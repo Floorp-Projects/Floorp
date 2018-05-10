@@ -135,19 +135,15 @@ protected:
                           const nsAString* inString,
                           nsAString* outString,
                           int32_t aMaxLength);
-  nsresult DidInsertText(nsresult aResult);
 
   nsresult WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
-  nsresult DidInsertBreak(nsresult aResult);
 
   nsresult WillSetText(bool* aCancel,
                        bool* aHandled,
                        const nsAString* inString,
                        int32_t aMaxLength);
-  nsresult DidSetText(nsresult aResult);
 
   void WillInsert(bool* aCancel);
-  nsresult DidInsert(nsresult aResult);
 
   nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                bool* aCancel,
@@ -156,10 +152,8 @@ protected:
                               nsresult aResult);
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
-  nsresult DidSetTextProperty(nsresult aResult);
 
   nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
-  nsresult DidRemoveTextProperty(nsresult aResult);
 
   nsresult WillUndo(bool* aCancel, bool* aHandled);
   nsresult DidUndo(nsresult aResult);
@@ -180,8 +174,6 @@ protected:
                           uint32_t aFlags,
                           bool* aOutCancel,
                           bool* aHandled);
-
-  nsresult DidOutputText(nsresult aResult);
 
   /**
    * Check for and replace a redundant trailing break.
