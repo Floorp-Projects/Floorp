@@ -1,5 +1,6 @@
 const { Constructor: CC } = Components;
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 const { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm", {});
@@ -9,6 +10,8 @@ const BlocklistClients = ChromeUtils.import("resource://services-common/blocklis
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
+
+const IS_ANDROID = AppConstants.platform == "android";
 
 
 let gBlocklistClients;
@@ -99,7 +102,14 @@ function run_test() {
 }
 
 add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is_empty() {
+  const november2016 = 1480000000000;
+
   for (let {client} of gBlocklistClients) {
+    if (IS_ANDROID && client.collectionName != BlocklistClients.AddonBlocklistClient.collectionName) {
+      // On Android we don't ship the dumps of plugins and gfx.
+      continue;
+    }
+
     // Test an empty db populates, but don't reach server (specified timestamp <= dump).
     await client.maybeSync(1, Date.now());
 
@@ -107,6 +117,28 @@ add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is
     const collection = await client.openCollection();
     const { data: list } = await collection.list();
     equal(list[0]._status, "synced");
+
+    // Verify that the internal timestamp was updated.
+    const timestamp = await collection.db.getLastModified();
+    ok(timestamp > november2016, `Loaded dump of ${client.collectionName} has timestamp ${timestamp}`);
+  }
+});
+add_task(clear_state);
+
+add_task(async function test_initial_dump_is_loaded_when_using_get_on_empty_collection() {
+  for (let {client} of gBlocklistClients) {
+    if (IS_ANDROID && client.collectionName != BlocklistClients.AddonBlocklistClient.collectionName) {
+      // On Android we don't ship the dumps of plugins and gfx.
+      continue;
+    }
+    // Internal database is empty.
+    const collection = await client.openCollection();
+    const { data: list } = await collection.list();
+    equal(list.length, 0);
+
+    // Calling .get() will load the dump.
+    const afterLoaded = await client.get();
+    ok(afterLoaded.length > 0, `Loaded dump of ${client.collectionName} has ${afterLoaded.length} records`);
   }
 });
 add_task(clear_state);
