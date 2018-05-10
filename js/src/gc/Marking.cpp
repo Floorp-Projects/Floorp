@@ -995,13 +995,27 @@ js::GCMarker::traverseEdge(S source, const T& thing)
 
 namespace {
 
-template <typename T> struct ParticipatesInCC {};
+template <typename T> struct TypeParticipatesInCC {};
 #define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
-    template <> struct ParticipatesInCC<type> { static const bool value = addToCCKind; };
+    template <> struct TypeParticipatesInCC<type> { static const bool value = addToCCKind; };
 JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
 #undef EXPAND_PARTICIPATES_IN_CC
 
+struct ParticipatesInCCFunctor
+{
+    template <typename T>
+    bool operator()() {
+        return TypeParticipatesInCC<T>::value;
+    }
+};
+
 } // namespace
+
+static bool
+TraceKindParticipatesInCC(JS::TraceKind kind)
+{
+    return DispatchTraceKindTyped(ParticipatesInCCFunctor(), kind);
+}
 
 template <typename T>
 bool
@@ -1011,7 +1025,7 @@ js::GCMarker::mark(T* thing)
     TenuredCell* cell = TenuredCell::fromPointer(thing);
     MOZ_ASSERT(!IsInsideNursery(cell));
 
-    if (!ParticipatesInCC<T>::value)
+    if (!TypeParticipatesInCC<T>::value)
         return cell->markIfUnmarked(MarkColor::Black);
 
     return cell->markIfUnmarked(markColor());
@@ -2571,12 +2585,18 @@ GCMarker::markDelayedChildren(Arena* arena)
     MOZ_ASSERT(arena->markOverflow);
     arena->markOverflow = 0;
 
+    JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
+
+    // Whether we need to mark children of gray or black cells in the arena
+    // depends on which kind of marking we were doing when the arena as pushed
+    // onto the list.  We never change mark color without draining the mark
+    // stack though so this is the same as the current color.
+    bool markGrayCells = markColor() == MarkColor::Gray && TraceKindParticipatesInCC(kind);
+
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
         TenuredCell* t = i.getCell();
-        if (t->isMarkedAny()) {
-            t->markIfUnmarked();
-            js::TraceChildren(this, t, MapAllocToTraceKind(arena->getAllocKind()));
-        }
+        if ((markGrayCells && t->isMarkedGray()) || (!markGrayCells && t->isMarkedBlack()))
+            js::TraceChildren(this, t, kind);
     }
 }
 
