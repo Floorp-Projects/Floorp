@@ -1067,7 +1067,12 @@ nsSocketTransportService::Run()
     // socket detach handlers get processed.
     NS_ProcessPendingEvents(mRawThread);
 
+    // Stopping the SLL threads can generate new events, so we need to
+    // process them before nulling out gSocketThread, otherwise we can get
+    // !onSocketThread assertions.
     psm::StopSSLServerCertVerificationThreads();
+    NS_ProcessPendingEvents(mRawThread);
+
     gSocketThread = nullptr;
 
     SOCKET_LOG(("STS thread exit\n"));
