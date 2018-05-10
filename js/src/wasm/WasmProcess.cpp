@@ -217,6 +217,7 @@ static ProcessCodeSegmentMap processCodeSegmentMap;
 bool
 wasm::RegisterCodeSegment(const CodeSegment* cs)
 {
+    MOZ_ASSERT(cs->codeTier().code().initialized());
     return processCodeSegmentMap.insert(cs);
 }
 
