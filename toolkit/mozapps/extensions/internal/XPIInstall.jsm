@@ -182,6 +182,7 @@ const TYPES = {
 const COMPATIBLE_BY_DEFAULT_TYPES = {
   extension: true,
   dictionary: true,
+  "webextension-dictionary": true,
 };
 
 const RESTARTLESS_TYPES = new Set([
