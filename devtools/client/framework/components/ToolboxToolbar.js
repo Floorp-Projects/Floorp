@@ -56,6 +56,8 @@ class ToolboxToolbar extends Component {
       disableAutohide: PropTypes.bool,
       // Function to select a tool based on its id.
       selectTool: PropTypes.func,
+      // Function to turn the options panel on / off.
+      toggleOptions: PropTypes.func.isRequired,
       // Function to turn the split console on / off.
       toggleSplitConsole: PropTypes.func,
       // Function to turn the disable pop-up autohide behavior on / off.
@@ -234,6 +236,8 @@ function renderSeparator() {
  *        (Only defined for the browser toolbox.)
  * @param {Function} selectTool
  *        Function to select a tool based on its id.
+ * @param {Function} toggleOptions
+ *        Function to turn the options panel on / off.
  * @param {Function} toggleSplitConsole
  *        Function to turn the split console on / off.
  * @param {Function} toggleNoAutohide
@@ -319,8 +323,10 @@ function renderToolboxControls(props) {
  *        Are we disabling the behavior where pop-ups are automatically
  *        closed when clicking outside them.
  *        (Only defined for the browser toolbox.)
- * @param {Function} props.selectTool
+ * @param {Function} selectTool
  *        Function to select a tool based on its id.
+ * @param {Function} toggleOptions
+ *        Function to turn the options panel on / off.
  * @param {Function} toggleSplitConsole
  *        Function to turn the split console on / off.
  * @param {Function} toggleNoAutohide
@@ -339,7 +345,7 @@ function showMeatballMenu(
     currentHostType,
     isSplitConsoleActive,
     disableAutohide,
-    selectTool,
+    toggleOptions,
     toggleSplitConsole,
     toggleNoAutohide,
     L10N,
@@ -402,7 +408,7 @@ function showMeatballMenu(
     id: "toolbox-meatball-menu-settings",
     label: L10N.getStr("toolbox.meatballMenu.settings.label"),
     accelerator: L10N.getStr("toolbox.help.key"),
-    click: () => selectTool("options"),
+    click: () => toggleOptions(),
   }));
 
   if (menu.items.length) {
