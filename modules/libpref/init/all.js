@@ -106,11 +106,7 @@ pref("browser.cache.compression_level", 0);
 pref("browser.download.forbid_open_with", false);
 
 // Remove navigator.registerContentHandler
-#ifdef EARLY_BETA_OR_EARLIER
 pref("dom.registerContentHandler.enabled", false);
-#else
-pref("dom.registerContentHandler.enabled", true);
-#endif
 
 // Nightly will have insecure registerProtocolHandler disabled by default
 // Beta and Stable will remain enabled until Firefox 62 providing deprecation stats.
