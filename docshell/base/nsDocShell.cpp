@@ -3500,84 +3500,12 @@ nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
   return NS_OK;
 }
 
-#ifdef DEBUG_DOCSHELL_FOCUS
-static void
-PrintDocTree(nsIDocShellTreeItem* aParentNode, int aLevel)
-{
-  for (int32_t i = 0; i < aLevel; i++) {
-    printf("  ");
-  }
-
-  int32_t childWebshellCount;
-  aParentNode->GetChildCount(&childWebshellCount);
-  nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
-  int32_t type = aParentNode->ItemType();
-  nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
-  RefPtr<nsPresContext> presContext;
-  parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
-  nsIDocument* doc = presShell->GetDocument();
-
-  nsCOMPtr<nsPIDOMWindowOuter> domwin(doc->GetWindow());
-
-  nsCOMPtr<nsIWidget> widget;
-  nsViewManager* vm = presShell->GetViewManager();
-  if (vm) {
-    vm->GetWidget(getter_AddRefs(widget));
-  }
-  dom::Element* rootElement = doc->GetRootElement();
-
-  printf("DS %p  Ty %s  Doc %p DW %p EM %p CN %p\n",
-         (void*)parentAsDocShell.get(),
-         type == nsIDocShellTreeItem::typeChrome ? "Chr" : "Con",
-         (void*)doc, (void*)domwin.get(),
-         (void*)presContext->EventStateManager(), (void*)rootElement);
-
-  if (childWebshellCount > 0) {
-    for (int32_t i = 0; i < childWebshellCount; i++) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      aParentNode->GetChildAt(i, getter_AddRefs(child));
-      PrintDocTree(child, aLevel + 1);
-    }
-  }
-}
-
-static void
-PrintDocTree(nsIDocShellTreeItem* aParentNode)
-{
-  NS_ASSERTION(aParentNode, "Pointer is null!");
-
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  aParentNode->GetParent(getter_AddRefs(parentItem));
-  while (parentItem) {
-    nsCOMPtr<nsIDocShellTreeItem> tmp;
-    parentItem->GetParent(getter_AddRefs(tmp));
-    if (!tmp) {
-      break;
-    }
-    parentItem = tmp;
-  }
-
-  if (!parentItem) {
-    parentItem = aParentNode;
-  }
-
-  PrintDocTree(parentItem, 0);
-}
-#endif
-
 NS_IMETHODIMP
 nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
   if (mIsBeingDestroyed && aTreeOwner) {
     return NS_ERROR_FAILURE;
   }
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aTreeOwner));
-  if (item) {
-    PrintDocTree(item);
-  }
-#endif
 
   // Don't automatically set the progress based on the tree owner for frames
   if (!IsFrame()) {

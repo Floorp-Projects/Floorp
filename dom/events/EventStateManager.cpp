@@ -103,8 +103,6 @@ namespace mozilla {
 
 using namespace dom;
 
-//#define DEBUG_DOCSHELL_FOCUS
-
 static const LayoutDeviceIntPoint kInvalidRefPoint = LayoutDeviceIntPoint(-1,-1);
 
 static uint32_t gMouseOrKeyboardEventCounter = 0;
@@ -121,66 +119,6 @@ RoundDown(double aDouble)
   return (aDouble > 0) ? static_cast<int32_t>(floor(aDouble)) :
                          static_cast<int32_t>(ceil(aDouble));
 }
-
-#ifdef DEBUG_DOCSHELL_FOCUS
-static void
-PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
-{
-  for (int32_t i=0;i<aLevel;i++) printf("  ");
-
-  int32_t childWebshellCount;
-  aParentItem->GetChildCount(&childWebshellCount);
-  nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentItem));
-  int32_t type = aParentItem->ItemType();
-  nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
-  RefPtr<nsPresContext> presContext;
-  parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
-  nsCOMPtr<nsIContentViewer> cv;
-  parentAsDocShell->GetContentViewer(getter_AddRefs(cv));
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  if (cv)
-    cv->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  nsCOMPtr<nsIDOMWindow> domwin = doc ? doc->GetWindow() : nullptr;
-  nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
-
-  printf("DS %p  Type %s  Cnt %d  Doc %p  DW %p  EM %p%c",
-    static_cast<void*>(parentAsDocShell.get()),
-    type==nsIDocShellTreeItem::typeChrome?"Chrome":"Content",
-    childWebshellCount, static_cast<void*>(doc.get()),
-    static_cast<void*>(domwin.get()),
-    static_cast<void*>(presContext ? presContext->EventStateManager() : nullptr),
-    uri ? ' ' : '\n');
-  if (uri) {
-    nsAutoCString spec;
-    uri->GetSpec(spec);
-    printf("\"%s\"\n", spec.get());
-  }
-
-  if (childWebshellCount > 0) {
-    for (int32_t i = 0; i < childWebshellCount; i++) {
-      nsCOMPtr<nsIDocShellTreeItem> child;
-      aParentItem->GetChildAt(i, getter_AddRefs(child));
-      PrintDocTree(child, aLevel + 1);
-    }
-  }
-}
-
-static void
-PrintDocTreeAll(nsIDocShellTreeItem* aItem)
-{
-  nsCOMPtr<nsIDocShellTreeItem> item = aItem;
-  for(;;) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    item->GetParent(getter_AddRefs(parent));
-    if (!parent)
-      break;
-    item = parent;
-  }
-
-  PrintDocTree(item, 0);
-}
-#endif
 
 /******************************************************************/
 /* mozilla::UITimerCallback                                       */
