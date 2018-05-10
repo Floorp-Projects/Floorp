@@ -644,7 +644,7 @@ process_toolchain() {
              gen_vcproj_cmd=${source_path}/build/make/gen_msvs_vcxproj.sh
              enabled werror && gen_vcproj_cmd="${gen_vcproj_cmd} --enable-werror"
              all_targets="${all_targets} solution"
-             INLINE="__forceinline"
+             INLINE="__inline"
         ;;
     esac
 
