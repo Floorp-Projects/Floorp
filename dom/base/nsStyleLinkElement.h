@@ -93,6 +93,18 @@ protected:
       mozilla::dom::ShadowRoot* aOldShadowRoot,
       ForceUpdate = ForceUpdate::No);
 
+  // Gets a suitable title and media for SheetInfo out of an element, which
+  // needs to be `this`.
+  //
+  // NOTE(emilio): Needs nsString instead of nsAString because of
+  // CompressWhitespace.
+  static void GetTitleAndMediaForElement(const mozilla::dom::Element&,
+                                         nsString& aTitle,
+                                         nsString& aMedia);
+
+  // Returns whether the type attribute specifies the text/css mime type.
+  static bool IsCSSMimeTypeAttribute(const mozilla::dom::Element&);
+
   virtual mozilla::Maybe<SheetInfo> GetStyleSheetInfo() = 0;
 
   // CC methods

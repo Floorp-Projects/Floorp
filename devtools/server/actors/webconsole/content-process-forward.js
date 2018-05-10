@@ -5,7 +5,6 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
-const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 ChromeUtils.defineModuleGetter(this, "E10SUtils",
                                "resource://gre/modules/E10SUtils.jsm");
@@ -37,8 +36,8 @@ function ContentProcessForward() {
   Services.cpmm.addMessageListener("DevTools:StopForwardingContentProcessMessage", this);
 }
 ContentProcessForward.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference]),
 
   receiveMessage(message) {
     if (message.name == "DevTools:StopForwardingContentProcessMessage") {

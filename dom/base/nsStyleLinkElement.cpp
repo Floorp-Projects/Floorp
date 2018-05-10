@@ -86,6 +86,42 @@ nsStyleLinkElement::~nsStyleLinkElement()
 }
 
 void
+nsStyleLinkElement::GetTitleAndMediaForElement(const Element& aSelf,
+                                               nsString& aTitle,
+                                               nsString& aMedia)
+{
+  // Only honor title as stylesheet name for elements in the document (that is,
+  // ignore for Shadow DOM), per [1] and [2]. See [3].
+  //
+  // [1]: https://html.spec.whatwg.org/#attr-link-title
+  // [2]: https://html.spec.whatwg.org/#attr-style-title
+  // [3]: https://github.com/w3c/webcomponents/issues/535
+  if (aSelf.IsInUncomposedDoc()) {
+    aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle);
+    aTitle.CompressWhitespace();
+  }
+
+  aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
+  // The HTML5 spec is formulated in terms of the CSSOM spec, which specifies
+  // that media queries should be ASCII lowercased during serialization.
+  //
+  // FIXME(emilio): How does it matter? This is going to be parsed anyway, CSS
+  // should take care of serializing it properly.
+  nsContentUtils::ASCIIToLower(aMedia);
+}
+
+bool
+nsStyleLinkElement::IsCSSMimeTypeAttribute(const Element& aSelf)
+{
+  nsAutoString type;
+  nsAutoString mimeType;
+  nsAutoString notUsed;
+  aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  nsContentUtils::SplitMimeType(type, mimeType, notUsed);
+  return mimeType.IsEmpty() || mimeType.LowerCaseEqualsLiteral("text/css");
+}
+
+void
 nsStyleLinkElement::Unlink()
 {
   nsStyleLinkElement::SetStyleSheet(nullptr);

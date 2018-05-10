@@ -1021,6 +1021,7 @@ function _parse(code, opts) {
 
 const sourceOptions = {
   generated: {
+    sourceType: "unambiguous",
     tokens: true,
     plugins: ["objectRestSpread"]
   },
@@ -2521,7 +2522,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getFramework = getFramework;
 
+var _types = __webpack_require__(2268);
+
+var t = _interopRequireWildcard(_types);
+
 var _getSymbols = __webpack_require__(1457);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function getFramework(sourceId) {
   const sourceSymbols = (0, _getSymbols.getSymbols)(sourceId);
@@ -2539,10 +2550,6 @@ function getFramework(sourceId) {
 
 // React
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 function isReactComponent(sourceSymbols) {
   const { imports, classes, callExpressions } = sourceSymbols;
   return importsReact(imports) || requiresReact(callExpressions) || extendsReactComponent(classes);
@@ -2557,14 +2564,7 @@ function requiresReact(callExpressions) {
 }
 
 function extendsReactComponent(classes) {
-  let result = false;
-  classes.some(classObj => {
-    if (classObj.parent && (classObj.parent.name === "Component" || classObj.parent.name === "PureComponent" || classObj.parent.property.name === "Component")) {
-      result = true;
-    }
-  });
-
-  return result;
+  return classes.some(classObj => t.isIdentifier(classObj.parent, { name: "Component" }) || t.isIdentifier(classObj.parent, { name: "PureComponent" }) || t.isMemberExpression(classObj.parent, { computed: false }) && t.isIdentifier(classObj.parent, { name: "Component" }));
 }
 
 // Angular
@@ -22866,7 +22866,7 @@ function fromBabelLocation(location, sourceId) {
   };
 }
 
-function parseDeclarator(declaratorId, targetScope, type, declaration, state) {
+function parseDeclarator(declaratorId, targetScope, type, locationType, declaration, state) {
   if (isNode(declaratorId, "Identifier")) {
     let existing = targetScope.bindings[declaratorId.name];
     if (!existing) {
@@ -22878,7 +22878,7 @@ function parseDeclarator(declaratorId, targetScope, type, declaration, state) {
     }
     state.declarationBindingIds.add(declaratorId);
     existing.refs.push({
-      type: "decl",
+      type: locationType,
       start: fromBabelLocation(declaratorId.loc.start, state.sourceId),
       end: fromBabelLocation(declaratorId.loc.end, state.sourceId),
       declaration: {
@@ -22888,16 +22888,16 @@ function parseDeclarator(declaratorId, targetScope, type, declaration, state) {
     });
   } else if (isNode(declaratorId, "ObjectPattern")) {
     declaratorId.properties.forEach(prop => {
-      parseDeclarator(prop.value, targetScope, type, declaration, state);
+      parseDeclarator(prop.value, targetScope, type, locationType, declaration, state);
     });
   } else if (isNode(declaratorId, "ArrayPattern")) {
     declaratorId.elements.forEach(item => {
-      parseDeclarator(item, targetScope, type, declaration, state);
+      parseDeclarator(item, targetScope, type, locationType, declaration, state);
     });
   } else if (isNode(declaratorId, "AssignmentPattern")) {
-    parseDeclarator(declaratorId.left, targetScope, type, declaration, state);
+    parseDeclarator(declaratorId.left, targetScope, type, locationType, declaration, state);
   } else if (isNode(declaratorId, "RestElement")) {
-    parseDeclarator(declaratorId.argument, targetScope, type, declaration, state);
+    parseDeclarator(declaratorId.argument, targetScope, type, locationType, declaration, state);
   }
 }
 
@@ -22958,7 +22958,7 @@ const scopeCollectionVisitor = {
         scope.bindings[node.id.name] = {
           type: "const",
           refs: [{
-            type: "decl",
+            type: "fn-expr",
             start: fromBabelLocation(node.id.loc.start, state.sourceId),
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration: {
@@ -22977,7 +22977,7 @@ const scopeCollectionVisitor = {
         scope.bindings[node.id.name] = {
           type: fnScope === scope ? "var" : "let",
           refs: [{
-            type: "decl",
+            type: "fn-decl",
             start: fromBabelLocation(node.id.loc.start, state.sourceId),
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration: {
@@ -22995,7 +22995,7 @@ const scopeCollectionVisitor = {
         end: fromBabelLocation(node.loc.end, state.sourceId)
       });
 
-      node.params.forEach(param => parseDeclarator(param, scope, "var", node, state));
+      node.params.forEach(param => parseDeclarator(param, scope, "var", "fn-param", node, state));
 
       if (!t.isArrowFunctionExpression(node)) {
         scope.bindings.this = {
@@ -23034,7 +23034,7 @@ const scopeCollectionVisitor = {
           state.scope.bindings[node.id.name] = {
             type: "let",
             refs: [{
-              type: "decl",
+              type: "class-decl",
               start: fromBabelLocation(node.id.loc.start, state.sourceId),
               end: fromBabelLocation(node.id.loc.end, state.sourceId),
               declaration
@@ -23051,7 +23051,7 @@ const scopeCollectionVisitor = {
         scope.bindings[node.id.name] = {
           type: "const",
           refs: [{
-            type: "decl",
+            type: "class-inner",
             start: fromBabelLocation(node.id.loc.start, state.sourceId),
             end: fromBabelLocation(node.id.loc.end, state.sourceId),
             declaration
@@ -23074,7 +23074,7 @@ const scopeCollectionVisitor = {
         start: fromBabelLocation(node.loc.start, state.sourceId),
         end: fromBabelLocation(node.loc.end, state.sourceId)
       });
-      parseDeclarator(node.param, scope, "var", node, state);
+      parseDeclarator(node.param, scope, "var", "catch", node, state);
     } else if (t.isBlockStatement(node) && hasLexicalDeclaration(node, parentNode)) {
       // Debugger will create new lexical environment for the block.
       pushTempScope(state, "block", "Block", {
@@ -23087,7 +23087,7 @@ const scopeCollectionVisitor = {
       // Finds right lexical environment
       const hoistAt = !isLetOrConst(node) ? getVarScope(state.scope) : state.scope;
       node.declarations.forEach(declarator => {
-        parseDeclarator(declarator.id, hoistAt, node.kind, node, state);
+        parseDeclarator(declarator.id, hoistAt, node.kind, node.kind, node, state);
       });
     } else if (t.isImportDeclaration(node) && (!node.importKind || node.importKind === "value")) {
       node.specifiers.forEach(spec => {
@@ -23099,7 +23099,7 @@ const scopeCollectionVisitor = {
             // just normal const bindings.
             type: "const",
             refs: [{
-              type: "decl",
+              type: "import-ns-decl",
               start: fromBabelLocation(spec.local.loc.start, state.sourceId),
               end: fromBabelLocation(spec.local.loc.end, state.sourceId),
               declaration: {
@@ -23114,7 +23114,7 @@ const scopeCollectionVisitor = {
           state.scope.bindings[spec.local.name] = {
             type: "import",
             refs: [{
-              type: "decl",
+              type: "import-decl",
               start: fromBabelLocation(spec.local.loc.start, state.sourceId),
               end: fromBabelLocation(spec.local.loc.end, state.sourceId),
               importName: t.isImportDefaultSpecifier(spec) ? "default" : spec.imported.name,
@@ -23131,7 +23131,7 @@ const scopeCollectionVisitor = {
       state.scope.bindings[node.id.name] = {
         type: "const",
         refs: [{
-          type: "decl",
+          type: "ts-enum-decl",
           start: fromBabelLocation(node.id.loc.start, state.sourceId),
           end: fromBabelLocation(node.id.loc.end, state.sourceId),
           declaration: {
@@ -24999,9 +24999,7 @@ const {
   isOriginalId
 } = __webpack_require__(3652);
 
-const {
-  workerUtils: { WorkerDispatcher }
-} = __webpack_require__(3651);
+const { workerUtils: { WorkerDispatcher } } = __webpack_require__(3651);
 
 const dispatcher = new WorkerDispatcher();
 

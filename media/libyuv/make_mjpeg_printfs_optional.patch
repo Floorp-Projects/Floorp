@@ -1,6 +1,6 @@
 # HG changeset patch
-# Parent  b079f87bb602629bb8b51979d79f825be7aef1ae
-Bug 1341513: Make disable MJPEG fprintf warnings build-time option r=sotaro
+# User Randell Jesup <rjesup@jesup.org>
+# Parent  5d4d728adccff4539e44f697b8011fb2eb1a1ad5
 
 diff --git a/media/libyuv/libyuv/source/mjpeg_decoder.cc b/media/libyuv/libyuv/source/mjpeg_decoder.cc
 --- a/media/libyuv/libyuv/source/mjpeg_decoder.cc

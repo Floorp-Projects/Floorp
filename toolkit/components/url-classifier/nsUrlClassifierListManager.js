@@ -674,15 +674,7 @@ PROT_ListManager.prototype.getBackOffTime = function(provider) {
   return delay == 0 ? 0 : Date.now() + delay;
 };
 
-PROT_ListManager.prototype.QueryInterface = function(iid) {
-  if (iid.equals(Ci.nsISupports) ||
-      iid.equals(Ci.nsIUrlListManager) ||
-      iid.equals(Ci.nsIObserver) ||
-      iid.equals(Ci.nsITimerCallback))
-    return this;
-
-  throw Cr.NS_ERROR_NO_INTERFACE;
-};
+PROT_ListManager.prototype.QueryInterface = ChromeUtils.generateQI(["nsIUrlListManager", "nsIObserver", "nsITimerCallback"]);
 
 var modScope = this;
 function Init() {

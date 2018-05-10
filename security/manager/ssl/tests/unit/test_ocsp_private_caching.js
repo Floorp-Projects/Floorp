@@ -81,12 +81,7 @@ function add_ocsp_necko_cache_test(loadContext, shouldFindEntry) {
                      "should only find a cached entry if we're expecting one");
         run_next_test();
       },
-      QueryInterface(iid) {
-        if (iid.equals(Ci.nsICacheStorageVisitor)) {
-          return this;
-        }
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      },
+      QueryInterface: ChromeUtils.generateQI(["nsICacheStorageVisitor"]),
     };
     Services.cache2.asyncVisitAllStorages(visitor, true);
   });
