@@ -619,36 +619,33 @@ Merge(ChunkSet* aStoreChunks,
 }
 
 nsresult
-HashStore::ApplyUpdate(TableUpdate &aUpdate)
+HashStore::ApplyUpdate(TableUpdateV2 *aUpdate)
 {
-  auto updateV2 = TableUpdate::Cast<TableUpdateV2>(&aUpdate);
-  NS_ENSURE_TRUE(updateV2, NS_ERROR_FAILURE);
+  MOZ_ASSERT(mTableName.Equals(aUpdate->TableName()));
 
-  TableUpdateV2& update = *updateV2;
-
-  nsresult rv = mAddExpirations.Merge(update.AddExpirations());
+  nsresult rv = mAddExpirations.Merge(aUpdate->AddExpirations());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mSubExpirations.Merge(update.SubExpirations());
+  rv = mSubExpirations.Merge(aUpdate->SubExpirations());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Expire();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mAddChunks, &mAddPrefixes,
-             update.AddChunks(), update.AddPrefixes());
+             aUpdate->AddChunks(), aUpdate->AddPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mAddChunks, &mAddCompletes,
-             update.AddChunks(), update.AddCompletes(), true);
+             aUpdate->AddChunks(), aUpdate->AddCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubPrefixes,
-             update.SubChunks(), update.SubPrefixes());
+             aUpdate->SubChunks(), aUpdate->SubPrefixes());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = Merge(&mSubChunks, &mSubCompletes,
-             update.SubChunks(), update.SubCompletes(), true);
+             aUpdate->SubChunks(), aUpdate->SubCompletes(), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

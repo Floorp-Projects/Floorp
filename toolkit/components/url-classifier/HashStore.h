@@ -220,7 +220,7 @@ public:
   nsresult BeginUpdate();
 
   // Imports the data from a TableUpdate.
-  nsresult ApplyUpdate(TableUpdate &aUpdate);
+  nsresult ApplyUpdate(TableUpdateV2 *aUpdate);
 
   // Process expired chunks
   nsresult Expire();
