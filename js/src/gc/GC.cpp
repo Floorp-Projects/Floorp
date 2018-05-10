@@ -2818,7 +2818,7 @@ GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount)
         for (size_t i = 0; i < bgTaskCount && !bgArenas.done(); i++) {
             bgTasks[i].emplace(rt, &bgArenas, lock);
             startTask(*bgTasks[i], gcstats::PhaseKind::COMPACT_UPDATE_CELLS, lock);
-            tasksStarted = i;
+            tasksStarted++;
         }
     }
 
@@ -2829,6 +2829,8 @@ GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds, size_t bgTaskCount)
 
         for (size_t i = 0; i < tasksStarted; i++)
             joinTask(*bgTasks[i], gcstats::PhaseKind::COMPACT_UPDATE_CELLS, lock);
+        for (size_t i = tasksStarted; i < MaxCellUpdateBackgroundTasks; i++)
+            MOZ_ASSERT(bgTasks[i].isNothing());
     }
 }
 
