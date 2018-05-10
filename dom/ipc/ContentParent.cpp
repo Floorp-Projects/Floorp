@@ -5241,6 +5241,14 @@ ContentParent::RecvGetFilesRequest(const nsID& aUUID,
 {
   MOZ_ASSERT(!mGetFilesPendingRequests.GetWeak(aUUID));
 
+  if (!mozilla::Preferences::GetBool("dom.filesystem.pathcheck.disabled", false)) {
+    RefPtr<FileSystemSecurity> fss = FileSystemSecurity::Get();
+    if (NS_WARN_IF(!fss ||
+                   !fss->ContentProcessHasAccessTo(ChildID(), aDirectoryPath))) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+  }
+
   ErrorResult rv;
   RefPtr<GetFilesHelper> helper =
     GetFilesHelperParent::Create(aUUID, aDirectoryPath, aRecursiveFlag, this,
