@@ -106,7 +106,7 @@ class ChunkPool
 
 // Performs extra allocation off thread so that when memory is required on the
 // main thread it will already be available and waiting.
-class BackgroundAllocTask : public GCParallelTask
+class BackgroundAllocTask : public GCParallelTaskHelper<BackgroundAllocTask>
 {
     // Guarded by the GC lock.
     GCLockData<ChunkPool&> chunkPool_;
@@ -117,21 +117,19 @@ class BackgroundAllocTask : public GCParallelTask
     BackgroundAllocTask(JSRuntime* rt, ChunkPool& pool);
     bool enabled() const { return enabled_; }
 
-  protected:
-    void run() override;
+    void run();
 };
 
 // Search the provided Chunks for free arenas and decommit them.
-class BackgroundDecommitTask : public GCParallelTask
+class BackgroundDecommitTask : public GCParallelTaskHelper<BackgroundDecommitTask>
 {
   public:
     using ChunkVector = mozilla::Vector<Chunk*>;
 
-    explicit BackgroundDecommitTask(JSRuntime *rt) : GCParallelTask(rt) {}
+    explicit BackgroundDecommitTask(JSRuntime *rt) : GCParallelTaskHelper(rt) {}
     void setChunksToScan(ChunkVector &chunks);
 
-  protected:
-    void run() override;
+    void run();
 
   private:
     MainThreadOrGCTaskData<ChunkVector> toDecommit;
@@ -492,8 +490,10 @@ class GCRuntime
     /*
      * Concurrent sweep infrastructure.
      */
-    void startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
-    void joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
+    void startTask(GCParallelTask& task, gcstats::PhaseKind phase,
+                   AutoLockHelperThreadState& locked);
+    void joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
+                  AutoLockHelperThreadState& locked);
 
     void mergeCompartments(JSCompartment* source, JSCompartment* target);
 
