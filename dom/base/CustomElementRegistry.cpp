@@ -1230,7 +1230,7 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
     MOZ_ASSERT(element);
 
     RefPtr<CustomElementData> elementData = element->GetCustomElementData();
-    if (!elementData) {
+    if (!elementData || !element->GetOwnerGlobal()) {
       // This happens when the document is destroyed and the element is already
       // unlinked, no need to fire the callbacks in this case.
       continue;
