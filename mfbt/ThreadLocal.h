@@ -237,7 +237,7 @@ ThreadLocal<T, Storage>::set(const T aValue)
   }
 }
 
-#if defined(XP_WIN) || defined(MACOSX_HAS_THREAD_LOCAL)
+#if (defined(XP_WIN) || defined(MACOSX_HAS_THREAD_LOCAL)) && !defined(__MINGW32__)
 #define MOZ_THREAD_LOCAL(TYPE) thread_local mozilla::detail::ThreadLocal<TYPE, mozilla::detail::ThreadLocalNativeStorage>
 #elif defined(HAVE_THREAD_TLS_KEYWORD)
 #define MOZ_THREAD_LOCAL(TYPE) __thread mozilla::detail::ThreadLocal<TYPE, mozilla::detail::ThreadLocalNativeStorage>
