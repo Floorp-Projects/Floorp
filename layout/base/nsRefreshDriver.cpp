@@ -2173,12 +2173,6 @@ void
 nsRefreshDriver::FinishedWaitingForTransaction()
 {
   mWaitingForTransaction = false;
-  if (mSkippedPaints &&
-      !IsInRefresh() &&
-      (HasObservers() || HasImageRequests())) {
-    AUTO_PROFILER_TRACING("Paint", "RefreshDriverTick");
-    DoRefresh();
-  }
   mSkippedPaints = false;
   mWarningThreshold = 1;
 }
