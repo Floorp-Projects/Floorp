@@ -17,7 +17,6 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIFrameLoaderOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsImpl.h"
@@ -626,11 +625,11 @@ LoadInfo::GetSandboxedLoadingPrincipal(nsIPrincipal** aPrincipal)
 }
 
 NS_IMETHODIMP
-LoadInfo::GetLoadingDocument(nsIDOMDocument** aResult)
+LoadInfo::GetLoadingDocument(nsIDocument** aResult)
 {
   nsCOMPtr<nsINode> node = do_QueryReferent(mLoadingContext);
   if (node) {
-    nsCOMPtr<nsIDOMDocument> context = do_QueryInterface(node->OwnerDoc());
+    nsCOMPtr<nsIDocument> context = node->OwnerDoc();
     context.forget(aResult);
   }
   return NS_OK;

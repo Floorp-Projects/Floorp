@@ -50,7 +50,6 @@
 #include "nsIDeprecationWarner.h"
 #include "nsICompressConvStats.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIEventTarget.h"
 #include "nsRedirectHistoryEntry.h"

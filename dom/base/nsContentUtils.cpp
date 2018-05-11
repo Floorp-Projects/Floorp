@@ -10607,9 +10607,8 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc;
+  aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
   nsCOMPtr<nsISerialEventTarget> target;
   if (doc) {
     if (DocGroup* group = doc->GetDocGroup()) {
