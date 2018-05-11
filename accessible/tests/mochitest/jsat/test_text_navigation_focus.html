@@ -28,20 +28,20 @@
       let evt;
 
       evt = await runner.focusSelector("textarea",
-        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
-        AndroidEvents.ANNOUNCEMENT);
-      // XXX: Get rid of announcements, and send focus events instead
-      runner.eventTextMatches(evt[0],
+        AndroidEvents.VIEW_FOCUSED,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt[0].editable, true, "focused item is editable");
+      is(evt[1].focused, true, "a11y focused item is focused");
+      runner.eventTextMatches(evt[1],
         ["Text content test document",
          "Please refrain from Mayoneggs during this salmonella scare.",
          "text area"]);
-      runner.eventTextMatches(evt[1], ["editing"]);
 
       evt = await runner.moveNext("Simple",
-        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
-        AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt[0], ["So we don't get dessert?", "label"]);
-      runner.eventTextMatches(evt[1], ["navigating"]);
+        AndroidEvents.VIEW_FOCUSED,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt[0].editable, false, "focused out of editable");
+      runner.eventTextMatches(evt[1], ["So we don't get dessert?", "label"]);
       runner.isFocused("html");
 
       evt = await runner.moveNext("Simple",
@@ -51,17 +51,17 @@
 
       evt = await runner.activateCurrent(0,
         AndroidEvents.VIEW_CLICKED,
-        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_FOCUSED,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      runner.eventTextMatches(evt[1], ["editing"]);
+      is(evt[1].editable, true, "focused item is editable");
       is(evt[2].fromIndex, 0, "Cursor at start");
       runner.isFocused("input[type=text]");
 
       evt = await runner.movePrevious("Simple",
-        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
-        AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt[0], ["So we don't get dessert?", "label"]);
-      runner.eventTextMatches(evt[1], ["navigating"]);
+        AndroidEvents.VIEW_FOCUSED,
+        AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
+      is(evt[0].editable, false, "focused out of editable");
+      runner.eventTextMatches(evt[1], ["So we don't get dessert?", "label"]);
       runner.isFocused("html");
 
       evt = await runner.moveNext("Simple",
@@ -72,12 +72,12 @@
       // XXX: TEXT_SELECTION_CHANGED should be fired here
       evt = await runner.activateCurrent(0,
         AndroidEvents.VIEW_CLICKED,
-        AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt[1], ["editing"]);
+        AndroidEvents.VIEW_FOCUSED);
+      is(evt[1].editable, true, "focused item is editable");
       runner.isFocused("input[type=text]");
 
-      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt, ["navigating"]);
+      evt = await runner.blur(AndroidEvents.VIEW_FOCUSED);
+      is(evt.editable, false, "Focused out of editable");
     }
 
 
