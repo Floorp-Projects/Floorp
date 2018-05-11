@@ -103,6 +103,18 @@ It is possible to package a dump of the server records that will be loaded into 
 Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
 
 
+Targets and A/B testing
+=======================
+
+In order to deliver settings to subsets of the population, you can set targets on entries (platform, language, channel, version range, preferences values, samples, etc.) when editing records on the server.
+
+From the client API standpoint, this is completely transparent: the ``.get()`` method — as well as the event data — will always filter the entries on which the target matches.
+
+.. note::
+
+    The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filters),
+
+
 Uptake Telemetry
 ================
 
