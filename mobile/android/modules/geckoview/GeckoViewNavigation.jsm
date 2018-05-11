@@ -175,8 +175,7 @@ class GeckoViewNavigation extends GeckoViewModule {
   createContentWindowInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId,
                              aName) {
     debug `createContentWindowInFrame: uri=${aUri && aUri.spec}
-                                       params=${aParams} where=${aWhere}
-                                       flags=${aFlags}
+                                       where=${aWhere} flags=${aFlags}
                                        nextTabParentId=${aNextTabParentId}
                                        name=${aName}`;
 
