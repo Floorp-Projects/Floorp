@@ -33,6 +33,7 @@ from collections import (
     OrderedDict,
 )
 from io import StringIO
+from itertools import chain
 from multiprocessing import cpu_count
 
 from mozbuild.util import (
@@ -902,7 +903,7 @@ class BuildReader(object):
         for path, f in self._relevant_mozbuild_finder.find('**/moz.build'):
             yield path
 
-    def find_sphinx_variables(self):
+    def find_sphinx_variables(self, path=None):
         """This function finds all assignments of Sphinx documentation variables.
 
         This is a generator of tuples of (moz.build path, var, key, value). For
@@ -997,7 +998,12 @@ class BuildReader(object):
             def visit_AugAssign(self, node):
                 self.helper(node)
 
-        for p in self.all_mozbuild_paths():
+        if path:
+            mozbuild_paths = chain(*self._find_relevant_mozbuilds([path]).values())
+        else:
+            mozbuild_paths = self.all_mozbuild_paths()
+
+        for p in mozbuild_paths:
             assignments[:] = []
             full = os.path.join(self.config.topsrcdir, p)
 

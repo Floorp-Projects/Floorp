@@ -15,8 +15,8 @@
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/TimeStamp.h" // for TimeDuration
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for FillMode
-                                                        // and PlaybackDirection
+#include "mozilla/dom/AnimationEffectBinding.h" // for FillMode
+                                                // and PlaybackDirection
 
 class nsIDocument;
 
@@ -75,6 +75,21 @@ struct TimingParams
   static TimingParams FromOptionsUnion(
     const dom::UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
     nsIDocument* aDocument, ErrorResult& aRv);
+  static TimingParams FromEffectTiming(
+    const dom::EffectTiming& aEffectTiming,
+    nsIDocument* aDocument,
+    ErrorResult& aRv);
+  // Returns a copy of |aSource| where each timing property in |aSource| that
+  // is also specified in |aEffectTiming| is replaced with the value from
+  // |aEffectTiming|.
+  //
+  // If any of the values in |aEffectTiming| are invalid, |aRv.Failed()| will be
+  // true and an unmodified copy of |aSource| will be returned.
+  static TimingParams MergeOptionalEffectTiming(
+    const TimingParams& aSource,
+    const dom::OptionalEffectTiming& aEffectTiming,
+    nsIDocument* aDocument,
+    ErrorResult& aRv);
 
   // Range-checks and validates an UnrestrictedDoubleOrString or
   // OwningUnrestrictedDoubleOrString object and converts to a

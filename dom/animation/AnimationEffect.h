@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AnimationEffectReadOnly_h
-#define mozilla_dom_AnimationEffectReadOnly_h
+#ifndef mozilla_dom_AnimationEffect_h
+#define mozilla_dom_AnimationEffect_h
 
 #include "mozilla/ComputedTiming.h"
-#include "mozilla/dom/AnimationEffectTimingReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/Maybe.h"
@@ -25,21 +24,23 @@ struct ElementPropertyTransition;
 namespace dom {
 
 class Animation;
-class AnimationEffectTimingReadOnly;
-class KeyframeEffectReadOnly;
-struct ComputedTimingProperties;
+class KeyframeEffect;
+struct ComputedEffectTiming;
 
-class AnimationEffectReadOnly : public nsISupports,
-                                public nsWrapperCache
+class AnimationEffect : public nsISupports,
+                        public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffect)
 
-  AnimationEffectReadOnly(nsIDocument* aDocument,
-                          AnimationEffectTimingReadOnly* aTiming);
+  AnimationEffect(nsIDocument* aDocument, const TimingParams& aTiming)
+    : mDocument(aDocument)
+    , mTiming(aTiming)
+  {
+  }
 
-  virtual KeyframeEffectReadOnly* AsKeyframeEffect() { return nullptr; }
+  virtual KeyframeEffect* AsKeyframeEffect() { return nullptr; }
 
   virtual ElementPropertyTransition* AsTransition() { return nullptr; }
   virtual const ElementPropertyTransition* AsTransition() const
@@ -56,11 +57,12 @@ public:
     return SpecifiedTiming().ActiveDuration() != TimeDuration::Forever();
   }
 
-  already_AddRefed<AnimationEffectTimingReadOnly> Timing();
-  const TimingParams& SpecifiedTiming() const
-  {
-    return mTiming->AsTimingParams();
-  }
+  // AnimationEffect interface
+  void GetTiming(EffectTiming& aRetVal) const;
+  void GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const;
+  void UpdateTiming(const OptionalEffectTiming& aTiming, ErrorResult& aRv);
+
+  const TimingParams& SpecifiedTiming() const { return mTiming; }
   void SetSpecifiedTiming(const TimingParams& aTiming);
 
   // This function takes as input the timing parameters of an animation and
@@ -80,7 +82,6 @@ public:
   // Shortcut that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming GetComputedTiming(const TimingParams* aTiming = nullptr) const;
-  void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const;
 
   virtual void SetAnimation(Animation* aAnimation) = 0;
   Animation* GetAnimation() const { return mAnimation; };
@@ -94,17 +95,17 @@ public:
   virtual bool AffectsGeometry() const = 0;
 
 protected:
-  virtual ~AnimationEffectReadOnly();
+  virtual ~AnimationEffect() = default;
 
   Nullable<TimeDuration> GetLocalTime() const;
 
 protected:
   RefPtr<nsIDocument> mDocument;
-  RefPtr<AnimationEffectTimingReadOnly> mTiming;
   RefPtr<Animation> mAnimation;
+  TimingParams mTiming;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_AnimationEffectReadOnly_h
+#endif // mozilla_dom_AnimationEffect_h

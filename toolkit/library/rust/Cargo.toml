@@ -15,6 +15,7 @@ gecko_debug = ["gkrust-shared/gecko_debug"]
 simd-accel = ["gkrust-shared/simd-accel"]
 no-static-ideograph-encoder-tables = ["gkrust-shared/no-static-ideograph-encoder-tables"]
 oom_with_global_alloc = ["gkrust-shared/oom_with_global_alloc"]
+moz_memory = ["gkrust-shared/moz_memory"]
 
 [dependencies]
 gkrust-shared = { path = "shared" }

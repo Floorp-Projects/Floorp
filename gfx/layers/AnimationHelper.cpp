@@ -6,9 +6,9 @@
 
 #include "AnimationHelper.h"
 #include "mozilla/ComputedTimingFunction.h" // for ComputedTimingFunction
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
+#include "mozilla/dom/AnimationEffectBinding.h" // for dom::FillMode
 #include "mozilla/dom/KeyframeEffectBinding.h" // for dom::IterationComposite
-#include "mozilla/dom/KeyframeEffectReadOnly.h" // for dom::KeyFrameEffectReadOnly
+#include "mozilla/dom/KeyframeEffect.h" // for dom::KeyFrameEffectReadOnly
 #include "mozilla/dom/Nullable.h" // for dom::Nullable
 #include "mozilla/layers/CompositorThread.h" // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
@@ -233,7 +233,7 @@ AnimationHelper::SampleAnimationForEachNode(
         .MultDouble(animation.playbackRate());
 
     ComputedTiming computedTiming =
-      dom::AnimationEffectReadOnly::GetComputedTimingAt(
+      dom::AnimationEffect::GetComputedTimingAt(
         dom::Nullable<TimeDuration>(elapsedDuration), animData.mTiming,
         animation.playbackRate());
 
@@ -254,7 +254,7 @@ AnimationHelper::SampleAnimationForEachNode(
     // FIXME Bug 1455476: We should do this optimizations for the case where
     // the layer has multiple animations.
     if (iEnd == 1 &&
-        !dom::KeyframeEffectReadOnly::HasComputedTimingChanged(
+        !dom::KeyframeEffect::HasComputedTimingChanged(
           computedTiming,
           iterCompositeOperation,
           animData.mProgressOnLastCompose,

@@ -88,9 +88,7 @@ linux64-stylo-sequential/opt:
     test-sets:
         - awsy-stylo-sequential
 
-# QR builds just run a subset right now. Note that the tests in this
-# test set are further restricted in {reftests,talos,...}.yml to run on
-# certain projects only, to avoid adding too much infra load.
+# QR builds just run a subset right now.
 linux64-qr/opt:
     build-platform: linux64/opt
     test-sets:
@@ -212,9 +210,7 @@ windows10-64-asan/opt:
     test-sets:
         - common-tests
 
-# QR builds just run a subset right now. Note that the tests in this
-# test set are further restricted in {reftests,talos,...}.yml to run on
-# certain projects only, to avoid adding too much infra load.
+# QR builds just run a subset right now.
 windows10-64-qr/debug:
     build-platform: win64/debug
     test-sets:

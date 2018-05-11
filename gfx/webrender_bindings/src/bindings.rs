@@ -981,8 +981,7 @@ pub unsafe extern "C" fn wr_api_shut_down(dh: &mut DocumentHandle) {
     dh.api.shut_down();
 }
 
-#[no_mangle]
-pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
+fn make_transaction(do_async: bool) -> Transaction {
     let mut transaction = Transaction::new();
     // Ensure that we either use async scene building or not based on the
     // gecko pref, regardless of what the default is. We can remove this once
@@ -992,7 +991,12 @@ pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
     } else {
         transaction.skip_scene_builder();
     }
-    Box::into_raw(Box::new(transaction))
+    transaction
+}
+
+#[no_mangle]
+pub extern "C" fn wr_transaction_new(do_async: bool) -> *mut Transaction {
+    Box::into_raw(Box::new(make_transaction(do_async)))
 }
 
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
@@ -1290,12 +1294,14 @@ pub extern "C" fn wr_resource_updates_delete_image(
 #[no_mangle]
 pub extern "C" fn wr_api_send_transaction(
     dh: &mut DocumentHandle,
-    transaction: &mut Transaction
+    transaction: &mut Transaction,
+    is_async: bool
 ) {
     if transaction.is_empty() {
         return;
     }
-    let txn = mem::replace(transaction, Transaction::new());
+    let new_txn = make_transaction(is_async);
+    let txn = mem::replace(transaction, new_txn);
     dh.api.send_transaction(dh.document_id, txn);
 }
 

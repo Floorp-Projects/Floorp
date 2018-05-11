@@ -35,7 +35,6 @@ xpcshell:
     treeherder-symbol: X(X)
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: ['mozilla-central', 'try']
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
     chunks:

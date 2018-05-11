@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+function index(tab) {
+  return Array.indexOf(gBrowser.tabs, tab);
+}
+
+async function testNewTabPosition(expectedPosition, modifiers = {}) {
+  let opening = BrowserTestUtils.waitForNewTab(gBrowser, "http://mochi.test:8888/");
+  BrowserTestUtils.synthesizeMouseAtCenter("#link", modifiers, gBrowser.selectedBrowser);
+  let newtab = await opening;
+  is(index(newtab), expectedPosition, "clicked tab is in correct position");
+  return newtab;
+}
+
+// Test that a tab opened from a pinned tab is not in the pinned region.
+add_task(async function test_pinned_content_click() {
+  let testUri = "data:text/html;charset=utf-8,<a href=\"http://mochi.test:8888/\" target=\"_blank\" id=\"link\">link</a>";
+  let tabs = [gBrowser.selectedTab, BrowserTestUtils.addTab(gBrowser, testUri), BrowserTestUtils.addTab(gBrowser)];
+  gBrowser.pinTab(tabs[1]);
+  gBrowser.pinTab(tabs[2]);
+
+  // First test new active tabs open at the start of non-pinned tabstrip.
+  await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
+  let newtab1 = await testNewTabPosition(2);
+
+  await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
+  let newtab2 = await testNewTabPosition(2);
+
+  gBrowser.removeTab(newtab1);
+  gBrowser.removeTab(newtab2);
+
+  // Second test new background tabs open in order.
+  let modifiers = AppConstants.platform == "macosx" ? {metaKey: true} : {ctrlKey: true};
+  await BrowserTestUtils.switchTab(gBrowser, tabs[1]);
+
+  newtab1 = await testNewTabPosition(2, modifiers);
+  newtab2 = await testNewTabPosition(3, modifiers);
+
+  gBrowser.removeTab(tabs[1]);
+  gBrowser.removeTab(tabs[2]);
+  gBrowser.removeTab(newtab1);
+  gBrowser.removeTab(newtab2);
+});

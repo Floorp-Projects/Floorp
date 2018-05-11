@@ -25,7 +25,7 @@ enum PlaybackDirection {
   "alternate-reverse"
 };
 
-dictionary AnimationEffectTimingProperties {
+dictionary EffectTiming {
   double                              delay = 0.0;
   double                              endDelay = 0.0;
   FillMode                            fill = "auto";
@@ -36,7 +36,18 @@ dictionary AnimationEffectTimingProperties {
   DOMString                           easing = "linear";
 };
 
-dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
+dictionary OptionalEffectTiming {
+  double                              delay;
+  double                              endDelay;
+  FillMode                            fill;
+  double                              iterationStart;
+  unrestricted double                 iterations;
+  (unrestricted double or DOMString)  duration;
+  PlaybackDirection                   direction;
+  DOMString                           easing;
+};
+
+dictionary ComputedEffectTiming : EffectTiming {
   unrestricted double   endTime = 0.0;
   unrestricted double   activeDuration = 0.0;
   double?               localTime = null;
@@ -45,9 +56,10 @@ dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
 };
 
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface AnimationEffectReadOnly {
-  [Cached, Constant]
-  readonly attribute AnimationEffectTimingReadOnly timing;
+interface AnimationEffect {
+  EffectTiming getTiming();
   [BinaryName="getComputedTimingAsDict"]
-  ComputedTimingProperties getComputedTiming();
+  ComputedEffectTiming getComputedTiming();
+  [Throws]
+  void updateTiming(optional OptionalEffectTiming timing);
 };

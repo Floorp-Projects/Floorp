@@ -26,14 +26,16 @@ PrintTargetWindows::PrintTargetWindows(cairo_surface_t* aCairoSurface,
 /* static */ already_AddRefed<PrintTargetWindows>
 PrintTargetWindows::CreateOrNull(HDC aDC)
 {
-  // Figure out the cairo surface size - Windows we need to use the printable
-  // area of the page.  Note: we only scale the printing using the LOGPIXELSY,
+  // Figure out the paper size, the actual surface size will be the printable
+  // area which is likely smaller, but the size here is later used to create the
+  // draw target where the full page size is needed.
+  // Note: we only scale the printing using the LOGPIXELSY,
   // so we use that when calculating the surface width as well as the height.
   int32_t heightDPI = ::GetDeviceCaps(aDC, LOGPIXELSY);
   float width =
-    (::GetDeviceCaps(aDC, HORZRES) * POINTS_PER_INCH_FLOAT) / heightDPI;
+    (::GetDeviceCaps(aDC, PHYSICALWIDTH) * POINTS_PER_INCH_FLOAT) / heightDPI;
   float height =
-    (::GetDeviceCaps(aDC, VERTRES) * POINTS_PER_INCH_FLOAT) / heightDPI;
+    (::GetDeviceCaps(aDC, PHYSICALHEIGHT) * POINTS_PER_INCH_FLOAT) / heightDPI;
   IntSize size = IntSize::Truncate(width, height);
 
   if (!Factory::CheckSurfaceSize(size)) {

@@ -2506,8 +2506,16 @@ void
 gfxPlatform::InitWebRenderConfig()
 {
   bool prefEnabled = WebRenderPrefEnabled();
+  bool envvarEnabled = WebRenderEnvvarEnabled();
 
-  ScopedGfxFeatureReporter reporter("WR", prefEnabled);
+  // On Nightly:
+  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified
+  //   WR! WR+   => means WR was enabled via gfx.webrender.{all,enabled} or envvar
+  // On Beta/Release:
+  //   WR? WR+   => means WR was enabled via gfx.webrender.all.qualified on qualified hardware
+  //   WR! WR+   => means WR was enabled via envvar, possibly on unqualified hardware.
+  // In all cases WR- means WR was not enabled, for one of many possible reasons.
+  ScopedGfxFeatureReporter reporter("WR", prefEnabled || envvarEnabled);
   if (!XRE_IsParentProcess()) {
     // The parent process runs through all the real decision-making code
     // later in this function. For other processes we still want to report
@@ -2525,10 +2533,19 @@ gfxPlatform::InitWebRenderConfig()
       "WebRender is an opt-in feature",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_DEFAULT_OFF"));
 
-  if (prefEnabled) {
-    featureWebRender.UserEnable("Force enabled by pref");
-  } else if (WebRenderEnvvarEnabled()) {
+  // envvar works everywhere; we need this for testing in CI. Sadly this allows
+  // beta/release to enable it on unqualified hardware, but at least this is
+  // harder for the average person than flipping a pref.
+  if (envvarEnabled) {
     featureWebRender.UserEnable("Force enabled by envvar");
+
+  // gfx.webrender.enabled and gfx.webrender.all only work on nightly
+#ifdef NIGHTLY_BUILD
+  } else if (prefEnabled) {
+    featureWebRender.UserEnable("Force enabled by pref");
+#endif
+
+  // gfx.webrender.all.qualified works on all channels
   } else if (gfxPrefs::WebRenderAllQualified()) {
     nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     nsCString discardFailureId;
