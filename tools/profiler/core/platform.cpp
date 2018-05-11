@@ -1550,6 +1550,10 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
 
   aWriter.IntProperty("version", 9);
 
+#if defined(MOZ_SOURCE_URL)
+  aWriter.StringProperty("sourceURL", "@MOZ_SOURCE_URL@");
+#endif
+
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
@@ -1636,6 +1640,10 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
     res = appInfo->GetName(string);
     if (!NS_FAILED(res))
       aWriter.StringProperty("product", string.Data());
+
+    res = appInfo->GetAppBuildID(string);
+    if (!NS_FAILED(res))
+      aWriter.StringProperty("appBuildID", string.Data());
   }
 
   aWriter.StartObjectProperty("extensions");
