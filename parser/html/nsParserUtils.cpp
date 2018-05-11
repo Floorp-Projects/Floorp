@@ -19,7 +19,6 @@
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
 #include "nsIContentSink.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
@@ -69,8 +68,8 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
                                   EmptyString(),
                                   EmptyString(),
                                   nullptr,
@@ -82,7 +81,6 @@ nsParserUtils::Sanitize(const nsAString& aFromStr,
                                   DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
   rv = nsContentUtils::ParseDocumentHTML(aFromStr, document, false);
   NS_ENSURE_SUCCESS(rv, rv);
 

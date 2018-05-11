@@ -10,7 +10,6 @@
 #include "mozilla/dom/DOMImplementationBinding.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDocument.h"
 #include "mozilla/dom/DocumentType.h"
 #include "nsTextNode.h"
 
@@ -91,9 +90,9 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
-  nsCOMPtr<nsIDOMDocument> document;
+  nsCOMPtr<nsIDocument> doc;
 
-  rv = NS_NewDOMDocument(getter_AddRefs(document),
+  rv = NS_NewDOMDocument(getter_AddRefs(doc),
                          aNamespaceURI, aQualifiedName, aDoctype,
                          mDocumentURI, mBaseURI,
                          mOwner->NodePrincipal(),
@@ -104,7 +103,6 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   // When DOMImplementation's createDocument method is invoked with
   // namespace set to HTML Namespace use the registry of the associated
   // document to the new instance.
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 
   if (aNamespaceURI.EqualsLiteral("http://www.w3.org/1999/xhtml")) {
     doc->SetContentType(NS_LITERAL_STRING("application/xhtml+xml"));
@@ -153,15 +151,14 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
 
   NS_ENSURE_STATE(!mScriptObject || scriptHandlingObject);
 
-  nsCOMPtr<nsIDOMDocument> document;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(doc),
                                   EmptyString(), EmptyString(),
                                   doctype, mDocumentURI, mBaseURI,
                                   mOwner->NodePrincipal(),
                                   true, scriptHandlingObject,
                                   DocumentFlavorLegacyGuess);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
 
   nsCOMPtr<Element> root = doc->CreateElem(NS_LITERAL_STRING("html"), nullptr,
                                            kNameSpaceID_XHTML);

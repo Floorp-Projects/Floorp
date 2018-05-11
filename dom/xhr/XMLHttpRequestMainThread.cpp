@@ -32,7 +32,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsIDOMDocument.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "nsIJARChannel.h"
 #include "nsIJARURI.h"
@@ -2002,7 +2001,6 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
     // Create an empty document from it.
     const nsAString& emptyStr = EmptyString();
-    nsCOMPtr<nsIDOMDocument> responseDoc;
     nsIGlobalObject* global = DOMEventTargetHelper::GetParentObject();
 
     nsCOMPtr<nsIPrincipal> requestingPrincipal;
@@ -2010,13 +2008,12 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
        GetChannelResultPrincipal(channel, getter_AddRefs(requestingPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
+    rv = NS_NewDOMDocument(getter_AddRefs(mResponseXML),
                            emptyStr, emptyStr, nullptr, docURI,
                            baseURI, requestingPrincipal, true, global,
                            mIsHtml ? DocumentFlavorHTML :
                                      DocumentFlavorLegacyGuess);
     NS_ENSURE_SUCCESS(rv, rv);
-    mResponseXML = do_QueryInterface(responseDoc);
     mResponseXML->SetChromeXHRDocURI(chromeXHRDocURI);
     mResponseXML->SetChromeXHRDocBaseURI(chromeXHRDocBaseURI);
 
