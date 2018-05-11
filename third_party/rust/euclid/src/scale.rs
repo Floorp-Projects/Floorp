@@ -70,7 +70,7 @@ where
 }
 
 impl<T, Src, Dst> TypedScale<T, Src, Dst> {
-    pub fn new(x: T) -> TypedScale<T, Src, Dst> {
+    pub fn new(x: T) -> Self {
         TypedScale(x, PhantomData)
     }
 }
@@ -79,6 +79,11 @@ impl<T: Clone, Src, Dst> TypedScale<T, Src, Dst> {
     pub fn get(&self) -> T {
         self.0.clone()
     }
+}
+
+impl<Src, Dst> TypedScale<f32, Src, Dst> {
+    /// Identity scaling, could be used to safely transit from one space to another.
+    pub const ONE: Self = TypedScale(1.0, PhantomData);
 }
 
 impl<T: Clone + One + Div<T, Output = T>, Src, Dst> TypedScale<T, Src, Dst> {

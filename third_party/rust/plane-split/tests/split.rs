@@ -3,18 +3,13 @@ extern crate plane_split;
 
 use std::f32::consts::FRAC_PI_4;
 use euclid::{Angle, TypedTransform3D, TypedRect, vec3};
-use plane_split::{BspSplitter, NaiveSplitter, Polygon, Splitter, _make_grid};
+use plane_split::{BspSplitter, Polygon, Splitter, make_grid};
 
 
 fn grid_impl(count: usize, splitter: &mut Splitter<f32, ()>) {
-    let polys = _make_grid(count);
+    let polys = make_grid(count);
     let result = splitter.solve(&polys, vec3(0.0, 0.0, 1.0));
     assert_eq!(result.len(), count + count*count + count*count*count);
-}
-
-#[test]
-fn grid_naive() {
-    grid_impl(2, &mut NaiveSplitter::new());
 }
 
 #[test]
@@ -44,11 +39,6 @@ fn sort_rotation(splitter: &mut Splitter<f32, ()>) {
 }
 
 #[test]
-fn rotation_naive() {
-    sort_rotation(&mut NaiveSplitter::new());
-}
-
-#[test]
 fn rotation_bsp() {
     sort_rotation(&mut BspSplitter::new());
 }
@@ -67,11 +57,6 @@ fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
     let mut anchors2 = anchors1.clone();
     anchors2.sort_by_key(|&a| -(a as i32));
     assert_eq!(anchors1, anchors2); //make sure Z is sorted backwards
-}
-
-#[test]
-fn trivial_naive() {
-    sort_trivial(&mut NaiveSplitter::new());
 }
 
 #[test]
