@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WebComponentsBinding.h"
@@ -366,12 +367,37 @@ public:
 
   explicit CustomElementRegistry(nsPIDOMWindowInner* aWindow);
 
+private:
+  class RunCustomElementCreationCallback : public mozilla::Runnable
+  {
+  public:
+    NS_DECL_NSIRUNNABLE
+    explicit RunCustomElementCreationCallback(CustomElementRegistry* aRegistry,
+                                              nsAtom* aAtom,
+                                              CustomElementCreationCallback* aCallback)
+      : mozilla::Runnable("CustomElementRegistry::RunCustomElementCreationCallback")
+#ifdef DEBUG
+      , mRegistry(aRegistry)
+#endif
+      , mAtom(aAtom)
+      , mCallback(aCallback)
+    {
+    }
+    private:
+#ifdef DEBUG
+      RefPtr<CustomElementRegistry> mRegistry;
+#endif
+      RefPtr<nsAtom> mAtom;
+      RefPtr<CustomElementCreationCallback> mCallback;
+  };
+
+public:
   /**
    * Looking up a custom element definition.
    * https://html.spec.whatwg.org/#look-up-a-custom-element-definition
    */
   CustomElementDefinition* LookupCustomElementDefinition(
-    nsAtom* aNameAtom, nsAtom* aTypeAtom) const;
+    nsAtom* aNameAtom, nsAtom* aTypeAtom);
 
   CustomElementDefinition* LookupCustomElementDefinition(
     JSContext* aCx, JSObject *aConstructor) const;
@@ -419,6 +445,8 @@ private:
 
   typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, CustomElementDefinition>
     DefinitionMap;
+  typedef nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, CustomElementCreationCallback>
+    ElementCreationCallbackMap;
   typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>,
                            nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>>
     CandidateMap;
@@ -431,6 +459,11 @@ private:
   // Custom prototypes are stored in the compartment where definition was
   // defined.
   DefinitionMap mCustomDefinitions;
+
+  // Hashtable for chrome-only callbacks that is called *before* we return
+  // a CustomElementDefinition, when the typeAtom matches.
+  // The callbacks are registered with the setElementCreationCallback method.
+  ElementCreationCallbackMap mElementCreationCallbacks;
 
   // Hashtable for looking up definitions by using constructor as key.
   // Custom elements' name are stored here and we need to lookup
@@ -484,6 +517,10 @@ public:
            JS::MutableHandle<JS::Value> aRetVal);
 
   already_AddRefed<Promise> WhenDefined(const nsAString& aName, ErrorResult& aRv);
+
+  // Chrome-only method that give JS an opportunity to only load the custom
+  // element definition script when needed.
+  void SetElementCreationCallback(const nsAString& aName, CustomElementCreationCallback& aCallback, ErrorResult& aRv);
 };
 
 class MOZ_RAII AutoCEReaction final {
