@@ -166,7 +166,7 @@
  * sense to touch memory pages and free that memory at shutdown,
  * unless we are running leak stats.
  */
-#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_VALGRIND) || defined(MOZ_ASAN)
+#if defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_VALGRIND) || defined(MOZ_ASAN) || defined(MOZ_CODE_COVERAGE)
 #define NS_FREE_PERMANENT_DATA
 #endif
 
