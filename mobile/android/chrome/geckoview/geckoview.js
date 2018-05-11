@@ -84,13 +84,13 @@ var ModuleManager = {
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
     this.forEach(module => {
-      if (!module.enabled) {
-        return;
+      if (module.enabled) {
+        module.impl.onSettingsUpdate();
       }
-      module.impl.onSettingsUpdate();
-      this._browser.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
-                                                    this._settings);
     });
+
+    this._browser.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
+                                                  aSettings);
   },
 
   onEvent(aEvent, aData, aCallback) {
@@ -175,9 +175,6 @@ class ModuleInfo {
     }
 
     if (!aEnabled) {
-      this._manager.messageManager.sendAsyncMessage("GeckoView:Unregister", {
-        module: this._name,
-      });
       this._impl.onDisable();
     }
 
@@ -186,11 +183,13 @@ class ModuleInfo {
     if (aEnabled) {
       this._impl.onEnable();
       this._impl.onSettingsUpdate();
-      this._manager.messageManager.sendAsyncMessage("GeckoView:Register", {
-        module: this._name,
-        settings: this._manager.settings,
-      });
     }
+
+    this._manager.messageManager.sendAsyncMessage("GeckoView:UpdateModuleState", {
+      module: this._name,
+      enabled: aEnabled,
+      settings: aEnabled ? this._manager.settings : null,
+    });
   }
 }
 
