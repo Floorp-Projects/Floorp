@@ -2382,7 +2382,14 @@ class LazyScript : public gc::TenuredCell
         toStringEnd_ = toStringEnd;
     }
 
-    bool hasUncompiledEnclosingScript() const;
+    // Returns true if the enclosing script failed to compile.
+    // See the comment in the definition for more details.
+    bool hasUncompletedEnclosingScript() const;
+
+    // Returns true if the enclosing script is also lazy.
+    bool isEnclosingScriptLazy() const {
+        return !sourceObject_;
+    }
 
     friend class GCMarker;
     void traceChildren(JSTracer* trc);
