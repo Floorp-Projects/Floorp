@@ -264,7 +264,9 @@ this.EventManager.prototype = {
              Roles.DOCUMENT,
              Roles.APPLICATION].includes(acc.role)) {
           this.contentControl.autoMove(acc);
-       }
+        }
+
+        this.present(Presentation.focused(acc));
 
        if (this.inTest) {
         this.sendMsgFunc("AccessFu:Focused");
