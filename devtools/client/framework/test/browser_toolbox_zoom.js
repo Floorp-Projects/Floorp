@@ -8,6 +8,12 @@ const {Toolbox} = require("devtools/client/framework/toolbox");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
 add_task(async function() {
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.toolbox.zoomValue");
+  });
+
+  // This test assume that zoom value will be default value. i.e. x1.0.
+  Services.prefs.setCharPref("devtools.toolbox.zoomValue", "1.0");
   await addTab("about:blank");
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = await gDevTools.showToolbox(target,
