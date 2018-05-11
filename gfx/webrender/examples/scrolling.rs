@@ -34,7 +34,6 @@ impl Example for App {
         builder.push_stacking_context(
             &info,
             None,
-            ScrollPolicy::Scrollable,
             None,
             TransformStyle::Flat,
             None,
@@ -50,7 +49,6 @@ impl Example for App {
             builder.push_stacking_context(
                 &LayoutPrimitiveInfo::new((10, 10).by(0, 0)),
                 None,
-                ScrollPolicy::Scrollable,
                 None,
                 TransformStyle::Flat,
                 None,

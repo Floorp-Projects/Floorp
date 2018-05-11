@@ -8,7 +8,7 @@ use display_list_flattener::build_scene;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
 use internal_types::FastHashSet;
-use resource_cache::{FontInstanceMap, TiledImageMap};
+use resource_cache::FontInstanceMap;
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
 use scene::Scene;
@@ -55,7 +55,6 @@ pub struct SceneRequest {
     pub scene: Scene,
     pub view: DocumentView,
     pub font_instances: FontInstanceMap,
-    pub tiled_image_map: TiledImageMap,
     pub output_pipelines: FastHashSet<PipelineId>,
     pub removed_pipelines: Vec<PipelineId>,
 }

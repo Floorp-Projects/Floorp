@@ -4,9 +4,6 @@
 
 #include shared,clip_shared
 
-in vec4 aDashOrDot0;
-in vec4 aDashOrDot1;
-
 varying vec3 vPos;
 
 flat varying vec2 vClipCenter;
@@ -18,6 +15,10 @@ flat varying vec2 vAlphaMask;
 flat varying vec4 vTaskRect;
 
 #ifdef WR_VERTEX_SHADER
+
+in vec4 aDashOrDot0;
+in vec4 aDashOrDot1;
+
 // Matches BorderCorner enum in border.rs
 #define CORNER_TOP_LEFT     0
 #define CORNER_TOP_RIGHT    1
