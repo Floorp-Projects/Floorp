@@ -40,18 +40,9 @@ using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
 
-bool
-CodeSegment::registerInProcessMap()
-{
-    if (!RegisterCodeSegment(this))
-        return false;
-    registered_ = true;
-    return true;
-}
-
 CodeSegment::~CodeSegment()
 {
-    if (registered_)
+    if (unregisterOnDestroy_)
         UnregisterCodeSegment(this);
 }
 
@@ -97,6 +88,26 @@ CodeSegment::AllocateCodeBytes(uint32_t codeLength)
     return UniqueCodeBytes((uint8_t*)p, FreeCode(roundedCodeLength));
 }
 
+bool
+CodeSegment::initialize(const CodeTier& codeTier)
+{
+    MOZ_ASSERT(!initialized());
+    codeTier_ = &codeTier;
+    MOZ_ASSERT(initialized());
+
+    // In the case of tiering, RegisterCodeSegment() immediately makes this code
+    // segment live to access from other threads executing the containing
+    // module. So only call once the CodeSegment is fully initialized.
+    if (!RegisterCodeSegment(this))
+        return false;
+
+    // This bool is only used by the destructor which cannot be called racily
+    // and so it is not a problem to mutate it after RegisterCodeSegment().
+    MOZ_ASSERT(!unregisterOnDestroy_);
+    unregisterOnDestroy_ = true;
+    return true;
+}
+
 const Code&
 CodeSegment::code() const
 {
@@ -107,7 +118,7 @@ CodeSegment::code() const
 void
 CodeSegment::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code) const
 {
-    *code += RoundupCodeLength(length_);
+    *code += RoundupCodeLength(length());
 }
 
 void
@@ -261,13 +272,20 @@ SendCodeRangesToProfiler(const ModuleSegment& ms, const Bytes& bytecode, const M
     }
 }
 
+ModuleSegment::ModuleSegment(Tier tier,
+                             UniqueCodeBytes codeBytes,
+                             uint32_t codeLength,
+                             const LinkDataTier& linkData)
+  : CodeSegment(Move(codeBytes), codeLength, CodeSegment::Kind::Module),
+    tier_(tier),
+    outOfBoundsCode_(base() + linkData.outOfBoundsOffset),
+    unalignedAccessCode_(base() + linkData.unalignedAccessOffset),
+    trapCode_(base() + linkData.trapOffset)
+{
+}
+
 /* static */ UniqueModuleSegment
-ModuleSegment::create(Tier tier,
-                      MacroAssembler& masm,
-                      const ShareableBytes& bytecode,
-                      const LinkDataTier& linkData,
-                      const Metadata& metadata,
-                      const CodeRangeVector& codeRanges)
+ModuleSegment::create(Tier tier, MacroAssembler& masm, const LinkDataTier& linkData)
 {
     uint32_t codeLength = masm.bytesNeeded();
 
@@ -278,16 +296,11 @@ ModuleSegment::create(Tier tier,
     // We'll flush the icache after static linking, in initialize().
     masm.executableCopy(codeBytes.get(), /* flushICache = */ false);
 
-    return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata, codeRanges);
+    return js::MakeUnique<ModuleSegment>(tier, Move(codeBytes), codeLength, linkData);
 }
 
 /* static */ UniqueModuleSegment
-ModuleSegment::create(Tier tier,
-                      const Bytes& unlinkedBytes,
-                      const ShareableBytes& bytecode,
-                      const LinkDataTier& linkData,
-                      const Metadata& metadata,
-                      const CodeRangeVector& codeRanges)
+ModuleSegment::create(Tier tier, const Bytes& unlinkedBytes, const LinkDataTier& linkData)
 {
     uint32_t codeLength = unlinkedBytes.length();
 
@@ -297,69 +310,35 @@ ModuleSegment::create(Tier tier,
 
     memcpy(codeBytes.get(), unlinkedBytes.begin(), codeLength);
 
-    return create(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata, codeRanges);
-}
-
-/* static */ UniqueModuleSegment
-ModuleSegment::create(Tier tier,
-                      UniqueCodeBytes codeBytes,
-                      uint32_t codeLength,
-                      const ShareableBytes& bytecode,
-                      const LinkDataTier& linkData,
-                      const Metadata& metadata,
-                      const CodeRangeVector& codeRanges)
-{
-    // These should always exist and should never be first in the code segment.
-
-    auto ms = js::MakeUnique<ModuleSegment>();
-    if (!ms)
-        return nullptr;
-
-    if (!ms->initialize(tier, Move(codeBytes), codeLength, bytecode, linkData, metadata, codeRanges))
-        return nullptr;
-
-    return UniqueModuleSegment(ms.release());
+    return js::MakeUnique<ModuleSegment>(tier, Move(codeBytes), codeLength, linkData);
 }
 
 bool
-ModuleSegment::initialize(Tier tier,
-                          UniqueCodeBytes codeBytes,
-                          uint32_t codeLength,
+ModuleSegment::initialize(const CodeTier& codeTier,
                           const ShareableBytes& bytecode,
                           const LinkDataTier& linkData,
                           const Metadata& metadata,
-                          const CodeRangeVector& codeRanges)
+                          const MetadataTier& metadataTier)
 {
-    MOZ_ASSERT(!bytes_);
-
-    tier_ = tier;
-    bytes_ = Move(codeBytes);
-    length_ = codeLength;
-    outOfBoundsCode_ = bytes_.get() + linkData.outOfBoundsOffset;
-    unalignedAccessCode_ = bytes_.get() + linkData.unalignedAccessOffset;
-    trapCode_ = bytes_.get() + linkData.trapOffset;
-
     if (!StaticallyLink(*this, linkData))
         return false;
 
-    ExecutableAllocator::cacheFlush(bytes_.get(), RoundupCodeLength(codeLength));
+    ExecutableAllocator::cacheFlush(base(), RoundupCodeLength(length()));
 
     // Reprotect the whole region to avoid having separate RW and RX mappings.
-    if (!ExecutableAllocator::makeExecutable(bytes_.get(), RoundupCodeLength(codeLength)))
+    if (!ExecutableAllocator::makeExecutable(base(), RoundupCodeLength(length())))
         return false;
 
-    if (!registerInProcessMap())
-        return false;
+    SendCodeRangesToProfiler(*this, bytecode.bytes, metadata, metadataTier.codeRanges);
 
-    SendCodeRangesToProfiler(*this, bytecode.bytes, metadata, codeRanges);
-
-    return true;
+    // See comments in CodeSegment::initialize() for why this must be last.
+    return CodeSegment::initialize(codeTier);
 }
 
 size_t
 ModuleSegment::serializedSize() const
 {
-    return sizeof(uint32_t) + length_;
+    return sizeof(uint32_t) + length();
 }
 
 void
@@ -374,17 +353,16 @@ ModuleSegment::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
 {
     MOZ_ASSERT(tier() == Tier::Serialized);
 
-    cursor = WriteScalar<uint32_t>(cursor, length_);
-    uint8_t* base = cursor;
-    cursor = WriteBytes(cursor, bytes_.get(), length_);
-    StaticallyUnlink(base, linkData);
+    cursor = WriteScalar<uint32_t>(cursor, length());
+    uint8_t* serializedBase = cursor;
+    cursor = WriteBytes(cursor, base(), length());
+    StaticallyUnlink(serializedBase, linkData);
     return cursor;
 }
 
-const uint8_t*
-ModuleSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode,
-                           const LinkDataTier& linkData, const Metadata& metadata,
-                           const CodeRangeVector& codeRanges)
+/* static */ const uint8_t*
+ModuleSegment::deserialize(const uint8_t* cursor, const LinkDataTier& linkData,
+                           UniqueModuleSegment* segment)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -399,7 +377,8 @@ ModuleSegment::deserialize(const uint8_t* cursor, const ShareableBytes& bytecode
     if (!cursor)
         return nullptr;
 
-    if (!initialize(Tier::Serialized, Move(bytes), length, bytecode, linkData, metadata, codeRanges))
+    *segment = js::MakeUnique<ModuleSegment>(Tier::Serialized, Move(bytes), length, linkData);
+    if (!*segment)
         return nullptr;
 
     return cursor;
@@ -560,17 +539,6 @@ MetadataTier::deserialize(const uint8_t* cursor)
     return cursor;
 }
 
-bool
-LazyStubSegment::initialize(UniqueCodeBytes codeBytes, size_t length)
-{
-    MOZ_ASSERT(bytes_ == nullptr);
-
-    bytes_ = Move(codeBytes);
-    length_ = length;
-
-    return registerInProcessMap();
-}
-
 UniqueLazyStubSegment
 LazyStubSegment::create(const CodeTier& codeTier, size_t length)
 {
@@ -578,9 +546,10 @@ LazyStubSegment::create(const CodeTier& codeTier, size_t length)
     if (!codeBytes)
         return nullptr;
 
-    auto segment = js::MakeUnique<LazyStubSegment>(codeTier);
-    if (!segment || !segment->initialize(Move(codeBytes), length))
+    auto segment = js::MakeUnique<LazyStubSegment>(Move(codeBytes), length);
+    if (!segment || !segment->initialize(codeTier))
         return nullptr;
+
     return segment;
 }
 
@@ -588,8 +557,8 @@ bool
 LazyStubSegment::hasSpace(size_t bytes) const
 {
     MOZ_ASSERT(bytes % MPROTECT_PAGE_SIZE == 0);
-    return bytes <= length_ &&
-           usedBytes_ <= length_ - bytes;
+    return bytes <= length() &&
+           usedBytes_ <= length() - bytes;
 }
 
 bool
@@ -1021,24 +990,25 @@ CodeTier::serialize(uint8_t* cursor, const LinkDataTier& linkData) const
     return cursor;
 }
 
-const uint8_t*
-CodeTier::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, Metadata& metadata,
-                      const LinkDataTier& linkData)
+/* static */ const uint8_t*
+CodeTier::deserialize(const uint8_t* cursor, const LinkDataTier& linkData,
+                      UniqueCodeTier* codeTier)
 {
-    metadata_ = js::MakeUnique<MetadataTier>(Tier::Serialized);
-    if (!metadata_)
+    auto metadata = js::MakeUnique<MetadataTier>(Tier::Serialized);
+    if (!metadata)
         return nullptr;
-    cursor = metadata_->deserialize(cursor);
+    cursor = metadata->deserialize(cursor);
     if (!cursor)
         return nullptr;
 
-    auto segment = Move(js::MakeUnique<ModuleSegment>());
-    if (!segment)
-        return nullptr;
-    cursor = segment->deserialize(cursor, *bytecode, linkData, metadata, metadata_->codeRanges);
+    UniqueModuleSegment segment;
+    cursor = ModuleSegment::deserialize(cursor, linkData, &segment);
     if (!cursor)
         return nullptr;
-    segment_ = takeOwnership(Move(segment));
+
+    *codeTier = js::MakeUnique<CodeTier>(Move(metadata), Move(segment));
+    if (!*codeTier)
+        return nullptr;
 
     return cursor;
 }
@@ -1108,25 +1078,38 @@ JumpTables::init(CompileMode mode, const ModuleSegment& ms, const CodeRangeVecto
     return true;
 }
 
-Code::Code(UniqueCodeTier codeTier, const Metadata& metadata, JumpTables&& maybeJumpTables)
-  : tier1_(takeOwnership(Move(codeTier))),
+Code::Code(UniqueCodeTier tier1, const Metadata& metadata, JumpTables&& maybeJumpTables)
+  : tier1_(Move(tier1)),
     metadata_(&metadata),
     profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector()),
     jumpTables_(Move(maybeJumpTables))
+{}
+
+bool
+Code::initialize(const ShareableBytes& bytecode, const LinkDataTier& linkData)
 {
+    MOZ_ASSERT(!initialized());
+
+    if (!tier1_->initialize(*this, bytecode, linkData, *metadata_))
+        return false;
+
+    MOZ_ASSERT(initialized());
+    return true;
 }
 
-Code::Code()
-  : profilingLabels_(mutexid::WasmCodeProfilingLabels, CacheableCharsVector())
-{
-}
-
-void
-Code::setTier2(UniqueCodeTier tier2) const
+bool
+Code::setTier2(UniqueCodeTier tier2, const ShareableBytes& bytecode,
+               const LinkDataTier& linkData) const
 {
     MOZ_RELEASE_ASSERT(!hasTier2());
     MOZ_RELEASE_ASSERT(tier2->tier() == Tier::Ion && tier1_->tier() == Tier::Baseline);
-    tier2_ = takeOwnership(Move(tier2));
+
+    if (!tier2->initialize(*this, bytecode, linkData, *metadata_))
+        return false;
+
+    tier2_ = Move(tier2);
+
+    return true;
 }
 
 void
@@ -1135,6 +1118,7 @@ Code::commitTier2() const
     MOZ_RELEASE_ASSERT(!hasTier2());
     MOZ_RELEASE_ASSERT(tier2_.get());
     hasTier2_ = true;
+    MOZ_ASSERT(hasTier2());
 }
 
 uint32_t
@@ -1180,14 +1164,20 @@ Code::codeTier(Tier tier) const
 {
     switch (tier) {
       case Tier::Baseline:
-        if (tier1_->tier() == Tier::Baseline)
+        if (tier1_->tier() == Tier::Baseline) {
+            MOZ_ASSERT(tier1_->initialized());
             return *tier1_;
+        }
         MOZ_CRASH("No code segment at this tier");
       case Tier::Ion:
-        if (tier1_->tier() == Tier::Ion)
+        if (tier1_->tier() == Tier::Ion) {
+            MOZ_ASSERT(tier1_->initialized());
             return *tier1_;
-        if (hasTier2())
+        }
+        if (tier2_) {
+            MOZ_ASSERT(tier2_->initialized());
             return *tier2_;
+        }
         MOZ_CRASH("No code segment at this tier");
       default:
         MOZ_CRASH();
@@ -1370,6 +1360,25 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
         codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);
 }
 
+bool
+CodeTier::initialize(const Code& code,
+                     const ShareableBytes& bytecode,
+                     const LinkDataTier& linkData,
+                     const Metadata& metadata)
+{
+    MOZ_ASSERT(!initialized());
+    code_ = &code;
+
+    MOZ_ASSERT(lazyStubs_.lock()->empty());
+
+    // See comments in CodeSegment::initialize() for why this must be last.
+    if (!segment_->initialize(*this, bytecode, linkData, metadata, *metadata_))
+        return false;
+
+    MOZ_ASSERT(initialized());
+    return true;
+}
+
 size_t
 Code::serializedSize() const
 {
@@ -1378,35 +1387,39 @@ Code::serializedSize() const
 }
 
 uint8_t*
-Code::serialize(uint8_t* cursor, const LinkDataTier& linkDataTier) const
+Code::serialize(uint8_t* cursor, const LinkData& linkData) const
 {
     MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
 
     cursor = metadata().serialize(cursor);
-    cursor = codeTier(Tier::Serialized).serialize(cursor, linkDataTier);
+    cursor = codeTier(Tier::Serialized).serialize(cursor, linkData.tier(Tier::Serialized));
     return cursor;
 }
 
-const uint8_t*
-Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode,
-                  const LinkDataTier& linkDataTier, Metadata& metadata)
+/* static */ const uint8_t*
+Code::deserialize(const uint8_t* cursor,
+                  const ShareableBytes& bytecode,
+                  const LinkData& linkData,
+                  Metadata& metadata,
+                  SharedCode* out)
 {
     cursor = metadata.deserialize(cursor);
     if (!cursor)
         return nullptr;
 
-    auto codeTier = js::MakeUnique<CodeTier>(Tier::Serialized);
-    if (!codeTier)
-        return nullptr;
-    cursor = codeTier->deserialize(cursor, bytecode, metadata, linkDataTier);
+    UniqueCodeTier codeTier;
+    cursor = CodeTier::deserialize(cursor, linkData.tier(Tier::Serialized), &codeTier);
     if (!cursor)
         return nullptr;
 
-    tier1_ = takeOwnership(Move(codeTier));
-    metadata_ = &metadata;
-
-    if (!jumpTables_.init(CompileMode::Once, tier1_->segment(), tier1_->metadata().codeRanges))
+    JumpTables jumpTables;
+    if (!jumpTables.init(CompileMode::Once, codeTier->segment(), codeTier->metadata().codeRanges))
         return nullptr;
 
+    MutableCode code = js_new<Code>(Move(codeTier), metadata, Move(jumpTables));
+    if (!code || !code->initialize(bytecode, linkData.tier(Tier::Serialized)))
+        return nullptr;
+
+    *out = code;
     return cursor;
 }

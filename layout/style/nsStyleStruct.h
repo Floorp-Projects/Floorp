@@ -653,6 +653,7 @@ struct nsStyleImageLayers {
 
   struct Layer {
     typedef mozilla::StyleGeometryBox StyleGeometryBox;
+    typedef mozilla::StyleImageLayerAttachment StyleImageLayerAttachment;
 
     nsStyleImage  mImage;         // [reset]
     mozilla::Position mPosition;  // [reset]
@@ -660,12 +661,13 @@ struct nsStyleImageLayers {
     StyleGeometryBox  mClip;      // [reset] See nsStyleConsts.h
     MOZ_INIT_OUTSIDE_CTOR
       StyleGeometryBox mOrigin;   // [reset] See nsStyleConsts.h
-    uint8_t       mAttachment;    // [reset] See nsStyleConsts.h
+    StyleImageLayerAttachment mAttachment;
+                                  // [reset] See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
                                   // only. For a mask layer, it should always
                                   // be the initial value, which is
-                                  // NS_STYLE_IMAGELAYER_ATTACHMENT_SCROLL.
+                                  // StyleImageLayerAttachment::Scroll.
     uint8_t       mBlendMode;     // [reset] See nsStyleConsts.h
                                   // background-only property
                                   // This property is used for background layer
