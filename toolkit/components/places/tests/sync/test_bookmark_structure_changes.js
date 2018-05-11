@@ -647,7 +647,8 @@ add_task(async function test_complex_move_with_additions() {
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
   deepEqual(mergeTelemetryEvents, [{
     value: "structure",
-    extra: { new: "1" },
+    extra: { new: 1, remoteRevives: 0, localDeletes: 0, localRevives: 0,
+             remoteDeletes: 0 },
   }], "Should record telemetry with structure change counts");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
