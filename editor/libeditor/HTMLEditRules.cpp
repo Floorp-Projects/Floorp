@@ -10232,11 +10232,21 @@ HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
     return NS_ERROR_FAILURE;
   }
 
-  AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
+  {
+    AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
-  nsresult rv = HTMLEditorRef().SetPositionToAbsoluteOrStatic(*element, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    nsresult rv = HTMLEditorRef().SetPositionToAbsoluteOrStatic(*element, false);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Restoring Selection might cause destroying the HTML editor.
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
   return NS_OK;
 }
