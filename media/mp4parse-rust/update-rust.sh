@@ -1,10 +1,8 @@
-#!/bin/sh
+#!/bin/sh -e
 # Script to update mp4parse-rust sources to latest upstream
 
-set -e
-
 # Default version.
-VER="0c8e1d91464aaa63b82ebf076b63cda1df4230d1"
+VER="2dc5127a69bc9bf891972e269e3abde0b77612f5"
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -38,7 +36,7 @@ mkdir -p mp4parse_fallible
 cp _upstream/mp4parse_fallible/* mp4parse_fallible/
 
 echo "Applying patches..."
-patch -p3 < mp4parse-cargo.patch
+patch -p4 < mp4parse-cargo.patch
 
 echo "Cleaning up..."
 rm -rf _upstream

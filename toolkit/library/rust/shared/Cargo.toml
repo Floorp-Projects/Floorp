@@ -39,7 +39,6 @@ gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 no-static-ideograph-encoder-tables = ["encoding_c/no-static-ideograph-encoder-tables", "encoding_glue/no-static-ideograph-encoder-tables"]
 oom_with_global_alloc = []
-moz_memory = ["mp4parse_capi/mp4parse_fallible"]
 
 [lib]
 path = "lib.rs"
