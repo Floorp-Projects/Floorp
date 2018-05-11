@@ -92,11 +92,14 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     public static final String APK_URI_PREFIX = "resource://android/";
 
+    private static final Method sGetNextMessage;
     private static final Method sOnPageStop;
     private static final Method sOnNewSession;
 
     static {
         try {
+            sGetNextMessage = MessageQueue.class.getDeclaredMethod("next");
+            sGetNextMessage.setAccessible(true);
             sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStop", GeckoSession.class, boolean.class);
             sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
@@ -656,6 +659,37 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     private static final List<Class<?>> CALLBACK_CLASSES = Arrays.asList(getCallbackClasses());
 
+    private static final class TimeoutRunnable implements Runnable {
+        private long timeout;
+
+        public void set(final long timeout) {
+            this.timeout = timeout;
+            cancel();
+            HANDLER.postDelayed(this, timeout);
+        }
+
+        public void cancel() {
+            HANDLER.removeCallbacks(this);
+        }
+
+        @Override
+        public void run() {
+            throw new TimeoutException("Timed out after " + timeout + "ms");
+        }
+    }
+
+    /* package */ static final Handler HANDLER = new Handler(Looper.getMainLooper());
+    private static final TimeoutRunnable TIMEOUT_RUNNABLE = new TimeoutRunnable();
+    private static final MessageQueue.IdleHandler IDLE_HANDLER = new MessageQueue.IdleHandler() {
+        @Override
+        public boolean queueIdle() {
+            final Message msg = Message.obtain(HANDLER);
+            msg.obj = HANDLER;
+            HANDLER.sendMessageAtFrontOfQueue(msg);
+            return false; // Remove this idle handler.
+        }
+    };
+
     private static GeckoRuntime sRuntime;
     private static RDPConnection sRDPConnection;
     private static long sLongestWait;
@@ -1122,37 +1156,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     protected static void loopUntilIdle(final long timeout) {
         // Adapted from GeckoThread.pumpMessageLoop.
-        final Looper looper = Looper.myLooper();
-        final MessageQueue queue = looper.getQueue();
-        final Handler handler = new Handler(looper);
-        final MessageQueue.IdleHandler idleHandler = new MessageQueue.IdleHandler() {
-            @Override
-            public boolean queueIdle() {
-                final Message msg = Message.obtain(handler);
-                msg.obj = handler;
-                handler.sendMessageAtFrontOfQueue(msg);
-                return false; // Remove this idle handler.
-            }
-        };
-
-        final Method getNextMessage;
-        try {
-            getNextMessage = queue.getClass().getDeclaredMethod("next");
-        } catch (final NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        getNextMessage.setAccessible(true);
-
-        final Runnable timeoutRunnable = new Runnable() {
-            @Override
-            public void run() {
-                throw new TimeoutException("Timed out after " + timeout + "ms");
-            }
-        };
+        final MessageQueue queue = HANDLER.getLooper().getQueue();
         if (timeout > 0) {
-            handler.postDelayed(timeoutRunnable, timeout);
+            TIMEOUT_RUNNABLE.set(timeout);
         } else {
-            queue.addIdleHandler(idleHandler);
+            queue.addIdleHandler(IDLE_HANDLER);
         }
 
         final long startTime = SystemClock.uptimeMillis();
@@ -1160,22 +1168,22 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             while (true) {
                 final Message msg;
                 try {
-                    msg = (Message) getNextMessage.invoke(queue);
+                    msg = (Message) sGetNextMessage.invoke(queue);
                 } catch (final IllegalAccessException | InvocationTargetException e) {
                     throw unwrapRuntimeException(e);
                 }
-                if (msg.getTarget() == handler && msg.obj == handler) {
+                if (msg.getTarget() == HANDLER && msg.obj == HANDLER) {
                     // Our idle signal.
                     break;
                 } else if (msg.getTarget() == null) {
-                    looper.quit();
+                    HANDLER.getLooper().quit();
                     return;
                 }
                 msg.getTarget().dispatchMessage(msg);
 
                 if (timeout > 0) {
-                    handler.removeCallbacks(timeoutRunnable);
-                    queue.addIdleHandler(idleHandler);
+                    TIMEOUT_RUNNABLE.cancel();
+                    queue.addIdleHandler(IDLE_HANDLER);
                 }
             }
 
@@ -1186,7 +1194,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             }
         } finally {
             if (timeout > 0) {
-                handler.removeCallbacks(timeoutRunnable);
+                TIMEOUT_RUNNABLE.cancel();
             }
         }
     }
