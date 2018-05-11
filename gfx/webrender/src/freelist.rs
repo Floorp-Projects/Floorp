@@ -52,6 +52,7 @@ pub struct WeakFreeListHandle<M> {
     _marker: PhantomData<M>,
 }
 
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct Slot<T> {
@@ -60,6 +61,7 @@ struct Slot<T> {
     value: Option<T>,
 }
 
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct FreeList<T, M> {
