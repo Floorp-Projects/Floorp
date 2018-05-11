@@ -12,6 +12,5 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 class GeckoViewScroll extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
-    this.registerContent("chrome://geckoview/content/GeckoViewScrollContent.js");
   }
 }

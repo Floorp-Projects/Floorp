@@ -49,11 +49,20 @@ var ModuleManager = {
       }
     })());
 
+    window.document.documentElement.appendChild(aBrowser);
+
     WindowEventDispatcher.registerListener(this, [
       "GeckoView:UpdateModuleState",
       "GeckoView:UpdateInitData",
       "GeckoView:UpdateSettings",
     ]);
+
+    this.messageManager.addMessageListener("GeckoView:ContentModuleLoaded",
+                                           this);
+
+    this.forEach(module => {
+      module.onInit();
+    });
   },
 
   get window() {
@@ -95,6 +104,7 @@ var ModuleManager = {
   },
 
   onEvent(aEvent, aData, aCallback) {
+    debug `onEvent ${aEvent} ${aData}`;
     switch (aEvent) {
       case "GeckoView:UpdateModuleState": {
         const module = this._modules.get(aData.module);
@@ -125,6 +135,19 @@ var ModuleManager = {
       }
     }
   },
+
+  receiveMessage(aMsg) {
+    debug `receiveMessage ${aMsg.name} ${aMsg.data}`;
+    switch (aMsg.name) {
+      case "GeckoView:ContentModuleLoaded": {
+        const module = this._modules.get(aMsg.data.module);
+        if (module) {
+          module.onContentModuleLoaded();
+        }
+        break;
+      }
+    }
+  },
 };
 
 /**
@@ -149,16 +172,28 @@ class ModuleInfo {
     this._name = name;
 
     this._impl = null;
+    this._contentModuleLoaded = false;
     this._enabled = false;
     // Only enable once we performed initialization.
     this._enabledOnInit = enabled;
 
-    this._loadPhase(onInit);
+    // For init, load resource _before_ initializing browser to support the
+    // onInitBrowser() override. However, load content module after initializing
+    // browser, because we don't have a message manager before then.
+    this._loadPhase({
+      resource: onInit && onInit.resource,
+    });
+    this._onInitPhase = {
+      frameScript: onInit && onInit.frameScript,
+    };
     this._onEnablePhase = onEnable;
   }
 
   onInit() {
     this._impl.onInit();
+    this._loadPhase(this._onInitPhase);
+    this._onInitPhase = null;
+
     this.enabled = this._enabledOnInit;
   }
 
@@ -166,6 +201,7 @@ class ModuleInfo {
    * Load resources according to a phase object that contains possible keys,
    *
    * "resource": specify the JSM resource to load for this module.
+   * "frameScript": specify a content JS frame script to load for this module.
    */
   _loadPhase(aPhase) {
     if (!aPhase) {
@@ -178,6 +214,12 @@ class ModuleInfo {
       const tag = this._name.replace("GeckoView", "GeckoView.");
       GeckoViewUtils.initLogging(tag, global);
       this._impl = new scope[this._name](this);
+    }
+
+    if (aPhase.frameScript && !this._contentModuleLoaded) {
+      this._impl.onLoadContentModule();
+      this._manager.messageManager.loadFrameScript(aPhase.frameScript, true);
+      this._contentModuleLoaded = true;
     }
   }
 
@@ -215,10 +257,19 @@ class ModuleInfo {
       this._impl.onSettingsUpdate();
     }
 
+    this._updateContentModuleState(/* includeSettings */ aEnabled);
+  }
+
+  onContentModuleLoaded() {
+    this._updateContentModuleState(/* includeSettings */ true);
+    this._impl.onContentModuleLoaded();
+  }
+
+  _updateContentModuleState(aIncludeSettings) {
     this._manager.messageManager.sendAsyncMessage("GeckoView:UpdateModuleState", {
       module: this._name,
-      enabled: aEnabled,
-      settings: aEnabled ? this._manager.settings : null,
+      enabled: this.enabled,
+      settings: aIncludeSettings ? this._manager.settings : null,
     });
   }
 }
@@ -244,11 +295,15 @@ function startup() {
     name: "GeckoViewContent",
     onInit: {
       resource: "resource://gre/modules/GeckoViewContent.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewContent.js",
     },
   }, {
     name: "GeckoViewNavigation",
     onInit: {
       resource: "resource://gre/modules/GeckoViewNavigation.jsm",
+    },
+    onEnable: {
+      frameScript: "chrome://geckoview/content/GeckoViewNavigationContent.js",
     },
   }, {
     name: "GeckoViewProgress",
@@ -259,16 +314,19 @@ function startup() {
     name: "GeckoViewScroll",
     onEnable: {
       resource: "resource://gre/modules/GeckoViewScroll.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewScrollContent.js",
     },
   }, {
     name: "GeckoViewSelectionAction",
     onEnable: {
       resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewSelectionActionContent.js",
     },
   }, {
     name: "GeckoViewSettings",
     onInit: {
       resource: "resource://gre/modules/GeckoViewSettings.jsm",
+      frameScript: "chrome://geckoview/content/GeckoViewContentSettings.js",
     },
   }, {
     name: "GeckoViewTab",
@@ -281,12 +339,6 @@ function startup() {
       resource: "resource://gre/modules/GeckoViewTrackingProtection.jsm",
     },
   }]);
-
-  window.document.documentElement.appendChild(browser);
-
-  ModuleManager.forEach(module => {
-    module.onInit();
-  });
 
   // Move focus to the content window at the end of startup,
   // so things like text selection can work properly.
