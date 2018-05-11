@@ -252,13 +252,6 @@ class AndroidPresentor {
   }
 
   /**
-   * We have entered or left text editing mode.
-   */
-  editingModeChanged(aIsEditing) {
-    return this.announce(UtteranceGenerator.genForEditingMode(aIsEditing));
-  }
-
-  /**
    * Announce something. Typically an app state change.
    */
   announce(aAnnouncement) {
