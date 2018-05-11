@@ -203,4 +203,17 @@ public final class RDPConnection implements Closeable {
         final Actor actor = getActor(reply);
         return (actor != null) ? (Tab) actor : new Tab(this, reply);
     }
+
+    /**
+     * Get the actor for the chrome process. The returned Tab object acts like a tab but has
+     * chrome privileges.
+     *
+     * @return Tab actor representing the process.
+     */
+    public Tab getChromeProcess() {
+        final JSONObject reply = mRoot.sendPacket("{\"type\":\"getProcess\"}", "form")
+                                      .optJSONObject("form");
+        final Actor actor = getActor(reply);
+        return (actor != null) ? (Tab) actor : new Tab(this, reply);
+    }
 }

@@ -101,7 +101,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.synthesizeTap(x: Int, y: Int) =
             sessionRule.synthesizeTap(this, x, y)
 
-    fun GeckoSession.evaluateJS(js: String) =
+    fun GeckoSession.evaluateJS(js: String): Any? =
             sessionRule.evaluateJS(this, js)
 
     infix fun Any?.dot(prop: Any): Any? =
