@@ -20,8 +20,6 @@ class GeckoViewContent extends GeckoViewModule {
     ]);
 
     this.messageManager.addMessageListener("GeckoView:SaveStateFinish", this);
-
-    this.registerContent("chrome://geckoview/content/GeckoViewContent.js");
   }
 
   onEnable() {
