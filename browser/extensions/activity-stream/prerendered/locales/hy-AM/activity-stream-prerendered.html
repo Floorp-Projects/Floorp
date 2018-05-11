@@ -13,7 +13,13 @@
     <div id="snippets-container">
       <div id="snippets"></div>
     </div>
-    <script>
+    <script>(() => {
+// Clear out any prerendered content if we shouldn't continue loading
+if (top !== window) {
+  document.documentElement.innerHTML = "";
+  return;
+}
+
 // Don't directly load the following scripts as part of html to let the page
 // finish loading to render the content sooner.
 for (const src of [
@@ -34,6 +40,6 @@ for (const src of [
   script.async = false;
   script.src = src;
 }
-    </script>
+    })();</script>
   </body>
 </html>

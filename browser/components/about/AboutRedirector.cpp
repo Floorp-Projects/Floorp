@@ -84,7 +84,7 @@ static const RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
   // Actual activity stream URL for home and newtab are set in channel creation
-  { "home", "about:blank", ACTIVITY_STREAM_FLAGS },
+  { "home", "about:blank", ACTIVITY_STREAM_FLAGS | nsIAboutModule::MAKE_LINKABLE }, // Bug 1438367 to try removing MAKE_LINKABLE again
   { "newtab", "about:blank", ACTIVITY_STREAM_FLAGS },
   { "library", "chrome://browser/content/aboutLibrary.xhtml",
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
