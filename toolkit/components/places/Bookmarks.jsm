@@ -786,7 +786,8 @@ var Bookmarks = Object.freeze({
                                              updatedItem.index, updatedItem.type,
                                              updatedItem.guid, item.parentGuid,
                                              updatedItem.parentGuid,
-                                             updatedItem.source ]);
+                                             updatedItem.source,
+                                             updatedItem.url && updatedItem.url.href ]);
         }
 
         // Remove non-enumerable properties.
@@ -1200,7 +1201,7 @@ var Bookmarks = Object.freeze({
                                            i, child.type,
                                            child.guid, child.parentGuid,
                                            child.parentGuid,
-                                           source ]);
+                                           source, child.url && child.url.href ]);
       }
     })();
   },
