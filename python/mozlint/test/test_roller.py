@@ -50,6 +50,36 @@ def test_roll_successful(lint, linters, files):
     assert container.rule == 'no-foobar'
 
 
+def test_roll_from_subdir(lint, linters):
+    lint.read(linters)
+
+    oldcwd = os.getcwd()
+    try:
+        os.chdir(os.path.join(lint.root, 'files'))
+
+        # Path relative to cwd works
+        result = lint.roll('no_foobar.js')
+        assert len(result) == 0
+        assert len(lint.failed) == 0
+
+        # Path relative to root doesn't work
+        result = lint.roll(os.path.join('files', 'no_foobar.js'))
+        assert len(result) == 0
+        assert len(lint.failed) == 3
+
+        # Paths from vcs are always joined to root instead of cwd
+        lint.mock_vcs([os.path.join('files', 'no_foobar.js')])
+        result = lint.roll(outgoing=True)
+        assert len(result) == 0
+        assert len(lint.failed) == 0
+
+        result = lint.roll(workdir=True)
+        assert len(result) == 0
+        assert len(lint.failed) == 0
+    finally:
+        os.chdir(oldcwd)
+
+
 def test_roll_catch_exception(lint, lintdir, files, capfd):
     lint.read(os.path.join(lintdir, 'raises.yml'))
 
