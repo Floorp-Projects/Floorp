@@ -1077,34 +1077,37 @@
     "description": "Time(ms) to purge dirty heap pages."
   },
   "LOW_MEMORY_EVENTS_VIRTUAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-virtual-memory events fired since last ping",
-    "cpp_guard": "XP_WIN"
+    "cpp_guard": "XP_WIN",
+    "bug_numbers": [711490,1451005]
   },
   "LOW_MEMORY_EVENTS_PHYSICAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-physical-memory events fired since last ping",
-    "cpp_guard": "XP_WIN"
+    "cpp_guard": "XP_WIN",
+    "bug_numbers": [711490,1451005]
   },
   "LOW_MEMORY_EVENTS_COMMIT_SPACE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 1024,
     "n_buckets": 21,
     "description": "Number of low-commit-space events fired since last ping",
-    "cpp_guard": "XP_WIN"
+    "cpp_guard": "XP_WIN",
+    "bug_numbers": [1451005]
   },
   "PAGE_FAULTS_HARD": {
     "record_in_processes": ["main", "content"],
