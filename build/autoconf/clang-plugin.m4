@@ -104,16 +104,19 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
+            _SAVE_CPPFLAGS="$CPPFLAGS"
             _SAVE_CXX="$CXX"
             _SAVE_MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
             unset MACOSX_DEPLOYMENT_TARGET
             CXXFLAGS="${LLVM_CXXFLAGS}"
+            CPPFLAGS=""
             CXX="${HOST_CXX}"
             AC_TRY_COMPILE([#include "clang/ASTMatchers/ASTMatchers.h"],
                            [clang::ast_matchers::cxxConstructExpr();],
                            ac_cv_have_new_ASTMatcher_names="yes",
                            ac_cv_have_new_ASTMatcher_names="no")
             CXX="$_SAVE_CXX"
+            CPPFLAGS="$_SAVE_CPPFLAGS"
             CXXFLAGS="$_SAVE_CXXFLAGS"
             export MACOSX_DEPLOYMENT_TARGET="$_SAVE_MACOSX_DEPLOYMENT_TARGET"
             AC_LANG_RESTORE
@@ -131,10 +134,12 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
             AC_LANG_SAVE
             AC_LANG_CPLUSPLUS
             _SAVE_CXXFLAGS="$CXXFLAGS"
+            _SAVE_CPPFLAGS="$CPPFLAGS"
             _SAVE_CXX="$CXX"
             _SAVE_MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
             unset MACOSX_DEPLOYMENT_TARGET
             CXXFLAGS="${LLVM_CXXFLAGS}"
+            CPPFLAGS=""
             CXX="${HOST_CXX}"
             AC_TRY_COMPILE([#include "clang/ASTMatchers/ASTMatchers.h"],
                            [using namespace clang::ast_matchers;
@@ -143,6 +148,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
                            ac_cv_has_accepts_ignoringParenImpCasts="yes",
                            ac_cv_has_accepts_ignoringParenImpCasts="no")
             CXX="$_SAVE_CXX"
+            CPPFLAGS="$_SAVE_CPPFLAGS"
             CXXFLAGS="$_SAVE_CXXFLAGS"
             export MACOSX_DEPLOYMENT_TARGET="$_SAVE_MACOSX_DEPLOYMENT_TARGET"
             AC_LANG_RESTORE
