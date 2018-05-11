@@ -298,6 +298,15 @@ nsHostRecord::ResolveComplete()
         }
     }
 
+    if (mTRRUsed && mNativeUsed) {
+        // both were used, accumulate comparative success
+        AccumulateCategorical(mNativeSuccess && mTRRSuccess?
+                              Telemetry::LABELS_DNS_TRR_COMPARE::BothWorked :
+                              ((mNativeSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::NativeWorked :
+                                (mTRRSuccess ? Telemetry::LABELS_DNS_TRR_COMPARE::TRRWorked:
+                                 Telemetry::LABELS_DNS_TRR_COMPARE::BothFailed))));
+    }
+
     switch(mResolverMode) {
     case MODE_NATIVEONLY:
     case MODE_TRROFF:
@@ -1686,6 +1695,11 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* aNe
                 TimeDuration age = TimeStamp::NowLoRes() - head->mValidStart;
                 Telemetry::Accumulate(Telemetry::DNS_CLEANUP_AGE,
                                       static_cast<uint32_t>(age.ToSeconds() / 60));
+                if (head->CheckExpiration(TimeStamp::Now()) !=
+                    nsHostRecord::EXP_EXPIRED) {
+                  Telemetry::Accumulate(Telemetry::DNS_PREMATURE_EVICTION,
+                                        static_cast<uint32_t>(age.ToSeconds() / 60));
+                }
             }
         }
     }

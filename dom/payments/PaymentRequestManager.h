@@ -23,7 +23,7 @@ class IPCPaymentActionRequest;
 
 /*
  *  PaymentRequestManager is a singleton used to manage the created PaymentRequests.
- *  It is also the communication agent to chrome proces.
+ *  It is also the communication agent to chrome process.
  */
 class PaymentRequestManager final
 {
