@@ -132,7 +132,8 @@ public:
 #endif
 
   SVGBBox GetBBoxForClipPathFrame(const SVGBBox& aBBox,
-                                  const gfxMatrix& aMatrix);
+                                  const gfxMatrix& aMatrix,
+                                  uint32_t aFlags);
 
   /**
    * If the clipPath element transforms its children due to

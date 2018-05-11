@@ -412,6 +412,9 @@ public:
     // this flag is set; Otherwise, getBBox returns the union bounds in
     // the coordinate system formed by the <use> element.
     eUseUserSpaceOfUseElement = 1 << 9,
+    // For a frame with a clip-path, if this flag is set then the result
+    // will not be clipped to the bbox of the content inside the clip-path.
+    eDoNotClipToBBoxOfContentInsideClipPath = 1 << 10,
   };
   /**
    * This function in primarily for implementing the SVG DOM function getBBox()
