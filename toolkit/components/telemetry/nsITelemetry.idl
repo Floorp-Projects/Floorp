@@ -472,10 +472,12 @@ interface nsITelemetry : nsISupports
    *   ]
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
-   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
+   * @param [aClear=false] Whether to clear out the events after snapshotting.
+   * @param aEventLimit How many events per process to limit the snapshot to contain, all if unspecified.
+   *                    Even if aClear, the leftover event records are not cleared.
    */
   [implicit_jscontext, optional_argc]
-  jsval snapshotEvents(in uint32_t aDataset, [optional] in boolean aClear);
+  jsval snapshotEvents(in uint32_t aDataset, [optional] in boolean aClear, [optional] in uint32_t aEventLimit);
 
   /**
    * Register new events to record them from addons. This allows registering multiple
