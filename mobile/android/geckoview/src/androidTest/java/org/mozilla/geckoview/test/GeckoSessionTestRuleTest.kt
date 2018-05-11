@@ -1279,10 +1279,118 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     @Test fun evaluateChromeJS() {
         assertThat("Should be able to access ChromeUtils",
                    sessionRule.evaluateChromeJS("ChromeUtils"), notNullValue())
+
+        // We rely on Preferences.jsm for pref support.
+        assertThat("Should be able to access Preferences.jsm",
+                   sessionRule.evaluateChromeJS("""
+                       ChromeUtils.import('resource://gre/modules/Preferences.jsm',
+                                          {}).Preferences"""), notNullValue())
     }
 
     @Test(expected = AssertionError::class)
     fun evaluateChromeJS_throwOnNotWithDevTools() {
         sessionRule.evaluateChromeJS("0")
+    }
+
+    @WithDevToolsAPI
+    @Test fun getPrefs_undefinedPrefReturnsNull() {
+        assertThat("Undefined pref should have null value",
+                   sessionRule.getPrefs("invalid.pref").asJSList(), equalTo(listOf(null)))
+    }
+
+    @Test(expected = AssertionError::class)
+    fun getPrefs_throwOnNotWithDevTools() {
+        sessionRule.getPrefs("invalid.pref")
+    }
+
+    @WithDevToolsAPI
+    @Test fun setPrefsUntilTestEnd() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "test.pref.bool" to true,
+                "test.pref.int" to 1,
+                "test.pref.foo" to "foo"))
+
+        assertThat("Prefs should be set",
+                   sessionRule.getPrefs(
+                           "test.pref.bool",
+                           "test.pref.int",
+                           "test.pref.foo",
+                           "test.pref.bar").asJSList(),
+                   equalTo(listOf(true, 1.0, "foo", null)))
+
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "test.pref.foo" to "bar",
+                "test.pref.bar" to "baz"))
+
+        assertThat("New prefs should be set",
+                   sessionRule.getPrefs(
+                           "test.pref.bool",
+                           "test.pref.int",
+                           "test.pref.foo",
+                           "test.pref.bar").asJSList(),
+                   equalTo(listOf(true, 1.0, "bar", "baz")))
+    }
+
+    @Test(expected = AssertionError::class)
+    fun setPrefsUntilTestEnd_throwOnNotWithDevTools() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("invalid.pref" to true))
+    }
+
+    @WithDevToolsAPI
+    @Test fun setPrefsDuringNextWait() {
+        sessionRule.setPrefsDuringNextWait(mapOf(
+                "test.pref.bool" to true,
+                "test.pref.int" to 1,
+                "test.pref.foo" to "foo"))
+
+        assertThat("Prefs should be set before wait",
+                   sessionRule.getPrefs(
+                           "test.pref.bool",
+                           "test.pref.int",
+                           "test.pref.foo").asJSList(),
+                   equalTo(listOf(true, 1.0, "foo")))
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("Prefs should be cleared after wait",
+                   sessionRule.getPrefs(
+                           "test.pref.bool",
+                           "test.pref.int",
+                           "test.pref.foo").asJSList(),
+                   equalTo(listOf(null, null, null)))
+    }
+
+    @WithDevToolsAPI
+    @Test fun setPrefsDuringNextWait_hasPrecedence() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "test.pref.int" to 1,
+                "test.pref.foo" to "foo"))
+
+        sessionRule.setPrefsDuringNextWait(mapOf(
+                "test.pref.foo" to "bar",
+                "test.pref.bar" to "baz"))
+
+        assertThat("Prefs should be overridden",
+                   sessionRule.getPrefs(
+                           "test.pref.int",
+                           "test.pref.foo",
+                           "test.pref.bar").asJSList(),
+                   equalTo(listOf(1.0, "bar", "baz")))
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        assertThat("Overridden prefs should be restored",
+                   sessionRule.getPrefs(
+                           "test.pref.int",
+                           "test.pref.foo",
+                           "test.pref.bar").asJSList(),
+                   equalTo(listOf(1.0, "foo", null)))
+    }
+
+    @Test(expected = AssertionError::class)
+    fun setPrefsDuringNextWait_throwOnNotWithDevTools() {
+        sessionRule.setPrefsDuringNextWait(mapOf("invalid.pref" to true))
     }
 }
