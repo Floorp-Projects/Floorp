@@ -24,6 +24,7 @@
 class nsIDOMWindow;
 
 class nsIDocShell;
+class nsIDocument;
 class nsRange;
 
 namespace mozilla {
@@ -71,15 +72,15 @@ protected:
 
   void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
-  nsresult GetRootNode(nsIDOMDocument* aDomDoc, nsIDOMNode** aNode);
+  nsresult GetRootNode(nsIDocument* aDomDoc, nsIDOMNode** aNode);
   nsresult GetSearchLimits(nsRange* aRange,
                            nsRange* aStartPt, nsRange* aEndPt,
-                           nsIDOMDocument* aDoc, mozilla::dom::Selection* aSel,
+                           nsIDocument* aDoc, mozilla::dom::Selection* aSel,
                            bool aWrap);
   nsresult SetRangeAroundDocument(nsRange* aSearchRange,
                                   nsRange* aStartPoint,
                                   nsRange* aEndPoint,
-                                  nsIDOMDocument* aDoc);
+                                  nsIDocument* aDoc);
 
 protected:
   nsString mSearchString;

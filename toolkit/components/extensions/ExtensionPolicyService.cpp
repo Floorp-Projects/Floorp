@@ -306,8 +306,7 @@ ExtensionPolicyService::CheckDocument(nsIDocument* aDocument)
 
     RefPtr<WebExtensionPolicy> policy = BasePrincipal::Cast(principal)->AddonPolicy();
     if (policy) {
-      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDocument);
-      ProcessScript().InitExtensionDocument(policy, doc);
+      ProcessScript().InitExtensionDocument(policy, aDocument);
     }
   }
 }
