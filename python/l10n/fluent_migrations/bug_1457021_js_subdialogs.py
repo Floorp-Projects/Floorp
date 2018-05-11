@@ -115,7 +115,6 @@ sitedata-total-size-calculating = { COPY("browser/chrome/browser/preferences/pre
         'browser/browser/preferences/siteDataSettings.ftl',
         transforms_from(
 """
-site-usage-persistent = { site-usage-pattern } (Persistent)
 site-data-remove-all =
     .label = { COPY("browser/chrome/browser/preferences/preferences.properties", "removeAllSiteData.label") }
     .accesskey = { COPY("browser/chrome/browser/preferences/preferences.properties", "removeAllSiteData.accesskey") }
@@ -127,6 +126,20 @@ site-data-removing-dialog =
     .buttonlabelaccept = { COPY("browser/chrome/browser/preferences/preferences.properties", "acceptRemove") }
 
 """) + [
+            # This replacement might not always work, since locales can either
+            # remove the space, or use a non-breaking space for "%1$S %2$S"
+            FTL.Message(
+                id=FTL.Identifier('site-usage-persistent'),
+                value=REPLACE(
+                    'browser/chrome/browser/preferences/preferences.properties',
+                    'siteUsagePersistent',
+                    {
+                        '%1$S %2$S': MESSAGE_REFERENCE(
+                            'site-usage-pattern'
+                        )
+                    }
+                )
+            ),
             FTL.Message(
                 id=FTL.Identifier('site-data-settings-description'),
                 value=REPLACE(
