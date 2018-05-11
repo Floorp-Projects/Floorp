@@ -17,7 +17,6 @@
 #include "mozilla/dom/Element.h"
 
 class nsIContent;
-class nsIDOMDocument;
 class nsAtom;
 class nsITransformObserver;
 class nsNodeInfoManager;

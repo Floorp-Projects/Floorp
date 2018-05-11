@@ -8,7 +8,6 @@
 #include "txXPathTreeWalker.h"
 
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsSyncLoadService.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -52,8 +51,7 @@ txParseDocumentFromURI(const nsAString& aHref,
         return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(theDocument);
-    *aResult = txXPathNativeNode::createXPathNode(domDocument);
+    *aResult = txXPathNativeNode::createXPathNode(theDocument);
     if (!*aResult) {
         NS_RELEASE(theDocument);
         return NS_ERROR_FAILURE;

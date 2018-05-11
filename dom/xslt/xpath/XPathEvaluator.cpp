@@ -15,7 +15,6 @@
 #include "nsError.h"
 #include "txURIUtils.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsDOMString.h"
 #include "nsNameSpaceManager.h"
 #include "nsContentUtils.h"

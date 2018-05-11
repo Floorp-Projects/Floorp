@@ -6,7 +6,6 @@
 #include "txXPathTreeWalker.h"
 #include "nsAtom.h"
 #include "nsIAttribute.h"
-#include "nsIDOMDocument.h"
 #include "nsINode.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -682,10 +681,9 @@ txXPathNativeNode::createXPathNode(nsINode* aNode, bool aKeepRootAlive)
 
 /* static */
 txXPathNode*
-txXPathNativeNode::createXPathNode(nsIDOMDocument* aDocument)
+txXPathNativeNode::createXPathNode(nsIDocument* aDocument)
 {
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
-    return new txXPathNode(document);
+    return new txXPathNode(aDocument);
 }
 
 /* static */
