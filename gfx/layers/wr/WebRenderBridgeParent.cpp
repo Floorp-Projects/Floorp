@@ -1296,14 +1296,17 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
 
-  // TODO: We can improve upon this by using two transactions: one for everything that
-  // doesn't change the display list (in other words does not cause the scene to be
-  // re-built), and one for the rest. This way, if an async pipeline needs to re-build
-  // its display list, other async pipelines can still be rendered while the scene is
-  // building.
-  wr::TransactionBuilder txn;
-  mAsyncImageManager->ApplyAsyncImages(txn);
-  mApi->SendTransaction(txn);
+  {
+    // TODO: We can improve upon this by using two transactions: one for everything that
+    // doesn't change the display list (in other words does not cause the scene to be
+    // re-built), and one for the rest. This way, if an async pipeline needs to re-build
+    // its display list, other async pipelines can still be rendered while the scene is
+    // building. Those other async pipelines can go in the other transaction that
+    // we create below.
+    wr::TransactionBuilder txn;
+    mAsyncImageManager->ApplyAsyncImages(txn);
+    mApi->SendTransaction(txn);
+  }
 
   if (!mAsyncImageManager->GetCompositeUntilTime().IsNull()) {
     // Trigger another CompositeToTarget() call because there might be another
@@ -1318,6 +1321,11 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     mPreviousFrameTimeStamp = TimeStamp();
     return;
   }
+
+  // Ensure this GenerateFrame is handled on the render backend thread rather
+  // than going through the scene builder thread. That way we continue generating
+  // frames with the old scene even during slow scene builds.
+  wr::TransactionBuilder txn(/* aUseSceneBuilderThread */ false);
 
   nsTArray<wr::WrOpacityProperty> opacityArray;
   nsTArray<wr::WrTransformProperty> transformArray;
