@@ -23,13 +23,13 @@ ifdef MOZ_DEBUG
 _RC_STRING += -DEBUG 1
 endif
 ifdef PROGRAM
-_RC_STRING += -BINARY $(PROGRAM)
+_RC_STRING += -BINARY $(notdir $(PROGRAM))
 else
 ifdef _PROGRAM
-_RC_STRING += -BINARY $(_PROGRAM)
+_RC_STRING += -BINARY $(notdir $(_PROGRAM))
 else
 ifdef SHARED_LIBRARY
-_RC_STRING += -BINARY $(SHARED_LIBRARY)
+_RC_STRING += -BINARY $(notdir $(SHARED_LIBRARY))
 endif
 endif
 endif
