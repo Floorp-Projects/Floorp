@@ -28,7 +28,7 @@ add_task(async function test_duping_local_newer() {
 
   // The mirror is out of sync because `bookmarkAAA5` is marked as merged,
   // even though it's not in Places, but we should still recover.
-  deepEqual(await buf.fetchInconsistencies(), {
+  deepEqual(await buf.fetchSyncStatusMismatches(), {
     missingLocal: ["bookmarkAAA5"],
     missingRemote: [],
     wrongSyncStatus: [],
