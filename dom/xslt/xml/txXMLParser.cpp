@@ -35,7 +35,7 @@ txParseDocumentFromURI(const nsAString& aHref,
 
     // Raw pointer, we want the resulting txXPathNode to hold a reference to
     // the document.
-    nsIDOMDocument* theDocument = nullptr;
+    nsIDocument* theDocument = nullptr;
     nsAutoSyncOperation sync(loaderDocument);
     rv = nsSyncLoadService::LoadDocument(documentURI,
                                          nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
@@ -52,7 +52,8 @@ txParseDocumentFromURI(const nsAString& aHref,
         return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
     }
 
-    *aResult = txXPathNativeNode::createXPathNode(theDocument);
+    nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(theDocument);
+    *aResult = txXPathNativeNode::createXPathNode(domDocument);
     if (!*aResult) {
         NS_RELEASE(theDocument);
         return NS_ERROR_FAILURE;
