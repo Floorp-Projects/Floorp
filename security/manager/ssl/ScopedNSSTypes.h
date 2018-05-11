@@ -356,6 +356,13 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSGNDigestInfo,
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueVFYContext,
                                       VFYContext,
                                       internal::VFY_DestroyContext_true)
+
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSEC_PKCS12DecoderContext,
+                                      SEC_PKCS12DecoderContext,
+                                      SEC_PKCS12DecoderFinish)
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueSEC_PKCS12ExportContext,
+                                      SEC_PKCS12ExportContext,
+                                      SEC_PKCS12DestroyExportContext)
 } // namespace mozilla
 
 #endif // ScopedNSSTypes_h
