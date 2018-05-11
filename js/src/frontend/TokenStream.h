@@ -1027,6 +1027,30 @@ class TokenStreamCharsBase
     MOZ_MUST_USE bool appendCodePointToTokenbuf(uint32_t codePoint);
 
   protected:
+    MOZ_MUST_USE bool
+    fillWithTemplateStringContents(CharBuffer& charbuf, const CharT* cur, const CharT* end) {
+        while (cur < end) {
+            // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are
+            // interpreted literally inside template literal contents; only
+            // literal CRLF sequences are normalized to '\n'.  See
+            // <https://tc39.github.io/ecma262/#sec-static-semantics-tv-and-trv>.
+            CharT ch = *cur;
+            if (ch == '\r') {
+                ch = '\n';
+                if ((cur + 1 < end) && (*(cur + 1) == '\n'))
+                    cur++;
+            }
+
+            if (!charbuf.append(ch))
+                return false;
+
+            cur++;
+        }
+
+        return true;
+    }
+
+  protected:
     /** Code units in the source code being tokenized. */
     SourceUnits sourceUnits;
 
@@ -1310,6 +1334,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::badToken;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
+    using CharsSharedBase::fillWithTemplateStringContents;
     using CharsBase::getChar;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::matchMultiUnitCodePoint;
@@ -1426,17 +1451,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
         }
 
         CharBuffer charbuf(anyChars.cx);
-        while (cur < end) {
-            CharT ch = *cur;
-            if (ch == '\r') {
-                ch = '\n';
-                if ((cur + 1 < end) && (*(cur + 1) == '\n'))
-                    cur++;
-            }
-            if (!charbuf.append(ch))
-                return nullptr;
-            cur++;
-        }
+        if (!fillWithTemplateStringContents(charbuf, cur, end))
+            return nullptr;
+
         return atomizeChars(anyChars.cx, charbuf.begin(), charbuf.length());
     }
 
