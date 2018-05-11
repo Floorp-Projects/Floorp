@@ -17,7 +17,6 @@
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"
