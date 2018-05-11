@@ -58,32 +58,32 @@
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 10, 20);
 
-      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 20, 29);
 
-      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 29, 36);
 
-      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+      evt = await runner.moveNextByGranularity(MovementGranularity.CHARACTER,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 36, 37);
 
-      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+      evt = await runner.moveNextByGranularity(MovementGranularity.CHARACTER,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 37, 38);
 
-      evt = await runner.moveCaretNext(MovementGranularity.PARAGRAPH,
+      evt = await runner.moveNextByGranularity(MovementGranularity.PARAGRAPH,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 38, 59);
 
-      evt = await runner.moveCaretPrevious(MovementGranularity.WORD,
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 59, 53);
