@@ -9969,6 +9969,30 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  rv = PrepareToMakeElementAbsolutePosition(aHandled, address_of(mNewBlock));
+  // PrepareToMakeElementAbsolutePosition() may restore selection with
+  // AutoSelectionRestorer.  Therefore, the editor might have already been
+  // destroyed now.
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditRules::PrepareToMakeElementAbsolutePosition(
+                 bool* aHandled,
+                 RefPtr<Element>* aTargetElement)
+{
+  MOZ_ASSERT(IsEditorDataAvailable());
+
+  MOZ_ASSERT(aHandled);
+  MOZ_ASSERT(aTargetElement);
+
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
   // Convert the selection ranges into "promoted" selection ranges: this
@@ -9981,8 +10005,8 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
 
   // Use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                            EditAction::setAbsolutePosition);
+  nsresult rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
+                                     EditAction::setAbsolutePosition);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10009,15 +10033,21 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
     RefPtr<Element> positionedDiv =
       HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                 splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!positionedDiv)) {
       return NS_ERROR_FAILURE;
     }
     // Remember our new block for postprocessing
-    mNewBlock = positionedDiv;
+    *aTargetElement = positionedDiv;
     // Delete anything that was in the list of nodes
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10025,10 +10055,14 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
     }
     // Put selection in new block
     *aHandled = true;
-    ErrorResult error;
-    SelectionRef().Collapse(RawRangeBoundary(positionedDiv, 0), error);
     // Don't restore the selection
     selectionRestorer.Abort();
+    ErrorResult error;
+    SelectionRef().Collapse(RawRangeBoundary(positionedDiv, 0), error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -10074,15 +10108,21 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
           curPositionedDiv =
             HTMLEditorRef().CreateNodeWithTransaction(
                               *nsGkAtoms::div, splitNodeResult.SplitPoint());
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           NS_WARNING_ASSERTION(curPositionedDiv,
             "Failed to create current positioned div element");
-          mNewBlock = curPositionedDiv;
+          *aTargetElement = curPositionedDiv;
         }
         EditorRawDOMPoint atEndOfCurPositionedDiv;
         atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
           HTMLEditorRef().CreateNodeWithTransaction(*containerName,
                                                     atEndOfCurPositionedDiv);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!curList)) {
           return NS_ERROR_FAILURE;
         }
@@ -10092,6 +10132,9 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
       // Tuck the node into the end of the active list
       rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                         *curList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10135,20 +10178,29 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
           curPositionedDiv =
             HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                       atListItemParent);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           NS_WARNING_ASSERTION(curPositionedDiv,
             "Failed to create current positioned div element");
-          mNewBlock = curPositionedDiv;
+          *aTargetElement = curPositionedDiv;
         }
         EditorRawDOMPoint atEndOfCurPositionedDiv;
         atEndOfCurPositionedDiv.SetToEndOf(curPositionedDiv);
         curList =
           HTMLEditorRef().CreateNodeWithTransaction(*containerName,
                                                     atEndOfCurPositionedDiv);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!curList)) {
           return NS_ERROR_FAILURE;
         }
       }
       rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*listItem, *curList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -10161,7 +10213,7 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
     if (!curPositionedDiv) {
       if (curNode->IsHTMLElement(nsGkAtoms::div)) {
         curPositionedDiv = curNode->AsElement();
-        mNewBlock = curPositionedDiv;
+        *aTargetElement = curPositionedDiv;
         curList = nullptr;
         continue;
       }
@@ -10174,17 +10226,23 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
       curPositionedDiv =
         HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curPositionedDiv)) {
         return NS_ERROR_FAILURE;
       }
       // Remember our new block for postprocessing
-      mNewBlock = curPositionedDiv;
+      *aTargetElement = curPositionedDiv;
       // curPositionedDiv is now the correct thing to put curNode in
     }
 
     // Tuck the node into the end of the active blockquote
     rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                       *curPositionedDiv);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
