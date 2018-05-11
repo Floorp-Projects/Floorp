@@ -187,9 +187,9 @@ protected:
   nsresult CreateTrailingBRIfNeeded();
 
   /**
-   * Creates a bogus text node if the document has no editable content.
+   * Creates a bogus <br> node if the root element has no editable content.
    */
-  nsresult CreateBogusNodeIfNeeded();
+  MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over

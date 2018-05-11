@@ -1459,6 +1459,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   // Create a br.
   RefPtr<Element> newBrElement =
     TextEditorRef().CreateHTMLContent(nsGkAtoms::br);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(!newBrElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1474,6 +1477,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   nsresult rv =
     TextEditorRef().InsertNodeWithTransaction(
                       *mBogusNode, EditorRawDOMPoint(rootElement, 0));
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1481,6 +1487,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   // Set selection.
   IgnoredErrorResult error;
   SelectionRef().Collapse(EditorRawDOMPoint(rootElement, 0), error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(!error.Failed(),
     "Failed to collapse selection at start of the root element");
   return NS_OK;
