@@ -352,70 +352,42 @@ class SyncedBookmarksMirror {
    */
   async store(records, { needsMerge = true } = {}) {
     let options = { needsMerge };
-    let ignoreCounts = {
-      bookmark: { id: 0, url: 0 },
-      query: { id: 0, url: 0 },
-      folder: { id: 0, root: 0 },
-      child: { id: 0, root: 0 },
-      livemark: { id: 0, feed: 0 },
-      separator: { id: 0 },
-      tombstone: { id: 0, root: 0 },
-    };
-    let extraTelemetryEvents = [];
-    try {
-      await this.db.executeBeforeShutdown(
-        "SyncedBookmarksMirror: store",
-        db => db.executeTransaction(async () => {
-          for await (let record of yieldingIterator(records)) {
-            MirrorLog.trace(`Storing in mirror: ${record.cleartextToString()}`);
-            switch (record.type) {
-              case "bookmark":
-                await this.storeRemoteBookmark(record, ignoreCounts, options);
-                continue;
+    await this.db.executeBeforeShutdown(
+      "SyncedBookmarksMirror: store",
+      db => db.executeTransaction(async () => {
+        for await (let record of yieldingIterator(records)) {
+          MirrorLog.trace(`Storing in mirror: ${record.cleartextToString()}`);
+          switch (record.type) {
+            case "bookmark":
+              await this.storeRemoteBookmark(record, options);
+              continue;
 
-              case "query":
-                await this.storeRemoteQuery(record, ignoreCounts, options);
-                continue;
+            case "query":
+              await this.storeRemoteQuery(record, options);
+              continue;
 
-              case "folder":
-                await this.storeRemoteFolder(record, ignoreCounts, options);
-                continue;
+            case "folder":
+              await this.storeRemoteFolder(record, options);
+              continue;
 
-              case "livemark":
-                await this.storeRemoteLivemark(record, ignoreCounts, options);
-                continue;
+            case "livemark":
+              await this.storeRemoteLivemark(record, options);
+              continue;
 
-              case "separator":
-                await this.storeRemoteSeparator(record, ignoreCounts, options);
-                continue;
+            case "separator":
+              await this.storeRemoteSeparator(record, options);
+              continue;
 
-              default:
-                if (record.deleted) {
-                  await this.storeRemoteTombstone(record, ignoreCounts,
-                                                  options);
-                  continue;
-                }
-            }
-            MirrorLog.warn("Ignoring record with unknown type", record.type);
-            extraTelemetryEvents.push({
-              method: "ignore",
-              value: "unknown-kind",
-              extra: { kind: record.type },
-            });
+            default:
+              if (record.deleted) {
+                await this.storeRemoteTombstone(record, options);
+                continue;
+              }
           }
-        }
-      ));
-    } finally {
-      for (let { method, value, extra } of extraTelemetryEvents) {
-        this.recordTelemetryEvent("mirror", method, value, extra);
-      }
-      for (let kind in ignoreCounts) {
-        let extra = normalizeExtraTelemetryFields(ignoreCounts[kind]);
-        if (extra) {
-          this.recordTelemetryEvent("mirror", "ignore", kind, extra);
+          MirrorLog.warn("Ignoring record with unknown type", record.type);
         }
       }
-    }
+    ));
   }
 
   /**
@@ -466,7 +438,7 @@ class SyncedBookmarksMirror {
     }
 
     let { missingLocal, missingRemote, wrongSyncStatus } =
-      await this.fetchInconsistencies();
+      await this.fetchSyncStatusMismatches();
     if (missingLocal.length) {
       MirrorLog.warn("Remote tree has merged items that don't exist locally",
                      missingLocal);
@@ -662,11 +634,10 @@ class SyncedBookmarksMirror {
     return rows.map(row => row.getResultByName("guid"));
   }
 
-  async storeRemoteBookmark(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteBookmark(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring bookmark with invalid ID", record.id);
-      ignoreCounts.bookmark.id++;
       return;
     }
 
@@ -674,7 +645,6 @@ class SyncedBookmarksMirror {
     if (!url) {
       MirrorLog.warn("Ignoring bookmark ${guid} with invalid URL ${url}",
                      { guid, url: record.bmkUri });
-      ignoreCounts.bookmark.url++;
       return;
     }
 
@@ -717,11 +687,10 @@ class SyncedBookmarksMirror {
     }
   }
 
-  async storeRemoteQuery(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteQuery(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring query with invalid ID", record.id);
-      ignoreCounts.query.id++;
       return;
     }
 
@@ -729,7 +698,6 @@ class SyncedBookmarksMirror {
     if (!url) {
       MirrorLog.warn("Ignoring query ${guid} with invalid URL ${url}",
                      { guid, url: record.bmkUri });
-      ignoreCounts.query.url++;
       return;
     }
 
@@ -743,7 +711,6 @@ class SyncedBookmarksMirror {
       if (!tagFolderName) {
         MirrorLog.warn("Ignoring tag query ${guid} with invalid tag name " +
                        "${tagFolderName}", { guid, tagFolderName });
-        ignoreCounts.query.url++;
         return;
       }
       url = new URL(`place:tag=${tagFolderName}`);
@@ -773,17 +740,15 @@ class SyncedBookmarksMirror {
         url: url.href, description, smartBookmarkName });
   }
 
-  async storeRemoteFolder(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteFolder(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring folder with invalid ID", record.id);
-      ignoreCounts.folder.id++;
       return;
     }
     if (guid == PlacesUtils.bookmarks.rootGuid) {
       // The Places root shouldn't be synced at all.
       MirrorLog.warn("Ignoring Places root record", record);
-      ignoreCounts.folder.root++;
     }
 
     let serverModified = determineServerModified(record);
@@ -810,13 +775,11 @@ class SyncedBookmarksMirror {
           MirrorLog.warn("Ignoring child of folder ${parentGuid} with " +
                          "invalid ID ${childRecordId}", { parentGuid: guid,
                                                           childRecordId });
-          ignoreCounts.child.id++;
           continue;
         }
         if (childGuid == PlacesUtils.bookmarks.rootGuid ||
             PlacesUtils.bookmarks.userContentRoots.includes(childGuid)) {
           MirrorLog.warn("Ignoring move for root", childGuid);
-          ignoreCounts.child.root++;
           continue;
         }
         await this.db.executeCached(`
@@ -841,11 +804,10 @@ class SyncedBookmarksMirror {
       }
   }
 
-  async storeRemoteLivemark(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteLivemark(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring livemark with invalid ID", record.id);
-      ignoreCounts.livemark.id++;
       return;
     }
 
@@ -853,7 +815,6 @@ class SyncedBookmarksMirror {
     if (!feedURL) {
       MirrorLog.warn("Ignoring livemark ${guid} with invalid feed URL ${url}",
                      { guid, url: record.feedUri });
-      ignoreCounts.livemark.feed++;
       return;
     }
 
@@ -874,11 +835,10 @@ class SyncedBookmarksMirror {
         siteURL: siteURL ? siteURL.href : null });
   }
 
-  async storeRemoteSeparator(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteSeparator(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring separator with invalid ID", record.id);
-      ignoreCounts.separator.id++;
       return;
     }
 
@@ -894,18 +854,16 @@ class SyncedBookmarksMirror {
         dateAdded });
   }
 
-  async storeRemoteTombstone(record, ignoreCounts, { needsMerge }) {
+  async storeRemoteTombstone(record, { needsMerge }) {
     let guid = validateGuid(record.id);
     if (!guid) {
       MirrorLog.warn("Ignoring tombstone with invalid ID", record.id);
-      ignoreCounts.tombstone.id++;
       return;
     }
 
     if (guid == PlacesUtils.bookmarks.rootGuid ||
         PlacesUtils.bookmarks.userContentRoots.includes(guid)) {
       MirrorLog.warn("Ignoring tombstone for root", guid);
-      ignoreCounts.tombstone.root++;
       return;
     }
 
@@ -929,19 +887,29 @@ class SyncedBookmarksMirror {
     let infos = {
       missingParents: [],
       missingChildren: [],
+      parentsWithGaps: [],
     };
 
     let orphanRows = await this.db.execute(`
-      SELECT v.guid AS guid, 1 AS missingParent, 0 AS missingChild
+      SELECT v.guid AS guid, 1 AS missingParent, 0 AS missingChild,
+             0 AS parentWithGaps
       FROM items v
       LEFT JOIN structure s ON s.guid = v.guid
       WHERE NOT v.isDeleted AND
             s.guid IS NULL
       UNION ALL
-      SELECT s.guid AS guid, 0 AS missingParent, 1 AS missingChild
+      SELECT s.guid AS guid, 0 AS missingParent, 1 AS missingChild,
+             0 AS parentsWithGaps
       FROM structure s
       LEFT JOIN items v ON v.guid = s.guid
-      WHERE v.guid IS NULL`);
+      WHERE v.guid IS NULL
+      UNION ALL
+      SELECT s.parentGuid AS guid, 0 AS missingParent, 0 AS missingChild,
+             1 AS parentWithGaps
+      FROM structure s
+      GROUP BY s.parentGuid
+      HAVING (sum(DISTINCT position + 1) -
+                  (count(*) * (count(*) + 1) / 2)) <> 0`);
 
     for await (let row of yieldingIterator(orphanRows)) {
       let guid = row.getResultByName("guid");
@@ -952,6 +920,10 @@ class SyncedBookmarksMirror {
       let missingChild = row.getResultByName("missingChild");
       if (missingChild) {
         infos.missingChildren.push(guid);
+      }
+      let parentWithGaps = row.getResultByName("parentWithGaps");
+      if (parentWithGaps) {
+        infos.parentsWithGaps.push(guid);
       }
     }
 
@@ -971,7 +943,7 @@ class SyncedBookmarksMirror {
    *           - `missingRemote`: NORMAL items in the local tree that aren't
    *             mentioned in the remote tree.
    */
-  async fetchInconsistencies() {
+  async fetchSyncStatusMismatches() {
     let infos = {
       missingLocal: [],
       missingRemote: [],
