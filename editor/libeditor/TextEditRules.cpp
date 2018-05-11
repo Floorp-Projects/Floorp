@@ -743,14 +743,17 @@ TextEditRules::WillInsertText(EditAction aAction,
     mPasswordText.Insert(*outString, start);
 
     if (LookAndFeel::GetEchoPassword() && !DontEchoPassword()) {
-      HideLastPWInput();
+      nsresult rv = HideLastPWInput();
       mLastStart = start;
       mLastLength = outString->Length();
       if (mTimer) {
         mTimer->Cancel();
-      } else {
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (!mTimer) {
         mTimer = NS_NewTimer();
-        NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
       }
       mTimer->InitWithCallback(this, LookAndFeel::GetPasswordMaskDelay(),
                                nsITimer::TYPE_ONE_SHOT);
@@ -1010,11 +1013,14 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                               start, end);
 
     if (LookAndFeel::GetEchoPassword()) {
-      HideLastPWInput();
+      rv = HideLastPWInput();
       mLastStart = start;
       mLastLength = 0;
       if (mTimer) {
         mTimer->Cancel();
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
     }
 
@@ -1606,6 +1612,7 @@ TextEditRules::Notify(nsITimer* aTimer)
   // Check whether our text editor's password flag was changed before this
   // "hide password character" timer actually fires.
   nsresult rv = IsPasswordEditor() ? HideLastPWInput() : NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to hide last password input");
   ASSERT_PASSWORD_LENGTHS_EQUAL();
   mLastLength = 0;
   return rv;
@@ -1643,12 +1650,21 @@ TextEditRules::HideLastPWInput()
 
   selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText,
                                     IgnoreErrors());
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   // XXXbz Selection::Collapse/Extend take int32_t, but there are tons of
   // callsites... Converting all that is a battle for another day.
   DebugOnly<nsresult> rv = SelectionRef().Collapse(selNode, start);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
   if (start != end) {
     rv = SelectionRef().Extend(selNode, end);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to extend selection");
   }
   return NS_OK;
