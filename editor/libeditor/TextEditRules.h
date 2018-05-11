@@ -8,6 +8,7 @@
 
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
 #include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
@@ -209,13 +210,21 @@ protected:
    *
    * @param aPointToInsert  The point where the new <br> element will be
    *                        inserted.
-   * @return                Returns created <br> element.
+   * @return                Returns created <br> element or an error code
+   *                        if couldn't create new <br> element.
    */
   template<typename PT, typename CT>
-  already_AddRefed<Element>
+  CreateElementResult
   CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
   {
-    return CreateBRInternal(aPointToInsert, false);
+    CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
+#ifdef DEBUG
+    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
+    if (!CanHandleEditAction()) {
+      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
+    }
+#endif // #ifdef DEBUG
+    return ret;
   }
 
   /**
@@ -223,28 +232,22 @@ protected:
    *
    * @param aPointToInsert  The point where the new moz-<br> element will be
    *                        inserted.
-   * @return                Returns created moz-<br> element.
+   * @return                Returns created <br> element or an error code
+   *                        if couldn't create new <br> element.
    */
   template<typename PT, typename CT>
-  already_AddRefed<Element>
+  CreateElementResult
   CreateMozBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
   {
-    return CreateBRInternal(aPointToInsert, true);
+    CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
+#ifdef DEBUG
+    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
+    if (!CanHandleEditAction()) {
+      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
+    }
+#endif // #ifdef DEBUG
+    return ret;
   }
-
-  /**
-   * Create a normal <br> element or a moz-<br> element and insert it to
-   * aPointToInsert.
-   *
-   * @param aParentToInsert     The point where the new <br> element will be
-   *                            inserted.
-   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
-   *                            element.  Otherwise, false.
-   * @return                    Returns created <br> element.
-   */
-  already_AddRefed<Element>
-  CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
-                   bool aCreateMozBR);
 
   void UndefineCaretBidiLevel();
 
@@ -266,6 +269,22 @@ protected:
 
 private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
+
+  /**
+   * Create a normal <br> element or a moz-<br> element and insert it to
+   * aPointToInsert.
+   *
+   * @param aParentToInsert     The point where the new <br> element will be
+   *                            inserted.
+   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
+   *                            element.  Otherwise, false.
+   * @return                    Returns created <br> element and error code.
+   *                            If it succeeded, never returns nullptr.
+   */
+  template<typename PT, typename CT>
+  CreateElementResult
+  CreateBRInternal(const EditorDOMPointBase<PT, CT>& aPointToInsert,
+                   bool aCreateMozBR);
 
 protected:
   /**

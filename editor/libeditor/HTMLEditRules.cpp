@@ -5598,9 +5598,10 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     NS_ENSURE_SUCCESS(rv, rv);
     *aHandled = true;
     // Put in a moz-br so that it won't get deleted
-    RefPtr<Element> brElement = CreateMozBR(EditorRawDOMPoint(div, 0));
-    if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
+    CreateElementResult createMozBrResult =
+      CreateMozBR(EditorRawDOMPoint(div, 0));
+    if (NS_WARN_IF(createMozBrResult.Failed())) {
+      return createMozBrResult.Rv();
     }
     EditorRawDOMPoint atStartOfDiv(div, 0);
     ErrorResult error;
@@ -7336,9 +7337,10 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
       return rv;
     }
     if (isEmptyNode) {
-      RefPtr<Element> brElement = CreateMozBR(EditorRawDOMPoint(prevItem, 0));
-      if (NS_WARN_IF(!brElement)) {
-        return NS_ERROR_FAILURE;
+      CreateElementResult createMozBrResult =
+        CreateMozBR(EditorRawDOMPoint(prevItem, 0));
+      if (NS_WARN_IF(createMozBrResult.Failed())) {
+        return createMozBrResult.Rv();
       }
     }
   }
@@ -7804,9 +7806,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
       return rv;
     }
     if (isEmptyNode) {
-      RefPtr<Element> brElement = CreateMozBR(EditorRawDOMPoint(prevItem, 0));
-      if (NS_WARN_IF(!brElement)) {
-        return NS_ERROR_FAILURE;
+      CreateElementResult createMozBrResult =
+        CreateMozBR(EditorRawDOMPoint(prevItem, 0));
+      if (NS_WARN_IF(createMozBrResult.Failed())) {
+        return createMozBrResult.Rv();
       }
     } else {
       rv = HTMLEditorRef().IsEmptyNode(&aListItem, &isEmptyNode, true);
@@ -8558,8 +8561,10 @@ HTMLEditRules::AdjustSpecialBreaks()
     // is in this node.
     EditorRawDOMPoint endOfNode;
     endOfNode.SetToEndOf(node);
-    RefPtr<Element> brElement = CreateMozBR(endOfNode);
-    if (NS_WARN_IF(!brElement)) {
+    // XXX This method should return nsreuslt due to may be destroyed by this
+    //     CreateMozBr() call.
+    CreateElementResult createMozBrResult = CreateMozBR(endOfNode);
+    if (NS_WARN_IF(createMozBrResult.Failed())) {
       return;
     }
   }
@@ -8782,9 +8787,9 @@ HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
       }
 
       // we know we can skip the rest of this routine given the cirumstance
-      RefPtr<Element> brElement = CreateMozBR(point);
-      if (NS_WARN_IF(!brElement)) {
-        return NS_ERROR_FAILURE;
+      CreateElementResult createMozBrResult = CreateMozBR(point);
+      if (NS_WARN_IF(createMozBrResult.Failed())) {
+        return createMozBrResult.Rv();
       }
       return NS_OK;
     }
@@ -8812,11 +8817,11 @@ HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
           // need to insert special moz BR. Why?  Because if we don't
           // the user will see no new line for the break.  Also, things
           // like table cells won't grow in height.
-          RefPtr<Element> brElement = CreateMozBR(point);
-          if (NS_WARN_IF(!brElement)) {
-            return NS_ERROR_FAILURE;
+          CreateElementResult createMozBrResult = CreateMozBR(point);
+          if (NS_WARN_IF(createMozBrResult.Failed())) {
+            return createMozBrResult.Rv();
           }
-          point.Set(brElement);
+          point.Set(createMozBrResult.GetNewNode());
           // selection stays *before* moz-br, sticking to it
           ErrorResult error;
           SelectionRef().SetInterlinePosition(true, error);
@@ -9450,10 +9455,11 @@ HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
     return NS_OK;
   }
 
-  RefPtr<Element> brElement =
-    CreateBRInternal(EditorRawDOMPoint(&aNode, 0), aInsertMozBR);
-  if (NS_WARN_IF(!brElement)) {
-    return NS_ERROR_FAILURE;
+  CreateElementResult createBrResult =
+    !aInsertMozBR ? CreateBR(EditorRawDOMPoint(&aNode, 0)) :
+                    CreateMozBR(EditorRawDOMPoint(&aNode, 0));
+  if (NS_WARN_IF(createBrResult.Failed())) {
+    return createBrResult.Rv();
   }
   return NS_OK;
 }
