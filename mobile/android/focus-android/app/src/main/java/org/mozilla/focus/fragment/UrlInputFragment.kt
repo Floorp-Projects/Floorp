@@ -37,6 +37,8 @@ import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.whatsnew.WhatsNew
 
+class FocusCrashException : Exception()
+
 /**
  * Fragment for displaying the URL input controls.
  */
@@ -484,6 +486,8 @@ class UrlInputFragment :
         }
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
+            if (input == "focus:crash") { throw FocusCrashException() }
+
             ViewUtils.hideKeyboard(urlView)
 
             val isUrl = UrlUtils.isUrl(input)
