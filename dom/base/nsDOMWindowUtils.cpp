@@ -3629,21 +3629,6 @@ nsDOMWindowUtils::DispatchEventToChromeOnly(EventTarget* aTarget,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::RequestCompositorProperty(const nsAString& property,
-                                            float* aResult)
-{
-  if (nsIWidget* widget = GetWidget()) {
-    mozilla::layers::LayerManager* manager = widget->GetLayerManager();
-    if (manager) {
-      *aResult = manager->RequestProperty(property);
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetOMTAStyle(Element* aElement,
                                const nsAString& aProperty,
                                const nsAString& aPseudoElement,
