@@ -495,14 +495,19 @@ CompositorBridgeParent::StopAndClearResources()
   }
 
   if (mWrBridge) {
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    ForEachIndirectLayerTree([] (LayerTreeState* lts, LayersId) -> void {
-      if (lts->mWrBridge) {
-        lts->mWrBridge->Destroy();
-        lts->mWrBridge = nullptr;
-      }
-      lts->mParent = nullptr;
-    });
+    { // scope lock
+      MonitorAutoLock lock(*sIndirectLayerTreesLock);
+      ForEachIndirectLayerTree([] (LayerTreeState* lts, LayersId) -> void {
+        if (lts->mWrBridge) {
+          lts->mWrBridge->Destroy();
+          lts->mWrBridge = nullptr;
+        }
+        lts->mParent = nullptr;
+      });
+    }
+
+    // Ensure we are not holding the sIndirectLayerTreesLock here because we
+    // are going to block on WR threads in order to shut it down properly.
     mWrBridge->Destroy();
     mWrBridge = nullptr;
     if (mAsyncImageManager) {
