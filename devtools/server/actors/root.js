@@ -512,6 +512,11 @@ RootActor.prototype = {
     // If the request doesn't contains id parameter or id is 0
     // (id == 0, based on onListProcesses implementation)
     if ((!("id" in request)) || request.id === 0) {
+      if (this._chromeActor && (!this._chromeActor.docShell ||
+          this._chromeActor.docShell.isBeingDestroyed)) {
+        this._globalActorPool.removeActor(this._chromeActor);
+        this._chromeActor = null;
+      }
       if (!this._chromeActor) {
         // Create a ChromeActor for the parent process
         let { ChromeActor } = require("devtools/server/actors/chrome");
