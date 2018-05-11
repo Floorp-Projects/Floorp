@@ -8,7 +8,6 @@ DIRS += [
     'PrimaryPanes',
     'SecondaryPanes',
     'shared',
-    'test',
 ]
 
 DevToolsModules(

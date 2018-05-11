@@ -249,6 +249,15 @@ function assertNotPaused(dbg) {
   ok(!isPaused(dbg), "client is not paused");
 }
 
+/**
+ * Assert that the debugger is currently paused.
+ * @memberof mochitest/asserts
+ * @static
+ */
+function assertPaused(dbg) {
+  ok(isPaused(dbg), "client is paused");
+}
+
 function getVisibleSelectedFrameLine(dbg) {
   const { selectors: { getVisibleSelectedFrame }, getState } = dbg;
   const frame = getVisibleSelectedFrame(getState());
@@ -1014,6 +1023,7 @@ const selectors = {
   debugErrorLine: ".new-debug-line-error",
   codeMirror: ".CodeMirror",
   resume: ".resume.active",
+  pause: ".pause.active",
   sourceTabs: ".source-tabs",
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
