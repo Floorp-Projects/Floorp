@@ -1498,8 +1498,6 @@ PresShell::UpdatePreferenceStyles()
     return;
   }
 
-  mStyleSet->BeginUpdate();
-
   RemovePreferenceStyles();
 
   // NOTE(emilio): This sheet is added as an agent sheet, because we don't want
@@ -1508,8 +1506,6 @@ PresShell::UpdatePreferenceStyles()
   // without too much trouble I'd think.
   mStyleSet->AppendStyleSheet(SheetType::Agent, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
-
-  mStyleSet->EndUpdate();
 }
 
 void
@@ -1532,8 +1528,6 @@ PresShell::AddUserSheet(StyleSheet* aSheet)
   nsCOMPtr<nsIStyleSheetService> dummy =
     do_GetService(NS_STYLESHEETSERVICE_CONTRACTID);
 
-  mStyleSet->BeginUpdate();
-
   nsStyleSheetService* sheetService = nsStyleSheetService::gInstance;
   nsTArray<RefPtr<StyleSheet>>& userSheets = *sheetService->UserStyleSheets();
   // Iterate forwards when removing so the searches for RemoveStyleSheet are as
@@ -1548,7 +1542,6 @@ PresShell::AddUserSheet(StyleSheet* aSheet)
     mStyleSet->PrependStyleSheet(SheetType::User, sheet);
   }
 
-  mStyleSet->EndUpdate();
   RestyleForCSSRuleChanges();
 }
 
@@ -2534,8 +2527,6 @@ PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #ifdef DEBUG
   mUpdateCount++;
 #endif
-  if (aUpdateType & UPDATE_STYLE)
-    mStyleSet->BeginUpdate();
 }
 
 void
@@ -2547,7 +2538,6 @@ PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 #endif
 
   if (aUpdateType & UPDATE_STYLE) {
-    mStyleSet->EndUpdate();
     if (mStyleSet->StyleSheetsHaveChanged()) {
       RestyleForCSSRuleChanges();
     }

@@ -147,9 +147,6 @@ public:
 
   void SetAuthorStyleDisabled(bool aStyleDisabled);
 
-  void BeginUpdate();
-  nsresult EndUpdate();
-
   already_AddRefed<ComputedStyle>
   ResolveStyleFor(dom::Element* aElement,
                   ComputedStyle* aParentContext,
