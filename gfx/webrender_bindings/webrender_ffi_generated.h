@@ -1579,6 +1579,8 @@ WR_INLINE
 uintptr_t wr_root_scroll_node_id()
 WR_FUNC;
 
+extern void wr_schedule_render(WrWindowId aWindowId);
+
 WR_INLINE
 void wr_set_item_tag(WrState *aState,
                      uint64_t aScrollId,
