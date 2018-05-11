@@ -38,7 +38,6 @@ from mozharness.mozilla.buildbot import (
     TBPL_SUCCESS,
     TBPL_WORST_LEVEL_TUPLE,
 )
-from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
@@ -668,7 +667,7 @@ def generate_build_UID():
     return uuid.uuid4().hex
 
 
-class BuildScript(BuildbotMixin, PurgeMixin, BalrogMixin,
+class BuildScript(BuildbotMixin, BalrogMixin,
                   VirtualenvMixin, MercurialScript,
                   SecretsMixin, PerfherderResourceOptionsMixin):
     def __init__(self, **kwargs):

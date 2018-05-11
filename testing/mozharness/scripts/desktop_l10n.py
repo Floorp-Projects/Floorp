@@ -22,7 +22,6 @@ from mozharness.base.script import BaseScript
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
-from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.building.buildbase import (
     MakeUploadOutputParser,
     get_mozconfig_path,
@@ -66,7 +65,7 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 # DesktopSingleLocale {{{1
 class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
-                          VCSMixin, PurgeMixin, BaseScript,
+                          VCSMixin, BaseScript,
                           BalrogMixin, MarMixin, VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
@@ -183,7 +182,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 "buildid_option": "BuildID",
                 "application_ini": "application.ini",
                 "log_name": "single_locale",
-                "clobber_file": 'CLOBBER',
                 "appName": "Firefox",
                 "hashType": "sha512",
                 'virtualenv_modules': [
@@ -192,7 +190,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 'virtualenv_path': 'venv',
             },
         }
-        #
 
         LocalesMixin.__init__(self)
         BaseScript.__init__(
@@ -534,12 +531,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                                    write_to_file=True)
 
     # Actions {{{2
-    def clobber(self):
-        """clobber"""
-        dirs = self.query_abs_dirs()
-        clobber_dirs = (dirs['abs_objdir'], dirs['abs_upload_dir'])
-        PurgeMixin.clobber(self, always_clobber_dirs=clobber_dirs)
-
     def pull(self):
         """pulls source code"""
         config = self.config
@@ -593,12 +584,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         config_dir = os.path.join(dirs['abs_objdir'], 'config')
         env = self.query_bootstrap_env()
         return self._make(target=['export'], cwd=config_dir, env=env)
-
-    def _clobber_file(self):
-        """returns the full path of the clobber file"""
-        config = self.config
-        dirs = self.query_abs_dirs()
-        return os.path.join(dirs['abs_objdir'], config.get('clobber_file'))
 
     def _copy_mozconfig(self):
         """copies the mozconfig file into abs_mozilla_dir/.mozconfig
