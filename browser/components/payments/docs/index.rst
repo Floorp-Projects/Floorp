@@ -58,7 +58,7 @@ The UI talks to the DOM code via the ``nsIPaymentRequestService`` interface.
 Dialog Architecture
 ===================
 
-Privileged wrapper XHTML document (paymentDialogWrapper.xhtml) containing a remote ``<iframe mozbrowser="true" remote="true">`` containing unprivileged XHTML (paymentRequest.xhtml).
+Privileged wrapper XUL document (paymentDialogWrapper.xul) containing a remote ``<xul:browser="true" remote="true">`` containing unprivileged XHTML (paymentRequest.xhtml).
 Keeping the dialog contents unprivileged is useful since the dialog will render payment line items and shipping options that are provided by web developers and should therefore be considered untrusted.
 In order to communicate across the process boundary a privileged frame script (`paymentDialogFrameScript.js`) is loaded into the iframe to relay messages.
 This is because the unprivileged document cannot access message managers.
