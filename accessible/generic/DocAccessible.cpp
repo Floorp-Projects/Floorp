@@ -698,7 +698,6 @@ DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
 
 NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(DocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(DocAccessible)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(DocAccessible)
 
 void
 DocAccessible::AttributeWillChange(dom::Element* aElement,
