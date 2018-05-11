@@ -876,6 +876,11 @@ Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
 nsresult
 Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
 {
+  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+             "ApplyFullHashes() MUST NOT be called on update thread");
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "ApplyFullHashes() must be called on the classifier worker thread.");
+
   LOG(("Applying %zu table gethashes.", aUpdates->Length()));
 
   ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
