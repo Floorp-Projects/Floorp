@@ -27,7 +27,6 @@
 #include "TypeInState.h"
 
 #include "nsHTMLDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocumentInlines.h"
 #include "nsISelectionController.h"
 #include "nsILinkHandler.h"

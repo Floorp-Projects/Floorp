@@ -74,7 +74,6 @@
 #include "nsAtom.h"                    // for nsAtom
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDocument.h"                // for nsIDocument
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMEventListener.h"        // for nsIDOMEventListener
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc.
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
@@ -654,17 +653,10 @@ EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMDocument>
-EditorBase::GetDOMDocument()
-{
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
-  return domDocument.forget();
-}
-
 NS_IMETHODIMP
-EditorBase::GetDocument(nsIDOMDocument** aDoc)
+EditorBase::GetDocument(nsIDocument** aDoc)
 {
-  *aDoc = GetDOMDocument().take();
+  NS_IF_ADDREF(*aDoc = mDocument);
   return *aDoc ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 

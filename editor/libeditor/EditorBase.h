@@ -39,7 +39,6 @@
 class mozInlineSpellChecker;
 class nsAtom;
 class nsIContent;
-class nsIDOMDocument;
 class nsIDOMNode;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
@@ -239,7 +238,6 @@ public:
                         const nsAString& aInitialValue);
 
   bool IsInitialized() const { return !!mDocument; }
-  already_AddRefed<nsIDOMDocument> GetDOMDocument();
   nsIDocument* GetDocument() const { return mDocument; }
   nsIPresShell* GetPresShell() const
   {
