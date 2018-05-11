@@ -18,7 +18,6 @@
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIPrincipal.h"
 #include "nsContentUtils.h" // for kLoadAsData
 #include "nsThreadUtils.h"
@@ -47,7 +46,7 @@ public:
     nsresult LoadDocument(nsIChannel* aChannel,
                           bool aChannelIsSync, bool aForceToXML,
                           ReferrerPolicy aReferrerPolicy,
-                          nsIDOMDocument** aResult);
+                          nsIDocument** aResult);
 
     NS_FORWARD_NSISTREAMLISTENER(mListener->)
     NS_DECL_NSIREQUESTOBSERVER
@@ -135,7 +134,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
                            bool aChannelIsSync,
                            bool aForceToXML,
                            ReferrerPolicy aReferrerPolicy,
-                           nsIDOMDocument **aResult)
+                           nsIDocument **aResult)
 {
     NS_ENSURE_ARG(aChannel);
     NS_ENSURE_ARG_POINTER(aResult);
@@ -211,7 +210,9 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
 
     NS_ENSURE_TRUE(document->GetRootElement(), NS_ERROR_FAILURE);
 
-    return CallQueryInterface(document, aResult);
+    document.forget(aResult);
+
+    return NS_OK;
 }
 
 nsresult
@@ -313,7 +314,7 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI,
                                 nsILoadGroup *aLoadGroup,
                                 bool aForceToXML,
                                 ReferrerPolicy aReferrerPolicy,
-                                nsIDOMDocument** aResult)
+                                nsIDocument** aResult)
 {
     nsCOMPtr<nsIChannel> channel;
     nsresult rv = NS_NewChannel(getter_AddRefs(channel),
