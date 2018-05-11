@@ -150,7 +150,8 @@ public:
           mHasIdAttribute(false),
           mHasClassAttribute(false),
           mHasStyleAttribute(false),
-          mAttributes(nullptr)
+          mAttributes(nullptr),
+          mIsAtom(nullptr)
     {
     }
 
@@ -193,6 +194,7 @@ public:
     uint32_t                 mHasClassAttribute:1;
     uint32_t                 mHasStyleAttribute:1;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
+    RefPtr<nsAtom>           mIsAtom;
 };
 
 namespace mozilla {

@@ -766,22 +766,42 @@ CustomElementRegistry::Define(const nsAString& aName,
    *       definition in this specification), then throw a "NotSupportedError"
    *       DOMException.
    *    3. Set localName to extends.
+   *
+   * Special note for XUL elements:
+   *
+   * For step 7.1, we'll subject XUL to the same rules as HTML, so that a
+   * custom built-in element will not be extending from a dashed name.
+   * Step 7.2 is disregarded. But, we do check if the name is a dashed name
+   * (i.e. step 2) given that there is no reason for a custom built-in element
+   * type to take on a non-dashed name.
+   * This also ensures the name of the built-in custom element type can never
+   * be the same as the built-in element name, so we don't break the assumption
+   * elsewhere.
    */
   nsAutoString localName(aName);
   if (aOptions.mExtends.WasPassed()) {
     RefPtr<nsAtom> extendsAtom(NS_Atomize(aOptions.mExtends.Value()));
-    if (nsContentUtils::IsCustomElementName(extendsAtom, nameSpaceID)) {
+    if (nsContentUtils::IsCustomElementName(extendsAtom, kNameSpaceID_XHTML)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
 
-    // bgsound and multicol are unknown html element.
-    int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(extendsAtom);
-    if (tag == eHTMLTag_userdefined ||
-        tag == eHTMLTag_bgsound ||
-        tag == eHTMLTag_multicol) {
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+    if (nameSpaceID == kNameSpaceID_XHTML) {
+      // bgsound and multicol are unknown html element.
+      int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(extendsAtom);
+      if (tag == eHTMLTag_userdefined ||
+          tag == eHTMLTag_bgsound ||
+          tag == eHTMLTag_multicol) {
+        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return;
+      }
+    } else { // kNameSpaceID_XUL
+      // As stated above, ensure the name of the customized built-in element
+      // (the one that goes to the |is| attribute) is a dashed name.
+      if (!nsContentUtils::IsNameWithDash(nameAtom)) {
+        aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return;
+      }
     }
 
     localName.Assign(aOptions.mExtends.Value());
