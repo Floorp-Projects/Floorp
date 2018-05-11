@@ -28,7 +28,6 @@ from mozharness.base.errors import MakefileErrorList
 from mozharness.base.log import OutputParser
 from mozharness.base.transfer import TransferMixin
 from mozharness.mozilla.buildbot import BuildbotMixin
-from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -41,7 +40,7 @@ from mozharness.base.python import VirtualenvMixin
 # MobileSingleLocale {{{1
 class MobileSingleLocale(LocalesMixin, ReleaseMixin,
                          TransferMixin, TooltoolMixin, BuildbotMixin,
-                         PurgeMixin, MercurialScript, BalrogMixin,
+                         MercurialScript, BalrogMixin,
                          VirtualenvMixin, SecretsMixin):
     config_options = [[
         ['--locale', ],
@@ -367,14 +366,6 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
                                    write_to_file=True)
 
     # Actions {{{2
-    def clobber(self):
-        self.read_buildbot_config()
-        dirs = self.query_abs_dirs()
-        c = self.config
-        objdir = os.path.join(dirs['abs_work_dir'], c['mozilla_dir'],
-                              c['objdir'])
-        super(MobileSingleLocale, self).clobber(always_clobber_dirs=[objdir])
-
     def pull(self):
         c = self.config
         dirs = self.query_abs_dirs()

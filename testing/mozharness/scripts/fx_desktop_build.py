@@ -54,7 +54,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # nightly stuff
                 "nightly_build": False,
                 'balrog_credentials_file': 'oauth.txt',
-                'periodic_clobber': 168,
                 # hg tool stuff
                 "tools_repo": "https://hg.mozilla.org/build/tools",
                 # Seed all clones with mozilla-unified. This ensures subsequent
@@ -77,7 +76,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 # try will overwrite these
                 'clone_with_purge': False,
                 'clone_by_revision': False,
-                'use_clobberer': True,
 
                 'virtualenv_modules': [
                     'requests==2.8.1',
@@ -208,7 +206,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         return self.abs_dirs
 
         # Actions {{{2
-        # clobber in BuildingMixin -> PurgeMixin
 
     def set_extra_try_arguments(self, action, success=None):
         """ Override unneeded method from TryToolsMixin """
