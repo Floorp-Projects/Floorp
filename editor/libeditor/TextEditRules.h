@@ -255,7 +255,12 @@ protected:
                                      nsIEditor::EDirection aAction,
                                      bool* aCancel);
 
-  nsresult HideLastPWInput();
+  /**
+   * HideLastPWInput() replaces last password characters which have not
+   * been replaced with mask character like '*' with with the mask character.
+   * This method may cause destroying the editor.
+   */
+  MOZ_MUST_USE nsresult HideLastPWInput();
 
   nsresult CollapseSelectionToTrailingBRIfNeeded();
 
