@@ -1412,6 +1412,9 @@ TextEditRules::CreateTrailingBRIfNeeded()
   lastChild->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                                   NS_LITERAL_STRING("_moz"),
                                   true);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   return NS_OK;
 }
 

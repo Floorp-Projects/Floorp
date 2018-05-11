@@ -184,7 +184,7 @@ protected:
   /**
    * Creates a trailing break in the text doc if there is not one already.
    */
-  nsresult CreateTrailingBRIfNeeded();
+  MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
    * Creates a bogus <br> node if the root element has no editable content.
