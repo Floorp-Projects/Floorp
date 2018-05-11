@@ -799,7 +799,6 @@ PresShell::PresShell()
 #ifdef DEBUG
   , mInVerifyReflow(false)
   , mCurrentReflowRoot(nullptr)
-  , mUpdateCount(0)
 #endif
 #ifdef MOZ_REFLOW_PERF
   , mReflowCountMgr(nullptr)
@@ -2522,21 +2521,8 @@ PresShell::GetCanvasFrame() const
 }
 
 void
-PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-#ifdef DEBUG
-  mUpdateCount++;
-#endif
-}
-
-void
 PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-#ifdef DEBUG
-  MOZ_ASSERT(0 != mUpdateCount, "too many EndUpdate's");
-  --mUpdateCount;
-#endif
-
   if (aUpdateType & UPDATE_STYLE) {
     if (mStyleSet->StyleSheetsHaveChanged()) {
       RestyleForCSSRuleChanges();
