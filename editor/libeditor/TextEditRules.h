@@ -178,7 +178,15 @@ protected:
   WillSetText(bool* aCancel, bool* aHandled,
               const nsAString* inString, int32_t aMaxLength);
 
-  void WillInsert(bool* aCancel);
+  /**
+   * Called before inserting something into the editor.
+   * This method may removes mBougsNode if there is.  Therefore, this method
+   * might cause destroying the editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   *                            This can be nullptr.
+   */
+  MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
 
   /**
    * Called before deleting selected content.
