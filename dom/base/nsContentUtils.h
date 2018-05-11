@@ -704,6 +704,11 @@ public:
                                             nsIURI* aBaseURI);
 
   /**
+   * Returns true if |aName| is a name with dashes.
+   */
+  static bool IsNameWithDash(nsAtom* aName);
+
+  /**
    * Returns true if |aName| is a valid name to be registered via
    * customElements.define.
    */
