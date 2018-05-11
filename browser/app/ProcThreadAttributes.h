@@ -51,13 +51,38 @@ public:
 
   bool AddInheritableHandle(HANDLE aHandle)
   {
+    DWORD type = ::GetFileType(aHandle);
+    if (type != FILE_TYPE_DISK && type != FILE_TYPE_PIPE) {
+      return false;
+    }
+
+    if (!::SetHandleInformation(aHandle, HANDLE_FLAG_INHERIT,
+                                HANDLE_FLAG_INHERIT)) {
+      return false;
+    }
+
     return mInheritableHandles.append(aHandle);
   }
 
   template <size_t N>
   bool AddInheritableHandles(HANDLE (&aHandles)[N])
   {
-    return mInheritableHandles.append(aHandles, N);
+    bool ok = true;
+    for (auto handle : aHandles) {
+      ok &= AddInheritableHandle(handle);
+    }
+
+    return ok;
+  }
+
+  bool HasMitigationPolicies() const
+  {
+    return !!mMitigationPolicies;
+  }
+
+  bool HasInheritableHandles() const
+  {
+    return !mInheritableHandles.empty();
   }
 
   /**
@@ -77,11 +102,11 @@ public:
     aSiex.StartupInfo.cb = sizeof(STARTUPINFOW);
 
     DWORD numAttributes = 0;
-    if (mMitigationPolicies) {
+    if (HasMitigationPolicies()) {
       ++numAttributes;
     }
 
-    if (!mInheritableHandles.empty()) {
+    if (HasInheritableHandles()) {
       ++numAttributes;
     }
 

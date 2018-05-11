@@ -172,14 +172,16 @@ LauncherMain(int argc, wchar_t* argv[])
   if (attrsOk.value()) {
     creationFlags |= EXTENDED_STARTUPINFO_PRESENT;
 
-    siex.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
-    siex.StartupInfo.hStdInput = stdHandles[0];
-    siex.StartupInfo.hStdOutput = stdHandles[1];
-    siex.StartupInfo.hStdError = stdHandles[2];
+    if (attrs.HasInheritableHandles()) {
+      siex.StartupInfo.dwFlags |= STARTF_USESTDHANDLES;
+      siex.StartupInfo.hStdInput = stdHandles[0];
+      siex.StartupInfo.hStdOutput = stdHandles[1];
+      siex.StartupInfo.hStdError = stdHandles[2];
 
-    // Since attrsOk == true, we have successfully set the handle inheritance
-    // whitelist policy, so only the handles added to attrs will be inherited.
-    inheritHandles = TRUE;
+      // Since attrsOk == true, we have successfully set the handle inheritance
+      // whitelist policy, so only the handles added to attrs will be inherited.
+      inheritHandles = TRUE;
+    }
   }
 
   PROCESS_INFORMATION pi = {};
