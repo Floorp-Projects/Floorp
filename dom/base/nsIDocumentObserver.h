@@ -83,43 +83,6 @@ public:
    */
   virtual void DocumentStatesChanged(nsIDocument* aDocument,
                                      mozilla::EventStates aStateMask) = 0;
-
-  /**
-   * A StyleSheet has just been added to the document.  This method is
-   * called automatically when a StyleSheet gets added to the
-   * document, even if the stylesheet is not applicable. The
-   * notification is passed on to all of the document observers.
-   *
-   * @param aStyleSheet the StyleSheet that has been added
-   * @param aDocumentSheet True if sheet is in document's style sheet list,
-   *                       false if sheet is not (i.e., UA or user sheet)
-   */
-  virtual void StyleSheetAdded(mozilla::StyleSheet* aStyleSheet,
-                               bool aDocumentSheet) = 0;
-
-  /**
-   * A StyleSheet has just been removed from the document.  This
-   * method is called automatically when a StyleSheet gets removed
-   * from the document, even if the stylesheet is not applicable. The
-   * notification is passed on to all of the document observers.
-   *
-   * @param aStyleSheet the StyleSheet that has been removed
-   * @param aDocumentSheet True if sheet is in document's style sheet list,
-   *                       false if sheet is not (i.e., UA or user sheet)
-   */
-  virtual void StyleSheetRemoved(mozilla::StyleSheet* aStyleSheet,
-                                 bool aDocumentSheet) = 0;
-
-  /**
-   * A StyleSheet has just changed its applicable state.
-   * This method is called automatically when the applicable state
-   * of a StyleSheet gets changed. The style sheet passes this
-   * notification to the document. The notification is passed on
-   * to all of the document observers.
-   *
-   * @param aStyleSheet the StyleSheet that has changed state
-   */
-  virtual void StyleSheetApplicableStateChanged(mozilla::StyleSheet* aStyleSheet) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -146,18 +109,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
                                        mozilla::EventStates aStateMask) override;
 
-#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
-    virtual void StyleSheetAdded(mozilla::StyleSheet* aStyleSheet,           \
-                                 bool aDocumentSheet) override;
-
-#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                        \
-    virtual void StyleSheetRemoved(mozilla::StyleSheet* aStyleSheet,         \
-                                   bool aDocumentSheet) override;
-
-#define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED         \
-    virtual void StyleSheetApplicableStateChanged(                           \
-        mozilla::StyleSheet* aStyleSheet) override;
-
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
     NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                                  \
     NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                    \
@@ -165,9 +116,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
     NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD                                      \
     NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED                          \
     NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                        \
-    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                              \
-    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED                            \
-    NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETAPPLICABLESTATECHANGED             \
     NS_DECL_NSIMUTATIONOBSERVER
 
 
@@ -208,21 +156,5 @@ _class::DocumentStatesChanged(nsIDocument* aDocument,                     \
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class)                       \
 NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)
-
-#define NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(_class)                    \
-void                                                                      \
-_class::StyleSheetAdded(mozilla::StyleSheet* aStyleSheet,                 \
-                        bool aDocumentSheet)                              \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::StyleSheetRemoved(mozilla::StyleSheet* aStyleSheet,               \
-                          bool aDocumentSheet)                            \
-{                                                                         \
-}                                                                         \
-void                                                                      \
-_class::StyleSheetApplicableStateChanged(mozilla::StyleSheet* aStyleSheet)\
-{                                                                         \
-}                                                                         \
 
 #endif /* nsIDocumentObserver_h___ */
