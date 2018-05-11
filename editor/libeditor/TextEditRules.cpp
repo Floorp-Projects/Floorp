@@ -1357,6 +1357,9 @@ TextEditRules::RemoveRedundantTrailingBR()
   // Rather than deleting this node from the DOM tree we should instead
   // morph this br into the bogus node
   childElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
 
   // set mBogusNode to be this <br>
   mBogusNode = childElement;

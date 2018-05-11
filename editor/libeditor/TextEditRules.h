@@ -179,7 +179,7 @@ protected:
   /**
    * Check for and replace a redundant trailing break.
    */
-  nsresult RemoveRedundantTrailingBR();
+  MOZ_MUST_USE nsresult RemoveRedundantTrailingBR();
 
   /**
    * Creates a trailing break in the text doc if there is not one already.
