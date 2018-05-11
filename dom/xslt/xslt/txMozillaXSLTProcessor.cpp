@@ -9,7 +9,6 @@
 #include "nsIChannel.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIStringBundle.h"
@@ -677,9 +676,8 @@ txMozillaXSLTProcessor::TransformToDoc(nsIDocument **aResult,
         if (aResult) {
             txAOutputXMLEventHandler* handler =
                 static_cast<txAOutputXMLEventHandler*>(es.mOutputHandler);
-            nsCOMPtr<nsIDOMDocument> result;
-            handler->getOutputDocument(getter_AddRefs(result));
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(result);
+            nsCOMPtr<nsIDocument> doc;
+            handler->getOutputDocument(getter_AddRefs(doc));
             MOZ_ASSERT(doc->GetReadyStateEnum() ==
                        nsIDocument::READYSTATE_INTERACTIVE, "Bad readyState");
             doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
