@@ -146,9 +146,35 @@ protected:
 
   void WillInsert(bool* aCancel);
 
-  nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                               bool* aCancel,
-                               bool* aHandled);
+  /**
+   * Called before deleting selected content.
+   * This method may actually remove the selected content with
+   * DeleteSelectionWithTransaction().  So, this might cause destroying the
+   * editor.
+   *
+   * @param aCaollapsedAction   Direction to extend the selection.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
+                      bool* aCancel, bool* aHandled);
+
+  /**
+   * DeleteSelectionWithTransaction() is internal method of
+   * WillDeleteSelection() since it needs to create SelectionBatcher in
+   * big scope and destroying it might causes destroying the editor.
+   * So, after calling this method, callers need to check CanHandleEditAction()
+   * manually.
+   *
+   * @param aCaollapsedAction   Direction to extend the selection.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  DeleteSelectionWithTransaction(nsIEditor::EDirection aCollapsedAction,
+                                 bool* aCancel, bool* aHandled);
+
   /**
    * Called after deleted selected content.
    * This method may remove empty text node and makes guarantee that caret
