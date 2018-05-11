@@ -86,11 +86,9 @@ add_task(async function test_duping_local_newer() {
   });
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
   deepEqual(mergeTelemetryEvents, [{
-    value: "dupes",
-    extra: { count: "2" },
-  }, {
     value: "structure",
-    extra: { new: "1" },
+    extra: { new: 1, remoteRevives: 0, localDeletes: 0, localRevives: 0,
+             remoteDeletes: 0 },
   }], "Should record telemetry with dupe counts");
 
   let menuInfo = await PlacesUtils.bookmarks.fetch(
