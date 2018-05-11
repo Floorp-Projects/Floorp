@@ -203,9 +203,6 @@ public:
   static bool IsShadowDOMEnabled(const nsINode* aNode);
 
 public:
-  // nsIDOMDocument
-  NS_DECL_NSIDOMDOCUMENT
-
   using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
   using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;

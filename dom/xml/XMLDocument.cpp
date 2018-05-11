@@ -605,7 +605,7 @@ XMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
   nsDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 }
 
-// nsIDOMDocument interface
+// nsIDocument interface
 
 nsresult
 XMLDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,

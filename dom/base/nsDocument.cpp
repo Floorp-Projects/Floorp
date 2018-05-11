@@ -5645,7 +5645,7 @@ nsIDocument::GetController() const
 }
 
 //
-// nsIDOMDocument interface
+// nsIDocument interface
 //
 DocumentType*
 nsIDocument::GetDoctype() const

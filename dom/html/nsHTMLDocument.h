@@ -77,18 +77,6 @@ public:
     return mForms;
   }
 
-  // nsIDOMDocument interface
-  using nsDocument::CreateElement;
-  using nsDocument::CreateElementNS;
-  NS_FORWARD_NSIDOMDOCUMENT(nsDocument::)
-
-  // And explicitly import the things from nsDocument that we just shadowed
-  using nsDocument::GetImplementation;
-  using nsDocument::GetTitle;
-  using nsDocument::SetTitle;
-  using nsDocument::GetLastStyleSheetSet;
-  using nsDocument::MozSetImageElement;
-
   mozilla::dom::HTMLAllCollection* All();
 
   nsISupports* ResolveName(const nsAString& aName, nsWrapperCache **aCache);

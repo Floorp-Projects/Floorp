@@ -22,7 +22,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIFrame.h"
 #include "nsINode.h"

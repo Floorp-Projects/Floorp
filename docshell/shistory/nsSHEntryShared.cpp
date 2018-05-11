@@ -12,7 +12,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsILayoutHistoryState.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"

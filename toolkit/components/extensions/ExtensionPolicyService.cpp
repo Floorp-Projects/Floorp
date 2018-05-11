@@ -18,7 +18,6 @@
 #include "nsGkAtoms.h"
 #include "nsIChannel.h"
 #include "nsIContentPolicy.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsILoadInfo.h"
 #include "nsIXULRuntime.h"
