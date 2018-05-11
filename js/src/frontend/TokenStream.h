@@ -546,6 +546,7 @@ class TokenStreamAnyChars
                         StrictModeGetter* smg);
 
     template<typename CharT, class AnyCharsAccess> friend class GeneralTokenStreamChars;
+    template<typename CharT, class AnyCharsAccess> friend class TokenStreamChars;
     template<typename CharT, class AnyCharsAccess> friend class TokenStreamSpecific;
 
     template<typename CharT> friend class TokenStreamPosition;
@@ -1164,6 +1165,10 @@ class GeneralTokenStreamChars
      * comment, without consuming the EOL/EOF.
      */
     void consumeRestOfSingleLineComment();
+
+    MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL() {
+        return anyCharsAccess().internalUpdateLineInfoForEOL(sourceUnits.offset());
+    }
 };
 
 template<typename CharT, class AnyCharsAccess> class TokenStreamChars;
@@ -1188,6 +1193,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     using GeneralCharsBase::getCharIgnoreEOL;
     using GeneralCharsBase::sourceUnits;
     using CharsSharedBase::ungetCharIgnoreEOL;
+    using GeneralCharsBase::updateLineInfoForEOL;
 
     using GeneralCharsBase::GeneralCharsBase;
 
@@ -1215,6 +1221,12 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
             matchMultiUnitCodePointSlow(c, codePoint);
         return true;
     }
+
+    // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
+    // '\n'.  Also updates internal line-counter state.  Return true on success
+    // and store the character in |*c|.  Return false and leave |*c| undefined
+    // on failure.
+    MOZ_MUST_USE bool getChar(int32_t* cp);
 
     void ungetCodePointIgnoreEOL(uint32_t codePoint);
 };
@@ -1298,6 +1310,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::badToken;
     using GeneralCharsBase::consumeRestOfSingleLineComment;
     using CharsSharedBase::copyTokenbufTo;
+    using CharsBase::getChar;
     using GeneralCharsBase::getCharIgnoreEOL;
     using CharsBase::matchMultiUnitCodePoint;
     using GeneralCharsBase::newAtomToken;
@@ -1310,6 +1323,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using GeneralCharsBase::ungetChar;
     using CharsSharedBase::ungetCharIgnoreEOL;
     using CharsBase::ungetCodePointIgnoreEOL;
+    using GeneralCharsBase::updateLineInfoForEOL;
 
     template<typename CharU> friend class TokenStreamPosition;
 
@@ -1661,12 +1675,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
     MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Modifier modifier, TokenKind* out);
 
-    // Try to get the next character, normalizing '\r', '\r\n', and '\n' into
-    // '\n'.  Also updates internal line-counter state.  Return true on success
-    // and store the character in |*c|.  Return false and leave |*c| undefined
-    // on failure.
-    MOZ_MUST_USE bool getChar(int32_t* cp);
-
     uint32_t peekUnicodeEscape(uint32_t* codePoint);
     uint32_t peekExtendedUnicodeEscape(uint32_t* codePoint);
     uint32_t matchUnicodeEscapeIdStart(uint32_t* codePoint);
@@ -1722,8 +1730,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
             getCharIgnoreEOL();
         }
     }
-
-    MOZ_MUST_USE MOZ_ALWAYS_INLINE bool updateLineInfoForEOL();
 };
 
 // It's preferable to define this in TokenStream.cpp, but its template-ness
