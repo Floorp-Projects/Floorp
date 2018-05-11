@@ -291,7 +291,16 @@ protected:
                               bool* aCancel, bool* aHandled);
   nsresult MakeBasicBlock(nsAtom& aBlockType);
   nsresult DidMakeBasicBlock(RulesInfo* aInfo, nsresult aResult);
-  nsresult DidAbsolutePosition();
+
+  /**
+   * Called if nobody handles the edit action to make an element absolute
+   * positioned.
+   * This method actually changes the element which is computed by
+   * WillAbsolutePosition() to absolute positioned.
+   * Therefore, this might cause destroying the HTML editor.
+   */
+  MOZ_MUST_USE nsresult DidAbsolutePosition();
+
   nsresult AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
   nsresult AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
