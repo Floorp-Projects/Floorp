@@ -494,6 +494,7 @@ extern "C" {
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
+    fn wr_schedule_render(window_id: WrWindowId);
 }
 
 impl RenderNotifier for CppNotifier {
@@ -722,6 +723,11 @@ impl SceneBuilderHooks for APZCallbacks {
     fn post_scene_swap(&self, info: PipelineInfo) {
         let info = WrPipelineInfo::new(info);
         unsafe { apz_post_scene_swap(self.window_id, info) }
+
+        // After a scene swap we should schedule a render for the next vsync,
+        // otherwise there's no guarantee that the new scene will get rendered
+        // anytime soon
+        unsafe { wr_schedule_render(self.window_id) }
     }
 
     fn poke(&self) {
