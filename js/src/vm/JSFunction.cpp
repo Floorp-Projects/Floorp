@@ -1655,7 +1655,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
 
         // XDR the newly delazified function.
         if (script->scriptSource()->hasEncoder()) {
-            RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
+            RootedScriptSourceObject sourceObject(cx, &lazy->sourceObject());
             if (!script->scriptSource()->xdrEncodeFunction(cx, fun, sourceObject))
                 return false;
         }

@@ -2159,7 +2159,8 @@ class LazyScript : public gc::TenuredCell
     uint32_t lineno_;
     uint32_t column_;
 
-    LazyScript(JSFunction* fun, void* table, uint64_t packedFields,
+    LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
+               void* table, uint64_t packedFields,
                uint32_t begin, uint32_t end, uint32_t toStringStart,
                uint32_t lineno, uint32_t column);
 
@@ -2167,6 +2168,7 @@ class LazyScript : public gc::TenuredCell
     // innerFunctions. To be GC-safe, the caller must initialize both vectors
     // with valid atoms and functions.
     static LazyScript* CreateRaw(JSContext* cx, HandleFunction fun,
+                                 HandleScriptSourceObject sourceObject,
                                  uint64_t packedData, uint32_t begin, uint32_t end,
                                  uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
@@ -2177,6 +2179,7 @@ class LazyScript : public gc::TenuredCell
     // Create a LazyScript and initialize closedOverBindings and innerFunctions
     // with the provided vectors.
     static LazyScript* Create(JSContext* cx, HandleFunction fun,
+                              HandleScriptSourceObject sourceObject,
                               const frontend::AtomVector& closedOverBindings,
                               Handle<GCVector<JSFunction*, 8>> innerFunctions,
                               uint32_t begin, uint32_t end,
@@ -2221,16 +2224,16 @@ class LazyScript : public gc::TenuredCell
         return enclosingScope_;
     }
 
-    ScriptSourceObject* sourceObject() const;
+    ScriptSourceObject& sourceObject() const;
     ScriptSource* scriptSource() const {
-        return sourceObject()->source();
+        return sourceObject().source();
     }
     ScriptSource* maybeForwardedScriptSource() const;
     bool mutedErrors() const {
         return scriptSource()->mutedErrors();
     }
 
-    void setEnclosingScopeAndSource(Scope* enclosingScope, ScriptSourceObject* sourceObject);
+    void setEnclosingScope(Scope* enclosingScope);
 
     uint32_t numClosedOverBindings() const {
         return p_.numClosedOverBindings;
@@ -2388,7 +2391,7 @@ class LazyScript : public gc::TenuredCell
 
     // Returns true if the enclosing script is also lazy.
     bool isEnclosingScriptLazy() const {
-        return !sourceObject_;
+        return !enclosingScope_;
     }
 
     friend class GCMarker;
