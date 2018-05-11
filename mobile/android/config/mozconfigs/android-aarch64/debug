@@ -2,7 +2,6 @@
 
 # Global options
 ac_add_options --enable-debug
-ac_add_options --enable-marionette
 
 # Android
 ac_add_options --with-android-min-sdk=21
