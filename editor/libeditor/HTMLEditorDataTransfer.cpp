@@ -38,7 +38,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIFile.h"
@@ -177,15 +176,14 @@ HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
                                   const nsAString& aContextStr,
                                   const nsAString& aInfoStr,
                                   const nsAString& aFlavor,
-                                  nsIDOMDocument* aSourceDoc,
+                                  nsIDocument* aSourceDoc,
                                   nsIDOMNode* aDestNode,
                                   int32_t aDestOffset,
                                   bool aDeleteSelection)
 {
-  nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDoc);
   nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestNode);
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-                                 aFlavor, sourceDoc, destNode, aDestOffset,
+                                 aFlavor, aSourceDoc, destNode, aDestOffset,
                                  aDeleteSelection,
                                  /* trusted input */ true,
                                  /* clear style */ false);
