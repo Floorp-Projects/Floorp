@@ -212,7 +212,7 @@ this.SnippetsFeed = class SnippetsFeed {
         this._clearBlockList();
         break;
       case at.TOTAL_BOOKMARKS_REQUEST:
-        this.getTotalBookmarksCount(action._target.browser);
+        this.getTotalBookmarksCount(action.meta.fromTarget);
         break;
     }
   }
