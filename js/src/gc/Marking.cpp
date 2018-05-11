@@ -1470,10 +1470,13 @@ void
 js::ObjectGroup::traceChildren(JSTracer* trc)
 {
     AutoSweepObjectGroup sweep(this);
-    unsigned count = getPropertyCount(sweep);
-    for (unsigned i = 0; i < count; i++) {
-        if (ObjectGroup::Property* prop = getProperty(sweep, i))
-            TraceEdge(trc, &prop->id, "group_property");
+
+    if (!trc->canSkipJsids()) {
+        unsigned count = getPropertyCount(sweep);
+        for (unsigned i = 0; i < count; i++) {
+            if (ObjectGroup::Property* prop = getProperty(sweep, i))
+                TraceEdge(trc, &prop->id, "group_property");
+        }
     }
 
     if (proto().isObject())
