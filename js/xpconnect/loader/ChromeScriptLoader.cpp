@@ -20,6 +20,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/SystemGroup.h"
+#include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionParticipant.h"
 
 using namespace JS;
@@ -338,6 +339,14 @@ PrecompiledScript::WrapObject(JSContext* aCx, HandleObject aGivenProto)
     return PrecompiledScriptBinding::Wrap(aCx, this, aGivenProto);
 }
 
+bool
+PrecompiledScript::IsBlackForCC(bool aTracingNeeded)
+{
+    return (nsCCUncollectableMarker::sGeneration &&
+            HasKnownLiveWrapper() &&
+            (!aTracingNeeded || HasNothingToTrace(this)));
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(PrecompiledScript)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PrecompiledScript)
@@ -360,6 +369,21 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(PrecompiledScript)
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScript)
     NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(PrecompiledScript)
+    if (tmp->IsBlackForCC(false)) {
+        tmp->mScript.exposeToActiveJS();
+        return true;
+    }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(PrecompiledScript)
+    return tmp->IsBlackForCC(true);
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(PrecompiledScript)
+    return tmp->IsBlackForCC(false);
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PrecompiledScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PrecompiledScript)
