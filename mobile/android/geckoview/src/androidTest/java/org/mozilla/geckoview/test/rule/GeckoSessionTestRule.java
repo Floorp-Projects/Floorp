@@ -607,6 +607,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected boolean mClosedSession;
     protected boolean mWithDevTools;
     protected Map<GeckoSession, Tab> mRDPTabs;
+    protected Tab mRDPChromeProcess;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -996,6 +997,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mLastWaitEnd = 0;
         mTimeoutMillis = 0;
         mRDPTabs = null;
+        mRDPChromeProcess = null;
     }
 
     @Override
@@ -1631,12 +1633,36 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @param session Session containing the target page.
      * @param js JavaScript expression.
      * @return Result of evaluating the expression.
+     * @see #evaluateChromeJS
      */
     public Object evaluateJS(final @NonNull GeckoSession session, final @NonNull String js) {
-        assertThat("Must enable RDP using @WithDevToolsAPI", mRDPTabs, notNullValue());
+        assertThat("Must enable RDP using @WithDevToolsAPI",
+                   mWithDevTools, equalTo(true));
 
         final Tab tab = mRDPTabs.get(session);
         assertThat("Session should have tab object", tab, notNullValue());
         return tab.getConsole().evaluateJS(js);
+    }
+
+    /**
+     * Evaluate a JavaScript expression in the context of a chrome window and return the result.
+     * RDP must be enabled first using the {@link WithDevToolsAPI} annotation. Results are
+     * converted the same way as {@link #evaluateJS}.
+     *
+     * @param js JavaScript expression.
+     * @return Result of evaluating the expression.
+     * @see #evaluateJS
+     */
+    public Object evaluateChromeJS(final @NonNull String js) {
+        assertThat("Must enable RDP using @WithDevToolsAPI",
+                   mWithDevTools, equalTo(true));
+
+        if (mRDPChromeProcess == null) {
+            mRDPChromeProcess = sRDPConnection.getChromeProcess();
+            assertThat("Should have chrome process object",
+                       mRDPChromeProcess, notNullValue());
+            mRDPChromeProcess.attach();
+        }
+        return mRDPChromeProcess.getConsole().evaluateJS(js);
     }
 }

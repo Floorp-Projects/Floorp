@@ -1268,4 +1268,21 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     fun evaluateJS_throwOnSyntaxError() {
         sessionRule.session.evaluateJS("<{[")
     }
+
+    @WithDevToolsAPI
+    @Test(expected = RuntimeException::class)
+    fun evaluateJS_throwOnChromeAccess() {
+        sessionRule.session.evaluateJS("ChromeUtils")
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateChromeJS() {
+        assertThat("Should be able to access ChromeUtils",
+                   sessionRule.evaluateChromeJS("ChromeUtils"), notNullValue())
+    }
+
+    @Test(expected = AssertionError::class)
+    fun evaluateChromeJS_throwOnNotWithDevTools() {
+        sessionRule.evaluateChromeJS("0")
+    }
 }
