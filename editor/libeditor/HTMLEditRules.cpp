@@ -10265,13 +10265,23 @@ HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange,
     return NS_ERROR_FAILURE;
   }
 
-  AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
+  {
+    AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
-  int32_t zIndex;
-  nsresult rv = HTMLEditorRef().RelativeChangeElementZIndex(*element, aChange,
-                                                            &zIndex);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    int32_t zIndex;
+    nsresult rv = HTMLEditorRef().RelativeChangeElementZIndex(*element, aChange,
+                                                              &zIndex);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Restoring Selection might cause destroying the HTML editor.
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
   return NS_OK;
 }
@@ -10283,6 +10293,8 @@ HTMLEditRules::DocumentModified()
     NewRunnableMethod("HTMLEditRules::DocumentModifiedWorker",
                       this,
                       &HTMLEditRules::DocumentModifiedWorker));
+  // Be aware, if DocumentModifiedWorker() is called synchronously, the
+  // editor might have been destroyed here.
   return NS_OK;
 }
 
