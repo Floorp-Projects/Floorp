@@ -3211,7 +3211,8 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
         masm.loadValue(sepAddr, sepVal);
         masm.branchTestString(Assembler::NotEqual, sepVal, &failureRestoreArgc);
 
-        Register sep = masm.extractString(sepVal, ExtractTemp0);
+        Register sep = sepVal.scratchReg();
+        masm.unboxString(sepVal, sep);
         masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedSep()),
                        sep, &failureRestoreArgc);
         regs.add(sepVal);
@@ -3226,7 +3227,8 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
         masm.loadValue(strAddr, strVal);
         masm.branchTestString(Assembler::NotEqual, strVal, &failureRestoreArgc);
 
-        Register str = masm.extractString(strVal, ExtractTemp0);
+        Register str = strVal.scratchReg();
+        masm.unboxString(strVal, str);
         masm.branchPtr(Assembler::NotEqual, Address(ICStubReg, offsetOfExpectedStr()),
                        str, &failureRestoreArgc);
         regs.add(strVal);

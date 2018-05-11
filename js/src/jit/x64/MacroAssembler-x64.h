@@ -885,11 +885,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxObject(value, scratch);
         return scratch;
     }
-    Register extractString(const ValueOperand& value, Register scratch) {
-        MOZ_ASSERT(scratch != ScratchReg);
-        unboxString(value, scratch);
-        return scratch;
-    }
     Register extractSymbol(const ValueOperand& value, Register scratch) {
         MOZ_ASSERT(scratch != ScratchReg);
         unboxSymbol(value, scratch);

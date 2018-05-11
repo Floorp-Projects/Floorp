@@ -943,8 +943,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (!finishMetadata(bytecode))
         return nullptr;
 
-    return ModuleSegment::create(tier(), masm_, bytecode, *linkDataTier_, *metadata_,
-                                 metadataTier_->codeRanges);
+    return ModuleSegment::create(tier(), masm_, *linkDataTier_);
 }
 
 SharedModule
@@ -972,12 +971,12 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
             return nullptr;
     }
 
-    auto codeTier = js::MakeUnique<CodeTier>(tier(), Move(metadataTier_), Move(moduleSegment));
+    auto codeTier = js::MakeUnique<CodeTier>(Move(metadataTier_), Move(moduleSegment));
     if (!codeTier)
         return nullptr;
 
-    SharedCode code = js_new<Code>(Move(codeTier), *metadata_, Move(jumpTables));
-    if (!code)
+    MutableCode code = js_new<Code>(Move(codeTier), *metadata_, Move(jumpTables));
+    if (!code || !code->initialize(bytecode, *linkDataTier_))
         return nullptr;
 
     SharedModule module(js_new<Module>(Move(assumptions_),
@@ -1012,7 +1011,7 @@ ModuleGenerator::finishTier2(Module& module)
     if (!moduleSegment)
         return false;
 
-    auto tier2 = js::MakeUnique<CodeTier>(tier(), Move(metadataTier_), Move(moduleSegment));
+    auto tier2 = js::MakeUnique<CodeTier>(Move(metadataTier_), Move(moduleSegment));
     if (!tier2)
         return false;
 
