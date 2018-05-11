@@ -258,7 +258,6 @@ protected:
   nsresult WillOutdent(bool* aCancel, bool* aHandled);
   nsresult WillAlign(const nsAString& aAlignType,
                      bool* aCancel, bool* aHandled);
-  nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
 
   /**
    * Called before changing absolute positioned element to static positioned.
@@ -291,6 +290,32 @@ protected:
                               bool* aCancel, bool* aHandled);
   nsresult MakeBasicBlock(nsAtom& aBlockType);
   nsresult DidMakeBasicBlock(RulesInfo* aInfo, nsresult aResult);
+
+  /**
+   * Called before changing an element to absolute positioned.
+   * This method only prepares the operation since DidAbsolutePosition() will
+   * change it actually later.  mNewBlock is set to the target element and
+   * if necessary, some ancestor nodes of selection may be split.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
+
+  /**
+   * PrepareToMakeElementAbsolutePosition() is helper method of
+   * WillAbsolutePosition() since in some cases, needs to restore selection
+   * with AutoSelectionRestorer.  So, all callers have to check if
+   * CanHandleEditAction() still returns true after a call of this method.
+   * XXX Should be documented outline of this method.
+   *
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param aTargetElement      Returns target element which should be
+   *                            changed to absolute positioned.
+   */
+  MOZ_MUST_USE nsresult
+  PrepareToMakeElementAbsolutePosition(bool* aHandled,
+                                       RefPtr<Element>* aTargetElement);
 
   /**
    * Called if nobody handles the edit action to make an element absolute
@@ -596,7 +621,7 @@ protected:
   RefPtr<nsRange> mUtilRange;
   // Need to remember an int across willJoin/didJoin...
   uint32_t mJoinOffset;
-  nsCOMPtr<Element> mNewBlock;
+  RefPtr<Element> mNewBlock;
   RefPtr<RangeItem> mRangeItem;
 
   // XXX In strict speaking, mCachedStyles isn't enough to cache inline styles
