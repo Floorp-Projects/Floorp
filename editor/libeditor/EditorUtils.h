@@ -26,6 +26,11 @@ class nsRange;
 namespace mozilla {
 template <class T> class OwningNonNull;
 
+namespace dom {
+class Element;
+class Text;
+} // namespace dom
+
 /***************************************************************************
  * EditActionResult is useful to return multiple results of an editor
  * action handler without out params.
@@ -144,6 +149,61 @@ EditActionCanceled(nsresult aRv = NS_OK)
 {
   return EditActionResult(aRv, true, true);
 }
+
+/***************************************************************************
+ * CreateNodeResultBase is a simple class for CreateSomething() methods
+ * which want to return new node.
+ */
+template<typename NodeType>
+class CreateNodeResultBase;
+
+typedef CreateNodeResultBase<dom::Element> CreateElementResult;
+
+template<typename NodeType>
+class MOZ_STACK_CLASS CreateNodeResultBase final
+{
+  typedef CreateNodeResultBase<NodeType> SelfType;
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+  NodeType* GetNewNode() const { return mNode; }
+
+  CreateNodeResultBase() = delete;
+
+  explicit CreateNodeResultBase(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  explicit CreateNodeResultBase(NodeType* aNode)
+    : mNode(aNode)
+    , mRv(aNode ? NS_OK : NS_ERROR_FAILURE)
+  {
+  }
+
+  explicit CreateNodeResultBase(already_AddRefed<NodeType>&& aNode)
+    : mNode(aNode)
+    , mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE)
+  {
+  }
+
+  CreateNodeResultBase(const SelfType& aOther) = delete;
+  SelfType& operator=(const SelfType& aOther) = delete;
+  CreateNodeResultBase(SelfType&& aOther) = default;
+  SelfType& operator=(SelfType&& aOther) = default;
+
+  already_AddRefed<NodeType> forget()
+  {
+    mRv = NS_ERROR_NOT_INITIALIZED;
+    return mNode.forget();
+  }
+
+private:
+  RefPtr<NodeType> mNode;
+  nsresult mRv;
+};
 
 /***************************************************************************
  * SplitNodeResult is a simple class for
