@@ -10496,19 +10496,6 @@ nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent)
   return false;
 }
 
-/* static */ Element*
-nsContentUtils::GetClosestNonNativeAnonymousAncestor(Element* aElement)
-{
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->IsNativeAnonymous());
-
-  Element* e = aElement;
-  while (e && e->IsNativeAnonymous()) {
-    e = e->GetParentElement();
-  }
-  return e;
-}
-
 /**
  * Checks whether the given type is a supported document type for
  * loading within the nsObjectLoadingContent specified by aContent.
