@@ -169,6 +169,9 @@ class MozbuildSymbols(Directive):
 
 
 def setup(app):
+    from mozbuild.virtualenv import VirtualenvManager
+    from moztreedocs import manager
+
     app.add_directive('mozbuildsymbols', MozbuildSymbols)
 
     # Unlike typical Sphinx installs, our documentation is assembled from
@@ -177,20 +180,12 @@ def setup(app):
     #
     # Here, we invoke our custom code for staging/generating all our
     # documentation.
-    from moztreedocs import SphinxManager
-
-    topsrcdir = app.config._raw_config['topsrcdir']
-    manager = SphinxManager(topsrcdir,
-        os.path.join(topsrcdir, 'tools', 'docs'),
-        app.outdir)
     manager.generate_docs(app)
-
-    app.srcdir = os.path.join(app.outdir, '_staging')
+    app.srcdir = manager.staging_dir
 
     # We need to adjust sys.path in order for Python API docs to get generated
     # properly. We leverage the in-tree virtualenv for this.
-    from mozbuild.virtualenv import VirtualenvManager
-
+    topsrcdir = manager.topsrcdir
     ve = VirtualenvManager(topsrcdir,
         os.path.join(topsrcdir, 'dummy-objdir'),
         os.path.join(app.outdir, '_venv'),

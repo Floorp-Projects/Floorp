@@ -16,9 +16,9 @@
 test(function(t) {
   var target = addDiv(t);
   var anim = new Animation();
-  anim.effect = new KeyframeEffectReadOnly(target,
-                                           { marginLeft: [ '0px', '100px' ] },
-                                           100 * MS_PER_SEC);
+  anim.effect = new KeyframeEffect(target,
+                                   { marginLeft: [ '0px', '100px' ] },
+                                   100 * MS_PER_SEC);
   anim.currentTime = 50 * MS_PER_SEC;
   assert_equals(getComputedStyle(target).marginLeft, '50px');
 }, 'After setting target effect on an animation with null effect, the ' +

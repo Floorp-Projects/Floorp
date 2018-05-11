@@ -2,7 +2,8 @@
 <html>
 <head>
   <title>
-    Test for Animation.effect.timing.iterations on compositor animations
+    Test for Animation.effect.updateTiming({ iterations }) on compositor
+    animations
   </title>
   <script type="application/javascript"
     src="/tests/SimpleTest/SimpleTest.js"></script>
@@ -47,14 +48,14 @@ addAsyncAnimTest(async function() {
   advance_clock(6000);
   omta_is(div, "transform", { tx: 50 }, RunningOn.Compositor,
           "Animation is running on compositor");
-  animation.effect.timing.iterations = 1;
+  animation.effect.updateTiming({ iterations: 1 });
   advance_clock(0);
 
   await waitForPaints();
   omta_is(div, "transform", { tx: 0 }, RunningOn.MainThread,
           "Animation is on MainThread");
 
-  animation.effect.timing.iterations = 3;
+  animation.effect.updateTiming({ iterations: 3 });
 
   advance_clock(0);
   await waitForPaints();

@@ -104,7 +104,8 @@ add_task(async function test_initial_dump_is_loaded_as_synced_when_collection_is
     await client.maybeSync(1, Date.now());
 
     // Verify the loaded data has status to synced:
-    const list = await client.get();
+    const collection = await client.openCollection();
+    const { data: list } = await collection.list();
     equal(list[0]._status, "synced");
   }
 });
@@ -173,6 +174,45 @@ add_task(async function test_sends_reload_message_when_blocklist_has_changes() {
   }
 });
 add_task(clear_state);
+
+add_task(async function test_sync_event_data_is_filtered_for_target() {
+  // Here we will synchronize 4 times, the first two to initialize the local DB and
+  // the last two about event filtered data.
+  const timestamp1 = 2000;
+  const timestamp2 = 3000;
+  const timestamp3 = 4000;
+  const timestamp4 = 5000;
+  // Fake a date value obtained from server (used to store a pref, useless here).
+  const fakeServerTime = Date.now();
+
+  for (let {client} of gBlocklistClients) {
+    // Initialize the collection with some data (local is empty, thus no ?_since)
+    await client.maybeSync(timestamp1, fakeServerTime - 30, {loadDump: false});
+    // This will pick the data with ?_since=3000.
+    await client.maybeSync(timestamp2 + 1, fakeServerTime - 20);
+
+    // In ?_since=4000 entries, no target matches. The sync event is not called.
+    let called = false;
+    client.on("sync", e => called = true);
+    await client.maybeSync(timestamp3 + 1, fakeServerTime - 10);
+    equal(called, false, `no sync event for ${client.collectionName}`);
+
+    // In ?_since=5000 entries, only one entry matches.
+    let syncEventData;
+    client.on("sync", e => syncEventData = e.data);
+    await client.maybeSync(timestamp4 + 1, fakeServerTime);
+    const { current, created, updated, deleted } = syncEventData;
+    equal(created.length + updated.length + deleted.length, 1, `event filtered data for ${client.collectionName}`);
+
+    // Since we had entries whose target does not match, the internal storage list
+    // and the event current data should differ.
+    const collection = await client.openCollection();
+    const { data: internalData } = await collection.list();
+    ok(internalData.length > current.length, `event current data for ${client.collectionName}`);
+  }
+});
+add_task(clear_state);
+
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {
@@ -321,7 +361,7 @@ function getSampleResponse(req, port) {
         "versionRange": [{
           "targetApplication": [],
           "minVersion": "11.2.202.509",
-          "maxVersion": "11.2.202.539",
+          "maxVersion": "*",
           "severity": "0",
           "vulnerabilityStatus": "1"
         }],
@@ -335,7 +375,6 @@ function getSampleResponse(req, port) {
         "versionRange": [{
           "targetApplication": [{
             "minVersion": "3.0",
-            "guid": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}",
             "maxVersion": "*"
           }]
         }]
@@ -368,6 +407,163 @@ function getSampleResponse(req, port) {
         "last_modified": 3500,
         "os": "Darwin 11",
         "featureStatus": "BLOCKED_DEVICE"
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/addons/records?_sort=-last_modified&_since=4000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"5000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        "last_modified": 4001,
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "some-guid"
+          }],
+        }],
+        "id": "8f03b264-57b7-4263-9b15-ad91b033a034"
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/plugins/records?_sort=-last_modified&_since=4000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"5000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        "last_modified": 4001,
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "0",
+            "maxVersion": "57.*"
+          }]
+        }],
+        "id": "cd3ea0b2-1ba8-4fb6-b242-976a87626116"
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/gfx/records?_sort=-last_modified&_since=4000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"5000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        "last_modified": 4001,
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "99999"
+          }],
+        }],
+        "id": "86771771-e803-4006-95e9-c9275d58b3d1"
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/addons/records?_sort=-last_modified&_since=5000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"6000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        // delete an entry with non matching target (see above)
+        "last_modified": 5001,
+        "deleted": true,
+        "id": "8f03b264-57b7-4263-9b15-ad91b033a034"
+      }, {
+        // delete entry with matching target (see above)
+        "last_modified": 5002,
+        "deleted": true,
+        "id": "9ccfac91-e463-c30c-f0bd-14143794a8dd"
+      }, {
+        // create an extra non matching
+        "last_modified": 5003,
+        "id": "75b36589-435a-48d4-8ee4-bacee3fb6119",
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "0",
+            "maxVersion": "57.*"
+          }]
+        }],
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/plugins/records?_sort=-last_modified&_since=5000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"6000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        // entry with non matching target (see above)
+        "newAttribute": 42,
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "0",
+            "maxVersion": "57.*"
+          }]
+        }],
+        "id": "cd3ea0b2-1ba8-4fb6-b242-976a87626116"
+      }, {
+        // entry with matching target (see above)
+        "newAttribute": 42,
+        "matchFilename": "npViewpoint.dll",
+        "blockID": "p32",
+        "id": "1f48af42-c508-b8ef-b8d5-609d48e4f6c9",
+        "last_modified": 3500,
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "3.0",
+            "maxVersion": "*"
+          }]
+        }]
+      }]})
+    },
+    "GET:/v1/buckets/blocklists/collections/gfx/records?_sort=-last_modified&_since=5000": {
+      "sampleHeaders": [
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Expose-Headers: Retry-After, Content-Length, Alert, Backoff",
+        "Content-Type: application/json; charset=UTF-8",
+        "Server: waitress",
+        "Etag: \"6000\""
+      ],
+      "status": {status: 200, statusText: "OK"},
+      "responseBody": JSON.stringify({"data": [{
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "0",
+            "maxVersion": "*"
+          }]
+        }],
+        "id": "43031a81-5f36-4eef-9b35-52f0bbeba363"
+      }, {
+        "versionRange": [{
+          "targetApplication": [{
+            "guid": "xpcshell@tests.mozilla.org",
+            "minVersion": "0",
+            "maxVersion": "3"
+          }]
+        }],
+        "id": "75a06bd3-f906-427d-a448-02092ee589fc"
       }]})
     }
   };

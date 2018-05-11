@@ -321,6 +321,22 @@ nsDeviceContextSpecWin::GetPrintingScale()
   return float(resolution) / GetDPI();
 }
 
+gfxPoint
+nsDeviceContextSpecWin::GetPrintingTranslate()
+{
+  // The underlying surface on windows is the size of the printable region. When
+  // the region is smaller than the actual paper size the (0, 0) coordinate
+  // refers top-left of that unwritable region. To instead have (0, 0) become
+  // the top-left of the actual paper, translate it's coordinate system by the
+  // unprintable region's width.
+  double marginTop, marginLeft;
+  mPrintSettings->GetUnwriteableMarginTop(&marginTop);
+  mPrintSettings->GetUnwriteableMarginLeft(&marginLeft);
+  int32_t resolution;
+  mPrintSettings->GetResolution(&resolution);
+  return gfxPoint(-marginLeft * resolution, -marginTop * resolution);
+}
+
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin::SetDeviceName(const nsAString& aDeviceName)
 {

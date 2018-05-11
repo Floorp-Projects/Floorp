@@ -106,32 +106,34 @@ function runTest() {
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation is added");
 
-      anim.effect.timing.duration = 100 * MS_PER_SEC;
+      anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [anim], removed: [] }],
         "records after duration is changed");
 
-      anim.effect.timing.duration = 100 * MS_PER_SEC;
+      anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value");
 
-      anim.currentTime = anim.effect.timing.duration * 2;
+      anim.currentTime = anim.effect.getComputedTiming().duration * 2;
       anim.finish();
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [], removed: [anim] }],
         "records after animation end");
 
-      anim.effect.timing.duration = anim.effect.timing.duration * 3;
+      anim.effect.updateTiming({
+        duration: anim.effect.getComputedTiming().duration * 3
+      });
       assert_equals_records(observer.takeRecords(),
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation restarted");
 
-      anim.effect.timing.duration = "auto";
+      anim.effect.updateTiming({ duration: 'auto' });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [], removed: [anim] }],
         "records after duration set \"auto\"");
 
-      anim.effect.timing.duration = "auto";
+      anim.effect.updateTiming({ duration: 'auto' });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value \"auto\"");
     }, "change_duration_and_currenttime");
@@ -149,12 +151,12 @@ function runTest() {
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation is added");
 
-      anim.effect.timing.endDelay = 10 * MS_PER_SEC;
+      anim.effect.updateTiming({ endDelay: 10 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [anim], removed: [] }],
         "records after endDelay is changed");
 
-      anim.effect.timing.endDelay = 10 * MS_PER_SEC;
+      anim.effect.updateTiming({ endDelay: 10 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value");
 
@@ -163,7 +165,7 @@ function runTest() {
         [{ added: [], changed: [], removed: [anim] }],
         "records after currentTime during endDelay");
 
-      anim.effect.timing.endDelay = -110 * MS_PER_SEC;
+      anim.effect.updateTiming({ endDelay: -110 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning negative value");
     }, "change_enddelay_and_currenttime");
@@ -195,21 +197,21 @@ function runTest() {
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation is added");
 
-      anim.effect.timing.iterations = 2;
+      anim.effect.updateTiming({ iterations: 2 });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [anim], removed: [] }],
         "records after iterations is changed");
 
-      anim.effect.timing.iterations = 2;
+      anim.effect.updateTiming({ iterations: 2 });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value");
 
-      anim.effect.timing.iterations = 0;
+      anim.effect.updateTiming({ iterations: 0 });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [], removed: [anim] }],
         "records after animation end");
 
-      anim.effect.timing.iterations = Infinity;
+      anim.effect.updateTiming({ iterations: Infinity });
       assert_equals_records(observer.takeRecords(),
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation restarted");
@@ -228,21 +230,21 @@ function runTest() {
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation is added");
 
-      anim.effect.timing.delay = 100;
+      anim.effect.updateTiming({ delay: 100 });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [anim], removed: [] }],
         "records after delay is changed");
 
-      anim.effect.timing.delay = 100;
+      anim.effect.updateTiming({ delay: 100 });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value");
 
-      anim.effect.timing.delay = -100 * MS_PER_SEC;
+      anim.effect.updateTiming({ delay: -100 * MS_PER_SEC });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [], removed: [anim] }],
         "records after animation end");
 
-      anim.effect.timing.delay = 0;
+      anim.effect.updateTiming({ delay: 0 });
       assert_equals_records(observer.takeRecords(),
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation restarted");
@@ -263,12 +265,12 @@ function runTest() {
         [{ added: [anim], changed: [], removed: [] }],
         "records after animation is added");
 
-      anim.effect.timing.easing = "steps(2, end)";
+      anim.effect.updateTiming({ easing: "steps(2, end)" });
       assert_equals_records(observer.takeRecords(),
         [{ added: [], changed: [anim], removed: [] }],
         "records after easing is changed");
 
-      anim.effect.timing.easing = "steps(2, end)";
+      anim.effect.updateTiming({ easing: "steps(2, end)" });
       assert_equals_records(observer.takeRecords(),
         [], "records after assigning same value");
     }, "change_easing");
@@ -293,9 +295,9 @@ function runTest() {
                                  aOptions.subtree ? div.parentNode : div,
                                  aOptions.subtree);
 
-      var effect = new KeyframeEffectReadOnly(null,
-                                              { opacity: [ 0, 1 ] },
-                                              { duration: 100 * MS_PER_SEC });
+      var effect = new KeyframeEffect(null,
+                                      { opacity: [ 0, 1 ] },
+                                      { duration: 100 * MS_PER_SEC });
       var anim = new Animation(effect, document.timeline);
       anim.play();
       assert_equals_records(observer.takeRecords(),
@@ -1525,32 +1527,34 @@ function runTest() {
       [{ added: [anim], changed: [], removed: [] }],
       "records after animation is added");
 
-    anim.effect.timing.duration = 100 * MS_PER_SEC;
+    anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
     assert_equals_records(observer.takeRecords(),
       [{ added: [], changed: [anim], removed: [] }],
       "records after duration is changed");
 
-    anim.effect.timing.duration = 100 * MS_PER_SEC;
+    anim.effect.updateTiming({ duration: 100 * MS_PER_SEC });
     assert_equals_records(observer.takeRecords(),
       [], "records after assigning same value");
 
-    anim.currentTime = anim.effect.timing.duration * 2;
+    anim.currentTime = anim.effect.getComputedTiming().duration * 2;
     anim.finish();
     assert_equals_records(observer.takeRecords(),
       [{ added: [], changed: [], removed: [anim] }],
       "records after animation end");
 
-    anim.effect.timing.duration = anim.effect.timing.duration * 3;
+    anim.effect.updateTiming({
+      duration: anim.effect.getComputedTiming().duration * 3
+    });
     assert_equals_records(observer.takeRecords(),
       [{ added: [anim], changed: [], removed: [] }],
       "records after animation restarted");
 
-    anim.effect.timing.duration = "auto";
+    anim.effect.updateTiming({ duration: "auto" });
     assert_equals_records(observer.takeRecords(),
       [{ added: [], changed: [], removed: [anim] }],
       "records after duration set \"auto\"");
 
-    anim.effect.timing.duration = "auto";
+    anim.effect.updateTiming({ duration: "auto" });
     assert_equals_records(observer.takeRecords(),
       [], "records after assigning same value \"auto\"");
   }, "change_duration_and_currenttime_on_pseudo_elements");

@@ -253,7 +253,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * @return {String}
    */
   getEasing: function() {
-    return this.player.effect.timing.easing;
+    return this.player.effect.getComputedTiming().easing;
   },
 
   /**

@@ -10,7 +10,7 @@ The `remote-settings.js <https://dxr.mozilla.org/mozilla-central/source/services
 Usage
 =====
 
-The `get()` method returns the list of entries for a specific key. Each entry can have arbitrary attributes, and can only be modified on the server.
+The ``get()`` method returns the list of entries for a specific key. Each entry can have arbitrary attributes, and can only be modified on the server.
 
 .. code-block:: js
 
@@ -68,6 +68,9 @@ The ``sync`` event allows to be notified when the remote settings are changed on
       }
     });
 
+.. important::
+    If one of the event handler fails, the others handlers for the same remote settings collection won't be executed.
+
 .. note::
     Currently, the update of remote settings is triggered by the `nsBlocklistService <https://dxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/nsBlocklistService.js>`_ (~ every 24H).
 
@@ -124,7 +127,7 @@ The synchronization of every known remote settings clients can be triggered manu
 
 .. code-block:: js
 
-    RemoteSettings.pollChanges()
+    await RemoteSettings.pollChanges()
 
 The synchronization of a single client can be forced with ``maybeSync()``:
 
@@ -155,7 +158,7 @@ And records can be created manually (as if they were synchronized from the serve
       passwordSelector: "#pass-signin",
     }, { synced: true });
 
-In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``.list()``:
+In order to bypass the potential target filtering of ``RemoteSettings("key").get()``, the low-level listing of records can be obtained with ``collection.list()``:
 
 .. code-block:: js
 
@@ -171,7 +174,7 @@ The local data can be flushed with ``clear()``:
 
     await collection.clear()
 
-For further documentation in collection API, checkout the `kinto.js library <https://kintojs.readthedocs.io/>`_, which is charge of the IndexedDB interaction behind-the-scenes.
+For further documentation in collection API, checkout the `kinto.js library <https://kintojs.readthedocs.io/>`_, which is in charge of the IndexedDB interactions behind-the-scenes.
 
 
 Inspect local data
@@ -182,14 +185,14 @@ The internal IndexedDBs of remote settings can be accessed via the Storage Inspe
 For example, the local data of the ``"key"`` collection can be accessed in the ``main/key`` IndexedDB store at *Browser Toolbox* > *Storage* > *IndexedDB* > *chrome* > *main/key*.
 
 
-about:remotesettings
---------------------
+\about:remotesettings
+---------------------
 
-The ``about:remotesettings`` extension provides tool to inspect synchronization status, change the remote server or switch to *preview* in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/leplatrem/aboutremotesettings>`_.
+The ``about:remotesettings`` extension provides some tooling to inspect synchronization statuses, to change the remote server or to switch to *preview* mode in order to sign-off pending changes. `More information on the dedicated repository <https://github.com/leplatrem/aboutremotesettings>`_.
 
 .. note::
 
-    With `Bug 1406036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1406036>`_, ``about:remotesettings`` will be available natively.
+    With `Bug 1406036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1406036>`_, about:remotesettings will be available natively.
 
 
 About blocklists
@@ -197,7 +200,7 @@ About blocklists
 
 Addons, certificates, plugins, and GFX blocklists were the first use-cases of remote settings, and thus have some specificities.
 
-For example, they leverage advanced customization options (bucket, content-signature certificate etc.), and in order to be able to inspect and manipulate their data, the client instances must first be explicitly initialized.
+For example, they leverage advanced customization options (bucket, content-signature certificate, target filtering etc.), and in order to be able to inspect and manipulate their data, the client instances must first be explicitly initialized.
 
 .. code-block:: js
 
