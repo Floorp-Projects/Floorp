@@ -235,6 +235,15 @@ struct String
     }
 };
 
+struct Symbol {
+    uint32_t code_;
+    static const uint32_t WellKnownAPILimit = 0x80000000;
+
+    static bool isWellKnownSymbol(const js::gc::Cell* cell) {
+        return reinterpret_cast<const Symbol*>(cell)->code_ < WellKnownAPILimit;
+    }
+};
+
 } /* namespace shadow */
 
 /**
@@ -310,7 +319,8 @@ class JS_FRIEND_API(GCCellPtr)
             return false;
         if (is<JSString>())
             return JS::shadow::String::isPermanentAtom(asCell());
-        return mayBeOwnedByOtherRuntimeSlow();
+        MOZ_ASSERT(is<JS::Symbol>());
+        return JS::shadow::Symbol::isWellKnownSymbol(asCell());
     }
 
   private:

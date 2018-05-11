@@ -8448,13 +8448,6 @@ JS::GCCellPtr::outOfLineKind() const
     return MapAllocToTraceKind(asCell()->asTenured().getAllocKind());
 }
 
-bool
-JS::GCCellPtr::mayBeOwnedByOtherRuntimeSlow() const
-{
-    MOZ_ASSERT(is<Symbol>());
-    return as<Symbol>().isWellKnownSymbol();
-}
-
 #ifdef JSGC_HASH_TABLE_CHECKS
 void
 js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
