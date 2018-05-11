@@ -70,11 +70,12 @@ function update(state = initialASTState(), action) {
     case "SET_PAUSE_POINTS":
       {
         const {
-          source,
+          sourceText,
+          sourceId,
           pausePoints
         } = action;
-        const emptyLines = (0, _ast.findEmptyLines)(source, pausePoints);
-        return state.setIn(["pausePoints", source.id], pausePoints).setIn(["emptyLines", source.id], emptyLines);
+        const emptyLines = (0, _ast.findEmptyLines)(sourceText, pausePoints);
+        return state.setIn(["pausePoints", sourceId], pausePoints).setIn(["emptyLines", sourceId], emptyLines);
       }
 
     case "OUT_OF_SCOPE_LOCATIONS":
