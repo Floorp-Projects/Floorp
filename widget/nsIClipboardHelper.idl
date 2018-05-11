@@ -11,8 +11,6 @@
 #include "nsString.h" // needed for AString -> nsAString, unfortunately
 %}
 
-interface nsIDOMDocument;
-
 /**
  * helper service for common uses of nsIClipboard.
  */
