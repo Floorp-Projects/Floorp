@@ -8,9 +8,10 @@
 
 interface imgIRequest;
 interface nsIDocument;
-interface nsIDOMDocument;
 interface nsIProperties;
 interface nsIURI;
+
+webidl Document;
 
 /**
  * imgICache interface
@@ -38,7 +39,7 @@ interface imgICache : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from
    * the cache.
    */
-  [noscript] void removeEntry(in nsIURI uri, [optional] in nsIDOMDocument doc);
+  [noscript] void removeEntry(in nsIURI uri, [optional] in Document doc);
 
   /**
    * Find Properties
@@ -57,7 +58,7 @@ interface imgICache : nsISupports
    */
   [must_use]
   nsIProperties findEntryProperties(in nsIURI uri,
-                                    [optional] in nsIDOMDocument doc);
+                                    [optional] in Document doc);
 
   /**
    * Make this cache instance respect private browsing notifications. This
