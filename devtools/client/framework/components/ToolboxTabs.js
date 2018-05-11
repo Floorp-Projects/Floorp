@@ -220,7 +220,7 @@ class ToolboxTabs extends Component {
         let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
 
         // Display the popup below the button.
-        menu.popup(rect.left + screenX, rect.bottom + screenY, toolbox);
+        menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, toolbox);
         return menu;
       },
     });

@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
@@ -48,6 +49,24 @@ Menu.prototype.append = function(menuItem) {
  */
 Menu.prototype.insert = function(pos, menuItem) {
   throw Error("Not implemented");
+};
+
+/**
+ * Show the Menu with anchor element's coordinate.
+ * For example, In the case of zoom in/out the devtool panel, we should multiply
+ * element's position to zoom value.
+ * If you know the screen coodinate of display position, you should use Menu.pop().
+ *
+ * @param {int} x
+ * @param {int} y
+ * @param Toolbox toolbox
+ */
+Menu.prototype.popupWithZoom = function(x, y, toolbox) {
+  let zoom = parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
+  if (!zoom || isNaN(zoom)) {
+    zoom = 1.0;
+  }
+  this.popup(x * zoom, y * zoom, toolbox);
 };
 
 /**
