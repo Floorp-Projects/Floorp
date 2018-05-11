@@ -62,19 +62,6 @@ var PaymentTestUtils = {
     },
 
     /**
-     * Create a new payment request and cache it as `rq`.
-     *
-     * @param {Object} args
-     * @param {PaymentMethodData[]} methodData
-     * @param {PaymentDetailsInit} details
-     * @param {PaymentOptions} options
-     */
-    createRequest: ({methodData, details, options}) => {
-      const rq = new content.PaymentRequest(methodData, details, options);
-      content.rq = rq; // assign it so we can retrieve it later
-    },
-
-    /**
      * Create a new payment request cached as `rq` and then show it.
      *
      * @param {Object} args

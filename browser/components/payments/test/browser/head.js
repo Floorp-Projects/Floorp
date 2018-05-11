@@ -112,7 +112,7 @@ function withNewDialogFrame(requestId, taskFn) {
 
   let args = {
     gBrowser,
-    url: `chrome://payments/content/paymentDialogWrapper.xhtml?requestId=${requestId}`,
+    url: `chrome://payments/content/paymentDialogWrapper.xul?requestId=${requestId}`,
   };
   return BrowserTestUtils.withNewTab(args, dialogTabTask);
 }
@@ -221,45 +221,24 @@ async function setupPaymentDialog(browser, {methodData, details, options, mercha
  * @param {string} options.origin
  */
 async function spawnInDialogForMerchantTask(merchantTaskFn, dialogTaskFn, taskArgs, {
+  browser,
   origin = "https://example.com",
 } = {
   origin: "https://example.com",
 }) {
   await withMerchantTab({
+    browser,
     url: origin + BLANK_PAGE_PATH,
   }, async merchBrowser => {
-    await ContentTask.spawn(merchBrowser, taskArgs, merchantTaskFn);
+    let {win, frame} = await setupPaymentDialog(merchBrowser, {
+      ...taskArgs,
+      merchantTaskFn,
+    });
 
-    const requests = getPaymentRequests();
-    is(requests.length, 1, "Should have one payment request");
-    let request = requests[0];
-    ok(!!request.requestId, "Got a payment request with an ID");
-
-    await spawnTaskInNewDialog(request.requestId, dialogTaskFn, taskArgs);
+    await spawnPaymentDialogTask(frame, dialogTaskFn, taskArgs);
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
-}
-
-async function spawnInDialogForPrivateMerchantTask(merchantTaskFn, dialogTaskFn, taskArgs, {
-  origin = "https://example.com",
-} = {
-  origin: "https://example.com",
-}) {
-  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
-
-  await withMerchantTab({
-    url: origin + BLANK_PAGE_PATH,
-    browser: privateWin.gBrowser,
-  }, async merchBrowser => {
-    await ContentTask.spawn(merchBrowser, taskArgs, merchantTaskFn);
-
-    const requests = getPaymentRequests();
-    is(requests.length, 1, "Should have one payment request");
-    let request = requests[0];
-    ok(!!request.requestId, "Got a payment request with an ID");
-
-    await spawnTaskInNewDialog(request.requestId, dialogTaskFn, taskArgs);
-  });
-  await BrowserTestUtils.closeWindow(privateWin);
 }
 
 async function setupFormAutofillStorage() {
