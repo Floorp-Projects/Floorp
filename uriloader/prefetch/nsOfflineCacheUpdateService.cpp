@@ -101,7 +101,7 @@ public:
                                 nsIURI *aManifestURI,
                                 nsIURI *aDocumentURI,
                                 nsIPrincipal* aLoadingPrincipal,
-                                nsIDOMDocument *aDocument)
+                                nsIDocument *aDocument)
         : mService(aService)
         , mManifestURI(aManifestURI)
         , mDocumentURI(aDocumentURI)
@@ -151,7 +151,7 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress* aWebProgress,
     if (mDidReleaseThis) {
         return NS_OK;
     }
-    nsCOMPtr<nsIDOMDocument> updateDoc = do_QueryReferent(mDocument);
+    nsCOMPtr<nsIDocument> updateDoc = do_QueryReferent(mDocument);
     if (!updateDoc) {
         // The document that scheduled this update has gone away,
         // we don't need to listen anymore.
@@ -344,13 +344,12 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
                                                     nsIURI *aDocumentURI,
                                                     nsIPrincipal* aLoadingPrincipal,
-                                                    nsIDOMDocument *aDocument)
+                                                    nsIDocument *aDocument)
 {
     LOG(("nsOfflineCacheUpdateService::ScheduleOnDocumentStop [%p, manifestURI=%p, documentURI=%p doc=%p]",
          this, aManifestURI, aDocumentURI, aDocument));
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-    nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(doc->GetContainer());
+    nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(aDocument->GetContainer());
     NS_ENSURE_TRUE(progress, NS_ERROR_INVALID_ARG);
 
     // Proceed with cache update
@@ -488,7 +487,7 @@ nsresult
 nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
                                       nsIURI *aDocumentURI,
                                       nsIPrincipal* aLoadingPrincipal,
-                                      nsIDOMDocument *aDocument,
+                                      nsIDocument *aDocument,
                                       nsPIDOMWindowInner* aWindow,
                                       nsIFile* aCustomProfileDir,
                                       nsIOfflineCacheUpdate **aUpdate)
