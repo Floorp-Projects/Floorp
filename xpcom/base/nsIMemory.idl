@@ -32,10 +32,6 @@
  * forms of memory minimization, but heavy handed approaches like
  * a GC are unlikely to succeed.
  *
- * "-no-forward"
- * This is appended to the above two parameters when the resulting
- * notification should not be forwarded to the child processes.
- *
  * "heap-minimize"
  * This will be passed as the extra data when the pressure 
  * observer is being asked to flush because of a heap minimize 
