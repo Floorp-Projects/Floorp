@@ -13,7 +13,13 @@ the requested process and prints its output, prefixing it with the
 current time to improve log usefulness.
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
+import sys
+
+
+if sys.version_info[0:2] < (3, 5):
+    print('run-task requires Python 3.5+')
+    sys.exit(1)
+
 
 import argparse
 import datetime
@@ -25,22 +31,10 @@ import re
 import socket
 import stat
 import subprocess
-import sys
 
-try:
-    import urllib.error
-    import urllib.request
+import urllib.error
+import urllib.request
 
-    urlopen = urllib.request.urlopen
-    URLError = urllib.error.URLError
-except ImportError:
-    import urllib2
-
-    urlopen = urllib2.urlopen
-    URLError = urllib2.URLError
-
-
-PY3 = sys.version_info.major == 3
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 FALLBACK_FINGERPRINT = {
@@ -89,16 +83,8 @@ IS_POSIX = os.name == 'posix'
 IS_WINDOWS = os.name == 'nt'
 
 
-if PY3:
-    bytestr = lambda x: x.encode('utf-8', 'strict')
-    sysstr = lambda x: x.decode('utf-8', 'strict')
-else:
-    bytestr = bytes
-    sysstr = str
-
-
 def print_line(prefix, m):
-    now = bytestr(datetime.datetime.utcnow().isoformat())
+    now = datetime.datetime.utcnow().isoformat().encode('utf-8')
     # slice microseconds to 3 decimals.
     now = now[:-3] if now[-7:-6] == b'.' else now
     sys.stdout.buffer.write(b'[%s %sZ] %s' % (prefix, now, m))
@@ -135,19 +121,12 @@ def run_and_prefix_output(prefix, args, extra_env=None):
                          stderr=subprocess.STDOUT,
                          stdin=sys.stdin.fileno(),
                          cwd='/',
-                         env=env,
-                         universal_newlines=not PY3)
+                         env=env)
 
-    if PY3:
-        stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
-    else:
-        stdout = p.stdout
+    stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
 
     while True:
-        data = stdout.readline()
-
-        if PY3:
-            data = data.encode('latin1')
+        data = stdout.readline().encode('latin1')
 
         if data == b'':
             break
@@ -192,10 +171,10 @@ def get_posix_user_group(user, group):
 
 
 def write_audit_entry(path, msg):
-    now = bytestr(datetime.datetime.utcnow().isoformat())
+    now = datetime.datetime.utcnow().isoformat().encode('utf-8')
     with open(path, 'ab') as fh:
         fh.write(b'[%sZ %s] %s\n' % (
-                 now, bytestr(os.environ.get('TASK_ID', 'UNKNOWN')), msg))
+                 now, os.environb.get(b'TASK_ID', b'UNKNOWN'), msg))
 
 
 WANTED_DIR_MODE = stat.S_IXUSR | stat.S_IRUSR | stat.S_IWUSR
@@ -216,7 +195,8 @@ def set_dir_permissions(path, uid, gid):
 def chown_recursive(path, user, group, uid, gid):
     print_line(b'chown',
                b'recursively changing ownership of %s to %s:%s\n' %
-               (bytestr(path), bytestr(user), bytestr(group)))
+               (path.encode('utf-8'), user.encode('utf-8'), group.encode(
+                   'utf-8')))
 
     set_dir_permissions(path, uid, gid)
 
@@ -273,7 +253,7 @@ def configure_cache_posix(cache, user, group,
     if not os.listdir(cache):
         print_line(b'cache', b'cache %s is empty; writing requirements: '
                              b'%s\n' % (
-                   bytestr(cache), b' '.join(sorted(our_requirements))))
+                    cache.encode('utf-8'), b' '.join(sorted(our_requirements))))
 
         # We write a requirements file so future invocations know what the
         # requirements are.
@@ -297,7 +277,7 @@ def configure_cache_posix(cache, user, group,
             wanted_requirements = set(fh.read().splitlines())
 
         print_line(b'cache', b'cache %s exists; requirements: %s\n' % (
-            bytestr(cache), b' '.join(sorted(wanted_requirements))))
+            cache.encode('utf-8'), b' '.join(sorted(wanted_requirements))))
 
         missing = wanted_requirements - our_requirements
 
@@ -313,7 +293,7 @@ def configure_cache_posix(cache, user, group,
                        b'cache %s uid/gid mismatch; this is acceptable '
                        b'because caches for this task are untrusted; '
                        b'changing ownership to facilitate cache use\n' %
-                       bytestr(cache))
+                       cache.encode('utf-8'))
             chown_recursive(cache, user.pw_name, group.gr_name, user.pw_uid,
                             group.gr_gid)
 
@@ -329,9 +309,9 @@ def configure_cache_posix(cache, user, group,
             print('error: requirements for populated cache %s differ from '
                   'this task' % cache)
             print('cache requirements: %s' % ' '.join(sorted(
-                map(sysstr, wanted_requirements))))
+                s.decode('utf-8') for s in wanted_requirements)))
             print('our requirements:   %s' % ' '.join(sorted(
-                map(sysstr, our_requirements))))
+                s.decode('utf-8') for s in our_requirements)))
             if any(s.startswith((b'uid=', b'gid=')) for s in missing):
                 print(CACHE_UID_GID_MISMATCH)
 
@@ -387,7 +367,7 @@ def configure_volume_posix(volume, user, group, running_as_root):
 
     if running_as_root:
         print_line(b'volume', b'changing ownership of volume %s '
-                              b'to %d:%d\n' % (bytestr(volume),
+                              b'to %d:%d\n' % (volume.encode('utf-8'),
                                                user.pw_uid,
                                                group.gr_gid))
         set_dir_permissions(volume, user.pw_uid, group.gr_gid)
@@ -430,15 +410,15 @@ def vcs_checkout(source_repo, dest, store_path,
     if fetch_hgfingerprint:
         try:
             print_line(b'vcs', b'fetching hg.mozilla.org fingerprint from %s\n' %
-                       bytestr(FINGERPRINT_URL))
-            res = urlopen(FINGERPRINT_URL, timeout=10)
+                       FINGERPRINT_URL.encode('utf-8'))
+            res = urllib.request.urlopen(FINGERPRINT_URL, timeout=10)
             secret = res.read()
             try:
                 secret = json.loads(secret, encoding='utf-8')
             except ValueError:
                 print_line(b'vcs', b'invalid JSON in hg fingerprint secret')
                 sys.exit(1)
-        except (URLError, socket.timeout):
+        except (urllib.error.URLError, socket.timeout):
             print_line(b'vcs', b'Unable to retrieve current hg.mozilla.org fingerprint'
                                b'using the secret service, using fallback instead.')
             # XXX This fingerprint will not be accurate if running on an old
@@ -586,7 +566,8 @@ def main(args):
     for volume in volumes:
         # If a volume is a cache, it was dealt with above.
         if volume in caches:
-            print_line(b'volume', b'volume %s is a cache\n' % bytestr(volume))
+            print_line(b'volume', b'volume %s is a cache\n' %
+                       volume.encode('utf-8'))
             continue
 
         configure_volume_posix(volume, user, group, running_as_root)
@@ -624,7 +605,7 @@ def main(args):
         if not path_in_cache_or_volume(checkout):
             print_line(b'vcs', b'WARNING: vcs checkout path (%s) not in cache '
                                b'or volume; performance will likely suffer\n' %
-                               bytestr(checkout))
+                               checkout.encode('utf-8'))
 
         # Ensure the directory for the source checkout exists.
         try:
@@ -648,7 +629,7 @@ def main(args):
         if not path_in_cache_or_volume(store_path):
             print_line(b'vcs', b'WARNING: HG_STORE_PATH (%s) not in cache or '
                                b'volume; performance will likely suffer\n' %
-                               bytestr(store_path))
+                               store_path.encode('utf-8'))
 
         try:
             os.makedirs(store_path)
@@ -669,8 +650,9 @@ def main(args):
         # This code is modeled after what `sudo` was observed to do in a Docker
         # container. We do not bother calling setrlimit() because containers have
         # their own limits.
-        print_line(b'setup', b'running as %s:%s\n' % (bytestr(args.user),
-                                                      bytestr(args.group)))
+        print_line(b'setup', b'running as %s:%s\n' % (
+            args.user.encode('utf-8'), args.group.encode('utf-8')))
+
         os.setgroups(gids)
         os.umask(0o22)
         os.setresgid(gid, gid, gid)
@@ -734,9 +716,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # Unbuffer stdio.
-    if not PY3:
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
-
     sys.exit(main(sys.argv[1:]))
