@@ -16,7 +16,7 @@
 #include "WrapperFactory.h"
 
 #include "nsIDocShellTreeItem.h"
-#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
 
 using namespace js;
 using namespace JS;
@@ -1110,7 +1110,7 @@ GetRemoteObjectTag(JS::Handle<JSObject*> obj)
         if (treeItem)
             return NS_LITERAL_CSTRING("ContentDocShellTreeItem");
 
-        nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(supports));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(supports));
         if (doc)
             return NS_LITERAL_CSTRING("ContentDocument");
     }

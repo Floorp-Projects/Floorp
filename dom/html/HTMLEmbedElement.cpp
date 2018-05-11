@@ -11,7 +11,6 @@
 
 #include "nsIDocument.h"
 #include "nsIPluginDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsThreadUtils.h"
 #include "nsIScriptError.h"
 #include "nsIWidget.h"

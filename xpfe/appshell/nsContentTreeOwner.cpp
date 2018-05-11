@@ -36,7 +36,6 @@
 #include "mozilla/BrowserElementParent.h"
 #include "nsIDocShellLoadInfo.h"
 
-#include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
 #include "nsIDocument.h"

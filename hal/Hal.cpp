@@ -9,7 +9,6 @@
 #include "HalImpl.h"
 #include "HalLog.h"
 #include "HalSandbox.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"

@@ -30,7 +30,6 @@
 #include "nsFrameLoader.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIContent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"

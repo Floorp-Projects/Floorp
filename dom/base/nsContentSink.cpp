@@ -11,7 +11,6 @@
 
 #include "nsContentSink.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
@@ -1656,9 +1655,8 @@ nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
     observerService->
-      NotifyObservers(domDoc, "document-element-inserted",
+      NotifyObservers(aDoc, "document-element-inserted",
                       EmptyString().get());
   }
 

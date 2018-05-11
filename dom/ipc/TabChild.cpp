@@ -70,7 +70,6 @@
 #include "nsIDocumentInlines.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsFocusManager.h"
@@ -202,9 +201,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(TabChildBase)
 already_AddRefed<nsIDocument>
 TabChildBase::GetDocument() const
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  WebNavigation()->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  nsCOMPtr<nsIDocument> doc;
+  WebNavigation()->GetDocument(getter_AddRefs(doc));
   return doc.forget();
 }
 
