@@ -3048,7 +3048,8 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL,
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> document = GetDocument();
-  sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+    document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
   sheet->SetDisabled(!aEnable);
   return NS_OK;
@@ -3066,7 +3067,8 @@ HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> document = GetDocument();
-  sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+    document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
   // FIXME: This used to do sheet->SetDisabled(false), figure out if we can
   // just remove all this code in bug 1449522, since it seems unused.

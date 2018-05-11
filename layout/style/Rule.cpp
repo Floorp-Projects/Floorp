@@ -9,6 +9,7 @@
 #include "Rule.h"
 
 #include "mozilla/css/GroupRule.h"
+#include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsIDocument.h"
 #include "nsWrapperCacheInlines.h"
@@ -47,12 +48,12 @@ Rule::IsKnownLive() const
     return false;
   }
 
-  if (!sheet->IsOwnedByDocument()) {
+  if (!sheet->IsKeptAliveByDocument()) {
     return false;
   }
 
   return nsCCUncollectableMarker::InGeneration(
-    sheet->GetAssociatedDocument()->GetMarkedCCGeneration());
+    GetComposedDoc()->GetMarkedCCGeneration());
 }
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Rule)

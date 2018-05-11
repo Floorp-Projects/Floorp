@@ -58,7 +58,7 @@ ServoStyleRuleDeclaration::GetParentRule()
 nsINode*
 ServoStyleRuleDeclaration::GetParentObject()
 {
-  return Rule()->GetDocument();
+  return Rule()->GetParentObject();
 }
 
 DeclarationBlock*
@@ -72,8 +72,7 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   ServoStyleRule* rule = Rule();
   if (RefPtr<StyleSheet> sheet = rule->GetStyleSheet()) {
-    nsCOMPtr<nsIDocument> doc = sheet->GetAssociatedDocument();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
+    mozAutoDocUpdate updateBatch(sheet->GetComposedDoc(), UPDATE_STYLE, true);
     if (aDecl != mDecls) {
       mDecls->SetOwningRule(nullptr);
       RefPtr<ServoDeclarationBlock> decls = aDecl->AsServo();
@@ -197,9 +196,7 @@ void
 ServoStyleRule::SetSelectorText(const nsAString& aSelectorText)
 {
   if (RefPtr<StyleSheet> sheet = GetStyleSheet()) {
-    nsIDocument* doc = sheet->GetAssociatedDocument();
-
-    mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
+    mozAutoDocUpdate updateBatch(sheet->GetComposedDoc(), UPDATE_STYLE, true);
 
     // StyleRule lives inside of the Inner, it is unsafe to call WillDirty
     // if sheet does not already have a unique Inner.
@@ -218,7 +215,6 @@ ServoStyleRule::GetSelectorCount()
 {
   uint32_t aCount;
   Servo_StyleRule_GetSelectorCount(mRawRule, &aCount);
-
   return aCount;
 }
 
