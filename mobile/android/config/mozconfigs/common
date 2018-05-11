@@ -32,6 +32,14 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --with-google-api-keyfile=/builds/gapi.data
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
 
+# Marionette is disabled on Android by default. This condition enables it only on some
+# Fennec builds. It remains disabled on "nightly-try", "nightly", release", "beta", etc.
+if [ -z "$MOZ_UPDATE_CHANNEL" ] || [ "$MOZ_UPDATE_CHANNEL" = "default" ] \
+   || [ "$MOZ_UPDATE_CHANNEL" = "try" ];
+then
+    ac_add_options --enable-marionette
+fi
+
 # MOZ_INSTALL_TRACKING does not guarantee MOZ_UPDATE_CHANNEL will be set so we
 # provide a default state. Currently, the default state provides a default
 # keyfile because an assertion will be thrown if MOZ_INSTALL_TRACKING is
