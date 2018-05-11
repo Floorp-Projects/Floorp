@@ -440,5 +440,5 @@ function showMeatballMenu(
   const screenY = menuButton.ownerDocument.defaultView.mozInnerScreenY;
 
   // Display the popup below the button.
-  menu.popup(rect.left + screenX, rect.bottom + screenY, toolbox);
+  menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, toolbox);
 }

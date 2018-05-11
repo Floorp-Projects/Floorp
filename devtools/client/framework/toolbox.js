@@ -2287,7 +2287,7 @@ Toolbox.prototype = {
     let rect = target.getBoundingClientRect();
     let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
     let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
-    menu.popup(rect.left + screenX, rect.bottom + screenY, this);
+    menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, this);
 
     return menu;
   },
