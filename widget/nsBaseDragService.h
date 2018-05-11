@@ -9,7 +9,6 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
-#include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "nsPoint.h"
@@ -25,6 +24,7 @@
 
 class nsIContent;
 class nsIDOMNode;
+class nsIDocument;
 class nsPresContext;
 class nsIImageLoadingContent;
 
@@ -165,7 +165,7 @@ protected:
   nsSize mTargetSize;
   nsCOMPtr<nsIDOMNode> mSourceNode;
   nsCString mTriggeringPrincipalURISpec;
-  nsCOMPtr<nsIDOMDocument> mSourceDocument;       // the document at the drag source. will be null
+  nsCOMPtr<nsIDocument> mSourceDocument;          // the document at the drag source. will be null
                                                   //  if it came from outside the app.
   nsContentPolicyType mContentPolicyType;         // the contentpolicy type passed to the channel
                                                   // when initiating the drag session
