@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/
 */
 
+ChromeUtils.defineModuleGetter(this, "TestUtils", "resource://testing-common/TestUtils.jsm");
+
 const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
 const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
 
@@ -250,6 +252,27 @@ add_task(async function test_clear() {
   // Now the events should be cleared.
   snapshot = Telemetry.snapshotEvents(OPTIN, false);
   Assert.equal(Object.keys(snapshot).length, 0, `Should have cleared the events.`);
+
+  for (let i = 0; i < COUNT; ++i) {
+    Telemetry.recordEvent("telemetry.test", "test1", "object1");
+    Telemetry.recordEvent("telemetry.test.second", "test", "object1");
+  }
+  snapshot = Telemetry.snapshotEvents(OPTIN, true, 5);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 5, "Should have returned 5 events");
+  snapshot = Telemetry.snapshotEvents(OPTIN, false);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, (2 * COUNT) - 5, `Should have returned ${(2 * COUNT) - 5} events`);
+
+  Telemetry.recordEvent("telemetry.test", "test1", "object1");
+  snapshot = Telemetry.snapshotEvents(OPTIN, false, 5);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, 5, "Should have returned 5 events");
+  snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  Assert.ok(("parent" in snapshot), "Should have entry for main process.");
+  Assert.equal(snapshot.parent.length, (2 * COUNT) - 5 + 1, `Should have returned ${(2 * COUNT) - 5 + 1} events`);
+
+
 });
 
 add_task(async function test_expiry() {
@@ -294,6 +317,7 @@ add_task(async function test_invalidParams() {
 add_task(async function test_storageLimit() {
   Telemetry.clearEvents();
 
+  let limitReached = TestUtils.topicObserved("event-telemetry-storage-limit-reached");
   // Record more events than the storage limit allows.
   let LIMIT = 1000;
   let COUNT = LIMIT + 10;
@@ -301,13 +325,16 @@ add_task(async function test_storageLimit() {
     Telemetry.recordEvent("telemetry.test", "test1", "object1", String(i));
   }
 
+  await limitReached;
+  Assert.ok(true, "Topic was notified when event limit was reached");
+
   // Check that the right events were recorded.
   let snapshot = Telemetry.snapshotEvents(OPTIN, true);
   Assert.ok(("parent" in snapshot), "Should have entry for main process.");
   let events = snapshot.parent;
-  Assert.equal(events.length, LIMIT, `Should have only recorded ${LIMIT} events`);
+  Assert.equal(events.length, COUNT, `Should have only recorded all ${COUNT} events`);
   Assert.ok(events.every((e, idx) => e[4] === String(idx)),
-            "Should have recorded all events from before hitting the limit.");
+            "Should have recorded all events.");
 });
 
 add_task(async function test_valueLimits() {
