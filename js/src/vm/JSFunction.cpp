@@ -792,7 +792,7 @@ JSFunction::trace(JSTracer* trc)
         // Functions can be be marked as interpreted despite having no script
         // yet at some points when parsing, and can be lazy with no lazy script
         // for self-hosted code.
-        if (hasScript() && !hasUncompiledScript())
+        if (hasScript() && !hasUncompletedScript())
             TraceManuallyBarrieredEdge(trc, &u.scripted.s.script_, "script");
         else if (isInterpretedLazy() && u.scripted.s.lazy_)
             TraceManuallyBarrieredEdge(trc, &u.scripted.s.lazy_, "lazyScript");

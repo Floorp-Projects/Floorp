@@ -3655,7 +3655,7 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleScope enclosingScope, HandleFun
                             HandleScript src)
 {
     MOZ_ASSERT(fun->isInterpreted());
-    MOZ_ASSERT(!fun->hasScript() || fun->hasUncompiledScript());
+    MOZ_ASSERT(!fun->hasScript() || fun->hasUncompletedScript());
 
     RootedScript dst(cx, CreateEmptyScriptForClone(cx, src));
     if (!dst)
@@ -4346,7 +4346,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
 
     // Set the enclosing scope and source object of the lazy function. These
     // values should only be non-null if we have a non-lazy enclosing script.
-    // AddLazyFunctionsForCompartment relies on the source object being null
+    // LazyScript::isEnclosingScriptLazy relies on the source object being null
     // if we're nested inside another lazy function.
     MOZ_ASSERT(!!sourceObject == !!enclosingScope);
     MOZ_ASSERT(!res->sourceObject());
@@ -4375,7 +4375,7 @@ LazyScript::initRuntimeFields(uint64_t packedFields)
 }
 
 bool
-LazyScript::hasUncompiledEnclosingScript() const
+LazyScript::hasUncompletedEnclosingScript() const
 {
     // It can happen that we created lazy scripts while compiling an enclosing
     // script, but we errored out while compiling that script. When we iterate
@@ -4389,7 +4389,7 @@ LazyScript::hasUncompiledEnclosingScript() const
         return false;
 
     JSFunction* fun = enclosingScope()->as<FunctionScope>().canonicalFunction();
-    return !fun->hasScript() || fun->hasUncompiledScript() || !fun->nonLazyScript()->code();
+    return !fun->hasScript() || fun->hasUncompletedScript() || !fun->nonLazyScript()->code();
 }
 
 void
