@@ -22,7 +22,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.genericErrorText = document.createElement("div");
 
     this.cancelButton = document.createElement("button");
-    this.cancelButton.id = "address-page-cancel-button";
+    this.cancelButton.className = "cancel-button";
     this.cancelButton.addEventListener("click", this);
 
     this.backButton = document.createElement("button");
@@ -30,6 +30,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.backButton.addEventListener("click", this);
 
     this.saveButton = document.createElement("button");
+    this.saveButton.className = "save-button";
     this.saveButton.addEventListener("click", this);
 
     // The markup is shared with form autofill preferences.
@@ -89,6 +90,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     } = state;
 
     this.backButton.hidden = page.onboardingWizard;
+    this.cancelButton.hidden = !page.onboardingWizard;
 
     if (page.addressFields) {
       this.setAttribute("address-fields", page.addressFields);
@@ -149,9 +151,10 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     let record = this.formHandler.buildFormObject();
     let {
       page,
+      savedBasicCards,
     } = this.requestStore.getState();
 
-    paymentRequest.updateAutofillRecord("addresses", record, page.guid, {
+    let state = {
       errorStateChange: {
         page: {
           id: "address-page",
@@ -161,12 +164,25 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       },
       preserveOldProperties: true,
       selectedStateKey: page.selectedStateKey,
-      successStateChange: {
+    };
+
+    if (page.onboardingWizard && !Object.keys(savedBasicCards).length) {
+      state.successStateChange = {
+        page: {
+          id: "basic-card-page",
+          onboardingWizard: true,
+          guid: null,
+        },
+      };
+    } else {
+      state.successStateChange = {
         page: {
           id: "payment-summary",
         },
-      },
-    });
+      };
+    }
+
+    paymentRequest.updateAutofillRecord("addresses", record, page.guid, state);
   }
 }
 
