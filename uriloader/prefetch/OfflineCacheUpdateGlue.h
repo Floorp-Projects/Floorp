@@ -53,14 +53,14 @@ public:
     NS_IMETHOD Init(nsIURI *aManifestURI,
                     nsIURI *aDocumentURI,
                     nsIPrincipal* aLoadingPrincipal,
-                    nsIDOMDocument *aDocument,
+                    nsIDocument *aDocument,
                     nsIFile *aCustomProfileDir) override;
 
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
     OfflineCacheUpdateGlue();
 
-    void SetDocument(nsIDOMDocument *aDocument);
+    void SetDocument(nsIDocument *aDocument);
 
 private:
     ~OfflineCacheUpdateGlue();
@@ -69,7 +69,7 @@ private:
     bool mCoalesced;
 
     /* Document that requested this update */
-    nsCOMPtr<nsIDOMDocument> mDocument;
+    nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsIURI> mDocumentURI;
     nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 };

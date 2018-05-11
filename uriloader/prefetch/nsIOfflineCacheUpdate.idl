@@ -8,13 +8,13 @@
 interface mozIDOMWindow;
 interface nsIURI;
 interface nsIDOMNode;
-interface nsIDOMDocument;
 interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
 interface nsIApplicationCache;
 interface nsIFile;
 interface nsIObserver;
+webidl Document;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
@@ -107,7 +107,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   void init(in nsIURI aManifestURI,
             in nsIURI aDocumentURI,
             in nsIPrincipal aLoadingPrincipal,
-            in nsIDOMDocument aDocument,
+            in Document aDocument,
             [optional] in nsIFile aCustomProfileDir);
 
   /**
@@ -240,7 +240,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     void scheduleOnDocumentStop(in nsIURI aManifestURI,
                                 in nsIURI aDocumentURI,
                                 in nsIPrincipal aLoadingPrincipal,
-                                in nsIDOMDocument aDocument);
+                                in Document aDocument);
 
     /**
      * Schedule a check to see if an update is available.
