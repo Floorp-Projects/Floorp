@@ -141,7 +141,8 @@ class SearchInput extends _react.Component {
       selectedItemId,
       showErrorEmoji,
       size,
-      summaryMsg
+      summaryMsg,
+      showClose
     } = this.props;
     const inputProps = {
       className: (0, _classnames2.default)({
@@ -172,7 +173,7 @@ class SearchInput extends _react.Component {
       "aria-expanded": expanded
     }, this.renderSvg(), _react2.default.createElement("input", inputProps), summaryMsg && _react2.default.createElement("div", {
       className: "summary"
-    }, summaryMsg), this.renderNav(), _react2.default.createElement(_Close2.default, {
+    }, summaryMsg), this.renderNav(), showClose && _react2.default.createElement(_Close2.default, {
       handleClick: handleClose,
       buttonClass: size
     })));
@@ -184,6 +185,7 @@ SearchInput.defaultProps = {
   expanded: false,
   hasPrefix: false,
   selectedItemId: "",
-  size: ""
+  size: "",
+  showClose: true
 };
 exports.default = SearchInput;

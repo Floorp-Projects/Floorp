@@ -37,7 +37,6 @@ DevToolsModules(
     'source.js',
     'tabs.js',
     'task.js',
-    'test-head.js',
     'text.js',
     'timings.js',
     'ui.js',
