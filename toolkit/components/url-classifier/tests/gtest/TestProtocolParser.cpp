@@ -89,8 +89,8 @@ TEST(UrlClassifierProtocolParser, SingleValueEncoding)
   p->AppendStream(nsCString(s.c_str(), s.length()));
   p->End();
 
-  auto& tus = p->GetTableUpdates();
-  auto tuv4 = TableUpdate::Cast<TableUpdateV4>(tus[0]);
+  const TableUpdateArray& tus = p->GetTableUpdates();
+  RefPtr<const TableUpdateV4> tuv4 = TableUpdate::Cast<TableUpdateV4>(tus[0]);
   auto& prefixMap = tuv4->Prefixes();
   for (auto iter = prefixMap.ConstIter(); !iter.Done(); iter.Next()) {
     // This prefix map should contain only a single 4-byte prefixe.

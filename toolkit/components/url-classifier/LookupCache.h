@@ -288,8 +288,8 @@ public:
 
   // This will Clear() the passed arrays when done.
   // 'aExpirySec' is used by testcase to config an expired time.
-  void AddGethashResultToCache(AddCompleteArray& aAddCompletes,
-                               MissPrefixArray& aMissPrefixes,
+  void AddGethashResultToCache(const AddCompleteArray& aAddCompletes,
+                               const MissPrefixArray& aMissPrefixes,
                                int64_t aExpirySec = 0);
 
 #if DEBUG

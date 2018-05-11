@@ -282,7 +282,7 @@ LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
   // remove from the old prefix set(according to lexigraphic order).
   // |removalIndex| is the current index of RemovalIndiceArray.
   // |numOldPrefixPicked| is used to record how many prefixes we picked from the old map.
-  TableUpdateV4::RemovalIndiceArray& removalArray = aTableUpdate->RemovalIndices();
+  const TableUpdateV4::RemovalIndiceArray& removalArray = aTableUpdate->RemovalIndices();
   uint32_t removalIndex = 0;
   int32_t numOldPrefixPicked = -1;
 
@@ -525,7 +525,7 @@ ReadValue(nsIInputStream* aInputStream, T& aValue)
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-LookupCacheV4::WriteMetadata(TableUpdateV4* aTableUpdate)
+LookupCacheV4::WriteMetadata(RefPtr<const TableUpdateV4> aTableUpdate)
 {
   NS_ENSURE_ARG_POINTER(aTableUpdate);
   if (nsUrlClassifierDBService::ShutdownHasStarted()) {

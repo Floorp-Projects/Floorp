@@ -873,7 +873,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     LOG(("Active tables: %s", s.get()));
   }
 
-  TableUpdateArray updates;
+  ConstTableUpdateArray updates;
 
   for (uint32_t i = 0; i < resultsPtr->Length(); i++) {
     bool activeTable = false;
