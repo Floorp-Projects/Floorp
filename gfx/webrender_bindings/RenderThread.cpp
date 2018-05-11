@@ -568,4 +568,13 @@ void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEv
                                              mozilla::Move(evt));
 }
 
+void wr_schedule_render(mozilla::wr::WrWindowId aWindowId)
+{
+  RefPtr<mozilla::layers::CompositorBridgeParent> cbp =
+      mozilla::layers::CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
+  if (cbp) {
+    cbp->ScheduleRenderOnCompositorThread();
+  }
+}
+
 } // extern C
