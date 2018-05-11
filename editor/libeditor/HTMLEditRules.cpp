@@ -10312,7 +10312,9 @@ HTMLEditRules::DocumentModifiedWorker()
   }
 
   // Try to recreate the bogus node if needed.
-  CreateBogusNodeIfNeeded();
+  DebugOnly<nsresult> rv = CreateBogusNodeIfNeeded();
+  NS_WARNING_ASSERTION(rv.value != NS_ERROR_EDITOR_DESTROYED,
+    "The editor has been destroyed during creating a bogus node");
 }
 
 } // namespace mozilla
