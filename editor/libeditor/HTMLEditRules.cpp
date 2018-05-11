@@ -3707,7 +3707,7 @@ HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
   }
 
   // call through to base class
-  return TextEditRules::DidDeleteSelection(aDir, aResult);
+  return TextEditRules::DidDeleteSelection();
 }
 
 nsresult

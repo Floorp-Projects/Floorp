@@ -149,8 +149,12 @@ protected:
   nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                bool* aCancel,
                                bool* aHandled);
-  nsresult DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                              nsresult aResult);
+  /**
+   * Called after deleted selected content.
+   * This method may remove empty text node and makes guarantee that caret
+   * is never at left of <br> element.
+   */
+  MOZ_MUST_USE nsresult DidDeleteSelection();
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 
