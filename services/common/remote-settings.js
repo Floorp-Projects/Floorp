@@ -4,7 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["RemoteSettings"];
+var EXPORTED_SYMBOLS = [
+  "RemoteSettings",
+  "jexlFilterFunc"
+];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -21,6 +24,7 @@ ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
                                "resource://services-common/uptake-telemetry.js");
 ChromeUtils.defineModuleGetter(this, "ClientEnvironmentBase",
                                "resource://gre/modules/components-utils/ClientEnvironment.jsm");
+ChromeUtils.defineModuleGetter(this, "FilterExpressions", "resource://normandy/lib/FilterExpressions.jsm");
 
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SETTINGS_DEFAULT_BUCKET     = "services.settings.default_bucket";
@@ -60,6 +64,27 @@ class ClientEnvironment extends ClientEnvironmentBase {
     Services.appinfo.QueryInterface(Ci.nsIXULAppInfo);
     return Services.appinfo.ID;
   }
+}
+
+/**
+ * Default entry filtering function, in charge of excluding remote settings entries
+ * where the JEXL expression evaluates into a falsy value.
+ */
+async function jexlFilterFunc(entry, environment) {
+  const { filters } = entry;
+  if (!filters) {
+    return entry;
+  }
+  let result;
+  try {
+    const context = {
+      environment
+    };
+    result = await FilterExpressions.eval(filters, context);
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  return result ? entry : null;
 }
 
 
@@ -150,7 +175,7 @@ async function fetchLatestChanges(url, lastEtag) {
 
 class RemoteSettingsClient {
 
-  constructor(collectionName, { bucketName, signerName, filterFunc, lastCheckTimePref }) {
+  constructor(collectionName, { bucketName, signerName, filterFunc = jexlFilterFunc, lastCheckTimePref }) {
     this.collectionName = collectionName;
     this.bucketName = bucketName;
     this.signerName = signerName;
