@@ -377,7 +377,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
 
   switch (aInfo->action) {
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aInfo->collapsedAction, aResult);
+      return DidDeleteSelection();
     case EditAction::undo:
       return DidUndo(aResult);
     case EditAction::redo:
@@ -1081,8 +1081,7 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
 }
 
 nsresult
-TextEditRules::DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                                  nsresult aResult)
+TextEditRules::DidDeleteSelection()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -1098,6 +1097,9 @@ TextEditRules::DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
     nsresult rv =
       TextEditorRef().DeleteNodeWithTransaction(
                         *selectionStartPoint.GetContainer());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
