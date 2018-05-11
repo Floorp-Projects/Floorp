@@ -268,7 +268,6 @@ android-4.3-arm7-api-16/debug:
     build-platform: android-api-16/debug
     test-sets:
         - android-common-tests
-        - android-debug-tests
         - android-gradle-tests
 
 android-4.3-arm7-api-16/opt:
