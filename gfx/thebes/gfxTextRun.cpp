@@ -3196,7 +3196,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
             // if font or orientation has changed, make a new range...
             // unless ch is a variation selector (bug 1248248)
             gfxTextRange& prevRange = aRanges[lastRangeIndex];
-            if (prevRange.font != font || prevRange.matchType != matchType ||
+            if (prevRange.font != font ||
                 (prevRange.orientation != orient && !IsClusterExtender(ch))) {
                 // close out the previous range
                 prevRange.end = origI;
@@ -3212,6 +3212,8 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
                 {
                     prevFont = font;
                 }
+            } else {
+                prevRange.matchType |= matchType;
             }
         }
     }
@@ -3233,13 +3235,26 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
         nsAutoCString fontMatches;
         for (size_t i = 0, i_end = aRanges.Length(); i < i_end; i++) {
             const gfxTextRange& r = aRanges[i];
+            nsAutoCString matchTypes;
+            if (r.matchType & gfxTextRange::MatchType::kFontGroup) {
+                matchTypes.AppendLiteral("list");
+            }
+            if (r.matchType & gfxTextRange::MatchType::kPrefsFallback) {
+                if (!matchTypes.IsEmpty()) {
+                    matchTypes.AppendLiteral(",");
+                }
+                matchTypes.AppendLiteral("prefs");
+            }
+            if (r.matchType & gfxTextRange::MatchType::kPrefsFallback) {
+                if (!matchTypes.IsEmpty()) {
+                    matchTypes.AppendLiteral(",");
+                }
+                matchTypes.AppendLiteral("sys");
+            }
             fontMatches.AppendPrintf(" [%u:%u] %.200s (%s)", r.start, r.end,
                 (r.font.get() ?
                  NS_ConvertUTF16toUTF8(r.font->GetName()).get() : "<null>"),
-                (r.matchType == gfxTextRange::MatchType::kFontGroup ?
-                 "list" :
-                 (r.matchType == gfxTextRange::MatchType::kPrefsFallback) ?
-                  "prefs" : "sys"));
+                matchTypes.get());
         }
         MOZ_LOG(log, LogLevel::Debug,\
                ("(%s-fontmatching) fontgroup: [%s] default: %s lang: %s script: %d"
