@@ -13,8 +13,8 @@ import org.mozilla.focus.BuildConfig
  * directly should go in here (like TelemetryWrapper).
  *
  * With the current implementation, to enable Sentry on Beta/Release builds, add a
- * <project-dir>/.sentry_dsn_release file with your key. To enable Sentry on Debug
- * builds, add a .sentry_dsn_debug key and replace the [DataUploadPreference.isEnabled]
+ * <project-dir>/.sentry_token file with your DSN. To enable Sentry on Debug
+ * builds, add a .sentry_token file and replace the [TelemetryWrapper.isTelemetryEnabled]
  * value with true (upload is disabled by default in dev builds).
  */
 object SentryWrapper {
