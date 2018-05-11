@@ -266,7 +266,7 @@ nsStyleBackground::HasLocalBackground() const
   NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mImage) {
     const nsStyleImageLayers::Layer& layer = mImage.mLayers[i];
     if (!layer.mImage.IsEmpty() &&
-        layer.mAttachment == NS_STYLE_IMAGELAYER_ATTACHMENT_LOCAL) {
+        layer.mAttachment == mozilla::StyleImageLayerAttachment::Local) {
       return true;
     }
   }

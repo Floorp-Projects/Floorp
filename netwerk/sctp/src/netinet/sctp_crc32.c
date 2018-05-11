@@ -60,7 +60,7 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.c 310590 2016-12-26 11:06:41Z tu
  *				non-NULL if the mode argument is equal to CONT or END
  *		p_buf - the packet buffer where crc computations are being performed
  *		length - the length of p_buf in bytes
- *		init_bytes - the number of initial bytes that need to be procesed before
+ *		init_bytes - the number of initial bytes that need to be processed before
  *					 aligning p_buf to multiples of 4 bytes
  *		mode - can be any of the following: BEGIN, CONT, END, BODY, ALIGN
  *

@@ -26,6 +26,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.FormAssistPopup;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -97,7 +98,7 @@ public class WebAppActivity extends AppCompatActivity
         final GeckoSessionSettings settings = new GeckoSessionSettings();
         settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, false);
         mGeckoSession = new GeckoSession(settings);
-        mGeckoView.setSession(mGeckoSession, GeckoRuntime.getDefault(this));
+        mGeckoView.setSession(mGeckoSession, GeckoApplication.ensureRuntime(this));
 
         mGeckoSession.setNavigationDelegate(this);
         mGeckoSession.setContentDelegate(this);
