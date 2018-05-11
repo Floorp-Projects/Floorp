@@ -27,8 +27,18 @@ public:
   RegisterProcessor(const nsAString& aType,
                     VoidFunction& aProcessorCtor);
 
+  uint64_t CurrentFrame() const;
+
+  double CurrentTime() const;
+
+  float SampleRate() const;
+
 private:
   ~AudioWorkletGlobalScope() = default;
+
+  uint64_t mCurrentFrame;
+  double mCurrentTime;
+  float mSampleRate;
 };
 
 } // namespace dom
