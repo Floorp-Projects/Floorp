@@ -11,6 +11,7 @@ import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.test.rdp.Actor;
 import org.mozilla.geckoview.test.rdp.RDPConnection;
 import org.mozilla.geckoview.test.rdp.Tab;
 import org.mozilla.geckoview.test.util.Callbacks;
@@ -977,7 +978,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                         dataDir + "/firefox-debugger-socket",
                         LocalSocketAddress.Namespace.FILESYSTEM);
                 sRDPConnection = new RDPConnection(address);
-                sRDPConnection.setTimeout((int) mTimeoutMillis);
+                sRDPConnection.setTimeout(mTimeoutMillis);
             }
             final Tab tab = sRDPConnection.getMostRecentTab();
             tab.attach();
@@ -1721,7 +1722,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         final Tab tab = mRDPTabs.get(session);
         assertThat("Session should have tab object", tab, notNullValue());
-        return tab.getConsole().evaluateJS(js);
+        return evaluateJS(tab, js);
     }
 
     /**
@@ -1743,7 +1744,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                        mRDPChromeProcess, notNullValue());
             mRDPChromeProcess.attach();
         }
-        return mRDPChromeProcess.getConsole().evaluateJS(js);
+        return evaluateJS(mRDPChromeProcess, js);
+    }
+
+    private Object evaluateJS(final @NonNull Tab tab, final @NonNull String js) {
+        final Actor.Reply<Object> reply = tab.getConsole().evaluateJS(js);
+        while (!reply.hasResult()) {
+            loopUntilIdle(mTimeoutMillis);
+        }
+        return reply.get();
     }
 
     /**
