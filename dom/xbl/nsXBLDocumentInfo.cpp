@@ -11,7 +11,6 @@
 #include "nsXBLPrototypeBinding.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMDocument.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIURI.h"
@@ -227,12 +226,9 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
   nsContentUtils::GetSecurityManager()->
     GetSystemPrincipal(getter_AddRefs(principal));
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = NS_NewXBLDocument(getter_AddRefs(domdoc), aURI, nullptr, principal);
+  nsCOMPtr<nsIDocument> doc;
+  rv = NS_NewXBLDocument(getter_AddRefs(doc), aURI, nullptr, principal);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-  NS_ASSERTION(doc, "Must have a document!");
 
   RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
 

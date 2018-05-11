@@ -5206,8 +5206,8 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   nsCOMPtr<nsIPrincipal> principal = NullPrincipal::CreateWithoutOriginAttributes();
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
                                   EmptyString(),
                                   EmptyString(),
                                   nullptr,
@@ -5219,7 +5219,7 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
                                   DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
   rv = nsContentUtils::ParseDocumentHTML(aSourceBuffer, document,
     !(aFlags & nsIDocumentEncoder::OutputNoScriptContent));
   NS_ENSURE_SUCCESS(rv, rv);
