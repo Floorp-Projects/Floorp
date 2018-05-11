@@ -260,8 +260,20 @@ protected:
                      bool* aCancel, bool* aHandled);
   nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
   nsresult WillRemoveAbsolutePosition(bool* aCancel, bool* aHandled);
-  nsresult WillRelativeChangeZIndex(int32_t aChange,
-                                    bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before changing z-index.
+   * This method actually changes z-index of nearest absolute positioned
+   * element relatively.  Therefore, this might cause destroying the HTML
+   * editor.
+   *
+   * @param aChange             Amount to change z-index.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillRelativeChangeZIndex(int32_t aChange, bool* aCancel, bool* aHandled);
+
   nsresult WillMakeDefListItem(const nsAString* aBlockType, bool aEntireList,
                                bool* aCancel, bool* aHandled);
   nsresult WillMakeBasicBlock(const nsAString& aBlockType,
