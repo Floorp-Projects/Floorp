@@ -195,6 +195,12 @@ We use a few tricks and optimizations to help improve the perceived performance 
 
 4. On platforms that support ``occlusionstatechange`` events (as of this writing, only macOS) and ``sizemodechange`` events (Windows, macOS and Linux), we stop rendering the layers for the currently selected tab when the window is minimized or fully occluded by another window.
 
+5. Based on the browser.tabs.remote.tabCacheSize pref, we keep recently used tabs'
+layers around to speed up tab switches by avoiding the round trip to the content
+process. This uses a simple array (``_tabLayerCache``) inside tabbrowser.js, which
+we examine when determining if we want to unload a tab's layers or not. This is still
+experimental as of Nightly 62.
+
 .. _async-tab-switcher.warming:
 
 Warming

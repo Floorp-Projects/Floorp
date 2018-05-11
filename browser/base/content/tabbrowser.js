@@ -97,6 +97,8 @@ window._gBrowser = {
 
   _contentWaitingCount: 0,
 
+  _tabLayerCache: [],
+
   tabAnimationsInProgress: 0,
 
   _XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -2329,6 +2331,9 @@ window._gBrowser = {
             lastRelatedTab.owner = null;
           } else if (openerTab) {
             t.owner = openerTab;
+          }
+          // Always set related map if opener exists.
+          if (openerTab) {
             this._lastRelatedTabMap.set(openerTab, t);
           }
         } else {
@@ -2336,8 +2341,11 @@ window._gBrowser = {
           aIndex = this.tabs.length;
         }
       }
+      // Ensure position respectes tab pinned state.
       if (aPinned) {
         aIndex = Math.min(aIndex, this._numPinnedTabs);
+      } else {
+        aIndex = Math.max(aIndex, this._numPinnedTabs);
       }
 
       // use .item() instead of [] because dragging to the end of the strip goes out of
@@ -2748,6 +2756,13 @@ window._gBrowser = {
       if (aTab.closing || (!timedOut && !permitUnload)) {
         return false;
       }
+    }
+
+    // this._switcher would normally cover removing a tab from this
+    // cache, but we may not have one at this time.
+    let tabCacheIndex = this._tabLayerCache.indexOf(aTab);
+    if (tabCacheIndex != -1) {
+      this._tabLayerCache.splice(tabCacheIndex, 1);
     }
 
     this._blurTab(aTab);

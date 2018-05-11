@@ -89,6 +89,31 @@ add_task(async function test_initialState() {
   is(initialState.page.id, "payment-summary", "Check initial page");
 });
 
+add_task(async function test_viewAllButtonVisibility() {
+  await setup();
+
+  let button = el1._viewAllButton;
+  ok(button.hidden, "Button is initially hidden when there are no items to show");
+
+  // Add a display item.
+  let request = deepClone(el1.requestStore.getState().request);
+  request.paymentDetails.displayItems = [
+    {
+      "label": "Triangle",
+      "amount": {
+        "currency": "CAD",
+        "value": "3",
+      },
+    },
+  ];
+  await el1.requestStore.setState({ request });
+  await asyncElementRendered();
+
+  // Check if the "View all items" button is visible.
+  ok(!button.hidden, "Button is visible");
+});
+
+
 add_task(async function test_viewAllButton() {
   await setup();
 

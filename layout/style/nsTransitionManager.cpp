@@ -41,7 +41,6 @@ using mozilla::TimeDuration;
 using mozilla::dom::Animation;
 using mozilla::dom::AnimationPlayState;
 using mozilla::dom::CSSTransition;
-using mozilla::dom::KeyframeEffectReadOnly;
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -394,7 +393,7 @@ CSSTransition::GetCurrentTimeAt(const dom::DocumentTimeline& aTimeline,
 }
 
 void
-CSSTransition::SetEffectFromStyle(dom::AnimationEffectReadOnly* aEffect)
+CSSTransition::SetEffectFromStyle(dom::AnimationEffect* aEffect)
 {
   Animation::SetEffectNoUpdate(aEffect);
 

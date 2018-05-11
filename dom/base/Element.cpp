@@ -136,8 +136,8 @@
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/VRDisplay.h"
@@ -3776,7 +3776,7 @@ Element::GetAnimationsUnsorted(Element* aElement,
     return;
   }
 
-  for (KeyframeEffectReadOnly* effect : *effects) {
+  for (KeyframeEffect* effect : *effects) {
     MOZ_ASSERT(effect && effect->GetAnimation(),
                "Only effects associated with an animation should be "
                "added to an element's effect set");

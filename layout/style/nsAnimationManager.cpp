@@ -15,9 +15,9 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
-#include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/DocumentTimeline.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/dom/KeyframeEffect.h"
 
 #include "nsPresContext.h"
 #include "nsStyleChangeList.h"
@@ -35,9 +35,9 @@
 using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
-using mozilla::dom::AnimationEffectReadOnly;
+using mozilla::dom::AnimationEffect;
 using mozilla::dom::AnimationPlayState;
-using mozilla::dom::KeyframeEffectReadOnly;
+using mozilla::dom::KeyframeEffect;
 using mozilla::dom::CSSAnimation;
 
 typedef mozilla::ComputedTiming::AnimationPhase AnimationPhase;
@@ -370,8 +370,7 @@ public:
                                          aTimingFunction,
                                          aKeyframes);
   }
-  void SetKeyframes(KeyframeEffectReadOnly& aEffect,
-                    nsTArray<Keyframe>&& aKeyframes)
+  void SetKeyframes(KeyframeEffect& aEffect, nsTArray<Keyframe>&& aKeyframes)
   {
     aEffect.SetKeyframes(Move(aKeyframes), mComputedStyle);
   }
@@ -402,12 +401,12 @@ public:
   // post the required restyles.
   void NotifyNewOrRemovedAnimation(const Animation& aAnimation)
   {
-    dom::AnimationEffectReadOnly* effect = aAnimation.GetEffect();
+    dom::AnimationEffect* effect = aAnimation.GetEffect();
     if (!effect) {
       return;
     }
 
-    KeyframeEffectReadOnly* keyframeEffect = effect->AsKeyframeEffect();
+    KeyframeEffect* keyframeEffect = effect->AsKeyframeEffect();
     if (!keyframeEffect) {
       return;
     }
@@ -433,11 +432,11 @@ UpdateOldAnimationPropertiesWithNew(
   // Update the old from the new so we can keep the original object
   // identity (and any expando properties attached to it).
   if (aOld.GetEffect()) {
-    dom::AnimationEffectReadOnly* oldEffect = aOld.GetEffect();
+    dom::AnimationEffect* oldEffect = aOld.GetEffect();
     animationChanged = oldEffect->SpecifiedTiming() != aNewTiming;
     oldEffect->SetSpecifiedTiming(aNewTiming);
 
-    KeyframeEffectReadOnly* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
+    KeyframeEffect* oldKeyframeEffect = oldEffect->AsKeyframeEffect();
     if (oldKeyframeEffect) {
       aBuilder.SetKeyframes(*oldKeyframeEffect, Move(aNewKeyframes));
     }
@@ -530,9 +529,8 @@ BuildAnimation(nsPresContext* aPresContext,
   Maybe<OwningAnimationTarget> target;
   target.emplace(aTarget.mElement, aTarget.mPseudoType);
   KeyframeEffectParams effectOptions;
-  RefPtr<KeyframeEffectReadOnly> effect =
-    new KeyframeEffectReadOnly(aPresContext->Document(), target, timing,
-                               effectOptions);
+  RefPtr<KeyframeEffect> effect =
+    new KeyframeEffect(aPresContext->Document(), target, timing, effectOptions);
 
   aBuilder.SetKeyframes(*effect, Move(keyframes));
 

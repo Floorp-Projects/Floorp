@@ -25,23 +25,23 @@ test(function(t) {
   var div = addDiv(t);
   var anim = div.animate({ }, 100 * MS_PER_SEC);
 
-  anim.effect.timing.easing = 'cubic-bezier(0, 1e+39, 0, 0)';
-  assert_equals(anim.effect.timing.easing,
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, 1e+39, 0, 0)' });
+  assert_equals(anim.effect.getComputedTiming().easing,
     'cubic-bezier(0, ' + max_float + ', 0, 0)',
     'y1 control point for effect easing is out of upper boundary');
 
-  anim.effect.timing.easing = 'cubic-bezier(0, 0, 0, 1e+39)';
-  assert_equals(anim.effect.timing.easing,
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, 0, 0, 1e+39)' });
+  assert_equals(anim.effect.getComputedTiming().easing,
     'cubic-bezier(0, 0, 0, ' + max_float + ')',
     'y2 control point for effect easing is out of upper boundary');
 
-  anim.effect.timing.easing = 'cubic-bezier(0, -1e+39, 0, 0)';
-  assert_equals(anim.effect.timing.easing,
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, -1e+39, 0, 0)' });
+  assert_equals(anim.effect.getComputedTiming().easing,
     'cubic-bezier(0, ' + -max_float + ', 0, 0)',
     'y1 control point for effect easing is out of lower boundary');
 
-  anim.effect.timing.easing = 'cubic-bezier(0, 0, 0, -1e+39)';
-  assert_equals(anim.effect.timing.easing,
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, 0, 0, -1e+39)' });
+  assert_equals(anim.effect.getComputedTiming().easing,
     'cubic-bezier(0, 0, 0, ' + -max_float + ')',
     'y2 control point for effect easing is out of lower boundary');
 
@@ -144,7 +144,7 @@ test(function(t) {
 
   anim.pause();
   // The positive steepest function on both edges.
-  anim.effect.timing.easing = 'cubic-bezier(0, 1e+39, 0, 1e+39)';
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, 1e+39, 0, 1e+39)' });
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
     'progress on lower edge for the highest value of y1 and y2 control points');
 
@@ -153,7 +153,7 @@ test(function(t) {
     'progress on upper edge for the highest value of y1 and y2 control points');
 
   // The negative steepest function on both edges.
-  anim.effect.timing.easing = 'cubic-bezier(0, -1e+39, 0, -1e+39)';
+  anim.effect.updateTiming({ easing: 'cubic-bezier(0, -1e+39, 0, -1e+39)' });
   anim.currentTime = 0;
   assert_equals(anim.effect.getComputedTiming().progress, 0.0,
     'progress on lower edge for the lowest value of y1 and y2 control points');

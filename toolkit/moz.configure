@@ -819,14 +819,14 @@ set_config('SERVO_TARGET_DIR', servo_target_dir)
 option('--enable-webrender', nargs='?', choices=('build',),
        help='Include WebRender in the build and/or enable it at runtime')
 
-@depends('--enable-webrender', milestone)
-def webrender(value, milestone):
+@depends('--enable-webrender')
+def webrender(value):
     build_webrender = None
     enable_webrender = None
 
     if value.origin == 'default':
-        # if nothing is specified, default to just building on Nightly
-        build_webrender = milestone.is_nightly
+        # if nothing is specified, default to building
+        build_webrender = True
     elif len(value) and value[0] == 'build':
         # if explicitly set to 'build', then we build but don't enable
         build_webrender = True

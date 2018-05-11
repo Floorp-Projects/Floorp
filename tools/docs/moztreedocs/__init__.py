@@ -6,8 +6,9 @@ from __future__ import unicode_literals
 
 import os
 
+from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
-from mozpack.archive import create_tar_gz_from_files
+from mozbuild.util import memoize
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
@@ -15,64 +16,75 @@ from mozpack.manifests import InstallManifest
 import sphinx
 import sphinx.apidoc
 
+here = os.path.abspath(os.path.dirname(__file__))
+build = MozbuildObject.from_environment(cwd=here)
 
-class SphinxManager(object):
+MAIN_DOC_PATH = os.path.join(build.topsrcdir, 'tools', 'docs')
+
+
+@memoize
+def read_build_config(docdir):
+    """Read the active build config and return the relevant doc paths.
+
+    The return value is cached so re-generating with the same docdir won't
+    invoke the build system a second time."""
+    trees = {}
+    python_package_dirs = set()
+
+    is_main = docdir == MAIN_DOC_PATH
+    relevant_mozbuild_path = None if is_main else docdir
+
+    # Reading the Sphinx variables doesn't require a full build context.
+    # Only define the parts we need.
+    class fakeconfig(object):
+        topsrcdir = build.topsrcdir
+
+    reader = BuildReader(fakeconfig())
+    for path, name, key, value in reader.find_sphinx_variables(relevant_mozbuild_path):
+        reldir = os.path.join(os.path.dirname(path), value)
+
+        if name == 'SPHINX_TREES':
+            # If we're building a subtree, only process that specific subtree.
+            absdir = os.path.join(build.topsrcdir, reldir)
+            if not is_main and absdir not in (docdir, MAIN_DOC_PATH):
+                continue
+
+            assert key
+            if key.startswith('/'):
+                key = key[1:]
+            else:
+                key = os.path.join(reldir, key)
+
+            if key in trees:
+                raise Exception('%s has already been registered as a destination.' % key)
+            trees[key] = reldir
+
+        if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
+            python_package_dirs.add(reldir)
+
+    return trees, python_package_dirs
+
+
+class _SphinxManager(object):
     """Manages the generation of Sphinx documentation for the tree."""
 
-    def __init__(self, topsrcdir, main_path, output_dir):
-        self._topsrcdir = topsrcdir
-        self._output_dir = output_dir
-        self._docs_dir = os.path.join(output_dir, '_staging')
-        self._conf_py_path = os.path.join(main_path, 'conf.py')
-        self._index_path = os.path.join(main_path, 'index.rst')
-        self._trees = {}
-        self._python_package_dirs = set()
+    def __init__(self, topsrcdir, main_path):
+        self.topsrcdir = topsrcdir
+        self.conf_py_path = os.path.join(main_path, 'conf.py')
+        self.index_path = os.path.join(main_path, 'index.rst')
 
-    def read_build_config(self):
-        """Read the active build config and add docs to this instance."""
-
-        # Reading the Sphinx variables doesn't require a full build context.
-        # Only define the parts we need.
-        class fakeconfig(object):
-            def __init__(self, topsrcdir):
-                self.topsrcdir = topsrcdir
-
-        config = fakeconfig(self._topsrcdir)
-        reader = BuildReader(config)
-
-        for path, name, key, value in reader.find_sphinx_variables():
-            reldir = os.path.dirname(path)
-
-            if name == 'SPHINX_TREES':
-                assert key
-                if key.startswith('/'):
-                    key = key[1:]
-                else:
-                    key = os.path.join(reldir, key)
-                self.add_tree(os.path.join(reldir, value), key)
-
-            if name == 'SPHINX_PYTHON_PACKAGE_DIRS':
-                self.add_python_package_dir(os.path.join(reldir, value))
-
-    def add_tree(self, source_dir, dest_dir):
-        """Add a directory from where docs should be sourced."""
-        if dest_dir in self._trees:
-            raise Exception('%s has already been registered as a destination.'
-                            % dest_dir)
-
-        self._trees[dest_dir] = source_dir
-
-    def add_python_package_dir(self, source_dir):
-        """Add a directory containing Python packages.
-
-        Added directories will have Python API docs generated automatically.
-        """
-        self._python_package_dirs.add(source_dir)
+        # Instance variables that get set in self.generate_docs()
+        self.staging_dir = None
+        self.trees = None
+        self.python_package_dirs = None
 
     def generate_docs(self, app):
         """Generate/stage documentation."""
+        self.staging_dir = os.path.join(app.outdir, '_staging')
+
         app.info('Reading Sphinx metadata from build configuration')
-        self.read_build_config()
+        self.trees, self.python_package_dirs = read_build_config(app.srcdir)
+
         app.info('Staging static documentation')
         self._synchronize_docs()
         app.info('Generating Python API documentation')
@@ -80,11 +92,11 @@ class SphinxManager(object):
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
-        out_dir = os.path.join(self._docs_dir, 'python')
+        out_dir = os.path.join(self.staging_dir, 'python')
         base_args = ['sphinx', '--no-toc', '-o', out_dir]
 
-        for p in sorted(self._python_package_dirs):
-            full = os.path.join(self._topsrcdir, p)
+        for p in sorted(self.python_package_dirs):
+            full = os.path.join(self.topsrcdir, p)
 
             finder = FileFinder(full)
             dirs = {os.path.dirname(f[0]) for f in finder.find('**')}
@@ -100,10 +112,10 @@ class SphinxManager(object):
     def _synchronize_docs(self):
         m = InstallManifest()
 
-        m.add_link(self._conf_py_path, 'conf.py')
+        m.add_link(self.conf_py_path, 'conf.py')
 
-        for dest, source in sorted(self._trees.items()):
-            source_dir = os.path.join(self._topsrcdir, source)
+        for dest, source in sorted(self.trees.items()):
+            source_dir = os.path.join(self.topsrcdir, source)
             for root, dirs, files in os.walk(source_dir):
                 for f in files:
                     source_path = os.path.join(root, f)
@@ -113,38 +125,21 @@ class SphinxManager(object):
 
         copier = FileCopier()
         m.populate_registry(copier)
-        copier.copy(self._docs_dir)
+        copier.copy(self.staging_dir)
 
-        with open(self._index_path, 'rb') as fh:
+        with open(self.index_path, 'rb') as fh:
             data = fh.read()
 
-        indexes = ['%s/index' % p for p in sorted(self._trees.keys())]
+        indexes = ['%s/index' % p for p in sorted(self.trees.keys())]
         indexes = '\n   '.join(indexes)
 
-        packages = [os.path.basename(p) for p in self._python_package_dirs]
+        packages = [os.path.basename(p) for p in self.python_package_dirs]
         packages = ['python/%s' % p for p in packages]
         packages = '\n   '.join(sorted(packages))
         data = data.format(indexes=indexes, python_packages=packages)
 
-        with open(os.path.join(self._docs_dir, 'index.rst'), 'wb') as fh:
+        with open(os.path.join(self.staging_dir, 'index.rst'), 'wb') as fh:
             fh.write(data)
 
 
-def distribution_files(root):
-    """Find all files suitable for distributing.
-
-    Given the path to generated Sphinx documentation, returns an iterable
-    of (path, BaseFile) for files that should be archived, uploaded, etc.
-    Paths are relative to given root directory.
-    """
-    finder = FileFinder(root, ignore=('_staging', '_venv'))
-    return finder.find('**')
-
-
-def create_tarball(filename, root):
-    """Create a tar.gz archive of docs in a directory."""
-    files = dict(distribution_files(root))
-
-    with open(filename, 'wb') as fh:
-        create_tar_gz_from_files(fh, files, filename=os.path.basename(filename),
-                                 compresslevel=6)
+manager = _SphinxManager(build.topsrcdir, MAIN_DOC_PATH)

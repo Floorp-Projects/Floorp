@@ -4,51 +4,40 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
+#include "mozilla/dom/AnimationEffect.h"
+#include "mozilla/dom/AnimationEffectBinding.h"
 
 #include "mozilla/dom/Animation.h"
-#include "mozilla/dom/KeyframeEffectReadOnly.h"
+#include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffectReadOnly)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffectReadOnly)
-  if (tmp->mTiming) {
-    tmp->mTiming->Unlink();
-  }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument, mTiming, mAnimation)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AnimationEffect)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationEffect)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument, mAnimation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEffectReadOnly)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument, mTiming, mAnimation)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEffect)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument, mAnimation)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AnimationEffect)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationEffectReadOnly)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationEffectReadOnly)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationEffect)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationEffect)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffectReadOnly)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationEffect)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-AnimationEffectReadOnly::AnimationEffectReadOnly(
-  nsIDocument* aDocument, AnimationEffectTimingReadOnly* aTiming)
-  : mDocument(aDocument)
-  , mTiming(aTiming)
-{
-  MOZ_ASSERT(aTiming);
-}
-
 // https://drafts.csswg.org/web-animations/#current
 bool
-AnimationEffectReadOnly::IsCurrent() const
+AnimationEffect::IsCurrent() const
 {
   if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
@@ -61,39 +50,44 @@ AnimationEffectReadOnly::IsCurrent() const
 
 // https://drafts.csswg.org/web-animations/#in-effect
 bool
-AnimationEffectReadOnly::IsInEffect() const
+AnimationEffect::IsInEffect() const
 {
   ComputedTiming computedTiming = GetComputedTiming();
   return !computedTiming.mProgress.IsNull();
 }
 
-already_AddRefed<AnimationEffectTimingReadOnly>
-AnimationEffectReadOnly::Timing()
-{
-  RefPtr<AnimationEffectTimingReadOnly> temp(mTiming);
-  return temp.forget();
-}
-
 void
-AnimationEffectReadOnly::SetSpecifiedTiming(const TimingParams& aTiming)
+AnimationEffect::SetSpecifiedTiming(const TimingParams& aTiming)
 {
-  if (mTiming->AsTimingParams() == aTiming) {
+  if (mTiming == aTiming) {
     return;
   }
-  mTiming->SetTimingParams(aTiming);
+
+  mTiming = aTiming;
+
   if (mAnimation) {
+    Maybe<nsAutoAnimationMutationBatch> mb;
+    if (AsKeyframeEffect() && AsKeyframeEffect()->GetTarget()) {
+      mb.emplace(AsKeyframeEffect()->GetTarget()->mElement->OwnerDoc());
+    }
+
     mAnimation->NotifyEffectTimingUpdated();
+
+    if (mAnimation->IsRelevant()) {
+      nsNodeUtils::AnimationChanged(mAnimation);
+    }
+
     if (AsKeyframeEffect()) {
       AsKeyframeEffect()->RequestRestyle(EffectCompositor::RestyleType::Layer);
     }
   }
   // For keyframe effects, NotifyEffectTimingUpdated above will eventually cause
-  // KeyframeEffectReadOnly::NotifyAnimationTimingUpdated to be called so it can
+  // KeyframeEffect::NotifyAnimationTimingUpdated to be called so it can
   // update its registration with the target element as necessary.
 }
 
 ComputedTiming
-AnimationEffectReadOnly::GetComputedTimingAt(
+AnimationEffect::GetComputedTimingAt(
     const Nullable<TimeDuration>& aLocalTime,
     const TimingParams& aTiming,
     double aPlaybackRate)
@@ -265,7 +259,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
 }
 
 ComputedTiming
-AnimationEffectReadOnly::GetComputedTiming(const TimingParams* aTiming) const
+AnimationEffect::GetComputedTiming(const TimingParams* aTiming) const
 {
   double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
   return GetComputedTimingAt(GetLocalTime(),
@@ -273,68 +267,77 @@ AnimationEffectReadOnly::GetComputedTiming(const TimingParams* aTiming) const
                              playbackRate);
 }
 
-// Helper functions for generating a ComputedTimingProperties dictionary
+// Helper function for generating an (Computed)EffectTiming dictionary
 static void
-GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
-                            const Nullable<TimeDuration>& aLocalTime,
-                            const TimingParams& aTiming,
-                            ComputedTimingProperties& aRetVal)
+GetEffectTimingDictionary(const TimingParams& aTiming, EffectTiming& aRetVal)
 {
-  // AnimationEffectTimingProperties
   aRetVal.mDelay = aTiming.Delay().ToMilliseconds();
   aRetVal.mEndDelay = aTiming.EndDelay().ToMilliseconds();
-  aRetVal.mFill = aComputedTiming.mFill;
-  aRetVal.mIterationStart = aComputedTiming.mIterationStart;
-  aRetVal.mIterations = aComputedTiming.mIterations;
-  aRetVal.mDuration.SetAsUnrestrictedDouble() =
-    aComputedTiming.mDuration.ToMilliseconds();
+  aRetVal.mFill = aTiming.Fill();
+  aRetVal.mIterationStart = aTiming.IterationStart();
+  aRetVal.mIterations = aTiming.Iterations();
+  if (aTiming.Duration()) {
+    aRetVal.mDuration.SetAsUnrestrictedDouble() =
+      aTiming.Duration()->ToMilliseconds();
+  }
   aRetVal.mDirection = aTiming.Direction();
   if (aTiming.TimingFunction()) {
     aRetVal.mEasing.Truncate();
     aTiming.TimingFunction()->AppendToString(aRetVal.mEasing);
   }
+}
 
-  // ComputedTimingProperties
-  aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
-  aRetVal.mEndTime = aComputedTiming.mEndTime.ToMilliseconds();
-  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(aLocalTime);
-  aRetVal.mProgress = aComputedTiming.mProgress;
+void
+AnimationEffect::GetTiming(EffectTiming& aRetVal) const
+{
+  GetEffectTimingDictionary(SpecifiedTiming(), aRetVal);
+}
+
+void
+AnimationEffect::GetComputedTimingAsDict(ComputedEffectTiming& aRetVal) const
+{
+  // Specified timing
+  GetEffectTimingDictionary(SpecifiedTiming(), aRetVal);
+
+  // Computed timing
+  double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
+  const Nullable<TimeDuration> currentTime = GetLocalTime();
+  ComputedTiming computedTiming =
+    GetComputedTimingAt(currentTime, SpecifiedTiming(), playbackRate);
+
+  aRetVal.mDuration.SetAsUnrestrictedDouble() =
+    computedTiming.mDuration.ToMilliseconds();
+  aRetVal.mFill = computedTiming.mFill;
+  aRetVal.mActiveDuration = computedTiming.mActiveDuration.ToMilliseconds();
+  aRetVal.mEndTime = computedTiming.mEndTime.ToMilliseconds();
+  aRetVal.mLocalTime = AnimationUtils::TimeDurationToDouble(currentTime);
+  aRetVal.mProgress = computedTiming.mProgress;
 
   if (!aRetVal.mProgress.IsNull()) {
     // Convert the returned currentIteration into Infinity if we set
-    // (uint64_t) aComputedTiming.mCurrentIteration to UINT64_MAX
-    double iteration = aComputedTiming.mCurrentIteration == UINT64_MAX
+    // (uint64_t) computedTiming.mCurrentIteration to UINT64_MAX
+    double iteration = computedTiming.mCurrentIteration == UINT64_MAX
                        ? PositiveInfinity<double>()
-                       : static_cast<double>(aComputedTiming.mCurrentIteration);
+                       : static_cast<double>(computedTiming.mCurrentIteration);
     aRetVal.mCurrentIteration.SetValue(iteration);
   }
 }
 
 void
-AnimationEffectReadOnly::GetComputedTimingAsDict(
-  ComputedTimingProperties& aRetVal) const
+AnimationEffect::UpdateTiming(const OptionalEffectTiming& aTiming,
+                              ErrorResult& aRv)
 {
-  double playbackRate = mAnimation ? mAnimation->PlaybackRate() : 1;
-  const Nullable<TimeDuration> currentTime = GetLocalTime();
-  GetComputedTimingDictionary(GetComputedTimingAt(currentTime,
-                                                  SpecifiedTiming(),
-                                                  playbackRate),
-                              currentTime,
-                              SpecifiedTiming(),
-                              aRetVal);
-}
-
-AnimationEffectReadOnly::~AnimationEffectReadOnly()
-{
-  // mTiming is cycle collected, so we have to do null check first even though
-  // mTiming shouldn't be null during the lifetime of KeyframeEffect.
-  if (mTiming) {
-    mTiming->Unlink();
+  TimingParams timing =
+    TimingParams::MergeOptionalEffectTiming(mTiming, aTiming, mDocument, aRv);
+  if (aRv.Failed()) {
+    return;
   }
+
+  SetSpecifiedTiming(timing);
 }
 
 Nullable<TimeDuration>
-AnimationEffectReadOnly::GetLocalTime() const
+AnimationEffect::GetLocalTime() const
 {
   // Since the *animation* start time is currently always zero, the local
   // time is equal to the parent time.

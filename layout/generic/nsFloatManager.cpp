@@ -1409,8 +1409,6 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
     nscoord bInAppUnits = (b - kbExpansionPerSide) * aAppUnitsPerDevPixel;
     bool bIsInExpandedRegion(b < kbExpansionPerSide ||
                              b >= bSize - kbExpansionPerSide);
-    bool bIsLessThanPolygonBStart(bInAppUnits < mBStart);
-    bool bIsMoreThanPolygonBEnd(bInAppUnits >= mBEnd);
 
     // We now figure out the i values that correspond to the left edge and
     // the right edge of the polygon at one-dev-pixel-thick strip of b. We
@@ -1420,6 +1418,8 @@ nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(
     // get out, we have to subtract away the aMarginRect.x value before
     // converting the app units to dev pixels.
     nscoord bInAppUnitsMarginRect = bInAppUnits + aMarginRect.y;
+    bool bIsLessThanPolygonBStart(bInAppUnitsMarginRect < mBStart);
+    bool bIsMoreThanPolygonBEnd(bInAppUnitsMarginRect >= mBEnd);
 
     const int32_t iLeftEdge = (bIsInExpandedRegion ||
                                bIsLessThanPolygonBStart ||

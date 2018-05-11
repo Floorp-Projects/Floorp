@@ -9967,10 +9967,13 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     return nullptr;
   }
 
-  // GetContentOffsetsFromPoint requires frame-relative coordinates, so we need
-  // to adjust to frame-relative coordinates before we can perform this call.
-  // It should also not take into account the padding of the frame.
-  nsPoint adjustedPoint = pt - ptFrame->GetOffsetTo(rootFrame);
+  // We require frame-relative coordinates for GetContentOffsetsFromPoint.
+  nsPoint aOffset;
+  nsCOMPtr<nsIWidget> widget = nsContentUtils::GetWidget(ps, &aOffset);
+  LayoutDeviceIntPoint refPoint =
+    nsContentUtils::ToWidgetPoint(CSSPoint(aX, aY), aOffset, GetPresContext());
+  nsPoint adjustedPoint =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(widget, refPoint, ptFrame);
 
   nsFrame::ContentOffsets offsets =
     ptFrame->GetContentOffsetsFromPoint(adjustedPoint);
