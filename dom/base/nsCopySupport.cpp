@@ -31,7 +31,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
@@ -116,10 +115,7 @@ SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
                           | nsIDocumentEncoder::OutputRaw
                           | nsIDocumentEncoder::OutputForPlainTextClipboardCopy;
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
-  NS_ASSERTION(domDoc, "Need a document");
-
-  rv = docEncoder->Init(domDoc, mimeType, flags);
+  rv = docEncoder->Init(aDoc, mimeType, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = docEncoder->SetSelection(aSel);
@@ -168,7 +164,7 @@ SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
                  nsIDocumentEncoder::OutputRubyAnnotation));
 
     mimeType.AssignLiteral(kTextMime);
-    rv = docEncoder->Init(domDoc, mimeType, flags);
+    rv = docEncoder->Init(aDoc, mimeType, flags);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = docEncoder->SetSelection(aSel);
@@ -186,7 +182,7 @@ SelectionCopyHelper(Selection *aSel, nsIDocument *aDoc,
     // Redo the encoding, but this time use the passed-in flags.
     // Don't allow wrapping of CJK strings.
     mimeType.AssignLiteral(kHTMLMime);
-    rv = docEncoder->Init(domDoc, mimeType,
+    rv = docEncoder->Init(aDoc, mimeType,
                           aFlags |
                           nsIDocumentEncoder::OutputDisallowLineBreaking);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -363,10 +359,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, uint32_t aFlags, Selecti
 
   NS_ConvertASCIItoUTF16 unicodeMimeType(aMimeType);
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
-  NS_ASSERTION(domDoc, "Need a document");
-
-  rv = docEncoder->Init(domDoc, unicodeMimeType, flags);
+  rv = docEncoder->Init(aDoc, unicodeMimeType, flags);
   if (NS_FAILED(rv)) return rv;
 
   if (aSel)
