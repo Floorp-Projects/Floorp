@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test.rule;
 
 import org.mozilla.gecko.gfx.GeckoDisplay;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
@@ -91,15 +92,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
     public static final String APK_URI_PREFIX = "resource://android/";
 
-    private static final Method sOnLocationChange;
     private static final Method sOnPageStop;
+    private static final Method sOnNewSession;
 
     static {
         try {
-            sOnLocationChange = GeckoSession.NavigationDelegate.class.getMethod(
-                    "onLocationChange", GeckoSession.class, String.class);
             sOnPageStop = GeckoSession.ProgressDelegate.class.getMethod(
                     "onPageStop", GeckoSession.class, boolean.class);
+            sOnNewSession = GeckoSession.NavigationDelegate.class.getMethod(
+                    "onNewSession", GeckoSession.class, String.class, GeckoResponse.class);
         } catch (final NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -906,6 +907,25 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     }
                 }
 
+                if (call != null && sOnNewSession.equals(method)) {
+                    // We're delegating an onNewSession call.
+                    // Make sure we wait on the newly opened session, if any.
+                    final GeckoSession oldSession = (GeckoSession) args[0];
+                    @SuppressWarnings("unchecked")
+                    final GeckoResponse<GeckoSession> realResponse =
+                            (GeckoResponse<GeckoSession>) args[2];
+                    args[2] = new GeckoResponse<GeckoSession>() {
+                        @Override
+                        public void respond(final GeckoSession newSession) {
+                            realResponse.respond(newSession);
+                            // `realResponse` has opened the session at this point, so wait on it.
+                            if (oldSession.isOpen() && newSession != null) {
+                                GeckoSessionTestRule.this.waitForOpenSession(newSession);
+                            }
+                        }
+                    };
+                }
+
                 try {
                     mCurrentMethodCall = call;
                     return method.invoke((call != null) ? call.target
@@ -968,6 +988,10 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      */
     public void openSession(final GeckoSession session) {
         session.open(sRuntime);
+        waitForOpenSession(session);
+    }
+
+    /* package */ void waitForOpenSession(final GeckoSession session) {
         waitForInitialLoad(session);
 
         if (mWithDevTools) {
@@ -987,37 +1011,23 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     }
 
     private void waitForInitialLoad(final GeckoSession session) {
-        // We receive an initial about:blank load; don't expose that to the test.
-        // The about:blank load is bounded by onLocationChange and onPageStop calls,
-        // so find the first about:blank onLocationChange, then the next onPageStop,
-        // and ignore everything in-between from that session.
+        // We receive an initial about:blank load; don't expose that to the test. The initial
+        // load ends with the first onPageStop call, so ignore everything from the session
+        // until the first onPageStop call.
 
         try {
             // We cannot detect initial page load without progress delegate.
             assertThat("ProgressDelegate cannot be null-delegate when opening session",
                        GeckoSession.ProgressDelegate.class, not(isIn(mNullDelegates)));
 
-            // If navigation delegate is a null-delegate, instead of looking for
-            // onLocationChange(), start with the first call that targets this session.
-            final boolean nullNavigation = mNullDelegates.contains(
-                    GeckoSession.NavigationDelegate.class);
-
             mCallRecordHandler = new CallRecordHandler() {
-                private boolean mFoundStart = false;
-
                 @Override
                 public boolean handleCall(final Method method, final Object[] args) {
-                    if (!mFoundStart && session.equals(args[0]) && (nullNavigation ||
-                            (sOnLocationChange.equals(method) && "about:blank".equals(args[1])))) {
-                        mFoundStart = true;
-                        return true;
-                    } else if (mFoundStart && session.equals(args[0])) {
-                        if (sOnPageStop.equals(method)) {
-                            mCallRecordHandler = null;
-                        }
-                        return true;
+                    final boolean matching = session.equals(args[0]);
+                    if (matching && sOnPageStop.equals(method)) {
+                        mCallRecordHandler = null;
                     }
-                    return false;
+                    return matching;
                 }
             };
 
