@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIdentifierMapEntry.h"
@@ -36,25 +37,7 @@ class ShadowRoot final : public DocumentFragment,
                          public nsStubMutationObserver
 {
 public:
-  static ShadowRoot* FromNode(nsINode* aNode)
-  {
-    return aNode->IsShadowRoot() ? static_cast<ShadowRoot*>(aNode) : nullptr;
-  }
-
-  static const ShadowRoot* FromNode(const nsINode* aNode)
-  {
-    return aNode->IsShadowRoot() ? static_cast<const ShadowRoot*>(aNode) : nullptr;
-  }
-
-  static ShadowRoot* FromNodeOrNull(nsINode* aNode)
-  {
-    return aNode ? FromNode(aNode) : nullptr;
-  }
-
-  static const ShadowRoot* FromNodeOrNull(const nsINode* aNode)
-  {
-    return aNode ? FromNode(aNode) : nullptr;
-  }
+  NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot,
                                            DocumentFragment)

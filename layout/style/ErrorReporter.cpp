@@ -177,6 +177,17 @@ ErrorReporter::ShouldReportErrors(const nsIDocument& aDoc)
   return report;
 }
 
+static nsINode*
+SheetOwner(const StyleSheet& aSheet)
+{
+  if (nsINode* owner = aSheet.GetOwnerNode()) {
+    return owner;
+  }
+
+  auto* associated = aSheet.GetAssociatedDocumentOrShadowRoot();
+  return associated ? &associated->AsNode() : nullptr;
+}
+
 bool
 ErrorReporter::ShouldReportErrors()
 {
@@ -194,10 +205,7 @@ ErrorReporter::ShouldReportErrors()
   }
 
   if (mSheet) {
-    nsINode* owner = mSheet->GetOwnerNode()
-      ? mSheet->GetOwnerNode()
-      : mSheet->GetAssociatedDocument();
-
+    nsINode* owner = SheetOwner(*mSheet);
     if (owner && ShouldReportErrors(*owner->OwnerDoc())) {
       return true;
     }

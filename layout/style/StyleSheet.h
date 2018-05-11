@@ -47,6 +47,7 @@ class SheetLoadData;
 namespace dom {
 class CSSImportRule;
 class CSSRuleList;
+class DocumentOrShadowRoot;
 class MediaList;
 class ShadowRoot;
 class SRIMetadata;
@@ -58,7 +59,7 @@ class StyleSheet final : public nsICSSLoaderObserver
   StyleSheet(const StyleSheet& aCopy,
              StyleSheet* aParentToUse,
              dom::CSSImportRule* aOwnerRuleToUse,
-             nsIDocument* aDocumentToUse,
+             dom::DocumentOrShadowRoot* aDocOrShadowRootToUse,
              nsINode* aOwningNodeToUse);
 
   virtual ~StyleSheet();
@@ -210,7 +211,7 @@ public:
 
   already_AddRefed<StyleSheet> Clone(StyleSheet* aCloneParent,
                                      dom::CSSImportRule* aCloneOwnerRule,
-                                     nsIDocument* aCloneDocument,
+                                     dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot,
                                      nsINode* aCloneOwningNode) const;
 
   bool HasForcedUniqueInner() const
@@ -244,21 +245,38 @@ public:
   void AppendAllChildSheets(nsTArray<StyleSheet*>& aArray);
 
   // style sheet owner info
-  enum DocumentAssociationMode : uint8_t {
-    // OwnedByDocument means mDocument owns us (possibly via a chain of other
-    // stylesheets).
-    OwnedByDocument,
+  enum AssociationMode : uint8_t {
+    // OwnedByDocumentOrShadowRoot means mDocumentOrShadowRoot owns us (possibly
+    // via a chain of other stylesheets).
+    OwnedByDocumentOrShadowRoot,
     // NotOwnedByDocument means we're owned by something that might have a
     // different lifetime than mDocument.
-    NotOwnedByDocument
+    NotOwnedByDocumentOrShadowRoot
   };
-  nsIDocument* GetAssociatedDocument() const { return mDocument; }
-  bool IsOwnedByDocument() const {
-    return mDocumentAssociationMode == OwnedByDocument;
+  dom::DocumentOrShadowRoot* GetAssociatedDocumentOrShadowRoot() const
+  {
+    return mDocumentOrShadowRoot;
   }
-  // aDocument must not be null.
-  void SetAssociatedDocument(nsIDocument* aDocument, DocumentAssociationMode);
-  void ClearAssociatedDocument();
+
+  // Whether this stylesheet is kept alive by the associated document or
+  // associated shadow root's document somehow, and thus at least has the same
+  // lifetime as GetAssociatedDocument().
+  bool IsKeptAliveByDocument() const;
+
+  // Returns the document whose styles this sheet is affecting.
+  nsIDocument* GetComposedDoc() const;
+
+  // Returns the document we're associated to, via mDocumentOrShadowRoot.
+  //
+  // Non-null iff GetAssociatedDocumentOrShadowRoot is non-null.
+  nsIDocument* GetAssociatedDocument() const;
+
+  void SetAssociatedDocumentOrShadowRoot(dom::DocumentOrShadowRoot*,
+                                         AssociationMode);
+  void ClearAssociatedDocumentOrShadowRoot()
+  {
+    SetAssociatedDocumentOrShadowRoot(nullptr, NotOwnedByDocumentOrShadowRoot);
+  }
 
   nsINode* GetOwnerNode() const
   {
@@ -482,7 +500,7 @@ protected:
   StyleSheet* mParent;    // weak ref
 
   nsString mTitle;
-  nsIDocument* mDocument; // weak ref; parents maintain this for their children
+  dom::DocumentOrShadowRoot* mDocumentOrShadowRoot; // weak ref; parents maintain this for their children
   nsINode* mOwningNode; // weak ref
   dom::CSSImportRule* mOwnerRule; // weak ref
 
@@ -503,10 +521,11 @@ protected:
   };
   uint8_t mDirtyFlags; // has been modified
 
-  // mDocumentAssociationMode determines whether mDocument directly owns us (in
-  // the sense that if it's known-live then we're known-live).  Always
-  // NotOwnedByDocument when mDocument is null.
-  DocumentAssociationMode mDocumentAssociationMode;
+  // mAssociationMode determines whether mDocumentOrShadowRoot directly owns us
+  // (in the sense that if it's known-live then we're known-live).
+  //
+  // Always NotOwnedByDocumentOrShadowRoot when mDocumentOrShadowRoot is null.
+  AssociationMode mAssociationMode;
 
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.

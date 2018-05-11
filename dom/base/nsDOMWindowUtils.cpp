@@ -3469,7 +3469,7 @@ nsDOMWindowUtils::AddSheet(nsIPreloadedStyleSheet* aSheet, uint32_t aSheetType)
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
 
-  if (sheet->GetAssociatedDocument()) {
+  if (sheet->GetAssociatedDocumentOrShadowRoot()) {
     return NS_ERROR_INVALID_ARG;
   }
 
