@@ -906,6 +906,9 @@ TextEditRules::WillSetText(bool* aCancel,
     nsresult rv =
       TextEditorRef().InsertNodeWithTransaction(
                         *newNode, EditorRawDOMPoint(rootElement, 0));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -925,6 +928,9 @@ TextEditRules::WillSetText(bool* aCancel,
   // for performance
   nsresult rv = TextEditorRef().SetTextImpl(SelectionRef(), tString,
                                             *curNode->GetAsText());
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

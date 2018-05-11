@@ -139,10 +139,20 @@ protected:
 
   nsresult WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
 
-  nsresult WillSetText(bool* aCancel,
-                       bool* aHandled,
-                       const nsAString* inString,
-                       int32_t aMaxLength);
+  /**
+   * Called before setting text to the text editor.
+   * This method may actually set text to it.  Therefore, this might cause
+   * destroying the text editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param inString            String to be set.
+   * @param aMaxLength          The maximum string length which the text editor
+   *                            allows to set.
+   */
+  MOZ_MUST_USE nsresult
+  WillSetText(bool* aCancel, bool* aHandled,
+              const nsAString* inString, int32_t aMaxLength);
 
   void WillInsert(bool* aCancel);
 
