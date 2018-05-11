@@ -2519,10 +2519,6 @@ pref("security.cert_pinning.process_headers_from_non_builtin_roots", false);
 // their protocol with the inner URI of the view-source URI
 pref("security.view-source.reachable-from-inner-protocol", false);
 
-// If set to true, in some limited circumstances it may be possible to load
-// privileged content in frames inside unprivileged content.
-pref("security.allow_chrome_frames_inside_content", false);
-
 // Services security settings
 pref("services.settings.server", "https://firefox.settings.services.mozilla.com/v1");
 pref("services.settings.changes.path", "/buckets/monitor/collections/changes/records");
