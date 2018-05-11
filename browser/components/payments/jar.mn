@@ -7,7 +7,7 @@ browser.jar:
     content/payments/paymentDialogFrameScript.js      (content/paymentDialogFrameScript.js)
     content/payments/paymentDialogWrapper.css         (content/paymentDialogWrapper.css)
     content/payments/paymentDialogWrapper.js          (content/paymentDialogWrapper.js)
-    content/payments/paymentDialogWrapper.xhtml       (content/paymentDialogWrapper.xhtml)
+    content/payments/paymentDialogWrapper.xul         (content/paymentDialogWrapper.xul)
 
 %   resource payments %res/payments/
     res/payments                                      (res/paymentRequest.*)
