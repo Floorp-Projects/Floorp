@@ -185,6 +185,7 @@ void
 ProtocolParserV2::End()
 {
   // Inbound data has already been processed in every AppendStream() call.
+  mTableUpdate = nullptr;
 }
 
 nsresult
@@ -523,6 +524,7 @@ ProtocolParserV2::ProcessDigestChunk(const nsACString& aChunk)
 nsresult
 ProtocolParserV2::ProcessDigestAdd(const nsACString& aChunk)
 {
+  MOZ_ASSERT(mTableUpdate);
   // The ABNF format for add chunks is (HASH)+, where HASH is 32 bytes.
   MOZ_ASSERT(aChunk.Length() % 32 == 0,
              "Chunk length in bytes must be divisible by 4");
@@ -542,6 +544,7 @@ ProtocolParserV2::ProcessDigestAdd(const nsACString& aChunk)
 nsresult
 ProtocolParserV2::ProcessDigestSub(const nsACString& aChunk)
 {
+  MOZ_ASSERT(mTableUpdate);
   // The ABNF format for sub chunks is (ADDCHUNKNUM HASH)+, where ADDCHUNKNUM
   // is a 4 byte chunk number, and HASH is 32 bytes.
   MOZ_ASSERT(aChunk.Length() % 36 == 0,
@@ -573,6 +576,7 @@ nsresult
 ProtocolParserV2::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
                                const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostAdd should only be called for prefix hashes.");
 
@@ -607,6 +611,7 @@ nsresult
 ProtocolParserV2::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
                                const nsACString& aChunk, uint32_t *aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == PREFIX_SIZE,
                "ProcessHostSub should only be called for prefix hashes.");
 
@@ -662,6 +667,7 @@ nsresult
 ProtocolParserV2::ProcessHostAddComplete(uint8_t aNumEntries,
                                        const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostAddComplete should only be called for complete hashes.");
 
@@ -694,6 +700,7 @@ nsresult
 ProtocolParserV2::ProcessHostSubComplete(uint8_t aNumEntries,
                                        const nsACString& aChunk, uint32_t* aStart)
 {
+  MOZ_ASSERT(mTableUpdate);
   NS_ASSERTION(mChunkState.hashSize == COMPLETE_SIZE,
                "ProcessHostSubComplete should only be called for complete hashes.");
 
