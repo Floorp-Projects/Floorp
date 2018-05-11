@@ -4577,7 +4577,7 @@ NS_NewVideoDocument(nsIDocument** aInstancePtrResult);
 // -- this method will not attempt to get a principal based on aDocumentURI.
 // Also, both aDocumentURI and aBaseURI must not be null.
 nsresult
-NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
+NS_NewDOMDocument(nsIDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI,
                   const nsAString& aQualifiedName,
                   mozilla::dom::DocumentType* aDoctype,
@@ -4591,7 +4591,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 // This is used only for xbl documents created from the startup cache.
 // Non-cached documents are created in the same manner as xml documents.
 nsresult
-NS_NewXBLDocument(nsIDOMDocument** aInstancePtrResult,
+NS_NewXBLDocument(nsIDocument** aInstancePtrResult,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
                   nsIPrincipal* aPrincipal);
