@@ -1447,10 +1447,11 @@ class SyncedBookmarksMirror {
     let movedItemRows = await this.db.execute(`
       SELECT b.id, b.guid, b.type, p.id AS newParentId, c.oldParentId,
              p.guid AS newParentGuid, c.oldParentGuid,
-             b.position AS newPosition, c.oldPosition
+             b.position AS newPosition, c.oldPosition, h.url
       FROM itemsMoved c
       JOIN moz_bookmarks b ON b.id = c.itemId
       JOIN moz_bookmarks p ON p.id = b.parent
+      LEFT JOIN moz_places h ON h.id = b.fk
       ORDER BY c.level, newParentId, newPosition`);
     for await (let row of yieldingIterator(movedItemRows)) {
       let info = {
@@ -1463,6 +1464,7 @@ class SyncedBookmarksMirror {
         oldParentGuid: row.getResultByName("oldParentGuid"),
         newPosition: row.getResultByName("newPosition"),
         oldPosition: row.getResultByName("oldPosition"),
+        urlHref: row.getResultByName("url"),
       };
       observersToNotify.noteItemMoved(info);
     }
@@ -4603,7 +4605,7 @@ class BookmarkObserverRecorder {
       isTagging: false,
       args: [info.id, info.oldParentId, info.oldPosition, info.newParentId,
         info.newPosition, info.type, info.guid, info.oldParentGuid,
-        info.newParentGuid, PlacesUtils.bookmarks.SOURCES.SYNC],
+        info.newParentGuid, PlacesUtils.bookmarks.SOURCES.SYNC, info.urlHref],
     });
   }
 
