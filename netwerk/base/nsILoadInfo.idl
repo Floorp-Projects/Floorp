@@ -8,11 +8,11 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIChannel;
-interface nsIDOMDocument;
 interface nsINode;
 interface nsIPrincipal;
 interface nsIRedirectHistoryEntry;
 interface nsIURI;
+webidl Document;
 native LoadContextRef(already_AddRefed<nsISupports>);
 %{C++
 #include "nsTArray.h"
@@ -336,7 +336,7 @@ interface nsILoadInfo : nsISupports
    * LoadingDocument is null. When the LoadingDocument is not null, the
    * LoadingPrincipal is set to the principal of the LoadingDocument.
    */
-  readonly attribute nsIDOMDocument loadingDocument;
+  readonly attribute Document loadingDocument;
 
   /**
    * A C++-friendly version of loadingDocument (loadingNode).

@@ -17,7 +17,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsICachingChannel.h"
-#include "nsIDOMDocument.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsISeekableStream.h"
@@ -3360,9 +3359,8 @@ HttpBaseChannel::DoNotifyListener()
     if (mLoadGroup) {
       FlushConsoleReports(mLoadGroup);
     } else if (mLoadInfo) {
-      nsCOMPtr<nsIDOMDocument> dommyDoc;
-      mLoadInfo->GetLoadingDocument(getter_AddRefs(dommyDoc));
-      nsCOMPtr<nsIDocument> doc = do_QueryInterface(dommyDoc);
+      nsCOMPtr<nsIDocument> doc;
+      mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
       FlushConsoleReports(doc);
     }
   }
@@ -4244,13 +4242,8 @@ HttpBaseChannel::GetPerformanceStorage()
     return performanceStorage;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  mLoadInfo->GetLoadingDocument(getter_AddRefs(domDocument));
-  if (!domDocument) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocument> loadingDocument = do_QueryInterface(domDocument);
+  nsCOMPtr<nsIDocument> loadingDocument;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
   if (!loadingDocument) {
     return nullptr;
   }
