@@ -44,6 +44,13 @@ namespace mozilla {
 
 using namespace dom;
 
+template CreateElementResult
+TextEditRules::CreateBRInternal(const EditorDOMPoint& aPointToInsert,
+                                bool aCreateMozBR);
+template CreateElementResult
+TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
+                                bool aCreateMozBR);
+
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (IsReadonly() || IsDisabled()) \
   {                     \
@@ -1379,9 +1386,9 @@ TextEditRules::CreateTrailingBRIfNeeded()
     AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
     EditorRawDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
-    RefPtr<Element> brElement = CreateMozBR(endOfRoot);
-    if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
+    CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
+    if (NS_WARN_IF(createMozBrResult.Failed())) {
+      return createMozBrResult.Rv();
     }
     return NS_OK;
   }
@@ -1663,37 +1670,46 @@ TextEditRules::FillBufWithPWChars(nsAString* aOutString,
   }
 }
 
-already_AddRefed<Element>
-TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
-                                bool aCreateMozBR)
+template<typename PT, typename CT>
+CreateElementResult
+TextEditRules::CreateBRInternal(
+                 const EditorDOMPointBase<PT, CT>& aPointToInsert,
+                 bool aCreateMozBR)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return nullptr;
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   RefPtr<Element> brElement =
     TextEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                    aPointToInsert);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   if (NS_WARN_IF(!brElement)) {
-    return nullptr;
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   // give it special moz attr
-  if (aCreateMozBR) {
-    // XXX Why do we need to set this attribute with transaction?
-    nsresult rv =
-      TextEditorRef().SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
-                                                  NS_LITERAL_STRING("_moz"));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // XXX Don't we need to remove the new <br> element from the DOM tree
-      //     in this case?
-      return nullptr;
-    }
+  if (!aCreateMozBR) {
+    return CreateElementResult(brElement.forget());
   }
 
-  return brElement.forget();
+  // XXX Why do we need to set this attribute with transaction?
+  nsresult rv =
+    TextEditorRef().SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
+                                                NS_LITERAL_STRING("_moz"));
+  // XXX Don't we need to remove the new <br> element from the DOM tree
+  //     in these case?
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+  return CreateElementResult(brElement.forget());
 }
 
 nsresult
