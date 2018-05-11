@@ -635,7 +635,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
       source = mProcessor->GetSourceContentModel();
     }
     nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
-    nsCOMPtr<nsIDOMDocument> document;
+    nsCOMPtr<nsIDocument> document;
 
     rv = nsSyncLoadService::LoadDocument(uri, nsIContentPolicy::TYPE_XSLT,
                                          referrerPrincipal,
@@ -645,8 +645,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
                                          getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
-    rv = handleNode(doc, aCompiler);
+    rv = handleNode(document, aCompiler);
     if (NS_FAILED(rv)) {
         nsAutoCString spec;
         uri->GetSpec(spec);
