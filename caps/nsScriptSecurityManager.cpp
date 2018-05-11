@@ -980,23 +980,6 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
             }
         }
 
-        static bool sCanLoadChromeInContent = false;
-        static bool sCachedCanLoadChromeInContentPref = false;
-        if (!sCachedCanLoadChromeInContentPref) {
-            sCachedCanLoadChromeInContentPref = true;
-            mozilla::Preferences::AddBoolVarCache(&sCanLoadChromeInContent,
-                "security.allow_chrome_frames_inside_content");
-        }
-        if (sCanLoadChromeInContent) {
-            // Special-case the hidden window: it's allowed to load
-            // URI_IS_UI_RESOURCE no matter what.  Bug 1145470 tracks removing this.
-            nsAutoCString sourceSpec;
-            if (NS_SUCCEEDED(aSourceBaseURI->GetSpec(sourceSpec)) &&
-                sourceSpec.EqualsLiteral("resource://gre-resources/hiddenWindow.html")) {
-                return NS_OK;
-            }
-        }
-
         if (reportErrors) {
             ReportError(nullptr, errorTag, aSourceURI, aTargetURI);
         }
