@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
 interface nsIDOMRange;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
 webidl Selection;
+webidl Document;
 
 %{ C++
 class nsINode;
@@ -236,7 +236,7 @@ interface nsIDocumentEncoder : nsISupports
    * @param aMimeType MimeType to use. May also be set by SetMimeType.
    * @param aFlags Flags to use while encoding. May also be set by SetFlags.
    */
-  void init(in nsIDOMDocument aDocument,
+  void init(in Document aDocument,
             in AString aMimeType,
             in unsigned long aFlags);
   [noscript] void nativeInit(in nsIDocumentPtr aDocument,
