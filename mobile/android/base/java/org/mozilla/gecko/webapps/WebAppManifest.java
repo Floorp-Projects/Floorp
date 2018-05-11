@@ -225,15 +225,15 @@ public class WebAppManifest {
             return true;
         }
 
-        if (!uri.getScheme().equals(mScope.getScheme())) {
+        if (!mScope.getScheme().equals(uri.getScheme())) {
             return false;
         }
 
-        if (!uri.getHost().equals(mScope.getHost())) {
+        if (!mScope.getHost().equals(uri.getHost())) {
             return false;
         }
 
-        if (!uri.getPath().startsWith(mScope.getPath())) {
+        if (uri.getPath() != null && !uri.getPath().startsWith(mScope.getPath())) {
             return false;
         }
 
