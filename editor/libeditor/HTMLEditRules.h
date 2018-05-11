@@ -259,7 +259,18 @@ protected:
   nsresult WillAlign(const nsAString& aAlignType,
                      bool* aCancel, bool* aHandled);
   nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
-  nsresult WillRemoveAbsolutePosition(bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before changing absolute positioned element to static positioned.
+   * This method actually changes the position property of nearest absolute
+   * positioned element.  Therefore, this might cause destroying the HTML
+   * editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillRemoveAbsolutePosition(bool* aCancel, bool* aHandled);
 
   /**
    * Called before changing z-index.
