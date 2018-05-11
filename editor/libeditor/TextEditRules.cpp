@@ -681,7 +681,9 @@ TextEditRules::WillInsertText(EditAction aAction,
   bool truncated = false;
   nsresult rv =
     TruncateInsertionIfNeeded(inString, outString, aMaxLength, &truncated);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   // If we're exceeding the maxlength when composing IME, we need to clean up
   // the composing text, so we shouldn't return early.
   if (truncated && outString->IsEmpty() &&
@@ -704,6 +706,9 @@ TextEditRules::WillInsertText(EditAction aAction,
   if (!SelectionRef().IsCollapsed()) {
     rv = TextEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
                                                  nsIEditor::eStrip);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -800,6 +805,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     }
     rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
                                                    betterInsertionPoint);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -813,6 +821,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
                                                    atStartOfSelection,
                                                    &pointAfterStringInserted);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -832,6 +843,9 @@ TextEditRules::WillInsertText(EditAction aAction,
         "GetChild() should be nullptr");
       error = IgnoredErrorResult();
       SelectionRef().Collapse(pointAfterStringInserted, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(!error.Failed(),
         "Failed to collapse selection after inserting string");
     }
