@@ -792,7 +792,7 @@ Classifier::ApplyUpdatesBackground(TableUpdateArray& aUpdates,
   LOG(("Applying %zu table updates.", aUpdates.Length()));
 
   for (uint32_t i = 0; i < aUpdates.Length(); i++) {
-    RefPtr<TableUpdate> update = aUpdates[i];
+    RefPtr<const TableUpdate> update = aUpdates[i];
     if (!update) {
       // Previous UpdateHashStore() may have consumed this update..
       continue;
@@ -853,7 +853,7 @@ Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
 }
 
 nsresult
-Classifier::ApplyFullHashes(TableUpdateArray& aUpdates)
+Classifier::ApplyFullHashes(ConstTableUpdateArray& aUpdates)
 {
   MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
              "ApplyFullHashes() MUST NOT be called on update thread");
@@ -1144,7 +1144,7 @@ Classifier::CheckValidUpdate(TableUpdateArray& aUpdates,
   uint32_t validupdates = 0;
 
   for (uint32_t i = 0; i < aUpdates.Length(); i++) {
-    RefPtr<TableUpdate> update = aUpdates[i];
+    RefPtr<const TableUpdate> update = aUpdates[i];
     if (!update || !update->TableName().Equals(aTable)) {
       continue;
     }
@@ -1304,7 +1304,7 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
   PrefixStringMap* input = &prefixes1;
   PrefixStringMap* output = &prefixes2;
 
-  TableUpdateV4* lastAppliedUpdate = nullptr;
+  RefPtr<const TableUpdateV4> lastAppliedUpdate = nullptr;
   for (uint32_t i = 0; i < aUpdates.Length(); i++) {
     RefPtr<TableUpdate> update = aUpdates[i];
     if (!update || !update->TableName().Equals(aTable)) {
@@ -1369,7 +1369,7 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
 }
 
 nsresult
-Classifier::UpdateCache(RefPtr<TableUpdate> aUpdate)
+Classifier::UpdateCache(RefPtr<const TableUpdate> aUpdate)
 {
   if (!aUpdate) {
     return NS_OK;
@@ -1385,7 +1385,7 @@ Classifier::UpdateCache(RefPtr<TableUpdate> aUpdate)
 
   auto lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
   if (lookupV2) {
-    RefPtr<TableUpdateV2> updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
+    RefPtr<const TableUpdateV2> updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
     lookupV2->AddGethashResultToCache(updateV2->AddCompletes(),
                                       updateV2->MissPrefixes());
   } else {
@@ -1394,7 +1394,7 @@ Classifier::UpdateCache(RefPtr<TableUpdate> aUpdate)
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<TableUpdateV4> updateV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
+    RefPtr<const TableUpdateV4> updateV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
     lookupV4->AddFullHashResponseToCache(updateV4->FullHashResponse());
   }
 

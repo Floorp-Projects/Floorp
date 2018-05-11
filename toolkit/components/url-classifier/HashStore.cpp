@@ -571,7 +571,7 @@ template<class T>
 static nsresult
 Merge(ChunkSet* aStoreChunks,
       FallibleTArray<T>* aStorePrefixes,
-      ChunkSet& aUpdateChunks,
+      const ChunkSet& aUpdateChunks,
       FallibleTArray<T>& aUpdatePrefixes,
       bool aAllowMerging = false)
 {
