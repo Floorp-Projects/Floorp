@@ -34,6 +34,35 @@ DocumentOrShadowRoot::EnsureDOMStyleSheets()
   return *mDOMStyleSheets;
 }
 
+void
+DocumentOrShadowRoot::AppendSheet(StyleSheet& aSheet)
+{
+  aSheet.SetAssociatedDocumentOrShadowRoot(
+    this, StyleSheet::OwnedByDocumentOrShadowRoot);
+  mStyleSheets.AppendElement(&aSheet);
+}
+
+void
+DocumentOrShadowRoot::InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
+{
+  aSheet.SetAssociatedDocumentOrShadowRoot(
+    this, StyleSheet::OwnedByDocumentOrShadowRoot);
+  mStyleSheets.InsertElementAt(aIndex, &aSheet);
+}
+
+already_AddRefed<StyleSheet>
+DocumentOrShadowRoot::RemoveSheet(StyleSheet& aSheet)
+{
+  auto index = mStyleSheets.IndexOf(&aSheet);
+  if (index == mStyleSheets.NoIndex) {
+    return nullptr;
+  }
+  RefPtr<StyleSheet> sheet = Move(mStyleSheets[index]);
+  mStyleSheets.RemoveElementAt(index);
+  sheet->ClearAssociatedDocumentOrShadowRoot();
+  return sheet.forget();
+}
+
 Element*
 DocumentOrShadowRoot::GetElementById(const nsAString& aElementId)
 {

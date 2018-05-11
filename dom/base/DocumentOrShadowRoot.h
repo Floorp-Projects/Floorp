@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_DocumentOrShadowRoot_h__
 #define mozilla_dom_DocumentOrShadowRoot_h__
 
+#include "mozilla/dom/NameSpaceConstants.h"
+#include "nsContentListDeclarations.h"
 #include "nsTArray.h"
 #include "nsIdentifierMapEntry.h"
 
@@ -63,21 +65,6 @@ public:
   int32_t IndexOfSheet(const StyleSheet& aSheet) const
   {
     return mStyleSheets.IndexOf(&aSheet);
-  }
-
-  void InsertSheetAt(size_t aIndex, StyleSheet& aSheet)
-  {
-    mStyleSheets.InsertElementAt(aIndex, &aSheet);
-  }
-
-  void RemoveSheet(StyleSheet& aSheet)
-  {
-    mStyleSheets.RemoveElement(&aSheet);
-  }
-
-  void AppendStyleSheet(StyleSheet& aSheet)
-  {
-    mStyleSheets.AppendElement(&aSheet);
   }
 
   StyleSheetList& EnsureDOMStyleSheets();
@@ -188,6 +175,11 @@ public:
   void ReportEmptyGetElementByIdArg();
 
 protected:
+  // Returns the reference to the sheet, if found in mStyleSheets.
+  already_AddRefed<StyleSheet> RemoveSheet(StyleSheet& aSheet);
+  void AppendSheet(StyleSheet& aSheet);
+  void InsertSheetAt(size_t aIndex, StyleSheet& aSheet);
+
   nsIContent* Retarget(nsIContent* aContent) const;
 
   /**

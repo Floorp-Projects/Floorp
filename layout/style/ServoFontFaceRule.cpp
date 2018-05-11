@@ -131,7 +131,7 @@ ServoFontFaceRuleDecl::GetParentRule()
 nsINode*
 ServoFontFaceRuleDecl::GetParentObject()
 {
-  return ContainingRule()->GetDocument();
+  return ContainingRule()->GetParentObject();
 }
 
 JSObject*

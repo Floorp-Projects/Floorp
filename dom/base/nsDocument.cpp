@@ -1687,11 +1687,11 @@ nsDocument::~nsDocument()
 
   // Let the stylesheets know we're going away
   for (StyleSheet* sheet : mStyleSheets) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
   }
   for (auto& sheets : mAdditionalSheets) {
     for (StyleSheet* sheet : sheets) {
-      sheet->ClearAssociatedDocument();
+      sheet->ClearAssociatedDocumentOrShadowRoot();
     }
   }
   if (mAttrStyleSheet) {
@@ -2422,7 +2422,7 @@ nsIDocument::RemoveDocStyleSheetsFromStyleSets()
 {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
 
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2441,7 +2441,7 @@ nsIDocument::RemoveStyleSheetsFromStyleSets(
 {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(aSheets)) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
 
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -4328,8 +4328,7 @@ void
 nsIDocument::AddStyleSheet(StyleSheet* aSheet)
 {
   MOZ_ASSERT(aSheet);
-  mStyleSheets.AppendElement(aSheet);
-  aSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  DocumentOrShadowRoot::AppendSheet(*aSheet);
 
   if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
@@ -4341,8 +4340,7 @@ nsIDocument::AddStyleSheet(StyleSheet* aSheet)
 void
 nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     shell->StyleSet()->RemoveDocStyleSheet(aSheet);
   }
 }
@@ -4350,23 +4348,23 @@ nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 void
 nsIDocument::RemoveStyleSheet(StyleSheet* aSheet)
 {
-  MOZ_ASSERT(aSheet, "null arg");
-  RefPtr<StyleSheet> sheet = aSheet; // hold ref so it won't die too soon
+  MOZ_ASSERT(aSheet);
+  RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(*aSheet);
 
-  if (!mStyleSheets.RemoveElement(aSheet)) {
+  if (!sheet) {
     NS_ASSERTION(mInUnlinkOrDeletion, "stylesheet not found");
     return;
   }
 
   if (!mIsGoingAway) {
-    if (aSheet->IsApplicable()) {
-      RemoveStyleSheetFromStyleSets(aSheet);
+    if (sheet->IsApplicable()) {
+      RemoveStyleSheetFromStyleSets(sheet);
     }
 
-    NotifyStyleSheetRemoved(aSheet, true);
+    NotifyStyleSheetRemoved(sheet, true);
   }
 
-  aSheet->ClearAssociatedDocument();
+  sheet->ClearAssociatedDocumentOrShadowRoot();
 }
 
 void
@@ -4393,8 +4391,7 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
     // Now put the new one in its place.  If it's null, just ignore it.
     StyleSheet* newSheet = aNewSheets[i];
     if (newSheet) {
-      mStyleSheets.InsertElementAt(oldIndex, newSheet);
-      newSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+      DocumentOrShadowRoot::InsertSheetAt(oldIndex, *newSheet);
       if (newSheet->IsApplicable()) {
         AddStyleSheetToStyleSets(newSheet);
       }
@@ -4411,11 +4408,7 @@ nsIDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
 {
   MOZ_ASSERT(aSheet);
 
-  // FIXME(emilio): Stop touching DocumentOrShadowRoot's members directly, and use an
-  // accessor.
-  mStyleSheets.InsertElementAt(aIndex, aSheet);
-
-  aSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  DocumentOrShadowRoot::InsertSheetAt(aIndex, *aSheet);
 
   if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
@@ -4543,7 +4536,8 @@ nsIDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
   nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+     this, StyleSheet::OwnedByDocumentOrShadowRoot);
   MOZ_ASSERT(sheet->IsApplicable());
 
   return AddAdditionalStyleSheet(aType, sheet);
@@ -4601,7 +4595,7 @@ nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aShee
     NotifyStyleSheetRemoved(sheetRef, false);
     EndUpdate(UPDATE_STYLE);
 
-    sheetRef->ClearAssociatedDocument();
+    sheetRef->ClearAssociatedDocumentOrShadowRoot();
   }
 }
 
@@ -11715,7 +11709,7 @@ SizeOfOwnedSheetArrayExcludingThis(const nsTArray<RefPtr<StyleSheet>>& aSheets,
   size_t n = 0;
   n += aSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (StyleSheet* sheet : aSheets) {
-    if (!sheet->GetAssociatedDocument()) {
+    if (!sheet->GetAssociatedDocumentOrShadowRoot()) {
       // Avoid over-reporting shared sheets.
       continue;
     }
