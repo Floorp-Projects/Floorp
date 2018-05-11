@@ -1,0 +1,12 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="786" viewBox="0,0,512,512">
+	<defs>
+		<filter id="filter-wVmTgUOU" filterUnits="objectBoundingBox" x="-30%" y="-30%" width="160%" height="170%" color-interpolation-filters="sRGB">
+			<feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0" in="SourceGraphic"/>
+			<feOffset dy="28"/>
+			<feGaussianBlur stdDeviation="18.67" result="blur1"/>
+		</filter>
+	</defs>
+  <g filter="url(#filter-wVmTgUOU)">
+    <rect x="58.88" y="58.88" width="394.24" height="394.24" color="#07773e" fill="red"/>
+  </g>
+</svg>
