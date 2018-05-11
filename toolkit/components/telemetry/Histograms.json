@@ -3231,6 +3231,17 @@
     "n_buckets": 50,
     "description": "DNS Cache Entry Age at Removal Time (minutes)"
   },
+  "DNS_PREMATURE_EVICTION": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1440,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "bug_numbers": [1460305],
+    "n_buckets": 50,
+    "description": "DNS Cache Entry Age at Removal Time of non-expired entries (minutes)"
+  },
   "DNS_LOOKUP_TIME": {
     "record_in_processes": ["main"],
     "expires_in_version": "never",
@@ -3271,6 +3282,15 @@
     "labels": ["TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50"],
     "bug_numbers": [1434852],
     "description": "DNS: TRR parallel resolve racing results"
+  },
+  "DNS_TRR_COMPARE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["BothWorked", "NativeWorked", "TRRWorked", "BothFailed"],
+    "bug_numbers": [1460589],
+    "description": "DNS: success distribution when both native and TRR were used"
   },
   "DNS_TRR_BLACKLISTED": {
     "record_in_processes": ["main"],

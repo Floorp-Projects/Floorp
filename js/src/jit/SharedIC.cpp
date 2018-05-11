@@ -1485,21 +1485,28 @@ ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICCompare_String::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    Label failure;
+    Label failure, restore;
     masm.branchTestString(Assembler::NotEqual, R0, &failure);
     masm.branchTestString(Assembler::NotEqual, R1, &failure);
 
     MOZ_ASSERT(IsEqualityOp(op));
 
-    Register left = masm.extractString(R0, ExtractTemp0);
-    Register right = masm.extractString(R1, ExtractTemp1);
+    // left/right are part of R0/R1. Restore R0 and R1 in the failure case.
+    Register left = R0.scratchReg();
+    Register right = R1.scratchReg();
+    masm.unboxString(R0, left);
+    masm.unboxString(R1, right);
 
     AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
 
-    masm.compareStrings(op, left, right, scratchReg, &failure);
+    masm.compareStrings(op, left, right, scratchReg, &restore);
     masm.tagValue(JSVAL_TYPE_BOOLEAN, scratchReg, R0);
     EmitReturnFromIC(masm);
+
+    masm.bind(&restore);
+    masm.tagValue(JSVAL_TYPE_STRING, left, R0);
+    masm.tagValue(JSVAL_TYPE_STRING, right, R1);
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);

@@ -334,7 +334,6 @@ class MacroAssemblerNone : public Assembler
     void notBoolean(ValueOperand) { MOZ_CRASH(); }
     Register extractObject(Address, Register) { MOZ_CRASH(); }
     Register extractObject(ValueOperand, Register) { MOZ_CRASH(); }
-    Register extractString(ValueOperand, Register) { MOZ_CRASH(); }
     Register extractSymbol(ValueOperand, Register) { MOZ_CRASH(); }
     Register extractInt32(ValueOperand, Register) { MOZ_CRASH(); }
     Register extractBoolean(ValueOperand, Register) { MOZ_CRASH(); }

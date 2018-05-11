@@ -837,10 +837,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_OBJECT, scratch);
         return value.payloadReg();
     }
-    Register extractString(const ValueOperand& value, Register scratch) {
-        unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_STRING, scratch);
-        return value.payloadReg();
-    }
     Register extractSymbol(const ValueOperand& value, Register scratch) {
         unboxNonDouble(value, value.payloadReg(), JSVAL_TYPE_SYMBOL, scratch);
         return value.payloadReg();
