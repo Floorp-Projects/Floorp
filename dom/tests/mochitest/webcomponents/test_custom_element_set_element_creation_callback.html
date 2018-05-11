@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1460815
+-->
+<head>
+  <title>Test for customElements.setElementCreationCallback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1460815">Bug 1460815</a>
+<div>
+</div>
+
+<script>
+
+let registry = SpecialPowers.wrap(customElements);
+
+function simpleTest() {
+  let callbackCalled = false;
+  class XObjElement extends HTMLElement {};
+  registry.setElementCreationCallback("x-html-obj-elem", (type) => {
+    if (callbackCalled) {
+      ok(false, "Callback should not be invoked more than once.");
+    }
+    callbackCalled = true;
+    is(type, "x-html-obj-elem", "Type is passed to the callback.");
+    customElements.define("x-html-obj-elem", XObjElement);
+  });
+  ok(!callbackCalled, "Callback should not be called.");
+  let el = document.createElement("x-html-obj-elem");
+  ok(callbackCalled, "Callback should be called.");
+  isnot(Object.getPrototypeOf(el), XObjElement.prototype, "Created element is not upgraded.");
+  document.body.appendChild(el);
+  is(Object.getPrototypeOf(el), XObjElement.prototype, "Created element should have the prototype of the custom type.");
+}
+
+function multipleDefinitionTest() {
+  let callbackCalled = false;
+  class XObjElement1 extends HTMLElement {};
+  class XObjElement2 extends HTMLElement {};
+  let callback = (type) => {
+    if (callbackCalled) {
+      ok(false, "Callback should not be invoked more than once.");
+    }
+    callbackCalled = true;
+    is(type, "x-html-obj-elem1", "Type is passed to the callback.");
+    customElements.define("x-html-obj-elem1", XObjElement1);
+    customElements.define("x-html-obj-elem2", XObjElement2);
+  };
+  registry.setElementCreationCallback("x-html-obj-elem1", callback);
+  registry.setElementCreationCallback("x-html-obj-elem2", callback);
+  ok(!callbackCalled, "Callback should not be called.");
+  let el1 = document.createElement("x-html-obj-elem1");
+  ok(callbackCalled, "Callback should be called.");
+  isnot(Object.getPrototypeOf(el1), XObjElement1.prototype, "Created element is not upgraded.");
+  document.body.appendChild(el1);
+  is(Object.getPrototypeOf(el1), XObjElement1.prototype, "Created element should have the prototype of the custom type.");
+  let el2 = document.createElement("x-html-obj-elem2");
+  is(Object.getPrototypeOf(el2), XObjElement2.prototype, "Created element should have the prototype of the custom type.");
+}
+
+function throwIfDefined() {
+  let callbackCalled = false;
+  class XObjElement3 extends HTMLElement {};
+  customElements.define("x-html-obj-elem3", XObjElement3);
+  try {
+    registry.setElementCreationCallback(
+      "x-html-obj-elem3", () => callbackCalled = true);
+  } catch (e) {
+    ok(true, "Set a callback on defined type should throw.");
+  }
+  ok(!callbackCalled, "Callback should not be called.");
+}
+
+function throwIfSetTwice() {
+  let callbackCalled = false;
+  registry.setElementCreationCallback(
+    "x-html-obj-elem4", () => callbackCalled = true);
+  try {
+    registry.setElementCreationCallback(
+      "x-html-obj-elem4", () => callbackCalled = true);
+  } catch (e) {
+    ok(true, "Callack shouldn't be set twice on the same type.");
+  }
+  ok(!callbackCalled, "Callback should not be called.");
+}
+
+function simpleExtendedTest() {
+  let callbackCalled = false;
+  class ExtendButton extends HTMLButtonElement {};
+  registry.setElementCreationCallback("x-extended-button", (type) => {
+    if (callbackCalled) {
+      ok(false, "Callback should not be invoked more than once.");
+    }
+    callbackCalled = true;
+    customElements.define("x-extended-button", ExtendButton, { extends: "button" });
+    is(type, "x-extended-button", "Type is passed to the callback.");
+  });
+  ok(!callbackCalled, "Callback should not be called.");
+  let el = document.createElement("button", { is: "x-extended-button"});
+  ok(callbackCalled, "Callback should be called.");
+  isnot(Object.getPrototypeOf(el), ExtendButton.prototype, "Created element is not upgraded.");
+  document.body.appendChild(el);
+  is(Object.getPrototypeOf(el), ExtendButton.prototype, "Created element should have the prototype of the extended type.");
+  is(el.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+}
+
+function simpleInnerHTMLTest() {
+  let callbackCalled = false;
+  class XObjElement4 extends HTMLElement {};
+  registry.setElementCreationCallback("x-html-obj-elem5", (type) => {
+    if (callbackCalled) {
+      ok(false, "Callback should not be invoked more than once.");
+    }
+    callbackCalled = true;
+    is(type, "x-html-obj-elem5", "Type is passed to the callback.");
+    customElements.define("x-html-obj-elem5", XObjElement4);
+  });
+  ok(!callbackCalled, "Callback should not be called.");
+  let p = document.createElement("p");
+  p.innerHTML = "<x-html-obj-elem5></x-html-obj-elem5>";
+  let el = p.firstChild;
+  ok(callbackCalled, "Callback should be called.");
+  isnot(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element is not upgraded.");
+  document.body.appendChild(p);
+  is(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element should have the prototype of the custom type.");
+}
+
+function twoElementInnerHTMLTest() {
+  let callbackCalled = false;
+  class XObjElement5 extends HTMLElement {};
+  registry.setElementCreationCallback("x-html-obj-elem6", (type) => {
+    if (callbackCalled) {
+      ok(false, "Callback should not be invoked more than once.");
+    }
+    callbackCalled = true;
+    is(type, "x-html-obj-elem6", "Type is passed to the callback.");
+    customElements.define("x-html-obj-elem6", XObjElement5);
+  });
+  ok(!callbackCalled, "Callback should not be called.");
+  let p = document.createElement("p");
+  p.innerHTML =
+    "<x-html-obj-elem6></x-html-obj-elem6><x-html-obj-elem6></x-html-obj-elem6>";
+  let el1 = p.firstChild;
+  let el2 = p.lastChild;
+  ok(callbackCalled, "Callback should be called.");
+  isnot(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element is not upgraded.");
+  isnot(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element is not upgraded.");
+  document.body.appendChild(p);
+  is(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
+  is(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
+}
+
+function startTest() {
+  simpleTest();
+  multipleDefinitionTest();
+  throwIfDefined();
+  throwIfSetTwice();
+  simpleExtendedTest();
+  simpleInnerHTMLTest();
+  twoElementInnerHTMLTest();
+}
+
+startTest();
+
+</script>
+</body>
+</html>
