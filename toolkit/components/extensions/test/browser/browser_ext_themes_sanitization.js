@@ -126,3 +126,31 @@ add_task(async function test_sanitization_transparent_accentcolor() {
 
   await extension.unload();
 });
+
+add_task(async function test_sanitization_transparent_textcolor() {
+  // This test checks whether transparent textcolor falls back to black.
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "colors": {
+          "accentcolor": ACCENT_COLOR,
+          "textcolor": "transparent",
+        },
+      },
+    },
+  });
+
+  let docEl = document.documentElement;
+
+  let transitionPromise = waitForTransition(docEl, "background-color");
+  await extension.startup();
+  await transitionPromise;
+
+  Assert.equal(
+    window.getComputedStyle(docEl).color,
+    "rgb(0, 0, 0)",
+    "Text color should be black",
+  );
+
+  await extension.unload();
+});

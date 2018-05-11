@@ -24,15 +24,13 @@ const toolkitVariableMap = [
     lwtProperty: "textcolor",
     processColor(rgbaChannels, element) {
       if (!rgbaChannels) {
-        element.removeAttribute("lwthemetextcolor");
-        element.removeAttribute("lwtheme");
-        return null;
+        rgbaChannels = {r: 0, g: 0, b: 0};
       }
-      const {r, g, b, a} = rgbaChannels;
+      // Remove the alpha channel
+      const {r, g, b} = rgbaChannels;
       const luminance = _getLuminance(r, g, b);
       element.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
-      element.setAttribute("lwtheme", "true");
-      return `rgba(${r}, ${g}, ${b}, ${a})` || "black";
+      return `rgba(${r}, ${g}, ${b})`;
     }
   }],
   ["--arrowpanel-background", {
@@ -178,6 +176,13 @@ LightweightThemeConsumer.prototype = {
     _setImage(root, active, "--lwt-footer-image", aData.footerURL);
     _setImage(root, active, "--lwt-additional-images", aData.additionalBackgrounds);
     _setProperties(root, active, aData);
+
+    if (active) {
+      root.setAttribute("lwtheme", "true");
+    } else {
+      root.removeAttribute("lwtheme");
+      root.removeAttribute("lwthemetextcolor");
+    }
 
     if (active && aData.footerURL)
       root.setAttribute("lwthemefooter", "true");
