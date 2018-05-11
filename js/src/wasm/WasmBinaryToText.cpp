@@ -762,14 +762,14 @@ RenderExtraConversionOperator(WasmRenderContext& c, AstExtraConversionOperator& 
     MAP_AST_EXPR(c, conv);
     const char* opStr;
     switch (conv.op()) {
-      case NumericOp::I32TruncSSatF32:   opStr = "i32.trunc_s:sat/f32"; break;
-      case NumericOp::I32TruncUSatF32:   opStr = "i32.trunc_u:sat/f32"; break;
-      case NumericOp::I32TruncSSatF64:   opStr = "i32.trunc_s:sat/f64"; break;
-      case NumericOp::I32TruncUSatF64:   opStr = "i32.trunc_u:sat/f64"; break;
-      case NumericOp::I64TruncSSatF32:   opStr = "i64.trunc_s:sat/f32"; break;
-      case NumericOp::I64TruncUSatF32:   opStr = "i64.trunc_u:sat/f32"; break;
-      case NumericOp::I64TruncSSatF64:   opStr = "i64.trunc_s:sat/f64"; break;
-      case NumericOp::I64TruncUSatF64:   opStr = "i64.trunc_u:sat/f64"; break;
+      case MiscOp::I32TruncSSatF32:   opStr = "i32.trunc_s:sat/f32"; break;
+      case MiscOp::I32TruncUSatF32:   opStr = "i32.trunc_u:sat/f32"; break;
+      case MiscOp::I32TruncSSatF64:   opStr = "i32.trunc_s:sat/f64"; break;
+      case MiscOp::I32TruncUSatF64:   opStr = "i32.trunc_u:sat/f64"; break;
+      case MiscOp::I64TruncSSatF32:   opStr = "i64.trunc_s:sat/f32"; break;
+      case MiscOp::I64TruncUSatF32:   opStr = "i64.trunc_u:sat/f32"; break;
+      case MiscOp::I64TruncSSatF64:   opStr = "i64.trunc_s:sat/f64"; break;
+      case MiscOp::I64TruncUSatF64:   opStr = "i64.trunc_u:sat/f64"; break;
       default:                      return Fail(c, "unexpected extra conversion operator");
     }
     return c.buffer.append(opStr, strlen(opStr));

@@ -4077,48 +4077,37 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitSignExtend(f, 4, 8));
 #endif
 
-          // Bulk memory operations
-#ifdef ENABLE_WASM_BULKMEM_OPS
-          case uint16_t(Op::CopyOrFillPrefix): {
+          // Miscellaneous operations
+          case uint16_t(Op::MiscPrefix): {
             switch (op.b1) {
-              case uint16_t(CopyOrFillOp::Copy):
-                CHECK(EmitMemCopy(f));
-              case uint16_t(CopyOrFillOp::Fill):
-                CHECK(EmitMemFill(f));
-              default:
-                return f.iter().unrecognizedOpcode(&op);
-            }
-            break;
-          }
-#endif
-
-          // Numeric operations
-          case uint16_t(Op::NumericPrefix): {
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
-            switch (op.b1) {
-              case uint16_t(NumericOp::I32TruncSSatF32):
-              case uint16_t(NumericOp::I32TruncUSatF32):
+              case uint16_t(MiscOp::I32TruncSSatF32):
+              case uint16_t(MiscOp::I32TruncUSatF32):
                 CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
-                                   NumericOp(op.b1) == NumericOp::I32TruncUSatF32, true));
-              case uint16_t(NumericOp::I32TruncSSatF64):
-              case uint16_t(NumericOp::I32TruncUSatF64):
+                                   MiscOp(op.b1) == MiscOp::I32TruncUSatF32, true));
+              case uint16_t(MiscOp::I32TruncSSatF64):
+              case uint16_t(MiscOp::I32TruncUSatF64):
                 CHECK(EmitTruncate(f, ValType::F64, ValType::I32,
-                                   NumericOp(op.b1) == NumericOp::I32TruncUSatF64, true));
-              case uint16_t(NumericOp::I64TruncSSatF32):
-              case uint16_t(NumericOp::I64TruncUSatF32):
+                                   MiscOp(op.b1) == MiscOp::I32TruncUSatF64, true));
+              case uint16_t(MiscOp::I64TruncSSatF32):
+              case uint16_t(MiscOp::I64TruncUSatF32):
                 CHECK(EmitTruncate(f, ValType::F32, ValType::I64,
-                                   NumericOp(op.b1) == NumericOp::I64TruncUSatF32, true));
-              case uint16_t(NumericOp::I64TruncSSatF64):
-              case uint16_t(NumericOp::I64TruncUSatF64):
+                                   MiscOp(op.b1) == MiscOp::I64TruncUSatF32, true));
+              case uint16_t(MiscOp::I64TruncSSatF64):
+              case uint16_t(MiscOp::I64TruncUSatF64):
                 CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
-                                   NumericOp(op.b1) == NumericOp::I64TruncUSatF64, true));
+                                   MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
+#endif
+#ifdef ENABLE_WASM_BULKMEM_OPS
+              case uint16_t(MiscOp::MemCopy):
+                CHECK(EmitMemCopy(f));
+              case uint16_t(MiscOp::MemFill):
+                CHECK(EmitMemFill(f));
+#endif
               default:
                 return f.iter().unrecognizedOpcode(&op);
             }
             break;
-#else
-            return f.iter().unrecognizedOpcode(&op);
-#endif
           }
 
           // Thread operations
