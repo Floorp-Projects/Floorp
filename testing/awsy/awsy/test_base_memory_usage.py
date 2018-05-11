@@ -81,8 +81,6 @@ class TestMemoryUsage(AwsyTestCase):
             self.open_pages()
             self.settle()
             self.settle()
-            self.settle()
-            self.settle()
             self.assertTrue(self.do_full_gc())
             self.settle()
             create_checkpoint("TabsOpenForceGC", itr)
