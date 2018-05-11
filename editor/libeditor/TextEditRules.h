@@ -315,7 +315,14 @@ protected:
    */
   MOZ_MUST_USE nsresult HideLastPWInput();
 
-  nsresult CollapseSelectionToTrailingBRIfNeeded();
+  /**
+   * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
+   * text node if:
+   * - the editor is text editor
+   * - and Selection is collapsed at the end of the text node
+   * - and the text node is followed by moz-<br>.
+   */
+  MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
   bool IsPasswordEditor() const;
   bool IsSingleLineEditor() const;
