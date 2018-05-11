@@ -356,8 +356,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
-      WillInsert(aCancel);
-      return NS_OK;
+      return WillInsert(aCancel);
     default:
       return NS_ERROR_FAILURE;
   }
@@ -410,28 +409,37 @@ TextEditRules::DocumentIsEmpty()
   return retVal;
 }
 
-void
+nsresult
 TextEditRules::WillInsert(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel);
 
   if (IsReadonly() || IsDisabled()) {
-    *aCancel = true;
-    return;
+    if (aCancel) {
+      *aCancel = true;
+    }
+    return NS_OK;
   }
 
   // initialize out param
-  *aCancel = false;
+  if (aCancel) {
+    *aCancel = false;
+  }
 
   // check for the magic content node and delete it if it exists
-  if (mBogusNode) {
-    DebugOnly<nsresult> rv =
-      TextEditorRef().DeleteNodeWithTransaction(*mBogusNode);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-      "Failed to remove the bogus node");
-    mBogusNode = nullptr;
+  if (!mBogusNode) {
+    return NS_OK;
   }
+
+  DebugOnly<nsresult> rv =
+    TextEditorRef().DeleteNodeWithTransaction(*mBogusNode);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+    "Failed to remove the bogus node");
+  mBogusNode = nullptr;
+  return NS_OK;
 }
 
 nsresult
@@ -478,10 +486,10 @@ TextEditRules::WillInsertBreak(bool* aCancel,
       }
     }
 
-    WillInsert(aCancel);
-    // initialize out param
-    // we want to ignore result of WillInsert()
-    *aCancel = false;
+    rv = WillInsert();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -726,10 +734,10 @@ TextEditRules::WillInsertText(EditAction aAction,
     }
   }
 
-  WillInsert(aCancel);
-  // initialize out param
-  // we want to ignore result of WillInsert()
-  *aCancel = false;
+  rv = WillInsert(aCancel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // handle password field data
   // this has the side effect of changing all the characters in aOutString
@@ -894,9 +902,10 @@ TextEditRules::WillSetText(bool* aCancel,
     return NS_OK;
   }
 
-  WillInsert(aCancel);
-  // we want to ignore result of WillInsert()
-  *aCancel = false;
+  nsresult rv = WillInsert(aCancel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   RefPtr<Element> rootElement = TextEditorRef().GetRoot();
   uint32_t count = rootElement->GetChildCount();
@@ -952,8 +961,8 @@ TextEditRules::WillSetText(bool* aCancel,
 
   // Even if empty text, we don't remove text node and set empty text
   // for performance
-  nsresult rv = TextEditorRef().SetTextImpl(SelectionRef(), tString,
-                                            *curNode->GetAsText());
+  rv = TextEditorRef().SetTextImpl(SelectionRef(), tString,
+                                   *curNode->GetAsText());
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
