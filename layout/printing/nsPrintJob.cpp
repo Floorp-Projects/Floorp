@@ -2365,10 +2365,7 @@ nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
     DeleteUnselectedNodes(aPO->mDocument->GetOriginalDocument(), aPO->mDocument);
   }
 
-  aPO->mPresShell->StyleSet()->EndUpdate();
-
   // The pres shell now owns the style set object.
-
 
   bool doReturn = false;;
   bool documentIsTopLevel = false;
