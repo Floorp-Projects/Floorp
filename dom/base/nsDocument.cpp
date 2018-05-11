@@ -283,10 +283,6 @@ static LazyLogModule gDocumentLeakPRLog("DocumentLeak");
 static LazyLogModule gCspPRLog("CSP");
 static LazyLogModule gUserInteractionPRLog("UserInteraction");
 
-static const char kChromeInContentPref[] = "security.allow_chrome_frames_inside_content";
-static bool sChromeInContentAllowed = false;
-static bool sChromeInContentPrefCached = false;
-
 static nsresult
 GetHttpChannelHelper(nsIChannel* aChannel, nsIHttpChannel** aHttpChannel)
 {
@@ -2396,13 +2392,7 @@ nsIDocument::MaybeDowngradePrincipal(nsIPrincipal* aPrincipal)
     return do_AddRef(expanded->WhiteList().LastElement());
   }
 
-  if (!sChromeInContentPrefCached) {
-    sChromeInContentPrefCached = true;
-    Preferences::AddBoolVarCache(&sChromeInContentAllowed,
-                                 kChromeInContentPref, false);
-  }
-  if (!sChromeInContentAllowed &&
-      nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     // We basically want the parent document here, but because this is very
     // early in the load, GetParentDocument() returns null, so we use the
     // docshell hierarchy to get this information instead.
