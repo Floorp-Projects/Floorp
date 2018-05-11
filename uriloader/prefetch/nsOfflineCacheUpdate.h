@@ -12,7 +12,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMutableArray.h"
@@ -343,7 +342,7 @@ public:
     nsresult Schedule(nsIURI *aManifestURI,
                       nsIURI *aDocumentURI,
                       nsIPrincipal* aLoadingPrincipal,
-                      nsIDOMDocument *aDocument,
+                      nsIDocument *aDocument,
                       nsPIDOMWindowInner* aWindow,
                       nsIFile* aCustomProfileDir,
                       nsIOfflineCacheUpdate **aUpdate);

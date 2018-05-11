@@ -1289,7 +1289,7 @@ nsresult
 nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
                            nsIURI *aDocumentURI,
                            nsIPrincipal* aLoadingPrincipal,
-                           nsIDOMDocument *aDocument,
+                           nsIDocument *aDocument,
                            nsIFile *aCustomProfileDir)
 {
     nsresult rv;
