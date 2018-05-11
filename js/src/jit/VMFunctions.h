@@ -25,6 +25,12 @@ class GeneratorObject;
 class RegExpObject;
 class TypedArrayObject;
 
+namespace gc {
+
+struct Cell;
+
+}
+
 namespace jit {
 
 enum DataType : uint8_t {
@@ -744,7 +750,7 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
 
 void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
-void PostWriteBarrier(JSRuntime* rt, JSObject* obj);
+void PostWriteBarrier(JSRuntime* rt, js::gc::Cell* cell);
 void PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj);
 
 enum class IndexInBounds { Yes, Maybe };
