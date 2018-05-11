@@ -1222,9 +1222,7 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
   }
 
-  aDocument->BeginUpdate(UPDATE_STYLE);
   aDocument->InsertStyleSheetAt(aSheet, insertionPoint);
-  aDocument->EndUpdate(UPDATE_STYLE);
   LOG(("  Inserting into document at position %d", insertionPoint));
 
   return NS_OK;

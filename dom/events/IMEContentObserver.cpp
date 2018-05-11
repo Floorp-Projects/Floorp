@@ -2298,9 +2298,6 @@ IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument,
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving())) {
     return;
   }
-  if (!(aUpdateType & UPDATE_CONTENT_MODEL)) {
-    return;
-  }
   mDocumentUpdating++;
   mIMEContentObserver->BeginDocumentUpdate();
 }
@@ -2311,9 +2308,6 @@ IMEContentObserver::DocumentObserver::EndUpdate(nsIDocument* aDocument,
 {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving()) ||
       NS_WARN_IF(!IsUpdating())) {
-    return;
-  }
-  if (!(aUpdateType & UPDATE_CONTENT_MODEL)) {
     return;
   }
   mDocumentUpdating--;

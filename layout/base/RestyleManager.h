@@ -336,7 +336,10 @@ public:
                                      CSSPseudoElementType,
                                      nsRestyleHint);
 
-  void PostRestyleEventForCSSRuleChanges();
+  void NextRestyleIsForCSSRuleChanges()
+  {
+    mRestyleForCSSRuleChanges = true;
+  }
 
   void RebuildAllStyleData(nsChangeHint aExtraHint, nsRestyleHint aRestyleHint);
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,

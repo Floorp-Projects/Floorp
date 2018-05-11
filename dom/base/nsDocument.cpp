@@ -2458,7 +2458,6 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
 
-  mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
   if (mStyleSetFilled) {
     // Skip removing style sheets from the style set if we know we haven't
     // filled the style set.  (This allows us to avoid calling
@@ -2501,9 +2500,11 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
   }
 
   // Now set up our style sets
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     FillStyleSet(shell->StyleSet());
+    if (shell->StyleSet()->StyleSheetsHaveChanged()) {
+      shell->ApplicableStylesChanged();
+    }
   }
 }
 
@@ -4242,9 +4243,7 @@ nsIDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
   if (mOnDemandBuiltInUASheets.Contains(aSheet)) {
     return;
   }
-  BeginUpdate(UPDATE_STYLE);
   AddOnDemandBuiltInUASheet(aSheet);
-  EndUpdate(UPDATE_STYLE);
 }
 
 void
@@ -4258,13 +4257,13 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 
   if (aSheet->IsApplicable()) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
+    if (nsIPresShell* shell = GetShell()) {
       // Note that prepending here is necessary to make sure that html.css etc.
       // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
       // have an insertion point to match the order of
       // nsDocumentViewer::CreateStyleSet though?
       shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
+      shell->ApplicableStylesChanged();
     }
   }
 
@@ -4274,9 +4273,9 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 void
 nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     shell->StyleSet()->AddDocStyleSheet(aSheet, this);
+    shell->ApplicableStylesChanged();
   }
 }
 
@@ -4338,6 +4337,7 @@ nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
   if (nsIPresShell* shell = GetShell()) {
     shell->StyleSet()->RemoveDocStyleSheet(aSheet);
+    shell->ApplicableStylesChanged();
   }
 }
 
@@ -4367,8 +4367,6 @@ void
 nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
                                nsTArray<RefPtr<StyleSheet>>& aNewSheets)
 {
-  BeginUpdate(UPDATE_STYLE);
-
   // XXX Need to set the sheet on the ownernode, if any
   MOZ_ASSERT(aOldSheets.Length() == aNewSheets.Length(),
              "The lists must be the same length!");
@@ -4395,8 +4393,6 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
       NotifyStyleSheetAdded(newSheet, true);
     }
   }
-
-  EndUpdate(UPDATE_STYLE);
 }
 
 void
@@ -4544,17 +4540,15 @@ nsIDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aShe
 
   mAdditionalSheets[aType].AppendElement(aSheet);
 
-  BeginUpdate(UPDATE_STYLE);
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     SheetType type = ConvertAdditionalSheetType(aType);
     shell->StyleSet()->AppendStyleSheet(type, aSheet);
+    shell->ApplicableStylesChanged();
   }
 
   // Passing false, so documet.styleSheets.length will not be affected by
   // these additional sheets.
   NotifyStyleSheetAdded(aSheet, false);
-  EndUpdate(UPDATE_STYLE);
   return NS_OK;
 }
 
@@ -4570,21 +4564,18 @@ nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aShee
     RefPtr<StyleSheet> sheetRef = sheets[i];
     sheets.RemoveElementAt(i);
 
-    BeginUpdate(UPDATE_STYLE);
     if (!mIsGoingAway) {
       MOZ_ASSERT(sheetRef->IsApplicable());
-      nsCOMPtr<nsIPresShell> shell = GetShell();
-      if (shell) {
+      if (nsIPresShell* shell = GetShell()) {
         SheetType type = ConvertAdditionalSheetType(aType);
         shell->StyleSet()->RemoveStyleSheet(type, sheetRef);
+        shell->ApplicableStylesChanged();
       }
     }
 
     // Passing false, so documet.styleSheets.length will not be affected by
     // these additional sheets.
     NotifyStyleSheetRemoved(sheetRef, false);
-    EndUpdate(UPDATE_STYLE);
-
     sheetRef->ClearAssociatedDocumentOrShadowRoot();
   }
 }
@@ -5027,6 +5018,8 @@ nsIDocument::BeginUpdate(nsUpdateType aUpdateType)
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
   // observable at this point. We reach this point when cycle collecting a
   // <link> element and the unlink code removes a style sheet.
+  //
+  // TODO(emilio): Style updates are gone, can this happen now?
   if (mDocGroup && !mIsGoingAway && !mInUnlinkOrDeletion && !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();
   }
@@ -5408,6 +5401,10 @@ nsIDocument::DocumentStatesChanged(EventStates aStateMask)
 void
 nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -5421,6 +5418,10 @@ nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 void
 nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -5434,6 +5435,10 @@ nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 void
 nsIDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -5997,7 +6002,6 @@ void
 nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                              bool aUpdateCSSLoader)
 {
-  BeginUpdate(UPDATE_STYLE);
   size_t count = SheetCount();
   nsAutoString title;
   for (size_t index = 0; index < count; index++) {
@@ -6012,7 +6016,11 @@ nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
   if (aUpdateCSSLoader) {
     CSSLoader()->DocumentStyleSheetSetChanged();
   }
-  EndUpdate(UPDATE_STYLE);
+  if (nsIPresShell* shell = GetShell()) {
+    if (shell->StyleSet()->StyleSheetsHaveChanged()) {
+      shell->ApplicableStylesChanged();
+    }
+  }
 }
 
 void

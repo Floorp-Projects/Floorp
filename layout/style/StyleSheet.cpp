@@ -260,10 +260,7 @@ StyleSheet::ApplicableStateChanged(bool aApplicable)
   if (auto* shadow = ShadowRoot::FromNode(node)) {
     shadow->StyleSheetApplicableStateChanged(*this, aApplicable);
   } else {
-    nsIDocument* doc = node.AsDocument();
-    doc->BeginUpdate(UPDATE_STYLE);
-    doc->SetStyleSheetApplicableState(this, aApplicable);
-    doc->EndUpdate(UPDATE_STYLE);
+    node.AsDocument()->SetStyleSheetApplicableState(this, aApplicable);
   }
 }
 
@@ -401,8 +398,6 @@ StyleSheet::GetType(nsAString& aType)
 void
 StyleSheet::SetDisabled(bool aDisabled)
 {
-  // DOM method, so handle BeginUpdate/EndUpdate
-  MOZ_AUTO_DOC_UPDATE(GetComposedDoc(), UPDATE_STYLE, true);
   SetEnabled(!aDisabled);
 }
 
@@ -585,8 +580,6 @@ StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
     return NS_ERROR_INVALID_ARG;
   }
 
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
-
   WillDirty();
 
   nsresult result = aGroup->DeleteStyleRuleAt(aIndex);
@@ -666,15 +659,11 @@ StyleSheet::InsertRuleIntoGroup(const nsAString& aRule,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // parse and grab the rule
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
-
   WillDirty();
 
   nsresult result = InsertRuleIntoGroupInternal(aRule, aGroup, aIndex);
   NS_ENSURE_SUCCESS(result, result);
   RuleAdded(*aGroup->GetStyleRuleAt(aIndex));
-
   return NS_OK;
 }
 
@@ -1125,8 +1114,6 @@ StyleSheet::ReparseSheet(const nsAString& aInput)
     loader = new css::Loader;
   }
 
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
-
   WillDirty();
 
   // cache child sheets to reuse
@@ -1218,7 +1205,6 @@ StyleSheet::StyleSheetLoaded(StyleSheet* aSheet,
                "We are being notified of a sheet load for a sheet that is not our child!");
 
   if (NS_SUCCEEDED(aStatus)) {
-    mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
     RuleAdded(*aSheet->GetOwnerRule());
   }
 
@@ -1271,7 +1257,6 @@ StyleSheet::InsertRuleInternal(const nsAString& aRule,
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();
 
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
   aRv = mRuleList->InsertRule(aRule, aIndex);
   if (aRv.Failed()) {
     return 0;
@@ -1298,7 +1283,6 @@ StyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
     return;
   }
 
-  mozAutoDocUpdate updateBatch(GetComposedDoc(), UPDATE_STYLE, true);
   // Hold a strong ref to the rule so it doesn't die when we remove it
   // from the list. XXX We may not want to hold it if stylesheet change
   // event is not enabled.
