@@ -98,8 +98,6 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
 
   mHasLoadedNonSVGUserAgentStyleSheets = true;
 
-  BeginUpdate(UPDATE_STYLE);
-
   if (IsBeingUsedAsImage()) {
     // nsDocumentViewer::CreateStyleSet skipped loading all user-agent/user
     // style sheets in this case, but we'll need B2G/Fennec's
@@ -167,8 +165,6 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     EnsureOnDemandBuiltInUASheet(cache->NoScriptSheet());
   }
   EnsureOnDemandBuiltInUASheet(cache->UASheet());
-
-  EndUpdate(UPDATE_STYLE);
 }
 
 } // namespace dom

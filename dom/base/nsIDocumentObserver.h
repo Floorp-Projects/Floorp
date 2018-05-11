@@ -21,8 +21,6 @@ class nsIDocument;
 typedef uint32_t nsUpdateType;
 
 #define UPDATE_CONTENT_MODEL 0x00000001
-#define UPDATE_STYLE         0x00000002
-#define UPDATE_ALL (UPDATE_CONTENT_MODEL | UPDATE_STYLE)
 
 // Document observer interface
 class nsIDocumentObserver : public nsIMutationObserver

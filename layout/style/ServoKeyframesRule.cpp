@@ -232,10 +232,7 @@ template<typename Func>
 void
 ServoKeyframesRule::UpdateRule(Func aCallback)
 {
-  MOZ_AUTO_DOC_UPDATE(GetComposedDoc(), UPDATE_STYLE, true);
-
   aCallback();
-
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }

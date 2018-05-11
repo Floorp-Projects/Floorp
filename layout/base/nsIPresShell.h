@@ -291,26 +291,11 @@ public:
   void SetAuthorStyleDisabled(bool aDisabled);
   bool GetAuthorStyleDisabled() const;
 
-  /*
-   * Called when stylesheets are added/removed/enabled/disabled to
-   * recompute style and clear other cached data as needed.  This will
-   * not reconstruct style synchronously; if you need to do that, call
-   * FlushPendingNotifications to flush out style reresolves.
-   *
-   * This handles the the addition and removal of the various types of
-   * style rules that can be in CSS style sheets, such as @font-face
-   * rules and @counter-style rules.
-   *
-   * It requires that StyleSheetAdded, StyleSheetRemoved,
-   * StyleSheetApplicableStateChanged, StyleRuleAdded, StyleRuleRemoved,
-   * or StyleRuleChanged has been called on the style sheets that have
-   * changed.
-   *
-   * // XXXbz why do we have this on the interface anyway?  The only consumer
-   * is calling AddOverrideStyleSheet/RemoveOverrideStyleSheet, and I think
-   * those should just handle reconstructing style data...
+  /**
+   * Needs to be called any time the applicable style can has changed, in order
+   * to schedule a style flush and setup all the relevant state.
    */
-  void RestyleForCSSRuleChanges();
+  void ApplicableStylesChanged();
 
   /**
    * Update the style set somehow to take into account changed prefs which
