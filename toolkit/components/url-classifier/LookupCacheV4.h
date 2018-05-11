@@ -43,7 +43,7 @@ public:
 
   nsresult AddFullHashResponseToCache(const FullHashResponseMap& aResponseMap);
 
-  nsresult WriteMetadata(TableUpdateV4* aTableUpdate);
+  nsresult WriteMetadata(RefPtr<const TableUpdateV4> aTableUpdate);
   nsresult LoadMetadata(nsACString& aState, nsACString& aChecksum);
 
   static const int VER;

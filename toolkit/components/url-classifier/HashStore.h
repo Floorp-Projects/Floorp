@@ -42,6 +42,10 @@ public:
   static T* Cast(TableUpdate* aThat) {
     return (T::TAG == aThat->Tag() ? reinterpret_cast<T*>(aThat) : nullptr);
   }
+  template<typename T>
+  static const T* Cast(const TableUpdate* aThat) {
+    return (T::TAG == aThat->Tag() ? reinterpret_cast<const T*>(aThat) : nullptr);
+  }
 
 protected:
   virtual ~TableUpdate() {}
@@ -53,6 +57,7 @@ private:
 };
 
 typedef nsTArray<RefPtr<TableUpdate>> TableUpdateArray;
+typedef nsTArray<RefPtr<const TableUpdate>> ConstTableUpdateArray;
 
 // A table update is built from a single update chunk from the server. As the
 // protocol parser processes each chunk, it constructs a table update with the
@@ -99,21 +104,22 @@ public:
                                        uint32_t aSubChunk);
   MOZ_MUST_USE nsresult NewMissPrefix(const Prefix& aPrefix);
 
-  ChunkSet& AddChunks() { return mAddChunks; }
-  ChunkSet& SubChunks() { return mSubChunks; }
+  const ChunkSet& AddChunks() const { return mAddChunks; }
+  const ChunkSet& SubChunks() const { return mSubChunks; }
 
   // Expirations for chunks.
-  ChunkSet& AddExpirations() { return mAddExpirations; }
-  ChunkSet& SubExpirations() { return mSubExpirations; }
+  const ChunkSet& AddExpirations() const { return mAddExpirations; }
+  const ChunkSet& SubExpirations() const { return mSubExpirations; }
 
   // Hashes associated with this chunk.
   AddPrefixArray& AddPrefixes() { return mAddPrefixes; }
   SubPrefixArray& SubPrefixes() { return mSubPrefixes; }
+  const AddCompleteArray& AddCompletes() const { return mAddCompletes; }
   AddCompleteArray& AddCompletes() { return mAddCompletes; }
   SubCompleteArray& SubCompletes() { return mSubCompletes; }
 
   // Entries that cannot be completed.
-  MissPrefixArray& MissPrefixes() { return mMissPrefixes; }
+  const MissPrefixArray& MissPrefixes() const { return mMissPrefixes; }
 
   // For downcasting.
   static const int TAG = 2;
@@ -162,8 +168,8 @@ public:
   }
 
   bool IsFullUpdate() const { return mFullUpdate; }
-  const PrefixStringMap& Prefixes() { return mPrefixesMap; }
-  RemovalIndiceArray& RemovalIndices() { return mRemovalIndiceArray; }
+  const PrefixStringMap& Prefixes() const { return mPrefixesMap; }
+  const RemovalIndiceArray& RemovalIndices() const { return mRemovalIndiceArray; }
   const nsACString& ClientState() const { return mClientState; }
   const nsACString& Checksum() const { return mChecksum; }
   const FullHashResponseMap& FullHashResponse() const { return mFullHashResponseMap; }

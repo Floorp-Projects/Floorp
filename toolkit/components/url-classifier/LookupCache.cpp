@@ -646,8 +646,8 @@ LookupCacheV2::GetPrefixes(FallibleTArray<uint32_t>& aAddPrefixes)
 }
 
 void
-LookupCacheV2::AddGethashResultToCache(AddCompleteArray& aAddCompletes,
-                                       MissPrefixArray& aMissPrefixes,
+LookupCacheV2::AddGethashResultToCache(const AddCompleteArray& aAddCompletes,
+                                       const MissPrefixArray& aMissPrefixes,
                                        int64_t aExpirySec)
 {
   int64_t defaultExpirySec = PR_Now() / PR_USEC_PER_SEC + V2_CACHE_DURATION_SEC;
