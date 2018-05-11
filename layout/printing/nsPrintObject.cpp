@@ -6,7 +6,6 @@
 
 #include "nsPrintObject.h"
 #include "nsIContentViewer.h"
-#include "nsIDOMDocument.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPIDOMWindow.h"
@@ -46,9 +45,11 @@ nsPrintObject::~nsPrintObject()
 
 //------------------------------------------------------------------
 nsresult
-nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
+nsPrintObject::Init(nsIDocShell* aDocShell, nsIDocument* aDoc,
                     bool aPrintPreview)
 {
+  NS_ENSURE_STATE(aDoc);
+
   mPrintPreview = aPrintPreview;
 
   if (mPrintPreview || mParent) {
@@ -65,26 +66,23 @@ nsPrintObject::Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   // Keep the document related to this docshell alive
-  nsCOMPtr<nsIDOMDocument> dummy = do_GetInterface(mDocShell);
+  nsCOMPtr<nsIDocument> dummy = do_GetInterface(mDocShell);
   mozilla::Unused << dummy;
 
   nsCOMPtr<nsIContentViewer> viewer;
   mDocShell->GetContentViewer(getter_AddRefs(viewer));
   NS_ENSURE_STATE(viewer);
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_ENSURE_STATE(doc);
-
   if (mParent) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> window = aDoc->GetWindow();
     if (window) {
       mContent = window->GetFrameElementInternal();
     }
-    mDocument = doc;
+    mDocument = aDoc;
     return NS_OK;
   }
 
-  mDocument = doc->CreateStaticClone(mDocShell);
+  mDocument = aDoc->CreateStaticClone(mDocShell);
   NS_ENSURE_STATE(mDocument);
 
   viewer->SetDocument(mDocument);

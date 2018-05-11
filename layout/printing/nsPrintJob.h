@@ -196,11 +196,11 @@ private:
 
   nsresult CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                        nsIWebProgressListener* aWebProgressListener,
-                       nsIDOMDocument* aDoc);
+                       nsIDocument* aDoc);
 
   nsresult DoCommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                          nsIWebProgressListener* aWebProgressListener,
-                         nsIDOMDocument* aDoc);
+                         nsIDocument* aDoc);
 
   void FirePrintCompletionEvent();
 
