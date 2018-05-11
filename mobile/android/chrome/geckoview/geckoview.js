@@ -17,11 +17,12 @@ XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher",
 
 /**
  * ModuleManager creates and manages GeckoView modules. Each GeckoView module
- * normally consists of a JSM file with an optional frame script file. The JSM
- * file contains a class that extends GeckoViewModule. A module usually pairs
- * with a particular GeckoSessionHandler or delegate on the Java side, and
- * automatically receives module lifetime events such as initialization, change
- * in enabled state, and change in settings.
+ * normally consists of a JSM module file with an optional content module file.
+ * The module file contains a class that extends GeckoViewModule, and the
+ * content module file contains a class that extends GeckoViewContentModule. A
+ * module usually pairs with a particular GeckoSessionHandler or delegate on the
+ * Java side, and automatically receives module lifetime events such as
+ * initialization, change in enabled state, and change in settings.
  */
 var ModuleManager = {
   get _initData() {
@@ -133,24 +134,51 @@ var ModuleManager = {
  * object that extends GeckoViewModule.
  */
 class ModuleInfo {
-  constructor({enabled, manager, name, resource}) {
+  /**
+   * Create a ModuleInfo instance. See _loadPhase for phase object description.
+   *
+   * @param manager the ModuleManager instance.
+   * @param name Name of the module.
+   * @param enabled Enabled state of the module at startup.
+   * @param onInit Phase object for the init phase, when the window is created.
+   * @param onEnable Phase object for the enable phase, when the module is first
+   *                 enabled by setting a delegate in Java.
+   */
+  constructor({manager, name, enabled, onInit, onEnable}) {
     this._manager = manager;
     this._name = name;
 
-    const scope = {};
-    const global = ChromeUtils.import(resource, scope);
-    const tag = name.replace("GeckoView", "GeckoView.");
-    GeckoViewUtils.initLogging(tag, global);
-
-    this._impl = new scope[name](this);
+    this._impl = null;
     this._enabled = false;
     // Only enable once we performed initialization.
     this._enabledOnInit = enabled;
+
+    this._loadPhase(onInit);
+    this._onEnablePhase = onEnable;
   }
 
   onInit() {
     this._impl.onInit();
     this.enabled = this._enabledOnInit;
+  }
+
+  /**
+   * Load resources according to a phase object that contains possible keys,
+   *
+   * "resource": specify the JSM resource to load for this module.
+   */
+  _loadPhase(aPhase) {
+    if (!aPhase) {
+      return;
+    }
+
+    if (aPhase.resource && !this._impl) {
+      const scope = {};
+      const global = ChromeUtils.import(aPhase.resource, scope);
+      const tag = this._name.replace("GeckoView", "GeckoView.");
+      GeckoViewUtils.initLogging(tag, global);
+      this._impl = new scope[this._name](this);
+    }
   }
 
   get manager() {
@@ -181,6 +209,8 @@ class ModuleInfo {
     this._enabled = aEnabled;
 
     if (aEnabled) {
+      this._loadPhase(this._onEnablePhase);
+      this._onEnablePhase = null;
       this._impl.onEnable();
       this._impl.onSettingsUpdate();
     }
@@ -207,31 +237,49 @@ function startup() {
   const browser = createBrowser();
   ModuleManager.init(browser, [{
     name: "GeckoViewAccessibility",
-    resource: "resource://gre/modules/GeckoViewAccessibility.jsm",
+    onInit: {
+      resource: "resource://gre/modules/GeckoViewAccessibility.jsm",
+    },
   }, {
     name: "GeckoViewContent",
-    resource: "resource://gre/modules/GeckoViewContent.jsm",
+    onInit: {
+      resource: "resource://gre/modules/GeckoViewContent.jsm",
+    },
   }, {
     name: "GeckoViewNavigation",
-    resource: "resource://gre/modules/GeckoViewNavigation.jsm",
+    onInit: {
+      resource: "resource://gre/modules/GeckoViewNavigation.jsm",
+    },
   }, {
     name: "GeckoViewProgress",
-    resource: "resource://gre/modules/GeckoViewProgress.jsm",
+    onEnable: {
+      resource: "resource://gre/modules/GeckoViewProgress.jsm",
+    },
   }, {
     name: "GeckoViewScroll",
-    resource: "resource://gre/modules/GeckoViewScroll.jsm",
+    onEnable: {
+      resource: "resource://gre/modules/GeckoViewScroll.jsm",
+    },
   }, {
     name: "GeckoViewSelectionAction",
-    resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
+    onEnable: {
+      resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
+    },
   }, {
     name: "GeckoViewSettings",
-    resource: "resource://gre/modules/GeckoViewSettings.jsm",
+    onInit: {
+      resource: "resource://gre/modules/GeckoViewSettings.jsm",
+    },
   }, {
     name: "GeckoViewTab",
-    resource: "resource://gre/modules/GeckoViewTab.jsm",
+    onInit: {
+      resource: "resource://gre/modules/GeckoViewTab.jsm",
+    },
   }, {
     name: "GeckoViewTrackingProtection",
-    resource: "resource://gre/modules/GeckoViewTrackingProtection.jsm",
+    onEnable: {
+      resource: "resource://gre/modules/GeckoViewTrackingProtection.jsm",
+    },
   }]);
 
   window.document.documentElement.appendChild(browser);
