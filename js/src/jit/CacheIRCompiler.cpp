@@ -924,7 +924,7 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
             InitGCPtr<JSString*>(destWords, field.asWord());
             break;
           case StubField::Type::Id:
-            InitGCPtr<jsid>(destWords, field.asWord());
+            AsGCPtr<jsid>(destWords)->init(jsid::fromRawBits(field.asWord()));
             break;
           case StubField::Type::RawInt64:
           case StubField::Type::DOMExpandoGeneration:

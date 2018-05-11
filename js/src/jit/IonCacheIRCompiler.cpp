@@ -115,7 +115,7 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
         return (const void*)readStubWord(offset, StubField::Type::RawWord);
     }
     jsid idStubField(uint32_t offset) {
-        return mozilla::BitwiseCast<jsid>(readStubWord(offset, StubField::Type::Id));
+        return jsid::fromRawBits(readStubWord(offset, StubField::Type::Id));
     }
     template <typename T>
     T rawWordStubField(uint32_t offset) {
