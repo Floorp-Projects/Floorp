@@ -22,8 +22,8 @@ def migrate(ctx):
                         FTL.Identifier('title'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'window.title',
-                        ),
+                            'window.title'
+                        )
                     ),
                     FTL.Attribute(
                         FTL.Identifier('style'),
@@ -31,11 +31,11 @@ def migrate(ctx):
                             FTL.TextElement('width: '),
                             COPY(
                                 'browser/chrome/browser/preferences/clearSiteData.dtd',
-                                'window.width',
-                            ),
+                                'window.width'
+                            )
                         )
-                    ),
-                ],
+                    )
+                ]
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-description'),
@@ -44,8 +44,8 @@ def migrate(ctx):
                     'window.description',
                     {
                         '&brandShortName;': MESSAGE_REFERENCE('-brand-short-name')
-                    },
-                ),
+                    }
+                )
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-close-key'),
@@ -54,56 +54,24 @@ def migrate(ctx):
                         FTL.Identifier('key'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'windowClose.key',
-                        ),
-                    ),
-                ],
-            ),
-            FTL.Message(
-                id=FTL.Identifier('clear-site-data-cookies'),
-                value=COPY(
-                    'browser/chrome/browser/preferences/clearSiteData.dtd',
-                    'clearSiteData.label',
-                ),
-                attributes=[
-                    FTL.Attribute(
-                        FTL.Identifier('accesskey'),
-                        COPY(
-                            'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'clearSiteData.accesskey',
-                        ),
-                    ),
-                ],
+                            'windowClose.key'
+                        )
+                    )
+                ]
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-cookies-info'),
                 value=COPY(
                     'browser/chrome/browser/preferences/clearSiteData.dtd',
-                    'clearSiteData.description',
-                ),
-            ),
-            FTL.Message(
-                id=FTL.Identifier('clear-site-data-cache'),
-                value=COPY(
-                    'browser/chrome/browser/preferences/clearSiteData.dtd',
-                    'clearCache.label',
-                ),
-                attributes=[
-                    FTL.Attribute(
-                        FTL.Identifier('accesskey'),
-                        COPY(
-                            'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'clearCache.accesskey',
-                        ),
-                    ),
-                ],
+                    'clearSiteData.description'
+                )
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-cache-info'),
                 value=COPY(
                     'browser/chrome/browser/preferences/clearSiteData.dtd',
-                    'clearCache.description',
-                ),
+                    'clearCache.description'
+                )
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-cancel'),
@@ -112,17 +80,17 @@ def migrate(ctx):
                         FTL.Identifier('label'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'button.cancel.label',
-                        ),
+                            'button.cancel.label'
+                        )
                     ),
                     FTL.Attribute(
                         FTL.Identifier('accesskey'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'button.cancel.accesskey',
-                        ),
-                    ),
-                ],
+                            'button.cancel.accesskey'
+                        )
+                    )
+                ]
             ),
             FTL.Message(
                 id=FTL.Identifier('clear-site-data-clear'),
@@ -131,17 +99,17 @@ def migrate(ctx):
                         FTL.Identifier('label'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'button.clear.label',
-                        ),
+                            'button.clear.label'
+                        )
                     ),
                     FTL.Attribute(
                         FTL.Identifier('accesskey'),
                         COPY(
                             'browser/chrome/browser/preferences/clearSiteData.dtd',
-                            'button.clear.accesskey',
-                        ),
-                    ),
-                ],
-            ),
+                            'button.clear.accesskey'
+                        )
+                    )
+                ]
+            )
         ]
     )

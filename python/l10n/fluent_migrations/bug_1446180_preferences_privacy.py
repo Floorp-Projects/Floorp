@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import fluent.syntax.ast as FTL
 from fluent.migrate.helpers import MESSAGE_REFERENCE
 from fluent.migrate.transforms import REPLACE
-from fluent.migrate import COPY, CONCAT
+from fluent.migrate import COPY
 
 
 def migrate(ctx):
@@ -44,25 +44,6 @@ def migrate(ctx):
                     'browser/chrome/browser/preferences/security.dtd',
                     'formsAndPasswords.label',
                 ),
-            ),
-            FTL.Message(
-                id=FTL.Identifier('forms-remember-logins'),
-                attributes=[
-                    FTL.Attribute(
-                        FTL.Identifier('label'),
-                        COPY(
-                            'browser/chrome/browser/preferences/security.dtd',
-                            'rememberLogins2.label',
-                        ),
-                    ),
-                    FTL.Attribute(
-                        FTL.Identifier('accesskey'),
-                        COPY(
-                            'browser/chrome/browser/preferences/security.dtd',
-                            'rememberLogins2.accesskey',
-                        ),
-                    ),
-                ],
             ),
             FTL.Message(
                 id=FTL.Identifier('forms-exceptions'),
@@ -544,21 +525,6 @@ def migrate(ctx):
                 value=COPY(
                     'browser/chrome/browser/preferences/privacy.dtd',
                     'trackingProtectionHeader2.label',
-                ),
-            ),
-            FTL.Message(
-                id=FTL.Identifier('tracking-description'),
-                value=CONCAT(
-                    COPY(
-                        'browser/chrome/browser/preferences/privacy.dtd',
-                        'trackingProtection3.description',
-                    ),
-                    FTL.TextElement(' <a>'),
-                    COPY(
-                        'browser/chrome/browser/preferences/privacy.dtd',
-                        'trackingProtectionLearnMore2.label',
-                    ),
-                    FTL.TextElement('</a>'),
                 ),
             ),
             FTL.Message(
