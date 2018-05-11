@@ -80,6 +80,8 @@ ShowError(DWORD aError = ::GetLastError())
   ::LocalFree(rawMsgBuf);
 }
 
+static wchar_t gAbsPath[MAX_PATH];
+
 namespace mozilla {
 
 // Eventually we want to be able to set a build config flag such that, when set,
@@ -95,11 +97,11 @@ RunAsLauncherProcess(int& argc, wchar_t** argv)
 int
 LauncherMain(int argc, wchar_t* argv[])
 {
+  // Make sure that the launcher process itself has image load policies set
   if (IsWin10November2015UpdateOrLater()) {
     const DynamicallyLinkedFunctionPtr<decltype(&SetProcessMitigationPolicy)>
       pSetProcessMitigationPolicy(L"kernel32.dll", "SetProcessMitigationPolicy");
     if (pSetProcessMitigationPolicy) {
-      // Make sure that the launcher process itself has image load policies set
       PROCESS_MITIGATION_IMAGE_LOAD_POLICY imgLoadPol = {};
       imgLoadPol.PreferSystem32Images = 1;
 
@@ -110,6 +112,19 @@ LauncherMain(int argc, wchar_t* argv[])
     }
   }
 
+  // Convert argv[0] to an absolute path if necessary
+  DWORD absPathLen = ::SearchPathW(nullptr, argv[0], L".exe",
+                                   ArrayLength(gAbsPath), gAbsPath, nullptr);
+  if (!absPathLen) {
+    ShowError();
+    return 1;
+  }
+
+  if (absPathLen < ArrayLength(gAbsPath)) {
+    argv[0] = gAbsPath;
+  }
+
+  // If we're elevated, we should relaunch ourselves as a normal user
   Maybe<bool> isElevated = IsElevated();
   if (!isElevated) {
     return 1;
@@ -119,6 +134,7 @@ LauncherMain(int argc, wchar_t* argv[])
     return !LaunchUnelevated(argc, argv);
   }
 
+  // Now proceed with setting up the parameters for process creation
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(argc, argv));
   if (!cmdLine) {
     return 1;
