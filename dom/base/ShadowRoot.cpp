@@ -308,9 +308,7 @@ ShadowRoot::ApplicableRulesChanged()
 
   nsIDocument* doc = OwnerDoc();
   if (nsIPresShell* shell = doc->GetShell()) {
-    doc->BeginUpdate(UPDATE_STYLE);
     shell->RecordShadowStyleChange(*this);
-    doc->EndUpdate(UPDATE_STYLE);
   }
 }
 

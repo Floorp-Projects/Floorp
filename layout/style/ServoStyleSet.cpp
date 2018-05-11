@@ -195,15 +195,6 @@ ServoStyleSet::Shutdown()
 }
 
 void
-ServoStyleSet::InvalidateStyleForCSSRuleChanges()
-{
-  MOZ_ASSERT(StylistNeedsUpdate());
-  if (nsPresContext* pc = GetPresContext()) {
-    pc->RestyleManager()->PostRestyleEventForCSSRuleChanges();
-  }
-}
-
-void
 ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot)
 {
   // TODO(emilio): We could keep track of the actual shadow roots that need

@@ -2265,7 +2265,7 @@ nsHTMLDocument::TearingDownEditor()
 
     presShell->SetAgentStyleSheets(agentSheets);
 
-    presShell->RestyleForCSSRuleChanges();
+    presShell->ApplicableStylesChanged();
   }
 }
 
@@ -2433,7 +2433,7 @@ nsHTMLDocument::EditingStateChanged()
     rv = presShell->SetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    presShell->RestyleForCSSRuleChanges();
+    presShell->ApplicableStylesChanged();
 
     // Adjust focused element with new style but blur event shouldn't be fired
     // until mEditingState is modified with newState.

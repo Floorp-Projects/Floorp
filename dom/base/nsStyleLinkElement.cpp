@@ -314,9 +314,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     if (aOldShadowRoot) {
       aOldShadowRoot->RemoveSheet(mStyleSheet);
     } else {
-      aOldDocument->BeginUpdate(UPDATE_STYLE);
       aOldDocument->RemoveStyleSheet(mStyleSheet);
-      aOldDocument->EndUpdate(UPDATE_STYLE);
     }
 
     nsStyleLinkElement::SetStyleSheet(nullptr);
@@ -355,9 +353,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
       ShadowRoot* containingShadow = thisContent->GetContainingShadow();
       containingShadow->RemoveSheet(mStyleSheet);
     } else {
-      doc->BeginUpdate(UPDATE_STYLE);
       doc->RemoveStyleSheet(mStyleSheet);
-      doc->EndUpdate(UPDATE_STYLE);
     }
 
     nsStyleLinkElement::SetStyleSheet(nullptr);
