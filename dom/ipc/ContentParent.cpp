@@ -2842,9 +2842,7 @@ ContentParent::Observe(nsISupports* aSubject,
     return NS_OK;
 
   // listening for memory pressure event
-  if (!strcmp(aTopic, "memory-pressure") &&
-      !StringEndsWith(nsDependentString(aData),
-                      NS_LITERAL_STRING("-no-forward"))) {
+  if (!strcmp(aTopic, "memory-pressure")) {
       Unused << SendFlushMemory(nsDependentString(aData));
   }
   else if (!strcmp(aTopic, "nsPref:changed")) {
