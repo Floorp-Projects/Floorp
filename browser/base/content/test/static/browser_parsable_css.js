@@ -72,6 +72,11 @@ if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
     sourceName: /(?:res|gre-resources)\/(ua|html)\.css$/i,
     errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
     isFromDevTools: false
+  }, {
+    // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
+    sourceName: /web\/viewer\.css$/i,
+    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+    isFromDevTools: false
   });
 }
 
