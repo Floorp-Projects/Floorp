@@ -140,7 +140,7 @@ impl<'a> RawtestHarness<'a> {
             blob_img = api.generate_image_key();
             resources.add_image(
                 blob_img,
-                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
                 ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
                 None,
             );
@@ -221,14 +221,14 @@ impl<'a> RawtestHarness<'a> {
             blob_img = api.generate_image_key();
             resources.add_image(
                 blob_img,
-                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
                 ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
                 None,
             );
             blob_img2 = api.generate_image_key();
             resources.add_image(
                 blob_img2,
-                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
                 ImageData::new_blob_image(blob::serialize_blob(ColorU::new(80, 50, 150, 255))),
                 None,
             );
@@ -286,13 +286,13 @@ impl<'a> RawtestHarness<'a> {
         let mut resources = ResourceUpdates::new();
         resources.update_image(
             blob_img,
-            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
             ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
             Some(rect(100, 100, 100, 100)),
         );
         resources.update_image(
             blob_img2,
-            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
             ImageData::new_blob_image(blob::serialize_blob(ColorU::new(59, 50, 150, 255))),
             Some(rect(100, 100, 100, 100)),
         );
@@ -307,7 +307,7 @@ impl<'a> RawtestHarness<'a> {
         let mut resources = ResourceUpdates::new();
         resources.update_image(
             blob_img,
-            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
             ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 150, 150, 255))),
             Some(rect(200, 200, 100, 100)),
         );
@@ -340,7 +340,7 @@ impl<'a> RawtestHarness<'a> {
             let img = self.wrench.api.generate_image_key();
             resources.add_image(
                 img,
-                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+                ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
                 ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
                 None,
             );
@@ -369,7 +369,7 @@ impl<'a> RawtestHarness<'a> {
         let mut resources = ResourceUpdates::new();
         resources.update_image(
             blob_img,
-            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
             ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 50, 150, 255))),
             Some(rect(100, 100, 100, 100)),
         );
@@ -393,7 +393,7 @@ impl<'a> RawtestHarness<'a> {
         let mut resources = ResourceUpdates::new();
         resources.update_image(
             blob_img,
-            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, true, false),
+            ImageDescriptor::new(500, 500, ImageFormat::BGRA8, false, false),
             ImageData::new_blob_image(blob::serialize_blob(ColorU::new(50, 150, 150, 255))),
             Some(rect(200, 200, 100, 100)),
         );

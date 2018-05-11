@@ -76,7 +76,6 @@ mod frame_builder;
 mod freelist;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod gamma_lut;
-mod geometry;
 mod glyph_cache;
 mod glyph_rasterizer;
 mod gpu_cache;

@@ -251,7 +251,6 @@ impl Example for App {
         builder.push_stacking_context(
             &info,
             None,
-            api::ScrollPolicy::Scrollable,
             None,
             api::TransformStyle::Flat,
             None,

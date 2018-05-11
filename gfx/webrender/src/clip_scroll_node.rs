@@ -5,12 +5,10 @@
 use api::{DevicePixelScale, ExternalScrollId, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize};
 use api::{LayoutVector2D, LayoutTransform, PipelineId, PropertyBinding};
 use api::{ScrollClamping, ScrollLocation, ScrollSensitivity, StickyOffsetBounds};
-use api::WorldPoint;
 use clip::{ClipChain, ClipChainNode, ClipSourcesHandle, ClipStore, ClipWorkItem};
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_tree::TransformUpdateState;
 use euclid::SideOffsets2D;
-use geometry::ray_intersects_rect;
 use gpu_cache::GpuCache;
 use gpu_types::{ClipScrollNodeIndex as GPUClipScrollNodeIndex, ClipScrollNodeData};
 use resource_cache::ResourceCache;
@@ -20,6 +18,7 @@ use util::{TransformedRectKind};
 
 #[derive(Debug)]
 pub struct StickyFrameInfo {
+    pub frame_rect: LayoutRect,
     pub margins: SideOffsets2D<Option<f32>>,
     pub vertical_offset_bounds: StickyOffsetBounds,
     pub horizontal_offset_bounds: StickyOffsetBounds,
@@ -29,12 +28,14 @@ pub struct StickyFrameInfo {
 
 impl StickyFrameInfo {
     pub fn new(
+        frame_rect: LayoutRect,
         margins: SideOffsets2D<Option<f32>>,
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D
     ) -> StickyFrameInfo {
         StickyFrameInfo {
+            frame_rect,
             margins,
             vertical_offset_bounds,
             horizontal_offset_bounds,
@@ -88,14 +89,10 @@ impl NodeType {
 /// Contains information common among all types of ClipScrollTree nodes.
 #[derive(Debug)]
 pub struct ClipScrollNode {
-    /// Viewing rectangle in the coordinate system of the parent reference frame.
-    pub local_viewport_rect: LayoutRect,
-
     /// The transformation for this viewport in world coordinates is the transformation for
     /// our parent reference frame, plus any accumulated scrolling offsets from nodes
     /// between our reference frame and this node. For reference frames, we also include
-    /// whatever local transformation this reference frame provides. This can be combined
-    /// with the local_viewport_rect to get its position in world space.
+    /// whatever local transformation this reference frame provides.
     pub world_viewport_transform: LayoutToWorldFastTransform,
 
     /// World transform for content transformed by this node.
@@ -138,11 +135,9 @@ impl ClipScrollNode {
     pub fn new(
         pipeline_id: PipelineId,
         parent_index: Option<ClipScrollNodeIndex>,
-        rect: &LayoutRect,
         node_type: NodeType
     ) -> Self {
         ClipScrollNode {
-            local_viewport_rect: *rect,
             world_viewport_transform: LayoutToWorldFastTransform::identity(),
             world_content_transform: LayoutToWorldFastTransform::identity(),
             transform_kind: TransformedRectKind::AxisAligned,
@@ -158,7 +153,7 @@ impl ClipScrollNode {
     }
 
     pub fn empty() -> ClipScrollNode {
-        ClipScrollNode::new(PipelineId::dummy(), None, &LayoutRect::zero(), NodeType::Empty)
+        Self::new(PipelineId::dummy(), None, NodeType::Empty)
     }
 
     pub fn new_scroll_frame(
@@ -170,6 +165,7 @@ impl ClipScrollNode {
         scroll_sensitivity: ScrollSensitivity,
     ) -> Self {
         let node_type = NodeType::ScrollFrame(ScrollFrameInfo::new(
+            *frame_rect,
             scroll_sensitivity,
             LayoutSize::new(
                 (content_size.width - frame_rect.size.width).max(0.0),
@@ -178,12 +174,11 @@ impl ClipScrollNode {
             external_id,
         ));
 
-        Self::new(pipeline_id, Some(parent_index), frame_rect, node_type)
+        Self::new(pipeline_id, Some(parent_index), node_type)
     }
 
     pub fn new_reference_frame(
         parent_index: Option<ClipScrollNodeIndex>,
-        frame_rect: &LayoutRect,
         source_transform: Option<PropertyBinding<LayoutTransform>>,
         source_perspective: Option<LayoutTransform>,
         origin_in_parent_reference_frame: LayoutVector2D,
@@ -199,17 +194,16 @@ impl ClipScrollNode {
             origin_in_parent_reference_frame,
             invertible: true,
         };
-        Self::new(pipeline_id, parent_index, frame_rect, NodeType::ReferenceFrame(info))
+        Self::new(pipeline_id, parent_index, NodeType::ReferenceFrame(info))
     }
 
     pub fn new_sticky_frame(
         parent_index: ClipScrollNodeIndex,
-        frame_rect: LayoutRect,
         sticky_frame_info: StickyFrameInfo,
         pipeline_id: PipelineId,
     ) -> Self {
         let node_type = NodeType::StickyFrame(sticky_frame_info);
-        Self::new(pipeline_id, Some(parent_index), &frame_rect, node_type)
+        Self::new(pipeline_id, Some(parent_index), node_type)
     }
 
 
@@ -354,7 +348,7 @@ impl ClipScrollNode {
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        clip_chains: &mut Vec<ClipChain>,
+        clip_chains: &mut [ClipChain],
     ) {
         let (clip_sources_handle, clip_chain_index, stored_clip_chain_node) = match self.node_type {
             NodeType::Clip { ref handle, clip_chain_index, ref mut clip_chain_node } =>
@@ -371,16 +365,20 @@ impl ClipScrollNode {
             resource_cache,
             device_pixel_scale,
         );
-        let (screen_inner_rect, screen_outer_rect) =
-            clip_sources.get_screen_bounds(&self.world_viewport_transform, device_pixel_scale);
+
+        let (screen_inner_rect, screen_outer_rect) = clip_sources.get_screen_bounds(
+            &self.world_viewport_transform,
+            device_pixel_scale,
+            None,
+        );
 
         // All clipping ClipScrollNodes should have outer rectangles, because they never
         // use the BorderCorner clip type and they always have at last one non-ClipOut
         // Rectangle ClipSource.
-        let screen_outer_rect = screen_outer_rect.expect("Clipping node didn't have outer rect.");
-        let local_outer_rect = clip_sources.local_outer_rect.expect(
-            "Clipping node didn't have outer rect."
-        );
+        let screen_outer_rect = screen_outer_rect
+            .expect("Clipping node didn't have outer rect.");
+        let local_outer_rect = clip_sources.local_outer_rect
+            .expect("Clipping node didn't have outer rect.");
 
         let new_node = ClipChainNode {
             work_item: ClipWorkItem {
@@ -477,8 +475,7 @@ impl ClipScrollNode {
         // The transformation for this viewport in world coordinates is the transformation for
         // our parent reference frame, plus any accumulated scrolling offsets from nodes
         // between our reference frame and this node. Finally, we also include
-        // whatever local transformation this reference frame provides. This can be combined
-        // with the local_viewport_rect to get its position in world space.
+        // whatever local transformation this reference frame provides.
         let relative_transform = info.resolved_transform
             .post_translate(state.parent_accumulated_scroll_offset)
             .to_transform()
@@ -526,7 +523,7 @@ impl ClipScrollNode {
         // between the scrolled content and unscrolled viewport we adjust the viewport's
         // position by the scroll offset in order to work with their relative positions on the
         // page.
-        let sticky_rect = self.local_viewport_rect.translate(viewport_scroll_offset);
+        let sticky_rect = info.frame_rect.translate(viewport_scroll_offset);
 
         let mut sticky_offset = LayoutVector2D::zero();
         if let Some(margin) = info.margins.top {
@@ -641,7 +638,7 @@ impl ClipScrollNode {
                 state.parent_accumulated_scroll_offset =
                     scrolling.offset + state.parent_accumulated_scroll_offset;
                 state.nearest_scrolling_ancestor_offset = scrolling.offset;
-                state.nearest_scrolling_ancestor_viewport = self.local_viewport_rect;
+                state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
             }
             NodeType::StickyFrame(ref info) => {
                 // We don't translate the combined rect by the sticky offset, because sticky
@@ -712,29 +709,6 @@ impl ClipScrollNode {
         scrolling.offset != original_layer_scroll_offset
     }
 
-    pub fn ray_intersects_node(&self, cursor: &WorldPoint) -> bool {
-        let inv = match self.world_viewport_transform.inverse() {
-            Some(inv) => inv,
-            None => return false,
-        };
-
-        let z0 = -10000.0;
-        let z1 = 10000.0;
-
-        let p0 = inv.transform_point3d(&cursor.extend(z0));
-        let p1 = inv.transform_point3d(&cursor.extend(z1));
-
-        if self.scrollable_size() == LayoutSize::zero() {
-            return false;
-        }
-
-        ray_intersects_rect(
-            p0.to_untyped(),
-            p1.to_untyped(),
-            self.local_viewport_rect.to_untyped(),
-        )
-    }
-
     pub fn scroll_offset(&self) -> LayoutVector2D {
         match self.node_type {
             NodeType::ScrollFrame(ref scrolling) => scrolling.offset,
@@ -752,6 +726,10 @@ impl ClipScrollNode {
 
 #[derive(Copy, Clone, Debug)]
 pub struct ScrollFrameInfo {
+    /// The rectangle of the viewport of this scroll frame. This is important for
+    /// positioning of items inside child StickyFrames.
+    pub viewport_rect: LayoutRect,
+
     pub offset: LayoutVector2D,
     pub scroll_sensitivity: ScrollSensitivity,
 
@@ -768,11 +746,13 @@ pub struct ScrollFrameInfo {
 /// Manages scrolling offset.
 impl ScrollFrameInfo {
     pub fn new(
+        viewport_rect: LayoutRect,
         scroll_sensitivity: ScrollSensitivity,
         scrollable_size: LayoutSize,
         external_id: Option<ExternalScrollId>,
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
+            viewport_rect,
             offset: LayoutVector2D::zero(),
             scroll_sensitivity,
             scrollable_size,
