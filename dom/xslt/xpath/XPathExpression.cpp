@@ -9,7 +9,6 @@
 #include "txExprResult.h"
 #include "txIXPathContext.h"
 #include "nsError.h"
-#include "nsIDOMDocument.h"
 #include "nsINode.h"
 #include "XPathResult.h"
 #include "txURIUtils.h"

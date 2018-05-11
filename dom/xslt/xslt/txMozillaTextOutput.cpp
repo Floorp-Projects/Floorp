@@ -7,7 +7,6 @@
 #include "nsContentCID.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocumentTransformer.h"
 #include "nsCharsetSource.h"
 #include "nsIPrincipal.h"
@@ -250,9 +249,9 @@ txMozillaTextOutput::startElement(nsAtom* aPrefix, const nsAString& aName,
     return NS_OK;
 }
 
-void txMozillaTextOutput::getOutputDocument(nsIDOMDocument** aDocument)
+void txMozillaTextOutput::getOutputDocument(nsIDocument** aDocument)
 {
-    CallQueryInterface(mDocument, aDocument);
+    NS_IF_ADDREF(*aDocument = mDocument);
 }
 
 nsresult

@@ -7,7 +7,6 @@
 
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
-#include "nsIDOMDocument.h"
 #include "nsIScriptElement.h"
 #include "nsCharsetSource.h"
 #include "nsIRefreshURI.h"
@@ -363,9 +362,9 @@ txMozillaXMLOutput::endElement()
     return NS_OK;
 }
 
-void txMozillaXMLOutput::getOutputDocument(nsIDOMDocument** aDocument)
+void txMozillaXMLOutput::getOutputDocument(nsIDocument** aDocument)
 {
-    CallQueryInterface(mDocument, aDocument);
+    NS_IF_ADDREF(*aDocument = mDocument);
 }
 
 nsresult
