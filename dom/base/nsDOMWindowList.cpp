@@ -9,7 +9,6 @@
 #include "FlushType.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -49,10 +48,8 @@ nsDOMWindowList::EnsureFresh()
   nsCOMPtr<nsIWebNavigation> shellAsNav = do_QueryInterface(mDocShellNode);
 
   if (shellAsNav) {
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    shellAsNav->GetDocument(getter_AddRefs(domdoc));
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+    nsCOMPtr<nsIDocument> doc;
+    shellAsNav->GetDocument(getter_AddRefs(doc));
 
     if (doc) {
       doc->FlushPendingNotifications(FlushType::ContentAndNotify);

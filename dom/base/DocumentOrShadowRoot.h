@@ -121,7 +121,7 @@ public:
                          nsTArray<RefPtr<mozilla::dom::Element>>& aElements);
 
   /**
-   * Helper for nsIDOMDocument::elementFromPoint implementation that allows
+   * Helper for elementFromPoint implementation that allows
    * ignoring the scroll frame and/or avoiding layout flushes.
    *
    * @see nsIDOMWindowUtils::elementFromPoint

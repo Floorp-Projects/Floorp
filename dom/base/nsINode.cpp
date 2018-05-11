@@ -60,7 +60,6 @@
 #include "nsIContentIterator.h"
 #include "nsIControllers.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsILinkHandler.h"
 #include "mozilla/dom/NodeInfo.h"

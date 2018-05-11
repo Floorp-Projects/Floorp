@@ -1836,10 +1836,12 @@ nsDocumentViewer::Stop(void)
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetDOMDocument(nsISupports **aResult)
+nsDocumentViewer::GetDOMDocument(nsIDocument **aResult)
 {
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
-  return CallQueryInterface(mDocument, aResult);
+  nsCOMPtr<nsIDocument> document = mDocument;
+  document.forget(aResult);
+  return NS_OK;
 }
 
 nsIDocument*

@@ -18,7 +18,6 @@
 #include "nsIContentParent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"

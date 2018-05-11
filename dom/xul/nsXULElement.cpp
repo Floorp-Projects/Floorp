@@ -9,7 +9,6 @@
 #include "nsDOMString.h"
 #include "nsAtom.h"
 #include "nsIBaseWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"

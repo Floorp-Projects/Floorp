@@ -8,7 +8,6 @@
 
 interface nsIURI;
 interface nsIInputStream;
-interface nsIDOMDocument;
 interface nsIWebProgressListener;
 interface nsIFile;
 interface nsIChannel;
@@ -228,7 +227,7 @@ interface nsIWebBrowserPersist : nsICancelable
    * @param aDocument          Document to save to file. Some implementations of
    *                           this interface may also support <CODE>nullptr</CODE>
    *                           to imply the currently loaded document.  Can be an
-   *                           nsIWebBrowserPersistDocument or nsIDOMDocument.
+   *                           nsIWebBrowserPersistDocument or Document.
    * @param aFile              Target local file. This may be a nsIFile object or an
    *                           nsIURI object with a file scheme or a scheme that
    *                           supports uploading (e.g. ftp).
