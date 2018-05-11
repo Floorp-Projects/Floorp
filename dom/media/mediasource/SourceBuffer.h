@@ -98,6 +98,10 @@ public:
 
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
 
+  already_AddRefed<Promise> RemoveAsync(double aStart,
+                                        double aEnd,
+                                        ErrorResult& aRv);
+
   void ChangeType(const nsAString& aType, ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(updatestart);
@@ -164,6 +168,8 @@ private:
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
   // Shared implementation of AppendBufferAsync overloads.
   already_AddRefed<Promise> AppendDataAsync(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
+
+  void PrepareRemove(double aStart, double aEnd, ErrorResult& aRv);
 
   // Implement the "Append Error Algorithm".
   // Will call endOfStream() with "decode" error if aDecodeError is true.

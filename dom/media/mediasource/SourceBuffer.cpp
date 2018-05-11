@@ -285,6 +285,55 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
   MSE_API("Remove(aStart=%f, aEnd=%f)", aStart, aEnd);
   DDLOG(DDLogCategory::API, "Remove-from", aStart);
   DDLOG(DDLogCategory::API, "Remove-until", aEnd);
+
+  PrepareRemove(aStart, aEnd, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  RangeRemoval(aStart, aEnd);
+}
+
+already_AddRefed<Promise>
+SourceBuffer::RemoveAsync(double aStart, double aEnd, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("RemoveAsync(aStart=%f, aEnd=%f)", aStart, aEnd);
+  DDLOG(DDLogCategory::API, "Remove-from", aStart);
+  DDLOG(DDLogCategory::API, "Remove-until", aEnd);
+
+  if (!IsAttached()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> parentObject =
+    do_QueryInterface(mMediaSource->GetParentObject());
+  if (!parentObject) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(parentObject, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  PrepareRemove(aStart, aEnd, aRv);
+
+  if (aRv.Failed()) {
+    // The bindings will automatically return a rejected promise.
+    return nullptr;
+  }
+  MOZ_ASSERT(!mDOMPromise, "Can't have a pending operation going");
+  mDOMPromise = promise;
+  RangeRemoval(aStart, aEnd);
+
+  return promise.forget();
+}
+
+void
+SourceBuffer::PrepareRemove(double aStart, double aEnd, ErrorResult& aRv)
+{
   if (!IsAttached()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -302,8 +351,6 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-
-  RangeRemoval(aStart, aEnd);
 }
 
 void
