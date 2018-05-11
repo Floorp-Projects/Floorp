@@ -94,7 +94,7 @@ var ModuleManager = {
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
     this.forEach(module => {
-      if (module.enabled) {
+      if (module.enabled && module.impl) {
         module.impl.onSettingsUpdate();
       }
     });
@@ -190,7 +190,9 @@ class ModuleInfo {
   }
 
   onInit() {
-    this._impl.onInit();
+    if (this._impl) {
+      this._impl.onInit();
+    }
     this._loadPhase(this._onInitPhase);
     this._onInitPhase = null;
 
@@ -217,7 +219,9 @@ class ModuleInfo {
     }
 
     if (aPhase.frameScript && !this._contentModuleLoaded) {
-      this._impl.onLoadContentModule();
+      if (this._impl) {
+        this._impl.onLoadContentModule();
+      }
       this._manager.messageManager.loadFrameScript(aPhase.frameScript, true);
       this._contentModuleLoaded = true;
     }
@@ -244,7 +248,7 @@ class ModuleInfo {
       return;
     }
 
-    if (!aEnabled) {
+    if (!aEnabled && this._impl) {
       this._impl.onDisable();
     }
 
@@ -253,8 +257,10 @@ class ModuleInfo {
     if (aEnabled) {
       this._loadPhase(this._onEnablePhase);
       this._onEnablePhase = null;
-      this._impl.onEnable();
-      this._impl.onSettingsUpdate();
+      if (this._impl) {
+        this._impl.onEnable();
+        this._impl.onSettingsUpdate();
+      }
     }
 
     this._updateContentModuleState(/* includeSettings */ aEnabled);
@@ -262,7 +268,10 @@ class ModuleInfo {
 
   onContentModuleLoaded() {
     this._updateContentModuleState(/* includeSettings */ true);
-    this._impl.onContentModuleLoaded();
+
+    if (this._impl) {
+      this._impl.onContentModuleLoaded();
+    }
   }
 
   _updateContentModuleState(aIncludeSettings) {
@@ -313,13 +322,11 @@ function startup() {
   }, {
     name: "GeckoViewScroll",
     onEnable: {
-      resource: "resource://gre/modules/GeckoViewScroll.jsm",
       frameScript: "chrome://geckoview/content/GeckoViewScrollContent.js",
     },
   }, {
     name: "GeckoViewSelectionAction",
     onEnable: {
-      resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
       frameScript: "chrome://geckoview/content/GeckoViewSelectionActionContent.js",
     },
   }, {
