@@ -180,6 +180,9 @@ enum ThemeWidgetType : uint8_t {
   // A non-disappearing scrollbar.
   NS_THEME_SCROLLBAR_NON_DISAPPEARING,
 
+  // The scroll corner
+  NS_THEME_SCROLLCORNER,
+
   // A textfield or text area
   NS_THEME_TEXTFIELD,
 
