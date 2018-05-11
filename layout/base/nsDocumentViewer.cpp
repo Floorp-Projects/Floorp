@@ -691,9 +691,6 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     return NS_ERROR_FAILURE;
   }
 
-  // We're done creating the style set
-  mPresShell->StyleSet()->EndUpdate();
-
   if (aDoInitialReflow) {
     // Since Initialize() will create frames for *all* items
     // that are currently in the document tree, we need to flush
@@ -2315,8 +2312,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 
   UniquePtr<ServoStyleSet> styleSet = MakeUnique<ServoStyleSet>();
 
-  styleSet->BeginUpdate();
-
   // The document will fill in the document sheets when we create the presshell
 
   if (aDocument->IsBeingUsedAsImage()) {
@@ -2328,8 +2323,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     // xul.css) to be loaded on-demand.
     // XXXjwatt Nothing else is loaded on-demand, but I don't think that
     // should matter for SVG-as-an-image. If it does, I want to know why!
-
-    // Caller will handle calling EndUpdate, per contract.
     return styleSet;
   }
 
@@ -2436,7 +2429,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
     }
   }
 
-  // Caller will handle calling EndUpdate, per contract.
   return styleSet;
 }
 

@@ -386,17 +386,6 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
   SetStylistStyleSheetsDirty();
 }
 
-void
-ServoStyleSet::BeginUpdate()
-{
-}
-
-nsresult
-ServoStyleSet::EndUpdate()
-{
-  return NS_OK;
-}
-
 already_AddRefed<ComputedStyle>
 ServoStyleSet::ResolveStyleFor(Element* aElement,
                                ComputedStyle* aParentContext,
