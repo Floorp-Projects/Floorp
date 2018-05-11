@@ -5219,7 +5219,6 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
                                   DocumentFlavorHTML);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
   rv = nsContentUtils::ParseDocumentHTML(aSourceBuffer, document,
     !(aFlags & nsIDocumentEncoder::OutputNoScriptContent));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -5227,7 +5226,7 @@ nsContentUtils::ConvertToPlainText(const nsAString& aSourceBuffer,
   nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(
     "@mozilla.org/layout/documentEncoder;1?type=text/plain");
 
-  rv = encoder->Init(domDocument, NS_LITERAL_STRING("text/plain"), aFlags);
+  rv = encoder->Init(document, NS_LITERAL_STRING("text/plain"), aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder->SetWrapColumn(aWrapCol);
