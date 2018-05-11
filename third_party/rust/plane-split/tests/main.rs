@@ -3,7 +3,7 @@ extern crate plane_split;
 
 use euclid::{Angle, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
 use euclid::approxeq::ApproxEq;
-use plane_split::{Intersection, Line, LineProjection, Polygon};
+use plane_split::{Intersection, Line, LineProjection, Plane, Polygon};
 
 
 #[test]
@@ -21,8 +21,10 @@ fn valid() {
             point3(1.0, 1.0, 0.0),
             point3(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
-        offset: -1.0,
+        plane: Plane {
+            normal: vec3(0.0, 1.0, 0.0),
+            offset: -1.0,
+        },
         anchor: 0,
     };
     assert!(!poly_a.is_valid()); // points[0] is outside
@@ -33,8 +35,10 @@ fn valid() {
             point3(1.0, 1.0, 0.0),
             point3(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
-        offset: -1.0,
+        plane: Plane {
+            normal: vec3(0.0, 1.0, 0.0),
+            offset: -1.0,
+        },
         anchor: 0,
     };
     assert!(!poly_b.is_valid()); // winding is incorrect
@@ -45,8 +49,10 @@ fn valid() {
             point3(1.0, 1.0, 1.0),
             point3(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
-        offset: -1.0,
+        plane: Plane {
+            normal: vec3(0.0, 0.0, 1.0),
+            offset: -1.0,
+        },
         anchor: 0,
     };
     assert!(poly_c.is_valid());
@@ -71,8 +77,10 @@ fn untransform_point() {
             point3(1.5, 1.0, 0.0),
             point3(1.0, 0.0, 0.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
-        offset: 0.0,
+        plane: Plane {
+            normal: vec3(0.0, 1.0, 0.0),
+            offset: 0.0,
+        },
         anchor: 0,
     };
     assert_eq!(poly.untransform_point(poly.points[0]), point2(0.0, 0.0));
@@ -83,26 +91,18 @@ fn untransform_point() {
 
 #[test]
 fn are_outside() {
-    let poly: Polygon<f32, ()> = Polygon {
-        points: [
-            point3(0.0, 0.0, 1.0),
-            point3(1.0, 0.0, 1.0),
-            point3(1.0, 1.0, 1.0),
-            point3(0.0, 1.0, 1.0),
-        ],
+    let plane: Plane<f32, ()> = Plane {
         normal: vec3(0.0, 0.0, 1.0),
         offset: -1.0,
-        anchor: 0,
     };
-    assert!(poly.is_valid());
-    assert!(poly.are_outside(&[
+    assert!(plane.are_outside(&[
         point3(0.0, 0.0, 1.1),
         point3(1.0, 1.0, 2.0),
     ]));
-    assert!(poly.are_outside(&[
+    assert!(plane.are_outside(&[
         point3(0.5, 0.5, 1.0),
     ]));
-    assert!(!poly.are_outside(&[
+    assert!(!plane.are_outside(&[
         point3(0.0, 0.0, 1.0),
         point3(0.0, 0.0, -1.0),
     ]));
@@ -117,8 +117,10 @@ fn intersect() {
             point3(1.0, 1.0, 1.0),
             point3(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
-        offset: -1.0,
+        plane: Plane {
+            normal: vec3(0.0, 0.0, 1.0),
+            offset: -1.0,
+        },
         anchor: 0,
     };
     assert!(poly_a.is_valid());
@@ -129,8 +131,10 @@ fn intersect() {
             point3(0.5, 1.0, 0.0),
             point3(0.5, 0.0, 0.0),
         ],
-        normal: vec3(1.0, 0.0, 0.0),
-        offset: -0.5,
+        plane: Plane {
+            normal: vec3(1.0, 0.0, 0.0),
+            offset: -0.5,
+        },
         anchor: 0,
     };
     assert!(poly_b.is_valid());
@@ -141,11 +145,11 @@ fn intersect() {
     };
     assert!(intersection.is_valid());
     // confirm the origin is on both planes
-    assert!(poly_a.signed_distance_to(&intersection.origin).approx_eq(&0.0));
-    assert!(poly_b.signed_distance_to(&intersection.origin).approx_eq(&0.0));
+    assert!(poly_a.plane.signed_distance_to(&intersection.origin).approx_eq(&0.0));
+    assert!(poly_b.plane.signed_distance_to(&intersection.origin).approx_eq(&0.0));
     // confirm the direction is coplanar to both planes
-    assert!(poly_a.normal.dot(intersection.dir).approx_eq(&0.0));
-    assert!(poly_b.normal.dot(intersection.dir).approx_eq(&0.0));
+    assert!(poly_a.plane.normal.dot(intersection.dir).approx_eq(&0.0));
+    assert!(poly_b.plane.normal.dot(intersection.dir).approx_eq(&0.0));
 
     let poly_c: Polygon<f32, ()> = Polygon {
         points: [
@@ -154,8 +158,10 @@ fn intersect() {
             point3(0.0, 0.0, 0.0),
             point3(0.0, 0.0, 2.0),
         ],
-        normal: vec3(1.0, 0.0, 0.0),
-        offset: 0.0,
+        plane: Plane {
+            normal: vec3(1.0, 0.0, 0.0),
+            offset: 0.0,
+        },
         anchor: 0,
     };
     assert!(poly_c.is_valid());
@@ -166,8 +172,10 @@ fn intersect() {
             point3(1.0, 1.0, 0.5),
             point3(0.0, 1.0, 0.5),
         ],
-        normal: vec3(0.0, 0.0, 1.0),
-        offset: -0.5,
+        plane: Plane {
+            normal: vec3(0.0, 0.0, 1.0),
+            offset: -0.5,
+        },
         anchor: 0,
     };
     assert!(poly_d.is_valid());
@@ -200,8 +208,10 @@ fn split() {
             point3(1.0, 1.0, 1.0),
             point3(0.0, 1.0, 1.0),
         ],
-        normal: vec3(0.0, 1.0, 0.0),
-        offset: -1.0,
+        plane: Plane {
+            normal: vec3(0.0, 1.0, 0.0),
+            offset: -1.0,
+        },
         anchor: 0,
     };
 

@@ -10,7 +10,7 @@
 use super::UnknownUnit;
 use length::Length;
 use scale::TypedScale;
-use vector::{TypedVector2D, vec2};
+use vector::{TypedVector2D, vec2, BoolVector2D};
 use num::*;
 
 use num_traits::{NumCast, Signed};
@@ -282,6 +282,39 @@ where
 
     pub fn is_positive(&self) -> bool {
         self.width.is_positive() && self.height.is_positive()
+    }
+}
+
+impl<T: PartialOrd, U> TypedSize2D<T, U> {
+    pub fn greater_than(&self, other: &Self) -> BoolVector2D {
+        BoolVector2D {
+            x: self.width > other.width,
+            y: self.height > other.height,
+        }
+    }
+
+    pub fn lower_than(&self, other: &Self) -> BoolVector2D {
+        BoolVector2D {
+            x: self.width < other.width,
+            y: self.height < other.height,
+        }
+    }
+}
+
+
+impl<T: PartialEq, U> TypedSize2D<T, U> {
+    pub fn equal(&self, other: &Self) -> BoolVector2D {
+        BoolVector2D {
+            x: self.width == other.width,
+            y: self.height == other.height,
+        }
+    }
+
+    pub fn not_equal(&self, other: &Self) -> BoolVector2D {
+        BoolVector2D {
+            x: self.width != other.width,
+            y: self.height != other.height,
+        }
     }
 }
 
