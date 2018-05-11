@@ -42,9 +42,6 @@ class GeckoViewSettings extends GeckoViewModule {
   onInit() {
     this._useTrackingProtection = false;
     this._useDesktopMode = false;
-
-    this.registerContent(
-        "chrome://geckoview/content/GeckoViewContentSettings.js");
   }
 
   onSettingsUpdate() {

@@ -13,6 +13,5 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 class GeckoViewSelectionAction extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
-    this.registerContent("chrome://geckoview/content/GeckoViewSelectionActionContent.js");
   }
 }
