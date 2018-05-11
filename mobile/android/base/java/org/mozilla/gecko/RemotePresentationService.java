@@ -132,7 +132,7 @@ class VirtualPresentation extends CastPresentation {
 
         // Create new GeckoView
         view = new GeckoView(getContext());
-        view.setSession(session, GeckoRuntime.getDefault(getContext()));
+        view.setSession(session, GeckoApplication.ensureRuntime(getContext()));
         view.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                                               LayoutParams.MATCH_PARENT));
 

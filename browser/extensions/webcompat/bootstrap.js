@@ -76,7 +76,7 @@ this.startup = function({webExtension}) {
 
   // Listen to the useragentoverrides-initialized notification we get and
   // initialize our overrider there. This is done to avoid slowing down the
-  // apparent startup proces, since we avoid loading anything before the first
+  // apparent startup process, since we avoid loading anything before the first
   // window is visible to the user. See bug 1371442 for details.
   let uaStartupObserver = {
     observe(aSubject, aTopic, aData) {

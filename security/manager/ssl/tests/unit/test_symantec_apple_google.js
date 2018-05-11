@@ -40,11 +40,11 @@ add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
                     null, null);
 
 // Enable the Firefox 63 total distrust; before or after cutoff should now all
-// behave the same.
+// behave the same. This will be made the default in Bug 1460062.
 add_test(function() {
   clearSessionCache();
   Services.prefs.setIntPref("security.pki.distrust_ca_policy",
-              /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 2);
+              /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 0b10);
   run_next_test();
 });
 
@@ -60,7 +60,7 @@ add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
 add_test(function() {
   clearSessionCache();
   Services.prefs.setIntPref("security.pki.distrust_ca_policy",
-                            /* DistrustedCAPolicy::Permit */ 0);
+                            /* DistrustedCAPolicy::Permit */ 0b00);
   run_next_test();
 });
 
@@ -96,7 +96,7 @@ add_task(async function() {
 
   // Try with the policy for 60
   Services.prefs.setIntPref("security.pki.distrust_ca_policy",
-                            /* DistrustedCAPolicy::DistrustSymantecRoots */ 1);
+                            /* DistrustedCAPolicy::DistrustSymantecRoots */ 0b01);
 
   // (new Date("2018-02-16")).getTime() / 1000
   const VALIDATION_TIME = 1518739200;
@@ -106,8 +106,23 @@ add_task(async function() {
 
   // Try with the policy for 63
   Services.prefs.setIntPref("security.pki.distrust_ca_policy",
-                            /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 2);
+                            /* DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate */ 0b10);
 
   await checkCertErrorGenericAtTime(certDB, whitelistedCert, PRErrorCodeSuccess,
                                     certificateUsageSSLServer, VALIDATION_TIME);
 });
+
+// Check invalid policy values; should default to current default
+add_test(function() {
+  clearSessionCache();
+  Services.prefs.setIntPref("security.pki.distrust_ca_policy",
+                            /* Larger than Max Value */ 0b1111);
+  run_next_test();
+});
+
+add_connection_test("symantec-not-whitelisted-before-cutoff.example.com",
+                    MOZILLA_PKIX_ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED,
+                    null, null);
+
+add_connection_test("symantec-not-whitelisted-after-cutoff.example.com",
+                    PRErrorCodeSuccess, null, shouldBeImminentlyDistrusted);

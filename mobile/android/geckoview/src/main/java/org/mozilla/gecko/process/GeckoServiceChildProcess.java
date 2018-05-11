@@ -24,9 +24,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 public class GeckoServiceChildProcess extends Service {
-
     private static final String LOGTAG = "GeckoServiceChildProcess";
-
     private static IProcessManager sProcessManager;
 
     @WrapForJNI(calledFrom = "gecko")
@@ -44,7 +42,6 @@ public class GeckoServiceChildProcess extends Service {
     public void onCreate() {
         super.onCreate();
 
-        GeckoAppShell.ensureCrashHandling();
         GeckoAppShell.setApplicationContext(getApplicationContext());
     }
 
@@ -63,6 +60,7 @@ public class GeckoServiceChildProcess extends Service {
         public boolean start(final IProcessManager procMan,
                              final String[] args,
                              final Bundle extras,
+                             final int flags,
                              final ParcelFileDescriptor prefsPfd,
                              final ParcelFileDescriptor ipcPfd,
                              final ParcelFileDescriptor crashReporterPfd,
@@ -85,7 +83,7 @@ public class GeckoServiceChildProcess extends Service {
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (GeckoThread.initChildProcess(args, extras, prefsFd, ipcFd, crashReporterFd,
+                    if (GeckoThread.initChildProcess(args, extras, flags, prefsFd, ipcFd, crashReporterFd,
                                                      crashAnnotationFd)) {
                         GeckoThread.launch();
                     }
