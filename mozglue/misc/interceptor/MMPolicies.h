@@ -154,6 +154,11 @@ public:
     return !!::FlushInstructionCache(::GetCurrentProcess(), nullptr, 0);
   }
 
+  static DWORD GetTrampWriteProtFlags()
+  {
+    return PAGE_EXECUTE_READWRITE;
+  }
+
 protected:
   uint8_t* GetLocalView() const
   {
@@ -368,6 +373,11 @@ public:
   bool FlushInstructionCache() const
   {
     return !!::FlushInstructionCache(mProcess, nullptr, 0);
+  }
+
+  static DWORD GetTrampWriteProtFlags()
+  {
+    return PAGE_READWRITE;
   }
 
 protected:
