@@ -1252,6 +1252,27 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    array.toString(), equalTo("[Array(2)][foo, bar]"))
     }
 
+    @WithDevToolsAPI
+    @Test fun evaluateJS_notBlockMainThread() {
+        // Test that we can still receive delegate callbacks during evaluateJS,
+        // by calling alert(), which blocks until prompt delegate is called.
+        assertThat("JS blocking result should be correct",
+                   sessionRule.session.evaluateJS("alert(); 'foo'") as String,
+                   equalTo("foo"))
+    }
+
+    @WithDevToolsAPI
+    @TimeoutMillis(1000)
+    @Test(expected = TimeoutException::class)
+    fun evaluateJS_canTimeout() {
+        sessionRule.session.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            override fun onAlert(session: GeckoSession, title: String, msg: String, callback: GeckoSession.PromptDelegate.AlertCallback) {
+                // Do nothing for the alert, so it hangs forever.
+            }
+        })
+        sessionRule.session.evaluateJS("alert()")
+    }
+
     @Test(expected = AssertionError::class)
     fun evaluateJS_throwOnNotWithDevTools() {
         sessionRule.session.evaluateJS("0")
