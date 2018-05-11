@@ -475,7 +475,8 @@ nsSVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame)
 
 SVGBBox
 nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox &aBBox,
-                                            const gfxMatrix &aMatrix)
+                                            const gfxMatrix &aMatrix,
+                                            uint32_t aFlags)
 {
   nsIContent* node = GetContent()->GetFirstChild();
   SVGBBox unionBBox, tmpBBox;
@@ -494,10 +495,12 @@ nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox &aBBox,
           nsSVGClipPathFrame *clipPathFrame =
             effectProperties.GetClipPathFrame();
           if (clipPathFrame) {
-            tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(tmpBBox, aMatrix);
+            tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(tmpBBox, aMatrix, aFlags);
           }
         }
-        tmpBBox.Intersect(aBBox);
+        if (!(aFlags & nsSVGUtils::eDoNotClipToBBoxOfContentInsideClipPath)) {
+          tmpBBox.Intersect(aBBox);
+        }
         unionBBox.UnionEdges(tmpBBox);
       }
     }
@@ -511,7 +514,7 @@ nsSVGClipPathFrame::GetBBoxForClipPathFrame(const SVGBBox &aBBox,
     } else  {
       nsSVGClipPathFrame *clipPathFrame = props.GetClipPathFrame();
       if (clipPathFrame) {
-        tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(aBBox, aMatrix);
+        tmpBBox = clipPathFrame->GetBBoxForClipPathFrame(aBBox, aMatrix, aFlags);
         unionBBox.Intersect(tmpBBox);
       }
     }
