@@ -17,10 +17,10 @@ var {
   watchExtensionProxyContextLoad,
 } = ExtensionParent;
 
-// Map[extension -> DevToolsPageDefinition]
-let devtoolsPageDefinitionMap = new Map();
-
-let initDevTools;
+// Get the devtools preference given the extension id.
+function getDevToolsPrefBranchName(extensionId) {
+  return `devtools.webextensions.${extensionId}`;
+}
 
 /**
  * Retrieve the devtools target for the devtools extension proxy context
@@ -222,8 +222,6 @@ class DevToolsPage extends HiddenExtensionPage {
  */
 class DevToolsPageDefinition {
   constructor(extension, url) {
-    initDevTools();
-
     this.url = url;
     this.extension = extension;
 
@@ -275,6 +273,32 @@ class DevToolsPageDefinition {
     this.devtoolsPageForTarget.delete(target);
   }
 
+  /**
+   * Build the devtools_page instances for all the existing toolboxes
+   * (if the toolbox target is supported).
+   */
+  build() {
+    // Iterate over the existing toolboxes and create the devtools page for them
+    // (if the toolbox target is supported).
+    for (let toolbox of DevToolsShim.getToolboxes()) {
+      if (!toolbox.target.isLocalTab) {
+        // Skip any non-local tab.
+        continue;
+      }
+
+      // Ensure that the WebExtension is listed in the toolbox options.
+      toolbox.registerWebExtension(this.extension.uuid, {
+        name: this.extension.name,
+        pref: `${getDevToolsPrefBranchName(this.extension.id)}.enabled`,
+      });
+
+      this.buildForToolbox(toolbox);
+    }
+  }
+
+  /**
+   * Shutdown all the devtools_page instances.
+   */
   shutdown() {
     for (let target of this.devtoolsPageForTarget.keys()) {
       this.shutdownForTarget(target);
@@ -288,78 +312,15 @@ class DevToolsPageDefinition {
   }
 }
 
-// Get the devtools preference given the extension id.
-function getDevToolsPrefBranchName(extensionId) {
-  return `devtools.webextensions.${extensionId}`;
-}
-
-let devToolsInitialized = false;
-initDevTools = function() {
-  if (devToolsInitialized) {
-    return;
-  }
-
-  /* eslint-disable mozilla/balanced-listeners */
-  // Create a devtools page context for a new opened toolbox,
-  // based on the registered devtools_page definitions.
-  DevToolsShim.on("toolbox-created", toolbox => {
-    if (!toolbox.target.isLocalTab) {
-      // Only local tabs are currently supported (See Bug 1304378 for additional details
-      // related to remote targets support).
-      let msg = `Ignoring DevTools Toolbox for target "${toolbox.target.toString()}": ` +
-                `"${toolbox.target.name}" ("${toolbox.target.url}"). ` +
-                "Only local tab are currently supported by the WebExtensions DevTools API.";
-      let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-      scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
-      Services.console.logMessage(scriptError);
-
-      return;
-    }
-
-    for (let [extension, devtoolsPage] of devtoolsPageDefinitionMap) {
-      // Ensure that the WebExtension is listed in the toolbox options.
-      toolbox.registerWebExtension(extension.uuid, {
-        name: extension.name,
-        pref: `${getDevToolsPrefBranchName(extension.id)}.enabled`,
-      });
-
-      // Do not build the devtools page if the extension has been disabled
-      // (e.g. based on the devtools preference).
-      if (!toolbox.isWebExtensionEnabled(extension.uuid)) {
-        continue;
-      }
-
-      devtoolsPage.buildForToolbox(toolbox);
-    }
-  });
-
-  // Destroy a devtools page context for a destroyed toolbox,
-  // based on the registered devtools_page definitions.
-  DevToolsShim.on("toolbox-destroy", target => {
-    if (!target.isLocalTab) {
-      // Only local tabs are currently supported (See Bug 1304378 for additional details
-      // related to remote targets support).
-      return;
-    }
-
-    for (let devtoolsPageDefinition of devtoolsPageDefinitionMap.values()) {
-      devtoolsPageDefinition.shutdownForTarget(target);
-    }
-  });
-  /* eslint-enable mozilla/balanced-listeners */
-
-  devToolsInitialized = true;
-};
-
 this.devtools = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
-    this.initDevToolsPref();
-    this.createDevToolsPageDefinition();
-  }
+  constructor(extension) {
+    super(extension);
 
-  onShutdown(reason) {
-    this.destroyDevToolsPageDefinition();
-    this.uninitDevToolsPref();
+    // DevToolsPageDefinition instance (created in onManifestEntry).
+    this.pageDefinition = null;
+
+    this.onToolboxCreated = this.onToolboxCreated.bind(this);
+    this.onToolboxDestroy = this.onToolboxDestroy.bind(this);
   }
 
   static onUninstall(extensionId) {
@@ -370,10 +331,75 @@ this.devtools = class extends ExtensionAPI {
     prefBranch.deleteBranch("");
   }
 
+  onManifestEntry(entryName) {
+    const {extension} = this;
+
+    this.initDevToolsPref();
+
+    // Create the devtools_page definition.
+    this.pageDefinition = new DevToolsPageDefinition(
+      extension, extension.manifest.devtools_page);
+
+    // Build the extension devtools_page on all existing toolboxes (if the extension
+    // devtools_page is not disabled by the related preference).
+    if (!this.isDevToolsPageDisabled()) {
+      this.pageDefinition.build();
+    }
+
+    DevToolsShim.on("toolbox-created", this.onToolboxCreated);
+    DevToolsShim.on("toolbox-destroy", this.onToolboxDestroy);
+  }
+
+  onShutdown(reason) {
+    DevToolsShim.off("toolbox-created", this.onToolboxCreated);
+    DevToolsShim.off("toolbox-destroy", this.onToolboxDestroy);
+
+    // Shutdown the extension devtools_page from all existing toolboxes.
+    this.pageDefinition.shutdown();
+    this.pageDefinition = null;
+
+    // Iterate over the existing toolboxes and unlist the devtools webextension from them.
+    for (let toolbox of DevToolsShim.getToolboxes()) {
+      toolbox.unregisterWebExtension(this.extension.uuid);
+    }
+
+    this.uninitDevToolsPref();
+  }
+
   getAPI(context) {
     return {
       devtools: {},
     };
+  }
+
+  onToolboxCreated(toolbox) {
+    if (!toolbox.target.isLocalTab) {
+      // Only local tabs are currently supported (See Bug 1304378 for additional details
+      // related to remote targets support).
+      return;
+    }
+
+    // Ensure that the WebExtension is listed in the toolbox options.
+    toolbox.registerWebExtension(this.extension.uuid, {
+      name: this.extension.name,
+      pref: `${getDevToolsPrefBranchName(this.extension.id)}.enabled`,
+    });
+
+    // Do not build the devtools page if the extension has been disabled
+    // (e.g. based on the devtools preference).
+    if (toolbox.isWebExtensionEnabled(this.extension.uuid)) {
+      this.pageDefinition.buildForToolbox(toolbox);
+    }
+  }
+
+  onToolboxDestroy(target) {
+    if (!target.isLocalTab) {
+      // Only local tabs are currently supported (See Bug 1304378 for additional details
+      // related to remote targets support).
+      return;
+    }
+
+    this.pageDefinition.shutdownForTarget(target);
   }
 
   /**
@@ -427,90 +453,11 @@ this.devtools = class extends ExtensionAPI {
       return;
     }
 
+    // Shutdown or build the devtools_page on any existing toolbox.
     if (this.isDevToolsPageDisabled()) {
-      this.shutdownDevToolsPages();
+      this.pageDefinition.shutdown();
     } else {
-      this.buildDevToolsPages();
-    }
-  }
-
-  /**
-   * Create the devtools_page definition for the extension and build the devtools_page
-   * for any existing toolbox that is supported as a target (currentl only toolbox with
-   * a local tab as a target).
-   */
-  createDevToolsPageDefinition() {
-    let {extension} = this;
-    let {manifest} = extension;
-
-    if (devtoolsPageDefinitionMap.has(extension)) {
-      throw new Error("Cannot create an extension devtools page multiple times");
-    }
-
-    // Create and register a new devtools_page definition as specified in the
-    // "devtools_page" property in the extension manifest.
-    let devtoolsPageDefinition = new DevToolsPageDefinition(extension, manifest.devtools_page);
-    devtoolsPageDefinitionMap.set(extension, devtoolsPageDefinition);
-
-    this.buildDevToolsPages();
-  }
-
-  /**
-   * Destroy the devtools_page definition for the extension, shutdown any built
-   * devtools_page from all the existing toolbox and ensure that the extension is unlisted
-   * from the toolbox options panel if the extension is being disabled or uninstalled.
-   *
-   */
-  destroyDevToolsPageDefinition() {
-    this.shutdownDevToolsPages();
-
-    // Destroy the registered devtools_page definition on extension shutdown.
-    devtoolsPageDefinitionMap.delete(this.extension);
-
-    // Iterate over the existing toolboxes and unlist the devtools webextension from them.
-    for (let toolbox of DevToolsShim.getToolboxes()) {
-      toolbox.unregisterWebExtension(this.extension.uuid);
-    }
-  }
-
-  /**
-   * Build the devtools_page instances for the existing toolboxes (if its definition has been
-   * created and the toolbox target is supported)/
-   */
-  buildDevToolsPages() {
-    const devtoolsPageDefinition = devtoolsPageDefinitionMap.get(this.extension);
-    if (!devtoolsPageDefinition) {
-      return;
-    }
-
-    // Iterate over the existing toolboxes and create the devtools page for them
-    // (if the toolbox target is supported).
-    for (let toolbox of DevToolsShim.getToolboxes()) {
-      if (!toolbox.target.isLocalTab) {
-        // Skip any non-local tab.
-        continue;
-      }
-
-      // Ensure that the WebExtension is listed in the toolbox options.
-      toolbox.registerWebExtension(this.extension.uuid, {
-        name: this.extension.name,
-        pref: `${getDevToolsPrefBranchName(this.extension.id)}.enabled`,
-      });
-
-      devtoolsPageDefinition.buildForToolbox(toolbox);
-    }
-  }
-
-  /**
-   * Shutdown any existing devtools_page instances from the existing toolboxes
-   * (without destroying its definition, so that the devtools_page can be rebuilt
-   * when it is re-enabled by toggling the related DevTools preference).
-   */
-  shutdownDevToolsPages() {
-    const devtoolsPageDefinition = devtoolsPageDefinitionMap.get(this.extension);
-
-    if (devtoolsPageDefinition) {
-      devtoolsPageDefinition.shutdown();
+      this.pageDefinition.build();
     }
   }
 };

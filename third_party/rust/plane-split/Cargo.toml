@@ -12,7 +12,7 @@
 
 [package]
 name = "plane-split"
-version = "0.8.0"
+version = "0.9.1"
 authors = ["Dzmitry Malyshau <kvark@mozilla.com>"]
 description = "Plane splitting"
 documentation = "https://docs.rs/plane-split"

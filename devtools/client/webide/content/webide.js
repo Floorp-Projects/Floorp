@@ -103,7 +103,6 @@ var UI = {
     AppManager.destroy();
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
-    this._telemetry.destroy();
   },
 
   onfocus: function() {
@@ -539,7 +538,7 @@ var UI = {
   logActionState: function(action, state) {
     let histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
                       action.toUpperCase() + "_USED";
-    this._telemetry.log(histogramId, state);
+    this._telemetry.getHistogramById(histogramId).add(state);
   },
 
   /** ******** PROJECTS **********/
@@ -607,7 +606,7 @@ var UI = {
     // Select project
     AppManager.selectedProject = project;
 
-    this._telemetry.actionOccurred("webideImportProject");
+    this._telemetry.toolOpened("webideImportProject");
   },
 
   // Remember the last selected project on the runtime

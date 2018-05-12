@@ -415,6 +415,12 @@
    ]
   },
   "testharness": {
+   "baselinecoverage/wpt_baselinecoverage.html": [
+    [
+     "/_mozilla/baselinecoverage/wpt_baselinecoverage.html",
+     {}
+    ]
+   ],
    "dom/classList.html": [
     [
      "/_mozilla/dom/classList.html",
@@ -991,6 +997,10 @@
   "./placeholder": [
    "74e16eb87ecdfeb2dfc28f36e0c73a584abdf9c2",
    "support"
+  ],
+  "baselinecoverage/wpt_baselinecoverage.html": [
+   "8deca29e7b82fc7ef4c11d2a16e8611dfb8cf487",
+   "testharness"
   ],
   "dom/classList.html": [
    "17c65652a2943738a0cc5152aec737f243a02d3d",

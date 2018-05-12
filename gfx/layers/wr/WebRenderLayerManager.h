@@ -152,9 +152,6 @@ public:
   const APZTestData& GetAPZTestData() const
   { return mApzTestData; }
 
-  bool SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
-                                                const ScrollUpdateInfo& aUpdateInfo) override;
-
   WebRenderCommandBuilder& CommandBuilder() { return mWebRenderCommandBuilder; }
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() { return mWebRenderCommandBuilder.GetWebRenderUserDataTable(); }
   WebRenderScrollData& GetScrollData() { return mScrollData; }

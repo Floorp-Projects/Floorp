@@ -21,6 +21,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 webext_dir = os.path.join(os.path.dirname(here), 'webext')
 sys.path.insert(0, here)
 
+try:
+    from mozbuild.base import MozbuildObject
+    build = MozbuildObject.from_environment(cwd=here)
+except ImportError:
+    build = None
+
 from cmdline import parse_args
 from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
@@ -44,16 +50,16 @@ class Raptor(object):
         self.playback = None
 
         # Create the profile
-        pref_file = os.path.join(here, 'preferences', '{}.json'.format(self.config['app']))
-        prefs = {}
-        if os.path.isfile(pref_file):
-            with open(pref_file, 'r') as fh:
-                prefs = json.load(fh)
+        self.profile = create_profile(self.config['app'])
 
-        try:
-            self.profile = create_profile(self.config['app'], preferences=prefs)
-        except NotImplementedError:
-            self.profile = None
+        # Merge in base profiles
+        with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
+            base_profiles = json.load(fh)['raptor']
+
+        for name in base_profiles:
+            path = os.path.join(self.profile_data_dir, name)
+            self.log.info("Merging profile: {}".format(path))
+            self.profile.merge(path)
 
         # Create the runner
         self.output_handler = OutputHandler()
@@ -63,6 +69,14 @@ class Raptor(object):
         runner_cls = runners[app]
         self.runner = runner_cls(
             binary, profile=self.profile, process_args=process_args)
+
+    @property
+    def profile_data_dir(self):
+        if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
+            return os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'], 'testing', 'profiles')
+        if build:
+            return os.path.join(build.topsrcdir, 'testing', 'profiles')
+        return os.path.join(here, 'profile_data')
 
     def start_control_server(self):
         self.control_server = RaptorControlServer()

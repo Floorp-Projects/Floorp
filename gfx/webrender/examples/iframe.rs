@@ -39,7 +39,6 @@ impl Example for App {
         sub_builder.push_stacking_context(
             &info,
             None,
-            ScrollPolicy::Scrollable,
             None,
             TransformStyle::Flat,
             None,
@@ -66,7 +65,6 @@ impl Example for App {
         builder.push_stacking_context(
             &info,
             None,
-            ScrollPolicy::Scrollable,
             Some(PropertyBinding::Binding(PropertyBindingKey::new(42))),
             TransformStyle::Flat,
             None,

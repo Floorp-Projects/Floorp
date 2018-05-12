@@ -435,10 +435,11 @@ var AppManager = exports.AppManager = {
 
     // Record connection result in telemetry
     let logResult = result => {
-      this._telemetry.log("DEVTOOLS_WEBIDE_CONNECTION_RESULT", result);
+      this._telemetry.getHistogramById("DEVTOOLS_WEBIDE_CONNECTION_RESULT")
+                     .add(result);
       if (runtime.type) {
-        this._telemetry.log("DEVTOOLS_WEBIDE_" + runtime.type +
-                            "_CONNECTION_RESULT", result);
+        this._telemetry.getHistogramById(
+          `DEVTOOLS_WEBIDE_${runtime.type}_CONNECTION_RESULT`).add(result);
       }
     };
     deferred.then(() => logResult(true), () => logResult(false));
@@ -446,9 +447,9 @@ var AppManager = exports.AppManager = {
     // If successful, record connection time in telemetry
     deferred.then(() => {
       const timerId = "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS";
-      this._telemetry.startTimer(timerId);
+      this._telemetry.start(timerId, this);
       this.connection.once(Connection.Events.STATUS_CHANGED, () => {
-        this._telemetry.stopTimer(timerId);
+        this._telemetry.finish(timerId, this);
       });
     }).catch(() => {
       // Empty rejection handler to silence uncaught rejection warnings
@@ -464,25 +465,32 @@ var AppManager = exports.AppManager = {
       return;
     }
     let runtime = this.selectedRuntime;
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_TYPE",
-                             runtime.type || "UNKNOWN", true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID",
-                             runtime.id || "unknown", true);
+    this._telemetry
+        .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_TYPE")
+        .add(runtime.type || "UNKNOWN", true);
+    this._telemetry
+        .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_ID")
+        .add(runtime.id || "unknown", true);
     if (!this.deviceFront) {
       this.update("runtime-telemetry");
       return;
     }
     let d = await this.deviceFront.getDescription();
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR",
-                             d.processor, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS",
-                             d.os, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION",
-                             d.platformversion, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE",
-                             d.apptype, true);
-    this._telemetry.logKeyed("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION",
-                             d.version, true);
+    this._telemetry
+      .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PROCESSOR")
+      .add(d.processor, true);
+    this._telemetry
+      .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_OS")
+      .add(d.os, true);
+    this._telemetry
+      .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_PLATFORM_VERSION")
+      .add(d.platformversion, true);
+    this._telemetry
+        .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_APP_TYPE")
+        .add(d.apptype, true);
+    this._telemetry
+        .getKeyedHistogramById("DEVTOOLS_WEBIDE_CONNECTED_RUNTIME_VERSION")
+        .add(d.version, true);
     this.update("runtime-telemetry");
   },
 

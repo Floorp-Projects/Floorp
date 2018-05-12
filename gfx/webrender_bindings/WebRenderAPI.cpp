@@ -133,8 +133,8 @@ private:
 };
 
 
-TransactionBuilder::TransactionBuilder()
-  : mUseSceneBuilderThread(gfxPrefs::WebRenderAsyncSceneBuild())
+TransactionBuilder::TransactionBuilder(bool aUseSceneBuilderThread)
+  : mUseSceneBuilderThread(gfxPrefs::WebRenderAsyncSceneBuild() && aUseSceneBuilderThread)
 {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
   mResourceUpdates = wr_resource_updates_new();

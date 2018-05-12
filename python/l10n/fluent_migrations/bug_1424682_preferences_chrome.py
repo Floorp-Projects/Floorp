@@ -5,9 +5,8 @@
 
 from __future__ import absolute_import
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import MESSAGE_REFERENCE, EXTERNAL_ARGUMENT
-from fluent.migrate.transforms import REPLACE
-from fluent.migrate import COPY, CONCAT
+from fluent.migrate.helpers import MESSAGE_REFERENCE
+from fluent.migrate import COPY, CONCAT, REPLACE
 
 
 def migrate(ctx):
@@ -27,7 +26,7 @@ def migrate(ctx):
                                 FTL.Placeable(
                                     expression=FTL.SelectExpression(
                                         expression=FTL.CallExpression(
-                                            callee=FTL.Identifier('PLATFORM')
+                                            callee=FTL.Function('PLATFORM')
                                         ),
                                         variants=[
                                             FTL.Variant(

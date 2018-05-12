@@ -16,21 +16,28 @@ except ImportError:
     JSONDecodeError = ValueError
 
 from mozlint import result
+from mozlint.util import pip
 from mozprocess import ProcessHandlerMixin
 
+here = os.path.abspath(os.path.dirname(__file__))
+CODESPELL_REQUIREMENTS_PATH = os.path.join(here, 'codespell_requirements.txt')
 
 CODESPELL_NOT_FOUND = """
-Unable to locate codespell, please ensure it is installed and in
-your PATH or set the CODESPELL environment variable.
+Could not find codespell! Install codespell and try again.
 
-https://github.com/lucasdemarchi/codespell or your system's package manager.
-""".strip()
+    $ pip install -U --require-hashes -r {}
+""".strip().format(CODESPELL_REQUIREMENTS_PATH)
+
+
+CODESPELL_INSTALL_ERROR = """
+Unable to install correct version of codespell
+Try to install it manually with:
+    $ pip install -U --require-hashes -r {}
+""".strip().format(CODESPELL_REQUIREMENTS_PATH)
 
 results = []
 
 CODESPELL_FORMAT_REGEX = re.compile(r'(.*):(.*): (.*) ==> (.*)$')
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 
 class CodespellProcess(ProcessHandlerMixin):
@@ -91,6 +98,10 @@ def get_codespell_binary():
 
 def lint(paths, config, fix=None, **lintargs):
 
+    if not pip.reinstall_program(CODESPELL_REQUIREMENTS_PATH):
+        print(CODESPELL_INSTALL_ERROR)
+        return 1
+
     binary = get_codespell_binary()
 
     if not binary:
@@ -110,7 +121,8 @@ def lint(paths, config, fix=None, **lintargs):
                 #    that were disabled in dictionary.
                 '--quiet-level=4',
                 '--ignore-words=' + exclude_list,
-                '--skip=exclude-list.txt',
+                # Ignore dictonnaries
+                '--skip=*.dic',
                 ]
 
     if fix:

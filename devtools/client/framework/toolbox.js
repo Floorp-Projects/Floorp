@@ -720,12 +720,12 @@ Toolbox.prototype = {
 
     this.telemetry.logOncePerBrowserVersion(SCREENSIZE_HISTOGRAM,
                                              system.getScreenDimensions());
-    this.telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+    this.telemetry.getHistogramById(HOST_HISTOGRAM).add(this._getTelemetryHostId());
 
     // Log current theme. The question we want to answer is:
     // "What proportion of users use which themes?"
     let currentTheme = Services.prefs.getCharPref("devtools.theme");
-    this.telemetry.logKeyedScalar(CURRENT_THEME_SCALAR, currentTheme, 1);
+    this.telemetry.keyedScalarAdd(CURRENT_THEME_SCALAR, currentTheme, 1);
 
     this.telemetry.preparePendingEvent(
       "devtools.main", "open", "tools", null,
@@ -2140,8 +2140,7 @@ Toolbox.prototype = {
     let delay = this.win.performance.now() - start;
 
     let telemetryKey = "DEVTOOLS_TOOLBOX_PAGE_RELOAD_DELAY_MS";
-    let histogram = Services.telemetry.getKeyedHistogramById(telemetryKey);
-    histogram.add(toolId, delay);
+    this.telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
   },
 
   /**
@@ -2287,7 +2286,7 @@ Toolbox.prototype = {
     let rect = target.getBoundingClientRect();
     let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
     let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
-    menu.popup(rect.left + screenX, rect.bottom + screenY, this);
+    menu.popupWithZoom(rect.left + screenX, rect.bottom + screenY, this);
 
     return menu;
   },
@@ -2476,7 +2475,7 @@ Toolbox.prototype = {
     this.focusTool(this.currentToolId, true);
 
     this.emit("host-changed");
-    this.telemetry.log(HOST_HISTOGRAM, this._getTelemetryHostId());
+    this.telemetry.getHistogramById(HOST_HISTOGRAM).add(this._getTelemetryHostId());
 
     this.component.setCurrentHostType(hostType);
   },
@@ -2775,6 +2774,10 @@ Toolbox.prototype = {
     Services.prefs.removeObserver("devtools.serviceWorkers.testing.enabled",
                                   this._applyServiceWorkersTestingSettings);
 
+    // We normally handle toolClosed from selectTool() but in the event of the
+    // toolbox closing we need to handle it here instead.
+    this.telemetry.toolClosed(this.currentToolId);
+
     this._lastFocusedElement = null;
 
     if (this._sourceMapURLService) {
@@ -2881,7 +2884,6 @@ Toolbox.prototype = {
       "next_panel": "none",
       "reason": "toolbox_close"
     });
-    this.telemetry.destroy();
 
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the

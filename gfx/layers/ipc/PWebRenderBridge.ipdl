@@ -15,6 +15,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using mozilla::layers::APZTestData from "mozilla/layers/APZTestData.h";
+using mozilla::layers::ScrollUpdatesMap from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
@@ -42,7 +43,7 @@ parent:
                        WebRenderScrollData aScrollData,
                        OpUpdateResource[] aResourceUpdates, RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems,
                        IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
-  async EmptyTransaction(FocusTarget focusTarget,
+  async EmptyTransaction(FocusTarget focusTarget, ScrollUpdatesMap scrollUpdates, uint32_t aPaintSequenceNumber,
                          WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
                          IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async SetFocusTarget(FocusTarget focusTarget);

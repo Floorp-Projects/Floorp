@@ -6,15 +6,15 @@ use api::{ApiMsg, BuiltDisplayList, ClearCache, DebugCommand};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
 use api::{DeviceIntPoint, DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
-use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestResult};
+use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, HitTestResult};
 use api::{IdNamespace, LayoutPoint, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
-use api::{ScrollLocation, ScrollNodeState, TransactionMsg, WorldPoint};
+use api::{ScrollLocation, ScrollNodeState, TransactionMsg};
 use api::channel::{MsgReceiver, Payload};
 #[cfg(feature = "capture")]
 use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
-use clip_scroll_tree::ClipScrollTree;
+use clip_scroll_tree::{ClipScrollNodeIndex, ClipScrollTree};
 #[cfg(feature = "debugger")]
 use debug_server;
 use display_list_flattener::DisplayListFlattener;
@@ -206,7 +206,6 @@ impl Document {
             &self.pending.scene,
             &mut self.clip_scroll_tree,
             resource_cache.get_font_instances(),
-            resource_cache.get_tiled_image_map(),
             &self.view,
             &self.output_pipelines,
             &self.frame_builder_config,
@@ -251,7 +250,6 @@ impl Document {
                 removed_pipelines: replace(&mut self.pending.removed_pipelines, Vec::new()),
                 view: self.view.clone(),
                 font_instances: resource_cache.get_font_instances(),
-                tiled_image_map: resource_cache.get_tiled_image_map(),
                 output_pipelines: self.output_pipelines.clone(),
             })
         } else {
@@ -315,12 +313,12 @@ impl Document {
     }
 
     /// Returns true if any nodes actually changed position or false otherwise.
-    pub fn scroll(
+    pub fn scroll_nearest_scrolling_ancestor(
         &mut self,
         scroll_location: ScrollLocation,
-        cursor: WorldPoint,
+        scroll_node_index: Option<ClipScrollNodeIndex>,
     ) -> bool {
-        self.clip_scroll_tree.scroll(scroll_location, cursor)
+        self.clip_scroll_tree.scroll_nearest_scrolling_ancestor(scroll_location, scroll_node_index)
     }
 
     /// Returns true if the node actually changed position or false otherwise.
@@ -620,9 +618,24 @@ impl RenderBackend {
             FrameMsg::Scroll(delta, cursor) => {
                 profile_scope!("Scroll");
 
-                let should_render = doc.scroll(delta, cursor)
-                    && doc.render_on_scroll == Some(true);
+                let mut should_render = true;
+                let node_index = match doc.hit_tester {
+                    Some(ref hit_tester) => {
+                        // Ideally we would call doc.scroll_nearest_scrolling_ancestor here, but
+                        // we need have to avoid a double-borrow.
+                        let test = HitTest::new(None, cursor, HitTestFlags::empty());
+                        hit_tester.find_node_under_point(test)
+                    }
+                    None => {
+                        should_render = false;
+                        None
+                    }
+                };
 
+                let should_render =
+                    should_render &&
+                    doc.scroll_nearest_scrolling_ancestor(delta, node_index) &&
+                    doc.render_on_scroll == Some(true);
                 DocumentOps {
                     scroll: true,
                     render: should_render,

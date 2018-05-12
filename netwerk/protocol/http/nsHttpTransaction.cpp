@@ -133,7 +133,6 @@ nsHttpTransaction::nsHttpTransaction()
     , mWaitingOnPipeOut(false)
     , mReportedStart(false)
     , mReportedResponseHeader(false)
-    , mForTakeResponseHead(nullptr)
     , mResponseHeadTaken(false)
     , mForTakeResponseTrailers(nullptr)
     , mResponseTrailersTaken(false)
@@ -230,7 +229,6 @@ nsHttpTransaction::~nsHttpTransaction()
     mConnection = nullptr;
 
     delete mResponseHead;
-    delete mForTakeResponseHead;
     delete mChunkedDecoder;
     ReleaseBlockingTransaction();
 }
@@ -467,15 +465,6 @@ nsHttpTransaction::TakeResponseHead()
 
     mResponseHeadTaken = true;
 
-    // Prefer mForTakeResponseHead over mResponseHead. It is always a complete
-    // set of headers.
-    nsHttpResponseHead *head;
-    if (mForTakeResponseHead) {
-        head = mForTakeResponseHead;
-        mForTakeResponseHead = nullptr;
-        return head;
-    }
-
     // Even in OnStartRequest() the headers won't be available if we were
     // canceled
     if (!mHaveAllHeaders) {
@@ -483,7 +472,7 @@ nsHttpTransaction::TakeResponseHead()
         return nullptr;
     }
 
-    head = mResponseHead;
+    nsHttpResponseHead *head = mResponseHead;
     mResponseHead = nullptr;
     return head;
 }
@@ -633,7 +622,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
                 // After a socket is connected we know for sure whether data
                 // has been sent on SYN packet and if not we should update TLS
                 // start timing.
-                if ((mFastOpenStatus != TFO_DATA_SENT) && 
+                if ((mFastOpenStatus != TFO_DATA_SENT) &&
                     !mTimings.secureConnectionStart.IsNull()) {
                     mTimings.secureConnectionStart = tnow;
                 }

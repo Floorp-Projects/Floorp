@@ -136,10 +136,6 @@ const GPU_TAG_SETUP_DATA: GpuProfileTag = GpuProfileTag {
     label: "data init",
     color: debug_colors::LIGHTGREY,
 };
-const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag {
-    label: "Image",
-    color: debug_colors::GREEN,
-};
 const GPU_TAG_PRIM_SPLIT_COMPOSITE: GpuProfileTag = GpuProfileTag {
     label: "SplitComposite",
     color: debug_colors::DARKBLUE,
@@ -183,12 +179,6 @@ impl TransformBatchKind {
     fn debug_name(&self) -> &'static str {
         match *self {
             TransformBatchKind::TextRun(..) => "TextRun",
-            TransformBatchKind::Image(image_buffer_kind, ..) => match image_buffer_kind {
-                ImageBufferKind::Texture2D => "Image (2D)",
-                ImageBufferKind::TextureRect => "Image (Rect)",
-                ImageBufferKind::TextureExternal => "Image (External)",
-                ImageBufferKind::Texture2DArray => "Image (Array)",
-            },
             TransformBatchKind::BorderCorner => "BorderCorner",
             TransformBatchKind::BorderEdge => "BorderEdge",
         }
@@ -197,7 +187,6 @@ impl TransformBatchKind {
     fn sampler_tag(&self) -> GpuProfileTag {
         match *self {
             TransformBatchKind::TextRun(..) => GPU_TAG_PRIM_TEXT_RUN,
-            TransformBatchKind::Image(..) => GPU_TAG_PRIM_IMAGE,
             TransformBatchKind::BorderCorner => GPU_TAG_PRIM_BORDER_CORNER,
             TransformBatchKind::BorderEdge => GPU_TAG_PRIM_BORDER_EDGE,
         }

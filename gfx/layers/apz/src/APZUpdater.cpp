@@ -233,6 +233,30 @@ APZUpdater::UpdateScrollDataAndTreeState(LayersId aRootLayerTreeId,
 }
 
 void
+APZUpdater::UpdateScrollOffsets(LayersId aRootLayerTreeId,
+                                LayersId aOriginatingLayersId,
+                                ScrollUpdatesMap&& aUpdates,
+                                uint32_t aPaintSequenceNumber)
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  RefPtr<APZUpdater> self = this;
+  RunOnUpdaterThread(aOriginatingLayersId, NS_NewRunnableFunction(
+    "APZUpdater::UpdateScrollOffsets",
+    [=,updates=Move(aUpdates)]() {
+      self->mScrollData[aOriginatingLayersId].ApplyUpdates(updates, aPaintSequenceNumber);
+      auto root = self->mScrollData.find(aRootLayerTreeId);
+      if (root == self->mScrollData.end()) {
+        return;
+      }
+      self->mApz->UpdateHitTestingTree(aRootLayerTreeId,
+          WebRenderScrollDataWrapper(*self, &(root->second)),
+          /*isFirstPaint*/ false, aOriginatingLayersId,
+          aPaintSequenceNumber);
+    }
+  ));
+}
+
+void
 APZUpdater::NotifyLayerTreeAdopted(LayersId aLayersId,
                                    const RefPtr<APZUpdater>& aOldUpdater)
 {

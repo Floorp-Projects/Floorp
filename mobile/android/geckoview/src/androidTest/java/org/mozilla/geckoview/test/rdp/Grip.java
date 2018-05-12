@@ -228,19 +228,31 @@ import java.util.Set;
         return output;
     }
 
+    private final ReplyParser<JSONObject> GRIP_PARSER = new ReplyParser<JSONObject>() {
+        @Override
+        public boolean canParse(@NonNull JSONObject packet) {
+            return packet.has("ownProperties") || packet.has("safeGetterValues");
+        }
+
+        @Override
+        public @NonNull JSONObject parse(@NonNull JSONObject packet) {
+            return packet;
+        }
+    };
+
     private Grip(final RDPConnection connection, final JSONObject grip) {
         super(connection, grip);
     }
 
     @Override
     protected void release() {
-        sendPacket("{\"type\":\"release\"}", null);
+        sendPacket("{\"type\":\"release\"}", JSON_PARSER).get();
         super.release();
     }
 
     /* package */ List<Object> unpackAsArray(final @NonNull Cache cache) {
         final JSONObject reply = sendPacket("{\"type\":\"prototypeAndProperties\"}",
-                                            "ownProperties");
+                                            GRIP_PARSER).get();
         final JSONObject props = reply.optJSONObject("ownProperties");
         final JSONObject getterValues = reply.optJSONObject("safeGetterValues");
 
@@ -267,7 +279,7 @@ import java.util.Set;
 
     /* package */ Map<String, Object> unpackAsObject(final @NonNull Cache cache) {
         final JSONObject reply = sendPacket("{\"type\":\"prototypeAndProperties\"}",
-                                            "ownProperties");
+                                            GRIP_PARSER).get();
         final Map<String, Object> output = new HashMap<>();
 
         fillProperties(cache, output, reply.optJSONObject("ownProperties"), "value");
