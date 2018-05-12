@@ -123,7 +123,7 @@ const ADDONS = {
     expected: {
       strictCompatibility: false,
     },
-    compatible: [false, false, false, false],
+    compatible: [false, true,  false, true],
   },
 };
 

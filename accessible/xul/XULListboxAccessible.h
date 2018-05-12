@@ -62,7 +62,7 @@ public:
   XULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // TableAccessible
-  virtual uint32_t ColCount() override;
+  virtual uint32_t ColCount() const override;
   virtual uint32_t RowCount() override;
   virtual Accessible* CellAt(uint32_t aRowIndex, uint32_t aColumnIndex) override;
   virtual bool IsColSelected(uint32_t aColIdx) override;
@@ -95,7 +95,7 @@ public:
 protected:
   virtual ~XULListboxAccessible() {}
 
-  bool IsMulticolumn() { return ColCount() > 1; }
+  bool IsMulticolumn() const { return ColCount() > 1; }
 };
 
 /**

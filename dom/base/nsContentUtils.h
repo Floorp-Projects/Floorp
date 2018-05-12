@@ -3121,12 +3121,6 @@ public:
   static bool ShouldBlockReservedKeys(mozilla::WidgetKeyboardEvent* aKeyEvent);
 
   /**
-   * Walks up the tree from aElement until it finds an element that is
-   * not native anonymous content.  aElement must be NAC itself.
-   */
-  static Element* GetClosestNonNativeAnonymousAncestor(Element* aElement);
-
-  /**
    * Returns the nsIPluginTag for the plugin we should try to use for a given
    * MIME type.
    *

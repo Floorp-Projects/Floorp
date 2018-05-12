@@ -76,7 +76,7 @@ class MachCommands(MachCommandBase):
         runtime_testvars = {}
         for arg in ('webRootDir', 'pageManifest', 'resultsDir', 'entities', 'iterations',
                     'perTabPause', 'settleWaitTime', 'maxTabs', 'dmd'):
-            if kwargs[arg]:
+            if arg in kwargs and kwargs[arg] is not None:
                 runtime_testvars[arg] = kwargs[arg]
 
         if 'webRootDir' not in runtime_testvars:

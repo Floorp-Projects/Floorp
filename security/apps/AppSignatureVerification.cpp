@@ -1453,12 +1453,3 @@ nsNSSCertificateDB::OpenSignedAppFileAsync(
                                                                aCallback));
   return task->Dispatch("SignedJAR");
 }
-
-NS_IMETHODIMP
-nsNSSCertificateDB::VerifySignedDirectoryAsync(AppTrustedRoot, nsIFile*,
-  nsIVerifySignedDirectoryCallback* aCallback)
-{
-  NS_ENSURE_ARG_POINTER(aCallback);
-  return aCallback->VerifySignedDirectoryFinished(
-    NS_ERROR_SIGNED_JAR_NOT_SIGNED, nullptr);
-}

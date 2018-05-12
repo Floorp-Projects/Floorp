@@ -65,15 +65,10 @@ class AndroidPresentor {
         });
       }
     } else {
-      let state = Utils.getState(context.accessible);
-      androidEvents.push({eventType: (isExploreByTouch) ?
-                           AndroidEvents.VIEW_HOVER_ENTER : focusEventType,
-                         text: Utils.localize(UtteranceGenerator.genForContext(
-                           context)),
-                         bounds: context.bounds,
-                         clickable: context.accessible.actionCount > 0,
-                         checkable: state.contains(States.CHECKABLE),
-                         checked: state.contains(States.CHECKED)});
+      let info = this._infoFromContext(context);
+      let eventType = isExploreByTouch ?
+        AndroidEvents.VIEW_HOVER_ENTER : focusEventType;
+      androidEvents.push({...info, eventType});
     }
 
     try {
@@ -86,6 +81,12 @@ class AndroidPresentor {
     }
 
     return androidEvents;
+  }
+
+  focused(aObject) {
+    let info = this._infoFromContext(
+      new PivotContext(aObject, null, -1, -1, true, false));
+    return [{ eventType: AndroidEvents.VIEW_FOCUSED, ...info }];
   }
 
   /**
@@ -251,13 +252,6 @@ class AndroidPresentor {
   }
 
   /**
-   * We have entered or left text editing mode.
-   */
-  editingModeChanged(aIsEditing) {
-    return this.announce(UtteranceGenerator.genForEditingMode(aIsEditing));
-  }
-
-  /**
    * Announce something. Typically an app state change.
    */
   announce(aAnnouncement) {
@@ -298,6 +292,20 @@ class AndroidPresentor {
       new PivotContext(aAccessible, null, -1, -1, true, !!aIsHide) : null;
     return this.announce(
       UtteranceGenerator.genForLiveRegion(context, aIsHide, aModifiedText));
+  }
+
+  _infoFromContext(aContext) {
+    let state = Utils.getState(aContext.accessible);
+    return {
+      text: Utils.localize(UtteranceGenerator.genForContext(aContext)),
+      bounds: aContext.bounds,
+      focusable: state.contains(States.FOCUSABLE),
+      focused: state.contains(States.FOCUSED),
+      clickable: aContext.accessible.actionCount > 0,
+      checkable: state.contains(States.CHECKABLE),
+      checked: state.contains(States.CHECKED),
+      editable: state.contains(States.EDITABLE),
+    };
   }
 }
 

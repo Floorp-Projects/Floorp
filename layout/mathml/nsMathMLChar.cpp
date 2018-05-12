@@ -578,7 +578,7 @@ nsOpenTypeTable::MakeTextRun(DrawTarget*        aDrawTarget,
     gfxTextRun::Create(&params, 1, aFontGroup,
                        gfx::ShapedTextFlags(), nsTextFrameUtils::Flags());
   textRun->AddGlyphRun(aFontGroup->GetFirstValidFont(),
-                       gfxTextRange::kFontGroup, 0,
+                       gfxTextRange::MatchType::kFontGroup, 0,
                        false, gfx::ShapedTextFlags::TEXT_ORIENT_HORIZONTAL);
                               // We don't care about CSS writing mode here;
                               // math runs are assumed to be horizontal.

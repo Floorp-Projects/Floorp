@@ -194,6 +194,10 @@ struct PropertyInfo {
   uint32_t prefIndex: NUM_BITS_PROPERTY_INFO_PREF_INDEX;
   // The index to the corresponding spec in Duo.mPrefables[prefIndex].specs[].
   uint32_t specIndex: NUM_BITS_PROPERTY_INFO_SPEC_INDEX;
+
+  // Note: the default constructor is not constexpr because of the bit fields,
+  // so we need this one.
+  constexpr PropertyInfo() : id(), type(0), prefIndex(0), specIndex(0) {}
 };
 
 static_assert(ePropertyTypeCount <= 1ull << NUM_BITS_PROPERTY_INFO_TYPE,
