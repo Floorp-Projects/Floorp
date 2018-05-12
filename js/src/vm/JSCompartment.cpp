@@ -351,23 +351,6 @@ JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
     return true;
 }
 
-#ifdef ENABLE_BIGINT
-bool
-JSCompartment::wrap(JSContext* cx, MutableHandleBigInt bi)
-{
-    MOZ_ASSERT(cx->compartment() == this);
-
-    if (bi->zone() == cx->zone())
-        return true;
-
-    BigInt* copy = BigInt::copy(cx, bi);
-    if (!copy)
-        return false;
-    bi.set(copy);
-    return true;
-}
-#endif
-
 bool
 JSCompartment::getNonWrapperObjectForCurrentCompartment(JSContext* cx, MutableHandleObject obj)
 {

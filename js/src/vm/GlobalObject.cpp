@@ -11,9 +11,6 @@
 #include "jsfriendapi.h"
 
 #include "builtin/AtomicsObject.h"
-#ifdef ENABLE_BIGINT
-#include "builtin/BigInt.h"
-#endif
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
 #include "builtin/MapObject.h"
