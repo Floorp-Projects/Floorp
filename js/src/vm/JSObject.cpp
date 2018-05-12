@@ -474,7 +474,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
     assertSameCompartment(cx, obj);
 
     // Steps 3-5. (Steps 1-2 are redundant assertions.)
-    if (!PreventExtensions(cx, obj, level))
+    if (!PreventExtensions(cx, obj))
         return false;
 
     // Steps 6-9, loosely interpreted.
@@ -522,8 +522,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
         // Ordinarily ArraySetLength handles this, but we're going behind its back
         // right now, so we must do this manually.
         if (level == IntegrityLevel::Frozen && obj->is<ArrayObject>()) {
-            if (!obj->as<ArrayObject>().maybeCopyElementsForWrite(cx))
-                return false;
+            MOZ_ASSERT(!nobj->denseElementsAreCopyOnWrite());
             obj->as<ArrayObject>().setNonWritableLength(cx);
         }
     } else {
@@ -569,11 +568,9 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
         }
     }
 
-    // Finally, freeze the dense elements.
-    if (level == IntegrityLevel::Frozen && obj->isNative()) {
-        if (!ObjectElements::FreezeElements(cx, obj.as<NativeObject>()))
-            return false;
-    }
+    // Finally, freeze or seal the dense elements.
+    if (obj->isNative())
+        ObjectElements::FreezeOrSeal(cx, &obj->as<NativeObject>(), level);
 
     return true;
 }
@@ -632,10 +629,26 @@ js::TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bo
             return true;
         }
 
-        // Unless the frozen flag is set, dense elements are configurable.
-        if (nobj->getDenseInitializedLength() > 0 && !nobj->denseElementsAreFrozen()) {
-            *result = false;
-            return true;
+        bool hasDenseElements = false;
+        for (size_t i = 0; i < nobj->getDenseInitializedLength(); i++) {
+            if (nobj->containsDenseElement(i)) {
+                hasDenseElements = true;
+                break;
+            }
+        }
+
+        if (hasDenseElements) {
+            // Unless the sealed flag is set, dense elements are configurable.
+            if (!nobj->denseElementsAreSealed()) {
+                *result = false;
+                return true;
+            }
+
+            // Unless the frozen flag is set, dense elements are writable.
+            if (level == IntegrityLevel::Frozen && !nobj->denseElementsAreFrozen()) {
+                *result = false;
+                return true;
+            }
         }
 
         // Steps 7-9.
@@ -2743,7 +2756,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto)
 }
 
 bool
-js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, IntegrityLevel level)
+js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result)
 {
     if (obj->is<ProxyObject>())
         return js::Proxy::preventExtensions(cx, obj, result);
@@ -2754,16 +2767,14 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
     if (!MaybeConvertUnboxedObjectToNative(cx, obj))
         return false;
 
-    // Force lazy properties to be resolved.
-    if (obj->isNative() && !ResolveLazyProperties(cx, obj.as<NativeObject>()))
-        return false;
+    if (obj->isNative()) {
+        // Force lazy properties to be resolved.
+        if (!ResolveLazyProperties(cx, obj.as<NativeObject>()))
+            return false;
 
-    // Sparsify dense elements, to make sure no element can be added without a
-    // call to isExtensible, at the cost of performance. If the object is being
-    // frozen, the caller is responsible for freezing the elements (and all
-    // other properties).
-    if (obj->isNative() && level != IntegrityLevel::Frozen) {
-        if (!NativeObject::sparsifyDenseElements(cx, obj.as<NativeObject>()))
+        // Prepare the elements. We have to do this before we mark the object
+        // non-extensible; that's fine because these changes are not observable.
+        if (!ObjectElements::PreventExtensions(cx, &obj->as<NativeObject>()))
             return false;
     }
 
@@ -2774,10 +2785,10 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
 }
 
 bool
-js::PreventExtensions(JSContext* cx, HandleObject obj, IntegrityLevel level)
+js::PreventExtensions(JSContext* cx, HandleObject obj)
 {
     ObjectOpResult result;
-    return PreventExtensions(cx, obj, result, level) && result.checkStrict(cx, obj);
+    return PreventExtensions(cx, obj, result) && result.checkStrict(cx, obj);
 }
 
 bool

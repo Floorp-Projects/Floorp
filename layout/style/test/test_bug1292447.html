@@ -284,34 +284,12 @@ function round(num, decimals) {
   return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
-function coordValueTest(camelProp, cssProp, decl, coordVal, prettyName) {
+function coordValueTest(camelProp, decl, coordVal, prettyName) {
   is(decl[camelProp], coordVal + "px", prettyName);
-  is(decl.getPropertyCSSValue(cssProp).cssValueType,
-     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-  is(decl.getPropertyCSSValue(cssProp).primitiveType,
-     CSSPrimitiveValue.CSS_PX, prettyName + " is px");
-  is(decl.getPropertyCSSValue(cssProp).cssText, coordVal + "px",
-     prettyName + " cssText");
-  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-     places here. */
-  is(round(decl.getPropertyCSSValue(cssProp)
-               .getFloatValue(CSSPrimitiveValue.CSS_PX),
-           3), coordVal, prettyName + " as float value");
 }
 
-function percentValueTest(camelProp, cssProp, decl, percentVal, prettyName) {
+function percentValueTest(camelProp, decl, percentVal, prettyName) {
   is(decl[camelProp], percentVal + "%", prettyName);
-  is(decl.getPropertyCSSValue(cssProp).cssValueType,
-     CSSValue.CSS_PRIMITIVE_VALUE, prettyName + " is primitive value");
-  is(decl.getPropertyCSSValue(cssProp).primitiveType,
-     CSSPrimitiveValue.CSS_PERCENTAGE, prettyName + " is percent");
-  is(decl.getPropertyCSSValue(cssProp).cssText, percentVal + "%",
-     prettyName + " cssText");
-  /* Since floats are only accurate to like 6 decimal places, round to 3 decimal
-     places here. */
-  is(round(decl.getPropertyCSSValue(cssProp)
-               .getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE),
-           3), percentVal, prettyName + " as float value");
 }
 
 function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = false) {
@@ -339,7 +317,7 @@ function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = fals
   }
 
   /* Test $(id)-1 */
-  coordValueTest(cssCamelPropName, propName,
+  coordValueTest(cssCamelPropName,
                  style(idBase + "1"), coordVal,
                  propName + " of " + idBase + "1");
 
@@ -350,23 +328,23 @@ function doATest(propName, idBase, coordVal, percentVal, resolveToUsedVal = fals
 
   /* Test $(id)-2 */
   if (resolveToUsedVal) {
-    coordValueTest(cssCamelPropName, propName,
+    coordValueTest(cssCamelPropName,
                    style(idBase + "2"), coordVal,
                    propName + " of " + idBase + "2");
   } else {
-    percentValueTest(cssCamelPropName, propName,
+    percentValueTest(cssCamelPropName,
                      style(idBase + "2"), percentVal,
                      propName + " of " + idBase + "2");
   }
 
   if (percentVal) {
     /* Test $(id)-3 */
-    coordValueTest(cssCamelPropName, propName,
+    coordValueTest(cssCamelPropName,
                    style(idBase + "3"), coordVal,
                    propName + " of " + idBase + "3");
 
     /* Test $(id)-4 */
-    percentValueTest(cssCamelPropName, propName,
+    percentValueTest(cssCamelPropName,
                      style(idBase + "4"), percentVal,
                      propName + " of " + idBase + "4");
   }
