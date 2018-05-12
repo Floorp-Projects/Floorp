@@ -159,7 +159,8 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         cmd = ['marionette']
 
         if self.config['test_about_blank']:
-            cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf", "base-testvars.json"))
+            cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf",
+                                                      "base-testvars.json"))
         else:
             cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf", "testvars.json"))
 
