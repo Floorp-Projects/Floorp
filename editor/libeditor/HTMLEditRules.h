@@ -590,9 +590,21 @@ protected:
   nsresult RemoveAlignment(nsINode& aNode, const nsAString& aAlignType,
                            bool aChildrenOnly);
   nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode, bool aStarts);
-  enum class ContentsOnly { no, yes };
-  nsresult AlignBlock(Element& aElement,
-                      const nsAString& aAlignType, ContentsOnly aContentsOnly);
+
+  /**
+   * AlignBlock() resets align attribute, text-align property, etc first.
+   * Then, aligns contents of aElement on aAlignType.
+   *
+   * @param aElement            The element whose contents will be aligned.
+   * @param aAlignType          Boundary or "center" which contents should be
+   *                            aligned on.
+   * @param aResetAlignOf       Resets align of whether element and its
+   *                            descendants or only descendants.
+   */
+  enum class ResetAlignOf { ElementAndDescendants, OnlyDescendants };
+  MOZ_MUST_USE nsresult
+  AlignBlock(Element& aElement, const nsAString& aAlignType,
+             ResetAlignOf aResetAlignOf);
 
   /**
    * IncreaseMarginToIndent() increases the margin of aElement.  See the
