@@ -6231,10 +6231,10 @@ jit::ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints, MDefin
 }
 
 bool
-jit::ElementAccessMightBeFrozen(CompilerConstraintList* constraints, MDefinition* obj)
+jit::ElementAccessMightBeNonExtensible(CompilerConstraintList* constraints, MDefinition* obj)
 {
     TemporaryTypeSet* types = obj->resultTypeSet();
-    return !types || types->hasObjectFlags(constraints, OBJECT_FLAG_FROZEN_ELEMENTS);
+    return !types || types->hasObjectFlags(constraints, OBJECT_FLAG_NON_EXTENSIBLE_ELEMENTS);
 }
 
 AbortReasonOr<bool>

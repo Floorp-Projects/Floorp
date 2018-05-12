@@ -1046,7 +1046,7 @@ LexicalEnvironmentObject::recreate(JSContext* cx, Handle<LexicalEnvironmentObjec
 bool
 LexicalEnvironmentObject::isExtensible() const
 {
-    return nonProxyIsExtensible();
+    return NativeObject::isExtensible();
 }
 
 Value
@@ -3382,7 +3382,7 @@ js::CheckCanDeclareGlobalBinding(JSContext* cx, Handle<GlobalObject*> global,
     if (!desc.object()) {
         // 8.1.14.15 step 6.
         // 8.1.14.16 step 5.
-        if (global->nonProxyIsExtensible())
+        if (global->isExtensible())
             return true;
 
         ReportCannotDeclareGlobalBinding(cx, name, "global is non-extensible");
