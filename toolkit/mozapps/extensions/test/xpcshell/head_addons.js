@@ -670,12 +670,8 @@ function isThemeInAddonsList(aDir, aId) {
   return AddonTestUtils.addonsList.hasTheme(aDir, aId);
 }
 
-function isExtensionInAddonsList(aDir, aId) {
-  return AddonTestUtils.addonsList.hasExtension(aDir, aId);
-}
-
 function isExtensionInBootstrappedList(aDir, aId) {
-  return AddonTestUtils.addonsList.hasBootstrapped(aDir, aId);
+  return AddonTestUtils.addonsList.hasExtension(aDir, aId);
 }
 
 function check_startup_changes(aType, aIds) {
