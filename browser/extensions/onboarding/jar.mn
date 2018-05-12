@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/onboarding@mozilla.org] chrome.jar:
-  # resource://onboarding/ is referenced in about:home and about:newtab,
+  # resource://onboarding/ is referenced in about:home about:newtab and about:welcome,
   # so make it content-accessible.
 % resource onboarding %content/ contentaccessible=yes
   content/ (content/*)
