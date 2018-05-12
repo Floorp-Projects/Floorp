@@ -12,6 +12,9 @@ cmake = "0.1"
 glob = "0.2.11"
 
 [[test]]
+name = "bigint"
+required-features = ["bigint"]
+[[test]]
 name = "callback"
 [[test]]
 name = "enumerate"
