@@ -4462,7 +4462,11 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     }
     // remember our new block for postprocessing
     mNewBlock = theBlock;
-    ChangeIndentation(*theBlock, Change::plus);
+    nsresult rv = IncreaseMarginToIndent(*theBlock);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to increase indentation");
     // delete anything that was in the list of nodes
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
@@ -4577,7 +4581,11 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     // Not a list item.
 
     if (IsBlockNode(*curNode)) {
-      ChangeIndentation(*curNode->AsElement(), Change::plus);
+      nsresult rv = IncreaseMarginToIndent(*curNode->AsElement());
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to inrease indentation");
       curQuote = nullptr;
       continue;
     }
@@ -4600,7 +4608,11 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
       if (NS_WARN_IF(!curQuote)) {
         return NS_ERROR_FAILURE;
       }
-      ChangeIndentation(*curQuote, Change::plus);
+      nsresult rv = IncreaseMarginToIndent(*curQuote);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to increase indentation");
       // remember our new block for postprocessing
       mNewBlock = curQuote;
       // curQuote is now the correct thing to put curNode in
@@ -4976,7 +4988,12 @@ HTMLEditRules::WillOutdent(bool* aCancel,
         RefPtr<nsAtom> unit;
         CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
         if (f > 0) {
-          ChangeIndentation(*curNode->AsElement(), Change::minus);
+          nsresult rv = DecreaseMarginToOutdent(*curNode->AsElement());
+          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+            "Failed to decrease indentation");
           continue;
         }
       }
@@ -5114,7 +5131,12 @@ HTMLEditRules::WillOutdent(bool* aCancel,
             element = curNode->AsElement();
           }
           if (element) {
-            ChangeIndentation(*element, Change::minus);
+            nsresult rv = DecreaseMarginToOutdent(*element);
+            if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+              "Failed to decrease indentation");
           }
         }
       }
@@ -5283,7 +5305,7 @@ HTMLEditRules::OutdentPartOfBlock(Element& aBlock,
 
   if (middleNode->IsElement()) {
     // We do nothing if middleNode isn't an element
-    nsresult rv = ChangeIndentation(*middleNode->AsElement(), Change::minus);
+    nsresult rv = DecreaseMarginToOutdent(*middleNode->AsElement());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9882,14 +9904,17 @@ HTMLEditRules::AlignBlock(Element& aElement,
 }
 
 nsresult
-HTMLEditRules::ChangeIndentation(Element& aElement,
-                                 Change aChange)
+HTMLEditRules::ChangeMarginStart(Element& aElement,
+                                 bool aIncrease)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   nsAtom& marginProperty = MarginPropertyAtomForIndent(aElement);
   nsAutoString value;
   CSSEditUtils::GetSpecifiedProperty(aElement, marginProperty, value);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   float f;
   RefPtr<nsAtom> unit;
   CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
@@ -9898,7 +9923,7 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
     CSSEditUtils::GetDefaultLengthUnit(defaultLengthUnit);
     unit = NS_Atomize(defaultLengthUnit);
   }
-  int8_t multiplier = aChange == Change::plus ? +1 : -1;
+  int8_t multiplier = aIncrease ? +1 : -1;
   if (nsGkAtoms::in == unit) {
     f += NS_EDITOR_INDENT_INCREMENT_IN * multiplier;
   } else if (nsGkAtoms::cm == unit) {
@@ -9925,11 +9950,17 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
     newValue.Append(nsDependentAtomString(unit));
     HTMLEditorRef().mCSSEditUtils->SetCSSProperty(aElement, marginProperty,
                                                   newValue);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     return NS_OK;
   }
 
   HTMLEditorRef().mCSSEditUtils->RemoveCSSProperty(aElement, marginProperty,
                                                    value);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
 
   // Remove unnecessary divs
   if (!aElement.IsHTMLElement(nsGkAtoms::div) ||
@@ -9940,6 +9971,9 @@ HTMLEditRules::ChangeIndentation(Element& aElement,
   }
 
   nsresult rv = HTMLEditorRef().RemoveContainerWithTransaction(aElement);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

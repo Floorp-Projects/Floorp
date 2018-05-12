@@ -593,8 +593,43 @@ protected:
   enum class ContentsOnly { no, yes };
   nsresult AlignBlock(Element& aElement,
                       const nsAString& aAlignType, ContentsOnly aContentsOnly);
-  enum class Change { minus, plus };
-  nsresult ChangeIndentation(Element& aElement, Change aChange);
+
+  /**
+   * IncreaseMarginToIndent() increases the margin of aElement.  See the
+   * document of ChangeMarginStart() for the detail.
+   * XXX This is not aware of vertical writing-mode.
+   *
+   * @param aElement            The element to be indented.
+   */
+  MOZ_MUST_USE nsresult IncreaseMarginToIndent(Element& aElement)
+  {
+    return ChangeMarginStart(aElement, true);
+  }
+
+  /**
+   * DecreaseMarginToOutdent() decreases the margin of aElement.  See the
+   * document of ChangeMarginStart() for the detail.
+   * XXX This is not aware of vertical writing-mode.
+   *
+   * @param aElement            The element to be outdented.
+   */
+  MOZ_MUST_USE nsresult DecreaseMarginToOutdent(Element& aElement)
+  {
+    return ChangeMarginStart(aElement, false);
+  }
+
+  /**
+   * ChangeMarginStart() changes margin of aElement to indent or outdent.
+   * However, use IncreaseMarginToIndent() and DecreaseMarginToOutdent()
+   * instead.  If it's rtl text, margin-right will be changed.  Otherwise,
+   * margin-left.
+   * XXX This is not aware of vertical writing-mode.
+   *
+   * @param aElement            The element to be indented or outdented.
+   * @param aIncrease           true for indent, false for outdent.
+   */
+  MOZ_MUST_USE nsresult ChangeMarginStart(Element& aElement, bool aIncrease);
+
   void DocumentModifiedWorker();
 
   /**
