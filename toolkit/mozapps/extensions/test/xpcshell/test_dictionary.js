@@ -101,7 +101,7 @@ var HunspellEngine = {
     }
     try {
       let xhr = new XMLHttpRequest();
-      xhr.open("GET", uri.spec, false);
+      xhr.open("GET", uri.spec.replace(/\.aff$/, ".dic"), false);
       xhr.send();
       return true;
     } catch (e) {

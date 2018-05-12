@@ -35,7 +35,7 @@ public:
   /**
    * Return the number of columns in the table.
    */
-  virtual uint32_t ColCount() { return 0; }
+  virtual uint32_t ColCount() const { return 0; }
 
   /**
    * Return the number of rows in the table.

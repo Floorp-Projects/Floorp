@@ -37,77 +37,67 @@
       let evt;
 
       evt = await runner.focusSelector("input",
-        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_FOCUSED,
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      // XXX: Get rid of announcements, and send focus events instead
-      runner.eventTextMatches(evt[0], ["editing"]);
+      is(evt[0].editable, true, "focused item is editable");
       runner.eventTextMatches(evt[1], ["Text content test document", "entry"]);
+      is(evt[1].focused, true, "a11y focused item is focused");
       is(evt[2].fromIndex, 0, "Caret at start (fromIndex)");
       is(evt[2].toIndex, 0, "Caret at start (toIndex)");
 
       evt = await runner.typeKey("B",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["B"], 0, 1);
 
       evt = await runner.typeKey("o",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bo"], 1, 1);
 
       evt = await runner.typeKey("b",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob"], 2, 1);
 
       evt = await runner.typeKey(" ",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob "], 3, 1);
 
       evt = await runner.typeKey("L",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob L"], 4, 1);
 
       evt = await runner.typeKey("o",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob Lo"], 5, 1);
 
       evt = await runner.typeKey("b",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob Lob"], 6, 1);
 
       evt = await runner.typeKey("l",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob Lobl"], 7, 1);
 
       evt = await runner.typeKey("a",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob Lobla"], 8, 1);
 
       evt = await runner.typeKey("w",
         AndroidEvents.VIEW_TEXT_CHANGED,
-        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED,
-        "todo.value-changed");
+        AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkInsert(evt[0], evt[1], ["Bob Loblaw"], 9, 1);
 
-      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt, ["navigating"]);
+      evt = await runner.blur(AndroidEvents.VIEW_FOCUSED);
+      is(evt.editable, false, "Focused out of editable");
     }
 
 

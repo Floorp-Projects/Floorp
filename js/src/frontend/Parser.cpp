@@ -797,7 +797,8 @@ ParserBase::errorNoOffset(unsigned errorNumber, ...)
 ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants,
-                       UsedNameTracker& usedNames)
+                       UsedNameTracker& usedNames,
+                       ScriptSourceObject* sourceObject)
   : AutoGCRooter(cx, PARSER),
     context(cx),
     alloc(alloc),
@@ -806,6 +807,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
     pc(nullptr),
     usedNames(usedNames),
     ss(nullptr),
+    sourceObject(cx, sourceObject),
     keepAtoms(cx),
     foldConstants(foldConstants),
 #ifdef DEBUG
@@ -848,8 +850,9 @@ template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
                                                  const ReadOnlyCompileOptions& options,
                                                  bool foldConstants, UsedNameTracker& usedNames,
-                                                 LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, foldConstants, usedNames),
+                                                 LazyScript* lazyOuterFunction,
+                                                 ScriptSourceObject* sourceObject)
+  : ParserBase(cx, alloc, options, foldConstants, usedNames, sourceObject),
     handler(cx, alloc, lazyOuterFunction)
 {
 
@@ -862,8 +865,9 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   bool foldConstants,
                                                   UsedNameTracker& usedNames,
                                                   SyntaxParser* syntaxParser,
-                                                  LazyScript* lazyOuterFunction)
-  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction),
+                                                  LazyScript* lazyOuterFunction,
+                                                  ScriptSourceObject* sourceObject)
+  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction, sourceObject),
     tokenStream(cx, options, chars, length)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
@@ -2534,7 +2538,8 @@ PerHandlerParser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /
 
     FunctionBox* funbox = pc->functionBox();
     RootedFunction fun(context, funbox->function());
-    LazyScript* lazy = LazyScript::Create(context, fun, pc->closedOverBindingsForLazy(),
+    LazyScript* lazy = LazyScript::Create(context, fun, sourceObject,
+                                          pc->closedOverBindingsForLazy(),
                                           pc->innerFunctionsForLazy,
                                           funbox->bufStart, funbox->bufEnd,
                                           funbox->toStringStart,

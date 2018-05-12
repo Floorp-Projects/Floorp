@@ -166,7 +166,7 @@ XULListboxAccessible::NativeRole()
 // XULListboxAccessible: Table
 
 uint32_t
-XULListboxAccessible::ColCount()
+XULListboxAccessible::ColCount() const
 {
   nsIContent* headContent = nullptr;
   for (nsIContent* childContent = mContent->GetFirstChild(); childContent;

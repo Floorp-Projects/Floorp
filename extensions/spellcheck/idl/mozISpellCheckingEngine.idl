@@ -88,7 +88,10 @@ interface mozISpellCheckingEngine : nsISupports {
   void removeDirectory(in nsIFile dir);
 
   /**
-   * Add a dictionary with the given language code and file URI.
+   * Add a dictionary with the given language code and source URI. The URI
+   * must point to an affix file, with the ".aff" extension. The word list
+   * file must be in the same directory, with the same base name, and the
+   * ".dic" extension.
    */
   void addDictionary(in AString lang, in nsIURI file);
 

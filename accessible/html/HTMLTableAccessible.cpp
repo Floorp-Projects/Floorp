@@ -484,7 +484,7 @@ HTMLTableAccessible::Summary(nsString& aSummary)
 }
 
 uint32_t
-HTMLTableAccessible::ColCount()
+HTMLTableAccessible::ColCount() const
 {
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   return tableFrame ? tableFrame->GetColCount() : 0;

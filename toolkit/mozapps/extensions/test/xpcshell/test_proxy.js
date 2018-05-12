@@ -10,6 +10,8 @@ BootstrapMonitor.init();
 
 // Ensure that a proxy file to an add-on with a valid manifest works.
 add_task(async function() {
+  Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
+
   await promiseStartupManager();
 
   let tempdir = gTmpD.clone();
@@ -50,7 +52,7 @@ add_task(async function() {
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
   Assert.equal(addon.type, "extension");
-  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   Assert.ok(proxyFile.exists());
 

@@ -714,7 +714,7 @@ AstDecodeConversion(AstDecodeContext& c, ValType fromType, ValType toType, Op op
 
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
 static bool
-AstDecodeExtraConversion(AstDecodeContext& c, ValType fromType, ValType toType, NumericOp op)
+AstDecodeExtraConversion(AstDecodeContext& c, ValType fromType, ValType toType, MiscOp op)
 {
     if (!c.iter().readConversion(fromType, toType, nullptr))
         return false;
@@ -1712,50 +1712,44 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!c.push(AstDecodeStackItem(tmp)))
             return false;
         break;
-#ifdef ENABLE_WASM_BULKMEM_OPS
-      case uint16_t(Op::CopyOrFillPrefix):
+      case uint16_t(Op::MiscPrefix):
         switch (op.b1) {
-          case uint16_t(CopyOrFillOp::Copy):
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+          case uint16_t(MiscOp::I32TruncSSatF32):
+          case uint16_t(MiscOp::I32TruncUSatF32):
+            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I32, MiscOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(MiscOp::I32TruncSSatF64):
+          case uint16_t(MiscOp::I32TruncUSatF64):
+            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I32, MiscOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(MiscOp::I64TruncSSatF32):
+          case uint16_t(MiscOp::I64TruncUSatF32):
+            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I64, MiscOp(op.b1)))
+                return false;
+            break;
+          case uint16_t(MiscOp::I64TruncSSatF64):
+          case uint16_t(MiscOp::I64TruncUSatF64):
+            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I64, MiscOp(op.b1)))
+                return false;
+            break;
+#endif
+#ifdef ENABLE_WASM_BULKMEM_OPS
+          case uint16_t(MiscOp::MemCopy):
             if (!AstDecodeMemCopy(c))
                 return false;
             break;
-          case uint16_t(CopyOrFillOp::Fill):
+          case uint16_t(MiscOp::MemFill):
             if (!AstDecodeMemFill(c))
                 return false;
             break;
+#endif
           default:
             return c.iter().unrecognizedOpcode(&op);
         }
         break;
-#endif
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
-      case uint16_t(Op::NumericPrefix):
-        switch (op.b1) {
-          case uint16_t(NumericOp::I32TruncSSatF32):
-          case uint16_t(NumericOp::I32TruncUSatF32):
-            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I32, NumericOp(op.b1)))
-                return false;
-            break;
-          case uint16_t(NumericOp::I32TruncSSatF64):
-          case uint16_t(NumericOp::I32TruncUSatF64):
-            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I32, NumericOp(op.b1)))
-                return false;
-            break;
-          case uint16_t(NumericOp::I64TruncSSatF32):
-          case uint16_t(NumericOp::I64TruncUSatF32):
-            if (!AstDecodeExtraConversion(c, ValType::F32, ValType::I64, NumericOp(op.b1)))
-                return false;
-            break;
-          case uint16_t(NumericOp::I64TruncSSatF64):
-          case uint16_t(NumericOp::I64TruncUSatF64):
-            if (!AstDecodeExtraConversion(c, ValType::F64, ValType::I64, NumericOp(op.b1)))
-                return false;
-            break;
-          default:
-            return c.iter().unrecognizedOpcode(&op);
-        }
-        break;
-#endif
       case uint16_t(Op::ThreadPrefix):
         switch (op.b1) {
           case uint16_t(ThreadOp::Wake):

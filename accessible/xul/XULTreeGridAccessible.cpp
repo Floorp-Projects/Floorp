@@ -33,7 +33,7 @@ XULTreeGridAccessible::~XULTreeGridAccessible()
 // XULTreeGridAccessible: Table
 
 uint32_t
-XULTreeGridAccessible::ColCount()
+XULTreeGridAccessible::ColCount() const
 {
   return nsCoreUtils::GetSensibleColumnCount(mTree);
 }
@@ -805,7 +805,7 @@ XULTreeGridCellAccessible::GetSiblingAtOffset(int32_t aOffset,
 
 void
 XULTreeGridCellAccessible::DispatchClickEvent(nsIContent* aContent,
-                                              uint32_t aActionIndex)
+                                              uint32_t aActionIndex) const
 {
   if (IsDefunct())
     return;

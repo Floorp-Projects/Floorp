@@ -816,7 +816,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                     log_obj=self.log_obj,
                     error_list=[])
                 self.run_command(final_cmd, cwd=cwd, env=env, output_parser=parser)
-                tbpl_status, log_level, summary = parser.evaluate_parser(0, summary)
+                tbpl_status, log_level, summary = parser.evaluate_parser(0,
+                                                                         previous_summary=summary)
                 parser.append_tinderboxprint_line(self.test_suite)
 
                 self.info("##### %s log ends" % self.test_suite)

@@ -356,6 +356,9 @@ public class SessionAccessibility {
         node.setCheckable(message.getBoolean("checkable"));
         node.setChecked(message.getBoolean("checked"));
         node.setPassword(message.getBoolean("password"));
+        node.setFocusable(message.getBoolean("focusable"));
+        node.setFocused(message.getBoolean("focused"));
+        node.setEditable(message.getBoolean("editable"));
 
         final String[] textArray = message.getStringArray("text");
         StringBuilder sb = new StringBuilder();
@@ -418,7 +421,10 @@ public class SessionAccessibility {
             }
         }
 
-        if (eventSource != View.NO_ID) {
+        if (eventSource != View.NO_ID &&
+                (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED ||
+                 eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED ||
+                 eventType == AccessibilityEvent.TYPE_VIEW_HOVER_ENTER)) {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
             if (mVirtualContentNode == null) {
