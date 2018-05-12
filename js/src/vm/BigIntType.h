@@ -34,7 +34,9 @@ class BigInt final : public js::gc::TenuredCell
     // Allocate and initialize a BigInt value
     static BigInt* create(JSContext* cx);
 
-    static BigInt* create(JSContext* cx, double d);
+    static BigInt* createFromDouble(JSContext* cx, double d);
+
+    static BigInt* createFromBoolean(JSContext* cx, bool b);
 
     static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
 
