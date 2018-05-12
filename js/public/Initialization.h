@@ -53,6 +53,26 @@ JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
                          JS_ICUReallocFn reallocFn,
                          JS_ICUFreeFn freeFn);
 
+#ifdef ENABLE_BIGINT
+namespace JS {
+
+// These types are documented as allocate_function, reallocate_function,
+// and free_function in the Info node `(gmp)Custom Allocation`.
+using GMPAllocFn = void* (*)(size_t allocSize);
+using GMPReallocFn = void* (*)(void* p, size_t oldSize, size_t newSize);
+using GMPFreeFn = void (*)(void* p, size_t size);
+
+// This function can be used to track memory used by GMP. If it is
+// called, it *must* be called before JS_Init so that same functions are
+// used for all allocations.
+extern JS_PUBLIC_API(void)
+SetGMPMemoryFunctions(GMPAllocFn allocFn,
+                      GMPReallocFn reallocFn,
+                      GMPFreeFn freeFn);
+
+}; // namespace JS
+#endif
+
 /**
  * Initialize SpiderMonkey, returning true only if initialization succeeded.
  * Once this method has succeeded, it is safe to call JS_NewContext and other

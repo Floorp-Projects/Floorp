@@ -16,6 +16,7 @@
 
 #include "gc/Allocator.h"
 #include "gc/Tracer.h"
+#include "js/Initialization.h"
 #include "js/Utility.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
@@ -40,10 +41,27 @@ js_mp_free(void* ptr, size_t size)
     return js_free(ptr);
 }
 
+static bool memoryFunctionsInitialized = false;
+
+JS_PUBLIC_API(void)
+JS::SetGMPMemoryFunctions(JS::GMPAllocFn allocFn,
+                          JS::GMPReallocFn reallocFn,
+                          JS::GMPFreeFn freeFn)
+{
+    MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Uninitialized);
+    memoryFunctionsInitialized = true;
+    mp_set_memory_functions(allocFn, reallocFn, freeFn);
+}
+
 void
 BigInt::init()
 {
-    mp_set_memory_functions(js_malloc, js_mp_realloc, js_mp_free);
+    // Don't override custom allocation functions if
+    // JS::SetGMPMemoryFunctions was called.
+    if (!memoryFunctionsInitialized) {
+        memoryFunctionsInitialized = true;
+        mp_set_memory_functions(js_malloc, js_mp_realloc, js_mp_free);
+    }
 }
 
 BigInt*
