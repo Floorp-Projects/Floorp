@@ -119,7 +119,7 @@ def lint(paths, config, fix=None, **lintargs):
                 # 2: disable warnings about binary file
                 # 4: shut down warnings about automatic fixes
                 #    that were disabled in dictionary.
-                '--quiet-level=4',
+                '--quiet-level=7',
                 '--ignore-words=' + exclude_list,
                 # Ignore dictonnaries
                 '--skip=*.dic',
