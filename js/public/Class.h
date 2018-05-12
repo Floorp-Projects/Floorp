@@ -1024,9 +1024,6 @@ enum class ESClass {
     SetIterator,
     Arguments,
     Error,
-#ifdef ENABLE_BIGINT
-    BigInt,
-#endif
 
     /** None of the above. */
     Other

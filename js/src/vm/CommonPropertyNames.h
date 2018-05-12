@@ -260,7 +260,6 @@
     macro(numeric, numeric, "numeric") \
     macro(objectArguments, objectArguments, "[object Arguments]") \
     macro(objectArray, objectArray, "[object Array]") \
-    macro(objectBigInt, objectBigInt, "[object BigInt]") \
     macro(objectBoolean, objectBoolean, "[object Boolean]") \
     macro(objectDate, objectDate, "[object Date]") \
     macro(objectError, objectError, "[object Error]") \
@@ -462,7 +461,6 @@
     macro(boolean, boolean, "boolean") \
     macro(null, null, "null") \
     macro(symbol, symbol, "symbol") \
-    macro(bigint, bigint, "bigint") \
-    macro(defineDataPropertyIntrinsic, defineDataPropertyIntrinsic, "_DefineDataProperty")
+    macro(defineDataPropertyIntrinsic, defineDataPropertyIntrinsic, "_DefineDataProperty") \
 
 #endif /* vm_CommonPropertyNames_h */
