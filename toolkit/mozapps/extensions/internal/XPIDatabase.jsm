@@ -164,6 +164,20 @@ function findMatchingStaticBlocklistItem(aAddon) {
 }
 
 /**
+ * Schedules an idle task, and returns a promise which resolves to an
+ * IdleDeadline when an idle slice is available. The caller should
+ * perform all of its idle work in the same micro-task, before the
+ * deadline is reached.
+ *
+ * @returns {Promise<IdleDeadline>}
+ */
+function promiseIdleSlice() {
+  return new Promise((resolve) => {
+    ChromeUtils.idleDispatch(resolve);
+  });
+}
+
+/**
  * Asynchronously fill in the _repositoryAddon field for one addon
  *
  * @param {AddonInternal} aAddon
@@ -1629,8 +1643,10 @@ this.XPIDatabase = {
     let readOptions = {
       outExecutionDuration: 0
     };
-    this._dbPromise = OS.File.read(this.jsonFile.path, null, readOptions).then(
-      byteArray => {
+    this._dbPromise = (async () => {
+      try {
+        let byteArray = await OS.File.read(this.jsonFile.path, null, readOptions);
+
         logger.debug("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
           readOptions.outExecutionDuration);
@@ -1639,16 +1655,21 @@ this.XPIDatabase = {
           logger.debug("Synchronous load completed while waiting for async load");
           return this.addonDB;
         }
+
         logger.debug("Finished async read of XPI database, parsing...");
+        await promiseIdleSlice();
         let decodeTimer = AddonManagerPrivate.simpleTimer("XPIDB_decode_MS");
-        let decoder = new TextDecoder();
-        let data = decoder.decode(byteArray);
-        decodeTimer.done();
-        this.parseDB(data, true);
+        let text;
+        try {
+          text = new TextDecoder().decode(byteArray);
+        } finally {
+          decodeTimer.done();
+        }
+
+        await promiseIdleSlice();
+        this.parseDB(text, true);
         return this.addonDB;
-      })
-    .catch(
-      error => {
+      } catch (error) {
         if (this.addonDB) {
           logger.debug("Synchronous load completed while waiting for async load");
           return this.addonDB;
@@ -1660,7 +1681,8 @@ this.XPIDatabase = {
           this.rebuildUnreadableDB(error, true);
         }
         return this.addonDB;
-      });
+      }
+    })();
 
     this._dbPromise.then(() => {
       Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
