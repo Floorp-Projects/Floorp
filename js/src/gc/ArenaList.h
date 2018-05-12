@@ -234,7 +234,7 @@ class ArenaLists
     // Because the JITs can allocate from the free lists, they cannot be null.
     // We use a placeholder FreeSpan that is empty (and wihout an associated
     // Arena) so the JITs can fall back gracefully.
-    static FreeSpan placeholder;
+    static FreeSpan emptySentinel;
 
     ZoneOrGCTaskData<AllAllocKindArray<ArenaList>> arenaLists_;
     ArenaList& arenaLists(AllocKind i) { return arenaLists_.ref()[i]; }
