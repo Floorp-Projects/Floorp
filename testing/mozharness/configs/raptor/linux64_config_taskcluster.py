@@ -15,6 +15,7 @@ INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.tar.bz2")
 
 config = {
     "log_name": "raptor",
+    "buildbot_json_path": "buildprops.json",
     "installer_path": INSTALLER_PATH,
     "virtualenv_path": VENV_PATH,
     "find_links": [
@@ -26,6 +27,7 @@ config = {
     "title": os.uname()[1].lower().split('.')[0],
     "default_actions": [
         "clobber",
+        "read-buildbot-config",
         "download-and-extract",
         "populate-webroot",
         "create-virtualenv",
