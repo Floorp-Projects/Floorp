@@ -2076,7 +2076,7 @@ js::ToStringSlow(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType
     else if (v.isBigInt()) {
         if (!allowGC)
             return nullptr;
-        str = BigInt::toString(cx, v.toBigInt());
+        str = BigInt::toString(cx, v.toBigInt(), 10);
     }
 #endif
     else {

@@ -263,6 +263,7 @@
     macro(numeric, numeric, "numeric") \
     macro(objectArguments, objectArguments, "[object Arguments]") \
     macro(objectArray, objectArray, "[object Array]") \
+    macro(objectBigInt, objectBigInt, "[object BigInt]") \
     macro(objectBoolean, objectBoolean, "[object Boolean]") \
     macro(objectDate, objectDate, "[object Date]") \
     macro(objectError, objectError, "[object Error]") \
