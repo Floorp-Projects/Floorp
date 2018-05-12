@@ -246,7 +246,8 @@ this.BootstrapMonitor = {
     Assert.notEqual(cached, undefined);
     Assert.equal(current.data.version, cached.data.version);
     Assert.equal(current.data.installPath, cached.data.installPath);
-    Assert.equal(current.data.resourceURI, cached.data.resourceURI);
+    Assert.ok(Services.io.newURI(current.data.resourceURI).equals(Services.io.newURI(cached.data.resourceURI)),
+              `Resource URIs match: "${current.data.resourceURI}" == "${cached.data.resourceURI}"`);
   },
 
   checkAddonStarted(id, version = undefined) {
