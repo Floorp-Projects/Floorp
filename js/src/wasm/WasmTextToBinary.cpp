@@ -153,7 +153,7 @@ class WasmToken
         FloatLiteralKind floatLiteralKind_;
         ValType valueType_;
         Op op_;
-        NumericOp numericOp_;
+        MiscOp miscOp_;
         ThreadOp threadOp_;
     } u;
   public:
@@ -226,14 +226,14 @@ class WasmToken
         u.op_ = op;
     }
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
-    explicit WasmToken(Kind kind, NumericOp op, const char16_t* begin, const char16_t* end)
+    explicit WasmToken(Kind kind, MiscOp op, const char16_t* begin, const char16_t* end)
       : kind_(kind),
         begin_(begin),
         end_(end)
     {
         MOZ_ASSERT(begin != end);
         MOZ_ASSERT(kind_ == ExtraConversionOpcode);
-        u.numericOp_ = op;
+        u.miscOp_ = op;
     }
 #endif
     explicit WasmToken(Kind kind, ThreadOp op, const char16_t* begin, const char16_t* end)
@@ -298,9 +298,9 @@ class WasmToken
         return u.op_;
     }
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
-    NumericOp numericOp() const {
+    MiscOp miscOp() const {
         MOZ_ASSERT(kind_ == ExtraConversionOpcode);
-        return u.numericOp_;
+        return u.miscOp_;
     }
 #endif
     ThreadOp threadOp() const {
@@ -1359,16 +1359,16 @@ WasmTokenStream::next()
                                      begin, cur_);
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
                 if (consume(u"trunc_s:sat/f32"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I32TruncSSatF32,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I32TruncSSatF32,
                                      begin, cur_);
                 if (consume(u"trunc_s:sat/f64"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I32TruncSSatF64,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I32TruncSSatF64,
                                      begin, cur_);
                 if (consume(u"trunc_u:sat/f32"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I32TruncUSatF32,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I32TruncUSatF32,
                                      begin, cur_);
                 if (consume(u"trunc_u:sat/f64"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I32TruncUSatF64,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I32TruncUSatF64,
                                      begin, cur_);
 #endif
                 break;
@@ -1609,16 +1609,16 @@ WasmTokenStream::next()
                                      begin, cur_);
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
                 if (consume(u"trunc_s:sat/f32"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I64TruncSSatF32,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I64TruncSSatF32,
                                      begin, cur_);
                 if (consume(u"trunc_s:sat/f64"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I64TruncSSatF64,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I64TruncSSatF64,
                                      begin, cur_);
                 if (consume(u"trunc_u:sat/f32"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I64TruncUSatF32,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I64TruncUSatF32,
                                      begin, cur_);
                 if (consume(u"trunc_u:sat/f64"))
-                    return WasmToken(WasmToken::ExtraConversionOpcode, NumericOp::I64TruncUSatF64,
+                    return WasmToken(WasmToken::ExtraConversionOpcode, MiscOp::I64TruncUSatF64,
                                      begin, cur_);
 #endif
                 break;
@@ -2454,7 +2454,7 @@ ParseConversionOperator(WasmParseContext& c, Op op, bool inParens)
 
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
 static AstExtraConversionOperator*
-ParseExtraConversionOperator(WasmParseContext& c, NumericOp op, bool inParens)
+ParseExtraConversionOperator(WasmParseContext& c, MiscOp op, bool inParens)
 {
     AstExpr* operand = ParseExpr(c, inParens);
     if (!operand)
@@ -3056,7 +3056,7 @@ ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
         return ParseConversionOperator(c, token.op(), inParens);
 #ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
       case WasmToken::ExtraConversionOpcode:
-        return ParseExtraConversionOperator(c, token.numericOp(), inParens);
+        return ParseExtraConversionOperator(c, token.miscOp(), inParens);
 #endif
       case WasmToken::Drop:
         return ParseDrop(c, inParens);
@@ -5051,7 +5051,7 @@ EncodeMemCopy(Encoder& e, AstMemCopy& s)
     return EncodeExpr(e, s.dest()) &&
            EncodeExpr(e, s.src()) &&
            EncodeExpr(e, s.len()) &&
-           e.writeOp(CopyOrFillOp::Copy);
+           e.writeOp(MiscOp::MemCopy);
 }
 
 static bool
@@ -5060,7 +5060,7 @@ EncodeMemFill(Encoder& e, AstMemFill& s)
     return EncodeExpr(e, s.start()) &&
            EncodeExpr(e, s.val()) &&
            EncodeExpr(e, s.len()) &&
-           e.writeOp(CopyOrFillOp::Fill);
+           e.writeOp(MiscOp::MemFill);
 }
 #endif
 

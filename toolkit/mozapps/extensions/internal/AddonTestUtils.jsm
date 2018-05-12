@@ -675,16 +675,6 @@ var AddonTestUtils = {
         });
       },
 
-      verifySignedDirectoryAsync(root, dir, callback) {
-        // First try calling the real cert DB
-        this._genuine.verifySignedDirectoryAsync(root, dir, (result, cert) => {
-          verifyCert(dir.clone(), result, cert, callback)
-            .then(([callback, result, cert]) => {
-              callback.verifySignedDirectoryFinished(result, cert);
-            });
-        });
-      },
-
       QueryInterface: ChromeUtils.generateQI([Ci.nsIX509CertDB]),
     };
 

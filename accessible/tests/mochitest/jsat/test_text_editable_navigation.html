@@ -36,15 +36,15 @@
       let evt;
 
       evt = await runner.focusSelector("textarea",
-        AndroidEvents.ANNOUNCEMENT,
+        AndroidEvents.VIEW_FOCUSED,
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
-      // XXX: Get rid of announcements, and send focus events instead
-      runner.eventTextMatches(evt[0], ["editing"]);
+      is(evt[0].editable, true, "focused item is editable");
       runner.eventTextMatches(evt[1],
         ["Text content test document",
          "Please refrain from Mayoneggs during this salmonella scare.",
          "text area"]);
+      is(evt[1].focused, true, "a11y focused item is focused");
       is(evt[2].fromIndex, 0, "Correct fromIndex");
       is(evt[2].toIndex, 0, "Correct toIndex");
 
@@ -58,38 +58,38 @@
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 10, 20);
 
-      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 20, 29);
 
-      evt = await runner.moveCaretNext(MovementGranularity.WORD,
+      evt = await runner.moveNextByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 29, 36);
 
-      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+      evt = await runner.moveNextByGranularity(MovementGranularity.CHARACTER,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 36, 37);
 
-      evt = await runner.moveCaretNext(MovementGranularity.CHARACTER,
+      evt = await runner.moveNextByGranularity(MovementGranularity.CHARACTER,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 37, 38);
 
-      evt = await runner.moveCaretNext(MovementGranularity.PARAGRAPH,
+      evt = await runner.moveNextByGranularity(MovementGranularity.PARAGRAPH,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 38, 59);
 
-      evt = await runner.moveCaretPrevious(MovementGranularity.WORD,
+      evt = await runner.movePreviousByGranularity(MovementGranularity.WORD,
         AndroidEvents.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
         AndroidEvents.VIEW_TEXT_SELECTION_CHANGED);
       checkMoveCaret(...evt, 59, 53);
 
-      evt = await runner.blur(AndroidEvents.ANNOUNCEMENT);
-      runner.eventTextMatches(evt, ["navigating"]);
+      evt = await runner.blur(AndroidEvents.VIEW_FOCUSED);
+      is(evt.editable, false, "Focused out of editable");
     }
 
     function doTest() {

@@ -455,7 +455,7 @@ function getAllAliasesForTypes(aTypes) {
  *        An nsIURI pointing at the resource
  */
 function getURIForResourceInFile(aFile, aPath) {
-  if (aFile.exists() && aFile.isDirectory()) {
+  if (!aFile.leafName.toLowerCase().endsWith(".xpi")) {
     let resource = aFile.clone();
     if (aPath)
       aPath.split("/").forEach(part => resource.append(part));
@@ -689,8 +689,8 @@ class XPIState {
     // Modified time is the install manifest time, if any. If no manifest
     // exists, we assume this is a packed .xpi and use the time stamp of
     // {path}
-    let mtime = (tryGetMtime(getManifestFileForDir(aFile)) ||
-                 tryGetMtime(aFile));
+    let mtime = (aFile.leafName.toLowerCase().endsWith(".xpi") ?
+                 tryGetMtime(aFile) : tryGetMtime(getManifestFileForDir(aFile)));
     if (!mtime) {
       logger.warn("Can't get modified time of ${file}", {file: aFile.path});
     }
@@ -782,8 +782,13 @@ class XPIStateLocation extends Map {
 
     for (let [id, data] of Object.entries(saved.addons || {})) {
       let xpiState = this._addState(id, data);
-      // Make a note that this state was restored from saved data.
-      xpiState.wasRestored = true;
+
+      // Make a note that this state was restored from saved data. But
+      // only if this location hasn't moved since the last startup,
+      // since that causes problems for new system add-on bundles.
+      if (!path || path == saved.path) {
+        xpiState.wasRestored = true;
+      }
     }
   }
 
@@ -1179,18 +1184,6 @@ var XPIStates = {
         if (entry.enabled) {
           yield entry;
         }
-      }
-    }
-  },
-
-  /**
-   * Iterates over the list of all add-ons which were initially restored
-   * from the startup state cache.
-   */
-  * initialEnabledAddons() {
-    for (let addon of this.enabledAddons()) {
-      if (addon.wasRestored) {
-        yield addon;
       }
     }
   },
@@ -1956,15 +1949,11 @@ var XPIProvider = {
     let distroDir;
     try {
       distroDir = FileUtils.getDir(KEY_APP_DISTRIBUTION, [DIR_EXTENSIONS]);
+      if (!distroDir.isDirectory())
+        return false;
     } catch (e) {
       return false;
     }
-
-    if (!distroDir.exists())
-      return false;
-
-    if (!distroDir.isDirectory())
-      return false;
 
     let changed = false;
     let profileLocation = this.installLocationsByName[KEY_APP_PROFILE];
@@ -1975,17 +1964,10 @@ var XPIProvider = {
     while ((entry = entries.nextFile)) {
 
       let id = entry.leafName;
-
-      if (entry.isFile()) {
-        if (id.endsWith(".xpi")) {
-          id = id.slice(0, -4);
-        } else {
-          logger.debug("Ignoring distribution add-on that isn't an XPI: " + entry.path);
-          continue;
-        }
-      } else if (!entry.isDirectory()) {
-        logger.debug("Ignoring distribution add-on that isn't a file or directory: " +
-            entry.path);
+      if (id.endsWith(".xpi")) {
+        id = id.slice(0, -4);
+      } else {
+        logger.debug("Ignoring distribution add-on that isn't an XPI: " + entry.path);
         continue;
       }
 
@@ -2775,10 +2757,9 @@ var XPIProvider = {
 };
 
 for (let meth of ["cancelUninstallAddon", "getInstallForFile",
-                  "getInstallForURL", "installAddonFromLocation",
-                  "installAddonFromSources", "installTemporaryAddon",
-                  "isInstallAllowed", "isInstallEnabled", "uninstallAddon",
-                  "updateSystemAddons"]) {
+                  "getInstallForURL", "installTemporaryAddon",
+                  "isInstallAllowed", "isInstallEnabled",
+                  "uninstallAddon", "updateSystemAddons"]) {
   XPIProvider[meth] = function() {
     return XPIInstall[meth](...arguments);
   };
@@ -2919,20 +2900,18 @@ class DirectoryInstallLocation {
       if (id == DIR_STAGE || id == DIR_TRASH)
         continue;
 
-      let directLoad = false;
-      if (entry.isFile() &&
-          id.substring(id.length - 4).toLowerCase() == ".xpi") {
-        directLoad = true;
+      let isFile = id.toLowerCase().endsWith(".xpi");
+      if (isFile) {
         id = id.substring(0, id.length - 4);
       }
 
       if (!gIDTest.test(id)) {
         logger.debug("Ignoring file entry whose name is not a valid add-on ID: " +
-             entry.path);
+                     entry.path);
         continue;
       }
 
-      if (!directLoad && (entry.isFile() || entry.isSymlink())) {
+      if (!isFile && (entry.isFile() || entry.isSymlink())) {
         let newEntry = this._readDirectoryFromFile(entry);
         if (!newEntry) {
           logger.debug("Deleting stale pointer file " + entry.path);

@@ -27,19 +27,28 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-struct jsid
-{
-    size_t asBits;
-    bool operator==(const jsid& rhs) const { return asBits == rhs.asBits; }
-    bool operator!=(const jsid& rhs) const { return asBits != rhs.asBits; }
-} JS_HAZ_GC_POINTER;
-#define JSID_BITS(id) (id.asBits)
-
 #define JSID_TYPE_STRING                 0x0
 #define JSID_TYPE_INT                    0x1
 #define JSID_TYPE_VOID                   0x2
 #define JSID_TYPE_SYMBOL                 0x4
 #define JSID_TYPE_MASK                   0x7
+
+struct jsid
+{
+    size_t asBits;
+
+    constexpr jsid() : asBits(JSID_TYPE_VOID) {}
+
+    static constexpr jsid fromRawBits(size_t bits) {
+        jsid id;
+        id.asBits = bits;
+        return id;
+    }
+
+    bool operator==(const jsid& rhs) const { return asBits == rhs.asBits; }
+    bool operator!=(const jsid& rhs) const { return asBits != rhs.asBits; }
+} JS_HAZ_GC_POINTER;
+#define JSID_BITS(id) (id.asBits)
 
 // Avoid using canonical 'id' for jsid parameters since this is a magic word in
 // Objective-C++ which, apparently, wants to be able to #include jsapi.h.
@@ -156,7 +165,7 @@ JSID_IS_EMPTY(const jsid id)
     return (size_t)JSID_BITS(id) == JSID_TYPE_SYMBOL;
 }
 
-constexpr const jsid JSID_VOID = { size_t(JSID_TYPE_VOID) };
+constexpr const jsid JSID_VOID;
 extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
 
 extern JS_PUBLIC_DATA(const JS::HandleId) JSID_VOIDHANDLE;
