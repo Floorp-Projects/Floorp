@@ -400,15 +400,13 @@ this.geckoProfiler = class extends ExtensionAPI {
 
           const cachedLibInfo = symbolCache.get(urlForSymFile(debugName, breakpadId));
 
-          const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad,remoteBreakpad");
+          const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad");
           const haveAbsolutePath = cachedLibInfo && OS.Path.split(cachedLibInfo.path).absolute;
 
           // We have multiple options for obtaining symbol information for the given
           // binary.
           //  "localBreakpad"  - Use existing symbol dumps stored in the object directory of a local
           //      Firefox build, generated using `mach buildsymbols` [requires path]
-          //  "remoteBreakpad" - Use symbol dumps from the Mozilla symbol server [only requires
-          //      debugName + breakpadId]
           //  "nm"             - Use the command line tool `nm` [linux/mac only, requires path]
           //  "dump_syms.exe"  - Use the tool dump_syms.exe from the object directory [Windows
           //      only, requires path]
@@ -427,9 +425,6 @@ this.geckoProfiler = class extends ExtensionAPI {
                     }
                   }
                   break;
-                case "remoteBreakpad":
-                  const url = urlForSymFile(debugName, breakpadId);
-                  return await parseSym({url});
                 case "nm":
                   if (haveAbsolutePath) {
                     const {path, arch} = cachedLibInfo;
@@ -461,8 +456,6 @@ this.geckoProfiler = class extends ExtensionAPI {
               // we will try the next one.
               // "localBreakpad" will fail if this is not a local build that's running from the object
               // directory or if the user hasn't run `mach buildsymbols` on it.
-              // "remoteBreakpad" will fail if this is not an official mozilla build (e.g. Nightly) or a
-              // known system library.
               // "nm" will fail if `nm` is not available.
               // "dump_syms.exe" will fail if this is not a local build that's running from the object
               // directory, or if dump_syms.exe doesn't exist in the object directory, or if
