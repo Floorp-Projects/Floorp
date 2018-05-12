@@ -519,10 +519,81 @@ function do_test_mutate_ref(aTest, aSuffix) {
   }
 }
 
+// Check that changing nested/about URIs works correctly.
+function check_nested_mutations()
+{
+  // nsNestedAboutURI
+  let uri1 = gIoService.newURI("about:blank#");
+  let uri2 = gIoService.newURI("about:blank");
+  let uri3 = uri1.mutate().setRef("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setRef("#").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("about:blank?something");
+  uri2 = gIoService.newURI("about:blank");
+  uri3 = uri1.mutate().setQuery("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setQuery("something").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("about:blank?query#ref");
+  uri2 = gIoService.newURI("about:blank");
+  uri3 = uri1.mutate().setPathQueryRef("blank").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setPathQueryRef("blank?query#ref").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  // nsSimpleNestedURI
+  uri1 = gIoService.newURI("view-source:http://example.com/path#");
+  uri2 = gIoService.newURI("view-source:http://example.com/path");
+  uri3 = uri1.mutate().setRef("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setRef("#").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("view-source:http://example.com/path?something");
+  uri2 = gIoService.newURI("view-source:http://example.com/path");
+  uri3 = uri1.mutate().setQuery("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setQuery("something").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("view-source:http://example.com/path?query#ref");
+  uri2 = gIoService.newURI("view-source:http://example.com/path");
+  uri3 = uri1.mutate().setPathQueryRef("path").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setPathQueryRef("path?query#ref").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("view-source:about:blank#");
+  uri2 = gIoService.newURI("view-source:about:blank");
+  uri3 = uri1.mutate().setRef("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setRef("#").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("view-source:about:blank?something");
+  uri2 = gIoService.newURI("view-source:about:blank");
+  uri3 = uri1.mutate().setQuery("").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setQuery("something").finalize();
+  do_check_uri_eq(uri3, uri1);
+
+  uri1 = gIoService.newURI("view-source:about:blank?query#ref");
+  uri2 = gIoService.newURI("view-source:about:blank");
+  uri3 = uri1.mutate().setPathQueryRef("blank").finalize();
+  do_check_uri_eq(uri3, uri2);
+  uri3 = uri2.mutate().setPathQueryRef("blank?query#ref").finalize();
+  do_check_uri_eq(uri3, uri1);
+}
+
 // TEST MAIN FUNCTION
 // ------------------
 function run_test()
 {
+  check_nested_mutations();
+
   // UTF-8 check - From bug 622981
   // ASCII
   let base = gIoService.newURI("http://example.org/xenia?");

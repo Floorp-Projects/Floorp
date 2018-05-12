@@ -11,6 +11,7 @@ ChromeUtils.defineModuleGetter(this, "Onboarding", "resource://onboarding/Onboar
 
 const ABOUT_HOME_URL = "about:home";
 const ABOUT_NEWTAB_URL = "about:newtab";
+const ABOUT_WELCOME_URL = "about:welcome";
 
 // Load onboarding module only when we enable it.
 if (Services.prefs.getBoolPref("browser.onboarding.enabled", false)) {
@@ -21,7 +22,7 @@ if (Services.prefs.getBoolPref("browser.onboarding.enabled", false)) {
 
     let window = evt.target.defaultView;
     let location = window.location.href;
-    if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
+    if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL || location == ABOUT_WELCOME_URL) {
       // We just want to run tests as quickly as possible
       // so in the automation test, we don't do `requestIdleCallback`.
       if (Cu.isInAutomation) {
