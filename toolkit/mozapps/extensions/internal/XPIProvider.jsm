@@ -2013,9 +2013,6 @@ var XPIProvider = {
             Services.obs.removeObserver(observer, event);
           }
 
-          // It would be nice to defer some of the work here until we
-          // have idle time but we can't yet use requestIdleCallback()
-          // from chrome.  See bug 1358476.
           XPIDatabase.asyncLoadDB();
         };
         for (let event of EVENTS) {
