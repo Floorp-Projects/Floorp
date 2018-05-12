@@ -599,19 +599,6 @@ WasmSaturatingTruncationSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-WasmBulkMemSupported(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_WASM_BULKMEM_OPS
-    bool isSupported = true;
-#else
-    bool isSupported = false;
-#endif
-    args.rval().setBoolean(isSupported);
-    return true;
-}
-
-static bool
 WasmGcEnabled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -5574,11 +5561,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmSaturatingTruncationSupported", WasmSaturatingTruncationSupported, 0, 0,
 "wasmSaturatingTruncationSupported()",
 "  Returns a boolean indicating whether the WebAssembly saturating truncates opcodes are\n"
-"  supported on the current device."),
-
-    JS_FN_HELP("wasmBulkMemSupported", WasmBulkMemSupported, 0, 0,
-"wasmBulkMemSupported()",
-"  Returns a boolean indicating whether the WebAssembly bulk memory proposal is\n"
 "  supported on the current device."),
 
     JS_FN_HELP("wasmCompileMode", WasmCompileMode, 0, 0,
