@@ -1390,6 +1390,98 @@ var XPIProvider = {
     }
   },
 
+  setupInstallLocations(aAppChanged) {
+    function DirectoryLocation(aName, aScope, aKey, aPaths, aLocked) {
+      try {
+        var dir = FileUtils.getDir(aKey, aPaths);
+      } catch (e) {
+        return null;
+      }
+      if (aLocked) {
+        return new DirectoryInstallLocation(aName, dir, aScope);
+      }
+      return new MutableDirectoryInstallLocation(aName, dir, aScope);
+    }
+
+    function BuiltInLocation(name, scope, key, paths) {
+      try {
+        var dir = FileUtils.getDir(key, paths);
+      } catch (e) {
+        return null;
+      }
+      return new BuiltInInstallLocation(name, dir, scope);
+    }
+
+    function SystemLocation(aName, aScope, aKey, aPaths) {
+      try {
+        var dir = FileUtils.getDir(aKey, aPaths);
+      } catch (e) {
+        return null;
+      }
+      return new SystemAddonInstallLocation(aName, dir, aScope, aAppChanged !== false);
+    }
+
+    function RegistryLocation(aName, aScope, aKey) {
+      if ("nsIWindowsRegKey" in Ci) {
+        return new WinRegInstallLocation(aName, Ci.nsIWindowsRegKey[aKey], aScope);
+      }
+    }
+
+    let enabledScopes = Services.prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
+                                                  AddonManager.SCOPE_ALL);
+    // The profile location is always enabled
+    enabledScopes |= AddonManager.SCOPE_PROFILE;
+
+    // These must be in order of priority, highest to lowest,
+    // for processFileChanges etc. to work
+    let locations = [
+      [() => TemporaryInstallLocation, TemporaryInstallLocation.name, null],
+
+      [DirectoryLocation, KEY_APP_PROFILE, AddonManager.SCOPE_PROFILE,
+       KEY_PROFILEDIR, [DIR_EXTENSIONS], false],
+
+      [SystemLocation, KEY_APP_SYSTEM_ADDONS, AddonManager.SCOPE_PROFILE,
+       KEY_PROFILEDIR, [DIR_SYSTEM_ADDONS]],
+
+      [BuiltInLocation, KEY_APP_SYSTEM_DEFAULTS, AddonManager.SCOPE_PROFILE,
+       KEY_APP_FEATURES, []],
+
+      [DirectoryLocation, KEY_APP_SYSTEM_USER, AddonManager.SCOPE_USER,
+       "XREUSysExt", [Services.appinfo.ID], true],
+
+      [RegistryLocation, "winreg-app-user", AddonManager.SCOPE_USER,
+       "ROOT_KEY_CURRENT_USER"],
+
+      [DirectoryLocation, KEY_APP_GLOBAL, AddonManager.SCOPE_APPLICATION,
+       KEY_ADDON_APP_DIR, [DIR_EXTENSIONS], true],
+
+      [DirectoryLocation, KEY_APP_SYSTEM_SHARE, AddonManager.SCOPE_SYSTEM,
+       "XRESysSExtPD", [Services.appinfo.ID], true],
+
+      [DirectoryLocation, KEY_APP_SYSTEM_LOCAL, AddonManager.SCOPE_SYSTEM,
+       "XRESysLExtPD", [Services.appinfo.ID], true],
+
+      [RegistryLocation, "winreg-app-global", AddonManager.SCOPE_SYSTEM,
+       "ROOT_KEY_LOCAL_MACHINE"],
+    ];
+
+    this.installLocations = [];
+    this.installLocationsByName = {};
+    for (let [constructor, name, scope, ...args] of locations) {
+      if (!scope || enabledScopes & scope) {
+        try {
+          let loc = constructor(name, scope, ...args);
+          if (loc) {
+            this.installLocations.push(loc);
+            this.installLocationsByName[name] = loc;
+          }
+        } catch (e) {
+          logger.warn(`Failed to add ${constructor.name} install location ${name}`, e);
+        }
+      }
+    }
+  },
+
   /**
    * Starts the XPI provider initializes the install locations and prefs.
    *
@@ -1407,142 +1499,19 @@ var XPIProvider = {
    *        if it is a new profile or the version is unknown
    */
   startup(aAppChanged, aOldAppVersion, aOldPlatformVersion) {
-    function addDirectoryInstallLocation(aName, aKey, aPaths, aScope, aLocked) {
-      try {
-        var dir = FileUtils.getDir(aKey, aPaths);
-      } catch (e) {
-        // Some directories aren't defined on some platforms, ignore them
-        logger.debug("Skipping unavailable install location " + aName);
-        return;
-      }
-
-      try {
-        var location = aLocked ? new DirectoryInstallLocation(aName, dir, aScope)
-                               : new MutableDirectoryInstallLocation(aName, dir, aScope);
-      } catch (e) {
-        logger.warn("Failed to add directory install location " + aName, e);
-        return;
-      }
-
-      XPIProvider.installLocations.push(location);
-      XPIProvider.installLocationsByName[location.name] = location;
-    }
-
-    function addBuiltInInstallLocation(name, key, paths, scope) {
-      let dir;
-      try {
-        dir = FileUtils.getDir(key, paths);
-      } catch (e) {
-        return;
-      }
-      try {
-        let location = new BuiltInInstallLocation(name, dir, scope);
-
-        XPIProvider.installLocations.push(location);
-        XPIProvider.installLocationsByName[location.name] = location;
-      } catch (e) {
-        logger.warn(`Failed to add built-in install location ${name}`, e);
-      }
-    }
-
-    function addSystemAddonInstallLocation(aName, aKey, aPaths, aScope) {
-      try {
-        var dir = FileUtils.getDir(aKey, aPaths);
-      } catch (e) {
-        // Some directories aren't defined on some platforms, ignore them
-        logger.debug("Skipping unavailable install location " + aName);
-        return;
-      }
-
-      try {
-        var location = new SystemAddonInstallLocation(aName, dir, aScope, aAppChanged !== false);
-      } catch (e) {
-        logger.warn("Failed to add system add-on install location " + aName, e);
-        return;
-      }
-
-      XPIProvider.installLocations.push(location);
-      XPIProvider.installLocationsByName[location.name] = location;
-    }
-
-    function addRegistryInstallLocation(aName, aRootkey, aScope) {
-      try {
-        var location = new WinRegInstallLocation(aName, aRootkey, aScope);
-      } catch (e) {
-        logger.warn("Failed to add registry install location " + aName, e);
-        return;
-      }
-
-      XPIProvider.installLocations.push(location);
-      XPIProvider.installLocationsByName[location.name] = location;
-    }
-
     try {
       AddonManagerPrivate.recordTimestamp("XPI_startup_begin");
 
       logger.debug("startup");
       this.runPhase = XPI_STARTING;
       this.installs = new Set();
-      this.installLocations = [];
-      this.installLocationsByName = {};
 
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
       // Register our details structure with AddonManager
       AddonManagerPrivate.setTelemetryDetails("XPI", this._telemetryDetails);
 
-      let hasRegistry = ("nsIWindowsRegKey" in Ci);
-
-      let enabledScopes = Services.prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
-                                                    AddonManager.SCOPE_ALL);
-
-      // These must be in order of priority, highest to lowest,
-      // for processFileChanges etc. to work
-
-      XPIProvider.installLocations.push(TemporaryInstallLocation);
-      XPIProvider.installLocationsByName[TemporaryInstallLocation.name] =
-        TemporaryInstallLocation;
-
-      // The profile location is always enabled
-      addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
-                                  [DIR_EXTENSIONS],
-                                  AddonManager.SCOPE_PROFILE, false);
-
-      addSystemAddonInstallLocation(KEY_APP_SYSTEM_ADDONS, KEY_PROFILEDIR,
-                                    [DIR_SYSTEM_ADDONS],
-                                    AddonManager.SCOPE_PROFILE);
-
-      addBuiltInInstallLocation(KEY_APP_SYSTEM_DEFAULTS, KEY_APP_FEATURES,
-                                [], AddonManager.SCOPE_PROFILE);
-
-      if (enabledScopes & AddonManager.SCOPE_USER) {
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
-                                    [Services.appinfo.ID],
-                                    AddonManager.SCOPE_USER, true);
-        if (hasRegistry) {
-          addRegistryInstallLocation("winreg-app-user",
-                                     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                     AddonManager.SCOPE_USER);
-        }
-      }
-
-      addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_ADDON_APP_DIR,
-                                  [DIR_EXTENSIONS],
-                                  AddonManager.SCOPE_APPLICATION, true);
-
-      if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
-                                    [Services.appinfo.ID],
-                                    AddonManager.SCOPE_SYSTEM, true);
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
-                                    [Services.appinfo.ID],
-                                    AddonManager.SCOPE_SYSTEM, true);
-        if (hasRegistry) {
-          addRegistryInstallLocation("winreg-app-global",
-                                     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                     AddonManager.SCOPE_SYSTEM);
-        }
-      }
+      this.setupInstallLocations(aAppChanged);
 
       this.minCompatibleAppVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_APP_VERSION,
                                                                   null);
@@ -1561,18 +1530,11 @@ var XPIProvider = {
 
       let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
                                              aOldPlatformVersion);
-
-      AddonManagerPrivate.markProviderSafe(this);
-
       if (flushCaches) {
         Services.obs.notifyObservers(null, "startupcache-invalidate");
-        // UI displayed early in startup (like the compatibility UI) may have
-        // caused us to cache parts of the skin or locale in memory. These must
-        // be flushed to allow extension provided skins and locales to take full
-        // effect
-        Services.obs.notifyObservers(null, "chrome-flush-skin-caches");
-        Services.obs.notifyObservers(null, "chrome-flush-caches");
       }
+
+      AddonManagerPrivate.markProviderSafe(this);
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         // Annotate the crash report with relevant add-on information.
