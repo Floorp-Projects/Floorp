@@ -8,6 +8,7 @@
 #define GFX_FRAMEMETRICS_H
 
 #include <stdint.h>                     // for uint8_t, uint32_t, uint64_t
+#include <map>
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
 #include "mozilla/DefineEnum.h"         // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"      // for HashGeneric
@@ -1233,6 +1234,8 @@ struct ZoomConstraints {
 
 
 typedef Maybe<ZoomConstraints> MaybeZoomConstraints;
+
+typedef std::map<FrameMetrics::ViewID,ScrollUpdateInfo> ScrollUpdatesMap;
 
 } // namespace layers
 } // namespace mozilla

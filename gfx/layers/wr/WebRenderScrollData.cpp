@@ -246,6 +246,18 @@ WebRenderScrollData::GetPaintSequenceNumber() const
 }
 
 void
+WebRenderScrollData::ApplyUpdates(const ScrollUpdatesMap& aUpdates,
+                                  uint32_t aPaintSequenceNumber)
+{
+  for (const auto& update : aUpdates) {
+    if (Maybe<size_t> index = HasMetadataFor(update.first)) {
+      mScrollMetadatas[*index].GetMetrics().UpdatePendingScrollInfo(update.second);
+    }
+  }
+  mPaintSequenceNumber = aPaintSequenceNumber;
+}
+
+void
 WebRenderScrollData::Dump() const
 {
   printf_stderr("WebRenderScrollData with %zu layers firstpaint: %d\n",
