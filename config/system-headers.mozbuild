@@ -1339,3 +1339,8 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/ustring.h',
         'unicode/utypes.h',
     ]
+
+if CONFIG['ENABLE_BIGINT']:
+    system_headers += [
+        'gmp.h'
+    ]
