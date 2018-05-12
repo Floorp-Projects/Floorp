@@ -11,6 +11,7 @@ DISABLE_SCREEN_SAVER = False
 ADJUST_MOUSE_AND_SCREEN = True
 #####
 config = {
+    "buildbot_json_path": "buildprops.json",
     "exes": {
         'python': sys.executable,
         'hg': 'c:/mozilla-build/hg/hg',
@@ -245,6 +246,7 @@ config = {
     ],
     "vcs_output_timeout": 1000,
     "minidump_save_path": "%(abs_work_dir)s/../minidumps",
+    "buildbot_max_log_size": 52428800,
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],
