@@ -7038,8 +7038,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
   {
     nsINode* parent = adoptedNode->GetParentNode();
     if (parent) {
-      nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent,
-                                           adoptedNode->OwnerDoc());
+      nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent);
     }
   }
 

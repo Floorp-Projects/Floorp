@@ -2342,13 +2342,11 @@ FragmentOrElement::FireNodeRemovedForChildren()
     return;
   }
 
-  nsCOMPtr<nsIDocument> owningDoc = doc;
-
   nsCOMPtr<nsINode> child;
   for (child = GetFirstChild();
        child && child->GetParentNode() == this;
        child = child->GetNextSibling()) {
-    nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+    nsContentUtils::MaybeFireNodeRemoved(child, this);
   }
 }
 
