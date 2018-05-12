@@ -111,6 +111,10 @@ TypeSet::NonObjectTypeString(TypeSet::Type type)
             return "string";
           case JSVAL_TYPE_SYMBOL:
             return "symbol";
+#ifdef ENABLE_BIGINT
+          case JSVAL_TYPE_BIGINT:
+            return "BigInt";
+#endif
           case JSVAL_TYPE_MAGIC:
             return "lazyargs";
           default:
@@ -783,6 +787,10 @@ TypeSet::print(FILE* fp)
         fprintf(fp, " string");
     if (flags & TYPE_FLAG_SYMBOL)
         fprintf(fp, " symbol");
+#ifdef ENABLE_BIGINT
+    if (flags & TYPE_FLAG_BIGINT)
+        fprintf(fp, " BigInt");
+#endif
     if (flags & TYPE_FLAG_LAZYARGS)
         fprintf(fp, " lazyargs");
 

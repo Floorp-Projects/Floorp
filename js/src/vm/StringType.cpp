@@ -2024,7 +2024,15 @@ js::ToStringSlow(JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType
                                       JSMSG_SYMBOL_TO_STRING);
         }
         return nullptr;
-    } else {
+    }
+#ifdef ENABLE_BIGINT
+    else if (v.isBigInt()) {
+        if (!allowGC)
+            return nullptr;
+        str = BigInt::toString(cx, v.toBigInt());
+    }
+#endif
+    else {
         MOZ_ASSERT(v.isUndefined());
         str = cx->names().undefined;
     }
