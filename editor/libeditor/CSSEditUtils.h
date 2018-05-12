@@ -273,9 +273,7 @@ public:
                                           bool aSuppressTransaction);
 
   /**
-   * Parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char
-   * we need such a parser because
-   * nsIDOMCSSStyleDeclaration::GetPropertyCSSValue() is not implemented.
+   * Parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char.
    *
    * @param aString        [IN] Input string to parse.
    * @param aValue         [OUT] Numeric part.

@@ -67,10 +67,6 @@ public:
                   mozilla::ErrorResult& aRv) override;
   NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
                               nsAString & _retval) override;
-  virtual already_AddRefed<mozilla::dom::CSSValue>
-    GetPropertyCSSValue(const nsAString & propertyName,
-                        mozilla::ErrorResult& aRv) override;
-  using nsICSSDeclaration::GetPropertyCSSValue;
   NS_IMETHOD RemoveProperty(const nsAString & propertyName,
                             nsAString & _retval) override;
   void GetPropertyPriority(const nsAString & propertyName,
