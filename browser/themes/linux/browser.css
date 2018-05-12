@@ -688,8 +688,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   #titlebar-buttonbox {
     z-index: 1;
     -moz-box-align: center;
-    padding-top: 2px;
-    padding-bottom: 2px;
   }
 
   /* Render titlebar command buttons according to system config.
