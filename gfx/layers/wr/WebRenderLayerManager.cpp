@@ -194,15 +194,9 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
 
-  // With the WebRenderLayerManager we reject attempts to set most kind of
-  // "pending data" for empty transactions. Any place that attempts to update
-  // transforms or scroll offset, for example, will get failure return values
-  // back, and will fall back to a full transaction. Therefore the only piece
-  // of "pending" information we need to send in an empty transaction are the
-  // APZ focus state and canvases's CompositableOperations.
-
   if (aFlags & EndTransactionFlags::END_NO_COMPOSITE && 
-      !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
+      !mWebRenderCommandBuilder.NeedsEmptyTransaction() &&
+      mPendingScrollUpdates.empty()) {
     MOZ_ASSERT(!mTarget);
     WrBridge()->SendSetFocusTarget(mFocusTarget);
     return true;
@@ -225,7 +219,9 @@ WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     }
   }
 
-  WrBridge()->EndEmptyTransaction(mFocusTarget, mLatestTransactionId, transactionStart);
+  WrBridge()->EndEmptyTransaction(mFocusTarget, mPendingScrollUpdates,
+      mPaintSequenceNumber, mLatestTransactionId, transactionStart);
+  ClearPendingScrollInfoUpdate();
 
   MakeSnapshotIfRequired(size);
   return true;
@@ -293,6 +289,10 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
     }
     mScrollData.SetPaintSequenceNumber(mPaintSequenceNumber);
   }
+  // Since we're sending a full mScrollData that will include the new scroll
+  // offsets, and we can throw away the pending scroll updates we had kept for
+  // an empty transaction.
+  ClearPendingScrollInfoUpdate();
 
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId(/*aThrottle*/ true);
   TimeStamp transactionStart = mTransactionIdAllocator->GetTransactionStart();
@@ -626,15 +626,6 @@ WebRenderLayerManager::SetRoot(Layer* aLayer)
 {
   // This should never get called
   MOZ_ASSERT(false);
-}
-
-bool
-WebRenderLayerManager::SetPendingScrollUpdateForNextTransaction(FrameMetrics::ViewID aScrollId,
-                                                                const ScrollUpdateInfo& aUpdateInfo)
-{
-  // If we ever support changing the scroll position in an "empty transactions"
-  // properly in WR we can fill this in. Covered by bug 1382259.
-  return false;
 }
 
 already_AddRefed<PersistentBufferProvider>

@@ -649,6 +649,11 @@ struct ParamTraits<mozilla::layers::SimpleLayerAttributes>
   : public PlainOldDataSerializer<mozilla::layers::SimpleLayerAttributes>
 { };
 
+template <>
+struct ParamTraits<mozilla::layers::ScrollUpdateInfo>
+  : public PlainOldDataSerializer<mozilla::layers::ScrollUpdateInfo>
+{};
+
 } /* namespace IPC */
 
 #endif /* mozilla_layers_LayersMessageUtils */
