@@ -102,7 +102,17 @@ public:
   nsresult GetIndentState(bool* aCanIndent, bool* aCanOutdent);
   nsresult GetAlignment(bool* aMixed, nsIHTMLEditor::EAlignment* aAlign);
   nsresult GetParagraphState(bool* aMixed, nsAString& outFormat);
-  nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
+
+  /**
+   * MakeSureElemStartsAndEndsOnCR() inserts <br> element at start (and/or end)
+   * of aNode if neither:
+   * - first (last) editable child of aNode is a block or a <br>,
+   * - previous (next) sibling of aNode is block or a <br>
+   * - nor no previous (next) sibling of aNode.
+   *
+   * @param aNode               The node which may be inserted <br> elements.
+   */
+  MOZ_MUST_USE nsresult MakeSureElemStartsAndEndsOnCR(nsINode& aNode);
 
   void DidCreateNode(Selection& aSelection, Element& aNewElement);
   void DidInsertNode(Selection& aSelection, nsIContent& aNode);
@@ -589,7 +599,20 @@ protected:
   bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
   nsresult RemoveAlignment(nsINode& aNode, const nsAString& aAlignType,
                            bool aChildrenOnly);
-  nsresult MakeSureElemStartsOrEndsOnCR(nsINode& aNode, bool aStarts);
+
+  /**
+   * MakeSureElemStartsOrEndsOnCR() inserts <br> element at start (end) of
+   * aNode if neither:
+   * - first (last) editable child of aNode is a block or a <br>,
+   * - previous (next) sibling of aNode is block or a <br>
+   * - nor no previous (next) sibling of aNode.
+   *
+   * @param aNode               The node which may be inserted <br> element.
+   * @param aStarts             true for trying to insert <br> to the start.
+   *                            false for trying to insert <br> to the end.
+   */
+  MOZ_MUST_USE nsresult
+  MakeSureElemStartsOrEndsOnCR(nsINode& aNode, bool aStarts);
 
   /**
    * AlignBlock() resets align attribute, text-align property, etc first.
