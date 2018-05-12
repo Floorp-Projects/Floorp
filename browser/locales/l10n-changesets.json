@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "a8c09f99ca6a"
+        "revision": "85a606ec46bc"
     }, 
     "kab": {
         "platforms": [
@@ -1442,7 +1442,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "701496eab7c3"
+        "revision": "30276495469e"
     }, 
     "zh-TW": {
         "platforms": [
@@ -1457,6 +1457,6 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "cab0206f85bd"
+        "revision": "b60094d9409c"
     }
 }
