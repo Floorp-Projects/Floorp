@@ -25,6 +25,9 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
+#ifdef ENABLE_BIGINT
+#include "builtin/BigInt.h"
+#endif
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/String.h"
@@ -3258,8 +3261,7 @@ js::PrimitiveToObject(JSContext* cx, const Value& v)
     }
     MOZ_ASSERT(v.isBigInt());
     RootedBigInt bigInt(cx, v.toBigInt());
-    // Return nullptr because BigIntObject has not been defined yet.
-    return nullptr;
+    return BigIntObject::create(cx, bigInt);
 #else
     MOZ_ASSERT(v.isSymbol());
     RootedSymbol symbol(cx, v.toSymbol());
