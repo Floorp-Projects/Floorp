@@ -154,6 +154,32 @@ BigIntObject::toString(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsBigInt, toString_impl>(cx, args);
 }
 
+// BigInt proposal section 5.3.2. "This function is
+// implementation-dependent, and it is permissible, but not encouraged,
+// for it to return the same thing as toString."
+bool
+BigIntObject::toLocaleString_impl(JSContext* cx, const CallArgs& args)
+{
+    HandleValue thisv = args.thisv();
+    MOZ_ASSERT(IsBigInt(thisv));
+    RootedBigInt bi(cx, thisv.isBigInt()
+                        ? thisv.toBigInt()
+                        : thisv.toObject().as<BigIntObject>().unbox());
+
+    RootedString str(cx, BigInt::toString(cx, bi, 10));
+    if (!str)
+        return false;
+    args.rval().setString(str);
+    return true;
+}
+
+bool
+BigIntObject::toLocaleString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsBigInt, toLocaleString_impl>(cx, args);
+}
+
 const ClassSpec BigIntObject::classSpec_ = {
     GenericCreateConstructor<BigIntConstructor, 1, gc::AllocKind::FUNCTION>,
     CreateBigIntPrototype,
@@ -180,5 +206,6 @@ const JSPropertySpec BigIntObject::properties[] = {
 const JSFunctionSpec BigIntObject::methods[] = {
     JS_FN("valueOf", valueOf, 0, 0),
     JS_FN("toString", toString, 0, 0),
+    JS_FN("toLocaleString", toLocaleString, 0, 0),
     JS_FS_END
 };
