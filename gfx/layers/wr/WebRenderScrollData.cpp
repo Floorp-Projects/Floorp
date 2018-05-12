@@ -255,5 +255,16 @@ WebRenderScrollData::Dump() const
   }
 }
 
+bool
+WebRenderScrollData::RepopulateMap()
+{
+  MOZ_ASSERT(mScrollIdMap.empty());
+  for (size_t i = 0; i < mScrollMetadatas.Length(); i++) {
+    FrameMetrics::ViewID scrollId = mScrollMetadatas[i].GetMetrics().GetScrollId();
+    mScrollIdMap.emplace(scrollId, i);
+  }
+  return true;
+}
+
 } // namespace layers
 } // namespace mozilla
