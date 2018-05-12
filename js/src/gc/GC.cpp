@@ -400,7 +400,7 @@ FOR_EACH_ALLOCKIND(EXPAND_THING_SIZE)
 #undef EXPAND_THING_SIZE
 };
 
-FreeSpan ArenaLists::placeholder;
+FreeSpan ArenaLists::emptySentinel;
 
 #undef CHECK_THING_SIZE_INNER
 #undef CHECK_THING_SIZE
@@ -3087,7 +3087,7 @@ ArenaLists::ArenaLists(JSRuntime* rt, Zone* zone)
     savedEmptyArenas(zone, nullptr)
 {
     for (auto i : AllAllocKinds()) {
-        freeLists()[i] = &placeholder;
+        freeLists()[i] = &emptySentinel;
         backgroundFinalizeState(i) = BFS_DONE;
         arenaListsToSweep(i) = nullptr;
     }
