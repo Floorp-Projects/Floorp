@@ -1468,10 +1468,11 @@ BaselineCacheIRCompiler::emitStoreDenseElementHole()
     Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
     Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
 
-    // Check for copy-on-write or frozen elements.
+    // Check for copy-on-write elements. Note that this stub is not attached for
+    // non-extensible objects, so the shape guard ensures there are no sealed or
+    // frozen elements.
     masm.branchTest32(Assembler::NonZero, elementsFlags,
-                      Imm32(ObjectElements::COPY_ON_WRITE |
-                            ObjectElements::FROZEN),
+                      Imm32(ObjectElements::COPY_ON_WRITE),
                       failure->label());
 
     // We don't have enough registers on x86 so use InvalidReg. This will emit
@@ -1615,10 +1616,11 @@ BaselineCacheIRCompiler::emitArrayPush()
     Address elementsLength(scratch, ObjectElements::offsetOfLength());
     Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
 
-    // Check for copy-on-write or frozen elements.
+    // Check for copy-on-write elements. Note that this stub is not attached for
+    // non-extensible objects, so the shape guard ensures there are no sealed or
+    // frozen elements.
     masm.branchTest32(Assembler::NonZero, elementsFlags,
-                      Imm32(ObjectElements::COPY_ON_WRITE |
-                            ObjectElements::FROZEN),
+                      Imm32(ObjectElements::COPY_ON_WRITE),
                       failure->label());
 
     // Fail if length != initLength.

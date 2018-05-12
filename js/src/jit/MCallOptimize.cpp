@@ -691,6 +691,14 @@ IonBuilder::inlineArrayPopShift(CallInfo& callInfo, MArrayPopShift::Mode mode)
         OBJECT_FLAG_LENGTH_OVERFLOW |
         OBJECT_FLAG_ITERATED;
 
+    // Don't optimize shift if the array may be non-extensible (this matters
+    // when there are holes). We check this here because there's no
+    // non-extensible ObjectElements flag so we would need an extra guard on the
+    // BaseShape flags. For pop this doesn't matter, guarding on the SEALED
+    // ObjectElements flag in JIT code is sufficient.
+    if (mode == MArrayPopShift::Shift)
+        unhandledFlags |= OBJECT_FLAG_NON_EXTENSIBLE_ELEMENTS;
+
     MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
     TemporaryTypeSet* thisTypes = obj->resultTypeSet();
     if (!thisTypes)
