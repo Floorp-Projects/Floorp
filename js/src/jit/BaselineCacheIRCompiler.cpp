@@ -40,7 +40,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
     ICStubEngine engine_;
 #endif
 
-    uint32_t stubDataOffset_;
+
     bool inStubFrame_;
     bool makesGCCalls_;
 
@@ -57,11 +57,10 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler
 
     BaselineCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, ICStubEngine engine,
                             uint32_t stubDataOffset)
-      : CacheIRCompiler(cx, writer, Mode::Baseline),
+      : CacheIRCompiler(cx, writer, stubDataOffset, Mode::Baseline, StubFieldPolicy::Address),
 #ifdef DEBUG
         engine_(engine),
 #endif
-        stubDataOffset_(stubDataOffset),
         inStubFrame_(false),
         makesGCCalls_(false)
     {}

@@ -4462,10 +4462,17 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
     frontend::UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
+
+    RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
+                                                                                 mozilla::Nothing()));
+    if (!sourceObject)
+        return false;
+
     frontend::Parser<frontend::FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(),
                                                                   options, chars, length,
                                                                   /* foldConstants = */ true,
-                                                                  usedNames, nullptr, nullptr);
+                                                                  usedNames, nullptr, nullptr,
+                                                                  sourceObject);
     JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
     if (!parser.checkOptions() || !parser.parse()) {
         // We ran into an error. If it was because we ran out of source, we

@@ -44,7 +44,7 @@ ARIAGridAccessible::NativeRole()
 // Table
 
 uint32_t
-ARIAGridAccessible::ColCount()
+ARIAGridAccessible::ColCount() const
 {
   AccIterator rowIter(this, filters::GetRow);
   Accessible* row = rowIter.Next();

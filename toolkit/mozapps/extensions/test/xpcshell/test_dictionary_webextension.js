@@ -87,12 +87,16 @@ add_task(async function test_registration() {
     },
 
     files: {
-      "en-US.dic": `1\n${WORD}\n`,
-      "en-US.aff": "",
+      "en-US.dic": `2\n${WORD}\nnativ/A\n`,
+      "en-US.aff": `
+SFX A Y 1
+SFX A   0       en         [^elr]
+      `,
     },
   });
 
   ok(spellCheck.check(WORD), "Word should pass check while add-on load is loaded");
+  ok(spellCheck.check("nativen"), "Words should have correct affixes");
 
   addon.uninstall();
 

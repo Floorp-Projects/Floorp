@@ -156,9 +156,6 @@ var AccessFu = {
       case "AccessFu:Present":
         this._output(aMessage.json, aMessage.target);
         break;
-      case "AccessFu:Input":
-        this.Input.setEditState(aMessage.json);
-        break;
       case "AccessFu:DoScroll":
         this.Input.doScroll(aMessage.json);
         break;
@@ -207,14 +204,12 @@ var AccessFu = {
 
   _addMessageListeners: function _addMessageListeners(aMessageManager) {
     aMessageManager.addMessageListener("AccessFu:Present", this);
-    aMessageManager.addMessageListener("AccessFu:Input", this);
     aMessageManager.addMessageListener("AccessFu:Ready", this);
     aMessageManager.addMessageListener("AccessFu:DoScroll", this);
   },
 
   _removeMessageListeners: function _removeMessageListeners(aMessageManager) {
     aMessageManager.removeMessageListener("AccessFu:Present", this);
-    aMessageManager.removeMessageListener("AccessFu:Input", this);
     aMessageManager.removeMessageListener("AccessFu:Ready", this);
     aMessageManager.removeMessageListener("AccessFu:DoScroll", this);
   },
@@ -364,8 +359,6 @@ var AccessFu = {
 };
 
 var Input = {
-  editState: {},
-
   moveToPoint: function moveToPoint(aRule, aX, aY) {
     // XXX: Bug 1013408 - There is no alignment between the chrome window's
     // viewport size and the content viewport size in Android. This makes
@@ -396,23 +389,8 @@ var Input = {
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {
-    const GRANULARITY_PARAGRAPH = 8;
-    const GRANULARITY_LINE = 4;
-
-    if (!this.editState.editing) {
-      if (aDetails.granularity & (GRANULARITY_PARAGRAPH | GRANULARITY_LINE)) {
-        this.moveCursor("move" + aDetails.direction, "Simple", "gesture");
-        return;
-      }
-    } else {
-      aDetails.atStart = this.editState.atStart;
-      aDetails.atEnd = this.editState.atEnd;
-    }
-
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
-    let type = this.editState.editing ? "AccessFu:MoveCaret" :
-                                        "AccessFu:MoveByGranularity";
-    mm.sendAsyncMessage(type, aDetails);
+    mm.sendAsyncMessage("AccessFu:MoveByGranularity", aDetails);
   },
 
   activateCurrent: function activateCurrent(aData, aActivateIfKey = false) {
@@ -421,11 +399,6 @@ var Input = {
 
     mm.sendAsyncMessage("AccessFu:Activate",
                         {offset, activateIfKey: aActivateIfKey});
-  },
-
-  setEditState: function setEditState(aEditState) {
-    Logger.debug(() => { return ["setEditState", JSON.stringify(aEditState)]; });
-    this.editState = aEditState;
   },
 
   // XXX: This is here for backwards compatability with screen reader simulator

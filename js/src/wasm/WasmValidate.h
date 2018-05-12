@@ -282,28 +282,22 @@ class Encoder
         MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
         return writeFixedU8(uint8_t(op));
     }
-    MOZ_MUST_USE bool writeOp(MozOp op) {
-        static_assert(size_t(MozOp::Limit) <= 256, "fits");
-        MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
-        return writeFixedU8(uint8_t(Op::MozPrefix)) &&
-               writeFixedU8(uint8_t(op));
-    }
-    MOZ_MUST_USE bool writeOp(CopyOrFillOp op) {
-        static_assert(size_t(CopyOrFillOp::Limit) <= 256, "fits");
-        MOZ_ASSERT(size_t(op) < size_t(CopyOrFillOp::Limit));
-        return writeFixedU8(uint8_t(Op::CopyOrFillPrefix)) &&
-               writeFixedU8(uint8_t(op));
-    }
-    MOZ_MUST_USE bool writeOp(NumericOp op) {
-        static_assert(size_t(NumericOp::Limit) <= 256, "fits");
-        MOZ_ASSERT(size_t(op) < size_t(NumericOp::Limit));
-        return writeFixedU8(uint8_t(Op::NumericPrefix)) &&
+    MOZ_MUST_USE bool writeOp(MiscOp op) {
+        static_assert(size_t(MiscOp::Limit) <= 256, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(MiscOp::Limit));
+        return writeFixedU8(uint8_t(Op::MiscPrefix)) &&
                writeFixedU8(uint8_t(op));
     }
     MOZ_MUST_USE bool writeOp(ThreadOp op) {
         static_assert(size_t(ThreadOp::Limit) <= 256, "fits");
         MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
         return writeFixedU8(uint8_t(Op::ThreadPrefix)) &&
+               writeFixedU8(uint8_t(op));
+    }
+    MOZ_MUST_USE bool writeOp(MozOp op) {
+        static_assert(size_t(MozOp::Limit) <= 256, "fits");
+        MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
+        return writeFixedU8(uint8_t(Op::MozPrefix)) &&
                writeFixedU8(uint8_t(op));
     }
 

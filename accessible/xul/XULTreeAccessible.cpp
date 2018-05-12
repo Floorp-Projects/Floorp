@@ -982,7 +982,7 @@ XULTreeItemAccessibleBase::ContainerWidget() const
 
 void
 XULTreeItemAccessibleBase::DispatchClickEvent(nsIContent* aContent,
-                                              uint32_t aActionIndex)
+                                              uint32_t aActionIndex) const
 {
   if (IsDefunct())
     return;

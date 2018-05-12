@@ -49,6 +49,12 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
           "dest": "enable_webrender",
           "default": False,
           "help": "Tries to enable the WebRender compositor.",
+          }],
+        [["--base"],
+         {"action": "store_true",
+          "dest": "test_about_blank",
+          "default": False,
+          "help": "Runs the about:blank base case memory test.",
           }]
     ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
                                + copy.deepcopy(code_coverage_config_options)
@@ -151,8 +157,13 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         runtime_testvars_file.close()
 
         cmd = ['marionette']
-        cmd.append("--preferences=%s" % os.path.join(self.awsy_path, "conf", "prefs.json"))
-        cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf", "testvars.json"))
+
+        if self.config['test_about_blank']:
+            cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf",
+                                                      "base-testvars.json"))
+        else:
+            cmd.append("--testvars=%s" % os.path.join(self.awsy_path, "conf", "testvars.json"))
+
         cmd.append("--testvars=%s" % runtime_testvars_path)
         cmd.append("--log-raw=-")
         cmd.append("--log-errorsummary=%s" % error_summary_file)
@@ -166,7 +177,14 @@ class AWSY(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin, CodeCo
         # self.symbols_path
         cmd.append('--symbols-path=%s' % self.symbols_path)
 
-        test_file = os.path.join(self.awsy_libdir, 'test_memory_usage.py')
+        if self.config['test_about_blank']:
+            test_file = os.path.join(self.awsy_libdir, 'test_base_memory_usage.py')
+            prefs_file = "base-prefs.json"
+        else:
+            test_file = os.path.join(self.awsy_libdir, 'test_memory_usage.py')
+            prefs_file = "prefs.json"
+
+        cmd.append("--preferences=%s" % os.path.join(self.awsy_path, "conf", prefs_file))
         cmd.append(test_file)
 
         if self.config['single_stylo_traversal']:
