@@ -24,6 +24,57 @@ nsSimpleNestedURI::nsSimpleNestedURI(nsIURI* innerURI)
     NS_ASSERTION(innerURI, "Must have inner URI");
 }
 
+nsresult
+nsSimpleNestedURI::SetPathQueryRef(const nsACString &aPathQueryRef)
+{
+    NS_ENSURE_TRUE(mInnerURI, NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsIURI> inner;
+    nsresult rv = NS_MutateURI(mInnerURI)
+                    .SetPathQueryRef(aPathQueryRef)
+                    .Finalize(inner);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = nsSimpleURI::SetPathQueryRef(aPathQueryRef);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // If the regular SetPathQueryRef worked, also set it on the inner URI
+    mInnerURI = inner;
+    return NS_OK;
+}
+
+nsresult
+nsSimpleNestedURI::SetQuery(const nsACString &aQuery)
+{
+    NS_ENSURE_TRUE(mInnerURI, NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsIURI> inner;
+    nsresult rv = NS_MutateURI(mInnerURI)
+                    .SetQuery(aQuery)
+                    .Finalize(inner);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = nsSimpleURI::SetQuery(aQuery);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // If the regular SetQuery worked, also set it on the inner URI
+    mInnerURI = inner;
+    return NS_OK;
+}
+
+nsresult
+nsSimpleNestedURI::SetRef(const nsACString &aRef)
+{
+    NS_ENSURE_TRUE(mInnerURI, NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsIURI> inner;
+    nsresult rv = NS_MutateURI(mInnerURI)
+                    .SetRef(aRef)
+                    .Finalize(inner);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = nsSimpleURI::SetRef(aRef);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // If the regular SetRef worked, also set it on the inner URI
+    mInnerURI = inner;
+    return NS_OK;
+}
+
 // nsISerializable
 
 NS_IMETHODIMP
