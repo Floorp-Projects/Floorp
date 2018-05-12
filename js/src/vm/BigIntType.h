@@ -34,6 +34,8 @@ class BigInt final : public js::gc::TenuredCell
     // Allocate and initialize a BigInt value
     static BigInt* create(JSContext* cx);
 
+    static BigInt* create(JSContext* cx, double d);
+
     static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
 
     void traceChildren(JSTracer* trc);
@@ -44,12 +46,13 @@ class BigInt final : public js::gc::TenuredCell
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    static JSLinearString* toString(JSContext* cx, BigInt* x);
     bool toBoolean();
 
     static void init();
 
     static BigInt* copy(JSContext* cx, Handle<BigInt*> x);
+
+    static JSLinearString* toString(JSContext* cx, BigInt* x, uint8_t radix);
 };
 
 static_assert(sizeof(BigInt) >= js::gc::MinCellSize,
@@ -61,6 +64,12 @@ namespace js {
 
 extern JSAtom*
 BigIntToAtom(JSContext* cx, JS::BigInt* bi);
+
+extern JS::BigInt*
+NumberToBigInt(JSContext* cx, double d);
+
+extern JS::BigInt*
+ToBigInt(JSContext* cx, JS::Handle<JS::Value> v);
 
 } // namespace js
 
