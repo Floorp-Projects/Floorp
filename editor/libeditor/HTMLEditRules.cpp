@@ -5703,7 +5703,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
         HTMLEditUtils::IsList(curNode)) {
       AutoEditorDOMPointOffsetInvalidator lockChild(atCurNode);
       rv = RemoveAlignment(*curNode, aAlignType, true);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       if (useCSS) {
         HTMLEditorRef().mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
                                          curNode->AsElement(), nullptr,
@@ -9713,7 +9715,7 @@ HTMLEditRules::WillDeleteSelection(Selection& aSelection)
 nsresult
 HTMLEditRules::RemoveAlignment(nsINode& aNode,
                                const nsAString& aAlignType,
-                               bool aChildrenOnly)
+                               bool aDescendantsOnly)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -9722,7 +9724,7 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
   }
 
   nsCOMPtr<nsINode> child, tmp;
-  if (aChildrenOnly) {
+  if (aDescendantsOnly) {
     child = aNode.GetFirstChild();
   } else {
     child = &aNode;
@@ -9731,7 +9733,7 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
   bool useCSS = HTMLEditorRef().IsCSSEnabled();
 
   while (child) {
-    if (aChildrenOnly) {
+    if (aDescendantsOnly) {
       // get the next sibling right now because we could have to remove child
       tmp = child->GetNextSibling();
     } else {
@@ -9755,6 +9757,9 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
 
       // now remove the CENTER container
       rv = HTMLEditorRef().RemoveContainerWithTransaction(*child->AsElement());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9765,6 +9770,9 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
         nsresult rv =
           HTMLEditorRef().RemoveAttributeWithTransaction(*child->AsElement(),
                                                          *nsGkAtoms::align);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -9775,6 +9783,9 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
             HTMLEditorRef().SetAttributeOrEquivalent(child->AsElement(),
                                                      nsGkAtoms::align,
                                                      aAlignType, false);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -9784,6 +9795,9 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
                                                          *child,
                                                          nsGkAtoms::textAlign,
                                                          dummyCssValue);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
