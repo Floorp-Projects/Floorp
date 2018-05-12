@@ -47,7 +47,8 @@ class MozharnessRunner(MozbuildObject):
 
         self.config = {
             "__defaults__": {
-                "config": ["--download-symbols", "ondemand",
+                "config": ["--no-read-buildbot-config",
+                           "--download-symbols", "ondemand",
                            "--installer-url", self.installer_url,
                            "--test-packages-url", self.test_packages_url]
             },

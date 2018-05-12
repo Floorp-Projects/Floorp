@@ -2481,7 +2481,8 @@ pref("security.csp.experimentalEnabled", false);
 pref("security.csp.enableStrictDynamic", true);
 
 #if defined(DEBUG) && !defined(ANDROID)
-pref("csp.content_privileged_about_uris_without_csp", "blank,home,newtab,printpreview,srcdoc,studies");
+// about:welcome has been added until Bug 1448359 is fixed at which time home, newtab, and welcome will all be removed.
+pref("csp.content_privileged_about_uris_without_csp", "blank,home,newtab,printpreview,srcdoc,studies,welcome");
 #endif
 
 #ifdef NIGHTLY_BUILD

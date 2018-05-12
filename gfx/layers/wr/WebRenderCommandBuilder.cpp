@@ -314,11 +314,16 @@ struct DIGroup
   nsRect mGroupBounds;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
+  FrameMetrics::ViewID mScrollId;
   LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
-  DIGroup() : mAppUnitsPerDevPixel(0) {}
+  DIGroup()
+    : mAppUnitsPerDevPixel(0)
+    , mScrollId(FrameMetrics::NULL_SCROLL_ID)
+  {
+  }
 
   void InvalidateRect(const IntRect& aRect)
   {
@@ -650,9 +655,16 @@ struct DIGroup
     GP("PushImage: %f %f %f %f\n", dest.origin.x, dest.origin.y, dest.size.width, dest.size.height);
     gfx::SamplingFilter sampleFilter = gfx::SamplingFilter::LINEAR; //nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
     bool backfaceHidden = false;
+
+    // Emit a dispatch-to-content hit test region covering this area
+    auto hitInfo = CompositorHitTestInfo::eVisibleToHitTest |
+                   CompositorHitTestInfo::eDispatchToContent;
+
+    aBuilder.SetHitTestInfo(mScrollId, hitInfo);
     aBuilder.PushImage(dest, dest, !backfaceHidden,
                        wr::ToImageRendering(sampleFilter),
                        mKey.value());
+    aBuilder.ClearHitTestInfo();
   }
 
   void PaintItemRange(Grouper* aGrouper,
@@ -1084,11 +1096,18 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
       group.mKey = Nothing();
     }
   }
+
+  FrameMetrics::ViewID scrollId = FrameMetrics::NULL_SCROLL_ID;
+  if (const ActiveScrolledRoot* asr = aWrappingItem->GetActiveScrolledRoot()) {
+    scrollId = asr->GetViewId();
+  }
+
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   g.mTransform = Matrix::Scaling(scale.width, scale.height);
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mGroupBounds = groupBounds;
   group.mScale = scale;
+  group.mScrollId = scrollId;
   group.mLayerBounds = LayerIntRect::FromUnknownRect(group.mGroupBounds.ScaleToOutsidePixels(scale.width, scale.height, group.mAppUnitsPerDevPixel));
   group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
   g.ConstructGroups(this, aBuilder, aResources, &group, aList, aSc);
