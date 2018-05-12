@@ -27,7 +27,7 @@
       evt = await runner.moveNext("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
       runner.eventTextMatches(evt, ["Traversal Rule test document", "Phone status bar"]);
-      runner.isFocused("body");
+      runner.isFocused("html");
 
       evt = await runner.movePrevious("Simple",
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);

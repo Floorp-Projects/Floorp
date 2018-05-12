@@ -32,9 +32,9 @@ GPUProcessImpl::Init(int aArgc, char* aArgv[])
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
   char* parentBuildID = nullptr;
-  for (int idx = aArgc; idx > 0; idx--) {
-    if (!strcmp(aArgv[idx], "-parentBuildID")) {
-      parentBuildID = aArgv[idx + 1];
+  for (int i = 1; i < aArgc; i++) {
+    if (strcmp(aArgv[i], "-parentBuildID") == 0) {
+      parentBuildID = aArgv[i + 1];
     }
   }
 

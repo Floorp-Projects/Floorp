@@ -19,8 +19,9 @@
 
 #endif
 
-#include "jsapi.h"
+#include "mozilla/Maybe.h"
 
+#include "jsapi.h"
 
 #include "frontend/BinSource.h"
 #include "frontend/FullParseHandler.h"
@@ -167,10 +168,16 @@ runTestFromPath(JSContext* cx, const char* path)
         UsedNameTracker txtUsedNames(cx);
         if (!txtUsedNames.init())
             MOZ_CRASH("Couldn't initialize used names");
+
+        RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(
+                                                  cx, txtOptions, mozilla::Nothing()));
+        if (!sourceObject)
+            MOZ_CRASH("Couldn't initialize ScriptSourceObject");
+
         js::frontend::Parser<js::frontend::FullParseHandler, char16_t> txtParser(
             cx, allocScope.alloc(), txtOptions, txtSource.begin(), txtSource.length(),
             /* foldConstants = */ false, txtUsedNames, nullptr,
-            nullptr);
+            nullptr, sourceObject);
         if (!txtParser.checkOptions())
             MOZ_CRASH("Bad options");
 

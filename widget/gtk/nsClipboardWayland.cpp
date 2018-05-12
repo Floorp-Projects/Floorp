@@ -667,8 +667,9 @@ nsRetrievalContextWayland::TransferFastTrackClipboard(
     int aClipboardRequestNumber, GtkSelectionData *aSelectionData)
 {
     if (mClipboardRequestNumber == aClipboardRequestNumber) {
-        mClipboardDataLength = gtk_selection_data_get_length(aSelectionData);
-        if (mClipboardDataLength > 0) {
+        int dataLength = gtk_selection_data_get_length(aSelectionData);
+        if (dataLength > 0) {
+            mClipboardDataLength = dataLength;
             mClipboardData = reinterpret_cast<char*>(
                 g_malloc(sizeof(char)*mClipboardDataLength));
             memcpy(mClipboardData, gtk_selection_data_get_data(aSelectionData),

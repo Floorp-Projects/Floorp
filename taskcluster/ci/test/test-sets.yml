@@ -82,6 +82,7 @@ talos:
 
 awsy:
     - awsy
+    - awsy-base
 
 awsy-stylo-sequential:
     - awsy-stylo-sequential

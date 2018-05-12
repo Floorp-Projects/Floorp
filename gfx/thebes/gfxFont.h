@@ -631,14 +631,15 @@ protected:
 };
 
 struct gfxTextRange {
-    enum {
-        // flags for recording the kind of font-matching that was used
-        kFontGroup      = 0x0001,
-        kPrefsFallback  = 0x0002,
-        kSystemFallback = 0x0004
+    enum class MatchType : uint8_t {
+        // Flags for recording the kind of font-matching that was used.
+        // Note that multiple flags may be set on a single range.
+        kFontGroup      = 0x01,
+        kPrefsFallback  = 0x02,
+        kSystemFallback = 0x04
     };
     gfxTextRange(uint32_t aStart, uint32_t aEnd,
-                 gfxFont* aFont, uint8_t aMatchType,
+                 gfxFont* aFont, MatchType aMatchType,
                  mozilla::gfx::ShapedTextFlags aOrientation)
         : start(aStart),
           end(aEnd),
@@ -649,9 +650,11 @@ struct gfxTextRange {
     uint32_t Length() const { return end - start; }
     uint32_t start, end;
     RefPtr<gfxFont> font;
-    uint8_t matchType;
+    MatchType matchType;
     mozilla::gfx::ShapedTextFlags orientation;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxTextRange::MatchType)
 
 /**
  * gfxFontShaper
@@ -1865,7 +1868,7 @@ public:
                               const T    *aText,
                               uint32_t    aOffset,
                               uint32_t    aLength,
-                              uint8_t     aMatchType,
+                              gfxTextRange::MatchType aMatchType,
                               mozilla::gfx::ShapedTextFlags aOrientation,
                               Script      aScript,
                               bool        aSyntheticLower,

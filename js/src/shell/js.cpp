@@ -4486,9 +4486,15 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
+
+    RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
+                                                                                 Nothing()));
+    if (!sourceObject)
+        return false;
+
     Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,
                                               /* foldConstants = */ false, usedNames, nullptr,
-                                              nullptr);
+                                              nullptr, sourceObject);
     if (!parser.checkOptions())
         return false;
 
@@ -4537,9 +4543,16 @@ SyntaxParse(JSContext* cx, unsigned argc, Value* vp)
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
+
+    RootedScriptSourceObject sourceObject(cx, frontend::CreateScriptSourceObject(cx, options,
+                                                                                 Nothing()));
+    if (!sourceObject)
+        return false;
+
     Parser<frontend::SyntaxParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(),
                                                           options, chars, length, false,
-                                                          usedNames, nullptr, nullptr);
+                                                          usedNames, nullptr, nullptr,
+                                                          sourceObject);
     if (!parser.checkOptions())
         return false;
 

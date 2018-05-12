@@ -336,9 +336,8 @@ enum class Op
     RefNull                              = 0xd0,
     RefIsNull                            = 0xd1,
 
-    FirstPrefix                          = 0xfb,
-    CopyOrFillPrefix                     = 0xfb,
-    NumericPrefix                        = 0xfc,
+    FirstPrefix                          = 0xfc,
+    MiscPrefix                           = 0xfc,
     ThreadPrefix                         = 0xfe,
     MozPrefix                            = 0xff,
 
@@ -351,8 +350,8 @@ IsPrefixByte(uint8_t b)
     return b >= uint8_t(Op::FirstPrefix);
 }
 
-// Opcodes in the "numeric" opcode space.
-enum class NumericOp
+// Opcodes in the "miscellaneous" opcode space.
+enum class MiscOp
 {
     // Saturating float-to-int conversions
     I32TruncSSatF32                      = 0x00,
@@ -363,6 +362,10 @@ enum class NumericOp
     I64TruncUSatF32                      = 0x05,
     I64TruncSSatF64                      = 0x06,
     I64TruncUSatF64                      = 0x07,
+
+    // Bulk memory operations.  Note, these are unofficial.
+    MemCopy                              = 0x40,
+    MemFill                              = 0x41,
 
     Limit
 };

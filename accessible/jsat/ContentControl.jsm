@@ -9,6 +9,8 @@ ChromeUtils.defineModuleGetter(this, "Logger",
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Roles",
   "resource://gre/modules/accessibility/Constants.jsm");
+ChromeUtils.defineModuleGetter(this, "States",
+  "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "TraversalRules",
   "resource://gre/modules/accessibility/Traversal.jsm");
 ChromeUtils.defineModuleGetter(this, "TraversalHelper",
@@ -33,7 +35,6 @@ this.ContentControl.prototype = {
                        "AccessFu:MoveToPoint",
                        "AccessFu:AutoMove",
                        "AccessFu:Activate",
-                       "AccessFu:MoveCaret",
                        "AccessFu:MoveByGranularity",
                        "AccessFu:AndroidScroll"],
 
@@ -300,25 +301,29 @@ this.ContentControl.prototype = {
   },
 
   handleMoveByGranularity: function cc_handleMoveByGranularity(aMessage) {
-    // XXX: Add sendToChild. Right now this is only used in Android, so no need.
-    let direction = aMessage.json.direction;
-    let granularity;
+    let { direction, granularity } = aMessage.json;
+    let focusedAcc = Utils.AccService.getAccessibleFor(this.document.activeElement);
+    if (focusedAcc && Utils.getState(focusedAcc).contains(States.EDITABLE)) {
+      this.moveCaret(focusedAcc, direction, granularity);
+      return;
+    }
 
-    switch (aMessage.json.granularity) {
+    let pivotGranularity;
+    switch (granularity) {
       case MOVEMENT_GRANULARITY_CHARACTER:
-        granularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
+        pivotGranularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
         break;
       case MOVEMENT_GRANULARITY_WORD:
-        granularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
+        pivotGranularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
         break;
       default:
         return;
     }
 
     if (direction === "Previous") {
-      this.vc.movePreviousByText(granularity);
+      this.vc.movePreviousByText(pivotGranularity);
     } else if (direction === "Next") {
-      this.vc.moveNextByText(granularity);
+      this.vc.moveNextByText(pivotGranularity);
     }
   },
 
@@ -331,16 +336,13 @@ this.ContentControl.prototype = {
     }
   },
 
-  handleMoveCaret: function cc_handleMoveCaret(aMessage) {
-    let direction = aMessage.json.direction;
-    let granularity = aMessage.json.granularity;
-    let accessible = this.vc.position;
+  moveCaret: function cc_moveCaret(accessible, direction, granularity) {
     let accText = accessible.QueryInterface(Ci.nsIAccessibleText);
     let oldOffset = accText.caretOffset;
     let text = accText.getText(0, accText.characterCount);
 
     let start = {}, end = {};
-    if (direction === "Previous" && !aMessage.json.atStart) {
+    if (direction === "Previous" && oldOffset > 0) {
       switch (granularity) {
         case MOVEMENT_GRANULARITY_CHARACTER:
           accText.caretOffset--;
@@ -356,7 +358,7 @@ this.ContentControl.prototype = {
           accText.caretOffset = startOfParagraph !== -1 ? startOfParagraph : 0;
           break;
       }
-    } else if (direction === "Next" && !aMessage.json.atEnd) {
+    } else if (direction === "Next" && oldOffset < accText.characterCount) {
       switch (granularity) {
         case MOVEMENT_GRANULARITY_CHARACTER:
           accText.caretOffset++;

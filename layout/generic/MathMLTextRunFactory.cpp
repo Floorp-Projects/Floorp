@@ -670,7 +670,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         // Bug 930504. Some platforms do not have fonts for Mathematical
         // Alphanumeric Symbols. Hence we check whether the transformed
         // character is actually available.
-        uint8_t matchType;
+        gfxTextRange::MatchType matchType;
         RefPtr<gfxFont> mathFont = fontGroup->
           FindFontForChar(ch2, 0, 0, unicode::Script::COMMON, nullptr, &matchType);
         if (mathFont) {
