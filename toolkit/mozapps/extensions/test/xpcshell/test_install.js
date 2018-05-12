@@ -721,7 +721,7 @@ add_task(async function test_16() {
     aInstall.addListener({
       onInstallStarted() {
         ok(!aInstall.addon.userDisabled);
-        aInstall.addon.userDisabled = true;
+        aInstall.addon.disable();
       },
 
       onInstallEnded() {
@@ -798,7 +798,7 @@ add_task(async function test_17() {
     aInstall_2.addListener({
       onInstallStarted() {
         ok(!aInstall_2.addon.userDisabled);
-        aInstall_2.addon.userDisabled = true;
+        aInstall_2.addon.disable();
       },
 
       onInstallEnded() {
@@ -828,7 +828,7 @@ add_task(async function test_18() {
     aInstall.addListener({
       onInstallStarted() {
         ok(!aInstall.addon.userDisabled);
-        aInstall.addon.userDisabled = true;
+        aInstall.addon.disable();
       },
 
       onInstallEnded() {
@@ -852,7 +852,7 @@ add_task(async function test_18() {
     aInstall_2.addListener({
       onInstallStarted() {
         ok(aInstall_2.addon.userDisabled);
-        aInstall_2.addon.userDisabled = false;
+        aInstall_2.addon.enable();
       },
 
       onInstallEnded() {

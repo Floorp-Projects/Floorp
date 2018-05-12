@@ -624,7 +624,7 @@ add_task(async function test_8() {
 
     if (options.initialState) {
       let addon = await AddonManager.getAddonByID(id);
-      Object.assign(addon, options.initialState);
+      await setInitialState(addon, options.initialState);
     }
   }
 

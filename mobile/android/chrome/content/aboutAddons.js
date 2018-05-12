@@ -519,6 +519,13 @@ var Addons = {
 
     let listItem = this._getElementForAddon(addon.id);
 
+    function setDisabled(addon, value) {
+      if (value) {
+        return addon.enable();
+      }
+      return addon.disable();
+    }
+
     let opType;
     if (addon.type == "theme") {
       if (aValue) {
@@ -527,18 +534,18 @@ var Addons = {
         let item = list.firstElementChild;
         while (item) {
           if (item.addon && (item.addon.type == "theme") && (item.addon.isActive)) {
-            item.addon.userDisabled = true;
+            item.addon.disable();
             item.setAttribute("isDisabled", true);
             break;
           }
           item = item.nextSibling;
         }
       }
-      addon.userDisabled = !aValue;
+      setDisabled(addon, !aValue);
     } else if (addon.type == "locale") {
-      addon.userDisabled = !aValue;
+      setDisabled(addon, !aValue);
     } else {
-      addon.userDisabled = !aValue;
+      setDisabled(addon, !aValue);
       opType = this._getOpTypeForOperations(addon.pendingOperations);
 
       if ((addon.pendingOperations & AddonManager.PENDING_ENABLE) ||

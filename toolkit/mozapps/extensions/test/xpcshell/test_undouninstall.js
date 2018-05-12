@@ -285,7 +285,7 @@ add_task(async function uninstallDisabledRestartless() {
   Assert.ok(a1.isActive);
   Assert.ok(!a1.userDisabled);
 
-  a1.userDisabled = true;
+  await a1.disable();
   BootstrapMonitor.checkAddonNotStarted(ID);
   Assert.equal(getShutdownReason(ID), ADDON_DISABLE);
   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
@@ -357,7 +357,7 @@ add_task(async function cancelUninstallDisabledRestartless() {
       "onDisabled"
     ]
   });
-  a1.userDisabled = true;
+  await a1.disable();
   ensure_test_completed();
 
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -427,7 +427,7 @@ add_task(async function reinstallDisabledAddonAwaitingUninstall() {
   Assert.ok(a1.isActive);
   Assert.ok(!a1.userDisabled);
 
-  a1.userDisabled = true;
+  await a1.disable();
   BootstrapMonitor.checkAddonNotStarted(ID);
   Assert.equal(getShutdownReason(ID), ADDON_DISABLE);
   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);

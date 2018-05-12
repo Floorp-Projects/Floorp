@@ -190,6 +190,13 @@ GMPWrapper.prototype = {
     GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_ENABLED, aVal === false, this._plugin.id);
   },
 
+  async enable() {
+    this.userDisabled = false;
+  },
+  async disable() {
+    this.userDisabled = true;
+  },
+
   get blocklistState() { return Ci.nsIBlocklistService.STATE_NOT_BLOCKED; },
   get size() { return 0; },
   get scope() { return AddonManager.SCOPE_APPLICATION; },

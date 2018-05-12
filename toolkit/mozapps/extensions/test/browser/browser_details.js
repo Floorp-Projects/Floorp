@@ -591,7 +591,7 @@ add_test(async function() {
   info("Checking that onPropertyChanges for appDisabled updates the UI");
 
   let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
-  aAddon.userDisabled = true;
+  await aAddon.disable();
   aAddon.isCompatible = true;
   aAddon.appDisabled = false;
 

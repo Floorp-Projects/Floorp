@@ -141,7 +141,7 @@ add_task(async function testExtensionControlledHomepage() {
   // Enable the extension so we get the UNINSTALL event, which is needed by
   // ExtensionPreferencesManager to clean up properly.
   // FIXME: See https://bugzilla.mozilla.org/show_bug.cgi?id=1408226.
-  addon.userDisabled = false;
+  await addon.enable();
   await waitForMessageShown("browserHomePageExtensionContent");
   // Do the uninstall now that the enable code has been run.
   addon.uninstall();
@@ -586,7 +586,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
 
   async function reEnableExtension(addon) {
     let controlledMessageShown = waitForMessageShown(CONTROLLED_LABEL_ID[uiType]);
-    addon.userDisabled = false;
+    await addon.enable();
     await controlledMessageShown;
   }
 
@@ -757,7 +757,7 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   async function reEnableExtension(addon) {
     let messageChanged = connectionSettingsMessagePromise(mainDoc, true);
-    addon.userDisabled = false;
+    await addon.enable();
     await messageChanged;
   }
 

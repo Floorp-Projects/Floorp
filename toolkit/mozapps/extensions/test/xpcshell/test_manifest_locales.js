@@ -79,8 +79,7 @@ add_task(async function test_1() {
   Assert.equal(addon.name, "fr Name");
   Assert.equal(addon.description, "fr Description");
 
-  // Disable item
-  addon.userDisabled = true;
+  await addon.disable();
   await promiseRestartManager();
 
   let newAddon = await AddonManager.getAddonByID(ID);

@@ -42,7 +42,7 @@ async function run_test_2() {
   Assert.equal(addon.name, "fr-FR Name");
   Assert.equal(addon.description, "fr-FR Description");
 
-  addon.userDisabled = true;
+  await addon.disable();
   executeSoon(run_test_3);
 }
 
@@ -101,7 +101,7 @@ async function run_test_6() {
   Assert.equal(addon.name, "Fallback Name");
   Assert.equal(addon.description, "Fallback Description");
 
-  addon.userDisabled = false;
+  await addon.enable();
   executeSoon(run_test_7);
 }
 

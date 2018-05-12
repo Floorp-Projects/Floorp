@@ -82,11 +82,11 @@ add_task(async function() {
   Assert.equal(addon.iconURL, uri + "icon48.png");
   Assert.equal(addon.icon64URL, uri + "icon64.png");
 
-  addon.userDisabled = true;
+  await addon.disable();
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  addon.userDisabled = false;
+  await addon.enable();
   await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
@@ -142,7 +142,7 @@ add_task(async function test_manifest_localization() {
   await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(extensionId);
-  addon.userDisabled = true;
+  await addon.disable();
 
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");

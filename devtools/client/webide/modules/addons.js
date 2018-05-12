@@ -79,7 +79,7 @@ Addon.prototype = {
     }
     this.status = "preparing";
     if (addon && addon.userDisabled) {
-      addon.userDisabled = false;
+      await addon.enable();
     } else {
       let install = await AddonManager.getInstallForURL(this.xpiLink, "application/x-xpinstall");
       install.addListener(this);
@@ -114,7 +114,7 @@ Addon.prototype = {
   },
 
   onInstallEnded: function({addon}) {
-    addon.userDisabled = false;
+    addon.enable();
   },
 
   onDownloadCancelled: function(install) {
