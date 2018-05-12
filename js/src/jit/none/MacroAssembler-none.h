@@ -159,11 +159,11 @@ class Assembler : public AssemblerShared
 class Operand
 {
   public:
-    Operand (const Address&) { MOZ_CRASH();}
-    Operand (const Register) { MOZ_CRASH();}
-    Operand (const FloatRegister) { MOZ_CRASH();}
-    Operand (Register, Imm32 ) { MOZ_CRASH(); }
-    Operand (Register, int32_t ) { MOZ_CRASH(); }
+    explicit Operand(const Address&) { MOZ_CRASH();}
+    explicit Operand(const Register) { MOZ_CRASH();}
+    explicit Operand(const FloatRegister) { MOZ_CRASH();}
+    explicit Operand(Register, Imm32) { MOZ_CRASH(); }
+    explicit Operand(Register, int32_t) { MOZ_CRASH(); }
 };
 
 class ScratchTagScope
@@ -241,10 +241,10 @@ class MacroAssemblerNone : public Assembler
 
     template <typename T, typename S> void moveValue(T, S) { MOZ_CRASH(); }
     template <typename T, typename S, typename U> void moveValue(T, S, U) { MOZ_CRASH(); }
-    template <typename T, typename S> void storeValue(T, S) { MOZ_CRASH(); }
+    template <typename T, typename S> void storeValue(const T&, const S&) { MOZ_CRASH(); }
     template <typename T, typename S, typename U> void storeValue(T, S, U) { MOZ_CRASH(); }
     template <typename T, typename S> void loadValue(T, S) { MOZ_CRASH(); }
-    template <typename T> void pushValue(T) { MOZ_CRASH(); }
+    template <typename T> void pushValue(const T&) { MOZ_CRASH(); }
     template <typename T, typename S> void pushValue(T, S) { MOZ_CRASH(); }
     void popValue(ValueOperand) { MOZ_CRASH(); }
     void tagValue(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
@@ -376,6 +376,7 @@ class MacroAssemblerNone : public Assembler
 
     void setPrinter(Sprinter*) { MOZ_CRASH(); }
     Operand ToPayload(Operand base) { MOZ_CRASH(); }
+    Address ToPayload(Address) { MOZ_CRASH(); }
 
     static const Register getStackPointer() { MOZ_CRASH(); }
 
@@ -384,7 +385,6 @@ class MacroAssemblerNone : public Assembler
     void profilerExitFrame() { MOZ_CRASH(); }
 
 #ifdef JS_NUNBOX32
-    Address ToPayload(Address) { MOZ_CRASH(); }
     Address ToType(Address) { MOZ_CRASH(); }
 #endif
 };
