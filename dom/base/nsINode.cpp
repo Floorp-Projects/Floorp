@@ -532,7 +532,7 @@ nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError)
   }
 
   if (aOldChild.GetParentNode() == this) {
-    nsContentUtils::MaybeFireNodeRemoved(&aOldChild, this, OwnerDoc());
+    nsContentUtils::MaybeFireNodeRemoved(&aOldChild, this);
   }
 
   int32_t index = ComputeIndexOf(&aOldChild);
@@ -593,8 +593,7 @@ nsINode::Normalize()
     for (uint32_t i = 0; i < nodes.Length(); ++i) {
       nsINode* parentNode = nodes[i]->GetParentNode();
       if (parentNode) { // Node may have already been removed.
-        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode,
-                                             doc);
+        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode);
       }
     }
   }
@@ -1904,15 +1903,14 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     // If we're replacing, fire for node-to-be-replaced.
     // If aRefChild == aNewChild then we'll fire for it in check below
     if (aReplace && aRefChild != aNewChild) {
-      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this, OwnerDoc());
+      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this);
     }
 
     // If the new node already has a parent, fire for removing from old
     // parent
     nsINode* oldParent = aNewChild->GetParentNode();
     if (oldParent) {
-      nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent,
-                                           aNewChild->OwnerDoc());
+      nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent);
     }
 
     // If we're inserting a fragment, fire for all the children of the
