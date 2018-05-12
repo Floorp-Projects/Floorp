@@ -41,20 +41,23 @@ enum class TraceKind
     // Note: The order here is determined by our Value packing. Other users
     //       should sort alphabetically, for consistency.
     Object = 0x00,
+#ifdef ENABLE_BIGINT
+    BigInt = 0x01,
+#endif
     String = 0x02,
     Symbol = 0x03,
 
-    // 0x1 is not used for any GCThing Value tag, so we use it for Script.
-    Script = 0x01,
+    // 0x4 is not used for any GCThing Value tag, so we use it for Script.
+    Script = 0x04,
 
     // Shape details are exposed through JS_TraceShapeCycleCollectorChildren.
-    Shape = 0x04,
+    Shape = 0x05,
 
     // ObjectGroup details are exposed through JS_TraceObjectGroupCycleCollectorChildren.
-    ObjectGroup = 0x05,
+    ObjectGroup = 0x06,
 
     // The kind associated with a nullptr.
-    Null = 0x06,
+    Null = 0x07,
 
     // The following kinds do not have an exposed C++ idiom.
     BaseShape = 0x0F,
@@ -97,6 +100,7 @@ struct MapTypeToTraceKind {
     D(Shape,         js::Shape,         true) \
     D(String,        JSString,          false) \
     D(Symbol,        JS::Symbol,        false) \
+    IF_BIGINT(D(BigInt, JS::BigInt, false),) \
     D(RegExpShared,  js::RegExpShared,  true)
 
 // Map from all public types to their trace kind.

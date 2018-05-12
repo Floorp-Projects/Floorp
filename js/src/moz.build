@@ -458,6 +458,11 @@ SOURCES += [
     'vm/ProfilingStack.cpp',
 ]
 
+if CONFIG['ENABLE_BIGINT']:
+    SOURCES += [
+        'vm/BigIntType.cpp',
+    ]
+
 if CONFIG['JS_POSIX_NSPR']:
     UNIFIED_SOURCES += [
         'vm/PosixNSPR.cpp',
