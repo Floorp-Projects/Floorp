@@ -25,6 +25,8 @@ config = {
         'hg': 'c:/mozilla-build/hg/hg',
     },
 
+    "buildbot_json_path": "buildprops.json",
+
     "default_blob_upload_servers": [
          "https://blobupload.elasticbeanstalk.com",
     ],

@@ -16,7 +16,7 @@ And make sure the value of `browser.onboarding.tourset-verion` and `browser.onbo
 
 Besides above settings, notification will wait 5 minutes before showing the first notification on a new profile or the updated user profile (to not put too much information to the user at once).
 
-To manually remove the mute duration, set pref `browser.onboarding.notification.mute-duration-on-first-session-ms` to `0` and notification will be shown at the next time you open `about:home` or `about:newtab`.
+To manually remove the mute duration, set pref `browser.onboarding.notification.mute-duration-on-first-session-ms` to `0` and notification will be shown at the next time you open `about:home`, `about:newtab`, or `about:welcome`.
 
 ## How to show the snippets
 
@@ -28,7 +28,7 @@ Snippets (the remote notification that handled by activity stream) will only be 
 
 During booting from `bootstrap.js`, `OnboardingTourType.jsm` will check the onboarding tour type (`new` and `update` are supported types) and set required initial states into preferences.
 
-Everytime `about:home` or `about:newtab` page is opened, `onboarding.js` is injected into that page via [frame scripts](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Message_Manager/Communicating_with_frame_scripts).
+Everytime `about:home`, `about:newtab`, or `about:welcome` page is opened, `onboarding.js` is injected into that page via [frame scripts](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Message_Manager/Communicating_with_frame_scripts).
 
 Then in `onboarding.js`, all tours are defined inside of `onboardingTourset` dictionary. `getTourIDList` function will load tours from proper preferences. (Check `How to change the order of tours` section for more detail).
 

@@ -47,7 +47,7 @@ function isValidCategory(category) {
 
 // Validate the page value is within the list
 function isValidPage(page) {
-  return ["about:newtab", "about:home"].includes(page);
+    return ["about:newtab", "about:home", "about:welcome"].includes(page);
 }
 
 // Validate the tour_type value is within the list

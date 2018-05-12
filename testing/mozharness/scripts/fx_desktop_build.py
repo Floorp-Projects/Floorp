@@ -90,9 +90,25 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         super(FxDesktopBuild, self).__init__(**buildscript_kwargs)
 
     def _pre_config_lock(self, rw_config):
-        """grab properties if we are running this in automation"""
+        """grab buildbot props if we are running this in automation"""
         super(FxDesktopBuild, self)._pre_config_lock(rw_config)
         c = self.config
+        if c['is_automation']:
+            # parse buildbot config and add it to self.config
+            self.info("We are running this in buildbot, grab the build props")
+            self.read_buildbot_config()
+            ###
+            if c.get('stage_platform'):
+                platform_for_log_url = c['stage_platform']
+                if c.get('pgo_build'):
+                    platform_for_log_url += '-pgo'
+                # postrun.py uses stage_platform buildbot prop as part of the log url
+                self.set_buildbot_property('stage_platform',
+                                           platform_for_log_url,
+                                           write_to_file=True)
+            else:
+                self.fatal("'stage_platform' not determined and is required in your config")
+
         if self.try_message_has_flag('artifact') or os.environ.get('USE_ARTIFACT'):
             # Not all jobs that look like builds can be made into artifact
             # builds (for example, various SAN builds will not make sense as
@@ -207,6 +223,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         return self.abs_dirs
 
         # Actions {{{2
+        # read_buildbot_config in BuildingMixin
         # clobber in BuildingMixin -> PurgeMixin
 
     def set_extra_try_arguments(self, action, success=None):

@@ -2449,9 +2449,9 @@ window._gBrowser = {
       throw e;
     }
 
-    // Hack to ensure that the about:newtab favicon is loaded
+    // Hack to ensure that the about:newtab, and about:welcome favicon is loaded
     // instantaneously, to avoid flickering and improve perceived performance.
-    if (aURI == "about:newtab") {
+    if (aURI == "about:newtab" || aURI == "about:home" || aURI == "about:welcome") {
       this.setIcon(t, "chrome://branding/content/icon32.png");
     } else if (aURI == "about:privatebrowsing") {
       this.setIcon(t, "chrome://browser/skin/privatebrowsing/favicon.svg");
@@ -4501,13 +4501,14 @@ class TabProgressListener {
 
         // Ignore initial about:blank to prevent flickering.
         if (!this.mBrowser.mIconURL && !ignoreBlank) {
-          // Don't switch to the default icon on about:home or about:newtab,
-          // since these pages get their favicon set in browser code to
-          // improve perceived performance.
+          // Don't switch to the default icon on about:home, about:newtab,
+          // about:privatebrowsing, or about:welcome since these pages get
+          // their favicon set in browser code to improve perceived performance.
           let isNewTab = originalLocation &&
-            (originalLocation.spec == "about:newtab" ||
+             (originalLocation.spec == "about:newtab" ||
               originalLocation.spec == "about:privatebrowsing" ||
-              originalLocation.spec == "about:home");
+              originalLocation.spec == "about:home" ||
+              originalLocation.spec == "about:welcome");
           if (!isNewTab) {
             gBrowser.useDefaultIcon(this.mTab);
           }
