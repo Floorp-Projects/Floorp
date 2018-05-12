@@ -7,16 +7,6 @@
 importScripts("resource://gre/modules/osfile.jsm");
 importScripts("resource:///modules/ParseSymbols.jsm");
 
-async function fetchSymbolFile(url) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`got error status ${response.status}`);
-  }
-
-  return response.text();
-}
-
 function parse(text) {
   const syms = new Map();
 
@@ -45,8 +35,6 @@ onmessage = async e => {
     let text;
     if (e.data.filepath) {
       text = await OS.File.read(e.data.filepath, {encoding: "utf-8"});
-    } else if (e.data.url) {
-      text = await fetchSymbolFile(e.data.url);
     } else if (e.data.textBuffer) {
       text = (new TextDecoder()).decode(e.data.textBuffer);
     }
