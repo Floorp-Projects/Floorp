@@ -641,10 +641,6 @@ CSSEditUtils::GetDefaultLengthUnit(nsAString& aLengthUnit)
   }
 }
 
-// Unfortunately, CSSStyleDeclaration::GetPropertyCSSValue is not yet
-// implemented... We need then a way to determine the number part and the unit
-// from aString, aString being the result of a GetPropertyValue query...
-
 // static
 void
 CSSEditUtils::ParseLength(const nsAString& aString,
