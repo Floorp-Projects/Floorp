@@ -524,7 +524,6 @@ function getDirectoryEntries(aDir, aSortEntries) {
  * as stored in the addonStartup.json file.
  */
 const JSON_FIELDS = Object.freeze([
-  "bootstrapped",
   "changed",
   "dependencies",
   "enabled",
@@ -554,7 +553,6 @@ class XPIState {
 
     // Set default values.
     this.type = "extension";
-    this.bootstrapped = false;
 
     for (let prop of JSON_FIELDS) {
       if (prop in saved) {
@@ -596,7 +594,6 @@ class XPIState {
     };
 
     if (bootstrapped) {
-      data.bootstrapped = true;
       data.enabled = true;
       data.path = descriptorToPath(bootstrapped.descriptor, location.dir);
 
@@ -663,12 +660,10 @@ class XPIState {
     if (this.type != "extension") {
       json.type = this.type;
     }
-    if (this.bootstrapped) {
-      json.bootstrapped = true;
-      json.dependencies = this.dependencies;
-      json.runInSafeMode = this.runInSafeMode;
-      json.hasEmbeddedWebExtension = this.hasEmbeddedWebExtension;
-    }
+    json.dependencies = this.dependencies;
+    json.runInSafeMode = this.runInSafeMode;
+    json.hasEmbeddedWebExtension = this.hasEmbeddedWebExtension;
+
     if (this.startupData) {
       json.startupData = this.startupData;
     }
@@ -740,12 +735,9 @@ class XPIState {
 
     this.telemetryKey = this.getTelemetryKey();
 
-    this.bootstrapped = !!aDBAddon.bootstrap;
-    if (this.bootstrapped) {
-      this.hasEmbeddedWebExtension = aDBAddon.hasEmbeddedWebExtension;
-      this.dependencies = aDBAddon.dependencies;
-      this.runInSafeMode = canRunInSafeMode(aDBAddon);
-    }
+    this.hasEmbeddedWebExtension = aDBAddon.hasEmbeddedWebExtension;
+    this.dependencies = aDBAddon.dependencies;
+    this.runInSafeMode = canRunInSafeMode(aDBAddon);
 
     if (aUpdated || mustGetMod) {
       this.getModTime(this.file, aDBAddon.id);
@@ -1189,17 +1181,6 @@ var XPIStates = {
   },
 
   /**
-   * Iterates over all enabled bootstrapped add-ons, in any location.
-   */
-  * bootstrappedAddons() {
-    for (let addon of this.enabledAddons()) {
-      if (addon.bootstrapped) {
-        yield addon;
-      }
-    }
-  },
-
-  /**
    * Add a new XPIState for an add-on and synchronize it with the DBAddonInternal.
    *
    * @param {DBAddonInternal} aAddon
@@ -1325,13 +1306,13 @@ var XPIProvider = {
   },
 
   /**
-   * Returns an array of the add-on values in `bootstrappedAddons`,
+   * Returns an array of the add-on values in `enabledAddons`,
    * sorted so that all of an add-on's dependencies appear in the array
    * before itself.
    *
    * @returns {Array<object>}
    *   A sorted array of add-on objects. Each value is a copy of the
-   *   corresponding value in the `bootstrappedAddons` object, with an
+   *   corresponding value in the `enabledAddons` object, with an
    *   additional `id` property, which corresponds to the key in that
    *   object, which is the same as the add-ons ID.
    */
@@ -1344,7 +1325,7 @@ var XPIProvider = {
     }
 
     // Sort the list so that ordering is deterministic.
-    let list = Array.from(XPIStates.bootstrappedAddons());
+    let list = Array.from(XPIStates.enabledAddons());
     list.sort((a, b) => compare(a.id, b.id));
 
     let addons = {};

@@ -120,7 +120,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",
-                          "updateDate", "applyBackgroundUpdates", "bootstrap", "path",
+                          "updateDate", "applyBackgroundUpdates", "path",
                           "skinnable", "size", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall",
                           "strictCompatibility", "locales", "targetApplications",
@@ -859,7 +859,7 @@ AddonWrapper = class {
   }
 
   get isDebuggable() {
-    return this.isActive && addonFor(this).bootstrap;
+    return this.isActive;
   }
 
   get permissions() {
@@ -872,12 +872,12 @@ AddonWrapper = class {
       return false;
     if (!Services.appinfo.inSafeMode)
       return true;
-    return addon.bootstrap && XPIInternal.canRunInSafeMode(addon);
+    return XPIInternal.canRunInSafeMode(addon);
   }
 
   get startupPromise() {
     let addon = addonFor(this);
-    if (!addon.bootstrap || !this.isActive)
+    if (!this.isActive)
       return null;
 
     let activeAddon = XPIProvider.activeAddons.get(addon.id);
@@ -2317,17 +2317,15 @@ this.XPIDatabase = {
       this.updateAddonActive(aAddon, !isDisabled);
 
       if (isDisabled) {
-        if (aAddon.bootstrap && XPIProvider.activeAddons.has(aAddon.id)) {
+        if (XPIProvider.activeAddons.has(aAddon.id)) {
           XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
                                           BOOTSTRAP_REASONS.ADDON_DISABLE);
           XPIProvider.unloadBootstrapScope(aAddon.id);
         }
         AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
-        if (aAddon.bootstrap) {
-          XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
-                                          BOOTSTRAP_REASONS.ADDON_ENABLE);
-        }
+        XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
+                                        BOOTSTRAP_REASONS.ADDON_ENABLE);
         AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
@@ -2875,7 +2873,7 @@ this.XPIDatabaseReconcile = {
     }
 
     for (let [id, addon] of previousVisible) {
-      if (addon.bootstrap && addonExists(addon)) {
+      if (addonExists(addon)) {
         this.callBootstrapUninstall(addon, BOOTSTRAP_REASONS.ADDON_UNINSTALL);
       }
       AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
@@ -2946,8 +2944,7 @@ this.XPIDatabaseReconcile = {
                             BOOTSTRAP_REASONS.ADDON_UPGRADE :
                             BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
 
-        if (previousAddon.bootstrap &&
-            previousAddon._installLocation &&
+        if (previousAddon._installLocation &&
             previousAddon._sourceBundle.exists() &&
             !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)) {
           this.callBootstrapUninstall(previousAddon, installReason,
@@ -2956,13 +2953,11 @@ this.XPIDatabaseReconcile = {
 
         XPIInstall.flushChromeCaches();
 
-        if (currentAddon.bootstrap) {
-          let file = currentAddon._sourceBundle.clone();
-          XPIProvider.callBootstrapMethod(currentAddon, file, "install", installReason,
-                                          { oldVersion: previousAddon.version });
-          if (currentAddon.disabled)
-            XPIProvider.unloadBootstrapScope(currentAddon.id);
-        }
+        let file = currentAddon._sourceBundle.clone();
+        XPIProvider.callBootstrapMethod(currentAddon, file, "install", installReason,
+                                        { oldVersion: previousAddon.version });
+        if (currentAddon.disabled)
+          XPIProvider.unloadBootstrapScope(currentAddon.id);
       }
 
       if (isActive != wasActive) {
@@ -2986,18 +2981,11 @@ this.XPIDatabaseReconcile = {
           currentAddon.userDisabled = true;
       }
     } else {
-      // This is a new install
-      if (currentAddon.foreignInstall)
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED, id);
-
-      if (currentAddon.bootstrap) {
-        AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED, id);
-        // Visible bootstrapped add-ons need to have their install method called
-        XPIProvider.callBootstrapMethod(currentAddon, currentAddon._sourceBundle,
-                                        "install", BOOTSTRAP_REASONS.ADDON_INSTALL);
-        if (!isActive)
-          XPIProvider.unloadBootstrapScope(currentAddon.id);
-      }
+      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED, id);
+      XPIProvider.callBootstrapMethod(currentAddon, currentAddon._sourceBundle,
+                                      "install", BOOTSTRAP_REASONS.ADDON_INSTALL);
+      if (!isActive)
+        XPIProvider.unloadBootstrapScope(currentAddon.id);
     }
 
     XPIDatabase.makeAddonVisible(currentAddon);
