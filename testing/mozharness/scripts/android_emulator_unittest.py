@@ -58,7 +58,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         super(AndroidEmulatorTest, self).__init__(
             config_options=self.config_options,
             all_actions=['clobber',
-                         'read-buildbot-config',
                          'setup-avds',
                          'start-emulator',
                          'download-and-extract',

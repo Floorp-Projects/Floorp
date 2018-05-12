@@ -17,6 +17,7 @@ For users
    :maxdepth: 1
 
    TraceLogs.md
+   CrashReports.md
 
 
 For developers

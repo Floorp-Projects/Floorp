@@ -285,6 +285,7 @@ class MarionetteMainProcess {
     this.finalUIStartup = false;
 
     log.level = MarionettePrefs.logLevel;
+    Services.ppmm.initialProcessData["Marionette:Log"] = {level: log.level};
 
     this.enabled = env.exists(ENV_ENABLED);
     this.alteredPrefs = new Set();

@@ -125,6 +125,7 @@ const remoteValues = {
   studyList: new RemoteValue("StudyList"),
   shieldLearnMoreHref: new RemoteValue("ShieldLearnMoreHref"),
   studiesEnabled: new RemoteValue("StudiesEnabled"),
+  shieldTranslations: new RemoteValue("ShieldTranslations"),
 };
 
 /**

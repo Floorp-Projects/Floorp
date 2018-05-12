@@ -90,24 +90,6 @@ awsy-stylo-sequential:
 ##
 # Limited test sets for specific platforms
 
-linux-qr-talos:
-    - talos-chrome
-    - talos-dromaeojs
-    - talos-g1
-    # - talos-g2 # doesn't work with QR yet
-    - talos-g3
-    - talos-g4
-    - talos-g5
-    - talos-other
-    - talos-svgr
-    - talos-tp5o
-    - talos-perf-reftest
-    - talos-perf-reftest-singletons
-    - talos-tp6
-    - talos-tp6-stylo-threads
-    - talos-speedometer
-    - talos-motionmark
-
 linux-qr-tests:
     - cppunit
     - crashtest
@@ -151,17 +133,6 @@ windows-qr-tests:
     - mochitest-webgl
     - reftest
     - reftest-fonts
-
-windows-qr-talos:
-    - talos-chrome
-    - talos-dromaeojs
-    - talos-g1
-    - talos-g4
-    - talos-perf-reftest
-    - talos-perf-reftest-singletons
-    - talos-tp5o
-    - talos-speedometer
-    - talos-motionmark
 
 jsdcov-code-coverage-tests:
     - mochitest

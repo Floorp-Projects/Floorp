@@ -1,20 +1,7 @@
 <html>
     <head><title>Hello, world!</title></head>
     <body>
-        <p id="message"></p>
-        <script>
-            const msg = document.getElementById("message");
-            msg.innerText = "Waiting for click...";
-            window.addEventListener("click", function() {
-                msg.innerText = "Opening window....";
-                try {
-                    const win = window.open("newSession_child.html");
-
-                    msg.innerText = "Opened window: " + win;
-                } catch (e) {
-                    msg.innerText = "Failed to open window: " + e;
-                }
-            });
-        </script>
+        <a id="targetBlankLink" target="_blank" href="newSession_child.html">target="_blank"</a>
+        <a id="noOpenerLink" target="_blank" rel="noopener" href="newSession_child.html">rel="noopener"</a>
     </body>
 </html>

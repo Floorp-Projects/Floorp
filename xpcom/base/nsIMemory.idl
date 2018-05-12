@@ -40,17 +40,6 @@
  * This will be passed as the extra data when the pressure 
  * observer is being asked to flush because of a heap minimize 
  * call.
- *
- * "alloc-failure"
- * This will be passed as the extra data when the pressure 
- * observer has been asked to flush because a malloc() or 
- * realloc() has failed.
- *
- * "lowering-priority"
- * This will be passed as the extra data when the priority of a child
- * process is lowered. The pressure observers could take the chance to
- * clear caches that could be easily regenerated. This type of
- * notification only appears in child processes.
  */
 
 [scriptable, uuid(1e004834-6d8f-425a-bc9c-a2812ed43bb7)]

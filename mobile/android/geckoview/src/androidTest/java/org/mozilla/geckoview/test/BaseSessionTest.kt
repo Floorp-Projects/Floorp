@@ -27,7 +27,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val INVALID_URI = "http://www.test.invalid/"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"
-        const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html";
+        const val NEW_SESSION_HTML_PATH = "/assets/www/newSession.html"
         const val NEW_SESSION_CHILD_HTML_PATH = "/assets/www/newSession_child.html"
         const val CLICK_TO_RELOAD_HTML_PATH = "/assets/www/clickToReload.html"
         const val TITLE_CHANGE_HTML_PATH = "/assets/www/titleChange.html"
@@ -101,7 +101,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.synthesizeTap(x: Int, y: Int) =
             sessionRule.synthesizeTap(this, x, y)
 
-    fun GeckoSession.evaluateJS(js: String) =
+    fun GeckoSession.evaluateJS(js: String): Any? =
             sessionRule.evaluateJS(this, js)
 
     infix fun Any?.dot(prop: Any): Any? =

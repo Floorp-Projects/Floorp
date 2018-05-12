@@ -12,7 +12,6 @@ job-defaults:
             default: hardware
     mozharness:
         script: talos_script.py
-        no-read-buildbot-config: true
         config:
             by-test-platform:
                 macosx.*:
@@ -353,7 +352,10 @@ talos-svgr:
     description: "Talos svgr"
     try-name: svgr
     treeherder-symbol: T(s)
-    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects:
+        by-test-platform:
+            windows10-64-qr/.*: []  # bug 1451305
+            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -432,6 +434,7 @@ talos-tps:
     max-run-time: 900
     run-on-projects:
         by-test-platform:
+            .*-qr/.*: []  # bug 1390875
             linux64-ccov/.*: ['try']  # Bug 1407593
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:

@@ -83,6 +83,16 @@ public:
                                     LayersId aOriginatingLayersId,
                                     const wr::Epoch& aEpoch,
                                     WebRenderScrollData&& aScrollData);
+  /**
+   * This is called in the WR-enabled case when we get an empty transaction that
+   * has some scroll offset updates (from paint-skipped scrolling on the content
+   * side). This function will update the stored scroll offsets and the
+   * hit-testing tree.
+   */
+  void UpdateScrollOffsets(LayersId aRootLayerTreeId,
+                           LayersId aOriginatingLayersId,
+                           ScrollUpdatesMap&& aUpdates,
+                           uint32_t aPaintSequenceNumber);
 
   void NotifyLayerTreeAdopted(LayersId aLayersId,
                               const RefPtr<APZUpdater>& aOldUpdater);

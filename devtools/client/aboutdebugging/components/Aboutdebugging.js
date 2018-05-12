@@ -76,7 +76,6 @@ class AboutDebuggingApp extends Component {
   componentWillUnmount() {
     window.removeEventListener("hashchange", this.onHashChange);
     this.props.telemetry.toolClosed("aboutdebugging");
-    this.props.telemetry.destroy();
   }
 
   onHashChange() {

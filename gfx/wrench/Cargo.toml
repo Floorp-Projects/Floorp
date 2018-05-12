@@ -35,6 +35,7 @@ core-foundation = "0.5"
 
 [features]
 headless = [ "osmesa-sys", "osmesa-src" ]
+pathfinder = [ "webrender/pathfinder" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.4.1"

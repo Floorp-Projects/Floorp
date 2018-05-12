@@ -90,6 +90,8 @@ public:
                                              const TimeStamp& aTxnStartTime,
                                              const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvEmptyTransaction(const FocusTarget& aFocusTarget,
+                                               const ScrollUpdatesMap& aUpdates,
+                                               const uint32_t& aPaintSequenceNumber,
                                                InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                                InfallibleTArray<OpDestroy>&& aToDestroy,
                                                const uint64_t& aFwdTransactionId,
@@ -191,6 +193,8 @@ private:
 
   void UpdateAPZFocusState(const FocusTarget& aFocus);
   void UpdateAPZScrollData(const wr::Epoch& aEpoch, WebRenderScrollData&& aData);
+  void UpdateAPZScrollOffsets(ScrollUpdatesMap&& aUpdates,
+                              uint32_t aPaintSequenceNumber);
 
   bool UpdateResources(const nsTArray<OpUpdateResource>& aResourceUpdates,
                        const nsTArray<RefCountedShmem>& aSmallShmems,

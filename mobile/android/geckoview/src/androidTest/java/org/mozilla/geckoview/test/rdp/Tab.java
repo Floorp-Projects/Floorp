@@ -5,12 +5,27 @@
 
 package org.mozilla.geckoview.test.rdp;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import org.json.JSONObject;
 
 /**
  * Provide access to the tab API.
  */
 public final class Tab extends Actor {
+    private final ReplyParser<Void> TAB_STATE_PARSER = new ReplyParser<Void>() {
+        @Override
+        public boolean canParse(@NonNull JSONObject packet) {
+            return packet.has("type");
+        }
+
+        @Override
+        public @Nullable Void parse(@NonNull JSONObject packet) {
+            return null;
+        }
+    };
+
     public final String title;
     public final String url;
     public final long outerWindowID;
@@ -28,14 +43,14 @@ public final class Tab extends Actor {
      * Attach to the server tab.
      */
     public void attach() {
-        sendPacket("{\"type\":\"attach\"}", "type");
+        sendPacket("{\"type\":\"attach\"}", TAB_STATE_PARSER).get();
     }
 
     /**
      * Detach from the server tab.
      */
     public void detach() {
-        sendPacket("{\"type\":\"detach\"}", "type");
+        sendPacket("{\"type\":\"detach\"}", TAB_STATE_PARSER).get();
     }
 
     /**

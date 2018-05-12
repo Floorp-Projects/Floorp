@@ -70,7 +70,9 @@ function testType(isValid, type, params = "") {
   const TEST_JSON_URL = "data:" + type + params + ",[1,2,3]";
   return addJsonViewTab(TEST_JSON_URL).then(async function() {
     ok(isValid, "The JSON Viewer should only load for valid content types.");
-    is(await evalInContent("document.contentType"), type, "Got the right content type");
+    await ContentTask.spawn(gBrowser.selectedBrowser, type, function(contentType) {
+      is(content.document.contentType, contentType, "Got the right content type");
+    });
 
     let count = await getElementCount(".jsonPanelBox .treeTable .treeRow");
     is(count, 3, "There must be expected number of rows");

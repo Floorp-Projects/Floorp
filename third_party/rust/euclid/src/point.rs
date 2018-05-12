@@ -406,7 +406,7 @@ define_matrix! {
 pub type Point3D<T> = TypedPoint3D<T, UnknownUnit>;
 
 impl<T: Copy + Zero, U> TypedPoint3D<T, U> {
-    /// Constructor, setting all copmonents to zero.
+    /// Constructor, setting all components to zero.
     #[inline]
     pub fn origin() -> Self {
         point3(Zero::zero(), Zero::zero(), Zero::zero())
@@ -470,7 +470,7 @@ impl<T: Copy, U> TypedPoint3D<T, U> {
 
     /// Cast this point into a vector.
     ///
-    /// Equivalent to substracting the origin to this point.
+    /// Equivalent to subtracting the origin to this point.
     #[inline]
     pub fn to_vector(&self) -> TypedVector3D<T, U> {
         vec3(self.x, self.y, self.z)

@@ -40,6 +40,7 @@ var ModuleManager = {
         yield [
           module.name,
           new ModuleInfo({
+            enabled: !!initData.modules[module.name],
             manager: self,
             ...module,
           }),
@@ -83,13 +84,13 @@ var ModuleManager = {
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
     this.forEach(module => {
-      if (!module.enabled) {
-        return;
+      if (module.enabled) {
+        module.impl.onSettingsUpdate();
       }
-      module.impl.onSettingsUpdate();
-      this._browser.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
-                                                    this._settings);
     });
+
+    this._browser.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
+                                                  aSettings);
   },
 
   onEvent(aEvent, aData, aCallback) {
@@ -103,9 +104,17 @@ var ModuleManager = {
       }
 
       case "GeckoView:UpdateInitData": {
-        // Replace all sett_onSettingsUpdateings during a transfer.
+        // Replace all settings during a transfer.
         const initData = this._initData;
         this._updateSettings(initData.settings);
+
+        // Update module enabled states.
+        for (const name in initData.modules) {
+          const module = this._modules.get(name);
+          if (module) {
+            module.enabled = initData.modules[name];
+          }
+        }
         break;
       }
 
@@ -124,7 +133,7 @@ var ModuleManager = {
  * object that extends GeckoViewModule.
  */
 class ModuleInfo {
-  constructor({manager, name, resource}) {
+  constructor({enabled, manager, name, resource}) {
     this._manager = manager;
     this._name = name;
 
@@ -135,10 +144,13 @@ class ModuleInfo {
 
     this._impl = new scope[name](this);
     this._enabled = false;
+    // Only enable once we performed initialization.
+    this._enabledOnInit = enabled;
   }
 
   onInit() {
     this._impl.onInit();
+    this.enabled = this._enabledOnInit;
   }
 
   get manager() {
@@ -163,9 +175,6 @@ class ModuleInfo {
     }
 
     if (!aEnabled) {
-      this._manager.messageManager.sendAsyncMessage("GeckoView:Unregister", {
-        module: this._name,
-      });
       this._impl.onDisable();
     }
 
@@ -174,11 +183,13 @@ class ModuleInfo {
     if (aEnabled) {
       this._impl.onEnable();
       this._impl.onSettingsUpdate();
-      this._manager.messageManager.sendAsyncMessage("GeckoView:Register", {
-        module: this._name,
-        settings: this._manager.settings,
-      });
     }
+
+    this._manager.messageManager.sendAsyncMessage("GeckoView:UpdateModuleState", {
+      module: this._name,
+      enabled: aEnabled,
+      settings: aEnabled ? this._manager.settings : null,
+    });
   }
 }
 

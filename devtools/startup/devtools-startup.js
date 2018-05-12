@@ -335,7 +335,7 @@ DevToolsStartup.prototype = {
     }
 
     let scalarId = "devtools.onboarding.is_devtools_user";
-    this.telemetry.logScalar(scalarId, this.isDevToolsUser());
+    this.telemetry.scalarSet(scalarId, this.isDevToolsUser());
     Services.prefs.setBoolPref(alreadyLoggedPref, true);
   },
 
@@ -861,7 +861,7 @@ DevToolsStartup.prototype = {
     // won't necessarely start the tool. For example key shortcuts may
     // only change the currently selected tool.
     try {
-      this.telemetry.log("DEVTOOLS_ENTRY_POINT", reason);
+      this.telemetry.getHistogramById("DEVTOOLS_ENTRY_POINT").add(reason);
     } catch (e) {
       dump("DevTools telemetry entry point failed: " + e + "\n");
     }
