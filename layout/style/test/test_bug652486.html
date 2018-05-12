@@ -32,101 +32,94 @@ var tests = [
   // a longhand property.
   { decoration: "none",
     line: null, color: null, style: null,
-    expectedValue: "none", expectedCSSValue: "none" },
+    expectedValue: "none" },
   { decoration: "underline",
     line: null, color: null, style: null,
-    expectedValue: "underline", expectedCSSValue: "underline" },
+    expectedValue: "underline" },
   { decoration: "overline",
     line: null, color: null, style: null,
-    expectedValue: "overline", expectedCSSValue: "overline" },
+    expectedValue: "overline" },
   { decoration: "line-through",
     line: null, color: null, style: null,
-    expectedValue: "line-through", expectedCSSValue: "line-through" },
+    expectedValue: "line-through" },
   { decoration: "blink",
     line: null, color: null, style: null,
-    expectedValue: "blink", expectedCSSValue: "blink" },
+    expectedValue: "blink" },
   { decoration: "underline overline",
     line: null, color: null, style: null,
-    expectedValue: "underline overline",
-    expectedCSSValue: "underline overline" },
+    expectedValue: "underline overline" },
   { decoration: "underline line-through",
     line: null, color: null, style: null,
-    expectedValue: "underline line-through",
-    expectedCSSValue: "underline line-through" },
+    expectedValue: "underline line-through" },
   { decoration: "blink underline",
     line: null, color: null, style: null,
-    expectedValue: "underline blink",
-    expectedCSSValue: "underline blink" },
+    expectedValue: "underline blink" },
   { decoration: "underline blink",
     line: null, color: null, style: null,
-    expectedValue: "underline blink",
-    expectedCSSValue: "underline blink" },
+    expectedValue: "underline blink" },
 
   // When only text-decoration-line or text-blink was specified,
   // text-decoration should look like a longhand property.
   { decoration: null,
     line: "blink", color: null, style: null,
-    expectedValue: "blink", expectedCSSValue: "blink" },
+    expectedValue: "blink" },
   { decoration: null,
     line: "underline", color: null, style: null,
-    expectedValue: "underline", expectedCSSValue: "underline" },
+    expectedValue: "underline" },
   { decoration: null,
     line: "overline", color: null, style: null,
-    expectedValue: "overline", expectedCSSValue: "overline" },
+    expectedValue: "overline" },
   { decoration: null,
     line: "line-through", color: null, style: null,
-    expectedValue: "line-through", expectedCSSValue: "line-through" },
+    expectedValue: "line-through" },
   { decoration: null,
     line: "blink underline", color: null, style: null,
-    expectedValue: "underline blink", expectedCSSValue: "underline blink" },
+    expectedValue: "underline blink" },
 
   // When text-decoration-color isn't its initial value,
   // text-decoration should be a shorthand property.
   { decoration: "blink",
     line: null, color: "rgb(0, 0, 0)", style: null,
-    expectedValue: "blink rgb(0, 0, 0)", expectedCSSValue: [ "blink", [0, 0, 0] ] },
+    expectedValue: "blink rgb(0, 0, 0)" },
   { decoration: "underline",
     line: null, color: "black", style: null,
-    expectedValue: "underline rgb(0, 0, 0)", expectedCSSValue: [ "underline", [0, 0, 0] ] },
+    expectedValue: "underline rgb(0, 0, 0)" },
   { decoration: "overline",
     line: null, color: "#ff0000", style: null,
-    expectedValue: "overline rgb(255, 0, 0)", expectedCSSValue: [ "overline", [255, 0, 0] ] },
+    expectedValue: "overline rgb(255, 0, 0)" },
   { decoration: "line-through",
     line: null, color: "initial", style: null,
-    expectedValue: "line-through", expectedCSSValue: "line-through" },
+    expectedValue: "line-through" },
   { decoration: "blink underline",
     line: null, color: "currentColor", style: null,
-    expectedValue: "underline blink", expectedCSSValue: "underline blink" },
+    expectedValue: "underline blink" },
   { decoration: "underline line-through",
     line: null, color: "currentcolor", style: null,
-    expectedValue: "underline line-through",
-    expectedCSSValue: "underline line-through" },
+    expectedValue: "underline line-through" },
 
   // When text-decoration-style isn't its initial value,
   // text-decoration should be a shorthand property.
   { decoration: "blink",
     line: null, color: null, style: "-moz-none",
-    expectedValue: "blink -moz-none", expectedCSSValue: [ "blink", "-moz-none" ] },
+    expectedValue: "blink -moz-none" },
   { decoration: "underline",
     line: null, color: null, style: "dotted",
-    expectedValue: "underline dotted", expectedCSSValue: [ "underline", "dotted" ] },
+    expectedValue: "underline dotted" },
   { decoration: "overline",
     line: null, color: null, style: "dashed",
-    expectedValue: "overline dashed", expectedCSSValue: [ "overline", "dashed" ] },
+    expectedValue: "overline dashed" },
   { decoration: "line-through",
     line: null, color: null, style: "double",
-    expectedValue: "line-through double", expectedCSSValue: [ "line-through", "double" ] },
+    expectedValue: "line-through double" },
   { decoration: "blink underline",
     line: null, color: null, style: "wavy",
-    expectedValue: "underline blink wavy", expectedCSSValue: [ "underline blink", "wavy" ] },
+    expectedValue: "underline blink wavy" },
   { decoration: "underline blink overline line-through",
     line: null, color: null, style: "solid",
-    expectedValue: "underline overline line-through blink",
-    expectedCSSValue: "underline overline line-through blink" },
+    expectedValue: "underline overline line-through blink" },
   { decoration: "line-through overline underline",
     line: null, color: null, style: "initial",
-    expectedValue: "underline overline line-through",
-    expectedCSSValue: "underline overline line-through" }
+    expectedValue: "underline overline line-through" }
 ];
 
 function makeDeclaration(aTest)
@@ -152,31 +145,6 @@ function clearStyleObject()
   $('t').style.textDecoration = null;
 }
 
-function testCSSValue(testname, test, dec) {
-  var val = document.defaultView.getComputedStyle($('t')).
-              getPropertyCSSValue("text-decoration");
-  isnot(val, null, testname + " (CSS value): " + dec);
-
-  if (typeof test.expectedCSSValue == "string") {
-    is(val.getStringValue(), test.expectedCSSValue, testname + " (CSS value): " + dec);
-    return;
-  }
-
-  is(val.length, test.expectedCSSValue.length, testname + " (CSS value length): " + dec);
-  for (var i = 0; i < val.length; i ++) {
-    var actual = val[i];
-    var expected = test.expectedCSSValue[i];
-    if (typeof expected == "string") {
-      is(actual.getStringValue(), expected, testname + " (CSS value [" + i + "] value): " + dec);
-    } else if (typeof expected == "object") {
-      var rgb = actual.getRGBColorValue();
-      is(rgb.red.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[0], testname + " (CSS value [" + i + "] red): " + dec);
-      is(rgb.green.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[1], testname + " (CSS value [" + i + "] green): " + dec);
-      is(rgb.blue.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[2], testname + " (CSS value [" + i + "] blue): " + dec);
-    }
-  }
-}
-
 for (var i = 0; i < tests.length; ++i) {
   var test = tests[i];
   if (test.decoration) {
@@ -194,14 +162,12 @@ for (var i = 0; i < tests.length; ++i) {
 
   var dec = makeDeclaration(test);
   is(c(), test.expectedValue, "Test1 (computed value): " + dec);
-  testCSSValue("Test1", test, dec);
 
   clearStyleObject();
 
   $('t').setAttribute("style", dec);
 
   is(c(), test.expectedValue, "Test2 (computed value): " + dec);
-  testCSSValue("Test2", test, dec);
 
   $('t').removeAttribute("style");
 }

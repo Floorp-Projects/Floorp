@@ -32,23 +32,8 @@ class ArrayObject : public NativeObject
     }
 
     void setNonWritableLength(JSContext* cx) {
-        if (getElementsHeader()->numShiftedElements() > 0)
-            moveShiftedElements();
-
-        // When an array's length becomes non-writable, writes to indexes
-        // greater than or equal to the length don't change the array.  We
-        // handle this with a check for non-writable length in most places.
-        // But in JIT code every check counts -- so we piggyback the check on
-        // the already-required range check for |index < capacity| by making
-        // capacity of arrays with non-writable length never exceed the length.
-        ObjectElements* header = getElementsHeader();
-        uint32_t len = header->initializedLength;
-        if (header->capacity > len) {
-            shrinkElements(cx, len);
-            header = getElementsHeader();
-            header->capacity = len;
-        }
-        header->setNonwritableArrayLength();
+        shrinkCapacityToInitializedLength(cx);
+        getElementsHeader()->setNonwritableArrayLength();
     }
 
     inline void setLength(JSContext* cx, uint32_t length);
@@ -56,6 +41,7 @@ class ArrayObject : public NativeObject
     // Variant of setLength for use on arrays where the length cannot overflow int32_t.
     void setLengthInt32(uint32_t length) {
         MOZ_ASSERT(lengthIsWritable());
+        MOZ_ASSERT_IF(length != getElementsHeader()->length, !denseElementsAreFrozen());
         MOZ_ASSERT(length <= INT32_MAX);
         getElementsHeader()->length = length;
     }

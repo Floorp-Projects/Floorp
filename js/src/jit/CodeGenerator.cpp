@@ -9161,6 +9161,7 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
 {
     LInstruction* ins_;
     Label rejoinStore_;
+    Label callStub_;
     bool strict_;
 
   public:
@@ -9179,6 +9180,9 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
     }
     Label* rejoinStore() {
         return &rejoinStore_;
+    }
+    Label* callStub() {
+        return &callStub_;
     }
     bool strict() const {
         return strict_;
@@ -9285,6 +9289,18 @@ CodeGenerator::emitStoreElementHoleT(T* lir)
     if (lir->mir()->needsBarrier())
         emitPreBarrier(elements, lir->index(), 0);
 
+    if (std::is_same<T, LFallibleStoreElementT>::value) {
+        // If the object might be non-extensible, check for frozen elements and
+        // holes.
+        Address flags(elements, ObjectElements::offsetOfFlags());
+        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
+                          ool->callStub());
+        if (lir->toFallibleStoreElementT()->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+                                 ool->callStub());
+        }
+    }
+
     masm.bind(ool->rejoinStore());
     emitStoreElementTyped(lir->value(), lir->mir()->value()->type(), lir->mir()->elementType(),
                           elements, lir->index(), 0);
@@ -9316,6 +9332,18 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
     masm.spectreBoundsCheck32(index, initLength, spectreTemp, ool->entry());
 
+    if (std::is_same<T, LFallibleStoreElementV>::value) {
+        // If the object might be non-extensible, check for frozen elements and
+        // holes.
+        Address flags(elements, ObjectElements::offsetOfFlags());
+        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN),
+                          ool->callStub());
+        if (lir->toFallibleStoreElementV()->mir()->needsHoleCheck()) {
+            masm.branchTestMagic(Assembler::Equal, BaseValueIndex(elements, index),
+                                 ool->callStub());
+        }
+    }
+
     if (lir->mir()->needsBarrier())
         emitPreBarrier(elements, lir->index(), 0);
 
@@ -9331,72 +9359,16 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV* lir)
     emitStoreElementHoleV(lir);
 }
 
-typedef bool (*ThrowReadOnlyFn)(JSContext*, HandleObject, int32_t);
-static const VMFunction ThrowReadOnlyInfo =
-    FunctionInfo<ThrowReadOnlyFn>(ThrowReadOnlyError, "ThrowReadOnlyError");
-
 void
 CodeGenerator::visitFallibleStoreElementT(LFallibleStoreElementT* lir)
 {
-    Register elements = ToRegister(lir->elements());
-
-    // Handle frozen objects
-    Label isFrozen;
-    Address flags(elements, ObjectElements::offsetOfFlags());
-    if (!lir->mir()->strict()) {
-        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), &isFrozen);
-    } else {
-        Register object = ToRegister(lir->object());
-        const LAllocation* index = lir->index();
-        OutOfLineCode* ool;
-        if (index->isConstant()) {
-            ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                            ArgList(object, Imm32(ToInt32(index))), StoreNothing());
-        } else {
-            ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                            ArgList(object, ToRegister(index)), StoreNothing());
-        }
-        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), ool->entry());
-        // This OOL code should have thrown an exception, so will never return.
-        // So, do not bind ool->rejoin() anywhere, so that it implicitly (and without the cost
-        // of a jump) does a masm.assumeUnreachable().
-    }
-
     emitStoreElementHoleT(lir);
-
-    masm.bind(&isFrozen);
 }
 
 void
 CodeGenerator::visitFallibleStoreElementV(LFallibleStoreElementV* lir)
 {
-    Register elements = ToRegister(lir->elements());
-
-    // Handle frozen objects
-    Label isFrozen;
-    Address flags(elements, ObjectElements::offsetOfFlags());
-    if (!lir->mir()->strict()) {
-        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), &isFrozen);
-    } else {
-        Register object = ToRegister(lir->object());
-        const LAllocation* index = lir->index();
-        OutOfLineCode* ool;
-        if (index->isConstant()) {
-            ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                            ArgList(object, Imm32(ToInt32(index))), StoreNothing());
-        } else {
-            ool = oolCallVM(ThrowReadOnlyInfo, lir,
-                            ArgList(object, ToRegister(index)), StoreNothing());
-        }
-        masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), ool->entry());
-        // This OOL code should have thrown an exception, so will never return.
-        // So, do not bind ool->rejoin() anywhere, so that it implicitly (and without the cost
-        // of a jump) does a masm.assumeUnreachable().
-    }
-
     emitStoreElementHoleV(lir);
-
-    masm.bind(&isFrozen);
 }
 
 typedef bool (*SetDenseElementFn)(JSContext*, HandleNativeObject, int32_t, HandleValue,
@@ -9461,18 +9433,17 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     // condition flags sticking from the incoming branch.
     // Also note: this branch does not need Spectre mitigations, doing that for
     // the capacity check below is sufficient.
-    Label callStub;
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     // Had to reimplement for MIPS because there are no flags.
     Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-    masm.branch32(Assembler::NotEqual, initLength, indexReg, &callStub);
+    masm.branch32(Assembler::NotEqual, initLength, indexReg, ool->callStub());
 #else
-    masm.j(Assembler::NotEqual, &callStub);
+    masm.j(Assembler::NotEqual, ool->callStub());
 #endif
 
     // Check array capacity.
     masm.spectreBoundsCheck32(indexReg, Address(elements, ObjectElements::offsetOfCapacity()),
-                              spectreTemp, &callStub);
+                              spectreTemp, ool->callStub());
 
     // Update initialized length. The capacity guard above ensures this won't overflow,
     // due to MAX_DENSE_ELEMENTS_COUNT.
@@ -9508,7 +9479,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
         masm.jump(ool->rejoinStore());
     }
 
-    masm.bind(&callStub);
+    masm.bind(ool->callStub());
     saveLive(ins);
 
     pushArg(Imm32(ool->strict()));
@@ -9658,13 +9629,13 @@ CodeGenerator::emitArrayPopShift(LInstruction* lir, const MArrayPopShift* mir, R
         masm.loadElementTypedOrValue(addr, out, mir->needsHoleCheck(), ool->entry());
     }
 
-    // Handle the failure case when the array length is non-writable in the
-    // OOL path.  (Unlike in the adding-an-element cases, we can't rely on the
-    // capacity <= length invariant for such arrays to avoid an explicit
-    // check.)
+    // Handle the failure cases when the array length is non-writable or the
+    // object is sealed in the OOL path. (Unlike in the adding-an-element cases,
+    // we can't rely on the capacity <= length invariant for such arrays to
+    // avoid an explicit check.)
     Address elementFlags(elementsTemp, ObjectElements::offsetOfFlags());
-    Imm32 bit(ObjectElements::NONWRITABLE_ARRAY_LENGTH);
-    masm.branchTest32(Assembler::NonZero, elementFlags, bit, ool->entry());
+    Imm32 bits(ObjectElements::NONWRITABLE_ARRAY_LENGTH | ObjectElements::SEALED);
+    masm.branchTest32(Assembler::NonZero, elementFlags, bits, ool->entry());
 
     if (mir->mode() == MArrayPopShift::Shift) {
         // Don't save the elementsTemp register.

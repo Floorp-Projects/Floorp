@@ -53,9 +53,6 @@ public:
 
   NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
                               nsAString& aValue) = 0;
-  virtual already_AddRefed<mozilla::dom::CSSValue>
-    GetPropertyCSSValue(const nsAString& aPropertyName,
-                        mozilla::ErrorResult& aRv) = 0;
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
                             nsAString& aReturn) = 0;
   NS_IMETHOD SetProperty(const nsAString& aPropertyName,
