@@ -5538,8 +5538,11 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
       // header; in HTML 4, it can directly carry the ALIGN attribute and we
       // don't need to make a div! If we are in CSS mode, all the work is done
       // in AlignBlock
-      rv = AlignBlock(*node->AsElement(), aAlignType, ContentsOnly::yes);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = AlignBlock(*node->AsElement(), aAlignType,
+                      ResetAlignOf::OnlyDescendants);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       return NS_OK;
     }
 
@@ -5619,8 +5622,10 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     // Remember our new block for postprocessing
     mNewBlock = div;
     // Set up the alignment on the div, using HTML or CSS
-    rv = AlignBlock(*div, aAlignType, ContentsOnly::yes);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = AlignBlock(*div, aAlignType, ResetAlignOf::OnlyDescendants);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
     *aHandled = true;
     // Put in a moz-br so that it won't get deleted
     CreateElementResult createMozBrResult =
@@ -5664,8 +5669,11 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     // don't need to nest it, just set the alignment.  In CSS, assign the
     // corresponding CSS styles in AlignBlock
     if (HTMLEditUtils::SupportsAlignAttr(*curNode)) {
-      rv = AlignBlock(*curNode->AsElement(), aAlignType, ContentsOnly::no);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = AlignBlock(*curNode->AsElement(), aAlignType,
+                      ResetAlignOf::ElementAndDescendants);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       // Clear out curDiv so that we don't put nodes after this one into it
       curDiv = nullptr;
       continue;
@@ -5738,7 +5746,11 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
       // Remember our new block for postprocessing
       mNewBlock = curDiv;
       // Set up the alignment on the div
-      rv = AlignBlock(*curDiv, aAlignType, ContentsOnly::yes);
+      rv = AlignBlock(*curDiv, aAlignType, ResetAlignOf::OnlyDescendants);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to align the <div>");
     }
 
     // Tuck the node into the end of the active div
@@ -9867,7 +9879,7 @@ HTMLEditRules::MakeSureElemStartsAndEndsOnCR(nsINode& aNode)
 nsresult
 HTMLEditRules::AlignBlock(Element& aElement,
                           const nsAString& aAlignType,
-                          ContentsOnly aContentsOnly)
+                          ResetAlignOf aResetAlignOf)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -9877,15 +9889,23 @@ HTMLEditRules::AlignBlock(Element& aElement,
   }
 
   nsresult rv = RemoveAlignment(aElement, aAlignType,
-                                aContentsOnly == ContentsOnly::yes);
+                                aResetAlignOf == ResetAlignOf::OnlyDescendants);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   if (HTMLEditorRef().IsCSSEnabled()) {
     // Let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    return HTMLEditorRef().SetAttributeOrEquivalent(
-                             &aElement, nsGkAtoms::align, aAlignType, false);
+    nsresult rv =
+      HTMLEditorRef().SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
+                                               aAlignType, false);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
 
   // HTML case; this code is supposed to be called ONLY if the element
@@ -9897,6 +9917,9 @@ HTMLEditRules::AlignBlock(Element& aElement,
 
   rv = HTMLEditorRef().SetAttributeOrEquivalent(&aElement, nsGkAtoms::align,
                                                 aAlignType, false);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
