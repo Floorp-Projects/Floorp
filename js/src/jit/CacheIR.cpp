@@ -3477,13 +3477,13 @@ SetPropIRGenerator::tryAttachSetDenseElement(HandleObject obj, ObjOperandId objI
 }
 
 static bool
-CanAttachAddElement(JSObject* obj, bool isInit)
+CanAttachAddElement(NativeObject* obj, bool isInit)
 {
     // Make sure the objects on the prototype don't have any indexed properties
     // or that such properties can't appear without a shape change.
     do {
         // The first two checks are also relevant to the receiver object.
-        if (obj->isNative() && obj->as<NativeObject>().isIndexed())
+        if (obj->isIndexed())
             return false;
 
         const Class* clasp = obj->getClass();
@@ -3522,7 +3522,7 @@ CanAttachAddElement(JSObject* obj, bool isInit)
         if (!nproto->isExtensible() && nproto->getDenseInitializedLength() > 0)
             return false;
 
-        obj = proto;
+        obj = nproto;
     } while (true);
 
     return true;
@@ -4393,7 +4393,7 @@ CallIRGenerator::tryAttachArrayPush()
         return false;
 
     // Check for other indexed properties or class hooks.
-    if (!CanAttachAddElement(thisobj, /* isInit = */ false))
+    if (!CanAttachAddElement(thisarray, /* isInit = */ false))
         return false;
 
     // Can't add new elements to arrays with non-writable length.
