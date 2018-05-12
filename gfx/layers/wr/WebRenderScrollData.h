@@ -160,15 +160,20 @@ public:
   void Dump() const;
 
 private:
+  // This is called by the ParamTraits implementation to rebuild mScrollIdMap
+  // based on mScrollMetadatas
+  bool RepopulateMap();
+
+private:
   // Pointer back to the layer manager; if this is non-null, it will always be
   // valid, because the WebRenderLayerManager that created |this| will
   // outlive |this|.
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
 
   // Internal data structure used to maintain uniqueness of mScrollMetadatas.
-  // This is not serialized/deserialized over IPC because there's no need for it,
-  // as the parent side doesn't need this at all. Also because we don't have any
-  // IPC-friendly hashtable implementation lying around.
+  // This is not serialized/deserialized over IPC, but it is rebuilt on the
+  // parent side when mScrollMetadatas is deserialized. So it should always be
+  // valid on both the child and parent.
   // The key into this map is the scrollId of a ScrollMetadata, and the value is
   // an index into the mScrollMetadatas array.
   std::map<FrameMetrics::ViewID, size_t> mScrollIdMap;
@@ -270,7 +275,8 @@ struct ParamTraits<mozilla::layers::WebRenderScrollData>
         && ReadParam(aMsg, aIter, &aResult->mLayerScrollData)
         && ReadParam(aMsg, aIter, &aResult->mFocusTarget)
         && ReadParam(aMsg, aIter, &aResult->mIsFirstPaint)
-        && ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber);
+        && ReadParam(aMsg, aIter, &aResult->mPaintSequenceNumber)
+        && aResult->RepopulateMap();
   }
 };
 
