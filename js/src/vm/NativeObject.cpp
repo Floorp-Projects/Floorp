@@ -528,7 +528,8 @@ NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32
     }
 
     // NOTE: We don't use addDataProperty because we don't want the
-    // extensibility check if we're, for example, sparsifying frozen objects..
+    // extensibility check if we're, for example, sparsifying an element of a
+    // non-extensible object.
     Shape* shape = addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT,
                                            obj->getElementsHeader()->elementAttributes(),
                                            table, entry, keep);
