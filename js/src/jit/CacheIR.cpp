@@ -3508,7 +3508,18 @@ CanAttachAddElement(JSObject* obj, bool isInit)
         if (!proto->isNative())
             return false;
 
-        if (proto->as<NativeObject>().denseElementsAreFrozen())
+        // We have to make sure the proto has no non-writable (frozen) elements
+        // because we're not allowed to shadow them. There are a few cases to
+        // consider:
+        //
+        // * If the proto is extensible, its Shape will change when it's made
+        //   non-extensible.
+        //
+        // * If the proto is already non-extensible, no new elements will be
+        //   added, so if there are no elements now it doesn't matter if the
+        //   object is frozen later on.
+        NativeObject* nproto = &proto->as<NativeObject>();
+        if (!nproto->isExtensible() && nproto->getDenseInitializedLength() > 0)
             return false;
 
         obj = proto;
@@ -3532,7 +3543,7 @@ SetPropIRGenerator::tryAttachSetDenseElementHole(HandleObject obj, ObjOperandId 
         return false;
 
     NativeObject* nobj = &obj->as<NativeObject>();
-    if (!nobj->nonProxyIsExtensible())
+    if (!nobj->isExtensible())
         return false;
 
     MOZ_ASSERT(!nobj->getElementsHeader()->isFrozen(),
@@ -4390,7 +4401,7 @@ CallIRGenerator::tryAttachArrayPush()
         return false;
 
     // Check that array is extensible.
-    if (!thisarray->nonProxyIsExtensible())
+    if (!thisarray->isExtensible())
         return false;
 
     MOZ_ASSERT(!thisarray->getElementsHeader()->isFrozen(),
