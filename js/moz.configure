@@ -102,13 +102,29 @@ def disable_export_js(value):
     die('Setting %s is deprecated, use %s instead.',
         value.format('DISABLE_EXPORT_JS'), suggestion)
 
+# Experimental BigInt support
+# =======================================================
+js_option('--enable-bigint',
+          default=False,
+          help='Enable BigInt')
+
+@depends('--enable-bigint')
+def enable_bigint(value):
+    if value:
+        return True
+
+set_config('ENABLE_BIGINT', enable_bigint)
+set_define('ENABLE_BIGINT', enable_bigint)
 
 # JIT support
 # =======================================================
-@depends(target)
-def ion_default(target):
+@depends(target, '--enable-bigint')
+def ion_default(target, enable_bigint):
+    if enable_bigint:
+        return False
     if target.cpu in ('x86', 'x86_64', 'arm', 'aarch64', 'mips32', 'mips64'):
         return True
+    return False
 
 js_option('--enable-ion',
           default=ion_default,
