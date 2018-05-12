@@ -55,7 +55,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <list>
+#include <deque>
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -207,7 +207,7 @@ private:
     }
   }
 
-  std::list<DisplayItemEntry> mMarkers;
+  std::deque<DisplayItemEntry> mMarkers;
   AutoTArray<nsDisplayItem*, 4> mActiveMarkers;
   ContainerState* mState;
 };
