@@ -306,9 +306,8 @@ add_task(async function test_should_not_fire_on_restart() {
   });
 
   let addon = await AddonManager.getAddonByID(EXTENSION_ID);
-  addon.userDisabled = true;
-
-  addon.userDisabled = false;
+  await addon.disable();
+  await addon.enable();
   await extension.awaitStartup();
 
   await expectEvents(extension, {

@@ -661,7 +661,7 @@ add_task(async function() {
 
   let addon = await promiseAddonByID(ID);
 
-  addon.userDisabled = true;
+  await addon.disable();
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -716,7 +716,7 @@ add_task(async function() {
   tempAddon.uninstall();
   unpacked_addon.remove(true);
 
-  addon.userDisabled = false;
+  await addon.enable();
   await new Promise(executeSoon);
   addon = await promiseAddonByID(ID);
 

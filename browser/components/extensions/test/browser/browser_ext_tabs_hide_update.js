@@ -17,7 +17,7 @@ async function updateExtension(ID, options) {
 async function disableExtension(ID) {
   let disabledPromise = awaitEvent("shutdown", ID);
   let addon = await AddonManager.getAddonByID(ID);
-  addon.userDisabled = true;
+  await addon.disable();
   await disabledPromise;
 }
 

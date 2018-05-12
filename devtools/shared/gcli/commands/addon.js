@@ -251,7 +251,7 @@ var items = [
     exec: function(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.userDisabled) {
-        args.addon.userDisabled = false;
+        args.addon.enable();
         return l10n.lookupFormat("addonEnabled", [ name ]);
       }
 
@@ -277,7 +277,7 @@ var items = [
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (!args.addon.userDisabled ||
           args.addon.userDisabled === AddonManager.STATE_ASK_TO_ACTIVATE) {
-        args.addon.userDisabled = true;
+        args.addon.disable();
         return l10n.lookupFormat("addonDisabled", [ name ]);
       }
 

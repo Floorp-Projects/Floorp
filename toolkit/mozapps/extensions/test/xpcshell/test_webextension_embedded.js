@@ -252,7 +252,7 @@ add_task(async function reload_embedded_webext_bootstrap() {
   await startupInfo.data.webExtension.startup();
 
   const waitForAddonDisabled = promiseAddonEvent("onDisabled");
-  addon.userDisabled = true;
+  await addon.disable();
   await waitForAddonDisabled;
 
   // No embedded webextension should be currently around.
@@ -260,7 +260,7 @@ add_task(async function reload_embedded_webext_bootstrap() {
         "No embedded extension instance should be tracked here");
 
   const waitForAddonEnabled = promiseAddonEvent("onEnabled");
-  addon.userDisabled = false;
+  await addon.enable();
   await waitForAddonEnabled;
 
   // Only one embedded extension.

@@ -1106,6 +1106,13 @@ MockAddon.prototype = {
     return val;
   },
 
+  async enable() {
+    this.userDisabled = false;
+  },
+  async disable() {
+    this.userDisabled = true;
+  },
+
   get permissions() {
     let permissions = this._permissions;
     if (this.appDisabled || !this._userDisabled)

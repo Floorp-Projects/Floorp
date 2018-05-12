@@ -90,7 +90,7 @@ add_task(async function detect_touches() {
          ]);
 
   info("Disable test add-ons");
-  pd.userDisabled = true;
+  await pd.disable();
 
   let XS = getXS();
 

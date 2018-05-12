@@ -1097,14 +1097,14 @@ add_task(async function test_addonsWatch_InterestingChange() {
 
   checkpointPromise = registerCheckpointPromise(2);
   let addon = await AddonManager.getAddonByID(ADDON_ID);
-  addon.userDisabled = true;
+  await addon.disable();
   await checkpointPromise;
   assertCheckpoint(2);
   Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
 
   checkpointPromise = registerCheckpointPromise(3);
   let startupPromise = AddonTestUtils.promiseWebExtensionStartup(ADDON_ID);
-  addon.userDisabled = false;
+  await addon.enable();
   await checkpointPromise;
   assertCheckpoint(3);
   Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);

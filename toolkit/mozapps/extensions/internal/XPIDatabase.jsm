@@ -535,6 +535,26 @@ class AddonInternal {
     }
   }
 
+  async setUserDisabled(val) {
+    if (val == (this.userDisabled || this.softDisabled)) {
+      return;
+    }
+
+    if (this.inDatabase) {
+      // hidden and system add-ons should not be user disabled,
+      // as there is no UI to re-enable them.
+      if (this.hidden) {
+        throw new Error(`Cannot disable hidden add-on ${this.id}`);
+      }
+      await XPIDatabase.updateAddonDisabledState(this, val);
+    } else {
+      this.userDisabled = val;
+      // When enabling remove the softDisabled flag
+      if (!val)
+        this.softDisabled = false;
+    }
+  }
+
   applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
     let wasCompatible = this.isCompatible;
 
@@ -908,27 +928,13 @@ AddonWrapper = class {
     let addon = addonFor(this);
     return addon.softDisabled || addon.userDisabled;
   }
-  set userDisabled(val) {
-    let addon = addonFor(this);
-    if (val == this.userDisabled) {
-      return val;
-    }
 
-    if (addon.inDatabase) {
-      // hidden and system add-ons should not be user disabled,
-      // as there is no UI to re-enable them.
-      if (this.hidden) {
-        throw new Error(`Cannot disable hidden add-on ${addon.id}`);
-      }
-      XPIDatabase.updateAddonDisabledState(addon, val);
-    } else {
-      addon.userDisabled = val;
-      // When enabling remove the softDisabled flag
-      if (!val)
-        addon.softDisabled = false;
-    }
+  enable() {
+    return addonFor(this).setUserDisabled(false);
+  }
 
-    return val;
+  disable() {
+    return addonFor(this).setUserDisabled(true);
   }
 
   set softDisabled(val) {
@@ -953,11 +959,7 @@ AddonWrapper = class {
   }
 
   get hidden() {
-    let addon = addonFor(this);
-    if (addon.location.isTemporary)
-      return false;
-
-    return addon.location.isSystem;
+    return addonFor(this).hidden;
   }
 
   get isSystem() {

@@ -44,7 +44,7 @@ add_task(async function test_enable() {
     is(addon.userDisabled, true, "addon is disabled");
 
     // enable it
-    addon.userDisabled = false;
+    await addon.enable();
     is(addon.userDisabled, false, "addon was enabled successfully");
 
     let events = await getListenerEvents(browser);
@@ -64,11 +64,11 @@ add_task(async function test_restartless() {
     is(addon.userDisabled, false, "addon is enabled");
 
     // disable it
-    addon.userDisabled = true;
+    await addon.disable();
     is(addon.userDisabled, true, "addon was disabled successfully");
 
     // re-enable it
-    addon.userDisabled = false;
+    await addon.enable();
     is(addon.userDisabled, false, "addon was re-enabled successfuly");
 
     let events = await getListenerEvents(browser);
