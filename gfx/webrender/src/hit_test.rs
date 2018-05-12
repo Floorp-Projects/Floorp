@@ -27,9 +27,6 @@ pub struct HitTestClipScrollNode {
 
     /// World viewport transform for content transformed by this node.
     world_viewport_transform: LayoutToWorldFastTransform,
-
-    /// Origin of the viewport of the node, used to calculate node-relative positions.
-    node_origin: LayoutPoint,
 }
 
 /// A description of a clip chain in the HitTester. This is used to describe
@@ -141,7 +138,6 @@ impl HitTester {
                 regions: get_regions_for_clip_scroll_node(node, clip_store),
                 world_content_transform: node.world_content_transform,
                 world_viewport_transform: node.world_viewport_transform,
-                node_origin: node.local_viewport_rect.origin,
             });
 
             if let NodeType::Clip { clip_chain_index, .. } = node.node_type {
@@ -166,7 +162,7 @@ impl HitTester {
         test: &mut HitTest
     ) -> bool {
         if let Some(result) = test.get_from_clip_chain_cache(clip_chain_index) {
-            return result;
+            return result == ClippedIn::ClippedIn;
         }
 
         let descriptor = &self.clip_chains[clip_chain_index.0];
@@ -176,18 +172,18 @@ impl HitTester {
         };
 
         if !parent_clipped_in {
-            test.set_in_clip_chain_cache(clip_chain_index, false);
+            test.set_in_clip_chain_cache(clip_chain_index, ClippedIn::NotClippedIn);
             return false;
         }
 
         for clip_node_index in &descriptor.clips {
             if !self.is_point_clipped_in_for_node(point, *clip_node_index, test) {
-                test.set_in_clip_chain_cache(clip_chain_index, false);
+                test.set_in_clip_chain_cache(clip_chain_index, ClippedIn::NotClippedIn);
                 return false;
             }
         }
 
-        test.set_in_clip_chain_cache(clip_chain_index, true);
+        test.set_in_clip_chain_cache(clip_chain_index, ClippedIn::ClippedIn);
         true
     }
 
@@ -197,8 +193,8 @@ impl HitTester {
         node_index: ClipScrollNodeIndex,
         test: &mut HitTest
     ) -> bool {
-        if let Some(point) = test.node_cache.get(&node_index) {
-            return point.is_some();
+        if let Some(clipped_in) = test.node_cache.get(&node_index) {
+            return *clipped_in == ClippedIn::ClippedIn;
         }
 
         let node = &self.nodes[node_index.0];
@@ -206,21 +202,53 @@ impl HitTester {
         let transformed_point = match transform.inverse() {
             Some(inverted) => inverted.transform_point2d(&point),
             None => {
-                test.node_cache.insert(node_index, None);
+                test.node_cache.insert(node_index, ClippedIn::NotClippedIn);
                 return false;
             }
         };
 
-        let point_in_layer = transformed_point - node.node_origin.to_vector();
         for region in &node.regions {
             if !region.contains(&transformed_point) {
-                test.node_cache.insert(node_index, None);
+                test.node_cache.insert(node_index, ClippedIn::NotClippedIn);
                 return false;
             }
         }
 
-        test.node_cache.insert(node_index, Some(point_in_layer));
+        test.node_cache.insert(node_index, ClippedIn::ClippedIn);
         true
+    }
+
+    pub fn find_node_under_point(&self, mut test: HitTest) -> Option<ClipScrollNodeIndex> {
+        let point = test.get_absolute_point(self);
+
+        for &HitTestingRun(ref items, ref clip_and_scroll) in self.runs.iter().rev() {
+            let scroll_node_id = clip_and_scroll.scroll_node_id;
+            let scroll_node = &self.nodes[scroll_node_id.0];
+            let transform = scroll_node.world_content_transform;
+            let point_in_layer = match transform.inverse() {
+                Some(inverted) => inverted.transform_point2d(&point),
+                None => continue,
+            };
+
+            let mut clipped_in = false;
+            for item in items.iter().rev() {
+                if !item.rect.contains(&point_in_layer) ||
+                    !item.clip_rect.contains(&point_in_layer) {
+                    continue;
+                }
+
+                let clip_chain_index = clip_and_scroll.clip_chain_index;
+                clipped_in |=
+                    self.is_point_clipped_in_for_clip_chain(point, clip_chain_index, &mut test);
+                if !clipped_in {
+                    break;
+                }
+
+                return Some(scroll_node_id);
+            }
+        }
+
+        None
     }
 
     pub fn hit_test(&self, mut test: HitTest) -> HitTestResult {
@@ -257,26 +285,22 @@ impl HitTester {
                     break;
                 }
 
-                // We need to trigger a lookup against the root reference frame here, because
-                // items that are clipped by clip chains won't test against that part of the
-                // hierarchy. If we don't have a valid point for this test, we are likely
-                // in a situation where the reference frame has an univertible transform, but the
-                // item's clip does not.
-                let root_node_index = self.pipeline_root_nodes[&pipeline_id];
-                if !self.is_point_clipped_in_for_node(point, root_node_index, &mut test) {
-                    continue;
-                }
-                let point_in_viewport = match test.node_cache[&root_node_index] {
-                    Some(point) => point,
-                    None => continue,
-                };
-
                 // Don't hit items with backface-visibility:hidden if they are facing the back.
                 if !item.is_backface_visible {
                     if *facing_backwards.get_or_insert_with(|| transform.is_backface_visible()) {
                         continue;
                     }
                 }
+
+                // We need to calculate the position of the test point relative to the origin of
+                // the pipeline of the hit item. If we cannot get a transformed point, we are
+                // in a situation with an uninvertible transformation so we should just skip this
+                // result.
+                let root_node = &self.nodes[self.pipeline_root_nodes[&pipeline_id].0];
+                let point_in_viewport = match root_node.world_viewport_transform.inverse() {
+                    Some(inverted) => inverted.transform_point2d(&point),
+                    None => continue,
+                };
 
                 result.items.push(HitTestItem {
                     pipeline: pipeline_id,
@@ -323,12 +347,18 @@ fn get_regions_for_clip_scroll_node(
     }).collect()
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum ClippedIn {
+    ClippedIn,
+    NotClippedIn,
+}
+
 pub struct HitTest {
     pipeline_id: Option<PipelineId>,
     point: WorldPoint,
     flags: HitTestFlags,
-    node_cache: FastHashMap<ClipScrollNodeIndex, Option<LayoutPoint>>,
-    clip_chain_cache: Vec<Option<bool>>,
+    node_cache: FastHashMap<ClipScrollNodeIndex, ClippedIn>,
+    clip_chain_cache: Vec<Option<ClippedIn>>,
 }
 
 impl HitTest {
@@ -346,7 +376,7 @@ impl HitTest {
         }
     }
 
-    pub fn get_from_clip_chain_cache(&mut self, index: ClipChainIndex) -> Option<bool> {
+    fn get_from_clip_chain_cache(&mut self, index: ClipChainIndex) -> Option<ClippedIn> {
         if index.0 >= self.clip_chain_cache.len() {
             None
         } else {
@@ -354,14 +384,14 @@ impl HitTest {
         }
     }
 
-    pub fn set_in_clip_chain_cache(&mut self, index: ClipChainIndex, value: bool) {
+    fn set_in_clip_chain_cache(&mut self, index: ClipChainIndex, value: ClippedIn) {
         if index.0 >= self.clip_chain_cache.len() {
             self.clip_chain_cache.resize(index.0 + 1, None);
         }
         self.clip_chain_cache[index.0] = Some(value);
     }
 
-    pub fn get_absolute_point(&self, hit_tester: &HitTester) -> WorldPoint {
+    fn get_absolute_point(&self, hit_tester: &HitTester) -> WorldPoint {
         if !self.flags.contains(HitTestFlags::POINT_RELATIVE_TO_PIPELINE_VIEWPORT) {
             return self.point;
         }

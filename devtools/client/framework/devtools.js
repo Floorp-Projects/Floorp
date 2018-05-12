@@ -507,7 +507,7 @@ DevTools.prototype = {
 
     let telemetryKey = this._firstShowToolbox ?
       "DEVTOOLS_COLD_TOOLBOX_OPEN_DELAY_MS" : "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS";
-    this._telemetry.logKeyed(telemetryKey, toolId, delay);
+    this._telemetry.getKeyedHistogramById(telemetryKey).add(toolId, delay);
 
     this._telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "first_panel",

@@ -8,7 +8,6 @@ geckoview:
     target: geckoview_example.apk
     mozharness:
         script: android_emulator_unittest.py
-        no-read-buildbot-config: true
         config:
             by-test-platform:
                 android-4.2-x86/opt:
@@ -35,7 +34,6 @@ geckoview-junit:
             default: 1
     mozharness:
         script: android_emulator_unittest.py
-        no-read-buildbot-config: true
         config:
             by-test-platform:
                 android-4.2-x86/opt:
@@ -60,7 +58,6 @@ robocop:
     e10s: false
     mozharness:
         script: android_emulator_unittest.py
-        no-read-buildbot-config: true
         config:
             - android/android_common.py
             - android/androidarm_4_3.py
@@ -121,7 +118,6 @@ test-verify:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
-        no-read-buildbot-config: true
         extra-options:
             - --verify
 
@@ -165,7 +161,6 @@ test-verify-gpu:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
-        no-read-buildbot-config: true
         extra-options:
             - --verify
             - --gpu-required
@@ -205,6 +200,5 @@ test-coverage:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_taskcluster_unittest.py
-        no-read-buildbot-config: true
         extra-options:
             - --per-test-coverage

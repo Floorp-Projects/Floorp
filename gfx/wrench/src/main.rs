@@ -15,7 +15,7 @@ extern crate core_graphics;
 extern crate crossbeam;
 #[cfg(target_os = "windows")]
 extern crate dwrote;
-#[cfg(feature = "logging")]
+#[cfg(feature = "env_logger")]
 extern crate env_logger;
 extern crate euclid;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
@@ -362,7 +362,7 @@ fn create_notifier() -> (Box<RenderNotifier>, Receiver<NotifierEvent>) {
 }
 
 fn main() {
-    #[cfg(feature = "logging")]
+    #[cfg(feature = "env_logger")]
     env_logger::init();
 
     let args_yaml = load_yaml!("args.yaml");

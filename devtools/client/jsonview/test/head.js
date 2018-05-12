@@ -208,8 +208,3 @@ function waitForFilter() {
 function normalizeNewLines(value) {
   return value.replace("(\r\n|\n)", "\n");
 }
-
-function evalInContent(code) {
-  return executeInContent("Test:JsonView:Eval", {code})
-  .then(result => result.result);
-}

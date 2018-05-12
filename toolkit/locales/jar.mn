@@ -14,6 +14,7 @@
   locale/@AB_CD@/global/aboutProfiles.dtd               (%chrome/global/aboutProfiles.dtd)
   locale/@AB_CD@/global/aboutProfiles.properties        (%chrome/global/aboutProfiles.properties)
 #endif
+  locale/@AB_CD@/global/aboutStudies.properties         (%chrome/global/aboutStudies.properties)
   locale/@AB_CD@/global/aboutServiceWorkers.dtd         (%chrome/global/aboutServiceWorkers.dtd)
   locale/@AB_CD@/global/aboutServiceWorkers.properties  (%chrome/global/aboutServiceWorkers.properties)
   locale/@AB_CD@/global/aboutSupport.dtd                (%chrome/global/aboutSupport.dtd)

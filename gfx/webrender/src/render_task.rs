@@ -217,8 +217,8 @@ impl BlurTask {
     }
 }
 
-#[cfg(feature = "pathfinder")]
 #[derive(Debug)]
+#[cfg(feature = "pathfinder")]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GlyphTask {
@@ -600,7 +600,6 @@ impl RenderTask {
     fn uv_rect_kind(&self) -> UvRectKind {
         match self.kind {
             RenderTaskKind::CacheMask(..) |
-            RenderTaskKind::Glyph(_) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) => {
                 unreachable!("bug: unexpected render task");
@@ -616,6 +615,7 @@ impl RenderTask {
             }
 
             RenderTaskKind::ClipRegion(..) |
+            RenderTaskKind::Glyph(_) |
             RenderTaskKind::Blit(..) => {
                 UvRectKind::Rect
             }
@@ -956,6 +956,7 @@ pub enum RenderTaskCacheMarker {}
 
 // A cache of render tasks that are stored in the texture
 // cache for usage across frames.
+#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RenderTaskCache {

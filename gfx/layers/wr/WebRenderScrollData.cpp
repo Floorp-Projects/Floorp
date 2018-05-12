@@ -246,6 +246,18 @@ WebRenderScrollData::GetPaintSequenceNumber() const
 }
 
 void
+WebRenderScrollData::ApplyUpdates(const ScrollUpdatesMap& aUpdates,
+                                  uint32_t aPaintSequenceNumber)
+{
+  for (const auto& update : aUpdates) {
+    if (Maybe<size_t> index = HasMetadataFor(update.first)) {
+      mScrollMetadatas[*index].GetMetrics().UpdatePendingScrollInfo(update.second);
+    }
+  }
+  mPaintSequenceNumber = aPaintSequenceNumber;
+}
+
+void
 WebRenderScrollData::Dump() const
 {
   printf_stderr("WebRenderScrollData with %zu layers firstpaint: %d\n",
@@ -253,6 +265,17 @@ WebRenderScrollData::Dump() const
   for (size_t i = 0; i < mLayerScrollData.Length(); i++) {
     mLayerScrollData.ElementAt(i).Dump(*this);
   }
+}
+
+bool
+WebRenderScrollData::RepopulateMap()
+{
+  MOZ_ASSERT(mScrollIdMap.empty());
+  for (size_t i = 0; i < mScrollMetadatas.Length(); i++) {
+    FrameMetrics::ViewID scrollId = mScrollMetadatas[i].GetMetrics().GetScrollId();
+    mScrollIdMap.emplace(scrollId, i);
+  }
+  return true;
 }
 
 } // namespace layers

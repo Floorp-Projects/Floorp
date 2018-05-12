@@ -1,0 +1,220 @@
+#!/bin/sh
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# The beginning of this script is both valid shell and valid python,
+# such that the script starts with the shell and is reexecuted python
+'''which' mach > /dev/null 2>&1 && exec mach python "$0" "$@" ||
+echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/profiles/profile"; exit
+'''
+
+from __future__ import absolute_import, unicode_literals, print_function
+
+"""This script can be used to:
+
+    1) Show all preferences for a given suite
+    2) Diff preferences between two suites or profiles
+    3) Sort preference files alphabetically for a given profile
+
+To use, either make sure that `mach` is on your $PATH, or run:
+    $ ./mach python testing/profiles/profile <args>
+
+For more details run:
+    $ ./profile -- --help
+"""
+
+import json
+import os
+import sys
+from argparse import ArgumentParser
+from itertools import chain
+
+from mozprofile import Profile
+from mozprofile.prefs import Preferences
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+try:
+    import jsondiff
+except ImportError:
+    from mozbuild.base import MozbuildObject
+    build = MozbuildObject.from_environment(cwd=here)
+    build.virtualenv_manager.install_pip_package("jsondiff")
+    import jsondiff
+
+
+def read_prefs(profile, pref_files=None):
+    """Read and return all preferences set in the given profile.
+
+    :param profile: Profile name relative to this `here`.
+    :returns: A dictionary of preferences set in the profile.
+    """
+    pref_files = pref_files or Profile.preference_file_names
+    prefs = {}
+    for name in pref_files:
+        path = os.path.join(here, profile, name)
+        if not os.path.isfile(path):
+            continue
+
+        try:
+            prefs.update(Preferences.read_json(path))
+        except ValueError:
+            prefs.update(Preferences.read_prefs(path))
+    return prefs
+
+
+def read(key):
+    """Read preferences relevant to either a profile or suite.
+
+    :param key: Can either be the name of a profile, or the name of
+                a suite as defined in suites.json.
+    """
+    with open(os.path.join(here, 'profiles.json'), 'r') as fh:
+        profiles = json.load(fh)
+
+    if key in profiles:
+        names = profiles[key]
+    elif os.path.isdir(os.path.join(here, key)):
+        names = [key]
+    else:
+        raise ValueError('{} is not a recognized suite or profile'.format(key))
+
+    prefs = {}
+    for profile in names:
+        prefs.update(read_prefs(profile))
+    return prefs
+
+
+def diff(a, b):
+    """Diff two profiles or suites.
+
+    :param a: The first profile or suite name.
+    :param b: The second profile or suite name.
+    """
+    prefs_a = read(a)
+    prefs_b = read(b)
+    res = jsondiff.diff(prefs_a, prefs_b, syntax='symmetric')
+    if not res:
+        return 0
+
+    if isinstance(res, list) and len(res) == 2:
+        res = {
+            jsondiff.Symbol('delete'): res[0],
+            jsondiff.Symbol('insert'): res[1],
+        }
+
+    modified = [(k, v) for k, v in res.items() if not isinstance(k, jsondiff.Symbol)]
+    if modified:
+        print("modified ({} => {}):".format(a, b))
+        for k, v in sorted(modified):
+            del prefs_a[k]
+            print("  {}: {} => {}".format(k, repr(v[0]), repr(v[1])))
+
+    label_map = {
+        'insert': 'missing in {}'.format(a),
+        'delete': 'missing in {}'.format(b),
+    }
+
+    symbols = [(k, v) for k, v in res.items() if isinstance(k, jsondiff.Symbol)]
+    for sym, value in symbols:
+        prefs = []
+        for k, v in value.items():
+            if k in prefs_a:
+                del prefs_a[k]
+            prefs.append("  {}: {}".format(k, repr(v)))
+        print("\n{}:\n{}".format(label_map.get(sym.label, sym.label), "\n".join(sorted(prefs))))
+
+    if prefs_a:
+        print("\nidentical:")
+        for k, v in sorted(prefs_a.items()):
+            print("  {}: {}".format(k, repr(v)))
+
+
+def sort_file(path):
+    """Sort the given pref file alphabetically, preserving preceding comments
+    that start with '//'.
+
+    :param path: Path to the preference file to sort.
+    """
+    with open(path, 'r') as fh:
+        lines = fh.readlines()
+
+    result = []
+    buf = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        if line.startswith('//'):
+            buf.append(line)
+            continue
+
+        if buf:
+            result.append(buf + [line])
+            buf = []
+            continue
+
+        result.append([line])
+
+    result = sorted(result, key=lambda x: x[-1])
+    result = chain(*result)
+
+    with open(path, 'w') as fh:
+        fh.write('\n'.join(result))
+
+
+def sort(profile):
+    """Sort all prefs in the given profile alphabetically. This will preserve
+    comments on preceding lines.
+
+    :param profile: The name of the profile to sort.
+    """
+    pref_files = Profile.preference_file_names
+
+    for name in pref_files:
+        path = os.path.join(here, profile, name)
+        if os.path.isfile(path):
+            sort_file(path)
+
+
+def show(suite):
+    """Display all prefs set in profiles used by the given suite.
+
+    :param suite: The name of the suite to show preferences for. This must
+                  be a key in suites.json.
+    """
+    for k, v in sorted(read(suite).items()):
+        print("{}: {}".format(k, repr(v)))
+
+
+def cli(args=sys.argv[1:]):
+    parser = ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    diff_parser = subparsers.add_parser('diff')
+    diff_parser.add_argument('a', metavar='A',
+                             help="Path to the first profile or suite name to diff.")
+    diff_parser.add_argument('b', metavar='B',
+                             help="Path to the second profile or suite name to diff.")
+    diff_parser.set_defaults(func=diff)
+
+    sort_parser = subparsers.add_parser('sort')
+    sort_parser.add_argument('profile', help="Path to profile to sort preferences.")
+    sort_parser.set_defaults(func=sort)
+
+    show_parser = subparsers.add_parser('show')
+    show_parser.add_argument('suite', help="Name of suite to show arguments for.")
+    show_parser.set_defaults(func=show)
+
+    args = vars(parser.parse_args(args))
+    func = args.pop('func')
+    func(**args)
+
+
+if __name__ == '__main__':
+    sys.exit(cli())

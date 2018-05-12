@@ -802,7 +802,7 @@
     "uk": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "bing", "meta-ua", "ddg", "wikipedia-uk", "metamarket"
+          "google", "bing", "meta-ua", "ddg", "wikipedia-uk", "hotline-ua"
         ]
       }
     },

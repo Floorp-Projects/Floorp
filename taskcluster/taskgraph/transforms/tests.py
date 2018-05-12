@@ -283,10 +283,6 @@ test_description_schema = Schema({
         # If true, tooltool downloads will be enabled via relengAPIProxy.
         Required('tooltool-downloads'): bool,
 
-        # This mozharness script also runs in Buildbot and tries to read a
-        # buildbot config file, so tell it not to do so in TaskCluster
-        Required('no-read-buildbot-config'): bool,
-
         # Add --blob-upload-branch=<project> mozharness parameter
         Optional('include-blob-upload-branch'): bool,
 
@@ -449,7 +445,6 @@ def set_defaults(config, tests):
         test['mozharness'].setdefault('extra-options', [])
         test['mozharness'].setdefault('requires-signed-builds', False)
         test['mozharness'].setdefault('tooltool-downloads', False)
-        test['mozharness'].setdefault('no-read-buildbot-config', False)
         test['mozharness'].setdefault('set-moz-node-path', False)
         test['mozharness'].setdefault('chunked', False)
         test['mozharness'].setdefault('chunking-args', 'this-chunk')

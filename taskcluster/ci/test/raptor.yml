@@ -12,7 +12,6 @@ job-defaults:
             default: hardware
     mozharness:
         script: raptor_script.py
-        no-read-buildbot-config: true
         config:
             by-test-platform:
                 macosx.*:

@@ -4,7 +4,6 @@
 "use strict";
 
 const Telemetry = require("devtools/client/shared/telemetry");
-const flags = require("devtools/shared/flags");
 const EVENTS = require("devtools/client/performance/events");
 
 const EVENT_MAP_FLAGS = new Map([
@@ -31,18 +30,14 @@ function PerformanceTelemetry(emitter) {
 
   this._emitter.on(EVENTS.RECORDING_STATE_CHANGE, this.onRecordingStateChange);
   this._emitter.on(EVENTS.UI_DETAILS_VIEW_SELECTED, this.onViewSelected);
-
-  if (flags.testing) {
-    this.recordLogs();
-  }
 }
 
 PerformanceTelemetry.prototype.destroy = function() {
   if (this._previousView) {
-    this._telemetry.stopTimer(SELECTED_VIEW_HISTOGRAM_NAME, this._previousView);
+    this._telemetry.finishKeyed(
+      SELECTED_VIEW_HISTOGRAM_NAME, this._previousView, this);
   }
 
-  this._telemetry.destroy();
   for (let [event] of EVENT_MAP_FLAGS) {
     this._emitter.off(event, this.onFlagEvent);
   }
@@ -52,7 +47,7 @@ PerformanceTelemetry.prototype.destroy = function() {
 };
 
 PerformanceTelemetry.prototype.onFlagEvent = function(eventName, ...data) {
-  this._telemetry.log(EVENT_MAP_FLAGS.get(eventName), true);
+  this._telemetry.getHistogramById(EVENT_MAP_FLAGS.get(eventName)).add(true);
 };
 
 PerformanceTelemetry.prototype.onRecordingStateChange = function(status, model) {
@@ -61,62 +56,33 @@ PerformanceTelemetry.prototype.onRecordingStateChange = function(status, model) 
   }
 
   if (model.isConsole()) {
-    this._telemetry.log("DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT", true);
+    this._telemetry.getHistogramById("DEVTOOLS_PERFTOOLS_CONSOLE_RECORDING_COUNT")
+                   .add(true);
   } else {
-    this._telemetry.log("DEVTOOLS_PERFTOOLS_RECORDING_COUNT", true);
+    this._telemetry.getHistogramById("DEVTOOLS_PERFTOOLS_RECORDING_COUNT")
+                   .add(true);
   }
 
-  this._telemetry.log("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS", model.getDuration());
+  this._telemetry.getHistogramById("DEVTOOLS_PERFTOOLS_RECORDING_DURATION_MS")
+                 .add(model.getDuration());
 
   let config = model.getConfiguration();
   for (let k in config) {
     if (RECORDING_FEATURES.includes(k)) {
-      this._telemetry.logKeyed("DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED", k,
-                               config[k]);
+      this._telemetry
+          .getKeyedHistogramById("DEVTOOLS_PERFTOOLS_RECORDING_FEATURES_USED")
+          .add(k, config[k]);
     }
   }
 };
 
 PerformanceTelemetry.prototype.onViewSelected = function(viewName) {
   if (this._previousView) {
-    this._telemetry.stopTimer(SELECTED_VIEW_HISTOGRAM_NAME, this._previousView);
+    this._telemetry.finishKeyed(
+      SELECTED_VIEW_HISTOGRAM_NAME, this._previousView, this);
   }
   this._previousView = viewName;
-  this._telemetry.startTimer(SELECTED_VIEW_HISTOGRAM_NAME);
-};
-
-/**
- * Utility to record histogram calls to this instance.
- * Should only be used in testing mode; throws otherwise.
- */
-PerformanceTelemetry.prototype.recordLogs = function() {
-  if (!flags.testing) {
-    throw new Error("Can only record telemetry logs in tests.");
-  }
-
-  let originalLog = this._telemetry.log;
-  let originalLogKeyed = this._telemetry.logKeyed;
-  this._log = {};
-
-  this._telemetry.log = (histo, data) => {
-    let results = this._log[histo] = this._log[histo] || [];
-    results.push(data);
-    originalLog(histo, data);
-  };
-
-  this._telemetry.logKeyed = (histo, key, data) => {
-    let results = this._log[histo] = this._log[histo] || [];
-    results.push([key, data]);
-    originalLogKeyed(histo, key, data);
-  };
-};
-
-PerformanceTelemetry.prototype.getLogs = function() {
-  if (!flags.testing) {
-    throw new Error("Can only get telemetry logs in tests.");
-  }
-
-  return this._log;
+  this._telemetry.startKeyed(SELECTED_VIEW_HISTOGRAM_NAME, viewName, this);
 };
 
 exports.PerformanceTelemetry = PerformanceTelemetry;

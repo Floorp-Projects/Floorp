@@ -7,6 +7,9 @@ package org.mozilla.geckoview.test.rdp;
 
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -18,6 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class for connecting to a remote debugging protocol server, and retrieving various
@@ -28,9 +35,192 @@ import java.util.HashMap;
 public final class RDPConnection implements Closeable {
     private static final String LOGTAG = "GeckoRDPConnection";
 
+    public static class TimeoutException extends RuntimeException {
+        public TimeoutException(final String detailMessage) {
+            super(detailMessage);
+        }
+    }
+
+    private final class InputThread extends Thread {
+        private final BlockingQueue<Object> mQueue = new SynchronousQueue<>();
+        private final Handler mHandler = new Handler();
+        private final InputStream mStream;
+        /* package */ final AtomicInteger mPendingPackets = new AtomicInteger();
+
+        private final Runnable mProcessPacketRunnable = new Runnable() {
+            @Override
+            public void run() {
+                final int pending = mPendingPackets.get();
+                if (pending > 0) {
+                    InputThread.this.processPacket();
+                }
+            }
+        };
+
+        public long timeout;
+
+        public InputThread(final InputStream stream) {
+            super("RDPInput");
+            setDaemon(true);
+            mStream = stream;
+        }
+
+        @Override
+        public void run() {
+            boolean quit = false;
+            do {
+                Object result = null;
+                try {
+                    result = readInputPacket();
+                } catch (final IOException e) {
+                    if (RDPConnection.this.mSocket.isClosed()) {
+                        quit = true;
+                    } else {
+                        result = new RuntimeException(e);
+                    }
+                }
+                if (result == null) {
+                    continue;
+                }
+                mPendingPackets.incrementAndGet();
+                mHandler.post(mProcessPacketRunnable);
+                do {
+                    try {
+                        mQueue.put(result);
+                        break;
+                    } catch (final InterruptedException e) {
+                        // Ignore
+                    }
+                    quit = RDPConnection.this.mSocket.isClosed();
+                } while (!quit);
+            } while (!quit);
+        }
+
+        public void processPacket() {
+            if (!mHandler.getLooper().equals(Looper.myLooper())) {
+                throw new AssertionError("Must be called from single thread");
+            }
+
+            Object result = null;
+            do {
+                try {
+                    if (timeout <= 0) {
+                        result = mQueue.take();
+                    } else {
+                        result = mQueue.poll(timeout, TimeUnit.MILLISECONDS);
+                    }
+                    if (result == null) {
+                        throw new TimeoutException("Socket timeout");
+                    }
+                } catch (final InterruptedException e) {
+                    // Ignore
+                }
+            } while (result == null);
+
+            mPendingPackets.decrementAndGet();
+
+            if (result instanceof RuntimeException) {
+                throw (RuntimeException) result;
+            }
+
+            final JSONObject json = (JSONObject) result;
+            final String from = json.optString("from", "none");
+            final Actor actor = RDPConnection.this.mActors.get(from);
+            if (actor != null) {
+                actor.onPacket(json);
+            } else {
+                Log.w(LOGTAG, "Packet from unknown actor " + from);
+            }
+        }
+
+        private Object readInputPacket() throws IOException {
+            byte[] buffer = new byte[128];
+            int len = 0;
+            for (int c = mStream.read(); c != ':'; c = mStream.read()) {
+                if (c == -1) {
+                    return new IllegalStateException("EOF reached");
+                }
+                buffer[len++] = (byte) c;
+            }
+
+            final String header = new String(buffer, 0, len, "utf-8");
+            final int length;
+            try {
+                length = Integer.valueOf(header.substring(header.lastIndexOf(' ') + 1));
+            } catch (final NumberFormatException e) {
+                return new RuntimeException("Invalid packet header: " + header);
+            }
+
+            if (header.startsWith("bulk ")) {
+                // Bulk packet not supported; skip the data.
+                int remaining = length;
+                while (remaining > 0) {
+                    remaining -= mStream.skip(remaining);
+                }
+                return null;
+            }
+
+            // JSON packet.
+            if (length > buffer.length) {
+                buffer = new byte[length];
+            }
+            int cursor = 0;
+            do {
+                final int read = mStream.read(buffer, cursor, length - cursor);
+                if (read <= 0) {
+                    return new IllegalStateException("EOF reached");
+                }
+                cursor += read;
+            } while (cursor < length);
+
+            final String str = new String(buffer, 0, length, "utf-8");
+            final JSONObject json;
+            try {
+                json = new JSONObject(str);
+            } catch (final JSONException e) {
+                return new RuntimeException(e);
+            }
+
+            final String error = json.optString("error", null);
+            if (error != null) {
+                return new RuntimeException("Request failed: " + error + ": " +
+                                            json.optString("message", null));
+            }
+            return json;
+        }
+    }
+
+    private final Actor.ReplyParser<Tab> TAB_PARSER = new Actor.ReplyParser<Tab>() {
+        @Override
+        public boolean canParse(@NonNull JSONObject packet) {
+            return packet.has("tab");
+        }
+
+        @Override
+        public @NonNull Tab parse(@NonNull JSONObject packet) {
+            final JSONObject tab = packet.optJSONObject("tab");
+            final Actor actor = getActor(tab);
+            return (actor != null) ? (Tab) actor : new Tab(RDPConnection.this, tab);
+        }
+    };
+
+    private final Actor.ReplyParser<Tab> PROCESS_PARSER = new Actor.ReplyParser<Tab>() {
+        @Override
+        public boolean canParse(@NonNull JSONObject packet) {
+            return packet.has("form");
+        }
+
+        @Override
+        public @NonNull Tab parse(@NonNull JSONObject packet) {
+            final JSONObject tab = packet.optJSONObject("form");
+            final Actor actor = getActor(tab);
+            return (actor != null) ? (Tab) actor : new Tab(RDPConnection.this, tab);
+        }
+    };
+
     private final LocalSocket mSocket = new LocalSocket();
-    private final InputStream mInput;
-    private final OutputStream mOutput;
+    private final InputThread mInputThread;
+    private final OutputStream mOutputStream;
     private final HashMap<String, Actor> mActors = new HashMap<>();
     private final Actor mRoot = new Actor(this, "root");
     private final JSONObject mRuntimeInfo;
@@ -48,9 +238,11 @@ public final class RDPConnection implements Closeable {
     public RDPConnection(final LocalSocketAddress address) {
         try {
             mSocket.connect(address);
-            mInput = new BufferedInputStream(mSocket.getInputStream());
-            mOutput = mSocket.getOutputStream();
-            mRuntimeInfo = mRoot.getReply(null);
+            mOutputStream = mSocket.getOutputStream();
+            mInputThread = new InputThread(new BufferedInputStream(mSocket.getInputStream()));
+            mInputThread.start();
+
+            mRuntimeInfo = mRoot.addReply(Actor.JSON_PARSER).get();
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -59,26 +251,19 @@ public final class RDPConnection implements Closeable {
     /**
      * Get the socket timeout.
      *
-     * @return Socket timeout in milliseconds.
+     * @return Socket timeout in milliseconds, or 0 if there is no timeout.
      */
-    public int getTimeout() {
-        try {
-            return mSocket.getSoTimeout();
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+    public long getTimeout() {
+        return mInputThread.timeout;
     }
 
     /**
-     * Set the socket timeout. IOException is thrown if the timeout expires while waiting
-     * for a socket operation.
+     * Set the socket timeout.
+     *
+     * @param timeout Timeout in milliseconds, or 0 to disable timeout.
      */
-    public void setTimeout(final int timeout) {
-        try {
-            mSocket.setSoTimeout(timeout);
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void setTimeout(final long timeout) {
+        mInputThread.timeout = timeout;
     }
 
     /**
@@ -87,11 +272,8 @@ public final class RDPConnection implements Closeable {
     @Override
     public void close() {
         try {
-            mOutput.close();
-            mSocket.shutdownOutput();
-            mInput.close();
-            mSocket.shutdownInput();
             mSocket.close();
+            mInputThread.interrupt();
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -121,74 +303,15 @@ public final class RDPConnection implements Closeable {
         try {
             final byte[] buffer = packet.getBytes("utf-8");
             final byte[] header = (String.valueOf(buffer.length) + ':').getBytes("utf-8");
-            mOutput.write(header);
-            mOutput.write(buffer);
+            mOutputStream.write(header);
+            mOutputStream.write(buffer);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    /* package */ void dispatchInputPacket() {
-        try {
-            byte[] buffer = new byte[128];
-            int len = 0;
-            for (int c = mInput.read(); c != ':'; c = mInput.read()) {
-                if (c == -1) {
-                    throw new IllegalStateException("EOF reached");
-                }
-                buffer[len++] = (byte) c;
-            }
-
-            final String header = new String(buffer, 0, len, "utf-8");
-            final int length;
-            try {
-                length = Integer.valueOf(header.substring(header.lastIndexOf(' ') + 1));
-            } catch (final NumberFormatException e) {
-                throw new RuntimeException("Invalid packet header: " + header);
-            }
-
-            if (header.startsWith("bulk ")) {
-                // Bulk packet not supported; skip the data.
-                mInput.skip(length);
-                return;
-            }
-
-            // JSON packet.
-            if (length > buffer.length) {
-                buffer = new byte[length];
-            }
-            int cursor = 0;
-            do {
-                final int read = mInput.read(buffer, cursor, length - cursor);
-                if (read <= 0) {
-                    throw new IllegalStateException("EOF reached");
-                }
-                cursor += read;
-            } while (cursor < length);
-
-            final String str = new String(buffer, 0, length, "utf-8");
-            final JSONObject json;
-            try {
-                json = new JSONObject(str);
-            } catch (final JSONException e) {
-                throw new RuntimeException(e);
-            }
-
-            final String error = json.optString("error", null);
-            if (error != null) {
-                throw new UnsupportedOperationException("Request failed: " + error);
-            }
-
-            final String from = json.optString("from", "none");
-            final Actor actor = mActors.get(from);
-            if (actor != null) {
-                actor.onPacket(json);
-            } else {
-                Log.w(LOGTAG, "Packet from unknown actor " + from);
-            }
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+    /* package */ void processInputPacket() {
+        mInputThread.processPacket();
     }
 
     /**
@@ -198,9 +321,16 @@ public final class RDPConnection implements Closeable {
      * @return Tab actor.
      */
     public Tab getMostRecentTab() {
-        final JSONObject reply = mRoot.sendPacket("{\"type\":\"getTab\"}", "tab")
-                                      .optJSONObject("tab");
-        final Actor actor = getActor(reply);
-        return (actor != null) ? (Tab) actor : new Tab(this, reply);
+        return mRoot.sendPacket("{\"type\":\"getTab\"}", TAB_PARSER).get();
+    }
+
+    /**
+     * Get the actor for the chrome process. The returned Tab object acts like a tab but has
+     * chrome privileges.
+     *
+     * @return Tab actor representing the process.
+     */
+    public Tab getChromeProcess() {
+        return mRoot.sendPacket("{\"type\":\"getProcess\"}", PROCESS_PARSER).get();
     }
 }

@@ -401,8 +401,7 @@ var WinTaskbarJumpList =
     var query = PlacesUtils.history.getNewQuery();
 
     // Return the pending statement to the caller, to allow cancelation.
-    return PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
-                              .asyncExecuteLegacyQuery(query, options, {
+    return PlacesUtils.history.asyncExecuteLegacyQuery(query, options, {
       handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {

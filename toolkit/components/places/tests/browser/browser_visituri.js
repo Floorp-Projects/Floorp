@@ -12,7 +12,7 @@ function promiseObserve(name, checkFn) {
   });
 }
 
-var conn = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
+var conn = PlacesUtils.history.DBConnection;
 
 /**
  * Gets a single column value from either the places or historyvisits table.

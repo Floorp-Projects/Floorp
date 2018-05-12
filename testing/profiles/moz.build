@@ -6,7 +6,9 @@
 
 profile_files = [
     'common/*',
+    'perf/*',
     'profiles.json',
+    'unittest/*',
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.profile_data += profile_files

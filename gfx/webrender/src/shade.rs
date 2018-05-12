@@ -492,7 +492,6 @@ pub struct Shaders {
     // a cache shader (e.g. blur) to the screen.
     pub ps_text_run: TextShader,
     pub ps_text_run_dual_source: TextShader,
-    ps_image: Vec<Option<PrimitiveShader>>,
     ps_border_corner: PrimitiveShader,
     ps_border_edge: PrimitiveShader,
 
@@ -632,11 +631,9 @@ impl Shaders {
 
         // All image configuration.
         let mut image_features = Vec::new();
-        let mut ps_image = Vec::new();
         let mut brush_image = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. IMAGE_BUFFER_KINDS.len() {
-            ps_image.push(None);
             brush_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
@@ -645,12 +642,6 @@ impl Shaders {
                 if feature_string != "" {
                     image_features.push(feature_string);
                 }
-                ps_image[buffer_kind] = Some(PrimitiveShader::new(
-                    "ps_image",
-                    device,
-                    &image_features,
-                    options.precache_shaders,
-                )?);
                 brush_image[buffer_kind] = Some(BrushShader::new(
                     "brush_image",
                     device,
@@ -749,7 +740,6 @@ impl Shaders {
             cs_clip_line,
             ps_text_run,
             ps_text_run_dual_source,
-            ps_image,
             ps_border_corner,
             ps_border_edge,
             ps_split_composite,
@@ -815,11 +805,6 @@ impl Shaders {
                         };
                         return text_shader.get(glyph_format, transform_kind);
                     }
-                    TransformBatchKind::Image(image_buffer_kind) => {
-                        self.ps_image[image_buffer_kind as usize]
-                            .as_mut()
-                            .expect("Unsupported image shader kind")
-                    }
                     TransformBatchKind::BorderCorner => {
                         &mut self.ps_border_corner
                     }
@@ -848,11 +833,6 @@ impl Shaders {
         self.ps_text_run.deinit(device);
         self.ps_text_run_dual_source.deinit(device);
         for shader in self.brush_image {
-            if let Some(shader) = shader {
-                shader.deinit(device);
-            }
-        }
-        for shader in self.ps_image {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }

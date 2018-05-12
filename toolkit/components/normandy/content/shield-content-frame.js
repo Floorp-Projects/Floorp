@@ -17,11 +17,20 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const frameGlobal = {};
 ChromeUtils.defineModuleGetter(
   frameGlobal, "AboutPages", "resource://normandy-content/AboutPages.jsm",
 );
+
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+  return Services.strings.createBundle("chrome://branding/locale/brand.properties");
+});
+
+XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
+  return Services.strings.createBundle("chrome://global/locale/aboutStudies.properties");
+});
 
 /**
  * Handles incoming events from the parent process and about:studies.
@@ -60,6 +69,21 @@ class ShieldFrameListener {
         this.triggerPageCallback(
           "ReceiveRemoteValue:ShieldLearnMoreHref",
           frameGlobal.AboutPages.aboutStudies.getShieldLearnMoreHref()
+        );
+        break;
+      case "GetRemoteValue:ShieldTranslations":
+        const strings = {};
+        const e = gStringBundle.getSimpleEnumeration();
+        while (e.hasMoreElements()) {
+          var str = e.getNext().QueryInterface(Ci.nsIPropertyElement);
+          strings[str.key] = str.value;
+        }
+        const brandName = gBrandBundle.GetStringFromName("brandShortName");
+        strings.enabledList = gStringBundle.formatStringFromName("enabledList", [brandName], 1);
+
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:ShieldTranslations",
+           strings
         );
         break;
     }

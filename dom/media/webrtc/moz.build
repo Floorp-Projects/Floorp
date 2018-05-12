@@ -78,6 +78,7 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl', 'gcc'):
         '-Wno-error=shadow',
     ]
 
+DEFINES['TRACING'] = True
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):

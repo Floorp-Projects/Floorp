@@ -1698,16 +1698,6 @@ interface nsIDOMWindowUtils : nsISupports {
                        [optional] in AString aPseudoElement);
 
   /**
-   * Special function that gets a property syncronously from the last composite
-   * that occured.
-   *
-   * Supported properties:
-   *   "overdraw": Report a percentage between 0 and 999 indicate how many times
-   *               each pixels on the destination window have been touched.
-   */
-  float requestCompositorProperty(in AString aProperty);
-
-  /**
    * If aHandlingInput is true, this informs the event state manager that
    * we're handling user input. Otherwise, this is a no-op (as by default
    * we're not handling user input).

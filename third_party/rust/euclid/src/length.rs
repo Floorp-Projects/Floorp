@@ -31,7 +31,9 @@ use std::fmt;
 /// enum.
 ///
 /// You can multiply a `Length` by a `scale::TypedScale` to convert it from one unit to
-/// another. See the `TypedScale` docs for an example.
+/// another. See the [`TypedScale`] docs for an example.
+///
+/// [`TypedScale`]: struct.TypedScale.html
 #[repr(C)]
 pub struct Length<T, Unit>(pub T, PhantomData<Unit>);
 

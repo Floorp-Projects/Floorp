@@ -5,9 +5,11 @@
 use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
 use api::{DevicePoint, DeviceRect, DeviceSize, LayoutPixel, LayoutPoint, LayoutRect, LayoutSize};
 use api::{WorldPixel, WorldRect};
-use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedPoint3D, TypedRect, TypedSize2D};
-use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D};
+use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
+use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedVector3D};
+use euclid::{HomogeneousVector};
 use num_traits::Zero;
+use plane_split::{Clipper, Plane, Polygon};
 use std::{i32, f32};
 
 // Matches the definition of SK_ScalarNearlyZero in Skia.
@@ -160,21 +162,114 @@ pub fn calculate_screen_bounding_rect(
     transform: &LayoutToWorldFastTransform,
     rect: &LayoutRect,
     device_pixel_scale: DevicePixelScale,
-) -> DeviceIntRect {
-    let points = [
-        transform.transform_point2d(&rect.origin),
-        transform.transform_point2d(&rect.top_right()),
-        transform.transform_point2d(&rect.bottom_left()),
-        transform.transform_point2d(&rect.bottom_right()),
+    screen_bounds: Option<&DeviceIntRect>,
+) -> Option<DeviceIntRect> {
+    debug!("rect {:?}", rect);
+    debug!("transform {:?}", transform);
+    debug!("screen_bounds: {:?}", screen_bounds);
+    let homogens = [
+        transform.transform_point2d_homogeneous(&rect.origin),
+        transform.transform_point2d_homogeneous(&rect.top_right()),
+        transform.transform_point2d_homogeneous(&rect.bottom_left()),
+        transform.transform_point2d_homogeneous(&rect.bottom_right()),
     ];
+    debug!("homogeneous points {:?}", homogens);
+    let max_rect = match screen_bounds {
+        Some(bounds) => bounds.to_f32(),
+        None => DeviceRect::max_rect(),
+    };
 
-    let rect = WorldRect::from_points(&points) * device_pixel_scale;
-    let max_rect = DeviceRect::max_rect();
-    rect
+    // Note: we only do the full frustum collision when the polygon approaches the camera plane.
+    // Otherwise, it will be clamped to the screen bounds anyway.
+    let world_rect = if homogens.iter().any(|h| h.w <= 0.0) {
+        let mut clipper = Clipper::new();
+        // using inverse-transpose of the inversed transform
+        let t = transform.to_transform();
+        // camera plane
+        {
+            let normal = TypedVector3D::new(t.m14, t.m24, t.m34);
+            let kf = 1.0 / normal.length();
+            clipper.add(Plane {
+                normal: normal * kf,
+                offset: t.m44 * kf,
+            });
+        }
+
+        // The equations for clip planes come from the following one:
+        // (v * M).x < right
+        // (v, Mx) < right
+        // (v, Mx) - right = 0;
+
+        // left/right planes
+        if let Some(bounds) = screen_bounds {
+            let normal = TypedVector3D::new(t.m11, t.m21, t.m31);
+            let kf = 1.0 / normal.length();
+            clipper.add(Plane {
+                normal: normal * kf,
+                offset: t.m41 * kf - (bounds.origin.x) as f32 / device_pixel_scale.0,
+            });
+            clipper.add(Plane {
+                normal: normal * -kf,
+                offset: t.m41 * -kf + (bounds.origin.x + bounds.size.width) as f32 / device_pixel_scale.0,
+            });
+        }
+        // top/bottom planes
+        if let Some(bounds) = screen_bounds {
+            let normal = TypedVector3D::new(t.m12, t.m22, t.m32);
+            let kf = 1.0 / normal.length();
+            clipper.add(Plane {
+                normal: normal * kf,
+                offset: t.m42 * kf - (bounds.origin.y) as f32 / device_pixel_scale.0,
+            });
+            clipper.add(Plane {
+                normal: normal * -kf,
+                offset: t.m42 * -kf + (bounds.origin.y + bounds.size.height) as f32 / device_pixel_scale.0,
+            });
+        }
+
+        let polygon = Polygon::from_points(
+            [
+                rect.origin.to_3d(),
+                rect.top_right().to_3d(),
+                rect.bottom_left().to_3d(),
+                rect.bottom_right().to_3d(),
+            ],
+            1,
+        );
+        debug!("crossing detected for poly {:?}", polygon);
+        let results = clipper.clip(polygon);
+        debug!("clip results: {:?}", results);
+        if results.is_empty() {
+            return None
+        }
+
+        debug!("points:");
+        WorldRect::from_points(results
+            .into_iter()
+            // filter out parts behind the view plane
+            .flat_map(|poly| &poly.points)
+            .map(|p| {
+                debug!("\tpoint {:?} -> {:?} -> {:?}", p,
+                    transform.transform_point2d_homogeneous(&p.to_2d()),
+                    transform.transform_point2d(&p.to_2d())
+                );
+                transform.transform_point2d(&p.to_2d())
+            })
+        )
+    } else {
+        WorldRect::from_points(&[
+            homogens[0].to_point2d(),
+            homogens[1].to_point2d(),
+            homogens[2].to_point2d(),
+            homogens[3].to_point2d(),
+        ])
+    };
+
+    debug!("world rect {:?}", world_rect);
+    (world_rect * device_pixel_scale)
         .round_out()
         .intersection(&max_rect)
-        .unwrap_or(max_rect)
-        .to_i32()
+        .map(|r| r.to_i32())
 }
 
 pub fn _subtract_rect<U>(
@@ -457,11 +552,13 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     }
 
     #[inline(always)]
-    pub fn transform_point3d(&self, point: &TypedPoint3D<f32, Src>) -> TypedPoint3D<f32, Dst> {
+    pub fn transform_point2d_homogeneous(&self, point: &TypedPoint2D<f32, Src>) -> HomogeneousVector<f32, Dst> {
         match *self {
-            FastTransform::Offset(offset) =>
-                TypedPoint3D::new(point.x + offset.x, point.y + offset.y, point.z),
-            FastTransform::Transform { ref transform, .. } => transform.transform_point3d(point),
+            FastTransform::Offset(offset) => {
+                let new_point = *point + offset;
+                HomogeneousVector::new(new_point.x, new_point.y, 0.0, 1.0)
+            }
+            FastTransform::Transform { ref transform, .. } => transform.transform_point2d_homogeneous(point),
         }
     }
 
@@ -538,7 +635,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
 }
 
 impl<Src, Dst> From<TypedTransform3D<f32, Src, Dst>> for FastTransform<Src, Dst> {
-    fn from(transform: TypedTransform3D<f32, Src, Dst>) -> FastTransform<Src, Dst> {
+    fn from(transform: TypedTransform3D<f32, Src, Dst>) -> Self {
         FastTransform::with_transform(transform)
     }
 }
@@ -550,7 +647,7 @@ impl<Src, Dst> Into<TypedTransform3D<f32, Src, Dst>> for FastTransform<Src, Dst>
 }
 
 impl<Src, Dst> From<TypedVector2D<f32, Src>> for FastTransform<Src, Dst> {
-    fn from(vector: TypedVector2D<f32, Src>) -> FastTransform<Src, Dst> {
+    fn from(vector: TypedVector2D<f32, Src>) -> Self {
         FastTransform::with_vector(vector)
     }
 }

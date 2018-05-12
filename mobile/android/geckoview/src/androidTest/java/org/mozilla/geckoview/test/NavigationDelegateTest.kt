@@ -8,13 +8,12 @@ import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -347,40 +346,164 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
-    @WithDisplay(width = 128, height = 128)
-    @Ignore
-    @Test fun onNewSession_calledForNewWindow() {
-        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
-        sessionRule.waitForPageStop()
+    @WithDevToolsAPI
+    @Test fun onNewSession_calledForWindowOpen() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
-            @AssertCalled(count = 1)
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.evaluateJS("window.open('newSession_child.html', '_blank')")
+
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1, order = [1])
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+                assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                assertThat("Where should be correct", where,
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+            }
+
+            @AssertCalled(count = 1, order = [2])
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-                response.respond(null)
+                assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
             }
         })
-
-        sessionRule.session.synthesizeTap(5, 5)
-        sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
     }
 
-    @WithDisplay(width = 128, height = 128)
-    @Ignore
-    @Test(expected = IllegalArgumentException::class)
-    fun onNewSession_doesNotAllowOpened() {
+    @WithDevToolsAPI
+    @Test fun onNewSession_calledForTargetBlankLink() {
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
-        sessionRule.waitForPageStop()
+        sessionRule.session.waitForPageStop()
 
-        sessionRule.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+
+        sessionRule.session.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            // We get two onLoadRequest calls for the link click,
+            // one when loading the URL and one when opening a new window.
+            @AssertCalled(count = 2, order = [1])
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+                assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+                assertThat("Where should be correct", where,
+                           equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
+            }
+
+            @AssertCalled(count = 1, order = [2])
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+                assertThat("URI should be correct", uri, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+            }
+        })
+    }
+
+    private fun delegateNewSession(): GeckoSession {
+        val newSession = sessionRule.createClosedSession()
+
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
-                val newSession = sessionRule.createClosedSession(session.settings)
-                newSession.open()
                 response.respond(newSession)
             }
         })
 
-        sessionRule.session.synthesizeTap(5, 5)
-        sessionRule.waitUntilCalled(GeckoSession.NavigationDelegate::class, "onNewSession")
+        return newSession
+    }
+
+    @WithDevToolsAPI
+    @Test fun onNewSession_childShouldLoad() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        val newSession = delegateNewSession()
+        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        newSession.waitForPageStop()
+
+        newSession.forCallbacksDuringWait(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStart(session: GeckoSession, url: String) {
+                assertThat("URL should match", url, endsWith(NEW_SESSION_CHILD_HTML_PATH))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Load should succeed", success, equalTo(true))
+            }
+        })
+    }
+
+    @WithDevToolsAPI
+    @Test fun onNewSession_setWindowOpener() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        val newSession = delegateNewSession()
+        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+        newSession.waitForPageStop()
+
+        assertThat("window.opener should be set",
+                   newSession.evaluateJS("window.opener.location.pathname") as String,
+                   equalTo(NEW_SESSION_HTML_PATH))
+    }
+
+    @WithDevToolsAPI
+    @Test fun onNewSession_supportNoOpener() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        val newSession = delegateNewSession()
+        sessionRule.session.evaluateJS("$('#noOpenerLink').click()")
+        newSession.waitForPageStop()
+
+        assertThat("window.opener should not be set",
+                   newSession.evaluateJS("window.opener"), nullValue())
+    }
+
+    @WithDevToolsAPI
+    @Test fun onNewSession_notCalledForHandledLoads() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+                // Pretend we handled the target="_blank" link click.
+                response.respond(uri.endsWith(NEW_SESSION_CHILD_HTML_PATH))
+            }
+        })
+
+        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+
+        // Assert that onNewSession was not called for the link click.
+        sessionRule.session.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 2)
+            override fun onLoadRequest(session: GeckoSession, uri: String, where: Int, flags: Int, response: GeckoResponse<Boolean>) {
+                assertThat("URI must match", uri,
+                           endsWith(forEachCall(NEW_SESSION_CHILD_HTML_PATH, NEW_SESSION_HTML_PATH)))
+            }
+
+            @AssertCalled(count = 0)
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+            }
+        })
+    }
+
+    @WithDevToolsAPI
+    @Test(expected = IllegalArgumentException::class)
+    fun onNewSession_doesNotAllowOpened() {
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onNewSession(session: GeckoSession, uri: String, response: GeckoResponse<GeckoSession>) {
+                response.respond(sessionRule.createOpenSession())
+            }
+        })
+
+        sessionRule.session.evaluateJS("$('#targetBlankLink').click()")
+
+        sessionRule.session.waitUntilCalled(GeckoSession.NavigationDelegate::class,
+                                            "onNewSession")
     }
 }

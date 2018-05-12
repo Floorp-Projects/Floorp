@@ -19,10 +19,13 @@ use size::TypedSize2D;
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use std::borrow::Borrow;
 use std::cmp::PartialOrd;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Div, Mul, Sub};
+
 
 /// A 2d Rectangle optionally tagged with a unit.
 #[repr(C)]
@@ -281,34 +284,32 @@ where
     /// semantic on these edges. This means that the right-most and bottom-most
     /// points provided to `from_points` will count as not contained by the rect.
     /// This behavior may change in the future.
-    pub fn from_points<'a, I>(points: I) -> Self
+    pub fn from_points<I>(points: I) -> Self
     where
-        U: 'a,
-        T: 'a,
-        I: IntoIterator<Item = &'a TypedPoint2D<T, U>>,
+        I: IntoIterator,
+        I::Item: Borrow<TypedPoint2D<T, U>>,
     {
         let mut points = points.into_iter();
 
-        let first = if let Some(first) = points.next() {
-            first
-        } else {
-            return TypedRect::zero();
+        let (mut min_x, mut min_y) = match points.next() {
+            Some(first) => (first.borrow().x, first.borrow().y),
+            None => return TypedRect::zero(),
         };
 
-        let (mut min_x, mut min_y) = (first.x, first.y);
         let (mut max_x, mut max_y) = (min_x, min_y);
         for point in points {
-            if point.x < min_x {
-                min_x = point.x
+            let p = point.borrow();
+            if p.x < min_x {
+                min_x = p.x
             }
-            if point.x > max_x {
-                max_x = point.x
+            if p.x > max_x {
+                max_x = p.x
             }
-            if point.y < min_y {
-                min_y = point.y
+            if p.y < min_y {
+                min_y = p.y
             }
-            if point.y > max_y {
-                max_y = point.y
+            if p.y > max_y {
+                max_y = p.y
             }
         }
         TypedRect::new(

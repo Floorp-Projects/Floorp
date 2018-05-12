@@ -7,10 +7,12 @@
 window.ShieldStudies = class ShieldStudies extends React.Component {
 
   render() {
+    const { translations } = this.props;
+
     return (
       r("div", {},
-        r(WhatsThisBox),
-        r(StudyList),
+        r(WhatsThisBox, {translations}),
+        r(StudyList, {translations}),
       )
     );
   }
@@ -73,6 +75,7 @@ class StudyList extends React.Component {
 
   render() {
     const { studies } = this.state;
+    const { translations } = this.props;
 
     if (studies === null) {
       // loading
@@ -81,7 +84,7 @@ class StudyList extends React.Component {
 
     let info = null;
     if (studies.length === 0) {
-      info = r("p", {className: "study-list-info"}, "You have not participated in any studies.");
+      info = r("p", {className: "study-list-info"}, translations.noStudies);
     }
 
     return (
@@ -89,7 +92,7 @@ class StudyList extends React.Component {
         info,
         r("ul", {className: "study-list"},
           this.state.studies.map(study => (
-            r(StudyListItem, {key: study.name, study})
+            r(StudyListItem, {key: study.name, study, translations})
           ))
         ),
       )
@@ -108,7 +111,7 @@ class StudyListItem extends React.Component {
   }
 
   render() {
-    const study = this.props.study;
+    const {study, translations} = this.props;
     return (
       r("li", {
         className: classnames("study", {disabled: !study.active}),
@@ -120,14 +123,14 @@ class StudyListItem extends React.Component {
         r("div", {className: "study-details"},
           r("div", {className: "study-name"}, study.name),
           r("div", {className: "study-description", title: study.description},
-            r("span", {className: "study-status"}, study.active ? "Active" : "Complete"),
+            r("span", {className: "study-status"}, study.active ? translations.activeStatus : translations.completeStatus),
             r("span", {}, "\u2022"), // &bullet;
             r("span", {}, study.description),
           ),
         ),
         r("div", {className: "study-actions"},
           study.active &&
-            r(FxButton, {className: "remove-button", onClick: this.handleClickRemove}, "Remove"),
+            r(FxButton, {className: "remove-button", onClick: this.handleClickRemove}, translations.removeButton),
         ),
       )
     );
@@ -140,6 +143,7 @@ StudyListItem.propTypes = {
     active: PropTypes.boolean,
     description: PropTypes.string.isRequired,
   }).isRequired,
+  translations: PropTypes.object.isRequired,
 };
 
 class WhatsThisBox extends React.Component {
@@ -179,21 +183,24 @@ class WhatsThisBox extends React.Component {
 
   render() {
     const { learnMoreHref, studiesEnabled } = this.state;
+    const { translations } = this.props;
 
     let message = null;
 
     // studiesEnabled can be null, in which case do nothing
     if (studiesEnabled === false) {
-      message = r("span", {}, "This is a list of studies that you have participated in. No new studies will run.");
+      message = r("span", {}, translations.disabledList);
     } else if (studiesEnabled === true) {
-      message = r("span", {}, "What's this? Firefox may install and run studies from time to time.");
+      message = r("span", {}, translations.enabledList);
     }
+
+    const updateButtonKey = navigator.platform.includes("Win") ? "updateButtonWin" : "updateButtonUnix";
 
     return (
       r(InfoBox, {},
         message,
-        r("a", {id: "shield-studies-learn-more", href: learnMoreHref}, "Learn more"),
-        r(UpdatePreferencesButton, {}, "Update Preferences"),
+        r("a", {id: "shield-studies-learn-more", href: learnMoreHref}, translations.learnMore),
+        r(UpdatePreferencesButton, {}, translations[updateButtonKey]),
        )
     );
   }

@@ -5,8 +5,7 @@
 
 from __future__ import absolute_import
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import MESSAGE_REFERENCE
-from fluent.migrate import COPY, CONCAT, REPLACE
+from fluent.migrate import COPY, CONCAT
 
 def migrate(ctx):
     """Bug 1451992 - Migrate Preferences::Subdialogs::Languages to Fluent, part {index}."""

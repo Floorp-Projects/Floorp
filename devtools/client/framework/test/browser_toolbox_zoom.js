@@ -1,47 +1,44 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-var toolbox;
-
 const {LocalizationHelper} = require("devtools/shared/l10n");
+const {Toolbox} = require("devtools/client/framework/toolbox");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
 
-function test() {
-  addTab("about:blank").then(openToolbox);
-}
-
-function openToolbox() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  gDevTools.showToolbox(target).then((aToolbox) => {
-    toolbox = aToolbox;
-    toolbox.selectTool("styleeditor").then(testZoom);
+add_task(async function() {
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.toolbox.zoomValue");
   });
-}
 
-function testZoom() {
+  // This test assume that zoom value will be default value. i.e. x1.0.
+  Services.prefs.setCharPref("devtools.toolbox.zoomValue", "1.0");
+  await addTab("about:blank");
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  let toolbox = await gDevTools.showToolbox(target,
+                                            "styleeditor",
+                                            Toolbox.HostType.BOTTOM);
+
   info("testing zoom keys");
 
-  testZoomLevel("In", 2, 1.2);
-  testZoomLevel("Out", 3, 0.9);
-  testZoomLevel("Reset", 1, 1);
+  testZoomLevel("In", 2, 1.2, toolbox);
+  testZoomLevel("Out", 3, 0.9, toolbox);
+  testZoomLevel("Reset", 1, 1, toolbox);
 
-  tidyUp();
-}
+  await toolbox.destroy();
+  gBrowser.removeCurrentTab();
+});
 
-function testZoomLevel(type, times, expected) {
+function testZoomLevel(type, times, expected, toolbox) {
   sendZoomKey("toolbox.zoom" + type + ".key", times);
 
   let zoom = getCurrentZoom(toolbox);
-  is(zoom.toFixed(2), expected, "zoom level correct after zoom " + type);
+  is(zoom.toFixed(1), expected, "zoom level correct after zoom " + type);
 
   let savedZoom = parseFloat(Services.prefs.getCharPref(
     "devtools.toolbox.zoomValue"));
-  is(savedZoom.toFixed(2), expected,
+  is(savedZoom.toFixed(1), expected,
      "saved zoom level is correct after zoom " + type);
 }
 
@@ -51,17 +48,8 @@ function sendZoomKey(shortcut, times) {
   }
 }
 
-function getCurrentZoom() {
+function getCurrentZoom(toolbox) {
   let windowUtils = toolbox.win.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIDOMWindowUtils);
   return windowUtils.fullZoom;
-}
-
-function tidyUp() {
-  toolbox.destroy().then(function() {
-    gBrowser.removeCurrentTab();
-
-    toolbox = null;
-    finish();
-  });
 }

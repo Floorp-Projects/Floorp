@@ -381,7 +381,6 @@ private:
     bool                            mReportedResponseHeader;
 
     // protected by nsHttp::GetLock()
-    nsHttpResponseHead             *mForTakeResponseHead;
     bool                            mResponseHeadTaken;
     nsAutoPtr<nsHttpHeaderArray>    mForTakeResponseTrailers;
     bool                            mResponseTrailersTaken;

@@ -272,7 +272,7 @@ pub struct ClipSources {
 }
 
 impl ClipSources {
-    pub fn new(clips: Vec<ClipSource>) -> ClipSources {
+    pub fn new(clips: Vec<ClipSource>) -> Self {
         let (local_inner_rect, local_outer_rect) = Self::calculate_inner_and_outer_rects(&clips);
 
         let clips = clips
@@ -466,6 +466,7 @@ impl ClipSources {
         &self,
         transform: &LayoutToWorldFastTransform,
         device_pixel_scale: DevicePixelScale,
+        screen_rect: Option<&DeviceIntRect>,
     ) -> (DeviceIntRect, Option<DeviceIntRect>) {
         // If this translation isn't axis aligned or has a perspective component, don't try to
         // calculate the inner rectangle. The rectangle that we produce would include potentially
@@ -476,13 +477,15 @@ impl ClipSources {
         let can_calculate_inner_rect =
             transform.preserves_2d_axis_alignment() && !transform.has_perspective_component();
         let screen_inner_rect = if can_calculate_inner_rect {
-            calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_scale)
+            calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_scale, screen_rect)
+                .unwrap_or(DeviceIntRect::zero())
         } else {
             DeviceIntRect::zero()
         };
 
         let screen_outer_rect = self.local_outer_rect.map(|outer_rect|
-            calculate_screen_bounding_rect(transform, &outer_rect, device_pixel_scale)
+            calculate_screen_bounding_rect(transform, &outer_rect, device_pixel_scale, screen_rect)
+                .unwrap_or(DeviceIntRect::zero())
         );
 
         (screen_inner_rect, screen_outer_rect)
@@ -565,7 +568,7 @@ pub struct ClipChain {
 }
 
 impl ClipChain {
-    pub fn empty(screen_rect: &DeviceIntRect) -> ClipChain {
+    pub fn empty(screen_rect: &DeviceIntRect) -> Self {
         ClipChain {
             parent_index: None,
             combined_inner_screen_rect: *screen_rect,
@@ -575,7 +578,7 @@ impl ClipChain {
         }
     }
 
-    pub fn new_with_added_node(&self, new_node: &ClipChainNode) -> ClipChain {
+    pub fn new_with_added_node(&self, new_node: &ClipChainNode) -> Self {
         // If the new node's inner rectangle completely surrounds our outer rectangle,
         // we can discard the new node entirely since it isn't going to affect anything.
         if new_node.screen_inner_rect.contains_rect(&self.combined_outer_screen_rect) {
