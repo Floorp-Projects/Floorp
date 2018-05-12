@@ -58,6 +58,9 @@ public:
 protected:
     nsCOMPtr<nsIURI> mInnerURI;
 
+    nsresult SetPathQueryRef(const nsACString &aPathQueryRef) override;
+    nsresult SetQuery(const nsACString &aQuery) override;
+    nsresult SetRef(const nsACString &aRef) override;
     bool Deserialize(const mozilla::ipc::URIParams&);
     nsresult ReadPrivate(nsIObjectInputStream *stream);
 
