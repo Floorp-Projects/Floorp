@@ -31,9 +31,6 @@
 #include "util/StringBuffer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
-#ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
-#endif
 #include "vm/BytecodeUtil.h"
 #include "vm/Debugger.h"
 #include "vm/GeneratorObject.h"
@@ -971,10 +968,6 @@ js::TypeOfValue(const Value& v)
         return TypeOfObject(&v.toObject());
     if (v.isBoolean())
         return JSTYPE_BOOLEAN;
-#ifdef ENABLE_BIGINT
-    if (v.isBigInt())
-        return JSTYPE_BIGINT;
-#endif
     MOZ_ASSERT(v.isSymbol());
     return JSTYPE_SYMBOL;
 }
@@ -4377,10 +4370,7 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
 
     // Optimize common cases like (2).toString() or "foo".valueOf() to not
     // create a wrapper object.
-    if (v.isPrimitive() &&
-        !v.isNullOrUndefined() &&
-        IF_BIGINT(!v.isBigInt(), true))
-    {
+    if (v.isPrimitive() && !v.isNullOrUndefined()) {
         NativeObject* proto;
         if (v.isNumber()) {
             proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());

@@ -15,9 +15,6 @@
 
 #include "jit/InlinableNatives.h"
 #include "util/StringBuffer.h"
-#ifdef ENABLE_BIGINT
-#include "vm/BigIntType.h"
-#endif
 #include "vm/GlobalObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -167,10 +164,6 @@ js::ToBooleanSlow(HandleValue v)
 {
     if (v.isString())
         return v.toString()->length() != 0;
-#ifdef ENABLE_BIGINT
-    if (v.isBigInt())
-        return v.toBigInt()->toBoolean();
-#endif
 
     MOZ_ASSERT(v.isObject());
     return !EmulatesUndefined(&v.toObject());
