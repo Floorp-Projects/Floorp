@@ -80,7 +80,7 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     MOZ_ASSERT(libraryInitState == InitState::Uninitialized,
                "must call JS_Init once before any JSAPI operation except "
-               "JS_SetICUMemoryFunctions");
+               "JS_SetICUMemoryFunctions or JS::SetGMPMemoryFunctions");
     MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
                "how do we have live runtimes before JS_Init?");
 
