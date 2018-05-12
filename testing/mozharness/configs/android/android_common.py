@@ -8,6 +8,7 @@ import os
 config = {
     "default_actions": [
         'clobber',
+        'read-buildbot-config',
         'setup-avds',
         'start-emulator',
         'download-and-extract',

@@ -881,7 +881,7 @@ NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id
         }
 
         if (!shape) {
-            MOZ_ASSERT(obj->nonProxyIsExtensible(),
+            MOZ_ASSERT(obj->isExtensible(),
                        "Can't add new property to non-extensible object");
             return addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT, attrs, table, entry,
                                            keep);
@@ -987,7 +987,7 @@ NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj, HandleI
         }
 
         if (!shape) {
-            MOZ_ASSERT(obj->nonProxyIsExtensible(),
+            MOZ_ASSERT(obj->isExtensible(),
                        "Can't add new property to non-extensible object");
             return addAccessorPropertyInternal(cx, obj, id, getter, setter, attrs, table, entry,
                                                keep);

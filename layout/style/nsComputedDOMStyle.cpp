@@ -988,16 +988,6 @@ nsComputedDOMStyle::ClearCurrentStyleSources()
 }
 
 already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
-                                        ErrorResult& aRv)
-{
-  if (nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak)) {
-    document->WarnOnceAbout(nsIDocument::eGetPropertyCSSValue);
-  }
-  return GetPropertyCSSValueWithoutWarning(aPropertyName, aRv);
-}
-
-already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetPropertyCSSValueWithoutWarning(
   const nsAString& aPropertyName,
   ErrorResult& aRv)

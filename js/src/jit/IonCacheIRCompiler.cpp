@@ -1865,6 +1865,22 @@ EmitStoreDenseElement(MacroAssembler& masm, const ConstantOrRegister& value,
     masm.bind(&done);
 }
 
+static void
+EmitAssertNoCopyOnWriteElements(MacroAssembler& masm, Register elementsReg)
+{
+#ifdef DEBUG
+    // IonBuilder::initOrSetElemTryCache ensures we have no copy-on-write
+    // elements. Assert this in debug builds.
+    Address elementsFlags(elementsReg, ObjectElements::offsetOfFlags());
+    Label ok;
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE),
+                      &ok);
+    masm.assumeUnreachable("Unexpected copy-on-write elements in Ion IC!");
+    masm.bind(&ok);
+#endif
+}
+
 bool
 IonCacheIRCompiler::emitStoreDenseElement()
 {
@@ -1881,8 +1897,10 @@ IonCacheIRCompiler::emitStoreDenseElement()
 
     EmitCheckPropertyTypes(masm, typeCheckInfo_, obj, val, *liveRegs_, failure->label());
 
-    // Load obj->elements in scratch.
+    // Load obj->elements in scratch1.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch1);
+
+    EmitAssertNoCopyOnWriteElements(masm, scratch1);
 
     // Bounds check.
     Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
@@ -1891,6 +1909,12 @@ IonCacheIRCompiler::emitStoreDenseElement()
     // Hole check.
     BaseObjectElementIndex element(scratch1, index);
     masm.branchTestMagic(Assembler::Equal, element, failure->label());
+
+    // Check for frozen elements. We have to check this here because we attach
+    // this stub also for non-extensible objects, and these can become frozen
+    // without triggering a Shape change.
+    Address flags(scratch1, ObjectElements::offsetOfFlags());
+    masm.branchTest32(Assembler::NonZero, flags, Imm32(ObjectElements::FROZEN), failure->label());
 
     EmitPreBarrier(masm, element, MIRType::Value);
     EmitStoreDenseElement(masm, val, scratch1, element);
@@ -1922,6 +1946,8 @@ IonCacheIRCompiler::emitStoreDenseElementHole()
 
     // Load obj->elements in scratch1.
     masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch1);
+
+    EmitAssertNoCopyOnWriteElements(masm, scratch1);
 
     Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
     BaseObjectElementIndex element(scratch1, index);

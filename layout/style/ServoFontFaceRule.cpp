@@ -66,15 +66,6 @@ ServoFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
   return NS_OK;
 }
 
-already_AddRefed<dom::CSSValue>
-ServoFontFaceRuleDecl::GetPropertyCSSValue(const nsAString& aPropName,
-                                           ErrorResult& aRv)
-{
-  // ??? nsDOMCSSDeclaration returns null/NS_OK, but that seems wrong.
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
-}
-
 NS_IMETHODIMP
 ServoFontFaceRuleDecl::RemoveProperty(const nsAString& aPropName,
                                       nsAString& aResult)

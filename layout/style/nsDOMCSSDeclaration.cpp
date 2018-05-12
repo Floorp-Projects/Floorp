@@ -144,14 +144,6 @@ nsDOMCSSDeclaration::Length()
   return 0;
 }
 
-already_AddRefed<dom::CSSValue>
-nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorResult& aRv)
-{
-  // We don't support CSSValue yet so we'll just return null...
-
-  return nullptr;
-}
-
 void
 nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName)
 {

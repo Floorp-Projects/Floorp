@@ -9144,9 +9144,9 @@ IonBuilder::initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
     bool hasExtraIndexedProperty;
     MOZ_TRY_VAR(hasExtraIndexedProperty, ElementAccessHasExtraIndexedProperty(this, obj));
 
-    bool mayBeFrozen = ElementAccessMightBeFrozen(constraints(), obj);
+    bool mayBeNonExtensible = ElementAccessMightBeNonExtensible(constraints(), obj);
 
-    if (mayBeFrozen && hasExtraIndexedProperty) {
+    if (mayBeNonExtensible && hasExtraIndexedProperty) {
         // FallibleStoreElement does not know how to deal with extra indexed
         // properties on the prototype. This case should be rare so we fall back
         // to an IC.
@@ -9199,23 +9199,23 @@ IonBuilder::initOrSetElemDense(TemporaryTypeSet::DoubleConversion conversion,
     // Use MStoreElementHole if this SETELEM has written to out-of-bounds
     // indexes in the past. Otherwise, use MStoreElement so that we can hoist
     // the initialized length and bounds check.
-    // If an object may have been frozen, no previous expectation hold and we
-    // fallback to MFallibleStoreElement.
+    // If an object may have been made non-extensible, no previous expectations
+    // hold and we fallback to MFallibleStoreElement.
     MInstruction* store;
     MStoreElementCommon* common = nullptr;
-    if (writeHole && !hasExtraIndexedProperty && !mayBeFrozen) {
+    if (writeHole && !hasExtraIndexedProperty && !mayBeNonExtensible) {
         MStoreElementHole* ins = MStoreElementHole::New(alloc(), obj, elements, id, newValue);
         store = ins;
         common = ins;
 
         current->add(ins);
-    } else if (mayBeFrozen) {
+    } else if (mayBeNonExtensible) {
         MOZ_ASSERT(!hasExtraIndexedProperty,
                    "FallibleStoreElement codegen assumes no extra indexed properties");
 
-        bool strict = IsStrictSetPC(pc);
+        bool needsHoleCheck = !packed;
         MFallibleStoreElement* ins = MFallibleStoreElement::New(alloc(), obj, elements, id,
-                                                                newValue, strict);
+                                                                newValue, needsHoleCheck);
         store = ins;
         common = ins;
 

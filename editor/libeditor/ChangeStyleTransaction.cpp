@@ -183,10 +183,6 @@ ChangeStyleTransaction::DoTransaction()
     nsAutoString returnString;
     if (multiple) {
       // Let's remove only the value we have to remove and not the others
-
-      // The two lines below are a workaround because
-      // nsDOMCSSDeclaration::GetPropertyCSSValue is not yet implemented (bug
-      // 62682)
       RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
       RemoveValueFromListOfValues(values, mValue);
       if (values.IsEmpty()) {
@@ -207,10 +203,6 @@ ChangeStyleTransaction::DoTransaction()
     cssDecl->GetPropertyPriority(propertyNameString, priority);
     if (multiple) {
       // Let's add the value we have to add to the others
-
-      // The line below is a workaround because
-      // nsDOMCSSDeclaration::GetPropertyCSSValue is not yet implemented (bug
-      // 62682)
       AddValueToMultivalueProperty(values, mValue);
     } else {
       values.Assign(mValue);
