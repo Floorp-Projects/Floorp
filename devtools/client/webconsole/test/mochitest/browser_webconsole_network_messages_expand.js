@@ -94,6 +94,9 @@ async function openRequestAfterUpdates(target, hud) {
   let urlNode = messageNode.querySelector(".url");
   urlNode.click();
 
+  let toggleButtonNode = messageNode.querySelector(".sidebar-toggle");
+  ok(!toggleButtonNode, "Sidebar toggle button shouldn't be shown");
+
   await payload;
   await testNetworkMessage(toolbox, messageNode);
 }
