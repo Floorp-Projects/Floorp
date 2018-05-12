@@ -32,10 +32,11 @@ PERF_SUITES = [
     { 'name': "Images", 'node': "explicit/images/" }
 ]
 
-def update_checkpoint_paths(checkpoint_files):
+def update_checkpoint_paths(checkpoint_files, checkpoints):
     """
-    Updates CHECKPOINTS with memory report file fetched in data_path
+    Updates checkpoints with memory report file fetched in data_path
     :param checkpoint_files: list of files in data_path
+    :param checkpoints: The checkpoints to update the path of.
     """
     target_path = [['Start-', 0],
                       ['StartSettled-', 0],
@@ -49,9 +50,14 @@ def update_checkpoint_paths(checkpoint_files):
     for i in range(len(target_path)):
         (name, idx) = target_path[i]
         paths = sorted([x for x in checkpoint_files if name in x])
-        CHECKPOINTS[i]['path'] = paths[idx]
+        if paths:
+            indices = [i for i,x in enumerate(checkpoints) if name in x['path']]
+            if indices:
+                checkpoints[indices[0]]['path'] = paths[idx]
+            else:
+                print "found files but couldn't find %s" % name
 
-def create_suite(name, node, data_path):
+def create_suite(name, node, data_path, checkpoints=CHECKPOINTS):
     """
     Creates a suite suitable for adding to a perfherder blob. Calculates the
     geometric mean of the checkpoint values and adds that to the suite as
@@ -60,6 +66,7 @@ def create_suite(name, node, data_path):
     :param name: The name of the suite.
     :param node: The path of the data node to extract data from.
     :param data_path: The directory to retrieve data from.
+    :param checkpoints: Which checkpoints to include.
     """
     suite = {
         'name': name,
@@ -71,16 +78,22 @@ def create_suite(name, node, data_path):
         suite['extraOptions'] = ["stylo"]
     if 'STYLO_THREADS' in os.environ and os.environ['STYLO_THREADS'] == '1':
         suite['extraOptions'] = ["stylo-sequential"]
-    update_checkpoint_paths(glob.glob(os.path.join(data_path, "memory-report*")))
+    update_checkpoint_paths(glob.glob(os.path.join(data_path, "memory-report*")), checkpoints)
 
     total = 0
-    for checkpoint in CHECKPOINTS:
+    for checkpoint in checkpoints:
         memory_report_path = os.path.join(data_path, checkpoint['path'])
+
+        name_filter = checkpoint.get('name_filter', None)
+        count = checkpoint.get('count', 0)
 
         if node != "resident":
             totals = parse_about_memory.calculate_memory_report_values(
-                                            memory_report_path, node)
-            value = sum(totals.values())
+                                            memory_report_path, node, name_filter)
+            if count:
+                value = sum(totals.values()[:count])
+            else:
+                value = sum(totals.values())
         else:
             # For "resident" we really want RSS of the chrome ("Main") process
             # and USS of the child processes. We'll still call it resident
@@ -104,12 +117,12 @@ def create_suite(name, node, data_path):
 
     # Add the geometric mean. For more details on the calculation see:
     #   https://en.wikipedia.org/wiki/Geometric_mean#Relationship_with_arithmetic_mean_of_logarithms
-    suite['value'] = math.exp(total / len(CHECKPOINTS))
+    suite['value'] = math.exp(total / len(checkpoints))
 
     return suite
 
 
-def create_perf_data(data_path):
+def create_perf_data(data_path, perf_suites=PERF_SUITES, checkpoints=CHECKPOINTS):
     """
     Builds up a performance data blob suitable for submitting to perfherder.
     """
@@ -122,8 +135,8 @@ def create_perf_data(data_path):
         'suites': []
     }
 
-    for suite in PERF_SUITES:
-        perf_blob['suites'].append(create_suite(suite['name'], suite['node'], data_path))
+    for suite in perf_suites:
+        perf_blob['suites'].append(create_suite(suite['name'], suite['node'], data_path, checkpoints))
 
     return perf_blob
 

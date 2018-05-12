@@ -11,8 +11,8 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsRange.h"
+#include "gfxFont.h"
 
-class gfxFontEntry;
 class gfxFontGroup;
 
 namespace mozilla {
@@ -27,7 +27,7 @@ class InspectorFontFace final : public NonRefcountedDOMObject
 public:
   InspectorFontFace(gfxFontEntry* aFontEntry,
                     gfxFontGroup* aFontGroup,
-                    uint8_t aMatchType)
+                    gfxTextRange::MatchType aMatchType)
     : mFontEntry(aFontEntry)
     , mFontGroup(aFontGroup)
     , mMatchType(aMatchType)
@@ -41,7 +41,9 @@ public:
   }
 
   gfxFontEntry* GetFontEntry() const { return mFontEntry; }
-  void AddMatchType(uint8_t aMatchType) { mMatchType |= aMatchType; }
+  void AddMatchType(gfxTextRange::MatchType aMatchType) {
+    mMatchType |= aMatchType;
+  }
 
   void AddRange(nsRange* aRange);
   size_t RangeCount() const {
@@ -81,7 +83,7 @@ protected:
   RefPtr<gfxFontEntry> mFontEntry;
   RefPtr<gfxFontGroup> mFontGroup;
   RefPtr<ServoFontFaceRule> mRule;
-  uint8_t mMatchType;
+  gfxTextRange::MatchType mMatchType;
 
   nsTArray<RefPtr<nsRange>> mRanges;
 };

@@ -801,28 +801,26 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValT
             CHECK(iter.readReturn(&nothing));
           case uint16_t(Op::Unreachable):
             CHECK(iter.readUnreachable());
-          case uint16_t(Op::NumericPrefix): {
-#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+          case uint16_t(Op::MiscPrefix): {
             switch (op.b1) {
-              case uint16_t(NumericOp::I32TruncSSatF32):
-              case uint16_t(NumericOp::I32TruncUSatF32):
+#ifdef ENABLE_WASM_SATURATING_TRUNC_OPS
+              case uint16_t(MiscOp::I32TruncSSatF32):
+              case uint16_t(MiscOp::I32TruncUSatF32):
                 CHECK(iter.readConversion(ValType::F32, ValType::I32, &nothing));
-              case uint16_t(NumericOp::I32TruncSSatF64):
-              case uint16_t(NumericOp::I32TruncUSatF64):
+              case uint16_t(MiscOp::I32TruncSSatF64):
+              case uint16_t(MiscOp::I32TruncUSatF64):
                 CHECK(iter.readConversion(ValType::F64, ValType::I32, &nothing));
-              case uint16_t(NumericOp::I64TruncSSatF32):
-              case uint16_t(NumericOp::I64TruncUSatF32):
+              case uint16_t(MiscOp::I64TruncSSatF32):
+              case uint16_t(MiscOp::I64TruncUSatF32):
                 CHECK(iter.readConversion(ValType::F32, ValType::I64, &nothing));
-              case uint16_t(NumericOp::I64TruncSSatF64):
-              case uint16_t(NumericOp::I64TruncUSatF64):
+              case uint16_t(MiscOp::I64TruncSSatF64):
+              case uint16_t(MiscOp::I64TruncUSatF64):
                 CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
+#endif
               default:
                 return iter.unrecognizedOpcode(&op);
             }
             break;
-#else
-            return iter.unrecognizedOpcode(&op);
-#endif
           }
 #ifdef ENABLE_WASM_GC
           case uint16_t(Op::RefNull): {

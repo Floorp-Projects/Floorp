@@ -247,7 +247,7 @@ enum AwaitHandling : uint8_t { AwaitIsName, AwaitIsKeyword, AwaitIsModuleKeyword
 template <class ParseHandler, typename CharT>
 class AutoAwaitIsKeyword;
 
-class ParserBase
+class MOZ_STACK_CLASS ParserBase
   : public StrictModeGetter,
     private JS::AutoGCRooter
 {
@@ -276,6 +276,8 @@ class ParserBase
 
     ScriptSource*       ss;
 
+    RootedScriptSourceObject sourceObject;
+
     /* Root atoms and objects allocated for the parsed tree. */
     AutoKeepAtoms       keepAtoms;
 
@@ -301,7 +303,8 @@ class ParserBase
     template<class, typename> friend class AutoAwaitIsKeyword;
 
     ParserBase(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-               bool foldConstants, UsedNameTracker& usedNames);
+               bool foldConstants, UsedNameTracker& usedNames,
+               ScriptSourceObject* sourceObject);
     ~ParserBase();
 
     bool checkOptions();
@@ -433,7 +436,7 @@ enum FunctionCallBehavior {
 };
 
 template <class ParseHandler>
-class PerHandlerParser
+class MOZ_STACK_CLASS PerHandlerParser
   : public ParserBase
 {
   private:
@@ -465,7 +468,8 @@ class PerHandlerParser
   protected:
     PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                      bool foldConstants, UsedNameTracker& usedNames,
-                     LazyScript* lazyOuterFunction);
+                     LazyScript* lazyOuterFunction,
+                     ScriptSourceObject* sourceObject);
 
     static Node null() { return ParseHandler::null(); }
 
@@ -636,7 +640,7 @@ template <class ParseHandler, typename CharT>
 class Parser;
 
 template <class ParseHandler, typename CharT>
-class GeneralParser
+class MOZ_STACK_CLASS GeneralParser
   : public PerHandlerParser<ParseHandler>
 {
   public:
@@ -867,7 +871,8 @@ class GeneralParser
     GeneralParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
                   const CharT* chars, size_t length, bool foldConstants,
                   UsedNameTracker& usedNames, SyntaxParser* syntaxParser,
-                  LazyScript* lazyOuterFunction);
+                  LazyScript* lazyOuterFunction,
+                  ScriptSourceObject* sourceObject);
 
     inline void setAwaitHandling(AwaitHandling awaitHandling);
 
@@ -1248,7 +1253,7 @@ class GeneralParser
 };
 
 template <typename CharT>
-class Parser<SyntaxParseHandler, CharT> final
+class MOZ_STACK_CLASS Parser<SyntaxParseHandler, CharT> final
   : public GeneralParser<SyntaxParseHandler, CharT>
 {
     using Base = GeneralParser<SyntaxParseHandler, CharT>;
@@ -1358,7 +1363,7 @@ class Parser<SyntaxParseHandler, CharT> final
 };
 
 template <typename CharT>
-class Parser<FullParseHandler, CharT> final
+class MOZ_STACK_CLASS Parser<FullParseHandler, CharT> final
   : public GeneralParser<FullParseHandler, CharT>
 {
     using Base = GeneralParser<FullParseHandler, CharT>;
