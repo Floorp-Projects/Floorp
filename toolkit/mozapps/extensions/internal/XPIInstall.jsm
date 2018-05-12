@@ -50,6 +50,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
+                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+
 XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
   return ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {}).ExtensionParent.IconDetails;
 });
@@ -63,6 +66,8 @@ const BinaryOutputStream = Components.Constructor("@mozilla.org/binaryoutputstre
                                                   "nsIBinaryOutputStream", "setOutputStream");
 const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
                                           "nsICryptoHash", "initWithString");
+const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
+                                               "nsIFileInputStream", "init");
 const FileOutputStream = Components.Constructor("@mozilla.org/network/file-output-stream;1",
                                                 "nsIFileOutputStream", "init");
 const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
@@ -753,14 +758,8 @@ function defineSyncGUID(aAddon) {
   // Define .syncGUID as a lazy property which is also settable
   Object.defineProperty(aAddon, "syncGUID", {
     get: () => {
-      // Generate random GUID used for Sync.
-      let guid = Cc["@mozilla.org/uuid-generator;1"]
-          .getService(Ci.nsIUUIDGenerator)
-          .generateUUID().toString();
-
-      delete aAddon.syncGUID;
-      aAddon.syncGUID = guid;
-      return guid;
+      aAddon.syncGUID = uuidGen.generateUUID().toString();
+      return aAddon.syncGUID;
     },
     set: (val) => {
       delete aAddon.syncGUID;
@@ -1985,9 +1984,7 @@ var LocalAddonInstall = class extends AddonInstall {
         return;
       }
 
-      let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-          createInstance(Ci.nsIFileInputStream);
-      fis.init(this.file, -1, -1, false);
+      let fis = new FileInputStream(this.file, -1, -1, false);
       crypto.updateFromStream(fis, this.file.fileSize);
       let calculatedHash = getHashStringForCrypto(crypto);
       if (calculatedHash != this.hash.data) {
@@ -2166,10 +2163,10 @@ var DownloadAddonInstall = class extends AddonInstall {
     try {
       this.file = getTemporaryFile();
       this.ownsTempFile = true;
-      this.stream = Cc["@mozilla.org/network/file-output-stream;1"].
-                    createInstance(Ci.nsIFileOutputStream);
-      this.stream.init(this.file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
-                       FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE, 0);
+      this.stream = new FileOutputStream(this.file,
+                                         (FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
+                                          FileUtils.MODE_TRUNCATE),
+                                         FileUtils.PERMS_FILE, 0);
     } catch (e) {
       logger.warn("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
@@ -2179,8 +2176,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       return;
     }
 
-    let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].
-                   createInstance(Ci.nsIStreamListenerTee);
+    let listener = Cc["@mozilla.org/network/stream-listener-tee;1"].createInstance(Ci.nsIStreamListenerTee);
     listener.init(this, this.stream);
     try {
       let requireBuiltIn = Services.prefs.getBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
@@ -2427,8 +2423,7 @@ var DownloadAddonInstall = class extends AddonInstall {
         win = this.browser.contentWindow || this.browser.ownerGlobal;
       }
 
-      let factory = Cc["@mozilla.org/prompter;1"].
-                    getService(Ci.nsIPromptFactory);
+      let factory = Cc["@mozilla.org/prompter;1"].getService(Ci.nsIPromptFactory);
       let prompt = factory.getPrompt(win, Ci.nsIAuthPrompt2);
 
       if (this.browser && prompt instanceof Ci.nsILoginManagerPrompter)
@@ -3239,14 +3234,10 @@ class SystemAddonInstallLocation extends MutableDirectoryInstallLocation {
     }
 
     let newDir = this._baseDir.clone();
-
-    let uuidGen = Cc["@mozilla.org/uuid-generator;1"].
-                  getService(Ci.nsIUUIDGenerator);
     newDir.append("blank");
 
     while (true) {
       newDir.leafName = uuidGen.generateUUID().toString();
-
       try {
         await OS.File.makeDir(newDir.path, { ignoreExisting: false });
         break;

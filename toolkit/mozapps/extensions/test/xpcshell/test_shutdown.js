@@ -24,7 +24,7 @@ const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
                         "setTelemetryDetails", "getTelemetryDetails",
                         "callNoUpdateListeners", "backgroundUpdateTimerHandler",
                         "hasUpgradeListener", "getUpgradeListener",
-                        "isDBLoaded", "BOOTSTRAP_REASONS"];
+                        "isDBLoaded", "recordTiming", "BOOTSTRAP_REASONS"];
 
 async function test_functions() {
   for (let prop in AddonManager) {

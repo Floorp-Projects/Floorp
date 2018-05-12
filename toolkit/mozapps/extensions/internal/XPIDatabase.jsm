@@ -73,6 +73,13 @@ const LOGGER_ID = "addons.xpi-utils";
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
+const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
+                                               "nsIFileInputStream", "init");
+const ConverterInputStream = Components.Constructor("@mozilla.org/intl/converter-input-stream;1",
+                                                    "nsIConverterInputStream", "init");
+const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
+                                         "nsIZipReader", "open");
+
 // Create a new logger for use by the Addons XPI Provider Utils
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
@@ -83,7 +90,6 @@ const FILE_JSON_DB                    = "extensions.json";
 // The last version of DB_SCHEMA implemented in SQLITE
 const LAST_SQLITE_DB_SCHEMA           = 14;
 
-const PREF_BLOCKLIST_ITEM_URL         = "extensions.blocklist.itemURL";
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
@@ -139,29 +145,6 @@ const LEGACY_TYPES = new Set([
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
-
-// Note: When adding/changing/removing items here, remember to change the
-// DB schema version to ensure changes are picked up ASAP.
-const STATIC_BLOCKLIST_PATTERNS = [
-  { creator: "Mozilla Corp.",
-    level: nsIBlocklistService.STATE_BLOCKED,
-    blockID: "i162" },
-  { creator: "Mozilla.org",
-    level: nsIBlocklistService.STATE_BLOCKED,
-    blockID: "i162" }
-];
-
-function findMatchingStaticBlocklistItem(aAddon) {
-  for (let item of STATIC_BLOCKLIST_PATTERNS) {
-    if ("creator" in item && typeof item.creator == "string") {
-      if ((aAddon.defaultLocale && aAddon.defaultLocale.creator == item.creator) ||
-          (aAddon.selectedLocale && aAddon.selectedLocale.creator == item.creator)) {
-        return item;
-      }
-    }
-  }
-  return null;
-}
 
 /**
  * Schedules an idle task, and returns a promise which resolves to an
@@ -459,15 +442,6 @@ class AddonInternal {
   }
 
   async findBlocklistEntry() {
-    let staticItem = findMatchingStaticBlocklistItem(this);
-    if (staticItem) {
-      let url = Services.urlFormatter.formatURLPref(PREF_BLOCKLIST_ITEM_URL);
-      return {
-        state: staticItem.level,
-        url: url.replace(/%blockID%/g, staticItem.blockID)
-      };
-    }
-
     return Blocklist.getAddonBlocklistEntry(this.wrapper);
   }
 
@@ -1032,10 +1006,9 @@ AddonWrapper = class {
       return result;
     }
 
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                    createInstance(Ci.nsIZipReader);
+    let zipReader;
     try {
-      zipReader.open(bundle);
+      zipReader = new ZipReader(bundle);
       let result = zipReader.hasEntry(aPath);
       addon._hasResourceCache.set(aPath, result);
       return result;
@@ -1043,7 +1016,8 @@ AddonWrapper = class {
       addon._hasResourceCache.set(aPath, false);
       return false;
     } finally {
-      zipReader.close();
+      if (zipReader)
+        zipReader.close();
     }
   }
 
@@ -1165,6 +1139,12 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
+function getLocalizedPref(pref) {
+  if (Services.prefs.getPrefType(pref) != Ci.nsIPrefBranch.PREF_INVALID)
+    return Services.prefs.getComplexValue(pref, Ci.nsIPrefLocalizedString).data;
+  return null;
+}
+
 PROP_LOCALE_SINGLE.forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
@@ -1178,8 +1158,7 @@ PROP_LOCALE_SINGLE.forEach(function(aProp) {
 
     if (addon.active) {
       try {
-        let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." + aProp;
-        let value = Services.prefs.getPrefType(pref) != Ci.nsIPrefBranch.PREF_INVALID ? Services.prefs.getComplexValue(pref, Ci.nsIPrefLocalizedString).data : null;
+        let value = getLocalizedPref(`${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp}`);
         if (value)
           result = value;
       } catch (e) {
@@ -1203,14 +1182,13 @@ PROP_LOCALE_MULTI.forEach(function(aProp) {
     let usedRepository = false;
 
     if (addon.active) {
-      let pref = PREF_EM_EXTENSION_FORMAT + addon.id + "." +
-                 aProp.substring(0, aProp.length - 1);
+      let pref = `${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp.slice(0, -1)}`;
       let list = Services.prefs.getChildList(pref, {});
       if (list.length > 0) {
         list.sort();
         results = [];
         for (let childPref of list) {
-          let value = Services.prefs.getPrefType(childPref) != Ci.nsIPrefBranch.PREF_INVALID ? Services.prefs.getComplexValue(childPref, Ci.nsIPrefLocalizedString).data : null;
+          let value = getLocalizedPref(childPref);
           if (value)
             results.push(value);
         }
@@ -1463,14 +1441,10 @@ this.XPIDatabase = {
     try {
       let readTimer = AddonManagerPrivate.simpleTimer("XPIDB_syncRead_MS");
       logger.debug("Opening XPI database " + this.jsonFile.path);
-      fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-              createInstance(Ci.nsIFileInputStream);
-      fstream.init(this.jsonFile, -1, 0, 0);
+      fstream = new FileInputStream(this.jsonFile, -1, 0, 0);
       let cstream = null;
       try {
-        cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Ci.nsIConverterInputStream);
-        cstream.init(fstream, "UTF-8", 0, 0);
+        cstream = new ConverterInputStream(fstream, "UTF-8", 0, 0);
 
         let str = {};
         let read = 0;
@@ -1520,28 +1494,25 @@ this.XPIDatabase = {
     let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
       let inputAddons = JSON.parse(aData);
-      // Now do some sanity checks on our JSON db
+
       if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
         parseTimer.done();
+
         // Content of JSON file is bad, need to rebuild from scratch
         logger.error("bad JSON file contents");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "badJSON");
-        let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildBadJSON_MS");
-        this.rebuildDatabase(aRebuildOnError);
-        rebuildTimer.done();
+
+        this.timeRebuildDatabase("XPIDB_rebuildBadJSON_MS", aRebuildOnError);
         return;
       }
+
       if (inputAddons.schemaVersion != DB_SCHEMA) {
-        // Handle mismatched JSON schema version. For now, we assume
-        // compatibility for JSON data, though we throw away any fields we
+        // For now, we assume compatibility for JSON data with a
+        // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError",
-                                                "schemaMismatch-" + inputAddons.schemaVersion);
-        logger.debug("JSON schema mismatch: expected " + DB_SCHEMA +
-            ", actual " + inputAddons.schemaVersion);
-        // When we rev the schema of the JSON database, we need to make sure we
-        // force the DB to save so that the DB_SCHEMA value in the JSON file and
-        // the preference are updated.
+                                                `schemaMismatch-${inputAddons.schemaVersion}`);
+        logger.debug(`JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`);
       }
       // If we got here, we probably have good data
       // Make AddonInternal instances from the loaded data and save them
@@ -1569,6 +1540,7 @@ this.XPIDatabase = {
       // If we catch and log a SyntaxError from the JSON
       // parser, the xpcshell test harness fails the test for us: bug 870828
       parseTimer.done();
+
       if (e.name == "SyntaxError") {
         logger.error("Syntax error parsing saved XPI JSON data");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "syntax");
@@ -1576,10 +1548,15 @@ this.XPIDatabase = {
         logger.error("Failed to load XPI JSON data from profile", e);
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "other");
       }
-      let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildReadFailed_MS");
-      this.rebuildDatabase(aRebuildOnError);
-      rebuildTimer.done();
+
+      this.timeRebuildDatabase("XPIDB_rebuildReadFailed_MS", aRebuildOnError);
     }
+  },
+
+  timeRebuildDatabase(timerName, rebuildOnError) {
+    AddonManagerPrivate.recordTiming(timerName, () => {
+      this.rebuildDatabase(rebuildOnError);
+    });
   },
 
   /**
@@ -1589,8 +1566,6 @@ this.XPIDatabase = {
    *        If true, synchronously reconstruct the database from installed add-ons
    */
   upgradeDB(aRebuildOnError) {
-    let upgradeTimer = AddonManagerPrivate.simpleTimer("XPIDB_upgradeDB_MS");
-
     let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA, 0);
     if (schemaVersion > LAST_SQLITE_DB_SCHEMA) {
       // we've upgraded before but the JSON file is gone, fall through
@@ -1598,8 +1573,7 @@ this.XPIDatabase = {
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "dbMissing");
     }
 
-    this.rebuildDatabase(aRebuildOnError);
-    upgradeTimer.done();
+    this.timeRebuildDatabase("XPIDB_upgradeDB_MS", aRebuildOnError);
   },
 
   /**
@@ -1612,15 +1586,12 @@ this.XPIDatabase = {
    *        If true, synchronously reconstruct the database from installed add-ons
    */
   rebuildUnreadableDB(aError, aRebuildOnError) {
-    let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildUnreadableDB_MS");
-    logger.warn("Extensions database " + this.jsonFile.path +
-        " exists but is not readable; rebuilding", aError);
+    logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`, aError);
     // Remember the error message until we try and write at least once, so
     // we know at shutdown time that there was a problem
     this._loadError = aError;
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "unreadable");
-    this.rebuildDatabase(aRebuildOnError);
-    rebuildTimer.done();
+
+    this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
   },
 
   /**
@@ -1647,9 +1618,9 @@ this.XPIDatabase = {
       try {
         let byteArray = await OS.File.read(this.jsonFile.path, null, readOptions);
 
-        logger.debug("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
+        logger.debug(`Async JSON file read took ${readOptions.outExecutionDuration} MS`);
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
-          readOptions.outExecutionDuration);
+                                                readOptions.outExecutionDuration);
 
         if (this.addonDB) {
           logger.debug("Synchronous load completed while waiting for async load");
