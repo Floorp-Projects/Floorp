@@ -76,12 +76,22 @@ BigInt::create(JSContext* cx)
 }
 
 BigInt*
-BigInt::create(JSContext* cx, double d)
+BigInt::createFromDouble(JSContext* cx, double d)
 {
     BigInt* x = Allocate<BigInt>(cx);
     if (!x)
         return nullptr;
     mpz_init_set_d(x->num_, d);
+    return x;
+}
+
+BigInt*
+BigInt::createFromBoolean(JSContext* cx, bool b)
+{
+    BigInt* x = Allocate<BigInt>(cx);
+    if (!x)
+        return nullptr;
+    mpz_init_set_ui(x->num_, b);
     return x;
 }
 
@@ -118,7 +128,7 @@ js::NumberToBigInt(JSContext* cx, double d)
     }
 
     // Step 3.
-    return BigInt::create(cx, d);
+    return BigInt::createFromDouble(cx, d);
 }
 
 BigInt*
@@ -142,9 +152,12 @@ js::ToBigInt(JSContext* cx, HandleValue val)
         return nullptr;
 
     // Step 2.
-    // Boolean and string conversions are not yet supported.
+    // String conversions are not yet supported.
     if (v.isBigInt())
         return v.toBigInt();
+
+    if (v.isBoolean())
+        return BigInt::createFromBoolean(cx, v.toBoolean());
 
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_BIGINT);
     return nullptr;
