@@ -51,6 +51,8 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
+const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
+                                               "nsIFileInputStream", "init");
 
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_XPI_STATE                  = "extensions.xpiState";
@@ -2785,17 +2787,12 @@ class DirectoryInstallLocation {
         return null;
       }
     } else {
-      let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-                createInstance(Ci.nsIFileInputStream);
-      fis.init(aFile, -1, -1, false);
+      let fis = new FileInputStream(aFile, -1, -1, false);
       let line = { value: "" };
-      if (fis instanceof Ci.nsILineInputStream)
-        fis.readLine(line);
+      fis.QueryInterface(Ci.nsILineInputStream).readLine(line);
       fis.close();
       if (line.value) {
-        linkedDirectory = Cc["@mozilla.org/file/local;1"].
-                              createInstance(Ci.nsIFile);
-
+        linkedDirectory = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         try {
           linkedDirectory.initWithPath(line.value);
         } catch (e) {
@@ -3148,8 +3145,7 @@ class WinRegInstallLocation extends DirectoryInstallLocation {
     this._IDToFileMap = {};
 
     let path = this._appKeyPath + "\\Extensions";
-    let key = Cc["@mozilla.org/windows-registry-key;1"].
-              createInstance(Ci.nsIWindowsRegKey);
+    let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
 
     // Reading the registry may throw an exception, and that's ok.  In error
     // cases, we just leave ourselves in the empty state.
