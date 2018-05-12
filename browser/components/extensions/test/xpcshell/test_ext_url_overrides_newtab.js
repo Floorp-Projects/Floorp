@@ -125,7 +125,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   // Disable the second extension.
   let addon = await AddonManager.getAddonByID(EXT_2_ID);
   let disabledPromise = awaitEvent("shutdown");
-  addon.userDisabled = true;
+  await addon.disable();
   await disabledPromise;
   equal(aboutNewTabService.newTabURL, DEFAULT_NEW_TAB_URL,
         "newTabURL url is reset to the default after second extension is disabled.");
@@ -133,7 +133,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
 
   // Re-enable the second extension.
   let enabledPromise = awaitEvent("ready");
-  addon.userDisabled = false;
+  await addon.enable();
   await enabledPromise;
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_2),
      "newTabURL is overridden by the second extension.");
@@ -151,7 +151,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
 
   // Disable the second extension.
   disabledPromise = awaitEvent("shutdown");
-  addon.userDisabled = true;
+  await addon.disable();
   await disabledPromise;
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_3),
      "newTabURL is still overridden by the third extension.");
@@ -159,7 +159,7 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
 
   // Re-enable the second extension.
   enabledPromise = awaitEvent("ready");
-  addon.userDisabled = false;
+  await addon.enable();
   await enabledPromise;
   ok(aboutNewTabService.newTabURL.endsWith(NEWTAB_URI_3),
      "newTabURL is still overridden by the third extension.");

@@ -22,7 +22,7 @@ async function install(data, reason) {
 
   let addon = await AddonManager.getAddonByID(data.id);
   if (addon) {
-    addon.userDisabled = false;
+    await addon.enable();
   }
 }
 

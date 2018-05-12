@@ -1621,3 +1621,11 @@ function mockPluginHost(plugins) {
 
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 }
+
+async function setInitialState(addon, initialState) {
+  if (initialState.userDisabled) {
+    await addon.disable();
+  } else if (initialState.userDisabled === false) {
+    await addon.enable();
+  }
+}

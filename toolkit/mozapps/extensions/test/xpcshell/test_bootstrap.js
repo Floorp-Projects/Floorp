@@ -291,7 +291,7 @@ add_task(async function test_2() {
 
   equal(b1.operationsRequiringRestart &
         AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
-  b1.userDisabled = true;
+  await b1.disable();
   ensure_test_completed();
 
   notEqual(b1, null);
@@ -356,7 +356,7 @@ add_task(async function test_4() {
 
   equal(b1.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_ENABLE, 0);
-  b1.userDisabled = false;
+  await b1.enable();
   ensure_test_completed();
 
   notEqual(b1, null);
@@ -652,7 +652,7 @@ add_task(async function test_11() {
     ]
   });
 
-  b1.userDisabled = true;
+  await b1.disable();
 
   BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID1);
@@ -804,7 +804,7 @@ add_task(async function test_15() {
   BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
   BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-  b1.userDisabled = true;
+  await b1.disable();
   ok(!b1.isActive);
   BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID1);

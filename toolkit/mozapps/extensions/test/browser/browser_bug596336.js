@@ -78,7 +78,7 @@ add_task(async function() {
 add_task(async function() {
   await install_addon("browser_bug596336_1");
   let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
   await check_addon(aAddon, "1.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
@@ -124,7 +124,7 @@ add_task(async function() {
 add_task(async function() {
   await install_addon("browser_bug596336_1");
   let [aAddon] = await promiseAddonsByIDs(["bug596336-1@tests.mozilla.org"]);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
   await check_addon(aAddon, "1.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 

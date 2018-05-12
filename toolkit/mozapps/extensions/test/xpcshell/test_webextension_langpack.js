@@ -45,7 +45,7 @@ add_task(async function() {
   equal(L10nRegistry.getAvailableLocales().includes("und"), true);
   equal(Services.locale.getAvailableLocales().includes("und"), true);
 
-  addon.userDisabled = true;
+  await addon.disable();
 
   // It is not available after the langpack has been disabled.
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
@@ -55,7 +55,7 @@ add_task(async function() {
   // addon is synchronous or asynchronous.
   await Promise.all([
     promiseLangpackStartup(),
-    (() => { addon.userDisabled = false; })()
+    addon.enable(),
   ]);
 
   // After re-enabling it, the `und` locale is available again.

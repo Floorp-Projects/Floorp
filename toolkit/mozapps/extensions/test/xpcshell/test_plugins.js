@@ -131,7 +131,7 @@ async function run_test_2(p) {
   ];
   prepare_test(test);
 
-  p.userDisabled = true;
+  await p.disable();
 
   ensure_test_completed();
 
@@ -158,7 +158,7 @@ async function run_test_3(p) {
   ];
   prepare_test(test);
 
-  p.userDisabled = false;
+  await p.enable();
 
   ensure_test_completed();
 

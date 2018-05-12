@@ -363,6 +363,13 @@ PluginWrapper.prototype = {
     return val;
   },
 
+  async enable() {
+    this.userDisabled = false;
+  },
+  async disable() {
+    this.userDisabled = true;
+  },
+
   get blocklistState() {
     let { tags: [tag] } = pluginFor(this);
     return tag.blocklistState;

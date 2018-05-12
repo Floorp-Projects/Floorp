@@ -200,7 +200,7 @@ add_task(async function test_2() {
 
   equal(addon.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
-  addon.userDisabled = true;
+  await addon.disable();
   ensure_test_completed();
 
   notEqual(addon, null);
@@ -248,7 +248,7 @@ add_task(async function test_4() {
 
   equal(addon.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_ENABLE, 0);
-  addon.userDisabled = false;
+  await addon.enable();
   ensure_test_completed();
 
   notEqual(addon, null);

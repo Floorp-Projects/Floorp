@@ -17,7 +17,7 @@ function enableAddon(addon) {
         }
       },
     });
-    addon.userDisabled = false;
+    addon.enable();
   });
 }
 
@@ -31,7 +31,7 @@ function disableAddon(addon) {
         }
       },
     });
-    addon.userDisabled = true;
+    addon.disable();
   });
 }
 

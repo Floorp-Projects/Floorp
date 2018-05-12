@@ -61,7 +61,8 @@ add_task(async function setup_to_default_browserish_state() {
   Assert.ok(t2, "Theme addon should exist");
   Assert.ok(d, "Theme addon should exist");
 
-  t1.userDisabled = t2.userDisabled = true;
+  await t1.disable();
+  await t2.disable();
   Assert.ok(!t1.isActive, "Theme should be disabled");
   Assert.ok(!t2.isActive, "Theme should be disabled");
   Assert.ok(d.isActive, "Default theme should be active");
@@ -108,7 +109,11 @@ async function setDisabledStateAndCheck(which, disabled = false) {
   // Set the state of the theme to change.
   let theme = await promiseAddonByID(which);
   prepare_test(expectedEvents);
-  theme.userDisabled = disabled;
+  if (disabled) {
+    await theme.disable();
+  } else {
+    await theme.enable();
+  }
 
   let isDisabled;
   for (theme of await promiseAddonsByIDs(THEME_IDS)) {

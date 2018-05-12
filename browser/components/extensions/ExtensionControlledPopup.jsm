@@ -227,7 +227,7 @@ class ExtensionControlledPopup {
         if (this.beforeDisableAddon) {
           await this.beforeDisableAddon(this, win);
         }
-        addon.userDisabled = true;
+        addon.disable();
       }
 
       // If the page this is appearing on is the New Tab page then the URL bar may

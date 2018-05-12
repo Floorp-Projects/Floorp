@@ -350,7 +350,7 @@ add_task(async function test_new_tab_restore_settings() {
     };
     AddonManager.addAddonListener(listener);
   });
-  addon.userDisabled = false;
+  await addon.enable();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await addonEnabled;
   await extension.unload();
@@ -468,8 +468,8 @@ add_task(async function test_new_tab_restore_settings_multiple() {
   // ExtensionSettingsStore for now. See bug 1408226.
   let addonsEnabled = Promise.all([
     waitForAddonEnabled(addonOne), waitForAddonEnabled(addonTwo)]);
-  addonOne.userDisabled = false;
-  addonTwo.userDisabled = false;
+  await addonOne.enable();
+  await addonTwo.enable();
   await addonsEnabled;
   await extensionOne.unload();
   await extensionTwo.unload();
