@@ -8042,10 +8042,11 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
             if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
                 JSObject* targetProto = global->getPrototypeForOffThreadPlaceholder(obj);
                 MOZ_ASSERT(targetProto->isDelegate());
+                MOZ_ASSERT_IF(targetProto->staticPrototypeIsImmutable(),
+                              obj->staticPrototypeIsImmutable());
+                MOZ_ASSERT_IF(targetProto->isNewGroupUnknown(),
+                              obj->isNewGroupUnknown());
                 group->setProtoUnchecked(TaggedProto(targetProto));
-                AutoSweepObjectGroup sweep(group);
-                if (targetProto->isNewGroupUnknown() && !group->unknownProperties(sweep))
-                    group->markUnknown(sweep, cx);
             }
         }
 
