@@ -982,9 +982,9 @@ AddonWrapper = class {
     return addonFor(this).isCompatibleWith(aAppVersion, aPlatformVersion);
   }
 
-  uninstall(alwaysAllowUndo) {
+  async uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
-    XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
+    return XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
   }
 
   cancelUninstall() {
@@ -1051,26 +1051,21 @@ AddonWrapper = class {
    * For temporarily installed add-ons, this uninstalls and re-installs the
    * add-on. Otherwise, the addon is disabled and then re-enabled, and the cache
    * is flushed.
-   *
-   * @returns {Promise}
    */
-  reload() {
-    return new Promise((resolve) => {
-      const addon = addonFor(this);
+  async reload() {
+    const addon = addonFor(this);
 
-      logger.debug(`reloading add-on ${addon.id}`);
+    logger.debug(`reloading add-on ${addon.id}`);
 
-      if (!this.temporarilyInstalled) {
-        let addonFile = addon.getResourceURI;
-        XPIDatabase.updateAddonDisabledState(addon, true);
-        Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-        XPIDatabase.updateAddonDisabledState(addon, false);
-        resolve();
-      } else {
-        // This function supports re-installing an existing add-on.
-        resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
-      }
-    });
+    if (!this.temporarilyInstalled) {
+      let addonFile = addon.getResourceURI;
+      await XPIDatabase.updateAddonDisabledState(addon, true);
+      Services.obs.notifyObservers(addonFile, "flush-cache-entry");
+      await XPIDatabase.updateAddonDisabledState(addon, false);
+    } else {
+      // This function supports re-installing an existing add-on.
+      await AddonManager.installTemporaryAddon(addon._sourceBundle);
+    }
   }
 
   /**
@@ -1677,7 +1672,7 @@ this.XPIDatabase = {
                                                  ["signedState"]);
         }
 
-        let disabled = this.updateAddonDisabledState(addon);
+        let disabled = await this.updateAddonDisabledState(addon);
         if (disabled !== undefined)
           changes[disabled ? "disabled" : "enabled"].push(addon.id);
       }
@@ -2213,14 +2208,14 @@ this.XPIDatabase = {
    * @param {boolean?} [aBecauseSelecting]
    *        True if we're disabling this add-on because we're selecting
    *        another.
-   * @returns {boolean?}
+   * @returns {Promise<boolean?>}
    *       A tri-state indicating the action taken for the add-on:
    *           - undefined: The add-on did not change state
-   *           - true: The add-on because disabled
+   *           - true: The add-on became disabled
    *           - false: The add-on became enabled
    * @throws if addon is not a AddonInternal
    */
-  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
+  async updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
     if (!(aAddon.inDatabase))
       throw new Error("Can only update addon states for installed addons.");
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
@@ -2293,10 +2288,10 @@ this.XPIDatabase = {
 
       let bootstrap = XPIInternal.BootstrapScope.get(aAddon);
       if (isDisabled) {
-        bootstrap.disable();
+        await bootstrap.disable();
         AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
-        bootstrap.startup(BOOTSTRAP_REASONS.ADDON_ENABLE);
+        await bootstrap.startup(BOOTSTRAP_REASONS.ADDON_ENABLE);
         AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
@@ -2823,14 +2818,19 @@ this.XPIDatabaseReconcile = {
       }
     }
 
+    let promises = [];
     for (let [id, addon] of currentVisible) {
       // If we have a stored manifest for the add-on, it came from the
       // startup data cache, and supersedes any previous XPIStates entry.
       let xpiState = (!findManifest(addon.location, id) &&
                       addonStates.get(addon));
 
-      this.applyStartupChange(addon, previousVisible.get(id), xpiState);
+      promises.push(this.applyStartupChange(addon, previousVisible.get(id), xpiState));
       previousVisible.delete(id);
+    }
+
+    if (promises.some(p => p)) {
+      XPIInternal.awaitPromise(Promise.all(promises));
     }
 
     for (let [id, addon] of previousVisible) {
@@ -2892,8 +2892,12 @@ this.XPIDatabaseReconcile = {
    *        The add-on as it existed in the previous session.
    * @param {XPIState?} xpiState
    *        The XPIState entry for this add-on, if one exists.
+   * @returns {Promise?}
+   *        If an update was performed, returns a promise which resolves
+   *        when the appropriate bootstrap methods have been called.
    */
   applyStartupChange(currentAddon, previousAddon, xpiState) {
+    let promise;
     let {id} = currentAddon;
 
     let isActive = !currentAddon.disabled;
@@ -2906,7 +2910,7 @@ this.XPIDatabaseReconcile = {
         if (previousAddon.location &&
             previousAddon._sourceBundle.exists() &&
             !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)) {
-          XPIInternal.BootstrapScope.get(previousAddon).update(
+          promise = XPIInternal.BootstrapScope.get(previousAddon).update(
             currentAddon);
         } else {
           let reason = XPIInstall.newVersionReason(previousAddon.version, currentAddon.version);
@@ -2943,5 +2947,6 @@ this.XPIDatabaseReconcile = {
 
     XPIDatabase.makeAddonVisible(currentAddon);
     currentAddon.active = isActive;
+    return promise;
   },
 };

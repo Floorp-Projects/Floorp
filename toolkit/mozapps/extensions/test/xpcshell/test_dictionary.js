@@ -301,7 +301,7 @@ add_task(async function test_7() {
 
   equal(addon.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_UNINSTALL, 0);
-  addon.uninstall();
+  await addon.uninstall();
 
   ensure_test_completed();
 
@@ -362,7 +362,7 @@ add_task(async function test_12() {
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
   do_check_in_crash_annotation(ID_DICT, "1.0");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 
@@ -399,7 +399,7 @@ add_task(async function test_16() {
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
 
   addon = await AddonManager.getAddonByID(ID_DICT);
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Check that a bootstrapped extension in a non-profile location is loaded
@@ -486,7 +486,7 @@ add_task(async function test_23() {
   await promiseRestartManager();
 
   addon = await AddonManager.getAddonByID(ID_DICT);
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Tests that an update check from a bootstrappable add-on to a bootstrappable add-on works

@@ -68,7 +68,7 @@ add_task(async function() {
   await check_addon(aAddon, "2.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
-  aAddon.uninstall();
+  await aAddon.uninstall();
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 });
@@ -87,7 +87,7 @@ add_task(async function() {
   await check_addon(aAddon, "2.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
-  aAddon.uninstall();
+  await aAddon.uninstall();
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 });
@@ -114,7 +114,7 @@ add_task(async function() {
   await check_addon(aAddon, "2.0");
   ok(!aAddon.userDisabled, "Add-on should not be disabled");
 
-  aAddon.uninstall();
+  await aAddon.uninstall();
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 });
@@ -142,7 +142,7 @@ add_task(async function() {
   await check_addon(aAddon, "2.0");
   ok(aAddon.userDisabled, "Add-on should be disabled");
 
-  aAddon.uninstall();
+  await aAddon.uninstall();
 
   is(get_list_item_count(), 0, "Should be no items in the list");
 });

@@ -13,7 +13,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 const { GlobalManager } = ChromeUtils.import("resource://gre/modules/Extension.jsm", {});
 
-add_task(async function() {
+add_task(async function test_1() {
   await promiseStartupManager();
 
   equal(GlobalManager.extensionMap.size, 0);
@@ -87,12 +87,11 @@ add_task(async function() {
   equal(GlobalManager.extensionMap.size, 0);
 
   await addon.enable();
-  await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
 
-  addon.uninstall();
+  await addon.uninstall();
 
   equal(GlobalManager.extensionMap.size, 0);
   Assert.ok(!GlobalManager.extensionMap.has(ID));
@@ -101,7 +100,7 @@ add_task(async function() {
 });
 
 // Writing the manifest direct to the profile should work
-add_task(async function() {
+add_task(async function test_2() {
   await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
@@ -130,7 +129,7 @@ add_task(async function() {
   let file = getFileForAddon(profileDir, ID);
   Assert.ok(file.exists());
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseRestartManager();
 });
@@ -163,11 +162,11 @@ add_task(async function test_manifest_localization() {
   equal(addon.name, "Web Extensiøn foo ☹");
   equal(addon.description, "Descriptïon bar ☹ of add-on");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Missing version should cause a failure
-add_task(async function() {
+add_task(async function test_3() {
   await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     manifest_version: 2,
@@ -190,7 +189,7 @@ add_task(async function() {
 });
 
 // Incorrect manifest version should cause a failure
-add_task(async function() {
+add_task(async function test_4() {
   await promiseWriteWebManifestForExtension({
     name: "Web Extension Name",
     version: "1.0",
@@ -234,7 +233,7 @@ add_task(async function test_options_ui() {
   ok(OPTIONS_RE.test(addon.optionsURL),
      "Addon should have a moz-extension: options URL for /options.html");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   const ID2 = "webextension2@tests.mozilla.org";
   await promiseInstallWebExtension({
@@ -254,7 +253,7 @@ add_task(async function test_options_ui() {
   ok(OPTIONS_RE.test(addon.optionsURL),
      "Addon should have a moz-extension: options URL for /options.html");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Test that experiments permissions add the appropriate dependencies.
@@ -275,7 +274,7 @@ add_task(async function test_experiments_dependencies() {
 
   equal(addon.appDisabled, true, "Add-on should be app disabled due to missing dependencies");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function developerShouldOverride() {
@@ -304,7 +303,7 @@ add_task(async function developerShouldOverride() {
   addon = await promiseAddonByID(addon.id);
   equal(addon.creator, "en name");
   equal(addon.homepageURL, "https://example.net/en");
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function developerEmpty() {
@@ -323,7 +322,7 @@ add_task(async function developerEmpty() {
     addon = await promiseAddonByID(addon.id);
     equal(addon.creator, "Some author");
     equal(addon.homepageURL, "https://example.net");
-    addon.uninstall();
+    await addon.uninstall();
   }
 });
 
@@ -340,7 +339,7 @@ add_task(async function authorNotString() {
 
     addon = await promiseAddonByID(addon.id);
     equal(addon.creator, null);
-    addon.uninstall();
+    await addon.uninstall();
   }
 });
 
@@ -369,7 +368,7 @@ add_task(async function testThemeExtension() {
   Assert.ok(addon.isWebExtension);
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   // Also test one without a proper 'theme' section.
   addon = await promiseInstallWebExtension({
@@ -386,7 +385,7 @@ add_task(async function testThemeExtension() {
   Assert.equal(addon.type, "extension");
   Assert.ok(addon.isWebExtension);
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Test that we can update from a webextension to a webextension-theme
@@ -404,10 +403,7 @@ add_task(async function test_theme_upgrade() {
     }
   });
 
-  await Promise.all([
-    AddonManager.installTemporaryAddon(webext),
-    promiseWebExtensionStartup(),
-  ]);
+  await AddonManager.installTemporaryAddon(webext);
   let addon = await promiseAddonByID(ID);
 
   // temporary add-on is installed and started
@@ -434,10 +430,7 @@ add_task(async function test_theme_upgrade() {
     }
   });
 
-  await Promise.all([
-    AddonManager.installTemporaryAddon(webext2),
-    promiseWebExtensionStartup(),
-  ]);
+  await AddonManager.installTemporaryAddon(webext2);
   addon = await promiseAddonByID(ID);
 
   Assert.notEqual(addon, null);
@@ -450,7 +443,7 @@ add_task(async function test_theme_upgrade() {
   Assert.equal(addon.type, "theme");
   Assert.ok(addon.isWebExtension);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   addon = await promiseAddonByID(ID);
   Assert.equal(addon, null);

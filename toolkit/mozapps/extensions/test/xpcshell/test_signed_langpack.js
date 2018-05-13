@@ -8,7 +8,7 @@ async function installShouldSucceed(file) {
   let install = await promiseInstallFile(file);
   Assert.equal(install.state, AddonManager.STATE_INSTALLED);
   Assert.notEqual(install.addon, null);
-  install.addon.uninstall();
+  await install.addon.uninstall();
 }
 
 // Try to install the given XPI file, assert that the install fails

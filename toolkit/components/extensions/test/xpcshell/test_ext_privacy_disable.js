@@ -94,7 +94,8 @@ add_task(async function test_disable() {
     });
   }
 
-  // Create an array of extensions to install.
+  await promiseStartupManager();
+
   let testExtensions = [
     ExtensionTestUtils.loadExtension({
       background,
@@ -122,8 +123,6 @@ add_task(async function test_disable() {
       useAddonManager: "temporary",
     }),
   ];
-
-  await promiseStartupManager();
 
   for (let extension of testExtensions) {
     await extension.startup();

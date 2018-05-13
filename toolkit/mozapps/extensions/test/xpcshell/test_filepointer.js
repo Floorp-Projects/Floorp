@@ -168,7 +168,7 @@ add_task(async function test_addon_over_pointer() {
   source.append(addon1.id);
   ok(source.exists());
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Tests that uninstalling doesn't clobber the original sources
@@ -181,7 +181,7 @@ add_task(async function test_uninstall_pointer() {
   notEqual(addon, null);
   equal(addon.version, "1.0");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseRestartManager();
 
@@ -286,7 +286,7 @@ add_task(async function test_replace_pointer() {
   notEqual(addon, null);
   equal(addon.version, "2.0");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Changes to the source files should be detected
@@ -307,7 +307,7 @@ add_task(async function test_change_pointer_sources() {
   notEqual(addon, null);
   equal(addon.version, "2.0");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Removing the add-on the pointer file points at should uninstall the add-on

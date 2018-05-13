@@ -78,18 +78,41 @@ function isRegExp(val) {
 var AMscope = ChromeUtils.import("resource://gre/modules/AddonManager.jsm", {});
 var {AddonManager, AddonManagerPrivate} = AMscope;
 
+class MockBarrier {
+  constructor(name) {
+    this.name = name;
+    this.blockers = [];
+  }
+
+  addBlocker(name, blocker, options) {
+    this.blockers.push({name, blocker, options});
+  }
+
+  async trigger() {
+    await Promise.all(
+      this.blockers.map(async ({blocker, name}) => {
+        try {
+          if (typeof blocker == "function") {
+            await blocker();
+          } else {
+            await blocker;
+          }
+        } catch (e) {
+          Cu.reportError(e);
+          dump(`Shutdown blocker '${name}' for ${this.name} threw error: ${e} :: ${e.stack}\n`);
+        }
+      }));
+
+    this.blockers = [];
+  }
+}
 
 // Mock out AddonManager's reference to the AsyncShutdown module so we can shut
 // down AddonManager from the test
 var MockAsyncShutdown = {
-  hook: null,
-  status: null,
-  profileBeforeChange: {
-    addBlocker(name, blocker, options) {
-      MockAsyncShutdown.hook = blocker;
-      MockAsyncShutdown.status = options.fetchState;
-    }
-  },
+  profileBeforeChange: new MockBarrier("profileBeforeChange"),
+  profileChangeTeardown: new MockBarrier("profileChangeTeardown"),
+  quitApplicationGranted: new MockBarrier("quitApplicationGranted"),
   // We can use the real Barrier
   Barrier: AsyncShutdown.Barrier,
 };
@@ -719,8 +742,12 @@ var AddonTestUtils = {
     if (this.addonIntegrationService)
       throw new Error("Attempting to startup manager that was already started.");
 
+
     if (newVersion)
       this.appInfo.version = newVersion;
+
+    let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+    XPIScope.AsyncShutdown = MockAsyncShutdown;
 
     this.addonIntegrationService = Cc["@mozilla.org/addons/integration;1"]
           .getService(Ci.nsIObserver);
@@ -733,50 +760,51 @@ var AddonTestUtils = {
     await this.loadAddonsList(true);
   },
 
-  promiseShutdownManager() {
+  async promiseShutdownManager() {
     if (!this.addonIntegrationService)
-      return Promise.resolve(false);
+      return false;
 
     if (this.overrideEntry) {
       this.overrideEntry.destruct();
     }
 
     Services.obs.notifyObservers(null, "quit-application-granted");
-    return MockAsyncShutdown.hook()
-      .then(async () => {
-        this.emit("addon-manager-shutdown");
+    await MockAsyncShutdown.quitApplicationGranted.trigger();
+    await MockAsyncShutdown.profileBeforeChange.trigger();
+    await MockAsyncShutdown.profileChangeTeardown.trigger();
 
-        this.addonIntegrationService = null;
+    this.emit("addon-manager-shutdown");
 
-        // Load the add-ons list as it was after application shutdown
-        await this.loadAddonsList();
+    this.addonIntegrationService = null;
 
-        // Flush the jar cache entries for each bootstrapped XPI so that
-        // we don't run into file locking issues on Windows.
-        for (let file of this.addonsList.xpis) {
-          Services.obs.notifyObservers(file, "flush-cache-entry");
-        }
+    // Load the add-ons list as it was after application shutdown
+    await this.loadAddonsList();
 
-        // Clear any crash report annotations
-        this.appInfo.annotations = {};
+    // Flush the jar cache entries for each bootstrapped XPI so that
+    // we don't run into file locking issues on Windows.
+    for (let file of this.addonsList.xpis) {
+      Services.obs.notifyObservers(file, "flush-cache-entry");
+    }
 
-        // Force the XPIProvider provider to reload to better
-        // simulate real-world usage.
-        let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-        // This would be cleaner if I could get it as the rejection reason from
-        // the AddonManagerInternal.shutdown() promise
-        let shutdownError = XPIscope.XPIDatabase._saveError;
+    // Clear any crash report annotations
+    this.appInfo.annotations = {};
 
-        AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
-        Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");
-        Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
-        Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
+    // Force the XPIProvider provider to reload to better
+    // simulate real-world usage.
+    let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
+    // This would be cleaner if I could get it as the rejection reason from
+    // the AddonManagerInternal.shutdown() promise
+    let shutdownError = XPIscope.XPIDatabase._saveError;
 
-        if (shutdownError)
-          throw shutdownError;
+    AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
+    Cu.unload("resource://gre/modules/addons/XPIProvider.jsm");
+    Cu.unload("resource://gre/modules/addons/XPIDatabase.jsm");
+    Cu.unload("resource://gre/modules/addons/XPIInstall.jsm");
 
-        return true;
-      });
+    if (shutdownError)
+      throw shutdownError;
+
+    return true;
   },
 
   /**

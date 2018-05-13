@@ -57,7 +57,7 @@ async function testSimpleIconsetParsing(manifest) {
 
   check_icons(addon);
 
-  addon.uninstall();
+  await addon.uninstall();
 }
 
 async function testRetinaIconsetParsing(manifest) {
@@ -86,7 +86,7 @@ async function testRetinaIconsetParsing(manifest) {
     devicePixelRatio: 2
   }), uri + "icon128.png");
 
-  addon.uninstall();
+  await addon.uninstall();
 }
 
 async function testNoIconsParsing(manifest) {
@@ -107,7 +107,7 @@ async function testNoIconsParsing(manifest) {
 
   equal(AddonManager.getPreferredIconURL(addon, 128), null);
 
-  addon.uninstall();
+  await addon.uninstall();
 }
 
 // Test simple icon set parsing

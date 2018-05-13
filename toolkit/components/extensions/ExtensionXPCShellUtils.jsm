@@ -344,7 +344,7 @@ class ExtensionWrapper {
     this.state = "unloading";
 
     if (this.addon) {
-      this.addon.uninstall();
+      await this.addon.uninstall();
     } else {
       await this.extension.shutdown();
     }

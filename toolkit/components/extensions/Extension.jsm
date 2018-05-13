@@ -53,7 +53,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
 });
 
@@ -102,9 +101,6 @@ const {
 XPCOMUtils.defineLazyGetter(this, "console", ExtensionUtils.getConsole);
 
 XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData);
-
-// The maximum time to wait for extension shutdown blockers to complete.
-const SHUTDOWN_BLOCKER_MAX_MS = 8000;
 
 /**
  * Classify an individual permission from a webextension manifest
@@ -1153,8 +1149,6 @@ class ExtensionData {
 
 const PROXIED_EVENTS = new Set(["test-harness-message", "add-permissions", "remove-permissions"]);
 
-const shutdownPromises = new Map();
-
 class BootstrapScope {
   install(data, reason) {}
   uninstall(data, reason) {
@@ -1174,8 +1168,9 @@ class BootstrapScope {
   }
 
   shutdown(data, reason) {
-    this.extension.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
+    let result = this.extension.shutdown(this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     this.extension = null;
+    return result;
   }
 }
 
@@ -1669,17 +1664,7 @@ class Extension extends ExtensionData {
     }
   }
 
-  startup() {
-    this.startupPromise = this._startup();
-
-    return this.startupPromise;
-  }
-
-  async _startup() {
-    if (shutdownPromises.has(this.id)) {
-      await shutdownPromises.get(this.id);
-    }
-
+  async startup() {
     // Create a temporary policy object for the devtools and add-on
     // manager callers that depend on it being available early.
     this.policy = new WebExtensionPolicy({
@@ -1749,8 +1734,6 @@ class Extension extends ExtensionData {
 
       throw errors;
     }
-
-    this.startupPromise = null;
   }
 
   cleanupGeneratedFile() {
@@ -1773,45 +1756,6 @@ class Extension extends ExtensionData {
   }
 
   async shutdown(reason) {
-    let promise = this._shutdown(reason);
-
-    let blocker = () => {
-      return Promise.race([
-        promise,
-        new Promise(resolve => setTimeout(resolve, SHUTDOWN_BLOCKER_MAX_MS)),
-      ]);
-    };
-
-    AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Extension Shutdown: ${this.id} (${this.manifest && this.name})`,
-      blocker);
-
-    // If we already have a shutdown promise for this extension, wait
-    // for it to complete before replacing it with a new one. This can
-    // sometimes happen during tests with rapid startup/shutdown cycles
-    // of multiple versions.
-    if (shutdownPromises.has(this.id)) {
-      await shutdownPromises.get(this.id);
-    }
-
-    let cleanup = () => {
-      shutdownPromises.delete(this.id);
-      AsyncShutdown.profileChangeTeardown.removeBlocker(blocker);
-    };
-    shutdownPromises.set(this.id, promise.then(cleanup, cleanup));
-
-    return Promise.resolve(promise);
-  }
-
-  async _shutdown(reason) {
-    try {
-      if (this.startupPromise) {
-        await this.startupPromise;
-      }
-    } catch (e) {
-      Cu.reportError(e);
-    }
-
     this.shutdownReason = reason;
     this.hasShutdown = true;
 

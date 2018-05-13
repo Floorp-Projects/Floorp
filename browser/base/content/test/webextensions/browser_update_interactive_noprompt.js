@@ -48,7 +48,7 @@ async function testUpdateNoPrompt(filename, id,
   PopupNotifications.panel.removeEventListener("popupshown", popupListener);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  addon.uninstall();
+  await addon.uninstall();
 }
 
 // Test that we don't see a prompt when updating from a legacy

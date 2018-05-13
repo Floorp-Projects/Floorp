@@ -54,7 +54,7 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.equal(addon.type, "extension");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseShutdownManager();
 });

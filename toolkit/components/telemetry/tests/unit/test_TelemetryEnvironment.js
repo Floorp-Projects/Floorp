@@ -1360,7 +1360,7 @@ add_task(async function test_addonsAndPlugins() {
 
   // Uninstall the addon.
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_signedAddon() {
@@ -1407,7 +1407,7 @@ add_task(async function test_signedAddon() {
 
   AddonTestUtils.useRealCertChecks = false;
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_addonsFieldsLimit() {
@@ -1438,7 +1438,7 @@ add_task(async function test_addonsFieldsLimit() {
                "The description string must have been limited");
 
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_collectionWithbrokenAddonData() {
@@ -1521,7 +1521,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
 
   // Uninstall the valid addon.
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_defaultSearchEngine() {
