@@ -2545,6 +2545,12 @@ bool
 RegExpCompiler::CheckOverRecursed()
 {
     if (!CheckRecursionLimitDontReport(cx())) {
+#ifdef JS_MORE_DETERMINISTIC
+        // We don't report overrecursion here, but we throw an exception later
+        // and this still affects differential testing. Mimic ReportOverRecursed
+        // (the fuzzers check for this particular string).
+        fprintf(stderr, "ReportOverRecursed called\n");
+#endif
         SetRegExpTooBig();
         return false;
     }
