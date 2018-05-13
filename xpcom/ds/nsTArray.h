@@ -221,12 +221,14 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
 // object when it is empty.
 struct nsTArrayHeader
 {
-  static nsTArrayHeader sEmptyHdr;
-
   uint32_t mLength;
   uint32_t mCapacity : 31;
   uint32_t mIsAutoArray : 1;
 };
+
+extern "C" {
+  extern nsTArrayHeader sEmptyTArrayHeader;
+}
 
 // This class provides a SafeElementAt method to nsTArray<T*> which does
 // not take a second default value parameter.
@@ -423,7 +425,7 @@ protected:
                    size_type aElemSize, size_t aElemAlign);
 
   // This method increments the length member of the array's header.
-  // Note that mHdr may actually be sEmptyHdr in the case where a
+  // Note that mHdr may actually be sEmptyTArrayHeader in the case where a
   // zero-length array is inserted into our array. But then aNum should
   // always be 0.
   void IncrementLength(size_t aNum)
@@ -501,12 +503,12 @@ protected:
   bool UsesAutoArrayBuffer() const;
 
   // The array's elements (prefixed with a Header).  This pointer is never
-  // null.  If the array is empty, then this will point to sEmptyHdr.
+  // null.  If the array is empty, then this will point to sEmptyTArrayHeader.
   Header* mHdr;
 
   Header* Hdr() const { return mHdr; }
   Header** PtrToHdr() { return &mHdr; }
-  static Header* EmptyHdr() { return &Header::sEmptyHdr; }
+  static Header* EmptyHdr() { return &sEmptyTArrayHeader; }
 };
 
 //

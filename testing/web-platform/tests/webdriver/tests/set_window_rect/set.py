@@ -385,6 +385,33 @@ def test_resize_to_same_height(session):
     assert size == (456, original_height)
 
 
+"""
+TODO(ato):
+
+    Disable test because the while statements are wrong.
+    To fix this properly we need to write an explicit wait utility.
+
+def test_resize_by_script(session):
+    # setting the window size by JS is asynchronous
+    # so we poll waiting for the results
+
+    size0 = session.window.size
+
+    session.execute_script("window.resizeTo(700, 800)")
+    size1 = session.window.size
+    while size0 == size1:
+        size1 = session.window.size
+    assert size1 == (700, 800)
+
+    session.execute_script("window.resizeTo(800, 900)")
+    size2 = session.window.size
+    while size1 == size2:
+        size2 = session.window.size
+        assert size2 == (800, 900)
+    assert size2 == {"width": 200, "height": 100}
+"""
+
+
 def test_payload(session):
     # step 14
     response = set_window_rect(session, {"x": 400, "y": 400})
