@@ -204,6 +204,7 @@ load 1348564.svg
 load 1402109.html
 load 1402124.html
 load 1402486.html
+load 1422226.html
 load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
 load blob-merging-and-retained-display-list.html
