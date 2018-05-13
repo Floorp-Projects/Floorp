@@ -573,7 +573,7 @@ XULMenubarAccessible::AreItemsOperable() const
 }
 
 Accessible*
-XULMenubarAccessible::CurrentItem()
+XULMenubarAccessible::CurrentItem() const
 {
   nsMenuBarFrame* menuBarFrame = do_QueryFrame(GetFrame());
   if (menuBarFrame) {

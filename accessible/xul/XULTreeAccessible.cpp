@@ -222,7 +222,7 @@ XULTreeAccessible::ChildAtPoint(int32_t aX, int32_t aY,
 // XULTreeAccessible: SelectAccessible
 
 Accessible*
-XULTreeAccessible::CurrentItem()
+XULTreeAccessible::CurrentItem() const
 {
   if (!mTreeView)
     return nullptr;

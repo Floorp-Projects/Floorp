@@ -108,7 +108,7 @@ public:
   // Widget
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
-  virtual Accessible* CurrentItem() override;
+  virtual Accessible* CurrentItem() const override;
   virtual void SetCurrentItem(Accessible* aItem) override;
 
 protected:

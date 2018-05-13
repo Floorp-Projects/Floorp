@@ -850,7 +850,7 @@ public:
    * Return the current item of the widget, i.e. an item that has or will have
    * keyboard focus when widget gets active.
    */
-  virtual Accessible* CurrentItem();
+  virtual Accessible* CurrentItem() const;
 
   /**
    * Set the current item of the widget.
