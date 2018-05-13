@@ -36,7 +36,7 @@ public:
   virtual bool UnselectAll() override;
 
   // Widgets
-  virtual Accessible* CurrentItem() override;
+  virtual Accessible* CurrentItem() const override;
   virtual void SetCurrentItem(Accessible* aItem) override;
 
 protected:
