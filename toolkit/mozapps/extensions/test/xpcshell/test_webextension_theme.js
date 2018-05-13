@@ -213,7 +213,7 @@ add_task(async function uninstall_offers_undo() {
   }
 
   let uninstallingPromise = promiseAddonEvent("onUninstalling", ID);
-  theme.uninstall(true);
+  await theme.uninstall(true);
   await uninstallingPromise;
 
   Assert.ok(hasFlag(theme.pendingOperations, AddonManager.PENDING_UNINSTALL),
@@ -226,7 +226,7 @@ add_task(async function uninstall_offers_undo() {
   Assert.equal(theme.pendingOperations, AddonManager.PENDING_NONE,
                "PENDING_UNINSTALL flag is cleared when uninstall is canceled");
 
-  theme.uninstall();
+  await theme.uninstall();
   await promiseRestartManager();
 });
 
@@ -265,5 +265,5 @@ add_task(async function default_locale_themes() {
   equal(addon.name, "the name");
   equal(addon.description, "the description");
   equal(addon.type, "theme");
-  addon.uninstall();
+  await addon.uninstall();
 });

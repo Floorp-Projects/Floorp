@@ -99,7 +99,7 @@ var Addons = {
     if (addon === null) {
       throw new Error(`No addon with ID [${addonId}] found.`);
     }
-    addon.uninstall();
+    await addon.uninstall();
     return null;
   },
 

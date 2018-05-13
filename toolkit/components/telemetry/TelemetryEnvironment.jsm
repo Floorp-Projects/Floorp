@@ -563,6 +563,9 @@ EnvironmentAddonBuilder.prototype = {
   onUninstalling() {
     this._onAddonChange();
   },
+  onUninstalled() {
+    this._onAddonChange();
+  },
 
   _onAddonChange() {
     this._environment._log.trace("_onAddonChange");

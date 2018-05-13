@@ -115,7 +115,7 @@ add_task(async function has_embedded_webextension_persisted() {
      "Got the expected 'startup' property in the webExtension object");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });
 
@@ -186,7 +186,7 @@ add_task(async function run_embedded_webext_bootstrap() {
   // test the params of the shutdown and uninstall bootstrap method.
   let waitForWebExtensionShutdown = promiseWebExtensionShutdown();
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitForWebExtensionShutdown;
   await waitUninstall;
 
@@ -275,7 +275,7 @@ add_task(async function reload_embedded_webext_bootstrap() {
   await startupInfo.data.webExtension.startup();
 
   const waitForReinstalled = promiseAddonEvent("onInstalled");
-  addon.reload();
+  await addon.reload();
   await waitForReinstalled;
 
   // No leaked embedded extension after the previous reloads.
@@ -291,7 +291,7 @@ add_task(async function reload_embedded_webext_bootstrap() {
 
   // Uninstall the test addon
   let waitUninstalled = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstalled;
 
   // No leaked embedded extension after uninstalling.
@@ -363,7 +363,7 @@ add_task(async function shutdown_embedded_webext_without_bootstrap_shutdown() {
 
   // Uninstall the addon.
   const waitUninstalled = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstalled;
 
   // No leaked embedded extension after uninstalling.

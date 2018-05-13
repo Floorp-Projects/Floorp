@@ -43,6 +43,12 @@ async function createXULExtension(details) {
   await AddonTestUtils.manuallyInstall(xpi);
 }
 
+function promiseEvent(eventEmitter, event) {
+  return new Promise(resolve => {
+    eventEmitter.once(event, resolve);
+  });
+}
+
 let cleanup;
 
 add_task(async function() {
@@ -181,6 +187,7 @@ add_task(async function() {
 
   // This time accept the install.
   panel.button.click();
+  await promiseEvent(ExtensionsUI, "sideload-response");
 
   [addon1, addon2, addon3, addon4] = await AddonManager.getAddonsByIDs([ID1, ID2, ID3, ID4]);
   is(addon1.userDisabled, true, "Addon 1 should still be disabled");
@@ -220,6 +227,7 @@ add_task(async function() {
 
   // Accept the permissions
   panel.button.click();
+  await promiseEvent(ExtensionsUI, "change");
 
   addon3 = await AddonManager.getAddonByID(ID3);
   is(addon3.userDisabled, false, "Addon 3 should be enabled");
@@ -245,6 +253,7 @@ add_task(async function() {
 
   // Accept the permissions
   panel.button.click();
+  await promiseEvent(ExtensionsUI, "change");
 
   addon4 = await AddonManager.getAddonByID(ID4);
   is(addon4.userDisabled, false, "Addon 4 should be enabled");
@@ -257,7 +266,7 @@ add_task(async function() {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   for (let addon of [addon1, addon2, addon3, addon4]) {
-    addon.uninstall();
+    await addon.uninstall();
   }
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

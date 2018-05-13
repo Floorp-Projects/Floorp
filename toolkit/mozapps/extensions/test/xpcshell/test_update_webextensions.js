@@ -156,7 +156,7 @@ add_task(async function checkUpdateMetadata() {
   ok(update.addon.isCompatibleWith("48", "48"), "compatible max");
   ok(!update.addon.isCompatibleWith("49", "49"), "not compatible max");
 
-  update.addon.uninstall();
+  await update.addon.uninstall();
 });
 
 
@@ -184,7 +184,7 @@ add_task(async function checkUpdateToWebExt() {
   let addon = await promiseAddonByID(update.addon.id);
   equal(addon.version, "1.2", "new add-on version");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 
@@ -218,7 +218,7 @@ add_task(async function checkUpdateToRDF() {
   let addon = await promiseAddonByID(update.addon.id);
   equal(addon.version, "1.0", "new add-on version");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 
