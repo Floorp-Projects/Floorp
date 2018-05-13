@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <title>Test new CORS console messages</title>
+</head>
+<body onload="initTest()">
+<p id="display">
+<iframe id=loader></iframe>
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+let gen;
+let number_of_tests = 0;
+
+function initTest() {
+  window.addEventListener("message", function(e) {
+    gen.next(e.data);
+    if (number_of_tests == 2) {
+      document.location.href += "#finishedTestTwo";
+    }
+  });
+
+  gen = runTest();
+
+  gen.next();
+}
+
+function* runTest() {
+  let loader = document.getElementById("loader");
+  let loaderWindow = loader.contentWindow;
+  loader.onload = function() { gen.next(); };
+
+  loader.src = "http://example.org/browser/dom/security/test/cors/file_CrossSiteXHR_inner.html";
+  origin = "http://example.org";
+  yield undefined;
+
+  let tests = [
+               // Loading URLs other than http(s) should throw 'CORS request
+               // not http' console message.
+               { baseURL: "ftp://mochi.test:8888/browser/dom/security/test/cors/file_CrossSiteXHR_server.sjs",
+                 method: "GET",
+               },
+               // (https://www.w3.org/TR/cors/#cross-origin-request-with-preflight-0)
+               // CORs preflight external redirect should throw 'CORS request
+               // external redirect not allowed' error.
+               // This will also throw 'CORS preflight channel did not succeed'
+               // and 'CORS request did not succeed' console messages.
+               {
+                 baseURL: "http://mochi.test:8888/browser/dom/security/test/cors/bug1456721.sjs?redirect",
+                 method: "OPTIONS",
+               },
+              ];
+
+  for (let test of tests) {
+    let req = {
+      url: test.baseURL,
+      method: test.method
+    };
+
+    loaderWindow.postMessage(req.toSource(), origin);
+    number_of_tests++;
+    eval(yield);
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
