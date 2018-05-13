@@ -13,8 +13,6 @@ Cu.importGlobalProperties(["TextEncoder"]);
 
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
-const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
-const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
 const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_COMPAT_OVERRIDES              = "extensions.getAddons.compatOverides.url";
 const PREF_XPI_SIGNATURES_REQUIRED    = "xpinstall.signatures.required";
@@ -1126,10 +1124,6 @@ function promiseInstallWebExtension(aData) {
 
 // By default use strict compatibility
 Services.prefs.setBoolPref("extensions.strictCompatibility", true);
-
-// By default, set min compatible versions to 0
-Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0");
-Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, "0");
 
 // Ensure signature checks are enabled by default
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
