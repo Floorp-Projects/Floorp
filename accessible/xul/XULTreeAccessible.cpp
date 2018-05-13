@@ -240,7 +240,7 @@ XULTreeAccessible::CurrentItem() const
 }
 
 void
-XULTreeAccessible::SetCurrentItem(Accessible* aItem)
+XULTreeAccessible::SetCurrentItem(const Accessible* aItem)
 {
   NS_ERROR("XULTreeAccessible::SetCurrentItem not implemented");
 }

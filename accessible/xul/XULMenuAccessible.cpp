@@ -587,7 +587,7 @@ XULMenubarAccessible::CurrentItem() const
 }
 
 void
-XULMenubarAccessible::SetCurrentItem(Accessible* aItem)
+XULMenubarAccessible::SetCurrentItem(const Accessible* aItem)
 {
   NS_ERROR("XULMenubarAccessible::SetCurrentItem not implemented");
 }

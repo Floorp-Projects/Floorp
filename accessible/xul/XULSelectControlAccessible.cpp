@@ -238,7 +238,7 @@ XULSelectControlAccessible::CurrentItem() const
 }
 
 void
-XULSelectControlAccessible::SetCurrentItem(Accessible* aItem)
+XULSelectControlAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (!mSelectControl)
     return;
