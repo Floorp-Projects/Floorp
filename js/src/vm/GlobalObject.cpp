@@ -343,6 +343,12 @@ GlobalObject::resolveOffThreadConstructor(JSContext* cx,
         return false;
     }
 
+    if ((key == JSProto_Object || key == JSProto_Function || key == JSProto_Array) &&
+        !JSObject::setNewGroupUnknown(cx, placeholder->getClass(), placeholder))
+    {
+        return false;
+    }
+
     global->setPrototype(key, ObjectValue(*placeholder));
     global->setConstructor(key, MagicValue(JS_OFF_THREAD_CONSTRUCTOR));
     return true;
