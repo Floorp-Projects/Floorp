@@ -301,7 +301,7 @@ private:
 class XULTreeItemIterator : public AccIterable
 {
 public:
-  XULTreeItemIterator(XULTreeAccessible* aXULTree, nsITreeView* aTreeView,
+  XULTreeItemIterator(const XULTreeAccessible* aXULTree, nsITreeView* aTreeView,
                       int32_t aRowIdx);
   virtual ~XULTreeItemIterator() { }
 
@@ -312,7 +312,7 @@ private:
   XULTreeItemIterator(const XULTreeItemIterator&) = delete;
   XULTreeItemIterator& operator = (const XULTreeItemIterator&) = delete;
 
-  XULTreeAccessible* mXULTree;
+  const XULTreeAccessible* mXULTree;
   nsITreeView* mTreeView;
   int32_t mRowCount;
   int32_t mContainerLevel;
