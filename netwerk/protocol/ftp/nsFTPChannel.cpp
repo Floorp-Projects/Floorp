@@ -233,7 +233,7 @@ nsFtpChannel::Suspend()
 {
     LOG(("nsFtpChannel::Suspend [this=%p]\n", this));
 
-    nsresult rv = nsBaseChannel::Suspend();
+    nsresult rv = SuspendInternal();
 
     nsresult rvParentChannel = NS_OK;
     if (mParentChannel) {
@@ -248,7 +248,7 @@ nsFtpChannel::Resume()
 {
     LOG(("nsFtpChannel::Resume [this=%p]\n", this));
 
-    nsresult rv = nsBaseChannel::Resume();
+    nsresult rv = ResumeInternal();
 
     nsresult rvParentChannel = NS_OK;
     if (mParentChannel) {
@@ -267,6 +267,11 @@ nsFtpChannel::MessageDiversionStarted(ADivertableParentChannel *aParentChannel)
 {
   MOZ_ASSERT(!mParentChannel);
   mParentChannel = aParentChannel;
+  // If the channel is suspended, propagate that info to the parent's mEventQ.
+  uint32_t suspendCount = mSuspendCount;
+  while (suspendCount--) {
+    mParentChannel->SuspendMessageDiversion();
+  }
   return NS_OK;
 }
 
@@ -283,7 +288,7 @@ NS_IMETHODIMP
 nsFtpChannel::SuspendInternal()
 {
     LOG(("nsFtpChannel::SuspendInternal [this=%p]\n", this));
-
+    ++mSuspendCount;
     return nsBaseChannel::Suspend();
 }
 
@@ -291,6 +296,7 @@ NS_IMETHODIMP
 nsFtpChannel::ResumeInternal()
 {
     LOG(("nsFtpChannel::ResumeInternal [this=%p]\n", this));
-
+    NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+    --mSuspendCount;
     return nsBaseChannel::Resume();
 }

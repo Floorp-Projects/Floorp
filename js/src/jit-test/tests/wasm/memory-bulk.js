@@ -1,4 +1,7 @@
 
+if (!wasmBulkMemSupported())
+    quit(0);
+
 //-----------------------------------------------------------
 // Test helpers
 function checkRange(arr, minIx, maxIxPlusOne, expectedValue)

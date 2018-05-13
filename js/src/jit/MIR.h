@@ -7041,7 +7041,7 @@ class MRandom : public MNullaryInstruction
 
 class MSign
   : public MUnaryInstruction,
-    public NoFloatPolicy<0>::Data
+    public SignPolicy::Data
 {
   private:
     MSign(MDefinition* input, MIRType resultType)
@@ -7049,6 +7049,7 @@ class MSign
     {
         MOZ_ASSERT(IsNumberType(input->type()));
         MOZ_ASSERT(resultType == MIRType::Int32 || resultType == MIRType::Double);
+        specialization_ = input->type();
         setResultType(resultType);
         setMovable();
     }

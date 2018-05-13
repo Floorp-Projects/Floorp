@@ -314,7 +314,7 @@ inline void
 NativeObject::ensureDenseInitializedLengthNoPackedCheck(uint32_t index, uint32_t extra)
 {
     MOZ_ASSERT(!denseElementsAreCopyOnWrite());
-    MOZ_ASSERT(isExtensible());
+    MOZ_ASSERT(!denseElementsAreFrozen());
 
     /*
      * Ensure that the array's contents have been initialized up to index, and
@@ -325,6 +325,7 @@ NativeObject::ensureDenseInitializedLengthNoPackedCheck(uint32_t index, uint32_t
     uint32_t& initlen = getElementsHeader()->initializedLength;
 
     if (initlen < index + extra) {
+        MOZ_ASSERT(isExtensible());
         uint32_t numShifted = getElementsHeader()->numShiftedElements();
         size_t offset = initlen;
         for (HeapSlot* sp = elements_ + initlen;

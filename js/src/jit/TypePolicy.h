@@ -166,6 +166,15 @@ class PowPolicy final : public TypePolicy
     MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
 };
 
+// Policy for MSign. Operand is either Double or Int32.
+class SignPolicy final : public TypePolicy
+{
+  public:
+    constexpr SignPolicy() { }
+    SPECIALIZATION_DATA_;
+    MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc, MInstruction* ins) const override;
+};
+
 // Expect a string for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
 class StringPolicy final : public TypePolicy
