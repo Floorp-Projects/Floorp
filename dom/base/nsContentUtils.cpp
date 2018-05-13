@@ -4731,12 +4731,11 @@ nsContentUtils::HasMutationListeners(nsIDocument* aDocument,
 }
 
 void
-nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
-                                     nsIDocument* aOwnerDoc)
+nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent)
 {
   MOZ_ASSERT(aChild, "Missing child");
   MOZ_ASSERT(aChild->GetParentNode() == aParent, "Wrong parent");
-  MOZ_ASSERT(aChild->OwnerDoc() == aOwnerDoc, "Wrong owner-doc");
+  MOZ_ASSERT(aChild->OwnerDoc() == aParent->OwnerDoc(), "Wrong owner-doc");
 
   // Having an explicit check here since it's an easy mistake to fall into,
   // and there might be existing code with problems. We'd rather be safe
@@ -4757,7 +4756,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
     if (!(aChild->IsContent() && aChild->AsContent()->IsInNativeAnonymousSubtree()) &&
         !sDOMNodeRemovedSuppressCount) {
       NS_ERROR("Want to fire DOMNodeRemoved event, but it's not safe");
-      WarnScriptWasIgnored(aOwnerDoc);
+      WarnScriptWasIgnored(aChild->OwnerDoc());
     }
     return;
   }
@@ -4767,7 +4766,7 @@ nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
     InternalMutationEvent mutation(true, eLegacyNodeRemoved);
     mutation.mRelatedNode = do_QueryInterface(aParent);
 
-    mozAutoSubtreeModified subtree(aOwnerDoc, aParent);
+    mozAutoSubtreeModified subtree(aParent->OwnerDoc(), aParent);
     EventDispatcher::Dispatch(aChild, nullptr, &mutation);
   }
 }
@@ -5268,7 +5267,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
           skipFirst = false;
           continue;
         }
-        nsContentUtils::MaybeFireNodeRemoved(child, aContent, doc);
+        nsContentUtils::MaybeFireNodeRemoved(child, aContent);
       }
     }
   }

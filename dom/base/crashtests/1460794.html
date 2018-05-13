@@ -1,0 +1,19 @@
+<script>
+function go() {
+  b.addEventListener("DOMAttrModified", eh2);
+  e.setAttribute("lang", "en-us");
+}
+function eh1() {
+  a.getSVGDocument().adoptNode(c);
+}
+function eh2() {
+  d.addEventListener("DOMNodeRemoved", eh1);
+  d.innerHTML = undefined;
+}
+</script>
+<body onload=go()>
+<iframe id="a"></iframe>
+<a id="c"/>
+<g id="d">
+<mask id="b"/>
+<font-face-format id="e">

@@ -4531,14 +4531,9 @@ class BaseCompiler final : public BaseCompilerInterface
             MOZ_ASSERT(dest.i64() == specific_.abiReturnRegI64);
             masm.wasmLoadI64(*access, srcAddr, dest.i64());
         } else {
-            ScratchI8 scratch(*this);
-            bool byteRegConflict = access->byteSize() == 1 && !ra.isSingleByteI32(dest.i32());
-            AnyRegister out = byteRegConflict ? AnyRegister(scratch) : dest.any();
-
-            masm.wasmLoad(*access, srcAddr, out);
-
-            if (byteRegConflict)
-                masm.mov(scratch, dest.i32());
+            // For 8 bit loads, this will generate movsbl or movzbl, so
+            // there's no constraint on what the output register may be.
+            masm.wasmLoad(*access, srcAddr, dest.any());
         }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if (IsUnaligned(*access)) {
