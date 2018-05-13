@@ -65,7 +65,7 @@ public:
   virtual bool IsActiveWidget() const override;
   virtual bool AreItemsOperable() const override;
   virtual Accessible* CurrentItem() const override;
-  virtual void SetCurrentItem(Accessible* aItem) override;
+  virtual void SetCurrentItem(const Accessible* aItem) override;
 
   virtual Accessible* ContainerWidget() const override;
 

@@ -108,7 +108,7 @@ HTMLSelectListAccessible::CurrentItem() const
 }
 
 void
-HTMLSelectListAccessible::SetCurrentItem(Accessible* aItem)
+HTMLSelectListAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (!aItem->GetContent()->IsElement())
     return;
@@ -506,7 +506,7 @@ HTMLComboboxAccessible::CurrentItem() const
 }
 
 void
-HTMLComboboxAccessible::SetCurrentItem(Accessible* aItem)
+HTMLComboboxAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (AreItemsOperable())
     mListAccessible->SetCurrentItem(aItem);

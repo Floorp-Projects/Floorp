@@ -2597,7 +2597,7 @@ Accessible::CurrentItem() const
 }
 
 void
-Accessible::SetCurrentItem(Accessible* aItem)
+Accessible::SetCurrentItem(const Accessible* aItem)
 {
   nsAtom* id = aItem->GetContent()->GetID();
   if (id) {
