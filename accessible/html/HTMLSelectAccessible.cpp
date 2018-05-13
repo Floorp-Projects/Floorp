@@ -93,7 +93,7 @@ HTMLSelectListAccessible::AreItemsOperable() const
 }
 
 Accessible*
-HTMLSelectListAccessible::CurrentItem()
+HTMLSelectListAccessible::CurrentItem() const
 {
   nsIListControlFrame* listControlFrame = do_QueryFrame(GetFrame());
   if (listControlFrame) {
@@ -500,7 +500,7 @@ HTMLComboboxAccessible::AreItemsOperable() const
 }
 
 Accessible*
-HTMLComboboxAccessible::CurrentItem()
+HTMLComboboxAccessible::CurrentItem() const
 {
   return AreItemsOperable() ? mListAccessible->CurrentItem() : nullptr;
 }

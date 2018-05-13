@@ -2574,7 +2574,7 @@ Accessible::AreItemsOperable() const
 }
 
 Accessible*
-Accessible::CurrentItem()
+Accessible::CurrentItem() const
 {
   // Check for aria-activedescendant, which changes which element has focus.
   // For activedescendant, the ARIA spec does not require that the user agent
