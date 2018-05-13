@@ -67,8 +67,8 @@ add_task(async function test_validation() {
     },
   });
 
-  addon.uninstall();
-  addon2.uninstall();
+  await addon.uninstall();
+  await addon2.uninstall();
 });
 
 const WORD = "Flehgragh";
@@ -98,7 +98,7 @@ SFX A   0       en         [^elr]
   ok(spellCheck.check(WORD), "Word should pass check while add-on load is loaded");
   ok(spellCheck.check("nativen"), "Words should have correct affixes");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await new Promise(executeSoon);
 

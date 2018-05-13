@@ -1763,7 +1763,7 @@ class AddonInstall {
       };
 
       if (this.existingAddon) {
-        XPIInternal.BootstrapScope.get(this.existingAddon).update(
+        await XPIInternal.BootstrapScope.get(this.existingAddon).update(
           this.addon, !this.addon.disabled, install);
       } else {
         install();
@@ -3826,24 +3826,28 @@ var XPIInstall = {
       XPIStates.save();
     };
 
+    let promise;
     if (oldAddon) {
       logger.warn(`Addon with ID ${oldAddon.id} already installed, ` +
                   "older version will be disabled");
 
       addon.installDate = oldAddon.installDate;
 
-      XPIInternal.BootstrapScope.get(oldAddon).update(
+      promise = XPIInternal.BootstrapScope.get(oldAddon).update(
         addon, true, install);
     } else {
       addon.installDate = Date.now();
 
       install();
       let bootstrap = XPIInternal.BootstrapScope.get(addon);
-      bootstrap.install(undefined, true, {temporarilyInstalled: true});
+      promise = bootstrap.install(undefined, true, {temporarilyInstalled: true});
     }
 
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
+
+    await promise;
+
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,
@@ -3955,12 +3959,12 @@ var XPIInstall = {
       };
 
       if (existing) {
-        bootstrap.update(existing, !existing.disabled, uninstall);
+        await bootstrap.update(existing, !existing.disabled, uninstall);
 
         AddonManagerPrivate.callAddonListeners("onInstalled", existing.wrapper);
       } else {
         aAddon.location.removeAddon(aAddon.id);
-        bootstrap.uninstall();
+        await bootstrap.uninstall();
         uninstall();
       }
     } else if (aAddon.active) {

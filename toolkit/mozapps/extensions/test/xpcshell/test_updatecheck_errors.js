@@ -48,5 +48,5 @@ add_task(async function() {
 
   equal(update.error, AddonManager.UPDATE_STATUS_DOWNLOAD_ERROR);
 
-  addon.uninstall();
+  await addon.uninstall();
 });

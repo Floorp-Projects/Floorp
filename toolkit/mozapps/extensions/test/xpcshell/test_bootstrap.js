@@ -294,6 +294,8 @@ add_task(async function test_2() {
   await b1.disable();
   ensure_test_completed();
 
+  await new Promise(executeSoon);
+
   notEqual(b1, null);
   equal(b1.version, "1.0");
   ok(!b1.appDisabled);
@@ -474,7 +476,7 @@ add_task(async function test_7() {
 
   equal(b1.operationsRequiringRestart &
         AddonManager.OP_NEEDS_RESTART_UNINSTALL, 0);
-  b1.uninstall();
+  await b1.uninstall();
 
   await checkBootstrappedPref();
 
@@ -660,7 +662,7 @@ add_task(async function test_11() {
   equal(getShutdownNewVersion(), undefined);
   do_check_not_in_crash_annotation(ID1, "1.0");
 
-  b1.uninstall();
+  await b1.uninstall();
 
   ensure_test_completed();
   BootstrapMonitor.checkAddonNotInstalled(ID1);
@@ -692,7 +694,7 @@ add_task(async function test_12() {
   equal(getStartupOldVersion(), undefined);
   do_check_in_crash_annotation(ID1, "1.0");
 
-  b1.uninstall();
+  await b1.uninstall();
 
   await promiseRestartManager();
   await checkBootstrappedPref();
@@ -758,7 +760,7 @@ add_task(async function test_13() {
   do_check_not_in_crash_annotation(ID1, "3.0");
 
   await checkBootstrappedPref();
-  b1.uninstall();
+  await b1.uninstall();
 });
 
 // Tests that a bootstrapped extension with an invalid target application entry
@@ -783,7 +785,7 @@ add_task(async function test_14() {
   do_check_not_in_crash_annotation(ID1, "3.0");
 
   await checkBootstrappedPref();
-  b1.uninstall();
+  await b1.uninstall();
 });
 
 // Tests that upgrading a disabled bootstrapped extension still calls uninstall
@@ -853,7 +855,7 @@ add_task(async function test_15() {
   BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
   BootstrapMonitor.checkAddonNotStarted(ID1);
 
-  b1_2.uninstall();
+  await b1_2.uninstall();
 });
 
 // Tests that bootstrapped extensions don't get loaded when in safe mode
@@ -900,7 +902,7 @@ add_task(async function test_16() {
   BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
   let b1_3 = await AddonManager.getAddonByID(ID1);
-  b1_3.uninstall();
+  await b1_3.uninstall();
 });
 
 // Check that a bootstrapped extension in a non-profile location is loaded
@@ -1115,7 +1117,7 @@ add_task(async function test_22() {
   equal(getStartupOldVersion(), undefined);
 
   await checkBootstrappedPref();
-  b1_2.uninstall();
+  await b1_2.uninstall();
 });
 
 
@@ -1196,7 +1198,7 @@ add_task(async function test_23() {
   await promiseRestartManager();
 
   let b1_2 = await AddonManager.getAddonByID(ID1);
-  b1_2.uninstall();
+  await b1_2.uninstall();
 });
 
 // Tests that we recover from a broken preference

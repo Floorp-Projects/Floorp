@@ -63,13 +63,15 @@ add_task(async function blockRepoShutdown() {
   await promiseStartupManager();
   AddonManagerPrivate.registerProvider(mockProvider);
 
+  let {fetchState} = MockAsyncShutdown.profileBeforeChange.blockers[0].options;
+
   // Start shutting the manager down
   let managerDown = promiseShutdownManager();
 
   // Wait for manager to call provider shutdown.
   await mockProvider.shutdownPromise;
   // check AsyncShutdown state
-  let status = MockAsyncShutdown.status();
+  let status = fetchState();
   equal(findInStatus(status[0], "Mock provider"), "(none)");
   equal(status[1].name, "AddonRepository: async shutdown");
   equal(status[1].state, "pending");
@@ -79,7 +81,7 @@ add_task(async function blockRepoShutdown() {
   // Wait for manager to call repo shutdown and start waiting for it
   await mockRepo.shutdownPromise;
   // Check the shutdown state
-  status = MockAsyncShutdown.status();
+  status = fetchState();
   equal(status[0].name, "AddonManager: Waiting for providers to shut down.");
   equal(status[0].state, "Complete");
   equal(status[1].name, "AddonRepository: async shutdown");
@@ -90,7 +92,7 @@ add_task(async function blockRepoShutdown() {
   await managerDown;
 
   // Check the shutdown state again
-  status = MockAsyncShutdown.status();
+  status = fetchState();
   equal(status[0].name, "AddonRepository: async shutdown");
   equal(status[0].state, "done");
 });

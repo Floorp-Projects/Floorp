@@ -28,6 +28,7 @@ ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
@@ -1753,11 +1754,13 @@ class BootstrapScope {
    * @param {Object} [aExtraParams = {}]
    *        An object of additional key/value pairs to pass to the method in
    *        the params argument
+   * @returns {any}
+   *        The return value of the bootstrap method.
    */
-  callBootstrapMethod(aMethod, aReason, aExtraParams = {}) {
+  async callBootstrapMethod(aMethod, aReason, aExtraParams = {}) {
     let {addon, runInSafeMode} = this;
     if (Services.appinfo.inSafeMode && !runInSafeMode)
-      return;
+      return null;
 
     let timeStart = new Date();
     if (addon.type == "extension" && aMethod == "startup") {
@@ -1793,7 +1796,7 @@ class BootstrapScope {
           this._pendingDisable = true;
           for (let addon of XPIProvider.getDependentAddons(this.addon)) {
             if (addon.active)
-              XPIDatabase.updateAddonDisabledState(addon);
+              await XPIDatabase.updateAddonDisabledState(addon);
           }
         }
       }
@@ -1829,23 +1832,19 @@ class BootstrapScope {
         }
       }
 
+      let result;
       if (!method) {
         logger.warn(`Add-on ${addon.id} is missing bootstrap method ${aMethod}`);
       } else {
         logger.debug(`Calling bootstrap method ${aMethod} on ${addon.id} version ${addon.version}`);
 
-        let result;
         try {
           result = method.call(scope, params, aReason);
         } catch (e) {
           logger.warn(`Exception running bootstrap method ${aMethod} on ${addon.id}`, e);
         }
-
-        if (aMethod == "startup") {
-          this.startupPromise = Promise.resolve(result);
-          this.startupPromise.catch(Cu.reportError);
-        }
       }
+      return result;
     } finally {
       // Extensions are automatically initialized in the correct order at startup.
       if (aMethod == "startup" && aReason != BOOTSTRAP_REASONS.APP_STARTUP) {
@@ -1945,9 +1944,16 @@ class BootstrapScope {
    *        The reason code for the startup call.
    * @param {Object} [aExtraParams]
    *        Optional extra parameters to pass to the bootstrap method.
+   * @returns {Promise}
+   *        Resolves when the startup method has run to completion.
    */
-  startup(reason, aExtraParams) {
-    this.callBootstrapMethod("startup", reason, aExtraParams);
+  async startup(reason, aExtraParams) {
+    if (this.shutdownPromise) {
+      await this.shutdownPromise;
+    }
+
+    this.startupPromise = this.callBootstrapMethod("startup", reason, aExtraParams);
+    return this.startupPromise;
   }
 
   /**
@@ -1959,8 +1965,15 @@ class BootstrapScope {
    * @param {Object} [aExtraParams]
    *        Optional extra parameters to pass to the bootstrap method.
    */
-  shutdown(reason, aExtraParams) {
-    this.callBootstrapMethod("shutdown", reason, aExtraParams);
+  async shutdown(reason, aExtraParams) {
+    this.shutdownPromise = this._shutdown(reason, aExtraParams);
+    await this.shutdownPromise;
+    this.shutdownPromise = null;
+  }
+
+  async _shutdown(reason, aExtraParams) {
+    await this.startupPromise;
+    return this.callBootstrapMethod("shutdown", reason, aExtraParams);
   }
 
   /**
@@ -1972,10 +1985,16 @@ class BootstrapScope {
    * @param {Object} [aExtraParams]
    *        Optional extra parameters to pass to the bootstrap method.
    */
-  disable() {
+  async disable() {
     if (this.started) {
-      this.shutdown(BOOTSTRAP_REASONS.ADDON_DISABLE);
-      this.unloadBootstrapScope();
+      await this.shutdown(BOOTSTRAP_REASONS.ADDON_DISABLE);
+      // If we disable and re-enable very quickly, it's possible that
+      // the next startup() method will be called immediately after this
+      // shutdown method finishes. This almost never happens outside of
+      // tests. In tests, alas...
+      if (!this.started) {
+        this.unloadBootstrapScope();
+      }
     }
   }
 
@@ -1990,12 +2009,15 @@ class BootstrapScope {
    *        after its install method.
    * @param {Object} [extraArgs]
    *        Optional extra parameters to pass to the bootstrap method.
+   * @returns {Promise}
+   *        Resolves when the startup method has run to completion, if
+   *        startup is required.
    */
   install(reason = BOOTSTRAP_REASONS.ADDON_INSTALL, startup, extraArgs) {
-    this._install(reason, false, startup, extraArgs);
+    return this._install(reason, false, startup, extraArgs);
   }
 
-  _install(reason, callUpdate, startup, extraArgs) {
+  async _install(reason, callUpdate, startup, extraArgs) {
     if (callUpdate) {
       this.callBootstrapMethod("update", reason, extraArgs);
     } else {
@@ -2003,7 +2025,7 @@ class BootstrapScope {
     }
 
     if (startup && this.addon.active) {
-      this.startup(reason, extraArgs);
+      await this.startup(reason, extraArgs);
     } else if (this.addon.disabled) {
       this.unloadBootstrapScope();
     }
@@ -2018,14 +2040,18 @@ class BootstrapScope {
    *        The reason code for the calls.
    * @param {Object} [extraArgs]
    *        Optional extra parameters to pass to the bootstrap method.
+   * @returns {Promise}
+   *        Resolves when the shutdown method has run to completion, if
+   *        shutdown is required, and the uninstall method has been
+   *        called.
    */
   uninstall(reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL, extraArgs) {
-    this._uninstall(reason, false, extraArgs);
+    return this._uninstall(reason, false, extraArgs);
   }
 
-  _uninstall(reason, callUpdate, extraArgs) {
+  async _uninstall(reason, callUpdate, extraArgs) {
     if (this.started) {
-      this.shutdown(reason, extraArgs);
+      await this.shutdown(reason, extraArgs);
     }
     if (!callUpdate) {
       this.callBootstrapMethod("uninstall", reason, extraArgs);
@@ -2052,21 +2078,24 @@ class BootstrapScope {
    *        the old add-on and installing the new one. This callback
    *        should update any database state which is necessary for the
    *        startup of the new add-on.
+   * @returns {Promise}
+   *        Resolves when all required bootstrap callbacks have
+   *        completed.
    */
-  update(newAddon, startup = false, updateCallback) {
+  async update(newAddon, startup = false, updateCallback) {
     let reason = XPIInstall.newVersionReason(this.addon.version, newAddon.version);
     let extraArgs = {oldVersion: this.addon.version, newVersion: newAddon.version};
 
     let callUpdate = isWebExtension(this.addon.type) && isWebExtension(newAddon.type);
 
-    this._uninstall(reason, callUpdate, extraArgs);
+    await this._uninstall(reason, callUpdate, extraArgs);
 
     if (updateCallback) {
       updateCallback();
     }
 
     this.addon = newAddon;
-    this._install(reason, callUpdate, startup, extraArgs);
+    return this._install(reason, callUpdate, startup, extraArgs);
   }
 }
 
@@ -2369,34 +2398,38 @@ var XPIProvider = {
 
       // Let these shutdown a little earlier when they still have access to most
       // of XPCOM
-      Services.obs.addObserver(function observer() {
-        XPIProvider.cleanupTemporaryAddons();
-        XPIProvider._closing = true;
-        for (let addon of XPIProvider.sortBootstrappedAddons().reverse()) {
-          // If no scope has been loaded for this add-on then there is no need
-          // to shut it down (should only happen when a bootstrapped add-on is
-          // pending enable)
-          let activeAddon = XPIProvider.activeAddons.get(addon.id);
-          if (!activeAddon || !activeAddon.started) {
-            continue;
-          }
-
-          // If the add-on was pending disable then shut it down and remove it
-          // from the persisted data.
-          let reason = BOOTSTRAP_REASONS.APP_SHUTDOWN;
-          if (addon._pendingDisable) {
-            reason = BOOTSTRAP_REASONS.ADDON_DISABLE;
-          } else if (addon.location.isTemporary) {
-            reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
-            let existing = XPIStates.findAddon(addon.id, loc => !loc.isTemporary);
-            if (existing) {
-              reason = XPIInstall.newVersionReason(addon.version, existing.version);
+      AsyncShutdown.quitApplicationGranted.addBlocker(
+        "XPIProvider shutdown",
+        async () => {
+          XPIProvider._closing = true;
+          await XPIProvider.cleanupTemporaryAddons();
+          for (let addon of XPIProvider.sortBootstrappedAddons().reverse()) {
+            // If no scope has been loaded for this add-on then there is no need
+            // to shut it down (should only happen when a bootstrapped add-on is
+            // pending enable)
+            let activeAddon = XPIProvider.activeAddons.get(addon.id);
+            if (!activeAddon || !activeAddon.started) {
+              continue;
             }
+
+            // If the add-on was pending disable then shut it down and remove it
+            // from the persisted data.
+            let reason = BOOTSTRAP_REASONS.APP_SHUTDOWN;
+            if (addon._pendingDisable) {
+              reason = BOOTSTRAP_REASONS.ADDON_DISABLE;
+            } else if (addon.location.name == KEY_APP_TEMPORARY) {
+              reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+              let existing = XPIStates.findAddon(addon.id, loc => !loc.isTemporary);
+              if (existing) {
+                reason = XPIInstall.newVersionReason(addon.version, existing.version);
+              }
+            }
+
+            let promise = BootstrapScope.get(addon).shutdown(reason);
+            AsyncShutdown.profileChangeTeardown.addBlocker(
+              `Extension shutdown: ${addon.id}`, promise);
           }
-          BootstrapScope.get(addon).shutdown(reason);
-        }
-        Services.obs.removeObserver(observer, "quit-application-granted");
-      }, "quit-application-granted");
+        });
 
       // Detect final-ui-startup for telemetry reporting
       Services.obs.addObserver(function observer() {
@@ -2494,6 +2527,7 @@ var XPIProvider = {
   },
 
   cleanupTemporaryAddons() {
+    let promises = [];
     let tempLocation = TemporaryInstallLocation;
     for (let [id, addon] of tempLocation.entries()) {
       tempLocation.delete(id);
@@ -2506,16 +2540,20 @@ var XPIProvider = {
         tempLocation.removeAddon(id);
       };
 
+      let promise;
       if (existing) {
-        bootstrap.update(existing, false, () => {
+        promise = bootstrap.update(existing, false, () => {
           cleanup();
           XPIDatabase.makeAddonLocationVisible(id, existing.location);
         });
       } else {
-        bootstrap.uninstall();
-        cleanup();
+        promise = bootstrap.uninstall().then(cleanup);
       }
+      AsyncShutdown.profileChangeTeardown.addBlocker(
+        `Temporary extension shutdown: ${addon.id}`, promise);
+      promises.push(promise);
     }
+    return Promise.all(promises);
   },
 
   /**

@@ -59,7 +59,7 @@ async function run_test() {
 
   Assert.ok(!a1.hasResource("subdir/missing.txt"));
 
-  a1.uninstall();
+  await a1.uninstall();
 
   try {
     // hasResource should never throw an exception.

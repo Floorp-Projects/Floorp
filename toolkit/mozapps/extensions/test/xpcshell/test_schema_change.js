@@ -70,7 +70,7 @@ add_task(async function schema_change() {
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });
 
@@ -130,7 +130,7 @@ add_task(async function schema_change() {
   equal(addon.version, "1.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });
 
@@ -193,7 +193,7 @@ add_task(async function schema_change_app_update() {
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });
 
@@ -252,7 +252,7 @@ add_task(async function schema_change() {
   equal(addon.version, "1.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });
 
@@ -313,6 +313,6 @@ add_task(async function schema_change() {
   equal(addon.version, "2.0", "Got the expected version");
 
   let waitUninstall = promiseAddonEvent("onUninstalled");
-  addon.uninstall();
+  await addon.uninstall();
   await waitUninstall;
 });

@@ -177,8 +177,11 @@ var ExtensionsUI = {
       type: "sideload",
     });
     this.showAddonsManager(browser, strings, addon.iconURL, "sideload")
-        .then(answer => {
-          addon.userDisabled = !answer;
+        .then(async answer => {
+          if (answer) {
+            await addon.enable();
+          }
+          this.emit("sideload-response");
         });
   },
 

@@ -289,7 +289,7 @@ add_task(async function() {
   }
 
   // remove original add-on
-  addon.uninstall();
+  await addon.uninstall();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -317,10 +317,7 @@ add_task(async function test_samefile() {
     }
   });
 
-  await Promise.all([
-    AddonManager.installTemporaryAddon(webext),
-    promiseWebExtensionStartup(),
-  ]);
+  await AddonManager.installTemporaryAddon(webext);
   let addon = await promiseAddonByID(ID);
 
   // temporary add-on is installed and started
@@ -347,10 +344,7 @@ add_task(async function test_samefile() {
     }
   });
 
-  await Promise.all([
-    AddonManager.installTemporaryAddon(webext),
-    promiseWebExtensionStartup(),
-  ]);
+  await AddonManager.installTemporaryAddon(webext);
   addon = await promiseAddonByID(ID);
 
   // temporary add-on is installed and started
@@ -364,7 +358,7 @@ add_task(async function test_samefile() {
   Assert.ok(addon.isWebExtension);
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 // Install a temporary add-on over the top of an existing add-on.
@@ -447,7 +441,7 @@ add_task(async function() {
   Assert.equal(addon.type, "extension");
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await new Promise(executeSoon);
   addon = await promiseAddonByID(ID);
@@ -466,7 +460,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   unpacked_addon.remove(true);
-  addon.uninstall();
+  await addon.uninstall();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);
@@ -524,7 +518,7 @@ add_task(async function() {
   equal(startup.data.oldVersion, "1.0");
 
   const addon = await promiseAddonByID(ID);
-  addon.uninstall();
+  await addon.uninstall();
 
   unpackedAddon.remove(true);
   await promiseRestartManager();
@@ -578,7 +572,7 @@ add_task(async function() {
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_DOWNGRADE);
 
   const addon = await promiseAddonByID(ID);
-  addon.uninstall();
+  await addon.uninstall();
 
   unpackedAddon.remove(true);
   await promiseRestartManager();
@@ -640,7 +634,7 @@ add_task(async function() {
   equal(startup.reason, BOOTSTRAP_REASONS.ADDON_UPGRADE);
 
   const addon = await promiseAddonByID(ID);
-  addon.uninstall();
+  await addon.uninstall();
 
   unpackedAddon.remove(true);
   await promiseRestartManager();
@@ -713,7 +707,7 @@ add_task(async function() {
   Assert.equal(tempAddon.type, "extension");
   Assert.equal(tempAddon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_UNKNOWN : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  tempAddon.uninstall();
+  await tempAddon.uninstall();
   unpacked_addon.remove(true);
 
   await addon.enable();
@@ -733,7 +727,7 @@ add_task(async function() {
   Assert.equal(addon.type, "extension");
   Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   BootstrapMonitor.checkAddonNotInstalled(ID);
   BootstrapMonitor.checkAddonNotStarted(ID);

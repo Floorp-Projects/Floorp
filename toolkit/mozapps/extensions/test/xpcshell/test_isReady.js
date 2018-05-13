@@ -25,9 +25,7 @@ add_task(async function() {
   gotShutdownEvent = false;
 
   info("Shutting down manager...");
-  let shutdownPromise = promiseShutdownManager();
-  equal(AddonManager.isReady, false, "isReady should be false when shutdown commences");
-  await shutdownPromise;
+  await promiseShutdownManager();
 
   equal(AddonManager.isReady, false, "isReady should be false after shutdown");
   equal(gotStartupEvent, false, "Should not have seen onStartup event after shutdown");

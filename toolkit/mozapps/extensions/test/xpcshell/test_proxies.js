@@ -148,7 +148,7 @@ async function run_proxy_tests() {
                      fixURL(addon.getResourceURI("install.rdf").spec),
                      `Resource URLs resolve as expected`);
 
-        addon.uninstall();
+        await addon.uninstall();
       }
     }
 
@@ -208,7 +208,7 @@ async function run_symlink_tests() {
   let addon = await AddonManager.getAddonByID(METADATA.id);
   Assert.notEqual(addon, null);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseRestartManager();
   await promiseShutdownManager();

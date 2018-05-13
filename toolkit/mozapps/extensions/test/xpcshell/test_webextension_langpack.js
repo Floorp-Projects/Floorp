@@ -62,7 +62,7 @@ add_task(async function() {
   equal(L10nRegistry.getAvailableLocales().includes("und"), true);
   equal(Services.locale.getAvailableLocales().includes("und"), true);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   // After the langpack has been uninstalled, no more `und` in locales.
   equal(L10nRegistry.getAvailableLocales().includes("und"), false);
@@ -107,7 +107,7 @@ add_task(async function() {
     Services.locale.setRequestedLocales(reqLocs);
   }
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 /**
@@ -132,5 +132,5 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.ok(addon.appDisabled);
 
-  addon.uninstall();
+  await addon.uninstall();
 });
