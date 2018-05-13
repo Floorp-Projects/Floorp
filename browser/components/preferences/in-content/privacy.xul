@@ -85,7 +85,7 @@
                     value="custom"
                     search-l10n-ids="
                       history-private-browsing-permanent.label,
-                      history-remember-option.label,
+                      history-remember-browser-option.label,
                       history-remember-search-option.label,
                       history-clear-on-close-option.label,
                       history-clear-on-close-settings.label"/>
@@ -120,7 +120,7 @@
                     preference="browser.privatebrowsing.autostart"/>
           <vbox class="indent">
             <checkbox id="rememberHistory"
-                      data-l10n-id="history-remember-option"
+                      data-l10n-id="history-remember-browser-option"
                       preference="places.history.enabled"/>
             <checkbox id="rememberForms"
                       data-l10n-id="history-remember-search-option"
@@ -146,7 +146,7 @@
         <button id="clearDataSettings"
                 class="accessory-button"
                 data-l10n-id="history-clear-on-close-settings"
-                searchkeywords="&clearDataSettings3.label;
+                searchkeywords="&clearDataSettings4.label;
                                 &historySection.label;
                                 &itemHistoryAndDownloads.label;
                                 &itemCookies.label;
