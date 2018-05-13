@@ -11,7 +11,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-nsTArrayHeader nsTArrayHeader::sEmptyHdr = { 0, 0, 0 };
+nsTArrayHeader sEmptyTArrayHeader = { 0, 0, 0 };
 
 bool
 IsTwiceTheRequiredBytesRepresentableAsUint32(size_t aCapacity, size_t aElemSize)
