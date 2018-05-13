@@ -379,6 +379,7 @@ WEBIDL_FILES = [
     'AudioListener.webidl',
     'AudioNode.webidl',
     'AudioParam.webidl',
+    'AudioParamMap.webidl',
     'AudioProcessingEvent.webidl',
     'AudioScheduledSourceNode.webidl',
     'AudioStreamTrack.webidl',
