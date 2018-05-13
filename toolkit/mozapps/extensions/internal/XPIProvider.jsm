@@ -69,9 +69,6 @@ const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_ALLOW_LEGACY               = "extensions.legacy.enabled";
 
-const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
-const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
-
 const PREF_EM_LAST_APP_BUILD_ID       = "extensions.lastAppBuildId";
 
 // Specify a list of valid built-in add-ons to load.
@@ -1645,10 +1642,6 @@ var XPIProvider = {
   installLocations: null,
   // A dictionary of known install locations by name
   installLocationsByName: null,
-  // The value of the minCompatibleAppVersion preference
-  minCompatibleAppVersion: null,
-  // The value of the minCompatiblePlatformVersion preference
-  minCompatiblePlatformVersion: null,
   // A Map of active addons to their bootstrapScope by ID
   activeAddons: new Map(),
   // True if the platform could have activated extensions
@@ -1891,13 +1884,6 @@ var XPIProvider = {
 
       this.setupInstallLocations(aAppChanged);
 
-      this.minCompatibleAppVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_APP_VERSION,
-                                                                  null);
-      this.minCompatiblePlatformVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
-                                                                       null);
-
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this);
-      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this);
       if (!AppConstants.MOZ_REQUIRE_SIGNING || Cu.isInAutomation)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this);
       Services.prefs.addObserver(PREF_LANGPACK_SIGNATURES, this);
@@ -2685,16 +2671,6 @@ var XPIProvider = {
 
     if (aTopic == "nsPref:changed") {
       switch (aData) {
-      case PREF_EM_MIN_COMPAT_APP_VERSION:
-        this.minCompatibleAppVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_APP_VERSION,
-                                                                    null);
-        this.updateAddonAppDisabledStates();
-        break;
-      case PREF_EM_MIN_COMPAT_PLATFORM_VERSION:
-        this.minCompatiblePlatformVersion = Services.prefs.getStringPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
-                                                                         null);
-        this.updateAddonAppDisabledStates();
-        break;
       case PREF_XPI_SIGNATURES_REQUIRED:
       case PREF_LANGPACK_SIGNATURES:
       case PREF_ALLOW_LEGACY:
