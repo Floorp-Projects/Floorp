@@ -1343,10 +1343,8 @@ public:
    *
    * @param aChild    The node to fire DOMNodeRemoved at.
    * @param aParent   The parent of aChild.
-   * @param aOwnerDoc The ownerDocument of aChild.
    */
-  static void MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
-                                   nsIDocument* aOwnerDoc);
+  static void MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent);
 
   /**
    * This method creates and dispatches a trusted event.
