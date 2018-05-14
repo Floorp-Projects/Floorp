@@ -33,9 +33,7 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
     ]
 
 UNIFIED_SOURCES += [
-    'lib/apiwrapper.c',
     'lib/bitpack.c',
-    'lib/decapiwrapper.c',
     'lib/decinfo.c',
     'lib/decode.c',
     'lib/dequant.c',
