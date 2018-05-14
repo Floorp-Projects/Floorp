@@ -1405,7 +1405,9 @@ HTMLEditRules::WillInsert(bool* aCancel)
        mTheAction == EditAction::insertIMEText ||
        mTheAction == EditAction::deleteSelection)) {
     nsresult rv = ReapplyCachedStyles();
-    NS_ENSURE_SUCCESS_VOID(rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
   // For most actions we want to clear the cached styles, but there are
   // exceptions
@@ -8539,8 +8541,12 @@ HTMLEditRules::ReapplyCachedStyles()
     // Nothing to do
     return NS_OK;
   }
+  const RangeBoundary& atStartOfSelection =
+    SelectionRef().GetRangeAt(0)->StartRef();
   nsCOMPtr<nsIContent> selNode =
-    do_QueryInterface(SelectionRef().GetRangeAt(0)->GetStartContainer());
+    atStartOfSelection.Container() &&
+    atStartOfSelection.Container()->IsContent() ?
+      atStartOfSelection.Container()->AsContent() : nullptr;
   if (!selNode) {
     // Nothing to do
     return NS_OK;
@@ -8564,6 +8570,9 @@ HTMLEditRules::ReapplyCachedStyles()
         bAny = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
                  selNode, mCachedStyles[i].tag, mCachedStyles[i].attr, curValue,
                  CSSEditUtils::eComputed);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
       }
       if (!bAny) {
         // then check typeinstate and html style
@@ -8573,6 +8582,9 @@ HTMLEditRules::ReapplyCachedStyles()
                                                 &(mCachedStyles[i].value),
                                                 &bFirst, &bAny, &bAll,
                                                 &curValue);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
