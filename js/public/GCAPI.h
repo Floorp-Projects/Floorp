@@ -356,6 +356,7 @@ namespace JS {
     D(FULL_CELL_PTR_BUFFER)                     \
     D(FULL_SLOT_BUFFER)                         \
     D(FULL_SHAPE_BUFFER)                        \
+    D(TOO_MUCH_WASM_MEMORY)                     \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -367,7 +368,6 @@ namespace JS {
     D(RESERVED6)                                \
     D(RESERVED7)                                \
     D(RESERVED8)                                \
-    D(RESERVED9)                                \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \

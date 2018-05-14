@@ -54,10 +54,12 @@
 
 using JS::ToInt32;
 
+using mozilla::Atomic;
 using mozilla::CheckedInt;
 using mozilla::Some;
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::Unused;
 
 using namespace js;
 using namespace js::gc;
@@ -91,9 +93,19 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
 // to 8TB.  Thus we track the number of live objects, and set a limit of
 // 1000 live objects per process; we run synchronous GC if necessary; and
 // we throw an OOM error if the per-process limit is exceeded.
-static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
+//
+// Since the MaximumLiveMappedBuffers limit is not generally accounted for by
+// any existing GC-trigger heuristics, we need an extra heuristic for triggering
+// GCs when the caller is allocating memories rapidly without other garbage.
+// Thus, once the live buffer count crosses a certain threshold, we start
+// triggering GCs every N allocations.
 
 static const int32_t MaximumLiveMappedBuffers = 1000;
+static const int32_t StartTriggeringAtLiveBufferCount = 200;
+static const int32_t AllocatedBuffersPerTrigger = 100;
+
+static Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
+static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
 
 int32_t
 js::LiveMappedBufferCount()
@@ -672,10 +684,6 @@ class js::WasmArrayRawBuffer
         return maxSize_;
     }
 
-    size_t allocatedBytes() const {
-        return mappedSize_ + gc::SystemPageSize();
-    }
-
 #ifndef WASM_HUGE_MEMORY
     uint32_t boundsCheckLimit() const {
         MOZ_ASSERT(mappedSize_ <= UINT32_MAX);
@@ -829,6 +837,18 @@ CreateBuffer(JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize
         return false;
 
     maybeSharedObject.set(object);
+
+    // See StartTriggeringAtLiveBufferCount comment above.
+    if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
+        allocatedSinceLastTrigger++;
+        if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
+            Unused << cx->runtime()->gc.triggerGC(JS::gcreason::TOO_MUCH_WASM_MEMORY);
+            allocatedSinceLastTrigger = 0;
+        }
+    } else {
+        allocatedSinceLastTrigger = 0;
+    }
+
     return true;
 }
 
@@ -1198,8 +1218,6 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
                 size_t nAllocated = nbytes;
                 if (contents.kind() == MAPPED)
                     nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
-                else if (contents.kind() == WASM)
-                    nAllocated = contents.wasmBuffer()->allocatedBytes();
                 cx->updateMallocCounter(nAllocated);
             }
         }
@@ -1287,7 +1305,7 @@ ArrayBufferObject::createFromNewRawBuffer(JSContext* cx, WasmArrayRawBuffer* buf
     auto contents = BufferContents::create<WASM>(buffer->dataPointer());
     obj->setDataPointer(contents, OwnsData);
 
-    cx->updateMallocCounter(buffer->mappedSize());
+    cx->updateMallocCounter(initialSize);
 
     return obj;
 }
