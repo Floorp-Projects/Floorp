@@ -107,6 +107,13 @@ function addAdaptiveFeedback(aUrl, aSearch) {
 }
 
 
+add_task(function init() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.urlbar.autoFill");
+  });
+});
+
 add_task(async function test_adaptive_search_specific() {
   // Add a bookmark to our url.
   await PlacesUtils.bookmarks.insert({

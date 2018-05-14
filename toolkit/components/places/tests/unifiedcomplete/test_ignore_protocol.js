@@ -7,6 +7,8 @@
  */
 
 add_task(async function test_escape() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+
   let uri1 = NetUtil.newURI("http://site/");
   let uri2 = NetUtil.newURI("http://happytimes/");
   await PlacesTestUtils.addVisits([

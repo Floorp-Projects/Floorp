@@ -6,13 +6,12 @@ add_task(async function test_non_keyword() {
   info("Searching for non-keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/") });
   await check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
-    completed: "mozilla.org/"
+    completed: "http://mozilla.org/"
   });
   await cleanup();
 });
@@ -21,7 +20,6 @@ add_task(async function test_keyword() {
   info("Searching for keyworded entry should not autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   await check_autocomplete({
@@ -36,13 +34,12 @@ add_task(async function test_more_than_keyword() {
   info("Searching for more than keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   await check_autocomplete({
     search: "mozi",
     autofilled: "mozilla.org/",
-    completed: "mozilla.org/"
+    completed: "http://mozilla.org/"
   });
   await cleanup();
 });
@@ -51,13 +48,12 @@ add_task(async function test_less_than_keyword() {
   info("Searching for less than keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   await check_autocomplete({
     search: "mo",
     autofilled: "mozilla.org/",
-    completed: "mozilla.org/",
+    completed: "http://mozilla.org/",
   });
   await cleanup();
 });
@@ -66,7 +62,6 @@ add_task(async function test_keyword_casing() {
   info("Searching for keyworded entry is case-insensitive");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await addBookmark({ uri: NetUtil.newURI("http://mozilla.org/test/"), keyword: "moz" });
   await check_autocomplete({

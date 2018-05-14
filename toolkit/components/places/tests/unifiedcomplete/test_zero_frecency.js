@@ -4,9 +4,8 @@
 
 // Ensure inline autocomplete doesn't return zero frecency pages.
 
-add_task(async function test_zzero_frec_domain() {
+add_task(async function test_zero_frec_domain() {
   info("Searching for zero frecency domain should not autoFill it");
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
     transition: TRANSITION_FRAMED_LINK
@@ -19,9 +18,8 @@ add_task(async function test_zzero_frec_domain() {
   await cleanup();
 });
 
-add_task(async function test_zzero_frec_url() {
+add_task(async function test_zero_frec_url() {
   info("Searching for zero frecency url should not autoFill it");
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/framed_link/"),
     transition: TRANSITION_FRAMED_LINK
