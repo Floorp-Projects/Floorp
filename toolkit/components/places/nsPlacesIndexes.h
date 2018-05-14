@@ -51,6 +51,11 @@
     "guid_uniqueindex", "moz_places", "guid", "UNIQUE" \
   )
 
+#define CREATE_IDX_MOZ_PLACES_ORIGIN_ID \
+  CREATE_PLACES_IDX( \
+    "originidindex", "moz_places", "origin_id", "" \
+  )
+
 /**
  * moz_historyvisits
  */
