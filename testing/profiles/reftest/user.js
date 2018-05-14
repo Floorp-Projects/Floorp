@@ -2,15 +2,8 @@
 /* globals user_pref */
 // Make sure Shield doesn't hit the network.
 user_pref("app.normandy.api_url", "https://localhost/selfsupport-dummy/");
-// Disable updates
-user_pref("app.update.enabled", false);
 user_pref("app.update.staging.enabled", false);
 user_pref("app.update.url.android", "");
-user_pref("browser.dom.window.dump.enabled", true);
-// Make sure we don't reach out to the network for activity stream services
-user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
-user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
-user_pref("browser.newtabpage.activity-stream.tippyTop.service.endpoint", "");
 // Disable the thumbnailing service
 user_pref("browser.pagethumbnails.capturing_disabled", true);
 user_pref("browser.ping-centre.production.endpoint", "https://localhost");
@@ -29,15 +22,7 @@ user_pref("browser.safebrowsing.provider.google4.gethashURL", "http://127.0.0.1/
 user_pref("browser.safebrowsing.provider.google4.updateURL", "http://127.0.0.1/safebrowsing-dummyg4/update");
 user_pref("browser.safebrowsing.provider.mozilla.gethashURL", "http://127.0.0.1/safebrowsing-dummym/gethash");
 user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/safebrowsing-dummym/update");
-user_pref("browser.search.countryCode", "US");
-user_pref("browser.search.geoSpecificDefaults", false);
-// Tell the search service we are running in the US.  This also has the
-// desired side-effect of preventing our geoip lookup.
-user_pref("browser.search.isUS", true);
-// And for snippets.
-user_pref("browser.snippets.enabled", false);
 user_pref("browser.snippets.firstrunHomepage.enabled", false);
-user_pref("browser.snippets.syncPromo.enabled", false);
 // use about:blank, not browser.startup.homepage
 user_pref("browser.startup.page", 0);
 // Since our tests are 800px wide, set the assume-designed-for width of all
@@ -45,19 +30,11 @@ user_pref("browser.startup.page", 0);
 // in our 800px window we don't zoom out by default to try to fit the
 // assumed 980px content.
 user_pref("browser.viewport.desktopWidth", 800);
-// And for webapp updates.  Yes, it is supposed to be an integer.
-user_pref("browser.webapps.checkForUpdates", 0);
 user_pref("datareporting.healthreport.uploadEnabled", false);
-// Skip data reporting policy notifications.
-user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 // Allow XUL and XBL files to be opened from file:// URIs
 user_pref("dom.allow_XUL_XBL_for_file", true);
 // Don't forcibly kill content processes after a timeout
 user_pref("dom.ipc.tabs.shutdownTimeoutSecs", 0);
-user_pref("dom.max_chrome_script_run_time", 0);
-// no slow script dialogs
-user_pref("dom.max_script_run_time", 0);
-user_pref("dom.send_after_paint_to_content", true);
 // For mochitests, we're more interested in testing the behavior of in-
 // content XBL bindings, so we set this pref to true. In reftests, we're
 // more interested in testing the behavior of XBL as it works in chrome,
@@ -66,21 +43,11 @@ user_pref("dom.use_xbl_scopes_for_remote_xul", false);
 user_pref("extensions.autoDisableScopes", 0);
 // Disable blocklist updates so we don't have them reported as leaks
 user_pref("extensions.blocklist.enabled", false);
-// Only allow add-ons from the profile and app and allow foreign
-// injection
-user_pref("extensions.enabledScopes", 5);
 user_pref("extensions.getAddons.cache.enabled", false);
-// Ensure we can load the reftest extension
-user_pref("extensions.legacy.enabled", true);
 user_pref("extensions.systemAddon.update.url", "http://localhost/dummy-system-addons.xml");
-// Disable addon updates and prefetching so we don't leak them
-user_pref("extensions.update.enabled", false);
-// And for useragent updates.
-user_pref("general.useragent.updates.enabled", false);
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.color_management.mode", 2);
 user_pref("gfx.logging.level", 1);
-user_pref("hangmonitor.timeout", 0);
 // Disable downscale-during-decode, since it makes reftests more difficult.
 user_pref("image.downscale-during-decode.enabled", false);
 // Disable interruptible reflow since (1) it's normally not going to
@@ -101,7 +68,6 @@ user_pref("layout.testing.overlay-scrollbars.always-visible", true);
 user_pref("marionette.prefs.recommended", false);
 // Ensure autoplay is enabled for all platforms.
 user_pref("media.autoplay.enabled", true);
-user_pref("media.gmp-manager.updateEnabled", false);
 user_pref("media.gmp-manager.url.override", "http://localhost/dummy-gmp-manager.xml");
 user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // Reftests load a lot of URLs very quickly. This puts avoidable and
@@ -122,7 +88,6 @@ user_pref("privacy.trackingprotection.pbmode.enabled", false);
 // rely on this to load downloadable fonts (which are restricted to same
 // origin policy by default) from outside their directory.
 user_pref("security.fileuri.strict_origin_policy", false);
-user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_computer", true);
 // Allow view-source URIs to be opened from URIs that share
 // their protocol with the inner URI of the view-source URI
 user_pref("security.view-source.reachable-from-inner-protocol", true);
@@ -137,5 +102,3 @@ user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
 user_pref("ui.caretBlinkTime", -1);
 user_pref("ui.caretWidth", 1);
-// Allow unsigned add-ons
-user_pref("xpinstall.signatures.required", false);
