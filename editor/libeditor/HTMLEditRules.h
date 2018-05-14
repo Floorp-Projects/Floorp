@@ -505,8 +505,9 @@ protected:
    * @param aNodeArray      Must be descendants of a node.
    * @param aBlockTag       The element name of new block elements.
    */
-  nsresult ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
-                           nsAtom& aBlockTag);
+  MOZ_MUST_USE nsresult
+  ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
+                  nsAtom& aBlockTag);
 
   nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
