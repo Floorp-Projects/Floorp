@@ -39,7 +39,7 @@ add_task(async function() {
   await test_autocomplete({ desc: "CTRL+ENTER on the autofilled part should use autofill",
                             typed: "exam",
                             autofilled: "example.com/",
-                            modified: "example.com/",
+                            modified: "example.com",
                             waitForUrl: "http://example.com/",
                             keys: [["KEY_Enter"]]
                           });

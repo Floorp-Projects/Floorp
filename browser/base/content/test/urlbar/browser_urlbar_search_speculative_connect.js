@@ -14,10 +14,17 @@ let gPort = -1;
 let gPrivateWin = null;
 let gIsSpeculativeConnected = false;
 
+let gTest;
+
 add_task(async function setup() {
   gHttpServer = runHttpServer(gScheme, gHost);
   // The server will be run on a random port if the port number wasn't given.
   gPort = gHttpServer.identity.primaryPort;
+
+  gTest = {
+    search: gHost.substr(0, 2),
+    autofilledValue: `${gHost}:${gPort}/`
+  };
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.autoFill", true],
@@ -45,11 +52,7 @@ add_task(async function setup() {
   let oldSpeculativeConnect = gURLBar.popup.maybeSetupSpeculativeConnect.bind(gURLBar.popup);
   let newSpeculativeConnect = (uriString) => {
     gIsSpeculativeConnected = true;
-    info(`Original uri is ${uriString}`);
-    let newUriString = uriString.substr(0, uriString.length - 1) +
-                       ":" + gPort + "/";
-    info(`New uri is ${newUriString}`);
-    oldSpeculativeConnect(newUriString);
+    oldSpeculativeConnect(uriString);
   };
   gURLBar.popup.maybeSetupSpeculativeConnect = newSpeculativeConnect;
   gPrivateWin.gURLBar.popup.maybeSetupSpeculativeConnect = newSpeculativeConnect;
@@ -59,24 +62,28 @@ add_task(async function setup() {
     gURLBar.popup.maybeSetupSpeculativeConnect = oldSpeculativeConnect;
     gPrivateWin.gURLBar.popup.maybeSetupSpeculativeConnect = oldSpeculativeConnect;
     gHttpServer.identity.remove(gScheme, gHost, gPort);
-    gHttpServer.stop(() => {
-      gHttpServer = null;
+    await new Promise(resolve => {
+      gHttpServer.stop(() => {
+        gHttpServer = null;
+        resolve();
+      });
     });
     await BrowserTestUtils.closeWindow(gPrivateWin);
+    gScheme = null;
+    gHost = null;
+    gPort = null;
+    gPrivateWin = null;
+    gIsSpeculativeConnected = null;
+    gTest = null;
   });
 });
 
-const test = {
-  search: gHost.substr(0, 2),
-  autofilledValue: `${gHost}/`
-};
-
 add_task(async function autofill_tests() {
   gIsSpeculativeConnected = false;
-  info(`Searching for '${test.search}'`);
-  await promiseAutocompleteResultPopup(test.search, window, true);
-  is(gURLBar.inputField.value, test.autofilledValue,
-     `Autofilled value is as expected for search '${test.search}'`);
+  info(`Searching for '${gTest.search}'`);
+  await promiseAutocompleteResultPopup(gTest.search, window, true);
+  is(gURLBar.inputField.value, gTest.autofilledValue,
+     `Autofilled value is as expected for search '${gTest.search}'`);
   is(gIsSpeculativeConnected, true, "Speculative connection should be called");
   await promiseSpeculativeConnection(gHttpServer);
   is(gHttpServer.connectionNumber, 1, `${gHttpServer.connectionNumber} speculative connection has been setup.`);
@@ -85,9 +92,9 @@ add_task(async function autofill_tests() {
 add_task(async function privateContext_test() {
   info("In private context.");
   gIsSpeculativeConnected = false;
-  info(`Searching for '${test.search}'`);
-  await promiseAutocompleteResultPopup(test.search, gPrivateWin, true);
-  is(gPrivateWin.gURLBar.inputField.value, test.autofilledValue,
-     `Autofilled value is as expected for search '${test.search}'`);
+  info(`Searching for '${gTest.search}'`);
+  await promiseAutocompleteResultPopup(gTest.search, gPrivateWin, true);
+  is(gPrivateWin.gURLBar.inputField.value, gTest.autofilledValue,
+     `Autofilled value is as expected for search '${gTest.search}'`);
   is(gIsSpeculativeConnected, false, "Speculative connection shouldn't be called");
 });
