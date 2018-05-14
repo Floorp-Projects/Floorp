@@ -597,7 +597,15 @@ protected:
   nsresult AdjustWhitespace();
   nsresult PinSelectionToNewBlock();
   void CheckInterlinePosition();
-  nsresult AdjustSelection(nsIEditor::EDirection aAction);
+
+  /**
+   * AdjustSelection() may adjust Selection range to nearest editable content.
+   * Despite of the name, this may change the DOM tree.  If it needs to create
+   * a <br> to put caret, this tries to create a <br> element.
+   *
+   * @param aAction     Maybe used to look for a good point to put caret.
+   */
+  MOZ_MUST_USE nsresult AdjustSelection(nsIEditor::EDirection aAction);
 
   /**
    * FindNearEditableNode() tries to find an editable node near aPoint.
