@@ -524,7 +524,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // clean up any empty nodes in the selection
-    nsresult rv = RemoveEmptyNodes();
+    nsresult rv = RemoveEmptyNodesInChangedRange();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -9006,7 +9006,7 @@ HTMLEditRules::InDifferentTableElements(nsINode* aNode1,
 
 
 nsresult
-HTMLEditRules::RemoveEmptyNodes()
+HTMLEditRules::RemoveEmptyNodesInChangedRange()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -9040,7 +9040,9 @@ HTMLEditRules::RemoveEmptyNodes()
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
   nsresult rv = iter->Init(mDocChangeRange);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   nsTArray<OwningNonNull<nsINode>> arrayOfEmptyNodes, arrayOfEmptyCites, skipList;
 
@@ -9058,45 +9060,47 @@ HTMLEditRules::RemoveEmptyNodes()
         skipList[idx] = parent;
       }
     } else {
-      bool bIsCandidate = false;
-      bool bIsEmptyNode = false;
-      bool bIsMailCite = false;
+      bool isCandidate = false;
+      bool isEmptyNode = false;
+      bool isMailCite = false;
 
       if (node->IsElement()) {
         if (node->IsHTMLElement(nsGkAtoms::body)) {
           // Don't delete the body
-        } else if ((bIsMailCite = HTMLEditUtils::IsMailCite(node)) ||
+        } else if ((isMailCite = HTMLEditUtils::IsMailCite(node)) ||
                    node->IsHTMLElement(nsGkAtoms::a) ||
                    HTMLEditUtils::IsInlineStyle(node) ||
                    HTMLEditUtils::IsList(node) ||
                    node->IsHTMLElement(nsGkAtoms::div)) {
           // Only consider certain nodes to be empty for purposes of removal
-          bIsCandidate = true;
+          isCandidate = true;
         } else if (HTMLEditUtils::IsFormatNode(node) ||
                    HTMLEditUtils::IsListItem(node) ||
                    node->IsHTMLElement(nsGkAtoms::blockquote)) {
           // These node types are candidates if selection is not in them.  If
           // it is one of these, don't delete if selection inside.  This is so
           // we can create empty headings, etc., for the user to type into.
-          bool bIsSelInNode;
-          rv = SelectionEndpointInNode(node, &bIsSelInNode);
-          NS_ENSURE_SUCCESS(rv, rv);
-          if (!bIsSelInNode) {
-            bIsCandidate = true;
+          bool isSelectionEndInNode;
+          rv = SelectionEndpointInNode(node, &isSelectionEndInNode);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+          if (!isSelectionEndInNode) {
+            isCandidate = true;
           }
         }
       }
 
-      if (bIsCandidate) {
+      if (isCandidate) {
         // We delete mailcites even if they have a solo br in them.  Other
         // nodes we require to be empty.
-        rv = HTMLEditorRef().IsEmptyNode(node, &bIsEmptyNode,
-                                         bIsMailCite, true);
+        rv = HTMLEditorRef().IsEmptyNode(node, &isEmptyNode,
+                                         isMailCite, true);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        if (bIsEmptyNode) {
-          if (bIsMailCite) {
+        if (isEmptyNode) {
+          if (isMailCite) {
             // mailcites go on a separate list from other empty nodes
             arrayOfEmptyCites.AppendElement(*node);
           } else {
@@ -9105,7 +9109,7 @@ HTMLEditRules::RemoveEmptyNodes()
         }
       }
 
-      if (!bIsEmptyNode && parent) {
+      if (!isEmptyNode && parent) {
         // put parent on skip list
         skipList.AppendElement(*parent);
       }
@@ -9118,6 +9122,9 @@ HTMLEditRules::RemoveEmptyNodes()
   for (OwningNonNull<nsINode>& delNode : arrayOfEmptyNodes) {
     if (HTMLEditorRef().IsModifiableNode(delNode)) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*delNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -9127,22 +9134,28 @@ HTMLEditRules::RemoveEmptyNodes()
   // Now delete the empty mailcites.  This is a separate step because we want
   // to pull out any br's and preserve them.
   for (OwningNonNull<nsINode>& delNode : arrayOfEmptyCites) {
-    bool bIsEmptyNode;
-    rv = HTMLEditorRef().IsEmptyNode(delNode, &bIsEmptyNode, false, true);
+    bool isEmptyNode;
+    rv = HTMLEditorRef().IsEmptyNode(delNode, &isEmptyNode, false, true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    if (!bIsEmptyNode) {
+    if (!isEmptyNode) {
       // We are deleting a cite that has just a br.  We want to delete cite,
       // but preserve br.
       RefPtr<Element> brElement =
         HTMLEditorRef().InsertBrElementWithTransaction(
                           SelectionRef(), EditorRawDOMPoint(delNode));
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
     }
     rv = HTMLEditorRef().DeleteNodeWithTransaction(*delNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

@@ -623,7 +623,19 @@ protected:
    * table element is its own nearest table element ancestor.
    */
   bool InDifferentTableElements(nsINode* aNode1, nsINode* aNode2);
-  nsresult RemoveEmptyNodes();
+
+  /**
+   * RemoveEmptyNodesInChangedRange() removes all empty nodes in
+   * mDocChangeRange.  However, if mail-cite node has only a <br> element,
+   * the node will be removed but <br> element is moved to where the
+   * mail-cite node was.
+   * XXX This method is expensive if mDocChangeRange is too wide and may
+   *     remove unexpected empty element, e.g., it was created by JS, but
+   *     we haven't touched it.  Cannot we remove this method and make
+   *     guarantee that empty nodes won't be created?
+   */
+  MOZ_MUST_USE nsresult RemoveEmptyNodesInChangedRange();
+
   nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
   nsresult UpdateDocChangeRange(nsRange* aRange);
 
