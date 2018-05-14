@@ -157,8 +157,8 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   return decl;
 }
 
-nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-nsDOMCSSAttributeDeclaration::GetServoCSSParsingEnvironment(
+nsDOMCSSDeclaration::ParsingEnvironment
+nsDOMCSSAttributeDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const
 {
   return {
