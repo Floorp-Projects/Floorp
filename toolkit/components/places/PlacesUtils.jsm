@@ -1872,7 +1872,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "favicons",
                                    "@mozilla.org/browser/favicon-service;1",
-                                   "mozIAsyncFavicons");
+                                   "nsIFaviconService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "bmsvc",
                                    "@mozilla.org/browser/nav-bookmarks-service;1",

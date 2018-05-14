@@ -71,7 +71,7 @@ fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixe
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
-fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
+fuzzy-if(cocoaWidget,128,9) skip-if(Android) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank
 == 1245450-1.html green-rect.html
 fuzzy(1,2000) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html

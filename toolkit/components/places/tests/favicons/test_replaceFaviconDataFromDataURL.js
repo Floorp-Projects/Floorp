@@ -2,7 +2,7 @@
  *    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests for mozIAsyncFavicons::replaceFaviconData()
+ * Tests for replaceFaviconData()
  */
 
 var iconsvc = PlacesUtils.favicons;

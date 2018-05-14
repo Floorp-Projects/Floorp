@@ -39,6 +39,7 @@ function TabboxPanel({
   activeTabId,
   cloneSelectedRequest = () => {},
   connector,
+  hideToggleButton,
   openLink,
   request,
   selectTab,
@@ -56,7 +57,8 @@ function TabboxPanel({
       onSelect: selectTab,
       renderOnlySelected: true,
       showAllTabsMenu: true,
-      sidebarToggleButton: {
+      sidebarToggleButton: hideToggleButton ? null :
+      {
         collapsed: false,
         collapsePaneTitle: COLLAPSE_DETAILS_PANE,
         expandPaneTitle: "",
@@ -144,6 +146,7 @@ TabboxPanel.propTypes = {
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
   sourceMapService: PropTypes.object,
+  hideToggleButton: PropTypes.boolean,
 };
 
 module.exports = TabboxPanel;
