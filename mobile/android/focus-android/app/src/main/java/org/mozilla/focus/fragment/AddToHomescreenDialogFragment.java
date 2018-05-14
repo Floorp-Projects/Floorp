@@ -33,13 +33,15 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
     private static final String URL = "url";
     private static final String TITLE = "title";
     private static final String BLOCKING_ENABLED = "blocking_enabled";
+    private static final String REQUEST_DESKTOP = "request_desktop";
 
-    public static AddToHomescreenDialogFragment newInstance(final String url, final String title, final boolean blockingEnabled) {
+    public static AddToHomescreenDialogFragment newInstance(final String url, final String title, final boolean blockingEnabled, final boolean requestDesktop) {
         AddToHomescreenDialogFragment frag = new AddToHomescreenDialogFragment();
         final Bundle args = new Bundle();
         args.putString(URL, url);
         args.putString(TITLE, title);
         args.putBoolean(BLOCKING_ENABLED, blockingEnabled);
+        args.putBoolean(REQUEST_DESKTOP, requestDesktop);
         frag.setArguments(args);
         return frag;
     }
@@ -50,6 +52,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
         final String url = getArguments().getString(URL);
         final String title = getArguments().getString(TITLE);
         final boolean blockingEnabled = getArguments().getBoolean(BLOCKING_ENABLED);
+        final boolean requestDesktop = getArguments().getBoolean(REQUEST_DESKTOP);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.DialogStyle);
         builder.setCancelable(true);
@@ -95,7 +98,7 @@ public class AddToHomescreenDialogFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 HomeScreen.installShortCut(getContext(), IconGenerator.generateLauncherIcon(getContext(), url), url,
-                        editableTitle.getText().toString().trim(), blockingEnabled);
+                        editableTitle.getText().toString().trim(), blockingEnabled, requestDesktop);
                 TelemetryWrapper.addToHomescreenShortcutEvent();
                 dismiss();
             }

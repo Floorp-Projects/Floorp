@@ -14,7 +14,6 @@
     <string name="pref_key_performance_block_javascript" translatable="false"><xliff:g id="preference_key">pref_performance_block_javascript</xliff:g></string>
     <string name="pref_key_performance_enable_cookies" translatable="false"><xliff:g id="preference_key">pref_performance_enable_cookies</xliff:g></string>
     <string name="pref_key_performance_block_images" translatable="false"><xliff:g id="preference_key">pref_performance_block_images</xliff:g></string>
-    <string name="pref_key_performance_request_desktop_site" translatable="false"><xliff:g id="preference_key">pref_performance_request_desktop_site</xliff:g></string>
 
     <string name="pref_key_default_browser" translatable="false"><xliff:g id="preference_key">pref_default_browser</xliff:g></string>
 

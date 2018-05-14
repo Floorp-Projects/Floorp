@@ -252,6 +252,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         });
 
         setBlockingEnabled(session.isBlockingEnabled());
+        setShouldRequestDesktop(session.shouldRequestDesktopSite());
 
         session.getLoading().observe(this, new AverageLoadTimeObserver(session));
 
@@ -709,7 +710,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             return;
         }
 
-        final AddToHomescreenDialogFragment addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(url, title, session.isBlockingEnabled());
+        final AddToHomescreenDialogFragment addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(url, title, session.isBlockingEnabled(), session.shouldRequestDesktopSite());
         addToHomescreenDialogFragment.setTargetFragment(BrowserFragment.this, 300);
 
         try {

@@ -98,8 +98,6 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
                         wasSessionsEmpty = false;
                     }
 
-                    getCurrentSessionForActivity().setRequestDesktopSite(Settings.getInstance(MainActivity.this).shouldRequestDesktopSite());
-
                     // We have at least one session. Show a fragment for the current session.
                     showBrowserScreenForCurrentSession();
                 }

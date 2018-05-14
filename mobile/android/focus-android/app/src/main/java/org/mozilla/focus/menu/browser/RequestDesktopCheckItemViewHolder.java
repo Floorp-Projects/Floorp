@@ -11,7 +11,6 @@ import android.widget.CompoundButton;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
-import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
 
 import mozilla.components.support.utils.ThreadUtils;
@@ -36,7 +35,6 @@ import mozilla.components.support.utils.ThreadUtils;
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         fragment.setShouldRequestDesktop(isChecked);
-        Settings.getInstance(fragment.getContext()).setShouldRequestDesktopSite(isChecked);
         TelemetryWrapper.desktopRequestCheckEvent(isChecked);
 
         // Delay closing the menu and reloading the website a bit so that the user can actually see

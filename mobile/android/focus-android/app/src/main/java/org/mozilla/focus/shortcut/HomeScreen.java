@@ -24,16 +24,17 @@ import java.util.UUID;
 public class HomeScreen {
     public static final String ADD_TO_HOMESCREEN_TAG = "add_to_homescreen";
     public static final String BLOCKING_ENABLED = "blocking_enabled";
+    public static final String REQUEST_DESKTOP = "request_desktop";
 
     /**
      * Create a shortcut for the given website on the device's home screen.
      */
-    public static void installShortCut(Context context, Bitmap icon, String url, String title, boolean blockingEnabled) {
+    public static void installShortCut(Context context, Bitmap icon, String url, String title, boolean blockingEnabled, boolean requestDesktop) {
         if (TextUtils.isEmpty(title.trim())) {
             title = generateTitleFromUrl(url);
         }
 
-        installShortCutViaManager(context, icon, url, title, blockingEnabled);
+        installShortCutViaManager(context, icon, url, title, blockingEnabled, requestDesktop);
 
         // Creating shortcut flow is different on Android up to 7, so we want to go
         // to the home screen manually where the user will see the new shortcut appear
@@ -50,7 +51,7 @@ public class HomeScreen {
      * On Android 8+ the user will have the ability to add the shortcut manually
      * or let the system place it automatically.
      */
-    private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled) {
+    private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled, boolean requestDesktop) {
         if (ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
             final IconCompat icon = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ?
                     IconCompat.createWithAdaptiveBitmap(bitmap) : IconCompat.createWithBitmap(bitmap);
@@ -58,17 +59,18 @@ public class HomeScreen {
                     .setShortLabel(title)
                     .setLongLabel(title)
                     .setIcon(icon)
-                    .setIntent(createShortcutIntent(context, url, blockingEnabled))
+                    .setIntent(createShortcutIntent(context, url, blockingEnabled, requestDesktop))
                     .build();
             ShortcutManagerCompat.requestPinShortcut(context, shortcut, null);
         }
     }
 
-    private static Intent createShortcutIntent(Context context, String url, boolean blockingEnabled) {
+    private static Intent createShortcutIntent(Context context, String url, boolean blockingEnabled, boolean requestDesktop) {
         final Intent shortcutIntent = new Intent(context, MainActivity.class);
         shortcutIntent.setAction(Intent.ACTION_VIEW);
         shortcutIntent.setData(Uri.parse(url));
         shortcutIntent.putExtra(BLOCKING_ENABLED, blockingEnabled);
+        shortcutIntent.putExtra(REQUEST_DESKTOP, requestDesktop);
         shortcutIntent.putExtra(ADD_TO_HOMESCREEN_TAG, ADD_TO_HOMESCREEN_TAG);
         return shortcutIntent;
     }

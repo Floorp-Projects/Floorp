@@ -85,7 +85,8 @@ public class SessionManager {
 
             if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
                 final boolean blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true);
-                createSession(context, Source.HOME_SCREEN, intent, intent.getDataString(), blockingEnabled);
+                final boolean requestDesktop = intent.getBooleanExtra(HomeScreen.REQUEST_DESKTOP, false);
+                createSession(context, Source.HOME_SCREEN, intent, intent.getDataString(), blockingEnabled, requestDesktop);
             } else {
                 createSession(context, Source.VIEW, intent, intent.getDataString());
             }
@@ -253,11 +254,12 @@ public class SessionManager {
         addSession(session);
     }
 
-    private void createSession(Context context, Source source, SafeIntent intent, String url, boolean blockingEnabled) {
+    private void createSession(Context context, Source source, SafeIntent intent, String url, boolean blockingEnabled, boolean requestDesktop) {
         final Session session = CustomTabConfig.isCustomTabIntent(intent)
                 ? new Session(url, CustomTabConfig.parseCustomTabIntent(context, intent))
                 : new Session(source, url);
         session.setBlockingEnabled(blockingEnabled);
+        session.setRequestDesktopSite(requestDesktop);
         addSession(session);
     }
 
