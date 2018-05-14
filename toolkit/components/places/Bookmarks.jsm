@@ -2442,7 +2442,7 @@ async function maybeInsertPlace(db, url) {
     `, { url: url.href,
          rev_host: PlacesUtils.getReversedHost(url),
          frecency: url.protocol == "place:" ? 0 : -1 });
-  await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
+  await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 }
 
 /**
@@ -2464,7 +2464,7 @@ async function maybeInsertManyPlaces(db, urls) {
        frecency: url.protocol == "place:" ? 0 : -1,
        maybeguid: PlacesUtils.history.makeGuid(),
      })));
-  await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
+  await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 }
 
 // Indicates whether we should write a tombstone for an item that has been
