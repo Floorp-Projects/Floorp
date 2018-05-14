@@ -257,7 +257,7 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
                  id
           FROM moz_origins
           WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
-                AND frecency <> 0
+                AND frecency >= :frecencyThreshold
                 ${conditions}
           UNION ALL
           SELECT :query_type,
@@ -268,7 +268,7 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
                  id
           FROM moz_origins
           WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
-                AND frecency <> 0
+                AND frecency >= :frecencyThreshold
                 ${conditions}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
@@ -308,7 +308,7 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost
-                AND frecency <> 0
+                AND frecency >= :frecencyThreshold
                 ${conditions1}
           UNION ALL
           SELECT :query_type,
@@ -319,7 +319,7 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost || 'www.'
-                AND frecency <> 0
+                AND frecency >= :frecencyThreshold
                 ${conditions2}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
@@ -2048,7 +2048,6 @@ Search.prototype = {
     // without a trailing slash, remove any trailing slash, too.
     let comment = stripHttpAndTrim(finalCompleteValue,
                                    !this._searchString.includes("/"));
-
     this._addMatch({
       value: this._strippedPrefix + autofilledValue,
       finalCompleteValue,
@@ -2284,6 +2283,7 @@ Search.prototype = {
     let opts = {
       query_type: QUERYTYPE_AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
+      frecencyThreshold: this._autofillFrecencyThreshold,
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2338,6 +2338,7 @@ Search.prototype = {
       query_type: QUERYTYPE_AUTOFILL_URL,
       revHost,
       strippedURL,
+      frecencyThreshold: this._autofillFrecencyThreshold,
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2354,6 +2355,16 @@ Search.prototype = {
       return [SQL_URL_BOOKMARKED_QUERY, opts];
     }
     return [SQL_URL_QUERY, opts];
+  },
+
+  get _autofillFrecencyThreshold() {
+    // Places with 0 frecency (and below) shouldn't be autofilled, so use 1 as a
+    // lower bound.
+    return Math.max(
+      1,
+      PlacesUtils.history.frecencyMean +
+        PlacesUtils.history.frecencyStandardDeviation
+    );
   },
 
   // The result is notified to the search listener on a timer, to chunk multiple
