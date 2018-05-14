@@ -43,7 +43,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace CanvasUtils {
 
-bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx)
+bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx, nsIPrincipal& aPrincipal)
 {
     // Do the rest of the checks only if privacy.resistFingerprinting is on.
     if (!nsContentUtils::ShouldResistFingerprinting()) {
@@ -58,25 +58,14 @@ bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx)
     nsPIDOMWindowOuter *win = aDocument->GetWindow();
     nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
 
-    if (sop) {
-        // Documents with system principal can always extract canvas data.
-        nsIPrincipal *principal = sop->GetPrincipal();
-        if (nsContentUtils::IsSystemPrincipal(principal)) {
-            return true;
-        }
-
-        if (principal) {
-            // Allow extension principals
-            nsAutoString addonId;
-            Unused << NS_WARN_IF(NS_FAILED(principal->GetAddonId(addonId)));
-            if (!addonId.IsEmpty()) {
-                return true;
-            }
-        }
+    // The system principal can always extract canvas data.
+    if (nsContentUtils::IsSystemPrincipal(&aPrincipal)) {
+        return true;
     }
 
-    // Always give permission to chrome scripts (e.g. Page Inspector).
-    if (nsContentUtils::ThreadsafeIsCallerChrome()) {
+    // Allow extension principals.
+    auto principal = BasePrincipal::Cast(&aPrincipal);
+    if (principal->AddonPolicy() || principal->ContentScriptAddonPolicy()) {
         return true;
     }
 

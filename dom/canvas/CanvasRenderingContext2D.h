@@ -203,10 +203,16 @@ public:
   bool DrawCustomFocusRing(mozilla::dom::Element& aElement);
   void Clip(const CanvasWindingRule& aWinding);
   void Clip(const CanvasPath& aPath, const CanvasWindingRule& aWinding);
-  bool IsPointInPath(JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding);
-  bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX, double aY, const CanvasWindingRule& aWinding);
-  bool IsPointInStroke(JSContext* aCx, double aX, double aY);
-  bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX, double aY);
+  bool IsPointInPath(JSContext* aCx, double aX, double aY,
+                     const CanvasWindingRule& aWinding,
+                     nsIPrincipal& aSubjectPrincipal);
+  bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath,
+                     double aX, double aY,
+                     const CanvasWindingRule& aWinding, nsIPrincipal&);
+  bool IsPointInStroke(JSContext* aCx, double aX, double aY,
+                       nsIPrincipal& aSubjectPrincipal);
+  bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath,
+                       double aX, double aY, nsIPrincipal&);
   void FillText(const nsAString& aText, double aX, double aY,
                 const Optional<double>& aMaxWidth,
                 mozilla::ErrorResult& aError);
@@ -248,7 +254,7 @@ public:
                     mozilla::ErrorResult& aError);
   already_AddRefed<ImageData>
     GetImageData(JSContext* aCx, double aSx, double aSy, double aSw, double aSh,
-                 mozilla::ErrorResult& aError);
+                 nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aError);
   void PutImageData(ImageData& aImageData,
                     double aDx, double aDy, mozilla::ErrorResult& aError);
   void PutImageData(ImageData& aImageData,
@@ -559,6 +565,7 @@ public:
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
+                             nsIPrincipal& aSubjectPrincipal,
                              JSObject** aRetval);
 
   nsresult PutImageData_explicit(int32_t aX, int32_t aY, uint32_t aW, uint32_t aH,
