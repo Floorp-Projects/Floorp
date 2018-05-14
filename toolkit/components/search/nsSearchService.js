@@ -1076,10 +1076,6 @@ function EngineURL(aType, aMethod, aTemplate, aResultDomain) {
   // If no resultDomain was specified in the engine definition file, use the
   // host from the template.
   this.resultDomain = aResultDomain || templateURI.host;
-  // We never want to return a "www." prefix, so eventually strip it.
-  if (this.resultDomain.startsWith("www.")) {
-    this.resultDomain = this.resultDomain.substr(4);
-  }
 }
 EngineURL.prototype = {
 

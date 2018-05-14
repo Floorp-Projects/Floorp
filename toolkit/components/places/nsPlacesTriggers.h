@@ -121,6 +121,9 @@
   "END" \
 )
 
+#define FRECENCY_DECAY_RATE 0.975f
+#define FRECENCY_DECAY_RATE_STR "0.975"
+
 // This trigger keeps frecencies in the moz_origins table in sync with
 // frecencies in moz_places.  However, we skip this when frecency changes are
 // due to frecency decay since (1) decay updates all frecencies at once, so this
@@ -134,7 +137,7 @@
     "OLD.frecency > 0 " \
     "AND is_frecency_decaying() " \
     "AND NEW.frecency < OLD.frecency " \
-    "AND (OLD.frecency - NEW.frecency) / OLD.frecency <= 0.975 " \
+    "AND (OLD.frecency - NEW.frecency) / OLD.frecency <= " FRECENCY_DECAY_RATE_STR \
   ") " \
   "BEGIN " \
     "UPDATE moz_origins " \
