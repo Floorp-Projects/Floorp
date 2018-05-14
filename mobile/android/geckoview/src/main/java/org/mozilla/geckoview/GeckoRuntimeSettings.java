@@ -231,6 +231,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         mNativeCrashReporting = settings.mNativeCrashReporting;
         mJavaCrashReporting = settings.mJavaCrashReporting;
+        mDebugPause = settings.mDebugPause;
     }
 
     /* package */ void flush() {
@@ -386,7 +387,7 @@ public final class GeckoRuntimeSettings implements Parcelable {
 
         mNativeCrashReporting = ParcelableUtils.readBoolean(source);
         mJavaCrashReporting = ParcelableUtils.readBoolean(source);
-        mJavaCrashReporting = ParcelableUtils.readBoolean(source);
+        mDebugPause = ParcelableUtils.readBoolean(source);
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR

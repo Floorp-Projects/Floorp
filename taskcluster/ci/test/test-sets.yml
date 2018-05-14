@@ -351,6 +351,18 @@ android-x86-tests:
     - xpcshell
     - geckoview
 
+android-x86-kvm-tests:
+    - crashtest
+    - geckoview-junit
+    - jsreftest
+    - mochitest
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-media
+    - reftest
+    - reftest-fonts
+
 devtools-tests:
     - mochitest-devtools-chrome
 
