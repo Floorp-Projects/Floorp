@@ -8156,10 +8156,6 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
   return NS_OK;
 }
 
-/**
- * ApplyBlockStyle() does whatever it takes to make the list of nodes into one
- * or more blocks of type aBlockTag.
- */
 nsresult
 HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                                nsAtom& aBlockTag)
@@ -8194,6 +8190,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       newBlock =
         HTMLEditorRef().ReplaceContainerAndCloneAttributesWithTransaction(
                           *curNode->AsElement(), aBlockTag);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!newBlock)) {
         return NS_ERROR_FAILURE;
       }
@@ -8230,6 +8229,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       RefPtr<Element> theBlock =
         HTMLEditorRef().CreateNodeWithTransaction(aBlockTag,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!theBlock)) {
         return NS_ERROR_FAILURE;
       }
@@ -8245,6 +8247,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         // Forget any previous block used for previous inline nodes
         curBlock = nullptr;
         nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*curNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -8261,6 +8266,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       curBlock =
         HTMLEditorRef().CreateNodeWithTransaction(aBlockTag,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curBlock)) {
         return NS_ERROR_FAILURE;
       }
@@ -8270,6 +8278,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsresult rv =
         HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                      *curBlock);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -8302,6 +8313,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
         curBlock =
           HTMLEditorRef().CreateNodeWithTransaction(
                             aBlockTag, splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!curBlock)) {
           return NS_ERROR_FAILURE;
         }
@@ -8322,6 +8336,9 @@ HTMLEditRules::ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
       nsresult rv =
         HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                      *curBlock);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
