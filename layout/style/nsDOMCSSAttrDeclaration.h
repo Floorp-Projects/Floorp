@@ -36,8 +36,8 @@ public:
   // is owned by our current style rule.
   mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
 
-  nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-    GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  nsDOMCSSDeclaration::ParsingEnvironment
+    GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
 
   mozilla::css::Rule* GetParentRule() override
   {
