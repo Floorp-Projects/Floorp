@@ -2060,7 +2060,7 @@ UpdateService.prototype = {
         AUSTLMY.pingCheckCode(this._pingSuffix,
                               AUSTLMY.CHK_INVALID_DEFAULT_URL);
       } else if (this.disabledByPolicy) {
-        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       } else if (!hasUpdateMutex()) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_MUTEX);
       } else if (!this.canCheckForUpdates) {
