@@ -54,15 +54,11 @@ impl SceneProperties {
     ) -> LayoutTransform {
         match *property {
             PropertyBinding::Value(value) => value,
-            PropertyBinding::Binding(ref key) => {
+            PropertyBinding::Binding(ref key, v) => {
                 self.transform_properties
                     .get(&key.id)
                     .cloned()
-                    .unwrap_or_else(|| {
-                        warn!("Property binding has an invalid value.");
-                        debug!("key={:?}", key);
-                        LayoutTransform::identity()
-                    })
+                    .unwrap_or(v)
             }
         }
     }
@@ -70,20 +66,15 @@ impl SceneProperties {
     /// Get the current value for a float property.
     pub fn resolve_float(
         &self,
-        property: &PropertyBinding<f32>,
-        default_value: f32
+        property: &PropertyBinding<f32>
     ) -> f32 {
         match *property {
             PropertyBinding::Value(value) => value,
-            PropertyBinding::Binding(ref key) => {
+            PropertyBinding::Binding(ref key, v) => {
                 self.float_properties
                     .get(&key.id)
                     .cloned()
-                    .unwrap_or_else(|| {
-                        warn!("Property binding has an invalid value.");
-                        debug!("key={:?}", key);
-                        default_value
-                    })
+                    .unwrap_or(v)
             }
         }
     }

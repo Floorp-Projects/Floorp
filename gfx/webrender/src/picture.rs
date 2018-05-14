@@ -163,7 +163,7 @@ impl PicturePrimitive {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
                 match *filter {
                     FilterOp::Opacity(ref binding, ref mut value) => {
-                        *value = properties.resolve_float(binding, *value);
+                        *value = properties.resolve_float(binding);
                     }
                     _ => {}
                 }
