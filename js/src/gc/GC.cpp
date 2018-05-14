@@ -7813,6 +7813,8 @@ GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
 
+    MOZ_ASSERT_IF(reason == JS::gcreason::EVICT_NURSERY,
+                  !rt->mainContextFromOwnThread()->suppressGC);
     if (rt->mainContextFromOwnThread()->suppressGC)
         return;
 
