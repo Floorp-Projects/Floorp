@@ -74,14 +74,14 @@ inline int32_t PseudoCompareType(nsIFrame* aFrame, nsIContent** aContent)
 /* static */ bool
 nsGenConList::NodeAfter(const nsGenConNode* aNode1, const nsGenConNode* aNode2)
 {
-  nsIFrame *frame1 = aNode1->mPseudoFrame;
-  nsIFrame *frame2 = aNode2->mPseudoFrame;
+  nsIFrame* frame1 = aNode1->mPseudoFrame;
+  nsIFrame* frame2 = aNode2->mPseudoFrame;
   if (frame1 == frame2) {
     NS_ASSERTION(aNode2->mContentIndex != aNode1->mContentIndex, "identical");
     return aNode1->mContentIndex > aNode2->mContentIndex;
   }
-  nsIContent *content1;
-  nsIContent *content2;
+  nsIContent* content1;
+  nsIContent* content2;
   int32_t pseudoType1 = PseudoCompareType(frame1, &content1);
   int32_t pseudoType2 = PseudoCompareType(frame2, &content2);
   if (pseudoType1 == 0 || pseudoType2 == 0) {
@@ -99,7 +99,7 @@ nsGenConList::NodeAfter(const nsGenConNode* aNode1, const nsGenConNode* aNode2)
       return pseudoType1 == 1;
     }
   }
-  // XXX Switch to the frame version of DoCompareTreePosition?
+
   int32_t cmp = nsLayoutUtils::DoCompareTreePosition(content1, content2,
                                                      pseudoType1, -pseudoType2);
   MOZ_ASSERT(cmp != 0, "same content, different frames");
