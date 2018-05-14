@@ -148,6 +148,8 @@ public:
    *                  affect the return value.
    */
   bool SetContentState(nsIContent* aContent, EventStates aState);
+
+  void NativeAnonymousContentRemoved(nsIContent* aAnonContent);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
 
   bool EventStatusOK(WidgetGUIEvent* aEvent);
@@ -1087,6 +1089,14 @@ protected:
   void HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
 private:
+  // Removes a node from the :hover / :active chain if needed, notifying if the
+  // node is not a NAC subtree.
+  //
+  // Only meant to be called from ContentRemoved and
+  // NativeAnonymousContentRemoved.
+  void RemoveNodeFromChainIfNeeded(EventStates aState,
+                                   nsIContent* aContentRemoved,
+                                   bool aNotify);
 
   bool IsEventOutsideDragThreshold(WidgetInputEvent* aEvent) const;
 
