@@ -4138,7 +4138,9 @@ HTMLEditRules::WillRemoveList(bool aOrdered,
       bool bOutOfList;
       do {
         rv = PopListItem(*curNode->AsContent(), &bOutOfList);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       } while (!bOutOfList); // keep popping it out until it's not in a list anymore
     } else if (HTMLEditUtils::IsList(curNode)) {
       // node is a list, move list items out
@@ -5019,7 +5021,9 @@ HTMLEditRules::WillOutdent(bool* aCancel,
           curBlockQuoteIsIndentedWithCSS = false;
         }
         rv = PopListItem(*curNode->AsContent());
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         continue;
       }
       // Do we have a blockquote that we are already committed to removing?
@@ -5101,7 +5105,9 @@ HTMLEditRules::WillOutdent(bool* aCancel,
           while (child) {
             if (HTMLEditUtils::IsListItem(child)) {
               rv = PopListItem(*child);
-              NS_ENSURE_SUCCESS(rv, rv);
+              if (NS_WARN_IF(NS_FAILED(rv))) {
+                return rv;
+              }
             } else if (HTMLEditUtils::IsList(child)) {
               // We have an embedded list, so move it out from under the parent
               // list. Be sure to put it after the parent list because this
@@ -9243,14 +9249,9 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // init out params
   if (aOutOfList) {
     *aOutOfList = false;
   }
-
-  nsCOMPtr<nsIContent> kungFuDeathGrip(&aListItem);
-  Unused << kungFuDeathGrip;
-
 
   if (NS_WARN_IF(!aListItem.GetParent()) ||
       NS_WARN_IF(!aListItem.GetParent()->GetParentNode()) ||
@@ -9260,20 +9261,26 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
 
   // if it's first or last list item, don't need to split the list
   // otherwise we do.
-  bool bIsFirstListItem = HTMLEditorRef().IsFirstEditableChild(&aListItem);
-  bool bIsLastListItem = HTMLEditorRef().IsLastEditableChild(&aListItem);
+  bool isFirstListItem = HTMLEditorRef().IsFirstEditableChild(&aListItem);
+  bool isLastListItem = HTMLEditorRef().IsLastEditableChild(&aListItem);
 
   nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
-  if (!bIsFirstListItem && !bIsLastListItem) {
-    EditorDOMPoint atListItem(&aListItem);
+
+  // If it's at middle of parent list element, split the parent list element.
+  // Then, aListItem becomes the first list item of the right list element.
+  nsCOMPtr<nsIContent> listItem(&aListItem);
+  if (!isFirstListItem && !isLastListItem) {
+    EditorDOMPoint atListItem(listItem);
     if (NS_WARN_IF(!atListItem.IsSet())) {
       return NS_ERROR_INVALID_ARG;
     }
     MOZ_ASSERT(atListItem.IsSetAndValid());
-
-    // split the list
     ErrorResult error;
     leftListNode = HTMLEditorRef().SplitNodeWithTransaction(atListItem, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -9287,25 +9294,38 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
   MOZ_ASSERT(pointToInsertListItem.IsSetAndValid());
 
   // But when the list item was the first child of the right list, it should
-  // be inserted into the next sibling of the list.  This allows user to hit
+  // be inserted between the both list elements.  This allows user to hit
   // Enter twice at a list item breaks the parent list node.
-  if (!bIsFirstListItem) {
+  if (!isFirstListItem) {
     DebugOnly<bool> advanced = pointToInsertListItem.AdvanceOffset();
     NS_WARNING_ASSERTION(advanced,
       "Failed to advance offset to right list node");
   }
 
   nsresult rv =
-    HTMLEditorRef().MoveNodeWithTransaction(aListItem, pointToInsertListItem);
+    HTMLEditorRef().MoveNodeWithTransaction(*listItem, pointToInsertListItem);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   // unwrap list item contents if they are no longer in a list
+  // XXX If the parent list element is a child of another list element
+  //     (although invalid tree), the list item element won't be unwrapped.
+  //     That makes the parent ancestor element tree valid, but might be
+  //     unexpected result.
+  // XXX If aListItem is <dl> or <dd> and current parent is <ul> or <ol>,
+  //     the list items won't be unwrapped.  If aListItem is <li> and its
+  //     current parent is <dl>, there is same issue.
   if (!HTMLEditUtils::IsList(pointToInsertListItem.GetContainer()) &&
-      HTMLEditUtils::IsListItem(&aListItem)) {
+      HTMLEditUtils::IsListItem(listItem)) {
     rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-                           *aListItem.AsElement());
+                           *listItem->AsElement());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
