@@ -231,7 +231,7 @@ impl OpacityBinding {
         let mut new_opacity = 1.0;
 
         for binding in &self.bindings {
-            let opacity = scene_properties.resolve_float(binding, 1.0);
+            let opacity = scene_properties.resolve_float(binding);
             new_opacity = new_opacity * opacity;
         }
 
@@ -247,6 +247,11 @@ pub struct VisibleImageTile {
     pub tile_offset: TileOffset,
     pub handle: GpuCacheHandle,
     pub edge_flags: EdgeAaSegmentMask,
+}
+
+#[derive(Debug)]
+pub struct VisibleGradientTile {
+    pub handle: GpuCacheHandle,
 }
 
 #[derive(Debug)]
@@ -285,6 +290,8 @@ pub enum BrushKind {
         end_radius: f32,
         ratio_xy: f32,
         stretch_size: LayoutSize,
+        tile_spacing: LayoutSize,
+        visible_tiles: Vec<VisibleGradientTile>,
     },
     LinearGradient {
         gradient_index: CachedGradientIndex,
@@ -295,6 +302,8 @@ pub enum BrushKind {
         start_point: LayoutPoint,
         end_point: LayoutPoint,
         stretch_size: LayoutSize,
+        tile_spacing: LayoutSize,
+        visible_tiles: Vec<VisibleGradientTile>,
     },
     Border {
         request: ImageRequest,
@@ -1423,7 +1432,7 @@ impl PrimitiveStore {
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
     ) {
-        let mut is_tiled_image = false;
+        let mut is_tiled = false;
         let metadata = &mut self.cpu_metadata[prim_index.0];
         #[cfg(debug_assertions)]
         {
@@ -1467,7 +1476,7 @@ impl PrimitiveStore {
                         // Set if we need to request the source image from the cache this frame.
                         if let Some(image_properties) = image_properties {
                             *current_epoch = image_properties.epoch;
-                            is_tiled_image = image_properties.tiling.is_some();
+                            is_tiled = image_properties.tiling.is_some();
 
                             // If the opacity changed, invalidate the GPU cache so that
                             // the new color for this primitive gets uploaded.
@@ -1481,7 +1490,7 @@ impl PrimitiveStore {
                                 image_properties.descriptor.is_opaque &&
                                 opacity_binding.current == 1.0;
 
-                            if *tile_spacing != LayoutSize::zero() && !is_tiled_image {
+                            if *tile_spacing != LayoutSize::zero() && !is_tiled {
                                 *source = ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
                                     size: DeviceIntSize::new(
@@ -1496,7 +1505,7 @@ impl PrimitiveStore {
                             // we need to pre-render it to the render task cache.
                             if let Some(rect) = sub_rect {
                                 // We don't properly support this right now.
-                                debug_assert!(!is_tiled_image);
+                                debug_assert!(!is_tiled);
                                 *source = ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
                                     size: rect.size,
@@ -1698,29 +1707,107 @@ impl PrimitiveStore {
                             );
                         }
                     }
-                    BrushKind::RadialGradient { gradient_index, stops_range, .. } => {
-                        let stops_handle = &mut frame_state.cached_gradients[gradient_index.0].handle;
-                        if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
-                            let gradient_builder = GradientGpuBlockBuilder::new(
-                                stops_range,
-                                pic_context.display_list,
-                            );
-                            gradient_builder.build(
-                                false,
-                                &mut request,
+                    BrushKind::RadialGradient {
+                        gradient_index,
+                        stops_range,
+                        center,
+                        start_radius,
+                        end_radius,
+                        ratio_xy,
+                        extend_mode,
+                        stretch_size,
+                        tile_spacing,
+                        ref mut visible_tiles,
+                        ..
+                    } => {
+                        build_gradient_stops_request(
+                            gradient_index,
+                            stops_range,
+                            false,
+                            frame_state,
+                            pic_context,
+                        );
+
+                        if tile_spacing != LayoutSize::zero() {
+                            is_tiled = true;
+
+                            decompose_repeated_primitive(
+                                visible_tiles,
+                                metadata,
+                                &stretch_size,
+                                &tile_spacing,
+                                prim_run_context,
+                                frame_context,
+                                frame_state,
+                                &mut |rect, clip_rect, mut request| {
+                                    request.push(*rect);
+                                    request.push(*clip_rect);
+                                    request.push([
+                                        center.x,
+                                        center.y,
+                                        start_radius,
+                                        end_radius,
+                                    ]);
+                                    request.push([
+                                        ratio_xy,
+                                        pack_as_float(extend_mode as u32),
+                                        stretch_size.width,
+                                        stretch_size.height,
+                                    ]);
+                                    request.write_segment(*rect, [0.0; 4]);
+                                },
                             );
                         }
                     }
-                    BrushKind::LinearGradient { gradient_index, stops_range, reverse_stops, .. } => {
-                        let stops_handle = &mut frame_state.cached_gradients[gradient_index.0].handle;
-                        if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
-                            let gradient_builder = GradientGpuBlockBuilder::new(
-                                stops_range,
-                                pic_context.display_list,
-                            );
-                            gradient_builder.build(
-                                reverse_stops,
-                                &mut request,
+                    BrushKind::LinearGradient {
+                        gradient_index,
+                        stops_range,
+                        reverse_stops,
+                        start_point,
+                        end_point,
+                        extend_mode,
+                        stretch_size,
+                        tile_spacing,
+                        ref mut visible_tiles,
+                        ..
+                    } => {
+
+                        build_gradient_stops_request(
+                            gradient_index,
+                            stops_range,
+                            reverse_stops,
+                            frame_state,
+                            pic_context,
+                        );
+
+                        if tile_spacing != LayoutSize::zero() {
+                            is_tiled = true;
+
+                            decompose_repeated_primitive(
+                                visible_tiles,
+                                metadata,
+                                &stretch_size,
+                                &tile_spacing,
+                                prim_run_context,
+                                frame_context,
+                                frame_state,
+                                &mut |rect, clip_rect, mut request| {
+                                    request.push(*rect);
+                                    request.push(*clip_rect);
+                                    request.push([
+                                        start_point.x,
+                                        start_point.y,
+                                        end_point.x,
+                                        end_point.y,
+                                    ]);
+                                    request.push([
+                                        pack_as_float(extend_mode as u32),
+                                        stretch_size.width,
+                                        stretch_size.height,
+                                        0.0,
+                                    ]);
+                                    request.write_segment(*rect, [0.0; 4]);
+                                }
                             );
                         }
                     }
@@ -1751,7 +1838,7 @@ impl PrimitiveStore {
             }
         }
 
-        if is_tiled_image {
+        if is_tiled {
             // we already requested each tile's gpu data.
             return;
         }
@@ -2477,6 +2564,80 @@ impl PrimitiveStore {
         }
 
         result
+    }
+}
+
+fn build_gradient_stops_request(
+    gradient_index: CachedGradientIndex,
+    stops_range: ItemRange<GradientStop>,
+    reverse_stops: bool,
+    frame_state: &mut FrameBuildingState,
+    pic_context: &PictureContext
+) {
+    let stops_handle = &mut frame_state.cached_gradients[gradient_index.0].handle;
+    if let Some(mut request) = frame_state.gpu_cache.request(stops_handle) {
+        let gradient_builder = GradientGpuBlockBuilder::new(
+            stops_range,
+            pic_context.display_list,
+        );
+        gradient_builder.build(
+            reverse_stops,
+            &mut request,
+        );
+    }
+}
+
+fn decompose_repeated_primitive(
+    visible_tiles: &mut Vec<VisibleGradientTile>,
+    metadata: &mut PrimitiveMetadata,
+    stretch_size: &LayoutSize,
+    tile_spacing: &LayoutSize,
+    prim_run_context: &PrimitiveRunContext,
+    frame_context: &FrameBuildingContext,
+    frame_state: &mut FrameBuildingState,
+    callback: &mut FnMut(&LayoutRect, &LayoutRect, GpuDataRequest),
+) {
+    visible_tiles.clear();
+
+    // Tighten the clip rect because decomposing the repeated image can
+    // produce primitives that are partially covering the original image
+    // rect and we want to clip these extra parts out.
+    let tight_clip_rect = metadata.local_clip_rect.intersection(&metadata.local_rect).unwrap();
+
+    let visible_rect = compute_conservative_visible_rect(
+        prim_run_context,
+        frame_context,
+        &tight_clip_rect
+    );
+    let stride = *stretch_size + *tile_spacing;
+
+    for_each_repetition(
+        &metadata.local_rect,
+        &visible_rect,
+        &stride,
+        &mut |origin, _| {
+
+            let mut handle = GpuCacheHandle::new();
+            if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
+                let rect = LayoutRect {
+                    origin: *origin,
+                    size: *stretch_size,
+                };
+
+                callback(&rect, &tight_clip_rect, request);
+            }
+
+            visible_tiles.push(VisibleGradientTile { handle });
+        }
+    );
+
+    if visible_tiles.is_empty() {
+        // At this point if we don't have tiles to show it means we could probably
+        // have done a better a job at culling during an earlier stage.
+        // Clearing the screen rect has the effect of "culling out" the primitive
+        // from the point of view of the batch builder, and ensures we don't hit
+        // assertions later on because we didn't request any image.
+        metadata.screen_rect = None;
     }
 }
 
