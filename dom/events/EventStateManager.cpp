@@ -5369,6 +5369,51 @@ EventStateManager::ResetLastOverForContent(
 }
 
 void
+EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
+                                               nsIContent* aContentRemoved)
+{
+  MOZ_ASSERT(aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE);
+  if (!aContentRemoved->IsElement() ||
+      !aContentRemoved->AsElement()->State().HasState(aState)) {
+    return;
+  }
+
+  nsCOMPtr<nsIContent>& leaf =
+    aState == NS_EVENT_STATE_HOVER ? mHoverContent : mActiveContent;
+
+  MOZ_ASSERT(leaf);
+  // XBL Likes to unbind content without notifying, thus the
+  // NODE_IS_ANONYMOUS_ROOT check...
+  MOZ_ASSERT(nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+               leaf, aContentRemoved) ||
+             leaf->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT));
+
+  nsIContent* newLeaf = aContentRemoved->GetFlattenedTreeParent();
+  MOZ_ASSERT_IF(newLeaf,
+                newLeaf->IsElement() &&
+                newLeaf->AsElement()->State().HasState(aState));
+  if (aContentRemoved->IsRootOfNativeAnonymousSubtree()) {
+    // We don't update the removed content's state here, since removing NAC
+    // happens from layout and we don't really want to notify at that point or
+    // what not.
+    //
+    // Also, NAC is not observable and NAC being removed will go away soon.
+    leaf = newLeaf;
+  } else {
+    SetContentState(newLeaf, aState);
+  }
+  MOZ_ASSERT(leaf == newLeaf);
+}
+
+void
+EventStateManager::NativeAnonymousContentRemoved(nsIContent* aContent)
+{
+  MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree());
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent);
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent);
+}
+
+void
 EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   /*
@@ -5392,29 +5437,8 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
   if (fm)
     fm->ContentRemoved(aDocument, aContent);
 
-  if (aContent->IsElement() &&
-      aContent->AsElement()->State().HasState(NS_EVENT_STATE_HOVER)) {
-    MOZ_ASSERT(mHoverContent);
-    // XBL Likes to unbind content without notifying, thus the
-    // NODE_IS_ANONYMOUS_ROOT check...
-    MOZ_ASSERT(nsContentUtils::ContentIsFlattenedTreeDescendantOf(mHoverContent,
-                                                                  aContent) ||
-               mHoverContent->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT));
-    // Since hover is hierarchical, set the current hover to the
-    // content's parent node.
-    SetContentState(aContent->GetFlattenedTreeParent(), NS_EVENT_STATE_HOVER);
-  }
-
-  if (aContent->IsElement() &&
-      aContent->AsElement()->State().HasState(NS_EVENT_STATE_ACTIVE)) {
-    MOZ_ASSERT(mActiveContent);
-    MOZ_ASSERT(nsContentUtils::ContentIsFlattenedTreeDescendantOf(mActiveContent,
-                                                                  aContent) ||
-               mHoverContent->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT));
-    // Active is hierarchical, so set the current active to the
-    // content's parent node.
-    SetContentState(aContent->GetFlattenedTreeParent(), NS_EVENT_STATE_ACTIVE);
-  }
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent);
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent);
 
   if (sDragOverContent &&
       sDragOverContent->OwnerDoc() == aContent->OwnerDoc() &&
