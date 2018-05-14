@@ -29,8 +29,7 @@ const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
 const PREF_EM_AUTOUPDATE_DEFAULT      = "extensions.update.autoUpdateDefault";
 const PREF_EM_STRICT_COMPATIBILITY    = "extensions.strictCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
-const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
-const PREF_APP_UPDATE_AUTO            = "app.update.auto";
+const PREF_SYS_ADDON_UPDATE_ENABLED   = "extensions.systemAddon.update.enabled";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
@@ -1249,8 +1248,7 @@ var AddonManagerInternal = {
 
   // Returns true if System Addons should be updated
   systemUpdateEnabled() {
-    if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) ||
-        !Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO)) {
+    if (!Services.prefs.getBoolPref(PREF_SYS_ADDON_UPDATE_ENABLED)) {
       return false;
     }
     if (Services.policies && !Services.policies.isAllowed("SysAddonUpdate")) {
