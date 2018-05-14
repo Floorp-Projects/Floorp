@@ -8385,6 +8385,9 @@ HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
                       *pointToInsert.GetChild(),
                       aStartOfDeepestRightNode,
                       SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
     "Failed to split the node for insert the element");
   return splitNodeResult;

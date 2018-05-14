@@ -528,9 +528,9 @@ protected:
    *                                    the point to insert the element.
    */
   template<typename PT, typename CT>
-  SplitNodeResult MaybeSplitAncestorsForInsertWithTransaction(
-                    nsAtom& aTag,
-                    const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
+  MOZ_MUST_USE SplitNodeResult
+  MaybeSplitAncestorsForInsertWithTransaction(
+    nsAtom& aTag, const EditorDOMPointBase<PT, CT>& aStartOfDeepestRightNode);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
