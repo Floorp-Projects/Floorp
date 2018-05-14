@@ -2672,9 +2672,13 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       // Are they both text nodes?  If so, join them!
       if (startNode == stepbrother && startNode->GetAsText() &&
           sibling->GetAsText()) {
-        EditorDOMPoint pt =
+        EditorDOMPoint pt;
+        nsresult rv =
           JoinNearestEditableNodesWithTransaction(*sibling,
-                                                  *startNode->AsContent());
+                                                  *startNode->AsContent(), &pt);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         if (NS_WARN_IF(!pt.IsSet())) {
           return NS_ERROR_FAILURE;
         }
@@ -3516,8 +3520,12 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
   if (mergeLists || leftBlock->NodeInfo()->NameAtom() ==
                     rightBlock->NodeInfo()->NameAtom()) {
     // Nodes are same type.  merge them.
-    EditorDOMPoint pt =
-      JoinNearestEditableNodesWithTransaction(*leftBlock, *rightBlock);
+    EditorDOMPoint pt;
+    nsresult rv =
+      JoinNearestEditableNodesWithTransaction(*leftBlock, *rightBlock, &pt);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (pt.IsSet() && mergeLists) {
       RefPtr<Element> newBlock =
         ConvertListType(rightBlock, existingList, nsGkAtoms::li);
@@ -8382,28 +8390,34 @@ HTMLEditRules::MaybeSplitAncestorsForInsertWithTransaction(
   return splitNodeResult;
 }
 
-EditorDOMPoint
-HTMLEditRules::JoinNearestEditableNodesWithTransaction(nsIContent& aNodeLeft,
-                                                       nsIContent& aNodeRight)
+nsresult
+HTMLEditRules::JoinNearestEditableNodesWithTransaction(
+                 nsIContent& aNodeLeft,
+                 nsIContent& aNodeRight,
+                 EditorDOMPoint* aNewFirstChildOfRightNode)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(aNewFirstChildOfRightNode);
 
   // Caller responsible for left and right node being the same type
   nsCOMPtr<nsINode> parent = aNodeLeft.GetParentNode();
   if (NS_WARN_IF(!parent)) {
-    return EditorDOMPoint();
+    return NS_ERROR_FAILURE;
   }
-  int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
   nsCOMPtr<nsINode> rightParent = aNodeRight.GetParentNode();
 
   // If they don't have the same parent, first move the right node to after the
   // left one
   if (parent != rightParent) {
+    int32_t parOffset = parent->ComputeIndexOf(&aNodeLeft);
     nsresult rv =
       HTMLEditorRef().MoveNodeWithTransaction(
                         aNodeRight, EditorRawDOMPoint(parent, parOffset));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorDOMPoint();
+      return rv;
     }
   }
 
@@ -8414,29 +8428,36 @@ HTMLEditRules::JoinNearestEditableNodesWithTransaction(nsIContent& aNodeLeft,
     // For lists, merge shallow (wouldn't want to combine list items)
     nsresult rv =
       HTMLEditorRef().JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorDOMPoint();
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
     }
-    return ret;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    *aNewFirstChildOfRightNode = Move(ret);
+    return NS_OK;
   }
 
   // Remember the last left child, and first right child
   nsCOMPtr<nsIContent> lastLeft =
     HTMLEditorRef().GetLastEditableChild(aNodeLeft);
   if (NS_WARN_IF(!lastLeft)) {
-    return EditorDOMPoint();
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIContent> firstRight =
     HTMLEditorRef().GetFirstEditableChild(aNodeRight);
   if (NS_WARN_IF(!firstRight)) {
-    return EditorDOMPoint();
+    return NS_ERROR_FAILURE;
   }
 
   // For list items, divs, etc., merge smart
   nsresult rv = HTMLEditorRef().JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorDOMPoint();
+    return rv;
   }
 
   if (lastLeft && firstRight &&
@@ -8445,9 +8466,16 @@ HTMLEditRules::JoinNearestEditableNodesWithTransaction(nsIContent& aNodeLeft,
        (lastLeft->IsElement() && firstRight->IsElement() &&
         CSSEditUtils::ElementsSameStyle(lastLeft->AsElement(),
                                         firstRight->AsElement())))) {
-    return JoinNearestEditableNodesWithTransaction(*lastLeft, *firstRight);
+    nsresult rv =
+      JoinNearestEditableNodesWithTransaction(*lastLeft, *firstRight,
+                                              aNewFirstChildOfRightNode);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    return NS_OK;
   }
-  return ret;
+  *aNewFirstChildOfRightNode = Move(ret);
+  return NS_OK;
 }
 
 Element*
