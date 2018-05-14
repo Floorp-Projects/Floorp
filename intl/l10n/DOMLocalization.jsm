@@ -644,7 +644,8 @@ class DOMLocalization extends Localization {
       const overlayTranslations = [];
 
       const getTranslationsForItems = async l10nItems => {
-        const keys = l10nItems.map(l10nItem => [l10nItem.l10nId, l10nItem.l10nArgs]);
+        const keys = l10nItems.map(
+          l10nItem => ({id: l10nItem.l10nId, args: l10nItem.l10nArgs}));
         const translations = await this.formatMessages(keys);
 
         // Here we want to separate out elements that require DOM Overlays.
