@@ -116,7 +116,7 @@
 
     <!-- Preference category for settings related to Mozilla -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_mozilla_summary">About %1$s, help, feedback</string>
+    <string name="preference_mozilla_summary">About %1$s, help</string>
 
     <!-- Preference category for ad blocking and tracking protection settings -->
     <string name="preference_category_tracking_protection">Tracking Protection</string>
