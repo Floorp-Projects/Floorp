@@ -102,6 +102,10 @@ check_and_add_gcc_warning('-Wno-error=free-nonheap-object')
 # Would be a pain to fix all occurrences, for very little gain
 check_and_add_gcc_warning('-Wno-error=multistatement-macros')
 
+# Disable the -Werror for return-std-move because of a false positive
+# on nsTAutoStringN: https://bugs.llvm.org/show_bug.cgi?id=37249
+check_and_add_gcc_warning('-Wno-error=return-std-move')
+
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
     '-Wformat', when=depends(target)(lambda t: t.kernel != 'WINNT'))

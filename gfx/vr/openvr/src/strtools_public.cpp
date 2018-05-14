@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sstream>
+#include <iostream>
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -142,8 +144,8 @@ std::wstring UTF8to16(const char * in)
 
 void strcpy_safe( char *pchBuffer, size_t unBufferSizeBytes, const char *pchSource )
 {
-	pchBuffer[ unBufferSizeBytes - 1 ] = '\0';
 	strncpy( pchBuffer, pchSource, unBufferSizeBytes - 1 );
+	pchBuffer[unBufferSizeBytes - 1] = '\0';
 }
 
 
@@ -195,13 +197,6 @@ uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t 
 	}
 
 	return unLen;
-}
-
-void BufferToStdString( std::string & sDest, const char *pchBuffer, uint32_t unBufferLen )
-{
-	sDest.resize( unBufferLen + 1 );
-	memcpy( const_cast< char* >( sDest.c_str() ), pchBuffer, unBufferLen );
-	const_cast< char* >( sDest.c_str() )[ unBufferLen ] = '\0';
 }
 
 // Commented out by Mozilla, please see README.mozilla
@@ -435,5 +430,21 @@ void V_StripExtension( std::string &in )
 			in.resize( test );
 		}
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Tokenizes a string into a vector of strings
+//-----------------------------------------------------------------------------
+std::vector<std::string> TokenizeString( const std::string & sString, char cToken )
+{
+	std::vector<std::string> vecStrings;
+	std::istringstream stream( sString );
+	std::string s;
+	while ( std::getline( stream, s, cToken ) )
+	{
+		vecStrings.push_back( s );
+	}
+	return vecStrings;
 }
 

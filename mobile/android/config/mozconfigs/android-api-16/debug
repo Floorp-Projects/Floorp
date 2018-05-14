@@ -2,7 +2,6 @@
 
 # Global options
 ac_add_options --enable-debug
-ac_add_options --enable-marionette
 
 # Android
 # Warning: Before increasing the with-android-min-sdk value, please note several places in and out

@@ -223,7 +223,7 @@ fn write_stacking_context(
             FilterOp::Invert(x) => { filters.push(Yaml::String(format!("invert({})", x))) }
             FilterOp::Opacity(x, _) => {
                 filters.push(Yaml::String(format!("opacity({})",
-                                                  properties.resolve_float(&x, 1.0))))
+                                                  properties.resolve_float(&x))))
             }
             FilterOp::Saturate(x) => { filters.push(Yaml::String(format!("saturate({})", x))) }
             FilterOp::Sepia(x) => { filters.push(Yaml::String(format!("sepia({})", x))) }

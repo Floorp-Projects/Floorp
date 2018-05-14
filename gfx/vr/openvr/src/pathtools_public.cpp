@@ -188,11 +188,8 @@ bool Path_IsAbsolute( const std::string & sPath )
 
 
 /** Makes an absolute path from a relative path and a base path */
-std::string Path_MakeAbsolute( const std::string & sRelativePath, const std::string & sBasePath, char slash )
+std::string Path_MakeAbsolute( const std::string & sRelativePath, const std::string & sBasePath )
 {
-	if( slash == 0 )
-		slash = Path_GetSlash();
-
 	if( Path_IsAbsolute( sRelativePath ) )
 		return sRelativePath;
 	else
@@ -200,7 +197,7 @@ std::string Path_MakeAbsolute( const std::string & sRelativePath, const std::str
 		if( !Path_IsAbsolute( sBasePath ) )
 			return "";
 
-		std::string sCompacted = Path_Compact( Path_Join( sBasePath, sRelativePath, slash ), slash );
+		std::string sCompacted = Path_Compact( Path_Join( sBasePath, sRelativePath ) );
 		if( Path_IsAbsolute( sCompacted ) )
 			return sCompacted;
 		else
@@ -464,10 +461,11 @@ bool Path_IsDirectory( const std::string & sPath )
 bool Path_IsAppBundle( const std::string & sPath )
 {
 #if defined(OSX)
-	NSBundle *bundle = [ NSBundle bundleWithPath: [ NSString stringWithUTF8String:sPath.c_str() ] ];
-	bool bisAppBundle = ( nullptr != bundle );
-	[ bundle release ];
-	return bisAppBundle;
+	@autoreleasepool {
+		NSBundle *bundle = [ NSBundle bundleWithPath: [ NSString stringWithUTF8String:sPath.c_str() ] ];
+		bool bisAppBundle = ( nullptr != bundle );
+		return bisAppBundle;
+	}
 #else
 	return false;
 #endif
@@ -655,7 +653,7 @@ bool Path_WriteBinaryFile(const std::string &strFilename, unsigned char *pData, 
 		fclose(f);
 	}
 
-	return written = nSize ? true : false;
+	return written == nSize ? true : false;
 }
 
 std::string Path_ReadTextFile( const std::string &strFilename )

@@ -6,8 +6,6 @@
 config = {
     "deprecated_sdk_path": True,
     "robocop_package_name": "org.mozilla.roboexample.test",
-    "marionette_address": "localhost:2828",
-    "marionette_test_manifest": "unit-tests.ini",
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidarm_4_3/releng.manifest",
     "emulator_manifest": """
         [
