@@ -334,4 +334,6 @@ XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_typeAheadLinksOnly",
   "accessibility.typeaheadfind.linksonly");
 XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_findAsYouType",
   "accessibility.typeaheadfind");
+XPCOMUtils.defineLazyPreferenceGetter(RemoteFinder, "_manualFAYT",
+  "accessibility.typeaheadfind.manual");
 
