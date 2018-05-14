@@ -1195,7 +1195,6 @@ private:
   Accessible() = delete;
   Accessible(const Accessible&) = delete;
   Accessible& operator =(const Accessible&) = delete;
-
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Accessible,
