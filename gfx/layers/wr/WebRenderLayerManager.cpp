@@ -570,6 +570,12 @@ WebRenderLayerManager::SetTransactionIdAllocator(TransactionIdAllocator* aAlloca
   mTransactionIdAllocator = aAllocator;
 }
 
+TransactionId
+WebRenderLayerManager::GetLastTransactionId()
+{
+  return mLatestTransactionId;
+}
+
 void
 WebRenderLayerManager::AddDidCompositeObserver(DidCompositeObserver* aObserver)
 {

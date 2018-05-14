@@ -148,6 +148,7 @@ function NetworkEventMessage({
       selectTab: (tabId) => {
         dispatch(actions.selectNetworkMessageTab(tabId));
       },
+      hideToggleButton: true,
     })
   );
 

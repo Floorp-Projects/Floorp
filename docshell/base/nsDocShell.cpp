@@ -214,7 +214,6 @@
 #ifdef MOZ_PLACES
 #include "nsIFaviconService.h"
 #include "mozIPlacesPendingOperation.h"
-#include "mozIAsyncFavicons.h"
 #endif
 
 #if NS_PRINT_PREVIEW
@@ -9121,7 +9120,7 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
   }
 
 #ifdef MOZ_PLACES
-  nsCOMPtr<mozIAsyncFavicons> favSvc =
+  nsCOMPtr<nsIFaviconService> favSvc =
     do_GetService("@mozilla.org/browser/favicon-service;1");
   if (favSvc) {
     favSvc->CopyFavicons(aOldURI, aNewURI,
