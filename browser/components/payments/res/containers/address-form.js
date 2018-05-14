@@ -21,10 +21,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.pageTitle = document.createElement("h1");
     this.genericErrorText = document.createElement("div");
 
-    this.cancelButton = document.createElement("button");
-    this.cancelButton.id = "address-page-cancel-button";
-    this.cancelButton.addEventListener("click", this);
-
     this.backButton = document.createElement("button");
     this.backButton.addEventListener("click", this);
 
@@ -67,7 +63,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       });
 
       this.appendChild(this.genericErrorText);
-      this.appendChild(this.cancelButton);
       this.appendChild(this.backButton);
       this.appendChild(this.saveButton);
       // Only call the connected super callback(s) once our markup is fully
@@ -77,7 +72,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
   }
 
   render(state) {
-    this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
     this.saveButton.textContent = this.dataset.saveButtonLabel;
 
@@ -86,8 +80,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       page,
       savedAddresses,
     } = state;
-
-    this.backButton.hidden = page.onboardingWizard;
 
     if (page.addressFields) {
       this.setAttribute("address-fields", page.addressFields);
@@ -122,10 +114,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
 
   onClick(evt) {
     switch (evt.target) {
-      case this.cancelButton: {
-        paymentRequest.cancel();
-        break;
-      }
       case this.backButton: {
         this.requestStore.setState({
           page: {
@@ -154,7 +142,6 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       errorStateChange: {
         page: {
           id: "address-page",
-          onboardingWizard: page.onboardingWizard,
           error: this.dataset.errorGenericSave,
         },
       },
