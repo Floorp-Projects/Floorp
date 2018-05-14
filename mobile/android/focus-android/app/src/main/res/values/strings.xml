@@ -118,9 +118,6 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">About %1$s, help, feedback</string>
 
-    <!-- Preference description of the Privacy and Security Menu -->
-    <string name="preference_privacy_and_security_description">Enable these options to remove ads, make web pages load faster, extend battery life, and save data</string>
-
     <!-- Preference category for ad blocking and tracking protection settings -->
     <string name="preference_category_tracking_protection">Tracking Protection</string>
 
