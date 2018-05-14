@@ -7192,6 +7192,19 @@
     "kind": "count",
     "description": "Count of TelemetrySession scheduler ticks that were delayed long enough to suspect sleep."
   },
+  "TELEMETRY_EVENT_PING_SENT": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
+    "bug_numbers": [1460595],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "periodic",
+      "max",
+      "shutdown"
+    ],
+    "description": "Number of 'event' pings sent, by reason"
+  },
   "TELEMETRY_TEST_FLAG": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],

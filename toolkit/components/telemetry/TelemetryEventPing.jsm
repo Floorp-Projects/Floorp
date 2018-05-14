@@ -194,6 +194,7 @@ var TelemetryEventPing = {
     };
 
     this._lastSendTime = Utils.monotonicNow();
+    Telemetry.getHistogramById("TELEMETRY_EVENT_PING_SENT").add(reason);
     Policy.sendPing(this.EVENT_PING_TYPE, payload, options);
   },
 
