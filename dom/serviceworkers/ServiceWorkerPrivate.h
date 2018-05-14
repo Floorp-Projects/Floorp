@@ -16,12 +16,19 @@
 class nsIInterceptedChannel;
 
 namespace mozilla {
+
+class JSObjectHolder;
+
 namespace dom {
 
 class ClientInfoAndState;
 class KeepAliveToken;
 class ServiceWorkerInfo;
 class ServiceWorkerRegistrationInfo;
+
+namespace ipc {
+class StructuredCloneData;
+} // namespace ipc
 
 class LifeCycleEventCallback : public Runnable
 {
@@ -82,8 +89,7 @@ public:
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
   nsresult
-  SendMessageEvent(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                   const Sequence<JSObject*>& aTransferable,
+  SendMessageEvent(ipc::StructuredCloneData&& aData,
                    const ClientInfoAndState& aClientInfoAndState);
 
   // This is used to validate the worker script and continue the installation
@@ -199,6 +205,9 @@ private:
   already_AddRefed<KeepAliveToken>
   CreateEventKeepAliveToken();
 
+  JSObject*
+  GetOrCreateSandbox(JSContext* aCx);
+
   // The info object owns us. It is possible to outlive it for a brief period
   // of time if there are pending waitUntil promises, in which case it
   // will be null and |SpawnWorkerIfNeeded| will always fail.
@@ -214,6 +223,11 @@ private:
   // We keep a token for |dom.serviceWorkers.idle_timeout| seconds to give the
   // worker a grace period after each event.
   RefPtr<KeepAliveToken> mIdleKeepAliveToken;
+
+  // Sandbox global used to re-pack structured clone data before sending
+  // to the service worker thread.  Ideally we would remove this and just
+  // make StructuredCloneData thread safe enough to pass to the worker thread.
+  RefPtr<JSObjectHolder> mSandbox;
 
   uint64_t mDebuggerCount;
 
