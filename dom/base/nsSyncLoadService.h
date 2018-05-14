@@ -19,7 +19,7 @@ class nsILoadGroup;
 class nsIStreamListener;
 class nsIURI;
 class nsIPrincipal;
-class nsIDOMDocument;
+class nsIDocument;
 class nsIChannel;
 
 class nsSyncLoadService
@@ -46,7 +46,7 @@ public:
                                  nsILoadGroup *aLoadGroup,
                                  bool aForceToXML,
                                  mozilla::net::ReferrerPolicy aReferrerPolicy,
-                                 nsIDOMDocument** aResult);
+                                 nsIDocument** aResult);
 
     /**
      * Read input stream aIn in chunks and deliver synchronously to aListener.

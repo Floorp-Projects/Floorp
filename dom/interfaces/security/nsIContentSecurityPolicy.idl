@@ -7,9 +7,10 @@
 
 interface nsIURI;
 interface nsIDocShell;
-interface nsIDOMDocument;
 interface nsIEventTarget;
 interface nsIPrincipal;
+
+webidl Document;
 
 /**
  * nsIContentSecurityPolicy
@@ -207,7 +208,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    *  * aDocument (preferred), or if no document is available, then provide
    *  * aPrincipal
    */
-  void setRequestContext(in nsIDOMDocument aDocument,
+  void setRequestContext(in Document aDocument,
                          in nsIPrincipal aPrincipal);
 
   /**

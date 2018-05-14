@@ -11,10 +11,11 @@ interface nsIInputStream;
 interface imgIContainer;
 interface imgILoader;
 interface imgICache;
-interface nsIDOMDocument;
 interface imgIScriptedNotificationObserver;
 interface imgINotificationObserver;
 interface imgIContainerCallback;
+
+webidl Document;
 
 [scriptable, builtinclass, uuid(4c2383a4-931c-484d-8c4a-973590f66e3f)]
 interface imgITools : nsISupports
@@ -118,7 +119,7 @@ interface imgITools : nsISupports
      * @param doc
      *        A document. Must not be null.
      */
-    imgILoader getImgLoaderForDocument(in nsIDOMDocument doc);
+    imgILoader getImgLoaderForDocument(in Document doc);
 
     /**
      * getImgLoaderForDocument
@@ -130,7 +131,7 @@ interface imgITools : nsISupports
      *        when there is no way to obtain a relevant document for
      *        the current context in which a cache is desired.
      */
-    imgICache getImgCacheForDocument(in nsIDOMDocument doc);
+    imgICache getImgCacheForDocument(in Document doc);
 
     /**
      * encodeCroppedImage

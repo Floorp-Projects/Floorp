@@ -38,7 +38,8 @@ class OriginAttributes;
 
 interface nsIURI;
 interface nsIContentSecurityPolicy;
-interface nsIDOMDocument;
+
+webidl Document;
 
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
@@ -165,7 +166,7 @@ interface nsIPrincipal : nsISerializable
      * Please note if aDocument is null, then setRequestContext on the
      * CSP object is called using the current principal.
      */
-    [noscript] nsIContentSecurityPolicy ensureCSP(in nsIDOMDocument aDocument);
+    [noscript] nsIContentSecurityPolicy ensureCSP(in Document aDocument);
 
     /**
      * A speculative Content Security Policy associated with this
@@ -186,7 +187,7 @@ interface nsIPrincipal : nsISerializable
      * Please note if aDocument is null, then setRequestContext on the
      * speculative CSP object is called using the current principal.
      */
-    [noscript] nsIContentSecurityPolicy ensurePreloadCSP(in nsIDOMDocument aDocument);
+    [noscript] nsIContentSecurityPolicy ensurePreloadCSP(in Document aDocument);
 
     /**
      * The CSP of the principal in JSON notation.

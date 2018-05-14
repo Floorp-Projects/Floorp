@@ -59,7 +59,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsITimer.h"
 // notifications
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
 #include "nsISelectionController.h" //for the enums

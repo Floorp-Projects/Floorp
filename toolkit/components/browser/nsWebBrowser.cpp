@@ -18,7 +18,6 @@
 #include "gfxContext.h"
 #include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -748,7 +747,7 @@ nsWebBrowser::GetSessionHistoryXPCOM(nsISupports** aSessionHistory)
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetDocument(nsIDOMDocument** aDocument)
+nsWebBrowser::GetDocument(nsIDocument** aDocument)
 {
   NS_ENSURE_STATE(mDocShell);
 
@@ -1101,7 +1100,7 @@ nsWebBrowser::SaveDocument(nsISupports* aDocumentish,
   if (aDocumentish) {
     doc = aDocumentish;
   } else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
+    nsCOMPtr<nsIDocument> domDoc;
     GetDocument(getter_AddRefs(domDoc));
     doc = domDoc.forget();
   }

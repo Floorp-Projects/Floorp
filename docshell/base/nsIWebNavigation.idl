@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
 interface nsIInputStream;
 interface nsISHistory;
 interface nsIURI;
 interface nsIPrincipal;
 interface nsIChildSHistory;
+webidl Document;
 
 %{ C++
 #include "mozilla/dom/ChildSHistory.h"
@@ -366,7 +366,7 @@ interface nsIWebNavigation : nsISupports
    * blank document if there is none.  This attribute never returns null except
    * for unexpected error situations.
    */
-  readonly attribute nsIDOMDocument document;
+  readonly attribute Document document;
 
   /**
    * The currently loaded URI or null.

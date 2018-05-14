@@ -5,10 +5,10 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
-interface nsIDocument;
 interface nsIDOMNode;
 interface nsISHEntry;
 interface nsIPrintSettings;
+webidl Document;
 
 
 %{ C++
@@ -42,7 +42,7 @@ interface nsIContentViewer : nsISupports
 
   attribute nsIDocShell container;
 
-  [noscript,notxpcom,nostdcall] void loadStart(in nsIDocument aDoc);
+  [noscript,notxpcom,nostdcall] void loadStart(in Document aDoc);
   void loadComplete(in nsresult aStatus);
   [noscript] readonly attribute boolean loadCompleted;
 
@@ -129,17 +129,17 @@ interface nsIContentViewer : nsISupports
    * Returns the same thing as getDocument(), but for use from script
    * only.  C++ consumers should use getDocument().
    */
-  readonly attribute nsISupports DOMDocument;
+  readonly attribute Document DOMDocument;
 
   /**
-   * Returns DOMDocument as nsIDocument and without addrefing.
+   * Returns DOMDocument without addrefing.
    */
-  [noscript,notxpcom,nostdcall] nsIDocument getDocument();
+  [noscript,notxpcom,nostdcall] Document getDocument();
 
   /**
    * Allows setting the document.
    */
-  [noscript,nostdcall] void setDocument(in nsIDocument aDocument);
+  [noscript,nostdcall] void setDocument(in Document aDocument);
 
   [noscript] void getBounds(in nsIntRectRef aBounds);
   [noscript] void setBounds([const] in nsIntRectRef aBounds);
@@ -218,7 +218,7 @@ interface nsIContentViewer : nsISupports
   [noscript] readonly attribute nsIPresShellPtr presShell;
   [noscript] readonly attribute nsPresContextPtr presContext;
   // aDocument must not be null.
-  [noscript] void setDocumentInternal(in nsIDocument aDocument,
+  [noscript] void setDocumentInternal(in Document aDocument,
                                       in boolean aForceReuseInnerWindow);
   /**
    * Find the view to use as the container view for MakeWindow. Returns

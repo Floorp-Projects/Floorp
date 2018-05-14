@@ -38,7 +38,6 @@ class nsDocumentFragment;
 class nsHTMLDocument;
 class nsITransferable;
 class nsIClipboard;
-class nsIDOMDocument;
 class nsILinkHandler;
 class nsTableWrapperFrame;
 class nsIDOMRange;

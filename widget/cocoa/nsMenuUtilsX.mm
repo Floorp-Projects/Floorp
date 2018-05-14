@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/XULCommandEvent.h"

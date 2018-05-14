@@ -8,7 +8,6 @@
 #include "txXPathTreeWalker.h"
 
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsSyncLoadService.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -35,7 +34,7 @@ txParseDocumentFromURI(const nsAString& aHref,
 
     // Raw pointer, we want the resulting txXPathNode to hold a reference to
     // the document.
-    nsIDOMDocument* theDocument = nullptr;
+    nsIDocument* theDocument = nullptr;
     nsAutoSyncOperation sync(loaderDocument);
     rv = nsSyncLoadService::LoadDocument(documentURI,
                                          nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,

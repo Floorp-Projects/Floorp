@@ -268,13 +268,12 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 }
 
 static GtkWindow*
-GetGtkWindow(nsIDOMDocument *aDocument)
+GetGtkWindow(nsIDocument *aDocument)
 {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-    if (!doc)
+    if (!aDocument)
         return nullptr;
 
-    nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
+    nsCOMPtr<nsIPresShell> presShell = aDocument->GetShell();
     if (!presShell)
         return nullptr;
 

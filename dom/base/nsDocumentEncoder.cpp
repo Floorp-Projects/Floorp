@@ -21,7 +21,6 @@
 #include "mozilla/Encoding.h"
 #include "nsIOutputStream.h"
 #include "nsRange.h"
-#include "nsIDOMDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
@@ -246,17 +245,11 @@ nsDocumentEncoder::~nsDocumentEncoder()
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::Init(nsIDOMDocument* aDocument,
+nsDocumentEncoder::Init(nsIDocument* aDocument,
                         const nsAString& aMimeType,
                         uint32_t aFlags)
 {
-  if (!aDocument)
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-  return NativeInit(doc, aMimeType, aFlags);
+  return NativeInit(aDocument, aMimeType, aFlags);
 }
 
 NS_IMETHODIMP
@@ -1152,7 +1145,7 @@ public:
   nsHTMLCopyEncoder();
   virtual ~nsHTMLCopyEncoder();
 
-  NS_IMETHOD Init(nsIDOMDocument* aDocument, const nsAString& aMimeType, uint32_t aFlags) override;
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType, uint32_t aFlags) override;
 
   // overridden methods from nsDocumentEncoder
   NS_IMETHOD SetSelection(Selection* aSelection) override;
@@ -1200,7 +1193,7 @@ nsHTMLCopyEncoder::~nsHTMLCopyEncoder()
 }
 
 NS_IMETHODIMP
-nsHTMLCopyEncoder::Init(nsIDOMDocument* aDocument,
+nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
                         const nsAString& aMimeType,
                         uint32_t aFlags)
 {
@@ -1211,8 +1204,7 @@ nsHTMLCopyEncoder::Init(nsIDOMDocument* aDocument,
   Initialize();
 
   mIsCopying = true;
-  mDocument = do_QueryInterface(aDocument);
-  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+  mDocument = aDocument;
 
   // Hack, hack! Traditionally, the caller passes text/unicode, which is
   // treated as "guess text/html or text/plain" in this context. (It has a

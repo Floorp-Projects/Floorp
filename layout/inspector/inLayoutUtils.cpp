@@ -7,7 +7,6 @@
 #include "inLayoutUtils.h"
 
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
@@ -32,16 +31,14 @@ inLayoutUtils::GetEventStateManagerFor(Element& aElement)
   return presContext->EventStateManager();
 }
 
-nsIDOMDocument*
+nsIDocument*
 inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {
     nsCOMPtr<nsIDocument> doc = content->GetComposedDoc();
     if (doc) {
-      nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc->GetSubDocumentFor(content)));
-
-      return domdoc;
+      return doc->GetSubDocumentFor(content);
     }
   }
 
