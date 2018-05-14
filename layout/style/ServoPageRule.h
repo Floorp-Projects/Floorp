@@ -35,8 +35,8 @@ protected:
   DeclarationBlock* GetCSSDeclaration(Operation aOperation) final;
   nsresult SetCSSDeclaration(DeclarationBlock* aDecl) final;
   nsIDocument* DocToUpdate() final;
-  nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
+  nsDOMCSSDeclaration::ParsingEnvironment
+  GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal) const final;
 
 private:
   // For accessing the constructor.

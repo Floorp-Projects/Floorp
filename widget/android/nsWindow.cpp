@@ -823,19 +823,6 @@ class nsWindow::LayerViewSupport final
 public:
     typedef LayerSession::Compositor::Natives<LayerViewSupport> Base;
 
-    template<class Functor>
-    static void OnNativeCall(Functor&& aCall)
-    {
-        if (aCall.IsTarget(&LayerViewSupport::CreateCompositor)) {
-            // This call is blocking.
-            nsAppShell::SyncRunEvent(nsAppShell::LambdaEvent<Functor>(
-                    mozilla::Move(aCall)), &LayerViewEvent::MakeEvent);
-            return;
-        }
-
-        MOZ_CRASH("Unexpected call");
-    }
-
     static LayerViewSupport*
     FromNative(const LayerSession::Compositor::LocalRef& instance)
     {
@@ -928,20 +915,6 @@ public:
         }
 
         mWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
-    }
-
-    void CreateCompositor(int32_t aWidth, int32_t aHeight,
-                          jni::Object::Param aSurface)
-    {
-        MOZ_ASSERT(NS_IsMainThread());
-        if (!mWindow) {
-            return; // Already shut down.
-        }
-
-        mSurface = aSurface;
-        mWindow->CreateLayerManager(aWidth, aHeight);
-
-        mCompositorPaused = false;
     }
 
     void SyncPauseCompositor()
@@ -1423,6 +1396,14 @@ nsWindow::Create(nsIWidget* aParent,
         mParent = parent;
     }
 
+    // A default size of 1x1 confuses MobileViewportManager, so
+    // use 0x0 instead. This is also a little more fitting since
+    // we don't yet have a surface yet (and therefore a valid size)
+    // and 0x0 is usually recognized as invalid.
+    Resize(0, 0, false);
+
+    CreateLayerManager();
+
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
@@ -1859,7 +1840,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild*, LayersBackend, LayerManagerPe
 }
 
 void
-nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
+nsWindow::CreateLayerManager()
 {
     if (mLayerManager) {
         return;
@@ -1875,7 +1856,8 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
     gfxPlatform::GetPlatform();
 
     if (ShouldUseOffMainThreadCompositing()) {
-        CreateCompositor(aCompositorWidth, aCompositorHeight);
+        LayoutDeviceIntRect rect = GetBounds();
+        CreateCompositor(rect.Width(), rect.Height());
         if (mLayerManager) {
             return;
         }

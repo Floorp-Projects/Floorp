@@ -29,9 +29,14 @@
 
     let invalidCred = {type: "Magic", id: base64ToBytes("AAA=")};
     let unknownCred = {type: "public-key", id: base64ToBytes("AAA=")};
+    let validCred = null;
 
     function requestGetAssertion(params) {
       return navigator.credentials.get(params);
+    }
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
     }
 
     function arrivingHereIsBad(aResult) {
@@ -39,11 +44,15 @@
     }
 
     function expectNotAllowedError(aResult) {
-      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
+      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    function expectInvalidStateError(aResult) {
+      ok(aResult.toString().startsWith("InvalidStateError"), "Expecting a InvalidStateError, got " + aResult);
     }
 
     function expectTypeError(aResult) {
-      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
+      ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError, got " + aResult);
     }
 
     function expectAbortError(aResult) {
@@ -58,6 +67,19 @@
       ]});
     });
 
+    // Set up a valid credential
+    add_task(async () => {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+      };
+
+      return navigator.credentials.create({publicKey})
+      .then(res => validCred = {type: "public-key", id: res.rawId} );
+    });
+
     // Test basic good call, but without giving a credential so expect failures
     // this is OK by the standard, but not supported by U2F-backed authenticators
     // like the soft token in use here.
@@ -68,10 +90,24 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
+        .catch(expectInvalidStateError);
     });
 
-    // Test with an unexpected option
+    // Test with a valid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: [validCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test with an unexpected option. That won't stop anything, and we'll
+    // fail with InvalidState just as if we had no valid credentials -- which
+    // we don't.
     add_task(async () => {
       let publicKey = {
         challenge: gAssertionChallenge,
@@ -80,7 +116,20 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
+        .catch(expectInvalidStateError);
+    });
+
+    // Test with an unexpected option but a valid credential
+    add_task(async () => {
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        unknownValue: "hi",
+        allowCredentials: [validCred]
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
     });
 
     // Test with an invalid credential
@@ -104,7 +153,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
+        .catch(expectInvalidStateError);
     });
 
     // Test with an unexpected option and an invalid credential
@@ -121,6 +170,8 @@
     });
 
     // Test with an empty credential list
+    // This will return InvalidStateError since the softotken consents, but
+    // there are no valid credentials.
     add_task(async () => {
       let publicKey = {
         challenge: gAssertionChallenge,
@@ -129,7 +180,7 @@
 
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
-        .catch(expectNotAllowedError);
+        .catch(expectInvalidStateError);
     });
 
     add_task(() => {

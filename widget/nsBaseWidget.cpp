@@ -1323,6 +1323,12 @@ nsBaseWidget::CreateCompositorSession(int aWidth,
     bool enableAL = gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS);
     options.SetUseAdvancedLayers(enableAL);
 
+#ifdef MOZ_WIDGET_ANDROID
+    if (!GetNativeData(NS_JAVA_SURFACE)) {
+      options.SetInitiallyPaused(true);
+    }
+#endif
+
     RefPtr<LayerManager> lm;
     if (options.UseWebRender()) {
       lm = new WebRenderLayerManager(this);

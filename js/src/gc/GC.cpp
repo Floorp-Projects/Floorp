@@ -7496,6 +7496,7 @@ IsDeterministicGCReason(JS::gcreason::Reason reason)
       case JS::gcreason::DESTROY_RUNTIME:
       case JS::gcreason::LAST_DITCH:
       case JS::gcreason::TOO_MUCH_MALLOC:
+      case JS::gcreason::TOO_MUCH_WASM_MEMORY:
       case JS::gcreason::ALLOC_TRIGGER:
       case JS::gcreason::DEBUG_GC:
       case JS::gcreason::CC_FORCED:
@@ -7812,6 +7813,8 @@ GCRuntime::minorGC(JS::gcreason::Reason reason, gcstats::PhaseKind phase)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapBusy());
 
+    MOZ_ASSERT_IF(reason == JS::gcreason::EVICT_NURSERY,
+                  !rt->mainContextFromOwnThread()->suppressGC);
     if (rt->mainContextFromOwnThread()->suppressGC)
         return;
 

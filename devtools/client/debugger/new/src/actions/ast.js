@@ -112,15 +112,16 @@ function setPausePoints(sourceId) {
       return;
     }
 
-    const pausePoints = await (0, _parser.getPausePoints)(source.id);
+    const pausePoints = await (0, _parser.getPausePoints)(sourceId);
 
-    if ((0, _devtoolsSourceMap.isGeneratedId)(source.id)) {
-      await client.setPausePoints(source.id, pausePoints);
+    if ((0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
+      await client.setPausePoints(sourceId, pausePoints);
     }
 
     dispatch({
       type: "SET_PAUSE_POINTS",
-      source: source.toJS(),
+      sourceText: source.text,
+      sourceId,
       pausePoints
     });
   };

@@ -24,7 +24,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual Relation RelationByType(RelationType aType) override;
 
@@ -59,7 +59,7 @@ public:
   virtual ~XULLabelTextLeafAccessible() { }
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 };
 
@@ -74,7 +74,7 @@ public:
   XULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 };
 
@@ -86,7 +86,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeLinkState() const override;
 
   // ActionAccessible

@@ -6314,6 +6314,13 @@ AddMarkObservers(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
+#ifdef ENABLE_WASM_GC
+    if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
+        JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
+        return false;
+    }
+#endif
+
     // WeakCaches are not swept during a minor GC. To prevent nursery-allocated
     // contents from having the mark bits be deceptively black until the second
     // GC, they would need to be marked weakly (cf NurseryAwareHashMap). It is

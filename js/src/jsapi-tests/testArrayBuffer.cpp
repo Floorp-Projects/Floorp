@@ -226,44 +226,15 @@ hasExpectedLength(JSContext* cx, JS::HandleObject obj, uint32_t* len)
 
 END_TEST(testArrayBuffer_externalize)
 
-BEGIN_TEST(testArrayBuffer_refcountedContents)
-{
-    RefCountedData data("One two three four");
-    JS::RootedObject buffer(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
-        &RefCountedData::incCallback, &RefCountedData::decCallback, &data));
-    CHECK(buffer);
-    CHECK_EQUAL(data.refcount(), size_t(2));
-
-    uint32_t len;
-    bool isShared;
-    uint8_t* bufferData;
-    js::GetArrayBufferLengthAndData(buffer, &len, &isShared, &bufferData);
-    CHECK_EQUAL(len, data.len());
-    CHECK(bufferData == data.contents());
-    CHECK(strcmp(reinterpret_cast<char*>(bufferData), data.asString()) == 0);
-
-    buffer = nullptr;
-    JS_GC(cx);
-    JS_GC(cx);
-    CHECK_EQUAL(data.refcount(), size_t(1));
-
-    data.decref();
-    CHECK_NULL(data.contents());
-    CHECK_EQUAL(data.refcount(), size_t(0));
-
-    return true;
-}
-END_TEST(testArrayBuffer_refcountedContents)
-
 BEGIN_TEST(testArrayBuffer_customFreeFunc)
 {
-    RefCountedData data("One two three four");
-    // Without passing a ref function, the buffer takes over the one existing
-    // reference to the data.
+    ExternalData data("One two three four");
+
+    // The buffer takes ownership of the data.
     JS::RootedObject buffer(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
-        nullptr, &RefCountedData::decCallback, &data));
+        &ExternalData::freeCallback, &data));
     CHECK(buffer);
-    CHECK_EQUAL(data.refcount(), size_t(1));
+    CHECK(!data.wasFreed());
 
     uint32_t len;
     bool isShared;
@@ -276,8 +247,7 @@ BEGIN_TEST(testArrayBuffer_customFreeFunc)
     buffer = nullptr;
     JS_GC(cx);
     JS_GC(cx);
-    CHECK_NULL(data.contents());
-    CHECK_EQUAL(data.refcount(), size_t(0));
+    CHECK(data.wasFreed());
 
     return true;
 }
@@ -285,13 +255,13 @@ END_TEST(testArrayBuffer_customFreeFunc)
 
 BEGIN_TEST(testArrayBuffer_staticContents)
 {
-    RefCountedData data("One two three four");
-    // When passing neither a ref nor unref function, the buffer doesn't own
-    // any reference.
+    ExternalData data("One two three four");
+
+    // When not passing a free function, the buffer doesn't own the data.
     JS::RootedObject buffer(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
-        nullptr, nullptr));
+        nullptr));
     CHECK(buffer);
-    CHECK_EQUAL(data.refcount(), size_t(1));
+    CHECK(!data.wasFreed());
 
     uint32_t len;
     bool isShared;
@@ -304,21 +274,20 @@ BEGIN_TEST(testArrayBuffer_staticContents)
     buffer = nullptr;
     JS_GC(cx);
     JS_GC(cx);
-    CHECK_EQUAL(data.refcount(), size_t(1));
+    CHECK(!data.wasFreed());
 
-    data.decref();
+    data.free();
     return true;
 }
 END_TEST(testArrayBuffer_staticContents)
 
 BEGIN_TEST(testArrayBuffer_stealDetachExternal)
 {
-    RefCountedData data("One two three four");
+    ExternalData data("One two three four");
     JS::RootedObject buffer(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
-        &RefCountedData::incCallback, &RefCountedData::decCallback, &data));
+        &ExternalData::freeCallback, &data));
     CHECK(buffer);
-    data.decref();
-    CHECK_EQUAL(data.refcount(), size_t(1));
+    CHECK(!data.wasFreed());
 
     void* stolenContents = JS_StealArrayBufferContents(cx, buffer);
     // External buffers are currently not stealable, since stealing only
@@ -329,13 +298,12 @@ BEGIN_TEST(testArrayBuffer_stealDetachExternal)
     // External buffers are currently not stealable, so this should keep the
     // reference to the data and just mark the buffer as detached.
     CHECK(JS_IsDetachedArrayBufferObject(buffer));
-    CHECK_EQUAL(data.refcount(), size_t(1));
+    CHECK(!data.wasFreed());
 
     buffer = nullptr;
     JS_GC(cx);
     JS_GC(cx);
-    CHECK_NULL(data.contents());
-    CHECK_EQUAL(data.refcount(), size_t(0));
+    CHECK(data.wasFreed());
 
     return true;
 }

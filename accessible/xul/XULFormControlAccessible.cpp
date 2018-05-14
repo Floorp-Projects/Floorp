@@ -82,7 +82,7 @@ XULButtonAccessible::DoAction(uint8_t aIndex)
 // XULButtonAccessible: Accessible
 
 role
-XULButtonAccessible::NativeRole()
+XULButtonAccessible::NativeRole() const
 {
   return roles::PUSHBUTTON;
 }
@@ -264,7 +264,7 @@ XULDropmarkerAccessible::DoAction(uint8_t index)
 }
 
 role
-XULDropmarkerAccessible::NativeRole()
+XULDropmarkerAccessible::NativeRole() const
 {
   return roles::PUSHBUTTON;
 }
@@ -286,7 +286,7 @@ XULCheckboxAccessible::
 }
 
 role
-XULCheckboxAccessible::NativeRole()
+XULCheckboxAccessible::NativeRole() const
 {
   return roles::CHECKBUTTON;
 }
@@ -352,7 +352,7 @@ XULGroupboxAccessible::
 }
 
 role
-XULGroupboxAccessible::NativeRole()
+XULGroupboxAccessible::NativeRole() const
 {
   return roles::GROUPING;
 }
@@ -462,7 +462,7 @@ XULRadioGroupAccessible::
 }
 
 role
-XULRadioGroupAccessible::NativeRole()
+XULRadioGroupAccessible::NativeRole() const
 {
   return roles::RADIO_GROUP;
 }
@@ -509,7 +509,7 @@ XULStatusBarAccessible::
 }
 
 role
-XULStatusBarAccessible::NativeRole()
+XULStatusBarAccessible::NativeRole() const
 {
   return roles::STATUSBAR;
 }
@@ -578,7 +578,7 @@ XULToolbarAccessible::
 }
 
 role
-XULToolbarAccessible::NativeRole()
+XULToolbarAccessible::NativeRole() const
 {
   return roles::TOOLBAR;
 }
@@ -604,7 +604,7 @@ XULToolbarSeparatorAccessible::
 }
 
 role
-XULToolbarSeparatorAccessible::NativeRole()
+XULToolbarSeparatorAccessible::NativeRole() const
 {
   return roles::SEPARATOR;
 }
