@@ -40,6 +40,8 @@ XPCOMUtils.defineLazyGetter(this, "PLATFORM", () => {
 
 var EXPORTED_SYMBOLS = [ "AddonRepository" ];
 
+Cu.importGlobalProperties(["fetch"]);
+
 const PREF_GETADDONS_CACHE_ENABLED       = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES         = "extensions.getAddons.cache.types";
 const PREF_GETADDONS_CACHE_ID_ENABLED    = "extensions.%ID%.getAddons.cache.enabled";
@@ -48,6 +50,7 @@ const PREF_GETADDONS_BYIDS               = "extensions.getAddons.get.url";
 const PREF_COMPAT_OVERRIDES              = "extensions.getAddons.compatOverides.url";
 const PREF_GETADDONS_BROWSESEARCHRESULTS = "extensions.getAddons.search.browseURL";
 const PREF_GETADDONS_DB_SCHEMA           = "extensions.getAddons.databaseSchema";
+const PREF_GET_LANGPACKS                 = "extensions.getAddons.langpacks.url";
 
 const PREF_METADATA_LASTUPDATE           = "extensions.getAddons.cache.lastUpdate";
 const PREF_METADATA_UPDATETHRESHOLD_SEC  = "extensions.getAddons.cache.updateThreshold";
@@ -731,7 +734,7 @@ var AddonRepository = {
   },
 
   // Create url from preference, returning null if preference does not exist
-  _formatURLPref(aPreference, aSubstitutions) {
+  _formatURLPref(aPreference, aSubstitutions = {}) {
     let url = Services.prefs.getCharPref(aPreference, "");
     if (!url) {
       logger.warn("_formatURLPref: Couldn't get pref: " + aPreference);
@@ -771,6 +774,39 @@ var AddonRepository = {
 
   flush() {
     return AddonDatabase.flush();
+  },
+
+  async getAvailableLangpacks() {
+    // This should be the API endpoint documented at:
+    // http://addons-server.readthedocs.io/en/latest/topics/api/addons.html#language-tools
+    let url = this._formatURLPref(PREF_GET_LANGPACKS);
+
+    let response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("fetching available language packs failed");
+    }
+
+    let data = await response.json();
+
+    let result = [];
+    for (let entry of data.results) {
+      if (!entry.current_compatible_version ||
+          !entry.current_compatible_version.files) {
+         continue;
+      }
+
+      for (let file of entry.current_compatible_version.files) {
+        if (file.platform == "all" || file.platform == Services.appinfo.OS.toLowerCase()) {
+          result.push({
+            target_locale: entry.target_locale,
+            url: file.url,
+            hash: file.hash,
+          });
+        }
+      }
+    }
+
+    return result;
   },
 };
 
