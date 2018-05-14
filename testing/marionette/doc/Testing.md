@@ -52,28 +52,18 @@ In case you want to run the tests with another Firefox binary:
 
 	% ./mach marionette test --binary /path/to/firefox TEST
 
-Running the tests on Fennec requires a bit more setup:
-
-	% ./mach marionette test --emulator --app fennec --avd-home /path/to/.mozbuild/android-device/avd --emulator-binary /path/to/.mozbuild/android-sdk-macosx/tools/emulator
-
-For Fennec tests, if you have an `AVD_HOME` environment variable and
-the emulator command is in your `PATH`, you may omit the `--avd-home`
-and `--emulator-binary` arguments.  See `./mach marionette test
--h` for additional options.  It is for example possible to specify
-x86/ARM and so on.
-
 When working on Marionette it is often useful to surface the stdout
 from Gecko, which can be achived using the `--gecko-log` option.
 See <Debugging.html> for usage instructions, but the gist is that
 you can redirect all Gecko output to stdout:
 
-	% ./mach marionette test --gecko-log - TEST
+    % ./mach marionette test --gecko-log - TEST
 
 Our functional integration tests pop up Firefox windows sporadically,
 and a helpful tip is to suppress the window can be to use Firefox’
 [headless mode]:
 
-	% ./mach marionette test -z TEST
+    % ./mach marionette test -z TEST
 
 `-z` is an alias for `--headless` and equivalent to setting the
 `MOZ_HEADLESS` output variable.  In addition to `MOZ_HEADLESS` there
@@ -82,15 +72,54 @@ the dimensions of the no-op virtual display.  This is similar to
 using xvfb(1) which you may know from the X windowing system, but
 has the additional benefit of also working on macOS and Windows.
 
-To connect to an already-running Fennec instance either in an
-emulator or on a device, you will need to enable Marionette manually.
-You can do this by building with `ac_add_options --enable-marionette`
-and adding a boolean preference named `marionette.enabled` set to
-true in your profile.  Once this preference has been set you will
-need to restart Fennec for it to take effect.
 
-	adb forward tcp:2828 tcp:2828
-	./mach marionette test --address 'localhost:2828'
+### Android
+
+Prerequisites:
+
+*   You have [built Fennec](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_for_Android_build) with 
+    `ac_add_options --enable-marionette` in your mozconfig.
+*   You can run an Android [emulator](https://wiki.mozilla.org/Mobile/Fennec/Android/Testing#Running_tests_on_the_Android_emulator), 
+    which means you have the AVD you need.
+
+When running tests on Fennec, you can have Marionette runner take care of
+starting Fennec on the emulator, as shown below.
+
+	% ./mach marionette test --emulator --app fennec
+    --avd-home /path/to/.mozbuild/android-device/avd
+    --emulator-binary /path/to/.mozbuild/android-sdk/emulator/emulator
+    --avd=mozemulator-x86
+
+For Fennec tests, if the appropriate `emulator` command is in your `PATH`, you may omit the `--emulator-binary` argument.  See `./mach marionette test -h`
+for additional options.
+
+To connect to Fennec in an already running emulator or on a device, you will need to enable Marionette manually by setting the browser preference 
+`marionette.enabled` set to true in the Fennec profile.
+
+Make sure port 2828 is forwarded:
+
+	% adb forward tcp:2828 tcp:2828
+
+If Fennec is already started:
+
+    % ./mach marionette test --app='fennec' --address=localhost:2828 --disable-e10s
+
+If Fennec is not already started on the emulator/device, add the `--emulator`
+option. Marionette Test Runner will take care of forwarding the port and
+starting Fennec with the correct prefs. (You may need to run
+`adb forward --remove-all` to allow the runner to start.)
+
+    % ./mach marionette test --emulator --app='fennec' --address=localhost:2828 --disable-e10s
+    --startup-timeout=300
+
+If you need to troubleshoot the Marionette connection, the most basic check is
+to start Fennec, make sure the `marionette.enabled` browser preference is
+true and port 2828 is forwarded, then see if you get any response from
+Marionette when you connect manually:
+
+    % telnet localhost:2828
+
+You should see output like `{"applicationType":"gecko","marionetteProtocol":3}`
 
 [headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
 [geckodriver]: /testing/geckodriver/geckodriver
