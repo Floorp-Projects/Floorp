@@ -400,7 +400,10 @@ HTMLEditRules::BeforeEdit(EditAction aAction,
     }
 
     // Check that selection is in subtree defined by body node
-    ConfirmSelectionInBody();
+    nsresult rv = ConfirmSelectionInBody();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     // Let rules remember the top level action
     mTheAction = aAction;
   }
@@ -464,7 +467,11 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  ConfirmSelectionInBody();
+  nsresult rv = ConfirmSelectionInBody();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
   if (aAction == EditAction::ignore) {
     return NS_OK;
   }
@@ -582,15 +589,13 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
   }
 
-  nsresult rv =
-    HTMLEditorRef().HandleInlineSpellCheck(
-                      aAction, SelectionRef(),
-                      mRangeItem->mStartContainer,
-                      mRangeItem->mStartOffset,
-                      rangeStartContainer,
-                      rangeStartOffset,
-                      rangeEndContainer,
-                      rangeEndOffset);
+  rv = HTMLEditorRef().HandleInlineSpellCheck(aAction, SelectionRef(),
+                                              mRangeItem->mStartContainer,
+                                              mRangeItem->mStartOffset,
+                                              rangeStartContainer,
+                                              rangeStartOffset,
+                                              rangeEndContainer,
+                                              rangeEndOffset);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -9312,44 +9317,68 @@ HTMLEditRules::PopListItem(nsIContent& aListItem,
 }
 
 nsresult
-HTMLEditRules::RemoveListStructure(Element& aList)
+HTMLEditRules::RemoveListStructure(Element& aListElement)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(HTMLEditUtils::IsList(&aListElement));
 
-  while (aList.GetFirstChild()) {
-    OwningNonNull<nsIContent> child = *aList.GetFirstChild();
+  while (aListElement.GetFirstChild()) {
+    OwningNonNull<nsIContent> child = *aListElement.GetFirstChild();
 
     if (HTMLEditUtils::IsListItem(child)) {
       bool isOutOfList;
       // Keep popping it out until it's not in a list anymore
+      // XXX Using PopuListItem() is too expensive for this purpose.  Looks
+      //     like the reason why this method uses it is, only this loop
+      //     wants to work with first child of aList.  However, what it
+      //     actually does is removing <li> as container.  So, just using
+      //     RemoveBlockContainerWithTransaction() is reasonable.
+      // XXX This loop means that if aListElement is is a child of another
+      //     list element (although it's invalid tree), this moves the
+      //     list item to outside of aListElement's parent.  Is that really
+      //     intentional behavior?
       do {
         nsresult rv = PopListItem(child, &isOutOfList);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       } while (!isOutOfList);
-    } else if (HTMLEditUtils::IsList(child)) {
+      continue;
+    }
+
+    if (HTMLEditUtils::IsList(child)) {
       nsresult rv = RemoveListStructure(*child->AsElement());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else {
-      // Delete any non-list items for now
-      nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*child);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      continue;
+    }
+
+    // Delete any non-list items for now
+    // XXX This is not HTML5 aware.  HTML5 allows all list elements to have
+    //     <script> and <template> and <dl> element to have <div> to group
+    //     some <dt> and <dd> elements.  So, this may break valid children.
+    nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*child);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
   // Delete the now-empty list
-  nsresult rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(aList);
+  nsresult rv =
+    HTMLEditorRef().RemoveBlockContainerWithTransaction(aListElement);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   return NS_OK;
 }
 
-// XXX This method is not necessary because even if selection is outside the
-//     <body> element, the element can be editable.
 nsresult
 HTMLEditRules::ConfirmSelectionInBody()
 {
@@ -9377,6 +9406,9 @@ HTMLEditRules::ConfirmSelectionInBody()
   if (!temp) {
     IgnoredErrorResult ignoredError;
     SelectionRef().Collapse(RawRangeBoundary(rootElement, 0), ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to collapse selection at start of the root element");
     return NS_OK;
@@ -9398,6 +9430,9 @@ HTMLEditRules::ConfirmSelectionInBody()
   if (!temp) {
     IgnoredErrorResult ignoredError;
     SelectionRef().Collapse(RawRangeBoundary(rootElement, 0), ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to collapse selection at start of the root element");
   }
