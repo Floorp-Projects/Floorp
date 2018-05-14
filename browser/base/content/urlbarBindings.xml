@@ -179,12 +179,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="handleEnterInstance">null</field>
 
       <!--
-        For performance reasons we want to limit the size of the text runs we
-        build and show to the user.
-      -->
-      <field name="textRunsMaxLen">255</field>
-
-      <!--
         Since we never want scrollbars, we always use the maxResults value.
       -->
       <property name="maxRows"
@@ -1799,6 +1793,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </content>
 
     <implementation>
+      <!--
+        For performance reasons we want to limit the size of the text runs we
+        build and show to the user.
+      -->
+      <field name="textRunsMaxLen">255</field>
+
       <field name="DOMWindowUtils">
         window.QueryInterface(Ci.nsIInterfaceRequestor)
               .getInterface(Ci.nsIDOMWindowUtils);
