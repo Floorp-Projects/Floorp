@@ -1456,6 +1456,7 @@ nsIDocument::nsIDocument()
     mWidthStrEmpty(false),
     mParserAborted(false),
     mReportedUseCounters(false),
+    mHasReportedShadowDOMUsage(false),
 #ifdef DEBUG
     mWillReparent(false),
 #endif
@@ -13219,4 +13220,28 @@ nsIDocument::ModuleScriptsEnabled()
   }
 
   return nsContentUtils::IsChromeDoc(this) || sEnabledForContent;
+}
+
+void
+nsIDocument::ReportShadowDOMUsage()
+{
+  if (mHasReportedShadowDOMUsage) {
+    return;
+  }
+
+  nsIDocument* topLevel = GetTopLevelContentDocument();
+  if (topLevel && !topLevel->mHasReportedShadowDOMUsage) {
+    topLevel->mHasReportedShadowDOMUsage = true;
+    nsString uri;
+    Unused << topLevel->GetDocumentURI(uri);
+    if (!uri.IsEmpty()) {
+      nsAutoString msg = NS_LITERAL_STRING("Shadow DOM used in [") + uri +
+        NS_LITERAL_STRING("] or in some of its subdocuments.");
+      nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::infoFlag,
+                                                  NS_LITERAL_CSTRING("DOM"),
+                                                  topLevel);
+    }
+  }
+
+  mHasReportedShadowDOMUsage = true;
 }
