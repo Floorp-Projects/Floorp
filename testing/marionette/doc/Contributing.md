@@ -33,7 +33,7 @@ By participating in this project, you agree to abide by the Mozilla
 for contributing high-quality and actionable bugs and code.
 
 [_Marionette_]: ./index.html
-[_geckodriver_]: ../geckodriver
+[_geckodriver_]: ../../geckodriver/geckodriver
 [_webdriver_]: https://searchfox.org/mozilla-central/source/testing/webdriver/README.md
 [WebDriver protocol]: https://w3c.github.io/webdriver/webdriver-spec.html#protocol
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Guide
