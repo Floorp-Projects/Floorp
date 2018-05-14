@@ -250,9 +250,6 @@ class GeckoViewNavigation extends GeckoViewModule {
   onEnable() {
     debug `onEnable`;
 
-    this.registerContent(
-      "chrome://geckoview/content/GeckoViewNavigationContent.js");
-
     let flags = Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]

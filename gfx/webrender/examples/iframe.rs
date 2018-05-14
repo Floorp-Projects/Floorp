@@ -65,7 +65,7 @@ impl Example for App {
         builder.push_stacking_context(
             &info,
             None,
-            Some(PropertyBinding::Binding(PropertyBindingKey::new(42))),
+            Some(PropertyBinding::Binding(PropertyBindingKey::new(42), LayoutTransform::identity())),
             TransformStyle::Flat,
             None,
             MixBlendMode::Normal,

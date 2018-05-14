@@ -610,7 +610,7 @@
                           label="&reportDeceptiveSiteMenu.title;"
                           accesskey="&reportDeceptiveSiteMenu.accesskey;"
                           observes="reportPhishingBroadcaster"
-                          oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event);"
+                          oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"
                           hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"

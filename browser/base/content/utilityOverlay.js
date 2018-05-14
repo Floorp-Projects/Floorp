@@ -120,12 +120,7 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
   }
 
   if (!params.triggeringPrincipal) {
-    let dt = event ? event.dataTransfer : null;
-    if (!!dt && dt.mozSourceNode) {
-      params.triggeringPrincipal = dt.mozSourceNode.nodePrincipal;
-    } else {
-      params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
-    }
+    throw new Error("Required argument triggeringPrincipal missing within openUILink");
   }
 
   let where = whereToOpenLink(event, aIgnoreButton, aIgnoreAlt);

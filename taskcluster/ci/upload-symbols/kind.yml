@@ -12,6 +12,10 @@ transforms:
 kind-dependencies:
     - build
 
+not-for-build-platforms:
+    # Address Sanitizer builds don't have symbols to upload.
+    - linux64-asan-reporter-nightly/opt
+
 job-template:
     description: Upload Symbols
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
