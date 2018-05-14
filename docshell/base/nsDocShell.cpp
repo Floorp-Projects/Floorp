@@ -5101,17 +5101,18 @@ nsDocShell::Stop(uint32_t aStopFlags)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetDocument(nsIDOMDocument** aDocument)
+nsDocShell::GetDocument(nsIDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
 
-  nsIDocument* doc = mContentViewer->GetDocument();
+  nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
   if (!doc) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return CallQueryInterface(doc, aDocument);
+  doc.forget(aDocument);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

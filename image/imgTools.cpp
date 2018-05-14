@@ -13,7 +13,6 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsError.h"
 #include "imgLoader.h"
 #include "imgICache.h"
@@ -527,15 +526,14 @@ imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
 }
 
 NS_IMETHODIMP
-imgTools::GetImgLoaderForDocument(nsIDOMDocument* aDoc, imgILoader** aLoader)
+imgTools::GetImgLoaderForDocument(nsIDocument* aDoc, imgILoader** aLoader)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  NS_IF_ADDREF(*aLoader = nsContentUtils::GetImgLoaderForDocument(doc));
+  NS_IF_ADDREF(*aLoader = nsContentUtils::GetImgLoaderForDocument(aDoc));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-imgTools::GetImgCacheForDocument(nsIDOMDocument* aDoc, imgICache** aCache)
+imgTools::GetImgCacheForDocument(nsIDocument* aDoc, imgICache** aCache)
 {
   nsCOMPtr<imgILoader> loader;
   nsresult rv = GetImgLoaderForDocument(aDoc, getter_AddRefs(loader));

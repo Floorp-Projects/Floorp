@@ -5606,7 +5606,7 @@ nsIDocument::GetController() const
 }
 
 //
-// nsIDOMDocument interface
+// nsIDocument interface
 //
 DocumentType*
 nsIDocument::GetDoctype() const
@@ -9199,8 +9199,8 @@ nsIDocument::GetTemplateContentsOwner()
     nsIScriptGlobalObject* scriptObject =
       GetScriptHandlingObject(hasHadScriptObject);
 
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDocument),
+    nsCOMPtr<nsIDocument> document;
+    nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),
                                     EmptyString(), // aNamespaceURI
                                     EmptyString(), // aQualifiedName
                                     nullptr, // aDoctype
@@ -9212,7 +9212,7 @@ nsIDocument::GetTemplateContentsOwner()
                                     DocumentFlavorHTML);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    mTemplateContentsOwner = do_QueryInterface(domDocument);
+    mTemplateContentsOwner = document;
     NS_ENSURE_TRUE(mTemplateContentsOwner, nullptr);
 
     nsDocument* doc = static_cast<nsDocument*>(mTemplateContentsOwner.get());
@@ -11853,9 +11853,9 @@ nsIDocument::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMDocument> document;
+  nsCOMPtr<nsIDocument> doc;
   nsresult res =
-    NS_NewDOMDocument(getter_AddRefs(document),
+    NS_NewDOMDocument(getter_AddRefs(doc),
                       VoidString(),
                       EmptyString(),
                       nullptr,
@@ -11870,7 +11870,6 @@ nsIDocument::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
   doc->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
 
   return doc.forget();

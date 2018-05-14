@@ -108,8 +108,7 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
       nsIPrincipal* principal = aDocument->NodePrincipal();
       nsCOMPtr<nsIContentSecurityPolicy> csp;
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
-      principal->EnsureCSP(domDoc, getter_AddRefs(csp));
+      principal->EnsureCSP(aDocument, getter_AddRefs(csp));
       if (csp) {
         if (LOG_ENABLED()) {
           nsAutoCString documentURIspec;

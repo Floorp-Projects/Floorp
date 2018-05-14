@@ -61,7 +61,6 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroupChild.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
 
 using namespace mozilla;
@@ -1472,20 +1471,19 @@ imgLoader::ClearCache(bool chrome)
 
 NS_IMETHODIMP
 imgLoader::RemoveEntry(nsIURI* aURI,
-                       nsIDOMDocument* aDOMDoc)
+                       nsIDocument* aDoc)
 {
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
   if (aURI) {
     OriginAttributes attrs;
-    if (doc) {
-      nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+    if (aDoc) {
+      nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
       if (principal) {
         attrs = principal->OriginAttributesRef();
       }
     }
 
     nsresult rv = NS_OK;
-    ImageCacheKey key(aURI, attrs, doc, rv);
+    ImageCacheKey key(aURI, attrs, aDoc, rv);
     if (NS_SUCCEEDED(rv) && RemoveFromCache(key)) {
       return NS_OK;
     }
@@ -1495,23 +1493,21 @@ imgLoader::RemoveEntry(nsIURI* aURI,
 
 NS_IMETHODIMP
 imgLoader::FindEntryProperties(nsIURI* uri,
-                               nsIDOMDocument* aDOMDoc,
+                               nsIDocument* aDoc,
                                nsIProperties** _retval)
 {
   *_retval = nullptr;
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
-
   OriginAttributes attrs;
-  if (doc) {
-    nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  if (aDoc) {
+    nsCOMPtr<nsIPrincipal> principal = aDoc->NodePrincipal();
     if (principal) {
       attrs = principal->OriginAttributesRef();
     }
   }
 
   nsresult rv;
-  ImageCacheKey key(uri, attrs, doc, rv);
+  ImageCacheKey key(uri, attrs, aDoc, rv);
   NS_ENSURE_SUCCESS(rv, rv);
   imgCacheTable& cache = GetCache(key);
 

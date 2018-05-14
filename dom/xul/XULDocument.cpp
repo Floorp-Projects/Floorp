@@ -1057,7 +1057,7 @@ XULDocument::ResolveForwardReferences()
 
 //----------------------------------------------------------------------
 //
-// nsIDOMDocument interface
+// nsIDocument interface
 //
 
 already_AddRefed<nsINodeList>

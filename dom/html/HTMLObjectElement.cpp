@@ -14,7 +14,6 @@
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIPluginDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"

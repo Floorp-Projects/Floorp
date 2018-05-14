@@ -189,7 +189,7 @@ BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 }
 
 NS_IMETHODIMP
-BasePrincipal::EnsureCSP(nsIDOMDocument* aDocument,
+BasePrincipal::EnsureCSP(nsIDocument* aDocument,
                          nsIContentSecurityPolicy** aCSP)
 {
   if (mCSP) {
@@ -219,7 +219,7 @@ BasePrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP)
 }
 
 NS_IMETHODIMP
-BasePrincipal::EnsurePreloadCSP(nsIDOMDocument* aDocument,
+BasePrincipal::EnsurePreloadCSP(nsIDocument* aDocument,
                                 nsIContentSecurityPolicy** aPreloadCSP)
 {
   if (mPreloadCSP) {

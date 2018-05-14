@@ -13,7 +13,7 @@
 #define kTXWrapper "transformiix:result"
 
 class txOutputFormat;
-class nsIDOMDocument;
+class nsIDocument;
 
 /**
  * An interface for handling XML documents, loosely modeled
@@ -149,11 +149,11 @@ public:
      *
      * @param aDocument the Mozilla output document
      */
-    virtual void getOutputDocument(nsIDOMDocument** aDocument) = 0;
+    virtual void getOutputDocument(nsIDocument** aDocument) = 0;
 };
 
 #define TX_DECL_TXAOUTPUTXMLEVENTHANDLER                        \
-    virtual void getOutputDocument(nsIDOMDocument** aDocument) override;
+    virtual void getOutputDocument(nsIDocument** aDocument) override;
 
 /**
  * Interface used to create the appropriate outputhandler

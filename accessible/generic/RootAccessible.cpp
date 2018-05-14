@@ -8,7 +8,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #define CreateEvent CreateEventA
-#include "nsIDOMDocument.h"
 
 #include "Accessible-inl.h"
 #include "DocAccessible-inl.h"

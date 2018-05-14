@@ -19,6 +19,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
+webidl Document;
 webidl Element;
 webidl Selection;
 
@@ -84,7 +85,7 @@ interface nsIEditor  : nsISupports
   /**
    * the DOM Document this editor is associated with, refcounted.
    */
-  readonly attribute nsIDOMDocument document;
+  readonly attribute Document document;
 
   /** the body element, i.e. the root of the editable document.
    */

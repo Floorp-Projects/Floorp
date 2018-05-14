@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/DOMParser.h"
 
-#include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
 #include "nsDOMString.h"
 #include "MainThreadUtils.h"
@@ -309,8 +308,8 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, ErrorResult& aRv)
   NS_ASSERTION(mPrincipal, "Must have principal by now");
   NS_ASSERTION(mDocumentURI, "Must have document URI by now");
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult rv = NS_NewDOMDocument(getter_AddRefs(domDoc), EmptyString(), EmptyString(),
+  nsCOMPtr<nsIDocument> doc;
+  nsresult rv = NS_NewDOMDocument(getter_AddRefs(doc), EmptyString(), EmptyString(),
                                   nullptr, mDocumentURI, mBaseURI, mPrincipal,
                                   true, scriptHandlingObject, aFlavor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -318,6 +317,5 @@ DOMParser::SetUpDocument(DocumentFlavor aFlavor, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   return doc.forget();
 }

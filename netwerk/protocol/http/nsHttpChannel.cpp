@@ -96,7 +96,6 @@
 #include "NullPrincipal.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsICompressConvStats.h"
 #include "nsCORSListenerProxy.h"
 #include "nsISocketProvider.h"
@@ -1236,11 +1235,7 @@ ReportTypeBlocking(nsIURI* aURI,
     const char16_t* params[] = { specUTF16.get() };
     nsCOMPtr<nsIDocument> doc;
     if (aLoadInfo) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
-        if (domDoc) {
-            doc = do_QueryInterface(domDoc);
-        }
+        aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
     }
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("MIMEMISMATCH"),
@@ -1287,11 +1282,7 @@ ProcessXCTO(nsIURI* aURI, nsHttpResponseHead* aResponseHead, nsILoadInfo* aLoadI
         NS_ConvertUTF8toUTF16 char16_header(contentTypeOptionsHeader);
         const char16_t* params[] = { char16_header.get() };
         nsCOMPtr<nsIDocument> doc;
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
-        if (domDoc) {
-          doc = do_QueryInterface(domDoc);
-        }
+        aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
         nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                         NS_LITERAL_CSTRING("XCTO"),
                                         doc,

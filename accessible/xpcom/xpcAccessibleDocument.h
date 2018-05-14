@@ -38,7 +38,7 @@ public:
   NS_IMETHOD GetTitle(nsAString& aTitle) final;
   NS_IMETHOD GetMimeType(nsAString& aType) final;
   NS_IMETHOD GetDocType(nsAString& aType) final;
-  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDOMDocument) final;
+  NS_IMETHOD GetDOMDocument(nsIDocument** aDOMDocument) final;
   NS_IMETHOD GetWindow(mozIDOMWindowProxy** aDOMWindow) final;
   NS_IMETHOD GetParentDocument(nsIAccessibleDocument** aDocument)
     final;
