@@ -24,7 +24,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // Widgets

@@ -44,8 +44,8 @@ function findBestMatchExpression(symbols, tokenPos) {
   }, null);
 }
 
-function findEmptyLines(selectedSource, pausePoints) {
-  if (!pausePoints || !selectedSource) {
+function findEmptyLines(sourceText, pausePoints) {
+  if (!pausePoints || !sourceText) {
     return [];
   }
 
@@ -53,11 +53,11 @@ function findEmptyLines(selectedSource, pausePoints) {
   const breakpoints = pausePointsList.filter(point => point.types.break);
   const breakpointLines = breakpoints.map(point => point.location.line);
 
-  if (!selectedSource.text || breakpointLines.length == 0) {
+  if (!sourceText || breakpointLines.length == 0) {
     return [];
   }
 
-  const lineCount = selectedSource.text.split("\n").length;
+  const lineCount = sourceText.split("\n").length;
   const sourceLines = (0, _lodash.range)(1, lineCount + 1);
   return (0, _lodash.xor)(sourceLines, breakpointLines);
 }

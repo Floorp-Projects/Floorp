@@ -44,7 +44,7 @@ XULComboboxAccessible::
 }
 
 role
-XULComboboxAccessible::NativeRole()
+XULComboboxAccessible::NativeRole() const
 {
   return IsAutoComplete() ? roles::AUTOCOMPLETE : roles::COMBOBOX;
 }

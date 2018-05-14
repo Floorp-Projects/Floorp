@@ -73,7 +73,7 @@ XULLabelAccessible::NativeName(nsString& aName)
 }
 
 role
-XULLabelAccessible::NativeRole()
+XULLabelAccessible::NativeRole() const
 {
   return roles::LABEL;
 }
@@ -127,7 +127,7 @@ XULLabelAccessible::UpdateLabelValue(const nsString& aValue)
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-XULLabelTextLeafAccessible::NativeRole()
+XULLabelTextLeafAccessible::NativeRole() const
 {
   return roles::TEXT_LEAF;
 }
@@ -156,7 +156,7 @@ XULTooltipAccessible::NativeState()
 }
 
 role
-XULTooltipAccessible::NativeRole()
+XULTooltipAccessible::NativeRole() const
 {
   return roles::TOOLTIP;
 }
@@ -199,7 +199,7 @@ XULLinkAccessible::NativeName(nsString& aName)
 }
 
 role
-XULLinkAccessible::NativeRole()
+XULLinkAccessible::NativeRole() const
 {
   return roles::LINK;
 }

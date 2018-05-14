@@ -21,20 +21,11 @@ pub fn u2f_init_device<T>(dev: &mut T) -> bool
 where
     T: U2FDevice + Read + Write,
 {
-    // Do a few U2F device checks.
     let mut nonce = [0u8; 8];
     thread_rng().fill_bytes(&mut nonce);
-    if init_device(dev, &nonce).is_err() {
-        return false;
-    }
 
-    let mut random = [0u8; 8];
-    thread_rng().fill_bytes(&mut random);
-    if ping_device(dev, &random).is_err() {
-        return false;
-    }
-
-    is_v2_device(dev).unwrap_or(false)
+    // Initialize the device and check its version.
+    init_device(dev, &nonce).is_ok() && is_v2_device(dev).unwrap_or(false)
 }
 
 pub fn u2f_register<T>(dev: &mut T, challenge: &[u8], application: &[u8]) -> io::Result<Vec<u8>>
@@ -140,18 +131,6 @@ where
     Ok(())
 }
 
-fn ping_device<T>(dev: &mut T, random: &[u8]) -> io::Result<()>
-where
-    T: U2FDevice + Read + Write,
-{
-    assert_eq!(random.len(), 8);
-    if sendrecv(dev, U2FHID_PING, random)? != random {
-        return Err(io_err("Ping was corrupted!"));
-    }
-
-    Ok(())
-}
-
 fn is_v2_device<T>(dev: &mut T) -> io::Result<bool>
 where
     T: U2FDevice + Read + Write,
@@ -235,7 +214,7 @@ where
 mod tests {
     use rand::{thread_rng, Rng};
 
-    use super::{init_device, ping_device, send_apdu, sendrecv, U2FDevice};
+    use super::{init_device, send_apdu, sendrecv, U2FDevice};
     use consts::{U2FHID_INIT, U2FHID_MSG, U2FHID_PING, CID_BROADCAST, SW_NO_ERROR};
 
     mod platform {
@@ -416,26 +395,5 @@ mod tests {
         let (result, status) = send_apdu(&mut device, U2FHID_PING, 0xaa, &data).unwrap();
         assert_eq!(result, &data);
         assert_eq!(status, SW_NO_ERROR);
-    }
-
-    #[test]
-    fn test_ping_device() {
-        let mut device = platform::TestDevice::new();
-        device.set_cid([0x01, 0x02, 0x03, 0x04]);
-
-        // ping nonce
-        let random = vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
-
-        // APDU header
-        let mut msg = vec![0x01, 0x02, 0x03, 0x04, U2FHID_PING, 0x00, 0x08];
-        msg.extend_from_slice(&random);
-        device.add_write(&msg, 0);
-
-        // Only expect data from APDU back
-        let mut msg = vec![0x01, 0x02, 0x03, 0x04, U2FHID_MSG, 0x00, 0x08];
-        msg.extend_from_slice(&random);
-        device.add_read(&msg, 0);
-
-        ping_device(&mut device, &random).unwrap();
     }
 }

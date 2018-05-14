@@ -92,11 +92,11 @@ ServoStyleRuleDeclaration::DocToUpdate()
   return nullptr;
 }
 
-nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-ServoStyleRuleDeclaration::GetServoCSSParsingEnvironment(
+nsDOMCSSDeclaration::ParsingEnvironment
+ServoStyleRuleDeclaration::GetParsingEnvironment(
   nsIPrincipal* aSubjectPrincipal) const
 {
-  return GetServoCSSParsingEnvironmentForRule(Rule());
+  return GetParsingEnvironmentForRule(Rule());
 }
 
 // -- ServoStyleRule --------------------------------------------------

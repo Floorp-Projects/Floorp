@@ -193,7 +193,7 @@ DocAccessible::Name(nsString& aName)
 
 // Accessible public method
 role
-DocAccessible::NativeRole()
+DocAccessible::NativeRole() const
 {
   nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mDocumentNode);
   if (docShell) {

@@ -260,10 +260,10 @@ const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
   // Nothing here yet.
-  //if (!mDriverInfo->Length()) {
+  //if (!sDriverInfo->Length()) {
   //
   //}
-  return *mDriverInfo;
+  return *sDriverInfo;
 }
 
 nsresult
@@ -282,7 +282,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   if (aOS)
     *aOS = os;
 
-  if (mShutdownOccurred) {
+  if (sShutdownOccurred) {
     return NS_OK;
   }
 
