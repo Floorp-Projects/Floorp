@@ -1661,9 +1661,9 @@ Function LaunchApp
   ${GetOptions} "$0" "/UAC:" $1
   ${If} ${Errors}
     ${If} $CheckboxCleanupProfile == 1
-      Exec "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
+      ${ExecAndWaitForInputIdle} "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
     ${Else}
-      Exec "$\"$INSTDIR\${FileMainEXE}$\""
+      ${ExecAndWaitForInputIdle} "$\"$INSTDIR\${FileMainEXE}$\""
     ${EndIf}
   ${Else}
     StrCpy $R1 $CheckboxCleanupProfile
@@ -1679,9 +1679,9 @@ Function LaunchAppFromElevatedProcess
   ; Set the current working directory to the installation directory
   SetOutPath "$INSTDIR"
   ${If} $R1 == 1
-    Exec "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
+    ${ExecAndWaitForInputIdle} "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
   ${Else}
-    Exec "$\"$INSTDIR\${FileMainEXE}$\""
+    ${ExecAndWaitForInputIdle} "$\"$INSTDIR\${FileMainEXE}$\""
   ${EndIf}
 FunctionEnd
 
