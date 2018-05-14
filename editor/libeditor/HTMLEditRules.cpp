@@ -557,6 +557,9 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     // if we created a new block, make sure selection lands in it
     if (mNewBlock) {
       rv = PinSelectionToNewBlock();
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
         "Failed to pin selection to the new block");
       mNewBlock = nullptr;
@@ -8671,7 +8674,9 @@ HTMLEditRules::PinSelectionToNewBlock()
 
   bool nodeBefore, nodeAfter;
   rv = nsRange::CompareNodeToRange(mNewBlock, range, &nodeBefore, &nodeAfter);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (nodeBefore && nodeAfter) {
     return NS_OK;  // selection is inside block
@@ -8695,6 +8700,10 @@ HTMLEditRules::PinSelectionToNewBlock()
     }
     ErrorResult error;
     SelectionRef().Collapse(endPoint, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -8715,6 +8724,10 @@ HTMLEditRules::PinSelectionToNewBlock()
   }
   ErrorResult error;
   SelectionRef().Collapse(atStartOfBlock, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
