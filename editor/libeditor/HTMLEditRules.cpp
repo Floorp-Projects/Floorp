@@ -8516,6 +8516,9 @@ HTMLEditRules::GetInlineStyles(nsINode* aNode,
       isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
                 aNode, aStyleCache[j].tag, aStyleCache[j].attr, outValue,
                 CSSEditUtils::eComputed);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
     }
     if (isSet) {
       aStyleCache[j].mPresent = true;
@@ -8556,7 +8559,7 @@ HTMLEditRules::ReapplyCachedStyles()
   InitStyleCacheArray(styleAtInsertionPoint);
   nsresult rv = GetInlineStyles(selNode, styleAtInsertionPoint);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_OK;
+    return rv == NS_ERROR_EDITOR_DESTROYED ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
   }
 
   for (size_t i = 0; i < SIZE_STYLE_TABLE; ++i) {
