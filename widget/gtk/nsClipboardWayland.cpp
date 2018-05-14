@@ -728,7 +728,7 @@ nsRetrievalContextWayland::GetClipboardText(int32_t aWhichClipboard)
     if (!dataOffer)
         return nullptr;
 
-    for (unsigned int i = 0; i < sizeof(sTextMimeTypes); i++) {
+    for (unsigned int i = 0; i < TEXT_MIME_TYPES_NUM; i++) {
         if (dataOffer->HasTarget(sTextMimeTypes[i])) {
             uint32_t unused;
             return GetClipboardData(sTextMimeTypes[i], aWhichClipboard,
