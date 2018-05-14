@@ -118,7 +118,7 @@ function selectLocation(location) {
     }
 
     const source = sourceRecord.toJS();
-    dispatch((0, _tabs.addTab)(source, 0));
+    dispatch((0, _tabs.addTab)(source.url, 0));
     dispatch({
       type: "SELECT_SOURCE",
       source,

@@ -50,7 +50,7 @@ public:
 
   // Accessible
   virtual TableAccessible* AsTable() override { return this; }
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 
 protected:
   virtual ~XULTreeGridAccessible();
@@ -81,7 +81,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual ENameValueFlag Name(nsString& aName) override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
@@ -133,7 +133,7 @@ public:
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual int32_t IndexInParent() const override;
   virtual Relation RelationByType(RelationType aType) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
 

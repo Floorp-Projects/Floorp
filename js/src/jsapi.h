@@ -3225,39 +3225,39 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* contents);
 
 namespace JS {
 
-using BufferContentsRefFunc = void (*)(void* contents, void* userData);
+using BufferContentsFreeFunc = void (*)(void* contents, void* userData);
 
 }  /* namespace JS */
 
 /**
- * Create a new array buffer with the given contents. The ref and unref
- * functions should increment or decrement the reference count of the contents.
- * These functions allow array buffers to be used with embedder objects that
- * use reference counting, for example. The contents must not be modified by
- * any reference holders, internal or external.
+ * Create a new array buffer with the given contents. The contents must not be
+ * modified by any other code, internal or external.
  *
- * On success, the new array buffer takes a reference, and |ref(contents,
- * refUserData)| will be called. When the array buffer is ready to be disposed
- * of, |unref(contents, refUserData)| will be called to release the array
- * buffer's reference on the contents.
+ * When the array buffer is ready to be disposed of, `freeFunc(contents,
+ * freeUserData)` will be called to release the array buffer's reference on the
+ * contents.
  *
- * The ref and unref functions must not call any JSAPI functions that could
- * cause a garbage collection.
+ * `freeFunc()` must not call any JSAPI functions that could cause a garbage
+ * collection.
  *
- * The ref function is optional. If it is nullptr, the caller is responsible
+ * The caller must keep the buffer alive until `freeFunc()` is called, or, if
+ * `freeFunc` is null, until the JSRuntime is destroyed.
+ *
+ * The caller must not access the buffer on other threads. The JS engine will
+ * not allow the buffer to be transferred to other threads. If you try to
+ * transfer an external ArrayBuffer to another thread, the data is copied to a
+ * new malloc buffer. `freeFunc()` must be threadsafe, and may be called from
+ * any thread.
+ *
+ * This allows array buffers to be used with embedder objects that use reference
+ * counting, for example. In that case the caller is responsible
  * for incrementing the reference count before passing the contents to this
  * function. This also allows using non-reference-counted contents that must be
  * freed with some function other than free().
- *
- * The ref function may also be called in case the buffer is cloned in some
- * way. Currently this is not used, but it may be in the future. If the ref
- * function is nullptr, any operation where an extra reference would otherwise
- * be taken, will either copy the data, or throw an exception.
  */
 extern JS_PUBLIC_API(JSObject*)
 JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* contents,
-                          JS::BufferContentsRefFunc ref, JS::BufferContentsRefFunc unref,
-                          void* refUserData = nullptr);
+                          JS::BufferContentsFreeFunc freeFunc, void* freeUserData = nullptr);
 
 /**
  * Create a new array buffer with the given contents.  The array buffer does not take ownership of

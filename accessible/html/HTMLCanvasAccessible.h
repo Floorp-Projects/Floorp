@@ -24,7 +24,7 @@ public:
                                        HyperTextAccessibleWrap)
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 
 protected:
   virtual ~HTMLCanvasAccessible() { }

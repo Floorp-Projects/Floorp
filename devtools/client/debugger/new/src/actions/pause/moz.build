@@ -19,6 +19,7 @@ DevToolsModules(
     'paused.js',
     'pauseOnExceptions.js',
     'resumed.js',
+    'selectComponent.js',
     'selectFrame.js',
     'setPopupObjectProperties.js',
     'skipPausing.js',

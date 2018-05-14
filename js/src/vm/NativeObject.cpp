@@ -504,45 +504,6 @@ NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCount, uint32_t newCount)
     slots_ = newslots;
 }
 
-/* static */ bool
-NativeObject::sparsifyDenseElement(JSContext* cx, HandleNativeObject obj, uint32_t index)
-{
-    if (!obj->maybeCopyElementsForWrite(cx))
-        return false;
-
-    RootedValue value(cx, obj->getDenseElement(index));
-    MOZ_ASSERT(!value.isMagic(JS_ELEMENTS_HOLE));
-
-    removeDenseElementForSparseIndex(cx, obj, index);
-
-    RootedId id(cx, INT_TO_JSID(index));
-
-    AutoKeepShapeTables keep(cx);
-    ShapeTable* table = nullptr;
-    ShapeTable::Entry* entry = nullptr;
-    if (obj->inDictionaryMode()) {
-        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
-        if (!table)
-            return false;
-        entry = &table->search<MaybeAdding::Adding>(id, keep);
-    }
-
-    // NOTE: We don't use addDataProperty because we don't want the
-    // extensibility check if we're, for example, sparsifying an element of a
-    // non-extensible object.
-    Shape* shape = addDataPropertyInternal(cx, obj, id, SHAPE_INVALID_SLOT,
-                                           obj->getElementsHeader()->elementAttributes(),
-                                           table, entry, keep);
-    if (!shape) {
-        obj->setDenseElementUnchecked(index, value);
-        return false;
-    }
-
-    obj->initSlot(shape->slot(), value);
-
-    return true;
-}
-
 bool
 NativeObject::willBeSparseElements(uint32_t requiredCapacity, uint32_t newElementsHint)
 {
@@ -1464,7 +1425,7 @@ AddOrChangeProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
             return false;
 
         uint32_t index = JSID_TO_INT(id);
-        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
+        obj->removeDenseElementForSparseIndex(cx, index);
         DenseElementResult edResult =
             NativeObject::maybeDensifySparseElements(cx, obj);
         if (edResult == DenseElementResult::Failure)
@@ -1787,13 +1748,6 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks)
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
-        if (prop.isDenseOrTypedArrayElement()) {
-            MOZ_ASSERT(!obj->is<TypedArrayObject>());
-            if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
-                return false;
-            prop.setNativeProperty(obj->lookup(cx, id));
-        }
-
         // Fill in desc fields with default values (steps 6.b.i and 6.c.i).
         CompletePropertyDescriptor(&desc);
     } else if (desc.isDataDescriptor()) {
@@ -1805,13 +1759,6 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
         if (frozen || !desc.hasValue()) {
-            if (prop.isDenseOrTypedArrayElement()) {
-                MOZ_ASSERT(!obj->is<TypedArrayObject>());
-                if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
-                    return false;
-                prop.setNativeProperty(obj->lookup(cx, id));
-            }
-
             RootedValue currentValue(cx);
             if (!GetExistingPropertyValue(cx, obj, id, prop, &currentValue))
                 return false;
@@ -1834,6 +1781,7 @@ js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
         if (frozen && !skipRedefineChecks)
             return result.succeed();
 
+        // Fill in desc.[[Writable]].
         if (!desc.hasWritable())
             desc.setWritable(IsWritable(shapeAttrs));
     } else {

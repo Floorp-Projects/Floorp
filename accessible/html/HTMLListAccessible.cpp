@@ -22,7 +22,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLListAccessible::NativeRole()
+HTMLListAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   return r != roles::NOTHING ? r : roles::LIST;
@@ -62,7 +62,7 @@ HTMLLIAccessible::Shutdown()
 }
 
 role
-HTMLLIAccessible::NativeRole()
+HTMLLIAccessible::NativeRole() const
 {
   a11y::role r = GetAccService()->MarkupRole(mContent);
   return r != roles::NOTHING ? r : roles::LISTITEM;
@@ -161,7 +161,7 @@ HTMLListBulletAccessible::Name(nsString &aName)
 }
 
 role
-HTMLListBulletAccessible::NativeRole()
+HTMLListBulletAccessible::NativeRole() const
 {
   return roles::STATICTEXT;
 }

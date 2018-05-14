@@ -242,7 +242,7 @@ XULMenuitemAccessible::KeyboardShortcut() const
 }
 
 role
-XULMenuitemAccessible::NativeRole()
+XULMenuitemAccessible::NativeRole() const
 {
   nsCOMPtr<nsIDOMXULContainerElement> xulContainer(do_QueryInterface(mContent));
   if (xulContainer)
@@ -368,7 +368,7 @@ XULMenuSeparatorAccessible::NativeName(nsString& aName)
 }
 
 role
-XULMenuSeparatorAccessible::NativeRole()
+XULMenuSeparatorAccessible::NativeRole() const
 {
   return roles::SEPARATOR;
 }
@@ -454,7 +454,7 @@ XULMenupopupAccessible::NativeName(nsString& aName)
 }
 
 role
-XULMenupopupAccessible::NativeRole()
+XULMenupopupAccessible::NativeRole() const
 {
   // If accessible is not bound to the tree (this happens while children are
   // cached) return general role.
@@ -551,7 +551,7 @@ XULMenubarAccessible::NativeName(nsString& aName)
 }
 
 role
-XULMenubarAccessible::NativeRole()
+XULMenubarAccessible::NativeRole() const
 {
   return roles::MENUBAR;
 }

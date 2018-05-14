@@ -65,7 +65,7 @@ XULTabAccessible::DoAction(uint8_t index)
 // XULTabAccessible: Accessible
 
 role
-XULTabAccessible::NativeRole()
+XULTabAccessible::NativeRole() const
 {
   return roles::PAGETAB;
 }
@@ -137,7 +137,7 @@ XULTabsAccessible::
 }
 
 role
-XULTabsAccessible::NativeRole()
+XULTabsAccessible::NativeRole() const
 {
   return roles::PAGETABLIST;
 }
@@ -167,7 +167,7 @@ XULTabsAccessible::NativeName(nsString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-XULTabpanelsAccessible::NativeRole()
+XULTabpanelsAccessible::NativeRole() const
 {
   return roles::PANE;
 }
@@ -183,7 +183,7 @@ XULTabpanelAccessible::
 }
 
 role
-XULTabpanelAccessible::NativeRole()
+XULTabpanelAccessible::NativeRole() const
 {
   return roles::PROPERTYPAGE;
 }

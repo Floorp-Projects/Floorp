@@ -37,7 +37,7 @@ public:
   virtual ~HTMLSelectListAccessible() {}
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
@@ -65,7 +65,7 @@ public:
   virtual ~HTMLSelectOptionAccessible() {}
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
 
@@ -135,7 +135,7 @@ public:
   virtual ~HTMLSelectOptGroupAccessible() {}
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
@@ -166,7 +166,7 @@ public:
   virtual void Shutdown() override;
   virtual void Description(nsString& aDescription) override;
   virtual void Value(nsString& aValue) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual bool RemoveChild(Accessible* aChild) override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
@@ -208,7 +208,7 @@ public:
 
   // Accessible
   virtual nsIFrame* GetFrame() const override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;

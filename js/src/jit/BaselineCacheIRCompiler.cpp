@@ -544,58 +544,6 @@ BaselineCacheIRCompiler::emitLoadDynamicSlotResult()
 }
 
 bool
-BaselineCacheIRCompiler::emitMegamorphicLoadSlotResult()
-{
-    AutoOutputRegister output(*this);
-
-    Register obj = allocator.useRegister(masm, reader.objOperandId());
-    Address nameAddr = stubAddress(reader.stubOffset());
-    bool handleMissing = reader.readBool();
-
-    AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
-    AutoScratchRegister scratch2(allocator, masm);
-    AutoScratchRegister scratch3(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    // The object must be Native.
-    masm.branchIfNonNativeObj(obj, scratch3, failure->label());
-
-    masm.Push(UndefinedValue());
-    masm.moveStackPtrTo(scratch3.get());
-
-    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
-    volatileRegs.takeUnchecked(scratch1);
-    volatileRegs.takeUnchecked(scratch2);
-    volatileRegs.takeUnchecked(scratch3);
-    masm.PushRegsInMask(volatileRegs);
-
-    masm.setupUnalignedABICall(scratch1);
-    masm.loadJSContext(scratch1);
-    masm.passABIArg(scratch1);
-    masm.passABIArg(obj);
-    masm.loadPtr(nameAddr, scratch2);
-    masm.passABIArg(scratch2);
-    masm.passABIArg(scratch3);
-    if (handleMissing)
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<true>)));
-    else
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<false>)));
-    masm.mov(ReturnReg, scratch2);
-    masm.PopRegsInMask(volatileRegs);
-
-    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
-    masm.adjustStack(sizeof(Value));
-
-    masm.branchIfFalseBool(scratch2, failure->label());
-    if (JitOptions.spectreJitToCxxCalls)
-        masm.speculationBarrier();
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitMegamorphicStoreSlot()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
