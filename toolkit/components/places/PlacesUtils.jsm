@@ -2241,7 +2241,7 @@ PlacesUtils.keywords = {
                               GENERATE_GUID()))
               `, { url: url.href, rev_host: PlacesUtils.getReversedHost(url),
                    frecency: url.protocol == "place:" ? 0 : -1 });
-            await db.executeCached("DELETE FROM moz_updatehostsinsert_temp");
+            await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
 
             // A new keyword could be assigned to an url that already has one,
             // then we must replace the old keyword with the new one.
