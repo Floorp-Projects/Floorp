@@ -593,7 +593,13 @@ protected:
   nsresult CacheInlineStyles(nsINode* aNode);
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
-  void AdjustSpecialBreaks();
+
+  /**
+   * InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() inserts
+   * <br> element into empty list item or table cell elements.
+   */
+  MOZ_MUST_USE nsresult
+  InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
 
   /**
    * AdjustWhitespace() may replace whitespaces with NBSP or something.
