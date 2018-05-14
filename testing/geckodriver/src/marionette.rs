@@ -1342,7 +1342,12 @@ impl MarionetteConnection {
         let poll_interval = time::Duration::from_millis(100);
         let now = time::Instant::now();
 
-        debug!("Waiting {}s to connect to browser", timeout.as_secs());
+        debug!(
+            "Waiting {}s to connect to browser on {}:{}",
+            timeout.as_secs(),
+            DEFAULT_HOST,
+            self.port
+        );
         loop {
             // immediately abort connection attempts if process disappears
             if let &mut Some(ref mut runner) = browser {

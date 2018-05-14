@@ -1637,8 +1637,8 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     if let Some(anim) = anim {
         debug_assert!(anim.id > 0);
         match anim.effect_type {
-            WrAnimationType::Opacity => filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id)), 1.0)),
-            WrAnimationType::Transform => transform_binding = Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id))),
+            WrAnimationType::Opacity => filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id), 1.0), 1.0)),
+            WrAnimationType::Transform => transform_binding = Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id), LayoutTransform::identity())),
         }
     }
 

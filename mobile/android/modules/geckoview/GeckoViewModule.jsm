@@ -64,27 +64,17 @@ class GeckoViewModule {
   // Override to disable module after clearing the Java delegate.
   onDisable() {}
 
-  registerContent(aUri) {
-    if (this._isContentLoaded) {
-      return;
-    }
-    this._isContentLoaded = true;
+  // Override to perform actions when content module has started loading;
+  // by default, pause events so events that depend on content modules can work.
+  onLoadContentModule() {
     this._eventProxy.enableQueuing(true);
+  }
 
-    let self = this;
-    this.messageManager.addMessageListener("GeckoView:ContentRegistered",
-      function listener(aMsg) {
-        if (aMsg.data.module !== self.name) {
-          return;
-        }
-        self.messageManager.removeMessageListener("GeckoView:ContentRegistered",
-                                                  listener);
-        self.messageManager.sendAsyncMessage("GeckoView:UpdateSettings",
-                                             self.settings);
-        self._eventProxy.enableQueuing(false);
-        self._eventProxy.dispatchQueuedEvents();
-    });
-    this.messageManager.loadFrameScript(aUri, true);
+  // Override to perform actions when content module has finished loading;
+  // by default, un-pause events and flush queued events.
+  onContentModuleLoaded() {
+    this._eventProxy.enableQueuing(false);
+    this._eventProxy.dispatchQueuedEvents();
   }
 
   registerListener(aEventList) {

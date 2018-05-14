@@ -327,6 +327,7 @@ android-common-tests:
     - geckoview-junit
     # - jittest # not ready yet: bug 1098508
     - jsreftest
+    - marionette
     - mochitest
     - mochitest-chrome
     - mochitest-clipboard
@@ -336,10 +337,6 @@ android-common-tests:
     - reftest-fonts
     - test-verify
     - xpcshell
-
-android-debug-tests:
-    # Marionette only available on Fennec debug builds as a security precaution
-    - marionette
 
 android-opt-tests:
     # Robocop tests often fail on Debug builds

@@ -4,6 +4,7 @@
 #include <string>
 #include <stdint.h>
 #include <sys/types.h>
+#include <vector>
 
 /** returns true if the string has the prefix */
 bool StringHasPrefix( const std::string & sString, const std::string & sPrefix );
@@ -64,6 +65,7 @@ inline errno_t strncpy_s(char *strDest, size_t numberOfElements, const char *str
 	return strlcpy(strDest, strSource, numberOfElements);
 }
 */
+
 #endif
 
 #if defined( LINUX )
@@ -91,9 +93,6 @@ inline uint64_t strtoull(const char *str, char **endptr, int base) { return _str
 
 /* Handles copying a std::string into a buffer as would be provided in an API */
 uint32_t ReturnStdString( const std::string & sValue, char *pchBuffer, uint32_t unBufferLen );
-
-/* Handles copying a buffer into an std::string and auto adds null terminator */
-void BufferToStdString( std::string & sDest, const char *pchBuffer, uint32_t unBufferLen );
 
 /** Returns a std::string from a uint64_t */
 // std::string Uint64ToString( uint64_t ulValue );
@@ -127,3 +126,5 @@ size_t V_URLDecode( char *pchDecodeDest, int nDecodeDestLen, const char *pchEnco
 void V_StripExtension( std::string &in );
 
 
+/** Tokenizes a string into a vector of strings */
+std::vector<std::string> TokenizeString( const std::string & sString, char cToken );

@@ -107,5 +107,5 @@ function test_openUILink() {
     runNextTest();
   });
 
-  openUILink("http://example.org/"); // defaults to "current"
+  openUILink("http://example.org/", null, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})}); // defaults to "current"
 }

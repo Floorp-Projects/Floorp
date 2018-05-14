@@ -84,8 +84,9 @@ class GeckoViewContentModule {
 
     this.onInit();
 
-    this.messageManager.sendAsyncMessage(
-      "GeckoView:ContentRegistered", { module: this.moduleName });
+    this.messageManager.sendAsyncMessage("GeckoView:ContentModuleLoaded", {
+      module: this.moduleName,
+    });
   }
 
   // Override to initialize module.

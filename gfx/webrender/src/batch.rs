@@ -21,7 +21,8 @@ use picture::{PictureCompositeMode, PicturePrimitive, PictureSurface};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, CachedGradient, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PictureIndex, PrimitiveIndex, PrimitiveKind};
-use prim_store::{PrimitiveMetadata, PrimitiveRun, PrimitiveStore};
+use prim_store::{PrimitiveMetadata, PrimitiveRun, PrimitiveStore, VisibleGradientTile};
+use prim_store::CachedGradientIndex;
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKind, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind};
 use renderer::{BLOCKS_PER_UV_RECT, ShaderColorMode};
@@ -615,6 +616,8 @@ impl AlphaBatchBuilder {
                 let brush = &ctx.prim_store.cpu_brushes[prim_metadata.cpu_prim_index.0];
                 match brush.kind {
                     BrushKind::Image { ref visible_tiles, .. } => !visible_tiles.is_empty(),
+                    BrushKind::LinearGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
+                    BrushKind::RadialGradient { ref visible_tiles, .. } => !visible_tiles.is_empty(),
                     _ => false,
                 }
             }
@@ -1018,6 +1021,40 @@ impl AlphaBatchBuilder {
                             }
                         }
                     }
+                    BrushKind::LinearGradient { gradient_index, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                        add_gradient_tiles(
+                            visible_tiles,
+                            gradient_index,
+                            BrushBatchKind::LinearGradient,
+                            specified_blend_mode,
+                            &task_relative_bounding_rect,
+                            clip_chain_rect_index,
+                            scroll_id,
+                            task_address,
+                            clip_task_address,
+                            z,
+                            ctx,
+                            gpu_cache,
+                            &mut self.batch_list,
+                        );
+                    }
+                    BrushKind::RadialGradient { gradient_index, ref visible_tiles, .. } if !visible_tiles.is_empty() => {
+                        add_gradient_tiles(
+                            visible_tiles,
+                            gradient_index,
+                            BrushBatchKind::RadialGradient,
+                            specified_blend_mode,
+                            &task_relative_bounding_rect,
+                            clip_chain_rect_index,
+                            scroll_id,
+                            task_address,
+                            clip_task_address,
+                            z,
+                            ctx,
+                            gpu_cache,
+                            &mut self.batch_list,
+                        );
+                    }
                     _ => {
                         if let Some((batch_kind, textures, user_data)) = brush.get_batch_params(
                                 ctx.resource_cache,
@@ -1345,6 +1382,57 @@ impl AlphaBatchBuilder {
                 batch.push(PrimitiveInstance::from(base_instance));
             }
         }
+    }
+}
+
+fn add_gradient_tiles(
+    visible_tiles: &[VisibleGradientTile],
+    gradient_index: CachedGradientIndex,
+    kind: BrushBatchKind,
+    blend_mode: BlendMode,
+    task_relative_bounding_rect: &DeviceIntRect,
+    clip_chain_rect_index: ClipChainRectIndex,
+    scroll_id: ClipScrollNodeIndex,
+    task_address: RenderTaskAddress,
+    clip_task_address: RenderTaskAddress,
+    z: ZBufferId,
+    ctx: &RenderTargetContext,
+    gpu_cache: &GpuCache,
+    batch_list: &mut BatchList,
+) {
+    batch_list.add_bounding_rect(task_relative_bounding_rect);
+    let batch = batch_list.get_suitable_batch(
+        BatchKey {
+            blend_mode: blend_mode,
+            kind: BatchKind::Brush(kind),
+            textures: BatchTextures::no_texture(),
+        },
+        task_relative_bounding_rect
+    );
+
+    let stops_handle = &ctx.cached_gradients[gradient_index.0].handle;
+    let user_data = [stops_handle.as_int(gpu_cache), 0, 0];
+
+    let base_instance = BrushInstance {
+        picture_address: task_address,
+        prim_address: GpuCacheAddress::invalid(),
+        clip_chain_rect_index,
+        scroll_id,
+        clip_task_address,
+        z,
+        segment_index: 0,
+        edge_flags: EdgeAaSegmentMask::all(),
+        brush_flags: BrushFlags::PERSPECTIVE_INTERPOLATION,
+        user_data,
+    };
+
+    for tile in visible_tiles {
+        batch.push(PrimitiveInstance::from(
+            BrushInstance {
+                prim_address: gpu_cache.get_address(&tile.handle),
+                ..base_instance
+            }
+        ));
     }
 }
 
