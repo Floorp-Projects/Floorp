@@ -590,7 +590,12 @@ protected:
    */
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
 
-  nsresult CacheInlineStyles(nsINode* aNode);
+  /**
+   * CacheInlineStyles() caches style of aNode into mCachedStyles.
+   * This may cause flushing layout at retrieving computed value of CSS
+   * properties.
+   */
+  MOZ_MUST_USE nsresult CacheInlineStyles(nsINode* aNode);
 
   /**
    * ReapplyCachedStyles() restores some styles which are disappeared during
