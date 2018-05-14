@@ -591,7 +591,14 @@ protected:
   MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
 
   nsresult CacheInlineStyles(nsINode* aNode);
-  nsresult ReapplyCachedStyles();
+
+  /**
+   * ReapplyCachedStyles() restores some styles which are disappeared during
+   * handling edit action and it should be restored.  This may cause flushing
+   * layout at retrieving computed value of CSS properties.
+   */
+  MOZ_MUST_USE nsresult ReapplyCachedStyles();
+
   void ClearCachedStyles();
 
   /**
