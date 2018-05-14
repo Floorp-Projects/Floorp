@@ -36,6 +36,17 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
 
     this.persistCheckbox = new LabelledCheckbox();
 
+    this._errorFieldMap = {
+      addressLine: "#street-address-container",
+      city: "#address-level2-container",
+      country: "#country-container",
+      organization: "#organization-container",
+      phone: "#tel-container",
+      postalCode: "#postal-code-container",
+      recipient: "#name-container",
+      region: "#address-level1-container",
+    };
+
     // The markup is shared with form autofill preferences.
     let url = "formautofill/editAddress.xhtml";
     this.promiseReady = this._fetchMarkup(url).then(doc => {
@@ -87,6 +98,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     let {
       page,
       "address-page": addressPage,
+      request,
     } = state;
 
     if (this.id && page && page.id !== this.id) {
@@ -129,6 +141,18 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     }
 
     this.formHandler.loadRecord(record);
+
+    let shippingAddressErrors = request.paymentDetails.shippingAddressErrors;
+    for (let [errorName, errorSelector] of Object.entries(this._errorFieldMap)) {
+      let container = document.querySelector(errorSelector);
+      let span = container.querySelector(".error-text");
+      if (!span) {
+        span = document.createElement("span");
+        span.className = "error-text";
+        container.appendChild(span);
+      }
+      span.textContent = shippingAddressErrors[errorName];
+    }
   }
 
   handleEvent(event) {
