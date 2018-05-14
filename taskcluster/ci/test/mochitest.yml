@@ -1,4 +1,8 @@
 job-defaults:
+    target:
+        by-test-platform:
+            android-7.0-x86/opt: geckoview-androidTest.apk
+            default: null
     mozharness:
         no-read-buildbot-config: true
         script:
@@ -10,6 +14,9 @@ job-defaults:
                 android-4.2-x86/opt:
                     - android/android_common.py
                     - android/androidx86.py
+                android-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 android.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
@@ -38,6 +45,7 @@ mochitest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 48
+            android-7.0-x86/opt: 4
             android.*: 24
             linux.*/debug: 16
             linux64-asan/opt: 10
@@ -161,6 +169,7 @@ mochitest-chrome:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 8
+            android-7.0-x86/opt: 1
             android.*: 4
             default: 3
     max-run-time:
@@ -296,6 +305,7 @@ mochitest-media:
             default: large
     chunks:
         by-test-platform:
+            android-7.0-x86/opt: 1
             macosx64.*: 1
             windows10-64.*: 1
             default: 3
