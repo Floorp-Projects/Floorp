@@ -8,6 +8,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Logging.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsColor.h"
 #include "nsDeviceContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -1523,6 +1524,26 @@ GetThemeDpiScaleFactor(nsIFrame* aFrame)
   return 1.0;
 }
 
+static bool
+IsWidgetScrollbarPart(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL:
+    case NS_THEME_SCROLLBAR_VERTICAL:
+    case NS_THEME_SCROLLBAR_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+      return true;
+    default:
+      return false;
+  }
+}
+
 NS_IMETHODIMP
 nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        nsIFrame* aFrame,
@@ -1530,6 +1551,12 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
+  if (aFrame->StyleUserInterface()->HasCustomScrollbars() &&
+      IsWidgetScrollbarPart(aWidgetType)) {
+    return DrawCustomScrollbarPart(aContext, aFrame, aWidgetType,
+                                   aRect, aDirtyRect);
+  }
+
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
     return ClassicDrawWidgetBackground(aContext, aFrame, aWidgetType, aRect, aDirtyRect); 
@@ -1925,6 +1952,47 @@ RENDER_AGAIN:
   nativeDrawing.PaintToContext();
 
   return NS_OK;
+}
+
+static nscolor
+GetScrollbarFaceColorForAuto()
+{
+  // Do we want to derive from scrollbar-track-color when possible?
+  DWORD sysColor = ::GetSysColor(COLOR_SCROLLBAR);
+  return NS_RGB(GetRValue(sysColor),
+                GetGValue(sysColor),
+                GetBValue(sysColor));
+}
+
+static nscolor
+GetScrollbarTrackColorForAuto(ComputedStyle* aStyle)
+{
+  // Fallback to background color for now. Do we want to derive from
+  // scrollbar-face-color somehow?
+  return aStyle->StyleBackground()->BackgroundColor(aStyle);
+}
+
+nscolor
+nsNativeThemeWin::GetWidgetAutoColor(ComputedStyle* aStyle, uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_SCROLLBAR:
+    case NS_THEME_SCROLLBAR_SMALL:
+    case NS_THEME_SCROLLBAR_VERTICAL:
+    case NS_THEME_SCROLLBAR_HORIZONTAL:
+    case NS_THEME_SCROLLBARBUTTON_UP:
+    case NS_THEME_SCROLLBARBUTTON_DOWN:
+    case NS_THEME_SCROLLBARBUTTON_LEFT:
+    case NS_THEME_SCROLLBARBUTTON_RIGHT:
+      return GetScrollbarTrackColorForAuto(aStyle);
+
+    case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+    case NS_THEME_SCROLLBARTHUMB_HORIZONTAL:
+      return GetScrollbarFaceColorForAuto();
+
+    default:
+      return nsITheme::GetWidgetAutoColor(aStyle, aWidgetType);
+  }
 }
 
 static void
@@ -4049,6 +4117,261 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
     gfxWindowsNativeDrawing::CANNOT_DRAW_TO_COLOR_ALPHA |
     gfxWindowsNativeDrawing::CANNOT_AXIS_ALIGNED_SCALE |
     gfxWindowsNativeDrawing::CANNOT_COMPLEX_TRANSFORM;
+}
+
+static COLORREF
+ToColorRef(nscolor aColor)
+{
+  return RGB(NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
+}
+
+static nscolor
+GetOpaqueBackgroundColor(ComputedStyle* aStyle)
+{
+  nscolor color = aStyle->StyleBackground()->BackgroundColor(aStyle);
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  // Compose white background with the background color.
+  return NS_ComposeColors(NS_RGB(255, 255, 255), color);
+}
+
+static nscolor
+GetScrollbarFaceColor(ComputedStyle* aStyle)
+{
+  StyleComplexColor complexColor =
+    aStyle->StyleUserInterface()->mScrollbarFaceColor;
+  if (complexColor.mIsAuto) {
+    return GetScrollbarFaceColorForAuto();
+  }
+  nscolor color = complexColor.CalcColor(aStyle);
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
+  return NS_ComposeColors(bgColor, color);
+}
+
+static nscolor
+GetScrollbarTrackColor(ComputedStyle* aStyle)
+{
+  StyleComplexColor complexColor =
+    aStyle->StyleUserInterface()->mScrollbarTrackColor;
+  nscolor color;
+  if (complexColor.mIsAuto) {
+    color = GetScrollbarTrackColorForAuto(aStyle);
+  } else {
+    color = complexColor.CalcColor(aStyle);
+  }
+  if (NS_GET_A(color) == 255) {
+    return color;
+  }
+  nscolor bgColor = GetOpaqueBackgroundColor(aStyle);
+  return NS_ComposeColors(bgColor, color);
+}
+
+static float
+ComputeColorComponentLuminance(uint8_t aComponent)
+{
+  float v = float(aComponent) / 255.0f;
+  if (v <= 0.03928f) {
+    return v / 12.92f;
+  }
+  return std::pow((v + 0.055f) / 1.055f, 2.4f);
+}
+
+static constexpr float
+ComputeRelativeLuminanceFromComponents(float aR, float aG, float aB)
+{
+  return 0.2126f * aR + 0.7152f * aG + 0.0722f * aB;
+}
+
+// This function is written according to the algorithm defined in
+// https://www.w3.org/TR/WCAG20/#relativeluminancedef
+static float
+ComputeRelativeLuminance(nscolor aColor)
+{
+  float r = ComputeColorComponentLuminance(NS_GET_R(aColor));
+  float g = ComputeColorComponentLuminance(NS_GET_G(aColor));
+  float b = ComputeColorComponentLuminance(NS_GET_B(aColor));
+  return ComputeRelativeLuminanceFromComponents(r, g, b);
+}
+
+// Inverse function of ComputeColorComponentLuminance.
+static uint8_t
+DecomputeColorComponentLuminance(float aComponent)
+{
+  if (aComponent <= 0.03928f / 12.92f) {
+    aComponent *= 12.92f;
+  } else {
+    aComponent = std::pow(aComponent, 1.0f / 2.4f) * 1.055f - 0.055f;
+  }
+  return ClampColor(aComponent * 255.0f);
+}
+
+// Adjust the luminance of the color to the given value.
+static nscolor
+AdjustColorLuminance(nscolor aColor, float aLuminance)
+{
+  float r = ComputeColorComponentLuminance(NS_GET_R(aColor));
+  float g = ComputeColorComponentLuminance(NS_GET_G(aColor));
+  float b = ComputeColorComponentLuminance(NS_GET_B(aColor));
+  float luminance = ComputeRelativeLuminanceFromComponents(r, g, b);
+  float factor = aLuminance / luminance;
+  uint8_t r1 = DecomputeColorComponentLuminance(r * factor);
+  uint8_t g1 = DecomputeColorComponentLuminance(g * factor);
+  uint8_t b1 = DecomputeColorComponentLuminance(b * factor);
+  return NS_RGB(r1, g1, b1);
+}
+
+static nscolor
+GetScrollbarArrowColor(nscolor aTrackColor)
+{
+  // In Windows 10 scrollbar, there are several gray colors used:
+  //
+  // State  | Background (lum) | Arrow   | Contrast
+  // -------+------------------+---------+---------
+  // Normal | Gray 240 (87.1%) | Gray 96 |     5.5
+  // Hover  | Gray 218 (70.1%) | Black   |    15.0
+  // Active | Gray 96  (11.7%) | White   |     6.3
+  //
+  // Contrast value is computed based on the definition in
+  // https://www.w3.org/TR/WCAG20/#contrast-ratiodef
+  //
+  // This function is written based on these values.
+
+  float luminance = ComputeRelativeLuminance(aTrackColor);
+  // Color with luminance larger than 0.72 has contrast ratio over 4.6
+  // to color with luminance of gray 96, so this value is chosen for
+  // this range. It is the luminance of gray 221.
+  if (luminance >= 0.72) {
+    // ComputeRelativeLuminanceFromComponents(96). That function cannot
+    // be constexpr because of std::pow.
+    const float GRAY96_LUMINANCE = 0.117f;
+    return AdjustColorLuminance(aTrackColor, GRAY96_LUMINANCE);
+  }
+  // The contrast ratio of a color to black equals that to white when its
+  // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
+  // thus the value below. It's the lumanince of gray 118.
+  if (luminance >= 0.18) {
+    return NS_RGB(0, 0, 0);
+  }
+  return NS_RGB(255, 255, 255);
+}
+
+// This tries to draw a Windows 10 style scrollbar with given colors.
+nsresult
+nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
+                                          nsIFrame* aFrame,
+                                          uint8_t aWidgetType,
+                                          const nsRect& aRect,
+                                          const nsRect& aClipRect)
+{
+  ComputedStyle* style = aFrame->Style();
+  MOZ_ASSERT(!style->StyleUserInterface()->mScrollbarFaceColor.mIsAuto ||
+             !style->StyleUserInterface()->mScrollbarTrackColor.mIsAuto);
+
+  gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
+          dr(aClipRect.X(), aClipRect.Y(),
+             aClipRect.Width(), aClipRect.Height());
+
+  nscolor trackColor = GetScrollbarTrackColor(style);
+  HBRUSH dcBrush = (HBRUSH) GetStockObject(DC_BRUSH);
+
+  gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
+  tr.Scale(1.0 / p2a);
+  dr.Scale(1.0 / p2a);
+
+  RefPtr<gfxContext> ctx = aContext;
+
+  uint32_t flags = GetWidgetNativeDrawingFlags(aWidgetType);
+  gfxWindowsNativeDrawing nativeDrawing(ctx, dr, flags);
+
+  do {
+    HDC hdc = nativeDrawing.BeginNativeDrawing();
+    if (!hdc) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RECT widgetRect;
+    nativeDrawing.TransformToNativeRect(tr, widgetRect);
+    ::SetDCBrushColor(hdc, ToColorRef(trackColor));
+    ::SelectObject(hdc, dcBrush);
+    ::FillRect(hdc, &widgetRect, dcBrush);
+
+    switch (aWidgetType) {
+      case NS_THEME_SCROLLBARTHUMB_VERTICAL:
+      case NS_THEME_SCROLLBARTHUMB_HORIZONTAL: {
+        // Scrollbar thumb is two CSS pixels thinner than the track.
+        gfxRect tr2 = tr;
+        gfxFloat dev2css = round(AppUnitsPerCSSPixel() / p2a);
+        if (aWidgetType == NS_THEME_SCROLLBARTHUMB_VERTICAL) {
+          tr2.Deflate(dev2css, 0);
+        } else {
+          tr2.Deflate(0, dev2css);
+        }
+        nativeDrawing.TransformToNativeRect(tr2, widgetRect);
+        nscolor faceColor = GetScrollbarFaceColor(style);
+        ::SetDCBrushColor(hdc, ToColorRef(faceColor));
+        ::FillRect(hdc, &widgetRect, dcBrush);
+        break;
+      }
+      case NS_THEME_SCROLLBARBUTTON_UP:
+      case NS_THEME_SCROLLBARBUTTON_DOWN:
+      case NS_THEME_SCROLLBARBUTTON_LEFT:
+      case NS_THEME_SCROLLBARBUTTON_RIGHT: {
+        // kPath is the path of scrollbar up arrow on Windows 10
+        // in a 17x17 area.
+        const LONG kSize = 17;
+        const POINT kPath[] = {
+          { 5, 9 }, { 8, 6 }, { 11, 9 }, { 11, 11 }, { 8, 8 }, { 5, 11 },
+        };
+        const size_t kCount = ArrayLength(kPath);
+        // Calculate necessary parameters for positioning the arrow.
+        LONG width = widgetRect.right - widgetRect.left;
+        LONG height = widgetRect.bottom - widgetRect.top;
+        LONG size = std::min(width, height);
+        LONG left = (width - size) / 2 + widgetRect.left;
+        LONG top = (height - size) / 2 + widgetRect.top;
+        float unit = float(size) / kSize;
+        POINT path[kCount];
+        // Flip the path for different direction, then resize and align
+        // it to the middle of the area.
+        for (size_t i = 0; i < kCount; i++) {
+          if (aWidgetType == NS_THEME_SCROLLBARBUTTON_UP) {
+            path[i] = kPath[i];
+          } else if (aWidgetType == NS_THEME_SCROLLBARBUTTON_DOWN) {
+            path[i].x = kPath[i].x;
+            path[i].y = kSize - kPath[i].y;
+          } else if (aWidgetType == NS_THEME_SCROLLBARBUTTON_LEFT) {
+            path[i].x = kPath[i].y;
+            path[i].y = kPath[i].x;
+          } else {
+            path[i].x = kSize - kPath[i].y;
+            path[i].y = kPath[i].x;
+          }
+          path[i].x = left + (LONG) round(unit * path[i].x);
+          path[i].y = top + (LONG) round(unit * path[i].y);
+        }
+        // Paint the arrow.
+        COLORREF arrowColor = ToColorRef(GetScrollbarArrowColor(trackColor));
+        // XXX Somehow we need to paint with both pen and brush to get
+        //     the desired shape. Can we do so only with brush?
+        ::SetDCPenColor(hdc, arrowColor);
+        ::SetDCBrushColor(hdc, arrowColor);
+        ::SelectObject(hdc, GetStockObject(DC_PEN));
+        ::Polygon(hdc, path, kCount);
+        break;
+      }
+      default:
+        break;
+    }
+
+    nativeDrawing.EndNativeDrawing();
+  } while (nativeDrawing.ShouldRenderAgain());
+
+  nativeDrawing.PaintToContext();
+  return NS_OK;
 }
 
 ///////////////////////////////////////////
