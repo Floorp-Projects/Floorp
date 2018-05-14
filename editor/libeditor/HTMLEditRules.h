@@ -594,7 +594,12 @@ protected:
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
   void AdjustSpecialBreaks();
-  nsresult AdjustWhitespace();
+
+  /**
+   * AdjustWhitespace() may replace whitespaces with NBSP or something.
+   * See WSRunObject::AdjustWhitespace() for the detail.
+   */
+  MOZ_MUST_USE nsresult AdjustWhitespace();
 
   /**
    * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
