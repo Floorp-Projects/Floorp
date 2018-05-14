@@ -65,6 +65,11 @@ EXPORTS.mozilla.gfx += [
     'PrintTargetThebes.h',
 ]
 
+if CONFIG['MOZ_ENABLE_SKIA']:
+    EXPORTS.mozilla.gfx += [
+        'SkMemoryReporter.h'
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
         'gfxAndroidPlatform.h',
@@ -211,6 +216,11 @@ UNIFIED_SOURCES += [
     'SoftwareVsyncSource.cpp',
     'VsyncSource.cpp',
 ]
+
+if CONFIG['MOZ_ENABLE_SKIA']:
+    UNIFIED_SOURCES += [
+        'SkMemoryReporter.cpp',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
