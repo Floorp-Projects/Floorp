@@ -45,8 +45,8 @@ add_task(async function test_searchEngine_autofill() {
   info("Should autoFill search engine if search string does not contains a space");
   await check_autocomplete({
     search: "ca",
-    autofilled: "cake.search",
-    completed: "http://cake.search"
+    autofilled: "cake.search/",
+    completed: "http://cake.search/"
   });
 
   await cleanup();
@@ -136,22 +136,22 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
   info("Should autoFill search engine if search string has matching prefix.");
   await check_autocomplete({
     search: "http://www.be",
-    autofilled: "http://www.bean.search",
-    completed: "http://www.bean.search"
+    autofilled: "http://www.bean.search/",
+    completed: "http://www.bean.search/"
   });
 
   info("Should autoFill search engine if search string has www prefix.");
   await check_autocomplete({
     search: "www.be",
-    autofilled: "www.bean.search",
-    completed: "http://www.bean.search"
+    autofilled: "www.bean.search/",
+    completed: "http://www.bean.search/"
   });
 
   info("Should autoFill search engine if search string has matching scheme.");
   await check_autocomplete({
     search: "http://be",
-    autofilled: "http://bean.search",
-    completed: "http://www.bean.search"
+    autofilled: "http://bean.search/",
+    completed: "http://www.bean.search/"
   });
 
   await cleanup();
@@ -160,11 +160,9 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
 add_task(async function test_prefix_autofill() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://moz.org/test/"),
-    transition: TRANSITION_TYPED
   });
 
   info("Should not try to autoFill in-the-middle if a search is canceled immediately");
@@ -172,7 +170,7 @@ add_task(async function test_prefix_autofill() {
     incompleteSearch: "moz",
     search: "mozi",
     autofilled: "mozilla.org/",
-    completed: "mozilla.org/"
+    completed: "http://mozilla.org/"
   });
 
   await cleanup();

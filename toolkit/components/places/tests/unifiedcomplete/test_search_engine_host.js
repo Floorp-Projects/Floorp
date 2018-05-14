@@ -22,8 +22,8 @@ add_task(async function test_searchEngine_autoFill() {
   info("Check search domain is autoFilled even if there's an higher frecency match");
   await check_autocomplete({
     search: "my",
-    autofilled: "my.search.com",
-    completed: "http://my.search.com"
+    autofilled: "my.search.com/",
+    completed: "http://my.search.com/"
   });
 
   await cleanup();
@@ -34,14 +34,13 @@ add_task(async function test_searchEngine_noautoFill() {
   let engine = await addTestEngine(engineName);
   equal(engine.searchForm, "http://example.com/?search");
 
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://example.com/my/"));
 
   info("Check search domain is not autoFilled if it matches a visited domain");
   await check_autocomplete({
     search: "example",
     autofilled: "example.com/",
-    completed: "example.com/"
+    completed: "http://example.com/"
   });
 
   await cleanup();

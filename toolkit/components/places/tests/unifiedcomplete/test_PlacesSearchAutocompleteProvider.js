@@ -35,7 +35,8 @@ add_task(async function hide_search_engine_nomatch() {
   Services.search.removeEngine(engine);
   await promiseTopic;
   Assert.ok(engine.hidden);
-  Assert.equal(null, await PlacesSearchAutocompleteProvider.findMatchByToken(token.substr(0, 1)));
+  let match = await PlacesSearchAutocompleteProvider.findMatchByToken(token.substr(0, 1));
+  Assert.ok(!match || match.token != token);
 });
 
 add_task(async function add_search_engine_match() {

@@ -15,6 +15,14 @@ ChromeUtils.import("resource://testing-common/httpd.js");
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
+// Add a lazy getter for common autofill test tasks used by some tests.
+{
+  /* import-globals-from ./autofill_tasks.js */
+  let file = do_get_file("autofill_tasks.js", false);
+  let uri = Services.io.newFileURI(file);
+  XPCOMUtils.defineLazyScriptGetter(this, "addAutofillTasks", uri.spec);
+}
+
 // Put any other stuff relative to this test folder below.
 
 const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
@@ -22,7 +30,6 @@ const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 async function cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autocomplete.enabled");
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
-  Services.prefs.clearUserPref("browser.urlbar.autoFill.typed");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
   let suggestPrefs = [
     "history",
@@ -105,14 +112,16 @@ AutoCompleteInput.prototype = {
  *   uri: {nsIURI} The expected uri.
  *   title: {String} The title of the entry.
  *   tags: {String} The tags for the entry.
- *   style: {String} The style of the entry.
+ *   style: {Array} The style of the entry.
  * }
  * @param {Object} result The result to compare the result against with the same
  *                        properties as the match param.
  * @returns {boolean} Returns true if the result matches.
  */
 async function _check_autocomplete_matches(match, result) {
-  let { uri, title, tags, style } = match;
+  let { uri, tags, style } = match;
+  let title = match.comment || match.title;
+
   if (tags)
     title += " \u2013 " + tags.sort().join(", ");
   if (style)
@@ -120,16 +129,19 @@ async function _check_autocomplete_matches(match, result) {
   else
     style = ["favicon"];
 
-  info(`Checking against expected "${uri.spec}", comment: "${title}", style: "${style}"`);
-  // Got a match on both uri and title?
-  if (stripPrefix(uri.spec) != stripPrefix(result.value) || title != result.comment) {
+  let actual = { value: result.value, comment: result.comment };
+  let expected = { value: match.value || uri.spec, comment: title };
+  info(`Checking match: ` +
+       `actual=${JSON.stringify(actual)} ... ` +
+       `expected=${JSON.stringify(expected)}`);
+  if (actual.value != expected.value || actual.comment != expected.comment) {
     return false;
   }
 
   let actualStyle = result.style.split(/\s+/).sort();
   if (style)
     Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
-  if (uri.spec.startsWith("moz-action:")) {
+  if (uri && uri.spec.startsWith("moz-action:")) {
     Assert.ok(actualStyle.includes("action"), "moz-action results should always have 'action' in their style");
   }
 
@@ -231,7 +243,7 @@ async function check_autocomplete(test) {
           style: controller.getStyleAt(i),
           image: controller.getImageAt(i),
         };
-        info(`Found value: "${result.value}", comment: "${result.comment}", style: "${result.style}" in results...`);
+        info(`Actual result at index ${i}: ${JSON.stringify(result)}`);
         let lowerBound = test.checkSorting ? i : firstIndexToCheck;
         let upperBound = test.checkSorting ? i + 1 : matches.length;
         let found = false;

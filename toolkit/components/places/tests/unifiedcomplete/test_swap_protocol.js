@@ -41,13 +41,16 @@ add_task(async function test_swap_protocol() {
   ];
 
   // Disable autoFill to avoid handling the first result.
-  Services.prefs.setBoolPref("browser.urlbar.autoFill", "false");
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
 
-  info("http://www.site matches all site");
+  info("http://www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "http://www.site",
-    matches: allMatches
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+    ]
   });
 
   info("http://site matches all site");
@@ -71,7 +74,10 @@ add_task(async function test_swap_protocol() {
   info("https://www.site matches all site");
   await check_autocomplete({
     search: "https://www.site",
-    matches: allMatches
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+    ]
   });
 
   info("https://site matches all site");
@@ -80,73 +86,93 @@ add_task(async function test_swap_protocol() {
     matches: allMatches
   });
 
-  info("www.site matches all site");
+  info("www.site matches 'www.site' pages");
   await check_autocomplete({
     search: "www.site",
-    matches: allMatches
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+    ]
   });
 
-  info("w matches none of www.");
+  info("w matches 'w' pages, including 'www'");
   await check_autocomplete({
     search: "w",
-    matches: [ { uri: uri7, title: "title" },
-               { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri7, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("http://w matches none of www.");
+  info("http://w matches 'w' pages, including 'www'");
   await check_autocomplete({
     search: "http://w",
-    matches: [ { uri: uri7, title: "title" },
-               { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri7, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("http://w matches none of www.");
+  info("http://www.w matches nothing");
   await check_autocomplete({
     search: "http://www.w",
-    matches: [ { uri: uri7, title: "title" },
-               { uri: uri8, title: "title" } ]
+    matches: []
   });
 
-  info("ww matches none of www.");
+  info("ww matches no 'ww' pages, including 'www'");
   await check_autocomplete({
     search: "ww",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("ww matches none of www.");
-  await check_autocomplete({
-    search: "ww",
-    matches: [ { uri: uri8, title: "title" } ]
-  });
-
-  info("http://ww matches none of www.");
+  info("http://ww matches no 'ww' pages, including 'www'");
   await check_autocomplete({
     search: "http://ww",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("http://www.ww matches none of www.");
+  info("http://www.ww matches nothing");
   await check_autocomplete({
     search: "http://www.ww",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: []
   });
 
-  info("www matches none of www.");
+  info("www matches 'www' pages");
   await check_autocomplete({
     search: "www",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("http://www matches none of www.");
+  info("http://www matches 'www' pages");
   await check_autocomplete({
     search: "http://www",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: [
+      { uri: uri1, title: "title" },
+      { uri: uri5, title: "title" },
+      { uri: uri8, title: "title" },
+    ]
   });
 
-  info("http://www.www matches none of www.");
+  info("http://www.www matches nothing");
   await check_autocomplete({
     search: "http://www.www",
-    matches: [ { uri: uri8, title: "title" } ]
+    matches: []
   });
 
   await cleanup();
