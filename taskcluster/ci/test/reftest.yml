@@ -1,4 +1,8 @@
 job-defaults:
+    target:
+        by-test-platform:
+            android-7.0-x86/opt: geckoview-androidTest.apk
+            default: null
     mozharness:
         no-read-buildbot-config: true
         script:
@@ -7,6 +11,9 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
+                android-7.0-x86/opt:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 android.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
@@ -34,6 +41,7 @@ crashtest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 10
+            android-7.0-x86/opt: 1
             android.*: 4
             default: 1
     e10s:
@@ -59,6 +67,7 @@ jsreftest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 100
+            android-7.0-x86/opt: 3
             android.*: 40
             windows.*: 2
             windows10-64-ccov/debug: 5
@@ -94,6 +103,7 @@ reftest:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 56
+            android-7.0-x86/opt: 5
             android.*: 28
             macosx64.*/opt: 1
             macosx64.*/debug: 3
@@ -139,6 +149,7 @@ reftest-fonts:
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 28
+            android-7.0-x86/opt: 5
             android.*: 7
             macosx64.*/opt: 1
             macosx64.*/debug: 2
