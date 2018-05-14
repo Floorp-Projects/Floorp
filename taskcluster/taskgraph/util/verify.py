@@ -129,6 +129,32 @@ def verify_gecko_v2_routes(task, taskgraph, scratch_pad):
 
 
 @verifications.add('full_task_graph')
+def verify_routes_notification_filters(task, taskgraph, scratch_pad):
+    """
+        This function ensures that only understood filters for notifications are
+        specified.
+
+        See: https://docs.taskcluster.net/reference/core/taskcluster-notify/docs/usage
+    """
+    if task is None:
+        return
+    route_prefix = "notify."
+    valid_filters = ('on-any', 'on-completed', 'on-failed', 'on-exception')
+    task_dict = task.task
+    routes = task_dict.get('routes', [])
+
+    for route in routes:
+        if route.startswith(route_prefix):
+            # Get the filter of the route
+            route_filter = route.split('.')[-1]
+            if route_filter not in valid_filters:
+                raise Exception(
+                    '{} has invalid notification filter ({})'
+                    .format(task.label, route_filter)
+                )
+
+
+@verifications.add('full_task_graph')
 def verify_dependency_tiers(task, taskgraph, scratch_pad):
     tiers = scratch_pad
     if task is not None:
