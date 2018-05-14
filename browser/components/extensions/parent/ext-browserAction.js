@@ -173,6 +173,7 @@ this.browserAction = class extends ExtensionAPI {
         node.classList.add("badged-button");
         node.classList.add("webextension-browser-action");
         node.setAttribute("constrain-size", "true");
+        node.setAttribute("data-extensionid", this.extension.id);
 
         node.onmousedown = event => this.handleEvent(event);
         node.onmouseover = event => this.handleEvent(event);
