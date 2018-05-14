@@ -558,7 +558,21 @@ protected:
 
   Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIContent& aListItem, bool* aOutOfList = nullptr);
-  nsresult RemoveListStructure(Element& aList);
+
+  /**
+   * RemoveListStructure() destroys the list structure of aListElement.
+   * If aListElement has <li>, <dl> or <dt> as a child, the element is removed
+   * but its descendants are moved to where the list item element was.
+   * If aListElement has another <ul>, <ol> or <dl> as a child, this method
+   * is called recursively.
+   * If aListElement has other nodes as its child, they are just removed.
+   * Finally, aListElement is removed. and its all children are moved to
+   * where the aListElement was.
+   *
+   * @param aListElement        A <ul>, <ol> or <dl> element.
+   */
+  MOZ_MUST_USE nsresult RemoveListStructure(Element& aListElement);
+
   nsresult CacheInlineStyles(nsINode* aNode);
   nsresult ReapplyCachedStyles();
   void ClearCachedStyles();
@@ -595,7 +609,17 @@ protected:
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsINode* aNode, bool* aResult);
   nsresult UpdateDocChangeRange(nsRange* aRange);
-  nsresult ConfirmSelectionInBody();
+
+  /**
+   * ConfirmSelectionInBody() makes sure that Selection is in editor root
+   * element typically <body> element (see HTMLEditor::UpdateRootElement())
+   * and only one Selection range.
+   * XXX This method is not necessary because even if selection is outside the
+   *     <body> element, elements outside the <body> element should be
+   *     editable, e.g., any element can be inserted siblings as <body> element
+   *     and other browsers allow to edit such elements.
+   */
+  MOZ_MUST_USE nsresult ConfirmSelectionInBody();
 
   bool IsEmptyInline(nsINode& aNode);
   bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
