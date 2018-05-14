@@ -29,27 +29,6 @@ protected:
   WebRenderLayerManager* mManager;
 };
 
-class WebRenderCanvasRendererSync : public WebRenderCanvasRenderer
-{
-public:
-  explicit WebRenderCanvasRendererSync(WebRenderLayerManager* aManager)
-    : WebRenderCanvasRenderer(aManager)
-  { }
-  virtual ~WebRenderCanvasRendererSync();
-
-  WebRenderCanvasRendererSync* AsWebRenderCanvasRendererSync() override { return this; }
-
-  void Initialize(const CanvasInitializeData& aData) override;
-  bool CreateCompositable() override;
-
-  void ClearCachedResources() override;
-  void Destroy() override;
-
-  wr::MaybeExternalImageId GetExternalImageId() { return mExternalImageId; }
-protected:
-  wr::MaybeExternalImageId mExternalImageId;
-};
-
 class WebRenderCanvasRendererAsync : public WebRenderCanvasRenderer
 {
 public:

@@ -256,7 +256,7 @@ js::gc::ArenaLists::clearFreeList(AllocKind i)
     if (!old->isEmpty())
         old->getArena()->checkNoMarkedFreeCells();
 #endif
-    freeLists()[i] = &placeholder;
+    freeLists()[i] = &emptySentinel;
 }
 
 js::gc::Arena*
