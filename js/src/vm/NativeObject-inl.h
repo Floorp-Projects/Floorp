@@ -102,13 +102,13 @@ NativeObject::setDenseElementHole(JSContext* cx, uint32_t index)
     setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
-/* static */ inline void
-NativeObject::removeDenseElementForSparseIndex(JSContext* cx,
-                                               HandleNativeObject obj, uint32_t index)
+inline void
+NativeObject::removeDenseElementForSparseIndex(JSContext* cx, uint32_t index)
 {
-    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
-    if (obj->containsDenseElement(index))
-        obj->setDenseElementUnchecked(index, MagicValue(JS_ELEMENTS_HOLE));
+    MOZ_ASSERT(containsPure(INT_TO_JSID(index)));
+    MarkObjectGroupFlags(cx, this, OBJECT_FLAG_NON_PACKED | OBJECT_FLAG_SPARSE_INDEXES);
+    if (containsDenseElement(index))
+        setDenseElement(index, MagicValue(JS_ELEMENTS_HOLE));
 }
 
 inline bool
