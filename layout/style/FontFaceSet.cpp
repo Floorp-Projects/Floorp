@@ -395,6 +395,14 @@ FontFaceSet::GetReady(ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  // There may be outstanding style changes that will trigger the loading of
+  // new fonts.  We need to flush layout to initiate any such loads so that
+  // if mReady is currently resolved we replace it with a new pending Promise.
+  // (That replacement will happen under this flush call.)
+  if (mDocument) {
+    mDocument->FlushPendingNotifications(FlushType::Layout);
+  }
+
   if (!mReady) {
     nsCOMPtr<nsIGlobalObject> global = GetParentObject();
     mReady = Promise::Create(global, aRv);
@@ -408,7 +416,6 @@ FontFaceSet::GetReady(ErrorResult& aRv)
     }
   }
 
-  FlushUserFontSet();
   return mReady;
 }
 
