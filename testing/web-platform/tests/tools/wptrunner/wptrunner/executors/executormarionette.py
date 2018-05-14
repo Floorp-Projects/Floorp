@@ -437,15 +437,18 @@ class ExecuteAsyncScriptRun(object):
             self.logger.error("Lost marionette connection before starting test")
             return Stop
 
-        executor = threading.Thread(target = self._run)
-        executor.start()
-
         if timeout is not None:
             wait_timeout = timeout + 2 * extra_timeout
         else:
             wait_timeout = None
 
-        flag = self.result_flag.wait(wait_timeout)
+        timer = threading.Timer(wait_timeout, self._timeout)
+        timer.start()
+
+        self._run()
+
+        self.result_flag.wait()
+        timer.cancel()
 
         if self.result == (None, None):
             self.logger.debug("Timed out waiting for a result")
@@ -479,6 +482,10 @@ class ExecuteAsyncScriptRun(object):
             self.result = False, ("INTERNAL-ERROR", e)
         finally:
             self.result_flag.set()
+
+    def _timeout(self):
+        self.result = False, ("EXTERNAL-TIMEOUT", None)
+        self.result_flag.set()
 
 
 class MarionetteTestharnessExecutor(TestharnessExecutor):
