@@ -2098,7 +2098,14 @@ LaunchCallbackApp(const NS_tchar *workingDir,
   // Do not allow the callback to run when running an update through the
   // service as session 0.  The unelevated updater.exe will do the launching.
   if (!usingService) {
-    WinLaunchChild(argv[0], argc, argv, nullptr);
+    HANDLE hProcess;
+    if (WinLaunchChild(argv[0], argc, argv, nullptr, &hProcess)) {
+      // Keep the current process around until the callback process has created
+      // its message queue, to avoid the launched process's windows being forced
+      // into the background.
+      WaitForInputIdle(hProcess, kWaitForInputIdleTimeoutMS);
+      CloseHandle(hProcess);
+    }
   }
 #else
 # warning "Need implementaton of LaunchCallbackApp"
