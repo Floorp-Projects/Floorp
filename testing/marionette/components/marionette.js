@@ -295,7 +295,7 @@ class MarionetteMainProcess {
   }
 
   get running() {
-    return this.server && this.server.alive;
+    return !!this.server && this.server.alive;
   }
 
   set enabled(value) {
