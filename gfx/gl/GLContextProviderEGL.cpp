@@ -131,35 +131,10 @@ DestroySurface(EGLSurface oldSurface) {
 }
 
 static EGLSurface
-CreateFallbackSurface(const EGLConfig& config)
-{
-    if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_surfaceless_context)) {
-        // We don't need a PBuffer surface in this case
-        return EGL_NO_SURFACE;
-    }
+CreateSurfaceFromNativeWindow(EGLNativeWindowType window, const EGLConfig& config) {
+    EGLSurface newSurface = nullptr;
 
-    std::vector<EGLint> pbattrs;
-    pbattrs.push_back(LOCAL_EGL_WIDTH); pbattrs.push_back(1);
-    pbattrs.push_back(LOCAL_EGL_HEIGHT); pbattrs.push_back(1);
-
-    for (const auto& cur : kTerminationAttribs) {
-        pbattrs.push_back(cur);
-    }
-
-    EGLSurface surface = sEGLLibrary.fCreatePbufferSurface(EGL_DISPLAY(), config, pbattrs.data());
-    if (!surface) {
-        MOZ_CRASH("Failed to create fallback EGLSurface");
-    }
-
-    return surface;
-}
-
-static EGLSurface
-CreateSurfaceFromNativeWindow(EGLNativeWindowType window, const EGLConfig& config)
-{
     MOZ_ASSERT(window);
-    EGLSurface newSurface = EGL_NO_SURFACE;
-
 #ifdef MOZ_WIDGET_ANDROID
     JNIEnv* const env = jni::GetEnvForThread();
     ANativeWindow* const nativeWindow = ANativeWindow_fromSurface(
@@ -193,6 +168,7 @@ already_AddRefed<GLContext>
 GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
                             bool aWebRender)
 {
+    MOZ_ASSERT(aWindow);
     nsCString discardFailureId;
     if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
         gfxCriticalNote << "Failed to load EGL library 3!";
@@ -217,9 +193,11 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
         }
     }
 
-    EGLSurface surface = EGL_NO_SURFACE;
-    if (aWindow) {
-        surface = mozilla::gl::CreateSurfaceFromNativeWindow(aWindow, config);
+    EGLSurface surface = mozilla::gl::CreateSurfaceFromNativeWindow(aWindow, config);
+
+    if (!surface) {
+        gfxCriticalNote << "Failed to create EGLSurface!";
+        return nullptr;
     }
 
     CreateContextFlags flags = CreateContextFlags::NONE;
@@ -250,7 +228,6 @@ GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
     : GLContext(flags, caps, nullptr, isOffscreen, false)
     , mConfig(config)
     , mSurface(surface)
-    , mFallbackSurface(CreateFallbackSurface(config))
     , mContext(context)
     , mSurfaceOverride(EGL_NO_SURFACE)
     , mThebesSurface(nullptr)
@@ -282,7 +259,6 @@ GLContextEGL::~GLContextEGL()
     sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
 
     mozilla::gl::DestroySurface(mSurface);
-    mozilla::gl::DestroySurface(mFallbackSurface);
 }
 
 bool
@@ -380,12 +356,8 @@ GLContextEGL::SetEGLSurfaceOverride(EGLSurface surf) {
 bool
 GLContextEGL::MakeCurrentImpl() const
 {
-    EGLSurface surface = (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride
-                                                              : mSurface;
-    if (!surface) {
-        surface = mFallbackSurface;
-    }
-
+    const EGLSurface surface = (mSurfaceOverride != EGL_NO_SURFACE) ? mSurfaceOverride
+                                                                    : mSurface;
     const bool succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), surface, surface,
                                                     mContext);
     if (!succeeded) {
@@ -419,16 +391,10 @@ GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
     // If we get here, then by definition we know that we want to get a new surface.
     ReleaseSurface();
     MOZ_ASSERT(aWidget);
-
-    void* nativeWindow = GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget);
-    if (nativeWindow) {
-        mSurface = mozilla::gl::CreateSurfaceFromNativeWindow(nativeWindow, mConfig);
-        if (!mSurface) {
-            NS_WARNING("Failed to create EGLSurface from native window");
-            return false;
-        }
+    mSurface = mozilla::gl::CreateSurfaceFromNativeWindow(GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget), mConfig);
+    if (!mSurface) {
+        return false;
     }
-
     return MakeCurrent(true);
 }
 
