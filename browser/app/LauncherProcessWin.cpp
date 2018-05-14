@@ -218,6 +218,11 @@ LauncherMain(int argc, wchar_t* argv[])
     return 1;
   }
 
+  // Keep the current process around until the callback process has created
+  // its message queue, to avoid the launched process's windows being forced
+  // into the background.
+  ::WaitForInputIdle(process.get(), kWaitForInputIdleTimeoutMS);
+
   return 0;
 }
 
