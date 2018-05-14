@@ -550,11 +550,13 @@ protected:
    * @param aLeftNode   The node which will be removed.
    * @param aRightNode  The node which will be inserted the content of
    *                    aLeftNode.
-   * @return            The point at the first child of aRightNode.
+   * @param aNewFirstChildOfRightNode
+   *                    The point at the first child of aRightNode.
    */
-  EditorDOMPoint
-  JoinNearestEditableNodesWithTransaction(nsIContent& aLeftNode,
-                                          nsIContent& aRightNode);
+  MOZ_MUST_USE nsresult
+  JoinNearestEditableNodesWithTransaction(
+    nsIContent& aLeftNode, nsIContent& aRightNode,
+    EditorDOMPoint* aNewFirstChildOfRightNode);
 
   Element* GetTopEnclosingMailCite(nsINode& aNode);
 
