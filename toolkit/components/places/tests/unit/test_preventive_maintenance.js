@@ -52,7 +52,7 @@ function addPlace(aUrl, aFavicon, aGuid = PlacesUtils.history.makeGuid()) {
   stmt.execute();
   stmt.finalize();
   stmt = mDBConn.createStatement(
-    "DELETE FROM moz_updatehostsinsert_temp");
+    "DELETE FROM moz_updateoriginsinsert_temp");
   stmt.execute();
   stmt.finalize();
   let id = mDBConn.lastInsertRowID;

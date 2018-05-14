@@ -7,7 +7,9 @@
  * sure we don't hit an assertion for "not a UTF8 string".
  */
 
-add_task(async function test_javascript_match() {
+add_task(async function test() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+
   info("Bad escaped uri stays escaped");
   let uri1 = NetUtil.newURI("http://site/%EAid");
   await PlacesTestUtils.addVisits([ { uri: uri1, title: "title" } ]);

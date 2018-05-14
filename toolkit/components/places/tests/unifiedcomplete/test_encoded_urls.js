@@ -25,9 +25,13 @@ add_task(async function test_encoded_trimmed() {
   });
   await check_autocomplete({
     search: "mozilla.com/search/top/?q=%25%32%35",
-    matches: [ { uri: NetUtil.newURI("https://www.mozilla.com/search/top/?q=%25%32%35"),
-                 title: "https://www.mozilla.com/search/top/?q=%25%32%35",
-                 style: [ "autofill", "heuristic" ] }],
+    matches: [
+      {
+        value: "mozilla.com/search/top/?q=%25%32%35",
+        comment: "https://www.mozilla.com/search/top/?q=%25%32%35",
+        style: ["autofill", "heuristic"],
+      },
+    ],
     autofilled: "mozilla.com/search/top/?q=%25%32%35",
     completed: "https://www.mozilla.com/search/top/?q=%25%32%35"
   });

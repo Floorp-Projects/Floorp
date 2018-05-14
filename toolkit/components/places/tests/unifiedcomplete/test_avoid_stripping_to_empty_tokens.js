@@ -11,27 +11,62 @@ add_task(async function test_protocol_trimming() {
       transition: TRANSITION_TYPED
     };
     await PlacesTestUtils.addVisits(visit);
-    let matches = [{uri: visit.uri, title: visit.title}];
+
+    let input = prot + "://www.";
+    info("Searching for: " + input);
+    await check_autocomplete({
+      search: input,
+      matches: [
+        {
+          value: prot + "://www.mozilla.org/",
+          comment: prot == "http" ? "www.mozilla.org"
+                                  : prot + "://www.mozilla.org",
+          style: ["autofill", "heuristic"],
+        },
+        {
+          value: visit.uri.spec,
+          comment: visit.title,
+          style: ["favicon"],
+        }
+      ],
+    });
+
+    input = "www.";
+    info("Searching for: " + input);
+    await check_autocomplete({
+      search: input,
+      matches: [
+        {
+          value: "www.mozilla.org/",
+          comment: prot == "http" ? "www.mozilla.org"
+                                  : prot + "://www.mozilla.org",
+          style: ["autofill", "heuristic"],
+        },
+        {
+          value: visit.uri.spec,
+          comment: visit.title,
+          style: ["favicon"],
+        }
+      ],
+    });
 
     let inputs = [
       prot + "://",
       prot + ":// ",
       prot + ":// mo",
       prot + "://mo te",
-      prot + "://www.",
       prot + "://www. ",
       prot + "://www. mo",
       prot + "://www.mo te",
-      "www.",
       "www. ",
       "www. mo",
       "www.mo te"
     ];
-    for (let input of inputs) {
+    for (input of inputs) {
       info("Searching for: " + input);
       await check_autocomplete({
         search: input,
-        matches
+        matches: [{uri: visit.uri, title: visit.title}],
       });
     }
 

@@ -27,5 +27,5 @@ add_task(async function test_resultDomain() {
                "purpose.google.com");
   Assert.equal(engine1.getResultDomain("fake-response-type"), "");
   Assert.equal(engine2.getResultDomain(), "duckduckgo.com");
-  Assert.equal(engine3.getResultDomain(), "bacon.moz");
+  Assert.equal(engine3.getResultDomain(), "www.bacon.moz");
 });
