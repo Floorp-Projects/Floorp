@@ -15,12 +15,16 @@ private const val LOCAL_STORAGE_DIR = "Local Storage"
 // Cache directory contents.
 private const val WEBVIEW_CACHE_DIR = "org.chromium.android_webview"
 
+// Sentry directory
+private const val SENTRY_CACHE_DIR = "sentry-buffered-events"
+
 class FileUtils {
     companion object {
         @JvmStatic
         fun truncateCacheDirectory(context: Context) = deleteContent(context.cacheDir, doNotEraseWhitelist = setOf(
                 // If the folder or its contents are deleted, WebView will stop using the disk cache entirely.
-                WEBVIEW_CACHE_DIR
+                WEBVIEW_CACHE_DIR,
+                SENTRY_CACHE_DIR
         ))
 
         @JvmStatic
