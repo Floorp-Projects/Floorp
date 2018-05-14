@@ -13,19 +13,19 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/mp4");
-    fetchWithXHR("bipbop/bipbop_videoinit.mp4", function (init) {
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/mp4");
+    fetchWithXHR("bipbop/bipbop_videoinit.mp4", function(init) {
       init = new Uint8Array(init);
-      fetchWithXHR("bipbop/bipbop_video1.m4s", function (segment1) {
+      fetchWithXHR("bipbop/bipbop_video1.m4s", function(segment1) {
         segment1 = new Uint8Array(segment1);
-        fetchWithXHR("bipbop/bipbop_video2.m4s", function (segment2) {
+        fetchWithXHR("bipbop/bipbop_video2.m4s", function(segment2) {
           segment2 = new Uint8Array(segment2);
-          var data = [init, segment1, init, segment2];
-          var length = data.map(d => d.byteLength).reduce((a, b) => a + b);
-          var arrayBuffer = new Uint8Array(length);
-          var pos = 0;
+          const data = [ init, segment1, init, segment2 ];
+          const length = data.map(d => d.byteLength).reduce((a, b) => a + b);
+          const arrayBuffer = new Uint8Array(length);
+          let pos = 0;
           data.forEach(function(buffer) {
             arrayBuffer.set(buffer, pos);
             pos += buffer.byteLength;
@@ -34,7 +34,7 @@ runWithMSE(function (ms, v) {
             // Since we are passing multiple segments in one buffer,
             // the first durationchange event from parsing the init
             // segment will be fired before updateend.
-            v.addEventListener("durationchange", function () {
+            v.addEventListener("durationchange", function() {
               ok(v.duration, 1.601666);
               SimpleTest.finish();
             });

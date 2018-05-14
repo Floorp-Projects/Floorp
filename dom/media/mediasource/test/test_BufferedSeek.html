@@ -12,29 +12,29 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", function (arrayBuffer) {
+    fetchWithXHR("seek.webm", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
     });
 
-    var target = 2;
+    const target = 2;
 
-    v.addEventListener("loadedmetadata", function () {
+    v.addEventListener("loadedmetadata", function() {
       ok(true, "received loadedmetadata");
       v.currentTime = target;
     });
 
-    var wasSeeking = false;
+    let wasSeeking = false;
 
-    v.addEventListener("seeking", function () {
+    v.addEventListener("seeking", function() {
       wasSeeking = true;
       is(v.currentTime, target, "Video currentTime at target");
     });
 
-    v.addEventListener("seeked", function () {
+    v.addEventListener("seeked", function() {
       ok(wasSeeking, "Received expected seeking and seeked events");
       is(v.currentTime, target, "Video currentTime at target");
       SimpleTest.finish();

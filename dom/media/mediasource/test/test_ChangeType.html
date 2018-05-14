@@ -11,17 +11,17 @@
 
 SimpleTest.waitForExplicitFinish();
 async function setupTest() {
-  await SpecialPowers.pushPrefEnv({'set': [['media.mediasource.experimental.enabled', true]]});
+  await SpecialPowers.pushPrefEnv({"set": [ [ "media.mediasource.experimental.enabled", true ] ]});
 }
 setupTest();
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     // Log events for debugging.
-    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
     function logEvent(e) {
       info("got " + e.type + " event");
     }
@@ -31,9 +31,9 @@ runWithMSE(function(ms, el) {
 
     ok(true, "Receive a sourceopen event");
 
-    var videosb = ms.addSourceBuffer("video/mp4");
-    if (typeof videosb.changeType === 'undefined') {
-      info('changeType API is not available');
+    const videosb = ms.addSourceBuffer("video/mp4");
+    if (typeof videosb.changeType === "undefined") {
+      info("changeType API is not available");
     }
 
     el.addEventListener("error", function(e) {
@@ -41,25 +41,25 @@ runWithMSE(function(ms, el) {
       SimpleTest.finish();
     });
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    var promises = [];
-    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop', ['init'], '.mp4'));
-    promises.push(once(el, 'loadedmetadata'));
-    Promise.all(promises)
+    const loadedmetadataPromises = [];
+    loadedmetadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop", [ "init" ], ".mp4"));
+    loadedmetadataPromises.push(once(el, "loadedmetadata"));
+    Promise.all(loadedmetadataPromises)
     .then(function() {
       ok(true, "got loadedmetadata event");
-      var promises = [];
-      promises.push(once(el, 'loadeddata'));
-      promises.push(once(el, 'canplay'));
-      promises.push(fetchAndLoad(videosb, 'bipbop/bipbop', range(1,3), '.m4s'));
-      return Promise.all(promises);
+      const canplayPromises = [];
+      canplayPromises.push(once(el, "loadeddata"));
+      canplayPromises.push(once(el, "canplay"));
+      canplayPromises.push(fetchAndLoad(videosb, "bipbop/bipbop", range(1, 3), ".m4s"));
+      return Promise.all(canplayPromises);
     })
     .then(function() {
       ok(true, "got canplay event");
       el.play();
       videosb.timestampOffset = el.buffered.end(0);
-      return fetchAndLoad(videosb, 'bipbop/bipbop_480_624kbps-video', ['init'], '.mp4');
+      return fetchAndLoad(videosb, "bipbop/bipbop_480_624kbps-video", [ "init" ], ".mp4");
     })
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_480_624kbps-video', range(1,3), '.m4s'))
+    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_480_624kbps-video", range(1, 3), ".m4s"))
     .then(function() {
       videosb.timestampOffset = el.buffered.end(0);
       try {
@@ -69,11 +69,11 @@ runWithMSE(function(ms, el) {
         SimpleTest.finish();
         throw e;
       }
-      return fetchAndLoad(videosb, 'bipbop/bipbop_300-3s', [''], '.webm');
+      return fetchAndLoad(videosb, "bipbop/bipbop_300-3s", [ "" ], ".webm");
     })
     .then(function() {
       ms.endOfStream();
-      return once(el, 'ended');
+      return once(el, "ended");
     })
     .then(function() {
       ok(el.currentTime >= el.buffered.end(0), "played to the end");

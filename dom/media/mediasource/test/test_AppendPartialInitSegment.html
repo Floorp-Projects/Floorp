@@ -12,11 +12,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", async function (arrayBuffer) {
+    fetchWithXHR("seek.webm", async function(arrayBuffer) {
       // init segment is total 236 bytes.
       info("- append partial init segment -");
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 100));

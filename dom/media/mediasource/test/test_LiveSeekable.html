@@ -12,14 +12,14 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/webm");
     // Load data with a +2 offset so that we can distinguish buffered range start
     // and seekable range start.
     sb.timestampOffset = 2;
-    var promises = [];
-    promises.push(fetchAndLoad(sb, 'seek', [''], '.webm'));
+    const promises = [];
+    promises.push(fetchAndLoad(sb, "seek", [ "" ], ".webm"));
     promises.push(once(v, "loadedmetadata"));
     Promise.all(promises)
     .then(function() {

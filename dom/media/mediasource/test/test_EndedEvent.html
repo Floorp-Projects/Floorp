@@ -13,8 +13,8 @@
 SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
-  once(ms, 'sourceopen').then(function() {
-    var sb = ms.addSourceBuffer("video/webm");
+  once(ms, "sourceopen").then(function() {
+    const sb = ms.addSourceBuffer("video/webm");
     fetchWithXHR("seek.webm", (buf) => sb.appendBuffer(new Uint8Array(buf)));
     sb.addEventListener("updateend", () => ms.endOfStream());
 

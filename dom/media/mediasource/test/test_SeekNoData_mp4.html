@@ -19,10 +19,10 @@ function fuzzyEquals(a, b) {
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var audiosb = ms.addSourceBuffer("audio/mp4");
-    var videosb = ms.addSourceBuffer("video/mp4");
+    const audiosb = ms.addSourceBuffer("audio/mp4");
+    const videosb = ms.addSourceBuffer("video/mp4");
     el.addEventListener("error", function(e) {
       ok(false, "should not fire '" + e + "' event");
     });
@@ -34,13 +34,13 @@ runWithMSE(function(ms, el) {
     }
     is(el.currentTime, 3, "currentTime is default playback start position");
     is(el.seeking, false, "seek not started with HAVE_NOTHING");
-    var promises = [];
-    promises.push(fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4'));
-    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));
-    promises.push(once(el, 'loadedmetadata'))
-    Promise.all(promises)
+    const metadataPromises = [];
+    metadataPromises.push(fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4"));
+    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
+    metadataPromises.push(once(el, "loadedmetadata"));
+    Promise.all(metadataPromises)
     .then(function() {
-      var p = once(el, 'seeking');
+      const p = once(el, "seeking");
       el.play();
       el.currentTime = 5;
       is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
@@ -49,17 +49,17 @@ runWithMSE(function(ms, el) {
       return p;
     })
     .then(function() {
-       ok(true, "Got seeking event");
-       var promises = [];
-       promises.push(once(el, 'seeked'));
-       promises.push(fetchAndLoad(audiosb, 'bipbop/bipbop_audio', range(5, 9), '.m4s'));
-       promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', range(6, 10), '.m4s'));
-       return Promise.all(promises);
+      ok(true, "Got seeking event");
+      const seekedPromises = [];
+      seekedPromises.push(once(el, "seeked"));
+      seekedPromises.push(fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(5, 9), ".m4s"));
+      seekedPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 10), ".m4s"));
+      return Promise.all(seekedPromises);
     })
     .then(function() {
       ok(true, "Got seeked event");
       ok(el.currentTime >= 5, "Time >= 5");
-      once(el, 'ended').then(SimpleTest.finish.bind(SimpleTest));
+      once(el, "ended").then(SimpleTest.finish.bind(SimpleTest));
       ms.endOfStream();
     });
   });
