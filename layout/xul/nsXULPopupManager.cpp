@@ -11,7 +11,6 @@
 #include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDocument.h"
 #include "nsXULElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULCommandDispatcher.h"

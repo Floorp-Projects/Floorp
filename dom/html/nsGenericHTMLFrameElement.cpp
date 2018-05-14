@@ -14,7 +14,6 @@
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
-#include "nsIDOMDocument.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
@@ -79,16 +78,6 @@ nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
   if (mFrameLoader) {
     mFrameLoader->Destroy();
   }
-}
-
-nsresult
-nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
-{
-  MOZ_ASSERT(aContentDocument, "Null out param");
-  nsCOMPtr<nsIDOMDocument> document =
-    do_QueryInterface(GetContentDocument(*nsContentUtils::SubjectPrincipal()));
-  document.forget(aContentDocument);
-  return NS_OK;
 }
 
 nsIDocument*

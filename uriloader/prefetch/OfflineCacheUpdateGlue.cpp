@@ -98,7 +98,7 @@ NS_IMETHODIMP
 OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
                              nsIURI *aDocumentURI,
                              nsIPrincipal* aLoadingPrincipal,
-                             nsIDOMDocument *aDocument,
+                             nsIDocument *aDocument,
                              nsIFile *aCustomProfileDir)
 {
     nsresult rv;
@@ -134,7 +134,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
 }
 
 void
-OfflineCacheUpdateGlue::SetDocument(nsIDOMDocument *aDocument)
+OfflineCacheUpdateGlue::SetDocument(nsIDocument *aDocument)
 {
     // The design is one document for one cache update on the content process.
     NS_ASSERTION(!mDocument, 
@@ -146,11 +146,10 @@ OfflineCacheUpdateGlue::SetDocument(nsIDOMDocument *aDocument)
     // If it were loaded from an offline cache then it has already
     // been associated with it and must not be again cached as
     // implicit (which are the reasons we collect documents here).
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
-    if (!document)
+    if (!aDocument)
         return;
 
-    nsIChannel* channel = document->GetChannel();
+    nsIChannel* channel = aDocument->GetChannel();
     nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
         do_QueryInterface(channel);
     if (!appCacheChannel)

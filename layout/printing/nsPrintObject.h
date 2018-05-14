@@ -34,8 +34,7 @@ public:
   ~nsPrintObject(); // non-virtual
 
   // Methods
-  nsresult Init(nsIDocShell* aDocShell, nsIDOMDocument* aDoc,
-                bool aPrintPreview);
+  nsresult Init(nsIDocShell* aDocShell, nsIDocument* aDoc, bool aPrintPreview);
 
   bool IsPrintable()  { return !mDontPrint; }
   void   DestroyPresentation();

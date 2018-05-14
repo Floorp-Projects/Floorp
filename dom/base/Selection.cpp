@@ -50,7 +50,6 @@
 #include "nsCaret.h"
 
 #include "nsITimer.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsINamed.h"
 
@@ -454,14 +453,11 @@ Selection::ToStringWithFormat(const nsAString& aFormatType, uint32_t aFlags,
 
   nsIDocument *doc = shell->GetDocument();
 
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-  NS_ASSERTION(domDoc, "Need a document");
-
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   nsAutoString readstring;
   readstring.Assign(aFormatType);
-  rv = encoder->Init(domDoc, readstring, aFlags);
+  rv = encoder->Init(doc, readstring, aFlags);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

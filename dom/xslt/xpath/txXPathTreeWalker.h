@@ -12,7 +12,6 @@
 #include "nsTArray.h"
 
 class nsAtom;
-class nsIDOMDocument;
 
 class txXPathTreeWalker
 {
@@ -97,7 +96,7 @@ public:
                                         bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIContent* aContent,
                                         bool aKeepRootAlive = false);
-    static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);
+    static txXPathNode* createXPathNode(nsIDocument* aDocument);
     static nsINode* getNode(const txXPathNode& aNode);
     static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
     {

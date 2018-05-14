@@ -10,7 +10,6 @@
 
 #include "DataTransfer.h"
 
-#include "nsIDOMDocument.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/DOMStringList.h"

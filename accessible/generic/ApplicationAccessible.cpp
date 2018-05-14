@@ -14,7 +14,6 @@
 #include "States.h"
 
 #include "nsIComponentManager.h"
-#include "nsIDOMDocument.h"
 #include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"

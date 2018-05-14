@@ -59,7 +59,6 @@
 #include "nsContainerFrame.h"
 #include "mozilla/dom/Selection.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsWindowSizes.h"

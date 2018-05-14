@@ -11,7 +11,6 @@
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "DocAccessible-inl.h"
-#include "nsIDOMDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -86,7 +85,7 @@ xpcAccessibleDocument::GetDocType(nsAString& aType)
 }
 
 NS_IMETHODIMP
-xpcAccessibleDocument::GetDOMDocument(nsIDOMDocument** aDOMDocument)
+xpcAccessibleDocument::GetDOMDocument(nsIDocument** aDOMDocument)
 {
   NS_ENSURE_ARG_POINTER(aDOMDocument);
   *aDOMDocument = nullptr;
@@ -95,7 +94,7 @@ xpcAccessibleDocument::GetDOMDocument(nsIDOMDocument** aDOMDocument)
     return NS_ERROR_FAILURE;
 
   if (Intl()->DocumentNode())
-    CallQueryInterface(Intl()->DocumentNode(), aDOMDocument);
+    NS_ADDREF(*aDOMDocument = Intl()->DocumentNode());
 
   return NS_OK;
 }

@@ -115,19 +115,6 @@ public:
     virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                            bool aPreallocateChildren) const override;
 
-    // nsIDOMDocument interface
-    using nsDocument::CreateElement;
-    using nsDocument::CreateElementNS;
-    NS_FORWARD_NSIDOMDOCUMENT(XMLDocument::)
-    // And explicitly import the things from nsDocument that we just shadowed
-    using mozilla::dom::DocumentOrShadowRoot::GetElementById;
-    using nsDocument::GetImplementation;
-    using nsDocument::GetTitle;
-    using nsDocument::SetTitle;
-    using nsDocument::GetLastStyleSheetSet;
-    using nsDocument::MozSetImageElement;
-    using nsIDocument::GetLocation;
-
     // nsICSSLoaderObserver
     NS_IMETHOD StyleSheetLoaded(mozilla::StyleSheet* aSheet,
                                 bool aWasAlternate,

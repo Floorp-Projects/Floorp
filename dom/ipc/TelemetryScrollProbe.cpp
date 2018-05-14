@@ -6,7 +6,6 @@
 
 #include "TelemetryScrollProbe.h"
 
-#include "nsIDOMDocument.h"     // for nsIDOMDocument
 #include "nsIURI.h"             // for nsIURI
 #include "TabChild.h"           // for TabChildGlobal, TabChildBase
 #include "mozilla/Telemetry.h"  // for mozilla::Telemetry
@@ -36,9 +35,7 @@ TelemetryScrollProbe::GetDocument() const
 {
   nsCOMPtr<nsIDocument> result;
   if (nsCOMPtr<nsIWebNavigation> webNav = GetWebNavigation()) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    webNav->GetDocument(getter_AddRefs(domDoc));
-    result = do_QueryInterface(domDoc);
+    webNav->GetDocument(getter_AddRefs(result));
   }
   return result.forget();
 }

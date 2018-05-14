@@ -11,7 +11,6 @@
 
 #include "nsContentSink.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
@@ -1201,9 +1200,8 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
       do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
 
     if (updateService) {
-      nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
       updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI,
-                                            mDocument->NodePrincipal(), domdoc);
+                                            mDocument->NodePrincipal(), mDocument);
     }
     break;
   }
@@ -1657,9 +1655,8 @@ nsContentSink::NotifyDocElementCreated(nsIDocument* aDoc)
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
     observerService->
-      NotifyObservers(domDoc, "document-element-inserted",
+      NotifyObservers(aDoc, "document-element-inserted",
                       EmptyString().get());
   }
 

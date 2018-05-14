@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsITabParent;

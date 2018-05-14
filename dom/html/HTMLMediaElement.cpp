@@ -34,7 +34,6 @@
 #include "nsSize.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
 #include "nsError.h"
 #include "nsNodeInfoManager.h"

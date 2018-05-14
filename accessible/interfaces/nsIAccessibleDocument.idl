@@ -6,8 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsIAccessiblePivot;
-interface nsIDOMDocument;
 interface mozIDOMWindowProxy;
+
+webidl Document;
 
 /**
  * An interface for in-process accessibility clients
@@ -43,9 +44,9 @@ interface nsIAccessibleDocument : nsISupports
   readonly attribute AString docType;
 
   /**
-   * The nsIDOMDocument interface associated with this document.
+   * The Document interface associated with this document.
    */
-  readonly attribute nsIDOMDocument DOMDocument;
+  readonly attribute Document DOMDocument;
 
   /**
    * The nsIDOMWindow that the document resides in.
