@@ -119,9 +119,6 @@ const uint32_t kMaxExtraKeyNameByteLength = 15;
 // The maximum number of valid extra keys for an event.
 const uint32_t kMaxExtraKeyCount = 10;
 
-typedef nsDataHashtable<nsCStringHashKey, uint32_t> StringUintMap;
-typedef nsClassHashtable<nsCStringHashKey, nsCString> StringMap;
-
 struct EventKey {
   uint32_t id;
   bool dynamic;
@@ -312,8 +309,8 @@ bool gCanRecordExtended;
 // The EventName -> EventKey cache map.
 nsClassHashtable<nsCStringHashKey, EventKey> gEventNameIDMap(kEventCount);
 
-// The CategoryName -> CategoryID cache map.
-StringUintMap gCategoryNameIDMap;
+// The CategoryName set.
+nsTHashtable<nsCStringHashKey> gCategoryNames;
 
 // This tracks the IDs of the categories for which recording is enabled.
 nsTHashtable<nsCStringHashKey> gEnabledCategories;
@@ -546,7 +543,7 @@ ShouldRecordChildEvent(const StaticMutexAutoLock& lock, const nsACString& catego
 void
 RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
                const nsTArray<DynamicEventInfo>& eventInfos,
-               const nsTArray<bool>& eventExpired)
+               const nsTArray<bool>& eventExpired, bool aBuiltin)
 {
   MOZ_ASSERT(eventInfos.Length() == eventExpired.Length(), "Event data array sizes should match.");
 
@@ -573,8 +570,16 @@ RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
     gEventNameIDMap.Put(eventName, new EventKey{eventId, true});
   }
 
-  // Now after successful registration enable recording for this category.
-  gEnabledCategories.PutEntry(category);
+  // If it is a builtin, add the category name in order to enable it later.
+  if (aBuiltin) {
+    gCategoryNames.PutEntry(category);
+  }
+
+  if (!aBuiltin) {
+    // Now after successful registration enable recording for this category
+    // (if not a dynamic builtin).
+    gEnabledCategories.PutEntry(category);
+  }
 }
 
 } // anonymous namespace
@@ -732,15 +737,9 @@ TelemetryEvent::InitializeGlobalState(bool aCanRecordBase, bool aCanRecordExtend
     }
 
     gEventNameIDMap.Put(UniqueEventName(info), new EventKey{eventId, false});
-    if (!gCategoryNameIDMap.Contains(info.common_info.category())) {
-      gCategoryNameIDMap.Put(info.common_info.category(),
-                             info.common_info.category_offset);
-    }
+    gCategoryNames.PutEntry(info.common_info.category());
   }
 
-#ifdef DEBUG
-  gCategoryNameIDMap.MarkImmutable();
-#endif
   gInitDone = true;
 }
 
@@ -754,7 +753,7 @@ TelemetryEvent::DeInitializeGlobalState()
   gCanRecordExtended = false;
 
   gEventNameIDMap.Clear();
-  gCategoryNameIDMap.Clear();
+  gCategoryNames.Clear();
   gEnabledCategories.Clear();
   gEventRecords.Clear();
   gBuiltinEventRecords.Clear();
@@ -1113,7 +1112,7 @@ TelemetryEvent::RegisterEvents(const nsACString& aCategory,
 
   {
     StaticMutexAutoLock locker(gTelemetryEventsMutex);
-    RegisterEvents(locker, aCategory, newEventInfos, newEventExpired);
+    RegisterEvents(locker, aCategory, newEventInfos, newEventExpired, aBuiltin);
   }
 
   return NS_OK;
@@ -1221,8 +1220,7 @@ TelemetryEvent::SetEventRecordingEnabled(const nsACString& category, bool enable
 {
   StaticMutexAutoLock locker(gTelemetryEventsMutex);
 
-  uint32_t categoryId;
-  if (!gCategoryNameIDMap.Get(category, &categoryId)) {
+  if (!gCategoryNames.Contains(category)) {
     LogToBrowserConsole(nsIScriptError::warningFlag,
                         NS_LITERAL_STRING("Unkown category for SetEventRecordingEnabled."));
     return;
@@ -1264,11 +1262,7 @@ TelemetryEvent::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
-  n += gCategoryNameIDMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = gCategoryNameIDMap.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-  }
-
+  n += gCategoryNames.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += gEnabledCategories.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   if (gDynamicEventInfo) {
