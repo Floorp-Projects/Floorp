@@ -26,7 +26,6 @@ class AsyncCanvasRenderer;
 class ClientCanvasRenderer;
 class CopyableCanvasRenderer;
 class PersistentBufferProvider;
-class WebRenderCanvasRendererSync;
 class WebRenderCanvasRendererAsync;
 
 struct CanvasInitializeData {
@@ -83,8 +82,6 @@ struct CanvasInitializeData {
 // ClientCanvasLayer.
 // WebRenderCanvasRenderer inherites ShareableCanvasRenderer and provides all
 // functionality that WebRender uses.
-// WebRenderCanvasRendererSync inherites WebRenderCanvasRenderer and be used in
-// WebRenderCanvasLayer.
 // WebRenderCanvasRendererAsync inherites WebRenderCanvasRenderer and be used in
 // layers-free mode of WebRender.
 //
@@ -108,13 +105,12 @@ struct CanvasInitializeData {
 //           |                            |
 // +--------------------+       +---------+-------------+
 // |ClientCanvasRenderer|       |WebRenderCanvasRenderer|
-// +--------------------+       +--------+--+-----------+
-//                                       ^  ^
-//               +-----------------------+  +----+
-//               |                               |
-// +-------------+-------------+   +-------------+--------------+
-// |WebRenderCanvasRendererSync|   |WebRenderCanvasRendererAsync|
-// +---------------------------+   +----------------------------+
+// +--------------------+       +-----------+-----------+
+//                                          ^
+//                                          |
+//                           +-------------+--------------+
+//                           |WebRenderCanvasRendererAsync|
+//                           +----------------------------+
 class CanvasRenderer
 {
 public:
@@ -136,7 +132,6 @@ public:
 
   virtual CopyableCanvasRenderer* AsCopyableCanvasRenderer() { return nullptr; }
   virtual ClientCanvasRenderer* AsClientCanvasRenderer() { return nullptr; }
-  virtual WebRenderCanvasRendererSync* AsWebRenderCanvasRendererSync() { return nullptr; }
   virtual WebRenderCanvasRendererAsync* AsWebRenderCanvasRendererAsync() { return nullptr; }
 
 protected:
