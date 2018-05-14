@@ -171,15 +171,14 @@ class Test(object):
             return self._test_metadata
 
     def itermeta(self, subtest=None):
-        for metadata in self._inherit_metadata:
-            yield metadata
-
         if self._test_metadata is not None:
-            yield self._get_metadata()
             if subtest is not None:
                 subtest_meta = self._get_metadata(subtest)
                 if subtest_meta is not None:
                     yield subtest_meta
+            yield self._get_metadata()
+        for metadata in reversed(self._inherit_metadata):
+            yield metadata
 
     def disabled(self, subtest=None):
         for meta in self.itermeta(subtest):
@@ -225,11 +224,10 @@ class Test(object):
         tags = set()
         for meta in self.itermeta():
             meta_tags = meta.tags
+            tags |= meta_tags
             if atom_reset in meta_tags:
-                tags = meta_tags.copy()
                 tags.remove(atom_reset)
-            else:
-                tags |= meta_tags
+                break
 
         tags.add("dir:%s" % self.id.lstrip("/").split("/")[0])
 
@@ -240,11 +238,10 @@ class Test(object):
         prefs = {}
         for meta in self.itermeta():
             meta_prefs = meta.prefs
-            if atom_reset in prefs:
-                prefs = meta_prefs.copy()
+            prefs.update(meta_prefs)
+            if atom_reset in meta_prefs:
                 del prefs[atom_reset]
-            else:
-                prefs.update(meta_prefs)
+                break
         return prefs
 
     def expected(self, subtest=None):
