@@ -778,10 +778,11 @@ protected:
 
   /**
    * GetInlineStyles() retrieves the style of aNode and modifies each item of
-   * aStyleCache.
+   * aStyleCache.  This might cause flushing layout at retrieving computed
+   * values of CSS properties.
    */
-  nsresult GetInlineStyles(nsINode* aNode,
-                           StyleCache aStyleCache[SIZE_STYLE_TABLE]);
+  MOZ_MUST_USE nsresult
+  GetInlineStyles(nsINode* aNode, StyleCache aStyleCache[SIZE_STYLE_TABLE]);
 
 protected:
   HTMLEditor* mHTMLEditor;
