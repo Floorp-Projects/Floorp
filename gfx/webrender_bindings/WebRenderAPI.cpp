@@ -207,15 +207,6 @@ TransactionBuilder::UpdateDynamicProperties(const nsTArray<wr::WrOpacityProperty
       aTransformArray.Length());
 }
 
-void
-TransactionBuilder::AppendTransformProperties(const nsTArray<wr::WrTransformProperty>& aTransformArray)
-{
-  wr_transaction_append_transform_properties(
-      mTxn,
-      aTransformArray.IsEmpty() ? nullptr : aTransformArray.Elements(),
-      aTransformArray.Length());
-}
-
 bool
 TransactionBuilder::IsEmpty() const
 {
