@@ -350,6 +350,27 @@ var PaymentTestUtils = {
         },
       },
     },
+    fieldSpecificErrors: {
+      error: "There are errors related to specific parts of the address",
+      shippingAddressErrors: {
+        addressLine: "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
+        city: "Can only ship to CITIES, not TOWNSHIPS or VILLAGES",
+        country: "Can only ship to USA, not CA",
+        organization: "Can only ship to CORPORATIONS, not CONSORTIUMS",
+        phone: "Only allowed to ship to area codes that start with 9",
+        postalCode: "Only allowed to ship to postalCodes that start with 0",
+        recipient: "Can only ship to names that start with J",
+        region: "Can only ship to regions that start with M",
+      },
+      shippingOptions: [],
+      total: {
+        label: "Grand total is now: ",
+        amount: {
+          value: "24",
+          currency: "USD",
+        },
+      },
+    },
   },
 
   Options: {
