@@ -50,6 +50,8 @@ exports.register = function(window) {
     // cap zoom value
     zoomValue = Math.max(newValue, MIN_ZOOM);
     zoomValue = Math.min(zoomValue, MAX_ZOOM);
+    // Prevent the floating-point error. (e.g. 1.1 + 0.1 = 1.2000000000000002)
+    zoomValue = Math.round(zoomValue * 10) / 10;
 
     contViewer.fullZoom = zoomValue;
 
