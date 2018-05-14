@@ -301,12 +301,17 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
   }
 
   if (node->IsElement()) {
-    ErrorResult rv;
-    mDocChangeRange->SelectNode(*node, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    ErrorResult error;
+    mDocChangeRange->SelectNode(*node, error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
-    AdjustSpecialBreaks();
+    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to insert <br> elements to empty list items and table cells");
   }
 
   StartToListenToEditActions();
@@ -512,7 +517,12 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // add in any needed <br>s, and remove any unneeded ones.
-    AdjustSpecialBreaks();
+    nsresult rv = InsertBRElementToEmptyListItemsAndTableCellsInChangedRange();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to insert <br> elements to empty list items and table cells");
 
     // merge any adjacent text nodes
     if (aAction != EditAction::insertText &&
@@ -524,7 +534,7 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     }
 
     // clean up any empty nodes in the selection
-    nsresult rv = RemoveEmptyNodesInChangedRange();
+    rv = RemoveEmptyNodesInChangedRange();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -8592,8 +8602,8 @@ HTMLEditRules::ClearCachedStyles()
   }
 }
 
-void
-HTMLEditRules::AdjustSpecialBreaks()
+nsresult
+HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -8602,7 +8612,7 @@ HTMLEditRules::AdjustSpecialBreaks()
   EmptyEditableFunctor functor(&HTMLEditorRef());
   DOMIterator iter;
   if (NS_WARN_IF(NS_FAILED(iter.Init(*mDocChangeRange)))) {
-    return;
+    return NS_ERROR_FAILURE;
   }
   iter.AppendList(functor, nodeArray);
 
@@ -8618,9 +8628,10 @@ HTMLEditRules::AdjustSpecialBreaks()
     //     CreateMozBr() call.
     CreateElementResult createMozBrResult = CreateMozBR(endOfNode);
     if (NS_WARN_IF(createMozBrResult.Failed())) {
-      return;
+      return createMozBrResult.Rv();
     }
   }
+  return NS_OK;
 }
 
 nsresult
