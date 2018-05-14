@@ -1228,7 +1228,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         return Throw(rv, ccx);
     }
 
-    JS::Rooted<CallMethodHelper> helper(ccx, CallMethodHelper(ccx));
+    JS::Rooted<CallMethodHelper> helper(ccx, /* init = */ ccx);
     return helper.get().Call();
 }
 
@@ -1581,19 +1581,19 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     switch (type.Tag()) {
         // Ensure that the jsval has a valid value.
         case nsXPTType::T_JSVAL:
-            new (&dp->Ext().jsval) JS::Value();
-            MOZ_ASSERT(dp->Ext().jsval.isUndefined());
+            new (&dp->ext.jsval) JS::Value();
+            MOZ_ASSERT(dp->ext.jsval.isUndefined());
             break;
 
         // Initialize our temporary string class values so they can be assigned
         // to by the XPCConvert logic.
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
-            new (&dp->Ext().nsstr) nsString();
+            new (&dp->ext.nsstr) nsString();
             break;
         case nsXPTType::T_CSTRING:
         case nsXPTType::T_UTF8STRING:
-            new (&dp->Ext().nscstr) nsCString();
+            new (&dp->ext.nscstr) nsCString();
             break;
     }
 

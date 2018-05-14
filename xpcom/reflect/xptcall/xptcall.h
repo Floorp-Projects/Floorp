@@ -72,22 +72,13 @@ struct nsXPTCVariant
         // The `val` field from nsXPTCMiniVariant.
         nsXPTCMiniVariant::Union val;
 
-        // Storage for any extended variants, if present. The storage is
-        // performed using a char buffer, as ExtendedVal is not a
-        // standard-layout type, which we want nsXPTCVariant to be.
-        char extbuf[sizeof(ExtendedVal)];
+        // Storage for any extended variants.
+        ExtendedVal ext;
     };
 
     void*     ptr;
     nsXPTType type;
     uint8_t   flags;
-
-    // Getters for data stored in the extended value buffer.
-    ExtendedVal& Ext() {
-        MOZ_ASSERT(IsIndirect(), "Ext() only supports indirect nsXPTCVariants!");
-        return *(ExtendedVal*) &extbuf;
-    }
-    const ExtendedVal& Ext() const { return const_cast<nsXPTCVariant*>(this)->Ext(); }
 
     enum
     {
@@ -137,10 +128,15 @@ struct nsXPTCVariant
     operator const nsXPTCMiniVariant&() const {
         return *(const nsXPTCMiniVariant*) &val;
     }
+
+    // As this type contains an anonymous union, we need to provide explicit
+    // constructors & destructors.
+    nsXPTCVariant() { }
+    ~nsXPTCVariant() { }
 };
 
-static_assert(offsetof(nsXPTCVariant, val) == offsetof(nsXPTCVariant, extbuf),
-              "nsXPTCVariant::{extbuf,val} must have matching offsets");
+static_assert(offsetof(nsXPTCVariant, val) == offsetof(nsXPTCVariant, ext),
+              "nsXPTCVariant::{ext,val} must have matching offsets");
 
 class nsIXPTCProxy : public nsISupports
 {
