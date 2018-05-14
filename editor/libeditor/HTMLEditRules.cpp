@@ -8816,14 +8816,14 @@ HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
   RefPtr<Element> theblock = HTMLEditorRef().GetBlock(*point.GetContainer());
 
   if (theblock && HTMLEditorRef().IsEditable(theblock)) {
-    bool bIsEmptyNode;
+    bool isEmptyNode;
     nsresult rv =
-      HTMLEditorRef().IsEmptyNode(theblock, &bIsEmptyNode, false, false);
+      HTMLEditorRef().IsEmptyNode(theblock, &isEmptyNode, false, false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     // check if br can go into the destination node
-    if (bIsEmptyNode &&
+    if (isEmptyNode &&
         HTMLEditorRef().CanContainTag(*point.GetContainer(), *nsGkAtoms::br)) {
       Element* rootElement = HTMLEditorRef().GetRoot();
       if (NS_WARN_IF(!rootElement)) {
@@ -8875,10 +8875,18 @@ HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
           // selection stays *before* moz-br, sticking to it
           ErrorResult error;
           SelectionRef().SetInterlinePosition(true, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           NS_WARNING_ASSERTION(!error.Failed(),
             "Failed to set interline position");
           error = NS_OK;
           SelectionRef().Collapse(point, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -8925,6 +8933,10 @@ HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction)
   EditorDOMPoint pt = GetGoodSelPointForNode(*nearNode, aAction);
   ErrorResult error;
   SelectionRef().Collapse(pt, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
