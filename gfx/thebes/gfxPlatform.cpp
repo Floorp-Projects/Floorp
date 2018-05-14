@@ -106,6 +106,7 @@
 # ifdef MOZ_ENABLE_FREETYPE
 #  include "skia/include/ports/SkTypeface_cairo.h"
 # endif
+# include "mozilla/gfx/SkMemoryReporter.h"
 # ifdef __GNUC__
 #  pragma GCC diagnostic pop // -Wshadow
 # endif
@@ -839,6 +840,9 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
+#ifdef USE_SKIA
+    RegisterStrongMemoryReporter(new SkMemoryReporter());
+#endif
     mlg::InitializeMemoryReporters();
 
 #ifdef USE_SKIA
