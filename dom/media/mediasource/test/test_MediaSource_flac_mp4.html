@@ -13,18 +13,18 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  ms.addEventListener("sourceopen", function () {
+  ms.addEventListener("sourceopen", function() {
     ok(true, "Receive a sourceopen event");
     is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
-    var sb = ms.addSourceBuffer("audio/mp4; codecs=\"flac\"");
+    const sb = ms.addSourceBuffer("audio/mp4; codecs=\"flac\"");
     ok(sb, "Create a SourceBuffer");
 
-    fetchAndLoad(sb, 'flac/IS', [''], '.mp4')
-    .then(fetchAndLoad.bind(null, sb, 'flac/0000', range(1, 3), '.m4s'))
+    fetchAndLoad(sb, "flac/IS", [ "" ], ".mp4")
+    .then(fetchAndLoad.bind(null, sb, "flac/0000", range(1, 3), ".m4s"))
     .then(function() {
       el.play();
       ms.endOfStream();
-      return once(el, 'ended');
+      return once(el, "ended");
     }).then(function() {
       SimpleTest.finish();
     });

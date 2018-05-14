@@ -13,27 +13,27 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var audiosb = ms.addSourceBuffer("audio/mp4");
-    var videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(1, 5), '.m4s'))
-    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(6, 12), '.m4s'))
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 6), '.m4s'))
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(7, 14), '.m4s'))
+    const audiosb = ms.addSourceBuffer("audio/mp4");
+    const videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4")
+    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s"))
+    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s"))
+    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"))
+    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 6), ".m4s"))
+    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(7, 14), ".m4s"))
     .then(function() {
       // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
       // has notified it of available data. Make sure that we get 'playing' before
       // we starting waiting for 'waiting'.
       info("Invoking play()");
-      var p = once(el, 'playing');
+      const p = once(el, "playing");
       el.play();
       return p;
     }).then(function() {
       ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-      var p = once(el, 'waiting');
+      const p = once(el, "waiting");
       el.play();
       return p;
     }).then(function() {
@@ -42,11 +42,11 @@ runWithMSE(function(ms, el) {
       // min(audioEnd, videoEnd).
       // 0.0465 is the length of the last audio frame.
       ok(el.currentTime >= (Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 0.0465),
-         "Got a waiting event at " + el.currentTime);
+          "Got a waiting event at " + el.currentTime);
       info("Loading more data");
-      var p = once(el, 'ended');
-      var loads = Promise.all([fetchAndLoad(audiosb, 'bipbop/bipbop_audio', [5], '.m4s'),
-                               fetchAndLoad(videosb, 'bipbop/bipbop_video', [6], '.m4s')]);
+      const p = once(el, "ended");
+      const loads = Promise.all([ fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ 5 ], ".m4s"),
+        fetchAndLoad(videosb, "bipbop/bipbop_video", [ 6 ], ".m4s") ]);
       loads.then(() => ms.endOfStream());
       return p;
     }).then(function() {

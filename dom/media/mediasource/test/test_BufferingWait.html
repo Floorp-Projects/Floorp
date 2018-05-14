@@ -11,34 +11,35 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var receivedSourceOpen = false;
+let receivedSourceOpen = false;
 runWithMSE(function(ms, v) {
   ms.addEventListener("sourceopen", function() {
     ok(true, "Receive a sourceopen event");
     ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
     receivedSourceOpen = true;
-    var sb = ms.addSourceBuffer("video/webm");
+    const sb = ms.addSourceBuffer("video/webm");
     ok(sb, "Create a SourceBuffer");
 
     fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))().then(
-      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25523-318))).then(
-      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25523, 46712-25523))).then(
+      sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))()
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25523 - 318)))
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25523, 46712 - 25523)))
       /* Note - Missing |46712, 67833 - 46712| segment here corresponding to (0.8, 1.2] */
       /* Note - Missing |67833, 88966 - 67833| segment here corresponding to (1.2, 1.6]  */
-      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966))).then(function() {
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966)))
+      .then(function() {
         // 0.767 is the time of the last video sample +- 40ms.
-        var promise = waitUntilTime(v, .767-0.04);
+        const promise = waitUntilTime(v, .767 - 0.04);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
       }).then(function() {
         window.firstStop = Date.now();
         loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
-        return waitUntilTime(v, 1.167-0.04);
+        return waitUntilTime(v, 1.167 - 0.04);
       }).then(function() {
-        var waitDuration = (Date.now() - window.firstStop) / 1000;
+        const waitDuration = (Date.now() - window.firstStop) / 1000;
         ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
         SimpleTest.finish();
         /* If we allow the rest of the stream to be played, we get stuck at

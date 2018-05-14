@@ -12,11 +12,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("seek.webm", async function (arrayBuffer) {
+    fetchWithXHR("seek.webm", async function(arrayBuffer) {
       info("- append buffer -");
       sb.appendBuffer(new Uint8Array(arrayBuffer));
 
@@ -27,7 +27,7 @@ runWithMSE(function (ms, v) {
       await once(sb, "updateend");
 
       info("- check seekable -");
-      var target = 2;
+      const target = 2;
       ok(v.seekable.length, "Resource is seekable");
       is(v.seekable.start(0), 0, "Seekable's start point is correct");
       is(v.seekable.end(0), ms.duration, "Seekable's end point is correct");

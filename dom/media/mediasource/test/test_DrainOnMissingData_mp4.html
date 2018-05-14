@@ -13,35 +13,35 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
+    const videosb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4")
     .then(function() {
       // Set appendWindowEnd to ensure we only have about 6 frames worth.
       // We must feed at least 6 frames to pass the MDSM pre-roll.
       videosb.appendWindowEnd = .4;
-      return fetchAndLoad(videosb, 'bipbop/bipbop_video', ['1'], '.m4s');
+      return fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
     })
     .then(function() {
       info("Invoking play()");
-      var promises = [];
-      promises.push(once(el, 'playing'));
+      const promises = [];
+      promises.push(once(el, "playing"));
       el.play();
       return Promise.all(promises);
     })
     .then(function() {
       info("got playing");
-      return once(el, 'waiting');
+      return once(el, "waiting");
     }).then(function() {
       info("got waiting");
       info("Loading more data");
       // Waiting will be fired on the last frame +- 40ms.
-      isfuzzy(el.currentTime, videosb.buffered.end(0) - 1/30,
+      isfuzzy(el.currentTime, videosb.buffered.end(0) - 1 / 30,
               0.04, "Got a waiting event at " + el.currentTime);
       videosb.appendWindowEnd = 1;
-      var p = once(el, 'ended');
-      var loads = fetchAndLoad(videosb, 'bipbop/bipbop_video', [1], '.m4s');
+      const p = once(el, "ended");
+      const loads = fetchAndLoad(videosb, "bipbop/bipbop_video", [ 1 ], ".m4s");
       loads.then(() => ms.endOfStream());
       return p;
     }).then(function() {
