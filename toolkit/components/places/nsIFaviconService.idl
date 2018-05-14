@@ -6,6 +6,9 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIPrincipal;
+interface mozIPlacesPendingOperation;
+interface nsIFaviconDataCallback;
 
 [scriptable, uuid(e81e0b0c-b9f1-4c2e-8f3c-b809933cf73c)]
 interface nsIFaviconService : nsISupports
@@ -115,6 +118,202 @@ interface nsIFaviconService : nsISupports
    * The default favicon mimeType
    */
   readonly attribute AUTF8String defaultFaviconMimeType;
+
+  /**
+   * Declares that a given page uses a favicon with the given URI and
+   * attempts to fetch and save the icon data by loading the favicon URI
+   * through an async network request.
+   *
+   * If the icon data already exists, we won't try to reload the icon unless
+   * aForceReload is true.  Similarly, if the icon is in the failed favicon
+   * cache we won't do anything unless aForceReload is true, in which case
+   * we'll try to reload the favicon.
+   *
+   * This function will only save favicons for pages that are already stored in
+   * the database, like visited pages or bookmarks.  For any other URIs, it
+   * will succeed but do nothing.  This function will also ignore the error
+   * page favicon URI (see FAVICON_ERRORPAGE_URL below).
+   *
+   * Icons that fail to load will automatically be added to the failed favicon
+   * cache, and this function will not save favicons for non-bookmarked URIs
+   * when history is disabled.
+   *
+   * @note This function is identical to
+   *       nsIFaviconService::setAndLoadFaviconForPage.
+   *
+   * @param aPageURI
+   *        URI of the page whose favicon is being set.
+   * @param aFaviconURI
+   *        URI of the favicon to associate with the page.
+   * @param aForceReload
+   *        If aForceReload is false, we try to reload the favicon only if we
+   *        don't have it or it has expired from the cache.  Setting
+   *        aForceReload to true causes us to reload the favicon even if we
+   *        have a usable copy.
+   * @param aFaviconLoadType
+   *        Set to FAVICON_LOAD_PRIVATE if the favicon is loaded from a private
+   *        browsing window.  Set to FAVICON_LOAD_NON_PRIVATE otherwise.
+   * @param [optional] aCallback
+   *        Once we're done setting and/or fetching the favicon, we invoke this
+   *        callback.
+   * @param [optional] aLoadingPrincipal
+   *        Principal of the page whose favicon is being set. If this argument
+   *        is omitted, the loadingPrincipal defaults to the nullPrincipal.
+   * @param [optional] aRequestContextID
+   *        used to inform Necko of how to link the
+   *        favicon request with other requests in the same tab.
+   *
+   * @see nsIFaviconDataCallback in nsIFaviconService.idl.
+   */
+  mozIPlacesPendingOperation setAndFetchFaviconForPage(
+    in nsIURI aPageURI,
+    in nsIURI aFaviconURI,
+    in boolean aForceReload,
+    in unsigned long aFaviconLoadType,
+    [optional] in nsIFaviconDataCallback aCallback,
+    [optional] in nsIPrincipal aLoadingPrincipal,
+    [optional] in unsigned long long aRequestContextID);
+
+  /**
+   * Sets the data for a given favicon URI either by replacing existing data in
+   * the database or taking the place of otherwise fetched icon data when
+   * calling setAndFetchFaviconForPage later.
+   *
+   * Favicon data for favicon URIs that are not associated with a page URI via
+   * setAndFetchFaviconForPage will be stored in memory, but may be expired at
+   * any time, so you should make an effort to associate favicon URIs with page
+   * URIs as soon as possible.
+   *
+   * It's better to not use this function for chrome: icon URIs since you can
+   * reference the chrome image yourself. getFaviconLinkForIcon/Page will ignore
+   * any associated data if the favicon URI is "chrome:" and just return the
+   * same chrome URI.
+   *
+   * This function does NOT send out notifications that the data has changed.
+   * Pages using this favicons that are visible in history or bookmarks views
+   * will keep the old icon until they have been refreshed by other means.
+   *
+   * This function tries to optimize the favicon size, if it is bigger
+   * than a defined limit we will try to convert it to a 16x16 png image.
+   * If the conversion fails and favicon is still bigger than our max accepted
+   * size it won't be saved.
+   *
+   * @param aFaviconURI
+   *        URI of the favicon whose data is being set.
+   * @param aData
+   *        Binary contents of the favicon to save
+   * @param aDataLength
+   *        Length of binary data
+   * @param aMimeType
+   *        MIME type of the data to store.  This is important so that we know
+   *        what to report when the favicon is used.  You should always set this
+   *        param unless you are clearing an icon.
+   * @param [optional] aExpiration
+   *        Time in microseconds since the epoch when this favicon expires.
+   *        Until this time, we won't try to load it again.
+   * @throws NS_ERROR_FAILURE
+   *         Thrown if the favicon is overbloated and won't be saved to the db.
+   */
+  void replaceFaviconData(in nsIURI aFaviconURI,
+                          [const,array,size_is(aDataLen)] in octet aData,
+                          in unsigned long aDataLen,
+                          in AUTF8String aMimeType,
+                          [optional] in PRTime aExpiration);
+
+  /**
+   * Same as replaceFaviconData but the data is provided by a string
+   * containing a data URL.
+   *
+   * @see replaceFaviconData
+   *
+   * @param aFaviconURI
+   *        URI of the favicon whose data is being set.
+   * @param aDataURL
+   *        string containing a data URL that represents the contents of
+   *        the favicon to save
+   * @param [optional] aExpiration
+   *        Time in microseconds since the epoch when this favicon expires.
+   *        Until this time, we won't try to load it again.
+   * @param [optional] aLoadingPrincipal
+   *        Principal of the page whose favicon is being set. If this argument
+   *        is omitted, the loadingPrincipal defaults to the nullPrincipal.
+   * @throws NS_ERROR_FAILURE
+   *         Thrown if the favicon is overbloated and won't be saved to the db.
+   */
+  void replaceFaviconDataFromDataURL(in nsIURI aFaviconURI,
+                                     in AString aDataURL,
+                                     [optional] in PRTime aExpiration,
+                                     [optional] in nsIPrincipal aLoadingPrincipal);
+
+  /**
+   * Retrieves the favicon URI associated to the given page, if any.
+   *
+   * @param aPageURI
+   *        URI of the page whose favicon URI we're looking up.
+   * @param aCallback
+   *        This callback is always invoked to notify the result of the lookup.
+   *        The aURI parameter will be the favicon URI, or null when no favicon
+   *        is associated with the page or an error occurred while fetching it.
+   *        aDataLen will be always 0, aData will be an empty array, and
+   *        aMimeType will be an empty string, regardless of whether a favicon
+   *        was found.
+   * @param [optional] aPreferredWidth
+   *        The preferred icon width, 0 for the biggest available.
+   *
+   * @note If a favicon specific to this page cannot be found, this will try to
+   *       fallback to the /favicon.ico for the root domain.
+   *
+   * @see nsIFaviconDataCallback in nsIFaviconService.idl.
+   */
+  void getFaviconURLForPage(in nsIURI aPageURI,
+                            in nsIFaviconDataCallback aCallback,
+                            [optional] in unsigned short aPreferredWidth);
+
+  /**
+   * Retrieves the favicon URI and data associated to the given page, if any.
+   * If the page icon is not available, it will try to return the root domain
+   * icon data, when it's known.
+   *
+   * @param aPageURI
+   *        URI of the page whose favicon URI and data we're looking up.
+   * @param aCallback
+   *        This callback is always invoked to notify the result of the lookup.  The aURI
+   *        parameter will be the favicon URI, or null when no favicon is
+   *        associated with the page or an error occurred while fetching it.  If
+   *        aURI is not null, the other parameters may contain the favicon data.
+   *        However, if no favicon data is currently associated with the favicon
+   *        URI, aDataLen will be 0, aData will be an empty array, and aMimeType
+   *        will be an empty string.
+   * @param [optional] aPreferredWidth
+   *        The preferred icon width, 0 for the biggest available.
+   * @note If a favicon specific to this page cannot be found, this will try to
+   *       fallback to the /favicon.ico for the root domain.
+   *
+   * @see nsIFaviconDataCallback in nsIFaviconService.idl.
+   */
+  void getFaviconDataForPage(in nsIURI aPageURI,
+                             in nsIFaviconDataCallback aCallback,
+                             [optional] in unsigned short aPreferredWidth);
+
+  /**
+   * Copies cached favicons from a page to another one.
+   *
+   * @param aFromPageURI
+   *        URI of the originating page.
+   * @param aToPageURI
+   *        URI of the destination page.
+   * @param aFaviconLoadType
+   *        Set to FAVICON_LOAD_PRIVATE if the copy is started from a private
+   *        browsing window.  Set to FAVICON_LOAD_NON_PRIVATE otherwise.
+   * @param [optional] aCallback
+   *        Once we're done copying the favicon, we invoke this callback.
+   *        If a copy has been done, the callback will report one of the
+   *        favicons uri as aFaviconURI, otherwise all the params will be null.
+   */
+  void copyFavicons(in nsIURI aFromPageURI,
+                    in nsIURI aToPageURI,
+                    in unsigned long aFaviconLoadType,
+                    [optional] in nsIFaviconDataCallback aCallback);
 };
 
 [scriptable, function, uuid(c85e5c82-b70f-4621-9528-beb2aa47fb44)]

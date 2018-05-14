@@ -127,7 +127,6 @@ NS_IMPL_CLASSINFO(nsFaviconService, nullptr, 0, NS_FAVICONSERVICE_CID)
 NS_IMPL_ISUPPORTS_CI(
   nsFaviconService
 , nsIFaviconService
-, mozIAsyncFavicons
 , nsITimerCallback
 , nsINamed
 )

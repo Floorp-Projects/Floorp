@@ -32,7 +32,7 @@ SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
   if (aMsg.message == "SENTINEL") {
     is(consoleCount, 0);
     SimpleTest.executeSoon(finish);
-  } else {
+  } else if (aMsg.message.includes("Content Security Policy")) {
     ++consoleCount;
     ok(false, "Must never see a console warning here");
   }

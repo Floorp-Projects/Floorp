@@ -39,7 +39,7 @@
 
     <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
-    <description>&clearDataSettings3.label;</description>
+    <description>&clearDataSettings4.label;</description>
 
     <groupbox orient="horizontal">
       <caption><label>&historySection.label;</label></caption>

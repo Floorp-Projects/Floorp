@@ -696,8 +696,8 @@ history-private-browsing-permanent =
     .label = Always use private browsing mode
     .accesskey = p
 
-history-remember-option =
-    .label = Remember my browsing and download history
+history-remember-browser-option =
+    .label = Remember browsing and download history
     .accesskey = b
 
 history-remember-search-option =
