@@ -44,7 +44,7 @@ public:
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual void Description(nsString& aDescription) override;
   virtual void Value(nsString& aValue) override;
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
   virtual uint64_t NativeState() override;
   virtual Relation RelationByType(RelationType aType) override;

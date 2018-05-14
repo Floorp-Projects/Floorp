@@ -31,7 +31,7 @@ HTMLLinkAccessible::
 // nsIAccessible
 
 role
-HTMLLinkAccessible::NativeRole()
+HTMLLinkAccessible::NativeRole() const
 {
   return roles::LINK;
 }

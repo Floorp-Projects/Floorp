@@ -75,7 +75,7 @@ public:
      * IsExtensionSupported.  The results of this are cached, and as
      * such it's safe to use this even in performance critical code.
      * If you add to this array, remember to add to the string names
-     * in GLContext.cpp.
+     * in GLLibraryEGL.cpp.
      */
     enum EGLExtensions {
         KHR_image_base,
@@ -99,6 +99,7 @@ public:
         ANGLE_stream_producer_d3d_texture,
         ANGLE_device_creation,
         ANGLE_device_creation_d3d11,
+        KHR_surfaceless_context,
         Extensions_Max
     };
 

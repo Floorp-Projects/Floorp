@@ -16,7 +16,7 @@ HTMLCanvasAccessible::
 }
 
 role
-HTMLCanvasAccessible::NativeRole()
+HTMLCanvasAccessible::NativeRole() const
 {
   return roles::CANVAS;
 }

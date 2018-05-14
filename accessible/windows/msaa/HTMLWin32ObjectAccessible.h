@@ -32,7 +32,7 @@ public:
 
   // Accessible
   virtual void Shutdown();
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual bool NativelyUnavailable() const;
 
 protected:

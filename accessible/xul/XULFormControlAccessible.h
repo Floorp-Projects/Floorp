@@ -36,7 +36,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XULButtonAccessible, AccessibleWrap)
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // ActionAccessible
@@ -70,7 +70,7 @@ public:
   XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // ActionAccessible
@@ -89,7 +89,7 @@ public:
   XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 
   // ActionAccessible
@@ -110,7 +110,7 @@ public:
   XULGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) override;
 
 protected:
@@ -144,7 +144,7 @@ public:
   XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
@@ -162,7 +162,7 @@ public:
   XULStatusBarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
 };
 
 /**
@@ -190,7 +190,7 @@ public:
   XULToolbarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
 
 protected:
   // Accessible
@@ -207,7 +207,7 @@ public:
                                 DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() override;
+  virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 };
 

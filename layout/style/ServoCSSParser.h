@@ -40,7 +40,7 @@ struct URLExtraData;
 class ServoCSSParser
 {
 public:
-  using ParsingEnvironment = nsDOMCSSDeclaration::ServoCSSParsingEnvironment;
+  using ParsingEnvironment = nsDOMCSSDeclaration::ParsingEnvironment;
 
   /**
    * Returns whether the specified string can be parsed as a valid CSS

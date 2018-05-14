@@ -35,7 +35,7 @@ XULColumAccessible::
 }
 
 role
-XULColumAccessible::NativeRole()
+XULColumAccessible::NativeRole() const
 {
   return roles::LIST;
 }
@@ -58,7 +58,7 @@ XULColumnItemAccessible::
 }
 
 role
-XULColumnItemAccessible::NativeRole()
+XULColumnItemAccessible::NativeRole() const
 {
   return roles::COLUMNHEADER;
 }
@@ -152,7 +152,7 @@ XULListboxAccessible::Value(nsString& aValue)
 }
 
 role
-XULListboxAccessible::NativeRole()
+XULListboxAccessible::NativeRole() const
 {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
@@ -592,7 +592,7 @@ XULListitemAccessible::NativeName(nsString& aName)
 }
 
 role
-XULListitemAccessible::NativeRole()
+XULListitemAccessible::NativeRole() const
 {
   Accessible* list = GetListAccessible();
   if (!list) {
@@ -784,7 +784,7 @@ XULListCellAccessible::Selected()
 // XULListCellAccessible. Accessible implementation
 
 role
-XULListCellAccessible::NativeRole()
+XULListCellAccessible::NativeRole() const
 {
   return roles::CELL;
 }

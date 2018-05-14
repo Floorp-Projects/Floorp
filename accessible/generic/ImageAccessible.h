@@ -22,7 +22,7 @@ public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 

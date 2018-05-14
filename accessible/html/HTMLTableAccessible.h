@@ -34,7 +34,7 @@ public:
 
   // Accessible
   virtual TableCellAccessible* AsTableCell() override { return this; }
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
@@ -79,7 +79,7 @@ public:
   HTMLTableHeaderCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 };
 
 
@@ -99,7 +99,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableRowAccessible, AccessibleWrap)
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
 
 protected:
@@ -162,7 +162,7 @@ public:
   // Accessible
   virtual TableAccessible* AsTable() override { return this; }
   virtual void Description(nsString& aDescription) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) override;
@@ -223,7 +223,7 @@ public:
     HyperTextAccessibleWrap(aContent, aDoc) { mType = eHTMLCaptionType; }
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aRelationType) override;
 
 protected:

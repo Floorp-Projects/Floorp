@@ -77,6 +77,7 @@ namespace jit {
     _(ArrayJoinResult)                    \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
+    _(MegamorphicLoadSlotResult)          \
     _(MegamorphicLoadSlotByValueResult)   \
     _(MegamorphicHasPropResult)           \
     _(CallObjectHasSparseElementResult)   \
@@ -659,8 +660,8 @@ class MOZ_RAII CacheIRCompiler
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)
 #undef DEFINE_SHARED_OP
 
-    void EmitLoadStubField(StubFieldOffset val, Register dest);
-    void EmitLoadStubFieldConstant(StubFieldOffset val, Register dest);
+    void emitLoadStubField(StubFieldOffset val, Register dest);
+    void emitLoadStubFieldConstant(StubFieldOffset val, Register dest);
 
     uintptr_t readStubWord(uint32_t offset, StubField::Type type) {
         MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);

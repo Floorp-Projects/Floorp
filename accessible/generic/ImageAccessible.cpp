@@ -90,7 +90,7 @@ ImageAccessible::NativeName(nsString& aName)
 }
 
 role
-ImageAccessible::NativeRole()
+ImageAccessible::NativeRole() const
 {
   return roles::GRAPHIC;
 }
