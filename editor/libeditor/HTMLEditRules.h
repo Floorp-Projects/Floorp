@@ -487,6 +487,15 @@ protected:
   nsIContent* GetHighestInlineParent(nsINode& aNode);
   void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);
+
+  /**
+   * RemoveBlockStyle() removes all format blocks, table related element,
+   * etc in aNodeArray.
+   * If aNodeArray has a format node, it will be removed and its contents
+   * will be moved to where it was.
+   * If aNodeArray has a table related element, <li>, <blockquote> or <div>,
+   * it will removed and its contents will be moved to where it was.
+   */
   nsresult RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
