@@ -7,7 +7,6 @@
 #ifndef __nsPlacesTables_h__
 #define __nsPlacesTables_h__
 
-
 #define CREATE_MOZ_PLACES NS_LITERAL_CSTRING( \
     "CREATE TABLE moz_places ( " \
     "  id INTEGER PRIMARY KEY" \
@@ -24,6 +23,7 @@
     ", url_hash INTEGER DEFAULT 0 NOT NULL " \
     ", description TEXT" \
     ", preview_image_url TEXT" \
+    ", origin_id INTEGER REFERENCES moz_origins(id)" \
   ")" \
 )
 
@@ -37,7 +37,6 @@
     ", session INTEGER" \
   ")" \
 )
-
 
 #define CREATE_MOZ_INPUTHISTORY NS_LITERAL_CSTRING( \
   "CREATE TABLE moz_inputhistory (" \
@@ -136,13 +135,13 @@
   ")" \
 )
 
-#define CREATE_MOZ_HOSTS NS_LITERAL_CSTRING( \
-  "CREATE TABLE moz_hosts (" \
-    "  id INTEGER PRIMARY KEY" \
-    ", host TEXT NOT NULL UNIQUE" \
-    ", frecency INTEGER" \
-    ", typed INTEGER NOT NULL DEFAULT 0" \
-    ", prefix TEXT" \
+#define CREATE_MOZ_ORIGINS NS_LITERAL_CSTRING( \
+  "CREATE TABLE moz_origins ( " \
+    "id INTEGER PRIMARY KEY, " \
+    "prefix TEXT NOT NULL, " \
+    "host TEXT NOT NULL, " \
+    "frecency INTEGER NOT NULL, " \
+    "UNIQUE (prefix, host) " \
   ")" \
 )
 
@@ -159,21 +158,25 @@
 
 // This table is used, along with moz_places_afterdelete_trigger, to update
 // hosts after places removals. During a DELETE FROM moz_places, hosts are
-// accumulated into this table, then a DELETE FROM moz_updatehostsdelete_temp
-// will take care of updating the moz_hosts table for every modified host. See
-// CREATE_PLACES_AFTERDELETE_TRIGGER in nsPlacestriggers.h for details.
-#define CREATE_UPDATEHOSTSDELETE_TEMP NS_LITERAL_CSTRING( \
-  "CREATE TEMP TABLE moz_updatehostsdelete_temp (" \
-    "  host TEXT PRIMARY KEY " \
-  ") WITHOUT ROWID " \
+// accumulated into this table, then a DELETE FROM moz_updateoriginsdelete_temp
+// will take care of updating the moz_origin_hosts table for every modified
+// host. See CREATE_PLACES_AFTERDELETE_TRIGGER in nsPlacestriggers.h for
+// details.
+#define CREATE_UPDATEORIGINSDELETE_TEMP NS_LITERAL_CSTRING( \
+  "CREATE TEMP TABLE moz_updateoriginsdelete_temp ( " \
+    "origin_id INTEGER PRIMARY KEY, " \
+    "host TEXT " \
+  ") " \
 )
 
-// This table is used in a similar way to moz_updatehostsdelete_temp, but for
+// This table is used in a similar way to moz_updateoriginsdelete_temp, but for
 // inserts, and triggered via moz_places_afterinsert_trigger.
-#define CREATE_UPDATEHOSTSINSERT_TEMP NS_LITERAL_CSTRING( \
-  "CREATE TEMP TABLE moz_updatehostsinsert_temp (" \
-    "  host TEXT PRIMARY KEY " \
-  ") WITHOUT ROWID " \
+#define CREATE_UPDATEORIGINSINSERT_TEMP NS_LITERAL_CSTRING( \
+  "CREATE TEMP TABLE moz_updateoriginsinsert_temp ( " \
+    "place_id INTEGER PRIMARY KEY, " \
+    "prefix TEXT NOT NULL, " \
+    "host TEXT NOT NULL " \
+  ") " \
 )
 
 // This table would not be strictly needed for functionality since it's just
