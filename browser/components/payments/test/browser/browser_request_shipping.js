@@ -1,7 +1,18 @@
 "use strict";
 
 add_task(async function setup() {
-  await addSampleAddressesAndBasicCard();
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
+
+  let card = {
+    "cc-exp-month": 1,
+    "cc-exp-year": 9999,
+    "cc-name": "John Doe",
+    "cc-number": "999999999999",
+  };
+
+  formAutofillStorage.creditCards.add(card);
+  await onChanged;
 });
 
 add_task(async function test_request_shipping_present() {
