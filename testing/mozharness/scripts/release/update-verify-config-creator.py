@@ -87,6 +87,7 @@ class UpdateVerifyConfigCreator(BaseScript):
         }],
         [["--partial-version"], {
             "dest": "partial_versions",
+            "default": [],
             "action": "append",
             "help": "A previous release version that is expected to receive a partial update. "
                     "Eg: 59.0b4. May be specified multiple times."
