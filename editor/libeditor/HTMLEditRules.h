@@ -595,7 +595,13 @@ protected:
   void ClearCachedStyles();
   void AdjustSpecialBreaks();
   nsresult AdjustWhitespace();
-  nsresult PinSelectionToNewBlock();
+
+  /**
+   * PinSelectionToNewBlock() may collapse Selection around mNewNode if it's
+   * necessary,
+   */
+  MOZ_MUST_USE nsresult PinSelectionToNewBlock();
+
   void CheckInterlinePosition();
 
   /**
