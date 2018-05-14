@@ -8049,9 +8049,6 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
   return NS_OK;
 }
 
-/**
- * RemoveBlockStyle() makes the nodes have no special block type.
- */
 nsresult
 HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
 {
@@ -8063,7 +8060,7 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
   nsCOMPtr<Element> curBlock;
   nsCOMPtr<nsIContent> firstNode, lastNode;
   for (auto& curNode : aNodeArray) {
-    // If curNode is a address, p, header, address, or pre, remove it
+    // If curNode is an <address>, <p>, <hn>, or <pre>, remove it.
     if (HTMLEditUtils::IsFormatNode(curNode)) {
       // Process any partial progress saved
       if (curBlock) {
@@ -8080,17 +8077,24 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       nsresult rv =
         HTMLEditorRef().RemoveBlockContainerWithTransaction(
                           *curNode->AsElement());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (curNode->IsAnyOfHTMLElements(nsGkAtoms::table,
-                                            nsGkAtoms::tr,
-                                            nsGkAtoms::tbody,
-                                            nsGkAtoms::td,
-                                            nsGkAtoms::li,
-                                            nsGkAtoms::blockquote,
-                                            nsGkAtoms::div) ||
-                HTMLEditUtils::IsList(curNode)) {
+      continue;
+    }
+
+    // XXX How about, <th>, <thead>, <tfoot>, <dt>, <dl>?
+    if (curNode->IsAnyOfHTMLElements(nsGkAtoms::table,
+                                     nsGkAtoms::tr,
+                                     nsGkAtoms::tbody,
+                                     nsGkAtoms::td,
+                                     nsGkAtoms::li,
+                                     nsGkAtoms::blockquote,
+                                     nsGkAtoms::div) ||
+        HTMLEditUtils::IsList(curNode)) {
       // Process any partial progress saved
       if (curBlock) {
         nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
@@ -8109,7 +8113,10 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
-    } else if (IsInlineNode(curNode)) {
+      continue;
+    }
+
+    if (IsInlineNode(curNode)) {
       if (curBlock) {
         // If so, is this node a descendant?
         if (EditorUtils::IsDescendantOf(*curNode, *curBlock)) {
@@ -8135,7 +8142,10 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       } else {
         firstNode = lastNode = curNode->AsContent();
       }
-    } else if (curBlock) {
+      continue;
+    }
+
+    if (curBlock) {
       // Some node that is already sans block style.  Skip over it and process
       // any partial progress saved.
       nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
@@ -8143,6 +8153,7 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         return rv;
       }
       firstNode = lastNode = curBlock = nullptr;
+      continue;
     }
   }
   // Process any partial progress saved
