@@ -1253,7 +1253,7 @@ AstDecodeWake(AstDecodeContext& c)
 static bool
 AstDecodeMemCopy(AstDecodeContext& c)
 {
-    if (!c.iter().readMemCopy(ValType::I32, nullptr, nullptr, nullptr))
+    if (!c.iter().readMemCopy(nullptr, nullptr, nullptr))
         return false;
 
     AstDecodeStackItem dest = c.popCopy();
@@ -1274,7 +1274,7 @@ AstDecodeMemCopy(AstDecodeContext& c)
 static bool
 AstDecodeMemFill(AstDecodeContext& c)
 {
-    if (!c.iter().readMemFill(ValType::I32, nullptr, nullptr, nullptr))
+    if (!c.iter().readMemFill(nullptr, nullptr, nullptr))
         return false;
 
     AstDecodeStackItem len   = c.popCopy();
