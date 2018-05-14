@@ -12,32 +12,32 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function () {
-  var ms = new MediaSource();
+runWithMSE(function() {
+  const ms = new MediaSource();
 
-  var v = document.createElement("video");
+  const v = document.createElement("video");
   v.src = URL.createObjectURL(ms);
   document.body.appendChild(v);
 
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/mp4");
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/mp4");
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
-      var count = 0;
-      sb.addEventListener("updateend", function () {
+      let count = 0;
+      sb.addEventListener("updateend", function() {
         ++count;
         if (count == 1) {
           setTimeout(function() {
-                       var fail = false;
-                       try {
-                         ms.endOfStream();
-                       } catch (e) {
-                         fail = true;
-                       }
-                       ok(!fail, "MediaSource.endOfStream succeeded");
-                       SimpleTest.finish();
-                     }, 0);
+            let fail = false;
+            try {
+              ms.endOfStream();
+            } catch (e) {
+              fail = true;
+            }
+            ok(!fail, "MediaSource.endOfStream succeeded");
+            SimpleTest.finish();
+          }, 0);
         }
       });
     });

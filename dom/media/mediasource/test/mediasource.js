@@ -1,9 +1,9 @@
 // Helpers for Media Source Extensions tests
 
-var gMSETestPrefs = [
+let gMSETestPrefs = [
   [ "media.mediasource.enabled", true ],
-  ['media.audio-max-decode-error', 0],
-  ['media.video-max-decode-error', 0],
+  [ "media.audio-max-decode-error", 0 ],
+  [ "media.video-max-decode-error", 0 ],
 ];
 
 // Called before runWithMSE() to set the prefs before running MSE tests.
@@ -13,14 +13,14 @@ function addMSEPrefs(...prefs) {
 
 function runWithMSE(testFunction) {
   function bootstrapTest() {
-    var ms = new MediaSource();
+    const ms = new MediaSource();
 
-    var el = document.createElement("video");
+    const el = document.createElement("video");
     el.src = URL.createObjectURL(ms);
     el.preload = "auto";
 
     document.body.appendChild(el);
-    SimpleTest.registerCleanupFunction(function () {
+    SimpleTest.registerCleanupFunction(function() {
       el.remove();
       el.removeAttribute("src");
       el.load();
@@ -29,17 +29,17 @@ function runWithMSE(testFunction) {
     testFunction(ms, el);
   }
 
-  addLoadEvent(function () {
+  addLoadEvent(function() {
     SpecialPowers.pushPrefEnv({"set": gMSETestPrefs}, bootstrapTest);
   });
 }
 
 function fetchWithXHR(uri, onLoadFunction) {
-  var p = new Promise(function(resolve, reject) {
-    var xhr = new XMLHttpRequest();
+  const p = new Promise(function(resolve, reject) {
+    const xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
-    xhr.addEventListener("load", function () {
+    xhr.addEventListener("load", function() {
       is(xhr.status, 200, "fetchWithXHR load uri='" + uri + "' status=" + xhr.status);
       resolve(xhr.response);
     });
@@ -51,18 +51,18 @@ function fetchWithXHR(uri, onLoadFunction) {
   }
 
   return p;
-};
+}
 
 function range(start, end) {
-  var rv = [];
-  for (var i = start; i < end; ++i) {
+  const rv = [];
+  for (let i = start; i < end; ++i) {
     rv.push(i);
   }
   return rv;
 }
 
 function once(target, name, cb) {
-  var p = new Promise(function(resolve, reject) {
+  const p = new Promise(function(resolve, reject) {
     target.addEventListener(name, function() {
       resolve();
     }, {once: true});
@@ -74,21 +74,21 @@ function once(target, name, cb) {
 }
 
 function timeRangeToString(r) {
-  var str = "TimeRanges: ";
-  for (var i = 0; i < r.length; i++) {
+  let str = "TimeRanges: ";
+  for (let i = 0; i < r.length; i++) {
     str += "[" + r.start(i) + ", " + r.end(i) + ")";
   }
   return str;
 }
 
 function loadSegment(sb, typedArrayOrArrayBuffer) {
-  var typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
-                                                                    : typedArrayOrArrayBuffer;
+  const typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
+                                                                      : typedArrayOrArrayBuffer;
   info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
-  var beforeBuffered = timeRangeToString(sb.buffered);
+  const beforeBuffered = timeRangeToString(sb.buffered);
   return new Promise(function(resolve, reject) {
-    once(sb, 'update').then(function() {
-      var afterBuffered = timeRangeToString(sb.buffered);
+    once(sb, "update").then(function() {
+      const afterBuffered = timeRangeToString(sb.buffered);
       info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
       resolve();
     });
@@ -99,16 +99,16 @@ function loadSegment(sb, typedArrayOrArrayBuffer) {
 function fetchAndLoad(sb, prefix, chunks, suffix) {
 
   // Fetch the buffers in parallel.
-  var buffers = {};
-  var fetches = [];
-  for (var chunk of chunks) {
+  const buffers = {};
+  const fetches = [];
+  for (const chunk of chunks) {
     fetches.push(fetchWithXHR(prefix + chunk + suffix).then(((c, x) => buffers[c] = x).bind(null, chunk)));
   }
 
   // Load them in series, as required per spec.
   return Promise.all(fetches).then(function() {
-    var rv = Promise.resolve();
-    for (var chunk of chunks) {
+    let rv = Promise.resolve();
+    for (const chunk of chunks) {
       rv = rv.then(loadSegment.bind(null, sb, buffers[chunk]));
     }
     return rv;
@@ -116,12 +116,12 @@ function fetchAndLoad(sb, prefix, chunks, suffix) {
 }
 
 function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
-  var typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
-                                                                    : typedArrayOrArrayBuffer;
+  const typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
+                                                                      : typedArrayOrArrayBuffer;
   info(`Loading buffer2: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
-  var beforeBuffered = timeRangeToString(sb.buffered);
+  const beforeBuffered = timeRangeToString(sb.buffered);
   return sb.appendBufferAsync(typedArray).then(() => {
-    var afterBuffered = timeRangeToString(sb.buffered);
+    const afterBuffered = timeRangeToString(sb.buffered);
     info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
   });
 }
@@ -129,28 +129,28 @@ function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
 function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
 
   // Fetch the buffers in parallel.
-  var buffers = {};
-  var fetches = [];
-  for (var chunk of chunks) {
+  const buffers = {};
+  const fetches = [];
+  for (const chunk of chunks) {
     fetches.push(fetchWithXHR(prefix + chunk + suffix).then(((c, x) => buffers[c] = x).bind(null, chunk)));
   }
 
   // Load them in series, as required per spec.
   return Promise.all(fetches).then(function() {
-    var rv = Promise.resolve();
-    for (var chunk of chunks) {
+    let rv = Promise.resolve();
+    for (const chunk of chunks) {
       rv = rv.then(loadSegmentAsync.bind(null, sb, buffers[chunk]));
     }
     return rv;
   });
 }
 
-//Register timeout function to dump debugging logs.
+// Register timeout function to dump debugging logs.
 SimpleTest.registerTimeoutFunction(function() {
-  for (var v of document.getElementsByTagName("video")) {
+  for (const v of document.getElementsByTagName("video")) {
     v.mozDumpDebugInfo();
   }
-  for (var a of document.getElementsByTagName("audio")) {
+  for (const a of document.getElementsByTagName("audio")) {
     a.mozDumpDebugInfo();
   }
 });

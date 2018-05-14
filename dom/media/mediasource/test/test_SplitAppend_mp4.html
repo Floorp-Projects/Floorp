@@ -12,20 +12,19 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var updateCount = 0;
+let updateCount = 0;
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/mp4");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/mp4");
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
-      sb.addEventListener("updateend", function () {
+      sb.addEventListener("updateend", function() {
         updateCount++;
         if (updateCount == 1) {
           sb.appendBuffer(new Uint8Array(arrayBuffer, 1395));
-        }
-        else if (updateCount == 2) {
+        } else if (updateCount == 2) {
           ms.endOfStream();
         }
       });
@@ -33,7 +32,7 @@ runWithMSE(function (ms, v) {
     });
   });
 
-  v.addEventListener("ended", function () {
+  v.addEventListener("ended", function() {
     // The bipbop video doesn't start at 0. The old MSE code adjust the
     // timestamps and ignore the audio track. The new one doesn't.
     isfuzzy(v.duration, 1.696, 0.166, "Video has correct duration");
