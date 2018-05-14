@@ -5,7 +5,7 @@
 "use strict";
 
 /* import-globals-from ../../../content/contentAreaUtils.js */
-/* globals XMLStylesheetProcessingInstruction */
+/* globals ProcessingInstruction */
 /* exported UPDATES_RELEASENOTES_TRANSFORMFILE, XMLURI_PARSE_ERROR, loadView, gBrowser */
 
 ChromeUtils.import("resource://gre/modules/DeferredTask.jsm");
@@ -109,7 +109,7 @@ Object.defineProperty(this, "gIsInitializing", {
 function initialize(event) {
   // XXXbz this listener gets _all_ load events for all nodes in the
   // document... but relies on not being called "too early".
-  if (event.target instanceof XMLStylesheetProcessingInstruction) {
+  if (event.target instanceof ProcessingInstruction) {
     return;
   }
   document.removeEventListener("load", initialize, true);
