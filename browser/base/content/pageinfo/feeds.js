@@ -45,7 +45,7 @@ function addRow(name, type, url) {
   urlLabel.className = "text-link";
   urlLabel.textContent = url;
   urlLabel.setAttribute("tooltiptext", url);
-  urlLabel.addEventListener("click", ev => openUILink(this.value, ev));
+  urlLabel.addEventListener("click", ev => openUILink(this.value, ev, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})}));
   urlContainer.appendChild(urlLabel);
 
   const subscribeButton = document.createElement("button");
