@@ -665,3 +665,20 @@ to push a layer-tree update to the compositor before taking the snapshot.
 Setting the "reftest-no-sync-layers" attribute on the root element skips this
 step, enabling testing that layer-tree updates are being correctly generated.
 However the test must manually wait for a MozAfterPaint event before ending.
+
+Avoid hanging on long/infinite animation tests: reftest-ignore-pending-paints
+=============================================================================
+
+If a test contains a long animation, and the desired behaviour is to take a
+snapshot partway through the animation, the usual procedure is to have a part
+of the animation that is visually unchanging, and when the test page reaches that
+part, it removes the reftest-wait to allow the harness to finish. However, this
+relies on an optimization inside Gecko that stops repaints if it detects that
+nothing will visually change (by detecting an empty invalidation area, for
+example). In some cases, this optimization may not trigger (e.g. with WebRender
+enabled). For such cases, the reftest-wait class attribute can be replaced by
+reftest-ignore-pending-paints on the root html element, and this will make the
+harness ignore any pending repaints (i.e. stop listening for MozAfterPaint) and
+just go ahead and finish the test.
+Note that any reftest that attempts to use this feature without animations will
+fail with an error.
