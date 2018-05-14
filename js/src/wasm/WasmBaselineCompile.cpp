@@ -9200,7 +9200,7 @@ BaseCompiler::emitMemCopy()
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     Nothing nothing;
-    if (!iter_.readMemCopy(ValType::I32, &nothing, &nothing, &nothing))
+    if (!iter_.readMemCopy(&nothing, &nothing, &nothing))
         return false;
 
     if (deadCode_)
@@ -9222,7 +9222,7 @@ BaseCompiler::emitMemFill()
     uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
     Nothing nothing;
-    if (!iter_.readMemFill(ValType::I32, &nothing, &nothing, &nothing))
+    if (!iter_.readMemFill(&nothing, &nothing, &nothing))
         return false;
 
     if (deadCode_)
