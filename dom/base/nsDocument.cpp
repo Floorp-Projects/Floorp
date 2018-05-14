@@ -5102,45 +5102,6 @@ nsDocument::BeginLoad()
 }
 
 void
-nsIDocument::ReportEmptyGetElementByIdArg()
-{
-  nsContentUtils::ReportEmptyGetElementByIdArg(this);
-}
-
-Element*
-nsIDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                void* aData, bool aForImage)
-{
-  nsDependentAtomString id(aID);
-
-  if (!CheckGetElementByIdArg(id))
-    return nullptr;
-
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
-  NS_ENSURE_TRUE(entry, nullptr);
-
-  entry->AddContentChangeCallback(aObserver, aData, aForImage);
-  return aForImage ? entry->GetImageIdElement() : entry->GetIdElement();
-}
-
-void
-nsIDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                   void* aData, bool aForImage)
-{
-  nsDependentAtomString id(aID);
-
-  if (!CheckGetElementByIdArg(id))
-    return;
-
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
-  if (!entry) {
-    return;
-  }
-
-  entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
-}
-
-void
 nsIDocument::MozSetImageElement(const nsAString& aImageElementId,
                                Element* aElement)
 {
