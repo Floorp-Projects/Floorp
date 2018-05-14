@@ -1453,7 +1453,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   if (aOS)
     *aOS = os;
 
-  if (sShutdownOccured) {
+  if (sShutdownOccurred) {
     return NS_OK;
   }
 
