@@ -14,8 +14,8 @@ int32_t GfxDriverInfo::allFeatures = 0;
 uint64_t GfxDriverInfo::allDriverVersions = ~(uint64_t(0));
 GfxDeviceFamily* const GfxDriverInfo::allDevices = nullptr;
 
-GfxDeviceFamily* GfxDriverInfo::mDeviceFamilies[DeviceFamilyMax];
-nsAString* GfxDriverInfo::mDeviceVendors[DeviceVendorMax];
+GfxDeviceFamily* GfxDriverInfo::sDeviceFamilies[DeviceFamilyMax];
+nsAString* GfxDriverInfo::sDeviceVendors[DeviceVendorMax];
 
 GfxDriverInfo::GfxDriverInfo()
   : mOperatingSystem(OperatingSystem::Unknown),
@@ -99,11 +99,11 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
   NS_ASSERTION(id >= 0 && id < DeviceFamilyMax, "DeviceFamily id is out of range");
 
   // If it already exists, we must have processed it once, so return it now.
-  if (mDeviceFamilies[id])
-    return mDeviceFamilies[id];
+  if (sDeviceFamilies[id])
+    return sDeviceFamilies[id];
 
-  mDeviceFamilies[id] = new GfxDeviceFamily;
-  GfxDeviceFamily* deviceFamily = mDeviceFamilies[id];
+  sDeviceFamilies[id] = new GfxDeviceFamily;
+  GfxDeviceFamily* deviceFamily = sDeviceFamilies[id];
 
   switch (id) {
     case IntelGMA500:
@@ -332,17 +332,17 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
 // Macro for assigning a device vendor id to a string.
 #define DECLARE_VENDOR_ID(name, deviceId) \
   case name: \
-    mDeviceVendors[id]->AssignLiteral(deviceId); \
+    sDeviceVendors[id]->AssignLiteral(deviceId); \
     break;
 
 const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id)
 {
   NS_ASSERTION(id >= 0 && id < DeviceVendorMax, "DeviceVendor id is out of range");
 
-  if (mDeviceVendors[id])
-    return *mDeviceVendors[id];
+  if (sDeviceVendors[id])
+    return *sDeviceVendors[id];
 
-  mDeviceVendors[id] = new nsString();
+  sDeviceVendors[id] = new nsString();
 
   switch (id) {
     DECLARE_VENDOR_ID(VendorAll, "");
@@ -359,5 +359,5 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id)
     DECLARE_VENDOR_ID(DeviceVendorMax, "");
   }
 
-  return *mDeviceVendors[id];
+  return *sDeviceVendors[id];
 }
