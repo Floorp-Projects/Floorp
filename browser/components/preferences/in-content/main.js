@@ -949,10 +949,10 @@ var gMainPane = {
     let [
       title, message, okButton, cancelButton
     ] = await document.l10n.formatValues([
-      ["containers-disable-alert-title"],
-      ["containers-disable-alert-desc", { tabCount: count }],
-      ["containers-disable-alert-ok-button", { tabCount: count }],
-      ["containers-disable-alert-cancel-button"]
+      {id: "containers-disable-alert-title"},
+      {id: "containers-disable-alert-desc", args: { tabCount: count }},
+      {id: "containers-disable-alert-ok-button", args: { tabCount: count }},
+      {id: "containers-disable-alert-cancel-button"}
     ]);
 
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +

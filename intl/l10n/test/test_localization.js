@@ -37,7 +37,7 @@ add_task(async function test_methods_calling() {
     "/browser/menu.ftl"
   ], generateMessages);
 
-  let values = await l10n.formatValues([["key"], ["key2"]]);
+  let values = await l10n.formatValues([{id: "key"}, {id: "key2"}]);
 
   equal(values[0], "[de] Value2");
   equal(values[1], "[en] Value3");
@@ -84,7 +84,7 @@ key = { PLATFORM() ->
     "/test.ftl"
   ], generateMessages);
 
-  let values = await l10n.formatValues([["key"]]);
+  let values = await l10n.formatValues([{id: "key"}]);
 
   ok(values[0].includes(
     `${ known_platforms[AppConstants.platform].toUpperCase() } Value`));
