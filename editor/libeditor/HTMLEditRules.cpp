@@ -8637,6 +8637,9 @@ HTMLEditRules::AdjustWhitespace()
   // Ask whitespace object to tweak nbsp's
   nsresult rv =
     WSRunObject(&HTMLEditorRef(), selectionStartPoint).AdjustWhitespace();
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
