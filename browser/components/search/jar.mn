@@ -4,6 +4,5 @@
 
 browser.jar:
         content/browser/search/search.xml                           (content/search.xml)
-        content/browser/search/searchbarBindings.css                (content/searchbarBindings.css)
         content/browser/search/searchReset.xhtml                    (content/searchReset.xhtml)
         content/browser/search/searchReset.js                       (content/searchReset.js)
