@@ -1390,5 +1390,53 @@ namespace places {
     return NS_OK;
   }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Update frecency stats function
+
+  /* static */
+  nsresult
+  UpdateFrecencyStatsFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<UpdateFrecencyStatsFunction> function =
+      new UpdateFrecencyStatsFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("update_frecency_stats"), 3, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    UpdateFrecencyStatsFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  UpdateFrecencyStatsFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                              nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 3);
+
+    int64_t placeId = aArgs->AsInt64(0);
+    int32_t oldFrecency = aArgs->AsInt32(1);
+    int32_t newFrecency = aArgs->AsInt32(2);
+
+    const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
+    NS_ENSURE_STATE(navHistory);
+    navHistory->DispatchFrecencyStatsUpdate(placeId, oldFrecency, newFrecency);
+
+    RefPtr<nsVariant> result = new nsVariant();
+    rv = result->SetAsVoid();
+    NS_ENSURE_SUCCESS(rv, rv);
+    result.forget(_result);
+    return NS_OK;
+  }
+
 } // namespace places
 } // namespace mozilla

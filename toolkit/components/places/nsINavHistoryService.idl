@@ -1177,7 +1177,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(8a1f527e-c9d7-4a51-bf0c-d86f0379b701)]
+[scriptable, uuid(20c974ff-ee16-4828-9326-1b7c9e036622)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1388,6 +1388,15 @@ interface nsINavHistoryService : nsISupports
    *        The hash mode: `""` (default), `"prefix_lo"`, or `"prefix_hi"`.
    */
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
+
+  /**
+   * The mean and standard deviation of all frecencies > 0 in the database.
+   * These are used to determine a frecency threshold for URLs that should be
+   * autofilled in the urlbar.  They are updated whenever a frecency changes,
+   * but not when frecencies decay.
+   */
+  readonly attribute double frecencyMean;
+  readonly attribute double frecencyStandardDeviation;
 
   /**
    * The database connection used by Places.

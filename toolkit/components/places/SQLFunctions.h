@@ -566,6 +566,38 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+//// Update frecency stats function
+
+/**
+ * Calls nsNavHistory::UpdateFrecencyStats with the old and new frecencies of a
+ * particular moz_places row.
+ *
+ * @param placeID
+ *        The moz_places row ID.
+ * @param oldFrecency
+ *        The old frecency of a moz_places row that changed frecencies.
+ * @param newFrecency
+ *        The new frecency of the same moz_places row.
+ */
+class UpdateFrecencyStatsFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~UpdateFrecencyStatsFunction() {}
+};
+
+
 } // namespace places
 } // namespace mozilla
 

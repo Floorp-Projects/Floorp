@@ -79,6 +79,8 @@
   "BEGIN " \
     "INSERT OR IGNORE INTO moz_updateoriginsdelete_temp (origin_id, host) " \
     "VALUES (OLD.origin_id, get_host_and_port(OLD.url)); " \
+    "SELECT update_frecency_stats(OLD.id, OLD.frecency, -1) " \
+    "WHERE OLD.id >= 0; " \
   "END" \
 )
 
@@ -147,6 +149,8 @@
       "WHERE moz_places.origin_id = moz_origins.id " \
     ") " \
     "WHERE id = NEW.origin_id; " \
+    "SELECT update_frecency_stats(NEW.id, OLD.frecency, NEW.frecency) " \
+    "WHERE NEW.id >= 0; " \
   "END" \
 )
 
