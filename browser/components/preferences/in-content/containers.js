@@ -79,10 +79,10 @@ let gContainersPane = {
     let count = ContextualIdentityService.countContainerTabs(userContextId);
     if (count > 0) {
       let [title, message, okButton, cancelButton] = await document.l10n.formatValues([
-        ["containers-remove-alert-title"],
-        ["containers-remove-alert-msg", { count }],
-        ["containers-remove-ok-button"],
-        ["containers-remove-cancel-button"]
+        {id: "containers-remove-alert-title"},
+        {id: "containers-remove-alert-msg", args: { count }},
+        {id: "containers-remove-ok-button"},
+        {id: "containers-remove-cancel-button"}
       ]);
 
       let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +

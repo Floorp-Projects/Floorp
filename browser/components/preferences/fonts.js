@@ -102,9 +102,9 @@ var gFontsDialog = {
     }
 
     let [title, warningMessage, confirmLabel] = await document.l10n.formatValues([
-      ["fonts-very-large-warning-title"],
-      ["fonts-very-large-warning-message"],
-      ["fonts-very-large-warning-accept"],
+      {id: "fonts-very-large-warning-title"},
+      {id: "fonts-very-large-warning-message"},
+      {id: "fonts-very-large-warning-accept"},
     ]);
     let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
     let flags = Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL |

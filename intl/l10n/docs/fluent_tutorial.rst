@@ -328,7 +328,7 @@ apply it onto the DOM, Fluent provides an API to retrieve it:
 .. code-block:: javascript
 
   let [ msg ] = await document.l10n.formatValues([
-    ["remove-containers-description"]
+    {id: "remove-containers-description"}
   ]);
 
   alert(msg);
@@ -550,7 +550,7 @@ contexts manually using `Localization` class:
   
   
   let [isDefaultMsg, isNotDefaultMsg] =
-    myL10n.formatValues(["is-default", "is-not-default"]);
+    myL10n.formatValues({id: "is-default"}, {id: "is-not-default"});
 
 
 .. admonition:: Example
