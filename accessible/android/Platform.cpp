@@ -45,8 +45,12 @@ a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 }
 
 void
-a11y::ProxyTextChangeEvent(ProxyAccessible*, const nsString&, int32_t, uint32_t,
-                     bool, bool)
+a11y::ProxyTextChangeEvent(ProxyAccessible*,
+                           const nsString&,
+                           int32_t,
+                           uint32_t,
+                           bool,
+                           bool)
 {
 }
 
@@ -57,5 +61,29 @@ a11y::ProxyShowHideEvent(ProxyAccessible*, ProxyAccessible*, bool, bool)
 
 void
 a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t)
+{
+}
+
+void
+a11y::ProxyVirtualCursorChangeEvent(ProxyAccessible*,
+                                    ProxyAccessible*,
+                                    int32_t,
+                                    int32_t,
+                                    ProxyAccessible*,
+                                    int32_t,
+                                    int32_t,
+                                    int16_t,
+                                    int16_t,
+                                    bool)
+{
+}
+
+void
+a11y::ProxyScrollingEvent(ProxyAccessible*,
+                          uint32_t,
+                          uint32_t,
+                          uint32_t,
+                          uint32_t,
+                          uint32_t)
 {
 }
