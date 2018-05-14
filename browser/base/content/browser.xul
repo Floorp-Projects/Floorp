@@ -333,7 +333,13 @@
     </panel>
 
     <menupopup id="toolbar-context-menu"
-               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); UpdateDownloadsAutoHide(this)">
+               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator')); UpdateDownloadsAutoHide(this); UpdateManageExtension(this)">
+      <menuitem oncommand="openAboutAddonsForContextAction(this.parentElement)"
+                accesskey="&customizeMenu.manageExtension.accesskey;"
+                label="&customizeMenu.manageExtension.label;"
+                contexttype="toolbaritem"
+                class="customize-context-manageExtension"/>
+      <menuseparator/>
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.pinToOverflowMenu.accesskey;"
                 label="&customizeMenu.pinToOverflowMenu.label;"
