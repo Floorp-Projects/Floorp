@@ -4,13 +4,15 @@
 
 package mozilla.components.browser.session
 
+import java.util.UUID
 import kotlin.properties.Delegates
 
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
 class Session(
-    initialUrl: String
+    initialUrl: String,
+    val id: String = UUID.randomUUID().toString()
 ) {
     /**
      * Interface to be implemented by classes that want to observe a session.

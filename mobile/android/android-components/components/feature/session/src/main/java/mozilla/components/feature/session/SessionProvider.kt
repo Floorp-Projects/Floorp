@@ -9,7 +9,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import java.util.WeakHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -20,30 +19,31 @@ import java.util.concurrent.TimeUnit
 class SessionProvider(
     private val context: Context,
     initialSession: Session = Session(""),
-    private val storage: SessionStorage = DefaultSessionStorage(context),
+    private val sessionStorage: SessionStorage = DefaultSessionStorage(context),
     private val savePeriodically: Boolean = false,
     private val saveIntervalInSeconds: Long = 300,
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 ) {
-    private val sessions = WeakHashMap<Session, EngineSession>()
+    private val sessions = mutableMapOf<Session, EngineSession>()
+
     val sessionManager: SessionManager = SessionManager(initialSession)
 
     val selectedSession
         get() = sessionManager.selectedSession
 
     /**
-     * Starts this provider and schedules periodic saves.
+     * Restores persisted session state and schedules periodic saves.
      */
     fun start(engine: Engine) {
-        storage.restore(engine).forEach {
-            sessionManager.add(it.session)
-            sessions.put(it.session, it.engineSession)
+        val (restoredSessions, restoredSelectedSession) = sessionStorage.restore(engine)
+        sessions.putAll(restoredSessions)
+        sessions.keys.forEach {
+            sessionManager.add(it, it.id == restoredSelectedSession)
         }
-        storage.getSelected()?.let { sessionManager.select(it) }
 
         if (savePeriodically) {
             scheduler.scheduleAtFixedRate(
-                { storage.persist(sessionManager.selectedSession) },
+                { sessionStorage.persist(sessions, sessionManager.selectedSession?.id) },
                 saveIntervalInSeconds,
                 saveIntervalInSeconds,
                 TimeUnit.SECONDS)
@@ -51,14 +51,15 @@ class SessionProvider(
     }
 
     /**
-     * Returns the engine session corresponding to the current or given browser session. A new
-     * engine session will be created if none exists for the given browser session.
+     * Returns the engine session corresponding to the given (or currently selected)
+     * browser session. A new engine session will be created if none exists for the
+     * given browser session.
      */
     @Synchronized
     fun getOrCreateEngineSession(engine: Engine, session: Session = selectedSession): EngineSession {
         return sessions.getOrPut(session, {
             val engineSession = engine.createSession()
-            storage.add(SessionProxy(session, engineSession))
+            SessionProxy(session, engineSession)
 
             engineSession.loadUrl(session.url)
             engineSession
@@ -69,6 +70,7 @@ class SessionProvider(
      * Stops this provider and periodic saves.
      */
     fun stop() {
+        sessions.clear()
         scheduler.shutdown()
     }
 }

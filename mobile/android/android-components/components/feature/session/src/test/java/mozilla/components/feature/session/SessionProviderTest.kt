@@ -29,11 +29,11 @@ class SessionProviderTest {
         val engine = mock(Engine::class.java)
         val engineSession = mock(EngineSession::class.java)
         val session = Session("http://mozilla.org")
-        val sessionList = listOf(SessionProxy(session, engineSession))
-        `when`(storage.restore(engine)).thenReturn(sessionList)
-        `when`(storage.getSelected()).thenReturn(session)
+        val sessionMap = mapOf(session to engineSession)
 
-        val provider = SessionProvider(context = RuntimeEnvironment.application, storage = storage)
+        `when`(storage.restore(engine)).thenReturn(Pair(sessionMap, session.id))
+
+        val provider = SessionProvider(context = RuntimeEnvironment.application, sessionStorage = storage)
         provider.start(engine)
 
         assertEquals(2, provider.sessionManager.size)
@@ -82,5 +82,14 @@ class SessionProviderTest {
         actualEngineSession = provider.getOrCreateEngineSession(engine, session)
         // Should still be the original (already created) engine session
         assertEquals(engineSession1, actualEngineSession)
+    }
+
+    @Test
+    fun testSelectedSession() {
+        val session = Session("http://mozilla.org")
+        val provider = SessionProvider(context = RuntimeEnvironment.application, initialSession = session)
+        provider.sessionManager.select(session)
+
+        assertEquals(session, provider.selectedSession)
     }
 }

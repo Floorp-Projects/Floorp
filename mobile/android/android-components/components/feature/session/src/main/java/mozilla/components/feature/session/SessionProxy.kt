@@ -8,9 +8,8 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.browser.session.Session
 
 /**
- * Represents a combination of a browser and engine session and acts as a proxy that
- * will subscribe to an EngineSession and update the Session object whenever new
- * data is available.
+ * Proxy class that will subscribe to an engine session and update the browser session object
+ * whenever new data is available.
  */
 class SessionProxy(
     val session: Session,

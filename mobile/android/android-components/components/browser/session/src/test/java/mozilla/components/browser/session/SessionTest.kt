@@ -5,6 +5,7 @@
 package mozilla.components.browser.session
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -127,5 +128,15 @@ class SessionTest {
         val session = Session("https://www.mozilla.org")
 
         assertEquals("https://www.mozilla.org", session.url)
+    }
+
+    @Test
+    fun `Session always has an ID`() {
+        var session = Session("https://www.mozilla.org")
+        assertNotNull(session.id)
+
+        session = Session("https://www.mozilla.org", "s1")
+        assertNotNull(session.id)
+        assertEquals("s1", session.id)
     }
 }

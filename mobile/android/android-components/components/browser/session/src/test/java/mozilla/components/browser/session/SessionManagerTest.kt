@@ -15,10 +15,11 @@ class SessionManagerTest {
     @Test
     fun `session can be added`() {
         val manager = SessionManager(Session("http://www.mozilla.org"))
-        manager.add(Session("http://www.firefox.com"))
+        manager.add(Session("http://getpocket.com"))
+        manager.add(Session("http://www.firefox.com"), true)
 
-        assertEquals(2, manager.size)
-        assertEquals("http://www.mozilla.org", manager.selectedSession.url)
+        assertEquals(3, manager.size)
+        assertEquals("http://www.firefox.com", manager.selectedSession.url)
     }
 
     @Test

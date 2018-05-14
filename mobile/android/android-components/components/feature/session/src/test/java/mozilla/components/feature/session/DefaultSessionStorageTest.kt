@@ -4,61 +4,68 @@
 
 package mozilla.components.feature.session
 
+import android.content.Context
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.spy
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.io.FileNotFoundException
 
 @RunWith(RobolectricTestRunner::class)
 class DefaultSessionStorageTest {
 
     @Test
-    fun testAddAndGet() {
-        val session = SessionProxy(mock(Session::class.java), mock(EngineSession::class.java))
-
-        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val id = storage.add(session)
-
-        assertNotNull(id)
-        assertEquals(session, storage.get(id))
-    }
-
-    @Test
-    fun testRemoveAndGet() {
-        val session = SessionProxy(mock(Session::class.java), mock(EngineSession::class.java))
-
-        val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val id = storage.add(session)
-
-        assertNotNull(storage.get(id))
-        assertTrue(storage.remove(id))
-        assertNull(storage.get(id))
-    }
-
-    @Test
     fun testPersistAndRestore() {
         val session = Session("http://mozilla.org")
+        val engineSession = mock(EngineSession::class.java)
 
         val engine = mock(Engine::class.java)
-        `when`(engine.createSession()).thenReturn(mock(EngineSession::class.java)
-        )
+        `when`(engine.createSession()).thenReturn(engineSession)
+
         val storage = DefaultSessionStorage(RuntimeEnvironment.application)
-        val id = storage.add(SessionProxy(session, mock(EngineSession::class.java)))
+        val persisted = storage.persist(mapOf(session to engineSession), session.id)
+        assertTrue(persisted)
 
-        assertTrue(storage.persist(session))
-
-        val sessions = storage.restore(engine)
+        val (sessions, selectedSession) = storage.restore(engine)
         assertEquals(1, sessions.size)
-        assertEquals(session.url, sessions[0].session.url)
-        assertEquals(session.url, storage.get(id)?.session?.url)
+        assertEquals(session.url, sessions.keys.first().url)
+        assertEquals(session.id, selectedSession)
+    }
+
+    @Test
+    fun testRestoreReturnsEmptyOnException() {
+        val engine = mock(Engine::class.java)
+        val context = spy(RuntimeEnvironment.application)
+
+        doThrow(FileNotFoundException::class.java).`when`(context).openFileInput(anyString())
+
+        val storage = DefaultSessionStorage(context)
+        val (sessions, selectedSession) = storage.restore(engine)
+        assertEquals(0, sessions.size)
+        assertEquals("", selectedSession)
+    }
+
+    @Test
+    fun testPersistReturnsFalseOnException() {
+        val session = Session("http://mozilla.org")
+        val engineSession = mock(EngineSession::class.java)
+
+        val context = spy(RuntimeEnvironment.application)
+        doThrow(FileNotFoundException::class.java).`when`(context).openFileOutput(anyString(), eq(Context.MODE_PRIVATE))
+
+        val storage = DefaultSessionStorage(context)
+        assertFalse(storage.persist(mapOf(session to engineSession), session.id))
     }
 }

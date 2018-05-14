@@ -26,8 +26,12 @@ class SessionManager(initialSession: Session) {
     /**
      * Adds the provided session.
      */
-    fun add(session: Session) {
+    fun add(session: Session, selected: Boolean = false) {
         sessions.add(session)
+
+        if (selected) {
+            select(session)
+        }
     }
 
     /**
