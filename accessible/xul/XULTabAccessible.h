@@ -25,7 +25,7 @@ public:
   XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual Relation RelationByType(RelationType aType) override;
@@ -47,7 +47,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
@@ -69,7 +69,7 @@ public:
     { mType = eXULTabpanelsType; }
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
 };
 
 
@@ -86,7 +86,7 @@ public:
   XULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual Relation RelationByType(RelationType aType) override;
 };
 

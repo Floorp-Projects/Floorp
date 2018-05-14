@@ -81,10 +81,10 @@ public:
   static void AddCollector(GfxInfoCollectorBase* collector);
   static void RemoveCollector(GfxInfoCollectorBase* collector);
 
-  static nsTArray<GfxDriverInfo>* mDriverInfo;
-  static nsTArray<mozilla::dom::GfxInfoFeatureStatus>* mFeatureStatus;
-  static bool mDriverInfoObserverInitialized;
-  static bool mShutdownOccurred;
+  static nsTArray<GfxDriverInfo>* sDriverInfo;
+  static nsTArray<mozilla::dom::GfxInfoFeatureStatus>* sFeatureStatus;
+  static bool sDriverInfoObserverInitialized;
+  static bool sShutdownOccurred;
 
   virtual nsString Model() { return EmptyString(); }
   virtual nsString Hardware() { return EmptyString(); }

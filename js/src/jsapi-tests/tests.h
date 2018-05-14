@@ -441,40 +441,30 @@ class TestJSPrincipals : public JSPrincipals
     }
 };
 
-// A class that simulates refcounted data, for testing with array buffers.
-class RefCountedData {
+// A class that simulates externally memory-managed data, for testing with
+// array buffers.
+class ExternalData {
     char* contents_;
     size_t len_;
-    size_t refcount_;
 
   public:
-    explicit RefCountedData(const char* str) : contents_(strdup(str)),
-        len_(strlen(str) + 1), refcount_(1) { }
+    explicit ExternalData(const char* str) : contents_(strdup(str)), len_(strlen(str) + 1) { }
 
     size_t len() const { return len_; }
     void* contents() const { return contents_; }
     char* asString() const { return contents_; }
-    size_t refcount() const { return refcount_; }
+    bool wasFreed() const { return !contents_; }
 
-    void incref() { refcount_++; }
-    void decref() {
-        refcount_--;
-        if (refcount_ == 0) {
-            free(contents_);
-            contents_ = nullptr;
-        }
+    void free() {
+        MOZ_ASSERT(!wasFreed());
+        ::free(contents_);
+        contents_ = nullptr;
     }
 
-    static void incCallback(void* contents, void* userData) {
-        auto self = static_cast<RefCountedData*>(userData);
+    static void freeCallback(void* contents, void* userData) {
+        auto self = static_cast<ExternalData*>(userData);
         MOZ_ASSERT(self->contents() == contents);
-        self->incref();
-    }
-
-    static void decCallback(void* contents, void* userData) {
-        auto self = static_cast<RefCountedData*>(userData);
-        MOZ_ASSERT(self->contents() == contents);
-        self->decref();
+        self->free();
     }
 };
 

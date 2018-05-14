@@ -209,7 +209,7 @@ XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx)
 // XULTreeGridAccessible: Accessible implementation
 
 role
-XULTreeGridAccessible::NativeRole()
+XULTreeGridAccessible::NativeRole() const
 {
   nsCOMPtr<nsITreeColumns> treeColumns;
   mTree->GetColumns(getter_AddRefs(treeColumns));
@@ -287,7 +287,7 @@ XULTreeGridRowAccessible::Shutdown()
 }
 
 role
-XULTreeGridRowAccessible::NativeRole()
+XULTreeGridRowAccessible::NativeRole() const
 {
   return roles::ROW;
 }
@@ -682,7 +682,7 @@ XULTreeGridCellAccessible::NativeAttributes()
 }
 
 role
-XULTreeGridCellAccessible::NativeRole()
+XULTreeGridCellAccessible::NativeRole() const
 {
   return roles::GRID_CELL;
 }

@@ -436,7 +436,7 @@ class QuickOpenModal extends _react.Component {
     return _react2.default.createElement(_Modal2.default, {
       "in": enabled,
       handleClose: this.closeModal
-    }, _react2.default.createElement(_SearchInput2.default, {
+    }, _react2.default.createElement(_SearchInput2.default, _extends({
       query: query,
       hasPrefix: true,
       count: this.getResultCount(),
@@ -447,8 +447,11 @@ class QuickOpenModal extends _react.Component {
       onKeyDown: this.onKeyDown,
       handleClose: this.closeModal,
       expanded: expanded,
+      showClose: false,
       selectedItemId: expanded && items[selectedIndex] ? items[selectedIndex].id : ""
-    }), this.renderLoading(), newResults && _react2.default.createElement(_ResultList2.default, _extends({
+    }, this.isSourceSearch() ? {
+      size: "big"
+    } : {})), this.renderLoading(), newResults && _react2.default.createElement(_ResultList2.default, _extends({
       key: "results",
       items: items,
       selected: selectedIndex,

@@ -57,10 +57,10 @@ public:
     });
     return NS_OK;
   }
-  ServoCSSParsingEnvironment GetServoCSSParsingEnvironment(
+  ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final
   {
-    return GetServoCSSParsingEnvironmentForRule(mRule);
+    return GetParsingEnvironmentForRule(mRule);
   }
   nsIDocument* DocToUpdate() final { return nullptr; }
 

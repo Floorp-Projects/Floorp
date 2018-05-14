@@ -87,11 +87,11 @@ ServoPageRuleDeclaration::DocToUpdate()
   return nullptr;
 }
 
-nsDOMCSSDeclaration::ServoCSSParsingEnvironment
-ServoPageRuleDeclaration::GetServoCSSParsingEnvironment(
+nsDOMCSSDeclaration::ParsingEnvironment
+ServoPageRuleDeclaration::GetParsingEnvironment(
   nsIPrincipal* aSubjectPrincipal) const
 {
-  return GetServoCSSParsingEnvironmentForRule(Rule());
+  return GetParsingEnvironmentForRule(Rule());
 }
 
 // -- ServoPageRule --------------------------------------------------

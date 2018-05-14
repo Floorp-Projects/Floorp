@@ -24,7 +24,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLHRAccessible::NativeRole()
+HTMLHRAccessible::NativeRole() const
 {
   return roles::SEPARATOR;
 }
@@ -34,7 +34,7 @@ HTMLHRAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLBRAccessible::NativeRole()
+HTMLBRAccessible::NativeRole() const
 {
   return roles::WHITESPACE;
 }
@@ -205,7 +205,7 @@ HTMLSummaryAccessible::IsWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLHeaderOrFooterAccessible::NativeRole()
+HTMLHeaderOrFooterAccessible::NativeRole() const
 {
   // Only map header and footer if they are direct descendants of the body tag.
   // If other sectioning or sectioning root elements, they become sections.

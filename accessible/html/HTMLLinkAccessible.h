@@ -21,7 +21,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue) override;
-  virtual a11y::role NativeRole() override;
+  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeLinkState() const override;
   virtual uint64_t NativeInteractiveState() const override;
