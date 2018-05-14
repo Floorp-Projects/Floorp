@@ -1060,6 +1060,25 @@ cert_extended_ssl()
 #	  -d "${PROFILEDIR}" -i "${CLIENT_CADIR}/clientCA-ecmixed.ca.cert" \
 #	  2>&1
 
+  # Check that a repeated import with a different nickname doesn't change the
+  # nickname of the existing cert (bug 1458518).
+  # We want to search for the results using grep, to avoid subset matches,
+  # we'll use one of the longer nicknames for testing.
+  # (Because "grep -w hostname" matches "grep -w hostname-dsamixed")
+  MYDBPASS="-d ${PROFILEDIR} -f ${R_PWFILE}"
+  TESTNAME="Ensure there's exactly one match for ${CERTNAME}-dsamixed"
+  cert_check_nickname_exists "$MYDBPASS" "${CERTNAME}-dsamixed" 0 1 "${TESTNAME}"
+
+  CU_ACTION="Repeated import of $CERTNAME's mixed DSA Cert with different nickname"
+  certu -A -n "${CERTNAME}-repeated-dsamixed" -t "u,u,u" -d "${PROFILEDIR}" \
+        -f "${R_PWFILE}" -i "${CERTNAME}-dsamixed.cert" 2>&1
+
+  TESTNAME="Ensure there's still exactly one match for ${CERTNAME}-dsamixed"
+  cert_check_nickname_exists "$MYDBPASS" "${CERTNAME}-dsamixed" 0 1 "${TESTNAME}"
+
+  TESTNAME="Ensure there's zero matches for ${CERTNAME}-repeated-dsamixed"
+  cert_check_nickname_exists "$MYDBPASS" "${CERTNAME}-repeated-dsamixed" 0 0 "${TESTNAME}"
+
   echo "Importing all the server's own CA chain into the servers DB"
   for CA in `find ${SERVER_CADIR} -name "?*.ca.cert"` ;
   do
@@ -1529,6 +1548,37 @@ cert_make_with_param()
     fi
 
     html_passed "${TESTNAME} (${COUNT})"
+    return 0
+}
+
+cert_check_nickname_exists()
+{
+    MYDIRPASS="$1"
+    MYCERTNAME="$2"
+    EXPECT="$3"
+    EXPECTCOUNT="$4"
+    MYTESTNAME="$5"
+
+    echo certutil ${MYDIRPASS} -L
+    ${BINDIR}/certutil ${MYDIRPASS} -L
+
+    RET=$?
+    if [ "${RET}" -ne "${EXPECT}" ]; then
+        CERTFAILED=1
+        html_failed "${MYTESTNAME} - list"
+        cert_log "ERROR: ${MYTESTNAME} - list"
+        return 1
+    fi
+
+    LISTCOUNT=`${BINDIR}/certutil ${MYDIRPASS} -L | grep -wc ${MYCERTNAME}`
+    if [ "${LISTCOUNT}" -ne "${EXPECTCOUNT}" ]; then
+        CERTFAILED=1
+        html_failed "${MYTESTNAME} - list and count"
+        cert_log "ERROR: ${MYTESTNAME} - list and count failed"
+        return 1
+    fi
+
+    html_passed "${MYTESTNAME}"
     return 0
 }
 

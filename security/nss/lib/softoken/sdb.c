@@ -37,6 +37,10 @@
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #endif
+#if defined(LINUX) && !defined(ANDROID)
+#include <linux/magic.h>
+#include <sys/vfs.h>
+#endif
 #include "utilpars.h"
 
 #ifdef SQLITE_UNSAFE_THREADS
@@ -1763,6 +1767,8 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
     PRIntervalTime now = 0;
     char *env;
     PRBool enableCache = PR_FALSE;
+    PRBool checkFSType = PR_FALSE;
+    PRBool measureSpeed = PR_FALSE;
     PRBool create;
     int flags = inFlags & 0x7;
 
@@ -1923,11 +1929,48 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
 
     env = PR_GetEnvSecure("NSS_SDB_USE_CACHE");
 
-    if (!env || PORT_Strcasecmp(env, "no") == 0) {
-        enableCache = PR_FALSE;
+    /* Variables enableCache, checkFSType, measureSpeed are PR_FALSE by default,
+     * which is the expected behavior for NSS_SDB_USE_CACHE="no".
+     * We don't need to check for "no" here. */
+    if (!env) {
+        /* By default, with no variable set, we avoid expensive measuring for
+         * most FS types. We start with inexpensive FS type checking, and
+         * might perform measuring for some types. */
+        checkFSType = PR_TRUE;
     } else if (PORT_Strcasecmp(env, "yes") == 0) {
         enableCache = PR_TRUE;
-    } else {
+    } else if (PORT_Strcasecmp(env, "no") != 0) { /* not "no" => "auto" */
+        measureSpeed = PR_TRUE;
+    }
+
+    if (checkFSType) {
+#if defined(LINUX) && !defined(ANDROID)
+        struct statfs statfs_s;
+        if (statfs(dbname, &statfs_s) == 0) {
+            switch (statfs_s.f_type) {
+                case SMB_SUPER_MAGIC:
+                case 0xff534d42: /* CIFS_MAGIC_NUMBER */
+                case NFS_SUPER_MAGIC:
+                    /* We assume these are slow. */
+                    enableCache = PR_TRUE;
+                    break;
+                case CODA_SUPER_MAGIC:
+                case 0x65735546: /* FUSE_SUPER_MAGIC */
+                case NCP_SUPER_MAGIC:
+                    /* It's uncertain if this FS is fast or slow.
+                     * It seems reasonable to perform slow measuring for users
+                     * with questionable FS speed. */
+                    measureSpeed = PR_TRUE;
+                    break;
+                case AFS_SUPER_MAGIC: /* Already implements caching. */
+                default:
+                    break;
+            }
+        }
+#endif
+    }
+
+    if (measureSpeed) {
         char *tempDir = NULL;
         PRUint32 tempOps = 0;
         /*

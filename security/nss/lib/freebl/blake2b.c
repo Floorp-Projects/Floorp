@@ -180,7 +180,7 @@ blake2b_Begin(BLAKE2BContext* ctx, uint8_t outlen, const uint8_t* key,
     return SECSuccess;
 
 failure:
-    PORT_Memset(&ctx, 0, sizeof(ctx));
+    PORT_Memset(ctx, 0, sizeof(*ctx));
     PORT_SetError(SEC_ERROR_INVALID_ARGS);
     return SECFailure;
 }

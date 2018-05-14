@@ -884,6 +884,45 @@ TEST_P(TlsConnectDatagram12Plus, MissAWindowAndOne) {
   SendReceive();
 }
 
+// This filter replaces the first record it sees with junk application data.
+class TlsReplaceFirstRecordWithJunk : public TlsRecordFilter {
+ public:
+  TlsReplaceFirstRecordWithJunk(const std::shared_ptr<TlsAgent>& a)
+      : TlsRecordFilter(a), replaced_(false) {}
+
+ protected:
+  PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                    const DataBuffer& record, size_t* offset,
+                                    DataBuffer* output) override {
+    if (replaced_) {
+      return KEEP;
+    }
+    replaced_ = true;
+    TlsRecordHeader out_header(header.variant(), header.version(),
+                               kTlsApplicationDataType,
+                               header.sequence_number());
+
+    static const uint8_t junk[] = {1, 2, 3, 4};
+    *offset = out_header.Write(output, *offset, DataBuffer(junk, sizeof(junk)));
+    return CHANGE;
+  }
+
+ private:
+  bool replaced_;
+};
+
+// DTLS needs to discard application_data that it receives prior to handshake
+// completion, not generate an error.
+TEST_P(TlsConnectDatagram, ReplaceFirstServerRecordWithApplicationData) {
+  MakeTlsFilter<TlsReplaceFirstRecordWithJunk>(server_);
+  Connect();
+}
+
+TEST_P(TlsConnectDatagram, ReplaceFirstClientRecordWithApplicationData) {
+  MakeTlsFilter<TlsReplaceFirstRecordWithJunk>(client_);
+  Connect();
+}
+
 INSTANTIATE_TEST_CASE_P(Datagram12Plus, TlsConnectDatagram12Plus,
                         TlsConnectTestBase::kTlsV12Plus);
 INSTANTIATE_TEST_CASE_P(DatagramPre13, TlsConnectDatagramPre13,
