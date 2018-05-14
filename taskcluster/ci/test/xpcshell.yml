@@ -42,6 +42,7 @@ xpcshell:
             linux32/debug: 12
             linux64/debug: 10
             android-4.2-x86/opt: 6
+            android-4.3-arm7-api-16/debug: 12
             macosx.*: 1
             windows.*: 1
             windows10-64-ccov/debug: 8
