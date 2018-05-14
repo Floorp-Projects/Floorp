@@ -1553,6 +1553,8 @@ Database::InitFunctions()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = IsFrecencyDecayingFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = UpdateFrecencyStatsFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
