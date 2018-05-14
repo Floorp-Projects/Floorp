@@ -113,15 +113,21 @@ def read(key):
     return prefs
 
 
-def format_diff(diff, fmt):
+def format_diff(diff, fmt, limit_key):
     """Format a diff."""
+    indent = '  '
+    if limit_key:
+        diff = {limit_key: diff[limit_key]}
+        indent = ''
+
     if fmt == 'json':
         print(json.dumps(diff, sort_keys=True, indent=2))
         return 0
 
     lines = []
     for key, prefs in sorted(diff.items()):
-        lines.append("{}:".format(key))
+        if not limit_key:
+            lines.append("{}:".format(key))
 
         for pref, value in sorted(prefs.items()):
             context = {'pref': pref, 'value': repr(value)}
@@ -133,12 +139,12 @@ def format_diff(diff, fmt):
             else:
                 text = FORMAT_STRINGS[fmt][0].format(**context)
 
-            lines.append('  {}'.format(text))
+            lines.append('{}{}'.format(indent, text))
         lines.append('')
     print('\n'.join(lines).strip())
 
 
-def diff(a, b, fmt):
+def diff(a, b, fmt, limit_key):
     """Diff two profiles or suites.
 
     :param a: The first profile or suite name.
@@ -169,7 +175,7 @@ def diff(a, b, fmt):
 
     same = set(prefs_a.keys()) - set(chain(*results.values()))
     results['same'] = {k: v for k, v in prefs_a.items() if k in same}
-    return format_diff(results, fmt)
+    return format_diff(results, fmt, limit_key)
 
 
 def sort_file(path):
@@ -242,6 +248,9 @@ def cli(args=sys.argv[1:]):
     diff_parser.add_argument('-f', '--format', dest='fmt', default='pretty',
                              choices=['pretty', 'json', 'names'],
                              help="Format to dump diff in (default: pretty)")
+    diff_parser.add_argument('-k', '--limit-key', default=None,
+                             choices=['change', 'delete', 'insert', 'same'],
+                             help="Restrict diff to the specified key.")
     diff_parser.set_defaults(func=diff)
 
     sort_parser = subparsers.add_parser('sort')
