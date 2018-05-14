@@ -194,8 +194,9 @@ class CodeCoverageMixin(SingleTestMixin):
                 self.suites["testharness"].append(wpt_baseline_test)
             return
 
-        # Go through all the tests and add all
+        # Go through all the tests and find all
         # the baseline tests that are needed.
+        tests_to_add = {}
         for suite in self.suites:
             for test in self.suites[suite]:
                 _, test_ext = os.path.splitext(test)
@@ -207,10 +208,18 @@ class CodeCoverageMixin(SingleTestMixin):
                 baseline_test_suite = baseline_tests[test_ext]['suite']
                 baseline_test_name = baseline_tests[test_ext]['test']
 
-                if baseline_test_suite not in self.suites:
-                    self.suites[baseline_test_suite] = []
-                if baseline_test_name not in self.suites[baseline_test_suite]:
-                    self.suites[baseline_test_suite].append(baseline_test_name)
+                if baseline_test_suite not in tests_to_add:
+                    tests_to_add[baseline_test_suite] = []
+                if baseline_test_name not in tests_to_add[baseline_test_suite]:
+                    tests_to_add[baseline_test_suite].append(baseline_test_name)
+
+        # Add all baseline tests needed
+        for suite in tests_to_add:
+            for test in tests_to_add[suite]:
+                if suite not in self.suites:
+                    self.suites[suite] = []
+                if test not in self.suites[suite]:
+                    self.suites[suite].append(test)
 
     @property
     def coverage_args(self):
