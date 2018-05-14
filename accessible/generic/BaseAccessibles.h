@@ -99,7 +99,7 @@ public:
     { return Accessible::QueryInterface(aIID, aPtr); }
 
   // Accessible
-  virtual a11y::role NativeRole() override { return R; }
+  virtual a11y::role NativeRole() const override { return R; }
 
 protected:
   virtual ~EnumRoleAccessible() { }

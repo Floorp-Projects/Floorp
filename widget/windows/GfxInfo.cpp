@@ -1010,7 +1010,7 @@ DetectBrokenAVX()
 const nsTArray<GfxDriverInfo>&
 GfxInfo::GetGfxDriverInfo()
 {
-  if (!mDriverInfo->Length()) {
+  if (!sDriverInfo->Length()) {
     /*
      * It should be noted here that more specialized rules on certain features
      * should be inserted -before- more generalized restriction. As the first
@@ -1435,7 +1435,7 @@ GfxInfo::GetGfxDriverInfo()
       nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_UNQUALIFIED_WEBRENDER_NVIDIA_8_1");
   }
-  return *mDriverInfo;
+  return *sDriverInfo;
 }
 
 nsresult
@@ -1453,7 +1453,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   if (aOS)
     *aOS = os;
 
-  if (mShutdownOccurred) {
+  if (sShutdownOccurred) {
     return NS_OK;
   }
 

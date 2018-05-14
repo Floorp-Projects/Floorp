@@ -111,13 +111,13 @@ public:
 
   // Information needed to parse a declaration for Servo side.
   // Put this in public so other Servo parsing functions can reuse this.
-  struct MOZ_STACK_CLASS ServoCSSParsingEnvironment
+  struct MOZ_STACK_CLASS ParsingEnvironment
   {
     RefPtr<mozilla::URLExtraData> mUrlExtraData;
     nsCompatibility mCompatMode;
     mozilla::css::Loader* mLoader;
 
-    ServoCSSParsingEnvironment(mozilla::URLExtraData* aUrlData,
+    ParsingEnvironment(mozilla::URLExtraData* aUrlData,
                                nsCompatibility aCompatMode,
                                mozilla::css::Loader* aLoader)
       : mUrlExtraData(aUrlData)
@@ -125,7 +125,7 @@ public:
       , mLoader(aLoader)
     {}
 
-    ServoCSSParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
+    ParsingEnvironment(already_AddRefed<mozilla::URLExtraData> aUrlData,
                                nsCompatibility aCompatMode,
                                mozilla::css::Loader* aLoader)
       : mUrlExtraData(aUrlData)
@@ -166,13 +166,13 @@ protected:
   // mCompatMode may not be set to anything meaningful.
   // If aSubjectPrincipal is passed, it should be the subject principal of the
   // scripted caller that initiated the parser.
-  virtual ServoCSSParsingEnvironment
-  GetServoCSSParsingEnvironment(nsIPrincipal* aSubjectPrincipal = nullptr) const = 0;
+  virtual ParsingEnvironment
+  GetParsingEnvironment(nsIPrincipal* aSubjectPrincipal = nullptr) const = 0;
 
-  // An implementation for GetServoCSSParsingEnvironment for callers wrapping a
+  // An implementation for GetParsingEnvironment for callers wrapping a
   // css::Rule.
-  static ServoCSSParsingEnvironment
-    GetServoCSSParsingEnvironmentForRule(const mozilla::css::Rule* aRule);
+  static ParsingEnvironment
+    GetParsingEnvironmentForRule(const mozilla::css::Rule* aRule);
 
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aPropValue,

@@ -2937,7 +2937,7 @@ CacheIRCompiler::emitCallObjectHasSparseElementResult()
 /*
  * Move a constant value into register dest.
  */
-void CacheIRCompiler::EmitLoadStubFieldConstant(StubFieldOffset val, Register dest) {
+void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val, Register dest) {
     MOZ_ASSERT(mode_ == Mode::Ion);
     switch (val.getStubFieldType()) {
       case StubField::Type::Shape:
@@ -2959,9 +2959,9 @@ void CacheIRCompiler::EmitLoadStubFieldConstant(StubFieldOffset val, Register de
  * sharing), where as Ion doesn't share ICs, and so we can safely use constants in the
  * IC.
  */
-void CacheIRCompiler::EmitLoadStubField(StubFieldOffset val, Register dest) {
+void CacheIRCompiler::emitLoadStubField(StubFieldOffset val, Register dest) {
     if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
-        EmitLoadStubFieldConstant(val, dest);
+        emitLoadStubFieldConstant(val, dest);
     } else {
         Address load(ICStubReg, stubDataOffset_ + val.getOffset());
         masm.loadPtr(load, dest);
@@ -3012,5 +3012,58 @@ CacheIRCompiler::emitLoadInstanceOfObjectResult()
     EmitStoreBoolean(masm, true, output);
     //fallthrough
     masm.bind(&done);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitMegamorphicLoadSlotResult()
+{
+    AutoOutputRegister output(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    StubFieldOffset name(reader.stubOffset(), StubField::Type::String);
+    bool handleMissing = reader.readBool();
+
+    AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+    AutoScratchRegister scratch2(allocator, masm);
+    AutoScratchRegister scratch3(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // The object must be Native.
+    masm.branchIfNonNativeObj(obj, scratch3, failure->label());
+
+    masm.Push(UndefinedValue());
+    masm.moveStackPtrTo(scratch3.get());
+
+    LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    volatileRegs.takeUnchecked(scratch1);
+    volatileRegs.takeUnchecked(scratch2);
+    volatileRegs.takeUnchecked(scratch3);
+    masm.PushRegsInMask(volatileRegs);
+
+    masm.setupUnalignedABICall(scratch1);
+    masm.loadJSContext(scratch1);
+    masm.passABIArg(scratch1);
+    masm.passABIArg(obj);
+    emitLoadStubField(name, scratch2);
+    masm.passABIArg(scratch2);
+    masm.passABIArg(scratch3);
+    if (handleMissing)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<true>)));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, (GetNativeDataProperty<false>)));
+    masm.mov(ReturnReg, scratch2);
+    masm.PopRegsInMask(volatileRegs);
+
+    masm.loadTypedOrValue(Address(masm.getStackPointer(), 0), output);
+    masm.adjustStack(sizeof(Value));
+
+    masm.branchIfFalseBool(scratch2, failure->label());
+    if (JitOptions.spectreJitToCxxCalls)
+        masm.speculationBarrier();
+
     return true;
 }

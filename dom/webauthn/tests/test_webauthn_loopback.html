@@ -185,7 +185,7 @@ function() {
       SimpleTest.finish();
     })
     .catch(function(aReason) {
-      ok(aReason.toString().startsWith("NotAllowedError"), "Expect NotAllowedError, got " + aReason);
+      ok(aReason.toString().startsWith("InvalidStateError"), "Expect InvalidStateError, got " + aReason);
       testAssertion(aCredInfo);
     });
   }

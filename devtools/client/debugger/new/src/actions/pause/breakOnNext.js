@@ -18,14 +18,13 @@ exports.breakOnNext = breakOnNext;
  * @static
  */
 function breakOnNext() {
-  return ({
+  return async ({
     dispatch,
     client
   }) => {
-    client.breakOnNext();
+    await client.breakOnNext();
     return dispatch({
-      type: "BREAK_ON_NEXT",
-      value: true
+      type: "BREAK_ON_NEXT"
     });
   };
 }

@@ -54,10 +54,12 @@
 
 using JS::ToInt32;
 
+using mozilla::Atomic;
 using mozilla::CheckedInt;
 using mozilla::Some;
 using mozilla::Maybe;
 using mozilla::Nothing;
+using mozilla::Unused;
 
 using namespace js;
 using namespace js::gc;
@@ -91,9 +93,19 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
 // to 8TB.  Thus we track the number of live objects, and set a limit of
 // 1000 live objects per process; we run synchronous GC if necessary; and
 // we throw an OOM error if the per-process limit is exceeded.
-static mozilla::Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
+//
+// Since the MaximumLiveMappedBuffers limit is not generally accounted for by
+// any existing GC-trigger heuristics, we need an extra heuristic for triggering
+// GCs when the caller is allocating memories rapidly without other garbage.
+// Thus, once the live buffer count crosses a certain threshold, we start
+// triggering GCs every N allocations.
 
 static const int32_t MaximumLiveMappedBuffers = 1000;
+static const int32_t StartTriggeringAtLiveBufferCount = 200;
+static const int32_t AllocatedBuffersPerTrigger = 100;
+
+static Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
+static Atomic<int32_t, mozilla::ReleaseAcquire> allocatedSinceLastTrigger(0);
 
 int32_t
 js::LiveMappedBufferCount()
@@ -672,10 +684,6 @@ class js::WasmArrayRawBuffer
         return maxSize_;
     }
 
-    size_t allocatedBytes() const {
-        return mappedSize_ + gc::SystemPageSize();
-    }
-
 #ifndef WASM_HUGE_MEMORY
     uint32_t boundsCheckLimit() const {
         MOZ_ASSERT(mappedSize_ <= UINT32_MAX);
@@ -829,6 +837,18 @@ CreateBuffer(JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize
         return false;
 
     maybeSharedObject.set(object);
+
+    // See StartTriggeringAtLiveBufferCount comment above.
+    if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
+        allocatedSinceLastTrigger++;
+        if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
+            Unused << cx->runtime()->gc.triggerGC(JS::gcreason::TOO_MUCH_WASM_MEMORY);
+            allocatedSinceLastTrigger = 0;
+        }
+    } else {
+        allocatedSinceLastTrigger = 0;
+    }
+
     return true;
 }
 
@@ -964,11 +984,11 @@ ArrayBufferObject::dataPointerShared() const
     return SharedMem<uint8_t*>::unshared(getFixedSlot(DATA_SLOT).toPrivate());
 }
 
-ArrayBufferObject::RefcountInfo*
-ArrayBufferObject::refcountInfo() const
+ArrayBufferObject::FreeInfo*
+ArrayBufferObject::freeInfo() const
 {
     MOZ_ASSERT(isExternal());
-    return reinterpret_cast<RefcountInfo*>(inlineDataPointer());
+    return reinterpret_cast<FreeInfo*>(inlineDataPointer());
 }
 
 void
@@ -987,13 +1007,13 @@ ArrayBufferObject::releaseData(FreeOp* fop)
         WasmArrayRawBuffer::Release(dataPointer());
         break;
       case EXTERNAL:
-        if (refcountInfo()->unref) {
+        if (freeInfo()->freeFunc) {
             // The analyzer can't know for sure whether the embedder-supplied
-            // unref function will GC. We give the analyzer a hint here.
-            // (Doing a GC in the unref function is considered a programmer
+            // free function will GC. We give the analyzer a hint here.
+            // (Doing a GC in the free function is considered a programmer
             // error.)
             JS::AutoSuppressGCAnalysis nogc;
-            refcountInfo()->unref(dataPointer(), refcountInfo()->refUserData);
+            freeInfo()->freeFunc(dataPointer(), freeInfo()->freeUserData);
         }
         break;
     }
@@ -1007,15 +1027,9 @@ ArrayBufferObject::setDataPointer(BufferContents contents, OwnsState ownsData)
     setFlags((flags() & ~KIND_MASK) | contents.kind());
 
     if (isExternal()) {
-        auto info = refcountInfo();
-        info->ref = contents.refFunc();
-        info->unref = contents.unrefFunc();
-        info->refUserData = contents.refUserData();
-        if (info->ref) {
-            // See comment in releaseData() for the explanation for this.
-            JS::AutoSuppressGCAnalysis nogc;
-            info->ref(dataPointer(), info->refUserData);
-        }
+        auto info = freeInfo();
+        info->freeFunc = contents.freeFunc();
+        info->freeUserData = contents.freeUserData();
     }
 }
 
@@ -1186,20 +1200,18 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     if (contents) {
         if (ownsState == OwnsData) {
             if (contents.kind() == EXTERNAL) {
-                // Store the RefcountInfo in the inline data slots so that we
+                // Store the FreeInfo in the inline data slots so that we
                 // don't use up slots for it in non-refcounted array buffers.
-                size_t refcountInfoSlots = JS_HOWMANY(sizeof(RefcountInfo), sizeof(Value));
-                MOZ_ASSERT(reservedSlots + refcountInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
-                           "RefcountInfo must fit in inline slots");
-                nslots += refcountInfoSlots;
+                size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
+                MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+                           "FreeInfo must fit in inline slots");
+                nslots += freeInfoSlots;
             } else {
                 // The ABO is taking ownership, so account the bytes against
                 // the zone.
                 size_t nAllocated = nbytes;
                 if (contents.kind() == MAPPED)
                     nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
-                else if (contents.kind() == WASM)
-                    nAllocated = contents.wasmBuffer()->allocatedBytes();
                 cx->updateMallocCounter(nAllocated);
             }
         }
@@ -1287,7 +1299,7 @@ ArrayBufferObject::createFromNewRawBuffer(JSContext* cx, WasmArrayRawBuffer* buf
     auto contents = BufferContents::create<WASM>(buffer->dataPointer());
     obj->setDataPointer(contents, OwnsData);
 
-    cx->updateMallocCounter(buffer->mappedSize());
+    cx->updateMallocCounter(initialSize);
 
     return obj;
 }
@@ -1852,8 +1864,7 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
 
 JS_PUBLIC_API(JSObject*)
 JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
-                          JS::BufferContentsRefFunc ref, JS::BufferContentsRefFunc unref,
-                          void* refUserData)
+                          JS::BufferContentsFreeFunc freeFunc, void* freeUserData)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
@@ -1862,7 +1873,7 @@ JS_NewExternalArrayBuffer(JSContext* cx, size_t nbytes, void* data,
     MOZ_ASSERT(nbytes > 0);
 
     ArrayBufferObject::BufferContents contents =
-        ArrayBufferObject::BufferContents::createExternal(data, ref, unref, refUserData);
+        ArrayBufferObject::BufferContents::createExternal(data, freeFunc, freeUserData);
     return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
                                      /* proto = */ nullptr, TenuredObject);
 }

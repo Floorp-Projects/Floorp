@@ -49,7 +49,7 @@ HTMLSelectListAccessible::NativeState()
 }
 
 role
-HTMLSelectListAccessible::NativeRole()
+HTMLSelectListAccessible::NativeRole() const
 {
   return roles::LISTBOX;
 }
@@ -139,7 +139,7 @@ HTMLSelectOptionAccessible::
 // HTMLSelectOptionAccessible: Accessible public
 
 role
-HTMLSelectOptionAccessible::NativeRole()
+HTMLSelectOptionAccessible::NativeRole() const
 {
   if (GetCombobox())
     return roles::COMBOBOX_OPTION;
@@ -306,7 +306,7 @@ HTMLSelectOptionAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 role
-HTMLSelectOptGroupAccessible::NativeRole()
+HTMLSelectOptGroupAccessible::NativeRole() const
 {
   return roles::GROUPING;
 }
@@ -368,7 +368,7 @@ HTMLComboboxAccessible::
 // HTMLComboboxAccessible: Accessible
 
 role
-HTMLComboboxAccessible::NativeRole()
+HTMLComboboxAccessible::NativeRole() const
 {
   return roles::COMBOBOX;
 }
@@ -562,7 +562,7 @@ HTMLComboboxListAccessible::GetFrame() const
 }
 
 role
-HTMLComboboxListAccessible::NativeRole()
+HTMLComboboxListAccessible::NativeRole() const
 {
   return roles::COMBOBOX_LIST;
 }
