@@ -13,7 +13,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     gl_provider = 'EAGL'
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
-    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE'] or CONFIG['MOZ_WAYLAND']:
+    if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
         gl_provider = 'EGL'
     else:
         gl_provider = 'GLX'
@@ -117,6 +117,11 @@ elif gl_provider == 'GLX':
     ]
     EXPORTS += [
         'SharedSurfaceGLX.h'
+    ]
+
+if CONFIG['MOZ_WAYLAND']:
+    SOURCES += [
+        'GLContextProviderWayland.cpp',
     ]
 
 UNIFIED_SOURCES += [
