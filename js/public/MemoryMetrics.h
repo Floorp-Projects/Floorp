@@ -74,7 +74,15 @@ struct ServoSizes
         Ignore
     };
 
-    ServoSizes() { mozilla::PodZero(this); }
+    ServoSizes()
+      : gcHeapUsed(0)
+      , gcHeapUnused(0)
+      , gcHeapAdmin(0)
+      , gcHeapDecommitted(0)
+      , mallocHeap(0)
+      , nonHeap(0)
+    {
+    }
 
     void add(Kind kind, size_t n) {
         switch (kind) {
