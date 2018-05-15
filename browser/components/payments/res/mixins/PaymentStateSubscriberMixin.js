@@ -17,8 +17,6 @@ export let requestStore = new PaymentsStore({
   orderDetailsShowing: false,
   page: {
     id: "payment-summary",
-    // onboardingWizard: true,
-    // error: "My error",
   },
   request: {
     tabId: null,
