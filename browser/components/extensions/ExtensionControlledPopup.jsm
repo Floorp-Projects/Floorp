@@ -38,6 +38,14 @@ XPCOMUtils.defineLazyGetter(this, "strBundle", function() {
   return Services.strings.createBundle("chrome://global/locale/extensions.properties");
 });
 
+const PREF_BRANCH_INSTALLED_ADDON = "extensions.installedDistroAddon.";
+
+XPCOMUtils.defineLazyGetter(this, "distributionAddonsList", function() {
+  let addonList = Services.prefs.getChildList(PREF_BRANCH_INSTALLED_ADDON)
+                          .map(id => id.replace(PREF_BRANCH_INSTALLED_ADDON, ""));
+  return new Set(addonList);
+});
+
 class ExtensionControlledPopup {
   /* Provide necessary options for the popup.
    *
@@ -114,6 +122,10 @@ class ExtensionControlledPopup {
   }
 
   userHasConfirmed(id) {
+    // We don't show a doorhanger for distribution installed add-ons.
+    if (distributionAddonsList.has(id)) {
+      return true;
+    }
     let setting = ExtensionSettingsStore.getSetting(this.confirmedType, id);
     return !!(setting && setting.value);
   }
