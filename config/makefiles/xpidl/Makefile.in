@@ -41,7 +41,6 @@ code_gen_deps := $(topsrcdir)/xpcom/reflect/xptinfo/perfecthash.py
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
 		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
-		$(foreach dir,$($(basename $(notdir $@))_dirs),--input-dir $(dir)) \
 		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
 		$(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
