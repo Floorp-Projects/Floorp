@@ -19,37 +19,8 @@ var EXPORTED_SYMBOLS = ["GeckoViewTelemetryController"];
 
 /* global debug warn */
 
-/**
- * Telemetry snapshot API adaptors used to retrieve one or more snapshots
- * for GeckoView:TelemetrySnapshots requests.
- * Match with RuntimeTelemetry.SNAPSHOT_* and nsITelemetry.idl.
- */
-const TelemetrySnapshots = [
-  {
-    type: "histograms",
-    flag: (1 << 0),
-    get: (dataset, clear) => Services.telemetry.snapshotHistograms(
-                               dataset, false, clear)
-  },
-  {
-    type: "keyedHistograms",
-    flag: (1 << 1),
-    get: (dataset, clear) => Services.telemetry.snapshotKeyedHistograms(
-                               dataset, false, clear)
-  },
-  {
-    type: "scalars",
-    flag: (1 << 2),
-    get: (dataset, clear) => Services.telemetry.snapshotScalars(
-                               dataset, clear)
-  },
-  {
-    type: "keyedScalars",
-    flag: (1 << 3),
-    get: (dataset, clear) => Services.telemetry.snapshotKeyedScalars(
-                               dataset, clear)
-  },
-];
+// Persistent data loading topic - see TelemetryGeckoViewPersistence.cpp.
+const LOAD_COMPLETE_TOPIC = "internal-telemetry-geckoview-load-complete";
 
 const GeckoViewTelemetryController = {
   /**
@@ -57,14 +28,27 @@ const GeckoViewTelemetryController = {
    * in all the processes that need to collect Telemetry.
    */
   setup() {
-    debug `setup`;
-
     TelemetryUtils.setTelemetryRecordingFlags();
 
-    debug `setup - canRecordPrereleaseData ${Services.telemetry.canRecordPrereleaseData
-          }, canRecordReleaseData ${Services.telemetry.canRecordReleaseData}`;
+    debug `setup -
+           canRecordPrereleaseData ${Services.telemetry.canRecordPrereleaseData},
+           canRecordReleaseData ${Services.telemetry.canRecordReleaseData}`;
 
     if (GeckoViewUtils.IS_PARENT_PROCESS) {
+      // Prevent dispatching snapshots before persistent data has been loaded.
+      this._loadComplete = new Promise(resolve => {
+        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+          if (aTopic !== LOAD_COMPLETE_TOPIC) {
+            warn `Received unexpected topic ${aTopic}`;
+            return;
+          }
+          debug `observed ${aTopic} - ready to handle telemetry requests`;
+          // Loading data has completed, discard this observer.
+          Services.obs.removeObserver(observer, LOAD_COMPLETE_TOPIC);
+          resolve();
+        }, LOAD_COMPLETE_TOPIC);
+      });
+
       try {
         EventDispatcher.instance.registerListener(this, [
           "GeckoView:TelemetrySnapshots",
@@ -91,21 +75,43 @@ const GeckoViewTelemetryController = {
       return;
     }
 
-    const { clear, types, dataset } = aData;
-    let snapshots = {};
+    // Handle this request when loading has completed.
+    this._loadComplete.then(() => this.retrieveSnapshots(aData.clear, aCallback));
+  },
 
-    // Iterate over all snapshot types, retreive and assemble results.
-    for (const tel of TelemetrySnapshots) {
-      if ((tel.flag & types) == 0) {
-        // This snapshot type has not been requested.
-        continue;
-      }
-      const snapshot = tel.get(dataset, clear);
-      if (!snapshot) {
-        aCallback.onError(`Failed retrieving ${tel.type} snapshot!`);
-        return;
-      }
-      snapshots[tel.type] = snapshot;
+  /**
+   * Retrieve snapshots and forward them to the callback.
+   *
+   * @param aClear True if snapshot data should be cleared after retrieving.
+   * @param aCallback Callback implementing nsIAndroidEventCallback.
+   */
+  retrieveSnapshots(aClear, aCallback) {
+    debug `retrieveSnapshots`;
+
+    // Selecting the opt-in dataset will ensure that we retrieve opt-in probes
+    // (iff canRecordPreRelease == true) and opt-out probes
+    // (iff canRecordRelease == true) if they are being recorded.
+    const dataset = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+
+    const snapshots = {
+      histograms: Services.telemetry.snapshotHistograms(
+                      dataset, /* subsession */ false, /* clear */ false),
+      keyedHistograms: Services.telemetry.snapshotKeyedHistograms(
+                           dataset, /* subsession */ false, /* clear */ false),
+      scalars: Services.telemetry.snapshotScalars(
+                   dataset, /* clear */ false),
+      keyedScalars: Services.telemetry.snapshotKeyedScalars(
+                        dataset, /* clear */ false),
+    };
+
+    if (!snapshots.histograms || !snapshots.keyedHistograms ||
+        !snapshots.scalars || !snapshots.keyedScalars) {
+      aCallback.onError(`Failed retrieving snapshots!`);
+      return;
+    }
+
+    if (aClear) {
+      Services.telemetry.clearProbes();
     }
 
     aCallback.onSuccess(snapshots);
