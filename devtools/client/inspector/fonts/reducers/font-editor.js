@@ -13,6 +13,7 @@ const {
   UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_STATE,
   UPDATE_EDITOR_VISIBILITY,
+  UPDATE_PROPERTY_VALUE,
 } = require("../actions/index");
 
 const INITIAL_STATE = {
@@ -114,6 +115,12 @@ let reducers = {
   [UPDATE_EDITOR_VISIBILITY](state, { isVisible, selector }) {
     return { ...state, isVisible, selector };
   },
+
+  [UPDATE_PROPERTY_VALUE](state, { property, value }) {
+    let newState = { ...state };
+    newState.properties[property] = value;
+    return newState;
+  }
 
 };
 

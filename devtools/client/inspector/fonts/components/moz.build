@@ -6,11 +6,14 @@
 
 DevToolsModules(
     'Font.js',
-    'FontAxis.js',
     'FontEditor.js',
     'FontList.js',
     'FontMeta.js',
     'FontOverview.js',
     'FontPreview.js',
+    'FontPropertyValue.js',
     'FontsApp.js',
+    'FontSize.js',
+    'FontStyle.js',
+    'FontWeight.js',
 )

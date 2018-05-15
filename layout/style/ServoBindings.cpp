@@ -2134,6 +2134,25 @@ Gecko_URLValue_SizeOfIncludingThis(URLValue* aURL)
   return aURL->SizeOfIncludingThis(GeckoURLValueMallocSizeOf);
 }
 
+void
+Gecko_GetComputedURLSpec(const URLValueData* aURL, nsCString* aOut)
+{
+  MOZ_ASSERT(aURL);
+  MOZ_ASSERT(aOut);
+  if (aURL->IsLocalRef()) {
+    aOut->Assign(aURL->GetString());
+    return;
+  }
+  if (nsIURI* uri = aURL->GetURI()) {
+    nsresult rv = uri->GetSpec(*aOut);
+    if (NS_SUCCEEDED(rv)) {
+      return;
+    }
+  }
+
+  aOut->AssignLiteral("about:invalid");
+}
+
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(css::URLValue, CSSURLValue);
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(URLExtraData, URLExtraData);

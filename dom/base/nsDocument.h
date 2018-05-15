@@ -165,7 +165,7 @@ public:
   static bool IsWebAnimationsEnabled(JSContext* aCx, JSObject* aObject);
   static bool IsWebAnimationsEnabled(mozilla::dom::CallerType aCallerType);
 
-  virtual void EndUpdate(nsUpdateType aUpdateType) override;
+  virtual void EndUpdate() override;
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 

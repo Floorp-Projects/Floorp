@@ -63,14 +63,14 @@ public:
       mDocument = nullptr;
     } else {
       mDocument = aCurrentDoc;
-      aCurrentDoc->BeginUpdate(UPDATE_CONTENT_MODEL);
+      aCurrentDoc->BeginUpdate();
     }
   }
 
   ~nsHtml5OtherDocUpdate()
   {
     if (MOZ_UNLIKELY(mDocument)) {
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+      mDocument->EndUpdate();
     }
   }
 

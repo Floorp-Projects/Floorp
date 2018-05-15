@@ -2985,8 +2985,7 @@ HTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   // Add the override style sheet
   // (This checks if already exists)
   ps->AddOverrideStyleSheet(sheet);
-
-  ps->RestyleForCSSRuleChanges();
+  ps->ApplicableStylesChanged();
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -3033,7 +3032,7 @@ HTMLEditor::RemoveOverrideStyleSheet(const nsAString& aURL)
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   ps->RemoveOverrideStyleSheet(sheet);
-  ps->RestyleForCSSRuleChanges();
+  ps->ApplicableStylesChanged();
 
   // Remove it from our internal list
   return rv;
@@ -3048,7 +3047,8 @@ HTMLEditor::EnableStyleSheet(const nsAString& aURL,
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> document = GetDocument();
-  sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+    document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
   sheet->SetDisabled(!aEnable);
   return NS_OK;
@@ -3066,7 +3066,8 @@ HTMLEditor::EnableExistingStyleSheet(const nsAString& aURL)
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> document = GetDocument();
-  sheet->SetAssociatedDocument(document, StyleSheet::NotOwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+    document, StyleSheet::NotOwnedByDocumentOrShadowRoot);
 
   // FIXME: This used to do sheet->SetDisabled(false), figure out if we can
   // just remove all this code in bug 1449522, since it seems unused.

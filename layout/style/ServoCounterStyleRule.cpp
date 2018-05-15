@@ -56,10 +56,8 @@ ServoCounterStyleRule::GetName(nsAString& aName)
 void
 ServoCounterStyleRule::SetName(const nsAString& aName)
 {
-  nsIDocument* doc = GetDocument();
   NS_ConvertUTF16toUTF8 name(aName);
   if (Servo_CounterStyleRule_SetName(mRawRule, &name)) {
-    MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
     if (StyleSheet* sheet = GetStyleSheet()) {
       sheet->RuleChanged(this);
     }
@@ -80,8 +78,6 @@ ServoCounterStyleRule::SetName(const nsAString& aName)
     NS_ConvertUTF16toUTF8 value(aValue);                        \
     if (Servo_CounterStyleRule_SetDescriptor(                   \
           mRawRule, eCSSCounterDesc_##method_, &value)) {       \
-      nsIDocument* doc = GetDocument();                         \
-      MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);             \
       if (StyleSheet* sheet = GetStyleSheet()) {                \
         sheet->RuleChanged(this);                               \
       }                                                         \

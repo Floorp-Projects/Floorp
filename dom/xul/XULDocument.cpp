@@ -2692,7 +2692,6 @@ XULDocument::DoneWalking()
     // attribute.
 
     {
-        mozAutoDocUpdate updateBatch(this, UPDATE_STYLE, true);
         uint32_t count = mOverlaySheets.Length();
         for (uint32_t i = 0; i < count; ++i) {
             AddStyleSheet(mOverlaySheets[i]);
@@ -2895,10 +2894,9 @@ XULDocument::MaybeBroadcast()
 }
 
 void
-XULDocument::EndUpdate(nsUpdateType aUpdateType)
+XULDocument::EndUpdate()
 {
-    XMLDocument::EndUpdate(aUpdateType);
-
+    XMLDocument::EndUpdate();
     MaybeBroadcast();
 }
 
