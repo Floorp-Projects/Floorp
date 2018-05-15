@@ -911,7 +911,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   int32_t jsIndex = jsCount - 1;
   int32_t nativeIndex = aNativeStack.mCount - 1;
 
-  uint8_t* lastPseudoCppStackAddr = nullptr;
+  uint8_t* lastLabelFrameStackAddr = nullptr;
   uint8_t* jitEndStackAddr = nullptr;
 
   // Iterate as long as there is at least one frame remaining.
@@ -925,8 +925,8 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     if (pseudoIndex != pseudoCount) {
       const js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
-      if (pseudoEntry.isCpp()) {
-        lastPseudoCppStackAddr = (uint8_t*) pseudoEntry.stackAddress();
+      if (pseudoEntry.isLabelFrame()) {
+        lastLabelFrameStackAddr = (uint8_t*) pseudoEntry.stackAddress();
       }
 
       // Skip any JS_OSR frames. Such frames are used when the JS interpreter
@@ -939,8 +939,8 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
           continue;
       }
 
-      MOZ_ASSERT(lastPseudoCppStackAddr);
-      pseudoStackAddr = lastPseudoCppStackAddr;
+      MOZ_ASSERT(lastLabelFrameStackAddr);
+      pseudoStackAddr = lastLabelFrameStackAddr;
     }
 
     if (jsIndex >= 0) {
@@ -976,11 +976,11 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       const js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
-      // Pseudo-frames with the CPP_MARKER_FOR_JS kind are just annotations and
+      // Pseudo-frames with the LABEL_MARKER_FOR_JS kind are just annotations and
       // should not be recorded in the profile.
-      if (pseudoEntry.kind() != js::ProfileEntry::Kind::CPP_MARKER_FOR_JS) {
+      if (pseudoEntry.kind() != js::ProfileEntry::Kind::LABEL_MARKER_FOR_JS) {
         // The JIT only allows the top-most entry to have a nullptr pc.
-        MOZ_ASSERT_IF(pseudoEntry.isJs() && pseudoEntry.script() && !pseudoEntry.pc(),
+        MOZ_ASSERT_IF(pseudoEntry.isJsFrame() && pseudoEntry.script() && !pseudoEntry.pc(),
                       &pseudoEntry == &pseudoStack.entries[pseudoStack.stackSize() - 1]);
         aCollector.CollectPseudoEntry(pseudoEntry);
       }
@@ -1140,7 +1140,7 @@ DoEHABIBacktrace(PSLockRef aLock, const RegisteredThread& aRegisteredThread,
     // The pseudostack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
     const js::ProfileEntry& entry = pseudoStack.entries[i - 1];
-    if (!entry.isJs() && strcmp(entry.label(), "EnterJIT") == 0) {
+    if (!entry.isJsFrame() && strcmp(entry.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
       // note that it yields nondecreasing stack pointers), then restore
@@ -2328,9 +2328,9 @@ MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
 {
   PseudoStack* pseudoStack = AutoProfilerLabel::sPseudoStack.get();
   if (pseudoStack) {
-    pseudoStack->pushCppFrame(aLabel, aDynamicString, aSp, aLine,
-                              js::ProfileEntry::Kind::CPP_NORMAL,
-                              js::ProfileEntry::Category::OTHER);
+    pseudoStack->pushLabelFrame(aLabel, aDynamicString, aSp, aLine,
+                                js::ProfileEntry::Kind::LABEL,
+                                js::ProfileEntry::Category::OTHER);
   }
   return pseudoStack;
 }
