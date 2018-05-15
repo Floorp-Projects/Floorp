@@ -77,7 +77,6 @@ $(generated_file): $(xpt_files) $(code_gen_py) $(code_gen_deps)
 
 define xpt_deps
 $(1): $(call mkdir_deps,$(dir $(1)))
-$(1): $(addsuffix .idl,$(addprefix $(dist_idl_dir)/,$($(basename $(notdir $(1)))_deps)))
 ifneq ($($(basename $(notdir $(1)))_deps),$($(basename $(notdir $(1)))_deps_built))
 $(1): FORCE
 endif
