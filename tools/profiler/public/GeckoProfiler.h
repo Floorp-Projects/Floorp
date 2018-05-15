@@ -732,7 +732,7 @@ public:
     mPseudoStack = aPseudoStack;
     if (mPseudoStack) {
       mPseudoStack->pushLabelFrame(aLabel, aDynamicString, this, aLine,
-                                   js::ProfileEntry::Kind::LABEL, aCategory);
+                                   aCategory);
     }
   }
 
