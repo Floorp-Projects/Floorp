@@ -78,7 +78,10 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 Cu.importGlobalProperties(["fetch"]);
 
-XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
+  aboutNewTabService: ["@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService"]
+});
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
   Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
 );
@@ -370,11 +373,48 @@ BrowserGlue.prototype = {
   },
 
   _sendMainPingCentrePing() {
-    const ACTIVITY_STREAM_ID = "activity-stream";
+    let newTabSetting;
+    let homePageSetting;
+
+    // Check whether or not about:home and about:newtab have been overridden at this point.
+    // Different settings are encoded as follows:
+    //   * Value 0: default
+    //   * Value 1: about:blank
+    //   * Value 2: web extension
+    //   * Value 3: other custom URL(s)
+    // Settings for about:newtab and about:home are combined in a bitwise manner.
+
+    // Note that a user could use about:blank and web extension at the same time
+    // to overwrite the about:newtab, but the web extension takes priority, so the
+    // ordering matters in the following check.
+    if (Services.prefs.getBoolPref("browser.newtabpage.enabled") &&
+                                   !aboutNewTabService.overridden) {
+      newTabSetting = 0;
+    } else if (aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
+      newTabSetting = 2;
+    } else if (!Services.prefs.getBoolPref("browser.newtabpage.enabled")) {
+      newTabSetting = 1;
+    } else {
+      newTabSetting = 3;
+    }
+
+    const homePageURL = Services.prefs.getComplexValue("browser.startup.homepage",
+                                                       Ci.nsIPrefLocalizedString).data;
+    if (homePageURL === "about:home") {
+      homePageSetting = 0;
+    } else if (homePageURL === "about:blank") {
+      homePageSetting = 1;
+    } else if (homePageURL.startsWith("moz-extension://")) {
+      homePageSetting = 2;
+    } else {
+      homePageSetting = 3;
+    }
+
     const payload = {
       event: "AS_ENABLED",
-      value: true
+      value: newTabSetting | (homePageSetting << 2)
     };
+    const ACTIVITY_STREAM_ID = "activity-stream";
     const options = {filter: ACTIVITY_STREAM_ID};
     this.pingCentre.sendPing(payload, options);
   },
