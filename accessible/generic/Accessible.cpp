@@ -1445,7 +1445,7 @@ Accessible::SetCurValue(double aValue)
 }
 
 role
-Accessible::ARIATransformRole(role aRole)
+Accessible::ARIATransformRole(role aRole) const
 {
   // Beginning with ARIA 1.1, user agents are expected to use the native host
   // language role of the element when the region role is used without a name.

@@ -67,7 +67,7 @@ public:
   /**
    * Return a first item for the given container.
    */
-  static Accessible* FirstItemOf(Accessible* aContainer);
+  static Accessible* FirstItemOf(const Accessible* aContainer);
 
   /**
    * Return next item of the same group to the given item.

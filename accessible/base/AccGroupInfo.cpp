@@ -144,7 +144,7 @@ AccGroupInfo::Update()
 }
 
 Accessible*
-AccGroupInfo::FirstItemOf(Accessible* aContainer)
+AccGroupInfo::FirstItemOf(const Accessible* aContainer)
 {
   // ARIA tree can be arranged by ARIA groups case #1 (previous sibling of a
   // group is a parent) or by aria-level.
