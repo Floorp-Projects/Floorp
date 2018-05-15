@@ -2536,7 +2536,9 @@ TabChild::RemovePendingDocShellBlocker()
   }
   if (!mPendingDocShellBlockers && mPendingRenderLayersReceivedMessage) {
     mPendingRenderLayersReceivedMessage = false;
-    RecvRenderLayers(mPendingRenderLayers, mPendingLayerObserverEpoch);
+    RecvRenderLayers(mPendingRenderLayers,
+                     false /* aForceRepaint */,
+                     mPendingLayerObserverEpoch);
   }
 }
 
@@ -2567,7 +2569,7 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverEpoch)
+TabChild::RecvRenderLayers(const bool& aEnabled, const bool& aForceRepaint, const uint64_t& aLayerObserverEpoch)
 {
   if (mPendingDocShellBlockers > 0) {
     mPendingRenderLayersReceivedMessage = true;
@@ -2585,19 +2587,19 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverE
   }
   mLayerObserverEpoch = aLayerObserverEpoch;
 
-  auto clearForcePaint = MakeScopeExit([&] {
+  auto clearPaintWhileInterruptingJS = MakeScopeExit([&] {
     // We might force a paint, or we might already have painted and this is a
     // no-op. In either case, once we exit this scope, we need to alert the
     // ProcessHangMonitor that we've finished responding to what might have
     // been a request to force paint. This is so that the BackgroundHangMonitor
     // for force painting can be made to wait again.
     if (aEnabled) {
-      ProcessHangMonitor::ClearForcePaint(mLayerObserverEpoch);
+      ProcessHangMonitor::ClearPaintWhileInterruptingJS(mLayerObserverEpoch);
     }
   });
 
   if (aEnabled) {
-    ProcessHangMonitor::MaybeStartForcePaint();
+    ProcessHangMonitor::MaybeStartPaintWhileInterruptingJS();
   }
 
   if (mCompositorOptions) {
@@ -2612,12 +2614,12 @@ TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverE
   }
 
   if (aEnabled) {
-    if (IsVisible()) {
+    if (!aForceRepaint && IsVisible()) {
       // This request is a no-op. In this case, we still want a MozLayerTreeReady
       // notification to fire in the parent (so that it knows that the child has
-      // updated its epoch). ForcePaintNoOp does that.
+      // updated its epoch). PaintWhileInterruptingJSNoOp does that.
       if (IPCOpen()) {
-        Unused << SendForcePaintNoOp(mLayerObserverEpoch);
+        Unused << SendPaintWhileInterruptingJSNoOp(mLayerObserverEpoch);
         return IPC_OK();
       }
     }
@@ -3446,7 +3448,8 @@ TabChild::GetOuterRect()
 }
 
 void
-TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
+TabChild::PaintWhileInterruptingJS(uint64_t aLayerObserverEpoch,
+                                   bool aForceRepaint)
 {
   if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
     // Don't bother doing anything now. Better to wait until we receive the
@@ -3455,7 +3458,7 @@ TabChild::ForcePaint(uint64_t aLayerObserverEpoch)
   }
 
   nsAutoScriptBlocker scriptBlocker;
-  RecvRenderLayers(true, aLayerObserverEpoch);
+  RecvRenderLayers(true /* aEnabled */, aForceRepaint, aLayerObserverEpoch);
 }
 
 void

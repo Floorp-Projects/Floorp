@@ -41,7 +41,7 @@ child:
   async BeginStartingDebugger();
   async EndStartingDebugger();
 
-  async ForcePaint(TabId tabId, uint64_t aLayerObserverEpoch);
+  async PaintWhileInterruptingJS(TabId tabId, bool forceRepaint, uint64_t aLayerObserverEpoch);
 };
 
 } // namespace mozilla

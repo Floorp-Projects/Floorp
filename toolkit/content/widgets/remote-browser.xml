@@ -266,6 +266,17 @@
         </setter>
       </property>
 
+      <method name="forceRepaint">
+        <body>
+          <![CDATA[
+            let {frameLoader} = this;
+            if (frameLoader && frameLoader.tabParent) {
+              frameLoader.tabParent.forceRepaint();
+            }
+          ]]>
+        </body>
+      </method>
+
       <property name="hasLayers" readonly="true">
         <getter><![CDATA[
           let {frameLoader} = this;

@@ -2931,19 +2931,7 @@ TabParent::SetRenderLayers(bool aEnabled)
 
   mRenderLayers = aEnabled;
 
-  // Increment the epoch so that layer tree updates from previous
-  // RenderLayers requests are ignored.
-  mLayerTreeEpoch++;
-
-  Unused << SendRenderLayers(aEnabled, mLayerTreeEpoch);
-
-  // Ask the child to repaint using the PHangMonitor channel/thread (which may
-  // be less congested).
-  if (aEnabled) {
-    ContentParent* cp = Manager()->AsContentParent();
-    cp->ForceTabPaint(this, mLayerTreeEpoch);
-  }
-
+  SetRenderLayersInternal(aEnabled, false /* aForceRepaint */);
   return NS_OK;
 }
 
@@ -2959,6 +2947,31 @@ TabParent::GetHasLayers(bool* aResult)
 {
   *aResult = mHasLayers;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TabParent::ForceRepaint()
+{
+  SetRenderLayersInternal(true /* aEnabled */,
+                          true /* aForceRepaint */);
+  return NS_OK;
+}
+
+void
+TabParent::SetRenderLayersInternal(bool aEnabled, bool aForceRepaint)
+{
+  // Increment the epoch so that layer tree updates from previous
+  // RenderLayers requests are ignored.
+  mLayerTreeEpoch++;
+
+  Unused << SendRenderLayers(aEnabled, aForceRepaint, mLayerTreeEpoch);
+
+  // Ask the child to repaint using the PHangMonitor channel/thread (which may
+  // be less congested).
+  if (aEnabled) {
+    ContentParent* cp = Manager()->AsContentParent();
+    cp->PaintTabWhileInterruptingJS(this, aForceRepaint, mLayerTreeEpoch);
+  }
 }
 
 NS_IMETHODIMP
@@ -3079,9 +3092,9 @@ TabParent::LayerTreeUpdate(uint64_t aEpoch, bool aActive)
 }
 
 mozilla::ipc::IPCResult
-TabParent::RecvForcePaintNoOp(const uint64_t& aLayerObserverEpoch)
+TabParent::RecvPaintWhileInterruptingJSNoOp(const uint64_t& aLayerObserverEpoch)
 {
-  // We sent a ForcePaint message when layers were already visible. In this
+  // We sent a PaintWhileInterruptingJS message when layers were already visible. In this
   // case, we should act as if an update occurred even though we already have
   // the layers.
   LayerTreeUpdate(aLayerObserverEpoch, true);

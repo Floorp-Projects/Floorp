@@ -36,6 +36,13 @@ interface nsITabParent : nsISupports
   readonly attribute boolean hasLayers;
 
   /**
+   * Sends a message to the child ensuring that they paint as early as
+   * possible. This will send the message to paint even if renderLayers
+   * is already true.
+   */
+  void forceRepaint();
+
+  /**
    * As an optimisation, setting the docshell's active state to
    * inactive also triggers a layer invalidation to free up some
    * potentially unhelpful memory usage. Calling preserveLayers

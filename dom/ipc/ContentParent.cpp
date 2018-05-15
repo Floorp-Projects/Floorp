@@ -5318,12 +5318,17 @@ ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
 }
 
 void
-ContentParent::ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch)
+ContentParent::PaintTabWhileInterruptingJS(TabParent* aTabParent,
+                                           bool aForceRepaint,
+                                           uint64_t aLayerObserverEpoch)
 {
   if (!mHangMonitorActor) {
     return;
   }
-  ProcessHangMonitor::ForcePaint(mHangMonitorActor, aTabParent, aLayerObserverEpoch);
+  ProcessHangMonitor::PaintWhileInterruptingJS(mHangMonitorActor,
+                                               aTabParent,
+                                               aForceRepaint,
+                                               aLayerObserverEpoch);
 }
 
 void
