@@ -370,7 +370,7 @@ XULGroupboxAccessible::NativeName(nsString& aName)
 }
 
 Relation
-XULGroupboxAccessible::RelationByType(RelationType aType)
+XULGroupboxAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABELLED_BY)

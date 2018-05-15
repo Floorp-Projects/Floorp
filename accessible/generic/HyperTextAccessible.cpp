@@ -1922,7 +1922,7 @@ HyperTextAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 }
 
 Relation
-HyperTextAccessible::RelationByType(RelationType aType)
+HyperTextAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = Accessible::RelationByType(aType);
 

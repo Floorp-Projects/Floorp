@@ -367,7 +367,7 @@ public:
   /**
    * Get the relation of the given type.
    */
-  virtual Relation RelationByType(RelationType aType);
+  virtual Relation RelationByType(RelationType aType) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods
@@ -1131,7 +1131,7 @@ protected:
   /**
    * Return group info.
    */
-  AccGroupInfo* GetGroupInfo();
+  AccGroupInfo* GetGroupInfo() const;
 
   // Data Members
   nsCOMPtr<nsIContent> mContent;
@@ -1155,7 +1155,7 @@ protected:
   /**
    * Keep in sync with StateFlags, ContextFlags, and AccTypes.
    */
-  uint32_t mStateFlags : kStateFlagsBits;
+  mutable uint32_t mStateFlags : kStateFlagsBits;
   uint32_t mContextFlags : kContextFlagsBits;
   uint32_t mType : kTypeBits;
   uint32_t mGenericTypes : kGenericTypesBits;
@@ -1187,7 +1187,7 @@ protected:
   {
     AccGroupInfo* groupInfo;
     ProxyAccessible* proxy;
-  } mBits;
+  } mutable mBits;
   friend class AccGroupInfo;
 
 private:

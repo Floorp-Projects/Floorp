@@ -734,7 +734,7 @@ HTMLGroupboxAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLGroupboxAccessible::RelationByType(RelationType aType)
+HTMLGroupboxAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
     // No override for label, so use <legend> for this <fieldset>
@@ -755,7 +755,7 @@ HTMLLegendAccessible::
 }
 
 Relation
-HTMLLegendAccessible::RelationByType(RelationType aType)
+HTMLLegendAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR)
@@ -793,7 +793,7 @@ HTMLFigureAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLFigureAccessible::RelationByType(RelationType aType)
+HTMLFigureAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABELLED_BY)
@@ -827,7 +827,7 @@ HTMLFigcaptionAccessible::
 }
 
 Relation
-HTMLFigcaptionAccessible::RelationByType(RelationType aType)
+HTMLFigcaptionAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR)

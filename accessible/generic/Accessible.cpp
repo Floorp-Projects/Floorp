@@ -1627,7 +1627,7 @@ Accessible::GetAtomicRegion() const
 }
 
 Relation
-Accessible::RelationByType(RelationType aType)
+Accessible::RelationByType(RelationType aType) const
 {
   if (!HasOwnContent())
     return Relation();
@@ -2733,7 +2733,7 @@ Accessible::GetActionRule() const
 }
 
 AccGroupInfo*
-Accessible::GetGroupInfo()
+Accessible::GetGroupInfo() const
 {
   if (IsProxy())
     MOZ_CRASH("This should never be called on proxy wrappers");

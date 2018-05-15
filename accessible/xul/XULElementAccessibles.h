@@ -26,7 +26,7 @@ public:
   virtual void Shutdown() override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   void UpdateLabelValue(const nsString& aValue);
 

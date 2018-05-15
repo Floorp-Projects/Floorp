@@ -480,7 +480,7 @@ RootAccessible::Shutdown()
 }
 
 Relation
-RootAccessible::RelationByType(RelationType aType)
+RootAccessible::RelationByType(RelationType aType) const
 {
   if (!mDocumentNode || aType != RelationType::EMBEDS)
     return DocAccessibleWrap::RelationByType(aType);
