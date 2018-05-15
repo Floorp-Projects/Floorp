@@ -1947,8 +1947,14 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
 
   if (HTMLEditUtils::IsHeader(*blockParent)) {
     // Headers: close (or split) header
-    ReturnInHeader(*blockParent, *atStartOfSelection.GetContainer(),
-                   atStartOfSelection.Offset());
+    nsresult rv =
+      ReturnInHeader(*blockParent, *atStartOfSelection.GetContainer(),
+                     atStartOfSelection.Offset());
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to handle insertParagraph in the heading element");
     *aHandled = true;
     return NS_OK;
   }
@@ -7370,9 +7376,6 @@ HTMLEditRules::DefaultParagraphSeparator()
            HTMLEditorRef().GetDefaultParagraphSeparator());
 }
 
-/**
- * ReturnInHeader: do the right thing for returns pressed in headers
- */
 nsresult
 HTMLEditRules::ReturnInHeader(Element& aHeader,
                               nsINode& aNode,
@@ -7389,6 +7392,9 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
   nsresult rv = WSRunObject::PrepareToSplitAcrossBlocks(&HTMLEditorRef(),
                                                         address_of(node),
                                                         &aOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7397,11 +7403,13 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
   }
 
   // Split the header
-  ErrorResult error;
   SplitNodeResult splitHeaderResult =
     HTMLEditorRef().SplitNodeDeepWithTransaction(
                       aHeader, EditorRawDOMPoint(node, aOffset),
                       SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(splitHeaderResult.Succeeded(),
     "Failed to split aHeader");
 
@@ -7427,6 +7435,9 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
   // If the new (righthand) header node is empty, delete it
   if (IsEmptyBlockElement(aHeader, IgnoreSingleBR::eYes)) {
     rv = HTMLEditorRef().DeleteNodeWithTransaction(aHeader);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7448,6 +7459,9 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
         HTMLEditorRef().CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br ?
                                                     *nsGkAtoms::p : paraAtom,
                                                   nextToHeader);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!pNode)) {
         return NS_ERROR_FAILURE;
       }
@@ -7456,6 +7470,9 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
       RefPtr<Element> brElement =
         HTMLEditorRef().InsertBrElementWithTransaction(
                           SelectionRef(), EditorRawDOMPoint(pNode, 0));
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
@@ -7463,6 +7480,10 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
       // Set selection to before the break
       ErrorResult error;
       SelectionRef().Collapse(EditorRawDOMPoint(pNode, 0), error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -7474,6 +7495,10 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
       // Put selection after break
       ErrorResult error;
       SelectionRef().Collapse(afterSibling, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -7482,6 +7507,10 @@ HTMLEditRules::ReturnInHeader(Element& aHeader,
     // Put selection at front of righthand heading
     ErrorResult error;
     SelectionRef().Collapse(RawRangeBoundary(&aHeader, 0), error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
