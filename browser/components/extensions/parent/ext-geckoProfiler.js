@@ -9,7 +9,6 @@ ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
 
 const PREF_ASYNC_STACK = "javascript.options.asyncstack";
-const PREF_SYMBOLS_URL = "extensions.geckoProfiler.symbols.url";
 const PREF_GET_SYMBOL_RULES = "extensions.geckoProfiler.getSymbolRules";
 
 const ASYNC_STACKS_ENABLED = Services.prefs.getBoolPref(PREF_ASYNC_STACK, false);
@@ -243,12 +242,6 @@ const pathComponentsForSymbolFile = (debugName, breakpadId) => {
   return [debugName, breakpadId, symName];
 };
 
-const urlForSymFile = (debugName, breakpadId) => {
-  const profilerSymbolsURL = Services.prefs.getCharPref(PREF_SYMBOLS_URL,
-                                                        "http://symbols.mozilla.org/");
-  return profilerSymbolsURL + pathComponentsForSymbolFile(debugName, breakpadId).join("/");
-};
-
 const getContainingObjdirDist = path => {
   let curPath = path;
   let curPathBasename = OS.Path.basename(curPath);
@@ -292,7 +285,7 @@ const symbolCache = new Map();
 
 const primeSymbolStore = libs => {
   for (const {debugName, debugPath, breakpadId, path, arch} of libs) {
-    symbolCache.set(urlForSymFile(debugName, breakpadId), {path, debugPath, arch});
+    symbolCache.set(`${debugName}/${breakpadId}`, {path, debugPath, arch});
   }
 };
 
@@ -398,7 +391,7 @@ this.geckoProfiler = class extends ExtensionAPI {
             primeSymbolStore(Services.profiler.sharedLibraries);
           }
 
-          const cachedLibInfo = symbolCache.get(urlForSymFile(debugName, breakpadId));
+          const cachedLibInfo = symbolCache.get(`${debugName}/${breakpadId}`);
 
           const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad");
           const haveAbsolutePath = cachedLibInfo && OS.Path.split(cachedLibInfo.path).absolute;
