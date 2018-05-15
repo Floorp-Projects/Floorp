@@ -11,34 +11,58 @@
 
 SimpleTest.waitForExplicitFinish();
 
-function consoleListener(cb) {
-  return new Promise(resolve => {
-    let observer = {
-      observe: function listener(aSubject, aTopic, aData) {
-        var obj = aSubject.wrappedJSObject;
-        if (obj.arguments[0] == 'test' && cb(obj)) {
-          SpecialPowers.removeObserver(observer, "console-api-log-event");
-          resolve();
-        }
-      }
-    };
-    SpecialPowers.addObserver(observer, "console-api-log-event");
-  });
+function ConsoleListener() {
+  SpecialPowers.addObserver(this, "console-api-log-event");
 }
+
+ConsoleListener.prototype = {
+  observe(aSubject, aTopic, aData) {
+    let obj = aSubject.wrappedJSObject;
+    if (obj.arguments[0] != 'test') {
+      return;
+    }
+
+    if (!this._cb) {
+      ok(false, "Callback not set!");
+      return;
+    }
+
+    if (!this._cb(obj)) {
+      return;
+    }
+
+    this._cb = null;
+    this._resolve();
+  },
+
+  shutdown() {
+    SpecialPowers.removeObserver(this, "console-api-log-event");
+  },
+
+  waitFor(cb) {
+    return new Promise(resolve => {
+      this._cb = cb;
+      this._resolve = resolve;
+    });
+  },
+};
+
+let listener = new ConsoleListener();
 
 // Timer creation:
 async function runTest() {
-  var cl = consoleListener(function(obj) {
+  let cl = listener.waitFor(obj => {
     return ("timer" in obj) &&
            ("name" in obj.timer) &&
            obj.timer.name == 'test';
   });
+
   console.time('test');
   await cl;
   ok(true, "Console.time received!");
 
   // Timer check:
-  cl = consoleListener(obj => {
+  cl = listener.waitFor(obj => {
     return ("timer" in obj) &&
            ("name" in obj.timer) &&
            obj.timer.name == 'test' &&
@@ -54,7 +78,7 @@ async function runTest() {
   ok(true, "Console.timeLog received!");
 
   // Time deleted:
-  cl = consoleListener(obj => {
+  cl = listener.waitFor(obj => {
     return ("timer" in obj) &&
            ("name" in obj.timer) &&
            obj.timer.name == 'test' &&
@@ -66,7 +90,7 @@ async function runTest() {
   ok(true, "Console.timeEnd received!");
 
   // Here an error:
-  cl = consoleListener(obj => {
+  cl = listener.waitFor(obj => {
     return ("timer" in obj) &&
            ("name" in obj.timer) &&
            obj.timer.name == 'test' &&
@@ -74,10 +98,13 @@ async function runTest() {
   });
   console.timeLog('test');
   await cl;
-  ok(true, "Console.timeLog with error received!");
+  ok(true, "Console.time with error received!");
 }
 
-runTest().then(SimpleTest.finish);
+runTest().then(() => {
+  listener.shutdown();
+  SimpleTest.finish();
+});
 
   </script>
 </body>
