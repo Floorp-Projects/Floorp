@@ -1620,25 +1620,40 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
         None => None,
     };
 
-    let opacity_ref = unsafe { opacity.as_ref() };
-    if let Some(opacity) = opacity_ref {
-        if *opacity < 1.0 {
-            filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity), *opacity));
-        }
-    }
-
     let transform_ref = unsafe { transform.as_ref() };
     let mut transform_binding = match transform_ref {
         Some(transform) => Some(PropertyBinding::Value(transform.clone())),
         None => None,
     };
 
+    let opacity_ref = unsafe { opacity.as_ref() };
+    let mut has_opacity_animation = false;
     let anim = unsafe { animation.as_ref() };
     if let Some(anim) = anim {
         debug_assert!(anim.id > 0);
         match anim.effect_type {
-            WrAnimationType::Opacity => filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id), 1.0), 1.0)),
-            WrAnimationType::Transform => transform_binding = Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id), LayoutTransform::identity())),
+            WrAnimationType::Opacity => {
+                filters.push(FilterOp::Opacity(PropertyBinding::Binding(PropertyBindingKey::new(anim.id),
+                                                                        // We have to set the static opacity value as
+                                                                        // the value for the case where the animation is
+                                                                        // in not in-effect (e.g. in the delay phase
+                                                                        // with no corresponding fill mode).
+                                                                        opacity_ref.cloned().unwrap_or(1.0)),
+                                                                        1.0));
+                has_opacity_animation = true;
+            },
+            WrAnimationType::Transform => {
+                transform_binding =
+                    Some(PropertyBinding::Binding(PropertyBindingKey::new(anim.id),
+                                                  // Same as above opacity case.
+                                                  transform_ref.cloned().unwrap_or(LayoutTransform::identity())));
+            },
+        }
+    }
+
+    if let Some(opacity) = opacity_ref {
+        if !has_opacity_animation && *opacity < 1.0 {
+            filters.push(FilterOp::Opacity(PropertyBinding::Value(*opacity), *opacity));
         }
     }
 
