@@ -12,7 +12,6 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/OriginAttributes.h"
 #include "nsIServiceWorkerManager.h"
-#include "ServiceWorker.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,8 +26,17 @@ class ServiceWorkerPrivate;
  * by this class and spawn a ServiceWorker in the right global when required.
  */
 class ServiceWorkerInfo final : public nsIServiceWorkerInfo
-                              , public ServiceWorker::Inner
 {
+public:
+  class Listener
+  {
+  public:
+    virtual void
+    SetState(ServiceWorkerState aState) = 0;
+
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  };
+
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   ServiceWorkerDescriptor mDescriptor;
@@ -60,7 +68,7 @@ private:
   //
   // There is a high chance of there being at least one ServiceWorker
   // associated with this all the time.
-  AutoTArray<ServiceWorker*, 1> mInstances;
+  AutoTArray<Listener*, 1> mInstances;
 
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
@@ -78,21 +86,20 @@ private:
   uint64_t
   GetNextID() const;
 
-  // ServiceWorker::Inner implementation
-  virtual void
-  AddServiceWorker(ServiceWorker* aWorker) override;
-
-  virtual void
-  RemoveServiceWorker(ServiceWorker* aWorker) override;
-
-  virtual void
-  PostMessage(ipc::StructuredCloneData&& aData,
-              const ClientInfo& aClientInfo,
-              const ClientState& aClientState) override;
-
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERINFO
+
+  void
+  AddListener(Listener* aListener);
+
+  void
+  RemoveListener(Listener* aListener);
+
+  void
+  PostMessage(ipc::StructuredCloneData&& aData,
+              const ClientInfo& aClientInfo,
+              const ClientState& aClientState);
 
   class ServiceWorkerPrivate*
   WorkerPrivate() const
