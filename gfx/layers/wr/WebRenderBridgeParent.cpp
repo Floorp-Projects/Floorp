@@ -724,7 +724,13 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
   // to early-return without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  bool scheduleComposite = false;
+  if (!aCommands.IsEmpty()) {
+    mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
+    wr::TransactionBuilder txn;
+    ProcessWebRenderParentCommands(aCommands, txn);
+    mApi->SendTransaction(txn);
+    ScheduleGenerateFrame();
+  }
 
   UpdateAPZFocusState(aFocusTarget);
   if (!aUpdates.empty()) {
@@ -733,38 +739,27 @@ WebRenderBridgeParent::RecvEmptyTransaction(const FocusTarget& aFocusTarget,
     // const so that we can move this structure all the way to the desired
     // destination.
     UpdateAPZScrollOffsets(Move(const_cast<ScrollUpdatesMap&>(aUpdates)), aPaintSequenceNumber);
-    scheduleComposite = true;
   }
 
   if (!aCommands.IsEmpty()) {
-    mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
     wr::TransactionBuilder txn;
     wr::Epoch wrEpoch = GetNextWrEpoch();
     txn.UpdateEpoch(mPipelineId, wrEpoch);
-    ProcessWebRenderParentCommands(aCommands, txn);
     mApi->SendTransaction(txn);
-    scheduleComposite = true;
-  }
 
-  bool sendDidComposite = true;
-  if (scheduleComposite || !mPendingTransactionIds.empty()) {
-    // If we are going to kick off a new composite as a result of this
-    // transaction, or if there are already composite-triggering pending
-    // transactions inflight, then set sendDidComposite to false because we will
-    // send the DidComposite message after the composite occurs.
-    // If there are no pending transactions and we're not going to do a
-    // composite, then we leave sendDidComposite as true so we just send
-    // the DidComposite notification now.
-    sendDidComposite = false;
-  }
-
-  HoldPendingTransactionId(WrEpoch(), aTransactionId, aTxnStartTime, aFwdTime);
-
-  if (scheduleComposite) {
-    ScheduleGenerateFrame();
-  } else if (sendDidComposite) {
-    TimeStamp now = TimeStamp::Now();
-    mCompositorBridge->DidComposite(GetLayersId(), now, now);
+    HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+  } else {
+    bool sendDidComposite = false;
+    if (mPendingTransactionIds.empty()) {
+      sendDidComposite = true;
+    }
+    HoldPendingTransactionId(WrEpoch(), aTransactionId, aTxnStartTime, aFwdTime);
+    // If WebRenderBridgeParent does not have pending DidComposites,
+    // send DidComposite now.
+    if (sendDidComposite) {
+      TimeStamp now = TimeStamp::Now();
+      mCompositorBridge->DidComposite(GetLayersId(), now, now);
+    }
   }
 
   return IPC_OK();
