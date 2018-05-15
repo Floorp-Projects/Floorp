@@ -68,9 +68,9 @@ LeafAccessible::IsAcceptableChild(nsIContent* aEl) const
 // LinkableAccessible. nsIAccessible
 
 void
-LinkableAccessible::TakeFocus()
+LinkableAccessible::TakeFocus() const
 {
-  if (Accessible* actionAcc = ActionWalk()) {
+  if (const Accessible* actionAcc = ActionWalk()) {
     actionAcc->TakeFocus();
   } else {
     AccessibleWrap::TakeFocus();
@@ -81,8 +81,7 @@ uint64_t
 LinkableAccessible::NativeLinkState() const
 {
   bool isLink;
-  Accessible* actionAcc =
-    const_cast<LinkableAccessible*>(this)->ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     return states::LINKED | (actionAcc->LinkState() & states::TRAVERSED);
   }
@@ -189,7 +188,7 @@ LinkableAccessible::DoAction(uint8_t aIndex)
     return false;
   }
 
-  if (Accessible* actionAcc = ActionWalk()) {
+  if (const Accessible* actionAcc = ActionWalk()) {
     return actionAcc->DoAction(aIndex);
   }
 
@@ -211,10 +210,10 @@ LinkableAccessible::AccessKey() const
 // LinkableAccessible: HyperLinkAccessible
 
 already_AddRefed<nsIURI>
-LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   bool isLink;
-  Accessible* actionAcc = ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     NS_ASSERTION(actionAcc->IsLink(), "HyperLink isn't implemented.");
 

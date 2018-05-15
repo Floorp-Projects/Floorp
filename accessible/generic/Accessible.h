@@ -542,7 +542,7 @@ public:
   /**
    * Focus the accessible.
    */
-  virtual void TakeFocus();
+  virtual void TakeFocus() const;
 
   /**
    * Scroll the accessible into view.
@@ -765,7 +765,7 @@ public:
   /**
    * Returns an anchor URI at the given index.
    */
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const;
 
   /**
    * Returns a text point for the accessible element.
