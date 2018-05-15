@@ -80,7 +80,6 @@ EXPORTS += [
     'nsIDocument.h',
     'nsIDocumentInlines.h',
     'nsIDocumentObserver.h',
-    'nsIDOMClassInfo.h',
     'nsIGlobalObject.h',
     'nsImageLoadingContent.h',
     'nsIMutationObserver.h',

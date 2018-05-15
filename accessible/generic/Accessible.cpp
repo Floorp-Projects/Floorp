@@ -324,8 +324,14 @@ uint64_t
 Accessible::VisibilityState() const
 {
   nsIFrame* frame = GetFrame();
-  if (!frame)
+  if (!frame) {
+    // Element having display:contents is considered visible semantically,
+    // despite it doesn't have a visually visible box.
+    if (mContent->IsElement() && mContent->AsElement()->IsDisplayContents()) {
+      return states::OFFSCREEN;
+    }
     return states::INVISIBLE;
+  }
 
   // Walk the parent frame chain to see if there's invisible parent or the frame
   // is in background tab.
@@ -1946,8 +1952,12 @@ Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
     return;
 
   nsIFrame *frame = GetFrame();
-  if (!frame)
+  if (!frame) {
+    if (mContent->IsElement() && mContent->AsElement()->IsDisplayContents()) {
+      aText += kEmbeddedObjectChar;
+    }
     return;
+  }
 
   NS_ASSERTION(mParent,
                "Called on accessible unbound from tree. Result can be wrong.");
@@ -2564,7 +2574,7 @@ Accessible::AreItemsOperable() const
 }
 
 Accessible*
-Accessible::CurrentItem()
+Accessible::CurrentItem() const
 {
   // Check for aria-activedescendant, which changes which element has focus.
   // For activedescendant, the ARIA spec does not require that the user agent
@@ -2587,7 +2597,7 @@ Accessible::CurrentItem()
 }
 
 void
-Accessible::SetCurrentItem(Accessible* aItem)
+Accessible::SetCurrentItem(const Accessible* aItem)
 {
   nsAtom* id = aItem->GetContent()->GetID();
   if (id) {

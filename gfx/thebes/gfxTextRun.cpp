@@ -2799,7 +2799,7 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
 gfxFont*
 gfxFontGroup::FindFallbackFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
 {
-    GlobalFontMatch data(aCh, &mStyle);
+    GlobalFontMatch data(aCh, mStyle);
     aFamily->SearchAllFontsForChar(&data);
     gfxFontEntry* fe = data.mBestMatch;
     if (!fe) {

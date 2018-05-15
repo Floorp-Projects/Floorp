@@ -59,12 +59,13 @@ class XPIDLManager(object):
         self.idls = {}
         self.modules = {}
 
-    def register_idl(self, idl, allow_existing=False):
+    def register_idl(self, idl):
         """Registers an IDL file with this instance.
 
         The IDL file will be built, installed, etc.
         """
         basename = mozpath.basename(idl.source_path)
+        dirname = mozpath.dirname(idl.source_path)
         root = mozpath.splitext(basename)[0]
         xpt = '%s.xpt' % idl.module
 
@@ -75,12 +76,18 @@ class XPIDLManager(object):
             'root': root,
         }
 
-        if not allow_existing and entry['basename'] in self.idls:
+        if entry['basename'] in self.idls:
             raise Exception('IDL already registered: %s' % entry['basename'])
 
         self.idls[entry['basename']] = entry
-        t = self.modules.setdefault(entry['module'], (idl.install_target, set()))
-        t[1].add(entry['root'])
+        # First element is a set of interface file basenames (no extension).
+        #
+        # Second element is a set of directory names where module IDLs
+        # can be found.  Yes, we have XPIDL modules with files from
+        # multiple directories.
+        t = self.modules.setdefault(entry['module'], (set(), set()))
+        t[0].add(entry['source'])
+        t[1].add(dirname)
 
 class BinariesCollection(object):
     """Tracks state of binaries produced by the build."""

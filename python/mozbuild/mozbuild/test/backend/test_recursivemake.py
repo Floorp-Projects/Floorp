@@ -688,13 +688,7 @@ class TestRecursiveMakeBackend(BackendTester):
         # Install manifests should contain entries.
         install_dir = mozpath.join(env.topobjdir, '_build_manifests',
             'install')
-        self.assertTrue(os.path.isfile(mozpath.join(install_dir, 'dist_idl')))
         self.assertTrue(os.path.isfile(mozpath.join(install_dir, 'xpidl')))
-
-        m = InstallManifest(path=mozpath.join(install_dir, 'dist_idl'))
-        self.assertEqual(len(m), 2)
-        self.assertIn('bar.idl', m)
-        self.assertIn('foo.idl', m)
 
         m = InstallManifest(path=mozpath.join(install_dir, 'xpidl'))
         self.assertIn('.deps/my_module.pp', m)

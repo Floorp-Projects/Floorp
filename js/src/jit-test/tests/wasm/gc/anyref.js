@@ -150,11 +150,18 @@ ref = exports.nested(baguette, 0);
 assertEq(ref, baguette);
 assertEq(ref.calories, baguette.calories);
 
-if (wasmDebuggingIsSupported()) {
-    let g = newGlobal();
-    let dbg = new Debugger(g);
-    g.eval(`o = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary('(module (func (result anyref) (param anyref) get_local 0) (export "" 0))')));`);
-}
+// Make sure grow-memory isn't blocked by the lack of gc.
+(function() {
+    assertEq(wasmEvalText(`(module
+    (memory 0 64)
+    (func (export "f") (param anyref) (result i32)
+        i32.const 10
+        grow_memory
+        drop
+        current_memory
+    )
+)`).exports.f({}), 10);
+})();
 
 // More interesting use cases about control flow joins.
 

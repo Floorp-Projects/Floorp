@@ -260,14 +260,6 @@ nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
 }
 
 void
-nsFrameManager::DestroyAnonymousContent(already_AddRefed<nsIContent> aContent)
-{
-  if (nsCOMPtr<nsIContent> content = aContent) {
-    content->UnbindFromTree();
-  }
-}
-
-void
 nsFrameManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
   aSizes.mLayoutPresShellSize += aSizes.mState.mMallocSizeOf(this);
