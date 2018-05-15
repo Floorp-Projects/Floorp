@@ -218,7 +218,7 @@ GeckoProfilerThread::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun
     if (sp > 0 && sp - 1 < pseudoStack_->stackCapacity()) {
         size_t start = (sp > 4) ? sp - 4 : 0;
         for (size_t i = start; i < sp - 1; i++)
-            MOZ_ASSERT_IF(pseudoStack_->entries[i].isJsFrame(), pseudoStack_->entries[i].pc());
+            MOZ_ASSERT_IF(pseudoStack_->frames[i].isJsFrame(), pseudoStack_->frames[i].pc());
     }
 #endif
 
@@ -241,25 +241,25 @@ GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
         MOZ_ASSERT(dynamicString);
 
         // Bug 822041
-        if (!pseudoStack_->entries[sp].isJsFrame()) {
+        if (!pseudoStack_->frames[sp].isJsFrame()) {
             fprintf(stderr, "--- ABOUT TO FAIL ASSERTION ---\n");
-            fprintf(stderr, " entries=%p size=%u/%u\n",
-                            (void*) pseudoStack_->entries,
+            fprintf(stderr, " frames=%p size=%u/%u\n",
+                            (void*) pseudoStack_->frames,
                             uint32_t(pseudoStack_->stackPointer),
                             pseudoStack_->stackCapacity());
             for (int32_t i = sp; i >= 0; i--) {
-                ProfileEntry& entry = pseudoStack_->entries[i];
-                if (entry.isJsFrame())
-                    fprintf(stderr, "  [%d] JS %s\n", i, entry.dynamicString());
+                ProfilingStackFrame& frame = pseudoStack_->frames[i];
+                if (frame.isJsFrame())
+                    fprintf(stderr, "  [%d] JS %s\n", i, frame.dynamicString());
                 else
-                    fprintf(stderr, "  [%d] C line %d %s\n", i, entry.line(), entry.dynamicString());
+                    fprintf(stderr, "  [%d] C line %d %s\n", i, frame.line(), frame.dynamicString());
             }
         }
 
-        ProfileEntry& entry = pseudoStack_->entries[sp];
-        MOZ_ASSERT(entry.isJsFrame());
-        MOZ_ASSERT(entry.script() == script);
-        MOZ_ASSERT(strcmp((const char*) entry.dynamicString(), dynamicString) == 0);
+        ProfilingStackFrame& frame = pseudoStack_->frames[sp];
+        MOZ_ASSERT(frame.isJsFrame());
+        MOZ_ASSERT(frame.script() == script);
+        MOZ_ASSERT(strcmp((const char*) frame.dynamicString(), dynamicString) == 0);
     }
 #endif
 }
@@ -324,7 +324,7 @@ GeckoProfilerThread::trace(JSTracer* trc)
     if (pseudoStack_) {
         size_t size = pseudoStack_->stackSize();
         for (size_t i = 0; i < size; i++)
-            pseudoStack_->entries[i].trace(trc);
+            pseudoStack_->frames[i].trace(trc);
     }
 }
 
@@ -362,11 +362,11 @@ GeckoProfilerRuntime::checkStringsMapAfterMovingGC()
 #endif
 
 void
-ProfileEntry::trace(JSTracer* trc)
+ProfilingStackFrame::trace(JSTracer* trc)
 {
     if (isJsFrame()) {
         JSScript* s = rawScript();
-        TraceNullableRoot(trc, &s, "ProfileEntry script");
+        TraceNullableRoot(trc, &s, "ProfilingStackFrame script");
         spOrScript = s;
     }
 }
@@ -391,9 +391,9 @@ GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bo
     if (sp == 0)
         return;
 
-    ProfileEntry& entry = profiler->pseudoStack_->entries[sp - 1];
-    MOZ_ASSERT(entry.kind() == ProfileEntry::Kind::JS_NORMAL);
-    entry.setKind(ProfileEntry::Kind::JS_OSR);
+    ProfilingStackFrame& frame = profiler->pseudoStack_->frames[sp - 1];
+    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_NORMAL);
+    frame.setKind(ProfilingStackFrame::Kind::JS_OSR);
 }
 
 GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
@@ -406,13 +406,13 @@ GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
     if (sp == 0)
         return;
 
-    ProfileEntry& entry = profiler->stack()[sp - 1];
-    MOZ_ASSERT(entry.kind() == ProfileEntry::Kind::JS_OSR);
-    entry.setKind(ProfileEntry::Kind::JS_NORMAL);
+    ProfilingStackFrame& frame = profiler->stack()[sp - 1];
+    MOZ_ASSERT(frame.kind() == ProfilingStackFrame::Kind::JS_OSR);
+    frame.setKind(ProfilingStackFrame::Kind::JS_NORMAL);
 }
 
 JS_PUBLIC_API(JSScript*)
-ProfileEntry::script() const
+ProfilingStackFrame::script() const
 {
     MOZ_ASSERT(isJsFrame());
     auto script = reinterpret_cast<JSScript*>(spOrScript.operator void*());
@@ -431,7 +431,7 @@ ProfileEntry::script() const
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfileEntry::pc() const
+ProfilingStackFrame::pc() const
 {
     MOZ_ASSERT(isJsFrame());
     if (lineOrPcOffset == NullPCOffset)
@@ -442,12 +442,12 @@ ProfileEntry::pc() const
 }
 
 /* static */ int32_t
-ProfileEntry::pcToOffset(JSScript* aScript, jsbytecode* aPc) {
+ProfilingStackFrame::pcToOffset(JSScript* aScript, jsbytecode* aPc) {
     return aPc ? aScript->pcToOffset(aPc) : NullPCOffset;
 }
 
 void
-ProfileEntry::setPC(jsbytecode* pc)
+ProfilingStackFrame::setPC(jsbytecode* pc)
 {
     MOZ_ASSERT(isJsFrame());
     JSScript* script = this->script();

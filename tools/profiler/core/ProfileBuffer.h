@@ -45,7 +45,7 @@ public:
 
   void CollectCodeLocation(
     const char* aLabel, const char* aStr, int aLineNumber,
-    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory);
+    const mozilla::Maybe<js::ProfilingStackFrame::Category>& aCategory);
 
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
@@ -162,7 +162,7 @@ public:
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectJitReturnAddr(void* aAddr) override;
   virtual void CollectWasmFrame(const char* aLabel) override;
-  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) override;
+  virtual void CollectProfilingStackFrame(const js::ProfilingStackFrame& aFrame) override;
 
 private:
   ProfileBuffer& mBuf;
