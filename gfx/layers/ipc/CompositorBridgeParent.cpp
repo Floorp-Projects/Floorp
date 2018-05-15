@@ -2108,6 +2108,13 @@ CompositorBridgeParent::LayerTreeState::InProcessSharingController() const
 }
 
 void
+CompositorBridgeParent::DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd)
+{
+  MOZ_ASSERT(aId == mRootLayerTreeID);
+  DidComposite(aCompositeStart, aCompositeEnd);
+}
+
+void
 CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
                                      TimeStamp& aCompositeEnd)
 {

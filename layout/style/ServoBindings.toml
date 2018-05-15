@@ -440,7 +440,7 @@ hide-types = [
     "ComputedStyleBorrowedOrNull",
 ]
 raw-lines = [
-    "pub use nsstring::{nsACString, nsAString, nsString, nsStringRepr};",
+    "pub use nsstring::{nsACString, nsAString, nsCString, nsString, nsStringRepr};",
     "use gecko_bindings::structs::nsStyleTransformMatrix;",
     "use gecko_bindings::structs::nsTArray;",
     "type nsACString_internal = nsACString;",

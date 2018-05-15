@@ -182,8 +182,14 @@ Prompt.prototype = {
   },
 
   _innerShow: function() {
-    let dispatcher = GeckoViewUtils.getDispatcherForWindow(this.window) ||
-                     GeckoViewUtils.getActiveDispatcher();
+    let dispatcher;
+    if (this.window) {
+      dispatcher = GeckoViewUtils.getDispatcherForWindow(this.window);
+    }
+    if (!dispatcher) {
+      [dispatcher] = GeckoViewUtils.getActiveDispatcherAndWindow();
+    }
+
     dispatcher.sendRequestForResult(this.msg).then((data) => {
       if (this.callback) {
         this.callback(data);

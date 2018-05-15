@@ -1222,9 +1222,7 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
     linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
   }
 
-  aDocument->BeginUpdate(UPDATE_STYLE);
   aDocument->InsertStyleSheetAt(aSheet, insertionPoint);
-  aDocument->EndUpdate(UPDATE_STYLE);
   LOG(("  Inserting into document at position %d", insertionPoint));
 
   return NS_OK;
@@ -1243,8 +1241,7 @@ Loader::InsertSheetInDoc(StyleSheet* aSheet,
  * bug 1220506.)
  */
 nsresult
-Loader::InsertChildSheet(StyleSheet* aSheet,
-                         StyleSheet* aParentSheet)
+Loader::InsertChildSheet(StyleSheet* aSheet, StyleSheet* aParentSheet)
 {
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
@@ -2161,11 +2158,9 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
 
   nsCOMPtr<nsINode> owningNode;
 
-  // Check for an associated document: if none, don't bother walking up the
-  // parent sheets.
-  //
-  // FIXME(emilio): This looks wrong for Shadow DOM.
-  if (aParentSheet->GetAssociatedDocument()) {
+  // Check for an associated document or shadow root: if none, don't bother
+  // walking up the parent sheets.
+  if (aParentSheet->GetAssociatedDocumentOrShadowRoot()) {
     StyleSheet* topSheet = aParentSheet;
     while (StyleSheet* parent = topSheet->GetParentSheet()) {
       topSheet = parent;

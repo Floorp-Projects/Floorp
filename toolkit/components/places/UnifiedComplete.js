@@ -377,6 +377,18 @@ function setTimeout(callback, ms) {
   return timer;
 }
 
+const kProtocolsWithIcons = ["chrome:", "moz-extension:", "about:", "http:", "https:", "ftp:"];
+function iconHelper(url) {
+  if (typeof url == "string") {
+    return kProtocolsWithIcons.some(p => url.startsWith(p)) ?
+      "page-icon:" + url : PlacesUtils.favicons.defaultFavicon.spec;
+  }
+  if (url && url instanceof URL && kProtocolsWithIcons.includes(url.protocol)) {
+    return "page-icon:" + url.href;
+  }
+  return PlacesUtils.favicons.defaultFavicon.spec;
+}
+
 /**
  * Storage object for switch-to-tab entries.
  * This takes care of caching and registering open pages, that will be reused
@@ -1489,7 +1501,7 @@ Search.prototype = {
       comment,
       // Don't use the url with replaced strings, since the icon doesn't change
       // but the string does, it may cause pointless icon flicker on typing.
-      icon: "page-icon:" + entry.url.href,
+      icon: iconHelper(entry.url),
       style,
       frecency: Infinity
     });
@@ -1652,7 +1664,7 @@ Search.prototype = {
       // It's rare that Sync supplies the icon for the page (but if it does, it
       // is a string URL)
       if (!icon) {
-        icon = "page-icon:" + url;
+        icon = iconHelper(url);
       } else {
         icon = PlacesUtils.favicons
                           .getFaviconLinkForIcon(Services.io.newURI(icon)).spec;
@@ -2054,7 +2066,7 @@ Search.prototype = {
       comment,
       frecency,
       style: ["autofill"].concat(extraStyles).join(" "),
-      icon: "page-icon:" + finalCompleteValue,
+      icon: iconHelper(finalCompleteValue),
     });
   },
 
@@ -2121,7 +2133,7 @@ Search.prototype = {
 
     match.value = url;
     match.comment = title;
-    match.icon = "page-icon:" + escapedURL;
+    match.icon = iconHelper(escapedURL);
     match.frecency = frecency;
 
     this._addMatch(match);

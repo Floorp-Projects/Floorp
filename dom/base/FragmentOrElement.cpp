@@ -2279,7 +2279,7 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
   target->FireNodeRemovedForChildren();
 
   // Needed when innerHTML is used in combination with contenteditable
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, true);
+  mozAutoDocUpdate updateBatch(doc, true);
 
   // Remove childnodes.
   nsAutoMutationBatch mb(target, true, false);

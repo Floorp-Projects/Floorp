@@ -1687,11 +1687,11 @@ nsDocument::~nsDocument()
 
   // Let the stylesheets know we're going away
   for (StyleSheet* sheet : mStyleSheets) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
   }
   for (auto& sheets : mAdditionalSheets) {
     for (StyleSheet* sheet : sheets) {
-      sheet->ClearAssociatedDocument();
+      sheet->ClearAssociatedDocumentOrShadowRoot();
     }
   }
   if (mAttrStyleSheet) {
@@ -2246,7 +2246,7 @@ nsIDocument::ResetToURI(nsIURI* aURI,
   mInUnlinkOrDeletion = true;
   uint32_t count = mChildren.ChildCount();
   { // Scope for update
-    MOZ_AUTO_DOC_UPDATE(this, UPDATE_CONTENT_MODEL, true);
+    MOZ_AUTO_DOC_UPDATE(this, true);
 
     // Invalidate cached array of child nodes
     InvalidateChildNodes();
@@ -2422,7 +2422,7 @@ nsIDocument::RemoveDocStyleSheetsFromStyleSets()
 {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
 
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2441,7 +2441,7 @@ nsIDocument::RemoveStyleSheetsFromStyleSets(
 {
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(aSheets)) {
-    sheet->ClearAssociatedDocument();
+    sheet->ClearAssociatedDocumentOrShadowRoot();
 
     if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetShell();
@@ -2458,7 +2458,6 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
 
-  mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
   if (mStyleSetFilled) {
     // Skip removing style sheets from the style set if we know we haven't
     // filled the style set.  (This allows us to avoid calling
@@ -2501,9 +2500,11 @@ nsIDocument::ResetStylesheetsToURI(nsIURI* aURI)
   }
 
   // Now set up our style sets
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     FillStyleSet(shell->StyleSet());
+    if (shell->StyleSet()->StyleSheetsHaveChanged()) {
+      shell->ApplicableStylesChanged();
+    }
   }
 }
 
@@ -4242,9 +4243,7 @@ nsIDocument::EnsureOnDemandBuiltInUASheet(StyleSheet* aSheet)
   if (mOnDemandBuiltInUASheets.Contains(aSheet)) {
     return;
   }
-  BeginUpdate(UPDATE_STYLE);
   AddOnDemandBuiltInUASheet(aSheet);
-  EndUpdate(UPDATE_STYLE);
 }
 
 void
@@ -4258,13 +4257,13 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 
   if (aSheet->IsApplicable()) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    nsCOMPtr<nsIPresShell> shell = GetShell();
-    if (shell) {
+    if (nsIPresShell* shell = GetShell()) {
       // Note that prepending here is necessary to make sure that html.css etc.
       // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
       // have an insertion point to match the order of
       // nsDocumentViewer::CreateStyleSet though?
       shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
+      shell->ApplicableStylesChanged();
     }
   }
 
@@ -4274,9 +4273,9 @@ nsIDocument::AddOnDemandBuiltInUASheet(StyleSheet* aSheet)
 void
 nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     shell->StyleSet()->AddDocStyleSheet(aSheet, this);
+    shell->ApplicableStylesChanged();
   }
 }
 
@@ -4301,8 +4300,6 @@ nsIDocument::AddStyleSheetToStyleSets(StyleSheet* aSheet)
 void
 nsIDocument::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet)
 {
-  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetAdded, (aSheet, aDocumentSheet));
-
   if (StyleSheetChangeEventsEnabled()) {
     DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent,
                                "StyleSheetAdded",
@@ -4314,8 +4311,6 @@ nsIDocument::NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet)
 void
 nsIDocument::NotifyStyleSheetRemoved(StyleSheet* aSheet, bool aDocumentSheet)
 {
-  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetRemoved, (aSheet, aDocumentSheet));
-
   if (StyleSheetChangeEventsEnabled()) {
     DO_STYLESHEET_NOTIFICATION(StyleSheetChangeEvent,
                                "StyleSheetRemoved",
@@ -4328,8 +4323,7 @@ void
 nsIDocument::AddStyleSheet(StyleSheet* aSheet)
 {
   MOZ_ASSERT(aSheet);
-  mStyleSheets.AppendElement(aSheet);
-  aSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  DocumentOrShadowRoot::AppendSheet(*aSheet);
 
   if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
@@ -4341,40 +4335,38 @@ nsIDocument::AddStyleSheet(StyleSheet* aSheet)
 void
 nsIDocument::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     shell->StyleSet()->RemoveDocStyleSheet(aSheet);
+    shell->ApplicableStylesChanged();
   }
 }
 
 void
 nsIDocument::RemoveStyleSheet(StyleSheet* aSheet)
 {
-  MOZ_ASSERT(aSheet, "null arg");
-  RefPtr<StyleSheet> sheet = aSheet; // hold ref so it won't die too soon
+  MOZ_ASSERT(aSheet);
+  RefPtr<StyleSheet> sheet = DocumentOrShadowRoot::RemoveSheet(*aSheet);
 
-  if (!mStyleSheets.RemoveElement(aSheet)) {
+  if (!sheet) {
     NS_ASSERTION(mInUnlinkOrDeletion, "stylesheet not found");
     return;
   }
 
   if (!mIsGoingAway) {
-    if (aSheet->IsApplicable()) {
-      RemoveStyleSheetFromStyleSets(aSheet);
+    if (sheet->IsApplicable()) {
+      RemoveStyleSheetFromStyleSets(sheet);
     }
 
-    NotifyStyleSheetRemoved(aSheet, true);
+    NotifyStyleSheetRemoved(sheet, true);
   }
 
-  aSheet->ClearAssociatedDocument();
+  sheet->ClearAssociatedDocumentOrShadowRoot();
 }
 
 void
 nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
                                nsTArray<RefPtr<StyleSheet>>& aNewSheets)
 {
-  BeginUpdate(UPDATE_STYLE);
-
   // XXX Need to set the sheet on the ownernode, if any
   MOZ_ASSERT(aOldSheets.Length() == aNewSheets.Length(),
              "The lists must be the same length!");
@@ -4393,8 +4385,7 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
     // Now put the new one in its place.  If it's null, just ignore it.
     StyleSheet* newSheet = aNewSheets[i];
     if (newSheet) {
-      mStyleSheets.InsertElementAt(oldIndex, newSheet);
-      newSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+      DocumentOrShadowRoot::InsertSheetAt(oldIndex, *newSheet);
       if (newSheet->IsApplicable()) {
         AddStyleSheetToStyleSets(newSheet);
       }
@@ -4402,8 +4393,6 @@ nsIDocument::UpdateStyleSheets(nsTArray<RefPtr<StyleSheet>>& aOldSheets,
       NotifyStyleSheetAdded(newSheet, true);
     }
   }
-
-  EndUpdate(UPDATE_STYLE);
 }
 
 void
@@ -4411,11 +4400,7 @@ nsIDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
 {
   MOZ_ASSERT(aSheet);
 
-  // FIXME(emilio): Stop touching DocumentOrShadowRoot's members directly, and use an
-  // accessor.
-  mStyleSheets.InsertElementAt(aIndex, aSheet);
-
-  aSheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  DocumentOrShadowRoot::InsertSheetAt(aIndex, *aSheet);
 
   if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
@@ -4438,12 +4423,6 @@ nsIDocument::SetStyleSheetApplicableState(StyleSheet* aSheet, bool aApplicable)
       RemoveStyleSheetFromStyleSets(aSheet);
     }
   }
-
-  // We have to always notify, since this will be called for sheets
-  // that are children of sheets in our style set, as well as some
-  // sheets for HTMLEditor.
-
-  NS_DOCUMENT_NOTIFY_OBSERVERS(StyleSheetApplicableStateChanged, (aSheet));
 
   if (StyleSheetChangeEventsEnabled()) {
     DO_STYLESHEET_NOTIFICATION(StyleSheetApplicableStateChangeEvent,
@@ -4543,7 +4522,8 @@ nsIDocument::LoadAdditionalStyleSheet(additionalSheetType aType,
   nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  sheet->SetAssociatedDocument(this, StyleSheet::OwnedByDocument);
+  sheet->SetAssociatedDocumentOrShadowRoot(
+     this, StyleSheet::OwnedByDocumentOrShadowRoot);
   MOZ_ASSERT(sheet->IsApplicable());
 
   return AddAdditionalStyleSheet(aType, sheet);
@@ -4560,17 +4540,15 @@ nsIDocument::AddAdditionalStyleSheet(additionalSheetType aType, StyleSheet* aShe
 
   mAdditionalSheets[aType].AppendElement(aSheet);
 
-  BeginUpdate(UPDATE_STYLE);
-  nsCOMPtr<nsIPresShell> shell = GetShell();
-  if (shell) {
+  if (nsIPresShell* shell = GetShell()) {
     SheetType type = ConvertAdditionalSheetType(aType);
     shell->StyleSet()->AppendStyleSheet(type, aSheet);
+    shell->ApplicableStylesChanged();
   }
 
   // Passing false, so documet.styleSheets.length will not be affected by
   // these additional sheets.
   NotifyStyleSheetAdded(aSheet, false);
-  EndUpdate(UPDATE_STYLE);
   return NS_OK;
 }
 
@@ -4586,22 +4564,19 @@ nsIDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aShee
     RefPtr<StyleSheet> sheetRef = sheets[i];
     sheets.RemoveElementAt(i);
 
-    BeginUpdate(UPDATE_STYLE);
     if (!mIsGoingAway) {
       MOZ_ASSERT(sheetRef->IsApplicable());
-      nsCOMPtr<nsIPresShell> shell = GetShell();
-      if (shell) {
+      if (nsIPresShell* shell = GetShell()) {
         SheetType type = ConvertAdditionalSheetType(aType);
         shell->StyleSet()->RemoveStyleSheet(type, sheetRef);
+        shell->ApplicableStylesChanged();
       }
     }
 
     // Passing false, so documet.styleSheets.length will not be affected by
     // these additional sheets.
     NotifyStyleSheetRemoved(sheetRef, false);
-    EndUpdate(UPDATE_STYLE);
-
-    sheetRef->ClearAssociatedDocument();
+    sheetRef->ClearAssociatedDocumentOrShadowRoot();
   }
 }
 
@@ -5037,12 +5012,14 @@ nsIDocument::MaybeEndOutermostXBLUpdate()
 }
 
 void
-nsIDocument::BeginUpdate(nsUpdateType aUpdateType)
+nsIDocument::BeginUpdate()
 {
   // If the document is going away, then it's probably okay to do things to it
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
   // observable at this point. We reach this point when cycle collecting a
   // <link> element and the unlink code removes a style sheet.
+  //
+  // TODO(emilio): Style updates are gone, can this happen now?
   if (mDocGroup && !mIsGoingAway && !mInUnlinkOrDeletion && !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();
   }
@@ -5054,13 +5031,13 @@ nsIDocument::BeginUpdate(nsUpdateType aUpdateType)
 
   ++mUpdateNestLevel;
   nsContentUtils::AddScriptBlocker();
-  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this, aUpdateType));
+  NS_DOCUMENT_NOTIFY_OBSERVERS(BeginUpdate, (this));
 }
 
 void
-nsDocument::EndUpdate(nsUpdateType aUpdateType)
+nsDocument::EndUpdate()
 {
-  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this, aUpdateType));
+  NS_DOCUMENT_NOTIFY_OBSERVERS(EndUpdate, (this));
 
   nsContentUtils::RemoveScriptBlocker();
 
@@ -5424,6 +5401,10 @@ nsIDocument::DocumentStatesChanged(EventStates aStateMask)
 void
 nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -5437,6 +5418,10 @@ nsIDocument::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule)
 void
 nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -5450,6 +5435,10 @@ nsIDocument::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule)
 void
 nsIDocument::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule)
 {
+  if (nsIPresShell* shell = GetShell()) {
+    shell->ApplicableStylesChanged();
+  }
+
   if (!StyleSheetChangeEventsEnabled()) {
     return;
   }
@@ -6013,7 +6002,6 @@ void
 nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                              bool aUpdateCSSLoader)
 {
-  BeginUpdate(UPDATE_STYLE);
   size_t count = SheetCount();
   nsAutoString title;
   for (size_t index = 0; index < count; index++) {
@@ -6028,7 +6016,11 @@ nsIDocument::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
   if (aUpdateCSSLoader) {
     CSSLoader()->DocumentStyleSheetSetChanged();
   }
-  EndUpdate(UPDATE_STYLE);
+  if (nsIPresShell* shell = GetShell()) {
+    if (shell->StyleSet()->StyleSheetsHaveChanged()) {
+      shell->ApplicableStylesChanged();
+    }
+  }
 }
 
 void
@@ -6374,7 +6366,7 @@ nsIDocument::SetTitle(const nsAString& aTitle, ErrorResult& aRv)
 
   // Batch updates so that mutation events don't change "the title
   // element" under us
-  mozAutoDocUpdate updateBatch(this, UPDATE_CONTENT_MODEL, true);
+  mozAutoDocUpdate updateBatch(this, true);
 
   nsCOMPtr<Element> title = GetTitleElement();
   if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
@@ -11715,7 +11707,7 @@ SizeOfOwnedSheetArrayExcludingThis(const nsTArray<RefPtr<StyleSheet>>& aSheets,
   size_t n = 0;
   n += aSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (StyleSheet* sheet : aSheets) {
-    if (!sheet->GetAssociatedDocument()) {
+    if (!sheet->GetAssociatedDocumentOrShadowRoot()) {
       // Avoid over-reporting shared sheets.
       continue;
     }

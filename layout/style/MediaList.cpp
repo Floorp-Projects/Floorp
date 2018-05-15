@@ -45,11 +45,6 @@ template<typename Func>
 nsresult
 MediaList::DoMediaChange(Func aCallback)
 {
-  nsCOMPtr<nsIDocument> doc;
-  if (mStyleSheet) {
-    doc = mStyleSheet->GetAssociatedDocument();
-  }
-  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
   if (mStyleSheet) {
     mStyleSheet->WillDirty();
   }

@@ -1295,7 +1295,7 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, uint32_t aStartIndex)
 
   {
     // Scope so we call EndUpdate before we decrease mInNotification
-    MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
+    MOZ_AUTO_DOC_UPDATE(mDocument, !mBeganUpdate);
     nsNodeUtils::ContentAppended(aContainer,
                                  aContainer->GetChildAt_Deprecated(aStartIndex));
     mLastNotificationTime = PR_Now();
@@ -1487,7 +1487,7 @@ nsContentSink::FavorPerformanceHint(bool perfOverStarvation, uint32_t starvation
 }
 
 void
-nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+nsContentSink::BeginUpdate(nsIDocument* aDocument)
 {
   // Remember nested updates from updates that we started.
   if (mInNotification > 0 && mUpdatesInNotification < 2) {
@@ -1506,7 +1506,7 @@ nsContentSink::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 }
 
 void
-nsContentSink::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
+nsContentSink::EndUpdate(nsIDocument* aDocument)
 {
   // If we're in a script and we didn't do the notification,
   // something else in the script processing caused the

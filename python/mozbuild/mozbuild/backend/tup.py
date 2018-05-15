@@ -629,6 +629,7 @@ class TupBackend(CommonBackend):
                 obj.method,
                 obj.outputs[0],
                 '%s.pp' % obj.outputs[0], # deps file required
+                'unused', # deps target is required
             ])
             full_inputs = [f.full_path for f in obj.inputs]
             cmd.extend(full_inputs)
@@ -653,8 +654,17 @@ class TupBackend(CommonBackend):
                 extra_outputs = [self._installed_files] if obj.required_for_compile else []
                 full_inputs += [self._early_generated_files]
 
+            if len(outputs) > 3:
+                display_outputs = ', '.join(outputs[0:3]) + ', ...'
+            else:
+                display_outputs = ', '.join(outputs)
+            display = 'python {script}:{method} -> [{display_outputs}]'.format(
+                script=obj.script,
+                method=obj.method,
+                display_outputs=display_outputs
+            )
             backend_file.rule(
-                display='python {script}:{method} -> [%o]'.format(script=obj.script, method=obj.method),
+                display=display,
                 cmd=cmd,
                 inputs=full_inputs,
                 outputs=outputs,
