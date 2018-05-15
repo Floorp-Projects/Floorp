@@ -327,7 +327,8 @@ MARKUPMAP(summary,
 MARKUPMAP(
   table,
   [](Element* aElement, Accessible* aContext) -> Accessible* {
-     if (aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
+     if (aElement->GetPrimaryFrame() &&
+         aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableType) {
        return new ARIAGridAccessibleWrap(aElement, aContext->Document());
      }
      return nullptr;
@@ -390,12 +391,13 @@ MARKUPMAP(
      if (table) {
         nsIContent* parentContent = aElement->GetParent();
         nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
-        if (!parentFrame->IsTableWrapperFrame()) {
+        if (parentFrame && !parentFrame->IsTableWrapperFrame()) {
           parentContent = parentContent->GetParent();
           parentFrame = parentContent->GetPrimaryFrame();
           if (table->GetContent() == parentContent &&
-              (!parentFrame->IsTableWrapperFrame() ||
-               aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableRowType)) {
+              ((parentFrame && !parentFrame->IsTableWrapperFrame()) ||
+               (aElement->GetPrimaryFrame() &&
+                aElement->GetPrimaryFrame()->AccessibleType() != eHTMLTableRowType))) {
             return new ARIARowAccessible(aElement, aContext->Document());
           }
         }

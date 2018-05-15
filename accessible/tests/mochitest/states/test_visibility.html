@@ -23,6 +23,7 @@
       testStates("div_off", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
       testStates("div_transformed", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
       testStates("div_abschild", 0, 0, STATE_INVISIBLE | STATE_OFFSCREEN);
+      testStates("ul", STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
       SimpleTest.finish();
     }
@@ -66,6 +67,10 @@
       <p style="position: absolute; left: 120px; top:120px;">absolute</p>
     </div>
 
+    <ul id="ul" style="display: contents;">
+      <li>Supermarket 1</li>
+      <li>Supermarket 2</li>
+    </ul>
   </div>
 </body>
 </html>
