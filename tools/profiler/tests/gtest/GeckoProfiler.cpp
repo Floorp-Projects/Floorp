@@ -680,7 +680,7 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
   ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
 }
 
-TEST(GeckoProfiler, PseudoStack)
+TEST(GeckoProfiler, ProfilingStack)
 {
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = { "GeckoMain" };

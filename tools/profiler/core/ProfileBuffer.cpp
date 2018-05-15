@@ -166,7 +166,7 @@ ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame
   int lineno = -1;
 
   if (aFrame.isJsFrame()) {
-    // There are two kinds of JS frames that get pushed onto the PseudoStack.
+    // There are two kinds of JS frames that get pushed onto the ProfilingStack.
     //
     // - label = "", dynamic string = <something>
     // - label = "js::RunScript", dynamic string = nullptr

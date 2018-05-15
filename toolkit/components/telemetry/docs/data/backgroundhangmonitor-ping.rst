@@ -36,7 +36,7 @@ Structure:
             "process": <string>, // Type of process that hung, see below for a list of types.
             "remoteType": <string>, // Remote type of process which hung, see below.
             "annotations": { ... }, // A set of annotations on the hang, see below.
-            "pseudoStack": [ ... ], // List of pseudostack frame names.
+            "pseudoStack": [ ... ], // List of label stack frames and js frames.
             "stack": [ ... ], // interleaved hang stack, see below.
           },
           ...
@@ -79,14 +79,17 @@ Stack Traces
 Each hang object contains a ``stack`` field which has been populated with an
 interleaved stack trace of the hung thread. An interleaved stack consists of a
 native backtrace with additional frames interleaved, representing chrome JS and
-pseudostack entries.
+label stack entries.
 
-Note that this field only contains native stack frames, pseudostack and chrome
+The structure that manages the label stack and the JS stack was called
+"PseudoStack" in the past and is now called "ProfilingStack".
+
+Note that this field only contains native stack frames, label stack and chrome
 JS script frames. If native stacks can not be collected on the target platform,
 or stackwalking was not initialized, there will be no native frames present, and
-the stack will consist only of pseudostack and chrome JS script frames.
+the stack will consist only of label stack and chrome JS script frames.
 
-A single frame in the stack is either a raw string, representing a pseudostack
+A single frame in the stack is either a raw string, representing a label stack
 or chrome JS script frame, or a native stack frame:
 
 .. code-block:: js

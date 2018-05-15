@@ -706,7 +706,7 @@ public:
   static bool Init(PSLockRef)
   {
     bool ok1 = sRegisteredThread.init();
-    bool ok2 = AutoProfilerLabel::sPseudoStack.init();
+    bool ok2 = AutoProfilerLabel::sProfilingStack.init();
     return ok1 && ok2;
   }
 
@@ -724,18 +724,18 @@ public:
                             : nullptr;
   }
 
-  // Get only the PseudoStack. Accesses are not guarded by gPSMutex.
-  // RacyRegisteredThread() can also be used to get the PseudoStack, but that
+  // Get only the ProfilingStack. Accesses are not guarded by gPSMutex.
+  // RacyRegisteredThread() can also be used to get the ProfilingStack, but that
   // is marginally slower because it requires an extra pointer indirection.
-  static PseudoStack* Stack() { return AutoProfilerLabel::sPseudoStack.get(); }
+  static ProfilingStack* Stack() { return AutoProfilerLabel::sProfilingStack.get(); }
 
   static void SetRegisteredThread(PSLockRef,
                                   class RegisteredThread* aRegisteredThread)
   {
     sRegisteredThread.set(aRegisteredThread);
-    AutoProfilerLabel::sPseudoStack.set(
+    AutoProfilerLabel::sProfilingStack.set(
       aRegisteredThread
-        ? &aRegisteredThread->RacyRegisteredThread().PseudoStack()
+        ? &aRegisteredThread->RacyRegisteredThread().ProfilingStack()
         : nullptr);
   }
 
@@ -749,11 +749,11 @@ private:
 
 MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
 
-// Although you can access a thread's PseudoStack via
+// Although you can access a thread's ProfilingStack via
 // TLSRegisteredThread::sRegisteredThread, we also have a second TLS pointer
-// directly to the PseudoStack. Here's why.
+// directly to the ProfilingStack. Here's why.
 //
-// - We need to be able to push to and pop from the PseudoStack in
+// - We need to be able to push to and pop from the ProfilingStack in
 //   AutoProfilerLabel.
 //
 // - The class functions are hot and must be defined in GeckoProfiler.h so they
@@ -764,7 +764,7 @@ MOZ_THREAD_LOCAL(RegisteredThread*) TLSRegisteredThread::sRegisteredThread;
 //
 // This second pointer isn't ideal, but does provide a way to satisfy those
 // constraints. TLSRegisteredThread is responsible for updating it.
-MOZ_THREAD_LOCAL(PseudoStack*) AutoProfilerLabel::sPseudoStack;
+MOZ_THREAD_LOCAL(ProfilingStack*) AutoProfilerLabel::sProfilingStack;
 
 // The name of the main thread.
 static const char* const kMainThreadName = "GeckoMain";
@@ -833,8 +833,8 @@ struct AutoWalkJSStack
   }
 };
 
-// Merges the pseudo-stack, native stack, and JS stack, outputting the details
-// to aCollector.
+// Merges the profiling stack, native stack, and JS stack, outputting the
+// details to aCollector.
 static void
 MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
             const RegisteredThread& aRegisteredThread, const Registers& aRegs,
@@ -845,10 +845,10 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
 
-  const PseudoStack& pseudoStack =
-    aRegisteredThread.RacyRegisteredThread().PseudoStack();
-  const js::ProfilingStackFrame* pseudoEntries = pseudoStack.frames;
-  uint32_t pseudoCount = pseudoStack.stackSize();
+  const ProfilingStack& profilingStack =
+    aRegisteredThread.RacyRegisteredThread().ProfilingStack();
+  const js::ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
+  uint32_t profilingStackFrameCount = profilingStack.stackSize();
   JSContext* context = aRegisteredThread.GetJSContext();
 
   // Make a copy of the JS stack into a JSFrame array. This is necessary since,
@@ -900,12 +900,12 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     }
   }
 
-  // While the pseudo-stack array is ordered oldest-to-youngest, the JS and
+  // While the profiling stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
-  // oldest-to-youngest. Thus, iterate over the pseudo-stack forwards and JS
+  // oldest-to-youngest. Thus, iterate over the profiling stack forwards and JS
   // and native arrays backwards. Note: this means the terminating condition
   // jsIndex and nativeIndex is being < 0.
-  uint32_t pseudoIndex = 0;
+  uint32_t profilingStackIndex = 0;
   int32_t jsIndex = jsCount - 1;
   int32_t nativeIndex = aNativeStack.mCount - 1;
 
@@ -913,32 +913,35 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
   uint8_t* jitEndStackAddr = nullptr;
 
   // Iterate as long as there is at least one frame remaining.
-  while (pseudoIndex != pseudoCount || jsIndex >= 0 || nativeIndex >= 0) {
+  while (profilingStackIndex != profilingStackFrameCount || jsIndex >= 0 ||
+         nativeIndex >= 0) {
     // There are 1 to 3 frames available. Find and add the oldest.
-    uint8_t* pseudoStackAddr = nullptr;
+    uint8_t* profilingStackAddr = nullptr;
     uint8_t* jsStackAddr = nullptr;
     uint8_t* nativeStackAddr = nullptr;
     uint8_t* jsActivationAddr = nullptr;
 
-    if (pseudoIndex != pseudoCount) {
-      const js::ProfilingStackFrame& profilingStackFrame = pseudoEntries[pseudoIndex];
+    if (profilingStackIndex != profilingStackFrameCount) {
+      const js::ProfilingStackFrame& profilingStackFrame =
+        profilingStackFrames[profilingStackIndex];
 
-      if (profilingStackFrame.isLabelFrame() || profilingStackFrame.isSpMarkerFrame()) {
+      if (profilingStackFrame.isLabelFrame() ||
+          profilingStackFrame.isSpMarkerFrame()) {
         lastLabelFrameStackAddr = (uint8_t*) profilingStackFrame.stackAddress();
       }
 
       // Skip any JS_OSR frames. Such frames are used when the JS interpreter
       // enters a jit frame on a loop edge (via on-stack-replacement, or OSR).
-      // To avoid both the pseudoframe and jit frame being recorded (and
-      // showing up twice), the interpreter marks the interpreter pseudostack
-      // frame as JS_OSR to ensure that it doesn't get counted.
+      // To avoid both the profiling stack frame and jit frame being recorded
+      // (and showing up twice), the interpreter marks the interpreter
+      // profiling stack frame as JS_OSR to ensure that it doesn't get counted.
       if (profilingStackFrame.kind() == js::ProfilingStackFrame::Kind::JS_OSR) {
-          pseudoIndex++;
+          profilingStackIndex++;
           continue;
       }
 
       MOZ_ASSERT(lastLabelFrameStackAddr);
-      pseudoStackAddr = lastLabelFrameStackAddr;
+      profilingStackAddr = lastLabelFrameStackAddr;
     }
 
     if (jsIndex >= 0) {
@@ -955,25 +958,26 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     // native stack frame which has the same SP as a JS stack frame.  In effect
     // this means profiling stack frames or JS frames trump conflicting native
     // frames.
-    if (nativeStackAddr && (pseudoStackAddr == nativeStackAddr ||
+    if (nativeStackAddr && (profilingStackAddr == nativeStackAddr ||
                             jsStackAddr == nativeStackAddr)) {
       nativeStackAddr = nullptr;
       nativeIndex--;
-      MOZ_ASSERT(pseudoStackAddr || jsStackAddr);
+      MOZ_ASSERT(profilingStackAddr || jsStackAddr);
     }
 
     // Sanity checks.
-    MOZ_ASSERT_IF(pseudoStackAddr, pseudoStackAddr != jsStackAddr &&
-                                   pseudoStackAddr != nativeStackAddr);
-    MOZ_ASSERT_IF(jsStackAddr, jsStackAddr != pseudoStackAddr &&
+    MOZ_ASSERT_IF(profilingStackAddr, profilingStackAddr != jsStackAddr &&
+                                      profilingStackAddr != nativeStackAddr);
+    MOZ_ASSERT_IF(jsStackAddr, jsStackAddr != profilingStackAddr &&
                                jsStackAddr != nativeStackAddr);
-    MOZ_ASSERT_IF(nativeStackAddr, nativeStackAddr != pseudoStackAddr &&
+    MOZ_ASSERT_IF(nativeStackAddr, nativeStackAddr != profilingStackAddr &&
                                    nativeStackAddr != jsStackAddr);
 
-    // Check to see if pseudoStack frame is top-most.
-    if (pseudoStackAddr > jsStackAddr && pseudoStackAddr > nativeStackAddr) {
-      MOZ_ASSERT(pseudoIndex < pseudoCount);
-      const js::ProfilingStackFrame& profilingStackFrame = pseudoEntries[pseudoIndex];
+    // Check to see if profiling stack frame is top-most.
+    if (profilingStackAddr > jsStackAddr && profilingStackAddr > nativeStackAddr) {
+      MOZ_ASSERT(profilingStackIndex < profilingStackFrameCount);
+      const js::ProfilingStackFrame& profilingStackFrame =
+        profilingStackFrames[profilingStackIndex];
 
       // Sp marker frames are just annotations and should not be recorded in
       // the profile.
@@ -981,10 +985,10 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
         // The JIT only allows the top-most frame to have a nullptr pc.
         MOZ_ASSERT_IF(profilingStackFrame.isJsFrame() &&
                       profilingStackFrame.script() && !profilingStackFrame.pc(),
-                      &profilingStackFrame == &pseudoStack.frames[pseudoStack.stackSize() - 1]);
+                      &profilingStackFrame == &profilingStack.frames[profilingStack.stackSize() - 1]);
         aCollector.CollectProfilingStackFrame(profilingStackFrame);
       }
-      pseudoIndex++;
+      profilingStackIndex++;
       continue;
     }
 
@@ -1129,17 +1133,17 @@ DoEHABIBacktrace(PSLockRef aLock, const RegisteredThread& aRegisteredThread,
 
   const mcontext_t* mcontext = &aRegs.mContext->uc_mcontext;
   mcontext_t savedContext;
-  const PseudoStack& pseudoStack =
-    aRegisteredThread.RacyRegisteredThread().PseudoStack();
+  const ProfilingStack& profilingStack =
+    aRegisteredThread.RacyRegisteredThread().ProfilingStack();
 
-  // The pseudostack contains an "EnterJIT" frame whenever we enter
+  // The profiling stack contains an "EnterJIT" frame whenever we enter
   // JIT code with profiling enabled; the stack pointer value points
   // the saved registers.  We use this to unwind resume unwinding
   // after encounting JIT code.
-  for (uint32_t i = pseudoStack.stackSize(); i > 0; --i) {
-    // The pseudostack grows towards higher indices, so we iterate
+  for (uint32_t i = profilingStack.stackSize(); i > 0; --i) {
+    // The profiling stack grows towards higher indices, so we iterate
     // backwards (from callee to caller).
-    const js::ProfilingStackFrame& frame = pseudoStack.frames[i - 1];
+    const js::ProfilingStackFrame& frame = profilingStack.frames[i - 1];
     if (!frame.isJsFrame() && strcmp(frame.label(), "EnterJIT") == 0) {
       // Found JIT entry frame.  Unwind up to that point (i.e., force
       // the stack walk to stop before the block of saved registers;
@@ -2322,24 +2326,24 @@ locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
                       const char** aFilters, uint32_t aFilterCount);
 
 // This basically duplicates AutoProfilerLabel's constructor.
-PseudoStack*
+ProfilingStack*
 MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
                   uint32_t aLine)
 {
-  PseudoStack* pseudoStack = AutoProfilerLabel::sPseudoStack.get();
-  if (pseudoStack) {
-    pseudoStack->pushLabelFrame(aLabel, aDynamicString, aSp, aLine,
+  ProfilingStack* profilingStack = AutoProfilerLabel::sProfilingStack.get();
+  if (profilingStack) {
+    profilingStack->pushLabelFrame(aLabel, aDynamicString, aSp, aLine,
                                 js::ProfilingStackFrame::Category::OTHER);
   }
-  return pseudoStack;
+  return profilingStack;
 }
 
 // This basically duplicates AutoProfilerLabel's destructor.
 void
-MozGlueLabelExit(PseudoStack* aPseudoStack)
+MozGlueLabelExit(ProfilingStack* sProfilingStack)
 {
-  if (aPseudoStack) {
-    aPseudoStack->pop();
+  if (sProfilingStack) {
+    sProfilingStack->pop();
   }
 }
 

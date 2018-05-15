@@ -95,11 +95,11 @@ public:
 
   int ThreadId() const { return mThreadId; }
 
-  class PseudoStack& PseudoStack() { return mPseudoStack; }
-  const class PseudoStack& PseudoStack() const { return mPseudoStack; }
+  class ProfilingStack& ProfilingStack() { return mProfilingStack; }
+  const class ProfilingStack& ProfilingStack() const { return mProfilingStack; }
 
 private:
-  class PseudoStack mPseudoStack;
+  class ProfilingStack mProfilingStack;
 
   // A list of pending markers that must be moved to the circular buffer.
   ProfilerSignalSafeLinkedList<ProfilerMarker> mPendingMarkers;
@@ -176,9 +176,9 @@ public:
 
     mContext = aContext;
 
-    // We give the JS engine a non-owning reference to the PseudoStack. It's
+    // We give the JS engine a non-owning reference to the ProfilingStack. It's
     // important that the JS engine doesn't touch this once the thread dies.
-    js::SetContextProfilingStack(aContext, &RacyRegisteredThread().PseudoStack());
+    js::SetContextProfilingStack(aContext, &RacyRegisteredThread().ProfilingStack());
 
     PollJSSampling();
   }

@@ -6,7 +6,7 @@
 const { L10N } = require("devtools/client/performance/modules/global");
 
 /**
- * Details about each profile pseudo-stack entry cateogry.
+ * Details about each label stack frame category.
  * @see CATEGORY_MAPPINGS.
  */
 const CATEGORIES = [{
