@@ -26,6 +26,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     this.cancelButton.addEventListener("click", this);
 
     this.backButton = document.createElement("button");
+    this.backButton.className = "back-button";
     this.backButton.addEventListener("click", this);
 
     this.saveButton = document.createElement("button");

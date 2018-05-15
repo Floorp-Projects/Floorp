@@ -50,6 +50,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     this._payerRelatedEls = contents.querySelectorAll(".payer-related");
     this._payerAddressPicker = contents.querySelector("address-picker.payer-related");
 
+    this._header = contents.querySelector("header");
+
     this._errorText = contents.querySelector("#error-text");
 
     this._disabledOverlay = contents.getElementById("disabled-overlay");
@@ -259,6 +261,10 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let totalAmountEl = this.querySelector("#total > currency-amount");
     totalAmountEl.value = totalItem.amount.value;
     totalAmountEl.currency = totalItem.amount.currency;
+
+    // Show the total header on the address and basic card pages only during
+    // on-boarding(FTU) and on the payment summary page.
+    this._header.hidden = !state.page.onboardingWizard && state.page.id != "payment-summary";
 
     this._orderDetailsOverlay.hidden = !state.orderDetailsShowing;
     this._errorText.textContent = paymentDetails.error;
