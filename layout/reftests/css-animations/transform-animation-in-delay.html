@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait reftest-no-flush">
+<style>
+@keyframes anim {
+  from { transform: scale(2); }
+  to { transform: scale(2); }
+}
+div {
+  background: green;
+  width: 100px;
+  height: 100px;
+  animation: anim 100s 100s;
+  transform: translateX(100px);
+}
+</style>
+<div></div>
+<script>
+requestAnimationFrame(() => {
+  document.documentElement.classList.remove('reftest-wait');
+});
+</script>
+</html>

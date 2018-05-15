@@ -68,3 +68,5 @@ fails-if(layerChecksEnabled) == background-position-important.html background-po
 == ib-split-sibling-opacity.html about:blank
 
 == opacity-animation-in-fixed-opacity-parent.html opacity-animation-in-fixed-opacity-parent-ref.html
+== opacity-animation-in-delay.html about:blank
+== transform-animation-in-delay.html transform-animation-in-delay-ref.html
