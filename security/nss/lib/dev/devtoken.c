@@ -528,7 +528,9 @@ nssToken_ImportCertificate(
          */
         NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
         NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID, id);
-        NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, nickname);
+        if (!rvObject->label && nickname) {
+            NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, nickname);
+        }
         NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
         /* reset the mutable attributes on the token */
         nssCKObject_SetAttributes(rvObject->handle,

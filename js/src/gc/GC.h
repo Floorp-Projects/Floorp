@@ -111,7 +111,8 @@ IterateHeapUnbarrieredForZone(JSContext* cx, JS::Zone* zone, void* data,
 extern void
 IterateChunks(JSContext* cx, void* data, IterateChunkCallback chunkCallback);
 
-typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* script);
+typedef void (*IterateScriptCallback)(JSRuntime* rt, void* data, JSScript* script,
+                                      const JS::AutoRequireNoGC& nogc);
 
 /*
  * Invoke scriptCallback on every in-use script for

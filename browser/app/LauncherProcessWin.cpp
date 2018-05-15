@@ -80,7 +80,31 @@ ShowError(DWORD aError = ::GetLastError())
   ::LocalFree(rawMsgBuf);
 }
 
-static wchar_t gAbsPath[MAX_PATH];
+static bool
+SetArgv0ToFullBinaryPath(wchar_t* aArgv[])
+{
+  DWORD bufLen = MAX_PATH;
+  mozilla::UniquePtr<wchar_t[]> buf;
+
+  while (true) {
+    buf = mozilla::MakeUnique<wchar_t[]>(bufLen);
+    DWORD retLen = ::GetModuleFileNameW(nullptr, buf.get(), bufLen);
+    if (!retLen) {
+      return false;
+    }
+
+    if (retLen == bufLen && ::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      bufLen *= 2;
+      continue;
+    }
+
+    break;
+  }
+
+  // We intentionally leak buf into argv[0]
+  aArgv[0] = buf.release();
+  return true;
+}
 
 namespace mozilla {
 
@@ -112,16 +136,9 @@ LauncherMain(int argc, wchar_t* argv[])
     }
   }
 
-  // Convert argv[0] to an absolute path if necessary
-  DWORD absPathLen = ::SearchPathW(nullptr, argv[0], L".exe",
-                                   ArrayLength(gAbsPath), gAbsPath, nullptr);
-  if (!absPathLen) {
+  if (!SetArgv0ToFullBinaryPath(argv)) {
     ShowError();
     return 1;
-  }
-
-  if (absPathLen < ArrayLength(gAbsPath)) {
-    argv[0] = gAbsPath;
   }
 
   // If we're elevated, we should relaunch ourselves as a normal user

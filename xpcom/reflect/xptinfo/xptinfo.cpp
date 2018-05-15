@@ -262,70 +262,6 @@ nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
 }
 
 nsresult
-nsXPTInterfaceInfo::GetTypeForParam(uint16_t /* UNUSED aMethodIndex */,
-                                    const nsXPTParamInfo* aParam,
-                                    uint16_t aDimension,
-                                    nsXPTType* aRetval) const
-{
-  const nsXPTType* type = &aParam->Type();
-  for (uint16_t i = 0; i < aDimension; ++i) {
-    if (type->Tag() != TD_ARRAY) {
-      NS_ERROR("bad dimension");
-      return NS_ERROR_INVALID_ARG;
-    }
-    type = &type->ArrayElementType();
-  }
-
-  *aRetval = *type; // NOTE: This copies the type, which is fine I guess?
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetSizeIsArgNumberForParam(uint16_t /* UNUSED aMethodIndex */,
-                                               const nsXPTParamInfo* aParam,
-                                               uint16_t aDimension,
-                                               uint8_t* aRetval) const
-{
-  const nsXPTType* type = &aParam->Type();
-  for (uint16_t i = 0; i < aDimension; ++i) {
-    if (type->Tag() != TD_ARRAY) {
-      NS_ERROR("bad dimension");
-      return NS_ERROR_INVALID_ARG;
-    }
-    type = &type->ArrayElementType();
-  }
-
-  if (type->Tag() != TD_ARRAY &&
-      type->Tag() != TD_PSTRING_SIZE_IS &&
-      type->Tag() != TD_PWSTRING_SIZE_IS) {
-    NS_ERROR("not a size_is");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aRetval = type->ArgNum();
-  return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16_t /* UNUSED aMethodIndex */,
-                                                    const nsXPTParamInfo* aParam,
-                                                    uint8_t* aRetval) const
-{
-  const nsXPTType* type = &aParam->Type();
-  while (type->Tag() == TD_ARRAY) {
-    type = &type->ArrayElementType();
-  }
-
-  if (type->Tag() != TD_INTERFACE_IS_TYPE) {
-    NS_ERROR("not an iid_is");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aRetval = type->ArgNum();
-  return NS_OK;
-}
-
-nsresult
 nsXPTInterfaceInfo::IsIID(const nsIID* aIID, bool* aIs) const
 {
   *aIs = mIID == *aIID;
@@ -358,26 +294,6 @@ nsXPTInterfaceInfo::HasAncestor(const nsIID* aIID, bool* aRetval) const
 {
   *aRetval = HasAncestor(*aIID);
   return NS_OK;
-}
-
-nsresult
-nsXPTInterfaceInfo::GetIIDForParamNoAlloc(uint16_t aMethodIndex,
-                                          const nsXPTParamInfo* aParam,
-                                          nsIID* aIID) const
-{
-  const nsXPTType* type = &aParam->Type();
-  while (type->Tag() == TD_ARRAY) {
-    type = &type->ArrayElementType();
-  }
-
-  if (type->Tag() == TD_INTERFACE_TYPE) {
-    const nsXPTInterfaceInfo* info = type->GetInterface();
-    if (info) {
-      *aIID = info->IID();
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
