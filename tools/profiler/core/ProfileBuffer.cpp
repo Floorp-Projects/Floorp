@@ -157,7 +157,7 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
-  MOZ_ASSERT(aEntry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
+  MOZ_ASSERT(aEntry.kind() == js::ProfileEntry::Kind::LABEL ||
              aEntry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
 
   const char* label = aEntry.label();
@@ -165,7 +165,7 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
   bool isChromeJSEntry = false;
   int lineno = -1;
 
-  if (aEntry.isJs()) {
+  if (aEntry.isJsFrame()) {
     // There are two kinds of JS frames that get pushed onto the PseudoStack.
     //
     // - label = "", dynamic string = <something>
@@ -189,7 +189,7 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
       MOZ_ASSERT(strcmp(label, "js::RunScript") == 0 && !dynamicString);
     }
   } else {
-    MOZ_ASSERT(aEntry.isCpp());
+    MOZ_ASSERT(aEntry.isLabelFrame());
     lineno = aEntry.line();
   }
 

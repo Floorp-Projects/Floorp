@@ -268,7 +268,7 @@ void
 ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
 {
   // For non-js frames we just include the raw label.
-  if (!aEntry.isJs()) {
+  if (!aEntry.isJsFrame()) {
     const char* entryLabel = aEntry.label();
 
     // entryLabel is a statically allocated string, so we want to store a

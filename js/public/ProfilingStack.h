@@ -34,8 +34,8 @@ class PseudoStack;
 //
 //  PseudoStack* pseudoStack = ...;
 //
-//  // For CPP stack frames:
-//  pseudoStack->pushCppFrame(...);
+//  // For label frames:
+//  pseudoStack->pushLabelFrame(...);
 //  // Execute some code. When finished, pop the entry:
 //  pseudoStack->pop();
 //
@@ -164,13 +164,13 @@ class ProfileEntry
     }
 
     enum class Kind : uint32_t {
-        // A normal C++ frame.
-        CPP_NORMAL = 0,
+        // A regular label frame. These usually come from AutoProfilerLabel.
+        LABEL = 0,
 
-        // A special C++ frame indicating the start of a run of JS pseudostack
-        // entries. CPP_MARKER_FOR_JS frames are ignored, except for the sp
+        // A special label frame indicating the start of a run of JS pseudostack
+        // entries. LABEL_MARKER_FOR_JS frames are ignored, except for the sp
         // field.
-        CPP_MARKER_FOR_JS = 1,
+        LABEL_MARKER_FOR_JS = 1,
 
         // A normal JS frame.
         JS_NORMAL = 2,
@@ -204,13 +204,13 @@ class ProfileEntry
     static_assert((uint32_t(Category::FIRST) & uint32_t(Kind::KIND_MASK)) == 0,
                   "Category overlaps with Kind");
 
-    bool isCpp() const
+    bool isLabelFrame() const
     {
         Kind k = kind();
-        return k == Kind::CPP_NORMAL || k == Kind::CPP_MARKER_FOR_JS;
+        return k == Kind::LABEL || k == Kind::LABEL_MARKER_FOR_JS;
     }
 
-    bool isJs() const
+    bool isJsFrame() const
     {
         Kind k = kind();
         return k == Kind::JS_NORMAL || k == Kind::JS_OSR;
@@ -221,7 +221,7 @@ class ProfileEntry
 
     const char* dynamicString() const { return dynamicString_; }
 
-    void initCppFrame(const char* aLabel, const char* aDynamicString, void* sp, uint32_t aLine,
+    void initLabelFrame(const char* aLabel, const char* aDynamicString, void* sp, uint32_t aLine,
                       Kind aKind, Category aCategory)
     {
         label_ = aLabel;
@@ -229,7 +229,7 @@ class ProfileEntry
         spOrScript = sp;
         lineOrPcOffset = static_cast<int32_t>(aLine);
         kindAndCategory_ = uint32_t(aKind) | uint32_t(aCategory);
-        MOZ_ASSERT(isCpp());
+        MOZ_ASSERT(isLabelFrame());
     }
 
     void initJsFrame(const char* aLabel, const char* aDynamicString, JSScript* aScript,
@@ -240,7 +240,7 @@ class ProfileEntry
         spOrScript = aScript;
         lineOrPcOffset = pcToOffset(aScript, aPc);
         kindAndCategory_ = uint32_t(Kind::JS_NORMAL) | uint32_t(Category::JS);
-        MOZ_ASSERT(isJs());
+        MOZ_ASSERT(isJsFrame());
     }
 
     void setKind(Kind aKind) {
@@ -256,20 +256,20 @@ class ProfileEntry
     }
 
     void* stackAddress() const {
-        MOZ_ASSERT(!isJs());
+        MOZ_ASSERT(!isJsFrame());
         return spOrScript;
     }
 
     JS_PUBLIC_API(JSScript*) script() const;
 
     uint32_t line() const {
-        MOZ_ASSERT(!isJs());
+        MOZ_ASSERT(!isJsFrame());
         return static_cast<uint32_t>(lineOrPcOffset);
     }
 
     // Note that the pointer returned might be invalid.
     JSScript* rawScript() const {
-        MOZ_ASSERT(isJs());
+        MOZ_ASSERT(isJsFrame());
         void* script = spOrScript;
         return static_cast<JSScript*>(script);
     }
@@ -327,12 +327,12 @@ class PseudoStack final
 
     ~PseudoStack();
 
-    void pushCppFrame(const char* label, const char* dynamicString, void* sp, uint32_t line,
+    void pushLabelFrame(const char* label, const char* dynamicString, void* sp, uint32_t line,
                       js::ProfileEntry::Kind kind, js::ProfileEntry::Category category) {
         uint32_t oldStackPointer = stackPointer;
 
         if (MOZ_LIKELY(entryCapacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow()))
-            entries[oldStackPointer].initCppFrame(label, dynamicString, sp, line, kind, category);
+            entries[oldStackPointer].initLabelFrame(label, dynamicString, sp, line, kind, category);
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, so any
