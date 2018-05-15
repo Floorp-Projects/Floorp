@@ -41,7 +41,7 @@ namespace gl {
   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderCGL
 #endif
 
-#if defined(MOZ_X11) && !defined(MOZ_WAYLAND)
+#if defined(MOZ_X11)
   #define GL_CONTEXT_PROVIDER_NAME GLContextProviderGLX
   #include "GLContextProviderImpl.h"
   #undef GL_CONTEXT_PROVIDER_NAME
@@ -53,6 +53,14 @@ namespace gl {
 #undef GL_CONTEXT_PROVIDER_NAME
 #ifndef GL_CONTEXT_PROVIDER_DEFAULT
   #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderEGL
+#endif
+
+#if defined(MOZ_WAYLAND)
+  #define GL_CONTEXT_PROVIDER_NAME GLContextProviderWayland
+  #include "GLContextProviderImpl.h"
+  #undef GL_CONTEXT_PROVIDER_NAME
+  #undef GL_CONTEXT_PROVIDER_DEFAULT
+  #define GL_CONTEXT_PROVIDER_DEFAULT GLContextProviderWayland
 #endif
 
 #if defined(MOZ_WIDGET_UIKIT)
