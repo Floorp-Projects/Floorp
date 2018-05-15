@@ -435,6 +435,15 @@ class StructMetaTypeDescr : public NativeObject
                             HandleObject fields);
 
   public:
+    // The prototype cannot be null.
+    // The names in `ids` must all be non-numeric.
+    // The type objects in `fieldTypeObjs` must all be TypeDescr objects.
+    static StructTypeDescr* createFromArrays(JSContext* cx,
+                                             HandleObject structTypePrototype,
+                                             bool opaque,
+                                             AutoIdVector& ids,
+                                             AutoValueVector& fieldTypeObjs);
+
     // Properties and methods to be installed on StructType.prototype,
     // and hence inherited by all struct type objects:
     static const JSPropertySpec typeObjectProperties[];
