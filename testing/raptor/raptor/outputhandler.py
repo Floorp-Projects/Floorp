@@ -10,7 +10,7 @@ import json
 from mozlog import get_proxy_logger
 
 
-LOG = get_proxy_logger(component='raptor_process')
+LOG = get_proxy_logger(component='raptor-output-handler')
 
 
 class OutputHandler(object):

@@ -19,7 +19,7 @@ from mozprocess import ProcessHandler
 from .base import Playback
 
 here = os.path.dirname(os.path.realpath(__file__))
-LOG = get_proxy_logger(component='mitmproxy')
+LOG = get_proxy_logger(component='raptor-mitmproxy')
 
 mozharness_dir = os.path.join(here, '../../../mozharness')
 sys.path.insert(0, mozharness_dir)
@@ -72,24 +72,20 @@ class Mitmproxy(Playback):
         self.recordings = config.get('playback_recordings', None)
         self.browser_path = config.get('binary', None)
 
-        # bindir is where we will download all mitmproxy required files
-        # if invoved via mach we will have received this in config; otherwise
-        # not running via mach (invoved direcdtly in testing/raptor) so figure it out
+        # raptor_dir is where we will download all mitmproxy required files
+        # when running locally it comes from obj_path via mozharness/mach
         if self.config.get("obj_path", None) is not None:
-            self.bindir = self.config.get("obj_path")
+            self.raptor_dir = self.config.get("obj_path")
         else:
-            # bit of a pain to get object dir when not running via mach - need to go from
-            # the binary folder i.e.
-            # /mozilla-unified/obj-x86_64-apple-darwin17.4.0/dist/Nightly.app/Contents/MacOS/
-            # back to:
-            # mozilla-unified/obj-x86_64-apple-darwin17.4.0/
-            # note, this may need to be updated per platform
-            self.bindir = os.path.normpath(os.path.join(self.config['binary'],
-                                                        '..', '..', '..', '..',
-                                                        '..', 'testing', 'raptor'))
+            # in production it is ../tasks/task_N/build/, in production that dir
+            # is not available as an envvar, however MOZ_UPLOAD_DIR is set as
+            # ../tasks/task_N/build/blobber_upload_dir so take that and go up 1 level
+            self.raptor_dir = os.path.dirname(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']))
 
-        self.recordings_path = self.bindir
-        LOG.info("bindir to be used for mitmproxy downloads and exe files: %s" % self.bindir)
+        # add raptor to raptor_dir
+        self.raptor_dir = os.path.join(self.raptor_dir, "testing", "raptor")
+        self.recordings_path = self.raptor_dir
+        LOG.info("raptor_dir used for mitmproxy downloads and exe files: %s" % self.raptor_dir)
 
         # go ahead and download and setup mitmproxy
         self.download()
@@ -104,7 +100,7 @@ class Mitmproxy(Playback):
 
         proc = ProcessHandler(
             command, processOutputLine=outputHandler, storeOutput=False,
-            cwd=self.bindir)
+            cwd=self.raptor_dir)
 
         proc.run()
 
@@ -117,8 +113,8 @@ class Mitmproxy(Playback):
     def download(self):
         # download mitmproxy binary and pageset using tooltool
         # note: tooltool automatically unpacks the files as well
-        if not os.path.exists(self.bindir):
-            os.makedirs(self.bindir)
+        if not os.path.exists(self.raptor_dir):
+            os.makedirs(self.raptor_dir)
         LOG.info("downloading mitmproxy binary")
         _manifest = os.path.join(here, self.config['playback_binary_manifest'])
         self._tooltool_fetch(_manifest)
@@ -139,7 +135,7 @@ class Mitmproxy(Playback):
         return
 
     def start(self):
-        mitmdump_path = os.path.join(self.bindir, 'mitmdump')
+        mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
         recordings_list = self.recordings.split()
         self.mitmproxy_proc = self.start_mitmproxy_playback(mitmdump_path,
                                                             self.recordings_path,
