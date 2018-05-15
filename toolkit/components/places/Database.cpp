@@ -78,6 +78,8 @@
 //   on URI lengths above 255 bytes
 #define PREF_HISTORY_MAXURLLEN_DEFAULT 2000
 
+#define PREF_MIGRATE_V48_FRECENCIES "places.database.migrateV48Frecencies"
+
 // Maximum size for the WAL file.
 // For performance reasons this should be as large as possible, so that more
 // transactions can fit into it, and the checkpoint cost is paid less often.
@@ -1120,6 +1122,7 @@ Database::InitSchema(bool* aDatabaseMigrated)
       mShouldConvertIconPayloads = false;
       nsFaviconService::ConvertUnsupportedPayloads(mMainConn);
     }
+    MigrateV48Frecencies();
   });
 
   // We are going to update the database, so everything from now on should be in
@@ -1259,6 +1262,13 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
       // Firefox 61 uses schema version 47.
 
+      if (currentSchemaVersion < 48) {
+        rv = MigrateV48Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 62 uses schema version 48.
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -1269,6 +1279,10 @@ Database::InitSchema(bool* aDatabaseMigrated)
   }
   else {
     // This is a new database, so we have to create all the tables and indices.
+
+    // moz_origins.
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_ORIGINS);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_places.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_PLACES);
@@ -1285,6 +1299,8 @@ Database::InitSchema(bool* aDatabaseMigrated)
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_GUID);
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ORIGIN_ID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_historyvisits.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HISTORYVISITS);
@@ -1298,10 +1314,6 @@ Database::InitSchema(bool* aDatabaseMigrated)
 
     // moz_inputhistory.
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_INPUTHISTORY);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // moz_hosts.
-    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_HOSTS);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // moz_bookmarks.
@@ -1533,6 +1545,16 @@ Database::InitFunctions()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = GetQueryParamFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = GetPrefixFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = GetHostAndPortFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = StripPrefixAndUserinfoFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = IsFrecencyDecayingFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = UpdateFrecencyStatsFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -1547,22 +1569,20 @@ Database::InitTempEntities()
   rv = mMainConn->ExecuteSimpleSQL(CREATE_HISTORYVISITS_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Add the triggers that update the moz_hosts table as necessary.
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTSINSERT_TEMP);
+  // Add the triggers that update the moz_origins table as necessary.
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSINSERT_TEMP);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTSINSERT_AFTERDELETE_TRIGGER);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSINSERT_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERINSERT_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTSDELETE_TEMP);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSDELETE_TEMP);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEHOSTSDELETE_AFTERDELETE_TRIGGER);
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_UPDATEORIGINSDELETE_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERDELETE_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mMainConn->ExecuteSimpleSQL(CREATE_PLACES_AFTERUPDATE_TYPED_TRIGGER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mMainConn->ExecuteSimpleSQL(CREATE_BOOKMARKS_FOREIGNCOUNT_AFTERDELETE_TRIGGER);
@@ -1660,6 +1680,30 @@ Database::MigrateV32Up() {
       "); "
   ), getter_AddRefs(deleteHostsStmt));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#define HOST_TO_REVHOST_PREDICATE \
+  "rev_host = get_unreversed_host(host || '.') || '.' " \
+  "OR rev_host = get_unreversed_host(host || '.') || '.www.'"
+#define HOSTS_PREFIX_PRIORITY_FRAGMENT \
+  "SELECT CASE " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,12) = 'https://www.')) FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
+    ") THEN 'https://www.' " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,8) = 'https://')) FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
+    ") THEN 'https://' " \
+    "WHEN 1 = ( " \
+      "SELECT min(substr(url,1,4) = 'ftp:') FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
+    ") THEN 'ftp://' " \
+    "WHEN ( " \
+      "SELECT round(avg(substr(url,1,11) = 'http://www.')) FROM moz_places h " \
+      "WHERE (" HOST_TO_REVHOST_PREDICATE ") AND +h.typed = 1 " \
+    ") THEN 'www.' " \
+  "END "
+
   nsCOMPtr<mozIStorageAsyncStatement> updateHostsStmt;
   rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_hosts "
@@ -1667,6 +1711,10 @@ Database::MigrateV32Up() {
     "WHERE host IN (SELECT host FROM moz_migrate_v32_temp) "
   ), getter_AddRefs(updateHostsStmt));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#undef HOST_TO_REVHOST_PREDICATE
+#undef HOSTS_PREFIX_PRIORITY_FRAGMENT
+
   nsCOMPtr<mozIStorageAsyncStatement> dropTableStmt;
   rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
     "DROP TABLE IF EXISTS moz_migrate_v32_temp"
@@ -2247,6 +2295,152 @@ Database::MigrateV47Up() {
   ));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
+}
+
+nsresult
+Database::MigrateV48Up() {
+  // Create and populate moz_origins.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT * FROM moz_origins; "
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_ORIGINS);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR IGNORE INTO moz_origins (prefix, host, frecency) " \
+    "SELECT get_prefix(url), get_host_and_port(url), -1 " \
+    "FROM moz_places; "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Add and populate moz_places.origin_id.
+  rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT origin_id FROM moz_places; "
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_places " \
+      "ADD COLUMN origin_id INTEGER REFERENCES moz_origins(id); "
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ORIGIN_ID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_places " \
+    "SET origin_id = ( "
+      "SELECT id FROM moz_origins " \
+      "WHERE prefix = get_prefix(url) AND host = get_host_and_port(url) " \
+    "); "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Setting this pref will cause InitSchema to begin async migration of
+  // frecencies to moz_origins.  The reason we don't defer the other steps
+  // above, like we do this one here, is because we want to make sure that the
+  // main data in moz_origins, prefix and host, are coherent in relation to
+  // moz_places.
+  Unused << Preferences::SetBool(PREF_MIGRATE_V48_FRECENCIES, true);
+
+  // From this point on, nobody should use moz_hosts again.  Empty it so that we
+  // don't leak the user's history, but don't remove it yet so that the user can
+  // downgrade.
+  rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_hosts; "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+namespace {
+
+class MigrateV48FrecenciesRunnable final : public Runnable
+{
+public:
+  NS_DECL_NSIRUNNABLE
+  explicit MigrateV48FrecenciesRunnable(mozIStorageConnection* aDBConn);
+private:
+  nsCOMPtr<mozIStorageConnection> mDBConn;
+};
+
+MigrateV48FrecenciesRunnable::MigrateV48FrecenciesRunnable(mozIStorageConnection* aDBConn)
+  : Runnable("places::MigrateV48FrecenciesRunnable")
+  , mDBConn(aDBConn)
+{
+}
+
+NS_IMETHODIMP
+MigrateV48FrecenciesRunnable::Run()
+{
+  if (NS_IsMainThread()) {
+    // Migration done.  Clear the pref.
+    Unused << Preferences::ClearUser(PREF_MIGRATE_V48_FRECENCIES);
+    return NS_OK;
+  }
+
+  nsCOMPtr<mozIStorageStatement> selectStmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM moz_origins " \
+    "WHERE frecency = -1 " \
+    "ORDER BY id ASC " \
+    "LIMIT 200; "
+  ), getter_AddRefs(selectStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> updateStmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_origins " \
+    "SET frecency = ( " \
+      "SELECT MAX(frecency) " \
+      "FROM moz_places " \
+      "WHERE moz_places.origin_id = moz_origins.id " \
+    ") " \
+    "WHERE id = :id; "
+  ), getter_AddRefs(updateStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageStatementScoper updateScoper(updateStmt);
+
+  // We should do the work in chunks, or the wal journal may grow too much.
+  bool hasResult;
+  uint8_t count = 0;
+  for (; NS_SUCCEEDED(selectStmt->ExecuteStep(&hasResult)) && hasResult; ++count) {
+    int64_t id = selectStmt->AsInt64(0);
+    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStmt->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (count == 200) {
+    // There are more results to handle. Re-dispatch to the same thread for the
+    // next chunk.
+    return NS_DispatchToCurrentThread(this);
+  }
+
+  // Re-dispatch to the main-thread to flip the migration pref.
+  return NS_DispatchToMainThread(this);
+}
+
+} // namespace
+
+void
+Database::MigrateV48Frecencies()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!Preferences::GetBool(PREF_MIGRATE_V48_FRECENCIES)) {
+    return;
+  }
+
+  RefPtr<MigrateV48FrecenciesRunnable> runnable =
+    new MigrateV48FrecenciesRunnable(mMainConn);
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(mMainConn);
+  MOZ_ASSERT(target);
+  Unused << target->Dispatch(runnable, NS_DISPATCH_NORMAL);
 }
 
 nsresult

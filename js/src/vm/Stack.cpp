@@ -1985,6 +1985,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
         frame.returnAddress = nullptr;
         frame.activation = activation_;
         frame.label = nullptr;
+        frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
         return mozilla::Some(frame);
     }
 
@@ -2011,6 +2012,7 @@ JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* en
     frame.returnAddress = returnAddr;
     frame.activation = activation_;
     frame.label = nullptr;
+    frame.endStackAddress = activation_->asJit()->jsOrWasmExitFP();
     return mozilla::Some(frame);
 }
 

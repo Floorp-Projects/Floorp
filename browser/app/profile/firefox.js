@@ -61,14 +61,11 @@ pref("extensions.autoDisableScopes", 15);
 // Scopes to scan for changes at startup.
 pref("extensions.startupScanScopes", 0);
 
-// This is where the profiler WebExtension API will look for breakpad symbols.
-// NOTE: deliberately http right now since https://symbols.mozilla.org is not supported.
-pref("extensions.geckoProfiler.symbols.url", "http://symbols.mozilla.org/");
 pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com,quantum-foxfooding@mozilla.com");
 #if defined(XP_LINUX) || defined (XP_MACOSX)
-pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad,nm");
+pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,nm");
 #else // defined(XP_WIN)
-pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,remoteBreakpad,dump_syms.exe");
+pref("extensions.geckoProfiler.getSymbolRules", "localBreakpad,dump_syms.exe");
 #endif
 
 
@@ -296,7 +293,6 @@ pref("browser.urlbar.doubleClickSelectsAll", false);
 
 // Control autoFill behavior
 pref("browser.urlbar.autoFill", true);
-pref("browser.urlbar.autoFill.typed", true);
 pref("browser.urlbar.speculativeConnect.enabled", true);
 
 // 0: Match anywhere (e.g., middle of words)

@@ -22,7 +22,7 @@
        */
       addPerfTest(async () => {
         const {
-          perfFront,
+          perfFrontMock,
           getRecordingState,
           mountComponent,
           container
@@ -31,15 +31,15 @@
         ok(true, "Start the profiler before initiliazing the component, to simulate" +
                  "the profiler being controlled by another tool.");
 
-        perfFront.startProfiler();
-        await perfFront.flushAsyncQueue();
+        perfFrontMock.startProfiler();
+        await perfFrontMock._flushAsyncQueue();
 
         mountComponent();
 
         is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "other-is-recording",
           "The profiler is not available to record.");
 
@@ -49,7 +49,7 @@
         is(getRecordingState(), "request-to-stop-profiler",
           "We can request to stop the profiler.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "available-to-record",
           "The profiler is now available to record.");
       });

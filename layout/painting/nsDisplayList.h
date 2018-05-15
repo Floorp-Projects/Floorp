@@ -844,6 +844,9 @@ public:
   void SetDisablePartialUpdates(bool aDisable) { mDisablePartialUpdates = aDisable; }
   bool DisablePartialUpdates() { return mDisablePartialUpdates; }
 
+  void SetPartialBuildFailed(bool aFailed) { mPartialBuildFailed = aFailed; }
+  bool PartialBuildFailed() { return mPartialBuildFailed; }
+
   /**
    * Return true if we're currently building a display list for the presshell
    * of a chrome document, or if we're building the display list for a popup.
@@ -1997,6 +2000,7 @@ private:
   bool                           mBuildCompositorHitTestInfo;
   bool                           mLessEventRegionItems;
   bool                           mDisablePartialUpdates;
+  bool                           mPartialBuildFailed;
 };
 
 class nsDisplayItem;

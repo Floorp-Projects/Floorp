@@ -1753,11 +1753,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
 
-    <resources>
-      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
-      <stylesheet src="chrome://browser/skin/searchbar.css"/>
-    </resources>
-
     <content ignorekeys="true" level="top" consumeoutsideclicks="never"
              aria-owns="richlistbox">
       <xul:deck anonid="search-suggestions-notification"
@@ -2306,10 +2301,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               let firstStyle = this.input.mController.getStyleAt(0);
               if (firstStyle.includes("autofill")) {
                 let uri = this.input.mController.getFinalCompleteValueAt(0);
-                // "http" will be stripped out, but other scheme won't.
-                if (!uri.includes("://")) {
-                  uri = "http://" + uri;
-                }
                 this.maybeSetupSpeculativeConnect(uri);
               } else if (firstStyle.includes("searchengine") &&
                          this.input.browserSearchSuggestEnabled &&

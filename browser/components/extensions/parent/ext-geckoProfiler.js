@@ -9,7 +9,6 @@ ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(this, "Subprocess", "resource://gre/modules/Subprocess.jsm");
 
 const PREF_ASYNC_STACK = "javascript.options.asyncstack";
-const PREF_SYMBOLS_URL = "extensions.geckoProfiler.symbols.url";
 const PREF_GET_SYMBOL_RULES = "extensions.geckoProfiler.getSymbolRules";
 
 const ASYNC_STACKS_ENABLED = Services.prefs.getBoolPref(PREF_ASYNC_STACK, false);
@@ -243,12 +242,6 @@ const pathComponentsForSymbolFile = (debugName, breakpadId) => {
   return [debugName, breakpadId, symName];
 };
 
-const urlForSymFile = (debugName, breakpadId) => {
-  const profilerSymbolsURL = Services.prefs.getCharPref(PREF_SYMBOLS_URL,
-                                                        "http://symbols.mozilla.org/");
-  return profilerSymbolsURL + pathComponentsForSymbolFile(debugName, breakpadId).join("/");
-};
-
 const getContainingObjdirDist = path => {
   let curPath = path;
   let curPathBasename = OS.Path.basename(curPath);
@@ -292,7 +285,7 @@ const symbolCache = new Map();
 
 const primeSymbolStore = libs => {
   for (const {debugName, debugPath, breakpadId, path, arch} of libs) {
-    symbolCache.set(urlForSymFile(debugName, breakpadId), {path, debugPath, arch});
+    symbolCache.set(`${debugName}/${breakpadId}`, {path, debugPath, arch});
   }
 };
 
@@ -398,61 +391,58 @@ this.geckoProfiler = class extends ExtensionAPI {
             primeSymbolStore(Services.profiler.sharedLibraries);
           }
 
-          const cachedLibInfo = symbolCache.get(urlForSymFile(debugName, breakpadId));
+          const cachedLibInfo = symbolCache.get(`${debugName}/${breakpadId}`);
+          if (!cachedLibInfo) {
+            throw new Error(
+              `The library ${debugName} ${breakpadId} is not in the Services.profiler.sharedLibraries list, ` +
+              "so the local path for it is not known and symbols for it can not be obtained. " +
+              "This usually happens if a content process uses a library that's not used in the parent " +
+              "process - Services.profiler.sharedLibraries only knows about libraries in the parent process.");
+          }
 
-          const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad,remoteBreakpad");
-          const haveAbsolutePath = cachedLibInfo && OS.Path.split(cachedLibInfo.path).absolute;
+          const {path, debugPath, arch} = cachedLibInfo;
+          if (!OS.Path.split(path).absolute) {
+            throw new Error(
+              `Services.profiler.sharedLibraries did not contain an absolute path for the library ${debugName} ${breakpadId}, ` +
+              "so symbols for this library can not be obtained.");
+          }
+
+          const symbolRules = Services.prefs.getCharPref(PREF_GET_SYMBOL_RULES, "localBreakpad");
 
           // We have multiple options for obtaining symbol information for the given
           // binary.
           //  "localBreakpad"  - Use existing symbol dumps stored in the object directory of a local
-          //      Firefox build, generated using `mach buildsymbols` [requires path]
-          //  "remoteBreakpad" - Use symbol dumps from the Mozilla symbol server [only requires
-          //      debugName + breakpadId]
-          //  "nm"             - Use the command line tool `nm` [linux/mac only, requires path]
-          //  "dump_syms.exe"  - Use the tool dump_syms.exe from the object directory [Windows
-          //      only, requires path]
+          //      Firefox build, generated using `mach buildsymbols`
+          //  "nm"             - Use the command line tool `nm` [linux/mac only]
+          //  "dump_syms.exe"  - Use the tool dump_syms.exe from the object directory [Windows only]
           for (const rule of symbolRules.split(",")) {
             try {
               switch (rule) {
                 case "localBreakpad":
-                  if (haveAbsolutePath) {
-                    const {path} = cachedLibInfo;
-                    const filepath = filePathForSymFileInObjDir(path, debugName, breakpadId);
-                    if (filepath) {
-                      // NOTE: here and below, "return await" is used to ensure we catch any
-                      // errors in the promise. A simple return would give the error to the
-                      // caller.
-                      return await parseSym({filepath});
-                    }
+                  const filepath = filePathForSymFileInObjDir(path, debugName, breakpadId);
+                  if (filepath) {
+                    // NOTE: here and below, "return await" is used to ensure we catch any
+                    // errors in the promise. A simple return would give the error to the
+                    // caller.
+                    return await parseSym({filepath});
                   }
                   break;
-                case "remoteBreakpad":
-                  const url = urlForSymFile(debugName, breakpadId);
-                  return await parseSym({url});
                 case "nm":
-                  if (haveAbsolutePath) {
-                    const {path, arch} = cachedLibInfo;
-                    return await getSymbolsFromNM(path, arch);
-                  }
-                  break;
+                  return await getSymbolsFromNM(path, arch);
                 case "dump_syms.exe":
-                  if (haveAbsolutePath) {
-                    const {path, debugPath} = cachedLibInfo;
-                    let dumpSymsPath = dumpSymsPathInObjDir(path);
-                    if (!dumpSymsPath && previouslySuccessfulDumpSymsPath) {
-                      // We may be able to dump symbol for system libraries
-                      // (which are outside the object directory, and for
-                      // which dumpSymsPath will be null) using dump_syms.exe.
-                      // If we know that dump_syms.exe exists, try it.
-                      dumpSymsPath = previouslySuccessfulDumpSymsPath;
-                    }
-                    if (dumpSymsPath) {
-                      const result =
-                        await getSymbolsUsingWindowsDumpSyms(dumpSymsPath, debugPath);
-                      previouslySuccessfulDumpSymsPath = dumpSymsPath;
-                      return result;
-                    }
+                  let dumpSymsPath = dumpSymsPathInObjDir(path);
+                  if (!dumpSymsPath && previouslySuccessfulDumpSymsPath) {
+                    // We may be able to dump symbol for system libraries
+                    // (which are outside the object directory, and for
+                    // which dumpSymsPath will be null) using dump_syms.exe.
+                    // If we know that dump_syms.exe exists, try it.
+                    dumpSymsPath = previouslySuccessfulDumpSymsPath;
+                  }
+                  if (dumpSymsPath) {
+                    const result =
+                      await getSymbolsUsingWindowsDumpSyms(dumpSymsPath, debugPath);
+                    previouslySuccessfulDumpSymsPath = dumpSymsPath;
+                    return result;
                   }
                   break;
               }
@@ -461,8 +451,6 @@ this.geckoProfiler = class extends ExtensionAPI {
               // we will try the next one.
               // "localBreakpad" will fail if this is not a local build that's running from the object
               // directory or if the user hasn't run `mach buildsymbols` on it.
-              // "remoteBreakpad" will fail if this is not an official mozilla build (e.g. Nightly) or a
-              // known system library.
               // "nm" will fail if `nm` is not available.
               // "dump_syms.exe" will fail if this is not a local build that's running from the object
               // directory, or if dump_syms.exe doesn't exist in the object directory, or if

@@ -14,11 +14,8 @@ var EXPORTED_SYMBOLS = ["TabAttributes"];
 // 'pending' is used internal by sessionstore and managed accordingly.
 // 'iconloadingprincipal' is same as 'image' that it should be handled by
 //                        using the gBrowser.getIcon()/setIcon() methods.
-// 'activemedia-blocked' should not be accessed directly but handled by using
-//                       tab's toggleMuteAudio() or linkedBrowser's methods
-//                       activeMediaBlockStarted()/activeMediaBlockBlockStopped().
 const ATTRIBUTES_TO_SKIP = new Set(["image", "muted", "pending", "iconloadingprincipal",
-                                    "skipbackgroundnotify", "activemedia-blocked"]);
+                                    "skipbackgroundnotify"]);
 
 // A set of tab attributes to persist. We will read a given list of tab
 // attributes when collecting tab data and will re-set those attributes when

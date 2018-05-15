@@ -445,6 +445,159 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+//// Get prefix function
+
+/**
+ * Gets the length of the prefix in a URL.  "Prefix" is defined to be the
+ * scheme, colon, and, if present, two slashes.
+ *
+ * @param url
+ *        A URL, or a string that may be a URL.
+ * @return
+ *        If `url` is actually a URL and has a prefix, then this returns the
+ *        prefix.  Otherwise this returns an empty string.
+ */
+class GetPrefixFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~GetPrefixFunction() {}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Get host and port function
+
+/**
+ * Gets the host and port substring of a URL.
+ *
+ * @param url
+ *        A URL, or a string that may be a URL.
+ * @return
+ *        If `url` is actually a URL, or if it's a URL without the prefix, then
+ *        this returns the host and port substring of the URL.  Otherwise, this
+ *        returns `url` itself.
+ */
+class GetHostAndPortFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~GetHostAndPortFunction() {}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Strip prefix function
+
+/**
+ * Gets the part of a URL after its prefix and userinfo; i.e., the substring
+ * starting at the host.
+ *
+ * @param url
+ *        A URL, or a string that may be a URL.
+ * @return
+ *        If `url` is actually a URL, or if it's a URL without the prefix, then
+ *        this returns the substring starting at the host.  Otherwise, this
+ *        returns `url` itself.
+ */
+class StripPrefixAndUserinfoFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~StripPrefixAndUserinfoFunction() {}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Is frecency decaying function
+
+/**
+ * Returns nsNavHistory::IsFrecencyDecaying().
+ *
+ * @return
+ *        True if frecency is currently decaying and false otherwise.
+ */
+class IsFrecencyDecayingFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~IsFrecencyDecayingFunction() {}
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Update frecency stats function
+
+/**
+ * Calls nsNavHistory::UpdateFrecencyStats with the old and new frecencies of a
+ * particular moz_places row.
+ *
+ * @param placeID
+ *        The moz_places row ID.
+ * @param oldFrecency
+ *        The old frecency of a moz_places row that changed frecencies.
+ * @param newFrecency
+ *        The new frecency of the same moz_places row.
+ */
+class UpdateFrecencyStatsFunction final : public mozIStorageFunction
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection *aDBConn);
+private:
+  ~UpdateFrecencyStatsFunction() {}
+};
+
+
 } // namespace places
 } // namespace mozilla
 

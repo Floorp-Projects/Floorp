@@ -27,7 +27,7 @@ add_task(async function() {
   await doc.l10n.ready;
 
   let [ msg ] = await doc.l10n.formatMessages([
-    ["category-general"],
+    {id: "category-general"},
   ]);
 
   let elem = doc.querySelector(

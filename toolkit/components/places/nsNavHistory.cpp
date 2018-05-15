@@ -16,6 +16,7 @@
 #include "nsAnnotationService.h"
 #include "nsFaviconService.h"
 #include "nsPlacesMacros.h"
+#include "nsPlacesTriggers.h"
 #include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
@@ -108,7 +109,10 @@ using namespace mozilla::places;
 
 // This is a 'hidden' pref for the purposes of unit tests.
 #define PREF_FREC_DECAY_RATE     "places.frecency.decayRate"
-#define PREF_FREC_DECAY_RATE_DEF 0.975f
+
+#define PREF_FREC_STATS_COUNT   "places.frecency.stats.count"
+#define PREF_FREC_STATS_SUM     "places.frecency.stats.sum"
+#define PREF_FREC_STATS_SQUARES "places.frecency.stats.sumOfSquares"
 
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
@@ -265,8 +269,32 @@ const int32_t nsNavHistory::kGetInfoIndex_VisitType = 17;
 // nsNavBookmarks::kGetChildrenIndex_Type = 20;
 // nsNavBookmarks::kGetChildrenIndex_PlaceID = 21;
 
-PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
+static uint64_t
+GetUInt64Pref(const char *prefName)
+{
+  // `Preferences` doesn't support uint64_t, so we store it as a string instead.
+  nsAutoCString strVal;
+  nsresult rv = Preferences::GetCString(prefName, strVal);
+  if (NS_SUCCEEDED(rv)) {
+    int64_t val = strVal.ToInteger64(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      return static_cast<uint64_t>(val);
+    }
+  }
+  return 0U;
+}
 
+static void
+SetUInt64Pref(const char *prefName,
+              uint64_t val)
+{
+  nsAutoCString strVal;
+  strVal.AppendInt(val);
+  Unused << Preferences::SetCString(prefName, strVal);
+}
+
+
+PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
 nsNavHistory::nsNavHistory()
   : mBatchLevel(0)
@@ -278,6 +306,7 @@ nsNavHistory::nsNavHistory()
   , mEmbedVisits(EMBED_VISITS_INITIAL_CACHE_LENGTH)
   , mHistoryEnabled(true)
   , mNumVisitsForFrecency(10)
+  , mDecayFrecencyPendingCount(0)
   , mTagsFolder(-1)
   , mDaysOfHistory(-1)
   , mLastCachedStartOfDay(INT64_MAX)
@@ -302,6 +331,8 @@ nsNavHistory::nsNavHistory()
 
 nsNavHistory::~nsNavHistory()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this,
@@ -325,6 +356,10 @@ nsNavHistory::Init()
 
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
+
+  mFrecencyStatsCount = GetUInt64Pref(PREF_FREC_STATS_COUNT);
+  mFrecencyStatsSum = GetUInt64Pref(PREF_FREC_STATS_SUM);
+  mFrecencyStatsSumOfSquares = GetUInt64Pref(PREF_FREC_STATS_SQUARES);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -465,9 +500,9 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
   }
 
   {
-    // Trigger the updates to moz_hosts
+    // Trigger the updates to the moz_origins tables
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "DELETE FROM moz_updatehostsinsert_temp"
+      "DELETE FROM moz_updateoriginsinsert_temp"
     );
     NS_ENSURE_STATE(stmt);
     mozStorageStatementScoper scoper(stmt);
@@ -547,15 +582,25 @@ nsNavHistory::NotifyTitleChange(nsIURI* aURI,
 }
 
 void
-nsNavHistory::NotifyFrecencyChanged(nsIURI* aURI,
+nsNavHistory::NotifyFrecencyChanged(const nsACString& aSpec,
                                     int32_t aNewFrecency,
                                     const nsACString& aGUID,
                                     bool aHidden,
                                     PRTime aLastVisitDate)
 {
   MOZ_ASSERT(!aGUID.IsEmpty());
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << NS_NewURI(getter_AddRefs(uri), aSpec);
+  // We cannot assert since some automated tests are checking this path.
+  NS_WARNING_ASSERTION(uri, "Invalid URI in nsNavHistory::NotifyFrecencyChanged");
+  // Notify a frecency change only if we have a valid uri, otherwise
+  // the observer couldn't gather any useful data from the notification.
+  if (!uri) {
+    return;
+  }
   NOTIFY_OBSERVERS(mCanNotify, mObservers, nsINavHistoryObserver,
-                   OnFrecencyChanged(aURI, aNewFrecency, aGUID, aHidden,
+                   OnFrecencyChanged(uri, aNewFrecency, aGUID, aHidden,
                                      aLastVisitDate));
 }
 
@@ -566,54 +611,6 @@ nsNavHistory::NotifyManyFrecenciesChanged()
                    OnManyFrecenciesChanged());
 }
 
-namespace {
-
-class FrecencyNotification : public Runnable
-{
-public:
-  FrecencyNotification(const nsACString& aSpec,
-                       int32_t aNewFrecency,
-                       const nsACString& aGUID,
-                       bool aHidden,
-                       PRTime aLastVisitDate)
-    : mozilla::Runnable("FrecencyNotification")
-    , mSpec(aSpec)
-    , mNewFrecency(aNewFrecency)
-    , mGUID(aGUID)
-    , mHidden(aHidden)
-    , mLastVisitDate(aLastVisitDate)
-  {
-  }
-
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
-    nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
-    if (navHistory) {
-      nsCOMPtr<nsIURI> uri;
-      (void)NS_NewURI(getter_AddRefs(uri), mSpec);
-      // We cannot assert since some automated tests are checking this path.
-      NS_WARNING_ASSERTION(uri, "Invalid URI in FrecencyNotification");
-      // Notify a frecency change only if we have a valid uri, otherwise
-      // the observer couldn't gather any useful data from the notification.
-      if (uri) {
-        navHistory->NotifyFrecencyChanged(uri, mNewFrecency, mGUID, mHidden,
-                                          mLastVisitDate);
-      }
-    }
-    return NS_OK;
-  }
-
-private:
-  nsCString mSpec;
-  int32_t mNewFrecency;
-  nsCString mGUID;
-  bool mHidden;
-  PRTime mLastVisitDate;
-};
-
-} // namespace
-
 void
 nsNavHistory::DispatchFrecencyChangedNotification(const nsACString& aSpec,
                                                   int32_t aNewFrecency,
@@ -621,10 +618,129 @@ nsNavHistory::DispatchFrecencyChangedNotification(const nsACString& aSpec,
                                                   bool aHidden,
                                                   PRTime aLastVisitDate) const
 {
-  nsCOMPtr<nsIRunnable> notif = new FrecencyNotification(aSpec, aNewFrecency,
-                                                         aGUID, aHidden,
-                                                         aLastVisitDate);
-  (void)NS_DispatchToMainThread(notif);
+  Unused << NS_DispatchToMainThread(
+    NewRunnableMethod<nsCString, int32_t, nsCString, bool, PRTime>(
+      "nsNavHistory::NotifyFrecencyChanged",
+      const_cast<nsNavHistory*>(this),
+      &nsNavHistory::NotifyFrecencyChanged,
+      aSpec, aNewFrecency, aGUID, aHidden, aLastVisitDate
+    )
+  );
+}
+
+
+void
+nsNavHistory::DispatchFrecencyStatsUpdate(int64_t aPlaceId,
+                                          int32_t aOldFrecency,
+                                          int32_t aNewFrecency) const
+{
+  MOZ_ASSERT(aPlaceId >= 0);
+  Unused << NS_DispatchToMainThread(
+    NewRunnableMethod<int64_t, int32_t, int32_t>(
+      "nsNavHistory::UpdateFrecencyStats",
+      const_cast<nsNavHistory*>(this),
+      &nsNavHistory::UpdateFrecencyStats,
+      aPlaceId, aOldFrecency, aNewFrecency
+    )
+  );
+}
+
+void
+nsNavHistory::UpdateFrecencyStats(int64_t aPlaceId,
+                                  int32_t aOldFrecency,
+                                  int32_t aNewFrecency)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+  MOZ_ASSERT(aPlaceId >= 0);
+
+  if (aOldFrecency > 0) {
+    MOZ_ASSERT(mFrecencyStatsCount > 0);
+    mFrecencyStatsCount--;
+    uint64_t uOld = static_cast<uint64_t>(aOldFrecency);
+    MOZ_ASSERT(mFrecencyStatsSum >= uOld);
+    mFrecencyStatsSum -= uOld;
+    uint64_t square = uOld * uOld;
+    MOZ_ASSERT(mFrecencyStatsSumOfSquares >= square);
+    mFrecencyStatsSumOfSquares -= square;
+  }
+  if (aNewFrecency > 0) {
+    mFrecencyStatsCount++;
+    uint64_t uNew = static_cast<uint64_t>(aNewFrecency);
+    mFrecencyStatsSum += uNew;
+    mFrecencyStatsSumOfSquares += uNew * uNew;
+  }
+
+  // This method can be called many times very quickly when many frecencies
+  // change at once.  (Note though that it is *not* called when frecencies
+  // decay.)  To avoid hammering preferences, update them only every so often.
+  // There's actually a browser mochitest that makes sure preferences aren't
+  // accessed too much, and it fails without throttling like this.
+  if (!mUpdateFrecencyStatsPrefsTimer) {
+    Unused << NS_NewTimerWithFuncCallback(
+      getter_AddRefs(mUpdateFrecencyStatsPrefsTimer),
+      &UpdateFrecencyStatsPrefs,
+      this,
+      5000, // ms
+      nsITimer::TYPE_ONE_SHOT,
+      "nsNavHistory::UpdateFrecencyStatsPrefs",
+      nullptr
+    );
+  }
+}
+
+void // static
+nsNavHistory::UpdateFrecencyStatsPrefs(nsITimer *aTimer,
+                                       void *aClosure)
+{
+  nsNavHistory *history = static_cast<nsNavHistory *>(aClosure);
+  if (!history) {
+    return;
+  }
+  SetUInt64Pref(PREF_FREC_STATS_COUNT, history->mFrecencyStatsCount);
+  SetUInt64Pref(PREF_FREC_STATS_SUM, history->mFrecencyStatsSum);
+  SetUInt64Pref(PREF_FREC_STATS_SQUARES, history->mFrecencyStatsSumOfSquares);
+  history->mUpdateFrecencyStatsPrefsTimer = nullptr;
+
+  // This is only so that tests can know when the prefs are written.  Observing
+  // nsPref:changed isn't sufficient because that's not fired when a pref value
+  // is the same as the previous value.
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    MOZ_ALWAYS_SUCCEEDS(obs->NotifyObservers(
+      nullptr,
+      "places-frecency-stats-prefs-updated",
+      nullptr
+    ));
+  }
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetFrecencyMean(double *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  if (mFrecencyStatsCount == 0) {
+    *_retval = 0.0;
+    return NS_OK;
+  }
+  *_retval =
+    static_cast<double>(mFrecencyStatsSum) /
+    static_cast<double>(mFrecencyStatsCount);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavHistory::GetFrecencyStandardDeviation(double *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  if (mFrecencyStatsCount <= 1) {
+    *_retval = 0.0;
+    return NS_OK;
+  }
+  double squares = static_cast<double>(mFrecencyStatsSumOfSquares);
+  double sum = static_cast<double>(mFrecencyStatsSum);
+  double count = static_cast<double>(mFrecencyStatsCount);
+  *_retval = sqrt((squares - ((sum * sum) / count)) / count);
+  return NS_OK;
 }
 
 Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);
@@ -2465,12 +2581,10 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 }
 
 
-namespace {
-
-class DecayFrecencyCallback : public AsyncStatementTelemetryTimer
+class PlacesDecayFrecencyCallback : public AsyncStatementTelemetryTimer
 {
 public:
-  DecayFrecencyCallback()
+  PlacesDecayFrecencyCallback()
     : AsyncStatementTelemetryTimer(Telemetry::PLACES_IDLE_FRECENCY_DECAY_TIME_MS)
   {
   }
@@ -2478,16 +2592,12 @@ public:
   NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
     (void)AsyncStatementTelemetryTimer::HandleCompletion(aReason);
-    if (aReason == REASON_FINISHED) {
-      nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
-      NS_ENSURE_STATE(navHistory);
-      navHistory->NotifyManyFrecenciesChanged();
-    }
+    nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
+    NS_ENSURE_STATE(navHistory);
+    navHistory->DecayFrecencyCompleted(aReason);
     return NS_OK;
   }
 };
-
-} // namespace
 
 nsresult
 nsNavHistory::DecayFrecency()
@@ -2495,7 +2605,7 @@ nsNavHistory::DecayFrecency()
   nsresult rv = FixInvalidFrecencies();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
+  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, FRECENCY_DECAY_RATE);
 
   // Globally decay places frecency rankings to estimate reduced frecency
   // values of pages that haven't been visited for a while, i.e., they do
@@ -2536,12 +2646,30 @@ nsNavHistory::DecayFrecency()
     deleteAdaptive.get()
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  RefPtr<DecayFrecencyCallback> cb = new DecayFrecencyCallback();
+  RefPtr<PlacesDecayFrecencyCallback> cb = new PlacesDecayFrecencyCallback();
   rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), cb,
                                      getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mDecayFrecencyPendingCount++;
+
   return NS_OK;
+}
+
+void
+nsNavHistory::DecayFrecencyCompleted(uint16_t reason)
+{
+  MOZ_ASSERT(mDecayFrecencyPendingCount > 0);
+  mDecayFrecencyPendingCount--;
+  if (mozIStorageStatementCallback::REASON_FINISHED == reason) {
+    NotifyManyFrecenciesChanged();
+  }
+}
+
+bool
+nsNavHistory::IsFrecencyDecaying() const
+{
+  return mDecayFrecencyPendingCount > 0;
 }
 
 
