@@ -27,21 +27,16 @@ android {
 }
 
 dependencies {
-    implementation project(':browser-session')
-    implementation project(':concept-engine')
-    implementation project(':concept-session-storage')
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
-    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
-    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
-    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+    implementation project(':concept-engine')
+    implementation project(':browser-session')
 }
 
-archivesBaseName = "feature-session"
+archivesBaseName = "session-storage"
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(
         'org.mozilla.components',
-        'feature-session',
-        'Feature implementation connecting an engine implementation with the session module.')
+        'session-storage',
+        'An abstract layer and contracts for hiding the actual session storage implementation.')

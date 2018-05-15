@@ -7,6 +7,7 @@ package mozilla.components.feature.session
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.session.storage.SessionStorage
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -40,6 +40,8 @@ _API contracts and abstraction layers for browser components._
 
 * **Engine** - Abstraction layer that allows hiding the actual browser engine implementation.
 
+* **Session-Storage** - Abstraction layer and contracts for hiding the actual session storage implementation.
+
 * **Toolbar** - Abstract definition of a browser toolbar component.
 
 ## Feature

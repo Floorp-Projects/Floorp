@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.session.storage.SessionStorage
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.FileNotFoundException

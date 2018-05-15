@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.session.storage.SessionStorage
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -43,7 +44,7 @@ class SessionProvider(
 
         if (savePeriodically) {
             scheduler.scheduleAtFixedRate(
-                { sessionStorage.persist(sessions, sessionManager.selectedSession?.id) },
+                { sessionStorage.persist(sessions, selectedSession.id) },
                 saveIntervalInSeconds,
                 saveIntervalInSeconds,
                 TimeUnit.SECONDS)
@@ -70,7 +71,6 @@ class SessionProvider(
      * Stops this provider and periodic saves.
      */
     fun stop() {
-        sessions.clear()
         scheduler.shutdown()
     }
 }

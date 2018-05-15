@@ -12,6 +12,9 @@ project(':concept-toolbar').projectDir = new File(rootDir, 'components/concept/t
 include ':concept-engine'
 project(':concept-engine').projectDir = new File(rootDir, 'components/concept/engine')
 
+include ':concept-session-storage'
+project(':concept-session-storage').projectDir = new File(rootDir, 'components/concept/session-storage')
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Features
 ////////////////////////////////////////////////////////////////////////////////////////////////////
