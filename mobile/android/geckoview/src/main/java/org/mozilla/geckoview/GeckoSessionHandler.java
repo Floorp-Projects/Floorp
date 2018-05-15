@@ -20,7 +20,6 @@ import android.util.Log;
     private static final boolean DEBUG = false;
 
     private Delegate mDelegate;
-    private final boolean mAlwaysListen;
     private final String mModuleName;
     private final String[] mEvents;
 
@@ -28,22 +27,10 @@ import android.util.Log;
     /* package */ GeckoSessionHandler(final String module,
                                       final GeckoSession session,
                                       final String[] events) {
-        this(module, session, events, /* alwaysListen */ false);
-    }
-
-    /* package */ GeckoSessionHandler(final String module,
-                                      final GeckoSession session,
-                                      final String[] events,
-                                      final boolean alwaysListen) {
         session.handlersCount++;
 
-        mAlwaysListen = alwaysListen;
         mModuleName = module;
         mEvents = events;
-
-        if (alwaysListen) {
-            register(session);
-        }
     }
 
     public Delegate getDelegate() {
@@ -60,13 +47,13 @@ import android.util.Log;
         final boolean settingNewDelegate = mDelegate == null &&
                                            delegate != null;
 
-        if (!mAlwaysListen && unsettingOldDelegate) {
+        if (unsettingOldDelegate) {
             unregister(session);
         }
 
         mDelegate = delegate;
 
-        if (!mAlwaysListen && settingNewDelegate) {
+        if (settingNewDelegate) {
             register(session);
         }
 
