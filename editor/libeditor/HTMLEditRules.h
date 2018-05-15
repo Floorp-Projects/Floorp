@@ -401,7 +401,19 @@ protected:
                           const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
                           nsIContent* aBRNode);
 
-  nsresult ReturnInListItem(Element& aHeader, nsINode& aNode, int32_t aOffset);
+  /**
+   * ReturnInListItem() handles insertParagraph command (i.e., handling
+   * Enter key press) in a list item element.
+   *
+   * @param aListItem           The list item which has the following point.
+   * @param aNode               Typically, Selection start container, where to
+   *                            insert a break.
+   * @param aOffset             Typically, Selection start offset in the
+   *                            start container, where to insert a break.
+   */
+  MOZ_MUST_USE nsresult
+  ReturnInListItem(Element& aListItem, nsINode& aNode, int32_t aOffset);
+
   nsresult AfterEditInner(EditAction action,
                           nsIEditor::EDirection aDirection);
   nsresult RemovePartOfBlock(Element& aBlock, nsIContent& aStartChild,
