@@ -42,7 +42,7 @@ ImageAccessible::~ImageAccessible()
 // Accessible public
 
 uint64_t
-ImageAccessible::NativeState()
+ImageAccessible::NativeState() const
 {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // states::ANIMATED if this is an animated image.

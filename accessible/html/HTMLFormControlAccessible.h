@@ -37,7 +37,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -65,7 +65,7 @@ public:
   }
 
   // Accessible
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual void GetPositionAndSizeInternal(int32_t *aPosInSet,
                                           int32_t *aSetSize) override;
 };
@@ -86,7 +86,7 @@ public:
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -124,7 +124,7 @@ public:
   virtual void Value(nsString& aValue) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 
   // ActionAccessible

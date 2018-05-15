@@ -33,7 +33,7 @@ XULAlertAccessible::NativeRole() const
 }
 
 uint64_t
-XULAlertAccessible::NativeState()
+XULAlertAccessible::NativeState() const
 {
   return Accessible::NativeState() | states::ALERT;
 }

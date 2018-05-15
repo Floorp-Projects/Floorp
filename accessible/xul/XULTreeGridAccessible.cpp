@@ -688,7 +688,7 @@ XULTreeGridCellAccessible::NativeRole() const
 }
 
 uint64_t
-XULTreeGridCellAccessible::NativeState()
+XULTreeGridCellAccessible::NativeState() const
 {
   if (!mTreeView)
     return states::DEFUNCT;

@@ -42,7 +42,7 @@ public:
   virtual void Shutdown() override;
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
 
@@ -149,7 +149,7 @@ public:
   virtual nsRect BoundsInAppUnits() const override;
   virtual nsIntRect BoundsInCSSPixels() const override;
   virtual GroupPos GroupPosition() override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t IndexInParent() const override;
   virtual Relation RelationByType(RelationType aType) const override;

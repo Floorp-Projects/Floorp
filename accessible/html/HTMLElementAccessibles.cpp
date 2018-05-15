@@ -40,7 +40,7 @@ HTMLBRAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLBRAccessible::NativeState()
+HTMLBRAccessible::NativeState() const
 {
   return states::READONLY;
 }
@@ -167,7 +167,7 @@ HTMLSummaryAccessible::DoAction(uint8_t aIndex) const
 }
 
 uint64_t
-HTMLSummaryAccessible::NativeState()
+HTMLSummaryAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 

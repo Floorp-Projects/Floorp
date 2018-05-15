@@ -293,7 +293,7 @@ public:
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
-  virtual uint64_t NativeState();
+  virtual uint64_t NativeState() const;
 
   /**
    * Return native interactice state (unavailable, focusable or selectable).

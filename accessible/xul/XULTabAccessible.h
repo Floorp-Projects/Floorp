@@ -26,7 +26,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 

@@ -32,7 +32,7 @@ ProgressMeterAccessible<Max>::NativeRole() const
 
 template<int Max>
 uint64_t
-ProgressMeterAccessible<Max>::NativeState()
+ProgressMeterAccessible<Max>::NativeState() const
 {
   uint64_t state = LeafAccessible::NativeState();
 

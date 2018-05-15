@@ -43,7 +43,7 @@ XULMenuitemAccessible::
 }
 
 uint64_t
-XULMenuitemAccessible::NativeState()
+XULMenuitemAccessible::NativeState() const
 {
   uint64_t state = Accessible::NativeState();
 
@@ -354,7 +354,7 @@ XULMenuSeparatorAccessible::
 }
 
 uint64_t
-XULMenuSeparatorAccessible::NativeState()
+XULMenuSeparatorAccessible::NativeState() const
 {
   // Isn't focusable, but can be offscreen/invisible -- only copy those states
   return XULMenuitemAccessible::NativeState() &
@@ -412,7 +412,7 @@ XULMenupopupAccessible::
 }
 
 uint64_t
-XULMenupopupAccessible::NativeState()
+XULMenupopupAccessible::NativeState() const
 {
   uint64_t state = Accessible::NativeState();
 

@@ -29,7 +29,7 @@ HTMLListAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLListAccessible::NativeState()
+HTMLListAccessible::NativeState() const
 {
   return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
@@ -69,7 +69,7 @@ HTMLLIAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLLIAccessible::NativeState()
+HTMLLIAccessible::NativeState() const
 {
   return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
@@ -167,7 +167,7 @@ HTMLListBulletAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLListBulletAccessible::NativeState()
+HTMLListBulletAccessible::NativeState() const
 {
   return LeafAccessible::NativeState() | states::READONLY;
 }

@@ -46,7 +46,7 @@ public:
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual Relation RelationByType(RelationType aType) const override;
 
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,

@@ -123,7 +123,7 @@ RootAccessible::GetChromeFlags() const
 #endif
 
 uint64_t
-RootAccessible::NativeState()
+RootAccessible::NativeState() const
 {
   uint64_t state = DocAccessibleWrap::NativeState();
   if (state & states::DEFUNCT)

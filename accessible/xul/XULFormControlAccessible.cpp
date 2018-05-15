@@ -88,7 +88,7 @@ XULButtonAccessible::NativeRole() const
 }
 
 uint64_t
-XULButtonAccessible::NativeState()
+XULButtonAccessible::NativeState() const
 {
   // Possible states: focused, focusable, unavailable(disabled).
 
@@ -270,7 +270,7 @@ XULDropmarkerAccessible::NativeRole() const
 }
 
 uint64_t
-XULDropmarkerAccessible::NativeState()
+XULDropmarkerAccessible::NativeState() const
 {
   return DropmarkerOpen(false) ? states::PRESSED : 0;
 }
@@ -319,7 +319,7 @@ XULCheckboxAccessible::DoAction(uint8_t aIndex) const
 }
 
 uint64_t
-XULCheckboxAccessible::NativeState()
+XULCheckboxAccessible::NativeState() const
 {
   // Possible states: focused, focusable, unavailable(disabled), checked
   // Get focus and disable status from base class
@@ -408,7 +408,7 @@ XULRadioButtonAccessible::
 }
 
 uint64_t
-XULRadioButtonAccessible::NativeState()
+XULRadioButtonAccessible::NativeState() const
 {
   uint64_t state = LeafAccessible::NativeState();
   state |= states::CHECKABLE;
@@ -610,7 +610,7 @@ XULToolbarSeparatorAccessible::NativeRole() const
 }
 
 uint64_t
-XULToolbarSeparatorAccessible::NativeState()
+XULToolbarSeparatorAccessible::NativeState() const
 {
   return 0;
 }

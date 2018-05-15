@@ -407,7 +407,7 @@ Accessible::VisibilityState() const
 }
 
 uint64_t
-Accessible::NativeState()
+Accessible::NativeState() const
 {
   uint64_t state = 0;
 
