@@ -5,8 +5,130 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = ["TabsPopup"];
+const NSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-class TabsPopup {
+class TabsListBase {
+  constructor({className, filterFn, insertBefore, onPopulate, containerNode}) {
+    this.className = className;
+    this.filterFn = filterFn;
+    this.insertBefore = insertBefore;
+    this.onPopulate = onPopulate;
+    this.containerNode = containerNode;
+
+    this.doc = containerNode.ownerDocument;
+    this.gBrowser = this.doc.defaultView.gBrowser;
+    this.tabToElement = new Map();
+    this.listenersRegistered = false;
+  }
+
+  get rows() {
+    return this.tabToElement.values();
+  }
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "TabAttrModified":
+        this._tabAttrModified(event.target);
+        break;
+      case "TabClose":
+        this._tabClose(event.target);
+        break;
+      case "command":
+        this._selectTab(event.target.tab);
+        break;
+    }
+  }
+
+  _selectTab(tab) {
+    if (this.gBrowser.selectedTab != tab) {
+      this.gBrowser.selectedTab = tab;
+    } else {
+      this.gBrowser.tabContainer._handleTabSelect();
+    }
+  }
+
+  /*
+   * Populate the popup with menuitems and setup the listeners.
+   */
+  _populate(event) {
+    let fragment = this.doc.createDocumentFragment();
+
+    for (let tab of this.gBrowser.tabs) {
+      if (this.filterFn(tab)) {
+        let row = this._createRow(tab);
+        row.tab = tab;
+        row.addEventListener("command", this);
+        this.tabToElement.set(tab, row);
+        if (this.className) {
+          row.classList.add(this.className);
+        }
+
+        fragment.appendChild(row);
+      }
+    }
+
+    if (this.insertBefore) {
+      this.insertBefore.parentNode.insertBefore(fragment, this.insertBefore);
+    } else {
+      this.containerNode.appendChild(fragment);
+    }
+
+    this._setupListeners();
+
+    if (typeof this.onPopulate == "function") {
+      this.onPopulate(event);
+    }
+  }
+
+  /*
+   * Remove the menuitems from the DOM, cleanup internal state and listeners.
+   */
+  _cleanup() {
+    for (let item of this.rows) {
+      item.remove();
+    }
+    this.tabToElement = new Map();
+    this._cleanupListeners();
+  }
+
+  _setupListeners() {
+    this.listenersRegistered = true;
+    this.gBrowser.tabContainer.addEventListener("TabAttrModified", this);
+    this.gBrowser.tabContainer.addEventListener("TabClose", this);
+  }
+
+  _cleanupListeners() {
+    this.gBrowser.tabContainer.removeEventListener("TabAttrModified", this);
+    this.gBrowser.tabContainer.removeEventListener("TabClose", this);
+    this.listenersRegistered = false;
+  }
+
+  _tabAttrModified(tab) {
+    let item = this.tabToElement.get(tab);
+    if (item) {
+      if (!this.filterFn(tab)) {
+        // If the tab is no longer in this set of tabs, hide the item.
+        this._removeItem(item, tab);
+      } else {
+        this._setRowAttributes(item, tab);
+      }
+    }
+  }
+
+  _tabClose(tab) {
+    let item = this.tabToElement.get(tab);
+    if (item) {
+      this._removeItem(item, tab);
+    }
+  }
+
+  _removeItem(item, tab) {
+    this.tabToElement.delete(tab);
+    item.remove();
+  }
+}
+
+class TabsPopup extends TabsListBase {
   /*
    * Handle menuitem rows for tab objects in a menupopup.
    *
@@ -26,141 +148,46 @@ class TabsPopup {
    *                 listeners on.
    */
   constructor({className, filterFn, insertBefore, onPopulate, popup}) {
-    this.className = className;
-    this.filterFn = filterFn;
-    this.insertBefore = insertBefore;
-    this.onPopulate = onPopulate;
-    this.popup = popup;
-
-    this.doc = popup.ownerDocument;
-    this.gBrowser = this.doc.defaultView.gBrowser;
-    this.tabToMenuitem = new Map();
-    this.popup.addEventListener("popupshowing", this);
+    super({className, filterFn, insertBefore, onPopulate, containerNode: popup});
+    this.containerNode.addEventListener("popupshowing", this);
   }
 
   handleEvent(event) {
     switch (event.type) {
-      case "TabAttrModified":
-        this._tabAttrModified(event.target);
-        break;
-      case "TabClose":
-        this._tabClose(event.target);
-        break;
-      case "command":
-        this._handleCommand(event.target.tab);
-        break;
       case "popuphidden":
-        if (event.target == this.popup) {
+        if (event.target == this.containerNode) {
           this._cleanup();
         }
         break;
       case "popupshowing":
-        if (event.target == this.popup) {
-          this._populate();
-          if (typeof this.onPopulate == "function") {
-            this.onPopulate(event);
-          }
+        if (event.target == this.containerNode) {
+          this._populate(event);
         }
+        break;
+      default:
+        super.handleEvent(event);
         break;
     }
   }
 
-  /*
-   * Populate the popup with menuitems and setup the listeners.
-   */
-  _populate() {
-    let fragment = this.doc.createDocumentFragment();
-
-    for (let tab of this.gBrowser.tabs) {
-      if (this.filterFn(tab)) {
-        fragment.appendChild(this._createMenuitem(tab));
-      }
-    }
-
-    if (this.insertBefore) {
-      this.popup.insertBefore(fragment, this.insertBefore);
-    } else {
-      this.popup.appendChild(fragment);
-    }
-
-    this._setupListeners();
-  }
-
-  /*
-   * Remove the menuitems from the DOM, cleanup internal state and listeners.
-   */
-  _cleanup() {
-    for (let item of this.tabToMenuitem.values()) {
-      item.remove();
-    }
-    this.tabToMenuitem = new Map();
-    this._cleanupListeners();
-  }
-
   _setupListeners() {
-    this.gBrowser.tabContainer.addEventListener("TabAttrModified", this);
-    this.gBrowser.tabContainer.addEventListener("TabClose", this);
-    this.popup.addEventListener("popuphidden", this);
+    super._setupListeners();
+    this.containerNode.addEventListener("popuphidden", this);
   }
 
   _cleanupListeners() {
-    this.gBrowser.tabContainer.removeEventListener("TabAttrModified", this);
-    this.gBrowser.tabContainer.removeEventListener("TabClose", this);
-    this.popup.removeEventListener("popuphidden", this);
+    super._cleanupListeners();
+    this.containerNode.removeEventListener("popuphidden", this);
   }
 
-  _tabAttrModified(tab) {
-    let item = this.tabToMenuitem.get(tab);
-    if (item) {
-      if (!this.filterFn(tab)) {
-        // If the tab is no longer in this set of tabs, hide the item.
-        this._removeItem(item, tab);
-      } else {
-        this._setMenuitemAttributes(item, tab);
-      }
-    }
-  }
-
-  _tabClose(tab) {
-    let item = this.tabToMenuitem.get(tab);
-    if (item) {
-      this._removeItem(item, tab);
-    }
-  }
-
-  _removeItem(item, tab) {
-    this.tabToMenuitem.delete(tab);
-    item.remove();
-  }
-
-  _handleCommand(tab) {
-    if (this.gBrowser.selectedTab != tab) {
-      this.gBrowser.selectedTab = tab;
-    } else {
-      this.gBrowser.tabContainer._handleTabSelect();
-    }
-  }
-
-  _createMenuitem(tab) {
-    let item = this.doc.createElementNS(
-      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-      "menuitem");
-    item.tab = tab;
-
+  _createRow(tab) {
+    let item = this.doc.createElementNS(NSXUL, "menuitem");
     item.setAttribute("class", "menuitem-iconic menuitem-with-favicon");
-    if (this.className) {
-      item.classList.add(this.className);
-    }
-    this._setMenuitemAttributes(item, tab);
-
-    this.tabToMenuitem.set(tab, item);
-
-    item.addEventListener("command", this);
-
+    this._setRowAttributes(item, tab);
     return item;
   }
 
-  _setMenuitemAttributes(item, tab) {
+  _setRowAttributes(item, tab) {
     item.setAttribute("label", tab.label);
     item.setAttribute("crop", "end");
 
