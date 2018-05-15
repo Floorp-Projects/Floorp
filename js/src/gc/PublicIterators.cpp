@@ -86,17 +86,18 @@ js::IterateScripts(JSContext* cx, JSCompartment* compartment,
     MOZ_ASSERT(!cx->suppressGC);
     AutoEmptyNursery empty(cx);
     AutoPrepareForTracing prep(cx);
+    JS::AutoSuppressGCAnalysis nogc;
 
     if (compartment) {
         Zone* zone = compartment->zone();
         for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next()) {
             if (script->compartment() == compartment)
-                scriptCallback(cx->runtime(), data, script);
+                scriptCallback(cx->runtime(), data, script, nogc);
         }
     } else {
         for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
             for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next())
-                scriptCallback(cx->runtime(), data, script);
+                scriptCallback(cx->runtime(), data, script, nogc);
         }
     }
 }

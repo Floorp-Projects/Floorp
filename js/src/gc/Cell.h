@@ -255,7 +255,7 @@ Cell::getTraceKind() const
 {
     if (isTenured())
         return asTenured().getTraceKind();
-    if (js::shadow::String::nurseryCellIsString(this))
+    if (JS::shadow::String::nurseryCellIsString(this))
         return JS::TraceKind::String;
     return JS::TraceKind::Object;
 }

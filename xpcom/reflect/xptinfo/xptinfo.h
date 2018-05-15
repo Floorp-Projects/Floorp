@@ -17,6 +17,7 @@
 #include "nsID.h"
 #include "mozilla/Assertions.h"
 #include "js/Value.h"
+#include "nsString.h"
 
 // Forward Declarations
 namespace mozilla {
@@ -106,23 +107,11 @@ struct nsXPTInterfaceInfo
   nsresult GetConstant(uint16_t aIndex,
                        JS::MutableHandleValue constant,
                        char** aName) const;
-  nsresult GetTypeForParam(uint16_t aMethodIndex, const nsXPTParamInfo* aParam,
-                           uint16_t aDimension, nsXPTType* aRetval) const;
-  nsresult GetSizeIsArgNumberForParam(uint16_t aMethodIndex,
-                                      const nsXPTParamInfo* aParam,
-                                      uint16_t aDimension,
-                                      uint8_t* aRetval) const;
-  nsresult GetInterfaceIsArgNumberForParam(uint16_t aMethodIndex,
-                                           const nsXPTParamInfo* aParam,
-                                           uint8_t* aRetval) const;
   nsresult IsIID(const nsIID* aIID, bool* aIs) const;
   nsresult GetNameShared(const char** aName) const;
   nsresult GetIIDShared(const nsIID** aIID) const;
   nsresult IsFunction(bool* aRetval) const;
   nsresult HasAncestor(const nsIID* aIID, bool* aRetval) const;
-  nsresult GetIIDForParamNoAlloc(uint16_t aMethodIndex,
-                                 const nsXPTParamInfo* aParam,
-                                 nsIID* aIID) const;
   nsresult IsMainProcessScriptableOnly(bool* aRetval) const;
 
   // XXX: We can probably get away with removing this method. A shim interface
@@ -190,7 +179,8 @@ enum nsXPTTypeTag : uint8_t
   TD_CSTRING           = 24,
   TD_ASTRING           = 25,
   TD_JSVAL             = 26,
-  TD_DOMOBJECT         = 27
+  TD_DOMOBJECT         = 27,
+  TD_PROMISE           = 28
 };
 
 
@@ -203,7 +193,9 @@ enum nsXPTTypeTag : uint8_t
  */
 struct nsXPTType
 {
-  nsXPTTypeTag Tag() const { return static_cast<nsXPTTypeTag>(mTag); }
+  // NOTE: This is uint8_t instead of nsXPTTypeTag so that it can be compared
+  // with the nsXPTType::* re-exports.
+  uint8_t Tag() const { return mTag; }
 
   uint8_t ArgNum() const {
     MOZ_ASSERT(Tag() == TD_INTERFACE_IS_TYPE ||
@@ -244,15 +236,6 @@ public:
   // place in xptcall. :-(
   bool IsArithmetic() const { return Tag() <= TD_WCHAR; }
 
-  // We used to abuse 'pointer' flag bit in typelib format quite extensively.
-  // We've gotten rid of most of the cases, but there's still a fair amount
-  // of refactoring to be done in XPCWrappedJSClass before we can safely stop
-  // asking about this. In the mean time, we've got a temporary version of
-  // IsPointer() that should do the right thing.
-  bool deprecated_IsPointer() const {
-    return !IsArithmetic() && Tag() != TD_JSVAL;
-  }
-
   bool IsInterfacePointer() const {
     return Tag() == TD_INTERFACE_TYPE || Tag() == TD_INTERFACE_IS_TYPE;
   }
@@ -264,9 +247,53 @@ public:
            Tag() == TD_PSTRING_SIZE_IS || Tag() == TD_PWSTRING_SIZE_IS;
   }
 
-  bool IsStringClass() const {
-    return Tag() == TD_DOMSTRING || Tag() == TD_ASTRING ||
-           Tag() == TD_CSTRING || Tag() == TD_UTF8STRING;
+  // Unwrap a nested type to its innermost value (e.g. through arrays).
+  const nsXPTType& InnermostType() const {
+    if (Tag() == TD_ARRAY) {
+      return ArrayElementType().InnermostType();
+    }
+    return *this;
+  }
+
+  // Helper methods for working with the type's native representation.
+  inline size_t Stride() const;
+  inline bool HasPointerRepr() const;
+
+  // Offset the given base pointer to reference the element at the given index.
+  void* ElementPtr(const void* aBase, uint32_t aIndex) const {
+    return (char*)aBase + (aIndex * Stride());
+  }
+
+  // Indexes into the extra types array of a small set of known types.
+  enum class Idx : uint8_t
+  {
+    INT8 = 0,
+    UINT8,
+    INT16,
+    UINT16,
+    INT32,
+    UINT32,
+    INT64,
+    UINT64,
+    FLOAT,
+    DOUBLE,
+    BOOL,
+    CHAR,
+    WCHAR,
+    PNSIID,
+    PSTRING,
+    PWSTRING,
+    INTERFACE_IS_TYPE
+  };
+
+  // Helper methods for fabricating nsXPTType values used by xpconnect.
+  static nsXPTType MkArrayType(Idx aInner) {
+    MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
+    return { TD_ARRAY, false, false, false, 0, (uint8_t)aInner };
+  }
+  static const nsXPTType& Get(Idx aInner) {
+    MOZ_ASSERT(aInner <= Idx::INTERFACE_IS_TYPE);
+    return xpt::detail::GetType((uint8_t)aInner);
   }
 
   ///////////////////////////////////////
@@ -306,7 +333,8 @@ public:
     T_CSTRING           = TD_CSTRING          ,
     T_ASTRING           = TD_ASTRING          ,
     T_JSVAL             = TD_JSVAL            ,
-    T_DOMOBJECT         = TD_DOMOBJECT
+    T_DOMOBJECT         = TD_DOMOBJECT        ,
+    T_PROMISE           = TD_PROMISE
   };
 
   ////////////////////////////////////////////////////////////////
@@ -339,7 +367,7 @@ static_assert(sizeof(nsXPTType) == 3, "wrong size");
 struct nsXPTParamInfo
 {
   bool IsIn() const { return mType.mInParam; }
-  bool IsOut() const { return mType.mOutParam && !IsDipper(); }
+  bool IsOut() const { return mType.mOutParam; }
   bool IsOptional() const { return mType.mOptionalParam; }
   bool IsShared() const { return false; } // XXX remove (backcompat)
 
@@ -347,30 +375,17 @@ struct nsXPTParamInfo
   const nsXPTType& Type() const { return mType; }
   const nsXPTType& GetType() const { return Type(); } // XXX remove (backcompat)
 
-  // Dipper types are one of the more inscrutable aspects of xpidl. In a
-  // nutshell, dippers are empty container objects, created and passed by the
-  // caller, and filled by the callee. The callee receives a fully- formed
-  // object, and thus does not have to construct anything. But the object is
-  // functionally empty, and the callee is responsible for putting something
-  // useful inside of it.
-  //
-  // Dipper types are treated as `in` parameters when declared as an `out`
-  // parameter. For this reason, dipper types are sometimes referred to as 'out
-  // parameters masquerading as in'. The burden of maintaining this illusion
-  // falls mostly on XPConnect, which creates the empty containers, and harvest
-  // the results after the call.
-  //
-  // Currently, the only dipper types are the string classes.
-  //
-  // XXX: Dipper types may be able to go away? (bug 677784)
-  bool IsDipper() const { return mType.mOutParam && IsStringClass(); }
-
-  // Whether this parameter is passed indirectly on the stack. This mainly
-  // applies to out/inout params, but we use it unconditionally for certain
-  // types.
-  bool IsIndirect() const { return IsOut() || mType.Tag() == TD_JSVAL; }
-
-  bool IsStringClass() const { return mType.IsStringClass(); }
+  // Whether this parameter is passed indirectly on the stack. All out/inout
+  // params are passed indirectly, although some types are passed indirectly
+  // unconditionally.
+  bool IsIndirect() const {
+    return IsOut() ||
+      mType.Tag() == TD_JSVAL ||
+      mType.Tag() == TD_ASTRING ||
+      mType.Tag() == TD_DOMSTRING ||
+      mType.Tag() == TD_CSTRING ||
+      mType.Tag() == TD_UTF8STRING;
+  }
 
   ////////////////////////////////////////////////////////////////
   // Ensure these fields are in the same order as xptcodegen.py //
@@ -561,5 +576,72 @@ GetString(uint32_t aIndex)
 
 } // namespace detail
 } // namespace xpt
+
+inline bool
+nsXPTType::HasPointerRepr() const
+{
+  // This method should return `true` if the given type would be represented as
+  // a pointer when not passed indirectly.
+  switch (Tag()) {
+    case TD_VOID:
+    case TD_PNSIID:
+    case TD_PSTRING:
+    case TD_PWSTRING:
+    case TD_INTERFACE_TYPE:
+    case TD_INTERFACE_IS_TYPE:
+    case TD_ARRAY:
+    case TD_PSTRING_SIZE_IS:
+    case TD_PWSTRING_SIZE_IS:
+    case TD_DOMOBJECT:
+    case TD_PROMISE:
+        return true;
+    default:
+        return false;
+  }
+}
+
+inline size_t
+nsXPTType::Stride() const
+{
+  // Compute the stride to use when walking an array of the given type.
+  //
+  // NOTE: We cast to nsXPTTypeTag here so we get a warning if a type is missed
+  // in this switch statement. It's important that this method returns a value
+  // for every possible type.
+
+  switch (static_cast<nsXPTTypeTag>(Tag())) {
+    case TD_INT8:              return sizeof(int8_t);
+    case TD_INT16:             return sizeof(int16_t);
+    case TD_INT32:             return sizeof(int32_t);
+    case TD_INT64:             return sizeof(int64_t);
+    case TD_UINT8:             return sizeof(uint8_t);
+    case TD_UINT16:            return sizeof(uint16_t);
+    case TD_UINT32:            return sizeof(uint32_t);
+    case TD_UINT64:            return sizeof(uint64_t);
+    case TD_FLOAT:             return sizeof(float);
+    case TD_DOUBLE:            return sizeof(double);
+    case TD_BOOL:              return sizeof(bool);
+    case TD_CHAR:              return sizeof(char);
+    case TD_WCHAR:             return sizeof(char16_t);
+    case TD_VOID:              return sizeof(void*);
+    case TD_PNSIID:            return sizeof(nsIID*);
+    case TD_DOMSTRING:         return sizeof(nsString);
+    case TD_PSTRING:           return sizeof(char*);
+    case TD_PWSTRING:          return sizeof(char16_t*);
+    case TD_INTERFACE_TYPE:    return sizeof(nsISupports*);
+    case TD_INTERFACE_IS_TYPE: return sizeof(nsISupports*);
+    case TD_ARRAY:             return sizeof(void*);
+    case TD_PSTRING_SIZE_IS:   return sizeof(char*);
+    case TD_PWSTRING_SIZE_IS:  return sizeof(char16_t*);
+    case TD_UTF8STRING:        return sizeof(nsCString);
+    case TD_CSTRING:           return sizeof(nsCString);
+    case TD_ASTRING:           return sizeof(nsString);
+    case TD_JSVAL:             return sizeof(JS::Value);
+    case TD_DOMOBJECT:         return sizeof(void*);
+    case TD_PROMISE:           return sizeof(void*);
+  }
+
+  MOZ_CRASH("Unknown type");
+}
 
 #endif /* xptinfo_h */

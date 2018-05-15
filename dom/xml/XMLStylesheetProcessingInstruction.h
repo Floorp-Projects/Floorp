@@ -17,8 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class XMLStylesheetProcessingInstruction final
-: public ProcessingInstruction
-, public nsStyleLinkElement
+  : public ProcessingInstruction
 {
 public:
   XMLStylesheetProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -36,8 +35,6 @@ public:
                                        nsGkAtoms::xml_stylesheet), aData)
   {
   }
-
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
