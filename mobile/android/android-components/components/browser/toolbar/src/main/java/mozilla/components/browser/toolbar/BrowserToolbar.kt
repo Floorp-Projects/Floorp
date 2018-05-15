@@ -9,6 +9,7 @@ import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
@@ -33,6 +34,7 @@ import mozilla.components.support.ktx.android.view.forEach
  *  +----------------+ +----------------+
  *
  */
+@Suppress("TooManyFunctions")
 class BrowserToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -118,6 +120,14 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     fun displayMode() {
         updateState(State.DISPLAY)
+    }
+
+    /**
+     * Sets a BrowserMenuBuilder that will be used to create a menu when the menu button is clicked.
+     * The menu button will only be visible if a builder has been set.
+     */
+    fun setMenuBuilder(menuBuilder: BrowserMenuBuilder) {
+        displayToolbar.menuBuilder = menuBuilder
     }
 
     internal fun onUrlEntered(url: String) {

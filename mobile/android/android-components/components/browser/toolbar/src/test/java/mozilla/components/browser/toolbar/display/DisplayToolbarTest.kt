@@ -5,16 +5,26 @@
 package mozilla.components.browser.toolbar.display
 
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import mozilla.components.browser.menu.BrowserMenu
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.view.forEach
+import mozilla.components.support.ktx.android.view.isGone
+import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.progress.AnimatedProgressBar
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -84,6 +94,60 @@ class DisplayToolbarTest {
         assertEquals(3, progressView.measuredHeight)
     }
 
+    @Test
+    fun `menu view is gone by default`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val menuView = extractMenuView(displayToolbar)
+        assertNotNull(menuView)
+        assertTrue(menuView.visibility == View.GONE)
+    }
+
+    @Test
+    fun `menu view becomes visible once a menu builder is set`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val menuView = extractMenuView(displayToolbar)
+        assertNotNull(menuView)
+
+        assertTrue(menuView.visibility == View.GONE)
+
+        displayToolbar.menuBuilder = BrowserMenuBuilder()
+
+        assertTrue(menuView.visibility == View.VISIBLE)
+    }
+
+    @Test
+    fun `no menu builder is set by default`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        assertNull(displayToolbar.menuBuilder)
+    }
+
+    @Test
+    fun `menu builder will be used to create and show menu when button is clicked`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        val menuView = extractMenuView(displayToolbar)
+
+        val menuBuilder = mock(BrowserMenuBuilder::class.java)
+        val menu = mock(BrowserMenu::class.java)
+        doReturn(menu).`when`(menuBuilder).build(RuntimeEnvironment.application)
+
+        displayToolbar.menuBuilder = menuBuilder
+
+        verify(menuBuilder, never()).build(RuntimeEnvironment.application)
+        verify(menu, never()).show(menuView)
+
+        menuView.performClick()
+
+        verify(menuBuilder).build(RuntimeEnvironment.application)
+        verify(menu).show(menuView)
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView {
             var textView: TextView? = null
@@ -122,6 +186,19 @@ class DisplayToolbarTest {
             }
 
             return iconView ?: throw AssertionError("Could not find URL view")
+        }
+
+        private fun extractMenuView(displayToolbar: DisplayToolbar): ImageButton {
+            var menuButton: ImageButton? = null
+
+            displayToolbar.forEach {
+                if (it is ImageButton) {
+                    menuButton = it
+                    return@forEach
+                }
+            }
+
+            return menuButton ?: throw AssertionError("Could not find menu view")
         }
     }
 }

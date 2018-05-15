@@ -5,10 +5,13 @@
 package mozilla.components.browser.toolbar
 
 import android.view.View
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -214,5 +217,18 @@ class BrowserToolbarTest {
 
         verify(displayToolbar).layout(100, 100, 1100, 300)
         verify(ediToolbar).layout(100, 100, 1100, 300)
+    }
+
+    @Test
+    fun `menu builder will be forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        assertNull(toolbar.displayToolbar.menuBuilder)
+
+        val menuBuilder = BrowserMenuBuilder()
+        toolbar.setMenuBuilder(menuBuilder)
+
+        assertNotNull(toolbar.displayToolbar.menuBuilder)
+        assertEquals(menuBuilder, toolbar.displayToolbar.menuBuilder)
     }
 }

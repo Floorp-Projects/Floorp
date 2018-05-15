@@ -9,11 +9,15 @@ import android.content.Context
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.view.dp
+import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.progress.AnimatedProgressBar
+import android.util.TypedValue
+import mozilla.components.browser.menu.BrowserMenuBuilder
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -35,6 +39,15 @@ internal class DisplayToolbar(
     context: Context,
     val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
+    internal var menuBuilder: BrowserMenuBuilder? = null
+        set(value) {
+            field = value
+            menuView.visibility = if (value == null)
+                View.GONE
+            else
+                View.VISIBLE
+        }
+
     private val iconView = ImageView(context).apply {
         val padding = dp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
@@ -55,11 +68,32 @@ internal class DisplayToolbar(
         }
     }
 
+    private val menuView = ImageButton(context).apply {
+        val padding = dp(MENU_PADDING_DP)
+        setPadding(padding, padding, padding, padding)
+
+        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
+
+        val outValue = TypedValue()
+        context.theme.resolveAttribute(
+                android.R.attr.selectableItemBackgroundBorderless,
+                outValue,
+                true)
+
+        setBackgroundResource(outValue.resourceId)
+        visibility = View.GONE
+
+        setOnClickListener {
+            menuBuilder?.build(context)?.show(this)
+        }
+    }
+
     private val progressView = AnimatedProgressBar(context)
 
     init {
         addView(iconView)
         addView(urlView)
+        addView(menuView)
         addView(progressView)
     }
 
@@ -87,12 +121,14 @@ internal class DisplayToolbar(
 
         setMeasuredDimension(width, height)
 
-        // The icon fills the whole height and has a square shape
-        val iconSquareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        iconView.measure(iconSquareSpec, iconSquareSpec)
+        // The icon and menu fill the whole height and have a square shape
+        val squareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        iconView.measure(squareSpec, squareSpec)
+        menuView.measure(squareSpec, squareSpec)
 
-        // The url uses whatever space is left
-        val urlWidthSpec = MeasureSpec.makeMeasureSpec(width - height, MeasureSpec.EXACTLY)
+        // The url uses whatever space is left. Substract the icon and (optionally) the menu
+        val urlWidth = width - height - if (menuView.isVisible()) height else 0
+        val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(dp(PROGRESS_BAR_HEIGHT_DP), MeasureSpec.EXACTLY)
@@ -103,13 +139,17 @@ internal class DisplayToolbar(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         iconView.layout(left, top, left + iconView.measuredWidth, bottom)
 
-        urlView.layout(left + iconView.measuredWidth, top, right, bottom)
+        val urlRight = right - if (menuView.isVisible()) height else 0
+        urlView.layout(left + iconView.measuredWidth, top, urlRight, bottom)
 
         progressView.layout(left, bottom - progressView.measuredHeight, right, bottom)
+
+        menuView.layout(right - menuView.measuredWidth, top, right, bottom)
     }
 
     companion object {
         private const val ICON_PADDING_DP = 16
+        private const val MENU_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
         private const val URL_FADING_EDGE_SIZE_DP = 24
         private const val PROGRESS_BAR_HEIGHT_DP = 3
