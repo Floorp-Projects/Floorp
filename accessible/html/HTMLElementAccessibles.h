@@ -61,7 +61,7 @@ public:
                                        HyperTextAccessibleWrap)
 
   // Accessible
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
@@ -87,7 +87,7 @@ public:
                                        HyperTextAccessibleWrap)
 
   // Accessible
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
 protected:
   virtual ~HTMLOutputAccessible() {}

@@ -102,7 +102,7 @@ XULTabAccessible::NativeInteractiveState() const
 }
 
 Relation
-XULTabAccessible::RelationByType(RelationType aType)
+XULTabAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABEL_FOR)
@@ -189,7 +189,7 @@ XULTabpanelAccessible::NativeRole() const
 }
 
 Relation
-XULTabpanelAccessible::RelationByType(RelationType aType)
+XULTabpanelAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType != RelationType::LABELLED_BY)

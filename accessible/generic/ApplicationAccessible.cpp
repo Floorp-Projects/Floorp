@@ -110,7 +110,7 @@ ApplicationAccessible::FocusedChild()
 }
 
 Relation
-ApplicationAccessible::RelationByType(RelationType aRelationType)
+ApplicationAccessible::RelationByType(RelationType aRelationType) const
 {
   return Relation();
 }

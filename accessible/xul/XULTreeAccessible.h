@@ -48,7 +48,7 @@ public:
 
   virtual Accessible* GetChildAt(uint32_t aIndex) const override;
   virtual uint32_t ChildCount() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   // SelectAccessible
   virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
@@ -152,7 +152,7 @@ public:
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t IndexInParent() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
   virtual Accessible* FocusedChild() override;
   virtual void SetSelected(bool aSelect) override;
   virtual void TakeFocus() override;

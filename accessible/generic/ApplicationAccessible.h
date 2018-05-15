@@ -47,7 +47,7 @@ public:
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
   virtual uint64_t NativeState() override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
