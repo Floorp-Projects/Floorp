@@ -62,9 +62,9 @@ GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSContext* cx,
 
     // We want to push a CPP frame so the profiler can correctly order JS and native stacks.
     // Only the sp value is important.
-    profiler_->pseudoStack_->pushCppFrame(
+    profiler_->pseudoStack_->pushLabelFrame(
         /* label = */ "", /* dynamicString = */ nullptr, /* sp = */ this, /* line = */ 0,
-        ProfileEntry::Kind::CPP_MARKER_FOR_JS, ProfileEntry::Category::OTHER);
+        ProfileEntry::Kind::LABEL_MARKER_FOR_JS, ProfileEntry::Category::OTHER);
 
     profiler_->pseudoStack_->pushJsFrame(
         "js::RunScript", /* dynamicString = */ nullptr, script, script->code());
@@ -95,12 +95,12 @@ AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
 #ifdef DEBUG
     spBefore_ = profiler_->stackPointer();
 #endif
-    profiler_->pseudoStack_->pushCppFrame(label,
-                                          /* dynamicString = */ nullptr,
-                                          /* sp = */ this,
-                                          /* line = */ 0,
-                                          ProfileEntry::Kind::CPP_NORMAL,
-                                          category);
+    profiler_->pseudoStack_->pushLabelFrame(label,
+                                            /* dynamicString = */ nullptr,
+                                            /* sp = */ this,
+                                            /* line = */ 0,
+                                            ProfileEntry::Kind::LABEL,
+                                            category);
 }
 
 MOZ_ALWAYS_INLINE
