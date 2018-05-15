@@ -786,6 +786,9 @@ class TupBackend(CommonBackend):
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
 
+        all_idl_directories = set()
+        all_idl_directories.update(*map(lambda x: x[1], manager.modules.itervalues()))
+
         all_xpts = []
         for module, (idls, directories) in sorted(manager.modules.iteritems()):
             cmd = [
@@ -800,9 +803,10 @@ class TupBackend(CommonBackend):
 
             for d in directories:
                 cmd.extend(['--input-dir', d])
+            for d in all_idl_directories:
+                cmd.extend(['-I', d])
 
             cmd.extend([
-                '-I', '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
                 '.',

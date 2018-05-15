@@ -116,7 +116,8 @@ def main(argv):
         help='Extra directories where to look for included .idl files.')
 
     args = parser.parse_args(argv)
-    process(args.input_dirs, args.incpath, args.bindings_conf, args.cache_dir,
+    incpath = [os.path.join(topsrcdir, p) for p in args.incpath]
+    process(args.input_dirs, incpath, args.bindings_conf, args.cache_dir,
         args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
         args.idls)
 
