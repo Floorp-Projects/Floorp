@@ -5,7 +5,7 @@ Full Installer Configuration
 Command-line Options
 --------------------
 
-The full installer provides a number of options that can be used either from the GUI or from the command line. The following command line options are accepted.
+The full installer provides a number of options that can be used either from the GUI or from the command line. The following command line options are accepted. The list is valid for Firefox 62 and later. Prior to Firefox 62, only ``/S`` and ``/INI`` are accepted, and ``/StartMenuShortcut`` is not available in INI files, only the plural ``/StartMenuShortcuts`` works (even though only one shortcut is created).
 
 The presence of **any** command-line option implicitly enables silent mode (see the ``/S`` option).
 
