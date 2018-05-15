@@ -469,7 +469,14 @@ protected:
   enum class BRLocation { beforeBlock, blockEnd };
   Element* CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
                                int32_t aOffset = 0);
-  nsresult ExpandSelectionForDeletion();
+
+  /**
+   * ExpandSelectionForDeletion() may expand Selection range if it's not
+   * collapsed and there is only one range.  This may expand to include
+   * invisible <br> element for preventing delete action handler to keep
+   * unexpected nodes.
+   */
+  MOZ_MUST_USE nsresult ExpandSelectionForDeletion();
 
   /**
    * NormalizeSelection() adjust Selection if it's not collapsed and there is

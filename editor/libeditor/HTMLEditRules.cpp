@@ -6111,9 +6111,6 @@ HTMLEditRules::GetInnerContent(
   }
 }
 
-/**
- * Promotes selection to include blocks that have all their children selected.
- */
 nsresult
 HTMLEditRules::ExpandSelectionForDeletion()
 {
@@ -6142,7 +6139,7 @@ HTMLEditRules::ExpandSelectionForDeletion()
   int32_t selEndOffset = firstRange->EndOffset();
 
   // Find current selection common block parent
-  nsCOMPtr<Element> selCommon =
+  RefPtr<Element> selCommon =
     HTMLEditor::GetBlock(*firstRange->GetCommonAncestor());
   if (NS_WARN_IF(!selCommon)) {
     return NS_ERROR_FAILURE;
@@ -6158,7 +6155,7 @@ HTMLEditRules::ExpandSelectionForDeletion()
     return NS_ERROR_FAILURE;
   }
 
-  // Find previous visible thingy before start of selection
+  // Find previous visible things before start of selection
   if (selStartNode != selCommon && selStartNode != root) {
     while (true) {
       WSRunObject wsObj(&HTMLEditorRef(), selStartNode, selStartOffset);
@@ -6180,7 +6177,7 @@ HTMLEditRules::ExpandSelectionForDeletion()
     }
   }
 
-  // Find next visible thingy after end of selection
+  // Find next visible things after end of selection
   if (selEndNode != selCommon && selEndNode != root) {
     for (;;) {
       WSRunObject wsObj(&HTMLEditorRef(), selEndNode, selEndOffset);
@@ -6215,13 +6212,16 @@ HTMLEditRules::ExpandSelectionForDeletion()
   // Now set the selection to the new range
   DebugOnly<nsresult> rv =
     SelectionRef().Collapse(selStartNode, selStartOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
 
-  // Expand selection endpoint only if we didn't pass a br, or if we really
-  // needed to pass that br (i.e., its block is now totally selected)
+  // Expand selection endpoint only if we didn't pass a <br>, or if we really
+  // needed to pass that <br> (i.e., its block is now totally selected).
   bool doEndExpansion = true;
   if (firstBRParent) {
-    // Find block node containing br
+    // Find block node containing <br>.
     nsCOMPtr<Element> brBlock = HTMLEditor::GetBlock(*firstBRParent);
     bool nodeBefore = false, nodeAfter = false;
 
@@ -6238,19 +6238,25 @@ HTMLEditRules::ExpandSelectionForDeletion()
       nsRange::CompareNodeToRange(brBlock, range, &nodeBefore, &nodeAfter);
     }
 
-    // If block isn't contained, forgo grabbing the br in expanded selection
+    // If block isn't contained, forgo grabbing the <br> in expanded selection.
     if (nodeBefore || nodeAfter) {
       doEndExpansion = false;
     }
   }
   if (doEndExpansion) {
     nsresult rv = SelectionRef().Extend(selEndNode, selEndOffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
-    // Only expand to just before br
+    // Only expand to just before <br>.
     nsresult rv = SelectionRef().Extend(firstBRParent, firstBROffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
