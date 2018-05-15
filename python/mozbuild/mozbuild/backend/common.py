@@ -59,7 +59,7 @@ class XPIDLManager(object):
         self.idls = {}
         self.modules = {}
 
-    def register_idl(self, idl, allow_existing=False):
+    def register_idl(self, idl):
         """Registers an IDL file with this instance.
 
         The IDL file will be built, installed, etc.
@@ -75,7 +75,7 @@ class XPIDLManager(object):
             'root': root,
         }
 
-        if not allow_existing and entry['basename'] in self.idls:
+        if entry['basename'] in self.idls:
             raise Exception('IDL already registered: %s' % entry['basename'])
 
         self.idls[entry['basename']] = entry
