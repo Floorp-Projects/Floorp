@@ -45,6 +45,7 @@ TypeMap = {
     'utf8string':         'TD_UTF8STRING',
     'cstring':            'TD_CSTRING',
     'jsval':              'TD_JSVAL',
+    'promise':            'TD_PROMISE',
 }
 
 

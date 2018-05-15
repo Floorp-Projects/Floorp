@@ -316,7 +316,7 @@ class JSString : public js::gc::Cell
                       "Inline char16_t chars must fit in a JSString");
 
         /* Ensure js::shadow::String has the same layout. */
-        using js::shadow::String;
+        using JS::shadow::String;
         static_assert(offsetof(JSString, d.u1.length) == offsetof(String, length),
                       "shadow::String length offset must match JSString");
         static_assert(offsetof(JSString, d.u1.flags) == offsetof(String, flags),

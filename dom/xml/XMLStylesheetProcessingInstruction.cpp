@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XMLStylesheetProcessingInstruction.h"
-#include "mozilla/dom/XMLStylesheetProcessingInstructionBinding.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
@@ -34,12 +33,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 XMLStylesheetProcessingInstruction::~XMLStylesheetProcessingInstruction()
 {
-}
-
-JSObject*
-XMLStylesheetProcessingInstruction::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return XMLStylesheetProcessingInstructionBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // nsIContent

@@ -3603,7 +3603,7 @@ static bool
 EmitMemCopy(FunctionCompiler& f)
 {
     MDefinition *dest, *src, *len;
-    if (!f.iter().readMemCopy(ValType::I32, &dest, &src, &len))
+    if (!f.iter().readMemCopy(&dest, &src, &len))
         return false;
 
     if (f.inDeadCode())
@@ -3642,7 +3642,7 @@ static bool
 EmitMemFill(FunctionCompiler& f)
 {
     MDefinition *start, *val, *len;
-    if (!f.iter().readMemFill(ValType::I32, &start, &val, &len))
+    if (!f.iter().readMemFill(&start, &val, &len))
         return false;
 
     if (f.inDeadCode())

@@ -522,4 +522,20 @@ void ThrowBadResult(nsresult result, XPCCallContext& ccx)
 
 /***************************************************************************/
 
+inline void
+xpc::CleanupValue(const nsXPTType& aType,
+                  void* aValue,
+                  uint32_t aArrayLen)
+{
+    // Check if we can do a cheap early return, and only perform the inner call
+    // if we can't. We never have to clean up null pointer types or arithmetic
+    // types.
+    if (aType.IsArithmetic() || (aType.HasPointerRepr() && !*(void**)aValue)) {
+        return;
+    }
+    xpc::InnerCleanupValue(aType, aValue, aArrayLen);
+}
+
+/***************************************************************************/
+
 #endif /* xpcinlines_h___ */

@@ -304,7 +304,7 @@ GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
 
     return JS_GetPropertyById(ccx, aJSObj, aName, &val) &&
            XPCConvert::JSData2Native(aResult, val, type,
-                                     &NS_GET_IID(nsIVariant), pErr);
+                                     &NS_GET_IID(nsIVariant), 0, pErr);
 }
 
 // static
@@ -492,10 +492,10 @@ GetFunctionName(JSContext* cx, HandleObject obj)
 
     nsCString displayName("anonymous");
     if (funName) {
-        nsCString* displayNamePtr = &displayName;
         RootedValue funNameVal(cx, StringValue(funName));
-        if (!XPCConvert::JSData2Native(&displayNamePtr, funNameVal, { nsXPTType::T_UTF8STRING },
-                                       nullptr, nullptr))
+        if (!XPCConvert::JSData2Native(&displayName, funNameVal,
+                                       { nsXPTType::T_UTF8STRING },
+                                       nullptr, 0, nullptr))
         {
             JS_ClearPendingException(cx);
             return nsCString("anonymous");
@@ -663,162 +663,108 @@ nsXPCWrappedJSClass::GetRootJSObject(JSContext* cx, JSObject* aJSObjArg)
 }
 
 bool
-nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
-                                           const nsXPTMethodInfo* method,
-                                           const nsXPTParamInfo& param,
-                                           uint16_t methodIndex,
-                                           uint8_t paramIndex,
+nsXPCWrappedJSClass::GetArraySizeFromParam(const nsXPTMethodInfo* method,
+                                           const nsXPTType& type,
                                            nsXPTCMiniVariant* nativeParams,
                                            uint32_t* result) const
 {
-    uint8_t argnum;
-    nsresult rv;
+    if (type.Tag() != nsXPTType::T_ARRAY &&
+        type.Tag() != nsXPTType::T_PSTRING_SIZE_IS &&
+        type.Tag() != nsXPTType::T_PWSTRING_SIZE_IS) {
+        *result = 0;
+        return true;
+    }
 
-    rv = mInfo->GetSizeIsArgNumberForParam(methodIndex, &param, 0, &argnum);
-    if (NS_FAILED(rv))
-        return false;
-
-    const nsXPTParamInfo& arg_param = method->GetParam(argnum);
+    uint8_t argnum = type.ArgNum();
+    const nsXPTParamInfo& param = method->Param(argnum);
 
     // This should be enforced by the xpidl compiler, but it's not.
     // See bug 695235.
-    MOZ_ASSERT(arg_param.GetType().TagPart() == nsXPTType::T_U32,
-               "size_is references parameter of invalid type.");
+    if (param.Type().Tag() != nsXPTType::T_U32) {
+        return false;
+    }
 
-    if (arg_param.IsIndirect())
+    // If the length is passed indirectly (as an outparam), dereference by an
+    // extra level.
+    if (param.IsIndirect()) {
         *result = *(uint32_t*)nativeParams[argnum].val.p;
-    else
+    } else {
         *result = nativeParams[argnum].val.u32;
-
+    }
     return true;
 }
 
 bool
-nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
-                                               const nsXPTMethodInfo* method,
-                                               const nsXPTParamInfo& param,
-                                               uint16_t methodIndex,
+nsXPCWrappedJSClass::GetInterfaceTypeFromParam(const nsXPTMethodInfo* method,
                                                const nsXPTType& type,
                                                nsXPTCMiniVariant* nativeParams,
                                                nsID* result) const
 {
-    uint8_t type_tag = type.TagPart();
+    result->Clear();
 
-    if (type_tag == nsXPTType::T_INTERFACE) {
-        if (NS_SUCCEEDED(GetInterfaceInfo()->
-                         GetIIDForParamNoAlloc(methodIndex, &param, result))) {
-            return true;
-        }
-    } else if (type_tag == nsXPTType::T_INTERFACE_IS) {
-        uint8_t argnum;
-        nsresult rv;
-        rv = mInfo->GetInterfaceIsArgNumberForParam(methodIndex,
-                                                    &param, &argnum);
-        if (NS_FAILED(rv))
+    const nsXPTType& inner = type.InnermostType();
+    if (inner.Tag() == nsXPTType::T_INTERFACE) {
+        // Directly get IID from nsXPTInterfaceInfo.
+        if (!inner.GetInterface()) {
             return false;
-
-        const nsXPTParamInfo& arg_param = method->GetParam(argnum);
-        const nsXPTType& arg_type = arg_param.GetType();
-
-        if (arg_type.TagPart() == nsXPTType::T_IID) {
-            if (arg_param.IsIndirect()) {
-                nsID** p = (nsID**) nativeParams[argnum].val.p;
-                if (!p || !*p)
-                    return false;
-                *result = **p;
-            } else {
-                nsID* p = (nsID*) nativeParams[argnum].val.p;
-                if (!p)
-                    return false;
-                *result = *p;
-            }
-            return true;
         }
-    }
-    return false;
-}
 
-/* static */ void
-nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
-                                         uint32_t array_count,
-                                         void** arrayp)
-{
-    if (datum_type.IsInterfacePointer()) {
-        nsISupports** pp = (nsISupports**) arrayp;
-        for (uint32_t k = 0; k < array_count; k++) {
-            nsISupports* p = pp[k];
-            NS_IF_RELEASE(p);
+        *result = inner.GetInterface()->IID();
+    } else if (inner.Tag() == nsXPTType::T_INTERFACE_IS) {
+        // Get IID from a passed parameter.
+        const nsXPTParamInfo& param = method->Param(inner.ArgNum());
+        if (param.Type().Tag() != nsXPTType::T_IID) {
+            return false;
         }
-    } else {
-        void** pp = (void**) arrayp;
-        for (uint32_t k = 0; k < array_count; k++) {
-            void* p = pp[k];
-            if (p) free(p);
-        }
-    }
-}
 
-/* static */ void
-nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
-                                              void** pp)
-{
-    MOZ_ASSERT(pp,"null pointer");
-    if (type.IsInterfacePointer()) {
-        nsISupports* p = *((nsISupports**)pp);
-        if (p) p->Release();
-    } else {
-        void* p = *((void**)pp);
-        if (p) free(p);
+        void* ptr = nativeParams[inner.ArgNum()].val.p;
+
+        // If the IID is passed indirectly (as an outparam), dereference by an
+        // extra level.
+        if (ptr && param.IsIndirect()) {
+            ptr = *(nsID**) ptr;
+        }
+
+        if (!ptr) {
+            return false;
+        }
+
+        *result = *(nsID*) ptr;
     }
+    return true;
 }
 
 void
-nsXPCWrappedJSClass::CleanupOutparams(JSContext* cx, uint16_t methodIndex,
-                                      const nsXPTMethodInfo* info, nsXPTCMiniVariant* nativeParams,
-                                      bool inOutOnly, uint8_t n) const
+nsXPCWrappedJSClass::CleanupOutparams(const nsXPTMethodInfo* info,
+                                      nsXPTCMiniVariant* nativeParams,
+                                      bool inOutOnly, uint8_t count) const
 {
     // clean up any 'out' params handed in
-    for (uint8_t i = 0; i < n; i++) {
+    for (uint8_t i = 0; i < count; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
         if (!param.IsOut())
             continue;
 
-        const nsXPTType& type = param.GetType();
-        if (!type.deprecated_IsPointer())
-            continue;
-        void* p = nativeParams[i].val.p;
-        if (!p)
+        // Extract the array length so we can use it in CleanupValue.
+        uint32_t arrayLen = 0;
+        if (!GetArraySizeFromParam(info, param.Type(), nativeParams, &arrayLen))
             continue;
 
-        // The inOutOnly flag was introduced when consolidating two very
-        // similar code paths in CallMethod in bug 1175513. I don't know
-        // if and why the difference is necessary.
+        MOZ_ASSERT(param.IsIndirect(), "Outparams are always indirect");
+
+        // The inOutOnly flag is necessary because full outparams may contain
+        // uninitialized junk before the call is made, and we don't want to try
+        // to clean up uninitialized junk.
         if (!inOutOnly || param.IsIn()) {
-            if (type.IsArray()) {
-                void** pp = *static_cast<void***>(p);
-                if (pp) {
-                    // we need to get the array length and iterate the items
-                    uint32_t array_count;
-                    nsXPTType datum_type;
-
-                    if (NS_SUCCEEDED(mInfo->GetTypeForParam(methodIndex, &param,
-                                                            1, &datum_type)) &&
-                        datum_type.deprecated_IsPointer() &&
-                        GetArraySizeFromParam(cx, info, param, methodIndex,
-                                              i, nativeParams, &array_count) &&
-                        array_count) {
-
-                        CleanupPointerArray(datum_type, array_count, pp);
-                    }
-
-                    // always release the array if it is inout
-                    free(pp);
-                }
-            } else {
-                CleanupPointerTypeObject(type, static_cast<void**>(p));
-            }
+            xpc::CleanupValue(param.Type(), nativeParams[i].val.p, arrayLen);
         }
-        *static_cast<void**>(p) = nullptr;
+
+        // Even if we didn't call CleanupValue, null out any pointers. This is
+        // just to protect C++ callers which may read garbage if they forget to
+        // check the error value.
+        if (param.Type().HasPointerRepr()) {
+            *(void**)nativeParams[i].val.p = nullptr;
+        }
     }
 }
 
@@ -1102,14 +1048,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     for (i = 0; i < argc; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
-        nsXPTType datum_type;
         uint32_t array_count;
-        bool isArray = type.IsArray();
         RootedValue val(cx, NullValue());
-        bool isSizedString = isArray ?
-                false :
-                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
 
         // verify that null was not passed for 'out' param
@@ -1118,53 +1058,24 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
             goto pre_call_clean_up;
         }
 
-        if (isArray) {
-            if (NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1,
-                                                 &datum_type)))
-                goto pre_call_clean_up;
-        } else
-            datum_type = type;
-
         if (param.IsIn()) {
-            nsXPTCMiniVariant* pv;
-
+            const void* pv;
             if (param.IsIndirect())
-                pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
+                pv = nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
 
-            if (datum_type.IsInterfacePointer() &&
-                !GetInterfaceTypeFromParam(cx, info, param, methodIndex,
-                                           datum_type, nativeParams,
-                                           &param_iid))
+            if (!GetInterfaceTypeFromParam(info, type, nativeParams, &param_iid) ||
+                !GetArraySizeFromParam(info, type, nativeParams, &array_count))
                 goto pre_call_clean_up;
 
-            if (isArray || isSizedString) {
-                if (!GetArraySizeFromParam(cx, info, param, methodIndex,
-                                           i, nativeParams, &array_count))
-                    goto pre_call_clean_up;
-            }
-
-            if (isArray) {
-                if (!XPCConvert::NativeArray2JS(&val,
-                                                (const void**)&pv->val,
-                                                datum_type, &param_iid,
-                                                array_count, nullptr))
-                    goto pre_call_clean_up;
-            } else if (isSizedString) {
-                if (!XPCConvert::NativeStringWithSize2JS(&val,
-                                                         (const void*)&pv->val,
-                                                         datum_type,
-                                                         array_count, nullptr))
-                    goto pre_call_clean_up;
-            } else {
-                if (!XPCConvert::NativeData2JS(&val, &pv->val, type,
-                                               &param_iid, nullptr))
-                    goto pre_call_clean_up;
-            }
+            if (!XPCConvert::NativeData2JS(&val, pv, type,
+                                            &param_iid, array_count,
+                                            nullptr))
+                goto pre_call_clean_up;
         }
 
-        if (param.IsOut() || param.IsDipper()) {
+        if (param.IsOut()) {
             // create an 'out' object
             RootedObject out_obj(cx, NewOutObject(cx));
             if (!out_obj) {
@@ -1188,7 +1099,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
 pre_call_clean_up:
     // clean up any 'out' params handed in
-    CleanupOutparams(cx, methodIndex, info, nativeParams, /* inOutOnly = */ true, paramCount);
+    CleanupOutparams(info, nativeParams, /* inOutOnly = */ true, paramCount);
 
     // Make sure "this" doesn't get deleted during this call.
     nsCOMPtr<nsIXPCWrappedJSClass> kungFuDeathGrip(this);
@@ -1247,7 +1158,7 @@ pre_call_clean_up:
     for (i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& param = info->GetParam(i);
         MOZ_ASSERT(!param.IsShared(), "[shared] implies [noscript]!");
-        if (!param.IsOut() && !param.IsDipper())
+        if (!param.IsOut())
             continue;
 
         const nsXPTType& type = param.GetType();
@@ -1257,13 +1168,6 @@ pre_call_clean_up:
         }
 
         RootedValue val(cx);
-        uint8_t type_tag = type.TagPart();
-        nsXPTCMiniVariant* pv;
-
-        if (param.IsDipper())
-            pv = (nsXPTCMiniVariant*) &nativeParams[i].val.p;
-        else
-            pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
 
         if (&param == info->GetRetval())
             val = rval;
@@ -1279,15 +1183,16 @@ pre_call_clean_up:
 
         // setup allocator and/or iid
 
-        if (type_tag == nsXPTType::T_INTERFACE) {
-            if (NS_FAILED(GetInterfaceInfo()->
-                          GetIIDForParamNoAlloc(methodIndex, &param,
-                                                &param_iid)))
+        const nsXPTType& inner = type.InnermostType();
+        if (inner.Tag() == nsXPTType::T_INTERFACE) {
+            if (!inner.GetInterface())
                 break;
+            param_iid = inner.GetInterface()->IID();
         }
 
-        if (!XPCConvert::JSData2Native(&pv->val, val, type,
-                                       &param_iid, nullptr))
+        MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
+        if (!XPCConvert::JSData2Native(nativeParams[i].val.p, val, type,
+                                       &param_iid, 0, nullptr))
             break;
     }
 
@@ -1303,16 +1208,7 @@ pre_call_clean_up:
                 continue;
 
             RootedValue val(cx);
-            nsXPTCMiniVariant* pv;
-            nsXPTType datum_type;
             uint32_t array_count;
-            bool isArray = type.IsArray();
-            bool isSizedString = isArray ?
-                    false :
-                    type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                    type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
-
-            pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
 
             if (&param == info->GetRetval())
                 val = rval;
@@ -1326,50 +1222,21 @@ pre_call_clean_up:
 
             // setup allocator and/or iid
 
-            if (isArray) {
-                if (NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1,
-                                                     &datum_type)))
-                    break;
-            } else
-                datum_type = type;
+            if (!GetInterfaceTypeFromParam(info, type, nativeParams, &param_iid) ||
+                !GetArraySizeFromParam(info, type, nativeParams, &array_count))
+                break;
 
-            if (datum_type.IsInterfacePointer()) {
-               if (!GetInterfaceTypeFromParam(cx, info, param, methodIndex,
-                                              datum_type, nativeParams,
-                                              &param_iid))
-                   break;
-            }
-
-            if (isArray || isSizedString) {
-                if (!GetArraySizeFromParam(cx, info, param, methodIndex,
-                                           i, nativeParams, &array_count))
-                    break;
-            }
-
-            if (isArray) {
-                if (array_count &&
-                    !XPCConvert::JSArray2Native((void**)&pv->val, val,
-                                                array_count, datum_type,
-                                                &param_iid, nullptr))
-                    break;
-            } else if (isSizedString) {
-                if (!XPCConvert::JSStringWithSize2Native((void*)&pv->val, val,
-                                                         array_count, datum_type,
-                                                         nullptr))
-                    break;
-            } else {
-                if (!XPCConvert::JSData2Native(&pv->val, val, type,
-                                               &param_iid,
-                                               nullptr))
-                    break;
-            }
+            MOZ_ASSERT(param.IsIndirect(), "outparams are always indirect");
+            if (!XPCConvert::JSData2Native(nativeParams[i].val.p, val, type,
+                                           &param_iid, array_count, nullptr))
+                break;
         }
     }
 
     if (i != paramCount) {
         // We didn't manage all the result conversions!
         // We have to cleanup any junk that *did* get converted.
-        CleanupOutparams(cx, methodIndex, info, nativeParams, /* inOutOnly = */ false, i);
+        CleanupOutparams(info, nativeParams, /* inOutOnly = */ false, i);
     } else {
         // set to whatever the JS code might have set as the result
         retval = xpccx->GetPendingResult();
