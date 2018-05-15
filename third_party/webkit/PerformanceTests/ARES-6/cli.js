@@ -25,6 +25,37 @@
 
 const isInBrowser = false;
 
+var readFile = readFile || read;
+
+function makeDoRun(source) {
+    // jsc shim
+    if (typeof runString === 'function') {
+        return function() {
+            let globalObjectOfScript = runString(source);
+            let results = globalObjectOfScript.results;
+            reportResult(results);
+        };
+    }
+
+    // spidermonkey shim
+    if (typeof newGlobal === 'function') {
+        return function() {
+            var globalObjectOfScript = newGlobal();
+            globalObjectOfScript.eval(source);
+            let results = globalObjectOfScript.results;
+            reportResult(results);
+        }
+    }
+
+    // v8 shim
+    return function() {
+        const realm = Realm.create();
+        Realm.eval(realm, source);
+        reportResult(Realm.eval(realm, "results"));
+        Realm.dispose(realm);
+    }
+}
+
 function makeBenchmarkRunner(sources, benchmarkConstructor, numIterations = 200) {
     let source = "'use strict';"
     for (let file of sources) {
@@ -41,11 +72,7 @@ function makeBenchmarkRunner(sources, benchmarkConstructor, numIterations = 200)
             results.push(after - before);
         }
     `;
-    return function doRun() {
-        let globalObjectOfScript = runString(source);
-        let results = globalObjectOfScript.results;
-        reportResult(results);
-    }
+    return makeDoRun(source);
 }
 
 load("driver.js");
