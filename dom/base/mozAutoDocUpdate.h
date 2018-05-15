@@ -21,15 +21,12 @@
 class MOZ_STACK_CLASS mozAutoDocUpdate
 {
 public:
-  mozAutoDocUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType,
-                   bool aNotify) :
-    mDocument(aNotify ? aDocument : nullptr),
-    mUpdateType(aUpdateType)
+  mozAutoDocUpdate(nsIDocument* aDocument, bool aNotify)
+    : mDocument(aNotify ? aDocument : nullptr)
   {
     if (mDocument) {
-      mDocument->BeginUpdate(mUpdateType);
-    }
-    else {
+      mDocument->BeginUpdate();
+    } else {
       nsContentUtils::AddScriptBlocker();
     }
   }
@@ -37,24 +34,22 @@ public:
   ~mozAutoDocUpdate()
   {
     if (mDocument) {
-      mDocument->EndUpdate(mUpdateType);
-    }
-    else {
+      mDocument->EndUpdate();
+    } else {
       nsContentUtils::RemoveScriptBlocker();
     }
   }
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
-  nsUpdateType mUpdateType;
 };
 
 #define MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line) tok##line
 #define MOZ_AUTO_DOC_UPDATE_PASTE(tok,line) \
   MOZ_AUTO_DOC_UPDATE_PASTE2(tok,line)
-#define MOZ_AUTO_DOC_UPDATE(doc,type,notify) \
+#define MOZ_AUTO_DOC_UPDATE(doc,notify) \
   mozAutoDocUpdate MOZ_AUTO_DOC_UPDATE_PASTE(_autoDocUpdater_, __LINE__) \
-  (doc,type,notify)
+  (doc,notify)
 
 
 /**
@@ -73,14 +68,14 @@ public:
     mDocument(aNotify ? aDocument : nullptr)
   {
     if (mDocument) {
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+      mDocument->BeginUpdate();
     }
   }
 
   ~mozAutoDocConditionalContentUpdateBatch()
   {
     if (mDocument) {
-      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+      mDocument->EndUpdate();
     }
   }
 

@@ -123,7 +123,7 @@ public:
   };
   friend class nsAutoEditingState;
 
-  void EndUpdate(nsUpdateType aUpdateType) override;
+  void EndUpdate() override;
 
   virtual void SetMayStartLayout(bool aMayStartLayout) override;
 

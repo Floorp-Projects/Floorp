@@ -2111,11 +2111,11 @@ nsHTMLDocument::MaybeEditingStateChanged()
 }
 
 void
-nsHTMLDocument::EndUpdate(nsUpdateType aUpdateType)
+nsHTMLDocument::EndUpdate()
 {
   const bool reset = !mPendingMaybeEditingStateChanged;
   mPendingMaybeEditingStateChanged = true;
-  nsDocument::EndUpdate(aUpdateType);
+  nsDocument::EndUpdate();
   if (reset) {
     mPendingMaybeEditingStateChanged = false;
   }
