@@ -10,7 +10,7 @@
 using namespace JS;
 
 static void
-ScriptCallback(JSRuntime* rt, void* data, JSScript* script)
+ScriptCallback(JSRuntime* rt, void* data, JSScript* script, const JS::AutoRequireNoGC& nogc)
 {
     unsigned& count = *static_cast<unsigned*>(data);
     if (script->hasIonScript())

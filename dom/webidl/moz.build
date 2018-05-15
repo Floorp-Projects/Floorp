@@ -941,7 +941,6 @@ WEBIDL_FILES = [
     'XMLHttpRequestEventTarget.webidl',
     'XMLHttpRequestUpload.webidl',
     'XMLSerializer.webidl',
-    'XMLStylesheetProcessingInstruction.webidl',
     'XPathEvaluator.webidl',
     'XPathExpression.webidl',
     'XPathNSResolver.webidl',
