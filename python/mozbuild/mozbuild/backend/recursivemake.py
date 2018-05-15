@@ -1052,9 +1052,11 @@ class RecursiveMakeBackend(CommonBackend):
         xpt_modules = sorted(modules.keys())
 
         mk = Makefile()
+        all_directories = set()
 
         for module in xpt_modules:
             sources, directories = modules[module]
+            all_directories |= directories
             deps = sorted(sources)
             directories = sorted(directories)
 
@@ -1073,6 +1075,8 @@ class RecursiveMakeBackend(CommonBackend):
             mk.add_statement('%s_dirs = %s' % (module, ' '.join(directories)))
 
             build_files.add_optional_exists('%s.xpt' % module)
+
+        mk.add_statement('all_idl_dirs = %s' % ' '.join(sorted(all_directories)))
 
         rules = StringIO()
         mk.dump(rules, removal_guard=False)
