@@ -320,9 +320,25 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         return all_passed
 
 
+def has_js_binary(binary):
+    def has_binary(cls):
+        name = binary + cls.substs['BIN_SUFFIX']
+        path = os.path.join(cls.topobjdir, 'dist', 'bin', name)
+
+        has_binary.__doc__ = """
+`{}` not found in <objdir>/dist/bin. Make sure you aren't using an artifact build
+and try rebuilding with `ac_add_options --enable-js-shell`.
+""".format(name).lstrip()
+
+        return os.path.isfile(path)
+    return has_binary
+
+
 @CommandProvider
 class JsapiTestsCommand(MachCommandBase):
-    @Command('jsapi-tests', category='testing', description='Run jsapi tests (JavaScript engine).')
+    @Command('jsapi-tests', category='testing',
+             conditions=[has_js_binary('jsapi-tests')],
+             description='Run jsapi tests (JavaScript engine).')
     @CommandArgument('test_name', nargs='?', metavar='N',
                      help='Test to run. Can be a prefix or omitted. If omitted, the entire '
                      'test suite is executed.')
@@ -338,6 +354,22 @@ class JsapiTestsCommand(MachCommandBase):
         jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
 
         return jsapi_tests_result
+
+
+def get_jsshell_parser():
+    from jsshell.benchmark import get_parser
+    return get_parser()
+
+
+@CommandProvider
+class JsShellTests(MachCommandBase):
+    @Command('jsshell-bench', category='testing',
+             parser=get_jsshell_parser,
+             description="Run benchmarks in the SpiderMonkey JS shell.")
+    def run_jsshelltests(self, **kwargs):
+        self._activate_virtualenv()
+        from jsshell import benchmark
+        return benchmark.run(**kwargs)
 
 
 @CommandProvider
