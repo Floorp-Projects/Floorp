@@ -731,6 +731,14 @@ class SyncedBookmarksMirror {
         return;
       }
       url = new URL(`place:tag=${tagFolderName}`);
+    } else {
+      // For any other legacy queries with a "folder" parameter, we are not able to
+      // know which folder it should point to. Therefore, add excludeItems onto the
+      // end, so that it doesn't return everything in the database.
+      let folder = params.get("folder");
+      if (folder) {
+        url.href = `${url.href}&excludeItems=1`;
+      }
     }
 
     await this.maybeStoreRemoteURL(url);
