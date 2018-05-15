@@ -11,7 +11,6 @@
 // at your own risk.
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
@@ -74,15 +73,7 @@ struct ServoSizes
         Ignore
     };
 
-    ServoSizes()
-      : gcHeapUsed(0)
-      , gcHeapUnused(0)
-      , gcHeapAdmin(0)
-      , gcHeapDecommitted(0)
-      , mallocHeap(0)
-      , nonHeap(0)
-    {
-    }
+    ServoSizes() = default;
 
     void add(Kind kind, size_t n) {
         switch (kind) {
@@ -97,12 +88,12 @@ struct ServoSizes
         }
     }
 
-    size_t gcHeapUsed;
-    size_t gcHeapUnused;
-    size_t gcHeapAdmin;
-    size_t gcHeapDecommitted;
-    size_t mallocHeap;
-    size_t nonHeap;
+    size_t gcHeapUsed = 0;
+    size_t gcHeapUnused = 0;
+    size_t gcHeapAdmin = 0;
+    size_t gcHeapDecommitted = 0;
+    size_t mallocHeap = 0;
+    size_t nonHeap = 0;
 };
 
 } // namespace JS
