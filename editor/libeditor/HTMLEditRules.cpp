@@ -7108,14 +7108,15 @@ HTMLEditRules::GetParagraphFormatNodes(
 }
 
 nsresult
-HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
+HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  bool isCollapsed = item.mStartContainer == item.mEndContainer &&
-                     item.mStartOffset == item.mEndOffset;
+  bool isCollapsed = aRangeItem.mStartContainer == aRangeItem.mEndContainer &&
+                     aRangeItem.mStartOffset == aRangeItem.mEndOffset;
 
-  nsCOMPtr<nsIContent> endInline = GetHighestInlineParent(*item.mEndContainer);
+  nsCOMPtr<nsIContent> endInline =
+    GetHighestInlineParent(*aRangeItem.mEndContainer);
 
   // XXX Oh, then, if the range is collapsed, we don't need to call
   //     GetHighestInlineParent(), isn't it?
@@ -7123,32 +7124,42 @@ HTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
     SplitNodeResult splitEndInlineResult =
       HTMLEditorRef().SplitNodeDeepWithTransaction(
                         *endInline,
-                        EditorRawDOMPoint(item.mEndContainer, item.mEndOffset),
+                        EditorRawDOMPoint(aRangeItem.mEndContainer,
+                                          aRangeItem.mEndOffset),
                         SplitAtEdges::eDoNotCreateEmptyContainer);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(splitEndInlineResult.Failed())) {
       return splitEndInlineResult.Rv();
     }
     EditorRawDOMPoint splitPointAtEnd(splitEndInlineResult.SplitPoint());
-    item.mEndContainer = splitPointAtEnd.GetContainer();
-    item.mEndOffset = splitPointAtEnd.Offset();
+    aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
+    aRangeItem.mEndOffset = splitPointAtEnd.Offset();
   }
 
   nsCOMPtr<nsIContent> startInline =
-    GetHighestInlineParent(*item.mStartContainer);
+    GetHighestInlineParent(*aRangeItem.mStartContainer);
 
   if (startInline) {
     SplitNodeResult splitStartInlineResult =
       HTMLEditorRef().SplitNodeDeepWithTransaction(
                         *startInline,
-                        EditorRawDOMPoint(item.mStartContainer,
-                                          item.mStartOffset),
+                        EditorRawDOMPoint(aRangeItem.mStartContainer,
+                                          aRangeItem.mStartOffset),
                         SplitAtEdges::eDoNotCreateEmptyContainer);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(splitStartInlineResult.Failed())) {
       return splitStartInlineResult.Rv();
     }
+    // XXX If we split only here because of collapsed range, we're modifying
+    //     only start point of aRangeItem.  Shouldn't we modify end point here
+    //     if it's collapsed?
     EditorRawDOMPoint splitPointAtStart(splitStartInlineResult.SplitPoint());
-    item.mStartContainer = splitPointAtStart.GetContainer();
-    item.mStartOffset = splitPointAtStart.Offset();
+    aRangeItem.mStartContainer = splitPointAtStart.GetContainer();
+    aRangeItem.mStartOffset = splitPointAtStart.Offset();
   }
 
   return NS_OK;
