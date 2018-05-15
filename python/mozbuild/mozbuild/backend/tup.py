@@ -796,7 +796,7 @@ class TupBackend(CommonBackend):
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
                 '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '--bindings-conf', '$(topsrcdir)/dom/bindings/Bindings.conf',
-                '$(DIST)/idl',
+                '--input-dir', '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
                 '.',
