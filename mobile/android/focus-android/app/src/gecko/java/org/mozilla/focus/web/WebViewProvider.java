@@ -353,6 +353,10 @@ public class WebViewProvider {
                         response.respond(true);
                     }
 
+                    if (callback != null) {
+                        callback.onRequest(flags == GeckoSession.NavigationDelegate.LOAD_REQUEST_IS_USER_TRIGGERED);
+                    }
+
                     // Otherwise allow the load to continue normally
                     response.respond(false);
                 }
