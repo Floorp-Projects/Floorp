@@ -198,7 +198,7 @@ interface nsITelemetry : nsISupports
    * @throws NS_ERROR_NOT_IMPLEMENTED if the Gecko profiler is not enabled.
    */
   [implicit_jscontext]
-  nsISupports getLoadedModules();
+  Promise getLoadedModules();
 
   /*
    * An object with two fields: memoryMap and stacks.

@@ -44,9 +44,9 @@ interface nsIBlocklistService : nsISupports
    *          is used.
    * @returns Promise that resolves to the STATE constant.
    */
-  nsISupports getPluginBlocklistState(in nsIPluginTag plugin,
-                                      [optional] in AString appVersion,
-                                      [optional] in AString toolkitVersion);
+  Promise getPluginBlocklistState(in nsIPluginTag plugin,
+                                  [optional] in AString appVersion,
+                                  [optional] in AString toolkitVersion);
 
   readonly attribute boolean isLoaded;
 };

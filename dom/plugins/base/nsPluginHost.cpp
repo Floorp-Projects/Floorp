@@ -2268,10 +2268,9 @@ nsPluginHost::UpdatePluginBlocklistState(nsPluginTag* aPluginTag, bool aShouldSo
     return;
   }
   // Asynchronously get the blocklist state.
-  nsCOMPtr<nsISupports> result;
+  RefPtr<Promise> promise;
   blocklist->GetPluginBlocklistState(aPluginTag, EmptyString(),
-                                     EmptyString(), getter_AddRefs(result));
-  RefPtr<Promise> promise = do_QueryObject(result);
+                                     EmptyString(), getter_AddRefs(promise));
   MOZ_ASSERT(promise, "Should always get a promise for plugin blocklist state.");
   if (promise) {
     promise->AppendNativeHandler(new mozilla::plugins::BlocklistPromiseHandler(aPluginTag, aShouldSoftblock));

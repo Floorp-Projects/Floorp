@@ -455,8 +455,9 @@ class Native(object):
         'utf8string': 'nsACString',
         'cstring': 'nsACString',
         'astring': 'nsAString',
-        'jsval': 'JS::Value'
-        }
+        'jsval': 'JS::Value',
+        'promise': '::mozilla::dom::Promise',
+    }
 
     # Mappings from C++ native name types to rust native names. Types which
     # aren't listed here are incompatible with rust code.
@@ -505,6 +506,9 @@ class Native(object):
         if self.specialtype is None:
             return False
 
+        if self.specialtype == 'promise':
+            return self.modifier == 'ptr'
+
         if self.specialtype == 'nsid':
             return self.modifier is not None
 
@@ -522,7 +526,7 @@ class Native(object):
                 raise IDLError("[shared] only applies to out parameters.")
             const = True
 
-        if self.specialtype is not None and calltype == 'in':
+        if self.specialtype not in [None, 'promise'] and calltype == 'in':
             const = True
 
         if self.specialtype == 'jsval':
@@ -936,8 +940,8 @@ class Attribute(object):
                 getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
-        if self.infallible and not self.realtype.kind == 'builtin':
-            raise IDLError('[infallible] only works on builtin types '
+        if self.infallible and not self.realtype.kind in ['builtin', 'interface', 'forward', 'webidl']:
+            raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
                            '(numbers, booleans, and raw char types)',
                            self.location)
         if self.infallible and not iface.attributes.builtinclass:

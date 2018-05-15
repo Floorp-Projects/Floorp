@@ -1456,6 +1456,7 @@ nsIDocument::nsIDocument()
     mWidthStrEmpty(false),
     mParserAborted(false),
     mReportedUseCounters(false),
+    mHasReportedShadowDOMUsage(false),
 #ifdef DEBUG
     mWillReparent(false),
 #endif
@@ -5089,45 +5090,6 @@ nsDocument::BeginLoad()
   }
 
   NS_DOCUMENT_NOTIFY_OBSERVERS(BeginLoad, (this));
-}
-
-void
-nsIDocument::ReportEmptyGetElementByIdArg()
-{
-  nsContentUtils::ReportEmptyGetElementByIdArg(this);
-}
-
-Element*
-nsIDocument::AddIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                void* aData, bool aForImage)
-{
-  nsDependentAtomString id(aID);
-
-  if (!CheckGetElementByIdArg(id))
-    return nullptr;
-
-  nsIdentifierMapEntry* entry = mIdentifierMap.PutEntry(aID);
-  NS_ENSURE_TRUE(entry, nullptr);
-
-  entry->AddContentChangeCallback(aObserver, aData, aForImage);
-  return aForImage ? entry->GetImageIdElement() : entry->GetIdElement();
-}
-
-void
-nsIDocument::RemoveIDTargetObserver(nsAtom* aID, IDTargetObserver aObserver,
-                                   void* aData, bool aForImage)
-{
-  nsDependentAtomString id(aID);
-
-  if (!CheckGetElementByIdArg(id))
-    return;
-
-  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aID);
-  if (!entry) {
-    return;
-  }
-
-  entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
 }
 
 void
@@ -13258,4 +13220,28 @@ nsIDocument::ModuleScriptsEnabled()
   }
 
   return nsContentUtils::IsChromeDoc(this) || sEnabledForContent;
+}
+
+void
+nsIDocument::ReportShadowDOMUsage()
+{
+  if (mHasReportedShadowDOMUsage) {
+    return;
+  }
+
+  nsIDocument* topLevel = GetTopLevelContentDocument();
+  if (topLevel && !topLevel->mHasReportedShadowDOMUsage) {
+    topLevel->mHasReportedShadowDOMUsage = true;
+    nsString uri;
+    Unused << topLevel->GetDocumentURI(uri);
+    if (!uri.IsEmpty()) {
+      nsAutoString msg = NS_LITERAL_STRING("Shadow DOM used in [") + uri +
+        NS_LITERAL_STRING("] or in some of its subdocuments.");
+      nsContentUtils::ReportToConsoleNonLocalized(msg, nsIScriptError::infoFlag,
+                                                  NS_LITERAL_CSTRING("DOM"),
+                                                  topLevel);
+    }
+  }
+
+  mHasReportedShadowDOMUsage = true;
 }

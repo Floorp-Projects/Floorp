@@ -150,6 +150,33 @@ def splitint(i):
     return (i >> 8, i & 0xff)
 
 
+# Occasionally in xpconnect, we need to fabricate types to pass into the
+# conversion methods. In some cases, these types need to be arrays, which hold
+# indicies into the extra types array.
+#
+# These are some types which should have known indexes into the extra types
+# array.
+utility_types = [
+    { 'tag': 'TD_INT8' },
+    { 'tag': 'TD_UINT8' },
+    { 'tag': 'TD_INT16' },
+    { 'tag': 'TD_UINT16' },
+    { 'tag': 'TD_INT32' },
+    { 'tag': 'TD_UINT32' },
+    { 'tag': 'TD_INT64' },
+    { 'tag': 'TD_UINT64' },
+    { 'tag': 'TD_FLOAT' },
+    { 'tag': 'TD_DOUBLE' },
+    { 'tag': 'TD_BOOL' },
+    { 'tag': 'TD_CHAR' },
+    { 'tag': 'TD_WCHAR' },
+    { 'tag': 'TD_PNSIID' },
+    { 'tag': 'TD_PSTRING' },
+    { 'tag': 'TD_PWSTRING' },
+    { 'tag': 'TD_INTERFACE_IS_TYPE', 'iid_is': 0 },
+]
+
+
 # Core of the code generator. Takes a list of raw JSON XPT interfaces, and
 # writes out a file containing the necessary static declarations into fd.
 def link_to_cpp(interfaces, fd):
@@ -220,6 +247,14 @@ def link_to_cpp(interfaces, fd):
             strings[s] = 0
         return strings[s]
 
+    def lower_extra_type(type):
+        key = describe_type(type)
+        idx = type_cache.get(key)
+        if idx is None:
+            idx = type_cache[key] = len(types)
+            types.append(lower_type(type))
+        return idx
+
     def describe_type(type): # Create the type's documentation comment.
         tag = type['tag'][3:].lower()
         if tag == 'array':
@@ -239,13 +274,7 @@ def link_to_cpp(interfaces, fd):
 
         if tag == 'TD_ARRAY':
             d1 = type['size_is']
-
-            # index of element in extra types list
-            key = describe_type(type['element'])
-            d2 = type_cache.get(key)
-            if d2 is None:
-                d2 = type_cache[key] = len(types)
-                types.append(lower_type(type['element']))
+            d2 = lower_extra_type(type['element'])
 
         elif tag == 'TD_INTERFACE_TYPE':
             d1, d2 = splitint(interface_idx(type['name']))
@@ -411,6 +440,12 @@ def link_to_cpp(interfaces, fd):
         for const in iface['consts']:
             lower_const(const, iface['name'])
 
+    # Lower the types which have fixed indexes first, and check that the indexes
+    # seem correct.
+    for expected, ty in enumerate(utility_types):
+        got = lower_extra_type(ty)
+        assert got == expected, "Wrong index when lowering"
+
     # Lower interfaces in the order of the IID phf's values lookup.
     for iface in iid_phf.values:
         lower_iface(iface)
@@ -486,8 +521,14 @@ namespace detail {
     phfarr("sPHF_Names", "uint32_t", name_phf.intermediate)
     phfarr("sPHF_NamesIdxs", "uint16_t", name_phf.values)
 
+    # Generate some checks that the indexes for the utility types match the
+    # declared ones in xptinfo.h
+    for idx, ty in enumerate(utility_types):
+        fd.write("static_assert(%d == (uint8_t)nsXPTType::Idx::%s, \"Bad idx\");\n" %
+                 (idx, ty['tag'][3:]))
+
     # The footer contains some checks re: the size of the generated arrays.
-    fd.write("""\
+    fd.write("""
 const uint16_t sInterfacesSize = mozilla::ArrayLength(sInterfaces);
 static_assert(sInterfacesSize == mozilla::ArrayLength(sPHF_NamesIdxs),
               "sPHF_NamesIdxs must have same size as sInterfaces");

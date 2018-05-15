@@ -6,6 +6,7 @@
 
 #include "CrashReporterHost.h"
 #include "CrashReporterMetadataShmem.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/SyncRunnable.h"
@@ -275,7 +276,7 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       return;
   }
 
-  nsCOMPtr<nsISupports> promise;
+  RefPtr<Promise> promise;
   crashService->AddCrash(processType, crashType, aChildDumpID, getter_AddRefs(promise));
   Telemetry::Accumulate(Telemetry::SUBPROCESS_CRASHES_WITH_DUMP, telemetryKey, 1);
 }

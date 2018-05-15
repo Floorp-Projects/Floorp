@@ -178,6 +178,7 @@ jsvalue_include = """
 """
 
 infallible_includes = """
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 """
@@ -306,13 +307,26 @@ iface_forward_safe = """
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
 #define NS_FORWARD_SAFE_%(macroname)s(_to) """
 
-attr_infallible_tmpl = """\
+attr_builtin_infallible_tmpl = """\
   inline %(realtype)s%(nativename)s(%(args)s)
   {
     %(realtype)sresult;
     mozilla::DebugOnly<nsresult> rv = %(nativename)s(%(argnames)s&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
+  }
+"""
+
+# NOTE: We don't use RefPtr::forget here because we don't want to need the
+# definition of %(realtype)s in scope, which we would need for the
+# AddRef/Release calls.
+attr_refcnt_infallible_tmpl = """\
+  inline already_AddRefed<%(realtype)s>%(nativename)s(%(args)s)
+  {
+    %(realtype)s* result = nullptr;
+    mozilla::DebugOnly<nsresult> rv = %(nativename)s(%(argnames)s&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return already_AddRefed<%(realtype)s>(result);
   }
 """
 
@@ -363,11 +377,18 @@ def write_interface(iface, fd):
 
         fd.write("  %s = 0;\n" % attributeAsNative(a, True))
         if a.infallible:
-            fd.write(attr_infallible_tmpl %
-                     {'realtype': a.realtype.nativeType('in'),
-                      'nativename': attributeNativeName(a, getter=True),
-                      'args': '' if not a.implicit_jscontext else 'JSContext* cx',
-                      'argnames': '' if not a.implicit_jscontext else 'cx, '})
+            realtype = a.realtype.nativeType('in')
+            tmpl = attr_builtin_infallible_tmpl
+
+            if a.realtype.kind != 'builtin':
+                assert realtype.endswith(' *'), "bad infallible type"
+                tmpl = attr_refcnt_infallible_tmpl
+                realtype = realtype[:-2] # strip trailing pointer
+
+            fd.write(tmpl % {'realtype': realtype,
+                             'nativename': attributeNativeName(a, getter=True),
+                             'args': '' if not a.implicit_jscontext else 'JSContext* cx',
+                             'argnames': '' if not a.implicit_jscontext else 'cx, '})
 
         if not a.readonly:
             fd.write("  %s = 0;\n" % attributeAsNative(a, False))
