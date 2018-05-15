@@ -12,7 +12,7 @@ add_task(async function() {
 
   const SEND_PING_CALL_ARGS = {
     event: "AS_ENABLED",
-    value: true
+    value: 0
   };
   const SEND_PING_FILTER = { filter: "activity-stream" };
 
