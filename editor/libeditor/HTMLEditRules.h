@@ -168,7 +168,7 @@ protected:
    * @param aInsertToBreak      The point where new <br> element will be
    *                            inserted before.
    */
-  nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
+  MOZ_MUST_USE nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
   /**
    * SplitMailCites() splits mail-cite elements at start of Selection if
