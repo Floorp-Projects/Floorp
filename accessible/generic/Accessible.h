@@ -222,7 +222,7 @@ public:
   /**
    * Return enumerated accessible role (see constants in Role.h).
    */
-  mozilla::a11y::role Role();
+  mozilla::a11y::role Role() const;
 
   /**
    * Return true if ARIA role is specified on the element.
@@ -1062,7 +1062,7 @@ protected:
   /**
    * Return ARIA role (helper method).
    */
-  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole);
+  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers

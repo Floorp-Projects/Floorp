@@ -19,7 +19,7 @@ namespace mozilla {
 namespace a11y {
 
 inline mozilla::a11y::role
-Accessible::Role()
+Accessible::Role() const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry || roleMapEntry->roleRule != kUseMapRole)
