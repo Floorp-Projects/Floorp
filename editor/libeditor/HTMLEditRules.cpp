@@ -6661,6 +6661,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
                             EditAction aOperationType)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(!aRange.IsInSelection());
 
   if (!aRange.IsPositioned()) {
     return;
