@@ -787,8 +787,7 @@ class TupBackend(CommonBackend):
         backend_file.export_shell()
 
         all_xpts = []
-        for module, data in sorted(manager.modules.iteritems()):
-            _, idls = data
+        for module, (idls,) in sorted(manager.modules.iteritems()):
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
