@@ -1961,10 +1961,11 @@ class DebugFrame
     // the return value of a frame being debugged.
     union
     {
-        int32_t resultI32_;
-        int64_t resultI64_;
-        float resultF32_;
-        double resultF64_;
+        int32_t  resultI32_;
+        int64_t  resultI64_;
+        intptr_t resultRef_;
+        float    resultF32_;
+        double   resultF64_;
     };
 
     // The returnValue() method returns a HandleValue pointing to this field.

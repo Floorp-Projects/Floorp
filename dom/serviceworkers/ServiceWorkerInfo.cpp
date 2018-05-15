@@ -118,7 +118,7 @@ namespace {
 class ChangeStateUpdater final : public Runnable
 {
 public:
-  ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,
+  ChangeStateUpdater(const nsTArray<ServiceWorkerInfo::Listener*>& aInstances,
                      ServiceWorkerState aState)
     : Runnable("dom::ChangeStateUpdater")
     , mState(aState)
@@ -137,7 +137,7 @@ public:
   }
 
 private:
-  AutoTArray<RefPtr<ServiceWorker>, 1> mInstances;
+  AutoTArray<RefPtr<ServiceWorkerInfo::Listener>, 1> mInstances;
   ServiceWorkerState mState;
 };
 
@@ -225,33 +225,20 @@ ServiceWorkerInfo::GetNextID() const
 }
 
 void
-ServiceWorkerInfo::AddServiceWorker(ServiceWorker* aWorker)
+ServiceWorkerInfo::AddListener(Listener* aListener)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aWorker);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  nsAutoString workerURL;
-  aWorker->GetScriptURL(workerURL);
-  MOZ_DIAGNOSTIC_ASSERT(
-    workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
-#endif
-  MOZ_ASSERT(!mInstances.Contains(aWorker));
+  MOZ_DIAGNOSTIC_ASSERT(aListener);
+  MOZ_ASSERT(!mInstances.Contains(aListener));
 
-  mInstances.AppendElement(aWorker);
-  aWorker->SetState(State());
+  mInstances.AppendElement(aListener);
+  aListener->SetState(State());
 }
 
 void
-ServiceWorkerInfo::RemoveServiceWorker(ServiceWorker* aWorker)
+ServiceWorkerInfo::RemoveListener(Listener* aListener)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aWorker);
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  nsAutoString workerURL;
-  aWorker->GetScriptURL(workerURL);
-  MOZ_DIAGNOSTIC_ASSERT(
-    workerURL.Equals(NS_ConvertUTF8toUTF16(mDescriptor.ScriptURL())));
-#endif
-
-  DebugOnly<bool> removed = mInstances.RemoveElement(aWorker);
+  MOZ_DIAGNOSTIC_ASSERT(aListener);
+  DebugOnly<bool> removed = mInstances.RemoveElement(aListener);
   MOZ_ASSERT(removed);
 }
 

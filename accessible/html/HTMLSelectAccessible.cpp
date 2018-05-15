@@ -93,7 +93,7 @@ HTMLSelectListAccessible::AreItemsOperable() const
 }
 
 Accessible*
-HTMLSelectListAccessible::CurrentItem()
+HTMLSelectListAccessible::CurrentItem() const
 {
   nsIListControlFrame* listControlFrame = do_QueryFrame(GetFrame());
   if (listControlFrame) {
@@ -108,7 +108,7 @@ HTMLSelectListAccessible::CurrentItem()
 }
 
 void
-HTMLSelectListAccessible::SetCurrentItem(Accessible* aItem)
+HTMLSelectListAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (!aItem->GetContent()->IsElement())
     return;
@@ -500,13 +500,13 @@ HTMLComboboxAccessible::AreItemsOperable() const
 }
 
 Accessible*
-HTMLComboboxAccessible::CurrentItem()
+HTMLComboboxAccessible::CurrentItem() const
 {
   return AreItemsOperable() ? mListAccessible->CurrentItem() : nullptr;
 }
 
 void
-HTMLComboboxAccessible::SetCurrentItem(Accessible* aItem)
+HTMLComboboxAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (AreItemsOperable())
     mListAccessible->SetCurrentItem(aItem);

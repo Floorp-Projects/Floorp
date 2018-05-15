@@ -13,7 +13,6 @@
 #include "mozilla/dom/BatteryManagerBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
-#include "nsIDOMClassInfo.h"
 #include "nsIDocument.h"
 
 /**

@@ -587,12 +587,6 @@ protected:
 };
 
 inline nsISupports*
-ToCanonicalSupports(nsRange* aRange)
-{
-  return static_cast<nsIDOMRange*>(aRange);
-}
-
-inline nsISupports*
 ToSupports(nsRange* aRange)
 {
   return static_cast<nsIDOMRange*>(aRange);

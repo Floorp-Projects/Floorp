@@ -49,10 +49,10 @@ interface nsIXPConnectWrappedNative;
     #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY       (1 << 11)
     // (1 << 12) is unused
     #define XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE        (1 << 13)
-    #define XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE (1 << 14)
-    #define XPC_SCRIPTABLE_CLASSINFO_INTERFACES_ONLY        (1 << 15)
+    // (1 << 14) is unused
+    // (1 << 15) is unused
     #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE   (1 << 16)
-    #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_TO_PROTOTYPE     (1 << 17)
+    // (1 << 17) is unused
     #define XPC_SCRIPTABLE_IS_GLOBAL_OBJECT                 (1 << 18)
     #define XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES     (1 << 19)
 %}
@@ -100,8 +100,6 @@ interface nsIXPCScriptable : nsISupports
                        in JSContextPtr cx, in JSObjectPtr obj,
                        in jsval val, out boolean bp);
 
-    void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
-
 %{ C++
     #define GET_IT(f_, c_) \
     bool f_() { \
@@ -119,46 +117,10 @@ interface nsIXPCScriptable : nsISupports
     GET_IT(UseJSStubForAddProperty,      USE_JSSTUB_FOR_ADDPROPERTY)
     GET_IT(UseJSStubForDelProperty,      USE_JSSTUB_FOR_DELPROPERTY)
     GET_IT(DontEnumQueryInterface,       DONT_ENUM_QUERY_INTERFACE)
-    GET_IT(DontAskInstanceForScriptable, DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
-    GET_IT(ClassInfoInterfacesOnly,      CLASSINFO_INTERFACES_ONLY)
     GET_IT(AllowPropModsDuringResolve,   ALLOW_PROP_MODS_DURING_RESOLVE)
-    GET_IT(AllowPropModsToPrototype,     ALLOW_PROP_MODS_TO_PROTOTYPE)
     GET_IT(IsGlobalObject,               IS_GLOBAL_OBJECT)
     GET_IT(DontReflectInterfaceNames,    DONT_REFLECT_INTERFACE_NAMES)
 
     #undef GET_IT
 %}
 };
-
-%{ C++
-
-#include "nsAutoPtr.h"
-
-#define NS_XPCCLASSINFO_IID \
-{ 0x43b67f01, 0xd4ce, 0x4b82, \
- { 0xb3, 0xf8, 0xeb, 0xf2, 0x13, 0x60, 0xfb, 0x7e } }
-
-class NS_NO_VTABLE nsXPCClassInfo : public nsIClassInfo,
-                                    public nsIXPCScriptable
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCCLASSINFO_IID)
-
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() override = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() override = 0;
-
-  virtual void PreserveWrapper(nsISupports *aNative) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCClassInfo, NS_XPCCLASSINFO_IID)
-
-inline
-nsresult
-CallQueryInterface(nsISupports* aSourcePtr,
-                   RefPtrGetterAddRefs<nsXPCClassInfo> aDestPtr)
-{
-  return CallQueryInterface(aSourcePtr,
-                            static_cast<nsXPCClassInfo**>(aDestPtr));
-}
-
-%}

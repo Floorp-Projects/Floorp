@@ -76,7 +76,7 @@ protected:
   void HandleTreeInvalidatedEvent(dom::Event* aEvent,
                                   XULTreeAccessible* aAccessible);
 
-    uint32_t GetChromeFlags();
+    uint32_t GetChromeFlags() const;
 #endif
 };
 

@@ -10,34 +10,26 @@
 #define nsDOMCSSRect_h_
 
 #include "mozilla/Attributes.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
+#include "mozilla/RefPtr.h"
 
 class nsROCSSPrimitiveValue;
 
-class nsDOMCSSRect final : public nsISupports,
-                           public nsWrapperCache
+class nsDOMCSSRect final : public RefCounted<nsDOMCSSRect>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsDOMCSSRect);
+
   nsDOMCSSRect(nsROCSSPrimitiveValue* aTop,
                nsROCSSPrimitiveValue* aRight,
                nsROCSSPrimitiveValue* aBottom,
                nsROCSSPrimitiveValue* aLeft);
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCSSRect)
 
   nsROCSSPrimitiveValue* Top() const { return mTop; }
   nsROCSSPrimitiveValue* Right() const { return mRight; }
   nsROCSSPrimitiveValue* Bottom() const { return mBottom; }
   nsROCSSPrimitiveValue* Left() const { return mLeft; }
 
-  nsISupports* GetParentObject() const { return nullptr; }
-
-  JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) final;
-
-protected:
-  virtual ~nsDOMCSSRect(void);
+  ~nsDOMCSSRect();
 
 private:
   RefPtr<nsROCSSPrimitiveValue> mTop;

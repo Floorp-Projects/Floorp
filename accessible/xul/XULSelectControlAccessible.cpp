@@ -211,7 +211,7 @@ XULSelectControlAccessible::SelectAll()
 // XULSelectControlAccessible: Widgets
 
 Accessible*
-XULSelectControlAccessible::CurrentItem()
+XULSelectControlAccessible::CurrentItem() const
 {
   if (!mSelectControl)
     return nullptr;
@@ -238,7 +238,7 @@ XULSelectControlAccessible::CurrentItem()
 }
 
 void
-XULSelectControlAccessible::SetCurrentItem(Accessible* aItem)
+XULSelectControlAccessible::SetCurrentItem(const Accessible* aItem)
 {
   if (!mSelectControl)
     return;

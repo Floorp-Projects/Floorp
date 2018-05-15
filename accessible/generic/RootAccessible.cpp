@@ -102,7 +102,7 @@ RootAccessible::NativeRole() const
 // RootAccessible protected member
 #ifdef MOZ_XUL
 uint32_t
-RootAccessible::GetChromeFlags()
+RootAccessible::GetChromeFlags() const
 {
   // Return the flag set for the top level window as defined
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]

@@ -1889,64 +1889,49 @@ nsHTMLDocument::ReleaseEvents()
   WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);
 }
 
-nsISupports*
-nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
+bool
+nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
+                            JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError)
 {
   nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aName);
   if (!entry) {
-    *aCache = nullptr;
-    return nullptr;
+    return false;
   }
 
   nsBaseContentList *list = entry->GetNameContentList();
   uint32_t length = list ? list->Length() : 0;
 
+  nsIContent *node;
   if (length > 0) {
-    if (length == 1) {
-      // Only one element in the list, return the element instead of returning
-      // the list.
-      nsIContent *node = list->Item(0);
-      *aCache = node;
-      return node;
+    if (length > 1) {
+      // The list contains more than one element, return the whole list.
+      if (!ToJSValue(aCx, list, aRetval)) {
+        aError.NoteJSContextException(aCx);
+        return false;
+      }
+      return true;
     }
 
-    // The list contains more than one element, return the whole list.
-    *aCache = list;
-    return list;
+    // Only one element in the list, return the element instead of returning
+    // the list.
+    node = list->Item(0);
+  } else {
+    // No named items were found, see if there's one registerd by id for aName.
+    Element *e = entry->GetIdElement();
+  
+    if (!e || !nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(e)) {
+      return false;
+    }
+
+    node = e;
   }
 
-  // No named items were found, see if there's one registerd by id for aName.
-  Element *e = entry->GetIdElement();
-
-  if (e && nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(e)) {
-    *aCache = e;
-    return e;
+  if (!ToJSValue(aCx, node, aRetval)) {
+    aError.NoteJSContextException(aCx);
+    return false;
   }
 
-  *aCache = nullptr;
-  return nullptr;
-}
-
-void
-nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
-                            JS::MutableHandle<JSObject*> aRetval,
-                            ErrorResult& rv)
-{
-  nsWrapperCache* cache;
-  nsISupports* supp = ResolveName(aName, &cache);
-  if (!supp) {
-    aFound = false;
-    aRetval.set(nullptr);
-    return;
-  }
-
-  JS::Rooted<JS::Value> val(cx);
-  if (!dom::WrapObject(cx, supp, cache, nullptr, &val)) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-  aFound = true;
-  aRetval.set(&val.toObject());
+  return true;
 }
 
 void

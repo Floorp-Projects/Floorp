@@ -497,6 +497,11 @@ def main(args):
     else:
         uid = gid = gids = None
 
+    if os.path.exists("/dev/kvm"):
+        # Ensure kvm permissions for worker, required for Android x86
+        st = os.stat("/dev/kvm")
+        os.chmod("/dev/kvm", st.st_mode | 0666)
+
     # Validate caches.
     #
     # Taskgraph should pass in a list of paths that are caches via an

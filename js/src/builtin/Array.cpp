@@ -780,7 +780,9 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         // for..in iteration over the array. Keys deleted before being reached
         // during the iteration must not be visited, and suppressing them here
         // would be too costly.
-        if (!arr->isIndexed() && !MaybeInIteration(arr, cx)) {
+        // This optimization is also invalid when there are sealed
+        // (non-configurable) elements.
+        if (!arr->isIndexed() && !MaybeInIteration(arr, cx) && !arr->denseElementsAreSealed()) {
             if (!arr->maybeCopyElementsForWrite(cx))
                 return false;
 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>CSS display:contents tests</title>
+<link rel="stylesheet" type="text/css"
+      href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script type="application/javascript"
+        src="../common.js"></script>
+<script type="application/javascript"
+        src="../role.js"></script>
+
+<script type="application/javascript">
+function doTest() {
+  let tree =
+    { LIST: [
+      { LISTITEM: [
+        { STATICTEXT: [] },
+        { TEXT_LEAF: [] }
+      ]},
+      { LISTITEM: [
+        { STATICTEXT: [] },
+        { TEXT_LEAF: [] }
+      ]},
+    ] };
+  testAccessibleTree("ul", tree);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addA11yLoadEvent(doTest);
+</script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <ul id="ul" style="display: contents;">
+    <li>Supermarket 1</li>
+    <li>Supermarket 2</li>
+  </ul>
+</body>
+</html>

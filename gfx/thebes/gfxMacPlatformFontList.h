@@ -30,6 +30,7 @@ class MacOSFontEntry : public gfxFontEntry
 {
 public:
     friend class gfxMacPlatformFontList;
+    friend class gfxMacFont;
 
     MacOSFontEntry(const nsAString& aPostscriptName, WeightRange aWeight,
                    bool aIsStandardFace = false,
@@ -104,6 +105,19 @@ protected:
     bool mHasAATSmallCaps;
     bool mHasAATSmallCapsInitialized;
     bool mCheckedForTracking;
+
+    // To work around Core Text's mishandling of the default value for 'opsz',
+    // we need to record whether the font has an a optical size axis, what its
+    // range and default values are, and a usable close-to-default alternative.
+    // (See bug 1457417 for details.)
+    // These fields are used by gfxMacFont, but stored in the font entry so
+    // that only a single font instance needs to inspect the available
+    // variations.
+    bool mCheckedForOpszAxis;
+    bool mHasOpszAxis;
+    gfxFontVariationAxis mOpszAxis;
+    float mAdjustedDefaultOpsz;
+
     nsTHashtable<nsUint32HashKey> mAvailableTables;
 
     mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontMac> mUnscaledFont;

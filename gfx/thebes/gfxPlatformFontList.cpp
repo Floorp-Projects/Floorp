@@ -682,7 +682,7 @@ gfxPlatformFontList::CommonFontFallback(uint32_t aCh, uint32_t aNextCh,
                 // If style/weight/stretch was not Normal, see if we can
                 // fall back to a next-best face (e.g. Arial Black -> Bold,
                 // or Arial Narrow -> Regular).
-                GlobalFontMatch data(aCh, aMatchStyle);
+                GlobalFontMatch data(aCh, *aMatchStyle);
                 fallback->SearchAllFontsForChar(&data);
                 if (data.mBestMatch) {
                     *aMatchedFamily = fallback;
@@ -715,7 +715,7 @@ gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     }
 
     // otherwise, try to find it among local fonts
-    GlobalFontMatch data(aCh, aMatchStyle);
+    GlobalFontMatch data(aCh, *aMatchStyle);
 
     // iterate over all font families to find a font that support the character
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
@@ -1721,6 +1721,7 @@ gfxPlatformFontList::ClearLangGroupPrefFonts()
         }
     }
     mCJKPrefLangs.Clear();
+    mEmojiPrefFont = nullptr;
 }
 
 // Support for memory reporting
