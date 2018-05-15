@@ -373,6 +373,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun onNewSession_calledForTargetBlankLink() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
@@ -410,6 +413,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun onNewSession_childShouldLoad() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
@@ -432,6 +438,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun onNewSession_setWindowOpener() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
@@ -446,6 +455,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun onNewSession_supportNoOpener() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
@@ -459,6 +471,9 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @WithDevToolsAPI
     @Test fun onNewSession_notCalledForHandledLoads() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
@@ -491,6 +506,9 @@ class NavigationDelegateTest : BaseSessionTest() {
     @WithDevToolsAPI
     @Test(expected = IllegalArgumentException::class)
     fun onNewSession_doesNotAllowOpened() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
         sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
