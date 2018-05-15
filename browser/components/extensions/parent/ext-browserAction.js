@@ -33,15 +33,6 @@ const POPUP_RESULT_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT"
 
 var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const isAncestorOrSelf = (target, node) => {
-  for (; node; node = node.parentNode) {
-    if (node === target) {
-      return true;
-    }
-  }
-  return false;
-};
-
 // WeakMap[Extension -> BrowserAction]
 const browserActionMap = new WeakMap();
 
@@ -313,7 +304,7 @@ this.browserAction = class extends ExtensionAPI {
           // long enough that we can be relatively certain it won't be opening.
           if (this.pendingPopup) {
             let node = window.gBrowser && this.widget.forWindow(window).node;
-            if (isAncestorOrSelf(node, event.originalTarget)) {
+            if (node && node.contains(event.originalTarget)) {
               this.pendingPopupTimeout = setTimeout(() => this.clearPopup(),
                                                     POPUP_PRELOAD_TIMEOUT_MS);
             } else {
@@ -355,7 +346,7 @@ this.browserAction = class extends ExtensionAPI {
         const node = window.document.getElementById(this.id);
         const contexts = ["toolbar-context-menu", "customizationPanelItemContextMenu"];
 
-        if (contexts.includes(menu.id) && node && isAncestorOrSelf(node, trigger)) {
+        if (contexts.includes(menu.id) && node && node.contains(trigger)) {
           global.actionContextMenu({
             extension: this.extension,
             onBrowserAction: true,
