@@ -464,8 +464,35 @@ protected:
   bool IsEmptyBlockElement(Element& aElement,
                            IgnoreSingleBR aIgnoreSingleBR);
 
-  nsresult CheckForEmptyBlock(nsINode* aStartNode, Element* aBodyNode,
-                              nsIEditor::EDirection aAction, bool* aHandled);
+  /**
+   * MaybeDeleteTopMostEmptyAncestor() looks for top most empty block ancestor
+   * of aStartNode in aEditingHostElement.
+   * If found empty ancestor is a list item element, inserts a <br> element
+   * before its parent element if grand parent is a list element.  Then,
+   * collapse Selection to after the empty block.
+   * If found empty ancestor is not a list item element, collapse Selection to
+   * somewhere depending on aAction.
+   * Finally, removes the empty block ancestor.
+   *
+   * @param aStartNode          Start node to look for empty ancestors.
+   * @param aEditingHostElement Current editing host.
+   * @param aAction             If found empty ancestor block is a list item
+   *                            element, this is ignored.  Otherwise:
+   *                            - If eNext, eNextWord or eToEndOfLine, collapse
+   *                              Selection to after found empty ancestor.
+   *                            - If ePrevious, ePreviousWord or
+   *                              eToBeginningOfLine, collapse Selection to
+   *                              end of previous editable node.
+   *                            Otherwise, eNone is allowed but does nothing.
+   * @param aHandled            Returns true if this method removes an empty
+   *                            block ancestor of aStartNode.
+   */
+  MOZ_MUST_USE nsresult
+  MaybeDeleteTopMostEmptyAncestor(nsINode& aStartNode,
+                                  Element& aEditingHostElement,
+                                  nsIEditor::EDirection aAction,
+                                  bool* aHandled);
+
   enum class BRLocation { beforeBlock, blockEnd };
   Element* CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
                                int32_t aOffset = 0);
