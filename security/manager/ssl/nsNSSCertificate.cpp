@@ -362,12 +362,13 @@ nsNSSCertificate::GetDisplayName(nsAString& aDisplayName)
     mCert->emailAddr
   };
 
-  nsAutoCString nameOption;
-  for (auto nameOptionPtr : nameOptions) {
-    nameOption.Assign(nameOptionPtr);
-    if (nameOption.Length() > 0 && IsUTF8(nameOption)) {
-      CopyUTF8toUTF16(nameOption, aDisplayName);
-      return NS_OK;
+  for (auto nameOption : nameOptions) {
+    if (nameOption) {
+      size_t len = strlen(nameOption);
+      if (len > 0) {
+        LossyUTF8ToUTF16(nameOption, len, aDisplayName);
+        return NS_OK;
+      }
     }
   }
 
@@ -378,7 +379,7 @@ NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 {
   if (mCert->emailAddr) {
-    CopyUTF8toUTF16(mCert->emailAddr, aEmailAddress);
+    LossyUTF8ToUTF16(mCert->emailAddr, strlen(mCert->emailAddr), aEmailAddress);
   } else {
     nsresult rv;
     nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
@@ -398,28 +399,23 @@ nsNSSCertificate::GetEmailAddresses(uint32_t* aLength, char16_t*** aAddresses)
 
   *aLength = 0;
 
-  const char* aAddr;
-  for (aAddr = CERT_GetFirstEmailAddress(mCert.get())
-       ;
-       aAddr
-       ;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr))
-  {
+  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get());
+       aAddr;
+       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
     ++(*aLength);
   }
 
   *aAddresses = (char16_t**) moz_xmalloc(sizeof(char16_t*) * (*aLength));
-  if (!*aAddresses)
+  if (!*aAddresses) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  uint32_t iAddr;
-  for (aAddr = CERT_GetFirstEmailAddress(mCert.get()), iAddr = 0
-       ;
-       aAddr
-       ;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr), ++iAddr)
-  {
-    (*aAddresses)[iAddr] = ToNewUnicode(NS_ConvertUTF8toUTF16(aAddr));
+  uint32_t iAddr = 0;
+  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get());
+       aAddr;
+       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
+    (*aAddresses)[iAddr] = ToNewUnicode(nsDependentCString(aAddr));
+    iAddr++;
   }
 
   return NS_OK;
@@ -432,25 +428,20 @@ nsNSSCertificate::ContainsEmailAddress(const nsAString& aEmailAddress,
   NS_ENSURE_ARG(result);
   *result = false;
 
-  const char* aAddr = nullptr;
-  for (aAddr = CERT_GetFirstEmailAddress(mCert.get())
-       ;
-       aAddr
-       ;
-       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr))
-  {
-    NS_ConvertUTF8toUTF16 certAddr(aAddr);
+  for (const char* aAddr = CERT_GetFirstEmailAddress(mCert.get());
+       aAddr;
+       aAddr = CERT_GetNextEmailAddress(mCert.get(), aAddr)) {
+    nsAutoString certAddr;
+    LossyUTF8ToUTF16(aAddr, strlen(aAddr), certAddr);
     ToLowerCase(certAddr);
 
     nsAutoString testAddr(aEmailAddress);
     ToLowerCase(testAddr);
 
-    if (certAddr == testAddr)
-    {
+    if (certAddr == testAddr) {
       *result = true;
       break;
     }
-
   }
 
   return NS_OK;
@@ -463,7 +454,7 @@ nsNSSCertificate::GetCommonName(nsAString& aCommonName)
   if (mCert) {
     UniquePORTString commonName(CERT_GetCommonName(&mCert->subject));
     if (commonName) {
-      aCommonName = NS_ConvertUTF8toUTF16(commonName.get());
+      LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
     }
   }
   return NS_OK;
@@ -476,7 +467,8 @@ nsNSSCertificate::GetOrganization(nsAString& aOrganization)
   if (mCert) {
     UniquePORTString organization(CERT_GetOrgName(&mCert->subject));
     if (organization) {
-      aOrganization = NS_ConvertUTF8toUTF16(organization.get());
+      LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
+                       aOrganization);
     }
   }
   return NS_OK;
@@ -489,7 +481,7 @@ nsNSSCertificate::GetIssuerCommonName(nsAString& aCommonName)
   if (mCert) {
     UniquePORTString commonName(CERT_GetCommonName(&mCert->issuer));
     if (commonName) {
-      aCommonName = NS_ConvertUTF8toUTF16(commonName.get());
+      LossyUTF8ToUTF16(commonName.get(), strlen(commonName.get()), aCommonName);
     }
   }
   return NS_OK;
@@ -502,7 +494,8 @@ nsNSSCertificate::GetIssuerOrganization(nsAString& aOrganization)
   if (mCert) {
     UniquePORTString organization(CERT_GetOrgName(&mCert->issuer));
     if (organization) {
-      aOrganization = NS_ConvertUTF8toUTF16(organization.get());
+      LossyUTF8ToUTF16(organization.get(), strlen(organization.get()),
+                       aOrganization);
     }
   }
   return NS_OK;
@@ -515,7 +508,8 @@ nsNSSCertificate::GetIssuerOrganizationUnit(nsAString& aOrganizationUnit)
   if (mCert) {
     UniquePORTString organizationUnit(CERT_GetOrgUnitName(&mCert->issuer));
     if (organizationUnit) {
-      aOrganizationUnit = NS_ConvertUTF8toUTF16(organizationUnit.get());
+      LossyUTF8ToUTF16(organizationUnit.get(), strlen(organizationUnit.get()),
+                       aOrganizationUnit);
     }
   }
   return NS_OK;
@@ -528,7 +522,8 @@ nsNSSCertificate::GetOrganizationalUnit(nsAString& aOrganizationalUnit)
   if (mCert) {
     UniquePORTString orgunit(CERT_GetOrgUnitName(&mCert->subject));
     if (orgunit) {
-      aOrganizationalUnit = NS_ConvertUTF8toUTF16(orgunit.get());
+      LossyUTF8ToUTF16(orgunit.get(), strlen(orgunit.get()),
+                       aOrganizationalUnit);
     }
   }
   return NS_OK;
@@ -539,7 +534,8 @@ nsNSSCertificate::GetSubjectName(nsAString& _subjectName)
 {
   _subjectName.Truncate();
   if (mCert->subjectName) {
-    _subjectName = NS_ConvertUTF8toUTF16(mCert->subjectName);
+    LossyUTF8ToUTF16(mCert->subjectName, strlen(mCert->subjectName),
+                     _subjectName);
   }
   return NS_OK;
 }
@@ -639,7 +635,7 @@ nsNSSCertificate::GetIssuerName(nsAString& _issuerName)
 {
   _issuerName.Truncate();
   if (mCert->issuerName) {
-    _issuerName = NS_ConvertUTF8toUTF16(mCert->issuerName);
+    LossyUTF8ToUTF16(mCert->issuerName, strlen(mCert->issuerName), _issuerName);
   }
   return NS_OK;
 }
