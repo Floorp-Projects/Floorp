@@ -10,7 +10,7 @@
 
 using namespace mozilla::a11y;
 
-AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
+AccGroupInfo::AccGroupInfo(const Accessible* aItem, role aRole) :
   mPosInSet(0), mSetSize(0), mParent(nullptr), mItem(aItem), mRole(aRole)
 {
   MOZ_COUNT_CTOR(AccGroupInfo);
