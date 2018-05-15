@@ -28,7 +28,7 @@ public:
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
@@ -87,7 +87,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 };
 
 } // namespace a11y

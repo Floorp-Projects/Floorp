@@ -165,7 +165,7 @@ public:
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
-  virtual Relation RelationByType(RelationType aRelationType) override;
+  virtual Relation RelationByType(RelationType aRelationType) const override;
 
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
 
@@ -224,7 +224,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual Relation RelationByType(RelationType aRelationType) override;
+  virtual Relation RelationByType(RelationType aRelationType) const override;
 
 protected:
   virtual ~HTMLCaptionAccessible() { }

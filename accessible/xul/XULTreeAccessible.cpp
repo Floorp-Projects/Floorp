@@ -433,7 +433,7 @@ XULTreeAccessible::ChildCount() const
 }
 
 Relation
-XULTreeAccessible::RelationByType(RelationType aType)
+XULTreeAccessible::RelationByType(RelationType aType) const
 {
   if (aType == RelationType::NODE_PARENT_OF) {
     if (mTreeView)
@@ -790,7 +790,7 @@ XULTreeItemAccessibleBase::TakeFocus()
 }
 
 Relation
-XULTreeItemAccessibleBase::RelationByType(RelationType aType)
+XULTreeItemAccessibleBase::RelationByType(RelationType aType) const
 {
 
   switch (aType) {

@@ -64,7 +64,7 @@ HTMLLabelAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLLabelAccessible::RelationByType(RelationType aType)
+HTMLLabelAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR) {
@@ -106,7 +106,7 @@ HTMLLabelAccessible::DoAction(uint8_t aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 Relation
-HTMLOutputAccessible::RelationByType(RelationType aType)
+HTMLOutputAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::CONTROLLED_BY)

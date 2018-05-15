@@ -87,7 +87,7 @@ XULLabelAccessible::NativeState()
 }
 
 Relation
-XULLabelAccessible::RelationByType(RelationType aType)
+XULLabelAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR) {
