@@ -60,8 +60,9 @@ IonIC::scratchRegisterForEntryJump()
         return asUnaryArithIC()->output().scratchReg();
       case CacheKind::BinaryArith:
         return asBinaryArithIC()->output().scratchReg();
-      case CacheKind::Call:
       case CacheKind::Compare:
+        return asCompareIC()->output().scratchReg();
+      case CacheKind::Call:
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
       case CacheKind::GetIntrinsic:
@@ -619,6 +620,83 @@ IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript, IonBinaryArith
         bool attached = false;
         BinaryArithIRGenerator gen(cx, script, pc, ic->state().mode(),
                                    op, lhs, rhs, ret);
+        if (gen.tryAttachStub()) {
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+            if (!attached)
+                ic->state().trackNotAttached();
+        }
+    }
+    return true;
+}
+
+/* static */ bool
+IonCompareIC::update(JSContext* cx, HandleScript outerScript, IonCompareIC* ic,
+                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+{
+    IonScript* ionScript = outerScript->ionScript();
+    RootedScript script(cx, ic->script());
+    jsbytecode* pc = ic->pc();
+    JSOp op = JSOp(*pc);
+
+    // Case operations in a CONDSWITCH are performing strict equality.
+    if (op == JSOP_CASE)
+        op = JSOP_STRICTEQ;
+
+    // Don't pass lhs/rhs directly, we need the original values when
+    // generating stubs.
+    RootedValue lhsCopy(cx, lhs);
+    RootedValue rhsCopy(cx, rhs);
+
+    // Perform the compare operation.
+    bool out;
+    switch (op) {
+      case JSOP_LT:
+        if (!LessThan(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_LE:
+        if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_GT:
+        if (!GreaterThan(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_GE:
+        if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_EQ:
+        if (!LooselyEqual<true>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_NE:
+        if (!LooselyEqual<false>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_STRICTEQ:
+        if (!StrictlyEqual<true>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      case JSOP_STRICTNE:
+        if (!StrictlyEqual<false>(cx, &lhsCopy, &rhsCopy, &out))
+            return false;
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unhandled ion compare op");
+        return false;
+    }
+
+    res.setBoolean(out);
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        CompareIRGenerator gen(cx, script, pc, ic->state().mode(),
+                               op, lhs, rhs);
         if (gen.tryAttachStub()) {
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
 
