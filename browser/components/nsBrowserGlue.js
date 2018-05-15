@@ -1843,7 +1843,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 68;
+    const UI_VERSION = 69;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2203,6 +2203,17 @@ BrowserGlue.prototype = {
       // Remove blocklists legacy storage, now relying on IndexedDB.
       OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
                                   "kinto.sqlite"), {ignoreAbsent: true});
+    }
+
+    if (currentUIVersion < 69) {
+      // Clear old social prefs from profile (bug 1460675)
+      let socialPrefs = Services.prefs.getBranch("social.");
+      if (socialPrefs) {
+        let socialPrefsArray = socialPrefs.getChildList("");
+        for (let item of socialPrefsArray) {
+          Services.prefs.clearUserPref("social." + item);
+        }
+      }
     }
 
     // Update the migration version.
