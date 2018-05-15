@@ -150,6 +150,19 @@ ref = exports.nested(baguette, 0);
 assertEq(ref, baguette);
 assertEq(ref.calories, baguette.calories);
 
+// Make sure grow-memory isn't blocked by the lack of gc.
+(function() {
+    assertEq(wasmEvalText(`(module
+    (memory 0 64)
+    (func (export "f") (param anyref) (result i32)
+        i32.const 10
+        grow_memory
+        drop
+        current_memory
+    )
+)`).exports.f({}), 10);
+})();
+
 // More interesting use cases about control flow joins.
 
 function assertJoin(body) {
