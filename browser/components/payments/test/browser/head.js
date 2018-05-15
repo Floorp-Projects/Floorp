@@ -195,9 +195,7 @@ function checkPaymentAddressMatchesStorageAddress(paymentAddress, storageAddress
 function checkPaymentMethodDetailsMatchesCard(methodDetails, card, msg) {
   info(msg);
   // The card expiry month should be a zero-padded two-digit string.
-  let cardExpiryMonth = card["cc-exp-month"] < 10 ?
-                       "0" + card["cc-exp-month"] :
-                       card["cc-exp-month"].toString();
+  let cardExpiryMonth = card["cc-exp-month"].toString().padStart(2, "0");
   is(methodDetails.cardholderName, card["cc-name"], "Check cardholderName");
   is(methodDetails.cardNumber, card["cc-number"], "Check cardNumber");
   is(methodDetails.expiryMonth, cardExpiryMonth, "Check expiryMonth");

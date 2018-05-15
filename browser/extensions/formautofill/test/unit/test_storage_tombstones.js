@@ -24,7 +24,7 @@ const TEST_ADDRESS_1 = {
 
 const TEST_CC_1 = {
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4111111111111111",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 };

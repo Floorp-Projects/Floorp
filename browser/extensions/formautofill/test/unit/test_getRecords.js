@@ -7,6 +7,7 @@
 let {FormAutofillParent} = ChromeUtils.import("resource://formautofill/FormAutofillParent.jsm", {});
 ChromeUtils.import("resource://formautofill/MasterPassword.jsm");
 ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm");
+ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 const TEST_ADDRESS_1 = {
   "given-name": "Timothy",
@@ -29,14 +30,14 @@ const TEST_ADDRESS_2 = {
 
 let TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4111111111111111",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 };
 
 let TEST_CREDIT_CARD_2 = {
   "cc-name": "John Dai",
-  "cc-number": "1111222233334444",
+  "cc-number": "4929001587121045",
   "cc-exp-month": 2,
   "cc-exp-year": 2017,
 };
@@ -59,7 +60,7 @@ add_task(async function test_getRecords() {
     }],
     creditCards: [{
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4111111111111111",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     }],
@@ -169,7 +170,7 @@ add_task(async function test_getRecords_creditCards() {
   let collection = formAutofillParent.formAutofillStorage.creditCards;
   let encryptedCCRecords = [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2].map(record => {
     let clonedRecord = Object.assign({}, record);
-    clonedRecord["cc-number"] = collection._getMaskedCCNumber(record["cc-number"]);
+    clonedRecord["cc-number"] = CreditCard.getLongMaskedNumber(record["cc-number"]);
     clonedRecord["cc-number-encrypted"] = MasterPassword.encryptSync(record["cc-number"]);
     return clonedRecord;
   });
@@ -212,7 +213,7 @@ add_task(async function test_getRecords_creditCards() {
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-number"},
-        searchString: "123",
+        searchString: "411",
       },
       expectedResult: CreditCardsWithDecryptedNumber.slice(0, 1),
     },
@@ -221,7 +222,7 @@ add_task(async function test_getRecords_creditCards() {
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-number"},
-        searchString: "1",
+        searchString: "4",
       },
       expectedResult: CreditCardsWithDecryptedNumber,
     },
@@ -240,7 +241,7 @@ add_task(async function test_getRecords_creditCards() {
       filter: {
         collectionName: "creditCards",
         info: {fieldName: "cc-number"},
-        searchString: "123",
+        searchString: "411",
       },
       mpEnabled: true,
       expectedResult: encryptedCCRecords,
