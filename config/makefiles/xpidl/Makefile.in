@@ -42,7 +42,7 @@ code_gen_deps := $(topsrcdir)/xpcom/reflect/xptinfo/perfecthash.py
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
 		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
 		$(foreach dir,$($(basename $(notdir $@))_dirs),--input-dir $(dir)) \
-		-I $(dist_idl_dir) \
+		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
 		$(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 # When some IDL is added or removed, if the actual IDL file was already, or
