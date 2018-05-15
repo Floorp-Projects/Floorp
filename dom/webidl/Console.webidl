@@ -54,6 +54,8 @@ namespace console {
   [UseCounter]
   void time(optional DOMString label = "default");
   [UseCounter]
+  void timeLog(optional DOMString label = "default", any... data);
+  [UseCounter]
   void timeEnd(optional DOMString label = "default");
 
   // Mozilla only or Webcompat methods
@@ -121,7 +123,7 @@ dictionary ConsoleTimerStart {
   DOMString name = "";
 };
 
-dictionary ConsoleTimerEnd {
+dictionary ConsoleTimerLogOrEnd {
   DOMString name = "";
   double duration = 0;
 };
@@ -165,6 +167,7 @@ interface ConsoleInstance {
 
   // Timing
   void time(optional DOMString label = "default");
+  void timeLog(optional DOMString label = "default", any... data);
   void timeEnd(optional DOMString label = "default");
 
   // Mozilla only or Webcompat methods
@@ -179,8 +182,9 @@ interface ConsoleInstance {
 callback ConsoleInstanceDumpCallback = void (DOMString message);
 
 enum ConsoleLogLevel {
-  "All", "Debug", "Log", "Info", "Clear", "Trace", "TimeEnd", "Time", "Group",
-  "GroupEnd", "Profile", "ProfileEnd", "Dir", "Dirxml", "Warn", "Error", "Off"
+  "All", "Debug", "Log", "Info", "Clear", "Trace", "TimeLog", "TimeEnd", "Time",
+  "Group", "GroupEnd", "Profile", "ProfileEnd", "Dir", "Dirxml", "Warn", "Error",
+  "Off"
 };
 
 dictionary ConsoleInstanceOptions {
