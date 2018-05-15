@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for timeStart/timeLog/timeEnd in console</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function consoleListener(cb) {
+  return new Promise(resolve => {
+    let observer = {
+      observe: function listener(aSubject, aTopic, aData) {
+        var obj = aSubject.wrappedJSObject;
+        if (obj.arguments[0] == 'test' && cb(obj)) {
+          SpecialPowers.removeObserver(observer, "console-api-log-event");
+          resolve();
+        }
+      }
+    };
+    SpecialPowers.addObserver(observer, "console-api-log-event");
+  });
+}
+
+// Timer creation:
+async function runTest() {
+  var cl = consoleListener(function(obj) {
+    return ("timer" in obj) &&
+           ("name" in obj.timer) &&
+           obj.timer.name == 'test';
+  });
+  console.time('test');
+  await cl;
+  ok(true, "Console.time received!");
+
+  // Timer check:
+  cl = consoleListener(obj => {
+    return ("timer" in obj) &&
+           ("name" in obj.timer) &&
+           obj.timer.name == 'test' &&
+           ("duration" in obj.timer) &&
+           obj.timer.duration > 0 &&
+           obj.arguments[1] == 1 &&
+           obj.arguments[2] == 2 &&
+           obj.arguments[3] == 3 &&
+           obj.arguments[4] == 4;
+  });
+  console.timeLog('test', 1, 2, 3, 4);
+  await cl;
+  ok(true, "Console.timeLog received!");
+
+  // Time deleted:
+  cl = consoleListener(obj => {
+    return ("timer" in obj) &&
+           ("name" in obj.timer) &&
+           obj.timer.name == 'test' &&
+           ("duration" in obj.timer) &&
+           obj.timer.duration > 0;
+  });
+  console.timeEnd('test');
+  await cl;
+  ok(true, "Console.timeEnd received!");
+
+  // Here an error:
+  cl = consoleListener(obj => {
+    return ("timer" in obj) &&
+           ("name" in obj.timer) &&
+           obj.timer.name == 'test' &&
+           ("error" in obj.timer);
+  });
+  console.timeLog('test');
+  await cl;
+  ok(true, "Console.timeLog with error received!");
+}
+
+runTest().then(SimpleTest.finish);
+
+  </script>
+</body>
+</html>

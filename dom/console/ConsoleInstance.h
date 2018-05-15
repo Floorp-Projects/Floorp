@@ -75,6 +75,10 @@ public:
   Time(JSContext* aCx, const nsAString& aLabel);
 
   void
+  TimeLog(JSContext* aCx, const nsAString& aLabel,
+          const Sequence<JS::Value>& aData);
+
+  void
   TimeEnd(JSContext* aCx, const nsAString& aLabel);
 
   void
