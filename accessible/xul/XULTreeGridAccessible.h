@@ -82,7 +82,7 @@ public:
   // Accessible
   virtual void Shutdown() override;
   virtual a11y::role NativeRole() const override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
 
@@ -128,7 +128,7 @@ public:
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual nsRect BoundsInAppUnits() const override;
   virtual nsIntRect BoundsInCSSPixels() const override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual Accessible* FocusedChild() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual int32_t IndexInParent() const override;

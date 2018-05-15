@@ -234,7 +234,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual a11y::role NativeRole() const override;
 
   // XULTreeItemAccessibleBase

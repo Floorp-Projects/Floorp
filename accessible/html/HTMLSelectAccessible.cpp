@@ -148,7 +148,7 @@ HTMLSelectOptionAccessible::NativeRole() const
 }
 
 ENameValueFlag
-HTMLSelectOptionAccessible::NativeName(nsString& aName)
+HTMLSelectOptionAccessible::NativeName(nsString& aName) const
 {
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use

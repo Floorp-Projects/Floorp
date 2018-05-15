@@ -71,7 +71,7 @@ ImageAccessible::NativeState()
 }
 
 ENameValueFlag
-ImageAccessible::NativeName(nsString& aName)
+ImageAccessible::NativeName(nsString& aName) const
 {
   bool hasAltAttrib =
     mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);

@@ -293,7 +293,7 @@ XULTreeGridRowAccessible::NativeRole() const
 }
 
 ENameValueFlag
-XULTreeGridRowAccessible::Name(nsString& aName)
+XULTreeGridRowAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -476,7 +476,7 @@ XULTreeGridCellAccessible::FocusedChild()
 }
 
 ENameValueFlag
-XULTreeGridCellAccessible::Name(nsString& aName)
+XULTreeGridCellAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
