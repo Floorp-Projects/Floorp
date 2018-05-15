@@ -7,6 +7,9 @@
 var EXPORTED_SYMBOLS = ["FormData"];
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "CreditCard",
+  "resource://gre/modules/CreditCard.jsm");
+
 /**
  * Returns whether the given URL very likely has input
  * fields that contain serialized session store data.
@@ -33,44 +36,6 @@ function hasRestorationData(data) {
  */
 function getDocumentURI(doc) {
   return doc.documentURI.replace(/#.*$/, "");
-}
-
-/**
- * Returns whether the given value is a valid credit card number based on
- * the Luhn algorithm. See https://en.wikipedia.org/wiki/Luhn_algorithm.
- */
-function isValidCCNumber(value) {
-  // Remove dashes and whitespace.
-  let ccNumber = value.replace(/[-\s]+/g, "");
-
-  // Check for non-alphanumeric characters.
-  if (/[^0-9]/.test(ccNumber)) {
-    return false;
-  }
-
-  // Check for invalid length.
-  let length = ccNumber.length;
-  if (length != 9 && length != 15 && length != 16) {
-    return false;
-  }
-
-  let total = 0;
-  for (let i = 0; i < length; i++) {
-    let currentChar = ccNumber.charAt(length - i - 1);
-    let currentDigit = parseInt(currentChar, 10);
-
-    if (i % 2) {
-      // Double every other value.
-      total += currentDigit * 2;
-      // If the doubled value has two digits, add the digits together.
-      if (currentDigit > 4) {
-        total -= 9;
-      }
-    } else {
-      total += currentDigit;
-    }
-  }
-  return total % 10 == 0;
 }
 
 // For a comprehensive list of all available <INPUT> types see
@@ -198,9 +163,10 @@ var FormDataInternal = {
       }
 
       // We do not want to collect credit card numbers.
-      if (ChromeUtils.getClassName(node) === "HTMLInputElement" &&
-          isValidCCNumber(node.value)) {
-        continue;
+      if (ChromeUtils.getClassName(node) === "HTMLInputElement") {
+        if (CreditCard.isValidNumber(node.value)) {
+          continue;
+        }
       }
 
       if (ChromeUtils.getClassName(node) === "HTMLInputElement" ||

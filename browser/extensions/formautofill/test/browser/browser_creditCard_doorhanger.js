@@ -18,7 +18,7 @@ add_task(async function test_submit_creditCard_cancel_saving() {
         name.setUserInput("User 1");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("1111222233334444");
+        number.setUserInput("5038146897157463");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -57,7 +57,7 @@ add_task(async function test_submit_creditCard_saved() {
         name.focus();
         name.setUserInput("User 1");
 
-        form.querySelector("#cc-number").setUserInput("1111222233334444");
+        form.querySelector("#cc-number").setUserInput("5038146897157463");
         form.querySelector("#cc-exp-month").setUserInput("12");
         form.querySelector("#cc-exp-year").setUserInput("2017");
 
@@ -135,7 +135,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         name.setUserInput("");
 
-        form.querySelector("#cc-number").setUserInput("1234567812345678");
+        form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
         form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
         // Wait 1000ms before submission to make sure the input value applied
@@ -173,7 +173,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
         name.focus();
 
         name.setUserInput("John Doe");
-        form.querySelector("#cc-number").setUserInput("1234567812345678");
+        form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
         form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
 
@@ -209,7 +209,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
         name.focus();
 
         name.setUserInput("John Doe");
-        form.querySelector("#cc-number").setUserInput("1234567812345678");
+        form.querySelector("#cc-number").setUserInput("4111111111111111");
         form.querySelector("#cc-exp-month").setUserInput("4");
         // Set unnormalized year
         form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear().toString().substr(2, 2));
@@ -248,7 +248,7 @@ add_task(async function test_submit_creditCard_never_save() {
         name.setUserInput("User 0");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("1234123412341234");
+        number.setUserInput("6387060366272981");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -286,7 +286,7 @@ add_task(async function test_submit_creditCard_saved_with_mp_enabled() {
         name.setUserInput("User 0");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("1234123412341234");
+        number.setUserInput("6387060366272981");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -303,7 +303,7 @@ add_task(async function test_submit_creditCard_saved_with_mp_enabled() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   is(creditCards[0]["cc-name"], "User 0", "Verify the name field");
-  is(creditCards[0]["cc-number"], "************1234", "Verify the card number field");
+  is(creditCards[0]["cc-number"], "************2981", "Verify the card number field");
   LoginTestUtils.masterPassword.disable();
   await removeAllRecords();
 });
@@ -323,7 +323,7 @@ add_task(async function test_submit_creditCard_saved_with_mp_enabled_but_cancele
         name.setUserInput("User 2");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("5678567856785678");
+        number.setUserInput("5471839082338112");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -361,7 +361,7 @@ add_task(async function test_submit_creditCard_with_sync_account() {
         name.setUserInput("User 2");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("1234123412341234");
+        number.setUserInput("6387060366272981");
 
         // Wait 500ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -417,7 +417,7 @@ add_task(async function test_submit_creditCard_with_synced_already() {
         name.setUserInput("User 2");
 
         let number = form.querySelector("#cc-number");
-        number.setUserInput("1234123412341234");
+        number.setUserInput("6387060366272981");
 
         // Wait 500ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -451,7 +451,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
         name.focus();
 
         name.setUserInput("User 3");
-        form.querySelector("#cc-number").setUserInput("9999888877776666");
+        form.querySelector("#cc-number").setUserInput("5103059495477870");
         form.querySelector("#cc-exp-month").setUserInput("1");
         form.querySelector("#cc-exp-year").setUserInput("2000");
 
@@ -506,7 +506,7 @@ add_task(async function test_update_autofill_form_name() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0]["cc-name"], "User 1", "cc-name field is updated");
-  is(creditCards[0]["cc-number"], "************5678", "Verify the card number field");
+  is(creditCards[0]["cc-number"], "************1111", "Verify the card number field");
   is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
@@ -546,7 +546,7 @@ add_task(async function test_update_autofill_form_exp_date() {
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card");
   is(creditCards[0]["cc-exp-year"], "2020", "cc-exp-year field is updated");
-  is(creditCards[0]["cc-number"], "************5678", "Verify the card number field");
+  is(creditCards[0]["cc-number"], "************1111", "Verify the card number field");
   is(SpecialPowers.getIntPref(CREDITCARDS_USED_STATUS_PREF), 3, "User has used autofill");
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
   await removeAllRecords();
@@ -600,10 +600,10 @@ add_task(async function test_update_duplicate_autofill_form() {
     ],
   });
   await saveCreditCard({
-    "cc-number": "1234123412341234",
+    "cc-number": "6387060366272981",
   });
   await saveCreditCard({
-    "cc-number": "1111222233334444",
+    "cc-number": "5038146897157463",
   });
   let creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit card in storage");
@@ -615,9 +615,9 @@ add_task(async function test_update_duplicate_autofill_form() {
       await ContentTask.spawn(browser, null, async function() {
         let form = content.document.getElementById("form");
         let number = form.querySelector("#cc-number");
-        is(number.value, "1234123412341234", "Should be the first credit card number");
+        is(number.value, "6387060366272981", "Should be the first credit card number");
         // Change number to the second credit card number
-        number.setUserInput("1111222233334444");
+        number.setUserInput("5038146897157463");
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));

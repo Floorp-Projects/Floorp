@@ -539,10 +539,10 @@ const CREDIT_CARD_COMPUTE_TESTCASES = [
   {
     description: "Number should be encrypted and masked",
     creditCard: {
-      "cc-number": "1234123412341234",
+      "cc-number": "4929001587121045",
     },
     expectedResult: {
-      "cc-number": "************1234",
+      "cc-number": "************1045",
     },
   },
 
@@ -609,28 +609,28 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
   {
     description: "Regular number",
     creditCard: {
-      "cc-number": "1234123412341234",
+      "cc-number": "4929001587121045",
     },
     expectedResult: {
-      "cc-number": "1234123412341234",
+      "cc-number": "4929001587121045",
     },
   },
   {
     description: "Number with spaces",
     creditCard: {
-      "cc-number": "1234 1234  1234 1234",
+      "cc-number": "4111 1111  1111 1111",
     },
     expectedResult: {
-      "cc-number": "1234123412341234",
+      "cc-number": "4111111111111111",
     },
   },
   {
     description: "Number with hyphens",
     creditCard: {
-      "cc-number": "1234-1234-1234-1234",
+      "cc-number": "4111-1111-1111-1111",
     },
     expectedResult: {
-      "cc-number": "1234123412341234",
+      "cc-number": "4111111111111111",
     },
   },
 
@@ -788,7 +788,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
   {
     description: "Has invalid \"cc-exp\"",
     creditCard: {
-      "cc-number": "1111222233334444", // Make sure it won't be an empty record.
+      "cc-number": "4111111111111111", // Make sure it won't be an empty record.
       "cc-exp": "99-9999",
     },
     expectedResult: {
