@@ -477,31 +477,28 @@ protected:
                          EditAction inOperationType);
   void PromoteRange(nsRange& aRange, EditAction inOperationType);
   enum class TouchContent { no, yes };
-  nsresult GetNodesForOperation(
-             nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
-             nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-             EditAction aOperationType,
-             TouchContent aTouchContent = TouchContent::yes);
+  MOZ_MUST_USE nsresult
+  GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+                       nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+                       EditAction aOperationType, TouchContent aTouchContent);
   void GetChildNodesForOperation(
          nsINode& aNode,
          nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(const EditorDOMPoint& aPoint,
-                             EditAction aOperation,
-                             nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-                             TouchContent aTouchContent);
-  nsresult GetNodesFromSelection(
-             EditAction aOperation,
-             nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-             TouchContent aTouchContent = TouchContent::yes);
+  MOZ_MUST_USE nsresult
+  GetNodesFromPoint(const EditorDOMPoint& aPoint, EditAction aOperation,
+                    nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
+                    TouchContent aTouchContent);
+  MOZ_MUST_USE nsresult
+  GetNodesFromSelection(EditAction aOperation,
+                        nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
+                        TouchContent aTouchContent);
   enum class EntireList { no, yes };
-  nsresult GetListActionNodes(
-             nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
-             EntireList aEntireList,
-             TouchContent aTouchContent = TouchContent::yes);
+  MOZ_MUST_USE nsresult
+  GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
+                     EntireList aEntireList, TouchContent aTouchContent);
   void GetDefinitionListItemTypes(Element* aElement, bool* aDT, bool* aDD);
-  nsresult GetParagraphFormatNodes(
-             nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
-             TouchContent aTouchContent = TouchContent::yes);
+  nsresult
+  GetParagraphFormatNodes(nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
   void LookInsideDivBQandList(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
