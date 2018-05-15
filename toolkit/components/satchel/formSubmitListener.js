@@ -4,6 +4,9 @@
 
 /* eslint-env mozilla/frame-script */
 
+ChromeUtils.defineModuleGetter(this, "CreditCard",
+                               "resource://gre/modules/CreditCard.jsm");
+
 (function() {
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -29,36 +32,6 @@ let satchelFormListener = {
   updatePrefs() {
     this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
     this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
-  },
-
-  // Implements the Luhn checksum algorithm as described at
-  // http://wikipedia.org/wiki/Luhn_algorithm
-  isValidCCNumber(ccNumber) {
-    // Remove dashes and whitespace
-    ccNumber = ccNumber.replace(/[\-\s]/g, "");
-
-    let len = ccNumber.length;
-    if (len != 9 && len != 15 && len != 16) {
-      return false;
-    }
-
-    if (!/^\d+$/.test(ccNumber)) {
-      return false;
-    }
-
-    let total = 0;
-    for (let i = 0; i < len; i++) {
-      let ch = parseInt(ccNumber[len - i - 1], 10);
-      if (i % 2 == 1) {
-        // Double it, add digits together if > 10
-        ch *= 2;
-        if (ch > 9) {
-          ch -= 9;
-        }
-      }
-      total += ch;
-    }
-    return total % 10 == 0;
   },
 
   log(message) {
@@ -127,7 +100,7 @@ let satchelFormListener = {
         }
 
         // Don't save credit card numbers.
-        if (this.isValidCCNumber(value)) {
+        if (CreditCard.isValidNumber(value)) {
           this.log("skipping saving a credit card number");
           continue;
         }

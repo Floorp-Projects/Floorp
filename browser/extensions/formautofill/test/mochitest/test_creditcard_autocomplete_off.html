@@ -22,12 +22,12 @@ Form autofill test: simple form credit card autofill
 
 const MOCK_STORAGE = [{
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4929001587121045",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 }, {
   "cc-name": "Timothy Berners-Lee",
-  "cc-number": "1111222233334444",
+  "cc-number": "5103059495477870",
   "cc-exp-month": 12,
   "cc-exp-year": 2022,
 }];
@@ -40,7 +40,7 @@ async function setupCreditCardStorage() {
 async function setupFormHistory() {
   await updateFormHistory([
     {op: "add", fieldname: "cc-name", value: "John Smith"},
-    {op: "add", fieldname: "cc-number", value: "1234000056780000"},
+    {op: "add", fieldname: "cc-number", value: "6011029476355493"},
   ]);
 }
 
@@ -53,7 +53,7 @@ add_task(async function history_only_menu_checking() {
   await setInput("#cc-number", "");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(["1234000056780000"], false);
+  checkMenuEntries(["6011029476355493"], false);
 
   await setInput("#cc-name", "");
   synthesizeKey("KEY_ArrowDown");

@@ -7,33 +7,34 @@
 const {FormAutofillStorage} = ChromeUtils.import("resource://formautofill/FormAutofillStorage.jsm", {});
 ChromeUtils.defineModuleGetter(this, "Preferences",
                                "resource://gre/modules/Preferences.jsm");
+ChromeUtils.import("resource://gre/modules/CreditCard.jsm");
 
 const TEST_STORE_FILE_NAME = "test-credit-card.json";
 const COLLECTION_NAME = "creditCards";
 
 const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
-  "cc-number": "1234567812345678",
+  "cc-number": "4929001587121045",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 };
 
 const TEST_CREDIT_CARD_2 = {
   "cc-name": "Timothy Berners-Lee",
-  "cc-number": "1111222233334444",
+  "cc-number": "5103059495477870",
   "cc-exp-month": 12,
   "cc-exp-year": 2022,
 };
 
 const TEST_CREDIT_CARD_3 = {
-  "cc-number": "9999888877776666",
+  "cc-number": "3589993783099582",
   "cc-exp-month": 1,
   "cc-exp-year": 2000,
 };
 
 const TEST_CREDIT_CARD_4 = {
   "cc-name": "Foo Bar",
-  "cc-number": "9999888877776666",
+  "cc-number": "3589993783099582",
 };
 
 const TEST_CREDIT_CARD_WITH_BILLING_ADDRESS = {
@@ -45,7 +46,7 @@ const TEST_CREDIT_CARD_WITH_BILLING_ADDRESS = {
 const TEST_CREDIT_CARD_WITH_EMPTY_FIELD = {
   billingAddressGUID: "",
   "cc-name": "",
-  "cc-number": "1234123412341234",
+  "cc-number": "344060747836806",
   "cc-exp-month": 1,
 };
 
@@ -54,31 +55,31 @@ const TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD = {
   "cc-additional-name": "",
   "cc-family-name": "",
   "cc-exp": "",
-  "cc-number": "1928374619283746",
+  "cc-number": "5415425865751454",
 };
 
 const TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR = {
-  "cc-number": "1234123412341234",
+  "cc-number": "344060747836806",
   "cc-exp-month": 1,
   "cc-exp-year": 12,
 };
 
 const TEST_CREDIT_CARD_WITH_INVALID_FIELD = {
   "cc-name": "John Doe",
-  "cc-number": "1234123412341234",
+  "cc-number": "344060747836806",
   invalidField: "INVALID",
 };
 
 const TEST_CREDIT_CARD_WITH_INVALID_EXPIRY_DATE = {
   "cc-name": "John Doe",
-  "cc-number": "1111222233334444",
+  "cc-number": "5103059495477870",
   "cc-exp-month": 13,
   "cc-exp-year": -3,
 };
 
 const TEST_CREDIT_CARD_WITH_SPACES_BETWEEN_DIGITS = {
   "cc-name": "John Doe",
-  "cc-number": "1111 2222 3333 4444",
+  "cc-number": "5103 0594 9547 7870",
 };
 
 const TEST_CREDIT_CARD_EMPTY_AFTER_NORMALIZE = {
@@ -96,19 +97,19 @@ const MERGE_TESTCASES = [
   {
     description: "Merge a superset",
     creditCardInStorage: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
     creditCardToMerge: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
     expectedCreditCard: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
@@ -116,14 +117,14 @@ const MERGE_TESTCASES = [
   {
     description: "Merge a superset with billingAddressGUID",
     creditCardInStorage: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
     },
     creditCardToMerge: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       billingAddressGUID: "ijsnbhfr",
     },
     expectedCreditCard: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       billingAddressGUID: "ijsnbhfr",
     },
   },
@@ -131,18 +132,18 @@ const MERGE_TESTCASES = [
     description: "Merge a subset",
     creditCardInStorage: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
     creditCardToMerge: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
     expectedCreditCard: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
@@ -151,15 +152,15 @@ const MERGE_TESTCASES = [
   {
     description: "Merge a subset with billingAddressGUID",
     creditCardInStorage: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       billingAddressGUID: "8fhdb3ug6",
     },
     creditCardToMerge: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
     },
     expectedCreditCard: {
       billingAddressGUID: "8fhdb3ug6",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
     },
     noNeedToUpdate: true,
   },
@@ -167,16 +168,16 @@ const MERGE_TESTCASES = [
     description: "Merge an creditCard with partial overlaps",
     creditCardInStorage: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
     },
     creditCardToMerge: {
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
     expectedCreditCard: {
       "cc-name": "John Doe",
-      "cc-number": "1234567812345678",
+      "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
     },
@@ -317,7 +318,7 @@ add_task(async function test_add() {
   profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD);
   creditCard = profileStorage.creditCards._data[3];
   Assert.equal(creditCard["cc-number"],
-    profileStorage.creditCards._getMaskedCCNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
+    CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
 
   Assert.throws(() => profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
@@ -399,11 +400,11 @@ add_task(async function test_update() {
   profileStorage.creditCards.update(profileStorage.creditCards._data[0].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, false);
   creditCard = profileStorage.creditCards._data[0];
   Assert.equal(creditCard["cc-number"],
-    profileStorage.creditCards._getMaskedCCNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
+    CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
   profileStorage.creditCards.update(profileStorage.creditCards._data[1].guid, TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD, true);
   creditCard = profileStorage.creditCards._data[1];
   Assert.equal(creditCard["cc-number"],
-    profileStorage.creditCards._getMaskedCCNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
+    CreditCard.getLongMaskedNumber(TEST_CREDIT_CARD_WITH_EMPTY_COMPUTED_FIELD["cc-number"]));
 
   Assert.throws(
     () => profileStorage.creditCards.update("INVALID_GUID", TEST_CREDIT_CARD_3),
@@ -635,7 +636,9 @@ add_task(async function test_getDuplicateGuid() {
   // Numbers with the same last 4 digits shouldn't be treated as a duplicate.
   record = Object.assign({}, TEST_CREDIT_CARD_3);
   let last4Digits = record["cc-number"].substr(-4);
-  record["cc-number"] = "000000000000" + last4Digits;
+  // This number differs from TEST_CREDIT_CARD_3 by swapping the order of the
+  // 09 and 90 adjacent digits, which is still a valid credit card number.
+  record["cc-number"] = "358999378390" + last4Digits;
   Assert.equal(profileStorage.creditCards.getDuplicateGuid(record), null);
 
   // ... However, we treat numbers with the same last 4 digits as a duplicate if
