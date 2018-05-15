@@ -26,43 +26,46 @@ class JS_PUBLIC_API(JSTracer);
 #pragma GCC diagnostic pop
 #endif // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
-class PseudoStack;
+class ProfilingStack;
 
-// This file defines the classes PseudoStack and ProfilingStackFrame.
-// The PseudoStack manages an array of ProfilingStackFrames.
+// This file defines the classes ProfilingStack and ProfilingStackFrame.
+// The ProfilingStack manages an array of ProfilingStackFrames.
+// It keeps track of the "label stack" and the JS interpreter stack.
+// The two stack types are interleaved.
+//
 // Usage:
 //
-//  PseudoStack* pseudoStack = ...;
+//  ProfilingStack* profilingStack = ...;
 //
 //  // For label frames:
-//  pseudoStack->pushLabelFrame(...);
+//  profilingStack->pushLabelFrame(...);
 //  // Execute some code. When finished, pop the frame:
-//  pseudoStack->pop();
+//  profilingStack->pop();
 //
 //  // For JS stack frames:
-//  pseudoStack->pushJSFrame(...);
+//  profilingStack->pushJSFrame(...);
 //  // Execute some code. When finished, pop the frame:
-//  pseudoStack->pop();
+//  profilingStack->pop();
 //
 //
 // Concurrency considerations
 //
-// A thread's pseudo stack (and the frames inside it) is only modified by
-// that thread. However, the pseudo stack can be *read* by a different thread,
+// A thread's profiling stack (and the frames inside it) is only modified by
+// that thread. However, the profiling stack can be *read* by a different thread,
 // the sampler thread: Whenever the profiler wants to sample a given thread A,
 // the following happens:
 //  (1) Thread A is suspended.
-//  (2) The sampler thread (thread S) reads the PseudoStack of thread A,
+//  (2) The sampler thread (thread S) reads the ProfilingStack of thread A,
 //      including all ProfilingStackFrames that are currently in that stack
-//      (pseudoStack->frames[0..pseudoStack->stackSize()]).
+//      (profilingStack->frames[0..profilingStack->stackSize()]).
 //  (3) Thread A is resumed.
 //
 // Thread suspension is achieved using platform-specific APIs; refer to each
 // platform's Sampler::SuspendAndSampleAndResumeThread implementation in
 // platform-*.cpp for details.
 //
-// When the thread is suspended, the values in pseudoStack->stackPointer and in
-// the stack frame range pseudoStack->frames[0..pseudoStack->stackPointer] need
+// When the thread is suspended, the values in profilingStack->stackPointer and in
+// the stack frame range profilingStack->frames[0..profilingStack->stackPointer] need
 // to be in a consistent state, so that thread S does not read partially-
 // constructed stack frames. More specifically, we have two requirements:
 //  (1) When adding a new frame at the top of the stack, its ProfilingStackFrame
@@ -119,7 +122,7 @@ class ProfilingStackFrame
     // that writes to these fields are release-writes, which ensures that
     // earlier writes in this thread don't get reordered after the writes to
     // these fields. In particular, the decrement of the stack pointer in
-    // PseudoStack::pop() is a write that *must* happen before the values in
+    // ProfilingStack::pop() is a write that *must* happen before the values in
     // this ProfilingStackFrame are changed. Otherwise, the sampler thread might
     // see an inconsistent state where the stack pointer still points to a
     // ProfilingStackFrame which has already been popped off the stack and whose
@@ -303,7 +306,7 @@ class ProfilingStackFrame
 };
 
 JS_FRIEND_API(void)
-SetContextProfilingStack(JSContext* cx, PseudoStack* pseudoStack);
+SetContextProfilingStack(JSContext* cx, ProfilingStack* profilingStack);
 
 // GetContextProfilingStack also exists, but it's defined in RootingAPI.h.
 
@@ -315,12 +318,12 @@ RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 
 } // namespace js
 
-// Each thread has its own PseudoStack. That thread modifies the PseudoStack,
+// Each thread has its own ProfilingStack. That thread modifies the ProfilingStack,
 // pushing and popping elements as necessary.
 //
-// The PseudoStack is also read periodically by the profiler's sampler thread.
-// This happens only when the thread that owns the PseudoStack is suspended. So
-// there are no genuine parallel accesses.
+// The ProfilingStack is also read periodically by the profiler's sampler thread.
+// This happens only when the thread that owns the ProfilingStack is suspended.
+// So there are no genuine parallel accesses.
 //
 // However, it is possible for pushing/popping to be interrupted by a periodic
 // sample. Because of this, we need pushing/popping to be effectively atomic.
@@ -334,14 +337,14 @@ RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*));
 // - When popping an old frame, the only operation is the decrementing of the
 //   stack pointer, which is obviously atomic.
 //
-class PseudoStack final
+class ProfilingStack final
 {
   public:
-    PseudoStack()
+    ProfilingStack()
       : stackPointer(0)
     {}
 
-    ~PseudoStack();
+    ~ProfilingStack();
 
     void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
                         uint32_t line, js::ProfilingStackFrame::Category category) {
@@ -402,12 +405,12 @@ class PseudoStack final
     MOZ_COLD MOZ_MUST_USE bool ensureCapacitySlow();
 
     // No copying.
-    PseudoStack(const PseudoStack&) = delete;
-    void operator=(const PseudoStack&) = delete;
+    ProfilingStack(const ProfilingStack&) = delete;
+    void operator=(const ProfilingStack&) = delete;
 
     // No moving either.
-    PseudoStack(PseudoStack&&) = delete;
-    void operator=(PseudoStack&&) = delete;
+    ProfilingStack(ProfilingStack&&) = delete;
+    void operator=(ProfilingStack&&) = delete;
 
     uint32_t capacity = 0;
 
@@ -445,19 +448,19 @@ class GeckoProfilerThread
     friend class GeckoProfilerEntryMarker;
     friend class GeckoProfilerBaselineOSRMarker;
 
-    PseudoStack*         pseudoStack_;
+    ProfilingStack*         profilingStack_;
 
   public:
     GeckoProfilerThread();
 
-    uint32_t stackPointer() { MOZ_ASSERT(installed()); return pseudoStack_->stackPointer; }
-    ProfilingStackFrame* stack() { return pseudoStack_->frames; }
-    PseudoStack* getPseudoStack() { return pseudoStack_; }
+    uint32_t stackPointer() { MOZ_ASSERT(installed()); return profilingStack_->stackPointer; }
+    ProfilingStackFrame* stack() { return profilingStack_->frames; }
+    ProfilingStack* getProfilingStack() { return profilingStack_; }
 
     /* management of whether instrumentation is on or off */
-    bool installed() { return pseudoStack_ != nullptr; }
+    bool installed() { return profilingStack_ != nullptr; }
 
-    void setProfilingStack(PseudoStack* pseudoStack);
+    void setProfilingStack(ProfilingStack* profilingStack);
     void trace(JSTracer* trc);
 
     /*
