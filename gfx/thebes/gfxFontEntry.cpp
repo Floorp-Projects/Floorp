@@ -1773,7 +1773,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData)
         // or Arial Narrow -> Regular).
         GlobalFontMatch data(aMatchData->mCh, aMatchData->mStyle);
         SearchAllFontsForChar(&data);
-        if (isfinite(data.mMatchDistance)) {
+        if (std::isfinite(data.mMatchDistance)) {
             fe = data.mBestMatch;
             distance = data.mMatchDistance;
         }
