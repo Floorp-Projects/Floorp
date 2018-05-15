@@ -193,6 +193,11 @@ typedef bool (*IonBinaryArithICFn)(JSContext* cx, HandleScript outerScript, IonB
 static const VMFunction IonBinaryArithICInfo =
     FunctionInfo<IonBinaryArithICFn>(IonBinaryArithIC::update, "IonBinaryArithIC::update");
 
+typedef bool (*IonCompareICFn)(JSContext* cx, HandleScript outerScript, IonCompareIC* stub,
+                                    HandleValue lhs, HandleValue rhs, MutableHandleValue res);
+static const VMFunction IonCompareICInfo =
+    FunctionInfo<IonCompareICFn>(IonCompareIC::update, "IonCompareIC::update");
+
 void
 CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
 {
@@ -402,8 +407,24 @@ CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool)
         masm.jump(ool->rejoin());
         return;
       }
+      case CacheKind::Compare: {
+        IonCompareIC* compareIC = ic->asCompareIC();
+
+        saveLive(lir);
+
+        pushArg(compareIC->rhs());
+        pushArg(compareIC->lhs());
+        icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
+        pushArg(ImmGCPtr(gen->info().script()));
+        callVM(IonCompareICInfo, lir);
+
+        StoreValueTo(compareIC->output()).generate(this);
+        restoreLiveIgnore(lir, StoreValueTo(compareIC->output()).clobbered());
+
+        masm.jump(ool->rejoin());
+        return;
+      }
       case CacheKind::Call:
-      case CacheKind::Compare:
       case CacheKind::TypeOf:
       case CacheKind::ToBool:
       case CacheKind::GetIntrinsic:
@@ -2820,8 +2841,34 @@ CodeGenerator::visitBinaryCache(LBinaryCache* lir)
     TypedOrValueRegister rhs = TypedOrValueRegister(ToValue(lir, LBinaryCache::RhsInput));
     ValueOperand output = ToOutValue(lir);
 
-    IonBinaryArithIC ic(liveRegs, lhs, rhs, output);
-    addIC(lir, allocateIC(ic));
+    JSOp jsop = JSOp(*lir->mirRaw()->toInstruction()->resumePoint()->pc());
+
+    switch (jsop) {
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+      case JSOP_POW: {
+        IonBinaryArithIC ic(liveRegs, lhs, rhs, output);
+        addIC(lir, allocateIC(ic));
+        return;
+      }
+      case JSOP_LT:
+      case JSOP_LE:
+      case JSOP_GT:
+      case JSOP_GE:
+      case JSOP_EQ:
+      case JSOP_NE:
+      case JSOP_STRICTEQ:
+      case JSOP_STRICTNE: {
+        IonCompareIC ic(liveRegs, lhs, rhs, output);
+        addIC(lir, allocateIC(ic));
+        return;
+      }
+      default:
+        MOZ_CRASH("Unsupported jsop in MBinaryCache");
+    }
 }
 
 void
