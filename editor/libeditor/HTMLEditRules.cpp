@@ -1933,8 +1933,14 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
 
   nsCOMPtr<Element> listItem = IsInListItem(blockParent);
   if (listItem && listItem != host) {
-    ReturnInListItem(*listItem, *atStartOfSelection.GetContainer(),
-                     atStartOfSelection.Offset());
+    nsresult rv =
+      ReturnInListItem(*listItem, *atStartOfSelection.GetContainer(),
+                       atStartOfSelection.Offset());
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to insert break into list item");
     *aHandled = true;
     return NS_OK;
   }
@@ -7759,9 +7765,6 @@ HTMLEditRules::SplitParagraph(
   return NS_OK;
 }
 
-/**
- * ReturnInListItem: do the right thing for returns pressed in list items
- */
 nsresult
 HTMLEditRules::ReturnInListItem(Element& aListItem,
                                 nsINode& aNode,
@@ -7787,6 +7790,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
       ErrorResult error;
       leftListNode =
         HTMLEditorRef().SplitNodeWithTransaction(atListItem, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -7802,17 +7809,27 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
       nsresult rv =
         HTMLEditorRef().MoveNodeWithTransaction(aListItem,
                                                 atNextSiblingOfLeftList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       ErrorResult error;
       SelectionRef().Collapse(RawRangeBoundary(&aListItem, 0), error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
     } else {
       // Otherwise kill this item
       nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(aListItem);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -7824,6 +7841,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
         HTMLEditorRef().CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br ?
                                                     *nsGkAtoms::p : paraAtom,
                                                   atNextSiblingOfLeftList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!pNode)) {
         return NS_ERROR_FAILURE;
       }
@@ -7832,6 +7852,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
       RefPtr<Element> brElement =
         HTMLEditorRef().InsertBrElementWithTransaction(
                           SelectionRef(), EditorRawDOMPoint(pNode, 0));
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!brElement)) {
         return NS_ERROR_FAILURE;
       }
@@ -7839,6 +7862,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
       // Set selection to before the break
       ErrorResult error;
       SelectionRef().Collapse(EditorRawDOMPoint(pNode, 0), error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -7852,6 +7879,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
   nsresult rv =
     WSRunObject::PrepareToSplitAcrossBlocks(&HTMLEditorRef(),
                                             address_of(selNode), &aOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7864,6 +7894,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
     HTMLEditorRef().SplitNodeDeepWithTransaction(
                       aListItem, EditorRawDOMPoint(selNode, aOffset),
                       SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(splitListItemResult.Succeeded(),
     "Failed to split the list item");
 
@@ -7903,15 +7936,25 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
           RefPtr<Element> newListItem =
             HTMLEditorRef().CreateNodeWithTransaction(*listAtom,
                                                       atNextListItem);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!newListItem)) {
             return NS_ERROR_FAILURE;
           }
           rv = HTMLEditorRef().DeleteNodeWithTransaction(aListItem);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
           ErrorResult error;
           SelectionRef().Collapse(EditorRawDOMPoint(newListItem, 0), error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -7923,6 +7966,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
           HTMLEditorRef().CopyLastEditableChildStylesWithTransaction(
                             *prevItem->AsElement(), aListItem,
                             address_of(brElement));
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NS_ERROR_FAILURE;
         }
@@ -7933,6 +7979,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
           }
           ErrorResult error;
           SelectionRef().Collapse(atBrNode, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -7953,6 +8003,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
           }
           ErrorResult error;
           SelectionRef().Collapse(atVisNode, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -7960,6 +8014,9 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
         }
 
         rv = SelectionRef().Collapse(visNode, visOffset);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -7970,6 +8027,10 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
 
   ErrorResult error;
   SelectionRef().Collapse(EditorRawDOMPoint(&aListItem, 0), error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
