@@ -4589,9 +4589,10 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         return true;
     }
 
-    static void considerScript(JSRuntime* rt, void* data, JSScript* script) {
+    static void considerScript(JSRuntime* rt, void* data, JSScript* script,
+                               const JS::AutoRequireNoGC& nogc) {
         ScriptQuery* self = static_cast<ScriptQuery*>(data);
-        self->consider(script);
+        self->consider(script, nogc);
     }
 
     /*
@@ -4599,7 +4600,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
      * |innermostForCompartment|, as appropriate. Set |oom| if an out of memory
      * condition occurred.
      */
-    void consider(JSScript* script) {
+    void consider(JSScript* script, const JS::AutoRequireNoGC& nogc) {
         // We check for presence of script->code() because it is possible that
         // the script was created and thus exposed to GC, but *not* fully
         // initialized from fullyInit{FromEmitter,Trivial} due to errors.
