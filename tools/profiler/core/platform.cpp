@@ -925,7 +925,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
     if (pseudoIndex != pseudoCount) {
       const js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
-      if (pseudoEntry.isLabelFrame()) {
+      if (pseudoEntry.isLabelFrame() || pseudoEntry.isSpMarkerFrame()) {
         lastLabelFrameStackAddr = (uint8_t*) pseudoEntry.stackAddress();
       }
 
@@ -976,9 +976,9 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       MOZ_ASSERT(pseudoIndex < pseudoCount);
       const js::ProfileEntry& pseudoEntry = pseudoEntries[pseudoIndex];
 
-      // Pseudo-frames with the LABEL_MARKER_FOR_JS kind are just annotations and
-      // should not be recorded in the profile.
-      if (pseudoEntry.kind() != js::ProfileEntry::Kind::LABEL_MARKER_FOR_JS) {
+      // Sp marker frames are just annotations and should not be recorded in
+      // the profile.
+      if (!pseudoEntry.isSpMarkerFrame()) {
         // The JIT only allows the top-most entry to have a nullptr pc.
         MOZ_ASSERT_IF(pseudoEntry.isJsFrame() && pseudoEntry.script() && !pseudoEntry.pc(),
                       &pseudoEntry == &pseudoStack.entries[pseudoStack.stackSize() - 1]);
@@ -2329,7 +2329,6 @@ MozGlueLabelEnter(const char* aLabel, const char* aDynamicString, void* aSp,
   PseudoStack* pseudoStack = AutoProfilerLabel::sPseudoStack.get();
   if (pseudoStack) {
     pseudoStack->pushLabelFrame(aLabel, aDynamicString, aSp, aLine,
-                                js::ProfileEntry::Kind::LABEL,
                                 js::ProfileEntry::Category::OTHER);
   }
   return pseudoStack;
