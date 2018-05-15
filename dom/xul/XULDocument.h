@@ -120,7 +120,7 @@ public:
                                 bool aWasAlternate,
                                 nsresult aStatus) override;
 
-    virtual void EndUpdate(nsUpdateType aUpdateType) override;
+    virtual void EndUpdate() override;
 
     virtual bool IsDocumentRightToLeft() override;
 

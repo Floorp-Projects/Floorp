@@ -2894,10 +2894,9 @@ XULDocument::MaybeBroadcast()
 }
 
 void
-XULDocument::EndUpdate(nsUpdateType aUpdateType)
+XULDocument::EndUpdate()
 {
-    XMLDocument::EndUpdate(aUpdateType);
-
+    XMLDocument::EndUpdate();
     MaybeBroadcast();
 }
 

@@ -16,7 +16,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
-#include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
@@ -1860,8 +1859,8 @@ public:
   // BeginUpdate must be called before any batch of modifications of the
   // content model or of style data, EndUpdate must be called afterward.
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
-  void BeginUpdate(nsUpdateType aUpdateType);
-  virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
+  void BeginUpdate();
+  virtual void EndUpdate() = 0;
 
   virtual void BeginLoad() = 0;
   virtual void EndLoad() = 0;
