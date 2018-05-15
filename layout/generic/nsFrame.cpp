@@ -246,10 +246,8 @@ nsReflowStatus::UpdateTruncated(const ReflowInput& aReflowInput,
 nsIFrame::DestroyAnonymousContent(nsPresContext* aPresContext,
                                   already_AddRefed<nsIContent>&& aContent)
 {
-  if (nsCOMPtr<nsIContent> content = aContent) {
-    aPresContext->EventStateManager()->NativeAnonymousContentRemoved(content);
-    content->UnbindFromTree();
-  }
+  aPresContext->PresShell()->FrameConstructor()
+              ->DestroyAnonymousContent(Move(aContent));
 }
 
 // Formerly the nsIFrameDebug interface
