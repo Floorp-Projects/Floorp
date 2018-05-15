@@ -109,7 +109,7 @@ XULTreeAccessible::NativeState()
 }
 
 void
-XULTreeAccessible::Value(nsString& aValue)
+XULTreeAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
   if (!mTreeView)

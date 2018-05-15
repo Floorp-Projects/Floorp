@@ -80,7 +80,7 @@ public:
   virtual Accessible* AsAccessible() override { return this; }
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual TableAccessible* AsTable() override { return this; }
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;

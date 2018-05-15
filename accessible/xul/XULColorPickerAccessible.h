@@ -21,7 +21,7 @@ public:
                                DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual uint64_t NativeInteractiveState() const override;

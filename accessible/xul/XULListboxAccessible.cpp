@@ -138,7 +138,7 @@ XULListboxAccessible::NativeState()
   * Our value is the label of our ( first ) selected child.
   */
 void
-XULListboxAccessible::Value(nsString& aValue)
+XULListboxAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 

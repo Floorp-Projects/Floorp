@@ -61,7 +61,7 @@ ProgressMeterAccessible<Max>::IsWidget() const
 
 template<int Max>
 void
-ProgressMeterAccessible<Max>::Value(nsString& aValue)
+ProgressMeterAccessible<Max>::Value(nsString& aValue) const
 {
   LeafAccessible::Value(aValue);
   if (!aValue.IsEmpty())

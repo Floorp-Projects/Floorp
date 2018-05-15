@@ -149,7 +149,7 @@ XULTabsAccessible::ActionCount()
 }
 
 void
-XULTabsAccessible::Value(nsString& aValue)
+XULTabsAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 }
