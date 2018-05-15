@@ -1396,6 +1396,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
                         Register temp1, Register temp2, Register temp3,
                         size_t inputOutputDataStartOffset,
                         RegExpShared::CompilationMode mode,
+                        bool stringsCanBeInNursery,
                         Label* notFound, Label* failure)
 {
     size_t matchPairsStartOffset = inputOutputDataStartOffset + sizeof(irregexp::InputOutputData);
@@ -1591,21 +1592,26 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);
     masm.guardedCallPreBarrier(lazySourceAddress, MIRType::String);
 
-    if (temp1.volatile_())
-        volatileRegs.add(temp1);
+    if (stringsCanBeInNursery) {
+        // Writing into RegExpStatics tenured memory; must post-barrier.
+        if (temp1.volatile_())
+            volatileRegs.add(temp1);
 
-    // Writing into RegExpStatics tenured memory; must post-barrier.
-    masm.loadPtr(pendingInputAddress, temp2);
-    masm.storePtr(input, pendingInputAddress);
-    masm.movePtr(input, temp3);
-    EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfPendingInput(),
-                          temp2 /* prev */, temp3 /* next */, volatileRegs);
+        masm.loadPtr(pendingInputAddress, temp2);
+        masm.storePtr(input, pendingInputAddress);
+        masm.movePtr(input, temp3);
+        EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfPendingInput(),
+                              temp2 /* prev */, temp3 /* next */, volatileRegs);
 
-    masm.loadPtr(matchesInputAddress, temp2);
-    masm.storePtr(input, matchesInputAddress);
-    masm.movePtr(input, temp3);
-    EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfMatchesInput(),
-                          temp2 /* prev */, temp3 /* next */, volatileRegs);
+        masm.loadPtr(matchesInputAddress, temp2);
+        masm.storePtr(input, matchesInputAddress);
+        masm.movePtr(input, temp3);
+        EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfMatchesInput(),
+                              temp2 /* prev */, temp3 /* next */, volatileRegs);
+    } else {
+        masm.storePtr(input, pendingInputAddress);
+        masm.storePtr(input, matchesInputAddress);
+    }
 
     masm.storePtr(lastIndex, Address(temp1, RegExpStatics::offsetOfLazyIndex()));
     masm.store32(Imm32(1), Address(temp1, RegExpStatics::offsetOfPendingLazyEvaluation()));
@@ -1940,7 +1946,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp5, inputOutputDataStartOffset,
-                                 RegExpShared::Normal, &notFound, &oolEntry))
+                                 RegExpShared::Normal, stringsCanBeInNursery, &notFound, &oolEntry))
     {
         return nullptr;
     }
@@ -2249,7 +2255,8 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, inputOutputDataStartOffset,
-                                 RegExpShared::Normal, &notFound, &oolEntry))
+                                 RegExpShared::Normal, stringsCanBeInNursery,
+                                 &notFound, &oolEntry))
     {
         return nullptr;
     }
@@ -2401,7 +2408,8 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, 0,
-                                 RegExpShared::MatchOnly, &notFound, &oolEntry))
+                                 RegExpShared::MatchOnly, stringsCanBeInNursery,
+                                 &notFound, &oolEntry))
     {
         return nullptr;
     }
