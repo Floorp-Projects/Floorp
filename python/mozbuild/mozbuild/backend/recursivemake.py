@@ -1054,7 +1054,7 @@ class RecursiveMakeBackend(CommonBackend):
         mk = Makefile()
 
         for module in xpt_modules:
-            install_target, sources = modules[module]
+            sources = modules[module][0]
             deps = sorted(sources)
 
             # It may seem strange to have the .idl files listed as
