@@ -268,7 +268,7 @@ XULLinkAccessible::EndOffset()
 }
 
 already_AddRefed<nsIURI>
-XULLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+XULLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   if (aAnchorIndex != 0)
     return nullptr;

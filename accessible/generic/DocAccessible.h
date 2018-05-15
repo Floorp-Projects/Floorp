@@ -79,7 +79,7 @@ public:
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
 
-  virtual void TakeFocus() override;
+  virtual void TakeFocus() const override;
 
 #ifdef A11Y_LOG
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;

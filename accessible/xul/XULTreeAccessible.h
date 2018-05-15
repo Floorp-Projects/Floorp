@@ -155,7 +155,7 @@ public:
   virtual Relation RelationByType(RelationType aType) const override;
   virtual Accessible* FocusedChild() override;
   virtual void SetSelected(bool aSelect) override;
-  virtual void TakeFocus() override;
+  virtual void TakeFocus() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;

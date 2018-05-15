@@ -65,7 +65,7 @@ public:
   // Accessible
   virtual void Value(nsString& aValue) const override;
   virtual uint64_t NativeLinkState() const override;
-  virtual void TakeFocus() override;
+  virtual void TakeFocus() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() override;
@@ -78,7 +78,7 @@ public:
                                bool* aIsOnclick = nullptr,
                                bool* aIsLabelWithControl = nullptr) const;
   // HyperLinkAccessible
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const override;
 
 protected:
   virtual ~LinkableAccessible() {}

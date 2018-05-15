@@ -778,7 +778,7 @@ XULTreeItemAccessibleBase::SetSelected(bool aSelect)
 }
 
 void
-XULTreeItemAccessibleBase::TakeFocus()
+XULTreeItemAccessibleBase::TakeFocus() const
 {
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
