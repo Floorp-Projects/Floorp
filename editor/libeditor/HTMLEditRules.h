@@ -397,9 +397,10 @@ protected:
    *                            removed.
    */
   template<typename PT, typename CT>
-  nsresult SplitParagraph(Element& aParentDivOrP,
-                          const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
-                          nsIContent* aBRNode);
+  MOZ_MUST_USE nsresult
+  SplitParagraph(Element& aParentDivOrP,
+                 const EditorDOMPointBase<PT, CT>& aStartOfRightNode,
+                 nsIContent* aBRNode);
 
   /**
    * ReturnInListItem() handles insertParagraph command (i.e., handling

@@ -7695,6 +7695,9 @@ HTMLEditRules::SplitParagraph(
   nsresult rv =
     WSRunObject::PrepareToSplitAcrossBlocks(&HTMLEditorRef(),
                                             address_of(selNode), &selOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7708,6 +7711,9 @@ HTMLEditRules::SplitParagraph(
                       aParentDivOrP,
                       EditorRawDOMPoint(selNode, selOffset),
                       SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(splitDivOrPResult.Failed())) {
     return splitDivOrPResult.Rv();
   }
@@ -7719,6 +7725,9 @@ HTMLEditRules::SplitParagraph(
   // prevent an empty p).
   if (aNextBRNode && HTMLEditorRef().IsVisibleBRElement(aNextBRNode)) {
     rv = HTMLEditorRef().DeleteNodeWithTransaction(*aNextBRNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -7727,6 +7736,9 @@ HTMLEditRules::SplitParagraph(
   // Remove ID attribute on the paragraph from the existing right node.
   rv = HTMLEditorRef().RemoveAttributeWithTransaction(aParentDivOrP,
                                                       *nsGkAtoms::id);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7753,12 +7765,18 @@ HTMLEditRules::SplitParagraph(
     EditorRawDOMPoint atStartOfChild(child, 0);
     IgnoredErrorResult ignoredError;
     SelectionRef().Collapse(atStartOfChild, ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to collapse selection at the end of the child");
   } else {
     EditorRawDOMPoint atChild(child);
     IgnoredErrorResult ignoredError;
     SelectionRef().Collapse(atChild, ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
       "Failed to collapse selection at the child");
   }
