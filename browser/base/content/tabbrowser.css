@@ -97,6 +97,5 @@ browser[pendingpaint] {
   background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
   background-repeat: no-repeat;
   background-position: center center;
-  background-color: #f9f9f9 !important;
   background-size: 30px;
 }
