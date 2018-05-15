@@ -198,8 +198,9 @@ of the Beetmover kind above and the repackage kind below.
 release-beetmover-push-to-release
 ---------------------------------
 
-Beetmover-cdns publishes promoted releases from the candidates directory to the
-release directory. This is part of release promotion.
+release-beetmover-push-to-release publishes promoted releases from the
+candidates directory to the release directory. This is part of release
+promotion.
 
 beetmover-source
 -------------------
