@@ -4673,6 +4673,14 @@ class TabProgressListener {
         gBrowser._unifiedComplete.registerOpenPage(aLocation, userContextId);
         this.mBrowser.registeredOpenURI = aLocation;
       }
+
+      if (this.mTab != gBrowser.selectedTab) {
+        let tabCacheIndex = gBrowser._tabLayerCache.indexOf(this.mTab);
+        if (tabCacheIndex != -1) {
+          gBrowser._tabLayerCache.splice(tabCacheIndex, 1);
+          gBrowser._getSwitcher().cleanUpTabAfterEviction(this.mTab);
+        }
+      }
     }
 
     if (!this.mBlank) {
