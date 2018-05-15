@@ -4211,10 +4211,16 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle,
 PLDHashNumber
 gfxFontStyle::Hash() const
 {
-    return mozilla::HashGeneric(systemFont, style.ForHash(),
-                                stretch.ForHash(), weight.ForHash(),
-                                size, int32_t(sizeAdjust * 1000.0f),
-                                nsRefPtrHashKey<nsAtom>::HashKey(language));
+    uint32_t hash =
+        variationSettings.IsEmpty()
+            ? 0
+            : mozilla::HashBytes(variationSettings.Elements(),
+                                 variationSettings.Length() *
+                                     sizeof(gfxFontVariation));
+    return mozilla::AddToHash(hash, systemFont, style.ForHash(),
+                              stretch.ForHash(), weight.ForHash(),
+                              size, int32_t(sizeAdjust * 1000.0f),
+                              nsRefPtrHashKey<nsAtom>::HashKey(language));
 }
 
 void
