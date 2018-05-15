@@ -46,7 +46,7 @@ HTMLCheckboxAccessible::NativeRole() const
 }
 
 uint8_t
-HTMLCheckboxAccessible::ActionCount()
+HTMLCheckboxAccessible::ActionCount() const
 {
   return 1;
 }
@@ -66,7 +66,7 @@ HTMLCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLCheckboxAccessible::DoAction(uint8_t aIndex)
+HTMLCheckboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;
@@ -180,7 +180,7 @@ HTMLButtonAccessible::
 }
 
 uint8_t
-HTMLButtonAccessible::ActionCount()
+HTMLButtonAccessible::ActionCount() const
 {
   return 1;
 }
@@ -193,7 +193,7 @@ HTMLButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLButtonAccessible::DoAction(uint8_t aIndex)
+HTMLButtonAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;
@@ -438,7 +438,7 @@ HTMLTextFieldAccessible::NativeState()
 }
 
 uint8_t
-HTMLTextFieldAccessible::ActionCount()
+HTMLTextFieldAccessible::ActionCount() const
 {
   return 1;
 }
@@ -451,7 +451,7 @@ HTMLTextFieldAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLTextFieldAccessible::DoAction(uint8_t aIndex)
+HTMLTextFieldAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;

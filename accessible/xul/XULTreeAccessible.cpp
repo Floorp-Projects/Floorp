@@ -824,7 +824,7 @@ XULTreeItemAccessibleBase::RelationByType(RelationType aType) const
 }
 
 uint8_t
-XULTreeItemAccessibleBase::ActionCount()
+XULTreeItemAccessibleBase::ActionCount() const
 {
   // "activate" action is available for all treeitems, "expand/collapse" action
   // is avaible for treeitem which is container.
@@ -850,7 +850,7 @@ XULTreeItemAccessibleBase::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULTreeItemAccessibleBase::DoAction(uint8_t aIndex)
+XULTreeItemAccessibleBase::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click &&
       (aIndex != eAction_Expand || !IsExpandable()))

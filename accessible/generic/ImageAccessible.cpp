@@ -99,7 +99,7 @@ ImageAccessible::NativeRole() const
 // Accessible
 
 uint8_t
-ImageAccessible::ActionCount()
+ImageAccessible::ActionCount() const
 {
   uint8_t actionCount = LinkableAccessible::ActionCount();
   return HasLongDesc() ? actionCount + 1 : actionCount;
@@ -116,7 +116,7 @@ ImageAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-ImageAccessible::DoAction(uint8_t aIndex)
+ImageAccessible::DoAction(uint8_t aIndex) const
 {
   // Get the long description uri and open in a new window.
   if (!IsLongDescIndex(aIndex))
@@ -216,7 +216,7 @@ ImageAccessible::GetLongDescURI() const
 }
 
 bool
-ImageAccessible::IsLongDescIndex(uint8_t aIndex)
+ImageAccessible::IsLongDescIndex(uint8_t aIndex) const
 {
   return aIndex == LinkableAccessible::ActionCount();
 }

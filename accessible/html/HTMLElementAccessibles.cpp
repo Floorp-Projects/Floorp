@@ -76,7 +76,7 @@ HTMLLabelAccessible::RelationByType(RelationType aType) const
 }
 
 uint8_t
-HTMLLabelAccessible::ActionCount()
+HTMLLabelAccessible::ActionCount() const
 {
   return nsCoreUtils::IsLabelWithControl(mContent) ? 1 : 0;
 }
@@ -91,7 +91,7 @@ HTMLLabelAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLLabelAccessible::DoAction(uint8_t aIndex)
+HTMLLabelAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;
@@ -127,7 +127,7 @@ HTMLSummaryAccessible::
 }
 
 uint8_t
-HTMLSummaryAccessible::ActionCount()
+HTMLSummaryAccessible::ActionCount() const
 {
   return 1;
 }
@@ -157,7 +157,7 @@ HTMLSummaryAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLSummaryAccessible::DoAction(uint8_t aIndex)
+HTMLSummaryAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

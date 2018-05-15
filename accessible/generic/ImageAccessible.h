@@ -27,9 +27,9 @@ public:
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // ImageAccessible
   nsIntPoint Position(uint32_t aCoordType);
@@ -67,7 +67,7 @@ private:
    *
    * @returns  true if index is valid for longdesc action.
    */
-  inline bool IsLongDescIndex(uint8_t aIndex);
+  inline bool IsLongDescIndex(uint8_t aIndex) const;
 
 };
 
