@@ -782,6 +782,7 @@ add_task(async function avoid_url_suggestions() {
 
 add_task(async function avoid_http_url_suggestions() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
   setSuggestionsFn(searchStr => {
     return [searchStr + "ed"];
@@ -853,11 +854,7 @@ add_task(async function avoid_http_url_suggestions() {
     search: "http:",
     searchParam: "enable-actions",
     matches: [
-      {
-        uri: makeActionURI("visiturl", { url: "http://http/", input: "http:" }),
-        style: [ "action", "visiturl", "heuristic" ],
-        title: "http://http/",
-      },
+      makeSearchMatch("http:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
@@ -865,11 +862,7 @@ add_task(async function avoid_http_url_suggestions() {
     search: "https:",
     searchParam: "enable-actions",
     matches: [
-      {
-        uri: makeActionURI("visiturl", { url: "http://https/", input: "https:" }),
-        style: [ "action", "visiturl", "heuristic" ],
-        title: "http://https/",
-      },
+      makeSearchMatch("https:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 
@@ -881,11 +874,7 @@ add_task(async function avoid_http_url_suggestions() {
     search: "ftp:",
     searchParam: "enable-actions",
     matches: [
-      {
-        uri: makeActionURI("visiturl", { url: "http://ftp/", input: "ftp:" }),
-        style: [ "action", "visiturl", "heuristic" ],
-        title: "http://ftp/",
-      },
+      makeSearchMatch("ftp:", { engineName: ENGINE_NAME, heuristic: true }),
     ],
   });
 

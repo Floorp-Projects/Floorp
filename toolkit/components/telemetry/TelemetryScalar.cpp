@@ -18,6 +18,10 @@
 #include "nsPrintfCString.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContent.h"
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+// This is only used on GeckoView.
+#include "mozilla/JSONWriter.h"
+#endif
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -40,6 +44,7 @@ using mozilla::Telemetry::Common::CanRecordProduct;
 using mozilla::Telemetry::Common::IsInDataset;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::GetNameForProcessID;
+using mozilla::Telemetry::Common::GetIDForProcessName;
 using mozilla::Telemetry::Common::RecordedProcessType;
 using mozilla::Telemetry::Common::IsValidIdentifierString;
 using mozilla::Telemetry::Common::GetCurrentProduct;
@@ -254,6 +259,50 @@ GetVariantFromIVariant(nsIVariant* aInput, uint32_t aScalarKind,
   }
   return ScalarResult::Ok;
 }
+
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+/**
+ * Write a nsIVariant with a JSONWriter, used for GeckoView persistence.
+ */
+nsresult
+WriteVariantToJSONWriter(uint32_t aScalarType, nsIVariant* aInputValue,
+                         const char* aPropertyName, mozilla::JSONWriter& aWriter)
+{
+  MOZ_ASSERT(aInputValue);
+
+  switch (aScalarType) {
+    case nsITelemetry::SCALAR_TYPE_COUNT:
+      {
+        uint32_t val = 0;
+        nsresult rv = aInputValue->GetAsUint32(&val);
+        NS_ENSURE_SUCCESS(rv, rv);
+        aWriter.IntProperty(aPropertyName, val);
+        break;
+      }
+    case nsITelemetry::SCALAR_TYPE_STRING:
+      {
+        nsCString val;
+        nsresult rv = aInputValue->GetAsACString(val);
+        NS_ENSURE_SUCCESS(rv, rv);
+        aWriter.StringProperty(aPropertyName, val.get());
+        break;
+      }
+    case nsITelemetry::SCALAR_TYPE_BOOLEAN:
+      {
+        bool val = false;
+        nsresult rv = aInputValue->GetAsBool(&val);
+        NS_ENSURE_SUCCESS(rv, rv);
+        aWriter.BoolProperty(aPropertyName, val);
+        break;
+      }
+    default:
+      MOZ_ASSERT(false, "Unknown scalar kind.");
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+#endif // MOZ_TELEMETRY_GECKOVIEW
 
 // Implements the methods for ScalarInfo.
 const char *
@@ -847,6 +896,14 @@ typedef nsClassHashtable<ScalarIDHashKey, KeyedScalar> KeyedScalarStorageMapType
 typedef nsClassHashtable<ProcessIDHashKey, ScalarStorageMapType> ProcessesScalarsMapType;
 typedef nsClassHashtable<ProcessIDHashKey, KeyedScalarStorageMapType> ProcessesKeyedScalarsMapType;
 
+typedef mozilla::Tuple<const char*, nsCOMPtr<nsIVariant>, uint32_t> ScalarDataTuple;
+typedef nsTArray<ScalarDataTuple> ScalarTupleArray;
+typedef nsDataHashtable<ProcessIDHashKey, ScalarTupleArray> ScalarSnapshotTable;
+
+typedef mozilla::Tuple<const char*, nsTArray<KeyedScalar::KeyValuePair>, uint32_t> KeyedScalarDataTuple;
+typedef nsTArray<KeyedScalarDataTuple> KeyedScalarTupleArray;
+typedef nsDataHashtable<ProcessIDHashKey, KeyedScalarTupleArray> KeyedScalarSnapshotTable;
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -1199,11 +1256,15 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
  * @param aName The scalar name.
  * @param aType The action type for updating the scalar.
  * @param aValue The value to use for updating the scalar.
+ * @param aProcessOverride The process for which the scalar must be updated.
+ *        This must only be used for GeckoView persistence. It must be
+ *        set to the ProcessID::Parent for all the other cases.
  * @return a ScalarResult error value.
  */
 ScalarResult
 internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
-                      ScalarActionType aType, nsIVariant* aValue)
+                      ScalarActionType aType, nsIVariant* aValue,
+                      ProcessID aProcessOverride = ProcessID::Parent)
 {
   ScalarKey uniqueId;
   nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
@@ -1237,7 +1298,7 @@ internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
 
   // Finally get the scalar.
   ScalarBase* scalar = nullptr;
-  rv = internal_GetScalarByEnum(lock, uniqueId, ProcessID::Parent, &scalar);
+  rv = internal_GetScalarByEnum(lock, uniqueId, aProcessOverride, &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1358,12 +1419,16 @@ internal_GetKeyedScalarByEnum(const StaticMutexAutoLock& lock,
  * @param aKey The key name.
  * @param aType The action type for updating the scalar.
  * @param aValue The value to use for updating the scalar.
+ * @param aProcessOverride The process for which the scalar must be updated.
+ *        This must only be used for GeckoView persistence. It must be
+ *        set to the ProcessID::Parent for all the other cases.
  * @return a ScalarResult error value.
  */
 ScalarResult
 internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
                            const nsACString& aName, const nsAString& aKey,
-                           ScalarActionType aType, nsIVariant* aValue)
+                           ScalarActionType aType, nsIVariant* aValue,
+                           ProcessID aProcessOverride = ProcessID::Parent)
 {
   ScalarKey uniqueId;
   nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
@@ -1397,8 +1462,7 @@ internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
 
   // Finally get the scalar.
   KeyedScalar* scalar = nullptr;
-  rv = internal_GetKeyedScalarByEnum(lock, uniqueId, ProcessID::Parent,
-                                     &scalar);
+  rv = internal_GetKeyedScalarByEnum(lock, uniqueId, aProcessOverride, &scalar);
   if (NS_FAILED(rv)) {
     // Don't throw on expired scalars.
     if (rv == NS_ERROR_NOT_AVAILABLE) {
@@ -1487,6 +1551,193 @@ internal_RegisterScalars(const StaticMutexAutoLock& lock,
     CharPtrEntryType *entry = gScalarNameIDMap.PutEntry(scalarInfo.name());
     entry->mData = ScalarKey{scalarId, true};
   }
+}
+
+/**
+ * Creates a snapshot of the desired scalar storage.
+ * @param {aLock} The proof of lock to access scalar data.
+ * @param {aScalarsToReflect} The table that will contain the snapshot.
+ * @param {aDataset} The dataset we're asking the snapshot for.
+ * @param {aProcessStorage} The scalar storage to take a snapshot of.
+ * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin scalars.
+ * @return NS_OK or the error code describing the failure reason.
+ */
+nsresult
+internal_ScalarSnapshotter(const StaticMutexAutoLock& aLock,
+                           ScalarSnapshotTable& aScalarsToReflect,
+                           unsigned int aDataset,
+                           ProcessesScalarsMapType& aProcessStorage,
+                           bool aIsBuiltinDynamic)
+{
+  // Iterate the scalars in aProcessStorage. The storage may contain empty or yet to be
+  // initialized scalars from all the supported processes.
+  for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
+    ScalarStorageMapType* scalarStorage = static_cast<ScalarStorageMapType*>(iter.Data());
+    ScalarTupleArray& processScalars = aScalarsToReflect.GetOrInsert(iter.Key());
+
+    // Are we in the "Dynamic" process?
+    bool isDynamicProcess = ProcessID::Dynamic == static_cast<ProcessID>(iter.Key());
+
+    // Iterate each available child storage.
+    for (auto childIter = scalarStorage->Iter(); !childIter.Done(); childIter.Next()) {
+      ScalarBase* scalar = static_cast<ScalarBase*>(childIter.Data());
+
+      // Get the informations for this scalar.
+      const BaseScalarInfo& info =
+        internal_GetScalarInfo(aLock, ScalarKey{childIter.Key(),
+                               aIsBuiltinDynamic ? true : isDynamicProcess});
+
+      // Serialize the scalar if it's in the desired dataset.
+      if (IsInDataset(info.dataset, aDataset)) {
+        // Get the scalar value.
+        nsCOMPtr<nsIVariant> scalarValue;
+        nsresult rv = scalar->GetValue(scalarValue);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        // Append it to our list.
+        processScalars.AppendElement(mozilla::MakeTuple(info.name(), scalarValue, info.kind));
+      }
+    }
+  }
+  return NS_OK;
+}
+
+/**
+ * Creates a snapshot of the desired keyed scalar storage.
+ * @param {aLock} The proof of lock to access scalar data.
+ * @param {aScalarsToReflect} The table that will contain the snapshot.
+ * @param {aDataset} The dataset we're asking the snapshot for.
+ * @param {aProcessStorage} The scalar storage to take a snapshot of.
+ * @param {aIsBuiltinDynamic} Whether or not the storage is for dynamic builtin scalars.
+ * @return NS_OK or the error code describing the failure reason.
+ */
+nsresult
+internal_KeyedScalarSnapshotter(const StaticMutexAutoLock& aLock,
+                                KeyedScalarSnapshotTable& aScalarsToReflect,
+                                unsigned int aDataset,
+                                ProcessesKeyedScalarsMapType& aProcessStorage,
+                                bool aIsBuiltinDynamic)
+{
+  // Iterate the scalars in aProcessStorage. The storage may contain empty or yet
+  // to be initialized scalars from all the supported processes.
+  for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
+    KeyedScalarStorageMapType* scalarStorage =
+      static_cast<KeyedScalarStorageMapType*>(iter.Data());
+    KeyedScalarTupleArray& processScalars = aScalarsToReflect.GetOrInsert(iter.Key());
+
+    // Are we in the "Dynamic" process?
+    bool isDynamicProcess = ProcessID::Dynamic == static_cast<ProcessID>(iter.Key());
+
+    for (auto childIter = scalarStorage->Iter(); !childIter.Done(); childIter.Next()) {
+      KeyedScalar* scalar = static_cast<KeyedScalar*>(childIter.Data());
+
+      // Get the informations for this scalar.
+      const BaseScalarInfo& info =
+        internal_GetScalarInfo(aLock, ScalarKey{childIter.Key(),
+                               aIsBuiltinDynamic ? true : isDynamicProcess});
+
+      // Serialize the scalar if it's in the desired dataset.
+      if (IsInDataset(info.dataset, aDataset)) {
+        // Get the keys for this scalar.
+        nsTArray<KeyedScalar::KeyValuePair> scalarKeyedData;
+        nsresult rv = scalar->GetValue(scalarKeyedData);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+        // Append it to our list.
+        processScalars.AppendElement(
+          mozilla::MakeTuple(info.name(), scalarKeyedData, info.kind));
+      }
+    }
+  }
+  return NS_OK;
+}
+
+/**
+ * Helper function to get a snapshot of the scalars.
+ *
+ * @param {aLock} The proof of lock to access scalar data.
+ * @param {aScalarsToReflect} The table that will contain the snapshot.
+ * @param {aDataset} The dataset we're asking the snapshot for.
+ * @param {aClearScalars} Whether or not to clear the scalar storage.
+ * @return NS_OK or the error code describing the failure reason.
+ */
+nsresult
+internal_GetScalarSnapshot(const StaticMutexAutoLock& aLock,
+                           ScalarSnapshotTable& aScalarsToReflect,
+                           unsigned int aDataset, bool aClearScalars)
+{
+  // Take a snapshot of the scalars.
+  nsresult rv = internal_ScalarSnapshotter(aLock,
+                                           aScalarsToReflect,
+                                           aDataset,
+                                           gScalarStorageMap,
+                                           false /*aIsBuiltinDynamic*/);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // And a snapshot of the dynamic builtin ones.
+  rv = internal_ScalarSnapshotter(aLock,
+                                  aScalarsToReflect,
+                                  aDataset,
+                                  gDynamicBuiltinScalarStorageMap,
+                                  true /*aIsBuiltinDynamic*/);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (aClearScalars) {
+    // The map already takes care of freeing the allocated memory.
+    gScalarStorageMap.Clear();
+    gDynamicBuiltinScalarStorageMap.Clear();
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Helper function to get a snapshot of the keyed scalars.
+ *
+ * @param {aLock} The proof of lock to access scalar data.
+ * @param {aScalarsToReflect} The table that will contain the snapshot.
+ * @param {aDataset} The dataset we're asking the snapshot for.
+ * @param {aClearScalars} Whether or not to clear the scalar storage.
+ * @return NS_OK or the error code describing the failure reason.
+ */
+nsresult
+internal_GetKeyedScalarSnapshot(const StaticMutexAutoLock& aLock,
+                                KeyedScalarSnapshotTable& aScalarsToReflect,
+                                unsigned int aDataset, bool aClearScalars)
+{
+  // Take a snapshot of the scalars.
+  nsresult rv = internal_KeyedScalarSnapshotter(aLock,
+                                                aScalarsToReflect,
+                                                aDataset,
+                                                gKeyedScalarStorageMap,
+                                                false /*aIsBuiltinDynamic*/);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // And a snapshot of the dynamic builtin ones.
+  rv = internal_KeyedScalarSnapshotter(aLock,
+                                       aScalarsToReflect,
+                                       aDataset,
+                                       gDynamicBuiltinKeyedScalarStorageMap,
+                                       true /*aIsBuiltinDynamic*/);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (aClearScalars) {
+    // The map already takes care of freeing the allocated memory.
+    gKeyedScalarStorageMap.Clear();
+    gDynamicBuiltinKeyedScalarStorageMap.Clear();
+  }
+
+  return NS_OK;
 }
 
 } // namespace
@@ -2193,74 +2444,20 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
   }
 
   // Only lock the mutex while accessing our data, without locking any JS related code.
-  typedef mozilla::Pair<const char*, nsCOMPtr<nsIVariant>> DataPair;
-  typedef nsTArray<DataPair> ScalarArray;
-  nsDataHashtable<ProcessIDHashKey, ScalarArray> scalarsToReflect;
+  ScalarSnapshotTable scalarsToReflect;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-    // The snapshotting function is the same for both static and dynamic builtin scalars.
-    // We can use the same function and store the scalars in the same output storage.
-    auto snapshotter = [aDataset, &locker, &scalarsToReflect]
-                       (ProcessesScalarsMapType& aProcessStorage, bool aIsBuiltinDynamic)
-                       -> nsresult
-    {
-      // Iterate the scalars in aProcessStorage. The storage may contain empty or yet to be
-      // initialized scalars from all the supported processes.
-      for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
-        ScalarStorageMapType* scalarStorage = static_cast<ScalarStorageMapType*>(iter.Data());
-        ScalarArray& processScalars = scalarsToReflect.GetOrInsert(iter.Key());
-
-        // Are we in the "Dynamic" process?
-        bool isDynamicProcess = ProcessID::Dynamic == static_cast<ProcessID>(iter.Key());
-
-        // Iterate each available child storage.
-        for (auto childIter = scalarStorage->Iter(); !childIter.Done(); childIter.Next()) {
-          ScalarBase* scalar = static_cast<ScalarBase*>(childIter.Data());
-
-          // Get the informations for this scalar.
-          const BaseScalarInfo& info =
-            internal_GetScalarInfo(locker, ScalarKey{childIter.Key(),
-                                   aIsBuiltinDynamic ? true : isDynamicProcess});
-
-          // Serialize the scalar if it's in the desired dataset.
-          if (IsInDataset(info.dataset, aDataset)) {
-            // Get the scalar value.
-            nsCOMPtr<nsIVariant> scalarValue;
-            nsresult rv = scalar->GetValue(scalarValue);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            // Append it to our list.
-            processScalars.AppendElement(mozilla::MakePair(info.name(), scalarValue));
-          }
-        }
-      }
-      return NS_OK;
-    };
-
-    // Take a snapshot of the scalars.
-    nsresult rv = snapshotter(gScalarStorageMap, false);
+    nsresult rv =
+      internal_GetScalarSnapshot(locker, scalarsToReflect, aDataset, aClearScalars);
     if (NS_FAILED(rv)) {
       return rv;
-    }
-
-    // And a snapshot of the dynamic builtin ones.
-    rv = snapshotter(gDynamicBuiltinScalarStorageMap, true);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (aClearScalars) {
-      // The map already takes care of freeing the allocated memory.
-      gScalarStorageMap.Clear();
-      gDynamicBuiltinScalarStorageMap.Clear();
     }
   }
 
   // Reflect it to JS.
   for (auto iter = scalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
-    ScalarArray& processScalars = iter.Data();
+    ScalarTupleArray& processScalars = iter.Data();
     const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
 
     // Create the object that will hold the scalars for this process and add it
@@ -2271,19 +2468,19 @@ TelemetryScalar::CreateSnapshots(unsigned int aDataset, bool aClearScalars, JSCo
       return NS_ERROR_FAILURE;
     }
 
-    for (nsTArray<DataPair>::size_type i = 0; i < processScalars.Length(); i++) {
-      const DataPair& scalar = processScalars[i];
+    for (ScalarTupleArray::size_type i = 0; i < processScalars.Length(); i++) {
+      const ScalarDataTuple& scalar = processScalars[i];
 
       // Convert it to a JS Val.
       JS::Rooted<JS::Value> scalarJsValue(aCx);
       nsresult rv =
-        nsContentUtils::XPConnect()->VariantToJS(aCx, processObj, scalar.second(), &scalarJsValue);
+        nsContentUtils::XPConnect()->VariantToJS(aCx, processObj, mozilla::Get<1>(scalar), &scalarJsValue);
       if (NS_FAILED(rv)) {
         return rv;
       }
 
       // Add it to the scalar object.
-      if (!JS_DefineProperty(aCx, processObj, scalar.first(), scalarJsValue, JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(aCx, processObj, mozilla::Get<0>(scalar), scalarJsValue, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -2323,72 +2520,20 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
   }
 
   // Only lock the mutex while accessing our data, without locking any JS related code.
-  typedef mozilla::Pair<const char*, nsTArray<KeyedScalar::KeyValuePair>> DataPair;
-  typedef nsTArray<DataPair> ScalarArray;
-  nsDataHashtable<ProcessIDHashKey, ScalarArray> scalarsToReflect;
+  KeyedScalarSnapshotTable scalarsToReflect;
   {
     StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
-    auto snapshotter = [aDataset, &locker, &scalarsToReflect]
-                       (ProcessesKeyedScalarsMapType& aProcessStorage,
-                        bool aIsBuiltinDynamic) -> nsresult
-    {
-      // Iterate the scalars in aProcessStorage. The storage may contain empty or yet
-      // to be initialized scalars from all the supported processes.
-      for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
-        KeyedScalarStorageMapType* scalarStorage =
-          static_cast<KeyedScalarStorageMapType*>(iter.Data());
-        ScalarArray& processScalars = scalarsToReflect.GetOrInsert(iter.Key());
-
-        // Are we in the "Dynamic" process?
-        bool isDynamicProcess = ProcessID::Dynamic == static_cast<ProcessID>(iter.Key());
-
-        for (auto childIter = scalarStorage->Iter(); !childIter.Done(); childIter.Next()) {
-          KeyedScalar* scalar = static_cast<KeyedScalar*>(childIter.Data());
-
-          // Get the informations for this scalar.
-          const BaseScalarInfo& info =
-            internal_GetScalarInfo(locker, ScalarKey{childIter.Key(),
-                                   aIsBuiltinDynamic ? true : isDynamicProcess});
-
-          // Serialize the scalar if it's in the desired dataset.
-          if (IsInDataset(info.dataset, aDataset)) {
-            // Get the keys for this scalar.
-            nsTArray<KeyedScalar::KeyValuePair> scalarKeyedData;
-            nsresult rv = scalar->GetValue(scalarKeyedData);
-            if (NS_FAILED(rv)) {
-              return rv;
-            }
-            // Append it to our list.
-            processScalars.AppendElement(mozilla::MakePair(info.name(), scalarKeyedData));
-          }
-        }
-      }
-      return NS_OK;
-    };
-
-    // Take a snapshot of the scalars.
-    nsresult rv = snapshotter(gKeyedScalarStorageMap, false);
+    nsresult rv =
+      internal_GetKeyedScalarSnapshot(locker, scalarsToReflect, aDataset, aClearScalars);
     if (NS_FAILED(rv)) {
       return rv;
-    }
-
-    // And a snapshot of the dynamic builtin ones.
-    rv = snapshotter(gDynamicBuiltinKeyedScalarStorageMap, true);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    if (aClearScalars) {
-      // The map already takes care of freeing the allocated memory.
-      gKeyedScalarStorageMap.Clear();
-      gDynamicBuiltinKeyedScalarStorageMap.Clear();
     }
   }
 
   // Reflect it to JS.
   for (auto iter = scalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
-    ScalarArray& processScalars = iter.Data();
+    KeyedScalarTupleArray& processScalars = iter.Data();
     const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
 
     // Create the object that will hold the scalars for this process and add it
@@ -2399,8 +2544,8 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
       return NS_ERROR_FAILURE;
     }
 
-    for (nsTArray<DataPair>::size_type i = 0; i < processScalars.Length(); i++) {
-      const DataPair& keyedScalarData = processScalars[i];
+    for (KeyedScalarTupleArray::size_type i = 0; i < processScalars.Length(); i++) {
+      const KeyedScalarDataTuple& keyedScalarData = processScalars[i];
 
       // Go through each keyed scalar and create a keyed scalar object.
       // This object will hold the values for all the keyed scalar keys.
@@ -2408,7 +2553,7 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
 
       // Define a property for each scalar key, then add it to the keyed scalar
       // object.
-      const nsTArray<KeyedScalar::KeyValuePair>& keyProps = keyedScalarData.second();
+      const nsTArray<KeyedScalar::KeyValuePair>& keyProps = mozilla::Get<1>(keyedScalarData);
       for (uint32_t i = 0; i < keyProps.Length(); i++) {
         const KeyedScalar::KeyValuePair& keyData = keyProps[i];
 
@@ -2428,7 +2573,7 @@ TelemetryScalar::CreateKeyedSnapshots(unsigned int aDataset, bool aClearScalars,
       }
 
       // Add the scalar to the root object.
-      if (!JS_DefineProperty(aCx, processObj, keyedScalarData.first(), keyedScalarObj, JSPROP_ENUMERATE)) {
+      if (!JS_DefineProperty(aCx, processObj, mozilla::Get<0>(keyedScalarData), keyedScalarObj, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -2938,3 +3083,426 @@ TelemetryScalar::AddDynamicScalarDefinitions(
     internal_RegisterScalars(locker, dynamicStubs);
   }
 }
+
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+/**
+ * Write the scalar data to the provided Json object, for
+ * GeckoView measurement persistence. The output format is the same one used
+ * for snapshotting the scalars.
+ *
+ * @param {aWriter} The JSON object to write to.
+ * @returns NS_OK or a failure value explaining why persistence failed.
+ */
+nsresult
+TelemetryScalar::SerializeScalars(mozilla::JSONWriter& aWriter)
+{
+  // Get a copy of the data, without clearing.
+  ScalarSnapshotTable scalarsToReflect;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+    // For persistence, we care about all the datasets. Worst case, they
+    // will be empty.
+    nsresult rv = internal_GetScalarSnapshot(locker,
+                                             scalarsToReflect,
+                                             nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
+                                             false /*aClearScalars*/);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  // Persist the scalars to the JSON object.
+  for (auto iter = scalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
+    ScalarTupleArray& processScalars = iter.Data();
+    const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
+
+    aWriter.StartObjectProperty(processName);
+
+    for (const ScalarDataTuple& scalar : processScalars) {
+      nsresult rv = WriteVariantToJSONWriter(mozilla::Get<2>(scalar) /*aScalarType*/,
+                                             mozilla::Get<1>(scalar) /*aInputValue*/,
+                                             mozilla::Get<0>(scalar) /*aPropertyName*/,
+                                             aWriter /*aWriter*/);
+      if (NS_FAILED(rv)) {
+        // Skip this scalar if we failed to write it. We don't bail out just
+        // yet as we may salvage other scalars. We eventually need to call EndObject.
+        continue;
+      }
+    }
+
+    aWriter.EndObject();
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Write the keyed scalar data to the provided Json object, for
+ * GeckoView measurement persistence. The output format is the same
+ * one used for snapshotting the keyed scalars.
+ *
+ * @param {aWriter} The JSON object to write to.
+ * @returns NS_OK or a failure value explaining why persistence failed.
+ */
+nsresult
+TelemetryScalar::SerializeKeyedScalars(mozilla::JSONWriter& aWriter)
+{
+  // Get a copy of the data, without clearing.
+  KeyedScalarSnapshotTable keyedScalarsToReflect;
+  {
+    StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+    // For persistence, we care about all the datasets. Worst case, they
+    // will be empty.
+    nsresult rv = internal_GetKeyedScalarSnapshot(locker,
+                                         keyedScalarsToReflect,
+                                         nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
+                                         false /*aClearScalars*/);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  // Persist the scalars to the JSON object.
+  for (auto iter = keyedScalarsToReflect.Iter(); !iter.Done(); iter.Next()) {
+    KeyedScalarTupleArray& processScalars = iter.Data();
+    const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
+
+    aWriter.StartObjectProperty(processName);
+
+    for (const KeyedScalarDataTuple& keyedScalarData : processScalars) {
+      aWriter.StartObjectProperty(mozilla::Get<0>(keyedScalarData));
+
+      // Define a property for each scalar key, then add it to the keyed scalar
+      // object.
+      const nsTArray<KeyedScalar::KeyValuePair>& keyProps = mozilla::Get<1>(keyedScalarData);
+      for (const KeyedScalar::KeyValuePair& keyData : keyProps) {
+        nsresult rv = WriteVariantToJSONWriter(mozilla::Get<2>(keyedScalarData) /*aScalarType*/,
+                                               keyData.second() /*aInputValue*/,
+                                               PromiseFlatCString(keyData.first()).get() /*aOutKey*/,
+                                               aWriter /*aWriter*/);
+        if (NS_FAILED(rv)) {
+          // Skip this scalar if we failed to write it. We don't bail out just
+          // yet as we may salvage other scalars. We eventually need to call EndObject.
+          continue;
+        }
+      }
+      aWriter.EndObject();
+    }
+    aWriter.EndObject();
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Load the persisted measurements from a Json object and inject them
+ * in the relevant process storage.
+ *
+ * @param {aData} The input Json object.
+ * @returns NS_OK if loading was performed, an error code explaining the
+ *          failure reason otherwise.
+ */
+nsresult
+TelemetryScalar::DeserializePersistedScalars(JSContext* aCx, JS::HandleValue aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only load scalars in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  typedef mozilla::Pair<nsCString, nsCOMPtr<nsIVariant>> PersistedScalarPair;
+  typedef nsTArray<PersistedScalarPair> PersistedScalarArray;
+  typedef nsDataHashtable<ProcessIDHashKey, PersistedScalarArray> PeristedScalarStorage;
+
+  PeristedScalarStorage scalarsToUpdate;
+
+  // Before updating the scalars, we need to get the data out of the JS
+  // wrappers. We can't hold the scalars mutex while handling JS stuff.
+  // Build a <scalar name, value> map.
+  JS::RootedObject scalarDataObj(aCx, &aData.toObject());
+  JS::Rooted<JS::IdVector> processes(aCx, JS::IdVector(aCx));
+  if (!JS_Enumerate(aCx, scalarDataObj, &processes)) {
+    // We can't even enumerate the processes in the loaded data, so
+    // there is nothing we could recover from the persistence file. Bail out.
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // The following block of code attempts to extract as much data as possible
+  // from the serialized JSON, even in case of light data corruptions: if, for example,
+  // the data for a single process is corrupted or is in an unexpected form, we press on
+  // and attempt to load the data for the other processes.
+  JS::RootedId process(aCx);
+  for (auto& processVal : processes) {
+    // This is required as JS API calls require an Handle<jsid> and not a
+    // plain jsid.
+    process = processVal;
+    // Get the process name.
+    nsAutoJSString processNameJS;
+    if (!processNameJS.init(aCx, process)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    // Make sure it's valid. Note that this is safe to call outside
+    // of a locked section.
+    NS_ConvertUTF16toUTF8 processName(processNameJS);
+    ProcessID processID = GetIDForProcessName(processName.get());
+    if (processID == ProcessID::Count) {
+      NS_WARNING(nsPrintfCString("Failed to get process ID for %s", processName.get()).get());
+      continue;
+    }
+
+    // And its probes.
+    JS::RootedValue processData(aCx);
+    if (!JS_GetPropertyById(aCx, scalarDataObj, process, &processData)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    if (!processData.isObject()) {
+      // |processData| should be an object containing scalars. If this is
+      // not the case, silently skip and try to load the data for the other
+      // processes.
+      continue;
+    }
+
+    // Iterate through each scalar.
+    JS::RootedObject processDataObj(aCx, &processData.toObject());
+    JS::Rooted<JS::IdVector> scalars(aCx, JS::IdVector(aCx));
+    if (!JS_Enumerate(aCx, processDataObj, &scalars)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    JS::RootedId scalar(aCx);
+    for (auto& scalarVal : scalars) {
+      scalar = scalarVal;
+      // Get the scalar name.
+      nsAutoJSString scalarName;
+      if (!scalarName.init(aCx, scalar)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      // Get the scalar value as a JS value.
+      JS::RootedValue scalarValue(aCx);
+      if (!JS_GetPropertyById(aCx, processDataObj, scalar, &scalarValue)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      if (scalarValue.isNullOrUndefined()) {
+        // We can't set scalars to null or undefined values, skip this
+        // and try to load other scalars.
+        continue;
+      }
+
+      // Unpack the aVal to nsIVariant.
+      nsCOMPtr<nsIVariant> unpackedVal;
+      nsresult rv =
+        nsContentUtils::XPConnect()->JSToVariant(aCx, scalarValue,  getter_AddRefs(unpackedVal));
+      if (NS_FAILED(rv)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      // Add the scalar to the map.
+      PersistedScalarArray& processScalars =
+        scalarsToUpdate.GetOrInsert(static_cast<uint32_t>(processID));
+      processScalars.AppendElement(
+        mozilla::MakePair(nsCString(NS_ConvertUTF16toUTF8(scalarName)), unpackedVal));
+    }
+  }
+
+  // Now that all the JS specific operations are finished, update the scalars.
+  {
+    StaticMutexAutoLock lock(gTelemetryScalarsMutex);
+
+    for (auto iter = scalarsToUpdate.ConstIter(); !iter.Done(); iter.Next()) {
+      PersistedScalarArray& processScalars = iter.Data();
+      for (PersistedScalarArray::size_type i = 0; i < processScalars.Length(); i++) {
+        mozilla::Unused << internal_UpdateScalar(lock,
+                                                 processScalars[i].first(),
+                                                 ScalarActionType::eSet,
+                                                 processScalars[i].second(),
+                                                 ProcessID(iter.Key()));
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Load the persisted measurements from a Json object and injects them
+ * in the relevant process storage.
+ *
+ * @param {aData} The input Json object.
+ * @returns NS_OK if loading was performed, an error code explaining the
+ *          failure reason otherwise.
+ */
+nsresult
+TelemetryScalar::DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValue aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only load scalars in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  typedef mozilla::Tuple<nsCString, nsString, nsCOMPtr<nsIVariant>> PersistedKeyedScalarTuple;
+  typedef nsTArray<PersistedKeyedScalarTuple> PersistedKeyedScalarArray;
+  typedef nsDataHashtable<ProcessIDHashKey, PersistedKeyedScalarArray> PeristedKeyedScalarStorage;
+
+  PeristedKeyedScalarStorage scalarsToUpdate;
+
+  // Before updating the keyed scalars, we need to get the data out of the JS
+  // wrappers. We can't hold the scalars mutex while handling JS stuff.
+  // Build a <scalar name, value> map.
+  JS::RootedObject scalarDataObj(aCx, &aData.toObject());
+  JS::Rooted<JS::IdVector> processes(aCx, JS::IdVector(aCx));
+  if (!JS_Enumerate(aCx, scalarDataObj, &processes)) {
+    // We can't even enumerate the processes in the loaded data, so
+    // there is nothing we could recover from the persistence file. Bail out.
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // The following block of code attempts to extract as much data as possible
+  // from the serialized JSON, even in case of light data corruptions: if, for example,
+  // the data for a single process is corrupted or is in an unexpected form, we press on
+  // and attempt to load the data for the other processes.
+  JS::RootedId process(aCx);
+  for (auto& processVal : processes) {
+    process = processVal;
+    // Get the process name.
+    nsAutoJSString processNameJS;
+    if (!processNameJS.init(aCx, process)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    // Make sure it's valid. Note that this is safe to call outside
+    // of a locked section.
+    NS_ConvertUTF16toUTF8 processName(processNameJS);
+    ProcessID processID = GetIDForProcessName(processName.get());
+    if (processID == ProcessID::Count) {
+      NS_WARNING(nsPrintfCString("Failed to get process ID for %s", processName.get()).get());
+      continue;
+    }
+
+    // And its probes.
+    JS::RootedValue processData(aCx);
+    if (!JS_GetPropertyById(aCx, scalarDataObj, process, &processData)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    if (!processData.isObject()) {
+      // |processData| should be an object containing scalars. If this is
+      // not the case, silently skip and try to load the data for the other
+      // processes.
+      continue;
+    }
+
+    // Iterate through each keyed scalar.
+    JS::RootedObject processDataObj(aCx, &processData.toObject());
+    JS::Rooted<JS::IdVector> keyedScalars(aCx, JS::IdVector(aCx));
+    if (!JS_Enumerate(aCx, processDataObj, &keyedScalars)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    JS::RootedId keyedScalar(aCx);
+    for (auto& keyedScalarVal : keyedScalars) {
+      keyedScalar = keyedScalarVal;
+      // Get the scalar name.
+      nsAutoJSString scalarName;
+      if (!scalarName.init(aCx, keyedScalar)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      // Get the data for this keyed scalar.
+      JS::RootedValue keyedScalarData(aCx);
+      if (!JS_GetPropertyById(aCx, processDataObj, keyedScalar, &keyedScalarData)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      if (!keyedScalarData.isObject()) {
+        // Keyed scalar data need to be an object. If that's not the case, skip it
+        // and try to load the rest of the data.
+        continue;
+      }
+
+      // Get the keys in the keyed scalar.
+      JS::RootedObject keyedScalarDataObj(aCx, &keyedScalarData.toObject());
+      JS::Rooted<JS::IdVector> keys(aCx, JS::IdVector(aCx));
+      if (!JS_Enumerate(aCx, keyedScalarDataObj, &keys)) {
+        JS_ClearPendingException(aCx);
+        continue;
+      }
+
+      JS::RootedId key(aCx);
+      for (auto keyVal : keys) {
+        key = keyVal;
+        // Get the process name.
+        nsAutoJSString keyName;
+        if (!keyName.init(aCx, key)) {
+          JS_ClearPendingException(aCx);
+          continue;
+        }
+
+        // Get the scalar value as a JS value.
+        JS::RootedValue scalarValue(aCx);
+        if (!JS_GetPropertyById(aCx, keyedScalarDataObj, key, &scalarValue)) {
+          JS_ClearPendingException(aCx);
+          continue;
+        }
+
+        if (scalarValue.isNullOrUndefined()) {
+          // We can't set scalars to null or undefined values, skip this
+          // and try to load other scalars.
+          continue;
+        }
+
+        // Unpack the aVal to nsIVariant.
+        nsCOMPtr<nsIVariant> unpackedVal;
+        nsresult rv =
+          nsContentUtils::XPConnect()->JSToVariant(aCx, scalarValue,  getter_AddRefs(unpackedVal));
+        if (NS_FAILED(rv)) {
+          JS_ClearPendingException(aCx);
+          continue;
+        }
+
+        // Add the scalar to the map.
+        PersistedKeyedScalarArray& processScalars =
+          scalarsToUpdate.GetOrInsert(static_cast<uint32_t>(processID));
+        processScalars.AppendElement(
+          mozilla::MakeTuple(nsCString(NS_ConvertUTF16toUTF8(scalarName)),
+                             nsString(keyName), unpackedVal));
+      }
+    }
+  }
+
+  // Now that all the JS specific operations are finished, update the scalars.
+  {
+    StaticMutexAutoLock lock(gTelemetryScalarsMutex);
+
+    for (auto iter = scalarsToUpdate.ConstIter(); !iter.Done(); iter.Next()) {
+      PersistedKeyedScalarArray& processScalars = iter.Data();
+      for (PersistedKeyedScalarArray::size_type i = 0; i < processScalars.Length(); i++) {
+        mozilla::Unused << internal_UpdateKeyedScalar(lock,
+                                                      mozilla::Get<0>(processScalars[i]),
+                                                      mozilla::Get<1>(processScalars[i]),
+                                                      ScalarActionType::eSet,
+                                                      mozilla::Get<2>(processScalars[i]),
+                                                      ProcessID(iter.Key()));
+      }
+    }
+  }
+
+  return NS_OK;
+}
+#endif // MOZ_TELEMETRY_GECKOVIEW

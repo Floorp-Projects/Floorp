@@ -31,7 +31,12 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
 
 if CONFIG['ENABLE_TESTS']:
-    DIRS += ['tests/gtest']
+    # We need to use a separate directory for GeckoView gtests. See
+    # the comment below near MOZ_TELEMETRY_GECKOVIEW.
+    DIRS += [
+        'geckoview/gtest',
+        'tests/gtest'
+    ]
 
 TEST_DIRS += ['tests']
 
@@ -198,6 +203,16 @@ processes_data.inputs = processes_files
 # which files to include. As a consequence, we can simply only
 # include the GeckoView files on all Android builds.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    # Introduce this define to conditionally enable Telemetry GV code in the various
+    # C++ modules. We need this trick in order to run gtest coverage on Treeherder
+    # on platforms other than Android, since gtests on Android are not supported
+    # yet (see bug 1318091).
+    DEFINES['MOZ_TELEMETRY_GECKOVIEW'] = True
+
+    SOURCES += [
+        'geckoview/TelemetryGeckoViewPersistence.cpp'
+    ]
+
     EXTRA_JS_MODULES += [
         'geckoview/GeckoViewTelemetryController.jsm',
     ]

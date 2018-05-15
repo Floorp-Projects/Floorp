@@ -731,8 +731,8 @@ public:
 
     mPseudoStack = aPseudoStack;
     if (mPseudoStack) {
-      mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
-                                 js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
+      mPseudoStack->pushLabelFrame(aLabel, aDynamicString, this, aLine,
+                                   aCategory);
     }
   }
 

@@ -164,9 +164,9 @@ add_task(async function test_invalid_records() {
       + "(url, url_hash, title, rev_host, visit_count, last_visit_date) "
       + "VALUES ('invalid-uri', hash('invalid-uri'), 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")"
     );
-    // Trigger the update on moz_hosts by deleting the added rows from
-    // moz_updatehostsinsert_temp
-    await db.execute("DELETE FROM moz_updatehostsinsert_temp");
+    // Trigger the update to the moz_origin tables by deleting the added rows
+    // from moz_updateoriginsinsert_temp
+    await db.executeCached("DELETE FROM moz_updateoriginsinsert_temp");
     // Add the corresponding visit to retain database coherence.
     await db.execute(
       "INSERT INTO moz_historyvisits "

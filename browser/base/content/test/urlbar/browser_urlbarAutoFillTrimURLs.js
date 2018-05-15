@@ -61,41 +61,46 @@ const tests = [{
     resultListActionText: "Search with Google",
     resultListType: "searchengine",
     finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"http%3A%2F%2F","searchQuery":"http%3A%2F%2F"}'
-  }, {
+  },
+  {
     search: "https://",
     autofilledValue: "https://",
     resultListDisplayTitle: "https://",
     resultListActionText: "Search with Google",
     resultListType: "searchengine",
     finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"https%3A%2F%2F","searchQuery":"https%3A%2F%2F"}'
-  }, {
+  },
+  {
     search: "au",
     autofilledValue: "autofilltrimurl.com/",
     resultListDisplayTitle: "www.autofilltrimurl.com",
     resultListActionText: "Visit",
     resultListType: "",
-    finalCompleteValue: "www.autofilltrimurl.com/"
-  }, {
+    finalCompleteValue: "http://www.autofilltrimurl.com/"
+  },
+  {
     search: "http://au",
     autofilledValue: "http://autofilltrimurl.com/",
-    resultListDisplayTitle: "autofilltrimurl.com",
+    resultListDisplayTitle: "www.autofilltrimurl.com",
     resultListActionText: "Visit",
     resultListType: "",
-    finalCompleteValue: "http://autofilltrimurl.com/"
-  }, {
+    finalCompleteValue: "http://www.autofilltrimurl.com/"
+  },
+  {
     search: "sec",
     autofilledValue: "secureautofillurl.com/",
     resultListDisplayTitle: "https://www.secureautofillurl.com",
     resultListActionText: "Visit",
     resultListType: "",
     finalCompleteValue: "https://www.secureautofillurl.com/"
-  }, {
+  },
+  {
     search: "https://sec",
     autofilledValue: "https://secureautofillurl.com/",
-    resultListDisplayTitle: "https://secureautofillurl.com",
+    resultListDisplayTitle: "https://www.secureautofillurl.com",
     resultListActionText: "Visit",
     resultListType: "",
-    finalCompleteValue: "https://secureautofillurl.com/"
+    finalCompleteValue: "https://www.secureautofillurl.com/"
   },
 ];
 

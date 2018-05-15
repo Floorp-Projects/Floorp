@@ -34,8 +34,8 @@ class PseudoStack;
 //
 //  PseudoStack* pseudoStack = ...;
 //
-//  // For CPP stack frames:
-//  pseudoStack->pushCppFrame(...);
+//  // For label frames:
+//  pseudoStack->pushLabelFrame(...);
 //  // Execute some code. When finished, pop the entry:
 //  pseudoStack->pop();
 //
@@ -164,13 +164,15 @@ class ProfileEntry
     }
 
     enum class Kind : uint32_t {
-        // A normal C++ frame.
-        CPP_NORMAL = 0,
+        // A regular label frame. These usually come from AutoProfilerLabel.
+        LABEL = 0,
 
-        // A special C++ frame indicating the start of a run of JS pseudostack
-        // entries. CPP_MARKER_FOR_JS frames are ignored, except for the sp
-        // field.
-        CPP_MARKER_FOR_JS = 1,
+        // A special label frame indicating the start of a run of JS pseudostack
+        // entries. SP_MARKER frames are ignored, except for the sp field.
+        // These frames are needed to get correct ordering between JS and LABEL
+        // frames because JS frames don't carry sp information.
+        // SP is short for "stack pointer".
+        SP_MARKER = 1,
 
         // A normal JS frame.
         JS_NORMAL = 2,
@@ -204,13 +206,17 @@ class ProfileEntry
     static_assert((uint32_t(Category::FIRST) & uint32_t(Kind::KIND_MASK)) == 0,
                   "Category overlaps with Kind");
 
-    bool isCpp() const
+    bool isLabelFrame() const
     {
-        Kind k = kind();
-        return k == Kind::CPP_NORMAL || k == Kind::CPP_MARKER_FOR_JS;
+        return kind() == Kind::LABEL;
     }
 
-    bool isJs() const
+    bool isSpMarkerFrame() const
+    {
+        return kind() == Kind::SP_MARKER;
+    }
+
+    bool isJsFrame() const
     {
         Kind k = kind();
         return k == Kind::JS_NORMAL || k == Kind::JS_OSR;
@@ -221,15 +227,25 @@ class ProfileEntry
 
     const char* dynamicString() const { return dynamicString_; }
 
-    void initCppFrame(const char* aLabel, const char* aDynamicString, void* sp, uint32_t aLine,
-                      Kind aKind, Category aCategory)
+    void initLabelFrame(const char* aLabel, const char* aDynamicString, void* sp,
+                        uint32_t aLine, Category aCategory)
     {
         label_ = aLabel;
         dynamicString_ = aDynamicString;
         spOrScript = sp;
         lineOrPcOffset = static_cast<int32_t>(aLine);
-        kindAndCategory_ = uint32_t(aKind) | uint32_t(aCategory);
-        MOZ_ASSERT(isCpp());
+        kindAndCategory_ = uint32_t(Kind::LABEL) | uint32_t(aCategory);
+        MOZ_ASSERT(isLabelFrame());
+    }
+
+    void initSpMarkerFrame(void* sp)
+    {
+        label_ = "";
+        dynamicString_ = nullptr;
+        spOrScript = sp;
+        lineOrPcOffset = 0;
+        kindAndCategory_ = uint32_t(Kind::SP_MARKER) | uint32_t(ProfileEntry::Category::OTHER);
+        MOZ_ASSERT(isSpMarkerFrame());
     }
 
     void initJsFrame(const char* aLabel, const char* aDynamicString, JSScript* aScript,
@@ -240,7 +256,7 @@ class ProfileEntry
         spOrScript = aScript;
         lineOrPcOffset = pcToOffset(aScript, aPc);
         kindAndCategory_ = uint32_t(Kind::JS_NORMAL) | uint32_t(Category::JS);
-        MOZ_ASSERT(isJs());
+        MOZ_ASSERT(isJsFrame());
     }
 
     void setKind(Kind aKind) {
@@ -256,20 +272,20 @@ class ProfileEntry
     }
 
     void* stackAddress() const {
-        MOZ_ASSERT(!isJs());
+        MOZ_ASSERT(!isJsFrame());
         return spOrScript;
     }
 
     JS_PUBLIC_API(JSScript*) script() const;
 
     uint32_t line() const {
-        MOZ_ASSERT(!isJs());
+        MOZ_ASSERT(!isJsFrame());
         return static_cast<uint32_t>(lineOrPcOffset);
     }
 
     // Note that the pointer returned might be invalid.
     JSScript* rawScript() const {
-        MOZ_ASSERT(isJs());
+        MOZ_ASSERT(isJsFrame());
         void* script = spOrScript;
         return static_cast<JSScript*>(script);
     }
@@ -327,12 +343,29 @@ class PseudoStack final
 
     ~PseudoStack();
 
-    void pushCppFrame(const char* label, const char* dynamicString, void* sp, uint32_t line,
-                      js::ProfileEntry::Kind kind, js::ProfileEntry::Category category) {
+    void pushLabelFrame(const char* label, const char* dynamicString, void* sp,
+                        uint32_t line, js::ProfileEntry::Category category) {
         uint32_t oldStackPointer = stackPointer;
 
         if (MOZ_LIKELY(entryCapacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow()))
-            entries[oldStackPointer].initCppFrame(label, dynamicString, sp, line, kind, category);
+            entries[oldStackPointer].initLabelFrame(label, dynamicString, sp, line, category);
+
+        // This must happen at the end! The compiler will not reorder this
+        // update because stackPointer is Atomic<..., ReleaseAcquire>, so any
+        // the writes above will not be reordered below the stackPointer store.
+        // Do the read and the write as two separate statements, in order to
+        // make it clear that we don't need an atomic increment, which would be
+        // more expensive on x86 than the separate operations done here.
+        // This thread is the only one that ever changes the value of
+        // stackPointer.
+        stackPointer = oldStackPointer + 1;
+    }
+
+    void pushSpMarkerFrame(void* sp) {
+        uint32_t oldStackPointer = stackPointer;
+
+        if (MOZ_LIKELY(entryCapacity > oldStackPointer) || MOZ_LIKELY(ensureCapacitySlow()))
+            entries[oldStackPointer].initSpMarkerFrame(sp);
 
         // This must happen at the end! The compiler will not reorder this
         // update because stackPointer is Atomic<..., ReleaseAcquire>, so any

@@ -1329,7 +1329,7 @@ class SyncedBookmarksMirror {
       WHERE r.valueState = :valueState`,
       { queryKind: SyncedBookmarksMirror.KIND.QUERY,
         valueState: BookmarkMergeState.TYPE.REMOTE });
-    await this.db.execute(`DELETE FROM moz_updatehostsinsert_temp`);
+    await this.db.execute(`DELETE FROM moz_updateoriginsinsert_temp`);
 
     MirrorLog.trace("Setting up deletions table");
     for (let chunk of PlacesSyncUtils.chunkArray(deletions,

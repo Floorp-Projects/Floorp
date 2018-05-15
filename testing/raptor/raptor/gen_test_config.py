@@ -20,10 +20,11 @@ def gen_test_config(browser, test, cs_port):
 function getTestConfig() {
     return {"browser": "%s",
             "cs_port": "%d",
+            "test_name": "%s",
             "test_settings_url": "http://localhost:%d/%s.json"};
 }
 
-""" % (browser, cs_port, cs_port, test)
+""" % (browser, cs_port, test, cs_port, test)
 
     webext_background_script = (os.path.join(webext_dir, "auto_gen_test_config.js"))
 

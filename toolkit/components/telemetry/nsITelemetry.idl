@@ -572,4 +572,16 @@ interface nsITelemetry : nsISupports
    * It will fail on Desktop.
    */
   void resetCurrentProduct();
+
+  /**
+   * Reset the storage for all the collection primitives so that GeckoView
+   * can issue a single Clear signal for histograms, scalars, events, ...
+   *
+   * This is needed for supporting the current implementation of GeckoView
+   * measurement persistence: all the measurements are stored in a single file and
+   * they can't be cleared independently.
+   *
+   * Please note that this is only intended to be used by GeckoViewTelemetryController.
+   */
+  void clearProbes();
 };

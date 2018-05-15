@@ -19,6 +19,7 @@ var ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
 
 add_task(async function test_escape() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
   let uri1 = NetUtil.newURI("http://matchme/");
   let uri2 = NetUtil.newURI("http://dontmatchme/");
