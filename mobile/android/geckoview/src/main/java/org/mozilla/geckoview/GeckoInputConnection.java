@@ -5,7 +5,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
@@ -582,11 +581,7 @@ import java.lang.reflect.Proxy;
         return config.keyboard != Configuration.KEYBOARD_NOKEYS;
     }
 
-    // Android N: @Override // InputConnection
-    // We need to suppress lint complaining about the lack override here in the meantime: it wants us to build
-    // against sdk 24, even though we're using 23, and therefore complains about the lack of override.
-    // Once we update to 24, we can use the actual override annotation and remove the lint suppression.
-    @SuppressLint("Override")
+    @Override // InputConnection
     public Handler getHandler() {
         final Handler handler;
         if (isPhysicalKeyboardPresent()) {
@@ -606,8 +601,8 @@ import java.lang.reflect.Proxy;
         return getHandler();
     }
 
-    // Android N: @Override // InputConnection
-    @SuppressLint("Override")
+
+    @Override // InputConnection
     public void closeConnection() {
         // Not supported at the moment.
     }
