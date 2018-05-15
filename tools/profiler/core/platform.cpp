@@ -3470,12 +3470,6 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
   racy_profiler_add_marker(aMarkerName, Move(payload));
 }
 
-PseudoStack*
-profiler_get_pseudo_stack()
-{
-  return TLSRegisteredThread::Stack();
-}
-
 void
 profiler_set_js_context(JSContext* aCx)
 {
