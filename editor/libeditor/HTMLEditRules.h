@@ -503,7 +503,18 @@ protected:
              nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
              TouchContent aTouchContent = TouchContent::yes);
   void LookInsideDivBQandList(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
-  nsresult BustUpInlinesAtRangeEndpoints(RangeItem& inRange);
+
+  /**
+   * BustUpInlinesAtRangeEndpoints() splits nodes at both start and end of
+   * aRangeItem.  If this splits at every point, this modifies aRangeItem
+   * to point each split point (typically, right node).  Note that this splits
+   * nodes only in highest inline element at every point.
+   *
+   * @param aRangeItem          One or two DOM points where should be split.
+   *                            Will be modified to split point if they're
+   *                            split.
+   */
+  MOZ_MUST_USE nsresult BustUpInlinesAtRangeEndpoints(RangeItem& aRangeItem);
 
   /**
    * BustUpInlinesAtBRs() splits before all <br> elements in aNode.  All <br>
