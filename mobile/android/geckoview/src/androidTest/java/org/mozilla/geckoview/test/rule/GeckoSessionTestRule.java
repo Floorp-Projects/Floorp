@@ -1039,7 +1039,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 sRDPConnection.setTimeout(mTimeoutMillis);
             }
             final Tab tab = sRDPConnection.getMostRecentTab();
-            tab.attach();
             mRDPTabs.put(session, tab);
         }
     }
@@ -1760,7 +1759,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             mRDPChromeProcess = sRDPConnection.getChromeProcess();
             assertThat("Should have chrome process object",
                        mRDPChromeProcess, notNullValue());
-            mRDPChromeProcess.attach();
         }
         return evaluateJS(mRDPChromeProcess, js);
     }
