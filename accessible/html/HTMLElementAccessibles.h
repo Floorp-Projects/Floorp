@@ -40,7 +40,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
 protected:
   // Accessible
@@ -105,7 +105,7 @@ public:
   HTMLSummaryAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;

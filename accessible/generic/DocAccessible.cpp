@@ -236,7 +236,7 @@ DocAccessible::Description(nsString& aDescription)
 
 // Accessible public method
 uint64_t
-DocAccessible::NativeState()
+DocAccessible::NativeState() const
 {
   // Document is always focusable.
   uint64_t state = states::FOCUSABLE; // keep in sync with NativeInteractiveState() impl

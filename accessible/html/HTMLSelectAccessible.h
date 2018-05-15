@@ -38,7 +38,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
   // SelectAccessible
@@ -66,7 +66,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   virtual int32_t GetLevelInternal() override;
@@ -167,7 +167,7 @@ public:
   virtual void Description(nsString& aDescription) override;
   virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual bool RemoveChild(Accessible* aChild) override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 
@@ -209,7 +209,7 @@ public:
   // Accessible
   virtual nsIFrame* GetFrame() const override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;
   virtual bool IsAcceptableChild(nsIContent* aEl) const override;
 

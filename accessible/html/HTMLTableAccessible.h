@@ -35,7 +35,7 @@ public:
   // Accessible
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
@@ -163,7 +163,7 @@ public:
   virtual TableAccessible* AsTable() override { return this; }
   virtual void Description(nsString& aDescription) override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) const override;
 

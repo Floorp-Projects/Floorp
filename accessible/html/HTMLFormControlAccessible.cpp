@@ -76,7 +76,7 @@ HTMLCheckboxAccessible::DoAction(uint8_t aIndex) const
 }
 
 uint64_t
-HTMLCheckboxAccessible::NativeState()
+HTMLCheckboxAccessible::NativeState() const
 {
   uint64_t state = LeafAccessible::NativeState();
 
@@ -109,7 +109,7 @@ HTMLCheckboxAccessible::IsWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 uint64_t
-HTMLRadioButtonAccessible::NativeState()
+HTMLRadioButtonAccessible::NativeState() const
 {
   uint64_t state = AccessibleWrap::NativeState();
 
@@ -222,7 +222,7 @@ HTMLButtonAccessible::State()
 }
 
 uint64_t
-HTMLButtonAccessible::NativeState()
+HTMLButtonAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
@@ -373,7 +373,7 @@ HTMLTextFieldAccessible::ApplyARIAState(uint64_t* aState) const
 }
 
 uint64_t
-HTMLTextFieldAccessible::NativeState()
+HTMLTextFieldAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 

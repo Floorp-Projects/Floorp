@@ -37,7 +37,7 @@ HTMLLinkAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLLinkAccessible::NativeState()
+HTMLLinkAccessible::NativeState() const
 {
   return HyperTextAccessibleWrap::NativeState() & ~states::READONLY;
 }

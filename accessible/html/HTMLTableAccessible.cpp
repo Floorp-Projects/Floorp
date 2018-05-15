@@ -62,7 +62,7 @@ HTMLTableCellAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLTableCellAccessible::NativeState()
+HTMLTableCellAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
@@ -404,7 +404,7 @@ HTMLTableAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLTableAccessible::NativeState()
+HTMLTableAccessible::NativeState() const
 {
   return Accessible::NativeState() | states::READONLY;
 }

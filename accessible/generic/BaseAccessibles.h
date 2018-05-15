@@ -116,7 +116,7 @@ public:
   explicit DummyAccessible(DocAccessible* aDocument = nullptr) :
     AccessibleWrap(nullptr, aDocument) { }
 
-  uint64_t NativeState() final;
+  uint64_t NativeState() const final;
   uint64_t NativeInteractiveState() const final;
   uint64_t NativeLinkState() const final;
   bool NativelyUnavailable() const final;

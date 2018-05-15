@@ -28,7 +28,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 };
 
 /**
@@ -42,7 +42,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -83,7 +83,7 @@ public:
   virtual void Value(nsString& aValue) const override;
   virtual TableAccessible* AsTable() override { return this; }
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // Widgets
   virtual bool IsWidget() const override;
@@ -114,7 +114,7 @@ public:
   // Accessible
   virtual void Description(nsString& aDesc) override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   // Actions

@@ -30,7 +30,7 @@ public:
   // Accessible
   virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // Value
   virtual double MaxValue() const override;

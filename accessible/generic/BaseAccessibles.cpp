@@ -231,7 +231,7 @@ LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 ////////////////////////////////////////////////////////////////////////////////
 
 uint64_t
-DummyAccessible::NativeState()
+DummyAccessible::NativeState() const
 {
   return 0;
 }
