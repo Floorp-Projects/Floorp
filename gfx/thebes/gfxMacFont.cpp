@@ -23,6 +23,13 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
+template<class T>
+struct TagEquals {
+    bool Equals(const T& aIter, uint32_t aTag) const {
+        return aIter.mTag == aTag;
+    }
+};
+
 gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
                        MacOSFontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle)
@@ -46,6 +53,55 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
         // for a particular fontStyle.
         AutoTArray<gfxFontVariation,4> vars;
         aFontEntry->GetVariationsForStyle(vars, *aFontStyle);
+
+        // Because of a Core Text bug, we need to ensure that if the font has
+        // an 'opsz' axis, it is always explicitly set, and NOT to the font's
+        // default value. (See bug 1457417.)
+        // We record the result of searching the font's axes in the font entry,
+        // so that this only has to be done by the first instance created for
+        // a given font resource.
+        const uint32_t kOpszTag = HB_TAG('o','p','s','z');
+
+        if (!aFontEntry->mCheckedForOpszAxis) {
+            aFontEntry->mCheckedForOpszAxis = true;
+            AutoTArray<gfxFontVariationAxis,4> axes;
+            aFontEntry->GetVariationAxes(axes);
+            auto index =
+                axes.IndexOf(kOpszTag, 0, TagEquals<gfxFontVariationAxis>());
+            if (index == axes.NoIndex) {
+                aFontEntry->mHasOpszAxis = false;
+            } else {
+                const auto& axis = axes[index];
+                aFontEntry->mHasOpszAxis = true;
+                aFontEntry->mOpszAxis = axis;
+                // Pick a slightly-adjusted version of the default that we'll
+                // use to work around Core Text's habit of ignoring any attempt
+                // to explicitly set the default value.
+                aFontEntry->mAdjustedDefaultOpsz =
+                    axis.mDefaultValue == axis.mMinValue
+                        ? axis.mDefaultValue + 0.001f
+                        : axis.mDefaultValue - 0.001f;
+            }
+        }
+
+        // Add 'opsz' if not present, or tweak its value if it looks too close
+        // to the default (after clamping to the font's available range).
+        if (aFontEntry->mHasOpszAxis) {
+            auto index =
+                vars.IndexOf(kOpszTag, 0, TagEquals<gfxFontVariation>());
+            if (index == vars.NoIndex) {
+                gfxFontVariation opsz{kOpszTag, aFontEntry->mAdjustedDefaultOpsz};
+                vars.AppendElement(opsz);
+            } else {
+                // Figure out a "safe" value that Core Text won't ignore.
+                auto& value = vars[index].mValue;
+                auto& axis = aFontEntry->mOpszAxis;
+                value = fmin(fmax(value, axis.mMinValue), axis.mMaxValue);
+                if (abs(value - axis.mDefaultValue) < 0.001f) {
+                    value = aFontEntry->mAdjustedDefaultOpsz;
+                }
+            }
+        }
 
         mCGFont =
             UnscaledFontMac::CreateCGFontWithVariations(baseFont,
