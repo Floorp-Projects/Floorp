@@ -894,8 +894,12 @@ gfxUserFontEntry::FontDataDownloadComplete(const uint8_t* aFontData,
         free((void*)aFontData);
     }
 
-    // error occurred, load next src if load not yet timed out
-    if (mFontDataLoadingState != LOADING_TIMED_OUT) {
+    // Error occurred.  Make sure the FontFace's promise is rejected if the
+    // load timed out, or else load the next src.
+    if (mFontDataLoadingState == LOADING_TIMED_OUT) {
+      mFontDataLoadingState = LOADING_FAILED;
+      SetLoadState(STATUS_FAILED);
+    } else {
       LoadNextSrc();
     }
 
