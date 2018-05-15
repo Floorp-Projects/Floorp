@@ -5,7 +5,7 @@ Installer Build
 How to build the installers
 ---------------------------
 
-The easiest way to build an installer in your local tree is to run ``mach build installer``. The finished installers will be in ``$OBJDIR/dist/install/sea/``. You have to have a build of the application already done before that will work, but `artifact builds <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds>`_ are supported, so that can save you a lot of time if you're only doing installer work.
+The easiest way to build an installer in your local tree is to run ``mach package``. The finished installers will be in ``$OBJDIR/dist/install/sea/``. You have to have a build of the application already done before that will work, but `artifact builds <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds>`_ are supported, so that can save you a lot of time if you're only doing installer work.
 
 You'll also need to be on a Windows machine; the installer build depends on tools that aren't available for other platforms.
 
@@ -33,9 +33,9 @@ Build process
 
 Both the full and stub installers are built through a similar process, which is summarized here along with references to the relevant bits of code.
 
-Most of this procedure is done in `makensis.mk <http://searchfox.org/mozilla-central/source/toolkit/mozapps/installer/windows/nsis/makensis.mk>`_.
+Most of this procedure is done in `makensis.mk <http://searchfox.org/mozilla-central/source/toolkit/mozapps/installer/windows/nsis/makensis.mk>`_ and in the `mach repackage <https://searchfox.org/mozilla-central/rev/2b9779c59390ecc47be7a70d99753653d8eb5afc/python/mozbuild/mozbuild/mach_commands.py#2166>`_ command.
 
-0. The application has to be in a packaged state, so the equivalent of ``mach package`` is run.
+0. A prerequisite is for the application to be in a packaged state, so ``mach package`` first creates a release-style package and puts it in ``$OBJDIR/dist/firefox``.
 1. All required files are copied into the instgen directory. This includes .nsi and .nsh script files, plugin DLL files, image and icon files, and the 7-zip SFX module and its configuration files.
 2. The NSIS scripts are compiled, resulting in setup.exe and setup-stub.exe (if building the stub is enabled).
 3. The 7-zip SFX module is run through UPX.
