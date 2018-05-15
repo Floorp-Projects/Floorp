@@ -495,6 +495,14 @@ var Policies = {
     }
   },
 
+  "HardwareAcceleration": {
+    onBeforeAddons(manager, param) {
+      if (!param) {
+        setAndLockPref("layers.acceleration.disabled", true);
+      }
+    }
+  },
+
   "Homepage": {
     onBeforeUIStartup(manager, param) {
       // |homepages| will be a string containing a pipe-separated ('|') list of
