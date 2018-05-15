@@ -6259,24 +6259,25 @@ HTMLEditRules::ExpandSelectionForDeletion()
   return NS_OK;
 }
 
-/**
- * NormalizeSelection() tweaks non-collapsed selections to be more "natural".
- * Idea here is to adjust selection endpoint so that they do not cross breaks
- * or block boundaries unless something editable beyond that boundary is also
- * selected.  This adjustment makes it much easier for the various block
- * operations to determine what nodes to act on.
- */
 nsresult
 HTMLEditRules::NormalizeSelection()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
+
+  // NormalizeSelection() tweaks non-collapsed selections to be more "natural".
+  // Idea here is to adjust selection endpoint so that they do not cross breaks
+  // or block boundaries unless something editable beyond that boundary is also
+  // selected.  This adjustment makes it much easier for the various block
+  // operations to determine what nodes to act on.
 
   // don't need to touch collapsed selections
   if (SelectionRef().IsCollapsed()) {
     return NS_OK;
   }
 
-  // we don't need to mess with cell selections, and we assume multirange selections are those.
+  // We don't need to mess with cell selections, and we assume multirange
+  // selections are those.
+  // XXX Why?  Even in <input>, user can select 2 or more ranges.
   if (SelectionRef().RangeCount() != 1) {
     return NS_OK;
   }
@@ -6313,12 +6314,12 @@ HTMLEditRules::NormalizeSelection()
   // let the whitespace code do the heavy lifting
   WSRunObject wsEndObj(&HTMLEditorRef(), endNode,
                        static_cast<int32_t>(endOffset));
-  // is there any intervening visible whitespace?  if so we can't push selection past that,
-  // it would visibly change maening of users selection
+  // Is there any intervening visible whitespace?  If so we can't push
+  // selection past that, it would visibly change meaning of users selection.
   wsEndObj.PriorVisibleNode(EditorRawDOMPoint(endNode, endOffset),
                             address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
-    // eThisBlock and eOtherBlock conveniently distinquish cases
+    // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
@@ -6355,12 +6356,12 @@ HTMLEditRules::NormalizeSelection()
   // similar dealio for start of range
   WSRunObject wsStartObj(&HTMLEditorRef(), startNode,
                          static_cast<int32_t>(startOffset));
-  // is there any intervening visible whitespace?  if so we can't push selection past that,
-  // it would visibly change maening of users selection
+  // Is there any intervening visible whitespace?  If so we can't push
+  // selection past that, it would visibly change meaning of users selection.
   wsStartObj.NextVisibleNode(EditorRawDOMPoint(startNode, startOffset),
                              address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
-    // eThisBlock and eOtherBlock conveniently distinquish cases
+    // eThisBlock and eOtherBlock conveniently distinguish cases
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
@@ -6394,13 +6395,14 @@ HTMLEditRules::NormalizeSelection()
     }
   }
 
-  // there is a demented possiblity we have to check for.  We might have a very strange selection
-  // that is not collapsed and yet does not contain any editable content, and satisfies some of the
-  // above conditions that cause tweaking.  In this case we don't want to tweak the selection into
-  // a block it was never in, etc.  There are a variety of strategies one might use to try to
-  // detect these cases, but I think the most straightforward is to see if the adjusted locations
-  // "cross" the old values: ie, new end before old start, or new start after old end.  If so
-  // then just leave things alone.
+  // There is a demented possiblity we have to check for.  We might have a very
+  // strange selection that is not collapsed and yet does not contain any
+  // editable content, and satisfies some of the above conditions that cause
+  // tweaking.  In this case we don't want to tweak the selection into a block
+  // it was never in, etc.  There are a variety of strategies one might use to
+  // try to detect these cases, but I think the most straightforward is to see
+  // if the adjusted locations "cross" the old values: i.e., new end before old
+  // start, or new start after old end.  If so then just leave things alone.
 
   int16_t comp;
   comp = nsContentUtils::ComparePoints(startNode, startOffset,
@@ -6418,9 +6420,15 @@ HTMLEditRules::NormalizeSelection()
   // XXX Why don't we use SetBaseAndExtent()?
   DebugOnly<nsresult> rv =
     SelectionRef().Collapse(newStartNode, newStartOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "Failed to collapse selection");
   rv = SelectionRef().Extend(newEndNode, newEndOffset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
     "Failed to extend selection");
   return NS_OK;

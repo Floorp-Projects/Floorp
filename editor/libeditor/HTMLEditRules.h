@@ -470,7 +470,15 @@ protected:
   Element* CheckForInvisibleBR(Element& aBlock, BRLocation aWhere,
                                int32_t aOffset = 0);
   nsresult ExpandSelectionForDeletion();
-  nsresult NormalizeSelection();
+
+  /**
+   * NormalizeSelection() adjust Selection if it's not collapsed and there is
+   * only one range.  If range start and/or end point is <br> node or something
+   * non-editable point, they should be moved to nearest text node or something
+   * where the other methods easier to handle edit action.
+   */
+  MOZ_MUST_USE nsresult NormalizeSelection();
+
   EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
                                   int32_t aOffset, EditAction actionID);
   void GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
