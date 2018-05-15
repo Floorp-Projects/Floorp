@@ -535,7 +535,7 @@ XULTreeGridCellAccessible::BoundsInAppUnits() const
 }
 
 uint8_t
-XULTreeGridCellAccessible::ActionCount()
+XULTreeGridCellAccessible::ActionCount() const
 {
   bool isCycler = false;
   mColumn->GetCycler(&isCycler);
@@ -578,7 +578,7 @@ XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULTreeGridCellAccessible::DoAction(uint8_t aIndex)
+XULTreeGridCellAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

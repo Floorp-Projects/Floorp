@@ -70,7 +70,7 @@ XULColumnItemAccessible::NativeState()
 }
 
 uint8_t
-XULColumnItemAccessible::ActionCount()
+XULColumnItemAccessible::ActionCount() const
 {
   return 1;
 }
@@ -83,7 +83,7 @@ XULColumnItemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULColumnItemAccessible::DoAction(uint8_t aIndex)
+XULColumnItemAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

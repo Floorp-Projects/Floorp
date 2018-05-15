@@ -212,7 +212,7 @@ XULLinkAccessible::NativeLinkState() const
 }
 
 uint8_t
-XULLinkAccessible::ActionCount()
+XULLinkAccessible::ActionCount() const
 {
   return 1;
 }
@@ -227,7 +227,7 @@ XULLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULLinkAccessible::DoAction(uint8_t aIndex)
+XULLinkAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Jump)
     return false;
