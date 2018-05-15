@@ -2190,6 +2190,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     HTMLEditorRef().SplitNodeDeepWithTransaction(
                       *citeNode, pointToSplit,
                       SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(splitCiteNodeResult.Failed())) {
     return splitCiteNodeResult.Rv();
   }
@@ -2220,6 +2223,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
         HTMLEditorRef().InsertBrElementWithTransaction(
                           SelectionRef(),
                           endOfPreviousNodeOfSplitPoint);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(invisibleBrElement,
         "Failed to create an invisible <br> element");
     }
@@ -2232,6 +2238,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
   RefPtr<Element> brElement =
     HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                    pointToInsertBrNode);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(!brElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -2247,6 +2256,10 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     "Failed to set interline position");
   error = NS_OK;
   SelectionRef().Collapse(atBrNode, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -2282,6 +2295,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
         brElement =
           HTMLEditorRef().InsertBrElementWithTransaction(
                             SelectionRef(), pointToCreateNewBrNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
@@ -2303,6 +2319,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     }
     if (bEmptyCite) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*previousNodeOfSplitPoint);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2317,6 +2336,9 @@ HTMLEditRules::SplitMailCites(bool* aHandled)
     }
     if (bEmptyCite) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*citeNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }

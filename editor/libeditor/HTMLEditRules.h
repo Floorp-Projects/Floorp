@@ -170,7 +170,17 @@ protected:
    */
   nsresult InsertBRElement(const EditorDOMPoint& aInsertToBreak);
 
-  nsresult SplitMailCites(bool* aHandled);
+  /**
+   * SplitMailCites() splits mail-cite elements at start of Selection if
+   * Selection starts from inside a mail-cite element.  Of course, if it's
+   * necessary, this inserts <br> node to new left nodes or existing right
+   * nodes.
+   *
+   * @param aHandled            Returns true if succeeded to split mail-cite
+   *                            elements.
+   */
+  MOZ_MUST_USE nsresult SplitMailCites(bool* aHandled);
+
   nsresult WillDeleteSelection(nsIEditor::EDirection aAction,
                                nsIEditor::EStripWrappers aStripWrappers,
                                bool* aCancel, bool* aHandled);
