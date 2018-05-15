@@ -86,7 +86,7 @@ class XPIDLManager(object):
         # can be found.  Yes, we have XPIDL modules with files from
         # multiple directories.
         t = self.modules.setdefault(entry['module'], (set(), set()))
-        t[0].add(entry['root'])
+        t[0].add(entry['source'])
         t[1].add(dirname)
 
 class BinariesCollection(object):
