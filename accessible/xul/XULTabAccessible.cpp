@@ -155,7 +155,7 @@ XULTabsAccessible::Value(nsString& aValue)
 }
 
 ENameValueFlag
-XULTabsAccessible::NativeName(nsString& aName)
+XULTabsAccessible::NativeName(nsString& aName) const
 {
   // no name
   return eNameOK;

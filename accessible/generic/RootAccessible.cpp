@@ -73,7 +73,7 @@ RootAccessible::~RootAccessible()
 // Accessible
 
 ENameValueFlag
-RootAccessible::Name(nsString& aName)
+RootAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 

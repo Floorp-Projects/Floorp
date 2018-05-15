@@ -147,7 +147,7 @@ HTMLListBulletAccessible::GetFrame() const
 }
 
 ENameValueFlag
-HTMLListBulletAccessible::Name(nsString &aName)
+HTMLListBulletAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 

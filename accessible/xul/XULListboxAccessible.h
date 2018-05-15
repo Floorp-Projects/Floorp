@@ -127,7 +127,7 @@ protected:
   virtual ~XULListitemAccessible();
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // XULListitemAccessible
 

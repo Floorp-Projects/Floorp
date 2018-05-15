@@ -46,7 +46,7 @@ HTMLBRAccessible::NativeState()
 }
 
 ENameValueFlag
-HTMLBRAccessible::NativeName(nsString& aName)
+HTMLBRAccessible::NativeName(nsString& aName) const
 {
   aName = static_cast<char16_t>('\n');    // Newline char
   return eNameOK;
@@ -57,7 +57,7 @@ HTMLBRAccessible::NativeName(nsString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 ENameValueFlag
-HTMLLabelAccessible::NativeName(nsString& aName)
+HTMLLabelAccessible::NativeName(nsString& aName) const
 {
   nsTextEquivUtils::GetNameFromSubtree(this, aName);
   return aName.IsEmpty() ? eNameOK : eNameFromSubtree;

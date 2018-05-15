@@ -208,7 +208,7 @@ public:
    * Note: aName.IsVoid() when name was left empty by the author on purpose.
    * aName.IsEmpty() when the author missed name, AT can try to repair a name.
    */
-  virtual ENameValueFlag Name(nsString& aName);
+  virtual ENameValueFlag Name(nsString& aName) const;
 
   /**
    * Maps ARIA state attributes to state of accessible. Note the given state
@@ -989,7 +989,7 @@ protected:
    * Return the accessible name provided by native markup. It doesn't take
    * into account ARIA markup used to specify the name.
    */
-  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName);
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName) const;
 
   /**
    * Return the accessible description provided by native markup. It doesn't take
@@ -1070,7 +1070,7 @@ protected:
   /**
    * Returns the accessible name specified by ARIA.
    */
-  void ARIAName(nsString& aName);
+  void ARIAName(nsString& aName) const;
 
   /**
    * Return the name for XUL element.

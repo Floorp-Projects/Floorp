@@ -1099,7 +1099,7 @@ NS_IMPL_RELEASE_INHERITED(XULTreeItemAccessible, XULTreeItemAccessibleBase)
 // XULTreeItemAccessible: nsIAccessible implementation
 
 ENameValueFlag
-XULTreeItemAccessible::Name(nsString& aName)
+XULTreeItemAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 

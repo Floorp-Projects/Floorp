@@ -133,7 +133,7 @@ XULMenuitemAccessible::NativeInteractiveState() const
 }
 
 ENameValueFlag
-XULMenuitemAccessible::NativeName(nsString& aName)
+XULMenuitemAccessible::NativeName(nsString& aName) const
 {
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   return eNameOK;
@@ -362,7 +362,7 @@ XULMenuSeparatorAccessible::NativeState()
 }
 
 ENameValueFlag
-XULMenuSeparatorAccessible::NativeName(nsString& aName)
+XULMenuSeparatorAccessible::NativeName(nsString& aName) const
 {
   return eNameOK;
 }
@@ -440,7 +440,7 @@ XULMenupopupAccessible::NativeState()
 }
 
 ENameValueFlag
-XULMenupopupAccessible::NativeName(nsString& aName)
+XULMenupopupAccessible::NativeName(nsString& aName) const
 {
   nsIContent* content = mContent;
   while (content && aName.IsEmpty()) {
@@ -544,7 +544,7 @@ XULMenubarAccessible::
 }
 
 ENameValueFlag
-XULMenubarAccessible::NativeName(nsString& aName)
+XULMenubarAccessible::NativeName(nsString& aName) const
 {
   aName.AssignLiteral("Application");
   return eNameOK;

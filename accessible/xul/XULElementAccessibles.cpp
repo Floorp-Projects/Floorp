@@ -62,7 +62,7 @@ XULLabelAccessible::Shutdown()
 }
 
 ENameValueFlag
-XULLabelAccessible::NativeName(nsString& aName)
+XULLabelAccessible::NativeName(nsString& aName) const
 {
   // if the value attr doesn't exist, the screen reader must get the accessible text
   // from the accessible text interface or from the children
@@ -188,7 +188,7 @@ XULLinkAccessible::Value(nsString& aValue)
 }
 
 ENameValueFlag
-XULLinkAccessible::NativeName(nsString& aName)
+XULLinkAccessible::NativeName(nsString& aName) const
 {
   mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
   if (!aName.IsEmpty())

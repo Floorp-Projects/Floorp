@@ -410,7 +410,7 @@ HTMLTableAccessible::NativeState()
 }
 
 ENameValueFlag
-HTMLTableAccessible::NativeName(nsString& aName)
+HTMLTableAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
