@@ -64,4 +64,15 @@ public final class Tab extends Actor {
         final Actor console = connection.getActor(name);
         return (console != null) ? (Console) console : new Console(connection, name);
     }
+
+    /**
+     * Get the promises object for access to the promises API.
+     *
+     * @return Promises object.
+     */
+    public Promises getPromises() {
+        final String name = mTab.optString("promisesActor", null);
+        final Actor promises = connection.getActor(name);
+        return (promises != null) ? (Promises) promises : new Promises(connection, name);
+    }
 }

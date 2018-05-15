@@ -23,7 +23,7 @@ import java.util.Set;
  * Provide methods for interacting with grips, including unpacking grips into Java
  * objects.
  */
-/* package */ final class Grip extends Actor {
+public class Grip extends Actor {
 
     private static final class Cache extends HashMap<String, Object> {
     }
@@ -159,6 +159,22 @@ import java.util.Set;
         }
     }
 
+    private static final class LongString {
+        private final int mLength;
+        private final String mInitial;
+
+        public LongString(final int length, final @Nullable String initial) {
+            mLength = length;
+            mInitial = (initial != null && !initial.isEmpty()) ? initial.substring(0, 50) : null;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[String(%d)]%s", mLength,
+                                 (mInitial != null) ? "(" + mInitial + "\u2026)" : "");
+        }
+    }
+
     /**
      * Unpack a received grip value into a Java object. The grip can be either a primitive
      * value, or a JSONObject that represents a live object on the server.
@@ -166,8 +182,8 @@ import java.util.Set;
      * @param connection Connection associated with this grip.
      * @param value Grip value received from the server.
      */
-    public static Object unpack(final RDPConnection connection,
-                                final Object value) {
+    /* package */ static Object unpack(final @NonNull RDPConnection connection,
+                                       final @Nullable Object value) {
         return unpackGrip(new Cache(), connection, value);
     }
 
@@ -181,7 +197,8 @@ import java.util.Set;
         }
 
         final JSONObject obj = (JSONObject) value;
-        switch (obj.optString("type")) {
+        final String type = obj.optString("type");
+        switch (type) {
             case "null":
             case "undefined":
                 return null;
@@ -193,10 +210,12 @@ import java.util.Set;
                 return Double.NaN;
             case "-0":
                 return -0.0;
+            case "longString":
+                return new LongString(obj.optInt("length"), obj.optString("initial"));
             case "object":
                 break;
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException(String.valueOf(type));
         }
 
         final String actor = obj.optString("actor", null);
@@ -211,6 +230,10 @@ import java.util.Set;
             final String displayName = obj.optString("displayName", name);
             final String userDisplayName = obj.optString("userDisplayName", displayName);
             final Function output = new Function(userDisplayName);
+            cache.put(actor, output);
+            return output;
+        } else if ("Promise".equals(cls)) {
+            final Promise output = new Promise(connection, obj);
             cache.put(actor, output);
             return output;
         }
@@ -249,7 +272,7 @@ import java.util.Set;
         }
     };
 
-    private Grip(final RDPConnection connection, final JSONObject grip) {
+    /* package */ Grip(final @NonNull RDPConnection connection, final @NonNull JSONObject grip) {
         super(connection, grip);
     }
 
