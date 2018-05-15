@@ -55,7 +55,7 @@ ServoPageRuleDeclaration::GetParentRule()
 nsINode*
 ServoPageRuleDeclaration::GetParentObject()
 {
-  return Rule()->GetDocument();
+  return Rule()->GetParentObject();
 }
 
 DeclarationBlock*

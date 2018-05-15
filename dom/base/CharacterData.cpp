@@ -266,7 +266,7 @@ CharacterData::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   }
 
   nsIDocument *document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  mozAutoDocUpdate updateBatch(document, aNotify);
 
   bool haveMutationListeners = aNotify &&
     nsContentUtils::HasMutationListeners(this,

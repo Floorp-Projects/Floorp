@@ -133,8 +133,6 @@ public:
   inline nscoord EvaluateSourceSizeList(
       const RawServoSourceSizeList* aSourceSizeList) const;
 
-  void InvalidateStyleForCSSRuleChanges();
-
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
   const RawServoStyleSet* RawSet() const {
     return mRawSet.get();
@@ -146,9 +144,6 @@ public:
   }
 
   void SetAuthorStyleDisabled(bool aStyleDisabled);
-
-  void BeginUpdate();
-  nsresult EndUpdate();
 
   already_AddRefed<ComputedStyle>
   ResolveStyleFor(dom::Element* aElement,

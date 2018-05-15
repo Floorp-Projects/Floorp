@@ -295,7 +295,7 @@ class MarionetteMainProcess {
   }
 
   get running() {
-    return this.server && this.server.alive;
+    return !!this.server && this.server.alive;
   }
 
   set enabled(value) {
@@ -388,6 +388,7 @@ class MarionetteMainProcess {
         }
 
         if (this.gfxWindow) {
+          log.debug("GFX sanity window detected, waiting until it has been closed...");
           Services.obs.addObserver(this, "domwindowclosed");
         } else {
           Services.obs.addObserver(this, "xpcom-will-shutdown");
@@ -418,14 +419,16 @@ class MarionetteMainProcess {
 
   init() {
     if (this.running || !this.enabled || !this.finalUIStartup) {
+      log.debug(`Init aborted (running=${this.running}, ` +
+                `enabled=${this.enabled}, finalUIStartup=${this.finalUIStartup})`);
       return;
     }
 
-    // wait for delayed startup...
+    log.debug(`Waiting for delayed startup...`);
     Services.tm.idleDispatchToMainThread(async () => {
-      // ... and for startup tests
       let startupRecorder = Promise.resolve();
       if ("@mozilla.org/test/startuprecorder;1" in Cc) {
+        log.debug(`Waiting for startup tests...`);
         startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"]
             .getService().wrappedJSObject.done;
       }
@@ -454,7 +457,7 @@ class MarionetteMainProcess {
 
       env.set(ENV_ENABLED, "1");
       Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
-      log.info(`Listening on port ${this.server.port}`);
+      log.debug("Remote service is active");
     });
   }
 
@@ -466,7 +469,9 @@ class MarionetteMainProcess {
         Preferences.reset(k);
       }
       this.alteredPrefs.clear();
+
       Services.obs.notifyObservers(this, NOTIFY_RUNNING);
+      log.debug("Remote service is inactive");
     }
   }
 

@@ -195,15 +195,6 @@ ServoStyleSet::Shutdown()
 }
 
 void
-ServoStyleSet::InvalidateStyleForCSSRuleChanges()
-{
-  MOZ_ASSERT(StylistNeedsUpdate());
-  if (nsPresContext* pc = GetPresContext()) {
-    pc->RestyleManager()->PostRestyleEventForCSSRuleChanges();
-  }
-}
-
-void
 ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot)
 {
   // TODO(emilio): We could keep track of the actual shadow roots that need
@@ -384,17 +375,6 @@ ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
   // to rebuild stylist for this change. But we have bug around this, and we
   // may want to rethink how things should work. See bug 1437785.
   SetStylistStyleSheetsDirty();
-}
-
-void
-ServoStyleSet::BeginUpdate()
-{
-}
-
-nsresult
-ServoStyleSet::EndUpdate()
-{
-  return NS_OK;
 }
 
 already_AddRefed<ComputedStyle>

@@ -66,7 +66,7 @@ public:
 
   nsINode* GetParentObject() final
   {
-    return mRule ? mRule->GetDocument() : nullptr;
+    return mRule ? mRule->GetParentObject() : nullptr;
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
@@ -149,9 +149,6 @@ template<typename Func>
 void
 ServoKeyframeRule::UpdateRule(Func aCallback)
 {
-  nsIDocument* doc = GetDocument();
-  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
-
   aCallback();
 
   if (StyleSheet* sheet = GetStyleSheet()) {

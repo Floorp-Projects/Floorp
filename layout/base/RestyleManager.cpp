@@ -2192,13 +2192,6 @@ RestyleManager::PostRestyleEvent(Element* aElement,
 }
 
 void
-RestyleManager::PostRestyleEventForCSSRuleChanges()
-{
-  mRestyleForCSSRuleChanges = true;
-  mPresContext->PresShell()->EnsureStyleFlush();
-}
-
-void
 RestyleManager::PostRestyleEventForAnimations(
   Element* aElement,
   CSSPseudoElementType aPseudoType,

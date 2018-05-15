@@ -69,7 +69,7 @@ public:
     MOZ_RELEASE_ASSERT(IsInFlush(), "Tried to double-open doc update.");
     MOZ_RELEASE_ASSERT(mParser, "Started doc update without parser.");
     mFlushState = eInDocUpdate;
-    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+    mDocument->BeginUpdate();
   }
 
   inline void EndDocUpdate()
@@ -77,7 +77,7 @@ public:
     MOZ_RELEASE_ASSERT(IsInDocUpdate(),
                        "Tried to end doc update without one open.");
     mFlushState = eInFlush;
-    mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+    mDocument->EndUpdate();
   }
 
   inline void BeginFlush()
