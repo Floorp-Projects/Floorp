@@ -50,6 +50,22 @@ FreeAllocStrings(int argc, wchar_t **argv)
   delete [] argv;
 }
 
+static wchar_t**
+AllocConvertUTF8toUTF16Strings(int argc, char **argv)
+{
+  wchar_t **argvConverted = new wchar_t*[argc];
+  if (!argvConverted)
+    return nullptr;
+
+  for (int i = 0; i < argc; ++i) {
+    argvConverted[i] = reinterpret_cast<wchar_t*>(AllocConvertUTF8toUTF16(argv[i]));
+    if (!argvConverted[i]) {
+      FreeAllocStrings(i, argvConverted);
+      return nullptr;
+    }
+  }
+  return argvConverted;
+}
 
 
 /**
@@ -70,17 +86,9 @@ WinLaunchChild(const wchar_t *exePath,
                HANDLE userToken,
                HANDLE *hProcess)
 {
-  wchar_t** argvConverted = new wchar_t*[argc];
+  wchar_t **argvConverted = AllocConvertUTF8toUTF16Strings(argc, argv);
   if (!argvConverted)
     return FALSE;
-
-  for (int i = 0; i < argc; ++i) {
-      argvConverted[i] = reinterpret_cast<wchar_t*>(AllocConvertUTF8toUTF16(argv[i]));
-    if (!argvConverted[i]) {
-      FreeAllocStrings(i, argvConverted);
-      return FALSE;
-    }
-  }
 
   BOOL ok = WinLaunchChild(exePath, argc, argvConverted, userToken, hProcess);
   FreeAllocStrings(argc, argvConverted);
