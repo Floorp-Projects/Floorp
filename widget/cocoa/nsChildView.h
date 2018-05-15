@@ -545,6 +545,7 @@ public:
   virtual LayoutDeviceIntPoint GetClientOffset() override;
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
+  nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
   void SwipeFinished();
 
