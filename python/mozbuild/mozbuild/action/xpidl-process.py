@@ -46,7 +46,7 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     def read_stem(stem):
         idl = '%s.idl' % stem
         for p in input_dirs:
-            idl_file = os.path.join(p, idl)
+            idl_file = os.path.join(topsrcdir, p, idl)
             if os.path.exists(idl_file):
                 return idl_file, open(idl_file).read()
 
