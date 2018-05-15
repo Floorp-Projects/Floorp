@@ -27,7 +27,7 @@ from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
 
 
-def process(input_dir, inc_paths, bindings_conf, cache_dir, header_dir,
+def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
             xpcrs_dir, xpt_dir, deps_dir, module, stems):
     p = IDLParser(outputdir=cache_dir)
 
@@ -43,12 +43,20 @@ def process(input_dir, inc_paths, bindings_conf, cache_dir, header_dir,
     # up to date, we will not re-process XPIDL files if the processor changes.
     rule.add_dependencies(iter_modules_in_path(topsrcdir))
 
+    def read_stem(stem):
+        idl = '%s.idl' % stem
+        for p in input_dirs:
+            idl_file = os.path.join(p, idl)
+            if os.path.exists(idl_file):
+                return idl_file, open(idl_file).read()
+
+        raise Exception('Could not find stem file for %s' % idl)
+
     for stem in stems:
-        path = os.path.join(input_dir, '%s.idl' % stem)
-        idl_data = open(path).read()
+        path, idl_data = read_stem(stem)
 
         idl = p.parse(idl_data, filename=path)
-        idl.resolve([input_dir] + inc_paths, p, webidlconfig)
+        idl.resolve(inc_paths, p, webidlconfig)
 
         header_path = os.path.join(header_dir, '%s.h' % stem)
         rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
@@ -91,8 +99,9 @@ def main(argv):
         help='Directory in which to write dependency files.')
     parser.add_argument('--bindings-conf',
         help='Path to the WebIDL binding configuration file.')
-    parser.add_argument('inputdir',
-        help='Directory in which to find source .idl files.')
+    parser.add_argument('--input-dir', dest='input_dirs',
+                        action='append', default=[],
+                        help='Directory(ies) in which to find source .idl files.')
     parser.add_argument('headerdir',
         help='Directory in which to write header files.')
     parser.add_argument('xpcrsdir',
@@ -107,7 +116,7 @@ def main(argv):
         help='Extra directories where to look for included .idl files.')
 
     args = parser.parse_args(argv)
-    process(args.inputdir, args.incpath, args.bindings_conf, args.cache_dir,
+    process(args.input_dirs, args.incpath, args.bindings_conf, args.cache_dir,
         args.headerdir, args.xpcrsdir, args.xptdir, args.depsdir, args.module,
         args.idls)
 
