@@ -787,7 +787,7 @@ class TupBackend(CommonBackend):
         backend_file.export_shell()
 
         all_xpts = []
-        for module, (idls,) in sorted(manager.modules.iteritems()):
+        for module, (idls, directories) in sorted(manager.modules.iteritems()):
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
@@ -796,12 +796,18 @@ class TupBackend(CommonBackend):
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
                 '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '--bindings-conf', '$(topsrcdir)/dom/bindings/Bindings.conf',
-                '--input-dir', '$(DIST)/idl',
+            ]
+
+            for d in directories:
+                cmd.extend(['--input-dir', d])
+
+            cmd.extend([
+                '-I', '$(DIST)/idl',
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
                 '.',
                 module,
-            ]
+            ])
             cmd.extend(sorted(idls))
 
             all_xpts.append('$(MOZ_OBJ_ROOT)/%s/%s.xpt' % (backend_file.relobjdir, module))
