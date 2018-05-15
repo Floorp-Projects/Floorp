@@ -138,7 +138,7 @@ public:
 
   virtual void ObserveLayerUpdate(LayersId aLayersId, uint64_t aEpoch, bool aActive) = 0;
 
-  virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) = 0;
+  virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) {}
 
   virtual void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                                       const wr::Epoch& aEpoch,
@@ -578,7 +578,7 @@ protected:
    */
   bool CanComposite();
 
-  void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
+  using CompositorBridgeParentBase::DidComposite;
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
