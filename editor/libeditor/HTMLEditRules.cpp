@@ -2019,6 +2019,9 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
     brElement =
       HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                      aPointToBreak);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!brElement)) {
       return NS_ERROR_FAILURE;
     }
@@ -2051,6 +2054,9 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
         HTMLEditorRef().SplitNodeDeepWithTransaction(
                           *linkNode, pointToBreak,
                           SplitAtEdges::eDoNotCreateEmptyContainer);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(splitLinkNodeResult.Failed())) {
         return splitLinkNodeResult.Rv();
       }
@@ -2058,6 +2064,9 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
     }
     brElement =
       wsObj.InsertBreak(SelectionRef(), pointToBreak, nsIEditor::eNone);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!brElement)) {
       return NS_ERROR_FAILURE;
     }
@@ -2082,6 +2091,10 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
     EditorRawDOMPoint point(brElement);
     error = NS_OK;
     SelectionRef().Collapse(point, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -2110,6 +2123,9 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
       nsresult rv =
         HTMLEditorRef().MoveNodeWithTransaction(*maybeSecondBRNode->AsContent(),
                                                 afterBRElement);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2132,6 +2148,10 @@ HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak)
     "Failed to set or unset interline position");
   error = NS_OK;
   SelectionRef().Collapse(afterBRElement, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
