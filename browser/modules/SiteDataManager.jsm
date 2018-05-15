@@ -192,7 +192,19 @@ var SiteDataManager = {
   },
 
   _updateAppCache() {
-    let groups = this._appCache.getGroups();
+    let groups;
+    try {
+      groups = this._appCache.getGroups();
+    } catch (e) {
+      // NS_ERROR_NOT_AVAILABLE means that appCache is not initialized,
+      // which probably means the user has disabled it. Otherwise, log an
+      // error. Either way, there's nothing we can do here.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        Cu.reportError(e);
+      }
+      return;
+    }
+
     for (let group of groups) {
       let cache = this._appCache.getActiveCache(group);
       if (cache.usage <= 0) {
