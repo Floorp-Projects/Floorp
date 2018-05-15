@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerContainerImpl.cpp',
     'ServiceWorkerDescriptor.cpp',
     'ServiceWorkerEvents.cpp',
+    'ServiceWorkerImpl.cpp',
     'ServiceWorkerInfo.cpp',
     'ServiceWorkerInterceptController.cpp',
     'ServiceWorkerJob.cpp',

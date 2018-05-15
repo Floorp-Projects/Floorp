@@ -252,18 +252,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     if (!found) {
         if (reflectToStringAndToSource) {
             JSNative call;
-            uint32_t flags = 0;
-
-            if (scr) {
-                nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(scr);
-
-                if (classInfo) {
-                    nsresult rv = classInfo->GetFlags(&flags);
-                    if (NS_FAILED(rv))
-                        return Throw(rv, ccx);
-                }
-            }
-
             if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING)) {
                 call = XPC_WN_Shared_ToString;
                 name = xpccx->GetStringName(XPCJSContext::IDX_TO_STRING);
@@ -952,10 +940,9 @@ XPC_WN_GetterSetter(JSContext* cx, unsigned argc, Value* vp)
 /***************************************************************************/
 
 static bool
-XPC_WN_Shared_Proto_Enumerate(JSContext* cx, HandleObject obj)
+XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj)
 {
-    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_Proto_JSClass ||
-               js::GetObjectClass(obj) == &XPC_WN_NoMods_Proto_JSClass,
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass,
                "bad proto");
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -986,7 +973,7 @@ XPC_WN_Shared_Proto_Enumerate(JSContext* cx, HandleObject obj)
 }
 
 static void
-XPC_WN_Shared_Proto_Finalize(js::FreeOp* fop, JSObject* obj)
+XPC_WN_Proto_Finalize(js::FreeOp* fop, JSObject* obj)
 {
     // This can be null if xpc shutdown has already happened
     XPCWrappedNativeProto* p = (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -995,7 +982,7 @@ XPC_WN_Shared_Proto_Finalize(js::FreeOp* fop, JSObject* obj)
 }
 
 static size_t
-XPC_WN_Shared_Proto_ObjectMoved(JSObject* obj, JSObject* old)
+XPC_WN_Proto_ObjectMoved(JSObject* obj, JSObject* old)
 {
     // This can be null if xpc shutdown has already happened
     XPCWrappedNativeProto* p = (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -1007,7 +994,7 @@ XPC_WN_Shared_Proto_ObjectMoved(JSObject* obj, JSObject* old)
 }
 
 static void
-XPC_WN_Shared_Proto_Trace(JSTracer* trc, JSObject* obj)
+XPC_WN_Proto_Trace(JSTracer* trc, JSObject* obj)
 {
     // This can be null if xpc shutdown has already happened
     XPCWrappedNativeProto* p =
@@ -1019,63 +1006,10 @@ XPC_WN_Shared_Proto_Trace(JSTracer* trc, JSObject* obj)
 /*****************************************************/
 
 static bool
-XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvep)
-{
-    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_Proto_JSClass,
-               "bad proto");
-
-    XPCWrappedNativeProto* self =
-        (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
-    if (!self)
-        return false;
-
-    XPCCallContext ccx(cx);
-    if (!ccx.IsValid())
-        return false;
-
-    nsCOMPtr<nsIXPCScriptable> scr = self->GetScriptable();
-    return DefinePropertyIfFound(ccx, obj, id,
-                                 self->GetSet(), nullptr, nullptr,
-                                 self->GetScope(),
-                                 true, nullptr, nullptr, scr,
-                                 JSPROP_ENUMERATE, resolvep);
-}
-
-static const js::ClassOps XPC_WN_ModsAllowed_Proto_JSClassOps = {
-    nullptr,                            // addProperty
-    nullptr,                            // delProperty
-    XPC_WN_Shared_Proto_Enumerate,      // enumerate
-    nullptr,                            // newEnumerate
-    XPC_WN_ModsAllowed_Proto_Resolve,   // resolve
-    nullptr,                            // mayResolve
-    XPC_WN_Shared_Proto_Finalize,       // finalize
-    nullptr,                            // call
-    nullptr,                            // construct
-    nullptr,                            // hasInstance
-    XPC_WN_Shared_Proto_Trace,          // trace
-};
-
-static const js::ClassExtension XPC_WN_Shared_Proto_ClassExtension = {
-    nullptr,    /* weakmapKeyDelegateOp */
-    XPC_WN_Shared_Proto_ObjectMoved
-};
-
-const js::Class XPC_WN_ModsAllowed_Proto_JSClass = {
-    "XPC_WN_ModsAllowed_Proto_JSClass",
-    XPC_WRAPPER_FLAGS,
-    &XPC_WN_ModsAllowed_Proto_JSClassOps,
-    JS_NULL_CLASS_SPEC,
-    &XPC_WN_Shared_Proto_ClassExtension,
-    JS_NULL_OBJECT_OPS
-};
-
-/***************************************************************************/
-
-static bool
 XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext* cx, HandleObject obj, HandleId id,
                                         HandleValue v)
 {
-    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_NoMods_Proto_JSClass,
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass,
                "bad proto");
 
     XPCWrappedNativeProto* self =
@@ -1095,9 +1029,9 @@ XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext* cx, HandleObject obj, HandleI
 }
 
 static bool
-XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
+XPC_WN_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 {
-    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_NoMods_Proto_JSClass,
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_Proto_JSClass,
                "bad proto");
 
     XPCWrappedNativeProto* self =
@@ -1120,26 +1054,31 @@ XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* 
                                  JSPROP_ENUMERATE, resolvedp);
 }
 
-static const js::ClassOps XPC_WN_NoMods_Proto_JSClassOps = {
+static const js::ClassOps XPC_WN_Proto_JSClassOps = {
     XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty
     XPC_WN_CannotDeletePropertyStub,           // delProperty
-    XPC_WN_Shared_Proto_Enumerate,             // enumerate
+    XPC_WN_Proto_Enumerate,                    // enumerate
     nullptr,                                   // newEnumerate
-    XPC_WN_NoMods_Proto_Resolve,               // resolve
+    XPC_WN_Proto_Resolve,                      // resolve
     nullptr,                                   // mayResolve
-    XPC_WN_Shared_Proto_Finalize,              // finalize
+    XPC_WN_Proto_Finalize,                     // finalize
     nullptr,                                   // call
     nullptr,                                   // construct
     nullptr,                                   // hasInstance
-    XPC_WN_Shared_Proto_Trace,                 // trace
+    XPC_WN_Proto_Trace,                        // trace
 };
 
-const js::Class XPC_WN_NoMods_Proto_JSClass = {
-    "XPC_WN_NoMods_Proto_JSClass",
+static const js::ClassExtension XPC_WN_Proto_ClassExtension = {
+    nullptr,    /* weakmapKeyDelegateOp */
+    XPC_WN_Proto_ObjectMoved
+};
+
+const js::Class XPC_WN_Proto_JSClass = {
+    "XPC_WN_Proto_JSClass",
     XPC_WRAPPER_FLAGS,
-    &XPC_WN_NoMods_Proto_JSClassOps,
+    &XPC_WN_Proto_JSClassOps,
     JS_NULL_CLASS_SPEC,
-    &XPC_WN_Shared_Proto_ClassExtension,
+    &XPC_WN_Proto_ClassExtension,
     JS_NULL_OBJECT_OPS
 };
 

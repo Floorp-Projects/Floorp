@@ -1054,6 +1054,20 @@ nsAccessibilityService::CreateAccessible(nsINode* aNode,
   // Check frame and its visibility. Note, hidden frame allows visible
   // elements in subtree.
   if (!frame || !frame->StyleVisibility()->IsVisible()) {
+    // display:contents element doesn't have a frame, but retains the semantics.
+    // All its children are unaffected.
+    if (content->IsElement() && content->AsElement()->IsDisplayContents()) {
+      const HTMLMarkupMapInfo* markupMap =
+        mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
+      if (markupMap && markupMap->new_func) {
+        RefPtr<Accessible> newAcc =
+          markupMap->new_func(content->AsElement(), aContext);
+        document->BindToDocument(newAcc, aria::GetRoleMap(content->AsElement()));
+        return newAcc;
+      }
+      return nullptr;
+    }
+
     if (aIsSubtreeHidden && !frame)
       *aIsSubtreeHidden = true;
 

@@ -435,7 +435,7 @@ public:
   /**
    * Return true if accessible has children;
    */
-  bool HasChildren() { return !!GetChildAt(0); }
+  bool HasChildren() const { return !!GetChildAt(0); }
 
   /**
    * Return first/last/next/previous sibling of the accessible.
@@ -850,12 +850,12 @@ public:
    * Return the current item of the widget, i.e. an item that has or will have
    * keyboard focus when widget gets active.
    */
-  virtual Accessible* CurrentItem();
+  virtual Accessible* CurrentItem() const;
 
   /**
    * Set the current item of the widget.
    */
-  virtual void SetCurrentItem(Accessible* aItem);
+  virtual void SetCurrentItem(const Accessible* aItem);
 
   /**
    * Return container widget this accessible belongs to.

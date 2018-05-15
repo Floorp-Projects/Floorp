@@ -1045,8 +1045,6 @@ class RecursiveMakeBackend(CommonBackend):
             build_files.add_optional_exists(p)
 
         for idl in manager.idls.values():
-            self._install_manifests['dist_idl'].add_link(idl['source'],
-                idl['basename'])
             self._install_manifests['dist_include'].add_optional_exists('%s.h'
                 % idl['root'])
 
@@ -1058,9 +1056,11 @@ class RecursiveMakeBackend(CommonBackend):
         xpt_modules = sorted(modules.keys())
 
         mk = Makefile()
+        all_directories = set()
 
         for module in xpt_modules:
-            install_target, sources = modules[module]
+            sources, directories = modules[module]
+            all_directories |= directories
             deps = sorted(sources)
 
             # It may seem strange to have the .idl files listed as
@@ -1076,6 +1076,8 @@ class RecursiveMakeBackend(CommonBackend):
             mk.add_statement('%s_deps = %s' % (module, ' '.join(deps)))
 
             build_files.add_optional_exists('%s.xpt' % module)
+
+        mk.add_statement('all_idl_dirs = %s' % ' '.join(sorted(all_directories)))
 
         rules = StringIO()
         mk.dump(rules, removal_guard=False)
