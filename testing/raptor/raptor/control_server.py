@@ -14,7 +14,7 @@ import threading
 
 from mozlog import get_proxy_logger
 
-LOG = get_proxy_logger(component='control_server')
+LOG = get_proxy_logger(component='raptor-control-server')
 
 here = os.path.abspath(os.path.dirname(__file__))
 

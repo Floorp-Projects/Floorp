@@ -22,7 +22,6 @@ class RaptorResultsHandler():
     def add(self, new_result_json):
         # add to results
         LOG.info("received results in RaptorResultsHandler.add")
-        LOG.info(new_result_json)
         new_result = RaptorTestResult(new_result_json)
         self.results.append(new_result)
 
