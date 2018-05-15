@@ -178,12 +178,7 @@ def diff(a, b, fmt, limit_key):
     return format_diff(results, fmt, limit_key)
 
 
-def sort_file(path):
-    """Sort the given pref file alphabetically, preserving preceding comments
-    that start with '//'.
-
-    :param path: Path to the preference file to sort.
-    """
+def read_with_comments(path):
     with open(path, 'r') as fh:
         lines = fh.readlines()
 
@@ -204,12 +199,21 @@ def sort_file(path):
             continue
 
         result.append([line])
+    return result
 
+
+def sort_file(path):
+    """Sort the given pref file alphabetically, preserving preceding comments
+    that start with '//'.
+
+    :param path: Path to the preference file to sort.
+    """
+    result = read_with_comments(path)
     result = sorted(result, key=lambda x: x[-1])
     result = chain(*result)
 
     with open(path, 'w') as fh:
-        fh.write('\n'.join(result))
+        fh.write('\n'.join(result) + '\n')
 
 
 def sort(profile):
@@ -236,6 +240,28 @@ def show(suite):
         print("{}: {}".format(k, repr(v)))
 
 
+def rm(profile, pref_file):
+    if pref_file == '-':
+        lines = sys.stdin.readlines()
+    else:
+        with open(pref_file, 'r') as fh:
+            lines = fh.readlines()
+
+    lines = [l.strip() for l in lines if l.strip()]
+    if not lines:
+        return
+
+    def filter_line(content):
+        return not any(line in content[-1] for line in lines)
+
+    path = os.path.join(here, profile, 'user.js')
+    contents = read_with_comments(path)
+    contents = filter(filter_line, contents)
+    contents = chain(*contents)
+    with open(path, 'w') as fh:
+        fh.write('\n'.join(contents))
+
+
 def cli(args=sys.argv[1:]):
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -260,6 +286,12 @@ def cli(args=sys.argv[1:]):
     show_parser = subparsers.add_parser('show')
     show_parser.add_argument('suite', help="Name of suite to show arguments for.")
     show_parser.set_defaults(func=show)
+
+    rm_parser = subparsers.add_parser('rm')
+    rm_parser.add_argument('profile', help="Name of the profile to remove prefs from.")
+    rm_parser.add_argument('--pref-file', default='-', help="File containing a list of pref "
+                           "substrings to delete (default: stdin)")
+    rm_parser.set_defaults(func=rm)
 
     args = vars(parser.parse_args(args))
     func = args.pop('func')
