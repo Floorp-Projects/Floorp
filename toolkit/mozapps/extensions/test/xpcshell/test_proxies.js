@@ -73,6 +73,10 @@ profileDir.append("extensions");
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
+  // Unpacked extensions are never signed, so this can only run with
+  // signature checks disabled.
+  Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, false);
+
   add_task(run_proxy_tests);
 
   if (gHaveSymlinks)

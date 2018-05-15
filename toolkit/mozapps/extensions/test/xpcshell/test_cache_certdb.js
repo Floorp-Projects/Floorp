@@ -23,7 +23,5 @@ add_task(async function() {
   await XPIProvider.verifySignatures();
 
   let addon = await AddonManager.getAddonByID(ID);
-  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
-  Assert.ok(!addon.isActive);
-  Assert.ok(addon.appDisabled);
+  Assert.equal(addon, null, "Unsigned extensions should not be installed at startup");
 });
