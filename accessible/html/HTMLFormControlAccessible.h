@@ -121,7 +121,7 @@ public:
   virtual already_AddRefed<TextEditor> GetEditor() const override;
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
@@ -177,7 +177,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
 
   virtual double MaxValue() const override;
   virtual double MinValue() const override;
@@ -200,7 +200,7 @@ public:
   }
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
 
   // Value

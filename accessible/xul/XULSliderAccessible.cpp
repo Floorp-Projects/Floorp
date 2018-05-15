@@ -59,7 +59,7 @@ XULSliderAccessible::NativelyUnavailable() const
 }
 
 void
-XULSliderAccessible::Value(nsString& aValue)
+XULSliderAccessible::Value(nsString& aValue) const
 {
   GetSliderAttr(nsGkAtoms::curpos, aValue);
 }

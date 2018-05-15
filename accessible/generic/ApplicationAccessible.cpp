@@ -69,7 +69,7 @@ ApplicationAccessible::Description(nsString& aDescription)
 }
 
 void
-ApplicationAccessible::Value(nsString& aValue)
+ApplicationAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 }

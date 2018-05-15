@@ -91,7 +91,7 @@ LinkableAccessible::NativeLinkState() const
 }
 
 void
-LinkableAccessible::Value(nsString& aValue)
+LinkableAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 
@@ -101,7 +101,7 @@ LinkableAccessible::Value(nsString& aValue)
   }
 
   bool isLink;
-  Accessible* actionAcc = ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     actionAcc->Value(aValue);
   }
@@ -115,9 +115,9 @@ LinkableAccessible::ActionCount()
   return (isLink || isOnclick || isLabelWithControl) ? 1 : 0;
 }
 
-Accessible*
+const Accessible*
 LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
-                               bool* aIsLabelWithControl)
+                               bool* aIsLabelWithControl) const
 {
   if (aIsOnclick) {
     *aIsOnclick = false;
@@ -139,7 +139,7 @@ LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
   // XXX: The logic looks broken since the click listener may be registered
   // on non accessible node in parent chain but this node is skipped when tree
   // is traversed.
-  Accessible* walkUpAcc = this;
+  const Accessible* walkUpAcc = this;
   while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
     if (walkUpAcc->LinkState() & states::LINKED) {
       if (aIsLink) {
