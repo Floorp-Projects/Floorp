@@ -12,6 +12,7 @@ from copy import deepcopy
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.taskcluster import get_taskcluster_artifact_prefix
+from taskgraph.util.treeherder import add_suffix
 
 transforms = TransformSequence()
 
@@ -23,7 +24,8 @@ def add_command(config, tasks):
 
         for this_chunk in range(1, total_chunks+1):
             chunked = deepcopy(task)
-            chunked["treeherder"]["symbol"] += str(this_chunk)
+            chunked["treeherder"]["symbol"] = add_suffix(
+                chunked["treeherder"]["symbol"], this_chunk)
             chunked["label"] = "release-update-verify-{}-{}/{}".format(
                 chunked["name"], this_chunk, total_chunks
             )
