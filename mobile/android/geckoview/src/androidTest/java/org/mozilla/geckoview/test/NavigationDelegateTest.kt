@@ -94,6 +94,29 @@ class NavigationDelegateTest : BaseSessionTest() {
         sessionRule.session.waitForPageStop()
     }
 
+    @NullDelegate(GeckoSession.NavigationDelegate::class)
+    @Test fun load_canUnsetNavigationDelegate() {
+        // Test that if we unset the navigation delegate during a load, the load still proceeds.
+        var onLocationCount = 0
+        sessionRule.session.navigationDelegate = object : Callbacks.NavigationDelegate {
+            override fun onLocationChange(session: GeckoSession, url: String) {
+                onLocationCount++
+            }
+        }
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        assertThat("Should get callback for first load",
+                   onLocationCount, equalTo(1))
+
+        sessionRule.session.reload()
+        sessionRule.session.navigationDelegate = null
+        sessionRule.session.waitForPageStop()
+
+        assertThat("Should not get callback for second load",
+                   onLocationCount, equalTo(1))
+    }
+
     @Test fun loadString() {
         val dataString = "<html><head><title>TheTitle</title></head><body>TheBody</body></html>"
         val mimeType = "text/html"
