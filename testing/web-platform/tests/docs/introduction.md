@@ -130,20 +130,17 @@ The test environment can then be started using
 This will start HTTP servers on two ports and a websockets server on
 one port. By default the web servers start on ports 8000 and 8443 and the other
 ports are randomly-chosen free ports. Tests must be loaded from the
-*first* HTTP server in the output. To change the ports, copy the
-`config.default.json` file to `config.json` and edit the new file,
-replacing the part that reads:
+*first* HTTP server in the output. To change the ports,
+create a `config.json` file in the wpt root directory, and add
+port definitions of your choice e.g.:
 
 ```
-"http": [8000, "auto"],
-"https":[8443]
-```
-
-to some ports of your choice e.g.
-
-```
-"http": [1234, "auto"],
-"https":[5678]
+{
+  "ports": {
+    "http": [1234, "auto"],
+    "https":[5678]
+  }
+}
 ```
 
 After your `hosts` file is configured, the servers will be locally accessible at:
