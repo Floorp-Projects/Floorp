@@ -69,7 +69,7 @@ public:
   virtual nsINode* GetNode() const override { return mDocumentNode; }
   nsIDocument* DocumentNode() const { return mDocumentNode; }
 
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) const override;
   virtual void Description(nsString& aDescription) override;
   virtual Accessible* FocusedChild() override;
   virtual mozilla::a11y::role NativeRole() const override;

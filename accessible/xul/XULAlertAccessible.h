@@ -23,7 +23,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(XULAlertAccessible, AccessibleWrap)
 
   // Accessible
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
 

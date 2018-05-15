@@ -40,7 +40,7 @@ public:
   virtual nsRect BoundsInAppUnits() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual GroupPos GroupPosition() override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual void Description(nsString& aDescription) override;
   virtual void Value(nsString& aValue) override;

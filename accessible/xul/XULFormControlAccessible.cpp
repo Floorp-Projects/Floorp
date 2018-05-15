@@ -358,7 +358,7 @@ XULGroupboxAccessible::NativeRole() const
 }
 
 ENameValueFlag
-XULGroupboxAccessible::NativeName(nsString& aName)
+XULGroupboxAccessible::NativeName(nsString& aName) const
 {
   // XXX: we use the first related accessible only.
   Accessible* label =
@@ -584,7 +584,7 @@ XULToolbarAccessible::NativeRole() const
 }
 
 ENameValueFlag
-XULToolbarAccessible::NativeName(nsString& aName)
+XULToolbarAccessible::NativeName(nsString& aName) const
 {
   if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::toolbarname, aName))
     aName.CompressWhitespace();

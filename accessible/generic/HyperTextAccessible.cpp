@@ -1868,7 +1868,7 @@ HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
 
 // Accessible protected
 ENameValueFlag
-HyperTextAccessible::NativeName(nsString& aName)
+HyperTextAccessible::NativeName(nsString& aName) const
 {
   // Check @alt attribute for invalid img elements.
   bool hasImgAlt = false;

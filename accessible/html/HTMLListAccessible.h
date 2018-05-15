@@ -80,7 +80,7 @@ public:
 
   // Accessible
   virtual nsIFrame* GetFrame() const override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() override;
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,

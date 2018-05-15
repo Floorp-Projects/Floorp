@@ -240,7 +240,7 @@ HTMLButtonAccessible::NativeRole() const
 }
 
 ENameValueFlag
-HTMLButtonAccessible::NativeName(nsString& aName)
+HTMLButtonAccessible::NativeName(nsString& aName) const
 {
   // No need to check @value attribute for buttons since this attribute results
   // in native anonymous text node and the name is calculated from subtree.
@@ -319,7 +319,7 @@ HTMLTextFieldAccessible::NativeAttributes()
 }
 
 ENameValueFlag
-HTMLTextFieldAccessible::NativeName(nsString& aName)
+HTMLTextFieldAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
@@ -720,7 +720,7 @@ HTMLGroupboxAccessible::GetLegend() const
 }
 
 ENameValueFlag
-HTMLGroupboxAccessible::NativeName(nsString& aName)
+HTMLGroupboxAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
@@ -779,7 +779,7 @@ HTMLFigureAccessible::
 }
 
 ENameValueFlag
-HTMLFigureAccessible::NativeName(nsString& aName)
+HTMLFigureAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = HyperTextAccessibleWrap::NativeName(aName);
   if (!aName.IsEmpty())

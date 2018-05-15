@@ -32,7 +32,7 @@ public:
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
 private:
   RefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
@@ -104,7 +104,7 @@ protected:
   virtual ~XULLinkAccessible();
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   enum { eAction_Jump = 0 };
 
