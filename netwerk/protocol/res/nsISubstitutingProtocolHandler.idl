@@ -25,8 +25,8 @@ interface nsISubstitutingProtocolHandler : nsIProtocolHandler
    *
    * A null baseURI removes the specified substitution.
    *
-   * A root key should always be lowercase; however, this may not be
-   * enforced.
+   * The root key will be converted to lower-case to conform to
+   * case-insensitive URI hostname matching behavior.
    */
   [must_use] void setSubstitution(in ACString root, in nsIURI baseURI);
 
