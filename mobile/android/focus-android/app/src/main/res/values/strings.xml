@@ -111,10 +111,12 @@
     <!-- Preference summary for settings related to privacy and security -->
     <string name="preference_privacy_and_security_summary">Tracking, cookies, data choices</string>
 
-    <!-- Preference category for settings related to search -->
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
     <string name="preference_search_summary">Set default, autocomplete</string>
 
-    <!-- Preference category for settings related to Mozilla -->
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">About %1$s, help</string>
 
