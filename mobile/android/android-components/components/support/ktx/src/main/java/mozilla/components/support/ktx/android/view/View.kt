@@ -43,6 +43,27 @@ fun View.dp(pixels: Int) = TypedValue.applyDimension(
     TypedValue.COMPLEX_UNIT_DIP, pixels.toFloat(), resources.displayMetrics).toInt()
 
 /**
+ * Returns true if this view's visibility is set to View.VISIBLE.
+ */
+fun View.isVisible(): Boolean {
+    return visibility == View.VISIBLE
+}
+
+/**
+ * Returns true if this view's visibility is set to View.GONE.
+ */
+fun View.isGone(): Boolean {
+    return visibility == View.GONE
+}
+
+/**
+ * Returns true if this view's visibility is set to View.INVISIBLE.
+ */
+fun View.isInvisible(): Boolean {
+    return visibility == View.INVISIBLE
+}
+
+/**
  * Tries to focus this view and show the soft input window for it.
  */
 fun View.showKeyboard() {

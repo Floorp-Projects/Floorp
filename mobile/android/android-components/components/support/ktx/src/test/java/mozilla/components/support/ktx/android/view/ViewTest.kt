@@ -14,6 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.shadows.ShadowLooper
 import android.util.DisplayMetrics
+import android.view.View
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 
@@ -42,5 +43,28 @@ class ViewTest {
             assertEquals(px, view.dp(i))
             assertNotEquals(0, view.dp(i))
         }
+    }
+
+    @Test
+    fun `visibility helper methods`() {
+        val view = TextView(RuntimeEnvironment.application)
+
+        view.visibility = View.GONE
+
+        assertTrue(view.isGone())
+        assertFalse(view.isVisible())
+        assertFalse(view.isInvisible())
+
+        view.visibility = View.VISIBLE
+
+        assertFalse(view.isGone())
+        assertTrue(view.isVisible())
+        assertFalse(view.isInvisible())
+
+        view.visibility = View.INVISIBLE
+
+        assertFalse(view.isGone())
+        assertFalse(view.isVisible())
+        assertTrue(view.isInvisible())
     }
 }
