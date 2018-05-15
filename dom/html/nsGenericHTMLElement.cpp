@@ -2959,8 +2959,7 @@ nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
 
   // Might as well stick a batch around this since we're performing several
   // mutations.
-  mozAutoDocUpdate updateBatch(GetComposedDoc(),
-    UPDATE_CONTENT_MODEL, true);
+  mozAutoDocUpdate updateBatch(GetComposedDoc(), true);
   nsAutoMutationBatch mb;
 
   mb.Init(this, true, false);

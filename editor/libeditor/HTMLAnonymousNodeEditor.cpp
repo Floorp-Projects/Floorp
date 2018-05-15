@@ -271,26 +271,12 @@ HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
   // Need to check whether aShell has been destroyed (but not yet deleted).
   // See bug 338129.
   if (aContent->IsInComposedDoc() && aShell && !aShell->IsDestroying()) {
-    // Call BeginUpdate() so that the nsCSSFrameConstructor/PresShell
-    // knows we're messing with the frame tree.
-    //
-    // FIXME(emilio): Shouldn't this use the document update mechanism instead?
-    // Also, is it really needed? This is NAC anyway.
-    nsCOMPtr<nsIDocument> document = GetDocument();
-    if (document) {
-      aShell->BeginUpdate(document, UPDATE_CONTENT_MODEL);
-    }
-
     MOZ_ASSERT(aContent->IsRootOfAnonymousSubtree());
     MOZ_ASSERT(!aContent->GetPreviousSibling(), "NAC has no siblings");
 
     // FIXME(emilio): This is the only caller to PresShell::ContentRemoved that
     // passes NAC into it. This is not great!
     aShell->ContentRemoved(aContent, nullptr);
-
-    if (document) {
-      aShell->EndUpdate(document, UPDATE_CONTENT_MODEL);
-    }
   }
 
   // The ManualNACPtr destructor will invoke UnbindFromTree.

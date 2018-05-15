@@ -18,10 +18,6 @@ class nsIDocument;
 { 0x71041fa3, 0x6dd7, 0x4cde, \
   { 0xbb, 0x76, 0xae, 0xcc, 0x69, 0xe1, 0x75, 0x78 } }
 
-typedef uint32_t nsUpdateType;
-
-#define UPDATE_CONTENT_MODEL 0x00000001
-
 // Document observer interface
 class nsIDocumentObserver : public nsIMutationObserver
 {
@@ -32,26 +28,25 @@ public:
    * Notify that a content model update is beginning. This call can be
    * nested.
    */
-  virtual void BeginUpdate(nsIDocument *aDocument,
-                           nsUpdateType aUpdateType) = 0;
+  virtual void BeginUpdate(nsIDocument* aDocument) = 0;
 
   /**
    * Notify that a content model update is finished. This call can be
    * nested.
    */
-  virtual void EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType) = 0;
+  virtual void EndUpdate(nsIDocument* aDocument) = 0;
 
   /**
    * Notify the observer that a document load is beginning.
    */
-  virtual void BeginLoad(nsIDocument *aDocument) = 0;
+  virtual void BeginLoad(nsIDocument* aDocument) = 0;
 
   /**
    * Notify the observer that a document load has finished. Note that
    * the associated reflow of the document will be done <b>before</b>
    * EndLoad is invoked, not after.
    */
-  virtual void EndLoad(nsIDocument *aDocument) = 0;
+  virtual void EndLoad(nsIDocument* aDocument) = 0;
 
   /**
    * Notification that the state of a content node has changed.
@@ -86,11 +81,10 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE                              \
-    virtual void BeginUpdate(nsIDocument* aDocument,                         \
-                             nsUpdateType aUpdateType) override;
+    virtual void BeginUpdate(nsIDocument* aDocument) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE                                \
-    virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) override;
+    virtual void EndUpdate(nsIDocument* aDocument) override;
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD                                \
     virtual void BeginLoad(nsIDocument* aDocument) override;
@@ -119,11 +113,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)                     \
 void                                                                      \
-_class::BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)     \
+_class::BeginUpdate(nsIDocument* aDocument)                               \
 {                                                                         \
 }                                                                         \
 void                                                                      \
-_class::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)       \
+_class::EndUpdate(nsIDocument* aDocument)                                 \
 {                                                                         \
 }                                                                         \
 NS_IMPL_NSIMUTATIONOBSERVER_CORE_STUB(_class)

@@ -2292,8 +2292,7 @@ IMEContentObserver::DocumentObserver::Destroy()
 }
 
 void
-IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument,
-                                                  nsUpdateType aUpdateType)
+IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument)
 {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving())) {
     return;
@@ -2303,8 +2302,7 @@ IMEContentObserver::DocumentObserver::BeginUpdate(nsIDocument* aDocument,
 }
 
 void
-IMEContentObserver::DocumentObserver::EndUpdate(nsIDocument* aDocument,
-                                                nsUpdateType aUpdateType)
+IMEContentObserver::DocumentObserver::EndUpdate(nsIDocument* aDocument)
 {
   if (NS_WARN_IF(Destroyed()) || NS_WARN_IF(!IsObserving()) ||
       NS_WARN_IF(!IsUpdating())) {
