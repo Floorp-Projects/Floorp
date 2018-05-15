@@ -69,6 +69,8 @@
 <!ENTITY  crash_restart_label "Restart &brandShortName;">
 
 <!ENTITY url_bar_default_text2 "Search or enter address">
+<!ENTITY url_bar_qrcode_text2 "Use QR Code to view website">
+<!ENTITY url_bar_mic_text2 "Use microphone to enter address">
 
 <!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_remove "Remove bookmark">
