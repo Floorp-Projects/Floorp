@@ -518,7 +518,17 @@ protected:
   ApplyBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                   nsAtom& aBlockTag);
 
-  nsresult MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
+  /**
+   * MakeBlockquote() inserts at least one <blockquote> element and moves
+   * nodes in aNodeArray into new <blockquote> elements.  If aNodeArray
+   * includes a table related element except <table>, this calls itself
+   * recursively to insert <blockquote> into the cell.
+   *
+   * @param aNodeArray          Nodes which will be moved into created
+   *                            <blockquote> elements.
+   */
+  MOZ_MUST_USE nsresult
+  MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
 
   /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of

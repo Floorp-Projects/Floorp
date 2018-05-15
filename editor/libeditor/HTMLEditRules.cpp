@@ -7976,9 +7976,6 @@ HTMLEditRules::ReturnInListItem(Element& aListItem,
   return NS_OK;
 }
 
-/**
- * MakeBlockquote() puts the list of nodes into one or more blockquotes.
- */
 nsresult
 HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
 {
@@ -7988,12 +7985,14 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
   // When the user blockquotes something, they expect one blockquote.  That may
   // not be possible (for instance, if they have two table cells selected, you
   // need two blockquotes inside the cells).
-  nsCOMPtr<Element> curBlock;
+  RefPtr<Element> curBlock;
   nsCOMPtr<nsINode> prevParent;
 
   for (auto& curNode : aNodeArray) {
     // Get the node to act on, and its location
-    NS_ENSURE_STATE(curNode->IsContent());
+    if (NS_WARN_IF(!curNode->IsContent())) {
+      return NS_ERROR_FAILURE;
+    }
 
     // If the node is a table element or list item, dive inside
     if (HTMLEditUtils::IsTableElementButNotTable(curNode) ||
@@ -8004,7 +8003,9 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       nsTArray<OwningNonNull<nsINode>> childArray;
       GetChildNodesForOperation(*curNode, childArray);
       nsresult rv = MakeBlockquote(childArray);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
 
     // If the node has different parent than previous node, further nodes in a
@@ -8031,6 +8032,9 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
       curBlock =
         HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::blockquote,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curBlock)) {
         return NS_ERROR_FAILURE;
       }
@@ -8042,6 +8046,9 @@ HTMLEditRules::MakeBlockquote(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     nsresult rv =
       HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                    *curBlock);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
