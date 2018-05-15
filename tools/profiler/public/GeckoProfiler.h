@@ -434,9 +434,6 @@ struct ProfilerBufferInfo
 // buffer is being written to, and how much data is visible.
 mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 
-// Get the current thread's PseudoStack.
-PseudoStack* profiler_get_pseudo_stack();
-
 //---------------------------------------------------------------------------
 // Put profiling data into the profiler (labels and markers)
 //---------------------------------------------------------------------------
