@@ -40,8 +40,6 @@ import java.util.Set;
             mCache = cache;
             mType = type;
             mGrip = grip;
-
-            cache.put(mGrip.name, this);
         }
 
         private Map<String, Object> ensureRealObject() {
@@ -106,8 +104,6 @@ import java.util.Set;
             mType = type;
             mLength = length;
             mGrip = grip;
-
-            cache.put(mGrip.name, this);
         }
 
         private List<Object> ensureRealObject() {
@@ -150,9 +146,16 @@ import java.util.Set;
     }
 
     private static final class Function {
+        private final String mName;
+
+        public Function(final @Nullable String name) {
+            mName = name;
+        }
+
         @Override
         public String toString() {
-            return "[Function]";
+            final String name = (mName != null) ? ("(" + mName + ')') : "";
+            return "[Function" + name + ']';
         }
     }
 
@@ -204,7 +207,12 @@ import java.util.Set;
 
         final String cls = obj.optString("class", null);
         if ("Function".equals(cls)) {
-            return new Function();
+            final String name = obj.optString("name", null);
+            final String displayName = obj.optString("displayName", name);
+            final String userDisplayName = obj.optString("userDisplayName", displayName);
+            final Function output = new Function(userDisplayName);
+            cache.put(actor, output);
+            return output;
         }
 
         final JSONObject preview = obj.optJSONObject("preview");
@@ -225,6 +233,7 @@ import java.util.Set;
         } else {
             output = new LazyObject(cache, cls, grip);
         }
+        cache.put(actor, output);
         return output;
     }
 

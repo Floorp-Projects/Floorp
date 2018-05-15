@@ -1250,6 +1250,14 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    (array dot 0) as String, equalTo("foo"))
         assertThat("JS array toString should be expanded after evaluation",
                    array.toString(), equalTo("[Array(2)][foo, bar]"))
+
+        assertThat("JS user function toString should be correct",
+                   sessionRule.session.evaluateJS("(function foo(){})").toString(),
+                   equalTo("[Function(foo)]"))
+
+        assertThat("JS window function toString should be correct",
+                   sessionRule.session.evaluateJS("window.alert").toString(),
+                   equalTo("[Function(alert)]"))
     }
 
     @WithDevToolsAPI
