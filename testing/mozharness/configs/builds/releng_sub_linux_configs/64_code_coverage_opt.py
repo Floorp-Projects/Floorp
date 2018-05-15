@@ -23,6 +23,6 @@ config = {
         'PATH': '/usr/local/bin:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin',
     },
-    'mozconfig_variant': 'code-coverage',
+    'mozconfig_variant': 'code-coverage-opt',
     #######################
 }
