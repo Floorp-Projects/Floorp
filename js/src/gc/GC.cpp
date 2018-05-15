@@ -6813,7 +6813,7 @@ AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : runtime(rt),
     prevState(rt->mainContextFromOwnThread()->heapState),
     pseudoFrame(rt->mainContextFromOwnThread(), HeapStateToLabel(heapState),
-                ProfileEntry::Category::GC)
+                ProfilingStackFrame::Category::GC)
 {
     MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);

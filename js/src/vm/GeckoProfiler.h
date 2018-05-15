@@ -32,7 +32,7 @@
  * is pushed onto a stack that the profiler owns and maintains. This
  * information is then popped at the end of the JS function. The profiler
  * informs the JS engine of this stack at runtime, and it can by turned on/off
- * dynamically. Each stack entry has type ProfileEntry.
+ * dynamically. Each stack frame has type ProfilingStackFrame.
  *
  * Throughout execution, the size of the stack recorded in memory may exceed the
  * maximum. The JS engine will not write any information past the maximum limit,
@@ -46,7 +46,7 @@
  * available. The other bit of information is the relevant C++ (native) stack
  * pointer. This stack pointer is what enables the interleaving of the C++ and
  * the JS stack. Finally, throughout execution of the function, some extra
- * information may be updated on the ProfileEntry structure.
+ * information may be updated on the ProfilingStackFrame structure.
  *
  * = Profile Strings
  *
@@ -82,7 +82,7 @@
  *
  * One goal of sampling is to get both a backtrace of the JS stack, but also
  * know where within each function on the stack execution currently is. For
- * this, each ProfileEntry has a 'pc' field to tell where its execution
+ * this, each ProfilingStackFrame has a 'pc' field to tell where its execution
  * currently is. This field is updated whenever a call is made to another JS
  * function, and for the JIT it is also updated whenever the JIT is left.
  *
@@ -93,7 +93,7 @@
  *
  * As an invariant, if the pc is nullptr, then the JIT is currently executing
  * generated code. Otherwise execution is in another JS function or in C++. With
- * this in place, only the top entry of the stack can ever have nullptr as its
+ * this in place, only the top frame of the stack can ever have nullptr as its
  * pc. Additionally with this invariant, it is possible to maintain mappings of
  * JIT code to pc which can be accessed safely because they will only be
  * accessed from a signal handler when the JIT code is executing.
@@ -185,7 +185,7 @@ class MOZ_RAII GeckoProfilerEntryMarker
 };
 
 /*
- * RAII class to automatically add Gecko Profiler pseudo frame entries.
+ * RAII class to automatically add Gecko Profiler profiling stack frames.
  *
  * NB: The `label` string must be statically allocated.
  */
@@ -194,7 +194,7 @@ class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
   public:
     explicit MOZ_ALWAYS_INLINE
     AutoGeckoProfilerEntry(JSContext* cx, const char* label,
-                           ProfileEntry::Category category = ProfileEntry::Category::JS
+                           ProfilingStackFrame::Category category = ProfilingStackFrame::Category::JS
                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     MOZ_ALWAYS_INLINE ~AutoGeckoProfilerEntry();
 
@@ -208,7 +208,7 @@ class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
 
 /*
  * This class is used in the interpreter to bound regions where the baseline JIT
- * being entered via OSR.  It marks the current top pseudostack entry as
+ * being entered via OSR.  It marks the current top profiling stack frame as
  * OSR-ed
  */
 class MOZ_RAII GeckoProfilerBaselineOSRMarker
