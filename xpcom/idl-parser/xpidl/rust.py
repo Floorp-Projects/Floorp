@@ -245,7 +245,8 @@ def attrAsWrapper(iface, m, getter):
 
         name = attributeParamName(m)
 
-        if getter and m.infallible:
+        if getter and m.infallible and m.realtype.kind == 'builtin':
+            # NOTE: We don't support non-builtin infallible getters in Rust code.
             return infallible_impl_tmpl % {
                 'name': attributeNativeName(m, getter),
                 'realtype': m.realtype.rustType('in'),

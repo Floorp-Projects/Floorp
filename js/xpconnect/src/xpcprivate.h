@@ -332,52 +332,6 @@ MOZ_DEFINE_ENUM(WatchdogTimestampCategory, (
 
 class AsyncFreeSnowWhite;
 
-template <class StringType>
-class ShortLivedStringBuffer
-{
-public:
-    StringType* Create()
-    {
-        for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            if (!mStrings[i]) {
-                mStrings[i].emplace();
-                return mStrings[i].ptr();
-            }
-        }
-
-        // All our internal string wrappers are used, allocate a new string.
-        return new StringType();
-    }
-
-    void Destroy(StringType* string)
-    {
-        for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            if (mStrings[i] && mStrings[i].ptr() == string) {
-                // One of our internal strings is no longer in use, mark
-                // it as such and free its data.
-                mStrings[i].reset();
-                return;
-            }
-        }
-
-        // We're done with a string that's not one of our internal
-        // strings, delete it.
-        delete string;
-    }
-
-    ~ShortLivedStringBuffer()
-    {
-#ifdef DEBUG
-        for (uint32_t i = 0; i < ArrayLength(mStrings); ++i) {
-            MOZ_ASSERT(!mStrings[i], "Short lived string still in use");
-        }
-#endif
-    }
-
-private:
-    mozilla::Maybe<StringType> mStrings[2];
-};
-
 class XPCJSContext final : public mozilla::CycleCollectedJSContext
                          , public mozilla::LinkedListElement<XPCJSContext>
 {
@@ -469,9 +423,6 @@ public:
 
     inline JS::HandleId GetStringID(unsigned index) const;
     inline const char* GetStringName(unsigned index) const;
-
-    ShortLivedStringBuffer<nsString> mScratchStrings;
-    ShortLivedStringBuffer<nsCString> mScratchCStrings;
 
 private:
     XPCJSContext();
@@ -1799,31 +1750,19 @@ private:
         {if (b) mDescriptors[i/32] |= (1 << (i%32));
          else mDescriptors[i/32] &= ~(1 << (i%32));}
 
-    bool GetArraySizeFromParam(JSContext* cx,
-                               const nsXPTMethodInfo* method,
-                               const nsXPTParamInfo& param,
-                               uint16_t methodIndex,
-                               uint8_t paramIndex,
+    bool GetArraySizeFromParam(const nsXPTMethodInfo* method,
+                               const nsXPTType& type,
                                nsXPTCMiniVariant* params,
                                uint32_t* result) const;
 
-    bool GetInterfaceTypeFromParam(JSContext* cx,
-                                   const nsXPTMethodInfo* method,
-                                   const nsXPTParamInfo& param,
-                                   uint16_t methodIndex,
+    bool GetInterfaceTypeFromParam(const nsXPTMethodInfo* method,
                                    const nsXPTType& type,
                                    nsXPTCMiniVariant* params,
                                    nsID* result) const;
 
-    static void CleanupPointerArray(const nsXPTType& datum_type,
-                                    uint32_t array_count,
-                                    void** arrayp);
-
-    static void CleanupPointerTypeObject(const nsXPTType& type,
-                                         void** pp);
-
-    void CleanupOutparams(JSContext* cx, uint16_t methodIndex, const nsXPTMethodInfo* info,
-                          nsXPTCMiniVariant* nativeParams, bool inOutOnly, uint8_t n) const;
+    void CleanupOutparams(const nsXPTMethodInfo* info,
+                          nsXPTCMiniVariant* nativeParams,
+                          bool inOutOnly, uint8_t n) const;
 
 private:
     XPCJSRuntime* mRuntime;
@@ -1999,11 +1938,13 @@ public:
 
     static bool NativeData2JS(JS::MutableHandleValue d,
                               const void* s, const nsXPTType& type,
-                              const nsID* iid, nsresult* pErr);
+                              const nsID* iid, uint32_t arrlen,
+                              nsresult* pErr);
 
     static bool JSData2Native(void* d, JS::HandleValue s,
                               const nsXPTType& type,
                               const nsID* iid,
+                              uint32_t arrlen,
                               nsresult* pErr);
 
     /**
@@ -2049,7 +1990,7 @@ public:
      * @param scope the default scope to put on the new JSObjects' parent chain
      * @param pErr [out] relevant error code, if any.
      */
-    static bool NativeArray2JS(JS::MutableHandleValue d, const void** s,
+    static bool NativeArray2JS(JS::MutableHandleValue d, const void* const* s,
                                const nsXPTType& type, const nsID* iid,
                                uint32_t count, nsresult* pErr);
 
@@ -2062,15 +2003,6 @@ public:
                                     uint32_t count,
                                     const nsXPTType& type,
                                     nsresult* pErr);
-
-    static bool NativeStringWithSize2JS(JS::MutableHandleValue d, const void* s,
-                                        const nsXPTType& type,
-                                        uint32_t count,
-                                        nsresult* pErr);
-
-    static bool JSStringWithSize2Native(void* d, JS::HandleValue s,
-                                        uint32_t count, const nsXPTType& type,
-                                        nsresult* pErr);
 
     static nsresult JSValToXPCException(JS::MutableHandleValue s,
                                         const char* ifaceName,
@@ -3108,6 +3040,39 @@ bool IsOutObject(JSContext* cx, JSObject* obj);
 nsresult HasInstance(JSContext* cx, JS::HandleObject objArg, const nsID* iid, bool* bp);
 
 nsIPrincipal* GetObjectPrincipal(JSObject* obj);
+
+// Attempt to clean up the passed in value pointer. The pointer `value` must be
+// a pointer to a value described by the type `nsXPTType`.
+//
+// This method expects a value of the following types:
+//   TD_PNSIID
+//     value : nsID* (free)
+//   TD_DOMSTRING, TD_ASTRING, TD_CSTRING, TD_UTF8STRING
+//     value : ns[C]String* (truncate)
+//   TD_PSTRING, TD_PWSTRING, TD_PSTRING_SIZE_IS, TD_PWSTRING_SIZE_IS
+//     value : char[16_t]** (free)
+//   TD_INTERFACE_TYPE, TD_INTERFACE_IS_TYPE
+//     value : nsISupports** (release)
+//   TD_ARRAY (NOTE: aArrayLen should be passed)
+//     value : void** (cleanup elements & free)
+//   TD_DOMOBJECT
+//     value : T** (cleanup)
+//   TD_PROMISE
+//     value : dom::Promise** (release)
+//
+// Other types are ignored.
+//
+// Custom behaviour may be desired in some situations:
+//  - This method Truncate()s nsStrings, it does not free them.
+//  - This method does not unroot JSValues.
+inline void CleanupValue(const nsXPTType& aType,
+                         void* aValue,
+                         uint32_t aArrayLen = 0);
+
+// Out-of-line internals for xpc::CleanupValue. Defined in XPCConvert.cpp.
+void InnerCleanupValue(const nsXPTType& aType,
+                       void* aValue,
+                       uint32_t aArrayLen);
 
 } // namespace xpc
 

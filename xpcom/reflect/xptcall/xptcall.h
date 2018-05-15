@@ -17,7 +17,9 @@
 
 struct nsXPTCMiniVariant
 {
-    union U
+// No ctors or dtors so that we can use arrays of these on the stack
+// with no penalty.
+    union Union
     {
         int8_t    i8;
         int16_t   i16;
@@ -33,26 +35,47 @@ struct nsXPTCMiniVariant
         char      c;
         char16_t wc;
         void*     p;
+    };
 
-        // Types below here are unknown to the assembly implementations, and
-        // therefore _must_ be passed with indirect semantics. We put them in
-        // the union here for type safety, so that we can avoid void* tricks.
-        JS::Value j;
-
-        // |j| has a non-trivial constructor and therefore MUST be
-        // placement-new'd into existence.
-        MOZ_PUSH_DISABLE_NONTRIVIAL_UNION_WARNINGS
-        U() {}
-        MOZ_POP_DISABLE_NONTRIVIAL_UNION_WARNINGS
-    } val;
+    Union val;
 };
 
-struct nsXPTCVariant : public nsXPTCMiniVariant
-{
-// No ctors or dtors so that we can use arrays of these on the stack
-// with no penalty.
+static_assert(offsetof(nsXPTCMiniVariant, val) == 0,
+              "nsXPTCMiniVariant must be a thin wrapper");
 
-    // inherits 'val' here
+struct nsXPTCVariant
+{
+// No ctors or dtors so that we can use arrays of these on the stack with no
+// penalty.
+    union ExtendedVal
+    {
+    // ExtendedVal is an extension on nsXPTCMiniVariant. It contains types
+    // unknown to the assembly implementations which must be passed by indirect
+    // semantics.
+    //
+    // nsXPTCVariant contains enough space to store ExtendedVal inline, which
+    // can be used to store these types when IsIndirect() is true.
+        nsXPTCMiniVariant mini;
+
+        nsCString  nscstr;
+        nsString   nsstr;
+        JS::Value  jsval;
+
+        // This type contains non-standard-layout types, so needs an explicit
+        // Ctor/Dtor - we'll just delete them.
+        ExtendedVal() = delete;
+        ~ExtendedVal() = delete;
+    };
+
+    union
+    {
+        // The `val` field from nsXPTCMiniVariant.
+        nsXPTCMiniVariant::Union val;
+
+        // Storage for any extended variants.
+        ExtendedVal ext;
+    };
+
     void*     ptr;
     nsXPTType type;
     uint8_t   flags;
@@ -98,52 +121,22 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     // Internal use only. Use IsIndirect() instead.
     bool IsPtrData()       const  {return 0 != (flags & PTR_IS_DATA);}
 
-    void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, uint8_t f)
-    {
-        type = t;
-        flags = f;
-
-        if(f & PTR_IS_DATA)
-        {
-            ptr = mv.val.p;
-            val.p = nullptr;
-        }
-        else
-        {
-            ptr = nullptr;
-            val.p = nullptr; // make sure 'val.p' is always initialized
-            switch(t.TagPart()) {
-              case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
-              case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;
-              case nsXPTType::T_I32:               val.i32 = mv.val.i32; break;
-              case nsXPTType::T_I64:               val.i64 = mv.val.i64; break;
-              case nsXPTType::T_U8:                val.u8  = mv.val.u8;  break;
-              case nsXPTType::T_U16:               val.u16 = mv.val.u16; break;
-              case nsXPTType::T_U32:               val.u32 = mv.val.u32; break;
-              case nsXPTType::T_U64:               val.u64 = mv.val.u64; break;
-              case nsXPTType::T_FLOAT:             val.f   = mv.val.f;   break;
-              case nsXPTType::T_DOUBLE:            val.d   = mv.val.d;   break;
-              case nsXPTType::T_BOOL:              val.b   = mv.val.b;   break;
-              case nsXPTType::T_CHAR:              val.c   = mv.val.c;   break;
-              case nsXPTType::T_WCHAR:             val.wc  = mv.val.wc;  break;
-              case nsXPTType::T_VOID:              /* fall through */
-              case nsXPTType::T_IID:               /* fall through */
-              case nsXPTType::T_DOMSTRING:         /* fall through */
-              case nsXPTType::T_CHAR_STR:          /* fall through */
-              case nsXPTType::T_WCHAR_STR:         /* fall through */
-              case nsXPTType::T_INTERFACE:         /* fall through */
-              case nsXPTType::T_INTERFACE_IS:      /* fall through */
-              case nsXPTType::T_DOMOBJECT:         /* fall through */
-              case nsXPTType::T_ARRAY:             /* fall through */
-              case nsXPTType::T_PSTRING_SIZE_IS:   /* fall through */
-              case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
-              case nsXPTType::T_UTF8STRING:        /* fall through */
-              case nsXPTType::T_CSTRING:           /* fall through */
-              default:                             val.p   = mv.val.p;   break;
-            }
-        }
+    // Implicitly convert to nsXPTCMiniVariant.
+    operator nsXPTCMiniVariant&() {
+        return *(nsXPTCMiniVariant*) &val;
     }
+    operator const nsXPTCMiniVariant&() const {
+        return *(const nsXPTCMiniVariant*) &val;
+    }
+
+    // As this type contains an anonymous union, we need to provide explicit
+    // constructors & destructors.
+    nsXPTCVariant() { }
+    ~nsXPTCVariant() { }
 };
+
+static_assert(offsetof(nsXPTCVariant, val) == offsetof(nsXPTCVariant, ext),
+              "nsXPTCVariant::{ext,val} must have matching offsets");
 
 class nsIXPTCProxy : public nsISupports
 {

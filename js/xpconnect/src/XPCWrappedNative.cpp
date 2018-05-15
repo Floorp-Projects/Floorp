@@ -1133,7 +1133,7 @@ static bool Throw(nsresult errNum, XPCCallContext& ccx)
 
 /***************************************************************************/
 
-class MOZ_STACK_CLASS CallMethodHelper
+class MOZ_STACK_CLASS CallMethodHelper final
 {
     XPCCallContext& mCallContext;
     nsresult mInvokeResult;
@@ -1151,12 +1151,10 @@ class MOZ_STACK_CLASS CallMethodHelper
     const uint32_t mArgc;
 
     MOZ_ALWAYS_INLINE bool
-    GetArraySizeFromParam(uint8_t paramIndex, HandleValue maybeArray, uint32_t* result);
+    GetArraySizeFromParam(const nsXPTType& type, HandleValue maybeArray, uint32_t* result);
 
     MOZ_ALWAYS_INLINE bool
-    GetInterfaceTypeFromParam(uint8_t paramIndex,
-                              const nsXPTType& datum_type,
-                              nsID* result) const;
+    GetInterfaceTypeFromParam(const nsXPTType& type, nsID* result) const;
 
     MOZ_ALWAYS_INLINE bool
     GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const;
@@ -1189,11 +1187,6 @@ class MOZ_STACK_CLASS CallMethodHelper
     MOZ_ALWAYS_INLINE bool ConvertDependentParams();
     MOZ_ALWAYS_INLINE bool ConvertDependentParam(uint8_t i);
 
-    MOZ_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
-
-    MOZ_ALWAYS_INLINE bool AllocateStringClass(nsXPTCVariant* dp,
-                                               const nsXPTParamInfo& paramInfo);
-
     MOZ_ALWAYS_INLINE nsresult Invoke();
 
 public:
@@ -1220,6 +1213,9 @@ public:
 
     MOZ_ALWAYS_INLINE bool Call();
 
+    // Trace implementation so we can put our CallMethodHelper in a Rooted<T>.
+    void trace(JSTracer* aTrc);
+
 };
 
 // static
@@ -1232,7 +1228,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         return Throw(rv, ccx);
     }
 
-    return CallMethodHelper(ccx).Call();
+    JS::Rooted<CallMethodHelper> helper(ccx, /* init = */ ccx);
+    return helper.get().Call();
 }
 
 bool
@@ -1281,82 +1278,51 @@ CallMethodHelper::Call()
 
 CallMethodHelper::~CallMethodHelper()
 {
-    uint8_t paramCount = mMethodInfo->GetParamCount();
-    if (mDispatchParams.Length()) {
-        for (uint8_t i = 0; i < paramCount; i++) {
-            nsXPTCVariant* dp = GetDispatchParam(i);
-            const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
+    for (nsXPTCVariant& param : mDispatchParams) {
+        // Only clean up values which need cleanup.
+        if (!param.DoesValNeedCleanup())
+            continue;
 
-            if (paramInfo.GetType().IsArray()) {
-                void* p = dp->val.p;
-                if (!p)
-                    continue;
+        uint32_t arraylen = 0;
+        if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arraylen))
+            continue;
 
-                // Clean up the array contents if necessary.
-                if (dp->DoesValNeedCleanup()) {
-                    // We need some basic information to properly destroy the array.
-                    uint32_t array_count = 0;
-                    nsXPTType datum_type;
-                    if (!GetArraySizeFromParam(i, UndefinedHandleValue, &array_count) ||
-                        !NS_SUCCEEDED(mIFaceInfo->GetTypeForParam(mVTableIndex,
-                                                                  &paramInfo,
-                                                                  1, &datum_type))) {
-                        // XXXbholley - I'm not convinced that the above calls will
-                        // ever fail.
-                        NS_ERROR("failed to get array information, we'll leak here");
-                        continue;
-                    }
-
-                    // Loop over the array contents. For each one, we create a
-                    // dummy 'val' and pass it to the cleanup helper.
-                    for (uint32_t k = 0; k < array_count; k++) {
-                        nsXPTCMiniVariant v;
-                        v.val.p = static_cast<void**>(p)[k];
-                        CleanupParam(v, datum_type);
-                    }
-                }
-
-                // always free the array itself
-                free(p);
-            } else {
-                // Clean up single parameters (if requested).
-                if (dp->DoesValNeedCleanup())
-                    CleanupParam(*dp, dp->type);
-            }
-        }
+        xpc::CleanupValue(param.type, &param.val, arraylen);
     }
 }
 
 bool
-CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
+CallMethodHelper::GetArraySizeFromParam(const nsXPTType& type,
                                         HandleValue maybeArray,
                                         uint32_t* result)
 {
-    nsresult rv;
-    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
+    if (type.Tag() != nsXPTType::T_ARRAY &&
+        type.Tag() != nsXPTType::T_PSTRING_SIZE_IS &&
+        type.Tag() != nsXPTType::T_PWSTRING_SIZE_IS) {
+        *result = 0;
+        return true;
+    }
+
+    uint8_t argnum = type.ArgNum();
+    uint32_t* lengthp = &GetDispatchParam(argnum)->val.u32;
 
     // TODO fixup the various exceptions that are thrown
-
-    rv = mIFaceInfo->GetSizeIsArgNumberForParam(mVTableIndex, &paramInfo, 0, &paramIndex);
-    if (NS_FAILED(rv))
-        return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
 
     // If the array length wasn't passed, it might have been listed as optional.
     // When converting arguments from JS to C++, we pass the array as |maybeArray|,
     // and give ourselves the chance to infer the length. Once we have it, we stick
     // it in the right slot so that we can find it again when cleaning up the params.
     // from the array.
-    if (paramIndex >= mArgc && maybeArray.isObject()) {
-        MOZ_ASSERT(mMethodInfo->GetParam(paramIndex).IsOptional());
-        RootedObject arrayOrNull(mCallContext, maybeArray.isObject() ? &maybeArray.toObject()
-                                                                     : nullptr);
+    if (argnum >= mArgc && maybeArray.isObject()) {
+        MOZ_ASSERT(mMethodInfo->Param(argnum).IsOptional());
+        RootedObject arrayOrNull(mCallContext, &maybeArray.toObject());
 
         bool isArray;
         bool ok = false;
         if (JS_IsArrayObject(mCallContext, maybeArray, &isArray) && isArray) {
-            ok = JS_GetArrayLength(mCallContext, arrayOrNull, &GetDispatchParam(paramIndex)->val.u32);
+            ok = JS_GetArrayLength(mCallContext, arrayOrNull, lengthp);
         } else if (JS_IsTypedArrayObject(&maybeArray.toObject())) {
-            GetDispatchParam(paramIndex)->val.u32 = JS_GetTypedArrayLength(&maybeArray.toObject());
+            *lengthp = JS_GetTypedArrayLength(&maybeArray.toObject());
             ok = true;
         }
 
@@ -1365,38 +1331,31 @@ CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
         }
     }
 
-    *result = GetDispatchParam(paramIndex)->val.u32;
-
+    *result = *lengthp;
     return true;
 }
 
 bool
-CallMethodHelper::GetInterfaceTypeFromParam(uint8_t paramIndex,
-                                            const nsXPTType& datum_type,
+CallMethodHelper::GetInterfaceTypeFromParam(const nsXPTType& type,
                                             nsID* result) const
 {
-    nsresult rv;
-    const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
-    uint8_t tag = datum_type.TagPart();
+    result->Clear();
 
-    // TODO fixup the various exceptions that are thrown
+    const nsXPTType& inner = type.InnermostType();
+    if (inner.Tag() == nsXPTType::T_INTERFACE) {
+        if (!inner.GetInterface()) {
+            return Throw(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, mCallContext);
+        }
 
-    if (tag == nsXPTType::T_INTERFACE) {
-        rv = mIFaceInfo->GetIIDForParamNoAlloc(mVTableIndex, &paramInfo, result);
-        if (NS_FAILED(rv))
+        *result = inner.GetInterface()->IID();
+    } else if (inner.Tag() == nsXPTType::T_INTERFACE_IS) {
+        nsID* id = (nsID*) GetDispatchParam(inner.ArgNum())->val.p;
+        if (!id) {
             return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
-                                 paramIndex, mCallContext);
-    } else if (tag == nsXPTType::T_INTERFACE_IS) {
-        rv = mIFaceInfo->GetInterfaceIsArgNumberForParam(mVTableIndex, &paramInfo,
-                                                         &paramIndex);
-        if (NS_FAILED(rv))
-            return Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
+                                 inner.ArgNum(), mCallContext);
+        }
 
-        nsID* p = (nsID*) GetDispatchParam(paramIndex)->val.p;
-        if (!p)
-            return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
-                                 paramIndex, mCallContext);
-        *result = *p;
+        *result = *id;
     }
     return true;
 }
@@ -1407,7 +1366,6 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
     bool isRetval = &paramInfo == mMethodInfo->GetRetval();
 
-    MOZ_ASSERT(!paramInfo.IsDipper(), "Dipper params are handled separately");
     if (paramInfo.IsOut() && !isRetval) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
@@ -1437,62 +1395,24 @@ CallMethodHelper::GatherAndConvertResults()
     uint8_t paramCount = mMethodInfo->GetParamCount();
     for (uint8_t i = 0; i < paramCount; i++) {
         const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
-        if (!paramInfo.IsOut() && !paramInfo.IsDipper())
+        if (!paramInfo.IsOut())
             continue;
 
         const nsXPTType& type = paramInfo.GetType();
         nsXPTCVariant* dp = GetDispatchParam(i);
         RootedValue v(mCallContext, NullValue());
+
         uint32_t array_count = 0;
-        nsXPTType datum_type;
-        bool isArray = type.IsArray();
-        bool isSizedString = isArray ?
-                false :
-                type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-                type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
-
-        if (isArray) {
-            if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
-                                                      &datum_type))) {
-                Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-                return false;
-            }
-        } else
-            datum_type = type;
-
-        if (isArray || isSizedString) {
-            if (!GetArraySizeFromParam(i, UndefinedHandleValue, &array_count))
-                return false;
-        }
-
         nsID param_iid;
-        if (datum_type.IsInterfacePointer() &&
-            !GetInterfaceTypeFromParam(i, datum_type, &param_iid))
+        if (!GetInterfaceTypeFromParam(type, &param_iid) ||
+            !GetArraySizeFromParam(type, UndefinedHandleValue, &array_count))
             return false;
 
         nsresult err;
-        if (isArray) {
-            if (!XPCConvert::NativeArray2JS(&v, (const void**)&dp->val,
-                                            datum_type, &param_iid,
-                                            array_count, &err)) {
-                // XXX need exception scheme for arrays to indicate bad element
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
-        } else if (isSizedString) {
-            if (!XPCConvert::NativeStringWithSize2JS(&v,
-                                                     (const void*)&dp->val,
-                                                     datum_type,
-                                                     array_count, &err)) {
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
-        } else {
-            if (!XPCConvert::NativeData2JS(&v, &dp->val, datum_type,
-                                           &param_iid, &err)) {
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
+        if (!XPCConvert::NativeData2JS(&v, &dp->val, type,
+                                        &param_iid, array_count, &err)) {
+            ThrowBadParam(err, i, mCallContext);
+            return false;
         }
 
         if (&paramInfo == mMethodInfo->GetRetval()) {
@@ -1549,7 +1469,7 @@ CallMethodHelper::QueryInterfaceFastPath()
     bool success =
         XPCConvert::NativeData2JS(&v, &qiresult,
                                   { nsXPTType::T_INTERFACE_IS },
-                                  iid, &err);
+                                  iid, 0, &err);
     NS_IF_RELEASE(qiresult);
 
     if (!success) {
@@ -1647,48 +1567,34 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    uint8_t type_tag = type.TagPart();
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
     MOZ_ASSERT(!paramInfo.IsShared(), "[shared] implies [noscript]!");
-
-    // String classes are always "in" - those that are marked "out" are converted
-    // by the XPIDL compiler to "in+dipper". See the note above IsDipper() in
-    // xptinfo.h.
-    //
-    // Also note that the fact that we bail out early for dipper parameters means
-    // that "inout" dipper parameters don't work - see bug 687612.
-    if (paramInfo.IsStringClass()) {
-        if (!AllocateStringClass(dp, paramInfo))
-            return false;
-        if (paramInfo.IsDipper()) {
-            // We've allocated our string class explicitly, so we don't need
-            // to do any conversions on the incoming argument. However, we still
-            // need to verify that it's an object, so that we don't get surprised
-            // later on when trying to assign the result to .value.
-            if (i < mArgc && !mArgv[i].isObject()) {
-                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, mCallContext);
-                return false;
-            }
-            return true;
-        }
-    }
 
     // Specify the correct storage/calling semantics.
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    // The JSVal proper is always stored within the 'val' union and passed
-    // indirectly, regardless of in/out-ness.
-    if (type_tag == nsXPTType::T_JSVAL) {
-        // Root the value.
-        new (&dp->val.j) JS::Value();
-        MOZ_ASSERT(dp->val.j.isUndefined());
-        if (!js::AddRawValueRoot(mCallContext, &dp->val.j,
-                                 "XPCWrappedNative::CallMethod param"))
-        {
-            return false;
-        }
+    // Some types are always stored within the nsXPTCVariant, and passed
+    // indirectly, regardless of in/out-ness. These types are stored in the
+    // nsXPTCVariant's extended value.
+    switch (type.Tag()) {
+        // Ensure that the jsval has a valid value.
+        case nsXPTType::T_JSVAL:
+            new (&dp->ext.jsval) JS::Value();
+            MOZ_ASSERT(dp->ext.jsval.isUndefined());
+            break;
+
+        // Initialize our temporary string class values so they can be assigned
+        // to by the XPCConvert logic.
+        case nsXPTType::T_ASTRING:
+        case nsXPTType::T_DOMSTRING:
+            new (&dp->ext.nsstr) nsString();
+            break;
+        case nsXPTType::T_CSTRING:
+        case nsXPTType::T_UTF8STRING:
+            new (&dp->ext.nscstr) nsCString();
+            break;
     }
 
     // Flag cleanup for anything that isn't self-contained.
@@ -1719,25 +1625,27 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
                    "Expected either enough arguments or an optional argument");
         if (i < mArgc)
             src = mArgv[i];
-        else if (type_tag == nsXPTType::T_JSVAL)
+        else if (type.Tag() == nsXPTType::T_JSVAL)
             src.setUndefined();
         else
             src.setNull();
     }
 
-    nsID param_iid;
-    if (type_tag == nsXPTType::T_INTERFACE &&
-        NS_FAILED(mIFaceInfo->GetIIDForParamNoAlloc(mVTableIndex, &paramInfo,
-                                                    &param_iid))) {
-        ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, i, mCallContext);
-        return false;
+    nsID param_iid = { 0 };
+    const nsXPTType& inner = type.InnermostType();
+    if (inner.Tag() == nsXPTType::T_INTERFACE) {
+        if (!inner.GetInterface()) {
+            return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
+                                 i, mCallContext);
+        }
+        param_iid = inner.GetInterface()->IID();
     }
 
     // Don't allow CPOWs to be passed to native code (in case they try to cast
     // to a concrete type).
     if (src.isObject() &&
         jsipc::IsWrappedCPOW(&src.toObject()) &&
-        type_tag == nsXPTType::T_INTERFACE &&
+        type.Tag() == nsXPTType::T_INTERFACE &&
         !param_iid.Equals(NS_GET_IID(nsISupports)))
     {
         // Allow passing CPOWs to XPCWrappedJS.
@@ -1749,7 +1657,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     }
 
     nsresult err;
-    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, &err)) {
+    if (!XPCConvert::JSData2Native(&dp->val, src, type, &param_iid, 0, &err)) {
         ThrowBadParam(err, i, mCallContext);
         return false;
     }
@@ -1778,41 +1686,17 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
     const nsXPTType& type = paramInfo.GetType();
-    nsXPTType datum_type;
-    uint32_t array_count = 0;
-    bool isArray = type.IsArray();
-
-    bool isSizedString = isArray ?
-        false :
-        type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
-        type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
     nsXPTCVariant* dp = GetDispatchParam(i);
     dp->type = type;
-
-    if (isArray) {
-        if (NS_FAILED(mIFaceInfo->GetTypeForParam(mVTableIndex, &paramInfo, 1,
-                                                  &datum_type))) {
-            Throw(NS_ERROR_XPC_CANT_GET_ARRAY_INFO, mCallContext);
-            return false;
-        }
-        MOZ_ASSERT(datum_type.TagPart() != nsXPTType::T_JSVAL,
-                   "Arrays of JSVals not currently supported - see bug 693337.");
-    } else {
-        datum_type = type;
-    }
 
     // Specify the correct storage/calling semantics.
     if (paramInfo.IsIndirect())
         dp->SetIndirect();
 
-    // We have 3 possible type of dependent parameters: Arrays, Sized Strings,
-    // and iid_is Interface pointers. The latter two always need cleanup, and
-    // arrays need cleanup for all non-arithmetic types. Since the latter two
-    // cases also happen to be non-arithmetic, we can just inspect datum_type
-    // here.
-    if (!datum_type.IsArithmetic())
-        dp->SetValNeedsCleanup();
+    // Make sure we clean up all of our dependent types. All of them require
+    // allocations of some kind.
+    dp->SetValNeedsCleanup();
 
     // Even if there's nothing to convert, we still need to examine the
     // JSObject container for out-params. If it's null or otherwise invalid,
@@ -1840,115 +1724,18 @@ CallMethodHelper::ConvertDependentParam(uint8_t i)
     }
 
     nsID param_iid;
-    if (datum_type.IsInterfacePointer() &&
-        !GetInterfaceTypeFromParam(i, datum_type, &param_iid))
+    uint32_t array_count;
+    if (!GetInterfaceTypeFromParam(type, &param_iid) ||
+        !GetArraySizeFromParam(type, src, &array_count))
         return false;
 
     nsresult err;
 
-    if (isArray || isSizedString) {
-        if (!GetArraySizeFromParam(i, src, &array_count))
-            return false;
-
-        if (isArray) {
-            if (array_count &&
-                !XPCConvert::JSArray2Native((void**)&dp->val, src,
-                                            array_count, datum_type, &param_iid,
-                                            &err)) {
-                // XXX need exception scheme for arrays to indicate bad element
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
-        } else // if (isSizedString)
-        {
-            if (!XPCConvert::JSStringWithSize2Native((void*)&dp->val,
-                                                     src, array_count,
-                                                     datum_type, &err)) {
-                ThrowBadParam(err, i, mCallContext);
-                return false;
-            }
-        }
-    } else {
-        if (!XPCConvert::JSData2Native(&dp->val, src, type,
-                                       &param_iid, &err)) {
-            ThrowBadParam(err, i, mCallContext);
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// Performs all necessary teardown on a parameter after method invocation.
-//
-// This method should only be called if the value in question was flagged
-// for cleanup (ie, if dp->DoesValNeedCleanup()).
-void
-CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
-{
-    // We handle array elements, but not the arrays themselves.
-    MOZ_ASSERT(type.TagPart() != nsXPTType::T_ARRAY, "Can't handle arrays.");
-
-    // Pointers may sometimes be null even if cleanup was requested. Combine
-    // the null checking for all the different types into one check here.
-    if (type.TagPart() != nsXPTType::T_JSVAL && param.val.p == nullptr)
-        return;
-
-    switch (type.TagPart()) {
-        case nsXPTType::T_JSVAL:
-            js::RemoveRawValueRoot(mCallContext, &param.val.j);
-            break;
-        case nsXPTType::T_INTERFACE:
-        case nsXPTType::T_INTERFACE_IS:
-            ((nsISupports*)param.val.p)->Release();
-            break;
-        case nsXPTType::T_DOMOBJECT:
-            type.GetDOMObjectInfo().Cleanup(param.val.p);
-            break;
-        case nsXPTType::T_ASTRING:
-        case nsXPTType::T_DOMSTRING:
-            mCallContext.GetContext()->mScratchStrings.Destroy((nsString*)param.val.p);
-            break;
-        case nsXPTType::T_UTF8STRING:
-        case nsXPTType::T_CSTRING:
-            mCallContext.GetContext()->mScratchCStrings.Destroy((nsCString*)param.val.p);
-            break;
-        default:
-            MOZ_ASSERT(!type.IsArithmetic(), "Cleanup requested on unexpected type.");
-            free(param.val.p);
-            break;
-    }
-}
-
-bool
-CallMethodHelper::AllocateStringClass(nsXPTCVariant* dp,
-                                      const nsXPTParamInfo& paramInfo)
-{
-    // Get something we can make comparisons with.
-    uint8_t type_tag = paramInfo.GetType().TagPart();
-
-    // There should be 4 cases, all strings. Verify that here.
-    MOZ_ASSERT(type_tag == nsXPTType::T_ASTRING ||
-               type_tag == nsXPTType::T_DOMSTRING ||
-               type_tag == nsXPTType::T_UTF8STRING ||
-               type_tag == nsXPTType::T_CSTRING,
-               "Unexpected string class type!");
-
-    // ASTRING and DOMSTRING are very similar, and both use nsString.
-    // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
-    if (type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-        dp->val.p = mCallContext.GetContext()->mScratchStrings.Create();
-    else
-        dp->val.p = mCallContext.GetContext()->mScratchCStrings.Create();
-
-    // Check for OOM, in either case.
-    if (!dp->val.p) {
-        JS_ReportOutOfMemory(mCallContext);
+    if (!XPCConvert::JSData2Native(&dp->val, src, type,
+                                   &param_iid, array_count, &err)) {
+        ThrowBadParam(err, i, mCallContext);
         return false;
     }
-
-    // We allocated, so we need to deallocate after the method call completes.
-    dp->SetValNeedsCleanup();
 
     return true;
 }
@@ -1960,6 +1747,44 @@ CallMethodHelper::Invoke()
     nsXPTCVariant* argv = mDispatchParams.Elements();
 
     return NS_InvokeByIndex(mCallee, mVTableIndex, argc, argv);
+}
+
+static void
+TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
+           uint32_t aArrayLen = 0)
+{
+    if (aType.Tag() == nsXPTType::T_JSVAL) {
+        JS::UnsafeTraceRoot(aTrc, (JS::Value*)aVal,
+                            "XPCWrappedNative::CallMethod param");
+    } else if (aType.Tag() == nsXPTType::T_ARRAY && *(void**)aVal) {
+        const nsXPTType& elty = aType.ArrayElementType();
+        if (elty.Tag() != nsXPTType::T_JSVAL) {
+            return;
+        }
+
+        for (uint32_t i = 0; i < aArrayLen; ++i) {
+            TraceParam(aTrc, elty.ElementPtr(aVal, i), elty);
+        }
+    }
+}
+
+void
+CallMethodHelper::trace(JSTracer* aTrc)
+{
+    // We need to note each of our initialized parameters which contain jsvals.
+    for (nsXPTCVariant& param : mDispatchParams) {
+        if (!param.DoesValNeedCleanup()) {
+            MOZ_ASSERT(param.type.Tag() != nsXPTType::T_JSVAL,
+                       "JSVals are marked as needing cleanup (even though they don't)");
+            continue;
+        }
+
+        uint32_t arrayLen = 0;
+        if (!GetArraySizeFromParam(param.type, UndefinedHandleValue, &arrayLen))
+            continue;
+
+        TraceParam(aTrc, &param.val, param.type, arrayLen);
+    }
 }
 
 /***************************************************************************/
