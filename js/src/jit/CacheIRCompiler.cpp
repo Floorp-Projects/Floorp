@@ -131,6 +131,8 @@ CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm, ValOperandId
 Register
 CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     OperandLocation& loc = operandLocations_[typedId.id()];
     switch (loc.kind()) {
       case OperandLocation::PayloadReg:
@@ -206,6 +208,8 @@ CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId
 ConstantOrRegister
 CacheRegisterAllocator::useConstantOrRegister(MacroAssembler& masm, ValOperandId val)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     OperandLocation& loc = operandLocations_[val.id()];
     switch (loc.kind()) {
       case OperandLocation::Constant:
@@ -236,6 +240,8 @@ CacheRegisterAllocator::useConstantOrRegister(MacroAssembler& masm, ValOperandId
 Register
 CacheRegisterAllocator::defineRegister(MacroAssembler& masm, TypedOperandId typedId)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     OperandLocation& loc = operandLocations_[typedId.id()];
     MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
 
@@ -247,6 +253,8 @@ CacheRegisterAllocator::defineRegister(MacroAssembler& masm, TypedOperandId type
 ValueOperand
 CacheRegisterAllocator::defineValueRegister(MacroAssembler& masm, ValOperandId val)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     OperandLocation& loc = operandLocations_[val.id()];
     MOZ_ASSERT(loc.kind() == OperandLocation::Uninitialized);
 
@@ -309,6 +317,8 @@ CacheRegisterAllocator::discardStack(MacroAssembler& masm)
 Register
 CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     if (availableRegs_.empty())
         freeDeadOperandLocations(masm);
 
@@ -359,6 +369,8 @@ CacheRegisterAllocator::allocateRegister(MacroAssembler& masm)
 void
 CacheRegisterAllocator::allocateFixedRegister(MacroAssembler& masm, Register reg)
 {
+    MOZ_ASSERT(!addedFailurePath_);
+
     // Fixed registers should be allocated first, to ensure they're
     // still available.
     MOZ_ASSERT(!currentOpRegs_.has(reg), "Register is in use");
@@ -479,6 +491,10 @@ CacheRegisterAllocator::fixupAliasedInputs(MacroAssembler& masm)
             }
         }
     }
+
+#ifdef DEBUG
+    assertValidState();
+#endif
 }
 
 GeneralRegisterSet
@@ -667,6 +683,32 @@ CacheRegisterAllocator::popValue(MacroAssembler& masm, OperandLocation* loc, Val
 
     loc->setValueReg(dest);
 }
+
+#ifdef DEBUG
+void
+CacheRegisterAllocator::assertValidState() const
+{
+    // Assert different operands don't have aliasing storage. We depend on this
+    // when spilling registers, for instance.
+
+    if (!JitOptions.fullDebugChecks)
+        return;
+
+    for (size_t i = 0; i < operandLocations_.length(); i++) {
+        const auto& loc1 = operandLocations_[i];
+        if (loc1.isUninitialized())
+            continue;
+
+        for (size_t j = 0; j < i; j++) {
+            const auto& loc2 = operandLocations_[j];
+            if (loc2.isUninitialized())
+                continue;
+            MOZ_ASSERT(loc1 != loc2);
+            MOZ_ASSERT(!loc1.aliasesReg(loc2));
+        }
+    }
+}
+#endif
 
 bool
 OperandLocation::aliasesReg(const OperandLocation& other) const
@@ -1165,6 +1207,10 @@ FailurePath::canShareFailurePath(const FailurePath& other) const
 bool
 CacheIRCompiler::addFailurePath(FailurePath** failure)
 {
+#ifdef DEBUG
+    allocator.setAddedFailurePath();
+#endif
+
     FailurePath newFailure;
     for (size_t i = 0; i < writer_.numInputOperands(); i++) {
         if (!newFailure.appendInput(allocator.operandLocation(i)))

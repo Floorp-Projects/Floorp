@@ -33,8 +33,8 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
 ifndef MOZ_PROFILE_USE
 # Automation builds should always have a new buildid, but for the sake of not
 # re-linking libxul on every incremental build we do not enforce this for
-# developer builds.
-ifneq (,$(MOZ_AUTOMATION)$(MOZ_BUILD_DATE))
+# developer builds.  Tests always need a new buildid as well.
+ifneq (,$(MOZ_AUTOMATION)$(MOZ_BUILD_DATE)$(TEST_MOZBUILD))
 buildid.h source-repo.h: FORCE
 endif
 endif
@@ -109,7 +109,7 @@ default:: $(BUILD_BACKEND_FILES)
 endif
 
 install_manifests := \
-  $(addprefix dist/,branding idl include public private xpi-stage) \
+  $(addprefix dist/,branding include public private xpi-stage) \
   _tests \
   $(NULL)
 # Skip the dist/bin install manifest when using the hybrid
@@ -140,12 +140,10 @@ install-manifests: $(addprefix install-,$(install_manifests))
 
 # If we're using the hybrid FasterMake/RecursiveMake backend, we want
 # to recurse in the faster/ directory in parallel of install manifests.
-# But dist/idl needs to happen before (cf. dependencies in
-# config/faster/rules.mk)
 ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 install-manifests: faster
 .PHONY: faster
-faster: install-dist/idl
+faster:
 	$(MAKE) -C faster FASTER_RECURSIVE_MAKE=1
 endif
 

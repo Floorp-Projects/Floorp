@@ -382,7 +382,7 @@ ItemIterator::Next()
 // XULTreeItemIterator
 ////////////////////////////////////////////////////////////////////////////////
 
-XULTreeItemIterator::XULTreeItemIterator(XULTreeAccessible* aXULTree,
+XULTreeItemIterator::XULTreeItemIterator(const XULTreeAccessible* aXULTree,
                                          nsITreeView* aTreeView,
                                          int32_t aRowIdx) :
   mXULTree(aXULTree), mTreeView(aTreeView), mRowCount(-1),

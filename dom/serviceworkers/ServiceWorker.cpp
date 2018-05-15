@@ -8,6 +8,7 @@
 
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
+#include "ServiceWorkerImpl.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
 
@@ -62,7 +63,8 @@ ServiceWorker::Create(nsIGlobalObject* aOwner,
     return ref.forget();
   }
 
-  ref = new ServiceWorker(aOwner, aDescriptor, info);
+  RefPtr<ServiceWorker::Inner> inner = new ServiceWorkerImpl(info);
+  ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }
 

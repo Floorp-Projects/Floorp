@@ -5369,6 +5369,54 @@ EventStateManager::ResetLastOverForContent(
 }
 
 void
+EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
+                                               nsIContent* aContentRemoved,
+                                               bool aNotify)
+{
+  MOZ_ASSERT(aState == NS_EVENT_STATE_HOVER || aState == NS_EVENT_STATE_ACTIVE);
+  if (!aContentRemoved->IsElement() ||
+      !aContentRemoved->AsElement()->State().HasState(aState)) {
+    return;
+  }
+
+  nsCOMPtr<nsIContent>& leaf =
+    aState == NS_EVENT_STATE_HOVER ? mHoverContent : mActiveContent;
+
+  MOZ_ASSERT(leaf);
+  // XBL Likes to unbind content without notifying, thus the
+  // NODE_IS_ANONYMOUS_ROOT check...
+  MOZ_ASSERT(nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+               leaf, aContentRemoved) ||
+             leaf->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT));
+
+  nsIContent* newLeaf = aContentRemoved->GetFlattenedTreeParent();
+  MOZ_ASSERT_IF(newLeaf,
+                newLeaf->IsElement() &&
+                newLeaf->AsElement()->State().HasState(aState));
+  if (aNotify) {
+    SetContentState(newLeaf, aState);
+  } else {
+    // We don't update the removed content's state here, since removing NAC
+    // happens from layout and we don't really want to notify at that point or
+    // what not.
+    //
+    // Also, NAC is not observable and NAC being removed will go away soon.
+    leaf = newLeaf;
+  }
+  MOZ_ASSERT(leaf == newLeaf);
+}
+
+void
+EventStateManager::NativeAnonymousContentRemoved(nsIContent* aContent)
+{
+  // FIXME(bug 1450250): <svg:use> is nasty.
+  MOZ_ASSERT(aContent->IsRootOfNativeAnonymousSubtree() ||
+             aContent->GetParentNode()->IsSVGElement(nsGkAtoms::use));
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, false);
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, false);
+}
+
+void
 EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   /*
@@ -5392,19 +5440,8 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
   if (fm)
     fm->ContentRemoved(aDocument, aContent);
 
-  if (mHoverContent &&
-      nsContentUtils::ContentIsFlattenedTreeDescendantOf(mHoverContent, aContent)) {
-    // Since hover is hierarchical, set the current hover to the
-    // content's parent node.
-    SetContentState(aContent->GetFlattenedTreeParent(), NS_EVENT_STATE_HOVER);
-  }
-
-  if (mActiveContent &&
-      nsContentUtils::ContentIsFlattenedTreeDescendantOf(mActiveContent, aContent)) {
-    // Active is hierarchical, so set the current active to the
-    // content's parent node.
-    SetContentState(aContent->GetFlattenedTreeParent(), NS_EVENT_STATE_ACTIVE);
-  }
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_HOVER, aContent, true);
+  RemoveNodeFromChainIfNeeded(NS_EVENT_STATE_ACTIVE, aContent, true);
 
   if (sDragOverContent &&
       sDragOverContent->OwnerDoc() == aContent->OwnerDoc() &&

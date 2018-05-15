@@ -796,9 +796,11 @@ class TupBackend(CommonBackend):
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
 
+        all_idl_directories = set()
+        all_idl_directories.update(*map(lambda x: x[1], manager.modules.itervalues()))
+
         all_xpts = []
-        for module, data in sorted(manager.modules.iteritems()):
-            _, idls = data
+        for module, (idls, _) in sorted(manager.modules.iteritems()):
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
@@ -807,19 +809,25 @@ class TupBackend(CommonBackend):
                 '$(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py',
                 '--cache-dir', '$(IDL_PARSER_CACHE_DIR)',
                 '--bindings-conf', '$(topsrcdir)/dom/bindings/Bindings.conf',
-                '$(DIST)/idl',
+            ]
+
+            for d in all_idl_directories:
+                cmd.extend(['-I', d])
+
+            cmd.extend([
                 '$(DIST)/include',
                 '$(DIST)/xpcrs',
                 '.',
                 module,
-            ]
+            ])
             cmd.extend(sorted(idls))
 
             all_xpts.append('$(MOZ_OBJ_ROOT)/%s/%s.xpt' % (backend_file.relobjdir, module))
             outputs = ['%s.xpt' % module]
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in sorted(idls)])
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in sorted(idls)])
+            stems = sorted(mozpath.splitext(mozpath.basename(idl))[0] for idl in idls)
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in stems])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in stems])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in stems])
             backend_file.rule(
                 inputs=[
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',

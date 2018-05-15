@@ -2140,12 +2140,6 @@ ToSupports(nsINode* aPointer)
   return aPointer;
 }
 
-inline nsISupports*
-ToCanonicalSupports(nsINode* aPointer)
-{
-  return aPointer;
-}
-
 // Some checks are faster to do on nsIContent or Element than on
 // nsINode, so spit out FromNode versions taking those types too.
 #define NS_IMPL_FROMNODE_GENERIC(_class, _check, _const)                 \

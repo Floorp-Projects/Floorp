@@ -94,8 +94,8 @@ public:
     , mTimeStamp(JS_Now() / PR_USEC_PER_MSEC)
     , mStartTimerValue(0)
     , mStartTimerStatus(Console::eTimerUnknown)
-    , mStopTimerDuration(0)
-    , mStopTimerStatus(Console::eTimerUnknown)
+    , mLogTimerDuration(0)
+    , mLogTimerStatus(Console::eTimerUnknown)
     , mCountValue(MAX_PAGE_COUNTERS)
     , mIDType(eUnknown)
     , mOuterIDNumber(0)
@@ -221,14 +221,14 @@ public:
   Console::TimerStatus mStartTimerStatus;
 
   // These values are set in the owning thread and they contain the duration,
-  // the name and the status of the StopTimer method. If status is false,
+  // the name and the status of the LogTimer method. If status is false,
   // something went wrong. They will be set on the owning thread and never
   // touched again on that thread. They will be used in order to create a
-  // ConsoleTimerEnd dictionary. This members are set when
-  // console.timeEnd() is called.
-  double mStopTimerDuration;
-  nsString mStopTimerLabel;
-  Console::TimerStatus mStopTimerStatus;
+  // ConsoleTimerLogOrEnd dictionary. This members are set when
+  // console.timeEnd() or console.timeLog() are called.
+  double mLogTimerDuration;
+  nsString mLogTimerLabel;
+  Console::TimerStatus mLogTimerStatus;
 
   // These 2 values are set by IncreaseCounter on the owning thread and they are
   // used CreateCounterValue. These members are set when console.count() is
@@ -1231,30 +1231,42 @@ Console::GroupEnd(const GlobalObject& aGlobal)
 /* static */ void
 Console::Time(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  StringMethod(aGlobal, aLabel, MethodTime, NS_LITERAL_STRING("time"));
+  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTime,
+               NS_LITERAL_STRING("time"));
 }
 
 /* static */ void
 Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  StringMethod(aGlobal, aLabel, MethodTimeEnd, NS_LITERAL_STRING("timeEnd"));
+  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodTimeEnd,
+               NS_LITERAL_STRING("timeEnd"));
+}
+
+/* static */ void
+Console::TimeLog(const GlobalObject& aGlobal, const nsAString& aLabel,
+                 const Sequence<JS::Value>& aData)
+{
+  StringMethod(aGlobal, aLabel, aData, MethodTimeLog,
+               NS_LITERAL_STRING("timeLog"));
 }
 
 /* static */ void
 Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
-                      MethodName aMethodName, const nsAString& aMethodString)
+                      const Sequence<JS::Value>& aData, MethodName aMethodName,
+                      const nsAString& aMethodString)
 {
   RefPtr<Console> console = GetConsole(aGlobal);
   if (!console) {
     return;
   }
 
-  console->StringMethodInternal(aGlobal.Context(), aLabel, aMethodName,
+  console->StringMethodInternal(aGlobal.Context(), aLabel, aData, aMethodName,
                                 aMethodString);
 }
 
 void
 Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
+                              const Sequence<JS::Value>& aData,
                               MethodName aMethodName,
                               const nsAString& aMethodString)
 {
@@ -1270,6 +1282,12 @@ Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
 
   if (!data.AppendElement(value, fallible)) {
     return;
+  }
+
+  for (uint32_t i = 0; i < aData.Length(); ++i) {
+    if (!data.AppendElement(aData[i], fallible)) {
+      return;
+    }
   }
 
   MethodInternal(aCx, aMethodName, aMethodString, data);
@@ -1422,7 +1440,8 @@ Console::Assert(const GlobalObject& aGlobal, bool aCondition,
 /* static */ void
 Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
 {
-  StringMethod(aGlobal, aLabel, MethodCount, NS_LITERAL_STRING("count"));
+  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCount,
+               NS_LITERAL_STRING("count"));
 }
 
 namespace {
@@ -1573,8 +1592,9 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   DOMHighResTimeStamp monotonicTimer;
 
-  // Monotonic timer for 'time' and 'timeEnd'
+  // Monotonic timer for 'time', 'timeLog' and 'timeEnd'
   if ((aMethodName == MethodTime ||
+       aMethodName == MethodTimeLog ||
        aMethodName == MethodTimeEnd ||
        aMethodName == MethodTimeStamp) &&
       !MonotonicTimer(aCx, aMethodName, aData, &monotonicTimer)) {
@@ -1589,10 +1609,19 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   else if (aMethodName == MethodTimeEnd && !aData.IsEmpty()) {
-    callData->mStopTimerStatus = StopTimer(aCx, aData[0],
-                                           monotonicTimer,
-                                           callData->mStopTimerLabel,
-                                           &callData->mStopTimerDuration);
+    callData->mLogTimerStatus = LogTimer(aCx, aData[0],
+                                         monotonicTimer,
+                                         callData->mLogTimerLabel,
+                                         &callData->mLogTimerDuration,
+                                         true /* Cancel timer */);
+  }
+
+  else if (aMethodName == MethodTimeLog && !aData.IsEmpty()) {
+    callData->mLogTimerStatus = LogTimer(aCx, aData[0],
+                                         monotonicTimer,
+                                         callData->mLogTimerLabel,
+                                         &callData->mLogTimerDuration,
+                                         false /* Cancel timer */);
   }
 
   else if (aMethodName == MethodCount) {
@@ -1863,10 +1892,11 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
                                          aData->mStartTimerStatus);
   }
 
-  else if (aData->mMethodName == MethodTimeEnd && !aArguments.IsEmpty()) {
-    event.mTimer = CreateStopTimerValue(aCx, aData->mStopTimerLabel,
-                                        aData->mStopTimerDuration,
-                                        aData->mStopTimerStatus);
+  else if ((aData->mMethodName == MethodTimeEnd ||
+            aData->mMethodName == MethodTimeLog) && !aArguments.IsEmpty()) {
+    event.mTimer = CreateLogOrEndTimerValue(aCx, aData->mLogTimerLabel,
+                                            aData->mLogTimerDuration,
+                                            aData->mLogTimerStatus);
   }
 
   else if (aData->mMethodName == MethodCount) {
@@ -2321,10 +2351,11 @@ Console::CreateStartTimerValue(JSContext* aCx, const nsAString& aTimerLabel,
 }
 
 Console::TimerStatus
-Console::StopTimer(JSContext* aCx, const JS::Value& aName,
-                   DOMHighResTimeStamp aTimestamp,
-                   nsAString& aTimerLabel,
-                   double* aTimerDuration)
+Console::LogTimer(JSContext* aCx, const JS::Value& aName,
+                  DOMHighResTimeStamp aTimestamp,
+                  nsAString& aTimerLabel,
+                  double* aTimerDuration,
+                  bool aCancelTimer)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTimerDuration);
@@ -2345,9 +2376,17 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
   aTimerLabel = key;
 
   DOMHighResTimeStamp value = 0;
-  if (!mTimerRegistry.Remove(key, &value)) {
-    NS_WARNING("mTimerRegistry entry not found");
-    return eTimerDoesntExist;
+
+  if (aCancelTimer) {
+    if (!mTimerRegistry.Remove(key, &value)) {
+      NS_WARNING("mTimerRegistry entry not found");
+      return eTimerDoesntExist;
+    }
+  } else {
+    if (!mTimerRegistry.Get(key, &value)) {
+      NS_WARNING("mTimerRegistry entry not found");
+      return eTimerDoesntExist;
+    }
   }
 
   *aTimerDuration = aTimestamp - value;
@@ -2355,14 +2394,14 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
 }
 
 JS::Value
-Console::CreateStopTimerValue(JSContext* aCx, const nsAString& aLabel,
-                              double aDuration, TimerStatus aStatus) const
+Console::CreateLogOrEndTimerValue(JSContext* aCx, const nsAString& aLabel,
+                                  double aDuration, TimerStatus aStatus) const
 {
   if (aStatus != eTimerDone) {
     return CreateTimerError(aCx, aLabel, aStatus);
   }
 
-  RootedDictionary<ConsoleTimerEnd> timer(aCx);
+  RootedDictionary<ConsoleTimerLogOrEnd> timer(aCx);
   timer.mName = aLabel;
   timer.mDuration = aDuration;
 
@@ -2996,6 +3035,7 @@ Console::WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const
     case ConsoleLogLevel::Info: return 3;
     case ConsoleLogLevel::Clear: return 3;
     case ConsoleLogLevel::Trace: return 3;
+    case ConsoleLogLevel::TimeLog: return 3;
     case ConsoleLogLevel::TimeEnd: return 3;
     case ConsoleLogLevel::Time: return 3;
     case ConsoleLogLevel::Group: return 3;
@@ -3033,6 +3073,7 @@ Console::InternalLogLevelToInteger(MethodName aName) const
     case MethodGroupCollapsed: return 3;
     case MethodGroupEnd: return 3;
     case MethodTime: return 3;
+    case MethodTimeLog: return 3;
     case MethodTimeEnd: return 3;
     case MethodTimeStamp: return 3;
     case MethodAssert: return 3;

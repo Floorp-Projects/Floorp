@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 export::
-	$(call py_action,process_install_manifest,--track install-xpidl.track $(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
 
 clean clobber realclean clobber_all distclean::

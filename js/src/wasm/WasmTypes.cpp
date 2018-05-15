@@ -647,6 +647,9 @@ DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp)
       case jit::MIRType::Double:
           vp.set(NumberValue(JS::CanonicalizeNaN(*static_cast<double*>(dataPtr))));
           break;
+      case jit::MIRType::Pointer:
+          vp.set(ObjectOrNullValue(*(JSObject**)dataPtr));
+          break;
       default:
           MOZ_CRASH("local type");
     }
@@ -674,6 +677,9 @@ DebugFrame::updateReturnJSValue()
           break;
       case ExprType::F64:
           cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
+          break;
+      case ExprType::AnyRef:
+          cachedReturnJSValue_ = ObjectOrNullValue(*(JSObject**)&resultRef_);
           break;
       default:
           MOZ_CRASH("result type");

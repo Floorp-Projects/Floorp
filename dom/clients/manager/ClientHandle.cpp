@@ -49,6 +49,7 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
 
   MaybeExecute([aArgs, kungFuGrip, aRejectCallback,
                 resolve = Move(aResolveCallback)] (ClientHandleChild* aActor) {
+    MOZ_RELEASE_ASSERT(aActor);
     ClientHandleOpChild* actor =
       new ClientHandleOpChild(kungFuGrip, aArgs, Move(resolve),
                               Move(aRejectCallback));
@@ -57,6 +58,7 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs,
       return;
     }
   }, [aRejectCallback] {
+    MOZ_RELEASE_ASSERT(aRejectCallback);
     aRejectCallback(NS_ERROR_DOM_INVALID_STATE_ERR);
   });
 }

@@ -17,25 +17,43 @@ namespace dom {
 template <typename ActorType>
 class ClientThing
 {
+  static const uint32_t kMagic1 = 0xC9FE2C9C;
+  static const uint32_t kMagic2 = 0x832072D4;
+
   ActorType* mActor;
+  uint32_t mMagic1;
+  uint32_t mMagic2;
   bool mShutdown;
 
 protected:
   ClientThing()
     : mActor(nullptr)
+    , mMagic1(kMagic1)
+    , mMagic2(kMagic2)
     , mShutdown(false)
   {
   }
 
   ~ClientThing()
   {
+    AssertIsValid();
     ShutdownThing();
+    mMagic1 = 0;
+    mMagic2 = 0;
+  }
+
+  void
+  AssertIsValid() const
+  {
+    MOZ_RELEASE_ASSERT(mMagic1 == kMagic1);
+    MOZ_RELEASE_ASSERT(mMagic2 == kMagic2);
   }
 
   // Return the current actor.
   ActorType*
   GetActor() const
   {
+    AssertIsValid();
     return mActor;
   }
 
@@ -43,6 +61,7 @@ protected:
   bool
   IsShutdown() const
   {
+    AssertIsValid();
     return mShutdown;
   }
 
@@ -52,6 +71,7 @@ protected:
   MaybeExecute(const Callable& aSuccess,
                const std::function<void()>& aFailure = []{})
   {
+    AssertIsValid();
     if (mShutdown) {
       aFailure();
       return;
@@ -67,6 +87,7 @@ protected:
   void
   ActivateThing(ActorType* aActor)
   {
+    AssertIsValid();
     MOZ_DIAGNOSTIC_ASSERT(aActor);
     MOZ_DIAGNOSTIC_ASSERT(!mActor);
     MOZ_DIAGNOSTIC_ASSERT(!mShutdown);
@@ -78,6 +99,7 @@ protected:
   void
   ShutdownThing()
   {
+    AssertIsValid();
     if (mShutdown) {
       return;
     }
@@ -106,6 +128,7 @@ public:
   void
   RevokeActor(ActorType* aActor)
   {
+    AssertIsValid();
     MOZ_DIAGNOSTIC_ASSERT(mActor);
     MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
     mActor->RevokeOwner(this);
