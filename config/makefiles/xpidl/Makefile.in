@@ -41,7 +41,8 @@ code_gen_deps := $(topsrcdir)/xpcom/reflect/xptinfo/perfecthash.py
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(topsrcdir)/xpcom/idl-parser -I$(DEPTH)/xpcom/idl-parser/xpidl \
 		$(process_py) --cache-dir $(DEPTH)/xpcom/idl-parser/xpidl --depsdir $(idl_deps_dir) \
 		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
-		$(dist_idl_dir) $(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
+		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
+		$(dist_include_dir) $(dist_xpcrs_dir) $(@D) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 # When some IDL is added or removed, if the actual IDL file was already, or
 # still is, in the tree, simple dependencies can't detect that the XPT needs
@@ -75,7 +76,6 @@ $(generated_file): $(xpt_files) $(code_gen_py) $(code_gen_deps)
 
 define xpt_deps
 $(1): $(call mkdir_deps,$(dir $(1)))
-$(1): $(addsuffix .idl,$(addprefix $(dist_idl_dir)/,$($(basename $(notdir $(1)))_deps)))
 ifneq ($($(basename $(notdir $(1)))_deps),$($(basename $(notdir $(1)))_deps_built))
 $(1): FORCE
 endif

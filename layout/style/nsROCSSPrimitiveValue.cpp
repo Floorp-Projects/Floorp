@@ -8,7 +8,6 @@
 
 #include "nsROCSSPrimitiveValue.h"
 
-#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
 #include "nsDOMCSSRGBColor.h"
@@ -16,22 +15,11 @@
 #include "nsIURI.h"
 #include "nsError.h"
 
-// There is no CSS_TURN constant on the CSSPrimitiveValue interface,
-// since that unit is newer than DOM Level 2 Style, and CSS OM will
-// probably expose CSS values in some other way in the future.  We
-// use this value in mType for "turn"-unit angles, but we define it
-// here to avoid exposing it to content.
-#define CSS_TURN 30U
-// Likewise we have some internal aliases for CSS_NUMBER that we don't
-// want to expose.
-#define CSS_NUMBER_INT32 31U
-#define CSS_NUMBER_UINT32 32U
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
-  : CSSValue(), mType(CSSPrimitiveValueBinding::CSS_PX)
+  : CSSValue(), mType(CSS_PX)
 {
   mValue.mAppUnits = 0;
 }
@@ -42,39 +30,6 @@ nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue()
   Reset();
 }
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsROCSSPrimitiveValue)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsROCSSPrimitiveValue)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsROCSSPrimitiveValue)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, CSSValue)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsROCSSPrimitiveValue)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsROCSSPrimitiveValue)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsROCSSPrimitiveValue)
-  if (tmp->mType == CSSPrimitiveValueBinding::CSS_URI) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mValue.mURI)
-  } else if (tmp->mType == CSSPrimitiveValueBinding::CSS_RGBCOLOR) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mValue.mColor)
-  } else if (tmp->mType == CSSPrimitiveValueBinding::CSS_RECT) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mValue.mRect)
-  }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsROCSSPrimitiveValue)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->Reset();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-JSObject*
-nsROCSSPrimitiveValue::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
-  return dom::CSSPrimitiveValueBinding::Wrap(cx, this, aGivenProto);
-}
-
 nsresult
 nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 {
@@ -83,26 +38,26 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
   nsresult result = NS_OK;
 
   switch (mType) {
-    case CSSPrimitiveValueBinding::CSS_PX:
+    case CSS_PX:
       {
         float val = nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
         nsStyleUtil::AppendCSSNumber(val, tmpStr);
         tmpStr.AppendLiteral("px");
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_IDENT:
+    case CSS_IDENT:
       {
         AppendUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword),
                           tmpStr);
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_STRING:
-    case CSSPrimitiveValueBinding::CSS_COUNTER: /* FIXME: COUNTER should use an object */
+    case CSS_STRING:
+    case CSS_COUNTER: /* FIXME: COUNTER should use an object */
       {
         tmpStr.Append(mValue.mString);
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_URI:
+    case CSS_URI:
       {
         if (mValue.mURI) {
           nsAutoCString specUTF8;
@@ -122,20 +77,20 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         }
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_ATTR:
+    case CSS_ATTR:
       {
         tmpStr.AppendLiteral("attr(");
         tmpStr.Append(mValue.mString);
         tmpStr.Append(char16_t(')'));
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_PERCENTAGE:
+    case CSS_PERCENTAGE:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat * 100, tmpStr);
         tmpStr.Append(char16_t('%'));
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_NUMBER:
+    case CSS_NUMBER:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         break;
@@ -150,19 +105,19 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         tmpStr.AppendInt(mValue.mUint32);
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_DEG:
+    case CSS_DEG:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         tmpStr.AppendLiteral("deg");
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_GRAD:
+    case CSS_GRAD:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         tmpStr.AppendLiteral("grad");
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_RAD:
+    case CSS_RAD:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         tmpStr.AppendLiteral("rad");
@@ -174,7 +129,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         tmpStr.AppendLiteral("turn");
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_RECT:
+    case CSS_RECT:
       {
         NS_ASSERTION(mValue.mRect, "mValue.mRect should never be null");
         NS_NAMED_LITERAL_STRING(comma, ", ");
@@ -202,7 +157,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         tmpStr.Append(sideValue + NS_LITERAL_STRING(")"));
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_RGBCOLOR:
+    case CSS_RGBCOLOR:
       {
         NS_ASSERTION(mValue.mColor, "mValue.mColor should never be null");
         ErrorResult error;
@@ -243,24 +198,24 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
 
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_S:
+    case CSS_S:
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
         tmpStr.Append('s');
         break;
       }
-    case CSSPrimitiveValueBinding::CSS_CM:
-    case CSSPrimitiveValueBinding::CSS_MM:
-    case CSSPrimitiveValueBinding::CSS_IN:
-    case CSSPrimitiveValueBinding::CSS_PT:
-    case CSSPrimitiveValueBinding::CSS_PC:
-    case CSSPrimitiveValueBinding::CSS_UNKNOWN:
-    case CSSPrimitiveValueBinding::CSS_EMS:
-    case CSSPrimitiveValueBinding::CSS_EXS:
-    case CSSPrimitiveValueBinding::CSS_MS:
-    case CSSPrimitiveValueBinding::CSS_HZ:
-    case CSSPrimitiveValueBinding::CSS_KHZ:
-    case CSSPrimitiveValueBinding::CSS_DIMENSION:
+    case CSS_CM:
+    case CSS_MM:
+    case CSS_IN:
+    case CSS_PT:
+    case CSS_PC:
+    case CSS_UNKNOWN:
+    case CSS_EMS:
+    case CSS_EXS:
+    case CSS_MS:
+    case CSS_HZ:
+    case CSS_KHZ:
+    case CSS_DIMENSION:
       NS_ERROR("We have a bogus value set.  This should not happen");
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
@@ -287,7 +242,7 @@ nsROCSSPrimitiveValue::SetCssText(const nsAString& aText, ErrorResult& aRv)
 uint16_t
 nsROCSSPrimitiveValue::CssValueType() const
 {
-  return CSSValueBinding::CSS_PRIMITIVE_VALUE;
+  return CSSValue::CSS_PRIMITIVE_VALUE;
 }
 
 void
@@ -301,54 +256,54 @@ float
 nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
 {
   switch(aUnitType) {
-    case CSSPrimitiveValueBinding::CSS_PX:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_PX:
+      if (mType == CSS_PX) {
         return nsPresContext::AppUnitsToFloatCSSPixels(mValue.mAppUnits);
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_CM:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_CM:
+      if (mType == CSS_PX) {
         return mValue.mAppUnits * CM_PER_INCH_FLOAT /
           nsPresContext::AppUnitsPerCSSInch();
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_MM:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_MM:
+      if (mType == CSS_PX) {
         return mValue.mAppUnits * MM_PER_INCH_FLOAT /
           nsPresContext::AppUnitsPerCSSInch();
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_IN:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_IN:
+      if (mType == CSS_PX) {
         return mValue.mAppUnits / nsPresContext::AppUnitsPerCSSInch();
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_PT:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_PT:
+      if (mType == CSS_PX) {
         return mValue.mAppUnits * POINTS_PER_INCH_FLOAT /
           nsPresContext::AppUnitsPerCSSInch();
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_PC:
-      if (mType == CSSPrimitiveValueBinding::CSS_PX) {
+    case CSS_PC:
+      if (mType == CSS_PX) {
         return mValue.mAppUnits * 6.0f /
           nsPresContext::AppUnitsPerCSSInch();
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_PERCENTAGE:
-      if (mType == CSSPrimitiveValueBinding::CSS_PERCENTAGE) {
+    case CSS_PERCENTAGE:
+      if (mType == CSS_PERCENTAGE) {
         return mValue.mFloat * 100;
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_NUMBER:
-      if (mType == CSSPrimitiveValueBinding::CSS_NUMBER) {
+    case CSS_NUMBER:
+      if (mType == CSS_NUMBER) {
         return mValue.mFloat;
       }
       if (mType == CSS_NUMBER_INT32) {
@@ -359,24 +314,24 @@ nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
       }
 
       break;
-    case CSSPrimitiveValueBinding::CSS_UNKNOWN:
-    case CSSPrimitiveValueBinding::CSS_EMS:
-    case CSSPrimitiveValueBinding::CSS_EXS:
-    case CSSPrimitiveValueBinding::CSS_DEG:
-    case CSSPrimitiveValueBinding::CSS_RAD:
-    case CSSPrimitiveValueBinding::CSS_GRAD:
-    case CSSPrimitiveValueBinding::CSS_MS:
-    case CSSPrimitiveValueBinding::CSS_S:
-    case CSSPrimitiveValueBinding::CSS_HZ:
-    case CSSPrimitiveValueBinding::CSS_KHZ:
-    case CSSPrimitiveValueBinding::CSS_DIMENSION:
-    case CSSPrimitiveValueBinding::CSS_STRING:
-    case CSSPrimitiveValueBinding::CSS_URI:
-    case CSSPrimitiveValueBinding::CSS_IDENT:
-    case CSSPrimitiveValueBinding::CSS_ATTR:
-    case CSSPrimitiveValueBinding::CSS_COUNTER:
-    case CSSPrimitiveValueBinding::CSS_RECT:
-    case CSSPrimitiveValueBinding::CSS_RGBCOLOR:
+    case CSS_UNKNOWN:
+    case CSS_EMS:
+    case CSS_EXS:
+    case CSS_DEG:
+    case CSS_RAD:
+    case CSS_GRAD:
+    case CSS_MS:
+    case CSS_S:
+    case CSS_HZ:
+    case CSS_KHZ:
+    case CSS_DIMENSION:
+    case CSS_STRING:
+    case CSS_URI:
+    case CSS_IDENT:
+    case CSS_ATTR:
+    case CSS_COUNTER:
+    case CSS_RECT:
+    case CSS_RGBCOLOR:
       break;
   }
 
@@ -395,14 +350,14 @@ void
 nsROCSSPrimitiveValue::GetStringValue(nsString& aReturn, ErrorResult& aRv)
 {
   switch (mType) {
-    case CSSPrimitiveValueBinding::CSS_IDENT:
+    case CSS_IDENT:
       CopyUTF8toUTF16(nsCSSKeywords::GetStringValue(mValue.mKeyword), aReturn);
       break;
-    case CSSPrimitiveValueBinding::CSS_STRING:
-    case CSSPrimitiveValueBinding::CSS_ATTR:
+    case CSS_STRING:
+    case CSS_ATTR:
       aReturn.Assign(mValue.mString);
       break;
-    case CSSPrimitiveValueBinding::CSS_URI: {
+    case CSS_URI: {
       nsAutoCString spec;
       if (mValue.mURI) {
         nsresult rv = mValue.mURI->GetSpec(spec);
@@ -430,7 +385,7 @@ nsROCSSPrimitiveValue::GetCounterValue(ErrorResult& aRv)
 nsDOMCSSRect*
 nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 {
-  if (mType != CSSPrimitiveValueBinding::CSS_RECT) {
+  if (mType != CSS_RECT) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
@@ -442,7 +397,7 @@ nsROCSSPrimitiveValue::GetRectValue(ErrorResult& aRv)
 nsDOMCSSRGBColor*
 nsROCSSPrimitiveValue::GetRGBColorValue(ErrorResult& aRv)
 {
-  if (mType != CSSPrimitiveValueBinding::CSS_RGBCOLOR) {
+  if (mType != CSS_RGBCOLOR) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
@@ -456,7 +411,7 @@ nsROCSSPrimitiveValue::SetNumber(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_NUMBER;
+  mType = CSS_NUMBER;
 }
 
 void
@@ -480,7 +435,7 @@ nsROCSSPrimitiveValue::SetPercent(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_PERCENTAGE;
+  mType = CSS_PERCENTAGE;
 }
 
 void
@@ -488,7 +443,7 @@ nsROCSSPrimitiveValue::SetDegree(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_DEG;
+  mType = CSS_DEG;
 }
 
 void
@@ -496,7 +451,7 @@ nsROCSSPrimitiveValue::SetGrad(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_GRAD;
+  mType = CSS_GRAD;
 }
 
 void
@@ -504,7 +459,7 @@ nsROCSSPrimitiveValue::SetRadian(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_RAD;
+  mType = CSS_RAD;
 }
 
 void
@@ -520,7 +475,7 @@ nsROCSSPrimitiveValue::SetAppUnits(nscoord aValue)
 {
   Reset();
   mValue.mAppUnits = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_PX;
+  mType = CSS_PX;
 }
 
 void
@@ -537,7 +492,7 @@ nsROCSSPrimitiveValue::SetIdent(nsCSSKeyword aKeyword)
              "bad keyword");
   Reset();
   mValue.mKeyword = aKeyword;
-  mType = CSSPrimitiveValueBinding::CSS_IDENT;
+  mType = CSS_IDENT;
 }
 
 // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
@@ -550,7 +505,7 @@ nsROCSSPrimitiveValue::SetString(const nsACString& aString, uint16_t aType)
     mType = aType;
   } else {
     // XXXcaa We should probably let the caller know we are out of memory
-    mType = CSSPrimitiveValueBinding::CSS_UNKNOWN;
+    mType = CSS_UNKNOWN;
   }
 }
 
@@ -564,7 +519,7 @@ nsROCSSPrimitiveValue::SetString(const nsAString& aString, uint16_t aType)
     mType = aType;
   } else {
     // XXXcaa We should probably let the caller know we are out of memory
-    mType = CSSPrimitiveValueBinding::CSS_UNKNOWN;
+    mType = CSS_UNKNOWN;
   }
 }
 
@@ -574,7 +529,7 @@ nsROCSSPrimitiveValue::SetURI(nsIURI *aURI)
   Reset();
   mValue.mURI = aURI;
   NS_IF_ADDREF(mValue.mURI);
-  mType = CSSPrimitiveValueBinding::CSS_URI;
+  mType = CSS_URI;
 }
 
 void
@@ -586,10 +541,10 @@ nsROCSSPrimitiveValue::SetColor(nsDOMCSSRGBColor* aColor)
   mValue.mColor = aColor;
   if (mValue.mColor) {
     NS_ADDREF(mValue.mColor);
-    mType = CSSPrimitiveValueBinding::CSS_RGBCOLOR;
+    mType = CSS_RGBCOLOR;
   }
   else {
-    mType = CSSPrimitiveValueBinding::CSS_UNKNOWN;
+    mType = CSS_UNKNOWN;
   }
 }
 
@@ -602,10 +557,10 @@ nsROCSSPrimitiveValue::SetRect(nsDOMCSSRect* aRect)
   mValue.mRect = aRect;
   if (mValue.mRect) {
     NS_ADDREF(mValue.mRect);
-    mType = CSSPrimitiveValueBinding::CSS_RECT;
+    mType = CSS_RECT;
   }
   else {
-    mType = CSSPrimitiveValueBinding::CSS_UNKNOWN;
+    mType = CSS_UNKNOWN;
   }
 }
 
@@ -614,36 +569,36 @@ nsROCSSPrimitiveValue::SetTime(float aValue)
 {
   Reset();
   mValue.mFloat = aValue;
-  mType = CSSPrimitiveValueBinding::CSS_S;
+  mType = CSS_S;
 }
 
 void
 nsROCSSPrimitiveValue::Reset()
 {
   switch (mType) {
-    case CSSPrimitiveValueBinding::CSS_IDENT:
+    case CSS_IDENT:
       break;
-    case CSSPrimitiveValueBinding::CSS_STRING:
-    case CSSPrimitiveValueBinding::CSS_ATTR:
-    case CSSPrimitiveValueBinding::CSS_COUNTER: // FIXME: Counter should use an object
+    case CSS_STRING:
+    case CSS_ATTR:
+    case CSS_COUNTER: // FIXME: Counter should use an object
       NS_ASSERTION(mValue.mString, "Null string should never happen");
       free(mValue.mString);
       mValue.mString = nullptr;
       break;
-    case CSSPrimitiveValueBinding::CSS_URI:
+    case CSS_URI:
       NS_IF_RELEASE(mValue.mURI);
       break;
-    case CSSPrimitiveValueBinding::CSS_RECT:
+    case CSS_RECT:
       NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
       NS_RELEASE(mValue.mRect);
       break;
-    case CSSPrimitiveValueBinding::CSS_RGBCOLOR:
+    case CSS_RGBCOLOR:
       NS_ASSERTION(mValue.mColor, "Null RGBColor should never happen");
       NS_RELEASE(mValue.mColor);
       break;
   }
 
-  mType = CSSPrimitiveValueBinding::CSS_UNKNOWN;
+  mType = CSS_UNKNOWN;
 }
 
 uint16_t
@@ -651,12 +606,11 @@ nsROCSSPrimitiveValue::PrimitiveType()
 {
   // New value types were introduced but not added to CSS OM.
   // Return CSS_UNKNOWN to avoid exposing CSS_TURN to content.
-  if (mType > CSSPrimitiveValueBinding::CSS_RGBCOLOR) {
-    if (mType == CSS_NUMBER_INT32 ||
-        mType == CSS_NUMBER_UINT32) {
-      return CSSPrimitiveValueBinding::CSS_NUMBER;
+  if (mType > CSS_RGBCOLOR) {
+    if (mType == CSS_NUMBER_INT32 || mType == CSS_NUMBER_UINT32) {
+      return CSS_NUMBER;
     }
-    return CSSPrimitiveValueBinding::CSS_UNKNOWN;
+    return CSS_UNKNOWN;
   }
   return mType;
 }

@@ -211,6 +211,7 @@ class OperandLocation
         data_.baselineFrameSlot = slot;
     }
 
+    bool isUninitialized() const { return kind_ == Uninitialized; }
     bool isInRegister() const { return kind_ == PayloadReg || kind_ == ValueReg; }
     bool isOnStack() const { return kind_ == PayloadStack || kind_ == ValueStack; }
 
@@ -305,6 +306,12 @@ class MOZ_RAII CacheRegisterAllocator
     // The number of bytes pushed on the native stack.
     uint32_t stackPushed_;
 
+#ifdef DEBUG
+    // Flag used to assert individual CacheIR instructions don't allocate
+    // registers after calling addFailurePath.
+    bool addedFailurePath_;
+#endif
+
     // The index of the CacheIR instruction we're currently emitting.
     uint32_t currentInstruction_;
 
@@ -321,6 +328,10 @@ class MOZ_RAII CacheRegisterAllocator
     void popPayload(MacroAssembler& masm, OperandLocation* loc, Register dest);
     void popValue(MacroAssembler& masm, OperandLocation* loc, ValueOperand dest);
 
+#ifdef DEBUG
+    void assertValidState() const;
+#endif
+
   public:
     friend class AutoScratchRegister;
     friend class AutoScratchRegisterExcluding;
@@ -328,6 +339,9 @@ class MOZ_RAII CacheRegisterAllocator
     explicit CacheRegisterAllocator(const CacheIRWriter& writer)
       : allocatableRegs_(GeneralRegisterSet::All()),
         stackPushed_(0),
+#ifdef DEBUG
+        addedFailurePath_(false),
+#endif
         currentInstruction_(0),
         writer_(writer)
     {}
@@ -383,9 +397,20 @@ class MOZ_RAII CacheRegisterAllocator
     }
 
     void nextOp() {
+#ifdef DEBUG
+        assertValidState();
+        addedFailurePath_ = false;
+#endif
         currentOpRegs_.clear();
         currentInstruction_++;
     }
+
+#ifdef DEBUG
+    void setAddedFailurePath() {
+        MOZ_ASSERT(!addedFailurePath_, "multiple failure paths for instruction");
+        addedFailurePath_ = true;
+    }
+#endif
 
     bool isDeadAfterInstruction(OperandId opId) const {
         return writer_.operandIsDead(opId.id(), currentInstruction_ + 1);
@@ -536,7 +561,8 @@ class FailurePath
  * Wrap an offset so that a call can decide to embed a constant
  * or load from the stub data.
  */
-class StubFieldOffset {
+class StubFieldOffset
+{
   private:
     uint32_t offset_;
     StubField::Type type_;
@@ -544,7 +570,7 @@ class StubFieldOffset {
     StubFieldOffset(uint32_t offset, StubField::Type type)
       : offset_(offset),
         type_(type)
-      { }
+    { }
 
     uint32_t getOffset() { return offset_; }
     StubField::Type getStubFieldType() { return type_; }

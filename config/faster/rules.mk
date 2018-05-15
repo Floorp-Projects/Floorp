@@ -97,14 +97,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(addprefix $(TOPOBJDIR)/
 # Below is a set of additional dependencies and variables used to build things
 # that are not supported by data in moz.build.
 
-# The xpidl target in config/makefiles/xpidl requires the install manifest for
-# dist/idl to have been processed. When using the hybrid
-# FasterMake/RecursiveMake backend, this dependency is handled in the top-level
-# Makefile.
-ifndef FASTER_RECURSIVE_MAKE
-$(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(TOPOBJDIR)/install-dist_idl
-endif
-
 $(TOPOBJDIR)/build/application.ini: $(TOPOBJDIR)/buildid.h $(TOPOBJDIR)/source-repo.h
 
 # The manifest of allowed system add-ons should be re-built when using
