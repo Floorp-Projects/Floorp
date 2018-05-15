@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<head>
+<style>
+  #test {
+    background: #050;
+    position: fixed;
+    width: 200px;
+    height: 200px;
+  }
+</style>
+</head>
+<body>
+<p id="test" onclick="this.remove()"></p>
+</body>
+<script>
+  function doTest() {
+    document.getElementById("test").remove();
+    document.documentElement.removeAttribute('class');
+  }
+  window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
