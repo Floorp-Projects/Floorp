@@ -33,7 +33,7 @@ job-defaults:
          by-project:
             mozilla-beta: ["release-signoff@mozilla.org"]
             mozilla-release: ["release-signoff@mozilla.org"]
-            try: ["{task_def[metadata][owner]}"]
+            try: ["{config[params][owner]}"]
             default: []
 
 jobs:
