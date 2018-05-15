@@ -1343,7 +1343,7 @@ Accessible::ApplyARIAState(uint64_t* aState) const
 }
 
 void
-Accessible::Value(nsString& aValue)
+Accessible::Value(nsString& aValue) const
 {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (!roleMapEntry)

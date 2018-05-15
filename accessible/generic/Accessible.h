@@ -195,7 +195,7 @@ public:
   /**
    * Get the value of this accessible.
    */
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) const;
 
   /**
    * Get help string for the accessible.

@@ -73,7 +73,7 @@ HTMLLinkAccessible::NativeInteractiveState() const
 }
 
 void
-HTMLLinkAccessible::Value(nsString& aValue)
+HTMLLinkAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 

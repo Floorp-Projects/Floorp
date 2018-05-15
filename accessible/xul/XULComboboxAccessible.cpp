@@ -96,7 +96,7 @@ XULComboboxAccessible::Description(nsString& aDescription)
 }
 
 void
-XULComboboxAccessible::Value(nsString& aValue)
+XULComboboxAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 

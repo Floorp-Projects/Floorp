@@ -63,7 +63,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(LinkableAccessible, AccessibleWrap)
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual uint64_t NativeLinkState() const override;
   virtual void TakeFocus() override;
 
@@ -74,9 +74,9 @@ public:
   virtual KeyBinding AccessKey() const override;
 
   // ActionAccessible helpers
-  Accessible* ActionWalk(bool* aIsLink = nullptr,
-                         bool* aIsOnclick = nullptr,
-                         bool* aIsLabelWithControl = nullptr);
+  const Accessible* ActionWalk(bool* aIsLink = nullptr,
+                               bool* aIsOnclick = nullptr,
+                               bool* aIsLabelWithControl = nullptr) const;
   // HyperLinkAccessible
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
 

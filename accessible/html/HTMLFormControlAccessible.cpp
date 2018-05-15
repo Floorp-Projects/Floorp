@@ -339,7 +339,7 @@ HTMLTextFieldAccessible::NativeName(nsString& aName) const
 }
 
 void
-HTMLTextFieldAccessible::Value(nsString& aValue)
+HTMLTextFieldAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
   if (NativeState() & states::PROTECTED)    // Don't return password text!
@@ -549,7 +549,7 @@ HTMLSpinnerAccessible::NativeRole() const
 }
 
 void
-HTMLSpinnerAccessible::Value(nsString& aValue)
+HTMLSpinnerAccessible::Value(nsString& aValue) const
 {
   AccessibleWrap::Value(aValue);
   if (!aValue.IsEmpty())
@@ -627,7 +627,7 @@ HTMLRangeAccessible::IsWidget() const
 }
 
 void
-HTMLRangeAccessible::Value(nsString& aValue)
+HTMLRangeAccessible::Value(nsString& aValue) const
 {
   LeafAccessible::Value(aValue);
   if (!aValue.IsEmpty())
