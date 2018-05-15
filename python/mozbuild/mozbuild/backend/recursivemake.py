@@ -1039,8 +1039,6 @@ class RecursiveMakeBackend(CommonBackend):
             build_files.add_optional_exists(p)
 
         for idl in manager.idls.values():
-            self._install_manifests['dist_idl'].add_link(idl['source'],
-                idl['basename'])
             self._install_manifests['dist_include'].add_optional_exists('%s.h'
                 % idl['root'])
 
