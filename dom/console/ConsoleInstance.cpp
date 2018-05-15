@@ -147,14 +147,24 @@ ConsoleInstance::GroupEnd(JSContext* aCx)
 void
 ConsoleInstance::Time(JSContext* aCx, const nsAString& aLabel)
 {
-  mConsole->StringMethodInternal(aCx, aLabel, Console::MethodTime,
+  mConsole->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
+                                 Console::MethodTime,
                                  NS_LITERAL_STRING("time"));
+}
+
+void
+ConsoleInstance::TimeLog(JSContext* aCx, const nsAString& aLabel,
+                         const Sequence<JS::Value>& aData)
+{
+  mConsole->StringMethodInternal(aCx, aLabel, aData, Console::MethodTimeLog,
+                                 NS_LITERAL_STRING("timeLog"));
 }
 
 void
 ConsoleInstance::TimeEnd(JSContext* aCx, const nsAString& aLabel)
 {
-  mConsole->StringMethodInternal(aCx, aLabel, Console::MethodTimeEnd,
+  mConsole->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
+                                 Console::MethodTimeEnd,
                                  NS_LITERAL_STRING("timeEnd"));
 }
 
@@ -201,7 +211,8 @@ ConsoleInstance::Assert(JSContext* aCx, bool aCondition,
 void
 ConsoleInstance::Count(JSContext* aCx, const nsAString& aLabel)
 {
-  mConsole->StringMethodInternal(aCx, aLabel, Console::MethodCount,
+  mConsole->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
+                                 Console::MethodCount,
                                  NS_LITERAL_STRING("count"));
 }
 

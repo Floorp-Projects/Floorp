@@ -7,7 +7,6 @@
 #include "Connection.h"
 #include "ConnectionMainThread.h"
 #include "ConnectionWorker.h"
-#include "nsIDOMClassInfo.h"
 #include "Constants.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/WorkerPrivate.h"

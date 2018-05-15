@@ -257,8 +257,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CSSPageRule", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CSSPrimitiveValue", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CSSPseudoElement", insecureContext: true, release: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CSSRule", insecureContext: true},
@@ -274,10 +272,6 @@ var interfaceNamesInGlobalScope =
     {name: "CSSSupportsRule", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CSSTransition", insecureContext: true, release: false},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CSSValue", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "CSSValueList", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "CustomElementRegistry", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -815,13 +809,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Range", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "Rect", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Request", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Response", insecureContext: true},
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "RGBColor", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "RTCCertificate", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!

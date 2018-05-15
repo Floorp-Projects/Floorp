@@ -36,8 +36,8 @@ public:
   virtual bool UnselectAll() override;
 
   // Widgets
-  virtual Accessible* CurrentItem() override;
-  virtual void SetCurrentItem(Accessible* aItem) override;
+  virtual Accessible* CurrentItem() const override;
+  virtual void SetCurrentItem(const Accessible* aItem) override;
 
 protected:
   // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have

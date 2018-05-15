@@ -573,7 +573,7 @@ XULMenubarAccessible::AreItemsOperable() const
 }
 
 Accessible*
-XULMenubarAccessible::CurrentItem()
+XULMenubarAccessible::CurrentItem() const
 {
   nsMenuBarFrame* menuBarFrame = do_QueryFrame(GetFrame());
   if (menuBarFrame) {
@@ -587,7 +587,7 @@ XULMenubarAccessible::CurrentItem()
 }
 
 void
-XULMenubarAccessible::SetCurrentItem(Accessible* aItem)
+XULMenubarAccessible::SetCurrentItem(const Accessible* aItem)
 {
   NS_ERROR("XULMenubarAccessible::SetCurrentItem not implemented");
 }

@@ -546,7 +546,6 @@ previewers.Object = [
         obj.class != "CSSRuleList" &&
         obj.class != "MediaList" &&
         obj.class != "StyleSheetList" &&
-        obj.class != "CSSValueList" &&
         obj.class != "NamedNodeMap" &&
         obj.class != "FileList" &&
         obj.class != "NodeList") {

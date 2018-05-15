@@ -28,7 +28,7 @@ RUN apt-get update -q && \
     apt-get install -yyq diffoscope libc++abi1 locales python3-setuptools python2.7 python-pip git && \
     sed -i '/en_US.UTF-8/s/^# *//' /etc/locale.gen && \
     locale-gen && \
-    git clone https://anonscm.debian.org/git/reproducible/diffoscope.git /tmp/diffoscope && \
+    git clone https://salsa.debian.org/reproducible-builds/diffoscope.git /tmp/diffoscope && \
     git -C /tmp/diffoscope checkout 202caf9d5d134e95f870d5f19f89511d635c27e4 && \
     (cd /tmp/diffoscope && python3 setup.py install ) && \
     rm -rf /tmp/diffoscope && \
