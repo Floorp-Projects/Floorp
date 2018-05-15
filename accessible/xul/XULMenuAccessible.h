@@ -26,7 +26,7 @@ public:
   // Accessible
   virtual void Description(nsString& aDescription) override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t GetLevelInternal() override;
 
@@ -57,7 +57,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -80,7 +80,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // Widgets
   virtual bool IsWidget() const override;

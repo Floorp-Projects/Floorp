@@ -71,7 +71,7 @@ HyperTextAccessible::NativeRole() const
 }
 
 uint64_t
-HyperTextAccessible::NativeState()
+HyperTextAccessible::NativeState() const
 {
   uint64_t states = AccessibleWrap::NativeState();
 

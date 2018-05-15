@@ -43,7 +43,7 @@ XULColorPickerTileAccessible::NativeRole() const
 }
 
 uint64_t
-XULColorPickerTileAccessible::NativeState()
+XULColorPickerTileAccessible::NativeState() const
 {
   uint64_t state = AccessibleWrap::NativeState();
   if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
@@ -89,7 +89,7 @@ XULColorPickerAccessible::
 // XULColorPickerAccessible: Accessible
 
 uint64_t
-XULColorPickerAccessible::NativeState()
+XULColorPickerAccessible::NativeState() const
 {
   uint64_t state = AccessibleWrap::NativeState();
   return state | states::HASPOPUP;

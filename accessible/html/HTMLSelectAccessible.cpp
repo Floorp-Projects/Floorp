@@ -39,7 +39,7 @@ HTMLSelectListAccessible::
 // HTMLSelectListAccessible: Accessible public
 
 uint64_t
-HTMLSelectListAccessible::NativeState()
+HTMLSelectListAccessible::NativeState() const
 {
   uint64_t state = AccessibleWrap::NativeState();
   if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
@@ -169,7 +169,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName) const
 }
 
 uint64_t
-HTMLSelectOptionAccessible::NativeState()
+HTMLSelectOptionAccessible::NativeState() const
 {
   // As a HTMLSelectOptionAccessible we can have the following states:
   // SELECTABLE, SELECTED, FOCUSED, FOCUSABLE, OFFSCREEN
@@ -397,7 +397,7 @@ HTMLComboboxAccessible::Shutdown()
 }
 
 uint64_t
-HTMLComboboxAccessible::NativeState()
+HTMLComboboxAccessible::NativeState() const
 {
   // As a HTMLComboboxAccessible we can have the following states:
   // FOCUSED, FOCUSABLE, HASPOPUP, EXPANDED, COLLAPSED
@@ -568,7 +568,7 @@ HTMLComboboxListAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLComboboxListAccessible::NativeState()
+HTMLComboboxListAccessible::NativeState() const
 {
   // As a HTMLComboboxListAccessible we can have the following states:
   // FOCUSED, FOCUSABLE, FLOATING, INVISIBLE

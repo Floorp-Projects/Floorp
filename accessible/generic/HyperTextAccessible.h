@@ -58,7 +58,7 @@ public:
   virtual int32_t GetLevelInternal() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   virtual void Shutdown() override;
   virtual bool RemoveChild(Accessible* aAccessible) override;

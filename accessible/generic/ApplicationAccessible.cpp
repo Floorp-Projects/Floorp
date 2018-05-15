@@ -148,7 +148,7 @@ ApplicationAccessible::NativeRole() const
 }
 
 uint64_t
-ApplicationAccessible::NativeState()
+ApplicationAccessible::NativeState() const
 {
   return 0;
 }

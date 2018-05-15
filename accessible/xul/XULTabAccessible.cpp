@@ -71,7 +71,7 @@ XULTabAccessible::NativeRole() const
 }
 
 uint64_t
-XULTabAccessible::NativeState()
+XULTabAccessible::NativeState() const
 {
   // Possible states: focused, focusable, unavailable(disabled), offscreen.
 
