@@ -18,18 +18,18 @@
 // want to give the browser some time (ms) to settle before starting tests
 var postStartupDelay = 30000;
 
-// have an optional delay (ms) between pageload cycles
-var pageloadDelay = 1000;
+// delay (ms) between pageload cycles
+var pageCycleDelay = 1000;
 
 var browserName;
 var ext;
 var testName = null;
 var settingsURL = null;
 var csPort = null;
+var benchmarkPort = null;
 var testType;
 var pageCycles = 0;
 var pageCycle = 0;
-var pageCycleDelay = 1000;
 var testURL;
 var testTabID = 0;
 var getHero = false;
@@ -63,6 +63,16 @@ function getTestSettings() {
         testType = settings.type;
         pageCycles = settings.page_cycles;
         testURL = settings.test_url;
+
+        // for pageload type tests, the testURL is fine as is - we don't have
+        // to add a port as it's accessed via proxy and the playback tool
+        // however for benchmark tests, their source is served out on a local
+        // webserver, so we need to swap in the webserver port into the testURL
+        if (testType == "benchmark") {
+          // just replace the '<port>' keyword in the URL with actual benchmarkPort
+          testURL = testURL.replace("<port>", benchmarkPort);
+        }
+
         results.page = testURL;
         results.type = testType;
         results.name = testName;
@@ -143,7 +153,7 @@ function getBrowserInfo() {
 function testTabCreated(tab) {
   testTabID = tab.id;
   console.log("opened new empty tab " + testTabID);
-  setTimeout(nextCycle, pageloadDelay);
+  nextCycle();
 }
 
 async function testTabUpdated(tab) {
@@ -151,7 +161,7 @@ async function testTabUpdated(tab) {
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
-  setTimeout(nextCycle, pageloadDelay);
+  nextCycle();
 }
 
 function waitForResult() {
@@ -205,7 +215,7 @@ function nextCycle() {
       } else if (testType == "benchmark") {
         isBenchmarkPending = true;
       }
-      // reload the test page
+      // (re)load the test page
       ext.tabs.update(testTabID, {url: testURL}, testTabUpdated);
     }, pageCycleDelay);
   } else {
@@ -356,6 +366,7 @@ function runner() {
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
   browserName = config.browser;
+  benchmarkPort = config.benchmark_port;
 
   getBrowserInfo().then(function() {
     getTestSettings().then(function() {

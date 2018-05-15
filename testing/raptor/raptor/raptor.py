@@ -26,6 +26,7 @@ try:
 except ImportError:
     build = None
 
+from benchmark import Benchmark
 from cmdline import parse_args
 from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
@@ -38,17 +39,18 @@ from results import RaptorResultsHandler
 class Raptor(object):
     """Container class for Raptor"""
 
-    def __init__(self, app, binary):
+    def __init__(self, app, binary, run_local=False, obj_path=None):
         self.config = {}
         self.config['app'] = app
         self.config['binary'] = binary
         self.config['platform'] = mozinfo.os
-
+        self.config['run_local'] = run_local
+        self.config['obj_path'] = obj_path
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
-        self.log = get_default_logger(component='raptor')
-        self.addons_installed = False
+        self.log = get_default_logger(component='raptor-main')
         self.control_server = None
         self.playback = None
+        self.benchmark = None
 
         # Create the profile
         self.profile = create_profile(self.config['app'])
@@ -99,9 +101,20 @@ class Raptor(object):
 
     def run_test(self, test, timeout=None):
         self.log.info("starting raptor test: %s" % test['name'])
+        self.log.info("test settings: %s" % str(test))
+        self.log.info("raptor config: %s" % str(self.config))
+
+        # benchmark-type tests require the benchmark test to be served out
+        if test.get('type') == "benchmark":
+            self.benchmark = Benchmark(self.config, test)
+            benchmark_port = int(self.benchmark.port)
+        else:
+            benchmark_port = 0
+
         gen_test_config(self.config['app'],
                         test['name'],
-                        self.control_server.port)
+                        self.control_server.port,
+                        benchmark_port)
 
         # must intall raptor addon each time because we dynamically update some content
         raptor_webext = os.path.join(webext_dir, 'raptor')
@@ -141,6 +154,18 @@ class Raptor(object):
             self.runner.stop()
 
     def process_results(self):
+        # when running locally output results in build/raptor.json; when running
+        # in production output to a local.json to be turned into tc job artifact
+        if self.config.get('run_local', False):
+            if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
+                raptor_json_path = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'],
+                                                'testing', 'mozharness', 'build', 'raptor.json')
+            else:
+                raptor_json_path = os.path.join(here, 'raptor.json')
+        else:
+            raptor_json_path = os.path.join(os.getcwd(), 'local.json')
+
+        self.config['raptor_json_path'] = raptor_json_path
         return self.results_handler.summarize_and_output(self.config)
 
     def clean_up(self):
@@ -167,7 +192,7 @@ def main(args=sys.argv[1:]):
     for next_test in raptor_test_list:
         LOG.info(next_test['name'])
 
-    raptor = Raptor(args.app, args.binary)
+    raptor = Raptor(args.app, args.binary, args.run_local, args.obj_path)
 
     raptor.start_control_server()
 

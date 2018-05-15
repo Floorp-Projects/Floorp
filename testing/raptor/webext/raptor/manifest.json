@@ -13,16 +13,19 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["*://*.amazon.com/*",
+                  "*://*.facebook.com/*",
+                  "*://*.google.com/*",
+                  "*://*.youtube.com/*"],
       "js": ["measure.js"]
     },
     {
-      "matches": ["http://*/Speedometer/index.html*"],
+      "matches": ["*://*/Speedometer/index.html*"],
       "js": ["benchmark-relay.js"]
     }
   ],
   "permissions": [
-    "http://127.0.0.1:8000/",
+    "<all_urls>",
     "tabs",
     "storage",
     "alarms"
