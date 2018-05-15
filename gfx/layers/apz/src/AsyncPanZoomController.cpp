@@ -4184,6 +4184,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // Note that even if the CancelAnimation call above requested a repaint
       // this is fine because we already have repaint request deduplication.
       needContentRepaint = true;
+      // Since the main-thread scroll offset changed we should trigger a
+      // recomposite to make sure it becomes user-visible.
+      ScheduleComposite();
     } else if (scrollableRectChanged) {
       // Even if we didn't accept a new scroll offset from content, the
       // scrollable rect may have changed in a way that makes our local
