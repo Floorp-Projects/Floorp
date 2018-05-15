@@ -716,6 +716,19 @@ nsXULAppInfo::GetUAName(nsACString& aResult)
 }
 
 NS_IMETHODIMP
+nsXULAppInfo::GetSourceURL(nsACString& aResult)
+{
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    aResult = cc->GetAppInfo().sourceURL;
+    return NS_OK;
+  }
+  aResult.Assign(gAppData->sourceURL);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULAppInfo::GetLogConsoleErrors(bool *aResult)
 {
   *aResult = gLogConsoleErrors;
