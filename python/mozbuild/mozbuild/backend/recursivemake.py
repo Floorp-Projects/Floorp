@@ -1056,7 +1056,6 @@ class RecursiveMakeBackend(CommonBackend):
             sources, directories = modules[module]
             all_directories |= directories
             deps = sorted(sources)
-            directories = sorted(directories)
 
             # It may seem strange to have the .idl files listed as
             # prerequisites both here and in the auto-generated .pp files.
@@ -1069,8 +1068,6 @@ class RecursiveMakeBackend(CommonBackend):
             # reference to the new .idl. Since the new .idl presumably has
             # an mtime newer than the .xpt, it will trigger xpt generation.
             mk.add_statement('%s_deps = %s' % (module, ' '.join(deps)))
-
-            mk.add_statement('%s_dirs = %s' % (module, ' '.join(directories)))
 
             build_files.add_optional_exists('%s.xpt' % module)
 

@@ -790,7 +790,7 @@ class TupBackend(CommonBackend):
         all_idl_directories.update(*map(lambda x: x[1], manager.modules.itervalues()))
 
         all_xpts = []
-        for module, (idls, directories) in sorted(manager.modules.iteritems()):
+        for module, (idls, _) in sorted(manager.modules.iteritems()):
             cmd = [
                 '$(PYTHON_PATH)',
                 '$(PLY_INCLUDE)',
@@ -801,8 +801,6 @@ class TupBackend(CommonBackend):
                 '--bindings-conf', '$(topsrcdir)/dom/bindings/Bindings.conf',
             ]
 
-            for d in directories:
-                cmd.extend(['--input-dir', d])
             for d in all_idl_directories:
                 cmd.extend(['-I', d])
 
@@ -816,9 +814,10 @@ class TupBackend(CommonBackend):
 
             all_xpts.append('$(MOZ_OBJ_ROOT)/%s/%s.xpt' % (backend_file.relobjdir, module))
             outputs = ['%s.xpt' % module]
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in sorted(idls)])
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in sorted(idls)])
-            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in sorted(idls)])
+            stems = sorted(mozpath.splitext(mozpath.basename(idl))[0] for idl in idls)
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/include/%s.h' % f for f in stems])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/rt/%s.rs' % f for f in stems])
+            outputs.extend(['$(MOZ_OBJ_ROOT)/dist/xpcrs/bt/%s.rs' % f for f in stems])
             backend_file.rule(
                 inputs=[
                     '$(MOZ_OBJ_ROOT)/xpcom/idl-parser/xpidl/xpidllex.py',

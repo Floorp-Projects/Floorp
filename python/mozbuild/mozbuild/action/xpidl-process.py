@@ -28,7 +28,7 @@ from mozbuild.util import FileAvoidWrite
 
 
 def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
-            xpcrs_dir, xpt_dir, deps_dir, module, stems):
+            xpcrs_dir, xpt_dir, deps_dir, module, idl_files):
     p = IDLParser(outputdir=cache_dir)
 
     xpts = []
@@ -43,17 +43,10 @@ def process(input_dirs, inc_paths, bindings_conf, cache_dir, header_dir,
     # up to date, we will not re-process XPIDL files if the processor changes.
     rule.add_dependencies(iter_modules_in_path(topsrcdir))
 
-    def read_stem(stem):
-        idl = '%s.idl' % stem
-        for p in input_dirs:
-            idl_file = os.path.join(topsrcdir, p, idl)
-            if os.path.exists(idl_file):
-                return idl_file, open(idl_file).read()
-
-        raise Exception('Could not find stem file for %s' % idl)
-
-    for stem in stems:
-        path, idl_data = read_stem(stem)
+    for path in idl_files:
+        basename = os.path.basename(path)
+        stem, _ = os.path.splitext(basename)
+        idl_data = open(path).read()
 
         idl = p.parse(idl_data, filename=path)
         idl.resolve(inc_paths, p, webidlconfig)
@@ -111,7 +104,7 @@ def main(argv):
     parser.add_argument('module',
         help='Final module name to use for linked output xpt file.')
     parser.add_argument('idls', nargs='+',
-        help='Source .idl file(s). Specified as stems only.')
+        help='Source .idl file(s).')
     parser.add_argument('-I', dest='incpath', action='append', default=[],
         help='Extra directories where to look for included .idl files.')
 
