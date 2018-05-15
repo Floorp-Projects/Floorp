@@ -98,7 +98,7 @@ public:
   virtual bool IsLink() const override;
   virtual uint32_t StartOffset() override;
   virtual uint32_t EndOffset() override;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const override;
 
 protected:
   virtual ~XULLinkAccessible();

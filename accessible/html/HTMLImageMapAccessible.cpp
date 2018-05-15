@@ -57,7 +57,7 @@ HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex)
 }
 
 already_AddRefed<nsIURI>
-HTMLImageMapAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+HTMLImageMapAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   Accessible* area = GetChildAt(aAnchorIndex);
   if (!area)

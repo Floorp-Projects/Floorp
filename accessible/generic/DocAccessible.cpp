@@ -320,7 +320,7 @@ DocAccessible::FocusedChild()
 }
 
 void
-DocAccessible::TakeFocus()
+DocAccessible::TakeFocus() const
 {
   // Focus the document.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();

@@ -747,7 +747,7 @@ Accessible::TakeSelection()
 }
 
 void
-Accessible::TakeFocus()
+Accessible::TakeFocus() const
 {
   nsIFrame* frame = GetFrame();
   if (!frame)
@@ -2396,7 +2396,7 @@ Accessible::AnchorAt(uint32_t aAnchorIndex)
 }
 
 already_AddRefed<nsIURI>
-Accessible::AnchorURIAt(uint32_t aAnchorIndex)
+Accessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   MOZ_ASSERT(IsLink(), "AnchorURIAt is called on not hyper link!");
   return nullptr;

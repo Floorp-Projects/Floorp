@@ -33,7 +33,7 @@ public:
 
   // HyperLinkAccessible
   virtual bool IsLink() const override;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const override;
 
 protected:
   virtual ~HTMLLinkAccessible() {}
