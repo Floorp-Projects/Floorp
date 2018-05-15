@@ -382,7 +382,7 @@ protected:
    *                        unexpected situation.  If this method tries to
    *                        split the paragraph, marked as handled.
    */
-  EditActionResult ReturnInParagraph(Element& aParentDivOrP);
+  MOZ_MUST_USE EditActionResult ReturnInParagraph(Element& aParentDivOrP);
 
   /**
    * SplitParagraph() splits the parent block, aPara, at aSelNode - aOffset.

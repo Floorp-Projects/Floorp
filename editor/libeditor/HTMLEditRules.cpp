@@ -7615,6 +7615,10 @@ HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP)
         nsCOMPtr<nsIContent> newLeftDivOrP =
           HTMLEditorRef().SplitNodeWithTransaction(pointToSplitParentDivOrP,
                                                    error);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          error.SuppressException();
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+        }
         if (NS_WARN_IF(error.Failed())) {
           return EditActionResult(error.StealNSResult());
         }
@@ -7648,11 +7652,6 @@ HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP)
     }
   }
   if (pointToInsertBR.IsSet()) {
-    // Don't modify the DOM tree if HTMLEditor is destroyed.
-    if (NS_WARN_IF(HTMLEditorRef().Destroyed())) {
-      return EditActionResult(NS_ERROR_NOT_AVAILABLE);
-    }
-
     // if CR does not create a new P, default to BR creation
     if (NS_WARN_IF(!doesCRCreateNewP)) {
       return EditActionResult(NS_OK);
@@ -7661,6 +7660,9 @@ HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP)
     brContent =
       HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                      pointToInsertBR);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+    }
     NS_WARNING_ASSERTION(brContent, "Failed to create a <br> element");
     if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
