@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.browser.menu
+
+import android.support.v7.widget.RecyclerView
+import android.view.View
+import android.widget.ImageButton
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+
+@RunWith(RobolectricTestRunner::class)
+class BrowserMenuBuilderTest {
+    @Test
+    fun `items are forwarded from builder to menu`() {
+        val builder = BrowserMenuBuilder()
+        builder.items = listOf(mockMenuItem(), mockMenuItem())
+
+        val menu = builder.build(RuntimeEnvironment.application)
+
+        val anchor = ImageButton(RuntimeEnvironment.application)
+        val popup = menu.show(anchor)
+
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+        assertNotNull(recyclerView)
+
+        val recyclerAdapter = recyclerView.adapter
+        assertNotNull(recyclerAdapter)
+        assertEquals(2, recyclerAdapter.itemCount)
+    }
+
+    @Test(expected = KotlinNullPointerException::class)
+    fun `builder throws exception if no items are set`() {
+        val builder = BrowserMenuBuilder()
+        builder.build(RuntimeEnvironment.application)
+    }
+
+    private fun mockMenuItem() = object : BrowserMenuItem {
+        override val visible: () -> Boolean = { true }
+
+        override fun getLayoutResource() = R.layout.mozac_browser_menu_item_simple
+
+        override fun bind(menu: BrowserMenu, view: View) {}
+    }
+}

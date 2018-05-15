@@ -27,7 +27,11 @@ android {
 }
 
 dependencies {
+    implementation project(':support-ktx')
+
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.dependencies['supportLibraries']}"
+    implementation "com.android.support:cardview-v7:${rootProject.ext.dependencies['supportLibraries']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
