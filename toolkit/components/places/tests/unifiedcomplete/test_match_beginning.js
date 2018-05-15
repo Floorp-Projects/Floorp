@@ -8,7 +8,7 @@
  */
 
 add_task(async function test_match_beginning() {
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
   let uri1 = NetUtil.newURI("http://x.com/y");
   let uri2 = NetUtil.newURI("https://y.com/x");

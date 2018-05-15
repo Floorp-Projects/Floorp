@@ -243,7 +243,7 @@ class Mitmproxy(Playback):
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
         env["PATH"] = os.path.dirname(browser_path) + ";" + env["PATH"]
 
-        command = [mitmdump_path, '-k', '-s', param2]
+        command = [mitmdump_path, '-k', '-q', '-s', param2]
 
         LOG.info("Starting mitmproxy playback using env path: %s" % env["PATH"])
         LOG.info("Starting mitmproxy playback using command: %s" % ' '.join(command))

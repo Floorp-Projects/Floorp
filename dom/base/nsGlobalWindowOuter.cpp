@@ -7702,18 +7702,26 @@ NextWindowID();
 } // namespace mozilla
 
 nsPIDOMWindowOuter::nsPIDOMWindowOuter()
-: mFrameElement(nullptr), mDocShell(nullptr), mModalStateDepth(0),
-  mIsActive(false), mIsBackground(false),
-  mMediaSuspend(
-    Preferences::GetBool("media.block-autoplay-until-in-foreground", true) &&
-    Preferences::GetBool("media.autoplay.enabled", true) ?
-    nsISuspendedTypes::SUSPENDED_BLOCK : nsISuspendedTypes::NONE_SUSPENDED),
-  mAudioMuted(false), mAudioVolume(1.0),
-  mDesktopModeViewport(false), mIsRootOuterWindow(false), mInnerWindow(nullptr),
+  : mFrameElement(nullptr)
+  , mDocShell(nullptr)
+  , mModalStateDepth(0)
+  , mIsActive(false)
+  , mIsBackground(false)
+  , mMediaSuspend(
+      Preferences::GetBool("media.block-autoplay-until-in-foreground", true)
+        ? nsISuspendedTypes::SUSPENDED_BLOCK
+        : nsISuspendedTypes::NONE_SUSPENDED)
+  , mAudioMuted(false)
+  , mAudioVolume(1.0)
+  , mDesktopModeViewport(false)
+  , mIsRootOuterWindow(false)
+  , mInnerWindow(nullptr)
+  ,
   // Make sure no actual window ends up with mWindowID == 0
-  mWindowID(NextWindowID()),
-  mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
-  mLargeAllocStatus(LargeAllocStatus::NONE)
+  mWindowID(NextWindowID())
+  , mMarkedCCGeneration(0)
+  , mServiceWorkersTestingEnabled(false)
+  , mLargeAllocStatus(LargeAllocStatus::NONE)
 {
 }
 

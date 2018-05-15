@@ -17,10 +17,6 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="searchbar">
-    <resources>
-      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
-      <stylesheet src="chrome://browser/skin/searchbar.css"/>
-    </resources>
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
@@ -843,10 +839,6 @@
   </binding>
 
   <binding id="browser-search-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
-    <resources>
-      <stylesheet src="chrome://browser/content/search/searchbarBindings.css"/>
-      <stylesheet src="chrome://browser/skin/searchbar.css"/>
-    </resources>
     <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:hbox anonid="searchbar-engine" xbl:inherits="showonlysettings"
                 class="search-panel-header search-panel-current-engine">

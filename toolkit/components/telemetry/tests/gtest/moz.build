@@ -11,6 +11,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES = [
+    'TelemetryFixture.cpp',
     'TelemetryTestHelpers.cpp',
     'TestCounters.cpp',
     'TestHistograms.cpp',

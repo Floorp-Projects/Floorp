@@ -6,12 +6,11 @@ add_task(async function test_casing_1() {
   info("Searching for cased entry 1");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "MOZ",
     autofilled: "MOZilla.org/",
-    completed: "mozilla.org/"
+    completed: "http://mozilla.org/"
   });
   await cleanup();
 });
@@ -20,7 +19,6 @@ add_task(async function test_casing_2() {
   info("Searching for cased entry 2");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "mozilla.org/T",
@@ -34,7 +32,6 @@ add_task(async function test_casing_3() {
   info("Searching for cased entry 3");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "mozilla.org/T",
@@ -48,7 +45,6 @@ add_task(async function test_casing_4() {
   info("Searching for cased entry 4");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "mOzilla.org/t",
@@ -62,7 +58,6 @@ add_task(async function test_casing_5() {
   info("Searching for cased entry 5");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "mOzilla.org/T",
@@ -76,7 +71,6 @@ add_task(async function test_untrimmed_casing() {
   info("Searching for untrimmed cased entry");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://mOz",
@@ -90,7 +84,6 @@ add_task(async function test_untrimmed_www_casing() {
   info("Searching for untrimmed cased entry with www");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://www.mOz",
@@ -104,7 +97,6 @@ add_task(async function test_untrimmed_path_casing() {
   info("Searching for untrimmed cased entry with path");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://mOzilla.org/t",
@@ -118,7 +110,6 @@ add_task(async function test_untrimmed_path_casing_2() {
   info("Searching for untrimmed cased entry with path 2");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://mOzilla.org/T",
@@ -132,7 +123,6 @@ add_task(async function test_untrimmed_path_www_casing() {
   info("Searching for untrimmed cased entry with www and path");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://www.mOzilla.org/t",
@@ -146,7 +136,6 @@ add_task(async function test_untrimmed_path_www_casing_2() {
   info("Searching for untrimmed cased entry with www and path 2");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://www.mozilla.org/Test/"),
-    transition: TRANSITION_TYPED
   });
   await check_autocomplete({
     search: "http://www.mOzilla.org/T",

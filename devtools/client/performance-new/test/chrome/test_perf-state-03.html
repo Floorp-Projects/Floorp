@@ -22,7 +22,7 @@
        */
       addPerfTest(async () => {
         const {
-          perfFront,
+          perfFrontMock,
           getRecordingState,
           mountComponent,
           getState,
@@ -34,7 +34,7 @@
         is(getRecordingState(), "not-yet-known",
           "The component at first is in an unknown state.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "available-to-record",
           "After talking to the actor, we're ready to record.");
 
@@ -42,7 +42,7 @@
         is(getRecordingState(), "request-to-start-recording",
           "Sent in a request to start recording.");
 
-        await perfFront.flushAsyncQueue();
+        await perfFrontMock._flushAsyncQueue();
         is(getRecordingState(), "recording",
           "The actor has started its recording");
 
@@ -50,8 +50,8 @@
         ok(!selectors.getRecordingUnexpectedlyStopped(getState()),
           "The profiler has not unexpectedly stopped.");
 
-        perfFront.stopProfilerAndDiscardProfile();
-        await perfFront.flushAsyncQueue();
+        perfFrontMock.stopProfilerAndDiscardProfile();
+        await perfFrontMock._flushAsyncQueue();
 
         ok(selectors.getRecordingUnexpectedlyStopped(getState()),
           "The profiler unexpectedly stopped.");

@@ -8,7 +8,9 @@
  * are separated from the title by a endash.
  */
 
-add_task(async function test_javascript_match() {
+add_task(async function test() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+
   let uri1 = NetUtil.newURI("http://page1");
   let uri2 = NetUtil.newURI("http://page2");
   let uri3 = NetUtil.newURI("http://page3");

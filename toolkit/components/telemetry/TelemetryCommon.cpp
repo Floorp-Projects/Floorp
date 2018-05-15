@@ -135,6 +135,18 @@ GetNameForProcessID(ProcessID process)
   return ProcessIDToString[static_cast<uint32_t>(process)];
 }
 
+ProcessID
+GetIDForProcessName(const char* aProcessName)
+{
+  for (uint32_t id = 0; id < static_cast<uint32_t>(ProcessID::Count); id++) {
+    if (!strcmp(GetNameForProcessID(ProcessID(id)), aProcessName)) {
+      return ProcessID(id);
+    }
+  }
+
+  return ProcessID::Count;
+}
+
 GeckoProcessType
 GetGeckoProcessType(ProcessID process)
 {

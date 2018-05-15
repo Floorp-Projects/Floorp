@@ -20,9 +20,8 @@
 //
 // Note that this class is slightly slower than the other AutoProfilerLabel,
 // and it lacks the macro wrappers. It also is effectively hardwired to use
-// js::ProfileEntry::Kind::CPP_NORMAL as the kind, and
 // js::ProfileEntry::Category::OTHER as the category, because that's what the
-// callbacks provided by the profiler use. (Specifying the kind or category in
+// callbacks provided by the profiler use. (Specifying the category in
 // this file would require #including ProfilingStack.h in mozglue, which we
 // don't want to do.)
 

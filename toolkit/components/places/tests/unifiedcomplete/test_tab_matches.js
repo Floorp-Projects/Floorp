@@ -7,6 +7,8 @@
 var gTabRestrictChar = "%";
 
 add_task(async function test_tab_matches() {
+  Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
+
   let uri1 = NetUtil.newURI("http://abc.com/");
   let uri2 = NetUtil.newURI("http://xyz.net/");
   let uri3 = NetUtil.newURI("about:mozilla");

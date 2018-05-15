@@ -32,6 +32,8 @@ using namespace mozilla::storage;
 namespace {
 
   typedef nsACString::const_char_iterator const_char_iterator;
+  typedef nsACString::size_type size_type;
+  typedef nsACString::char_type char_type;
 
   /**
    * Scan forward through UTF-8 text until the next potential character that
@@ -272,6 +274,111 @@ namespace {
     nsVariant* mResult;
   };
 
+  /**
+   * Gets the length of the prefix in a URI spec.  "Prefix" is defined to be the
+   * scheme, colon, and, if present, two slashes.
+   *
+   * Examples:
+   *
+   *   http://example.com
+   *   ~~~~~~~
+   *   => length == 7
+   *
+   *   foo:example
+   *   ~~~~
+   *   => length == 4
+   *
+   *   not a spec
+   *   => length == 0
+   *
+   * @param  aSpec
+   *         A URI spec, or a string that may be a URI spec.
+   * @return The length of the prefix in the spec.  If there isn't a prefix,
+   *         returns 0.
+   */
+  static
+  MOZ_ALWAYS_INLINE size_type
+  getPrefixLength(const nsACString &aSpec)
+  {
+    // To keep the search bounded, look at 64 characters at most.  The longest
+    // IANA schemes are ~30, so double that and round up to a nice number.
+    size_type length = std::min(static_cast<size_type>(64), aSpec.Length());
+    for (size_type i = 0; i < length; ++i) {
+      if (aSpec[i] == static_cast<char_type>(':')) {
+        // Found the ':'.  Now skip past "//", if present.
+        if (i + 2 < aSpec.Length() &&
+            aSpec[i + 1] == static_cast<char_type>('/') &&
+            aSpec[i + 2] == static_cast<char_type>('/')) {
+          i += 2;
+        }
+        return i + 1;
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * Gets the index in a URI spec of the host and port substring and optionally
+   * its length.
+   *
+   * Examples:
+   *
+   *   http://example.com/
+   *          ~~~~~~~~~~~
+   *   => index == 7, length == 11
+   *
+   *   http://example.com:8888/
+   *          ~~~~~~~~~~~~~~~~
+   *   => index == 7, length == 16
+   *
+   *   http://user:pass@example.com/
+   *                    ~~~~~~~~~~~
+   *   => index == 17, length == 11
+   *
+   *   foo:example
+   *       ~~~~~~~
+   *   => index == 4, length == 7
+   *
+   *   not a spec
+   *   ~~~~~~~~~~
+   *   => index == 0, length == 10
+   *
+   * @param  aSpec
+   *         A URI spec, or a string that may be a URI spec.
+   * @param  _hostAndPortLength
+   *         The length of the host and port substring is returned through this
+   *         param.  Pass null if you don't care.
+   * @return The length of the host and port substring in the spec.  If aSpec
+   *         doesn't look like a URI, then the entire aSpec is assumed to be a
+   *         "host and port", and this returns 0, and _hostAndPortLength will be
+   *         the length of aSpec.
+   */
+  static
+  MOZ_ALWAYS_INLINE size_type
+  indexOfHostAndPort(const nsACString &aSpec,
+                     size_type *_hostAndPortLength)
+  {
+    size_type index = getPrefixLength(aSpec);
+    size_type i = index;
+    for (; i < aSpec.Length(); ++i) {
+      // RFC 3986 (URIs): The origin ("authority") is terminated by '/', '?', or
+      // '#' (or the end of the URI).
+      if (aSpec[i] == static_cast<char_type>('/') ||
+          aSpec[i] == static_cast<char_type>('?') ||
+          aSpec[i] == static_cast<char_type>('#')) {
+        break;
+      }
+      // RFC 3986: '@' marks the end of the userinfo component.
+      if (aSpec[i] == static_cast<char_type>('@')) {
+        index = i + 1;
+      }
+    }
+    if (_hostAndPortLength) {
+      *_hostAndPortLength = i - index;
+    }
+    return index;
+  }
+
 } // End anonymous namespace
 
 namespace mozilla {
@@ -323,10 +430,6 @@ namespace places {
       fixedSpec.Rebind(fixedSpec, 8);
     } else if (StringBeginsWith(fixedSpec, NS_LITERAL_CSTRING("ftp://"))) {
       fixedSpec.Rebind(fixedSpec, 6);
-    }
-
-    if (StringBeginsWith(fixedSpec, NS_LITERAL_CSTRING("www."))) {
-      fixedSpec.Rebind(fixedSpec, 4);
     }
 
     return fixedSpec;
@@ -1114,6 +1217,223 @@ namespace places {
     rv = result->SetAsInt64(hash);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Get prefix function
+
+  /* static */
+  nsresult
+  GetPrefixFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<GetPrefixFunction> function = new GetPrefixFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("get_prefix"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    GetPrefixFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  GetPrefixFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                    nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 1);
+
+    nsDependentCString spec(getSharedUTF8String(aArgs, 0));
+
+    RefPtr<nsVariant> result = new nsVariant();
+    result->SetAsACString(Substring(spec, 0, getPrefixLength(spec)));
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Get host and port function
+
+  /* static */
+  nsresult
+  GetHostAndPortFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<GetHostAndPortFunction> function = new GetHostAndPortFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("get_host_and_port"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    GetHostAndPortFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  GetHostAndPortFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                         nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 1);
+
+    nsDependentCString spec(getSharedUTF8String(aArgs, 0));
+
+    RefPtr<nsVariant> result = new nsVariant();
+
+    size_type length;
+    size_type index = indexOfHostAndPort(spec, &length);
+    result->SetAsACString(Substring(spec, index, length));
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Strip prefix and userinfo function
+
+  /* static */
+  nsresult
+  StripPrefixAndUserinfoFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<StripPrefixAndUserinfoFunction> function =
+      new StripPrefixAndUserinfoFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("strip_prefix_and_userinfo"), 1, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    StripPrefixAndUserinfoFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  StripPrefixAndUserinfoFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                                 nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 1);
+
+    nsDependentCString spec(getSharedUTF8String(aArgs, 0));
+
+    RefPtr<nsVariant> result = new nsVariant();
+
+    size_type index = indexOfHostAndPort(spec, NULL);
+    result->SetAsACString(Substring(spec, index, spec.Length() - index));
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Is frecency decaying function
+
+  /* static */
+  nsresult
+  IsFrecencyDecayingFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<IsFrecencyDecayingFunction> function =
+      new IsFrecencyDecayingFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("is_frecency_decaying"), 0, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    IsFrecencyDecayingFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  IsFrecencyDecayingFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                             nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 0);
+
+    const nsNavHistory *navHistory = nsNavHistory::GetConstHistoryService();
+    NS_ENSURE_STATE(navHistory);
+
+    RefPtr<nsVariant> result = new nsVariant();
+    rv = result->SetAsBool(navHistory->IsFrecencyDecaying());
+    NS_ENSURE_SUCCESS(rv, rv);
+    result.forget(_result);
+    return NS_OK;
+  }
+
+////////////////////////////////////////////////////////////////////////////////
+//// Update frecency stats function
+
+  /* static */
+  nsresult
+  UpdateFrecencyStatsFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<UpdateFrecencyStatsFunction> function =
+      new UpdateFrecencyStatsFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("update_frecency_stats"), 3, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    UpdateFrecencyStatsFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  UpdateFrecencyStatsFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                              nsIVariant **_result)
+  {
+    MOZ_ASSERT(aArgs);
+
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 3);
+
+    int64_t placeId = aArgs->AsInt64(0);
+    int32_t oldFrecency = aArgs->AsInt32(1);
+    int32_t newFrecency = aArgs->AsInt32(2);
+
+    const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
+    NS_ENSURE_STATE(navHistory);
+    navHistory->DispatchFrecencyStatsUpdate(placeId, oldFrecency, newFrecency);
+
+    RefPtr<nsVariant> result = new nsVariant();
+    rv = result->SetAsVoid();
+    NS_ENSURE_SUCCESS(rv, rv);
     result.forget(_result);
     return NS_OK;
   }
