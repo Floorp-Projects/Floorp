@@ -38,6 +38,7 @@ ChromeUtils.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  CreditCard: "resource://gre/modules/CreditCard.jsm",
   FormAutofillPreferences: "resource://formautofill/FormAutofillPreferences.jsm",
   FormAutofillDoorhanger: "resource://formautofill/FormAutofillDoorhanger.jsm",
   MasterPassword: "resource://formautofill/MasterPassword.jsm",
@@ -519,7 +520,12 @@ FormAutofillParent.prototype = {
         return;
       }
 
-      const description = FormAutofillUtils.getCreditCardLabel(creditCard.record, false);
+      const card = new CreditCard({
+        number: creditCard.record["cc-number"] || creditCard.record["cc-number-decrypted"],
+        encryptedNumber: creditCard.record["cc-number-encrypted"],
+        name: creditCard.record["cc-name"],
+      });
+      const description = await card.getLabel();
       const state = await FormAutofillDoorhanger.show(target,
                                                       creditCard.guid ? "updateCreditCard" : "addCreditCard",
                                                       description);
