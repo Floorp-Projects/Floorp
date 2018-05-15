@@ -82,6 +82,7 @@ def _defines():
                 'MOZ_APP_UA_NAME',
                 'MOZ_APP_VENDOR',
                 'MOZ_APP_VERSION',
+                'MOZ_APP_VERSION_DISPLAY',
                 'MOZ_CHILD_PROCESS_NAME',
                 'MOZ_MOZILLA_API_KEY',
                 'MOZ_UPDATE_CHANNEL',
