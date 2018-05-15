@@ -806,7 +806,7 @@ private:
 // The most complicated part is the stack entry sequence that begins with
 // Label. Here are some examples.
 //
-// - PseudoStack frames without a dynamic string:
+// - ProfilingStack frames without a dynamic string:
 //
 //     Label("js::RunScript")
 //     Category(ProfilingStackFrame::Category::JS)
@@ -819,7 +819,7 @@ private:
 //     LineNumber(3003)
 //     Category(ProfilingStackFrame::Category::CSS)
 //
-// - PseudoStack frames with a dynamic string:
+// - ProfilingStack frames with a dynamic string:
 //
 //     Label("nsObserverService::NotifyObservers")
 //     DynamicStringFragment("domwindo")
@@ -846,7 +846,7 @@ private:
 //     LineNumber(945)
 //     Category(ProfilingStackFrame::Category::JS)
 //
-// - A pseudoStack frame with a dynamic string, but with privacy enabled:
+// - A profiling stack frame with a dynamic string, but with privacy enabled:
 //
 //     Label("nsObserverService::NotifyObservers")
 //     DynamicStringFragment("(private")
@@ -854,7 +854,7 @@ private:
 //     LineNumber(291)
 //     Category(ProfilingStackFrame::Category::OTHER)
 //
-// - A pseudoStack frame with an overly long dynamic string:
+// - A profiling stack frame with an overly long dynamic string:
 //
 //     Label("")
 //     DynamicStringFragment("(too lon")

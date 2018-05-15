@@ -14,9 +14,9 @@
 
 using namespace js;
 
-PseudoStack::~PseudoStack()
+ProfilingStack::~ProfilingStack()
 {
-    // The label macros keep a reference to the PseudoStack to avoid a TLS
+    // The label macros keep a reference to the ProfilingStack to avoid a TLS
     // access. If these are somehow not all cleared we will get a
     // use-after-free so better to crash now.
     MOZ_RELEASE_ASSERT(stackPointer == 0);
@@ -25,7 +25,7 @@ PseudoStack::~PseudoStack()
 }
 
 bool
-PseudoStack::ensureCapacitySlow()
+ProfilingStack::ensureCapacitySlow()
 {
     MOZ_ASSERT(stackPointer >= capacity);
     const uint32_t kInitialCapacity = 128;

@@ -9,7 +9,7 @@
 #include "nsJSPrincipals.h"
 #include "nsScriptSecurityManager.h"
 #include "jsfriendapi.h"
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
 #include "js/ProfilingStack.h"
 #endif
 
@@ -95,7 +95,7 @@ ThreadStackHelper::PrepareStackBuffer(HangStack& aStack)
   aStack.strbuffer().ClearAndRetainStorage();
   aStack.modules().Clear();
 
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
   // Ensure we have enough space in our stack and string buffers for the data we
   // want to collect.
   if (!aStack.stack().SetCapacity(mMaxStackSize, fallible) ||

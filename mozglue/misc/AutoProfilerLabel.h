@@ -12,11 +12,11 @@
 #include "mozilla/Types.h"
 
 // The Gecko Profiler defines AutoProfilerLabel, an RAII class for
-// pushing/popping frames to/from the PseudoStack.
+// pushing/popping frames to/from the ProfilingStack.
 //
 // This file defines a class of the same name that does much the same thing,
 // but which can be used in (and only in) mozglue. A different class is
-// necessary because mozglue cannot directly access sPseudoStack.
+// necessary because mozglue cannot directly access sProfilingStack.
 //
 // Note that this class is slightly slower than the other AutoProfilerLabel,
 // and it lacks the macro wrappers. It also is effectively hardwired to use
@@ -25,15 +25,15 @@
 // this file would require #including ProfilingStack.h in mozglue, which we
 // don't want to do.)
 
-class PseudoStack;
+class ProfilingStack;
 
 namespace mozilla {
 
-typedef PseudoStack* (*ProfilerLabelEnter)(const char*, const char*, void*,
+typedef ProfilingStack* (*ProfilerLabelEnter)(const char*, const char*, void*,
                                            uint32_t);
-typedef void (*ProfilerLabelExit)(PseudoStack*);
+typedef void (*ProfilerLabelExit)(ProfilingStack*);
 
-// Register callbacks that do the entry/exit work involving sPseudoStack.
+// Register callbacks that do the entry/exit work involving sProfilingStack.
 MFBT_API void RegisterProfilerLabelEnterExit(ProfilerLabelEnter aEnter,
                                              ProfilerLabelExit aExit);
 
@@ -51,7 +51,7 @@ public:
 
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  PseudoStack* mPseudoStack;
+  ProfilingStack* mProfilingStack;
 };
 
 #endif
