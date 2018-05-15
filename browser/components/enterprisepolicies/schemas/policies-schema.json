@@ -382,6 +382,13 @@
       }
     },
 
+    "HardwareAcceleration": {
+      "description": "If false, prevents ability to turn on hardware acceleration.",
+      "first_available": "60.0",
+
+      "type": "boolean"
+    },
+
     "Homepage": {
       "description": "Set and optionally lock the homepage.",
       "first_available": "60.0",
