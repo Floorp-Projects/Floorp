@@ -686,7 +686,7 @@ public:
   /**
    * Return the number of actions that can be performed on this accessible.
    */
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() const;
 
   /**
    * Return action name at given index.
@@ -706,7 +706,7 @@ public:
   /**
    * Invoke the accessible action.
    */
-  virtual bool DoAction(uint8_t aIndex);
+  virtual bool DoAction(uint8_t aIndex) const;
 
   /**
    * Return access key, such as Alt+D.

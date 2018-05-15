@@ -35,7 +35,7 @@ XULTabAccessible::
 // XULTabAccessible: Accessible
 
 uint8_t
-XULTabAccessible::ActionCount()
+XULTabAccessible::ActionCount() const
 {
   return 1;
 }
@@ -48,7 +48,7 @@ XULTabAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULTabAccessible::DoAction(uint8_t index)
+XULTabAccessible::DoAction(uint8_t index) const
 {
   if (index == eAction_Switch) {
     // XXXbz Could this just FromContent?
@@ -143,7 +143,7 @@ XULTabsAccessible::NativeRole() const
 }
 
 uint8_t
-XULTabsAccessible::ActionCount()
+XULTabsAccessible::ActionCount() const
 {
   return 0;
 }

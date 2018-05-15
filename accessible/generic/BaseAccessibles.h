@@ -68,9 +68,9 @@ public:
   virtual void TakeFocus() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t index) override;
+  virtual bool DoAction(uint8_t index) const override;
   virtual KeyBinding AccessKey() const override;
 
   // ActionAccessible helpers

@@ -269,7 +269,7 @@ XULMenuitemAccessible::GetLevelInternal()
 }
 
 bool
-XULMenuitemAccessible::DoAction(uint8_t index)
+XULMenuitemAccessible::DoAction(uint8_t index) const
 {
   if (index == eAction_Click) {   // default action
     DoCommand();
@@ -287,7 +287,7 @@ XULMenuitemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 uint8_t
-XULMenuitemAccessible::ActionCount()
+XULMenuitemAccessible::ActionCount() const
 {
   return 1;
 }
@@ -374,7 +374,7 @@ XULMenuSeparatorAccessible::NativeRole() const
 }
 
 bool
-XULMenuSeparatorAccessible::DoAction(uint8_t index)
+XULMenuSeparatorAccessible::DoAction(uint8_t index) const
 {
   return false;
 }
@@ -386,7 +386,7 @@ XULMenuSeparatorAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 uint8_t
-XULMenuSeparatorAccessible::ActionCount()
+XULMenuSeparatorAccessible::ActionCount() const
 {
   return 0;
 }

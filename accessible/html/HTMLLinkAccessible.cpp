@@ -83,7 +83,7 @@ HTMLLinkAccessible::Value(nsString& aValue) const
 }
 
 uint8_t
-HTMLLinkAccessible::ActionCount()
+HTMLLinkAccessible::ActionCount() const
 {
   return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
 }
@@ -104,7 +104,7 @@ HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLLinkAccessible::DoAction(uint8_t aIndex)
+HTMLLinkAccessible::DoAction(uint8_t aIndex) const
 {
   if (!IsLinked())
     return HyperTextAccessible::DoAction(aIndex);

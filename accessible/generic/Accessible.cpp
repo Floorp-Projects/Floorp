@@ -1526,7 +1526,7 @@ Accessible::NativeRole() const
 }
 
 uint8_t
-Accessible::ActionCount()
+Accessible::ActionCount() const
 {
   return GetActionRule() == eNoAction ? 0 : 1;
 }
@@ -1599,7 +1599,7 @@ Accessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-Accessible::DoAction(uint8_t aIndex)
+Accessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;

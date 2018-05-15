@@ -65,7 +65,7 @@ XULSliderAccessible::Value(nsString& aValue) const
 }
 
 uint8_t
-XULSliderAccessible::ActionCount()
+XULSliderAccessible::ActionCount() const
 {
   return 1;
 }
@@ -79,7 +79,7 @@ XULSliderAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULSliderAccessible::DoAction(uint8_t aIndex)
+XULSliderAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;

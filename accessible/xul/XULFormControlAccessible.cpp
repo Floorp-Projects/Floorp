@@ -56,7 +56,7 @@ XULButtonAccessible::~XULButtonAccessible()
 // XULButtonAccessible: nsIAccessible
 
 uint8_t
-XULButtonAccessible::ActionCount()
+XULButtonAccessible::ActionCount() const
 {
   return 1;
 }
@@ -69,7 +69,7 @@ XULButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULButtonAccessible::DoAction(uint8_t aIndex)
+XULButtonAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;
@@ -205,7 +205,7 @@ XULDropmarkerAccessible::
 }
 
 uint8_t
-XULDropmarkerAccessible::ActionCount()
+XULDropmarkerAccessible::ActionCount() const
 {
   return 1;
 }
@@ -254,7 +254,7 @@ XULDropmarkerAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULDropmarkerAccessible::DoAction(uint8_t index)
+XULDropmarkerAccessible::DoAction(uint8_t index) const
 {
   if (index == eAction_Click) {
     DropmarkerOpen(true); // Reverse the open attribute
@@ -292,7 +292,7 @@ XULCheckboxAccessible::NativeRole() const
 }
 
 uint8_t
-XULCheckboxAccessible::ActionCount()
+XULCheckboxAccessible::ActionCount() const
 {
   return 1;
 }
@@ -309,7 +309,7 @@ XULCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULCheckboxAccessible::DoAction(uint8_t aIndex)
+XULCheckboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

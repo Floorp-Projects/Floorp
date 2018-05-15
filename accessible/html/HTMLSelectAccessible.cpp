@@ -265,13 +265,13 @@ HTMLSelectOptionAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 uint8_t
-HTMLSelectOptionAccessible::ActionCount()
+HTMLSelectOptionAccessible::ActionCount() const
 {
   return 1;
 }
 
 bool
-HTMLSelectOptionAccessible::DoAction(uint8_t aIndex)
+HTMLSelectOptionAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Select)
     return false;
@@ -324,7 +324,7 @@ HTMLSelectOptGroupAccessible::IsAcceptableChild(nsIContent* aEl) const
 }
 
 uint8_t
-HTMLSelectOptGroupAccessible::ActionCount()
+HTMLSelectOptGroupAccessible::ActionCount() const
 {
   return 0;
 }
@@ -336,7 +336,7 @@ HTMLSelectOptGroupAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLSelectOptGroupAccessible::DoAction(uint8_t aIndex)
+HTMLSelectOptGroupAccessible::DoAction(uint8_t aIndex) const
 {
   return false;
 }
@@ -440,13 +440,13 @@ HTMLComboboxAccessible::Value(nsString& aValue) const
 }
 
 uint8_t
-HTMLComboboxAccessible::ActionCount()
+HTMLComboboxAccessible::ActionCount() const
 {
   return 1;
 }
 
 bool
-HTMLComboboxAccessible::DoAction(uint8_t aIndex)
+HTMLComboboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

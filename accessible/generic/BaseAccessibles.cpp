@@ -107,7 +107,7 @@ LinkableAccessible::Value(nsString& aValue) const
 }
 
 uint8_t
-LinkableAccessible::ActionCount()
+LinkableAccessible::ActionCount() const
 {
   bool isLink, isOnclick, isLabelWithControl;
   ActionWalk(&isLink, &isOnclick, &isLabelWithControl);
@@ -182,7 +182,7 @@ LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-LinkableAccessible::DoAction(uint8_t aIndex)
+LinkableAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Jump) {
     return false;

@@ -107,14 +107,14 @@ XULComboboxAccessible::Value(nsString& aValue) const
 }
 
 uint8_t
-XULComboboxAccessible::ActionCount()
+XULComboboxAccessible::ActionCount() const
 {
   // Just one action (click).
   return 1;
 }
 
 bool
-XULComboboxAccessible::DoAction(uint8_t aIndex)
+XULComboboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != XULComboboxAccessible::eAction_Click)
     return false;
