@@ -396,7 +396,7 @@ public:
 
   virtual void CollectWasmFrame(const char* aLabel) = 0;
 
-  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) = 0;
+  virtual void CollectProfilingStackFrame(const js::ProfilingStackFrame& aFrame) = 0;
 };
 
 // This method suspends the thread identified by aThreadId, samples its
@@ -450,7 +450,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // information to the pseudo stack frame.
 #define AUTO_PROFILER_LABEL(label, category) \
   mozilla::AutoProfilerLabel PROFILER_RAII(label, nullptr, __LINE__, \
-                                           js::ProfileEntry::Category::category)
+                                           js::ProfilingStackFrame::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL, but with an additional string. The inserted
 // RAII object stores the cStr pointer in a field; it does not copy the string.
@@ -473,7 +473,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // the profile buffer than AUTO_PROFILER_LABEL_DYNAMIC_* frames.
 #define AUTO_PROFILER_LABEL_DYNAMIC_CSTR(label, category, cStr) \
   mozilla::AutoProfilerLabel \
-    PROFILER_RAII(label, cStr, __LINE__, js::ProfileEntry::Category::category)
+    PROFILER_RAII(label, cStr, __LINE__, js::ProfilingStackFrame::Category::category)
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsACString.
 //
@@ -488,7 +488,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
   if (profiler_is_active()) { \
     autoCStr.emplace(nsCStr); \
     raiiObjectNsCString.emplace(label, autoCStr->get(), __LINE__, \
-                                js::ProfileEntry::Category::category); \
+                                js::ProfilingStackFrame::Category::category); \
   }
 
 // Similar to AUTO_PROFILER_LABEL_DYNAMIC_CSTR, but takes an nsString that is
@@ -505,7 +505,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
   if (profiler_is_active()) { \
     asciiStr.emplace(nsStr); \
     raiiObjectLossyNsString.emplace(label, asciiStr->get(), __LINE__, \
-                                    js::ProfileEntry::Category::category); \
+                                    js::ProfilingStackFrame::Category::category); \
   }
 
 // Similar to AUTO_PROFILER_LABEL, but accepting a JSContext* parameter, and a
@@ -516,7 +516,7 @@ mozilla::Maybe<ProfilerBufferInfo> profiler_get_buffer_info();
 // where the profiler is disabled.
 #define AUTO_PROFILER_LABEL_FAST(label, category, ctx) \
   mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, __LINE__, \
-                                           js::ProfileEntry::Category::category)
+                                           js::ProfilingStackFrame::Category::category)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
@@ -695,7 +695,7 @@ class MOZ_RAII AutoProfilerLabel
 public:
   // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
-                    uint32_t aLine, js::ProfileEntry::Category aCategory
+                    uint32_t aLine, js::ProfilingStackFrame::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -708,7 +708,7 @@ public:
   // profiler_is_active() and retrieves the PseudoStack from the JSContext.
   AutoProfilerLabel(JSContext* aJSContext,
                     const char* aLabel, const char* aDynamicString,
-                    uint32_t aLine, js::ProfileEntry::Category aCategory
+                    uint32_t aLine, js::ProfilingStackFrame::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -722,7 +722,7 @@ public:
 
   void Push(PseudoStack* aPseudoStack,
             const char* aLabel, const char* aDynamicString,
-            uint32_t aLine, js::ProfileEntry::Category aCategory)
+            uint32_t aLine, js::ProfilingStackFrame::Category aCategory)
   {
     // This function runs both on and off the main thread.
 

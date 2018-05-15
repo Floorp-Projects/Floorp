@@ -93,7 +93,7 @@ protected:
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectJitReturnAddr(void* aAddr) override;
   virtual void CollectWasmFrame(const char* aLabel) override;
-  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) override;
+  virtual void CollectProfilingStackFrame(const js::ProfilingStackFrame& aEntry) override;
 
 private:
   void TryAppendFrame(mozilla::HangEntry aFrame);

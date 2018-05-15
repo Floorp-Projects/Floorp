@@ -23,8 +23,8 @@ GeckoProfilerThread::updatePC(JSContext* cx, JSScript* script, jsbytecode* pc)
     uint32_t sp = pseudoStack_->stackPointer;
     if (sp - 1 < pseudoStack_->stackCapacity()) {
         MOZ_ASSERT(sp > 0);
-        MOZ_ASSERT(pseudoStack_->entries[sp - 1].rawScript() == script);
-        pseudoStack_->entries[sp - 1].setPC(pc);
+        MOZ_ASSERT(pseudoStack_->frames[sp - 1].rawScript() == script);
+        pseudoStack_->frames[sp - 1].setPC(pc);
     }
 }
 
@@ -81,7 +81,7 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
 
 MOZ_ALWAYS_INLINE
 AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
-                                               ProfileEntry::Category category
+                                               ProfilingStackFrame::Category category
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : profiler_(&cx->geckoProfiler())
 {
