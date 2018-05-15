@@ -622,10 +622,12 @@ class AsyncTabSwitcher {
 
     this.maybeFinishTabSwitch();
 
-    if (numWarming > gTabWarmingMax || numBackgroundCached > 0) {
-      if (numWarming > gTabWarmingMax) {
-        this.logState("Hit tabWarmingMax");
-      }
+    if (numBackgroundCached > 0) {
+      this.deactivateCachedBackgroundTabs();
+    }
+
+    if (numWarming > gTabWarmingMax) {
+      this.logState("Hit tabWarmingMax");
       if (this.unloadTimer) {
         this.clearTimer(this.unloadTimer);
       }
@@ -650,14 +652,7 @@ class AsyncTabSwitcher {
     this.postActions();
   }
 
-  // If there are any non-visible and non-requested tabs in
-  // STATE_LOADED, sets them to STATE_UNLOADING. Also queues
-  // up the unloadTimer to run onUnloadTimeout if there are still
-  // tabs in the process of unloading.
-  unloadNonRequiredTabs() {
-    this.warmingTabs = new WeakSet();
-    let numPending = 0;
-
+  deactivateCachedBackgroundTabs() {
     for (let tab of this.tabLayerCache) {
       if (tab !== this.requestedTab) {
         let browser = tab.linkedBrowser;
@@ -665,6 +660,15 @@ class AsyncTabSwitcher {
         browser.docShellIsActive = false;
       }
     }
+  }
+
+  // If there are any non-visible and non-requested tabs in
+  // STATE_LOADED, sets them to STATE_UNLOADING. Also queues
+  // up the unloadTimer to run onUnloadTimeout if there are still
+  // tabs in the process of unloading.
+  unloadNonRequiredTabs() {
+    this.warmingTabs = new WeakSet();
+    let numPending = 0;
 
     // Unload any tabs that can be unloaded.
     for (let [tab, state] of this.tabState) {
