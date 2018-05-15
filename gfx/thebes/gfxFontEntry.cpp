@@ -1780,7 +1780,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData)
     }
     aMatchData->mCmapsTested++;
 
-    if (isinf(distance)) {
+    if (std::isinf(distance)) {
         return;
     }
 
