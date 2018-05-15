@@ -435,7 +435,6 @@ talos-tps:
     max-run-time: 900
     run-on-projects:
         by-test-platform:
-            .*-qr/.*: []  # bug 1390875
             linux64-ccov/.*: ['try']  # Bug 1407593
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
