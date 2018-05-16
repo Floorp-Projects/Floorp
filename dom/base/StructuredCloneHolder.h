@@ -42,7 +42,10 @@ public:
   StructuredCloneHolderBase(StructuredCloneScope aScope = StructuredCloneScope::SameProcessSameThread);
   virtual ~StructuredCloneHolderBase();
 
-  StructuredCloneHolderBase(StructuredCloneHolderBase&& aOther) = default;
+  // Note, it is unsafe to Move() a StructuredCloneHolderBase since a raw
+  // this pointer is passed to mBuffer as a callback closure.  That must
+  // be fixed if you want to implement a move constructor here.
+  StructuredCloneHolderBase(StructuredCloneHolderBase&& aOther) = delete;
 
   // These methods should be implemented in order to clone data.
   // Read more documentation in js/public/StructuredClone.h.
@@ -173,7 +176,7 @@ public:
                                  StructuredCloneScope aStructuredCloneScope);
   virtual ~StructuredCloneHolder();
 
-  StructuredCloneHolder(StructuredCloneHolder&& aOther) = default;
+  StructuredCloneHolder(StructuredCloneHolder&& aOther) = delete;
 
   // Normally you should just use Write() and Read().
 

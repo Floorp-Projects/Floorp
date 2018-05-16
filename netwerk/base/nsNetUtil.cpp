@@ -2706,32 +2706,6 @@ NS_LinkRedirectChannels(uint32_t channelId,
                                  _result);
 }
 
-#define NS_FAKE_SCHEME "http://"
-#define NS_FAKE_TLD ".invalid"
-nsresult NS_MakeRandomInvalidURLString(nsCString &result)
-{
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsID idee;
-  rv = uuidgen->GenerateUUIDInPlace(&idee);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char chars[NSID_LENGTH];
-  idee.ToProvidedString(chars);
-
-  result.AssignLiteral(NS_FAKE_SCHEME);
-  // Strip off the '{' and '}' at the beginning and end of the UUID
-  result.Append(chars + 1, NSID_LENGTH - 3);
-  result.AppendLiteral(NS_FAKE_TLD);
-
-  return NS_OK;
-}
-#undef NS_FAKE_SCHEME
-#undef NS_FAKE_TLD
-
 nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel* aChannel,
                                        nsIInputStream **aStream)
 {
@@ -2750,64 +2724,6 @@ nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel* aChannel,
     return aChannel->AsyncOpen2(aListener);
   }
   return aChannel->AsyncOpen(aListener, nullptr);
-}
-
-nsresult
-NS_CheckIsJavaCompatibleURLString(nsCString &urlString, bool *result)
-{
-  *result = false; // Default to "no"
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIURLParser> urlParser =
-    do_GetService(NS_STDURLPARSER_CONTRACTID, &rv);
-  if (NS_FAILED(rv) || !urlParser)
-    return NS_ERROR_FAILURE;
-
-  bool compatible = true;
-  uint32_t schemePos = 0;
-  int32_t schemeLen = 0;
-  urlParser->ParseURL(urlString.get(), -1, &schemePos, &schemeLen,
-                      nullptr, nullptr, nullptr, nullptr);
-  if (schemeLen != -1) {
-    nsCString scheme;
-    scheme.Assign(urlString.get() + schemePos, schemeLen);
-    // By default Java only understands a small number of URL schemes, and of
-    // these only some can legitimately represent a browser page's "origin"
-    // (and be something we can legitimately expect Java to handle ... or not
-    // to mishandle).
-    //
-    // Besides those listed below, the OJI plugin understands the "jar",
-    // "mailto", "netdoc", "javascript" and "rmi" schemes, and Java Plugin2
-    // also understands the "about" scheme.  We actually pass "about" URLs
-    // to Java ("about:blank" when processing a javascript: URL (one that
-    // calls Java) from the location bar of a blank page, and (in FF4 and up)
-    // "about:home" when processing a javascript: URL from the home page).
-    // And Java doesn't appear to mishandle them (for example it doesn't allow
-    // connections to "about" URLs).  But it doesn't make any sense to do
-    // same-origin checks on "about" URLs, so we don't include them in our
-    // scheme whitelist.
-    //
-    // The OJI plugin doesn't understand "chrome" URLs (only Java Plugin2
-    // does) -- so we mustn't pass them to the OJI plugin.  But we do need to
-    // pass "chrome" URLs to Java Plugin2:  Java Plugin2 grants additional
-    // privileges to chrome "origins", and some extensions take advantage of
-    // this.  For more information see bug 620773.
-    //
-    // As of FF4, we no longer support the OJI plugin.
-    if (PL_strcasecmp(scheme.get(), "http") &&
-        PL_strcasecmp(scheme.get(), "https") &&
-        PL_strcasecmp(scheme.get(), "file") &&
-        PL_strcasecmp(scheme.get(), "ftp") &&
-        PL_strcasecmp(scheme.get(), "gopher") &&
-        PL_strcasecmp(scheme.get(), "chrome"))
-      compatible = false;
-  } else {
-    compatible = false;
-  }
-
-  *result = compatible;
-
-  return NS_OK;
 }
 
 /** Given the first (disposition) token from a Content-Disposition header,
