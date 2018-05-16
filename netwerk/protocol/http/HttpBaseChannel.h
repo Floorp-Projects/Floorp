@@ -247,8 +247,6 @@ public:
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable) override;
   NS_IMETHOD GetInitialRwin(uint32_t* aRwin) override;
   NS_IMETHOD SetInitialRwin(uint32_t aRwin) override;
-  NS_IMETHOD GetNetworkInterfaceId(nsACString& aNetworkInterfaceId) override;
-  NS_IMETHOD SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId) override;
   NS_IMETHOD ForcePending(bool aForcePending) override;
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) override;
   NS_IMETHOD GetCorsIncludeCredentials(bool* aInclude) override;
@@ -674,9 +672,6 @@ protected:
   uint64_t mTransferSize;
   uint64_t mDecodedBodySize;
   uint64_t mEncodedBodySize;
-
-  // The network interface id that's associated with this channel.
-  nsCString mNetworkInterfaceId;
 
   uint64_t mRequestContextID;
   bool EnsureRequestContextID();

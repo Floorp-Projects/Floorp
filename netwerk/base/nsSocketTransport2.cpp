@@ -1116,9 +1116,9 @@ nsSocketTransport::ResolveHost()
         SOCKET_LOG(("nsSocketTransport %p origin %s doing dns for %s\n",
                     this, mOriginHost.get(), SocketHost().get()));
     }
-    rv = dns->AsyncResolveExtendedNative(SocketHost(), dnsFlags, mNetworkInterfaceId,
-                                         this, nullptr, mOriginAttributes,
-                                         getter_AddRefs(mDNSRequest));
+    rv = dns->AsyncResolveNative(SocketHost(), dnsFlags,
+                                 this, nullptr, mOriginAttributes,
+                                 getter_AddRefs(mDNSRequest));
     if (NS_SUCCEEDED(rv)) {
         SOCKET_LOG(("  advancing to STATE_RESOLVING\n"));
         mState = STATE_RESOLVING;
@@ -2671,22 +2671,6 @@ NS_IMETHODIMP
 nsSocketTransport::GetPort(int32_t *port)
 {
     *port = (int32_t) SocketPort();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::GetNetworkInterfaceId(nsACString &aNetworkInterfaceId)
-{
-    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    aNetworkInterfaceId = mNetworkInterfaceId;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::SetNetworkInterfaceId(const nsACString &aNetworkInterfaceId)
-{
-    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    mNetworkInterfaceId = aNetworkInterfaceId;
     return NS_OK;
 }
 

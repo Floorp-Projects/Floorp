@@ -27,7 +27,6 @@ public:
   DNSRequestChild(const nsACString& aHost,
                   const OriginAttributes& aOriginAttributes,
                   const uint32_t& aFlags,
-                  const nsACString& aNetworkInterface,
                   nsIDNSListener *aListener, nsIEventTarget *target);
 
   void AddIPDLReference() {
@@ -54,7 +53,6 @@ protected:
   nsCString                 mHost;
   const OriginAttributes    mOriginAttributes;
   uint16_t                  mFlags;
-  nsCString                 mNetworkInterface;
   bool                      mIPCOpen;
 };
 
