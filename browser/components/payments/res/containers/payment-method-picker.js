@@ -24,10 +24,12 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
     this.securityCodeInput.size = 3;
     this.securityCodeInput.addEventListener("change", this);
     this.addLink = document.createElement("a");
+    this.addLink.className = "add-link";
     this.addLink.href = "javascript:void(0)";
     this.addLink.textContent = this.dataset.addLinkLabel;
     this.addLink.addEventListener("click", this);
     this.editLink = document.createElement("a");
+    this.editLink.className = "edit-link";
     this.editLink.href = "javascript:void(0)";
     this.editLink.textContent = this.dataset.editLinkLabel;
     this.editLink.addEventListener("click", this);

@@ -35,6 +35,7 @@
 #include "LayerState.h"
 #include "FrameMetrics.h"
 #include "ImgDrawResult.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
@@ -3474,10 +3475,9 @@ public:
       }
     }
     mOldItems.Clear();
+    mDAG.Clear();
     nsDisplayList::DeleteAll(aBuilder);
   }
-
-  void ClearDAG();
 
   DirectedAcyclicGraph<MergedListUnits> mDAG;
 
