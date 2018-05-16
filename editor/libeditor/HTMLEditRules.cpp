@@ -5515,13 +5515,8 @@ HTMLEditRules::ConvertListType(Element* aList,
   return listElement.forget();
 }
 
-
-/**
- * CreateStyleForInsertText() takes care of clearing and setting appropriate
- * style nodes for text insertion.
- */
 nsresult
-HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
+HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDocument)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(HTMLEditorRef().mTypeInState);
@@ -5534,7 +5529,7 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
   nsCOMPtr<nsINode> node = firstRange->GetStartContainer();
   int32_t offset = firstRange->StartOffset();
 
-  nsCOMPtr<Element> rootElement = aDoc.GetRootElement();
+  RefPtr<Element> rootElement = aDocument.GetRootElement();
   if (NS_WARN_IF(!rootElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -5553,6 +5548,9 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
       nsresult rv =
         HTMLEditorRef().ClearStyle(address_of(node), &offset,
                                    item->tag, item->attr);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -5574,6 +5572,9 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
         HTMLEditorRef().SplitNodeDeepWithTransaction(
                           *text, EditorRawDOMPoint(text, offset),
                           SplitAtEdges::eAllowToCreateEmptyContainer);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(splitTextNodeResult.Failed())) {
         return splitTextNodeResult.Rv();
       }
@@ -5585,10 +5586,13 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
       return NS_OK;
     }
     OwningNonNull<Text> newNode =
-      EditorBase::CreateTextNode(aDoc, EmptyString());
+      EditorBase::CreateTextNode(aDocument, EmptyString());
     nsresult rv =
       HTMLEditorRef().InsertNodeWithTransaction(
                         *newNode, EditorRawDOMPoint(node, offset));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5602,6 +5606,9 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
         HTMLEditor::FontSize::incr : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         rv = HTMLEditorRef().RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -5612,6 +5619,9 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
       rv = HTMLEditorRef().SetInlinePropertyOnNode(*node->AsContent(),
                                                    *item->tag, item->attr,
                                                    item->value);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -5624,6 +5634,9 @@ HTMLEditRules::CreateStyleForInsertText(nsIDocument& aDoc)
   }
 
   nsresult rv = SelectionRef().Collapse(node, offset);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
