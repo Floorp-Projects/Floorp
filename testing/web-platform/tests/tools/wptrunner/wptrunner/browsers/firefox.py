@@ -10,7 +10,7 @@ import mozleak
 from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile, Preferences
 from mozrunner import FirefoxRunner
-from mozrunner.utils import get_stack_fixer_function
+from mozrunner.utils import test_environment, get_stack_fixer_function
 from mozcrash import mozcrash
 
 from .base import (get_free_port,
@@ -80,6 +80,7 @@ def browser_kwargs(test_type, run_info_data, **kwargs):
                                                          run_info_data,
                                                          **kwargs),
             "leak_check": kwargs["leak_check"],
+            "asan": run_info_data.get("asan"),
             "stylo_threads": kwargs["stylo_threads"],
             "chaos_mode_flags": kwargs["chaos_mode_flags"],
             "config": kwargs["config"]}
@@ -151,8 +152,8 @@ class FirefoxBrowser(Browser):
     def __init__(self, logger, binary, prefs_root, test_type, extra_prefs=None, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
                  ca_certificate_path=None, e10s=False, stackfix_dir=None,
-                 binary_args=None, timeout_multiplier=None, leak_check=False, stylo_threads=1,
-                 chaos_mode_flags=None, config=None):
+                 binary_args=None, timeout_multiplier=None, leak_check=False, asan=False,
+                 stylo_threads=1, chaos_mode_flags=None, config=None):
         Browser.__init__(self, logger)
         self.binary = binary
         self.prefs_root = prefs_root
@@ -178,8 +179,12 @@ class FirefoxBrowser(Browser):
         if timeout_multiplier:
             self.init_timeout = self.init_timeout * timeout_multiplier
 
-        self.leak_report_file = None
+        self.asan = asan
         self.leak_check = leak_check
+        self.leak_report_file = None
+        self.lsan_handler = None
+        if self.asan:
+            self.lsan_handler = mozleak.LSANLeaks(logger)
         self.stylo_threads = stylo_threads
         self.chaos_mode_flags = chaos_mode_flags
 
@@ -191,10 +196,11 @@ class FirefoxBrowser(Browser):
             self.marionette_port = get_free_port(2828, exclude=self.used_ports)
             self.used_ports.add(self.marionette_port)
 
-        env = os.environ.copy()
-        env["MOZ_CRASHREPORTER"] = "1"
-        env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
-        env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
+        env = test_environment(xrePath=os.path.dirname(self.binary),
+                               debugger=self.debug_info is not None,
+                               log=self.logger,
+                               lsanPath=self.prefs_root)
+
         env["STYLO_THREADS"] = str(self.stylo_threads)
         if self.chaos_mode_flags is not None:
             env["MOZ_CHAOSMODE"] = str(self.chaos_mode_flags)
@@ -299,20 +305,21 @@ class FirefoxBrowser(Browser):
 
     def process_leaks(self):
         self.logger.debug("PROCESS LEAKS %s" % self.leak_report_file)
-        if self.leak_report_file is None:
-            return
-        mozleak.process_leak_log(
-            self.leak_report_file,
-            leak_thresholds={
-                "default": 0,
-                "tab": 10000,  # See dependencies of bug 1051230.
-                # GMP rarely gets a log, but when it does, it leaks a little.
-                "geckomediaplugin": 20000,
-            },
-            ignore_missing_leaks=["geckomediaplugin"],
-            log=self.logger,
-            stack_fixer=self.stack_fixer
-        )
+        if self.lsan_handler:
+            self.lsan_handler.process()
+        if self.leak_report_file is not None:
+            mozleak.process_leak_log(
+                self.leak_report_file,
+                leak_thresholds={
+                    "default": 0,
+                    "tab": 10000,  # See dependencies of bug 1051230.
+                    # GMP rarely gets a log, but when it does, it leaks a little.
+                    "geckomediaplugin": 20000,
+                },
+                ignore_missing_leaks=["geckomediaplugin"],
+                log=self.logger,
+                stack_fixer=self.stack_fixer
+            )
 
     def pid(self):
         if self.runner.process_handler is None:
@@ -331,6 +338,8 @@ class FirefoxBrowser(Browser):
             data = line.decode("utf8", "replace")
             if self.stack_fixer:
                 data = self.stack_fixer(data)
+            if self.lsan_handler:
+                self.lsan_handler.log(data)
             self.logger.process_output(self.pid(),
                                       data,
                                       command=" ".join(self.runner.command))
