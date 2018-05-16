@@ -654,6 +654,8 @@ case "$target" in
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
         MOZ_FIX_LINK_PATHS=
 
+        MOZ_OPTIMIZE_FLAGS="-O2"
+
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
     else
