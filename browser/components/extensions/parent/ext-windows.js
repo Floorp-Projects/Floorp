@@ -110,15 +110,13 @@ this.windows = class extends ExtensionAPI {
 
         getAll: function(getInfo) {
           let doNotCheckTypes = getInfo === null || getInfo.windowTypes === null;
-
-          function typeFilter(win) {
-            return doNotCheckTypes || getInfo.windowTypes.includes(win.type);
+          let windows = [];
+          for (let win of windowManager.getAll()) {
+            if (doNotCheckTypes || getInfo.windowTypes.includes(win.type)) {
+              windows.push(win.convert(getInfo));
+            }
           }
-
-          let windows = Array.from(windowManager.getAll(), win => win.convert(getInfo))
-                        .filter(typeFilter);
-
-          return Promise.resolve(windows);
+          return windows;
         },
 
         create: function(createData) {

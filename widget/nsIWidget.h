@@ -143,6 +143,7 @@ typedef void* nsNativeWidget;
 #ifdef MOZ_X11
 #define NS_NATIVE_COMPOSITOR_DISPLAY   105
 #endif // MOZ_X11
+#define NS_NATIVE_EGL_WINDOW           106
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #define NS_JAVA_SURFACE                100

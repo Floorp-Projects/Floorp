@@ -333,6 +333,7 @@ add_task(async function onItemMoved_bookmark() {
           { name: "oldParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "newParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
+          { name: "url", check: v => typeof(v) == "string" },
         ] },
       { name: "onItemMoved",
         args: [
@@ -346,6 +347,7 @@ add_task(async function onItemMoved_bookmark() {
           { name: "oldParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "newParentGuid", check: v => typeof(v) == "string" && PlacesUtils.isValidGuid(v) },
           { name: "source", check: v => Object.values(PlacesUtils.bookmarks.SOURCES).includes(v) },
+          { name: "url", check: v => typeof(v) == "string" },
         ] },
   ])]);
   await PlacesUtils.bookmarks.update({

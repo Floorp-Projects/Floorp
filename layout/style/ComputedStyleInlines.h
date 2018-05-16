@@ -15,9 +15,8 @@
 #define ComputedStyleInlines_h
 
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/ComputedStyle.h"
+#include "mozilla/ServoComputedDataInlines.h"
 #include "mozilla/ServoUtils.h"
-#include "mozilla/ServoBindings.h"
 
 namespace mozilla {
 
@@ -28,7 +27,7 @@ ComputedStyle::Style##name_() {                             \
 }                                                           \
 const nsStyle##name_ *                                      \
 ComputedStyle::ThreadsafeStyle##name_() {                   \
-  if (mozilla::ServoStyleSet::IsInServoTraversal()) {       \
+  if (mozilla::IsInServoTraversal()) {                      \
     return ComputedData()->GetStyle##name_();               \
   }                                                         \
   return Style##name_();                                    \
@@ -53,7 +52,7 @@ const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
   /* perform any remaining main thread work on the struct */                \
   if (needToCompute) {                                                      \
     MOZ_ASSERT(NS_IsMainThread());                                          \
-    MOZ_ASSERT(!mozilla::ServoStyleSet::IsInServoTraversal());              \
+    MOZ_ASSERT(!mozilla::IsInServoTraversal());                             \
     const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
     /* the ComputedStyle owns the struct */                                 \
     AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \

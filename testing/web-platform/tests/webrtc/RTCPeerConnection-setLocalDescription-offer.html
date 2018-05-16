@@ -12,8 +12,8 @@
 
   // The following helper functions are called from RTCPeerConnection-helper.js:
   //   generateOffer
-  //   assert_session_desc_not_equals
-  //   assert_session_desc_equals
+  //   assert_session_desc_not_similar
+  //   assert_session_desc_similar
   //   test_state_change_event
 
   /*
@@ -65,8 +65,8 @@
       pc.setLocalDescription(offer)
       .then(() => {
         assert_equals(pc.signalingState, 'have-local-offer');
-        assert_session_desc_equals(pc.localDescription, offer);
-        assert_session_desc_equals(pc.pendingLocalDescription, offer);
+        assert_session_desc_similar(pc.localDescription, offer);
+        assert_session_desc_similar(pc.pendingLocalDescription, offer);
         assert_equals(pc.currentLocalDescription, null);
       }));
   }, 'setLocalDescription with valid offer should succeed');
@@ -84,8 +84,8 @@
       pc.setLocalDescription({ type: 'offer' })
       .then(() => {
         assert_equals(pc.signalingState, 'have-local-offer');
-        assert_session_desc_equals(pc.localDescription, offer);
-        assert_session_desc_equals(pc.pendingLocalDescription, offer);
+        assert_session_desc_similar(pc.localDescription, offer);
+        assert_session_desc_similar(pc.pendingLocalDescription, offer);
         assert_equals(pc.currentLocalDescription, null);
       }));
   }, 'setLocalDescription with type offer and null sdp should use lastOffer generated from createOffer');
@@ -117,7 +117,7 @@
     .then(offer1 =>
       pc.createOffer({ offerToReceiveVideo: true })
       .then(offer2 => {
-        assert_session_desc_not_equals(offer1, offer2);
+        assert_session_desc_not_similar(offer1, offer2);
         return promise_rejects(t, 'InvalidModificationError',
           pc.setLocalDescription(offer1));
       }));
@@ -137,10 +137,10 @@
         .then(offer2 =>
           pc.setLocalDescription(offer2)
           .then(offer2 => {
-            assert_session_desc_not_equals(offer1, offer2);
+            assert_session_desc_not_similar(offer1, offer2);
             assert_equals(pc.signalingState, 'have-local-offer');
-            assert_session_desc_equals(pc.localDescription, offer2);
-            assert_session_desc_equals(pc.pendingLocalDescription, offer2);
+            assert_session_desc_similar(pc.localDescription, offer2);
+            assert_session_desc_similar(pc.pendingLocalDescription, offer2);
             assert_equals(pc.currentLocalDescription, null);
           }))));
   }, 'Creating and setting offer multiple times should succeed');

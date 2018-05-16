@@ -348,9 +348,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   },
 
   get isDisplayed() {
-    // The NodeActor's form contains the isDisplayed information as a boolean
-    // starting from FF32. Before that, the property is missing
-    return "isDisplayed" in this._form ? this._form.isDisplayed : true;
+    return this._form.isDisplayed;
   },
 
   get isTreeDisplayed() {

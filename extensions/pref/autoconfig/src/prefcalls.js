@@ -11,6 +11,9 @@ const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
 const nsIPrefService = Ci.nsIPrefService;
 const PrefServiceContractID = "@mozilla.org/preferences-service;1";
 
+// ChromeUtils isn't available here, so we can't use Services.*
+/* eslint-disable mozilla/use-services */
+
 var gVersion;
 var gIsUTF8;
 

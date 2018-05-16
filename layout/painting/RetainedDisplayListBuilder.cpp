@@ -149,8 +149,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
 
     if (item->GetChildren()) {
       if (!PreProcessDisplayList(item->GetChildren(), SelectAGRForFrame(f, aAGR))) {
-        mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
-        mBuilder.MarkFrameModifiedDuringBuilding(f);
+        return false;
       }
     }
 
@@ -462,11 +461,6 @@ public:
   DirectedAcyclicGraph<MergedListUnits> mMergedDAG;
   bool mResultIsModified;
 };
-
-void RetainedDisplayList::ClearDAG()
-{
-  mDAG.Clear();
-}
 
 /**
  * Takes two display lists and merges them into an output list.
@@ -1119,7 +1113,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
                            &modifiedAGR, framesWithProps.Frames()) ||
       !PreProcessDisplayList(&mList, modifiedAGR)) {
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
-    mList.ClearDAG();
+    mList.DeleteAll(&mBuilder);
     return PartialUpdateResult::Failed;
   }
 
@@ -1157,7 +1151,8 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(
   if (mBuilder.PartialBuildFailed()) {
     mBuilder.SetPartialBuildFailed(false);
     mBuilder.LeavePresShell(mBuilder.RootReferenceFrame(), List());
-    mList.ClearDAG();
+    mList.DeleteAll(&mBuilder);
+    modifiedDL.DeleteAll(&mBuilder);
     return PartialUpdateResult::Failed;
   }
 
