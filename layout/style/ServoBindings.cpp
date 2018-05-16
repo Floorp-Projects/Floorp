@@ -1668,11 +1668,11 @@ Gecko_CreateGradient(uint8_t aShape,
   return result;
 }
 
-const mozilla::css::URLValueData*
-Gecko_GetURLValue(const nsStyleImage* aImage)
+const nsStyleImageRequest*
+Gecko_GetImageRequest(const nsStyleImage* aImage)
 {
-  MOZ_ASSERT(aImage && aImage->GetType() == eStyleImageType_Image);
-  return aImage->GetURLValue();
+  MOZ_ASSERT(aImage);
+  return aImage->ImageRequest();
 }
 
 nsAtom*

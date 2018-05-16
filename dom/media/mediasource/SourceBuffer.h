@@ -88,10 +88,19 @@ public:
   void AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv);
   void AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv);
 
+  already_AddRefed<Promise> AppendBufferAsync(const ArrayBuffer& aData,
+                                              ErrorResult& aRv);
+  already_AddRefed<Promise> AppendBufferAsync(const ArrayBufferView& aData,
+                                              ErrorResult& aRv);
+
   void Abort(ErrorResult& aRv);
   void AbortBufferAppend();
 
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
+
+  already_AddRefed<Promise> RemoveAsync(double aStart,
+                                        double aEnd,
+                                        ErrorResult& aRv);
 
   void ChangeType(const nsAString& aType, ErrorResult& aRv);
 
@@ -157,6 +166,10 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
+  // Shared implementation of AppendBufferAsync overloads.
+  already_AddRefed<Promise> AppendDataAsync(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
+
+  void PrepareRemove(double aStart, double aEnd, ErrorResult& aRv);
 
   // Implement the "Append Error Algorithm".
   // Will call endOfStream() with "decode" error if aDecodeError is true.
@@ -190,6 +203,11 @@ private:
   RefPtr<TimeRanges> mBuffered;
 
   MozPromiseRequestHolder<MediaSource::ActiveCompletionPromise> mCompletionPromise;
+
+  // Only used if MSE v2 experimental mode is active.
+  // Contains the current Promise to be resolved following use of
+  // appendBufferAsync and removeAsync. Not set of no operation is pending.
+  RefPtr<Promise> mDOMPromise;
 };
 
 } // namespace dom

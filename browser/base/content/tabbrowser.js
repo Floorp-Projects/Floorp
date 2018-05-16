@@ -2093,6 +2093,12 @@ window._gBrowser = {
       return;
     }
 
+    // Reset webrtc sharing state.
+    if (tab._sharingState) {
+      this.setBrowserSharing(aBrowser, {});
+    }
+    webrtcUI.forgetStreamsFromBrowser(aBrowser);
+
     // Set browser parameters for when browser is restored.  Also remove
     // listeners and set up lazy restore data in SessionStore. This must
     // be done before aBrowser is destroyed and removed from the document.
