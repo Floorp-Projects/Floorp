@@ -12,6 +12,7 @@
 #include "mozilla/AtomArray.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/ServoComputedDataInlines.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/css/SheetParsingMode.h"
@@ -20,7 +21,6 @@
 #include "mozilla/ComputedTimingFunction.h"
 #include "nsChangeHint.h"
 #include "nsIDocument.h"
-#include "nsStyleStruct.h"
 
 /*
  * API for Servo to access Gecko data structures.
@@ -77,17 +77,6 @@ const bool GECKO_IS_NIGHTLY = true;
 #else
 const bool GECKO_IS_NIGHTLY = false;
 #endif
-
-namespace mozilla {
-  #define STYLE_STRUCT(name_) struct Gecko##name_ {nsStyle##name_ gecko;};
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
-}
-
-#define STYLE_STRUCT(name_) \
-  const nsStyle##name_* ServoComputedData::GetStyle##name_() const { return &name_.mPtr->gecko; }
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
