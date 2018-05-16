@@ -443,6 +443,9 @@ HTMLEditRules::AfterEdit(EditAction aAction,
 
     // Do all the tricky stuff
     rv = AfterEditInner(aAction, aDirection);
+    // Perhaps, we need to do the following jobs even if the editor has been
+    // destroyed since they adjust some states of HTML document but don't
+    // modify the DOM tree nor Selection.
 
     // Free up selectionState range item
     HTMLEditorRef().mRangeUpdater.DropRangeItem(mRangeItem);
@@ -528,6 +531,9 @@ HTMLEditRules::AfterEditInner(EditAction aAction,
     if (aAction != EditAction::insertText &&
         aAction != EditAction::insertIMEText) {
       nsresult rv = HTMLEditorRef().CollapseAdjacentTextNodes(mDocChangeRange);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
