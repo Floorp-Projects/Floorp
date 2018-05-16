@@ -22,4 +22,9 @@ UNIFIED_SOURCES = [
     'TestGeckoView.cpp',
 ]
 
+# We need the following line otherwise including
+# "TelemetryHistogram.h" in tests will fail due to
+# missing headers.
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul-gtest'

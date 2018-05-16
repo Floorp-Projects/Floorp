@@ -18,6 +18,10 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+// This is only used on GeckoView.
+#include "mozilla/JSONWriter.h"
+#endif
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -36,6 +40,7 @@ using base::BooleanHistogram;
 using base::CountHistogram;
 using base::FlagHistogram;
 using base::LinearHistogram;
+using mozilla::MakeTuple;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
 using mozilla::Telemetry::HistogramAccumulation;
@@ -47,6 +52,7 @@ using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
 using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::GetNameForProcessID;
+using mozilla::Telemetry::Common::GetIDForProcessName;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::CanRecordProduct;
@@ -2508,3 +2514,361 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
   // TODO
   return 0;
 }
+
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+namespace base {
+class PersistedSampleSet : public Histogram::SampleSet
+{
+public:
+  explicit PersistedSampleSet(const nsTArray<Histogram::Count>& aCounts,
+                              int64_t aSampleSum);
+};
+
+PersistedSampleSet::PersistedSampleSet(const nsTArray<Histogram::Count>& aCounts,
+                                       int64_t aSampleSum)
+{
+  // Initialize the data in the base class. See Histogram::SampleSet
+  // for the fields documentation.
+  const size_t numCounts = aCounts.Length();
+  counts_.resize(numCounts);
+  for (size_t i = 0; i < numCounts; i++) {
+    counts_[i] = aCounts[i];
+    redundant_count_ += aCounts[i];
+  }
+  sum_ = aSampleSum;
+};
+} // base (from ipc/chromium/src/base)
+
+namespace {
+/**
+ * Helper function to write histogram properties to JSON.
+ * Please note that this needs to be called between
+ * StartObjectProperty/EndObject calls that mark the histogram's
+ * JSON creation.
+ */
+void
+internal_ReflectHistogramToJSON(const HistogramSnapshotData& aSnapshot,
+                                mozilla::JSONWriter& aWriter)
+{
+  aWriter.IntProperty("sum", aSnapshot.mSampleSum);
+
+  // Fill the "counts" property.
+  aWriter.StartArrayProperty("counts");
+  for (size_t i = 0; i < aSnapshot.mBucketCounts.Length(); i++) {
+    aWriter.IntElement(aSnapshot.mBucketCounts[i]);
+  }
+  aWriter.EndArray();
+}
+
+bool
+internal_CanRecordHistogram(const HistogramID id,
+                            ProcessID aProcessType)
+{
+  // Check if we are allowed to record the data.
+  if (!CanRecordDataset(gHistogramInfos[id].dataset,
+                        internal_CanRecordBase(),
+                        internal_CanRecordExtended())) {
+    return false;
+  }
+
+  // Check if we're allowed to record in the given process.
+  if (aProcessType == ProcessID::Parent && !internal_IsRecordingEnabled(id)) {
+    return false;
+  }
+
+  if (aProcessType != ProcessID::Parent
+      && !CanRecordInProcess(gHistogramInfos[id].record_in_processes, aProcessType)) {
+    return false;
+  }
+
+  // Don't record if the current platform is not enabled
+  if (!CanRecordProduct(gHistogramInfos[id].products)) {
+    return false;
+  }
+
+  return true;
+}
+
+nsresult
+internal_ParseHistogramData(JSContext* aCx, JS::HandleId aEntryId,
+                            JS::HandleObject aContainerObj, nsACString& aOutName,
+                            nsTArray<Histogram::Count>& aOutCountArray, int64_t& aOutSum)
+{
+  // Get the histogram name.
+  nsAutoJSString histogramName;
+  if (!histogramName.init(aCx, aEntryId)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  aOutName = NS_ConvertUTF16toUTF8(histogramName);
+
+  // Get the data for this histogram.
+  JS::RootedValue histogramData(aCx);
+  if (!JS_GetPropertyById(aCx, aContainerObj, aEntryId, &histogramData)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!histogramData.isObject()) {
+    // Histogram data need to be an object. If that's not the case, skip it
+    // and try to load the rest of the data.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the "sum" property.
+  JS::RootedValue sumValue(aCx);
+  JS::RootedObject histogramObj(aCx, &histogramData.toObject());
+  if (!JS_GetProperty(aCx, histogramObj, "sum", &sumValue)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!JS::ToInt64(aCx, sumValue, &aOutSum)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the "counts" array.
+  JS::RootedValue countsArray(aCx);
+  bool countsIsArray = false;
+  if (!JS_GetProperty(aCx, histogramObj, "counts", &countsArray)
+      || !JS_IsArrayObject(aCx, countsArray, &countsIsArray)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!countsIsArray) {
+    // The "counts" property needs to be an array. If this is not the case,
+    // skip this histogram.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Get the length of the array.
+  uint32_t countsLen = 0;
+  JS::RootedObject countsArrayObj(aCx, &countsArray.toObject());
+  if (!JS_GetArrayLength(aCx, countsArrayObj, &countsLen)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Parse the "counts" in the array.
+  for (uint32_t arrayIdx = 0; arrayIdx < countsLen; arrayIdx++) {
+    JS::RootedValue elementValue(aCx);
+    int countAsInt = 0;
+    if (!JS_GetElement(aCx, countsArrayObj, arrayIdx, &elementValue)
+        || !JS::ToInt32(aCx, elementValue, &countAsInt)) {
+      JS_ClearPendingException(aCx);
+      return NS_ERROR_FAILURE;
+    }
+    aOutCountArray.AppendElement(countAsInt);
+  }
+
+  return NS_OK;
+}
+
+} // Anonymous namespace
+
+nsresult
+TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only save histograms in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Include the GPU process in histogram snapshots only if we actually tried
+  // to launch a process for it.
+  bool includeGPUProcess = internal_AttemptedGPUProcess();
+
+  // Take a snapshot of the histograms.
+  HistogramProcessSnapshotsArray processHistArray;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    // We always request the "opt-in"/"prerelease" dataset: we internally
+    // record the right subset, so this will only return "prerelease" if
+    // it was recorded.
+    if (NS_FAILED(internal_GetHistogramsSnapshot(locker,
+                                                 nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN,
+                                                 false /* aClearSubsession */,
+                                                 includeGPUProcess,
+                                                 processHistArray))) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+
+
+  // Make the JSON calls on the stashed histograms for every process
+  for (uint32_t process = 0; process < processHistArray.length(); ++process) {
+    aWriter.StartObjectProperty(GetNameForProcessID(ProcessID(process)));
+
+    for (const HistogramSnapshotInfo& hData : processHistArray[process]) {
+      HistogramID id = hData.histogramID;
+
+      aWriter.StartObjectProperty(gHistogramInfos[id].name());
+      internal_ReflectHistogramToJSON(hData.data, aWriter);
+      aWriter.EndObject();
+    }
+    aWriter.EndObject();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+TelemetryHistogram::DeserializeHistograms(JSContext* aCx, JS::HandleValue aData)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(), "Only load histograms in the parent process");
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Telemetry is disabled. This should never happen, but let's leave this check
+  // for consistency with other histogram updates routines.
+  if (!internal_CanRecordBase()) {
+    return NS_OK;
+  }
+
+  typedef mozilla::Tuple<nsCString, nsTArray<Histogram::Count>, int64_t>
+    PersistedHistogramTuple;
+  typedef mozilla::Vector<PersistedHistogramTuple> PersistedHistogramArray;
+  typedef mozilla::Vector<PersistedHistogramArray> PersistedHistogramStorage;
+
+  // Before updating the histograms, we need to get the data out of the JS
+  // wrappers. We can't hold the histogram mutex while handling JS stuff.
+  // Build a <histogram name, value> map.
+  JS::RootedObject histogramDataObj(aCx, &aData.toObject());
+  JS::Rooted<JS::IdVector> processes(aCx, JS::IdVector(aCx));
+  if (!JS_Enumerate(aCx, histogramDataObj, &processes)) {
+    // We can't even enumerate the processes in the loaded data, so
+    // there is nothing we could recover from the persistence file. Bail out.
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Make sure we have enough storage for all the processes.
+  PersistedHistogramStorage histogramsToUpdate;
+  if (!histogramsToUpdate.resize(processes.length())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // The following block of code attempts to extract as much data as possible
+  // from the serialized JSON, even in case of light data corruptions: if, for example,
+  // the data for a single process is corrupted or is in an unexpected form, we press on
+  // and attempt to load the data for the other processes.
+  JS::RootedId process(aCx);
+  for (auto& processVal : processes) {
+    // This is required as JS API calls require an Handle<jsid> and not a
+    // plain jsid.
+    process = processVal;
+    // Get the process name.
+    nsAutoJSString processNameJS;
+    if (!processNameJS.init(aCx, process)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    // Make sure it's valid. Note that this is safe to call outside
+    // of a locked section.
+    NS_ConvertUTF16toUTF8 processName(processNameJS);
+    ProcessID processID = GetIDForProcessName(processName.get());
+    if (processID == ProcessID::Count) {
+      NS_WARNING(nsPrintfCString("Failed to get process ID for %s", processName.get()).get());
+      continue;
+    }
+
+    // And its probes.
+    JS::RootedValue processData(aCx);
+    if (!JS_GetPropertyById(aCx, histogramDataObj, process, &processData)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    if (!processData.isObject()) {
+      // |processData| should be an object containing histograms. If this is
+      // not the case, silently skip and try to load the data for the other
+      // processes.
+      continue;
+    }
+
+    // Iterate through each histogram.
+    JS::RootedObject processDataObj(aCx, &processData.toObject());
+    JS::Rooted<JS::IdVector> histograms(aCx, JS::IdVector(aCx));
+    if (!JS_Enumerate(aCx, processDataObj, &histograms)) {
+      JS_ClearPendingException(aCx);
+      continue;
+    }
+
+    // Get a reference to the deserialized data for this process.
+    PersistedHistogramArray& deserializedProcessData =
+      histogramsToUpdate[static_cast<uint32_t>(processID)];
+
+    JS::RootedId histogram(aCx);
+    for (auto& histogramVal : histograms) {
+      histogram = histogramVal;
+
+      int64_t sum = 0;
+      nsTArray<Histogram::Count> deserializedCounts;
+      nsCString histogramName;
+      if (NS_FAILED(internal_ParseHistogramData(aCx, histogram, processDataObj,
+                                                histogramName, deserializedCounts, sum))) {
+        continue;
+      }
+
+      // Finally append the deserialized data to the storage.
+      if (!deserializedProcessData.emplaceBack(
+        MakeTuple(mozilla::Move(histogramName), mozilla::Move(deserializedCounts), sum))) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  // Update the histogram storage.
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+
+    for (uint32_t process = 0; process < histogramsToUpdate.length(); ++process) {
+      PersistedHistogramArray& processArray = histogramsToUpdate[process];
+
+      for (auto& histogramData : processArray) {
+        // Attempt to get the corresponding ID for the deserialized histogram name.
+        HistogramID id;
+        if (NS_FAILED(internal_GetHistogramIdByName(mozilla::Get<0>(histogramData), &id))) {
+          continue;
+        }
+
+        ProcessID procID = static_cast<ProcessID>(process);
+        if (!internal_CanRecordHistogram(id, procID)) {
+          // We're not allowed to record this, so don't try to restore it.
+          continue;
+        }
+
+        // Get the Histogram instance: this will instantiate it if it doesn't exist.
+        Histogram* h = internal_GetHistogramById(id, procID);
+        MOZ_ASSERT(h);
+
+        if (!h || internal_IsExpired(h)) {
+          // Don't restore expired histograms.
+          continue;
+        }
+
+        // Make sure that histogram counts have matching sizes. If not,
+        // |AddSampleSet| will fail and crash.
+        size_t numCounts = mozilla::Get<1>(histogramData).Length();
+        if (h->bucket_count() != numCounts) {
+          MOZ_ASSERT(false,
+                     "The number of restored buckets does not match with the on in the definition");
+          continue;
+        }
+
+        // Update the data for the histogram.
+        h->AddSampleSet(base::PersistedSampleSet(mozilla::Move(mozilla::Get<1>(histogramData)),
+                                                 mozilla::Get<2>(histogramData)));
+      }
+    }
+  }
+
+  return NS_OK;
+}
+#endif // MOZ_TELEMETRY_GECKOVIEW
