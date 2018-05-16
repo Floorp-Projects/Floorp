@@ -29,7 +29,7 @@ public:
                        uint32_t* aMatchLength,
                        bool* aConfirmed) override;
 
-  virtual bool IsEmpty() override;
+  virtual bool IsEmpty() const override;
 
   nsresult Build(PrefixStringMap& aPrefixMap);
 
@@ -53,12 +53,11 @@ protected:
   virtual nsresult ClearPrefixes() override;
   virtual nsresult StoreToFile(nsIFile* aFile) override;
   virtual nsresult LoadFromFile(nsIFile* aFile) override;
-  virtual size_t SizeOfPrefixSet() override;
+  virtual size_t SizeOfPrefixSet() const override;
 
 private:
   virtual int Ver() const override { return VER; }
 
-  nsresult InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto);
   nsresult VerifyChecksum(const nsACString& aChecksum);
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;

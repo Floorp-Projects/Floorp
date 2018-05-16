@@ -37,23 +37,23 @@ public:
     Completion complete;
   } hash;
 
-  const Completion &CompleteHash() {
+  const Completion &CompleteHash() const {
     MOZ_ASSERT(!mNoise);
     return hash.complete;
   }
 
-  nsCString PartialHash() {
+  nsCString PartialHash() const {
     MOZ_ASSERT(mPartialHashLength <= COMPLETE_SIZE);
     if (mNoise) {
-      return nsCString(reinterpret_cast<char*>(hash.fixedLengthPrefix.buf),
+      return nsCString(reinterpret_cast<const char*>(hash.fixedLengthPrefix.buf),
                        PREFIX_SIZE);
     } else {
-      return nsCString(reinterpret_cast<char*>(hash.complete.buf),
+      return nsCString(reinterpret_cast<const char*>(hash.complete.buf),
                        mPartialHashLength);
     }
   }
 
-  nsCString PartialHashHex() {
+  nsCString PartialHashHex() const {
     nsAutoCString hex;
     for (size_t i = 0; i < mPartialHashLength; i++) {
       hex.AppendPrintf("%.2X", hash.complete.buf[i]);
@@ -208,7 +208,7 @@ public:
 
   // Check if completions can be found in cache.
   // Currently this is only used by testcase.
-  bool IsInCache(uint32_t key) { return mFullHashCache.Get(key); };
+  bool IsInCache(uint32_t key) const { return mFullHashCache.Get(key); };
 
 #if DEBUG
   void DumpCache();
@@ -224,7 +224,7 @@ public:
                        uint32_t* aMatchLength,
                        bool* aConfirmed) = 0;
 
-  virtual bool IsEmpty() = 0;
+  virtual bool IsEmpty() const = 0;
 
   virtual void ClearAll();
 
@@ -238,7 +238,7 @@ private:
 
   virtual nsresult StoreToFile(nsIFile* aFile) = 0;
   virtual nsresult LoadFromFile(nsIFile* aFile) = 0;
-  virtual size_t SizeOfPrefixSet() = 0;
+  virtual size_t SizeOfPrefixSet() const = 0;
 
   virtual int Ver() const = 0;
 
@@ -250,8 +250,8 @@ protected:
                       bool* aConfirmed);
 
   bool mPrimed; // true when the PrefixSet has been loaded (or constructed)
-  nsCString mTableName;
-  nsCString mProvider;
+  const nsCString mTableName;
+  const nsCString mProvider;
   nsCOMPtr<nsIFile> mRootStoreDirectory;
   nsCOMPtr<nsIFile> mStoreDirectory;
 
@@ -279,7 +279,7 @@ public:
                        uint32_t* aMatchLength,
                        bool* aConfirmed) override;
 
-  virtual bool IsEmpty() override;
+  virtual bool IsEmpty() const override;
 
   nsresult Build(AddPrefixArray& aAddPrefixes,
                  AddCompleteArray& aAddCompletes);
@@ -304,7 +304,7 @@ protected:
   virtual nsresult ClearPrefixes() override;
   virtual nsresult StoreToFile(nsIFile* aFile) override;
   virtual nsresult LoadFromFile(nsIFile* aFile) override;
-  virtual size_t SizeOfPrefixSet() override;
+  virtual size_t SizeOfPrefixSet() const override;
 
 private:
   virtual int Ver() const override { return VER; }

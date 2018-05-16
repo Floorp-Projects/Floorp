@@ -998,7 +998,7 @@ Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
 }
 
 nsresult
-Classifier::ActiveTables(nsTArray<nsCString>& aTables)
+Classifier::ActiveTables(nsTArray<nsCString>& aTables) const
 {
   aTables = mActiveTablesCache;
   return NS_OK;

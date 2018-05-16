@@ -52,7 +52,7 @@ public:
   // becomes the caller's responsibility to free them.  This is shitty.
   TableUpdate *GetTableUpdate(const nsACString& aTable);
   void ForgetTableUpdates() { mTableUpdates.Clear(); }
-  nsTArray<TableUpdate*> &GetTableUpdates() { return mTableUpdates; }
+  const nsTArray<TableUpdate*>& GetTableUpdates() { return mTableUpdates; }
 
   // These are only meaningful to V2. Since they were originally public,
   // moving them to ProtocolParserV2 requires a dymamic cast in the call
