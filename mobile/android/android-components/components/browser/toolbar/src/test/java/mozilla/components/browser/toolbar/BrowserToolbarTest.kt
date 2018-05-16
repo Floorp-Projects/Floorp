@@ -225,7 +225,7 @@ class BrowserToolbarTest {
 
         assertNull(toolbar.displayToolbar.menuBuilder)
 
-        val menuBuilder = BrowserMenuBuilder()
+        val menuBuilder = BrowserMenuBuilder(emptyList())
         toolbar.setMenuBuilder(menuBuilder)
 
         assertNotNull(toolbar.displayToolbar.menuBuilder)

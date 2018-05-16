@@ -31,11 +31,7 @@ class Components(private val applicationContext: Context) {
     val sessionUseCases = SessionUseCases(sessionProvider, engine)
     val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
 
-    val menuBuilder by lazy {
-        val builder = BrowserMenuBuilder()
-        builder.items = menuItems
-        builder
-    }
+    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
         listOf(

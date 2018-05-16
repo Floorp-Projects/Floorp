@@ -8,15 +8,14 @@ import android.content.Context
 
 /**
  * Helper class for building browser menus.
+ *
+ * @param items List of BrowserMenuItem objects to compose the menu from.
  */
-class BrowserMenuBuilder {
-    /**
-     * List of BrowserMenuItem objects to compose the menu from.
-     */
-    var items: List<BrowserMenuItem>? = null
-
+class BrowserMenuBuilder(
+    private val items: List<BrowserMenuItem>
+) {
     fun build(context: Context): BrowserMenu {
-        val adapter = BrowserMenuAdapter(context, items!!)
+        val adapter = BrowserMenuAdapter(context, items)
 
         return BrowserMenu(adapter)
     }

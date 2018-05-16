@@ -111,7 +111,7 @@ class DisplayToolbarTest {
 
         assertTrue(menuView.visibility == View.GONE)
 
-        displayToolbar.menuBuilder = BrowserMenuBuilder()
+        displayToolbar.menuBuilder = BrowserMenuBuilder(emptyList())
 
         assertTrue(menuView.visibility == View.VISIBLE)
     }

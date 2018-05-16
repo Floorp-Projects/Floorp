@@ -18,8 +18,7 @@ import org.robolectric.RuntimeEnvironment
 class BrowserMenuBuilderTest {
     @Test
     fun `items are forwarded from builder to menu`() {
-        val builder = BrowserMenuBuilder()
-        builder.items = listOf(mockMenuItem(), mockMenuItem())
+        val builder = BrowserMenuBuilder(listOf(mockMenuItem(), mockMenuItem()))
 
         val menu = builder.build(RuntimeEnvironment.application)
 
@@ -32,12 +31,6 @@ class BrowserMenuBuilderTest {
         val recyclerAdapter = recyclerView.adapter
         assertNotNull(recyclerAdapter)
         assertEquals(2, recyclerAdapter.itemCount)
-    }
-
-    @Test(expected = KotlinNullPointerException::class)
-    fun `builder throws exception if no items are set`() {
-        val builder = BrowserMenuBuilder()
-        builder.build(RuntimeEnvironment.application)
     }
 
     private fun mockMenuItem() = object : BrowserMenuItem {
