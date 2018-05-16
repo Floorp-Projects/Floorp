@@ -904,7 +904,7 @@ nsIFrame::AddDisplayItem(nsDisplayItem* aItem)
     items = new DisplayItemArray();
     AddProperty(DisplayItems(), items);
   }
-  MOZ_DIAGNOSTIC_ASSERT(!items->Contains(aItem));
+  MOZ_ASSERT(!items->Contains(aItem));
   items->AppendElement(aItem);
 }
 
