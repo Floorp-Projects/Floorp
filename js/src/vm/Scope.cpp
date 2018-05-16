@@ -204,12 +204,12 @@ template <typename ConcreteScope>
 static UniquePtr<typename ConcreteScope::Data>
 NewEmptyScopeData(JSContext* cx, uint32_t length = 0)
 {
-    uint8_t* bytes = cx->zone()->pod_calloc<uint8_t>(ConcreteScope::sizeOfData(length));
+    uint8_t* bytes = cx->zone()->pod_malloc<uint8_t>(ConcreteScope::sizeOfData(length));
     if (!bytes)
         ReportOutOfMemory(cx);
     auto data = reinterpret_cast<typename ConcreteScope::Data*>(bytes);
     if (data)
-        new (data) typename ConcreteScope::Data();
+        new (data) typename ConcreteScope::Data(length);
     return UniquePtr<typename ConcreteScope::Data>(data);
 }
 
