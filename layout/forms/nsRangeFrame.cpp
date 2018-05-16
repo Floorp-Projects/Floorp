@@ -242,7 +242,7 @@ nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
 
   ImgDrawResult result =
     nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
-                                mVisibleRect, GetBounds(aBuilder, &unused),
+                                GetPaintRect(), GetBounds(aBuilder, &unused),
                                 computedStyle, flags);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);

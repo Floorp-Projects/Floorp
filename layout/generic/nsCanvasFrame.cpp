@@ -355,7 +355,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
-  PaintInternal(aBuilder, aCtx, mVisibleRect, &bgClipRect);
+  PaintInternal(aBuilder, aCtx, GetPaintRect(), &bgClipRect);
 }
 
 bool
@@ -402,7 +402,7 @@ nsDisplayCanvasThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
-  PaintInternal(aBuilder, aCtx, mVisibleRect, &bgClipRect);
+  PaintInternal(aBuilder, aCtx, GetPaintRect(), &bgClipRect);
 }
 
 /**

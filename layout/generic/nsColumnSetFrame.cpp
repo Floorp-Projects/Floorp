@@ -59,7 +59,7 @@ nsDisplayColumnRule::Paint(nsDisplayListBuilder* aBuilder,
                            gfxContext* aCtx)
 {
   static_cast<nsColumnSetFrame*>(mFrame)->
-    CreateBorderRenderers(mBorderRenderers, aCtx, mVisibleRect, ToReferenceFrame());
+    CreateBorderRenderers(mBorderRenderers, aCtx, GetPaintRect(), ToReferenceFrame());
 
   for (auto iter = mBorderRenderers.begin(); iter != mBorderRenderers.end(); iter++) {
     iter->DrawBorders();
@@ -77,7 +77,7 @@ nsDisplayColumnRule::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aB
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
 
   static_cast<nsColumnSetFrame*>(mFrame)->
-    CreateBorderRenderers(mBorderRenderers, screenRefCtx, mVisibleRect, ToReferenceFrame());
+    CreateBorderRenderers(mBorderRenderers, screenRefCtx, GetPaintRect(), ToReferenceFrame());
 
   if (mBorderRenderers.IsEmpty()) {
     return true;
