@@ -151,12 +151,25 @@ protected:
   void InitFields();
 
   void WillInsert(bool* aCancel);
-  nsresult WillInsertText(EditAction aAction,
-                          bool* aCancel,
-                          bool* aHandled,
-                          const nsAString* inString,
-                          nsAString* outString,
-                          int32_t aMaxLength);
+
+  /**
+   * Called before inserting text.
+   * This method may actually inserts text into the editor.  Therefore, this
+   * might cause destroying the editor.
+   *
+   * @param aAction             Must be EditAction::insertIMEText or
+   *                            EditAction::insertText.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param inString            String to be inserted.
+   * @param outString           String actually inserted.
+   * @param aMaxLength          The maximum string length which the editor
+   *                            allows to set.
+   */
+  MOZ_MUST_USE nsresult
+  WillInsertText(EditAction aAction, bool* aCancel, bool* aHandled,
+                 const nsAString* inString, nsAString* outString,
+                 int32_t aMaxLength);
 
   /**
    * WillLoadHTML() is called before loading enter document from source.
