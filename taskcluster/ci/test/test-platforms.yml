@@ -83,6 +83,7 @@ linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - common-tests
+        - web-platform-tests
 
 # Stylo sequential runs check memory and performance when using a single thread.
 linux64-stylo-sequential/opt:
