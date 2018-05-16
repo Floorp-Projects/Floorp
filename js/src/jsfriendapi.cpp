@@ -799,13 +799,13 @@ FormatValue(JSContext* cx, const Value& vArg, JSAutoByteString& bytes)
         return "[unavailable]";
 
     /*
-     * We could use Maybe<AutoCompartment> here, but G++ can't quite follow
+     * We could use Maybe<AutoRealm> here, but G++ can't quite follow
      * that, and warns about uninitialized members being used in the
      * destructor.
      */
     RootedString str(cx);
     if (v.isObject()) {
-        AutoCompartment ac(cx, &v.toObject());
+        AutoRealm ar(cx, &v.toObject());
         str = ToString<CanGC>(cx, v);
     } else {
         str = ToString<CanGC>(cx, v);

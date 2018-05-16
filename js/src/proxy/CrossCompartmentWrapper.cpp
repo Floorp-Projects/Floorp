@@ -20,7 +20,7 @@ using namespace js;
     JS_BEGIN_MACRO                                              \
         bool ok;                                                \
         {                                                       \
-            AutoCompartment call(cx, wrappedObject(wrapper));   \
+            AutoRealm call(cx, wrappedObject(wrapper));         \
             ok = (pre) && (op);                                 \
         }                                                       \
         return ok && (post);                                    \
@@ -101,7 +101,7 @@ CrossCompartmentWrapper::getPrototype(JSContext* cx, HandleObject wrapper,
 {
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
-        AutoCompartment call(cx, wrapped);
+        AutoRealm call(cx, wrapped);
         if (!GetPrototype(cx, wrapped, protop))
             return false;
         if (protop) {
@@ -130,7 +130,7 @@ CrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrap
 {
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
-        AutoCompartment call(cx, wrapped);
+        AutoRealm call(cx, wrapped);
         if (!GetPrototypeIfOrdinary(cx, wrapped, isOrdinary, protop))
             return false;
 
@@ -218,7 +218,7 @@ CrossCompartmentWrapper::get(JSContext* cx, HandleObject wrapper, HandleValue re
 {
     RootedValue receiverCopy(cx, receiver);
     {
-        AutoCompartment call(cx, wrappedObject(wrapper));
+        AutoRealm call(cx, wrappedObject(wrapper));
         if (!MarkAtoms(cx, id) || !WrapReceiver(cx, wrapper, &receiverCopy))
             return false;
 
@@ -325,7 +325,7 @@ CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper) const
 {
     RootedObject res(cx);
     {
-        AutoCompartment call(cx, wrappedObject(wrapper));
+        AutoRealm call(cx, wrappedObject(wrapper));
         res = Wrapper::enumerate(cx, wrapper);
         if (!res)
             return nullptr;
@@ -344,7 +344,7 @@ CrossCompartmentWrapper::call(JSContext* cx, HandleObject wrapper, const CallArg
     RootedObject wrapped(cx, wrappedObject(wrapper));
 
     {
-        AutoCompartment call(cx, wrapped);
+        AutoRealm call(cx, wrapped);
 
         args.setCallee(ObjectValue(*wrapped));
         if (!cx->compartment()->wrap(cx, args.mutableThisv()))
@@ -367,7 +367,7 @@ CrossCompartmentWrapper::construct(JSContext* cx, HandleObject wrapper, const Ca
 {
     RootedObject wrapped(cx, wrappedObject(wrapper));
     {
-        AutoCompartment call(cx, wrapped);
+        AutoRealm call(cx, wrapped);
 
         for (size_t n = 0; n < args.length(); ++n) {
             if (!cx->compartment()->wrap(cx, args[n]))
@@ -391,7 +391,7 @@ CrossCompartmentWrapper::nativeCall(JSContext* cx, IsAcceptableThis test, Native
 
     RootedObject wrapped(cx, wrappedObject(wrapper));
     {
-        AutoCompartment call(cx, wrapped);
+        AutoRealm call(cx, wrapped);
         InvokeArgs dstArgs(cx);
         if (!dstArgs.init(cx, srcArgs.length()))
             return false;
@@ -434,7 +434,7 @@ bool
 CrossCompartmentWrapper::hasInstance(JSContext* cx, HandleObject wrapper, MutableHandleValue v,
                                      bool* bp) const
 {
-    AutoCompartment call(cx, wrappedObject(wrapper));
+    AutoRealm call(cx, wrappedObject(wrapper));
     if (!cx->compartment()->wrap(cx, v))
         return false;
     return Wrapper::hasInstance(cx, wrapper, v, bp);
@@ -443,7 +443,7 @@ CrossCompartmentWrapper::hasInstance(JSContext* cx, HandleObject wrapper, Mutabl
 const char*
 CrossCompartmentWrapper::className(JSContext* cx, HandleObject wrapper) const
 {
-    AutoCompartment call(cx, wrappedObject(wrapper));
+    AutoRealm call(cx, wrappedObject(wrapper));
     return Wrapper::className(cx, wrapper);
 }
 
@@ -452,7 +452,7 @@ CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, bool 
 {
     RootedString str(cx);
     {
-        AutoCompartment call(cx, wrappedObject(wrapper));
+        AutoRealm call(cx, wrappedObject(wrapper));
         str = Wrapper::fun_toString(cx, wrapper, isToSource);
         if (!str)
             return nullptr;
@@ -467,7 +467,7 @@ CrossCompartmentWrapper::regexp_toShared(JSContext* cx, HandleObject wrapper) co
 {
     RootedRegExpShared re(cx);
     {
-        AutoCompartment call(cx, wrappedObject(wrapper));
+        AutoRealm call(cx, wrappedObject(wrapper));
         re = Wrapper::regexp_toShared(cx, wrapper);
         if (!re)
             return nullptr;
@@ -637,7 +637,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
-    AutoCompartmentUnchecked ac(cx, wcompartment);
+    AutoRealmUnchecked ar(cx, wcompartment);
     if (!wcompartment->rewrap(cx, &tobj, wobj))
         MOZ_CRASH();
 

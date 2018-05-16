@@ -1331,9 +1331,9 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject stack(cx);
     {
-        Maybe<AutoCompartment> ac;
+        Maybe<AutoRealm> ar;
         if (compartmentObject)
-            ac.emplace(cx, compartmentObject);
+            ar.emplace(cx, compartmentObject);
         if (!JS::CaptureCurrentStack(cx, &stack, mozilla::Move(capture)))
             return false;
     }
@@ -2183,10 +2183,10 @@ ResolvePromise(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject promise(cx, &args[0].toObject());
     RootedValue resolution(cx, args[1]);
-    mozilla::Maybe<AutoCompartment> ac;
+    mozilla::Maybe<AutoRealm> ar;
     if (IsWrapper(promise)) {
         promise = UncheckedUnwrap(promise);
-        ac.emplace(cx, promise);
+        ar.emplace(cx, promise);
         if (!cx->compartment()->wrap(cx, &resolution))
             return false;
     }
@@ -2215,10 +2215,10 @@ RejectPromise(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject promise(cx, &args[0].toObject());
     RootedValue reason(cx, args[1]);
-    mozilla::Maybe<AutoCompartment> ac;
+    mozilla::Maybe<AutoRealm> ar;
     if (IsWrapper(promise)) {
         promise = UncheckedUnwrap(promise);
-        ac.emplace(cx, promise);
+        ar.emplace(cx, promise);
         if (!cx->compartment()->wrap(cx, &reason))
             return false;
     }
@@ -3927,7 +3927,7 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
         // If we're switching globals here, ExecuteInGlobalAndReturnScope will
         // take care of cloning the script into that compartment before
         // executing it.
-        AutoCompartment ac(cx, global);
+        AutoRealm ar(cx, global);
 
         if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &lexicalScope))
             return false;
@@ -4002,7 +4002,7 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    AutoCompartment ac(cx, global);
+    AutoRealm ar(cx, global);
 
     JS::RootedValue rval(cx);
     if (!JS::CloneAndExecuteScript(cx, script, &rval))
@@ -4387,7 +4387,7 @@ GetLcovInfo(JSContext* cx, unsigned argc, Value* vp)
     size_t length = 0;
     char* content = nullptr;
     {
-        AutoCompartment ac(cx, global);
+        AutoRealm ar(cx, global);
         content = js::GetCodeCoverageSummary(cx, &length);
     }
 
@@ -5191,7 +5191,7 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
 
     const char* returnedStr = nullptr;
     do {
-        AutoCompartment ac(cx, script);
+        AutoRealm ar(cx, script);
         if (script->hasBaselineScript()) {
             if (forceDebug && !script->baselineScript()->hasDebugInstrumentation()) {
                 // There isn't an easy way to do this for a script that might be on

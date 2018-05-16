@@ -144,7 +144,7 @@ bool TestViewType(JSContext* cx)
 
     JS::Rooted<JSObject*> buffer(cx);
     {
-        AutoCompartment ac(cx, otherGlobal);
+        AutoRealm ar(cx, otherGlobal);
         buffer = JS_NewArrayBuffer(cx, 8);
         CHECK(buffer);
         CHECK(buffer->as<ArrayBufferObject>().byteLength() == 8);

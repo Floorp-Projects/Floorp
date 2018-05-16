@@ -3499,7 +3499,7 @@ js::detail::CopyScript(JSContext* cx, HandleScript src, HandleScript dst,
                     clone = innerFun;
                 } else {
                     if (innerFun->isInterpretedLazy()) {
-                        AutoCompartment ac(cx, innerFun);
+                        AutoRealm ar(cx, innerFun);
                         if (!JSFunction::getOrCreateScript(cx, innerFun))
                             return false;
                     }

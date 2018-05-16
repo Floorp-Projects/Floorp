@@ -248,7 +248,7 @@ static inline bool
 EnsureFunctionHasScript(JSContext* cx, HandleFunction fun)
 {
     if (fun->isInterpretedLazy()) {
-        AutoCompartment ac(cx, fun);
+        AutoRealm ar(cx, fun);
         return !!JSFunction::getOrCreateScript(cx, fun);
     }
     return true;
@@ -367,7 +367,7 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
         if (EnterDebuggeeNoExecute* nx = findInStack(cx)) {
             bool warning = !cx->options().throwOnDebuggeeWouldRun();
             if (!warning || !nx->reported_) {
-                AutoCompartment ac(cx, nx->debugger().toJSObject());
+                AutoRealm ar(cx, nx->debugger().toJSObject());
                 nx->reported_ = true;
                 if (cx->options().dumpStackOnDebuggeeWouldRun()) {
                     fprintf(stdout, "Dumping stack for DebuggeeWouldRun:\n");
@@ -960,14 +960,14 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
             {
                 OnPopHandler* handler = frameobj->onPopHandler();
 
-                Maybe<AutoCompartment> ac;
-                ac.emplace(cx, dbg->object);
+                Maybe<AutoRealm> ar;
+                ar.emplace(cx, dbg->object);
 
                 RootedValue wrappedValue(cx, value);
                 RootedValue completion(cx);
                 if (!dbg->wrapDebuggeeValue(cx, &wrappedValue))
                 {
-                    resumeMode = dbg->reportUncaughtException(ac);
+                    resumeMode = dbg->reportUncaughtException(ar);
                     break;
                 }
 
@@ -975,7 +975,7 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode
                 ResumeMode nextResumeMode = resumeMode;
                 RootedValue nextValue(cx, wrappedValue);
                 bool success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
-                nextResumeMode = dbg->processParsedHandlerResult(ac, frame, pc, success,
+                nextResumeMode = dbg->processParsedHandlerResult(ar, frame, pc, success,
                                                                  nextResumeMode, &nextValue);
 
                 /*
@@ -1352,9 +1352,9 @@ Debugger::unwrapPropertyDescriptor(JSContext* cx, HandleObject obj,
 }
 
 ResumeMode
-Debugger::reportUncaughtException(Maybe<AutoCompartment>& ac)
+Debugger::reportUncaughtException(Maybe<AutoRealm>& ar)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     // Uncaught exceptions arise from Debugger code, and so we must already be
     // in an NX section.
@@ -1387,16 +1387,16 @@ Debugger::reportUncaughtException(Maybe<AutoCompartment>& ac)
         cx->clearPendingException();
     }
 
-    ac.reset();
+    ar.reset();
     return ResumeMode::Terminate;
 }
 
 ResumeMode
-Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac, MutableHandleValue* vp,
+Debugger::handleUncaughtExceptionHelper(Maybe<AutoRealm>& ar, MutableHandleValue* vp,
                                         const Maybe<HandleValue>& thisVForCheck,
                                         AbstractFramePtr frame)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     // Uncaught exceptions arise from Debugger code, and so we must already be
     // in an NX section.
@@ -1414,7 +1414,7 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac, MutableHandl
             if (js::Call(cx, fval, object, exc, &rv)) {
                 if (vp) {
                     ResumeMode resumeMode = ResumeMode::Continue;
-                    if (processResumptionValue(ac, frame, thisVForCheck, rv, resumeMode, *vp))
+                    if (processResumptionValue(ar, frame, thisVForCheck, rv, resumeMode, *vp))
                         return resumeMode;
                 } else {
                     return ResumeMode::Continue;
@@ -1422,24 +1422,24 @@ Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment>& ac, MutableHandl
             }
         }
 
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
     }
 
-    ac.reset();
+    ar.reset();
     return ResumeMode::Terminate;
 }
 
 ResumeMode
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac, MutableHandleValue vp,
+Debugger::handleUncaughtException(Maybe<AutoRealm>& ar, MutableHandleValue vp,
                                   const Maybe<HandleValue>& thisVForCheck, AbstractFramePtr frame)
 {
-    return handleUncaughtExceptionHelper(ac, &vp, thisVForCheck, frame);
+    return handleUncaughtExceptionHelper(ar, &vp, thisVForCheck, frame);
 }
 
 ResumeMode
-Debugger::handleUncaughtException(Maybe<AutoCompartment>& ac)
+Debugger::handleUncaughtException(Maybe<AutoRealm>& ar)
 {
-    return handleUncaughtExceptionHelper(ac, nullptr, mozilla::Nothing(), NullFramePtr());
+    return handleUncaughtExceptionHelper(ar, nullptr, mozilla::Nothing(), NullFramePtr());
 }
 
 /* static */ void
@@ -1506,16 +1506,16 @@ Debugger::newCompletionValue(JSContext* cx, ResumeMode resumeMode, const Value& 
 }
 
 bool
-Debugger::receiveCompletionValue(Maybe<AutoCompartment>& ac, bool ok,
+Debugger::receiveCompletionValue(Maybe<AutoRealm>& ar, bool ok,
                                  HandleValue val,
                                  MutableHandleValue vp)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     ResumeMode resumeMode;
     RootedValue value(cx);
     resultToCompletion(cx, ok, val, &resumeMode, &value);
-    ac.reset();
+    ar.reset();
     return wrapDebuggeeValue(cx, &value) &&
            newCompletionValue(cx, resumeMode, value, vp);
 }
@@ -1612,7 +1612,7 @@ GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
 {
     if (frame.debuggerNeedsCheckPrimitiveReturn()) {
         {
-            AutoCompartment ac(cx, frame.environmentChain());
+            AutoRealm ar(cx, frame.environmentChain());
             if (!GetThisValueForDebuggerMaybeOptimizedOut(cx, frame, pc, thisv))
                 return false;
         }
@@ -1628,11 +1628,11 @@ GetThisValueForCheck(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
 }
 
 bool
-Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+Debugger::processResumptionValue(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
                                  const Maybe<HandleValue>& maybeThisv, HandleValue rval,
                                  ResumeMode& resumeMode, MutableHandleValue vp)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     if (!ParseResumptionValue(cx, rval, resumeMode, vp) ||
         !unwrapDebuggeeValue(cx, vp) ||
@@ -1641,7 +1641,7 @@ Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr fr
         return false;
     }
 
-    ac.reset();
+    ar.reset();
     if (!cx->compartment()->wrap(cx, vp)) {
         resumeMode = ResumeMode::Terminate;
         vp.setUndefined();
@@ -1651,22 +1651,22 @@ Debugger::processResumptionValue(Maybe<AutoCompartment>& ac, AbstractFramePtr fr
 }
 
 ResumeMode
-Debugger::processParsedHandlerResultHelper(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+Debugger::processParsedHandlerResultHelper(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
                                            const Maybe<HandleValue>& maybeThisv, bool success,
                                            ResumeMode resumeMode, MutableHandleValue vp)
 {
     if (!success)
-        return handleUncaughtException(ac, vp, maybeThisv, frame);
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
 
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     if (!unwrapDebuggeeValue(cx, vp) ||
         !CheckResumptionValue(cx, frame, maybeThisv, resumeMode, vp))
     {
-        return handleUncaughtException(ac, vp, maybeThisv, frame);
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
     }
 
-    ac.reset();
+    ar.reset();
     if (!cx->compartment()->wrap(cx, vp)) {
         resumeMode = ResumeMode::Terminate;
         vp.setUndefined();
@@ -1676,43 +1676,43 @@ Debugger::processParsedHandlerResultHelper(Maybe<AutoCompartment>& ac, AbstractF
 }
 
 ResumeMode
-Debugger::processParsedHandlerResult(Maybe<AutoCompartment>& ac, AbstractFramePtr frame,
+Debugger::processParsedHandlerResult(Maybe<AutoRealm>& ar, AbstractFramePtr frame,
                                      jsbytecode* pc, bool success, ResumeMode resumeMode,
                                      MutableHandleValue vp)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     RootedValue thisv(cx);
     Maybe<HandleValue> maybeThisv;
     if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
-        ac.reset();
+        ar.reset();
         return ResumeMode::Terminate;
     }
 
-    return processParsedHandlerResultHelper(ac, frame, maybeThisv, success, resumeMode, vp);
+    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
 }
 
 ResumeMode
-Debugger::processHandlerResult(Maybe<AutoCompartment>& ac, bool success, const Value& rv,
+Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success, const Value& rv,
                                AbstractFramePtr frame, jsbytecode* pc, MutableHandleValue vp)
 {
-    JSContext* cx = ac->context();
+    JSContext* cx = ar->context();
 
     RootedValue thisv(cx);
     Maybe<HandleValue> maybeThisv;
     if (!GetThisValueForCheck(cx, frame, pc, &thisv, maybeThisv)) {
-        ac.reset();
+        ar.reset();
         return ResumeMode::Terminate;
     }
 
     if (!success)
-        return handleUncaughtException(ac, vp, maybeThisv, frame);
+        return handleUncaughtException(ar, vp, maybeThisv, frame);
 
     RootedValue rootRv(cx, rv);
     ResumeMode resumeMode = ResumeMode::Continue;
     success = ParseResumptionValue(cx, rootRv, resumeMode, vp);
 
-    return processParsedHandlerResultHelper(ac, frame, maybeThisv, success, resumeMode, vp);
+    return processParsedHandlerResultHelper(ar, frame, maybeThisv, success, resumeMode, vp);
 }
 
 static bool
@@ -1750,18 +1750,18 @@ Debugger::fireDebuggerStatement(JSContext* cx, MutableHandleValue vp)
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     ScriptFrameIter iter(cx);
     RootedValue scriptFrame(cx);
     if (!getFrame(cx, iter, &scriptFrame))
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
-    return processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+    return processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
 }
 
 ResumeMode
@@ -1776,20 +1776,20 @@ Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp)
         return ResumeMode::Terminate;
     cx->clearPendingException();
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     RootedValue scriptFrame(cx);
     RootedValue wrappedExc(cx, exc);
 
     FrameIter iter(cx);
     if (!getFrame(cx, iter, &scriptFrame) || !wrapDebuggeeValue(cx, &wrappedExc))
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, wrappedExc, &rv);
-    ResumeMode resumeMode = processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+    ResumeMode resumeMode = processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
     if (resumeMode == ResumeMode::Continue)
         cx->setPendingException(exc);
     return resumeMode;
@@ -1802,20 +1802,20 @@ Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp)
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     RootedValue scriptFrame(cx);
 
     FrameIter iter(cx);
     if (!getFrame(cx, iter, &scriptFrame))
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
 
     RootedValue fval(cx, ObjectValue(*hook));
     RootedValue rv(cx);
     bool ok = js::Call(cx, fval, object, scriptFrame, &rv);
 
-    return processHandlerResult(ac, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
+    return processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
 }
 
 void
@@ -1825,12 +1825,12 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     JSObject* dsobj = wrapVariantReferent(cx, scriptReferent);
     if (!dsobj) {
-        reportUncaughtException(ac);
+        reportUncaughtException(ar);
         return;
     }
 
@@ -1838,7 +1838,7 @@ Debugger::fireNewScript(JSContext* cx, Handle<DebuggerScriptReferent> scriptRefe
     RootedValue dsval(cx, ObjectValue(*dsobj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dsval, &rv))
-        handleUncaughtException(ac);
+        handleUncaughtException(ar);
 }
 
 void
@@ -1852,12 +1852,12 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     JSObject* dataObj = gcData->toJSObject(cx);
     if (!dataObj) {
-        reportUncaughtException(ac);
+        reportUncaughtException(ar);
         return;
     }
 
@@ -1865,7 +1865,7 @@ Debugger::fireOnGarbageCollectionHook(JSContext* cx,
     RootedValue dataVal(cx, ObjectValue(*dataObj));
     RootedValue rv(cx);
     if (!js::Call(cx, fval, object, dataVal, &rv))
-        handleUncaughtException(ac);
+        handleUncaughtException(ar);
 }
 
 template <typename HookIsEnabledFun /* bool (Debugger*) */,
@@ -2016,17 +2016,17 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
         Debugger* dbg = bp->debugger;
         bool hasDebuggee = dbg->enabled && dbg->debuggees.has(global);
         if (hasDebuggee) {
-            Maybe<AutoCompartment> ac;
-            ac.emplace(cx, dbg->object);
+            Maybe<AutoRealm> ar;
+            ar.emplace(cx, dbg->object);
             EnterDebuggeeNoExecute nx(cx, *dbg);
 
             RootedValue scriptFrame(cx);
             if (!dbg->getFrame(cx, iter, &scriptFrame))
-                return dbg->reportUncaughtException(ac);
+                return dbg->reportUncaughtException(ar);
             RootedValue rv(cx);
             Rooted<JSObject*> handler(cx, bp->handler);
             bool ok = CallMethodIfPresent(cx, handler, "hit", 1, scriptFrame.address(), &rv);
-            ResumeMode resumeMode = dbg->processHandlerResult(ac, ok, rv,  iter.abstractFramePtr(),
+            ResumeMode resumeMode = dbg->processHandlerResult(ar, ok, rv,  iter.abstractFramePtr(),
                                                               iter.pc(), vp);
             if (resumeMode != ResumeMode::Continue) {
                 savedExc.drop();
@@ -2115,12 +2115,12 @@ Debugger::onSingleStep(JSContext* cx, MutableHandleValue vp)
         Debugger* dbg = Debugger::fromChildJSObject(frame);
         EnterDebuggeeNoExecute nx(cx, *dbg);
 
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, dbg->object);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, dbg->object);
 
         ResumeMode resumeMode = ResumeMode::Continue;
         bool success = handler->onStep(cx, frame, resumeMode, vp);
-        resumeMode = dbg->processParsedHandlerResult(ac, iter.abstractFramePtr(), iter.pc(), success,
+        resumeMode = dbg->processParsedHandlerResult(ar, iter.abstractFramePtr(), iter.pc(), success,
                                                      resumeMode, vp);
         if (resumeMode != ResumeMode::Continue) {
             savedExc.drop();
@@ -2139,12 +2139,12 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
     MOZ_ASSERT(hook);
     MOZ_ASSERT(hook->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     RootedValue wrappedGlobal(cx, ObjectValue(*global));
     if (!wrapDebuggeeValue(cx, &wrappedGlobal))
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
 
     // onNewGlobalObject is infallible, and thus is only allowed to return
     // undefined as a resumption value. If it returns anything else, we throw.
@@ -2165,7 +2165,7 @@ Debugger::fireNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global, Mutab
     // uncaughtExceptionHook and tells the caller whether we should execute the
     // rest of the onNewGlobalObject hooks or not.
     ResumeMode resumeMode = ok ? ResumeMode::Continue
-                               : handleUncaughtException(ac, vp);
+                               : handleUncaughtException(ar, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return resumeMode;
 }
@@ -2267,14 +2267,14 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
 {
     MOZ_ASSERT(trackingAllocationSites && enabled);
 
-    AutoCompartment ac(cx, object);
+    AutoRealm ar(cx, object);
     RootedObject wrappedFrame(cx, frame);
     if (!cx->compartment()->wrap(cx, &wrappedFrame))
         return false;
 
     RootedAtom ctorName(cx);
     {
-        AutoCompartment ac(cx, obj);
+        AutoRealm ar(cx, obj);
         if (!JSObject::constructorDisplayAtom(cx, obj, &ctorName))
             return false;
     }
@@ -2308,12 +2308,12 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
     MOZ_ASSERT(hookObj);
     MOZ_ASSERT(hookObj->isCallable());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, object);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, object);
 
     RootedValue dbgObj(cx, ObjectValue(*promise));
     if (!wrapDebuggeeValue(cx, &dbgObj))
-        return reportUncaughtException(ac);
+        return reportUncaughtException(ar);
 
     // Like onNewGlobalObject, the Promise hooks are infallible and the comments
     // in |Debugger::fireNewGlobalObject| apply here as well.
@@ -2327,7 +2327,7 @@ Debugger::firePromiseHook(JSContext* cx, Hook hook, HandleObject promise, Mutabl
     }
 
     ResumeMode resumeMode = ok ? ResumeMode::Continue
-                               : handleUncaughtException(ac, vp);
+                               : handleUncaughtException(ar, vp);
     MOZ_ASSERT(!cx->isExceptionPending());
     return resumeMode;
 }
@@ -2337,9 +2337,9 @@ Debugger::slowPathPromiseHook(JSContext* cx, Hook hook, Handle<PromiseObject*> p
 {
     MOZ_ASSERT(hook == OnNewPromise || hook == OnPromiseSettled);
 
-    Maybe<AutoCompartment> ac;
+    Maybe<AutoRealm> ar;
     if (hook == OnNewPromise)
-        ac.emplace(cx, promise);
+        ar.emplace(cx, promise);
 
     assertSameCompartment(cx, promise);
 
@@ -2545,7 +2545,7 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext* cx, const ExecutionObs
 
     // See comment in unsetPrevUpToDateUntil.
     if (oldestEnabledFrame) {
-        AutoCompartment ac(cx, oldestEnabledFrame.environmentChain());
+        AutoRealm ar(cx, oldestEnabledFrame.environmentChain());
         DebugEnvironments::unsetPrevUpToDateUntil(cx, oldestEnabledFrame);
     }
 
@@ -2566,7 +2566,7 @@ AppendAndInvalidateScript(JSContext* cx, Zone* zone, JSScript* script, Vector<JS
     // cancel off-thread compilations, whose books are kept on the
     // script's compartment.
     MOZ_ASSERT(script->compartment()->zone() == zone);
-    AutoCompartment ac(cx, script);
+    AutoRealm ar(cx, script);
     zone->types.addPendingRecompile(cx, script);
     return scripts.append(script);
 }
@@ -4013,7 +4013,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
      * All six indications must be kept consistent.
      */
 
-    AutoCompartment ac(cx, global);
+    AutoRealm ar(cx, global);
     Zone* zone = global->zone();
 
     // (1)
@@ -7616,7 +7616,7 @@ DebuggerFrame::getEnvironment(JSContext* cx, HandleDebuggerFrame frame,
 
     Rooted<Env*> env(cx);
     {
-        AutoCompartment ac(cx, iter.abstractFramePtr().environmentChain());
+        AutoRealm ar(cx, iter.abstractFramePtr().environmentChain());
         UpdateFrameIterPc(iter);
         env = GetDebugEnvironmentForFrame(cx, iter.abstractFramePtr(), iter.pc());
         if (!env)
@@ -7698,7 +7698,7 @@ DebuggerFrame::getThis(JSContext* cx, HandleDebuggerFrame frame, MutableHandleVa
 
     {
         AbstractFramePtr frame = iter.abstractFramePtr();
-        AutoCompartment ac(cx, frame.environmentChain());
+        AutoRealm ar(cx, frame.environmentChain());
 
         UpdateFrameIterPc(iter);
 
@@ -7777,7 +7777,7 @@ DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame, OnStep
     } else {
         if (handler && !prior) {
             // Single stepping toggled off->on.
-            AutoCompartment ac(cx, referent.environmentChain());
+            AutoRealm ar(cx, referent.environmentChain());
             // Ensure observability *before* incrementing the step mode count.
             // Calling this function after calling incrementStepModeCount
             // will make it a no-op.
@@ -7920,11 +7920,11 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
         }
     }
 
-    Maybe<AutoCompartment> ac;
+    Maybe<AutoRealm> ar;
     if (iter)
-        ac.emplace(cx, iter->environmentChain(cx));
+        ar.emplace(cx, iter->environmentChain(cx));
     else
-        ac.emplace(cx, envArg);
+        ar.emplace(cx, envArg);
 
     Rooted<Env*> env(cx);
     if (iter) {
@@ -7972,7 +7972,7 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
                             options.filename() ? options.filename() : "debugger eval code",
                             options.lineno(), &rval);
     Debugger::resultToCompletion(cx, ok, rval, &resumeMode, value);
-    ac.reset();
+    ar.reset();
     return dbg->wrapDebuggeeValue(cx, value);
 }
 
@@ -8348,7 +8348,7 @@ DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
     if (unsigned(i) < frame.numActualArgs()) {
         script = frame.script();
         {
-            AutoCompartment ac(cx, script);
+            AutoRealm ar(cx, script);
             if (!script->ensureHasAnalyzedArgsUsage(cx))
                 return false;
         }
@@ -8970,7 +8970,7 @@ DebuggerObject::environmentGetter(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<Env*> env(cx);
     {
-        AutoCompartment ac(cx, fun);
+        AutoRealm ar(cx, fun);
         env = GetDebugEnvironmentForFunction(cx, fun);
         if (!env)
             return false;
@@ -9590,7 +9590,7 @@ DebuggerObject::asEnvironmentMethod(JSContext* cx, unsigned argc, Value* vp)
 
     Rooted<Env*> env(cx);
     {
-        AutoCompartment ac(cx, referent);
+        AutoRealm ar(cx, referent);
         env = GetDebugEnvironmentForGlobalLexicalEnvironment(cx);
         if (!env)
             return false;
@@ -9911,7 +9911,7 @@ DebuggerObject::getClassName(JSContext* cx, HandleDebuggerObject object,
 
     const char* className;
     {
-        AutoCompartment ac(cx, referent);
+        AutoRealm ar(cx, referent);
         className = GetObjectClassName(cx, referent);
     }
 
@@ -10218,9 +10218,9 @@ DebuggerObject::isExtensible(JSContext* cx, HandleDebuggerObject object, bool& r
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
-    ErrorCopier ec(ac);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
+    ErrorCopier ec(ar);
     return IsExtensible(cx, referent, &result);
 }
 
@@ -10229,10 +10229,10 @@ DebuggerObject::isSealed(JSContext* cx, HandleDebuggerObject object, bool& resul
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Sealed, &result);
 }
 
@@ -10241,10 +10241,10 @@ DebuggerObject::isFrozen(JSContext* cx, HandleDebuggerObject object, bool& resul
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Frozen, &result);
 }
 
@@ -10257,7 +10257,7 @@ DebuggerObject::getPrototypeOf(JSContext* cx, HandleDebuggerObject object,
 
     RootedObject proto(cx);
     {
-        AutoCompartment ac(cx, referent);
+        AutoRealm ar(cx, referent);
         if (!GetPrototype(cx, referent, &proto))
             return false;
     }
@@ -10278,10 +10278,10 @@ DebuggerObject::getOwnPropertyNames(JSContext* cx, HandleDebuggerObject object,
 
     AutoIdVector ids(cx);
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
 
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
         if (!GetPropertyKeys(cx, referent, JSITER_OWNONLY | JSITER_HIDDEN, &ids))
             return false;
     }
@@ -10300,10 +10300,10 @@ DebuggerObject::getOwnPropertySymbols(JSContext* cx, HandleDebuggerObject object
 
     AutoIdVector ids(cx);
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
 
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
         if (!GetPropertyKeys(cx, referent,
                              JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
                              &ids))
@@ -10325,11 +10325,11 @@ DebuggerObject::getOwnPropertyDescriptor(JSContext* cx, HandleDebuggerObject obj
 
     /* Bug: This can cause the debuggee to run! */
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
         cx->markId(id);
 
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
         if (!GetOwnPropertyDescriptor(cx, referent, id, desc))
             return false;
     }
@@ -10364,10 +10364,10 @@ DebuggerObject::preventExtensions(JSContext* cx, HandleDebuggerObject object)
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return PreventExtensions(cx, referent);
 }
 
@@ -10376,10 +10376,10 @@ DebuggerObject::seal(JSContext* cx, HandleDebuggerObject object)
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Sealed);
 }
 
@@ -10388,10 +10388,10 @@ DebuggerObject::freeze(JSContext* cx, HandleDebuggerObject object)
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return SetIntegrityLevel(cx, referent, IntegrityLevel::Frozen);
 }
 
@@ -10407,13 +10407,13 @@ DebuggerObject::defineProperty(JSContext* cx, HandleDebuggerObject object, Handl
         return false;
     JS_TRY_OR_RETURN_FALSE(cx, CheckPropertyDescriptorAccessors(cx, desc));
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
     cx->markId(id);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     if (!DefineProperty(cx, referent, id, desc))
         return false;
 
@@ -10437,15 +10437,15 @@ DebuggerObject::defineProperties(JSContext* cx, HandleDebuggerObject object,
         JS_TRY_OR_RETURN_FALSE(cx, CheckPropertyDescriptorAccessors(cx, descs[i]));
     }
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
     for (size_t i = 0; i < descs.length(); i++) {
         if (!cx->compartment()->wrap(cx, descs[i]))
             return false;
         cx->markId(ids[i]);
     }
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     for (size_t i = 0; i < descs.length(); i++) {
         if (!DefineProperty(cx, referent, ids[i], descs[i]))
             return false;
@@ -10460,12 +10460,12 @@ DebuggerObject::deleteProperty(JSContext* cx, HandleDebuggerObject object, Handl
 {
     RootedObject referent(cx, object->referent());
 
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
 
     cx->markId(id);
 
-    ErrorCopier ec(ac);
+    ErrorCopier ec(ar);
     return DeleteProperty(cx, referent, id, result);
 }
 
@@ -10503,8 +10503,8 @@ DebuggerObject::call(JSContext* cx, HandleDebuggerObject object, HandleValue thi
      * Enter the debuggee compartment and rewrap all input value for that compartment.
      * (Rewrapping always takes place in the destination compartment.)
      */
-    Maybe<AutoCompartment> ac;
-    ac.emplace(cx, referent);
+    Maybe<AutoRealm> ar;
+    ar.emplace(cx, referent);
     if (!cx->compartment()->wrap(cx, &calleev) || !cx->compartment()->wrap(cx, &thisv))
         return false;
     for (unsigned i = 0; i < args2.length(); ++i) {
@@ -10531,7 +10531,7 @@ DebuggerObject::call(JSContext* cx, HandleDebuggerObject object, HandleValue thi
         }
     }
 
-    return dbg->receiveCompletionValue(ac, ok, result, result);
+    return dbg->receiveCompletionValue(ar, ok, result, result);
 }
 
 /* static */ bool
@@ -10599,7 +10599,7 @@ DebuggerObject::makeDebuggeeValue(JSContext* cx, HandleDebuggerObject object,
         // Enter this Debugger.Object's referent's compartment, and wrap the
         // argument as appropriate for references from there.
         {
-            AutoCompartment ac(cx, referent);
+            AutoRealm ar(cx, referent);
             if (!cx->compartment()->wrap(cx, &value))
                 return false;
         }
@@ -11162,10 +11162,10 @@ DebuggerEnvironment::getNames(JSContext* cx, HandleDebuggerEnvironment environme
 
     AutoIdVector ids(cx);
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
 
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
         if (!GetPropertyKeys(cx, referent, JSITER_HIDDEN, &ids))
             return false;
     }
@@ -11192,13 +11192,13 @@ DebuggerEnvironment::find(JSContext* cx, HandleDebuggerEnvironment environment, 
     Debugger* dbg = environment->owner();
 
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, env);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, env);
 
         cx->markId(id);
 
         /* This can trigger resolve hooks. */
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
         for (; env; env = env->enclosingEnvironment()) {
             bool found;
             if (!HasProperty(cx, env, id, &found))
@@ -11226,13 +11226,13 @@ DebuggerEnvironment::getVariable(JSContext* cx, HandleDebuggerEnvironment enviro
     Debugger* dbg = environment->owner();
 
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
 
         cx->markId(id);
 
         /* This can trigger getters. */
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
 
         bool found;
         if (!HasProperty(cx, referent, id, &found))
@@ -11283,14 +11283,14 @@ DebuggerEnvironment::setVariable(JSContext* cx, HandleDebuggerEnvironment enviro
         return false;
 
     {
-        Maybe<AutoCompartment> ac;
-        ac.emplace(cx, referent);
+        Maybe<AutoRealm> ar;
+        ar.emplace(cx, referent);
         if (!cx->compartment()->wrap(cx, &value))
             return false;
         cx->markId(id);
 
         /* This can trigger setters. */
-        ErrorCopier ec(ac);
+        ErrorCopier ec(ar);
 
         /* Make sure the environment actually has the specified binding. */
         bool found;
@@ -11348,7 +11348,7 @@ Builder::Object::definePropertyToTrusted(JSContext* cx, const char* name,
 bool
 Builder::Object::defineProperty(JSContext* cx, const char* name, JS::HandleValue propval_)
 {
-    AutoCompartment ac(cx, debuggerObject());
+    AutoRealm ar(cx, debuggerObject());
 
     RootedValue propval(cx, propval_);
     if (!debugger()->wrapDebuggeeValue(cx, &propval))
@@ -11367,7 +11367,7 @@ Builder::Object::defineProperty(JSContext* cx, const char* name, JS::HandleObjec
 bool
 Builder::Object::defineProperty(JSContext* cx, const char* name, Builder::Object& propval_)
 {
-    AutoCompartment ac(cx, debuggerObject());
+    AutoRealm ar(cx, debuggerObject());
 
     RootedValue propval(cx, ObjectOrNullValue(propval_.value));
     return definePropertyToTrusted(cx, name, &propval);
@@ -11376,7 +11376,7 @@ Builder::Object::defineProperty(JSContext* cx, const char* name, Builder::Object
 Builder::Object
 Builder::newObject(JSContext* cx)
 {
-    AutoCompartment ac(cx, debuggerObject);
+    AutoRealm ar(cx, debuggerObject);
 
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
 

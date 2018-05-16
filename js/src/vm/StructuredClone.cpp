@@ -1782,7 +1782,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
     while (!counts.empty()) {
         RootedObject obj(context(), &objs.back().toObject());
-        AutoCompartment ac(context(), obj);
+        AutoRealm ar(context(), obj);
         if (counts.back()) {
             counts.back()--;
             RootedValue key(context(), entries.back());
@@ -2792,11 +2792,11 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 
     JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcessSameThread, callbacks, closure);
     {
-        // If we use Maybe<AutoCompartment> here, G++ can't tell that the
+        // If we use Maybe<AutoRealm> here, G++ can't tell that the
         // destructor is only called when Maybe::construct was called, and
         // we get warnings about using uninitialized variables.
         if (value.isObject()) {
-            AutoCompartment ac(cx, &value.toObject());
+            AutoRealm ar(cx, &value.toObject());
             if (!buf.write(cx, value, callbacks, closure))
                 return false;
         } else {

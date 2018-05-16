@@ -25,7 +25,7 @@ struct DtoaState;
 
 namespace js {
 
-class AutoCompartment;
+class AutoRealm;
 
 namespace jit {
 class JitContext;
@@ -199,7 +199,7 @@ struct JSContext : public JS::RootingContext,
      * enter/leave stack is maintained by enterCompartmentDepth_ and queried by
      * hasEnteredCompartment.
      *
-     * To enter a compartment, code should prefer using AutoCompartment over
+     * To enter a compartment, code should prefer using AutoRealm over
      * manually calling cx->enterCompartment/leaveCompartment.
      */
   protected:
@@ -224,7 +224,7 @@ struct JSContext : public JS::RootingContext,
     inline void enterAtomsCompartment(JSCompartment* c,
                                       const js::AutoLockForExclusiveAccess& lock);
 
-    friend class js::AutoCompartment;
+    friend class js::AutoRealm;
 
   public:
     template <typename T>
@@ -265,7 +265,7 @@ struct JSContext : public JS::RootingContext,
     inline js::LifoAlloc& typeLifoAlloc();
 
     // Current global. This is only safe to use within the scope of the
-    // AutoCompartment from which it's called.
+    // AutoRealm from which it's called.
     inline js::Handle<js::GlobalObject*> global() const;
 
     // Methods to access runtime data that must be protected by locks.

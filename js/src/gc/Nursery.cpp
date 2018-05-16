@@ -762,7 +762,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
         for (auto& entry : tenureCounts.entries) {
             if (entry.count >= 3000) {
                 ObjectGroup* group = entry.group;
-                AutoCompartment ac(cx, group);
+                AutoRealm ar(cx, group);
                 AutoSweepObjectGroup sweep(group);
                 if (group->canPreTenure(sweep)) {
                     group->setShouldPreTenure(sweep, cx);
