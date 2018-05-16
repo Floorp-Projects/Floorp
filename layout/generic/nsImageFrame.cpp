@@ -685,16 +685,6 @@ nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
 nsresult
 nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 {
-  // Check what request type we're dealing with
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
-  NS_ASSERTION(imageLoader, "Who's notifying us??");
-  int32_t loadType = nsIImageLoadingContent::UNKNOWN_REQUEST;
-  imageLoader->GetRequestType(aRequest, &loadType);
-  if (loadType != nsIImageLoadingContent::CURRENT_REQUEST &&
-      loadType != nsIImageLoadingContent::PENDING_REQUEST) {
-    return NS_ERROR_FAILURE;
-  }
-
   NotifyNewCurrentRequest(aRequest, aStatus);
   return NS_OK;
 }
@@ -719,8 +709,7 @@ nsImageFrame::ResponsiveContentDensityChanged()
 }
 
 void
-nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
-                                      nsresult aStatus)
+nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest, nsresult aStatus)
 {
   nsCOMPtr<imgIContainer> image;
   aRequest->GetImage(getter_AddRefs(image));
