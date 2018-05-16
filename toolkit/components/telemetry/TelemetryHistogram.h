@@ -89,7 +89,9 @@ GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 // on the disk and vice-versa.
 #if defined(MOZ_TELEMETRY_GECKOVIEW)
 nsresult SerializeHistograms(mozilla::JSONWriter &aWriter);
+nsresult SerializeKeyedHistograms(mozilla::JSONWriter &aWriter);
 nsresult DeserializeHistograms(JSContext* aCx, JS::HandleValue aData);
+nsresult DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue aData);
 #endif // MOZ_TELEMETRY_GECKOVIEW
 
 } // namespace TelemetryHistogram
