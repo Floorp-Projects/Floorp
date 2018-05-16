@@ -2218,6 +2218,8 @@ ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
                                                        principal);
 
           loadInfo->GiveReservedClientSource(Move(reservedClient));
+
+          clientInfo = loadInfo->GetReservedClientInfo();
         }
       }
 
