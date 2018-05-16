@@ -6,6 +6,7 @@
 DevToolsModules(
     'filters.js',
     'messages.js',
+    'notifications.js',
     'prefs.js',
     'ui.js',
 )
