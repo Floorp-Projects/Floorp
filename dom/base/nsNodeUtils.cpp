@@ -584,7 +584,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
       JS::Rooted<JSObject*> wrapper(cx);
       if ((wrapper = aNode->GetWrapper())) {
         MOZ_ASSERT(IsDOMObject(wrapper));
-        JSAutoCompartment ac(cx, wrapper);
+        JSAutoRealm ar(cx, wrapper);
         ReparentWrapper(cx, wrapper, aError);
         if (aError.Failed()) {
           if (wasRegistered) {

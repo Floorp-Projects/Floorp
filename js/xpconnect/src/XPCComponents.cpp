@@ -2455,7 +2455,7 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
     Rooted<JSObject*> obj(cx, &object.toObject());
     obj = js::UncheckedUnwrap(obj);
     {
-        JSAutoCompartment ac(cx, obj);
+        JSAutoRealm ar(cx, obj);
         obj = JS_GetGlobalForObject(cx, obj);
     }
 
@@ -2524,7 +2524,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext* cx)
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     RootedObject obj(cx, js::UncheckedUnwrap(&vobj.toObject()));
-    JSAutoCompartment ac(cx, obj);
+    JSAutoRealm ar(cx, obj);
     Rooted<IdVector> ida(cx, IdVector(cx));
     if (!JS_Enumerate(cx, obj, &ida))
         return NS_ERROR_FAILURE;
@@ -2654,13 +2654,13 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
                                 JSContext* cx)
 {
     RootedValue runnable(cx, runnableArg);
-    // Enter the given compartment, if any, and rewrap runnable.
-    Maybe<JSAutoCompartment> ac;
+    // Enter the given realm, if any, and rewrap runnable.
+    Maybe<JSAutoRealm> ar;
     if (scope.isObject()) {
         JSObject* scopeObj = js::UncheckedUnwrap(&scope.toObject());
         if (!scopeObj)
             return NS_ERROR_FAILURE;
-        ac.emplace(cx, scopeObj);
+        ar.emplace(cx, scopeObj);
         if (!JS_WrapValue(cx, &runnable))
             return NS_ERROR_FAILURE;
     }
@@ -2896,7 +2896,7 @@ nsXPCComponents_Utils::GenerateXPCWrappedJS(HandleValue aObj, HandleValue aScope
     RootedObject obj(aCx, &aObj.toObject());
     RootedObject scope(aCx, aScope.isObject() ? js::UncheckedUnwrap(&aScope.toObject())
                                               : CurrentGlobalOrNull(aCx));
-    JSAutoCompartment ac(aCx, scope);
+    JSAutoRealm ar(aCx, scope);
     if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
 
@@ -2964,7 +2964,7 @@ xpc::CloneInto(JSContext* aCx, HandleValue aValue, HandleValue aScope,
         return false;
 
     {
-        JSAutoCompartment ac(aCx, scope);
+        JSAutoRealm ar(aCx, scope);
         aCloned.set(aValue);
         if (!StackScopedClone(aCx, options, aCloned))
             return false;

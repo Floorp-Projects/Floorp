@@ -967,7 +967,7 @@ ScriptPreloader::MaybeFinishOffThreadDecode()
     AutoSafeJSAPI jsapi;
     JSContext* cx = jsapi.cx();
 
-    JSAutoCompartment ac(cx, CompilationScope(cx));
+    JSAutoRealm ar(cx, CompilationScope(cx));
     JS::Rooted<JS::ScriptVector> jsScripts(cx, JS::ScriptVector(cx));
 
     // If this fails, we still need to mark the scripts as finished. Any that
@@ -1037,7 +1037,7 @@ ScriptPreloader::DecodeNextBatch(size_t chunkSize, JS::HandleObject scope)
 
     AutoSafeJSAPI jsapi;
     JSContext* cx = jsapi.cx();
-    JSAutoCompartment ac(cx, scope ? scope : CompilationScope(cx));
+    JSAutoRealm ar(cx, scope ? scope : CompilationScope(cx));
 
     JS::CompileOptions options(cx);
     options.setNoScriptRval(true)
@@ -1083,7 +1083,7 @@ ScriptPreloader::CachedScript::CachedScript(ScriptPreloader& cache, InputBuffer&
 bool
 ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
 {
-    JSAutoCompartment ac(cx, mScript);
+    JSAutoRealm ar(cx, mScript);
     JS::RootedScript jsscript(cx, mScript);
 
     mXDRData.construct<JS::TranscodeBuffer>();

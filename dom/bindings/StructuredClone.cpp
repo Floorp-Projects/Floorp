@@ -47,7 +47,7 @@ WriteStructuredCloneImageData(JSContext* aCx, JSStructuredCloneWriter* aWriter,
   uint32_t height = aImageData->Height();
   JS::Rooted<JSObject*> dataArray(aCx, aImageData->GetDataObject());
 
-  JSAutoCompartment ac(aCx, dataArray);
+  JSAutoRealm ar(aCx, dataArray);
   JS::Rooted<JS::Value> arrayValue(aCx, JS::ObjectValue(*dataArray));
   return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
          JS_WriteUint32Pair(aWriter, width, height) &&

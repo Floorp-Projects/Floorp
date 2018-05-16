@@ -201,7 +201,7 @@ var ignoreFunctions = {
     // These are a little overzealous -- these destructors *can* GC if they end
     // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
     "void js::AutoCompartment::~AutoCompartment(int32)" : true,
-    "void JSAutoCompartment::~JSAutoCompartment(int32)" : true,
+    "void JSAutoRealm::~JSAutoRealm(int32)" : true,
 
     // Similar to heap snapshot mock classes, and GTests below. This posts a
     // synchronous runnable when a GTest fails, and we are pretty sure that the

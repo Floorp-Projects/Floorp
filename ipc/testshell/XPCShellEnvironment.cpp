@@ -387,7 +387,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
         Rooted<JSObject*> global(cx, GetGlobalObject());
 
         {
-            JSAutoCompartment ac(cx, global);
+            JSAutoRealm ar(cx, global);
             JS_SetAllNonReservedSlotsToUndefined(cx, global);
         }
         mGlobalHolder.reset();
@@ -448,7 +448,7 @@ XPCShellEnvironment::Init()
         NS_ERROR("Failed to get global JSObject!");
         return false;
     }
-    JSAutoCompartment ac(cx, globalObj);
+    JSAutoRealm ar(cx, globalObj);
 
     backstagePass->SetGlobalObject(globalObj);
 
