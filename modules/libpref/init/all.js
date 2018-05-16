@@ -258,6 +258,10 @@ pref("dom.script_loader.bytecode_cache.enabled", true);
 // look at: ScriptLoader::ShouldCacheBytecode function.
 pref("dom.script_loader.bytecode_cache.strategy", 0);
 
+#ifdef JS_BUILD_BINAST
+pref("dom.script_loader.binast_encoding.enabled", false);
+#endif
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
