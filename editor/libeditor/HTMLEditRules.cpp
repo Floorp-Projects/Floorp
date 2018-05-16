@@ -1773,6 +1773,9 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     nsresult rv =
       HTMLEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
                                               nsIEditor::eStrip);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1926,6 +1929,9 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     RefPtr<Element> brElement =
       HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                      endOfBlockParent);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!brElement)) {
       return NS_ERROR_FAILURE;
     }
