@@ -288,6 +288,12 @@ class ScalarTypeDescr : public SimpleTypeDescr
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)           \
     macro_(Scalar::Uint8Clamped, uint8_t, uint8Clamped)
 
+enum class ReferenceType {
+    TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
+    TYPE_OBJECT = JS_REFERENCETYPEREPR_OBJECT,
+    TYPE_STRING = JS_REFERENCETYPEREPR_STRING
+};
+
 // Type for reference type constructors like `Any`, `String`, and
 // `Object`. All such type constructors share a common js::Class and
 // JSFunctionSpec. All these types are opaque.
@@ -295,14 +301,10 @@ class ReferenceTypeDescr : public SimpleTypeDescr
 {
   public:
     // Must match order of JS_FOR_EACH_REFERENCE_TYPE_REPR below
-    enum Type {
-        TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
-        TYPE_OBJECT = JS_REFERENCETYPEREPR_OBJECT,
-        TYPE_STRING = JS_REFERENCETYPEREPR_STRING,
-    };
-    static const int32_t TYPE_MAX = TYPE_STRING + 1;
+    typedef ReferenceType Type;
     static const char* typeName(Type type);
 
+    static const int32_t TYPE_MAX = int32_t(ReferenceType::TYPE_STRING) + 1;
     static const type::Kind Kind = type::Reference;
     static const bool Opaque = true;
     static const Class class_;
@@ -310,8 +312,8 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     static uint32_t alignment(Type t);
     static const JSFunctionSpec typeObjectMethods[];
 
-    ReferenceTypeDescr::Type type() const {
-        return (ReferenceTypeDescr::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    ReferenceType type() const {
+        return (ReferenceType) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
     }
 
     const char* typeName() const {
@@ -322,9 +324,9 @@ class ReferenceTypeDescr : public SimpleTypeDescr
 };
 
 #define JS_FOR_EACH_REFERENCE_TYPE_REPR(macro_) \
-    macro_(ReferenceTypeDescr::TYPE_ANY, GCPtrValue, Any) \
-    macro_(ReferenceTypeDescr::TYPE_OBJECT, GCPtrObject, Object) \
-    macro_(ReferenceTypeDescr::TYPE_STRING, GCPtrString, string)
+    macro_(ReferenceType::TYPE_ANY, GCPtrValue, Any) \
+    macro_(ReferenceType::TYPE_OBJECT, GCPtrObject, Object) \
+    macro_(ReferenceType::TYPE_STRING, GCPtrString, string)
 
 // Type descriptors whose instances are objects and hence which have
 // an associated `prototype` property.
@@ -473,7 +475,7 @@ class StructMetaTypeDescr : public NativeObject
       public:
         // The field adders return the offset of the the field.
         mozilla::CheckedInt32 addScalar(Scalar::Type type);
-        mozilla::CheckedInt32 addReference(ReferenceTypeDescr::Type type);
+        mozilla::CheckedInt32 addReference(ReferenceType type);
 
         // The close method rounds up the structure size to the appropriate
         // alignment and returns that size.  If `alignment` is not NULL then
