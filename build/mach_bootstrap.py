@@ -212,7 +212,10 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def should_skip_dispatch(context, handler):
         # The user is performing a maintenance command.
-        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup'):
+        if handler.name in ('bootstrap', 'doctor', 'mach-commands', 'vcs-setup',
+                            # We call mach environment in client.mk which would cause the
+                            # data submission to block the forward progress of make.
+                            'environment'):
             return True
 
         # We are running in automation.
@@ -233,11 +236,6 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         """
         # Don't do anything when...
         if should_skip_dispatch(context, handler):
-            return
-
-        # We call mach environment in client.mk which would cause the
-        # data submission below to block the forward progress of make.
-        if handler.name in ('environment'):
             return
 
         # We have not opted-in to telemetry
