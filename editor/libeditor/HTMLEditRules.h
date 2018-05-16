@@ -402,7 +402,21 @@ protected:
   MOZ_MUST_USE nsresult DidAbsolutePosition();
 
   nsresult AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
-  nsresult AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
+
+  /**
+   * AlignBlockContents() sets align attribute of <div> element which is
+   * only child of aNode to aAlignType.  If aNode has 2 or more children or
+   * does not have a <div> element has only child, inserts a <div> element
+   * into aNode and move all children of aNode into the new <div> element.
+   *
+   * @param aNode               The node whose contents should be aligned
+   *                            to aAlignType.
+   * @param aAlignType          New value of align attribute of <div> which
+   *                            is only child of aNode.
+   */
+  MOZ_MUST_USE nsresult
+  AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
+
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString &outFormat);
