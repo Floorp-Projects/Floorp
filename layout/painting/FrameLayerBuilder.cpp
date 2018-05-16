@@ -3785,7 +3785,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
     if (!mOpaqueRegion.Contains(componentAlphaRect)) {
       if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem,
-            componentAlphaBounds.Intersect(aItem->GetVisibleRect()))) {
+            componentAlphaBounds.Intersect(aItem->GetBuildingRect()))) {
         mNeedComponentAlpha = true;
       } else {
         aItem->DisableComponentAlpha();
@@ -4008,7 +4008,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 #ifdef MOZ_DUMP_PAINTING
   int32_t appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
   nsIntRect itemVisibleRect =
-    aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
+    aItem->GetPaintRect().ToOutsidePixels(appUnitsPerDevPixel);
 
   RefPtr<DrawTarget> tempDT;
   if (gfxEnv::DumpPaint()) {
@@ -4473,12 +4473,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 #endif
 
     nsIntRect itemVisibleRect = itemDrawRect;
-    // We haven't computed visibility at this point, so item->GetVisibleRect()
-    // is just the dirty rect that item was initialized with. We intersect it
-    // with the clipped item bounds to get a tighter visible rect.
+    // We intersect the building rect with the clipped item bounds to get a
+    // tighter visible rect.
     if (!prerenderedTransform) {
       itemVisibleRect = itemVisibleRect.Intersect(
-        ScaleToOutsidePixels(item->GetVisibleRect(), false));
+        ScaleToOutsidePixels(item->GetBuildingRect(), false));
     }
 
     if (maxLayers != -1 && layerCount >= maxLayers) {
@@ -4770,7 +4769,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           // to avoid failure caused by singular transforms.
           newLayerEntry->mUntransformedVisibleRegion = true;
           newLayerEntry->mVisibleRegion =
-            item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel);
+            item->GetBuildingRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel);
         } else {
           newLayerEntry->mVisibleRegion = itemVisibleRegion;
         }
@@ -4784,7 +4783,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           (item->Frame()->IsPreserve3DLeaf() ||
            item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
-          item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel):
+          item->GetBuildingRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel):
           itemVisibleRegion;
 
         SetOuterVisibleRegionForLayer(ownLayer, visible,
@@ -5092,7 +5091,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
 
     bool snap;
     nsRect visibleRect =
-      aItem.mItem->GetVisibleRect().Intersect(aItem.mItem->GetBounds(mDisplayListBuilder, &snap));
+      aItem.mItem->GetBuildingRect().Intersect(aItem.mItem->GetBounds(mDisplayListBuilder, &snap));
     nsIntRegion rgn = visibleRect.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
 
     // Convert the visible rect to a region and give the item
@@ -5945,7 +5944,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters scaleParameters;
   nsRect bounds = aChildren->GetClippedBoundsWithRespectToASR(aBuilder, containerASR);
   nsRect childrenVisible =
-      aContainerItem ? aContainerItem->GetVisibleRectForChildren() :
+      aContainerItem ? aContainerItem->GetBuildingRectForChildren() :
           aContainerFrame->GetVisualOverflowRectRelativeToSelf();
   if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame,
                                   aContainerItem,
@@ -6336,7 +6335,7 @@ FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
       continue;
     }
 
-    const nsRect& visibleRect = item->GetVisibleRect();
+    const nsRect& visibleRect = item->GetPaintRect();
     const nsRect paintRect = visibleRect.Intersect(boundRect);
 
     if (paintRect.IsEmpty() || emptyOpacityNesting > 0) {

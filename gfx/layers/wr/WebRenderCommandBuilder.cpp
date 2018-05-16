@@ -1625,10 +1625,10 @@ WebRenderCommandBuilder::GenerateFallbackData(nsDisplayItem* aItem,
 
   // nsDisplayItem::Paint() may refer the variables that come from ComputeVisibility().
   // So we should call ComputeVisibility() before painting. e.g.: nsDisplayBoxShadowInner
-  // uses mVisibleRegion in Paint() and mVisibleRegion is computed in
+  // uses mPaintRect in Paint() and mPaintRect is computed in
   // nsDisplayBoxShadowInner::ComputeVisibility().
   nsRegion visibleRegion(paintBounds);
-  aItem->SetVisibleRect(paintBounds, false);
+  aItem->SetPaintRect(paintBounds);
   aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
 
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();

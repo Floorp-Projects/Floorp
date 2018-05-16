@@ -1282,7 +1282,7 @@ nsDisplayTableBorderCollapse::Paint(nsDisplayListBuilder* aBuilder,
   drawTarget->SetTransform(
       drawTarget->GetTransform().PreTranslate(ToPoint(devPixelOffset)));
 
-  static_cast<nsTableFrame*>(mFrame)->PaintBCBorders(*drawTarget, mVisibleRect - pt);
+  static_cast<nsTableFrame*>(mFrame)->PaintBCBorders(*drawTarget, GetPaintRect() - pt);
 }
 
 bool
@@ -1294,7 +1294,7 @@ nsDisplayTableBorderCollapse::CreateWebRenderCommands(mozilla::wr::DisplayListBu
 {
   static_cast<nsTableFrame *>(mFrame)->CreateWebRenderCommandsForBCBorders(aBuilder,
                                                                           aSc,
-                                                                          mVisibleRect,
+                                                                          GetPaintRect(),
                                                                           ToReferenceFrame());
   return true;
 }

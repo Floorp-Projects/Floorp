@@ -715,7 +715,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   ImgDrawResult result = static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect, flags,
+    PaintBullet(*aCtx, ToReferenceFrame(), GetPaintRect(), flags,
                 mDisableSubpixelAA);
 
   nsDisplayBulletGeometry::UpdateDrawResult(this, result);

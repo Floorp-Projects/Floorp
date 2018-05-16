@@ -423,7 +423,7 @@ void nsDisplayTableCellBackground::Paint(nsDisplayListBuilder* aBuilder,
                                          gfxContext* aCtx)
 {
   ImgDrawResult result = static_cast<nsTableCellFrame*>(mFrame)->
-    PaintBackground(*aCtx, mVisibleRect, ToReferenceFrame(),
+    PaintBackground(*aCtx, GetPaintRect(), ToReferenceFrame(),
                     aBuilder->GetBackgroundPaintFlags());
 
   nsDisplayTableItemGeometry::UpdateDrawResult(this, result);

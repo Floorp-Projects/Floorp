@@ -2811,7 +2811,7 @@ public:
                                                       mDisableSubpixelAA);
 
     ImgDrawResult result = static_cast<nsTreeBodyFrame*>(mFrame)
-      ->PaintTreeBody(*aCtx, mVisibleRect, ToReferenceFrame(), aBuilder);
+      ->PaintTreeBody(*aCtx, GetPaintRect(), ToReferenceFrame(), aBuilder);
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
   }
