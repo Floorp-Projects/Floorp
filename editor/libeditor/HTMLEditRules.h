@@ -331,6 +331,16 @@ protected:
   nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
   nsresult WillHTMLIndent(bool* aCancel, bool* aHandled);
   nsresult WillOutdent(bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before aligning contents around Selection.  This method actually
+   * sets align attributes to align contents.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
   nsresult WillAlign(const nsAString& aAlignType,
                      bool* aCancel, bool* aHandled);
 
@@ -425,6 +435,20 @@ protected:
    */
   MOZ_MUST_USE nsresult
   AlignBlockContents(nsINode& aNode, const nsAString& aAlignType);
+
+  /**
+   * AlignContentsAtSelection() aligns contents around Selection to aAlignType.
+   * This creates AutoSelectionRestorer.  Therefore, even if this returns
+   * NS_OK, CanHandleEditAction() may return false if the editor is destroyed
+   * during restoring the Selection.  So, every caller needs to check if
+   * CanHandleEditAction() returns true before modifying the DOM tree or
+   * changing Selection.
+   *
+   * @param aAlignType          New align attribute value where the contents
+   *                            should be aligned to.
+   */
+  MOZ_MUST_USE nsresult
+  AlignContentsAtSelection(const nsAString& aAlignType);
 
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
