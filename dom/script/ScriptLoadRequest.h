@@ -10,7 +10,9 @@
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/net/ReferrerPolicy.h"
+#include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -134,7 +136,8 @@ public:
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t {
     eUnknown,
-    eSource,
+    eTextSource,
+    eBinASTSource,
     eBytecode
   };
 
@@ -142,13 +145,47 @@ public:
   {
     return mDataType == DataType::eUnknown;
   }
+  bool IsTextSource() const
+  {
+    return mDataType == DataType::eTextSource;
+  }
+  bool IsBinASTSource() const
+  {
+#ifdef JS_BUILD_BINAST
+    return mDataType == DataType::eBinASTSource;
+#else
+    return false;
+#endif
+  }
   bool IsSource() const
   {
-    return mDataType == DataType::eSource;
+    return IsTextSource() || IsBinASTSource();
   }
   bool IsBytecode() const
   {
     return mDataType == DataType::eBytecode;
+  }
+
+  void SetUnknownDataType();
+  void SetTextSource();
+  void SetBinASTSource();
+  void SetBytecode();
+
+  const Vector<char16_t>& ScriptText() const {
+    MOZ_ASSERT(IsTextSource());
+    return mScriptData->as<Vector<char16_t>>();
+  }
+  Vector<char16_t>& ScriptText() {
+    MOZ_ASSERT(IsTextSource());
+    return mScriptData->as<Vector<char16_t>>();
+  }
+  const Vector<uint8_t>& ScriptBinASTData() const {
+    MOZ_ASSERT(IsBinASTSource());
+    return mScriptData->as<Vector<uint8_t>>();
+  }
+  Vector<uint8_t>& ScriptBinASTData() {
+    MOZ_ASSERT(IsBinASTSource());
+    return mScriptData->as<Vector<uint8_t>>();
   }
 
   enum class ScriptMode : uint8_t {
@@ -180,6 +217,9 @@ public:
     return true;
   }
 
+  bool ShouldAcceptBinASTEncoding() const;
+
+  void ClearScriptSource();
 
   void MaybeCancelOffThreadScript();
   void DropBytecodeCacheReferences();
@@ -209,9 +249,10 @@ public:
   // it is parsed, and planned to be saved in the bytecode cache.
   JS::Heap<JSScript*> mScript;
 
-  // Holds script text for non-inline scripts. Don't use nsString so we can give
-  // ownership to jsapi.
-  mozilla::Vector<char16_t> mScriptText;
+  // Holds script source data for non-inline scripts. Don't use nsString so we
+  // can give ownership to jsapi. Holds either char16_t source text characters
+  // or BinAST encoded bytes depending on mSourceEncoding.
+  Maybe<Variant<Vector<char16_t>, Vector<uint8_t>>> mScriptData;
 
   // Holds the SRI serialized hash and the script bytecode for non-inline
   // scripts.
