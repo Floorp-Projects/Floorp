@@ -331,7 +331,7 @@ private:
 
   RefPtr<nsImageMap> mImageMap;
 
-  nsCOMPtr<imgINotificationObserver> mListener;
+  RefPtr<nsImageListener> mListener;
 
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
