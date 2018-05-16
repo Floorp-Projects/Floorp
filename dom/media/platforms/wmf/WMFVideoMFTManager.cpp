@@ -171,6 +171,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   bool aDXVAEnabled)
   : mVideoInfo(aConfig)
   , mImageSize(aConfig.mImage)
+  , mDecodedImageSize(aConfig.mImage)
   , mVideoStride(0)
   , mYUVColorSpace(YUVColorSpace::BT601)
   , mImageContainer(aImageContainer)
@@ -192,6 +193,13 @@ WMFVideoMFTManager::WMFVideoMFTManager(
     mStreamType = VP9;
   } else {
     mStreamType = Unknown;
+  }
+
+  // The V and U planes are stored 16-row-aligned, so we need to add padding
+  // to the row heights to ensure the Y'CbCr planes are referenced properly.
+  // This value is only used with software decoder.
+  if (mDecodedImageSize.height % 16 != 0) {
+    mDecodedImageSize.height += 16 - (mDecodedImageSize.height % 16);
   }
 }
 
@@ -974,14 +982,10 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
-  // The V and U planes are stored 16-row-aligned, so we need to add padding
-  // to the row heights to ensure the Y'CbCr planes are referenced properly.
-  uint32_t padding = 0;
-  if (videoHeight % 16 != 0) {
-    padding = 16 - (videoHeight % 16);
-  }
-  uint32_t y_size = stride * (videoHeight + padding);
-  uint32_t v_size = stride * (videoHeight + padding) / 4;
+  MOZ_DIAGNOSTIC_ASSERT(mDecodedImageSize.height % 16 == 0,
+                        "decoded height must be 16 bytes aligned");
+  uint32_t y_size = stride * mDecodedImageSize.height;
+  uint32_t v_size = stride * mDecodedImageSize.height / 4;
   uint32_t halfStride = (stride + 1) / 2;
   uint32_t halfHeight = (videoHeight + 1) / 2;
   uint32_t halfWidth = (videoWidth + 1) / 2;
@@ -1139,6 +1143,13 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
         hr = GetDefaultStride(outputType, mVideoInfo.ImageRect().width,
                               &mVideoStride);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+        UINT32 width = 0, height = 0;
+        hr = MFGetAttributeSize(outputType, MF_MT_FRAME_SIZE, &width, &height);
+        NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+        NS_ENSURE_TRUE(width <= MAX_VIDEO_WIDTH, E_FAIL);
+        NS_ENSURE_TRUE(height <= MAX_VIDEO_HEIGHT, E_FAIL);
+        mDecodedImageSize = gfx::IntSize(width, height);
       }
       // Catch infinite loops, but some decoders perform at least 2 stream
       // changes on consecutive calls, so be permissive.
