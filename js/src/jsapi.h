@@ -1298,14 +1298,14 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII JS_PUBLIC_API(JSAutoNullableCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    explicit JSAutoNullableCompartment(JSContext* cx, JSObject* targetOrNull
-                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoNullableCompartment();
+    explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoNullableRealm();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
