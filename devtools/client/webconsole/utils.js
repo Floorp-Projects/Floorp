@@ -28,6 +28,8 @@ exports.CONSOLE_WORKER_IDS = [
 
 var WebConsoleUtils = {
 
+  CONSOLE_ENTRY_THRESHOLD,
+
   /**
    * Wrap a string in an nsISupportsString object.
    *
