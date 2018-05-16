@@ -772,9 +772,6 @@ class HashMapEntry
 
 namespace mozilla {
 
-template <typename T>
-struct IsPod<js::detail::HashTableEntry<T> > : IsPod<T> {};
-
 template <typename K, typename V>
 struct IsPod<js::HashMapEntry<K, V> >
   : IntegralConstant<bool, IsPod<K>::value && IsPod<V>::value>
@@ -795,7 +792,11 @@ class HashTableEntry
   private:
     using NonConstT = typename mozilla::RemoveConst<T>::Type;
 
-    HashNumber keyHash;
+    static const HashNumber sFreeKey = 0;
+    static const HashNumber sRemovedKey = 1;
+    static const HashNumber sCollisionBit = 1;
+
+    HashNumber keyHash = sFreeKey;
     alignas(NonConstT) unsigned char valueData_[sizeof(NonConstT)];
 
   private:
@@ -807,10 +808,6 @@ class HashTableEntry
     // breaks the chain such that affected GCC versions no longer warn/error.
     void* rawValuePtr() { return valueData_; }
 
-    static const HashNumber sFreeKey = 0;
-    static const HashNumber sRemovedKey = 1;
-    static const HashNumber sCollisionBit = 1;
-
     static bool isLiveHash(HashNumber hash)
     {
         return hash > sRemovedKey;
@@ -818,7 +815,6 @@ class HashTableEntry
 
     HashTableEntry(const HashTableEntry&) = delete;
     void operator=(const HashTableEntry&) = delete;
-    ~HashTableEntry() = delete;
 
     NonConstT* valuePtr() { return reinterpret_cast<NonConstT*>(rawValuePtr()); }
 
@@ -829,11 +825,13 @@ class HashTableEntry
     }
 
   public:
-    // NB: HashTableEntry is treated as a POD: no constructor or destructor calls.
+    HashTableEntry() = default;
 
-    void destroyIfLive() {
+    ~HashTableEntry() {
         if (isLive())
             destroyStoredT();
+
+        MOZ_MAKE_MEM_UNDEFINED(this, sizeof(*this));
     }
 
     void destroy() {
@@ -1296,26 +1294,31 @@ class HashTable : private AllocPolicy
     static Entry* createTable(AllocPolicy& alloc, uint32_t capacity,
                               FailureBehavior reportFailure = ReportFailure)
     {
-        static_assert(sFreeKey == 0,
-                      "newly-calloc'd tables have to be considered empty");
-        if (reportFailure)
-            return alloc.template pod_calloc<Entry>(capacity);
-
-        return alloc.template maybe_pod_calloc<Entry>(capacity);
+        Entry* table = reportFailure
+                       ? alloc.template pod_malloc<Entry>(capacity)
+                       : alloc.template maybe_pod_malloc<Entry>(capacity);
+        if (table) {
+            for (uint32_t i = 0; i < capacity; i++)
+                new (&table[i]) Entry();
+        }
+        return table;
     }
 
     static Entry* maybeCreateTable(AllocPolicy& alloc, uint32_t capacity)
     {
-        static_assert(sFreeKey == 0,
-                      "newly-calloc'd tables have to be considered empty");
-        return alloc.template maybe_pod_calloc<Entry>(capacity);
+        Entry* table = alloc.template maybe_pod_malloc<Entry>(capacity);
+        if (table) {
+            for (uint32_t i = 0; i < capacity; i++)
+                new (&table[i]) Entry();
+        }
+        return table;
     }
 
     static void destroyTable(AllocPolicy& alloc, Entry* oldTable, uint32_t capacity)
     {
         Entry* end = oldTable + capacity;
         for (Entry* e = oldTable; e < end; ++e)
-            e->destroyIfLive();
+            e->~Entry();
         alloc.free_(oldTable);
     }
 
@@ -1578,8 +1581,9 @@ class HashTable : private AllocPolicy
                 HashNumber hn = src->getKeyHash();
                 findFreeEntry(hn).setLive(
                     hn, mozilla::Move(const_cast<typename Entry::NonConstT&>(src->get())));
-                src->destroy();
             }
+
+            src->~Entry();
         }
 
         // All entries have been destroyed, no need to destroyTable.
