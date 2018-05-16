@@ -757,6 +757,11 @@ internal_ShouldReflectHistogram(Histogram* h, HistogramID id)
     return false;
   }
 
+  // Don't reflect the histogram if it's not allowed in this product.
+  if (!CanRecordProduct(gHistogramInfos[id].products)) {
+    return false;
+  }
+
   return true;
 }
 
