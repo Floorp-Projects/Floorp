@@ -322,7 +322,7 @@ nsUrlClassifierDBServiceWorker::AddNoise(const Prefix aPrefix,
 
   PrefixArray noiseEntries;
   nsresult rv = mClassifier->ReadNoiseEntries(aPrefix, tableName,
-                                              aCount, &noiseEntries);
+                                              aCount, noiseEntries);
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (uint32_t i = 0; i < noiseEntries.Length(); i++) {
