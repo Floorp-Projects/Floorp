@@ -43,6 +43,7 @@ class nsIURI;
 class nsTextFrame;
 class imgIContainer;
 class nsPresContext;
+struct nsStyleDisplay;
 struct nsStyleVisibility;
 namespace mozilla {
 class ComputedStyle;
