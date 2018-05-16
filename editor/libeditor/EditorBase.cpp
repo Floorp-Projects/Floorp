@@ -4009,6 +4009,13 @@ EditorBase::SplitNodeDeepWithTransaction(
   nsCOMPtr<nsIContent> newLeftNodeOfMostAncestor;
   EditorDOMPoint atStartOfRightNode(aStartOfDeepestRightNode);
   while (true) {
+    // Need to insert rules code call here to do things like not split a list
+    // if you are after the last <li> or before the first, etc.  For now we
+    // just have some smarts about unneccessarily splitting text nodes, which
+    // should be universal enough to put straight in this EditorBase routine.
+    if (NS_WARN_IF(!atStartOfRightNode.GetContainerAsContent())) {
+      return SplitNodeResult(NS_ERROR_FAILURE);
+    }
     // If we meet an orphan node before meeting aMostAncestorToSplit, we need
     // to stop splitting.  This is a bug of the caller.
     if (NS_WARN_IF(atStartOfRightNode.GetContainer() != &aMostAncestorToSplit &&
@@ -4016,14 +4023,6 @@ EditorBase::SplitNodeDeepWithTransaction(
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
-    // Need to insert rules code call here to do things like not split a list
-    // if you are after the last <li> or before the first, etc.  For now we
-    // just have some smarts about unneccessarily splitting text nodes, which
-    // should be universal enough to put straight in this EditorBase routine.
-
-    if (NS_WARN_IF(!atStartOfRightNode.GetContainerAsContent())) {
-      return SplitNodeResult(NS_ERROR_FAILURE);
-    }
     nsIContent* currentRightNode = atStartOfRightNode.GetContainerAsContent();
 
     // If the split point is middle of the node or the node is not a text node

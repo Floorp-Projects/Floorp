@@ -1,0 +1,13 @@
+<script>
+function go() {
+  document.getElementById("label1").addEventListener("DOMNodeRemoved", () => {
+    document.getElementById("a1").innerText = "";
+  });
+  document.execCommand("indent", false);
+}
+</script>
+<body onload=go()>
+<li contenteditable="">
+<a id="a1">
+<label id="label1"></br>
+<!---
