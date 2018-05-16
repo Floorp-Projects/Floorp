@@ -26,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        toolbar.setMenuBuilder(components.menuBuilder)
+
         sessionFeature = SessionFeature(
             components.sessionProvider,
             components.sessionUseCases,

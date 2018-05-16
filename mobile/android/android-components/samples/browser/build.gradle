@@ -25,7 +25,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
 }
 
 dependencies {
@@ -38,6 +37,7 @@ dependencies {
 
     implementation project(':browser-session')
     implementation project(':browser-toolbar')
+    implementation project(':browser-menu')
 
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
@@ -45,6 +45,7 @@ dependencies {
     implementation project(':ui-autocomplete')
 
     implementation "org.mozilla:geckoview-nightly-armeabi-v7a:${rootProject.ext.gecko['version']}"
+    //implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.gecko['version']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
 
