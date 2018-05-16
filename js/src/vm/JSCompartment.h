@@ -1257,59 +1257,59 @@ class MOZ_RAII AssertCompartmentUnchanged
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoCompartment
+class AutoRealm
 {
-    JSContext * const cx_;
-    JSCompartment * const origin_;
+    JSContext* const cx_;
+    JSCompartment* const origin_;
     const AutoLockForExclusiveAccess* maybeLock_;
 
   public:
     template <typename T>
-    inline AutoCompartment(JSContext* cx, const T& target);
-    inline ~AutoCompartment();
+    inline AutoRealm(JSContext* cx, const T& target);
+    inline ~AutoRealm();
 
     JSContext* context() const { return cx_; }
     JSCompartment* origin() const { return origin_; }
 
   protected:
-    inline AutoCompartment(JSContext* cx, JSCompartment* target);
+    inline AutoRealm(JSContext* cx, JSCompartment* target);
 
     // Used only for entering the atoms compartment.
-    inline AutoCompartment(JSContext* cx, JSCompartment* target,
-                           AutoLockForExclusiveAccess& lock);
+    inline AutoRealm(JSContext* cx, JSCompartment* target,
+                     AutoLockForExclusiveAccess& lock);
 
   private:
-    AutoCompartment(const AutoCompartment&) = delete;
-    AutoCompartment & operator=(const AutoCompartment&) = delete;
+    AutoRealm(const AutoRealm&) = delete;
+    AutoRealm& operator=(const AutoRealm&) = delete;
 };
 
-class AutoAtomsCompartment : protected AutoCompartment
+class AutoAtomsRealm : protected AutoRealm
 {
   public:
-    inline AutoAtomsCompartment(JSContext* cx, AutoLockForExclusiveAccess& lock);
+    inline AutoAtomsRealm(JSContext* cx, AutoLockForExclusiveAccess& lock);
 };
 
-// Enter a compartment directly. Only use this where there's no target GC thing
-// to pass to AutoCompartment or where you need to avoid the assertions in
+// Enter a realm directly. Only use this where there's no target GC thing
+// to pass to AutoRealm or where you need to avoid the assertions in
 // JS::Compartment::enterCompartmentOf().
-class AutoCompartmentUnchecked : protected AutoCompartment
+class AutoRealmUnchecked : protected AutoRealm
 {
   public:
-    inline AutoCompartmentUnchecked(JSContext* cx, JSCompartment* target);
+    inline AutoRealmUnchecked(JSContext* cx, JSCompartment* target);
 };
 
 /*
- * Use this to change the behavior of an AutoCompartment slightly on error. If
+ * Use this to change the behavior of an AutoRealm slightly on error. If
  * the exception happens to be an Error object, copy it to the origin compartment
  * instead of wrapping it.
  */
 class ErrorCopier
 {
-    mozilla::Maybe<AutoCompartment>& ac;
+    mozilla::Maybe<AutoRealm>& ar;
 
   public:
-    explicit ErrorCopier(mozilla::Maybe<AutoCompartment>& ac)
-      : ac(ac) {}
+    explicit ErrorCopier(mozilla::Maybe<AutoRealm>& ar)
+      : ar(ar) {}
     ~ErrorCopier();
 };
 
