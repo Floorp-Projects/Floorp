@@ -339,13 +339,13 @@ static const uint32_t ReferenceSizes[] = {
 uint32_t
 ReferenceTypeDescr::size(Type t)
 {
-    return ReferenceSizes[t];
+    return ReferenceSizes[uint32_t(t)];
 }
 
 uint32_t
 ReferenceTypeDescr::alignment(Type t)
 {
-    return ReferenceSizes[t];
+    return ReferenceSizes[uint32_t(t)];
 }
 
 /*static*/ const char*
@@ -375,11 +375,11 @@ js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
     }
 
     switch (descr->type()) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceType::TYPE_ANY:
         args.rval().set(args[0]);
         return true;
 
-      case ReferenceTypeDescr::TYPE_OBJECT:
+      case ReferenceType::TYPE_OBJECT:
       {
         RootedObject obj(cx, ToObject(cx, args[0]));
         if (!obj)
@@ -388,7 +388,7 @@ js::ReferenceTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
         return true;
       }
 
-      case ReferenceTypeDescr::TYPE_STRING:
+      case ReferenceType::TYPE_STRING:
       {
         RootedString obj(cx, ToString<CanGC>(cx, args[0]));
         if (!obj)
@@ -792,7 +792,7 @@ StructMetaTypeDescr::Layout::addScalar(Scalar::Type type) {
 }
 
 CheckedInt32
-StructMetaTypeDescr::Layout::addReference(ReferenceTypeDescr::Type type) {
+StructMetaTypeDescr::Layout::addReference(ReferenceType type) {
     return addField(ReferenceTypeDescr::alignment(type),
                     ReferenceTypeDescr::size(type));
 }
@@ -1176,7 +1176,7 @@ DefineSimpleTypeDescr(JSContext* cx,
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(T::alignment(type)));
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(AssertedCast<int32_t>(T::size(type))));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(T::Opaque));
-    descr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(type));
+    descr->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(int32_t(type)));
 
     if (!CreateUserSizeAndAlignmentProperties(cx, descr))
         return false;
@@ -2789,14 +2789,14 @@ void
 MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
 {
     switch (descr.type()) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceType::TYPE_ANY:
       {
         js::GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
         heapValue->init(UndefinedValue());
         return;
       }
 
-      case ReferenceTypeDescr::TYPE_OBJECT:
+      case ReferenceType::TYPE_OBJECT:
       {
         js::GCPtrObject* objectPtr =
             reinterpret_cast<js::GCPtrObject*>(mem);
@@ -2804,7 +2804,7 @@ MemoryInitVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
         return;
       }
 
-      case ReferenceTypeDescr::TYPE_STRING:
+      case ReferenceType::TYPE_STRING:
       {
         js::GCPtrString* stringPtr =
             reinterpret_cast<js::GCPtrString*>(mem);
@@ -2859,21 +2859,21 @@ void
 MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
 {
     switch (descr.type()) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceType::TYPE_ANY:
       {
         GCPtrValue* heapValue = reinterpret_cast<js::GCPtrValue*>(mem);
         TraceEdge(trace_, heapValue, "reference-val");
         return;
       }
 
-      case ReferenceTypeDescr::TYPE_OBJECT:
+      case ReferenceType::TYPE_OBJECT:
       {
         GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(mem);
         TraceNullableEdge(trace_, objectPtr, "reference-obj");
         return;
       }
 
-      case ReferenceTypeDescr::TYPE_STRING:
+      case ReferenceType::TYPE_STRING:
       {
         GCPtrString* stringPtr = reinterpret_cast<js::GCPtrString*>(mem);
         TraceNullableEdge(trace_, stringPtr, "reference-str");
@@ -2913,9 +2913,9 @@ TraceListVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
 {
     VectorType* offsets;
     switch (descr.type()) {
-      case ReferenceTypeDescr::TYPE_ANY: offsets = &valueOffsets; break;
-      case ReferenceTypeDescr::TYPE_OBJECT: offsets = &objectOffsets; break;
-      case ReferenceTypeDescr::TYPE_STRING: offsets = &stringOffsets; break;
+      case ReferenceType::TYPE_ANY: offsets = &valueOffsets; break;
+      case ReferenceType::TYPE_OBJECT: offsets = &objectOffsets; break;
+      case ReferenceType::TYPE_STRING: offsets = &stringOffsets; break;
       default: MOZ_CRASH("Invalid kind");
     }
 
