@@ -7,6 +7,7 @@
 #include "TelemetryGeckoViewPersistence.h"
 
 #include "jsapi.h"
+#include "mozilla/ErrorNames.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Path.h"
 #include "mozilla/Preferences.h"
@@ -28,8 +29,10 @@
 #include "prenv.h"
 #include "prio.h"
 #include "TelemetryScalar.h"
+#include "TelemetryHistogram.h"
 #include "xpcpublic.h"
 
+using mozilla::GetErrorName;
 using mozilla::MakeScopeExit;
 using mozilla::Preferences;
 using mozilla::StaticRefPtr;
@@ -299,6 +302,26 @@ MainThreadParsePersistedProbes(const nsACString& aProbeData)
     // and continue.
     JS_ClearPendingException(jsapi.cx());
   }
+
+  // Get the data for the histograms.
+  JS::RootedValue histogramData(jsapi.cx());
+  if (JS_GetProperty(jsapi.cx(), dataObj, "histograms", &histogramData)) {
+    // If the data is an object, try to parse its properties. If not,
+    // silently skip and try to load the other sections.
+    nsresult rv = NS_OK;
+    if (!histogramData.isObject()
+        || NS_FAILED(rv = TelemetryHistogram::DeserializeHistograms(jsapi.cx(), histogramData))) {
+      nsAutoCString errorName;
+      GetErrorName(rv, errorName);
+      ANDROID_LOG("MainThreadParsePersistedProbes - Failed to parse 'histograms', %s.",
+                  errorName.get());
+      MOZ_ASSERT(!JS_IsExceptionPending(jsapi.cx()), "Parsers must suppress exceptions themselves");
+    }
+  } else {
+    // Getting the "histogramData" property failed, suppress the exception
+    // and continue.
+    JS_ClearPendingException(jsapi.cx());
+  }
 }
 
 /**
@@ -347,6 +370,12 @@ PersistenceThreadPersist()
   w.StartObjectProperty("keyedScalars");
   if (NS_FAILED(TelemetryScalar::SerializeKeyedScalars(w))) {
     ANDROID_LOG("Persist - Failed to persist keyed scalars.");
+  }
+  w.EndObject();
+
+  w.StartObjectProperty("histograms");
+  if (NS_FAILED(TelemetryHistogram::SerializeHistograms(w))) {
+    ANDROID_LOG("Persist - Failed to persist histograms.");
   }
   w.EndObject();
 
