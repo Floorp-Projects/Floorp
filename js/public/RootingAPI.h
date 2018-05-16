@@ -851,14 +851,27 @@ class RootingContext
 
 class JS_PUBLIC_API(AutoGCRooter)
 {
+  protected:
+    enum class Tag : uint8_t {
+        Array,          /* js::AutoArrayRooter */
+        ValueArray,     /* js::AutoValueArray */
+        Parser,         /* js::frontend::Parser */
+#if defined(JS_BUILD_BINAST)
+        BinParser,      /* js::frontend::BinSource */
+#endif // defined(JS_BUILD_BINAST)
+        WrapperVector,  /* js::AutoWrapperVector */
+        Wrapper,        /* js::AutoWrapperRooter */
+        Custom          /* js::CustomAutoRooter */
+  };
+
   public:
-    AutoGCRooter(JSContext* cx, ptrdiff_t tag)
+    AutoGCRooter(JSContext* cx, Tag tag)
       : AutoGCRooter(JS::RootingContext::get(cx), tag)
     {}
-    AutoGCRooter(JS::RootingContext* cx, ptrdiff_t tag)
+    AutoGCRooter(JS::RootingContext* cx, Tag tag)
       : down(cx->autoGCRooters_),
-        tag_(tag),
-        stackTop(&cx->autoGCRooters_)
+        stackTop(&cx->autoGCRooters_),
+        tag_(tag)
     {
         MOZ_ASSERT(this != *stackTop);
         *stackTop = this;
@@ -874,31 +887,15 @@ class JS_PUBLIC_API(AutoGCRooter)
     static void traceAll(JSContext* cx, JSTracer* trc);
     static void traceAllWrappers(JSContext* cx, JSTracer* trc);
 
-  protected:
-    AutoGCRooter * const down;
+  private:
+    AutoGCRooter* const down;
+    AutoGCRooter** const stackTop;
 
     /*
-     * Discriminates actual subclass of this being used.  If non-negative, the
-     * subclass roots an array of values of the length stored in this field.
-     * If negative, meaning is indicated by the corresponding value in the enum
-     * below.  Any other negative value indicates some deeper problem such as
-     * memory corruption.
+     * Discriminates actual subclass of this being used. The meaning is
+     * indicated by the corresponding value in the Tag enum.
      */
-    ptrdiff_t tag_;
-
-    enum {
-        VALARRAY =     -2, /* js::AutoValueArray */
-        PARSER =       -3, /* js::frontend::Parser */
-#if defined(JS_BUILD_BINAST)
-        BINPARSER =    -4, /* js::frontend::BinSource */
-#endif // defined(JS_BUILD_BINAST)
-        WRAPVECTOR =  -20, /* js::AutoWrapperVector */
-        WRAPPER =     -21, /* js::AutoWrapperRooter */
-        CUSTOM =      -26  /* js::CustomAutoRooter */
-    };
-
-  private:
-    AutoGCRooter ** const stackTop;
+    Tag tag_;
 
     /* No copy or assignment semantics. */
     AutoGCRooter(AutoGCRooter& ida) = delete;

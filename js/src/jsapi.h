@@ -79,7 +79,7 @@ class MOZ_RAII AutoValueArray : public AutoGCRooter
   public:
     explicit AutoValueArray(JSContext* cx
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, VALARRAY), length_(N)
+      : AutoGCRooter(cx, AutoGCRooter::Tag::ValueArray), length_(N)
     {
         /* Always initialize in case we GC before assignment. */
         mozilla::PodArrayZero(elements_);
@@ -115,7 +115,7 @@ class MOZ_RAII JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
   public:
     template <typename CX>
     explicit CustomAutoRooter(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, CUSTOM)
+      : AutoGCRooter(cx, AutoGCRooter::Tag::Custom)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
