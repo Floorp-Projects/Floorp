@@ -12,6 +12,13 @@
 #include "mozilla/TelemetryComms.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+namespace mozilla{
+// This is only used for the GeckoView persistence.
+class JSONWriter;
+}
+#endif
+
 // This module is internal to Telemetry.  It encapsulates Telemetry's
 // histogram accumulation and storage logic.  It should only be used by
 // Telemetry.cpp.  These functions should not be used anywhere else.
@@ -76,6 +83,14 @@ GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 size_t
 GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+
+// These functions are only meant to be used for GeckoView persistence.
+// They are responsible for updating in-memory probes with the data persisted
+// on the disk and vice-versa.
+#if defined(MOZ_TELEMETRY_GECKOVIEW)
+nsresult SerializeHistograms(mozilla::JSONWriter &aWriter);
+nsresult DeserializeHistograms(JSContext* aCx, JS::HandleValue aData);
+#endif // MOZ_TELEMETRY_GECKOVIEW
 
 } // namespace TelemetryHistogram
 
