@@ -119,6 +119,7 @@ public:
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
   virtual void UpdateRenderBounds(const gfx::IntRect& aRect) {}
   virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) {}
+  virtual void InvalidateAll() = 0;
 
   virtual HostLayerManager* AsHostLayerManager() override {
     return this;
@@ -404,6 +405,10 @@ public:
   }
   virtual void SetDiagnosticTypes(DiagnosticTypes aDiagnostics) override {
     mCompositor->SetDiagnosticTypes(aDiagnostics);
+  }
+
+  virtual void InvalidateAll() override {
+    AddInvalidRegion(nsIntRegion(mRenderBounds));
   }
 
   void ForcePresent() override { mCompositor->ForcePresent(); }

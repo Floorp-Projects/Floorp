@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-    - beetmover-cdns
+    - release-beetmover-push-to-release
 
 transforms:
     - taskgraph.transforms.release_deps:transforms

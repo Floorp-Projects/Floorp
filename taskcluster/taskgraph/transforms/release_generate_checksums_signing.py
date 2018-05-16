@@ -13,6 +13,7 @@ from taskgraph.util.schema import validate_schema, Schema
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope,
     get_worker_type_for_scope,
+    add_scope_prefix,
 )
 from taskgraph.util.taskcluster import get_artifact_path
 from taskgraph.transforms.task import task_description_schema
@@ -88,7 +89,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
                        'max-run-time': 3600},
             'scopes': [
                 signing_cert_scope,
-                "project:releng:signing:format:gpg"
+                add_scope_prefix(config, 'signing:format:gpg'),
             ],
             'dependencies': dependencies,
             'attributes': attributes,

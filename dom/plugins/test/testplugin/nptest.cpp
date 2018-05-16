@@ -135,7 +135,6 @@ static bool setPluginWantsAllStreams(NPObject* npobj, const NPVariant* args, uin
 static bool crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool getJavaCodebase(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -207,7 +206,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "crash",
   "crashOnDestroy",
   "getObjectValue",
-  "getJavaCodebase",
   "checkObjectValue",
   "enableFPExceptions",
   "hang",
@@ -280,7 +278,6 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   crashPlugin,
   crashOnDestroy,
   getObjectValue,
-  getJavaCodebase,
   checkObjectValue,
   enableFPExceptions,
   hangPlugin,
@@ -881,11 +878,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "bugmode") == 0) {
       instanceData->bugMode = atoi(argv[i]);
-    }
-    // Try to emulate java's codebase handling: Use the last seen codebase
-    // value, regardless of whether it is in attributes or params.
-    if (strcasecmp(argn[i], "codebase") == 0) {
-      instanceData->javaCodebase = argv[i];
     }
 
     // Bug 1307694 - There are two flash parameters that are order dependent for
@@ -2723,20 +2715,6 @@ static const NPClass kTestSharedNPClass = {
   NP_CLASS_STRUCT_VERSION,
   // Everything else is nullptr
 };
-
-static bool getJavaCodebase(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  if (argCount != 0) {
-    return false;
-  }
-
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-
-  char *outval = NPN_StrDup(id->javaCodebase.c_str());
-  STRINGZ_TO_NPVARIANT(outval, *result);
-  return true;
-}
 
 static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {

@@ -850,12 +850,6 @@ nsresult NS_LinkRedirectChannels(uint32_t channelId,
                                  nsIChannel **_result);
 
 /**
- * Helper function to create a random URL string that's properly formed
- * but guaranteed to be invalid.
- */
-nsresult NS_MakeRandomInvalidURLString(nsCString &result);
-
-/**
  * Helper function which checks whether the channel can be
  * openend using Open2() or has to fall back to opening
  * the channel using Open().
@@ -870,15 +864,6 @@ nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel* aChannel,
  */
 nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel* aChannel,
                                             nsIStreamListener *aListener);
-
-/**
- * Helper function to determine whether urlString is Java-compatible --
- * whether it can be passed to the Java URL(String) constructor without the
- * latter throwing a MalformedURLException, or without Java otherwise
- * mishandling it.  This function (in effect) implements a scheme whitelist
- * for Java.
- */
-nsresult NS_CheckIsJavaCompatibleURLString(nsCString& urlString, bool *result);
 
 /** Given the first (disposition) token from a Content-Disposition header,
  * tell whether it indicates the content is inline or attachment

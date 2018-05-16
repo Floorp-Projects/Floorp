@@ -465,7 +465,7 @@ task_description_schema = Schema({
             Required('locale'): basestring,
         }],
     }, {
-        Required('implementation'): 'beetmover-cdns',
+        Required('implementation'): 'beetmover-push-to-release',
 
         # the maximum time to run, in seconds
         Required('max-run-time'): int,
@@ -998,8 +998,8 @@ def build_beetmover_payload(config, task, task_def):
         task_def['payload'].update(release_config)
 
 
-@payload_builder('beetmover-cdns')
-def build_beetmover_cdns_payload(config, task, task_def):
+@payload_builder('beetmover-push-to-release')
+def build_beetmover_push_to_release_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
 
@@ -1219,7 +1219,7 @@ def set_defaults(config, tasks):
             worker.setdefault('max-run-time', 600)
         elif worker['implementation'] == 'beetmover':
             worker.setdefault('max-run-time', 600)
-        elif worker['implementation'] == 'beetmover-cdns':
+        elif worker['implementation'] == 'beetmover-push-to-release':
             worker.setdefault('max-run-time', 600)
         elif worker['implementation'] == 'push-apk':
             worker.setdefault('commit', False)

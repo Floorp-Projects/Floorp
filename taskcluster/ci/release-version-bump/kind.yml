@@ -10,7 +10,7 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - beetmover-cdns
+    - release-beetmover-push-to-release
 
 job-defaults:
     description: Release Promotion version bump/tag
