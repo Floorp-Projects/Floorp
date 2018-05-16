@@ -357,7 +357,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   if (aGlobal) {
     JS::ExposeObjectToActiveJS(aGlobal);
   }
-  mAutoNullableCompartment.emplace(mCx, aGlobal);
+  mAutoNullableRealm.emplace(mCx, aGlobal);
 
   ScriptSettingsStack::Push(this);
 
@@ -556,11 +556,10 @@ AutoJSAPI::ReportException()
     return;
   }
 
-  // AutoJSAPI uses a JSAutoNullableCompartment, and may be in a null
-  // compartment when the destructor is called. However, the JS engine
-  // requires us to be in a realm when we fetch the pending exception.
-  // In this case, we enter the privileged junk scope and don't dispatch any
-  // error events.
+  // AutoJSAPI uses a JSAutoNullableRealm, and may be in a null realm
+  // when the destructor is called. However, the JS engine requires us
+  // to be in a realm when we fetch the pending exception. In this case,
+  // we enter the privileged junk scope and don't dispatch any error events.
   JS::Rooted<JSObject*> errorGlobal(cx(), JS::CurrentGlobalOrNull(cx()));
   if (!errorGlobal) {
     if (mIsMainThread) {
