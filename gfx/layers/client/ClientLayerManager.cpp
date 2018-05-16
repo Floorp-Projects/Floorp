@@ -6,6 +6,7 @@
 
 #include "ClientLayerManager.h"
 #include "GeckoProfiler.h"              // for AUTO_PROFILER_LABEL
+#include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPrefs.h"                   // for gfxPrefs::LayersTile...
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Hal.h"
@@ -224,8 +225,15 @@ ClientLayerManager::CreateReadbackLayer()
 bool
 ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
-  // Wait for any previous async paints to complete before starting to paint again.
-  FlushAsyncPaints();
+#ifdef MOZ_DUMP_PAINTING
+  // When we are dump painting, we expect to be able to read the contents of
+  // compositable clients from previous paints inside this layer transaction
+  // before we flush async paints in EndTransactionInternal.
+  // So to work around this flush async paints now.
+  if (gfxEnv::DumpPaint()) {
+    FlushAsyncPaints();
+  }
+#endif
 
   MOZ_ASSERT(mForwarder, "ClientLayerManager::BeginTransaction without forwarder");
   if (!mForwarder->IPCOpen()) {
@@ -309,6 +317,11 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                            void* aCallbackData,
                                            EndTransactionFlags)
 {
+  // Wait for any previous async paints to complete before starting to paint again.
+  // Do this outside the profiler and telemetry block so this doesn't count as time
+  // spent rasterizing.
+  FlushAsyncPaints();
+
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
   AUTO_PROFILER_TRACING("Paint", "Rasterize");
 
@@ -411,12 +424,6 @@ ClientLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
     return;
   }
 
-  if (mTransactionIncomplete) {
-    // If the previous transaction was incomplete then we may have buffer operations
-    // running on the paint thread that haven't finished yet
-    FlushAsyncPaints();
-  }
-
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }
@@ -445,12 +452,6 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
 
   if (!mRoot || !mForwarder->IPCOpen()) {
     return false;
-  }
-
-  if (mTransactionIncomplete) {
-    // If the previous transaction was incomplete then we may have buffer operations
-    // running on the paint thread that haven't finished yet
-    FlushAsyncPaints();
   }
 
   if (!EndTransactionInternal(nullptr, nullptr, aFlags)) {
