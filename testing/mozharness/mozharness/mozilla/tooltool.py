@@ -92,18 +92,11 @@ class TooltoolMixin(object):
         toolchains = os.environ.get('MOZ_TOOLCHAINS')
         if toolchains:
             cmd.extend(toolchains.split())
-        # when mock is enabled run tooltool in mock. We can't use
-        # run_command_m in all cases because it won't exist unless
-        # MockMixin is used on the parent class
-        if self.config.get('mock_target'):
-            cmd_runner = self.run_command_m
-        else:
-            cmd_runner = self.run_command
 
         timeout = self.config.get('tooltool_timeout', 10 * 60)
 
         self.retry(
-            cmd_runner,
+            self.run_command,
             args=(cmd, ),
             kwargs={'cwd': output_dir,
                     'error_list': TooltoolErrorList,
