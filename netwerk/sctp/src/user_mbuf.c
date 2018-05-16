@@ -987,6 +987,13 @@ m_copym(struct mbuf *m, int off0, int len, int wait)
 
 	KASSERT(off >= 0, ("m_copym, negative off %d", off));
 	KASSERT(len >= 0, ("m_copym, negative len %d", len));
+	KASSERT(m != NULL, ("m_copym, m is NULL"));
+
+#if !defined(INVARIANTS)
+	if (m == NULL) {
+		return (NULL);
+	}
+#endif
 
 	if (off == 0 && m->m_flags & M_PKTHDR)
 		copyhdr = 1;
