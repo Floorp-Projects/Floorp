@@ -43,6 +43,11 @@ public:
 
   virtual bool Draggable() const override;
 
+  ResponsiveImageSelector* GetResponsiveImageSelector()
+  {
+    return mResponsiveSelector.get();
+  }
+
   // Element
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
