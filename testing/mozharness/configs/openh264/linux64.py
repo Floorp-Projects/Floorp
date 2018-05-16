@@ -16,15 +16,6 @@ config = {
     },
     'dump_syms_binary': 'dump_syms',
     'arch': 'x64',
-    'use_mock': True,
     'avoid_avx2': True,
-    'mock_target': 'mozilla-centos6-x86_64',
-    'mock_packages': ['make', 'git', 'nasm', 'glibc-devel.i686',
-                      'libstdc++-devel.i686', 'zip', 'yasm',
-                      'mozilla-python27'],
-    'mock_files': [
-        ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
-        ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-    ],
     'operating_system': 'linux',
 }
