@@ -23,7 +23,7 @@ add_task(async function test_non_https_remote_server_uri() {
   Services.prefs.setCharPref(
     "identity.fxaccounts.remote.root",
     "http://example.com/");
-  Assert.rejects(FxAccounts.config.promiseSignUpURI(), null, "Firefox Accounts server must use HTTPS");
+  await Assert.rejects(FxAccounts.config.promiseSignUpURI(), /Firefox Accounts server must use HTTPS/);
   Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
 });
 

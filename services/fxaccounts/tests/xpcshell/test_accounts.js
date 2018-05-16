@@ -287,13 +287,15 @@ add_task(async function test_update_account_data() {
     uid: "another_uid",
     assertion: "new_assertion",
   };
-  await Assert.rejects(account.updateUserAccountData(newCreds));
+  await Assert.rejects(account.updateUserAccountData(newCreds),
+    /The specified credentials aren't for the current user/);
 
   // should fail without the uid.
   newCreds = {
     assertion: "new_assertion",
   };
-  await Assert.rejects(account.updateUserAccountData(newCreds));
+  await Assert.rejects(account.updateUserAccountData(newCreds),
+    /The specified credentials aren't for the current user/);
 
   // and should fail with a field name that's not known by storage.
   newCreds = {
@@ -301,7 +303,8 @@ add_task(async function test_update_account_data() {
     uid: "another_uid",
     foo: "bar",
   };
-  await Assert.rejects(account.updateUserAccountData(newCreds));
+  await Assert.rejects(account.updateUserAccountData(newCreds),
+    /The specified credentials aren't for the current user/);
 });
 
 add_task(async function test_getCertificateOffline() {

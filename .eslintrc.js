@@ -56,7 +56,6 @@ module.exports = {
       "browser/modules/test/browser/**",
       "browser/tools/mozscreenshots/browser_boundingbox.js",
       "devtools/client/inspector/extensions/test/head_devtools_inspector_sidebar.js",
-      "services/**",
       "storage/test/unit/**",
       "testing/marionette/test/unit/**",
       "toolkit/components/**",

@@ -648,7 +648,7 @@ add_task(async function test_abort() {
 
   Assert.equal(request.status, request.ABORTED);
 
-  await Assert.rejects(responsePromise);
+  await Assert.rejects(responsePromise, /NS_BINDING_ABORTED/);
 
   await promiseStopServer(server);
 });
