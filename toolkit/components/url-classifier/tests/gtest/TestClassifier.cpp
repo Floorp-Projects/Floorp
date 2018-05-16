@@ -80,7 +80,7 @@ TestReadNoiseEntries(Classifier* classifier,
   nsresult rv;
   rv = classifier->ReadNoiseEntries(result.hash.fixedLengthPrefix,
                                     aTable, noiseCount,
-                                    &noiseEntries);
+                                    noiseEntries);
   ASSERT_TRUE(rv == NS_OK);
   EXPECT_TRUE(noiseEntries.Length() > 0);
 

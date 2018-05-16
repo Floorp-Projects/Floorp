@@ -1471,7 +1471,7 @@ nsresult
 Classifier::ReadNoiseEntries(const Prefix& aPrefix,
                              const nsACString& aTableName,
                              uint32_t aCount,
-                             PrefixArray* aNoiseEntries)
+                             PrefixArray& aNoiseEntries)
 {
   FallibleTArray<uint32_t> prefixes;
   nsresult rv;
@@ -1524,7 +1524,7 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
 
     newPrefix.FromUint32(hash);
     if (newPrefix != aPrefix) {
-      aNoiseEntries->AppendElement(newPrefix);
+      aNoiseEntries.AppendElement(newPrefix);
     }
   }
 
