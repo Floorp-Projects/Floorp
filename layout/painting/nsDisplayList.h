@@ -2117,6 +2117,7 @@ public:
     , mDisableSubpixelAA(false)
     , mReusedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
+    , mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2190,6 +2191,7 @@ public:
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
     , mReusedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
+    , mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2677,7 +2679,9 @@ public:
 
   void SetPaintRect(const nsRect& aPaintRect) {
     mPaintRect = aPaintRect;
+    mPaintRectValid = true;
   }
+  bool HasPaintRect() const { return mPaintRectValid; }
 
   /**
    * Returns the building rect for the children, relative to their
@@ -2914,6 +2918,7 @@ protected:
   bool      mDisableSubpixelAA;
   bool      mReusedItem;
   bool      mBackfaceHidden;
+  bool      mPaintRectValid;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;

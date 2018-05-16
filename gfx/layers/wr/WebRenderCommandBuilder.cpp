@@ -1325,6 +1325,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
 
       // Note: this call to CreateWebRenderCommands can recurse back into
       // this function if the |item| is a wrapper for a sublist.
+      item->SetPaintRect(item->GetBuildingRect());
       bool createdWRCommands =
         item->CreateWebRenderCommands(aBuilder, aResources, aSc, mManager,
                                       aDisplayListBuilder);
