@@ -138,7 +138,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
   nsRect layerRect = rect - (*aItem->GetAnimatedGeometryRoot())->GetOffsetToCrossDoc(aItem->ReferenceFrame());
-  nsRect vis = aItem->GetVisibleRect();
+  nsRect vis = aItem->GetPaintRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
   nsDisplayList* list = aItem->GetChildren();
   const DisplayItemClip& clip = aItem->GetClip();

@@ -1342,7 +1342,7 @@ public:
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
     ImgDrawResult result =
       f->DisplayAltFeedback(*aCtx,
-                            mVisibleRect,
+                            GetPaintRect(),
                             ToReferenceFrame(),
                             flags);
 
@@ -1539,7 +1539,7 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   ImgDrawResult result = static_cast<nsImageFrame*>(mFrame)->
-    PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage, flags);
+    PaintImage(*aCtx, ToReferenceFrame(), GetPaintRect(), mImage, flags);
 
   if (result == ImgDrawResult::NOT_READY ||
       result == ImgDrawResult::INCOMPLETE ||
@@ -1548,7 +1548,7 @@ nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
     // decoding, try painting the previous image.
     if (mPrevImage) {
       result = static_cast<nsImageFrame*>(mFrame)->
-        PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mPrevImage, flags);
+        PaintImage(*aCtx, ToReferenceFrame(), GetPaintRect(), mPrevImage, flags);
     }
   }
 

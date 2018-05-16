@@ -946,7 +946,7 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 {
   nsPluginFrame* f = static_cast<nsPluginFrame*>(mFrame);
   bool snap;
-  f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder, &snap));
+  f->PaintPlugin(aBuilder, *aCtx, GetPaintRect(), GetBounds(aBuilder, &snap));
 }
 
 static nsRect
