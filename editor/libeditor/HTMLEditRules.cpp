@@ -719,9 +719,14 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     case EditAction::makeDefListItem:
       return WillMakeDefListItem(aInfo->blockType,
                                  aInfo->entireList, aCancel, aHandled);
-    case EditAction::insertElement:
-      WillInsert(aCancel);
+    case EditAction::insertElement: {
+      nsresult rv = WillInsert(aCancel);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
+    }
     case EditAction::decreaseZIndex:
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
     case EditAction::increaseZIndex:
@@ -1347,15 +1352,14 @@ HTMLEditRules::GetFormatString(nsINode* aNode,
   return NS_OK;
 }
 
-void
+nsresult
 HTMLEditRules::WillInsert(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel);
 
   nsresult rv = TextEditRules::WillInsert(aCancel);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
+    return rv;
   }
 
   // Adjust selection to prevent insertion after a moz-BR.  This next only
@@ -1363,19 +1367,19 @@ HTMLEditRules::WillInsert(bool* aCancel)
   // work with when not collapsed.  (no good way to extend start or end of
   // selection), so we ignore those types of selections.
   if (!SelectionRef().IsCollapsed()) {
-    return;
+    return NS_OK;
   }
 
   // If we are after a mozBR in the same block, then move selection to be
   // before it
   nsRange* firstRange = SelectionRef().GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
-    return;
+    return NS_ERROR_FAILURE;
   }
 
   EditorRawDOMPoint atStartOfSelection(firstRange->StartRef());
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
-    return;
+    return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atStartOfSelection.IsSetAndValid());
 
@@ -1392,10 +1396,14 @@ HTMLEditRules::WillInsert(bool* aCancel)
       // the same block as the selection.  We need to move the selection start
       // to be before the mozBR.
       EditorRawDOMPoint point(priorNode);
-      IgnoredErrorResult error;
+      ErrorResult error;
       SelectionRef().Collapse(point, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
-        return;
+        return error.StealNSResult();
       }
     }
   }
@@ -1406,7 +1414,7 @@ HTMLEditRules::WillInsert(bool* aCancel)
        mTheAction == EditAction::deleteSelection)) {
     nsresult rv = ReapplyCachedStyles();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
+      return rv;
     }
   }
   // For most actions we want to clear the cached styles, but there are
@@ -1414,6 +1422,7 @@ HTMLEditRules::WillInsert(bool* aCancel)
   if (!IsStyleCachePreservingAction(mTheAction)) {
     ClearCachedStyles();
   }
+  return NS_OK;
 }
 
 nsresult
@@ -1448,10 +1457,12 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     }
   }
 
-  WillInsert(aCancel);
-  // initialize out param
-  // we want to ignore result of WillInsert()
-  *aCancel = false;
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // we need to get the doc
   nsCOMPtr<nsIDocument> doc = HTMLEditorRef().GetDocument();
@@ -1460,7 +1471,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
   }
 
   // for every property that is set, insert a new inline style node
-  nsresult rv = CreateStyleForInsertText(*doc);
+  rv = CreateStyleForInsertText(*doc);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1803,10 +1814,12 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     }
   }
 
-  WillInsert(aCancel);
-
-  // Initialize out param.  We want to ignore result of WillInsert().
-  *aCancel = false;
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // Split any mailcites in the way.  Should we abort this if we encounter
   // table cell boundaries?
@@ -2021,7 +2034,7 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
   // If nobody handles this edit action, let's insert new <br> at the selection.
   MOZ_ASSERT(!*aHandled, "Reached last resort of WillInsertBreak() "
                          "after the edit action is handled");
-  nsresult rv = InsertBRElement(atStartOfSelection);
+  rv = InsertBRElement(atStartOfSelection);
   *aHandled = true;
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3837,14 +3850,17 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     return NS_ERROR_INVALID_ARG;
   }
 
-  OwningNonNull<nsAtom> listType = NS_Atomize(*aListType);
-
-  WillInsert(aCancel);
-
-  // initialize out param
-  // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = false;
+
+  OwningNonNull<nsAtom> listType = NS_Atomize(*aListType);
+
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
   // deduce what tag to use for list items
   RefPtr<nsAtom> itemType;
@@ -3863,7 +3879,7 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
 
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection();
+  rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4287,12 +4303,17 @@ HTMLEditRules::WillMakeBasicBlock(const nsAString& aBlockType,
 
   OwningNonNull<nsAtom> blockType = NS_Atomize(aBlockType);
 
-  WillInsert(aCancel);
-  // We want to ignore result of WillInsert()
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = MakeBasicBlock(blockType);
+  rv = MakeBasicBlock(blockType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4503,14 +4524,17 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(aCancel);
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // initialize out param
-  // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection();
+  rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4753,14 +4777,17 @@ HTMLEditRules::WillHTMLIndent(bool* aCancel,
     return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(aCancel);
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // initialize out param
-  // we want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
-  nsresult rv = NormalizeSelection();
+  rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5624,13 +5651,17 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel && aHandled);
 
-  WillInsert(aCancel);
-
-  // Initialize out param.  We want to ignore result of WillInsert().
   *aCancel = false;
   *aHandled = false;
 
-  nsresult rv = NormalizeSelection();
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
+
+  rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10468,9 +10499,13 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aCancel && aHandled);
 
-  WillInsert(aCancel);
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // We want to ignore result of WillInsert()
   *aCancel = false;
   *aHandled = true;
 
@@ -10480,7 +10515,7 @@ HTMLEditRules::WillAbsolutePosition(bool* aCancel,
     return NS_OK;
   }
 
-  nsresult rv = NormalizeSelection();
+  rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -10796,10 +10831,13 @@ HTMLEditRules::WillRemoveAbsolutePosition(bool* aCancel,
     return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(aCancel);
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // initialize out param
-  // we want to ignore aCancel from WillInsert()
   *aCancel = false;
   *aHandled = true;
 
@@ -10839,10 +10877,13 @@ HTMLEditRules::WillRelativeChangeZIndex(int32_t aChange,
     return NS_ERROR_INVALID_ARG;
   }
 
-  WillInsert(aCancel);
+  // FYI: Ignore cancel result of WillInsert().
+  nsresult rv = WillInsert();
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
 
-  // initialize out param
-  // we want to ignore aCancel from WillInsert()
   *aCancel = false;
   *aHandled = true;
 
