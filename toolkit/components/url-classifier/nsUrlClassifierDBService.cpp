@@ -915,12 +915,12 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
 }
 
 nsresult
-nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResult,
+nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(const CacheResult* aCacheResult,
                                                          RefPtr<TableUpdate> aUpdate)
 {
   RefPtr<TableUpdateV2> tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
   if (tuV2) {
-    const CacheResultV2* result = CacheResult::Cast<CacheResultV2>(aCacheResult);
+    const CacheResultV2* result = CacheResult::Cast<const CacheResultV2>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (result->miss) {
@@ -939,7 +939,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
 
   RefPtr<TableUpdateV4> tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
   if (tuV4) {
-    const CacheResultV4* result = CacheResult::Cast<CacheResultV4>(aCacheResult);
+    const CacheResultV4* result = CacheResult::Cast<const CacheResultV4>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (LOG_ENABLED()) {
@@ -1027,11 +1027,11 @@ nsUrlClassifierDBServiceWorker::IsSameAsLastResults(const CacheResultArray& aRes
     }
 
     if (lhs->Ver() == CacheResult::V2) {
-      equal = *(CacheResult::Cast<CacheResultV2>(lhs)) ==
-              *(CacheResult::Cast<CacheResultV2>(rhs));
+      equal = *(CacheResult::Cast<const CacheResultV2>(lhs)) ==
+              *(CacheResult::Cast<const CacheResultV2>(rhs));
     } else if (lhs->Ver() == CacheResult::V4) {
-      equal = *(CacheResult::Cast<CacheResultV4>(lhs)) ==
-              *(CacheResult::Cast<CacheResultV4>(rhs));
+      equal = *(CacheResult::Cast<const CacheResultV4>(lhs)) ==
+              *(CacheResult::Cast<const CacheResultV4>(rhs));
     }
   }
 
