@@ -115,6 +115,36 @@ function fetchAndLoad(sb, prefix, chunks, suffix) {
   });
 }
 
+function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
+  var typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
+                                                                    : typedArrayOrArrayBuffer;
+  info(`Loading buffer2: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
+  var beforeBuffered = timeRangeToString(sb.buffered);
+  return sb.appendBufferAsync(typedArray).then(() => {
+    var afterBuffered = timeRangeToString(sb.buffered);
+    info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
+  });
+}
+
+function fetchAndLoadAsync(sb, prefix, chunks, suffix) {
+
+  // Fetch the buffers in parallel.
+  var buffers = {};
+  var fetches = [];
+  for (var chunk of chunks) {
+    fetches.push(fetchWithXHR(prefix + chunk + suffix).then(((c, x) => buffers[c] = x).bind(null, chunk)));
+  }
+
+  // Load them in series, as required per spec.
+  return Promise.all(fetches).then(function() {
+    var rv = Promise.resolve();
+    for (var chunk of chunks) {
+      rv = rv.then(loadSegmentAsync.bind(null, sb, buffers[chunk]));
+    }
+    return rv;
+  });
+}
+
 //Register timeout function to dump debugging logs.
 SimpleTest.registerTimeoutFunction(function() {
   for (var v of document.getElementsByTagName("video")) {

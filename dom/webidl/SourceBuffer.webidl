@@ -40,12 +40,22 @@ interface SourceBuffer : EventTarget {
   void appendBuffer(ArrayBuffer data);
   [Throws]
   void appendBuffer(ArrayBufferView data);
+  // Experimental function as proposed in:
+  // https://github.com/w3c/media-source/issues/100 for promise proposal.
+  [Throws, Func="mozilla::dom::MediaSource::ExperimentalEnabled"]
+  Promise<void> appendBufferAsync(ArrayBuffer data);
+  [Throws, Func="mozilla::dom::MediaSource::ExperimentalEnabled"]
+  Promise<void> appendBufferAsync(ArrayBufferView data);
   //[Throws]
   //void appendStream(Stream stream, [EnforceRange] optional unsigned long long maxSize);
   [Throws]
   void abort();
   [Throws]
   void remove(double start, unrestricted double end);
+  // Experimental function as proposed in:
+  // https://github.com/w3c/media-source/issues/100 for promise proposal.
+  [Throws, Func="mozilla::dom::MediaSource::ExperimentalEnabled"]
+  Promise<void> removeAsync(double start, unrestricted double end);
   // Experimental function as proposed in:
   // https://github.com/w3c/media-source/issues/155
   [Throws, Func="mozilla::dom::MediaSource::ExperimentalEnabled"]

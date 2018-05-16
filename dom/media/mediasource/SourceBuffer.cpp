@@ -206,6 +206,32 @@ SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
   AppendData(aData.Data(), aData.Length(), aRv);
 }
 
+already_AddRefed<Promise>
+SourceBuffer::AppendBufferAsync(const ArrayBuffer& aData,
+                                ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MSE_API("AppendBufferAsync(ArrayBuffer)");
+  aData.ComputeLengthAndData();
+  DDLOG(DDLogCategory::API, "AppendBufferAsync", aData.Length());
+
+  return AppendDataAsync(aData.Data(), aData.Length(), aRv);
+}
+
+already_AddRefed<Promise>
+SourceBuffer::AppendBufferAsync(const ArrayBufferView& aData,
+                                ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MSE_API("AppendBufferAsync(ArrayBufferView)");
+  aData.ComputeLengthAndData();
+  DDLOG(DDLogCategory::API, "AppendBufferAsync", aData.Length());
+
+  return AppendDataAsync(aData.Data(), aData.Length(), aRv);
+}
+
 void
 SourceBuffer::Abort(ErrorResult& aRv)
 {
@@ -259,6 +285,55 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
   MSE_API("Remove(aStart=%f, aEnd=%f)", aStart, aEnd);
   DDLOG(DDLogCategory::API, "Remove-from", aStart);
   DDLOG(DDLogCategory::API, "Remove-until", aEnd);
+
+  PrepareRemove(aStart, aEnd, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+  RangeRemoval(aStart, aEnd);
+}
+
+already_AddRefed<Promise>
+SourceBuffer::RemoveAsync(double aStart, double aEnd, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MSE_API("RemoveAsync(aStart=%f, aEnd=%f)", aStart, aEnd);
+  DDLOG(DDLogCategory::API, "Remove-from", aStart);
+  DDLOG(DDLogCategory::API, "Remove-until", aEnd);
+
+  if (!IsAttached()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> parentObject =
+    do_QueryInterface(mMediaSource->GetParentObject());
+  if (!parentObject) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(parentObject, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  PrepareRemove(aStart, aEnd, aRv);
+
+  if (aRv.Failed()) {
+    // The bindings will automatically return a rejected promise.
+    return nullptr;
+  }
+  MOZ_ASSERT(!mDOMPromise, "Can't have a pending operation going");
+  mDOMPromise = promise;
+  RangeRemoval(aStart, aEnd);
+
+  return promise.forget();
+}
+
+void
+SourceBuffer::PrepareRemove(double aStart, double aEnd, ErrorResult& aRv)
+{
   if (!IsAttached()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -276,8 +351,6 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
     mMediaSource->SetReadyState(MediaSourceReadyState::Open);
   }
-
-  RangeRemoval(aStart, aEnd);
 }
 
 void
@@ -459,6 +532,10 @@ SourceBuffer::StopUpdating()
   mUpdating = false;
   QueueAsyncSimpleEvent("update");
   QueueAsyncSimpleEvent("updateend");
+  if (mDOMPromise) {
+    mDOMPromise->MaybeResolveWithUndefined();
+    mDOMPromise = nullptr;
+  }
 }
 
 void
@@ -468,6 +545,10 @@ SourceBuffer::AbortUpdating()
   mUpdating = false;
   QueueAsyncSimpleEvent("abort");
   QueueAsyncSimpleEvent("updateend");
+  if (mDOMPromise) {
+    mDOMPromise->MaybeReject(NS_ERROR_DOM_MEDIA_ABORT_ERR);
+    mDOMPromise = nullptr;
+  }
 }
 
 void
@@ -485,6 +566,7 @@ SourceBuffer::CheckEndTime()
 void
 SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("AppendData(aLength=%u)", aLength);
 
   RefPtr<MediaByteBuffer> data = PrepareAppend(aData, aLength, aRv);
@@ -500,8 +582,43 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
     ->Track(mPendingAppend);
 }
 
+already_AddRefed<Promise>
+SourceBuffer::AppendDataAsync(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsAttached()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> parentObject =
+    do_QueryInterface(mMediaSource->GetParentObject());
+  if (!parentObject) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(parentObject, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  AppendData(aData, aLength, aRv);
+
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!mDOMPromise, "Can't have a pending operation going");
+  mDOMPromise = promise;
+
+  return promise.forget();
+}
+
 void
-SourceBuffer::AppendDataCompletedWithSuccess(const SourceBufferTask::AppendBufferResult& aResult)
+SourceBuffer::AppendDataCompletedWithSuccess(
+  const SourceBufferTask::AppendBufferResult& aResult)
 {
   MOZ_ASSERT(mUpdating);
   mPendingAppend.Complete();
@@ -570,10 +687,17 @@ SourceBuffer::AppendError(const MediaResult& aDecodeError)
   MOZ_ASSERT(NS_FAILED(aDecodeError));
 
   mMediaSource->EndOfStream(aDecodeError);
+
+  if (mDOMPromise) {
+    mDOMPromise->MaybeReject(aDecodeError);
+    mDOMPromise = nullptr;
+  }
 }
 
 already_AddRefed<MediaByteBuffer>
-SourceBuffer::PrepareAppend(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv)
+SourceBuffer::PrepareAppend(const uint8_t* aData,
+                            uint32_t aLength,
+                            ErrorResult& aRv)
 {
   typedef TrackBuffersManager::EvictDataResult Result;
 
@@ -660,12 +784,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SourceBuffer)
   tmp->Detach();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBuffered)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMPromise)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SourceBuffer,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBuffered)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMPromise)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(SourceBuffer, DOMEventTargetHelper)

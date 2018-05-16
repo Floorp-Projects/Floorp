@@ -28,6 +28,8 @@ exports.CONSOLE_WORKER_IDS = [
 
 var WebConsoleUtils = {
 
+  CONSOLE_ENTRY_THRESHOLD,
+
   /**
    * Wrap a string in an nsISupportsString object.
    *
@@ -125,7 +127,7 @@ var WebConsoleUtils = {
   /**
    * Helper function to deduce the name of the provided function.
    *
-   * @param funtion function
+   * @param function function
    *        The function whose name will be returned.
    * @return string
    *         Function name.

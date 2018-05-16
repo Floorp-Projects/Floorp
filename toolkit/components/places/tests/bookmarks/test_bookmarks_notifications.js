@@ -193,7 +193,8 @@ add_task(async function update_move_same_folder() {
   observer.check([ { name: "onItemMoved",
                      arguments: [ bmItemId, bmParentId, bmOldIndex, bmParentId, bm.index,
                                   bm.type, bm.guid, bm.parentGuid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+                                  "http://move.example.com/" ] }
                  ]);
 
   // Test that we get the right index for DEFAULT_INDEX input.
@@ -206,7 +207,8 @@ add_task(async function update_move_same_folder() {
   observer.check([ { name: "onItemMoved",
                      arguments: [ bmItemId, bmParentId, bmOldIndex, bmParentId, bm.index,
                                   bm.type, bm.guid, bm.parentGuid, bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+                                  bm.url ] }
                  ]);
 });
 
@@ -231,7 +233,8 @@ add_task(async function update_move_different_folder() {
                                   bm.index, bm.type, bm.guid,
                                   PlacesUtils.bookmarks.unfiledGuid,
                                   bm.parentGuid,
-                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
+                                  Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+                                  "http://move.example.com/" ] }
                  ]);
 });
 
@@ -522,7 +525,8 @@ add_task(async function reorder_notification() {
                                               child.guid,
                                               child.parentGuid,
                                               child.parentGuid,
-                                              Ci.nsINavBookmarksService.SOURCE_DEFAULT
+                                              Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+                                              child.url
                                             ] });
   }
   observer.check(expectedNotifications);

@@ -156,9 +156,11 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
             'chromium/sandbox/win/src/service_resolver_32.cc',
         ]
 
-    for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
+    for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM',
                 '_CRT_RAND_S', 'CHROMIUM_SANDBOX_BUILD'):
         DEFINES[var] = True
+    if CONFIG['CC_TYPE'] != 'gcc':
+        DEFINES['SANDBOX_EXPORTS'] = True
 
     LOCAL_INCLUDES += ['/security/sandbox/chromium-shim']
     LOCAL_INCLUDES += ['/security/sandbox/chromium']

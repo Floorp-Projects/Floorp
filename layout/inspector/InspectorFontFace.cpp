@@ -13,6 +13,7 @@
 #include "brotli/decode.h"
 #include "zlib.h"
 #include "mozilla/dom/FontFaceSet.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoFontFaceRule.h"
 #include "mozilla/Unused.h"
 
