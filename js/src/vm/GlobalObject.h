@@ -691,7 +691,7 @@ class GlobalObject : public NativeObject
         if (!holder)
             return false;
 
-        if (Shape* shape = holder->lookupPure(name)) {
+        if (Shape* shape = holder->lookup(cx, name)) {
             vp.set(holder->getSlot(shape->slot()));
             *exists = true;
         } else {
