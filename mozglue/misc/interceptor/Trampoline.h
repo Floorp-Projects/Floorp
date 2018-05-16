@@ -30,7 +30,7 @@ public:
     , mMaxOffset(aChunkSize)
     , mAccumulatedStatus(true)
   {
-    ::VirtualProtect(aLocalBase, aChunkSize, PAGE_EXECUTE_READWRITE,
+    ::VirtualProtect(aLocalBase, aChunkSize, MMPolicy::GetTrampWriteProtFlags(),
                      &mPrevLocalProt);
   }
 

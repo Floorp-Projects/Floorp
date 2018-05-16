@@ -315,11 +315,7 @@ public:
   bool isNothing() const { return !mIsSome; }
 
   /* Returns the contents of this Maybe<T> by value. Unsafe unless |isSome()|. */
-  T value() const
-  {
-    MOZ_ASSERT(mIsSome);
-    return ref();
-  }
+  T value() const;
 
   /*
    * Returns the contents of this Maybe<T> by value. If |isNothing()|, returns
@@ -348,17 +344,8 @@ public:
   }
 
   /* Returns the contents of this Maybe<T> by pointer. Unsafe unless |isSome()|. */
-  T* ptr()
-  {
-    MOZ_ASSERT(mIsSome);
-    return &ref();
-  }
-
-  const T* ptr() const
-  {
-    MOZ_ASSERT(mIsSome);
-    return &ref();
-  }
+  T* ptr();
+  const T* ptr() const;
 
   /*
    * Returns the contents of this Maybe<T> by pointer. If |isNothing()|,
@@ -402,30 +389,12 @@ public:
     return aFunc();
   }
 
-  T* operator->()
-  {
-    MOZ_ASSERT(mIsSome);
-    return ptr();
-  }
-
-  const T* operator->() const
-  {
-    MOZ_ASSERT(mIsSome);
-    return ptr();
-  }
+  T* operator->();
+  const T* operator->() const;
 
   /* Returns the contents of this Maybe<T> by ref. Unsafe unless |isSome()|. */
-  T& ref()
-  {
-    MOZ_ASSERT(mIsSome);
-    return *static_cast<T*>(data());
-  }
-
-  const T& ref() const
-  {
-    MOZ_ASSERT(mIsSome);
-    return *static_cast<const T*>(data());
-  }
+  T& ref();
+  const T& ref() const;
 
   /*
    * Returns the contents of this Maybe<T> by ref. If |isNothing()|, returns
@@ -469,17 +438,8 @@ public:
     return aFunc();
   }
 
-  T& operator*()
-  {
-    MOZ_ASSERT(mIsSome);
-    return ref();
-  }
-
-  const T& operator*() const
-  {
-    MOZ_ASSERT(mIsSome);
-    return ref();
-  }
+  T& operator*();
+  const T& operator*() const;
 
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
@@ -544,12 +504,7 @@ public:
    * arguments to |emplace()| are the parameters to T's constructor.
    */
   template<typename... Args>
-  void emplace(Args&&... aArgs)
-  {
-    MOZ_ASSERT(!mIsSome);
-    ::new (KnownNotNull, data()) T(Forward<Args>(aArgs)...);
-    mIsSome = true;
-  }
+  void emplace(Args&&... aArgs);
 
   friend std::ostream&
   operator<<(std::ostream& aStream, const Maybe<T>& aMaybe)
@@ -562,6 +517,88 @@ public:
     return aStream;
   }
 };
+
+template<typename T>
+T
+Maybe<T>::value() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return ref();
+}
+
+template<typename T>
+T*
+Maybe<T>::ptr()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return &ref();
+}
+
+template<typename T>
+const T*
+Maybe<T>::ptr() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return &ref();
+}
+
+template<typename T>
+T*
+Maybe<T>::operator->()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return ptr();
+}
+
+template<typename T>
+const T*
+Maybe<T>::operator->() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return ptr();
+}
+
+template<typename T>
+T&
+Maybe<T>::ref()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return *static_cast<T*>(data());
+}
+
+template<typename T>
+const T&
+Maybe<T>::ref() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return *static_cast<const T*>(data());
+}
+
+template<typename T>
+T&
+Maybe<T>::operator*()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return ref();
+}
+
+template<typename T>
+const T&
+Maybe<T>::operator*() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mIsSome);
+  return ref();
+}
+
+template<typename T>
+template<typename... Args>
+void
+Maybe<T>::emplace(Args&&... aArgs)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mIsSome);
+  ::new (KnownNotNull, data()) T(Forward<Args>(aArgs)...);
+  mIsSome = true;
+}
 
 /*
  * Some() creates a Maybe<T> value containing the provided T value. If T has a

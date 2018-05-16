@@ -3103,11 +3103,6 @@ pref("plugins.navigator.hidden_ctp_plugin", "");
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 
-// The MIME type that should bind to legacy java-specific invocations like
-// <applet> and <object data="java:foo">. Setting this to a non-java MIME type
-// is undefined behavior.
-pref("plugin.java.mime", "application/x-java-vm");
-
 // How long in minutes we will allow a plugin to work after the user has chosen
 // to allow it "now"
 pref("plugin.sessionPermissionNow.intervalInMinutes", 60);

@@ -6,7 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
    - taskgraph.transforms.release_deps:transforms
-   - taskgraph.transforms.beetmover_cdns:transforms
+   - taskgraph.transforms.beetmover_push_to_release:transforms
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
@@ -17,20 +17,20 @@ job-defaults:
    shipping-phase: push
 
 jobs:
-   fennec-push-to-cdns:
-      name: fennec_push_to_cdns
+   fennec-push-to-release:
+      name: fennec_push_to_release
       product: fennec
       shipping-product: fennec
-      treeherder-platform: Android/opt
+      treeherder-platform: fennec-release/opt
 
-   devedition-push-to-cdns:
-      name: devedition_push_to_cdns
+   devedition-push-to-release:
+      name: devedition_push_to_release
       product: devedition
       shipping-product: devedition
-      treeherder-platform: Linux64-devedition/opt
+      treeherder-platform: devedition-release/opt
 
-   firefox-push-to-cdns:
-      name: firefox_push_to_cdns
+   firefox-push-to-release:
+      name: firefox_push_to_release
       product: firefox
       shipping-product: firefox
-      treeherder-platform: Linux64/opt
+      treeherder-platform: firefox-release/opt

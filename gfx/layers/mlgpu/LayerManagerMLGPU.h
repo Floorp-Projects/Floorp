@@ -69,6 +69,10 @@ public:
   void NotifyShadowTreeTransaction() override;
   void UpdateRenderBounds(const gfx::IntRect& aRect) override;
 
+  void InvalidateAll() override {
+    AddInvalidRegion(nsIntRegion(mRenderBounds));
+  }
+
   LayerManagerMLGPU* AsLayerManagerMLGPU() override {
     return this;
   }

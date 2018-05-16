@@ -195,10 +195,11 @@ Beetmover-repackage is beetmover but for tasks that need an intermediate step
 between signing and packaging, such as OSX. For more details see the definitions
 of the Beetmover kind above and the repackage kind below.
 
-beetmover-cdns
--------------------
+release-beetmover-push-to-release
+---------------------------------
 
-Beetmover-cdns publishes promoted releases to CDNs. This is part of release promotion.
+Beetmover-cdns publishes promoted releases from the candidates directory to the
+release directory. This is part of release promotion.
 
 beetmover-source
 -------------------

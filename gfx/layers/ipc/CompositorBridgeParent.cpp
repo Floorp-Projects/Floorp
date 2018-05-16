@@ -642,9 +642,8 @@ CompositorBridgeParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
 void
 CompositorBridgeParent::Invalidate()
 {
-  if (mLayerManager && mLayerManager->GetRoot()) {
-    mLayerManager->AddInvalidRegion(
-                                    mLayerManager->GetRoot()->GetLocalVisibleRegion().ToUnknownRegion().GetBounds());
+  if (mLayerManager) {
+    mLayerManager->InvalidateAll();
   }
 }
 

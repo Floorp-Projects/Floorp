@@ -875,14 +875,6 @@ _useragent(NPP aNPP);
 static void*
 _memalloc (uint32_t size);
 
-// Deprecated entry points for the old Java plugin.
-static void* /* OJI type: JRIEnv* */
-_getjavaenv(void);
-
-// Deprecated entry points for the old Java plugin.
-static void* /* OJI type: jref */
-_getjavapeer(NPP aNPP);
-
 static bool
 _invoke(NPP aNPP, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result);
@@ -978,17 +970,17 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_geturl,
     mozilla::plugins::child::_posturl,
     mozilla::plugins::child::_requestread,
-    nullptr,
-    nullptr,
-    nullptr,
+    nullptr, // _newstream, unimplemented
+    nullptr, // _write, unimplemented
+    nullptr, // _destroystream, unimplemented
     mozilla::plugins::child::_status,
     mozilla::plugins::child::_useragent,
     mozilla::plugins::child::_memalloc,
     mozilla::plugins::child::_memfree,
     mozilla::plugins::child::_memflush,
     mozilla::plugins::child::_reloadplugins,
-    mozilla::plugins::child::_getjavaenv,
-    mozilla::plugins::child::_getjavapeer,
+    nullptr, // _getjavaenv, unimplemented
+    nullptr, // _getjavapeer, unimplemented
     mozilla::plugins::child::_geturlnotify,
     mozilla::plugins::child::_posturlnotify,
     mozilla::plugins::child::_getvalue,
@@ -1302,21 +1294,6 @@ _memalloc(uint32_t aSize)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     return moz_xmalloc(aSize);
-}
-
-// Deprecated entry points for the old Java plugin.
-void* /* OJI type: JRIEnv* */
-_getjavaenv(void)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    return 0;
-}
-
-void* /* OJI type: jref */
-_getjavapeer(NPP aNPP)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    return 0;
 }
 
 bool

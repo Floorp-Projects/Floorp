@@ -186,7 +186,7 @@ partial interface Navigator {
   readonly attribute DOMString buildID;
 
   // WebKit/Blink/Trident/Presto support this.
-  [Throws, NeedsCallerType]
+  [Affects=Nothing, DependsOn=Nothing]
   boolean javaEnabled();
 
   /**

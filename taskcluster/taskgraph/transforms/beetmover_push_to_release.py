@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Transform the beetmover-cdns task into a task description.
+Transform the beetmover-push-to-release task into a task description.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -30,7 +30,7 @@ taskref_or_string = Any(
     basestring,
     {Required('task-reference'): basestring})
 
-beetmover_cdns_description_schema = Schema({
+beetmover_push_to_release_description_schema = Schema({
     Required('name'): basestring,
     Required('product'): basestring,
     Required('treeherder-platform'): basestring,
@@ -52,13 +52,13 @@ def validate(config, jobs):
     for job in jobs:
         label = job['name']
         validate_schema(
-            beetmover_cdns_description_schema, job,
-            "In cdns-signing ({!r} kind) task for {!r}:".format(config.kind, label))
+            beetmover_push_to_release_description_schema, job,
+            "In beetmover-push-to-release ({!r} kind) task for {!r}:".format(config.kind, label))
         yield job
 
 
 @transforms.add
-def make_beetmover_cdns_description(config, jobs):
+def make_beetmover_push_to_release_description(config, jobs):
     for job in jobs:
         treeherder = job.get('treeherder', {})
         treeherder.setdefault('symbol', 'Rel(BM-C)')
@@ -68,7 +68,7 @@ def make_beetmover_cdns_description(config, jobs):
 
         label = job['name']
         description = (
-            "Beetmover push to cdns for '{product}'".format(
+            "Beetmover push to release for '{product}'".format(
                 product=job['product']
             )
         )
@@ -96,10 +96,10 @@ def make_beetmover_cdns_description(config, jobs):
 
 
 @transforms.add
-def make_beetmover_cdns_worker(config, jobs):
+def make_beetmover_push_to_release_worker(config, jobs):
     for job in jobs:
         worker = {
-            'implementation': 'beetmover-cdns',
+            'implementation': 'beetmover-push-to-release',
             'product': job['product'],
         }
         job["worker"] = worker

@@ -521,17 +521,17 @@ public:
 };
 
 class SendMessageEventRunnable final : public ExtendableEventWorkerRunnable
+                                     , public StructuredCloneHolder
 {
-  StructuredCloneHolder mData;
   const ClientInfoAndState mClientInfoAndState;
 
 public:
   SendMessageEventRunnable(WorkerPrivate*  aWorkerPrivate,
                            KeepAliveToken* aKeepAliveToken,
-                           StructuredCloneHolder&& aData,
                            const ClientInfoAndState& aClientInfoAndState)
     : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
-    , mData(Move(aData))
+    , StructuredCloneHolder(CloningSupported, TransferringSupported,
+                            JS::StructuredCloneScope::SameProcessDifferentThread)
     , mClientInfoAndState(aClientInfoAndState)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -543,13 +543,13 @@ public:
     JS::Rooted<JS::Value> messageData(aCx);
     nsCOMPtr<nsIGlobalObject> sgo = aWorkerPrivate->GlobalScope();
     ErrorResult rv;
-    mData.Read(sgo, aCx, &messageData, rv);
+    Read(sgo, aCx, &messageData, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return true;
     }
 
     Sequence<OwningNonNull<MessagePort>> ports;
-    if (!mData.TakeTransferredPortsAsSequence(ports)) {
+    if (!TakeTransferredPortsAsSequence(ports)) {
       return true;
     }
 
@@ -640,17 +640,6 @@ ServiceWorkerPrivate::SendMessageEvent(ipc::StructuredCloneData&& aData,
   JS::Rooted<JS::Value> transferable(cx);
   transferable.setObject(*array);
 
-  StructuredCloneHolder holder(StructuredCloneHolder::CloningSupported,
-                               StructuredCloneHolder::TransferringSupported,
-                               JS::StructuredCloneScope::DifferentProcess);
-  holder.Write(cx, messageData, transferable, JS::CloneDataPolicy(), rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  // Now that the re-packing is complete, send a runnable to the service worker
-  // thread.
-
   rv = SpawnWorkerIfNeeded(MessageEvent);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
@@ -658,8 +647,13 @@ ServiceWorkerPrivate::SendMessageEvent(ipc::StructuredCloneData&& aData,
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
   RefPtr<SendMessageEventRunnable> runnable =
-    new SendMessageEventRunnable(mWorkerPrivate, token, Move(holder),
-                                 aClientInfoAndState);
+    new SendMessageEventRunnable(mWorkerPrivate, token, aClientInfoAndState);
+
+  runnable->Write(cx, messageData, transferable, JS::CloneDataPolicy(), rv);
+  if (rv.Failed()) {
+    return rv.StealNSResult();
+  }
+
   if (!runnable->Dispatch()) {
     return NS_ERROR_FAILURE;
   }
