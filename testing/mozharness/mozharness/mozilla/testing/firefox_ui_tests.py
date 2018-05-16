@@ -279,7 +279,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
                                        env=env)
 
         tbpl_status, log_level, summary = parser.evaluate_parser(return_code)
-        self.buildbot_status(tbpl_status, level=log_level)
+        self.record_status(tbpl_status, level=log_level)
 
         return return_code
 

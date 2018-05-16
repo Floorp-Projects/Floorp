@@ -22,7 +22,7 @@ from mozharness.base.python import (
     VirtualenvMixin,
     virtualenv_config_options,
 )
-from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_WARNING
+from mozharness.mozilla.automation import AutomationMixin, TBPL_WARNING
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
@@ -103,7 +103,7 @@ testing_config_options = [
 
 
 # TestingMixin {{{1
-class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
+class TestingMixin(VirtualenvMixin, AutomationMixin, ResourceMonitoringMixin,
                    TooltoolMixin, TryToolsMixin, VerifyToolsMixin):
     """
     The steps to identify + download the proper bits for [browser] unit
@@ -407,7 +407,7 @@ You can set this by specifying --test-url URL
                                             parent_dir=dirs['abs_work_dir'],
                                             error_level=FATAL)
         self.installer_path = os.path.realpath(source)
-        self.set_buildbot_property("build_url", self.installer_url, write_to_file=True)
+        self.set_property("build_url", self.installer_url, write_to_file=True)
 
     def _download_and_extract_symbols(self):
         dirs = self.query_abs_dirs()
@@ -430,8 +430,8 @@ You can set this by specifying --test-url URL
             if not self.symbols_path:
                 self.symbols_path = os.path.join(dirs['abs_work_dir'], 'symbols')
 
-            self.set_buildbot_property("symbols_url", self.symbols_url,
-                                       write_to_file=True)
+            self.set_property("symbols_url", self.symbols_url,
+                              write_to_file=True)
             if self.symbols_url:
                 self.download_unpack(self.symbols_url, self.symbols_path)
 
@@ -627,7 +627,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
             self.nodejs_path = abs_nodejs_path
         else:
             self.warning("nodejs path was given but couldn't be found. Tried looking in '%s'" % abs_nodejs_path)
-            self.buildbot_status(TBPL_WARNING, WARNING)
+            self.record_status(TBPL_WARNING, WARNING)
 
         return self.nodejs_path
 
@@ -669,7 +669,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
                 self.warning("minidump stackwalk path was given but couldn't be found. "
                              "Tried looking in '%s'" % abs_minidump_path)
                 # don't burn the job but we should at least turn them orange so it is caught
-                self.buildbot_status(TBPL_WARNING, WARNING)
+                self.record_status(TBPL_WARNING, WARNING)
 
         return self.minidump_stackwalk_path
 

@@ -21,7 +21,7 @@ from mozharness.base.errors import MakefileErrorList
 from mozharness.base.script import BaseScript
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
-from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.building.buildbase import (
     MakeUploadOutputParser,
     get_mozconfig_path,
@@ -64,9 +64,9 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
-                          VCSMixin, BaseScript,
-                          BalrogMixin, MarMixin, VirtualenvMixin, TransferMixin):
+class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
+                          VCSMixin, BaseScript, BalrogMixin, MarMixin,
+                          VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
         ['--balrog-config', ],
@@ -252,9 +252,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 msg.append(t)
             self.fatal(' '.join(msg))
         self.info('configuration looks ok')
-
-        # Set an empty dict for buildbot_config for now
-        self.buildbot_config = {"properties": {}}
         return
 
     def _get_configuration_tokens(self, iterable):
@@ -472,12 +469,12 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         """marks current step as failed"""
         self.locales_property[locale] = FAILURE_STR
         prop_key = "%s_failure" % locale
-        prop_value = self.query_buildbot_property(prop_key)
+        prop_value = self.query_property(prop_key)
         if prop_value:
             prop_value = "%s  %s" % (prop_value, message)
         else:
             prop_value = message
-        self.set_buildbot_property(prop_key, prop_value, write_to_file=True)
+        self.set_property(prop_key, prop_value, write_to_file=True)
         BaseScript.add_failure(self, locale, message=message, **kwargs)
 
     def query_failed_locales(self):
@@ -491,9 +488,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         locales = self.query_locales()
         for locale in locales:
             self.locales_property.setdefault(locale, SUCCESS_STR)
-        self.set_buildbot_property("locales",
-                                   json.dumps(self.locales_property),
-                                   write_to_file=True)
+        self.set_property("locales",
+                          json.dumps(self.locales_property),
+                          write_to_file=True)
 
     # Actions {{{2
     def pull(self):
@@ -771,7 +768,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
 
     def submit_to_balrog(self):
         """submit to balrog"""
-        self.info("Reading buildbot build properties...")
+        self.info("Reading build properties...")
         # get platform, appName and hashType from configuration
         # common values across different locales
         config = self.config
@@ -779,13 +776,13 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         appName = config['appName']
         branch = config['branch']
         # values from configuration
-        self.set_buildbot_property("branch", branch)
-        self.set_buildbot_property("appName", appName)
+        self.set_property("branch", branch)
+        self.set_property("appName", appName)
         # it's hardcoded to sha512 in balrog.py
-        self.set_buildbot_property("platform", platform)
+        self.set_property("platform", platform)
         # values common to the current repacks
-        self.set_buildbot_property("buildid", self._query_buildid())
-        self.set_buildbot_property("appVersion", self.query_version())
+        self.set_property("buildid", self._query_buildid())
+        self.set_property("appVersion", self.query_version())
 
         # YAY
         def balrog_props_wrapper(locale):

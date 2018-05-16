@@ -26,8 +26,8 @@ from mozharness.base.python import Python3Virtualenv
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
-from mozharness.mozilla.buildbot import TBPL_RETRY, TBPL_FAILURE, TBPL_WARNING
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
+from mozharness.mozilla.automation import TBPL_RETRY, TBPL_FAILURE, TBPL_WARNING
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -729,7 +729,7 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
                     dest = os.path.join(env['MOZ_UPLOAD_DIR'], 'perfherder-data.json')
                     self._artifact_perf_data(dest)
 
-        self.buildbot_status(parser.worst_tbpl_status,
+        self.record_status(parser.worst_tbpl_status,
                              level=parser.worst_log_level)
 
     def fetch_python3(self):

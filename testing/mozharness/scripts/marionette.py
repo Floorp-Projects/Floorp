@@ -380,7 +380,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
 
         self.log("Marionette exited with return code %s: %s" % (return_code, tbpl_status),
                  level=level)
-        self.buildbot_status(tbpl_status)
+        self.record_status(tbpl_status)
 
 
 if __name__ == '__main__':

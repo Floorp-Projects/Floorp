@@ -12,7 +12,7 @@ class BalrogMixin(object):
 
     def generate_balrog_props(self, props_path):
         balrog_props = {}
-        balrog_props.update(self.buildbot_properties)
+        balrog_props.update(self.properties)
 
         balrog_props['hashType'] = self.config.get("hash_type", "sha512")
         if self.config.get('stage_platform'):
