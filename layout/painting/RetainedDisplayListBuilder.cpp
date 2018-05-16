@@ -154,7 +154,8 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
 
     if (item->GetChildren()) {
       if (!PreProcessDisplayList(item->GetChildren(), SelectAGRForFrame(f, aAGR))) {
-        return false;
+        mBuilder.MarkFrameForDisplayIfVisible(f, mBuilder.RootReferenceFrame());
+        mBuilder.MarkFrameModifiedDuringBuilding(f);
       }
     }
 
