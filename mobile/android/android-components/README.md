@@ -28,6 +28,8 @@ High-level components for building browser(-like) apps.
 
 * **Erropages** - Responsive browser error pages for Android apps.
 
+* **Menu** - A generic menu with customizable items primarily for browser toolbars.
+
 * **Search** - Search plugins and companion code to load, parse and use them.
 
 * **Session** - A generic representation of a browser session.
