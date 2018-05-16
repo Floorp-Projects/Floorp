@@ -158,6 +158,15 @@ protected:
                           nsAString* outString,
                           int32_t aMaxLength);
   nsresult WillLoadHTML(bool* aCancel);
+
+  /**
+   * WillInsertBreak() is called when insertParagraph command is executed
+   * or something equivalent.  This method actually tries to insert new
+   * paragraph or <br> element, etc.
+   *
+   * @param aCancel             Returns true if target node is not editable.
+   * @param aHandled            Returns true if actually insert new break.
+   */
   nsresult WillInsertBreak(bool* aCancel, bool* aHandled);
 
   void DeleteNodeIfCollapsedText(nsINode& aNode);
