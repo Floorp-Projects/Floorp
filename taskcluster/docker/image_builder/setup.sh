@@ -9,13 +9,16 @@ apt-get update -y
 # Install dependencies
 apt-get install -y --no-install-recommends \
     socat \
-    python \
     python-requests \
-    python-requests-unixsocket
+    python-requests-unixsocket \
+    python3.5 \
+    python3-minimal \
+    python3-requests \
+    python3-requests-unixsocket
 
 # Extra dependencies only needed for image building. Will be removed at
 # end of script.
-apt-get install -y python-pip
+apt-get install -y python-pip python3-pip
 
 # Install mercurial
 # shellcheck disable=SC1091
@@ -37,21 +40,24 @@ cd /setup
 tooltool_fetch <<EOF
 [
   {
-    "size": 463794,
+    "size": 558068,
     "visibility": "public",
-    "digest": "c6ba906403e5c18b374faf9f676b10f0988b9f4067bd6c52c548d7dee58fac79974babfd5c438aef8da0a5260158116db69b11f2a52a775772d9904b9d86fdbc",
+    "digest": "72b1fc542e5af36fc660d7b8d3882f0a25644d3b66316293717aabf9ba8cf578e49e2cf45e63e962c5535ec1f8b3e83248c379d34b0cab2ef1a950205ad153ce",
     "algorithm": "sha512",
-    "filename": "zstandard-0.8.0.tar.gz"
+    "filename": "zstandard-0.9.0.tar.gz"
   }
 ]
 EOF
 )
 
-/usr/bin/pip -v install /setup/zstandard-0.8.0.tar.gz
+# We need to install for both Python 2 and 3 because `mach taskcluster-load-image`
+# uses Python 2 and `download-and-compress` uses Python 3.
+/usr/bin/pip -v install /setup/zstandard-0.9.0.tar.gz
+/usr/bin/pip3 -v install /setup/zstandard-0.9.0.tar.gz
 
 # python-pip only needed to install python-zstandard. Removing it removes
 # several hundred MB of dependencies from the image.
-apt-get purge -y python-pip
+apt-get purge -y python-pip python3-pip
 
 # Purge apt-get caches to minimize image size
 apt-get auto-remove -y

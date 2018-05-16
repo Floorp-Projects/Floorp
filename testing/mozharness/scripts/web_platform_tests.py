@@ -97,7 +97,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             config_options=self.config_options,
             all_actions=[
                 'clobber',
-                'read-buildbot-config',
                 'download-and-extract',
                 'create-virtualenv',
                 'pull',

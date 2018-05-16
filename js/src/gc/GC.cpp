@@ -6802,7 +6802,7 @@ HeapStateToLabel(JS::HeapState heapState)
         return "JS_IterateCompartments";
       case JS::HeapState::Idle:
       case JS::HeapState::CycleCollecting:
-        MOZ_CRASH("Should never have an Idle or CC heap state when pushing GC pseudo frames!");
+        MOZ_CRASH("Should never have an Idle or CC heap state when pushing GC profiling stack frames!");
     }
     MOZ_ASSERT_UNREACHABLE("Should have exhausted every JS::HeapState variant!");
     return nullptr;
@@ -6812,8 +6812,8 @@ HeapStateToLabel(JS::HeapState heapState)
 AutoTraceSession::AutoTraceSession(JSRuntime* rt, JS::HeapState heapState)
   : runtime(rt),
     prevState(rt->mainContextFromOwnThread()->heapState),
-    pseudoFrame(rt->mainContextFromOwnThread(), HeapStateToLabel(heapState),
-                ProfileEntry::Category::GC)
+    profilingStackFrame(rt->mainContextFromOwnThread(), HeapStateToLabel(heapState),
+                        ProfilingStackFrame::Category::GC)
 {
     MOZ_ASSERT(prevState == JS::HeapState::Idle);
     MOZ_ASSERT(heapState != JS::HeapState::Idle);

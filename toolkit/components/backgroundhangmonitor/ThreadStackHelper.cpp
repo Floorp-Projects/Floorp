@@ -9,7 +9,7 @@
 #include "nsJSPrincipals.h"
 #include "nsScriptSecurityManager.h"
 #include "jsfriendapi.h"
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
 #include "js/ProfilingStack.h"
 #endif
 
@@ -95,7 +95,7 @@ ThreadStackHelper::PrepareStackBuffer(HangStack& aStack)
   aStack.strbuffer().ClearAndRetainStorage();
   aStack.modules().Clear();
 
-#ifdef MOZ_THREADSTACKHELPER_PSEUDO
+#ifdef MOZ_THREADSTACKHELPER_PROFILING_STACK
   // Ensure we have enough space in our stack and string buffers for the data we
   // want to collect.
   if (!aStack.stack().SetCapacity(mMaxStackSize, fallible) ||
@@ -265,13 +265,13 @@ GetPathAfterComponent(const char* filename, const char (&component)[LEN]) {
 } // namespace
 
 void
-ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
+ThreadStackHelper::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFrame)
 {
   // For non-js frames we just include the raw label.
-  if (!aEntry.isJsFrame()) {
-    const char* entryLabel = aEntry.label();
+  if (!aFrame.isJsFrame()) {
+    const char* frameLabel = aFrame.label();
 
-    // entryLabel is a statically allocated string, so we want to store a
+    // frameLabel is a statically allocated string, so we want to store a
     // reference to it without performing any allocations. This is important, as
     // we aren't allowed to allocate within this function.
     //
@@ -285,22 +285,22 @@ ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
     // which has the LITERAL flag set. Without this optimization, this code
     // would be incorrect.
     nsCString label;
-    label.AssignLiteral(entryLabel, strlen(entryLabel));
+    label.AssignLiteral(frameLabel, strlen(frameLabel));
 
     // Let's make sure we don't deadlock here, by asserting that `label`'s
     // backing data matches.
-    MOZ_RELEASE_ASSERT(label.BeginReading() == entryLabel,
-        "String copy performed during ThreadStackHelper::CollectPseudoEntry");
+    MOZ_RELEASE_ASSERT(label.BeginReading() == frameLabel,
+        "String copy performed during ThreadStackHelper::CollectProfilingStackFrame");
     TryAppendFrame(label);
     return;
   }
 
-  if (!aEntry.script()) {
+  if (!aFrame.script()) {
     TryAppendFrame(HangEntrySuppressed());
     return;
   }
 
-  if (!IsChromeJSScript(aEntry.script())) {
+  if (!IsChromeJSScript(aFrame.script())) {
     TryAppendFrame(HangEntryContent());
     return;
   }
@@ -309,8 +309,8 @@ ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
   // This is because we want to do some size-saving strategies, and throw out
   // information which won't help us as much.
   // XXX: We currently don't collect the function name which hung.
-  const char* filename = JS_GetScriptFilename(aEntry.script());
-  unsigned lineno = JS_PCToLineNumber(aEntry.script(), aEntry.pc());
+  const char* filename = JS_GetScriptFilename(aFrame.script());
+  unsigned lineno = JS_PCToLineNumber(aFrame.script(), aFrame.pc());
 
   // Some script names are in the form "foo -> bar -> baz".
   // Here we find the origin of these redirected scripts.

@@ -4,7 +4,6 @@ job-defaults:
             android-7.0-x86/opt: geckoview-androidTest.apk
             default: null
     mozharness:
-        no-read-buildbot-config: true
         script:
             by-test-platform:
                 android.*: android_emulator_unittest.py

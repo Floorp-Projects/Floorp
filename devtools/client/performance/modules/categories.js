@@ -6,7 +6,7 @@
 const { L10N } = require("devtools/client/performance/modules/global");
 
 /**
- * Details about each profile pseudo-stack entry cateogry.
+ * Details about each label stack frame category.
  * @see CATEGORY_MAPPINGS.
  */
 const CATEGORIES = [{
@@ -49,26 +49,26 @@ const CATEGORIES = [{
 
 /**
  * Mapping from category bitmasks in the profiler data to additional details.
- * To be kept in sync with the js::ProfileEntry::Category in ProfilingStack.h
+ * To be kept in sync with the js::ProfilingStackFrame::Category in ProfilingStack.h
  */
 const CATEGORY_MAPPINGS = {
-  // js::ProfileEntry::Category::OTHER
+  // js::ProfilingStackFrame::Category::OTHER
   "16": CATEGORIES[0],
-  // js::ProfileEntry::Category::CSS
+  // js::ProfilingStackFrame::Category::CSS
   "32": CATEGORIES[1],
-  // js::ProfileEntry::Category::JS
+  // js::ProfilingStackFrame::Category::JS
   "64": CATEGORIES[2],
-  // js::ProfileEntry::Category::GC
+  // js::ProfilingStackFrame::Category::GC
   "128": CATEGORIES[3],
-  // js::ProfileEntry::Category::CC
+  // js::ProfilingStackFrame::Category::CC
   "256": CATEGORIES[3],
-  // js::ProfileEntry::Category::NETWORK
+  // js::ProfilingStackFrame::Category::NETWORK
   "512": CATEGORIES[4],
-  // js::ProfileEntry::Category::GRAPHICS
+  // js::ProfilingStackFrame::Category::GRAPHICS
   "1024": CATEGORIES[5],
-  // js::ProfileEntry::Category::STORAGE
+  // js::ProfilingStackFrame::Category::STORAGE
   "2048": CATEGORIES[6],
-  // js::ProfileEntry::Category::EVENTS
+  // js::ProfilingStackFrame::Category::EVENTS
   "4096": CATEGORIES[7],
   // non-bitmasks for specially-assigned categories
   "9000": CATEGORIES[8],

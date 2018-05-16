@@ -172,7 +172,7 @@ struct ShellContext
     js::shell::RCFile** errFilePtr;
     js::shell::RCFile** outFilePtr;
 
-    UniquePtr<PseudoStack> geckoProfilingStack;
+    UniquePtr<ProfilingStack> geckoProfilingStack;
 
     JS::UniqueChars moduleLoadPath;
     UniquePtr<MarkBitObservers> markObservers;
