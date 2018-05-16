@@ -791,6 +791,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // set value and try to confirm it. UnifiedComplete should always
             // resolve to a valid url.
             try {
+              url = url.trim();
               new URL(url);
             } catch (ex) {
               let lastLocationChange = browser.lastLocationChange;
