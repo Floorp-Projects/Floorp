@@ -11,7 +11,7 @@ transforms:
 jobs:
    hsts-hpkp-blocklist:
       name: periodic_file_update
-      description: HSTS, HPKP, and Blocklist update
+      description: HSTS, HPKP, Blocklist and remote settings update
       run-on-projects: []  # Only run via cron
       treeherder:
          kind: build
@@ -28,6 +28,7 @@ jobs:
             DO_HSTS: "1"
             DO_HPKP: "1"
             DO_BLOCKLIST: "1"
+            DO_REMOTE_SETTINGS: "1"
             USE_MOZILLA_CENTRAL: "1"
             BRANCH: mozilla-central
             PRODUCT: firefox
@@ -44,6 +45,9 @@ jobs:
               type: file
             - name: 'public/build/blocklist.diff'
               path: '/home/worker/artifacts/blocklist.diff'
+              type: file
+            - name: 'public/build/remote-settings.diff'
+              path: '/home/worker/artifacts/remote-settings.diff'
               type: file
       scopes:
          - secrets:get:project/releng/gecko/build/level-{level}/arc-phabricator-token
