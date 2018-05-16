@@ -46,7 +46,7 @@ public:
 private:
   virtual int Tag() const = 0;
 
-  nsCString mTable;
+  const nsCString mTable;
 };
 
 // A table update is built from a single update chunk from the server. As the
@@ -173,7 +173,7 @@ public:
 
   nsresult NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   nsresult NewFullHashResponse(const Prefix& aPrefix,
-                               CachedFullHashResponse& aResponse);
+                               const CachedFullHashResponse& aResponse);
 
 private:
   virtual int Tag() const override { return TAG; }
@@ -240,7 +240,7 @@ private:
   nsresult Reset();
 
   nsresult ReadHeader();
-  nsresult SanityCheck();
+  nsresult SanityCheck() const;
   nsresult CalculateChecksum(nsAutoCString& aChecksum, uint32_t aFileSize,
                              bool aChecksumPresent);
   nsresult CheckChecksum(uint32_t aFileSize);
@@ -260,8 +260,8 @@ private:
 
   nsresult PrepareForUpdate();
 
-  bool AlreadyReadChunkNumbers();
-  bool AlreadyReadCompletions();
+  bool AlreadyReadChunkNumbers() const;
+  bool AlreadyReadCompletions() const;
 
  // This is used for checking that the database is correct and for figuring out
  // the number of chunks, etc. to read from disk on restart.
@@ -280,7 +280,7 @@ private:
 
   // The name of the table (must end in -shavar or -digest256, or evidently
   // -simple for unittesting.
-  nsCString mTableName;
+  const nsCString mTableName;
   nsCOMPtr<nsIFile> mStoreDirectory;
 
   bool mInUpdate;

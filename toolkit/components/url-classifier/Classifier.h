@@ -52,7 +52,7 @@ public:
   /*
    * Get all tables that we know about.
    */
-  nsresult ActiveTables(nsTArray<nsCString>& aTables);
+  nsresult ActiveTables(nsTArray<nsCString>& aTables) const;
 
   /**
    * Check a URL against the specified tables.
@@ -172,7 +172,7 @@ private:
 
   nsresult LoadMetadata(nsIFile* aDirectory, nsACString& aResult);
 
-  nsCString GetProvider(const nsACString& aTableName);
+  static nsCString GetProvider(const nsACString& aTableName);
 
   /**
    * The "background" part of ApplyUpdates. Once the background update

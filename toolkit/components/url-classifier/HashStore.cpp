@@ -220,7 +220,7 @@ TableUpdateV4::NewChecksum(const std::string& aChecksum)
 
 nsresult
 TableUpdateV4::NewFullHashResponse(const Prefix& aPrefix,
-                                   CachedFullHashResponse& aResponse)
+                                   const CachedFullHashResponse& aResponse)
 {
   CachedFullHashResponse* response =
     mFullHashResponseMap.LookupOrAdd(aPrefix.ToUint32());
@@ -374,7 +374,7 @@ HashStore::ReadHeader()
 }
 
 nsresult
-HashStore::SanityCheck()
+HashStore::SanityCheck() const
 {
   if (mHeader.magic != STORE_MAGIC || mHeader.version != CURRENT_VERSION) {
     NS_WARNING("Unexpected header data in the store.");
@@ -1245,7 +1245,7 @@ HashStore::SubCompletes()
 }
 
 bool
-HashStore::AlreadyReadChunkNumbers()
+HashStore::AlreadyReadChunkNumbers() const
 {
   // If there are chunks but chunk set not yet contains any data
   // Then we haven't read chunk numbers.
@@ -1257,7 +1257,7 @@ HashStore::AlreadyReadChunkNumbers()
 }
 
 bool
-HashStore::AlreadyReadCompletions()
+HashStore::AlreadyReadCompletions() const
 {
   // If there are completions but completion set not yet contains any data
   // Then we haven't read completions.

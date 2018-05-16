@@ -269,7 +269,7 @@ private:
   nsresult CacheResultToTableUpdate(CacheResult* aCacheResult,
                                     TableUpdate* aUpdate);
 
-  bool IsSameAsLastResults(CacheResultArray& aResult);
+  bool IsSameAsLastResults(const CacheResultArray& aResult) const;
 
   nsAutoPtr<mozilla::safebrowsing::Classifier> mClassifier;
   // The class that actually parses the update chunks.
