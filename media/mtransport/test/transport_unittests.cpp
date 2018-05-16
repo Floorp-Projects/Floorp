@@ -476,6 +476,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
 
 
   void DestroyFlow() {
+    disconnect_all();
     if (flow_) {
       loopback_->Disconnect();
       flow_ = nullptr;
