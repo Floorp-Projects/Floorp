@@ -16,6 +16,8 @@
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
+#include <new>
+
 // This data structure supports stacky LIFO allocation (mark/release and
 // LifoAllocScope). It does not maintain one contiguous segment; instead, it
 // maintains a bunch of linked memory segments. In order to prevent malloc/free
@@ -591,6 +593,20 @@ class LifoAlloc
             JS_OOM_POSSIBLY_FAIL();
 #endif
         return allocImpl(n);
+    }
+
+    template<typename T, typename... Args>
+    MOZ_ALWAYS_INLINE T*
+    allocInSize(size_t n, Args&&... args)
+    {
+        MOZ_ASSERT(n >= sizeof(T), "must request enough space to store a T");
+        static_assert(alignof(T) <= detail::LIFO_ALLOC_ALIGN,
+                      "LifoAlloc must provide enough alignment to store T");
+        void* ptr = alloc(n);
+        if (!ptr)
+            return nullptr;
+
+        return new (ptr) T(mozilla::Forward<Args>(args)...);
     }
 
     MOZ_ALWAYS_INLINE

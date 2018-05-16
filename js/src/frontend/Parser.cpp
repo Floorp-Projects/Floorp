@@ -1762,13 +1762,11 @@ template <typename Scope>
 typename Scope::Data*
 NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 {
+    using Data = typename Scope::Data;
     size_t allocSize = Scope::sizeOfData(numBindings);
-    auto* bindings = static_cast<typename Scope::Data*>(alloc.alloc(allocSize));
-    if (!bindings) {
+    auto* bindings = alloc.allocInSize<Data>(allocSize, numBindings);
+    if (!bindings)
         ReportOutOfMemory(cx);
-        return nullptr;
-    }
-    PodZero(bindings);
     return bindings;
 }
 
