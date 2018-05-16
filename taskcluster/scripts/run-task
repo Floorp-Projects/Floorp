@@ -18,6 +18,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import datetime
 import errno
+import io
 import json
 import os
 import re
@@ -38,6 +39,8 @@ except ImportError:
     urlopen = urllib2.urlopen
     URLError = urllib2.URLError
 
+
+PY3 = sys.version_info.major == 3
 
 FINGERPRINT_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgfingerprint'
 FALLBACK_FINGERPRINT = {
@@ -86,10 +89,18 @@ IS_POSIX = os.name == 'posix'
 IS_WINDOWS = os.name == 'nt'
 
 
+if PY3:
+    bytestr = lambda x: x.encode('utf-8', 'strict')
+else:
+    bytestr = bytes
+
+
 def print_line(prefix, m):
-    now = datetime.datetime.utcnow().isoformat()
-    now = now[:-3] if now[-7] == '.' else now  # slice microseconds to 3 decimals
-    print(b'[%s %sZ] %s' % (prefix, now, m), end=b'')
+    now = bytestr(datetime.datetime.utcnow().isoformat())
+    # slice microseconds to 3 decimals.
+    now = now[:-3] if now[-7:-6] == b'.' else now
+    sys.stdout.buffer.write(b'[%s %sZ] %s' % (prefix, now, m))
+    sys.stdout.buffer.flush()
 
 
 def run_and_prefix_output(prefix, args, extra_env=None):
@@ -97,7 +108,7 @@ def run_and_prefix_output(prefix, args, extra_env=None):
 
     Returns the process exit code.
     """
-    print_line(prefix, b'executing %s\n' % args)
+    print_line(prefix, b'executing %r\n' % args)
 
     env = dict(os.environ)
     env.update(extra_env or {})
@@ -106,6 +117,13 @@ def run_and_prefix_output(prefix, args, extra_env=None):
     # when we pass sys.stdin to the invoked process. If we cared
     # to preserve stdin as a TTY, we could make this work. But until
     # someone needs it, don't bother.
+
+    # We want stdout to be bytes on Python 3. That means we can't use
+    # universal_newlines=True (because it implies text mode). But
+    # p.stdout.readline() won't work for bytes text streams. So, on Python 3,
+    # we manually install a latin1 stream wrapper. This allows us to readline()
+    # and preserves bytes, without losing any data.
+
     p = subprocess.Popen(args,
                          # Disable buffering because we want to receive output
                          # as it is generated so timestamps in logs are
@@ -116,12 +134,19 @@ def run_and_prefix_output(prefix, args, extra_env=None):
                          stdin=sys.stdin.fileno(),
                          cwd='/',
                          env=env,
-                         # So \r in progress bars are rendered as multiple
-                         # lines, preserving progress indicators.
-                         universal_newlines=True)
+                         universal_newlines=not PY3)
+
+    if PY3:
+        stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
+    else:
+        stdout = p.stdout
 
     while True:
-        data = p.stdout.readline()
+        data = stdout.readline()
+
+        if PY3:
+            data = data.encode('latin1')
+
         if data == b'':
             break
 
@@ -640,7 +665,8 @@ def main(args):
         # This code is modeled after what `sudo` was observed to do in a Docker
         # container. We do not bother calling setrlimit() because containers have
         # their own limits.
-        print_line(b'setup', b'running as %s:%s\n' % (args.user, args.group))
+        print_line(b'setup', b'running as %s:%s\n' % (bytestr(args.user),
+                                                      bytestr(args.group)))
         os.setgroups(gids)
         os.umask(0o22)
         os.setresgid(gid, gid, gid)
@@ -705,7 +731,8 @@ def main(args):
 
 if __name__ == '__main__':
     # Unbuffer stdio.
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-    sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
+    if not PY3:
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
 
     sys.exit(main(sys.argv[1:]))
