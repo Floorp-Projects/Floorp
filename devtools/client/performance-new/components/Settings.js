@@ -96,12 +96,6 @@ const featureCheckboxes = [
     recommended: true
   },
   {
-    name: "Responsiveness",
-    value: "responsiveness",
-    title: "Collect thread responsiveness information.",
-    recommended: true
-  },
-  {
     name: "Java",
     value: "java",
     title: "Profile Java code (Android only)."
