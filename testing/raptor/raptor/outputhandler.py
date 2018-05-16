@@ -40,7 +40,8 @@ class OutputHandler(object):
             self.process_output(json.dumps(data))
 
     def process_output(self, line):
-        LOG.process_output(self.proc.pid, line)
+        if "error" in line or "warning" in line or "raptor" in line:
+            LOG.process_output(self.proc.pid, line)
 
     def wait_for_quit(self, timeout=5):
         """Wait timeout seconds for the process to exit. If it hasn't
