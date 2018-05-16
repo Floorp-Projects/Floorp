@@ -157,7 +157,12 @@ protected:
                           const nsAString* inString,
                           nsAString* outString,
                           int32_t aMaxLength);
-  nsresult WillLoadHTML(bool* aCancel);
+
+  /**
+   * WillLoadHTML() is called before loading enter document from source.
+   * This removes bogus node if there is.
+   */
+  MOZ_MUST_USE nsresult WillLoadHTML();
 
   /**
    * WillInsertBreak() is called when insertParagraph command is executed

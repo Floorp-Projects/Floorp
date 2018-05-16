@@ -692,7 +692,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
                             aInfo->inString, aInfo->outString,
                             aInfo->maxLength);
     case EditAction::loadHTML:
-      return WillLoadHTML(aCancel);
+      return WillLoadHTML();
     case EditAction::insertBreak:
       UndefineCaretBidiLevel();
       return WillInsertBreak(aCancel, aHandled);
@@ -1707,15 +1707,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 }
 
 nsresult
-HTMLEditRules::WillLoadHTML(bool* aCancel)
+HTMLEditRules::WillLoadHTML()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aCancel)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  *aCancel = false;
 
   // Delete mBogusNode if it exists. If we really need one,
   // it will be added during post-processing in AfterEditInner().
@@ -1723,6 +1717,9 @@ HTMLEditRules::WillLoadHTML(bool* aCancel)
   if (mBogusNode) {
     DebugOnly<nsresult> rv =
       HTMLEditorRef().DeleteNodeWithTransaction(*mBogusNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
       "Failed to remove the bogus node");
     mBogusNode = nullptr;
