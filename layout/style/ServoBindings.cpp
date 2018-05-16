@@ -1672,7 +1672,7 @@ const nsStyleImageRequest*
 Gecko_GetImageRequest(const nsStyleImage* aImage)
 {
   MOZ_ASSERT(aImage);
-  return aImage->GetImageRequest();
+  return aImage->ImageRequest();
 }
 
 nsAtom*
