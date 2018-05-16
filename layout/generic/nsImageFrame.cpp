@@ -18,6 +18,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/dom/HTMLImageElement.h"
+#include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Unused.h"
@@ -294,6 +296,33 @@ nsImageFrame::Init(nsIContent*       aContent,
   }
 }
 
+static void
+ScaleIntrinsicSizeForDensity(nsIContent& aContent, nsSize& aSize)
+{
+  auto* image = HTMLImageElement::FromNode(aContent);
+  if (!image) {
+    return;
+  }
+
+  ResponsiveImageSelector* selector = image->GetResponsiveImageSelector();
+  if (!selector) {
+    return;
+  }
+
+  double density = selector->GetSelectedImageDensity();
+  MOZ_ASSERT(density > 0.0);
+  if (density == 1.0) {
+    return;
+  }
+
+  if (aSize.width != -1) {
+    aSize.width = NSToCoordRound(double(aSize.width) / density);
+  }
+  if (aSize.height != -1) {
+    aSize.height = NSToCoordRound(double(aSize.height) / density);
+  }
+}
+
 bool
 nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
 {
@@ -307,6 +336,7 @@ nsImageFrame::UpdateIntrinsicSize(imgIContainer* aImage)
   // Set intrinsic size to match aImage's reported intrinsic width & height.
   nsSize intrinsicSize;
   if (NS_SUCCEEDED(aImage->GetIntrinsicSize(&intrinsicSize))) {
+    ScaleIntrinsicSizeForDensity(*mContent, intrinsicSize);
     // If the image has no intrinsic width, intrinsicSize.width will be -1, and
     // we can leave mIntrinsicSize.width at its default value of eStyleUnit_None.
     // Otherwise we use intrinsicSize.width. Height works the same way.
@@ -859,46 +889,8 @@ nsImageFrame::ComputeSize(gfxContext *aRenderingContext,
                           ComputeSizeFlags aFlags)
 {
   EnsureIntrinsicSizeAndRatio();
-
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
-  NS_ASSERTION(imageLoader, "No content node??");
-  mozilla::IntrinsicSize intrinsicSize(mIntrinsicSize);
-
-  // XXX(seth): We may sometimes find ourselves in the situation where we have
-  // mImage, but imageLoader's current request does not have a size yet.
-  // This can happen when we load an image speculatively from cache, it fails
-  // to validate, and the new image load hasn't fired SIZE_AVAILABLE yet. In
-  // this situation we should always use mIntrinsicSize, because
-  // GetNaturalWidth/Height will return 0, so we check CurrentRequestHasSize()
-  // below. See bug 1019840. We will fix this in bug 1141395.
-
-  // Content may override our default dimensions. This is termed as overriding
-  // the intrinsic size by the spec, but all other consumers of mIntrinsic*
-  // values are being used to refer to the real/true size of the image data.
-  if (imageLoader && imageLoader->CurrentRequestHasSize() && mImage &&
-      intrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
-      intrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
-    uint32_t width;
-    uint32_t height;
-    if (NS_SUCCEEDED(imageLoader->GetNaturalWidth(&width)) &&
-        NS_SUCCEEDED(imageLoader->GetNaturalHeight(&height))) {
-      nscoord appWidth = nsPresContext::CSSPixelsToAppUnits((int32_t)width);
-      nscoord appHeight = nsPresContext::CSSPixelsToAppUnits((int32_t)height);
-      // If this image is rotated, we'll need to transpose the natural
-      // width/height.
-      bool coordFlip;
-      if (StyleVisibility()->mImageOrientation.IsFromImage()) {
-        coordFlip = mImage->GetOrientation().SwapsWidthAndHeight();
-      } else {
-        coordFlip = StyleVisibility()->mImageOrientation.SwapsWidthAndHeight();
-      }
-      intrinsicSize.width.SetCoordValue(coordFlip ? appHeight : appWidth);
-      intrinsicSize.height.SetCoordValue(coordFlip ? appWidth : appHeight);
-    }
-  }
-
   return ComputeSizeWithIntrinsicDimensions(aRenderingContext, aWM,
-                                            intrinsicSize, mIntrinsicRatio,
+                                            mIntrinsicSize, mIntrinsicRatio,
                                             aCBSize, aMargin, aBorder, aPadding,
                                             aFlags);
 }
