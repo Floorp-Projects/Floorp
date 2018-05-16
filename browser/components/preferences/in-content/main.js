@@ -583,6 +583,7 @@ var gMainPane = {
       // of the preferences page.
       window.addEventListener("pageshow", async () => {
         try {
+          this._initListEventHandlers();
           this._loadData();
           await this._rebuildVisibleTypes();
           this._sortVisibleTypes();
@@ -1448,6 +1449,31 @@ var gMainPane = {
 
   // View Construction
 
+  selectedHandlerListItem: null,
+
+  _initListEventHandlers() {
+    this._list.addEventListener("select", event => {
+      if (event.target != this._list) {
+        return;
+      }
+
+      let handlerListItem = this._list.selectedItem &&
+                            HandlerListItem.forNode(this._list.selectedItem);
+      if (this.selectedHandlerListItem == handlerListItem) {
+        return;
+      }
+
+      if (this.selectedHandlerListItem) {
+        this.selectedHandlerListItem.showActionsMenu = false;
+      }
+      this.selectedHandlerListItem = handlerListItem;
+      if (handlerListItem) {
+        this.rebuildActionsMenu();
+        handlerListItem.showActionsMenu = true;
+      }
+    });
+  },
+
   async _rebuildVisibleTypes() {
     this._visibleTypes = [];
 
@@ -1506,8 +1532,9 @@ var gMainPane = {
   },
 
   _rebuildView() {
-    let lastSelectedType = this._list.selectedItem &&
-      HandlerListItem.forNode(this._list.selectedItem).handlerInfoWrapper.type;
+    let lastSelectedType = this.selectedHandlerListItem &&
+                           this.selectedHandlerListItem.handlerInfoWrapper.type;
+    this.selectedHandlerListItem = null;
 
     // Clear the list of entries.
     while (this._list.childNodes.length > 1)
@@ -1585,7 +1612,7 @@ var gMainPane = {
    */
   rebuildActionsMenu() {
     var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
     var menu =
       document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
     var menuPopup = menu.menupopup;
@@ -1699,7 +1726,7 @@ var gMainPane = {
     if (Cc["@mozilla.org/gio-service;1"]) {
       let gIOSvc = Cc["@mozilla.org/gio-service;1"].
                    getService(Ci.nsIGIOService);
-      var gioApps = gIOSvc.getAppsForURIScheme(typeItem.type);
+      var gioApps = gIOSvc.getAppsForURIScheme(handlerInfo.type);
       let enumerator = gioApps.enumerate();
       let possibleHandlers = handlerInfo.possibleApplicationHandlers;
       while (enumerator.hasMoreElements()) {
@@ -1906,8 +1933,7 @@ var gMainPane = {
   },
 
   _storeAction(aActionItem) {
-    var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
     let action = parseInt(aActionItem.getAttribute("action"));
 
@@ -1942,7 +1968,7 @@ var gMainPane = {
     handlerInfo.handledOnlyByPlugin = false;
 
     // Update the action label and image to reflect the new preferred action.
-    HandlerListItem.forNode(typeItem).refreshAction();
+    this.selectedHandlerListItem.refreshAction();
   },
 
   manageApp(aEvent) {
@@ -1950,8 +1976,7 @@ var gMainPane = {
     // as we handle it specially ourselves.
     aEvent.stopPropagation();
 
-    var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
     let onComplete = () => {
       // Rebuild the actions menu so that we revert to the previous selection,
@@ -1959,7 +1984,7 @@ var gMainPane = {
       this.rebuildActionsMenu();
 
       // update the richlistitem too. Will be visible when selecting another row
-      HandlerListItem.forNode(typeItem).refreshAction();
+      this.selectedHandlerListItem.refreshAction();
     };
 
     gSubDialog.open("chrome://browser/content/preferences/applicationManager.xul",
@@ -1998,7 +2023,7 @@ var gMainPane = {
 
     if (AppConstants.platform == "win") {
       var params = {};
-      var handlerInfo = this._handledTypes[this._list.selectedItem.type];
+      var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
       if (isFeedType(handlerInfo.type)) {
         // MIME info will be null, create a temp object.
@@ -2038,7 +2063,7 @@ var gMainPane = {
           handlerApp.executable = fp.file;
 
           // Add the app to the type's list of possible handlers.
-          let handler = this._handledTypes[this._list.selectedItem.type];
+          let handler = this.selectedHandlerListItem.handlerInfoWrapper;
           handler.addPossibleApplicationHandler(handlerApp);
 
           chooseAppCallback(handlerApp);
@@ -2463,6 +2488,13 @@ class HandlerListItem {
       this.node.removeAttribute(APP_ICON_ATTR_NAME);
       this.node.setAttribute("actionIcon", this.handlerInfoWrapper.actionIcon);
     }
+  }
+
+  set showActionsMenu(value) {
+    document.getAnonymousElementByAttribute(this.node, "anonid", "selected")
+            .setAttribute("hidden", !value);
+    document.getAnonymousElementByAttribute(this.node, "anonid", "not-selected")
+            .setAttribute("hidden", !!value);
   }
 }
 
