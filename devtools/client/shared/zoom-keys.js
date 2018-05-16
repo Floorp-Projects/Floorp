@@ -66,10 +66,6 @@ exports.register = function(window) {
   if (zoomIn2) {
     shortcuts.on(zoomIn2, zoomIn);
   }
-  let zoomIn3 = L10N.getStr("toolbox.zoomIn3.key");
-  if (zoomIn3) {
-    shortcuts.on(zoomIn3, zoomIn);
-  }
 
   shortcuts.on(L10N.getStr("toolbox.zoomOut.key"),
                zoomOut);
