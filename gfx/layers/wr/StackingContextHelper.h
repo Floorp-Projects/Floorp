@@ -59,6 +59,11 @@ public:
     return mInheritedTransform;
   }
 
+  const gfx::Matrix& GetSnappingSurfaceTransform() const
+  {
+    return mSnappingSurfaceTransform;
+  }
+
   const Maybe<gfx::Matrix4x4>& GetTransformForScrollData() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
@@ -68,6 +73,13 @@ private:
   wr::DisplayListBuilder* mBuilder;
   gfx::Size mScale;
   gfx::Matrix mInheritedTransform;
+
+  // The "snapping surface" defines the space that we want to snap in.
+  // You can think of it as the nearest physical surface.
+  // Animated transforms create a new snapping surface, so that changes to their transform don't affect the snapping of their contents.
+  // Non-animated transforms do *not* create a new snapping surface,
+  // so that for example the existence of a non-animated identity transform does not affect snapping.
+  gfx::Matrix mSnappingSurfaceTransform;
   bool mAffectsClipPositioning;
   Maybe<wr::WrClipId> mReferenceFrameId;
   Maybe<gfx::Matrix4x4> mTransformForScrollData;
