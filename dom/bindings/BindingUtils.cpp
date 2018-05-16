@@ -1608,7 +1608,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
 {
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   {
-    JSAutoCompartment ac(cx, global);
+    JSAutoRealm ar(cx, global);
     ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
     // This function is called when resolving the "constructor" and "prototype"
     // properties of Xrays for DOM prototypes and constructors respectively.
@@ -2254,7 +2254,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
                                   domClass->mGetAssociatedGlobal(aCx, aObj));
   MOZ_ASSERT(JS_IsGlobalObject(newParent));
 
-  JSAutoCompartment oldAc(aCx, oldParent);
+  JSAutoRealm oldAr(aCx, oldParent);
 
   JSCompartment* oldCompartment = js::GetObjectCompartment(oldParent);
   JSCompartment* newCompartment = js::GetObjectCompartment(newParent);
@@ -2274,7 +2274,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg, ErrorResult& aErr
     expandoObject = DOMProxyHandler::GetAndClearExpandoObject(aObj);
   }
 
-  JSAutoCompartment newAc(aCx, newParent);
+  JSAutoRealm newAr(aCx, newParent);
 
   // First we clone the reflector. We get a copy of its properties and clone its
   // expando chain.
@@ -3510,10 +3510,10 @@ GetMaplikeSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
   JS::Rooted<JS::Value> slotValue(aCx);
   slotValue = js::GetReservedSlot(reflector, aSlotIndex);
   if (slotValue.isUndefined()) {
-    // Since backing object access can happen in non-originating compartments,
-    // make sure to create the backing object in reflector compartment.
+    // Since backing object access can happen in non-originating realms,
+    // make sure to create the backing object in reflector realm.
     {
-      JSAutoCompartment ac(aCx, reflector);
+      JSAutoRealm ar(aCx, reflector);
       JS::Rooted<JSObject*> newBackingObj(aCx);
       newBackingObj.set(Method(aCx));
       if (NS_WARN_IF(!newBackingObj)) {
@@ -3736,7 +3736,7 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // objects as constructors?  Of course it's not clear that the spec check
   // makes sense to start with: https://github.com/whatwg/html/issues/3575
   {
-    JSAutoCompartment ac(aCx, newTarget);
+    JSAutoRealm ar(aCx, newTarget);
     JS::Handle<JSObject*> constructor =
       GetPerInterfaceObjectHandle(aCx, aConstructorId, aCreator,
                                   true);
@@ -3769,9 +3769,9 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // Step 4.
     // If the definition is for an autonomous custom element, the active
     // function should be HTMLElement or XULElement.  We want to get the actual
-    // functions to compare to from our global's compartment, not the caller
-    // compartment.
-    JSAutoCompartment ac(aCx, global.Get());
+    // functions to compare to from our global's realm, not the caller
+    // realm.
+    JSAutoRealm ar(aCx, global.Get());
 
     JS::Rooted<JSObject*> constructor(aCx);
     if (ns == kNameSpaceID_XUL) {
@@ -3811,9 +3811,9 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
       return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
     }
 
-    // We want to get the constructor from our global's compartment, not the
-    // caller compartment.
-    JSAutoCompartment ac(aCx, global.Get());
+    // We want to get the constructor from our global's realm, not the
+    // caller realm.
+    JSAutoRealm ar(aCx, global.Get());
     JS::Rooted<JSObject*> constructor(aCx, cb(aCx));
     if (!constructor) {
       return false;
@@ -3833,22 +3833,22 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   // Step 7.
   if (!desiredProto) {
     // This fallback behavior is designed to match analogous behavior for the
-    // JavaScript built-ins. So we enter the compartment of our underlying
-    // newTarget object and fall back to the prototype object from that global.
+    // JavaScript built-ins. So we enter the realm of our underlying newTarget
+    // object and fall back to the prototype object from that global.
     // XXX The spec says to use GetFunctionRealm(), which is not actually
     // the same thing as what we have here (e.g. in the case of scripted callable proxies
-    // whose target is not same-compartment with the proxy, or bound functions, etc).
+    // whose target is not same-realm with the proxy, or bound functions, etc).
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1317658
     {
-      JSAutoCompartment ac(aCx, newTarget);
+      JSAutoRealm ar(aCx, newTarget);
       desiredProto = GetPerInterfaceObjectHandle(aCx, aProtoId, aCreator, true);
       if (!desiredProto) {
           return false;
       }
     }
 
-    // desiredProto is in the compartment of the underlying newTarget object.
-    // Wrap it into the context compartment.
+    // desiredProto is in the realm of the underlying newTarget object.
+    // Wrap it into the context realm.
     if (!JS_WrapObject(aCx, &desiredProto)) {
       return false;
     }
@@ -3863,9 +3863,9 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   if (constructionStack.IsEmpty()) {
     // Step 8.
     // Now we go to construct an element.  We want to do this in global's
-    // compartment, not caller compartment (the normal constructor behavior),
+    // realm, not caller realm (the normal constructor behavior),
     // just in case those elements create JS things.
-    JSAutoCompartment ac(aCx, global.Get());
+    JSAutoRealm ar(aCx, global.Get());
 
     RefPtr<NodeInfo> nodeInfo =
       doc->NodeInfoManager()->GetNodeInfo(definition->mLocalName,
@@ -3907,8 +3907,8 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
     // that proto).
     JS::Rooted<JSObject*> reflector(aCx, element->GetWrapper());
     if (reflector) {
-      // reflector might be in different compartment.
-      JSAutoCompartment ac(aCx, reflector);
+      // reflector might be in different realm.
+      JSAutoRealm ar(aCx, reflector);
       JS::Rooted<JSObject*> givenProto(aCx, desiredProto);
       if (!JS_WrapObject(aCx, &givenProto) ||
           !JS_SetPrototype(aCx, reflector, givenProto)) {
@@ -3921,9 +3921,9 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
   }
 
   // Tail end of step 8 and step 13: returning the element.  We want to do this
-  // part in the global's compartment, though in practice it won't matter much
-  // because Element always knows which compartment it should be created in.
-  JSAutoCompartment ac(aCx, global.Get());
+  // part in the global's realm, though in practice it won't matter much
+  // because Element always knows which realm it should be created in.
+  JSAutoRealm ar(aCx, global.Get());
   if (!js::IsObjectInContextCompartment(desiredProto, aCx) &&
       !JS_WrapObject(aCx, &desiredProto)) {
     return false;
@@ -3945,11 +3945,11 @@ AssertReflectorHasGivenProto(JSContext* aCx, JSObject* aReflector,
   }
 
   JS::Rooted<JSObject*> reflector(aCx, aReflector);
-  JSAutoCompartment ac(aCx, reflector);
+  JSAutoRealm ar(aCx, reflector);
   JS::Rooted<JSObject*> reflectorProto(aCx);
   bool ok = JS_GetPrototype(aCx, reflector, &reflectorProto);
   MOZ_ASSERT(ok);
-  // aGivenProto may not be in the right compartment here, so we
+  // aGivenProto may not be in the right realm here, so we
   // have to wrap it to compare.
   JS::Rooted<JSObject*> givenProto(aCx, aGivenProto);
   ok = JS_WrapObject(aCx, &givenProto);

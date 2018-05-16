@@ -446,7 +446,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
                                            JS::DontFireOnNewGlobalHook, aOptions));
     if (!global)
         return nullptr;
-    JSAutoCompartment ac(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // The constructor automatically attaches the scope to the compartment private
     // of |global|.
@@ -509,9 +509,9 @@ InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
 bool
 InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t aFlags)
 {
-    // Immediately enter the global's compartment so that everything we create
+    // Immediately enter the global's realm so that everything we create
     // ends up there.
-    JSAutoCompartment ac(aJSContext, aGlobal);
+    JSAutoRealm ar(aJSContext, aGlobal);
 
     // Stuff coming through this path always ends up as a DOM global.
     MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL);
@@ -584,7 +584,7 @@ NativeInterface2JSObject(HandleObject aScope,
                          MutableHandleValue aVal)
 {
     AutoJSContext cx;
-    JSAutoCompartment ac(cx, aScope);
+    JSAutoRealm ar(cx, aScope);
 
     nsresult rv;
     xpcObjectHelper helper(aCOMObj, aCache);
@@ -653,7 +653,7 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
     *result = nullptr;
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
-    JSAutoCompartment ac(aJSContext, aJSObj);
+    JSAutoRealm ar(aJSContext, aJSObj);
 
     nsresult rv = NS_ERROR_UNEXPECTED;
     if (!XPCConvert::JSObject2NativeInterface(result, aJSObj,
@@ -788,7 +788,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext* aJSContext,
                                        JSObject** aRetVal)
 {
     RootedObject aScope(aJSContext, aScopeArg);
-    JSAutoCompartment ac(aJSContext, aScope);
+    JSAutoRealm ar(aJSContext, aScope);
 
     XPCWrappedNativeScope* scope = ObjectScope(aScope);
     if (!scope)

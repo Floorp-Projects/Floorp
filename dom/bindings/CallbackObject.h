@@ -337,11 +337,11 @@ protected:
     Maybe<JS::Rooted<JSObject*>> mAsyncStack;
     Maybe<JS::AutoSetAsyncStackForNewCalls> mAsyncStackSetter;
 
-    // Can't construct a JSAutoCompartment without a JSContext either.  Also,
-    // Put mAc after mAutoEntryScript so that we exit the compartment before
-    // we pop the JSContext. Though in practice we'll often manually order
-    // those two things.
-    Maybe<JSAutoCompartment> mAc;
+    // Can't construct a JSAutoRealm without a JSContext either.  Also,
+    // Put mAr after mAutoEntryScript so that we exit the realm before we
+    // pop the script settings stack. Though in practice we'll often manually
+    // order those two things.
+    Maybe<JSAutoRealm> mAr;
 
     // An ErrorResult to possibly re-throw exceptions on and whether
     // we should re-throw them.

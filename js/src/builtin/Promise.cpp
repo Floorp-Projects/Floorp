@@ -1971,7 +1971,7 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
     // PromiseAllResolveElement.
     RootedObject valuesArray(cx);
     if (unwrappedPromiseObj) {
-        JSAutoCompartment ac(cx, unwrappedPromiseObj);
+        JSAutoRealm ar(cx, unwrappedPromiseObj);
         valuesArray = NewDenseFullyAllocatedArray(cx, 0);
     } else {
         valuesArray = NewDenseFullyAllocatedArray(cx, 0);
@@ -2030,10 +2030,10 @@ PerformPromiseAll(JSContext *cx, JS::ForOfIterator& iterator, HandleObject C,
         }
 
         // Step h.
-        { // Scope for the JSAutoCompartment we need to work with valuesArray.  We
+        { // Scope for the JSAutoRealm we need to work with valuesArray.  We
             // mostly do this for performance; we could go ahead and do the define via
             // a cross-compartment proxy instead...
-            JSAutoCompartment ac(cx, valuesArray);
+            JSAutoRealm ar(cx, valuesArray);
             indexId = INT_TO_JSID(index);
             if (!DefineDataProperty(cx, valuesArray, indexId, UndefinedHandleValue))
                 return false;

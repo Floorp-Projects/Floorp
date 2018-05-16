@@ -1152,7 +1152,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
         desc.attributesRef() &= ~JSPROP_PERMANENT;
     }
 
-    JSAutoCompartment ac(cx, target);
+    JSAutoRealm ar(cx, target);
     cx->markId(id);
     RootedId wrappedId(cx, id);
     if (!cx->compartment()->wrap(cx, &desc))
@@ -1164,7 +1164,7 @@ JS_CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
 JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext* cx, HandleObject target, HandleObject obj)
 {
-    JSAutoCompartment ac(cx, obj);
+    JSAutoRealm ar(cx, obj);
 
     AutoIdVector props(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props))

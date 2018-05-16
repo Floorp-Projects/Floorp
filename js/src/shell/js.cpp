@@ -610,7 +610,8 @@ ShellContext::ShellContext(JSContext* cx)
     readLineBufPos(0),
     errFilePtr(nullptr),
     outFilePtr(nullptr),
-    offThreadMonitor(mutexid::ShellOffThreadState)
+    offThreadMonitor(mutexid::ShellOffThreadState),
+    moduleResolveHook(cx)
 {}
 
 ShellContext::~ShellContext()
@@ -726,7 +727,7 @@ ShellInterruptCallback(JSContext* cx)
     if (sc->haveInterruptFunc) {
         bool wasAlreadyThrowing = cx->isExceptionPending();
         JS::AutoSaveExceptionState savedExc(cx);
-        JSAutoCompartment ac(cx, &sc->interruptFunc.toObject());
+        JSAutoRealm ar(cx, &sc->interruptFunc.toObject());
         RootedValue rval(cx);
 
         // Report any exceptions thrown by the JS interrupt callback, but do
@@ -868,6 +869,7 @@ RunBinAST(JSContext* cx, const char* filename, FILE* file)
 static bool
 InitModuleLoader(JSContext* cx)
 {
+
     // Decompress and evaluate the embedded module loader source to initialize
     // the module loader for the current compartment.
 
@@ -1944,7 +1946,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     }
 
     {
-        JSAutoCompartment ac(cx, global);
+        JSAutoRealm ar(cx, global);
         RootedScript script(cx);
 
         {
@@ -2013,7 +2015,7 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
 
         if (!JS_ExecuteScript(cx, envChain, script, args.rval())) {
             if (catchTermination && !JS_IsExceptionPending(cx)) {
-                JSAutoCompartment ac1(cx, callerGlobal);
+                JSAutoRealm ar1(cx, callerGlobal);
                 JSString* str = JS_NewStringCopyZ(cx, "terminated");
                 if (!str)
                     return false;
@@ -3017,7 +3019,7 @@ DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp, Sprinter* sprinte
         /* Without arguments, disassemble the current script. */
         RootedScript script(cx, GetTopScript(cx));
         if (script) {
-            JSAutoCompartment ac(cx, script);
+            JSAutoRealm ar(cx, script);
             if (!Disassemble(cx, script, p.lines, sprinter))
                 return false;
             if (!SrcNotes(cx, script, sprinter))
@@ -3280,12 +3282,12 @@ Clone(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject funobj(cx);
     {
-        Maybe<JSAutoCompartment> ac;
+        Maybe<JSAutoRealm> ar;
         RootedObject obj(cx, args[0].isPrimitive() ? nullptr : &args[0].toObject());
 
         if (obj && obj->is<CrossCompartmentWrapperObject>()) {
             obj = UncheckedUnwrap(obj);
-            ac.emplace(cx, obj);
+            ar.emplace(cx, obj);
             args[0].setObject(*obj);
         }
         if (obj && obj->is<JSFunction>()) {
@@ -3432,7 +3434,7 @@ NewSandbox(JSContext* cx, bool lazy)
         return nullptr;
 
     {
-        JSAutoCompartment ac(cx, obj);
+        JSAutoRealm ar(cx, obj);
         if (!lazy && !JS_InitStandardClasses(cx, obj))
             return nullptr;
 
@@ -3498,12 +3500,12 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
 
     DescribeScriptedCaller(cx, &filename, &lineno);
     {
-        Maybe<JSAutoCompartment> ac;
+        Maybe<JSAutoRealm> ar;
         unsigned flags;
         JSObject* unwrapped = UncheckedUnwrap(sobj, true, &flags);
         if (flags & Wrapper::CROSS_COMPARTMENT) {
             sobj = unwrapped;
-            ac.emplace(cx, sobj);
+            ar.emplace(cx, sobj);
         }
 
         sobj = ToWindowIfWindowProxy(sobj);
@@ -3601,7 +3603,7 @@ WorkerMain(void* arg)
     EnvironmentPreparer environmentPreparer(cx);
 
     do {
-        JSAutoRequest ar(cx);
+        JSAutoRequest areq(cx);
 
         JS::CompartmentOptions compartmentOptions;
         SetStandardCompartmentOptions(compartmentOptions);
@@ -3610,7 +3612,7 @@ WorkerMain(void* arg)
         if (!global)
             break;
 
-        JSAutoCompartment ac(cx, global);
+        JSAutoRealm ar(cx, global);
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("<string>", 1)
@@ -4280,11 +4282,32 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedFunction hook(cx, &args[0].toObject().as<JSFunction>());
-    Rooted<GlobalObject*> global(cx, cx->global());
-    global->setModuleResolveHook(hook);
+    ShellContext* sc = GetShellContext(cx);
+    sc->moduleResolveHook = &args[0].toObject().as<JSFunction>();
+
     args.rval().setUndefined();
     return true;
+}
+
+static JSObject*
+CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier)
+{
+    ShellContext* sc = GetShellContext(cx);
+
+    JS::AutoValueArray<2> args(cx);
+    args[0].setObject(*module);
+    args[1].setString(specifier);
+
+    RootedValue result(cx);
+    if (!JS_CallFunction(cx, nullptr, sc->moduleResolveHook, args, &result))
+        return nullptr;
+
+    if (!result.isObject() || !result.toObject().is<ModuleObject>()) {
+         JS_ReportErrorASCII(cx, "Module resolve hook did not return Module object");
+         return nullptr;
+    }
+
+    return &result.toObject();
 }
 
 static bool
@@ -5100,7 +5123,7 @@ DecompileThisScript(JSContext* cx, unsigned argc, Value* vp)
     }
 
     {
-        JSAutoCompartment ac(cx, iter.script());
+        JSAutoRealm ar(cx, iter.script());
 
         RootedScript script(cx, iter.script());
         JSString* result = JS_DecompileScript(cx, script);
@@ -7580,11 +7603,11 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!exn.isObject())
         return false;
 
-    Maybe<JSAutoCompartment> ac;
+    Maybe<JSAutoRealm> ar;
     RootedObject exnObj(cx, &exn.toObject());
     if (IsCrossCompartmentWrapper(exnObj)) {
         exnObj = UncheckedUnwrap(exnObj);
-        ac.emplace(cx, exnObj);
+        ar.emplace(cx, exnObj);
     }
 
     // Ignore non-ErrorObject thrown by |throw| statement.
@@ -8210,7 +8233,7 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         return nullptr;
 
     {
-        JSAutoCompartment ac(cx, glob);
+        JSAutoRealm ar(cx, glob);
 
 #ifndef LAZY_STANDARD_CLASSES
         if (!JS_InitStandardClasses(cx, glob))
@@ -8803,7 +8826,7 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     if (op->getBoolOption("no-cgc"))
         nocgc.emplace(cx);
 
-    JSAutoRequest ar(cx);
+    JSAutoRequest areq(cx);
 
     if (op->getBoolOption("fuzzing-safe"))
         fuzzingSafe = true;
@@ -8819,7 +8842,7 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     if (!glob)
         return 1;
 
-    JSAutoCompartment ac(cx, glob);
+    JSAutoRealm ar(cx, glob);
 
     ShellContext* sc = GetShellContext(cx);
     int result = EXIT_SUCCESS;
@@ -9297,6 +9320,8 @@ main(int argc, char** argv, char** envp)
 #endif
 
     js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
+
+    JS::SetModuleResolveHook(cx->runtime(), CallModuleResolveHook);
 
     result = Shell(cx, &op, envp);
 

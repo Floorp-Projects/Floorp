@@ -1249,25 +1249,25 @@ extern JS_PUBLIC_API(bool)
 JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /*
- * At any time, a JSContext has a current (possibly-nullptr) compartment.
- * Compartments are described in:
+ * At any time, a JSContext has a current (possibly-nullptr) realm.
+ * Realms are described in:
  *
  *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
  *
- * The current compartment of a context may be changed. The preferred way to do
- * this is with JSAutoCompartment:
+ * The current realm of a context may be changed. The preferred way to do
+ * this is with JSAutoRealm:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
- *     // in some compartment 'c'
+ *     // in some realm 'r'
  *     {
- *       JSAutoCompartment ac(cx, obj);  // constructor enters
- *       // in the compartment of 'obj'
+ *       JSAutoRealm ar(cx, obj);  // constructor enters
+ *       // in the realm of 'obj'
  *     }                                 // destructor leaves
- *     // back in compartment 'c'
+ *     // back in realm 'r'
  *   }
  *
  * For more complicated uses that don't neatly fit in a C++ stack frame, the
- * compartment can entered and left using separate function calls:
+ * realm can be entered and left using separate function calls:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
  *     // in 'oldCompartment'
@@ -1282,32 +1282,30 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
  * the corresponding JS_LeaveCompartment call.
  *
- * Entering a compartment roots the compartment and its global object for the
- * lifetime of the JSAutoCompartment.
+ * Entering a realm roots the realm and its global object for the lifetime of
+ * the JSAutoRealm.
  */
 
-class MOZ_RAII JS_PUBLIC_API(JSAutoCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    JSAutoCompartment(JSContext* cx, JSObject* target
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    JSAutoCompartment(JSContext* cx, JSScript* target
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoCompartment();
+    JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoRealm();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII JS_PUBLIC_API(JSAutoNullableCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    explicit JSAutoNullableCompartment(JSContext* cx, JSObject* targetOrNull
-                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoNullableCompartment();
+    explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoNullableRealm();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -4143,17 +4141,19 @@ extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
          const char* filename, JS::MutableHandleValue rval);
 
-/**
- * Get the HostResolveImportedModule hook for a global.
- */
-extern JS_PUBLIC_API(JSFunction*)
-GetModuleResolveHook(JSContext* cx);
+using ModuleResolveHook = JSObject* (*)(JSContext*, HandleObject, HandleString);
 
 /**
- * Set the HostResolveImportedModule hook for a global to the given function.
+ * Get the HostResolveImportedModule hook for the runtime.
+ */
+extern JS_PUBLIC_API(ModuleResolveHook)
+GetModuleResolveHook(JSRuntime* rt);
+
+/**
+ * Set the HostResolveImportedModule hook for the runtime to the given function.
  */
 extern JS_PUBLIC_API(void)
-SetModuleResolveHook(JSContext* cx, JS::HandleFunction func);
+SetModuleResolveHook(JSRuntime* rt, ModuleResolveHook func);
 
 /**
  * Parse the given source buffer as a module in the scope of the current global

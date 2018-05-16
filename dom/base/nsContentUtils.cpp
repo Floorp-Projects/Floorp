@@ -3123,7 +3123,7 @@ nsContentUtils::SubjectPrincipal()
   JSCompartment *compartment = js::GetContextCompartment(cx);
 
   // When an AutoJSAPI is instantiated, we are in a null compartment until the
-  // first JSAutoCompartment, which is kind of a purgatory as far as permissions
+  // first JSAutoRealm, which is kind of a purgatory as far as permissions
   // go. It would be nice to just hard-abort if somebody does a security check
   // in this purgatory zone, but that would be too fragile, since it could be
   // triggered by random IsCallerChrome() checks 20-levels deep.
@@ -7071,7 +7071,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
 
   // We can use the junk scope here, because we're just using it for
   // regexp evaluation, not actual script execution.
-  JSAutoCompartment ac(cx, xpc::UnprivilegedJunkScope());
+  JSAutoRealm ar(cx, xpc::UnprivilegedJunkScope());
 
   // The pattern has to match the entire value.
   aPattern.InsertLiteral(u"^(?:", 0);

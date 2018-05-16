@@ -80,14 +80,14 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // bother about the field accessors here, since we don't use/support those
   // for in-content bindings.
 
-  // First, start by entering the compartment of the XBL scope. This may or may
-  // not be the same compartment as globalObject.
+  // First, start by entering the realm of the XBL scope. This may or may
+  // not be the same realm as globalObject.
   JS::Rooted<JSObject*> globalObject(cx,
     GetGlobalForObjectCrossCompartment(targetClassObject));
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(scopeObject) == scopeObject);
-  JSAutoCompartment ac(cx, scopeObject);
+  JSAutoRealm ar(cx, scopeObject);
 
   // Determine the appropriate property holder.
   //
@@ -164,7 +164,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   }
 
   // From here on out, work in the scope of the bound element.
-  JSAutoCompartment ac2(cx, targetClassObject);
+  JSAutoRealm ar2(cx, targetClassObject);
 
   // Install all of our field accessors.
   for (nsXBLProtoImplField* curr = mFields;
@@ -206,7 +206,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
 
-  JSAutoCompartment ac(cx, global);
+  JSAutoRealm ar(cx, global);
   // Make sure the interface object is created before the prototype object
   // so that XULElement is hidden from content. See bug 909340.
   bool defineOnGlobal = dom::XULElementBinding::ConstructorEnabled(cx, global);
@@ -217,7 +217,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
-  JSAutoCompartment ac2(cx, value);
+  JSAutoRealm ar2(cx, value);
 
   // All of the above code was just obtaining the bound element's script object and its immediate
   // concrete base class.  We need to alter the object so that our concrete class is interposed

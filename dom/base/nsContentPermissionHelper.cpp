@@ -714,7 +714,7 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
 
       JSContext* cx = jsapi.cx();
       JS::Rooted<JSObject*> obj(cx, &aChoices.toObject());
-      JSAutoCompartment ac(cx, obj);
+      JSAutoRealm ar(cx, obj);
 
       JS::Rooted<JS::Value> val(cx);
 
