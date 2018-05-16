@@ -18,14 +18,11 @@
 #endif
 
 ProfiledThreadData::ProfiledThreadData(ThreadInfo* aThreadInfo,
-                                       nsIEventTarget* aEventTarget,
-                                       bool aIncludeResponsiveness)
+                                       nsIEventTarget* aEventTarget)
   : mThreadInfo(aThreadInfo)
 {
   MOZ_COUNT_CTOR(ProfiledThreadData);
-  if (aIncludeResponsiveness) {
-    mResponsiveness.emplace(aEventTarget, aThreadInfo->IsMainThread());
-  }
+  mResponsiveness.emplace(aEventTarget, aThreadInfo->IsMainThread());
 }
 
 ProfiledThreadData::~ProfiledThreadData()
