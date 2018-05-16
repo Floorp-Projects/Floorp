@@ -557,7 +557,187 @@ var XPCOMUtils = {
       writable: false
     });
   },
+
+  /**
+   * Defines a proxy which acts as a lazy object getter that can be passed
+   * around as a reference, and will only be evaluated when something in
+   * that object gets accessed.
+   *
+   * The evaluation can be triggered by a function call, by getting or
+   * setting a property, calling this as a constructor, or enumerating
+   * the properties of this object (e.g. during an iteration).
+   *
+   * Please note that, even after evaluated, the object given to you
+   * remains being the proxy object (which forwards everything to the
+   * real object). This is important to correctly use these objects
+   * in pairs of add+remove listeners, for example.
+   * If your use case requires access to the direct object, you can
+   * get it through the untrap callback.
+   *
+   * @param aObject
+   *        The object to define the lazy getter on.
+   *
+   *        You can pass null to aObject if you just want to get this
+   *        proxy through the return value.
+   *
+   * @param aName
+   *        The name of the getter to define on aObject.
+   *
+   * @param aInitFuncOrResource
+   *        A function or a module that defines what this object actually
+   *        should be when it gets evaluated. This will only ever be called once.
+   *
+   *        Short-hand: If you pass a string to this parameter, it will be treated
+   *        as the URI of a module to be imported, and aName will be used as
+   *        the symbol to retrieve from the module.
+   *
+   * @param aStubProperties
+   *        In this parameter, you can provide an object which contains
+   *        properties from the original object that, when accessed, will still
+   *        prevent the entire object from being evaluated.
+   *
+   *        These can be copies or simplified versions of the original properties.
+   *
+   *        One example is to provide an alternative QueryInterface implementation
+   *        to avoid the entire object from being evaluated when it's added as an
+   *        observer (as addObserver calls object.QueryInterface(Ci.nsIObserver)).
+   *
+   *        Once the object has been evaluated, the properties from the real
+   *        object will be used instead of the ones provided here.
+   *
+   * @param aUntrapCallback
+   *        A function that gets called once when the object has just been evaluated.
+   *        You can use this to do some work (e.g. setting properties) that you need
+   *        to do on this object but that can wait until it gets evaluated.
+   *
+   *        Another use case for this is to use during code development to log when
+   *        this object gets evaluated, to make sure you're not accidentally triggering
+   *        it earlier than expected.
+   */
+  defineLazyProxy: function XPCOMUtils__defineLazyProxy(aObject, aName, aInitFuncOrResource,
+                                                        aStubProperties, aUntrapCallback) {
+    let initFunc = aInitFuncOrResource;
+
+    if (typeof(aInitFuncOrResource) == "string") {
+      initFunc = function () {
+        let tmp = {};
+        ChromeUtils.import(aInitFuncOrResource, tmp);
+        return tmp[aName];
+      };
+    }
+
+    let handler = new LazyProxyHandler(aName, initFunc,
+                                       aStubProperties, aUntrapCallback);
+
+    /*
+     * We cannot simply create a lazy getter for the underlying
+     * object and pass it as the target of the proxy, because
+     * just passing it in `new Proxy` means it would get
+     * evaluated. Becase of this, a full handler needs to be
+     * implemented (the LazyProxyHandler).
+     *
+     * So, an empty object is used as the target, and the handler
+     * replaces it on every call with the real object.
+     */
+    let proxy = new Proxy({}, handler);
+
+    if (aObject) {
+      Object.defineProperty(aObject, aName, {
+        value: proxy,
+        enumerable: true,
+        writable: true,
+      });
+    }
+
+    return proxy;
+  },
 };
+
+/**
+ * LazyProxyHandler
+ * This class implements the handler used
+ * in the proxy from defineLazyProxy.
+ *
+ * This handler forwards all calls to an underlying object,
+ * stored as `this.realObject`, which is obtained as the returned
+ * value from aInitFunc, which will be called on the first time
+ * time that it needs to be used (with an exception in the get() trap
+ * for the properties provided in the `aStubProperties` parameter).
+ */
+
+class LazyProxyHandler {
+  constructor(aName, aInitFunc, aStubProperties, aUntrapCallback) {
+    this.pending = true;
+    this.name = aName;
+    this.initFuncOrResource = aInitFunc;
+    this.stubProperties = aStubProperties;
+    this.untrapCallback = aUntrapCallback;
+  }
+
+  getObject() {
+    if (this.pending) {
+      this.realObject = this.initFuncOrResource.call(null);
+
+      if (this.untrapCallback) {
+        this.untrapCallback.call(null, this.realObject);
+        this.untrapCallback = null;
+      }
+
+      this.pending = false;
+      this.stubProperties = null;
+    }
+    return this.realObject;
+  }
+
+  getPrototypeOf(target) {
+    return Reflect.getPrototypeOf(this.getObject());
+  }
+
+  setPrototypeOf(target, prototype) {
+    return Reflect.setPrototypeOf(this.getObject(), prototype);
+  }
+
+  isExtensible(target) {
+    return Reflect.isExtensible(this.getObject());
+  }
+
+  preventExtensions(target) {
+    return Reflect.preventExtensions(this.getObject());
+  }
+
+  getOwnPropertyDescriptor(target, prop) {
+    return Reflect.getOwnPropertyDescriptor(this.getObject(), prop);
+  }
+
+  defineProperty(target, prop, descriptor) {
+    return Reflect.defineProperty(this.getObject(), prop, descriptor);
+  }
+
+  has(target, prop) {
+    return Reflect.has(this.getObject(), prop);
+  }
+
+  get(target, prop, receiver) {
+    if (this.pending &&
+        this.stubProperties &&
+        Object.prototype.hasOwnProperty.call(this.stubProperties, prop)) {
+      return this.stubProperties[prop];
+    }
+    return Reflect.get(this.getObject(), prop, receiver);
+  }
+
+  set(target, prop, value, receiver) {
+    return Reflect.set(this.getObject(), prop, value, receiver);
+  }
+
+  deleteProperty(target, prop) {
+    return Reflect.deleteProperty(this.getObject(), prop);
+  }
+
+  ownKeys(target) {
+    return Reflect.ownKeys(this.getObject());
+  }
+}
 
 var XPCU_lazyPreferenceObserverQI = ChromeUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]);
 

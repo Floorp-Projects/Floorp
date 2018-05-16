@@ -3988,14 +3988,6 @@
     "n_buckets": 10,
     "description": "Time spent scanning filesystem for plugins (ms)"
   },
-  "CHECK_JAVA_ENABLED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
-    "description": "Time spent checking if Java is enabled (ms)"
-  },
   "PLUGIN_HANG_UI_USER_RESPONSE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -12986,6 +12978,17 @@
     "high": 100,
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
+  },
+  "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1430897],
+    "expires_in_version": "66",
+    "keyed": true,
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 10,
+    "description": "Percentage of time taken by phases in normal content paints."
   },
   "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "record_in_processes": ["main", "content"],

@@ -2471,6 +2471,7 @@ this.XPIDatabaseReconcile = {
     let isDetectedInstall = isNewInstall && !aNewAddon;
 
     // Load the manifest if necessary and sanity check the add-on ID
+    let unsigned;
     try {
       if (!aNewAddon) {
         // Load the manifest from the add-on.
@@ -2482,6 +2483,11 @@ this.XPIDatabaseReconcile = {
         throw new Error("Invalid addon ID: expected addon ID " + aId +
                         ", found " + aNewAddon.id + " in manifest");
       }
+
+      unsigned = XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
+      if (unsigned) {
+          throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
+      }
     } catch (e) {
       logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
 
@@ -2491,6 +2497,8 @@ this.XPIDatabaseReconcile = {
         logger.warn("Not uninstalling invalid item because it is a proxy file");
       else if (aInstallLocation.locked)
         logger.warn("Could not uninstall invalid item from locked install location");
+      else if (unsigned && !isNewInstall)
+        logger.warn("Not uninstalling existing unsigned add-on");
       else
         aInstallLocation.uninstallAddon(aId);
       return null;
