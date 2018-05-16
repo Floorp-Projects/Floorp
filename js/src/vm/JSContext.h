@@ -977,15 +977,6 @@ enum ErrorArgumentsType {
     ArgumentsAreUTF8
 };
 
-/*
- * Loads and returns a self-hosted function by name. For performance, define
- * the property name in vm/CommonPropertyNames.h.
- *
- * Defined in SelfHosting.cpp.
- */
-JSFunction*
-SelfHostedFunction(JSContext* cx, HandlePropertyName propName);
-
 /**
  * Report an exception, using printf-style APIs to generate the error
  * message.
