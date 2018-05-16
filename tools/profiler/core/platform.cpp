@@ -1662,38 +1662,42 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
       aWriter.StringProperty("appBuildID", string.Data());
   }
 
-  aWriter.StartObjectProperty("extensions");
-  {
+  // We should avoid collecting extension metadata for profiler while XPCOM is
+  // shutting down since it cannot create a new ExtensionPolicyService.
+  if (!gXPCOMShuttingDown) {
+    aWriter.StartObjectProperty("extensions");
     {
-      JSONSchemaWriter schema(aWriter);
-      schema.WriteField("id");
-      schema.WriteField("name");
-      schema.WriteField("baseURL");
-    }
-
-    aWriter.StartArrayProperty("data");
-    {
-      nsTArray<RefPtr<WebExtensionPolicy>> exts;
-      ExtensionPolicyService::GetSingleton().GetAll(exts);
-
-      for (auto& ext : exts) {
-        aWriter.StartArrayElement(JSONWriter::SingleLineStyle);
-
-        nsAutoString id;
-        ext->GetId(id);
-        aWriter.StringElement(NS_ConvertUTF16toUTF8(id).get());
-
-        aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()).get());
-
-        auto url = ext->GetURL(NS_LITERAL_STRING(""));
-        if (url.isOk()) {
-          aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()).get());
-        }
-
-        aWriter.EndArray();
+      {
+        JSONSchemaWriter schema(aWriter);
+        schema.WriteField("id");
+        schema.WriteField("name");
+        schema.WriteField("baseURL");
       }
+
+      aWriter.StartArrayProperty("data");
+      {
+        nsTArray<RefPtr<WebExtensionPolicy>> exts;
+        ExtensionPolicyService::GetSingleton().GetAll(exts);
+
+        for (auto& ext : exts) {
+          aWriter.StartArrayElement(JSONWriter::SingleLineStyle);
+
+          nsAutoString id;
+          ext->GetId(id);
+          aWriter.StringElement(NS_ConvertUTF16toUTF8(id).get());
+
+          aWriter.StringElement(NS_ConvertUTF16toUTF8(ext->Name()).get());
+
+          auto url = ext->GetURL(NS_LITERAL_STRING(""));
+          if (url.isOk()) {
+            aWriter.StringElement(NS_ConvertUTF16toUTF8(url.unwrap()).get());
+          }
+
+          aWriter.EndArray();
+        }
+      }
+      aWriter.EndArray();
     }
-    aWriter.EndArray();
   }
   aWriter.EndObject();
 }
