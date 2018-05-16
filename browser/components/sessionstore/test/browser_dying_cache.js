@@ -37,8 +37,10 @@ add_task(async function test() {
 
   // Make sure we're not allowed to modify state data.
   Assert.throws(() => ss.setWindowState(win, {}),
+    /Window is not tracked/,
     "we're not allowed to modify state data anymore");
   Assert.throws(() => ss.setWindowValue(win, "foo", "baz"),
+    /Window is not tracked/,
     "we're not allowed to modify state data anymore");
 });
 

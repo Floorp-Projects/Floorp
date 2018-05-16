@@ -236,7 +236,7 @@ add_task(async function testPageActionSecurity() {
     });
 
     await Assert.rejects(extension.startup(),
-                         null,
+                         /startup failed/,
                          "Manifest rejected");
 
     SimpleTest.endMonitorConsole();

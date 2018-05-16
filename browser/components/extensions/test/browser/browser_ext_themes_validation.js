@@ -33,7 +33,9 @@ async function testThemeWithInvalidProperties(invalidProps) {
   });
 
   let extension = ExtensionTestUtils.loadExtension({manifest});
-  await Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
+  await Assert.rejects(extension.startup(),
+                       /startup failed/,
+                       "Theme should fail to load if it contains invalid properties");
 }
 
 add_task(async function test_that_theme_with_invalid_properties_fails_to_load() {
