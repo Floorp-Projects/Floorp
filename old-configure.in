@@ -4528,16 +4528,9 @@ if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
 
-if test "$MOZ_DEBUG"; then
+if test "$MOZ_DEBUG" -o "$DEVELOPER_OPTIONS"; then
     A11Y_LOG=1
 fi
-case "$MOZ_UPDATE_CHANNEL" in
-aurora|beta|release|esr)
-    ;;
-*)
-    A11Y_LOG=1
-    ;;
-esac
 AC_SUBST(A11Y_LOG)
 if test -n "$A11Y_LOG"; then
     AC_DEFINE(A11Y_LOG)
