@@ -23,7 +23,7 @@ add_task(async function test_dropdown() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let addLink = content.document.querySelector("address-picker a");
+      let addLink = content.document.querySelector("address-picker .add-link");
       is(addLink.textContent, "Add", "Add link text");
 
       addLink.click();
