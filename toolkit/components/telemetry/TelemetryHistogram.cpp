@@ -147,11 +147,6 @@ struct HistogramInfo {
   bool allows_key(const nsACString& key) const;
 };
 
-enum reflectStatus {
-  REFLECT_OK,
-  REFLECT_FAILURE
-};
-
 // Structs used to keep information about the histograms for which a
 // snapshot should be created.
 struct HistogramSnapshotData {
