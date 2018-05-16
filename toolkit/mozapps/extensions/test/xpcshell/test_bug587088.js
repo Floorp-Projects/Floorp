@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// This test is currently dead code.
+/* eslint-disable */
+
 // Tests that trying to upgrade or uninstall an extension that has a file locked
 // will roll back the upgrade or uninstall and retry at the next restart
 
