@@ -547,7 +547,13 @@ protected:
   already_AddRefed<Element> ConvertListType(Element* aList, nsAtom* aListType,
                                             nsAtom* aItemType);
 
-  nsresult CreateStyleForInsertText(nsIDocument& aDoc);
+  /**
+   * CreateStyleForInsertText() sets CSS properties which are stored in
+   * TypeInState to proper element node.
+   *
+   * @param aDocument           The document of the editor.
+   */
+  MOZ_MUST_USE nsresult CreateStyleForInsertText(nsIDocument& aDocument);
 
   /**
    * IsEmptyBlockElement() returns true if aElement is a block level element
