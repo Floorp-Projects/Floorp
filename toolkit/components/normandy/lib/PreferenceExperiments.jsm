@@ -512,6 +512,7 @@ var PreferenceExperiments = {
     TelemetryEnvironment.setExperimentInactive(experimentName);
     TelemetryEvents.sendEvent("unenroll", "preference_study", experimentName, {
       didResetValue: resetValue ? "true" : "false",
+      branch: experiment.branch,
       reason,
     });
     await this.saveStartupPrefs();
