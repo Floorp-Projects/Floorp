@@ -171,6 +171,14 @@ typedef mozilla::Vector<HistogramSnapshotsArray> HistogramProcessSnapshotsArray;
 // The following is used to handle snapshot information for keyed histograms.
 typedef nsDataHashtable<nsCStringHashKey, HistogramSnapshotData> KeyedHistogramSnapshotData;
 
+struct KeyedHistogramSnapshotInfo {
+  KeyedHistogramSnapshotData data;
+  HistogramID histogramId;
+};
+
+typedef mozilla::Vector<KeyedHistogramSnapshotInfo> KeyedHistogramSnapshotsArray;
+typedef mozilla::Vector<KeyedHistogramSnapshotsArray> KeyedHistogramProcessSnapshotsArray;
+
 class KeyedHistogram {
 public:
   KeyedHistogram(HistogramID id, const HistogramInfo& info);
@@ -1045,6 +1053,70 @@ KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
     Clear();
   }
 
+  return NS_OK;
+}
+
+
+/**
+ * Helper function to get a snapshot of the keyed histograms.
+ *
+ * @param {aLock} the lock proof.
+ * @param {aDataset} the dataset for which the snapshot is being requested.
+ * @param {aClearSubsession} whether or not to clear the data after
+ *        taking the snapshot.
+ * @param {aIncludeGPU} whether or not to include data for the GPU.
+ * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @return {nsresult} NS_OK if the snapshot was successfully taken or
+ *         NS_ERROR_OUT_OF_MEMORY if it failed to allocate memory.
+ */
+nsresult
+internal_GetKeyedHistogramsSnapshot(const StaticMutexAutoLock& aLock,
+                                    unsigned int aDataset,
+                                    bool aClearSubsession,
+                                    bool aIncludeGPU,
+                                    KeyedHistogramProcessSnapshotsArray& aOutSnapshot)
+{
+  if (!aOutSnapshot.resize(static_cast<uint32_t>(ProcessID::Count))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+    KeyedHistogramSnapshotsArray& hArray = aOutSnapshot[process];
+
+    for (size_t i = 0; i < HistogramCount; ++i) {
+      HistogramID id = HistogramID(i);
+      const HistogramInfo& info = gHistogramInfos[id];
+      if (!info.keyed) {
+        continue;
+      }
+
+      if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
+        ((ProcessID(process) == ProcessID::Gpu) && !aIncludeGPU)) {
+        continue;
+      }
+
+      if (!IsInDataset(info.dataset, aDataset)) {
+        continue;
+      }
+
+      KeyedHistogram* keyed = internal_GetKeyedHistogramById(id,
+                                                             ProcessID(process),
+                                                             /* instantiate = */ false);
+      if (!keyed) {
+        continue;
+      }
+
+      // Take a snapshot of the keyed histogram data!
+      KeyedHistogramSnapshotData snapshot;
+      if (!NS_SUCCEEDED(keyed->GetSnapshot(aLock, snapshot, aClearSubsession))) {
+        return NS_ERROR_FAILURE;
+      }
+
+      if (!hArray.emplaceBack(KeyedHistogramSnapshotInfo{mozilla::Move(snapshot), id})) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -2370,63 +2442,22 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
     includeGPUProcess = gpm->AttemptedGPUProcess();
   }
 
-  struct KeyedHistogramProcessInfo {
-    KeyedHistogramSnapshotData data;
-    HistogramID histogramId;
-  };
-
   // Get a snapshot of all the data while holding the mutex.
-  mozilla::Vector<mozilla::Vector<KeyedHistogramProcessInfo>> dataSnapshot;
+  KeyedHistogramProcessSnapshotsArray processHistArray;
   {
-    if (!dataSnapshot.resize(static_cast<uint32_t>(ProcessID::Count))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-
-    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-      mozilla::Vector<KeyedHistogramProcessInfo>& hArray = dataSnapshot[process];
-
-      for (size_t i = 0; i < HistogramCount; ++i) {
-        HistogramID id = HistogramID(i);
-        const HistogramInfo& info = gHistogramInfos[id];
-        if (!info.keyed) {
-          continue;
-        }
-
-        if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
-          ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
-          continue;
-        }
-
-        if (!IsInDataset(info.dataset, aDataset)) {
-          continue;
-        }
-
-        KeyedHistogram* keyed = internal_GetKeyedHistogramById(id,
-                                                               ProcessID(process),
-                                                               /* instantiate = */ false);
-        if (!keyed) {
-          continue;
-        }
-
-        // Take a snapshot of the keyed histogram data!
-        KeyedHistogramSnapshotData snapshot;
-        if (!NS_SUCCEEDED(keyed->GetSnapshot(locker, snapshot, aClearSubsession))) {
-          return NS_ERROR_FAILURE;
-        }
-
-        if (!hArray.emplaceBack(KeyedHistogramProcessInfo{mozilla::Move(snapshot), id})) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
+    nsresult rv = internal_GetKeyedHistogramsSnapshot(locker,
+                                                      aDataset,
+                                                      aClearSubsession,
+                                                      includeGPUProcess,
+                                                      processHistArray);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
   // Mirror the snapshot data to JS, now that we released the mutex.
-  for (uint32_t process = 0; process < dataSnapshot.length(); ++process) {
-    const mozilla::Vector<KeyedHistogramProcessInfo>& hArray = dataSnapshot[process];
-
+  for (uint32_t process = 0; process < processHistArray.length(); ++process) {
     JS::Rooted<JSObject*> processObject(aCx, JS_NewPlainObject(aCx));
     if (!processObject) {
       return NS_ERROR_FAILURE;
@@ -2435,8 +2466,8 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
                            processObject, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
-    for (size_t i = 0; i < hArray.length(); ++i) {
-      const KeyedHistogramProcessInfo& hData = hArray[i];
+
+    for (const KeyedHistogramSnapshotInfo& hData : processHistArray[process]) {
       const HistogramInfo& info = gHistogramInfos[hData.histogramId];
 
       JS::RootedObject snapshot(aCx, JS_NewPlainObject(aCx));
