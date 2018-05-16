@@ -786,10 +786,10 @@ DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
 }
 
 void
-DisplayListBuilder::PopStackingContext()
+DisplayListBuilder::PopStackingContext(bool aIsReferenceFrame)
 {
   WRDL_LOG("PopStackingContext\n", mWrState);
-  wr_dp_pop_stacking_context(mWrState);
+  wr_dp_pop_stacking_context(mWrState, aIsReferenceFrame);
 }
 
 wr::WrClipChainId
