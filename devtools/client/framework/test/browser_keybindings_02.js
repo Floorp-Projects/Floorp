@@ -54,7 +54,6 @@ function zoomWithKey(toolbox, key) {
 function checkKeyBindings(toolbox) {
   zoomWithKey(toolbox, "toolbox.zoomIn.key");
   zoomWithKey(toolbox, "toolbox.zoomIn2.key");
-  zoomWithKey(toolbox, "toolbox.zoomIn3.key");
 
   zoomWithKey(toolbox, "toolbox.zoomReset.key");
 
