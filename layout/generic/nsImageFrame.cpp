@@ -263,17 +263,15 @@ nsImageFrame::Init(nsIContent*       aContent,
 
   mListener = new nsImageListener(this);
 
+  if (!gIconLoad)
+    LoadIcons(PresContext());
+
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(aContent);
   if (!imageLoader) {
     MOZ_CRASH("Why do we have an nsImageFrame here at all?");
   }
 
   imageLoader->AddNativeObserver(mListener);
-
-  nsPresContext *aPresContext = PresContext();
-
-  if (!gIconLoad)
-    LoadIcons(aPresContext);
 
   // We have a PresContext now, so we need to notify the image content node
   // that it can register images.
