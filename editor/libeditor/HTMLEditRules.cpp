@@ -5872,10 +5872,15 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
         continue;
       }
       if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
-        // If we don't use CSS, add a contraint to list element: they have to
-        // be inside another list, i.e., >= second level of nesting
+        // If we don't use CSS, add a content to list element: they have to
+        // be inside another list, i.e., >= second level of nesting.
+        // XXX AlignInnerBlocks() handles list item elements and table cells.
+        //     Is it intentional to change alignment of nested other type
+        //     descendants too?
         rv = AlignInnerBlocks(*curNode, aAlignType);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
         curDiv = nullptr;
         continue;
       }
@@ -5924,10 +5929,6 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
   return NS_OK;
 }
 
-
-/**
- * AlignInnerBlocks() aligns inside table cells or list items.
- */
 nsresult
 HTMLEditRules::AlignInnerBlocks(nsINode& aNode,
                                 const nsAString& aAlignType)
