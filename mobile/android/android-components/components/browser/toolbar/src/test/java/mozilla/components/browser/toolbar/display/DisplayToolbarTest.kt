@@ -12,11 +12,8 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.ktx.android.view.forEach
-import mozilla.components.support.ktx.android.view.isGone
-import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.progress.AnimatedProgressBar
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

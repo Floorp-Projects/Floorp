@@ -59,9 +59,15 @@ allprojects {
         google()
         jcenter()
 
-        // Only ARM for now. See issue #51
+        // GeckoView repositories
         maven {
             url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-api-16-opt/artifacts/public/android/maven"
+        }
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-x86-opt/artifacts/public/android/maven"
+        }
+        maven {
+            url "https://index.taskcluster.net/v1/task/gecko.v2.mozilla-central.nightly.${gecko['nightlyDate']}.revision.${gecko['revision']}.mobile.android-aarch64-opt/artifacts/public/android/maven"
         }
     }
 }
