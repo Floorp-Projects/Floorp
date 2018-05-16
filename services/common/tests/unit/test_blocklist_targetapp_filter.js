@@ -16,7 +16,6 @@ async function createRecords(records) {
   for (const record of records) {
     await collection.create(record);
   }
-  collection.db.saveLastModified(42); // Simulate sync (and prevent load dump).
 }
 
 
