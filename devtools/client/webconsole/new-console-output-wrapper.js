@@ -4,6 +4,7 @@
 "use strict";
 
 const { createElement, createFactory } = require("devtools/client/shared/vendor/react");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
@@ -15,7 +16,10 @@ const { getAllMessagesById, getMessage } = require("devtools/client/webconsole/s
 const Telemetry = require("devtools/client/shared/telemetry");
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const App = createFactory(require("devtools/client/webconsole/components/App"));
+const ConsoleOutput = createFactory(require("devtools/client/webconsole/components/ConsoleOutput"));
+const FilterBar = createFactory(require("devtools/client/webconsole/components/FilterBar"));
+const SideBar = createFactory(require("devtools/client/webconsole/components/SideBar"));
+const JSTerm = createFactory(require("devtools/client/webconsole/components/JSTerm"));
 
 let store = null;
 
@@ -39,7 +43,6 @@ function NewConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
 
   store = configureStore(this.hud);
 }
-
 NewConsoleOutputWrapper.prototype = {
   init: function() {
     return new Promise((resolve) => {
@@ -208,15 +211,28 @@ NewConsoleOutputWrapper.prototype = {
         });
       }
 
-      const app = App({
-        attachRefToHud,
-        serviceContainer,
-        hud,
-        onFirstMeaningfulPaint: resolve,
-      });
-
-      // Render the root Application component.
-      let provider = createElement(Provider, { store }, app);
+      let provider = createElement(
+        Provider,
+        { store },
+        dom.div(
+          {className: "webconsole-output-wrapper"},
+          FilterBar({
+            hidePersistLogsCheckbox: this.hud.isBrowserConsole,
+            serviceContainer: {
+              attachRefToHud
+            }
+          }),
+          ConsoleOutput({
+            serviceContainer,
+            onFirstMeaningfulPaint: resolve
+          }),
+          SideBar({
+            serviceContainer,
+          }),
+          JSTerm({
+            hud: this.hud,
+          }),
+        ));
       this.body = ReactDOM.render(provider, this.parentNode);
     });
   },
