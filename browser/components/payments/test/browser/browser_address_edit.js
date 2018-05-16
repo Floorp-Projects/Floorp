@@ -42,7 +42,7 @@ add_task(async function test_add_link() {
         return Object.keys(state.savedAddresses).length == 0;
       }, "No saved addresses when starting test");
 
-      let addLink = content.document.querySelector("address-picker a");
+      let addLink = content.document.querySelector("address-picker .add-link");
       is(addLink.textContent, "Add", "Add link text");
 
       addLink.click();
@@ -124,7 +124,7 @@ add_task(async function test_edit_link() {
         return Object.keys(state.savedAddresses).length == 1;
       }, "One saved address when starting test");
 
-      let editLink = content.document.querySelector("address-picker a:nth-of-type(2)");
+      let editLink = content.document.querySelector("address-picker .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
 
       editLink.click();
@@ -203,7 +203,7 @@ add_task(async function test_add_payer_contact_name_email_link() {
         return Object.keys(state.savedAddresses).length == 0;
       }, "No saved addresses when starting test");
 
-      let addLink = content.document.querySelector("address-picker.payer-related a");
+      let addLink = content.document.querySelector("address-picker.payer-related .add-link");
       is(addLink.textContent, "Add", "Add link text");
 
       addLink.click();
@@ -286,7 +286,7 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       }, "One saved addresses when starting test");
 
       let editLink =
-        content.document.querySelector("address-picker.payer-related a:nth-of-type(2)");
+        content.document.querySelector("address-picker.payer-related .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
 
       editLink.click();
