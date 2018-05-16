@@ -2818,6 +2818,7 @@ ContentPermissionPrompt.prototype = {
    *        The request that we're to show a prompt for.
    */
   prompt(request) {
+    let type;
     try {
       // Only allow exactly one permission request here.
       let types = request.types.QueryInterface(Ci.nsIArray);
@@ -2827,7 +2828,7 @@ ContentPermissionPrompt.prototype = {
           Cr.NS_ERROR_UNEXPECTED);
       }
 
-      let type = types.queryElementAt(0, Ci.nsIContentPermissionType).type;
+      type = types.queryElementAt(0, Ci.nsIContentPermissionType).type;
       let combinedIntegration =
         Integration.contentPermission.getCombined(ContentPermissionIntegration);
 
@@ -2841,8 +2842,15 @@ ContentPermissionPrompt.prototype = {
 
       permissionPrompt.prompt();
 
-      let schemeHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_ORIGIN_SCHEME");
-      let scheme = 0;
+    } catch (ex) {
+      Cu.reportError(ex);
+      request.cancel();
+      throw ex;
+    }
+
+    let schemeHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_ORIGIN_SCHEME");
+    let scheme = 0;
+    try {
       // URI is null for system principals.
       if (request.principal.URI) {
         switch (request.principal.URI.scheme) {
@@ -2854,23 +2862,26 @@ ContentPermissionPrompt.prototype = {
             break;
         }
       }
-      schemeHistogram.add(type, scheme);
-
-      // request.element should be the browser element in e10s.
-      if (request.element && request.element.contentPrincipal) {
-        let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_THIRD_PARTY_ORIGIN");
-        let isThirdParty = request.principal.origin != request.element.contentPrincipal.origin;
-        thirdPartyHistogram.add(type, isThirdParty);
-      }
-
-      let userInputHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_HANDLING_USER_INPUT");
-      userInputHistogram.add(type, request.isHandlingUserInput);
-
     } catch (ex) {
-      Cu.reportError(ex);
-      request.cancel();
-      throw ex;
+      // If the request principal is not available at this point,
+      // the request has likely been cancelled before being shown to the
+      // user. We shouldn't record this request.
+      if (ex.result != Cr.NS_ERROR_FAILURE) {
+        Cu.reportError(ex);
+      }
+      return;
     }
+    schemeHistogram.add(type, scheme);
+
+    // request.element should be the browser element in e10s.
+    if (request.element && request.element.contentPrincipal) {
+      let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_THIRD_PARTY_ORIGIN");
+      let isThirdParty = request.principal.origin != request.element.contentPrincipal.origin;
+      thirdPartyHistogram.add(type, isThirdParty);
+    }
+
+    let userInputHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_HANDLING_USER_INPUT");
+    userInputHistogram.add(type, request.isHandlingUserInput);
   },
 };
 
