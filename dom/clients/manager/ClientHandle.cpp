@@ -9,6 +9,7 @@
 #include "ClientHandleChild.h"
 #include "ClientHandleOpChild.h"
 #include "ClientManager.h"
+#include "ClientPrincipalUtils.h"
 #include "ClientState.h"
 #include "mozilla/dom/PClientManagerChild.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
@@ -121,6 +122,11 @@ ClientHandle::Control(const ServiceWorkerDescriptor& aServiceWorker)
 {
   RefPtr<GenericPromise::Private> outerPromise =
     new GenericPromise::Private(__func__);
+
+  // We should never have a cross-origin controller.  Since this would be
+  // same-origin policy violation we do a full release assertion here.
+  MOZ_RELEASE_ASSERT(ClientMatchPrincipalInfo(mClientInfo.PrincipalInfo(),
+                                              aServiceWorker.PrincipalInfo()));
 
   StartOp(ClientControlledArgs(aServiceWorker.ToIPC()),
     [outerPromise](const ClientOpResult& aResult) {
