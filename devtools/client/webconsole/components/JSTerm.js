@@ -18,6 +18,8 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "NotificationBox", "devtools/client/shared/components/NotificationBox", true);
+loader.lazyRequireGetter(this, "PriorityLevels", "devtools/client/shared/components/NotificationBox", true);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -51,8 +53,6 @@ class JSTerm extends Component {
   static get propTypes() {
     return {
       hud: PropTypes.object.isRequired,
-      // Handler for clipboard 'paste' event (also used for 'drop' event).
-      onPaste: PropTypes.func,
     };
   }
 
@@ -62,7 +62,6 @@ class JSTerm extends Component {
     const {
       hud,
     } = props;
-
     this.hud = hud;
     this.hudId = this.hud.hudId;
     this.inputHistoryCount = Services.prefs.getIntPref(PREF_INPUT_HISTORY_COUNT);
@@ -177,6 +176,16 @@ class JSTerm extends Component {
     this.inputNode.addEventListener("input", this._inputEventHandler);
     this.inputNode.addEventListener("keyup", this._inputEventHandler);
     this.inputNode.addEventListener("focus", this._focusEventHandler);
+
+    if (!this.hud.isBrowserConsole) {
+      let okstring = l10n.getStr("selfxss.okstring");
+      let msg = l10n.getFormatStr("selfxss.msg", [okstring]);
+      this._onPaste = WebConsoleUtils.pasteHandlerGen(this.inputNode,
+          this.getNotificationBox(), msg, okstring);
+      this.inputNode.addEventListener("paste", this._onPaste);
+      this.inputNode.addEventListener("drop", this._onPaste);
+    }
+
     this.hud.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
 
@@ -1270,9 +1279,27 @@ class JSTerm extends Component {
     this._inputCharWidth = tempLabel.offsetWidth;
     tempLabel.remove();
     // Calculate the width of the chevron placed at the beginning of the input
-    // box. Remove 4 more pixels to accommodate the padding of the popup.
+    // box. Remove 4 more pixels to accomodate the padding of the popup.
     this._chevronWidth = +doc.defaultView.getComputedStyle(this.inputNode)
                              .paddingLeft.replace(/[^0-9.]/g, "") - 4;
+  }
+
+  /**
+   * Build the notification box as soon as needed.
+   */
+  getNotificationBox() {
+    if (this._notificationBox) {
+      return this._notificationBox;
+    }
+
+    let box = this.hud.document.getElementById("webconsole-notificationbox");
+    let toolbox = gDevTools.getToolbox(this.hud.owner.target);
+
+    // Render NotificationBox and assign priority levels to it.
+    this._notificationBox = Object.assign(
+      toolbox.ReactDOM.render(toolbox.React.createElement(NotificationBox), box),
+      PriorityLevels);
+    return this._notificationBox;
   }
 
   destroy() {
@@ -1291,6 +1318,12 @@ class JSTerm extends Component {
     }
 
     if (this.inputNode) {
+      if (this._onPaste) {
+        this.inputNode.removeEventListener("paste", this._onPaste);
+        this.inputNode.removeEventListener("drop", this._onPaste);
+        this._onPaste = null;
+      }
+
       this.inputNode.removeEventListener("keypress", this._keyPress);
       this.inputNode.removeEventListener("input", this._inputEventHandler);
       this.inputNode.removeEventListener("keyup", this._inputEventHandler);
@@ -1307,11 +1340,8 @@ class JSTerm extends Component {
       return null;
     }
 
-    let {
-      onPaste
-    } = this.props;
-
-    return (
+    return [
+      dom.div({id: "webconsole-notificationbox", key: "notification"}),
       dom.div({
         className: "jsterm-input-container",
         key: "jsterm-container",
@@ -1335,11 +1365,9 @@ class JSTerm extends Component {
           ref: node => {
             this.inputNode = node;
           },
-          onPaste: onPaste,
-          onDrop: onPaste,
         })
-      )
-    );
+      ),
+    ];
   }
 }
 
