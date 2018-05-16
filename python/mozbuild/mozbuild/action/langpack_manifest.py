@@ -459,7 +459,7 @@ def main(args):
 
     defines = parse_defines(args.defines)
 
-    min_app_version = args.min_app_version
+    min_app_version = args.min_app_ver
     if 'a' not in min_app_version:  # Don't mangle alpha versions
         v = Version(min_app_version)
         if args.app_name == "SeaMonkey":
