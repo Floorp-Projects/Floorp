@@ -643,7 +643,7 @@ private:
     // don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoCompartment ac(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // We don't need to set a parent object in mCallData bacause there are not
     // DOM objects exposed to worklet.
@@ -758,7 +758,7 @@ protected:
     // We don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoCompartment ac(cx, global);
+    JSAutoRealm ar(cx, global);
 
     RunConsole(cx, nullptr, nullptr);
   }
@@ -921,7 +921,7 @@ private:
     // don't need a proxy here.
     global = js::UncheckedUnwrap(global);
 
-    JSAutoCompartment ac(cx, global);
+    JSAutoRealm ar(cx, global);
 
     // We don't need to set a parent object in mCallData bacause there are not
     // DOM objects exposed to worklet.
@@ -1904,7 +1904,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
                                         aData->mCountValue);
   }
 
-  JSAutoCompartment ac2(aCx, targetScope);
+  JSAutoRealm ar2(aCx, targetScope);
 
   if (NS_WARN_IF(!ToJSValue(aCx, event, aEventValue))) {
     return false;
@@ -2670,7 +2670,7 @@ Console::RetrieveConsoleEvents(JSContext* aCx, nsTArray<JS::Value>& aEvents,
     JS::Rooted<JS::Value> value(aCx);
 
     JS::Rooted<JSObject*> sequenceScope(aCx, mCallDataStorage[i]->mGlobal);
-    JSAutoCompartment ac(aCx, sequenceScope);
+    JSAutoRealm ar(aCx, sequenceScope);
 
     Sequence<JS::Value> sequence;
     SequenceRooter<JS::Value> arguments(aCx, &sequence);

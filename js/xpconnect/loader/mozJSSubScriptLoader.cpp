@@ -229,7 +229,7 @@ EvalScript(JSContext* cx,
         }
     }
 
-    JSAutoCompartment rac(cx, targetObj);
+    JSAutoRealm rar(cx, targetObj);
     if (!JS_WrapValue(cx, retval)) {
         return false;
     }
@@ -264,7 +264,7 @@ EvalScript(JSContext* cx,
         }
 
         if (startupCache) {
-            JSAutoCompartment ac(cx, script);
+            JSAutoRealm ar(cx, script);
             WriteCachedScript(StartupCache::GetSingleton(), cachePath, cx, script);
         }
     }
@@ -632,7 +632,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
         return NS_ERROR_FAILURE;
     }
 
-    JSAutoCompartment ac(cx, targetObj);
+    JSAutoRealm ar(cx, targetObj);
 
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (!serv) {

@@ -9295,7 +9295,7 @@ DebuggerObject::promiseDependentPromisesGetter(JSContext* cx, unsigned argc, Val
 
     Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     {
-        JSAutoCompartment ac(cx, promise);
+        JSAutoRealm ar(cx, promise);
         if (!promise->dependentPromises(cx, &values))
             return false;
     }

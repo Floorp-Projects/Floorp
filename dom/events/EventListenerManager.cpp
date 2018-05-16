@@ -1025,11 +1025,11 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   // where mTarget is a Window.
   //
   // The wrapScope doesn't really matter here, because the target will create
-  // its reflector in the proper scope, and then we'll enter that compartment.
+  // its reflector in the proper scope, and then we'll enter that realm.
   JS::Rooted<JSObject*> wrapScope(cx, global->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
   {
-    JSAutoCompartment ac(cx, wrapScope);
+    JSAutoRealm ar(cx, wrapScope);
     nsresult rv = nsContentUtils::WrapNative(cx, mTarget, &v,
                                              /* aAllowWrapping = */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1038,9 +1038,9 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   }
 
   JS::Rooted<JSObject*> target(cx, &v.toObject());
-  JSAutoCompartment ac(cx, target);
+  JSAutoRealm ar(cx, target);
 
-  // Now that we've entered the compartment we actually care about, create our
+  // Now that we've entered the realm we actually care about, create our
   // scope chain.  Note that we start with |element|, not aElement, because
   // mTarget is different from aElement in the <body> case, where mTarget is a
   // Window, and in that case we do not want the scope chain to include the body

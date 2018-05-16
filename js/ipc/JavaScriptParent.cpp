@@ -73,7 +73,7 @@ JavaScriptParent::allowMessage(JSContext* cx)
     nsIGlobalObject* global = dom::GetIncumbentGlobal();
     JS::Rooted<JSObject*> jsGlobal(cx, global ? global->GetGlobalJSObject() : nullptr);
     if (jsGlobal) {
-        JSAutoCompartment ac(cx, jsGlobal);
+        JSAutoRealm ar(cx, jsGlobal);
 
         if (!xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
             if (ForbidUnsafeBrowserCPOWs() && !isSafe) {

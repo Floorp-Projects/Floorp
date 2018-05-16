@@ -38,7 +38,7 @@ CallTrusted(JSContext* cx, unsigned argc, JS::Value* vp)
 
     bool ok = false;
     {
-        JSAutoCompartment ac(cx, trusted_glob);
+        JSAutoRealm ar(cx, trusted_glob);
         JS::RootedValue funVal(cx, JS::ObjectValue(*trusted_fun));
         ok = JS_CallFunctionValue(cx, nullptr, funVal, JS::HandleValueArray::empty(), args.rval());
     }
@@ -66,7 +66,7 @@ BEGIN_TEST(testChromeBuffer)
         JS::ContextOptions oldOptions = JS::ContextOptionsRef(cx);
         JS::ContextOptionsRef(cx).setIon(false).setBaseline(false);
         {
-            JSAutoCompartment ac(cx, trusted_glob);
+            JSAutoRealm ar(cx, trusted_glob);
             const char* paramName = "x";
             const char* bytes = "return x ? 1 + trusted(x-1) : 0";
             JS::CompileOptions options(cx);
@@ -110,7 +110,7 @@ BEGIN_TEST(testChromeBuffer)
      */
     {
         {
-            JSAutoCompartment ac(cx, trusted_glob);
+            JSAutoRealm ar(cx, trusted_glob);
             const char* paramName = "untrusted";
             const char* bytes = "try {                                  "
                                 "  untrusted();                         "
@@ -156,7 +156,7 @@ BEGIN_TEST(testChromeBuffer)
 
     {
         {
-            JSAutoCompartment ac(cx, trusted_glob);
+            JSAutoRealm ar(cx, trusted_glob);
             const char* bytes = "return 42";
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);

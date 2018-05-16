@@ -1249,25 +1249,25 @@ extern JS_PUBLIC_API(bool)
 JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
 
 /*
- * At any time, a JSContext has a current (possibly-nullptr) compartment.
- * Compartments are described in:
+ * At any time, a JSContext has a current (possibly-nullptr) realm.
+ * Realms are described in:
  *
  *   developer.mozilla.org/en-US/docs/SpiderMonkey/SpiderMonkey_compartments
  *
- * The current compartment of a context may be changed. The preferred way to do
- * this is with JSAutoCompartment:
+ * The current realm of a context may be changed. The preferred way to do
+ * this is with JSAutoRealm:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
- *     // in some compartment 'c'
+ *     // in some realm 'r'
  *     {
- *       JSAutoCompartment ac(cx, obj);  // constructor enters
- *       // in the compartment of 'obj'
+ *       JSAutoRealm ar(cx, obj);  // constructor enters
+ *       // in the realm of 'obj'
  *     }                                 // destructor leaves
- *     // back in compartment 'c'
+ *     // back in realm 'r'
  *   }
  *
  * For more complicated uses that don't neatly fit in a C++ stack frame, the
- * compartment can entered and left using separate function calls:
+ * realm can be entered and left using separate function calls:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
  *     // in 'oldCompartment'
@@ -1282,20 +1282,18 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
  * the corresponding JS_LeaveCompartment call.
  *
- * Entering a compartment roots the compartment and its global object for the
- * lifetime of the JSAutoCompartment.
+ * Entering a realm roots the realm and its global object for the lifetime of
+ * the JSAutoRealm.
  */
 
-class MOZ_RAII JS_PUBLIC_API(JSAutoCompartment)
+class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
 {
     JSContext* cx_;
     JSCompartment* oldCompartment_;
   public:
-    JSAutoCompartment(JSContext* cx, JSObject* target
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    JSAutoCompartment(JSContext* cx, JSScript* target
-                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~JSAutoCompartment();
+    JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~JSAutoRealm();
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
