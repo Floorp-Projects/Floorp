@@ -766,6 +766,44 @@ const JSFunctionSpec StructMetaTypeDescr::typedObjectMethods[] = {
     JS_FS_END
 };
 
+CheckedInt32
+StructMetaTypeDescr::Layout::addField(int32_t fieldAlignment, int32_t fieldSize)
+{
+    // Alignment of the struct is the max of the alignment of its fields.
+    structAlignment = js::Max(structAlignment, fieldAlignment);
+
+    // Align the pointer.
+    CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldAlignment);
+    if (!offset.isValid())
+        return offset;
+
+    // Allocate space.
+    sizeSoFar = offset + fieldSize;
+    if (!sizeSoFar.isValid())
+        return sizeSoFar;
+
+    return offset;
+}
+
+CheckedInt32
+StructMetaTypeDescr::Layout::addScalar(Scalar::Type type) {
+    return addField(ScalarTypeDescr::alignment(type),
+                    ScalarTypeDescr::size(type));
+}
+
+CheckedInt32
+StructMetaTypeDescr::Layout::addReference(ReferenceTypeDescr::Type type) {
+    return addField(ReferenceTypeDescr::alignment(type),
+                    ReferenceTypeDescr::size(type));
+}
+
+CheckedInt32
+StructMetaTypeDescr::Layout::close(int32_t *alignment) {
+    if (alignment)
+        *alignment = structAlignment;
+    return RoundUpToAlignment(sizeSoFar, structAlignment);
+}
+
 /* static */ JSObject*
 StructMetaTypeDescr::create(JSContext* cx,
                             HandleObject metaTypeDescr,
@@ -835,8 +873,7 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
     AutoValueVector fieldOffsets(cx);  // Offset of each field field.
     RootedObject userFieldOffsets(cx); // User-exposed {f:offset} object
     RootedObject userFieldTypes(cx);   // User-exposed {f:descr} object.
-    CheckedInt32 sizeSoFar(0);         // Size of struct thus far.
-    uint32_t alignment = 1;            // Alignment of struct.
+    Layout layout;                     // Field offsetter
 
     userFieldOffsets = NewBuiltinClassInstance<PlainObject>(cx, TenuredObject);
     if (!userFieldOffsets)
@@ -879,9 +916,7 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
         if (!stringBuffer.append(&fieldType->stringRepr()))
             return nullptr;
 
-        // Offset of this field is the current total size adjusted for
-        // the field's alignment.
-        CheckedInt32 offset = RoundUpToAlignment(sizeSoFar, fieldType->alignment());
+        CheckedInt32 offset = layout.addField(fieldType->alignment(), fieldType->size());
         if (!offset.isValid()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
@@ -897,16 +932,6 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
         {
             return nullptr;
         }
-
-        // Add space for this field to the total struct size.
-        sizeSoFar = offset + fieldType->size();
-        if (!sizeSoFar.isValid()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
-            return nullptr;
-        }
-
-        // Alignment of the struct is the max of the alignment of its fields.
-        alignment = js::Max(alignment, fieldType->alignment());
     }
 
     // Complete string representation.
@@ -917,8 +942,8 @@ StructMetaTypeDescr::createFromArrays(JSContext* cx,
     if (!stringRepr)
         return nullptr;
 
-    // Adjust the total size to be a multiple of the final alignment.
-    CheckedInt32 totalSize = RoundUpToAlignment(sizeSoFar, alignment);
+    int32_t alignment;
+    CheckedInt32 totalSize = layout.close(&alignment);
     if (!totalSize.isValid()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPEDOBJECT_TOO_BIG);
         return nullptr;

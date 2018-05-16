@@ -7,6 +7,8 @@
 #ifndef builtin_TypedObject_h
 #define builtin_TypedObject_h
 
+#include "mozilla/CheckedInt.h"
+
 #include "builtin/TypedObjectConstants.h"
 #include "gc/WeakMap.h"
 #include "js/Conversions.h"
@@ -457,6 +459,27 @@ class StructMetaTypeDescr : public NativeObject
     // This is the function that gets called when the user
     // does `new StructType(...)`. It produces a struct type object.
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+
+    class Layout
+    {
+        // Can call addField() directly.
+        friend class StructMetaTypeDescr;
+
+        mozilla::CheckedInt32 sizeSoFar = 0;
+        int32_t structAlignment = 1;
+
+        mozilla::CheckedInt32 addField(int32_t fieldAlignment, int32_t fieldSize);
+
+      public:
+        // The field adders return the offset of the the field.
+        mozilla::CheckedInt32 addScalar(Scalar::Type type);
+        mozilla::CheckedInt32 addReference(ReferenceTypeDescr::Type type);
+
+        // The close method rounds up the structure size to the appropriate
+        // alignment and returns that size.  If `alignment` is not NULL then
+        // return the structure alignment through that pointer.
+        mozilla::CheckedInt32 close(int32_t* alignment = nullptr);
+    };
 };
 
 class StructTypeDescr : public ComplexTypeDescr
