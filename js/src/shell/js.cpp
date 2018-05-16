@@ -3534,7 +3534,7 @@ EnsureGeckoProfilingStackInstalled(JSContext* cx, ShellContext* sc)
     }
 
     MOZ_ASSERT(!sc->geckoProfilingStack);
-    sc->geckoProfilingStack = MakeUnique<PseudoStack>();
+    sc->geckoProfilingStack = MakeUnique<ProfilingStack>();
     if (!sc->geckoProfilingStack) {
         JS_ReportOutOfMemory(cx);
         return false;

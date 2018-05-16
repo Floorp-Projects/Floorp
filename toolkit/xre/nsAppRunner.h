@@ -27,11 +27,6 @@
 #include "nsStringFwd.h"
 #include "nsXULAppAPI.h"
 
-// This directory service key is a lot like NS_APP_LOCALSTORE_50_FILE,
-// but it is always the "main" localstore file, even when we're in safe mode
-// and we load localstore from somewhere else.
-#define NS_LOCALSTORE_UNSAFE_FILE "LStoreS"
-
 class nsINativeAppSupport;
 class nsXREDirProvider;
 class nsIToolkitProfileService;

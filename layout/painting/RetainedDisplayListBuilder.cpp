@@ -118,16 +118,17 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
   MOZ_ASSERT(aList->mOldItems.IsEmpty());
   while (nsDisplayItem* item = aList->RemoveBottom()) {
     if (item->HasDeletedFrame() || !item->CanBeReused()) {
-      // If we haven't yet initialized the DAG, then we can
-      // just drop this item. Otherwise we need to keep it
-      // around to preserve indices, and merging will
-      // get rid of it.
+      size_t i = aList->mOldItems.Length();
+      aList->mOldItems.AppendElement(OldItemInfo(nullptr));
+      item->Destroy(&mBuilder);
+
       if (initializeDAG) {
-        item->Destroy(&mBuilder);
-      } else {
-        size_t i = aList->mOldItems.Length();
-        aList->mOldItems.AppendElement(OldItemInfo(item));
-        item->SetOldListIndex(aList, OldListIndex(i));
+        if (i == 0) {
+          aList->mDAG.AddNode(Span<const MergedListIndex>());
+        } else {
+          MergedListIndex previous(i - 1);
+          aList->mDAG.AddNode(Span<const MergedListIndex>(&previous, 1));
+        }
       }
       continue;
     }
@@ -237,7 +238,9 @@ OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
   MOZ_ASSERT(!IsUsed());
   mUsed = mDiscarded = true;
   mDirectPredecessors = Move(aDirectPredecessors);
-  mItem->Destroy(aBuilder->Builder());
+  if (mItem) {
+    mItem->Destroy(aBuilder->Builder());
+  }
   mItem = nullptr;
 }
 
@@ -800,7 +803,7 @@ ProcessFrameInternal(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
 
       // Grab the visible (display list building) rect for children of this wrapper
       // item and convert into into coordinate relative to the current frame.
-      nsRect previousVisible = wrapperItem->GetVisibleRectForChildren();
+      nsRect previousVisible = wrapperItem->GetBuildingRectForChildren();
       if (wrapperItem->ReferenceFrameForChildren() == wrapperItem->ReferenceFrame()) {
         previousVisible -= wrapperItem->ToReferenceFrame();
       } else {

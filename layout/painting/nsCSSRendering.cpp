@@ -767,7 +767,7 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
                                                         aForFrame,
                                                         aBorderArea,
                                                         *styleBorder,
-                                                        aItem->GetVisibleRect(),
+                                                        aItem->GetPaintRect(),
                                                         aForFrame->GetSkipSides(),
                                                         flags,
                                                         &result);

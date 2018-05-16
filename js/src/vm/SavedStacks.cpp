@@ -1291,7 +1291,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
         return true;
     }
 
-    AutoGeckoProfilerEntry pseudoFrame(cx, "js::SavedStacks::saveCurrentStack");
+    AutoGeckoProfilerEntry labelFrame(cx, "js::SavedStacks::saveCurrentStack");
     return insertFrames(cx, frame, mozilla::Move(capture));
 }
 

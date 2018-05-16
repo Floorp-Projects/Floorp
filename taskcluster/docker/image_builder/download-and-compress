@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3 -u
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,7 +9,7 @@ import time
 
 import requests
 import requests_unixsocket
-import zstd
+import zstandard as zstd
 
 # Allow requests to fetch from UNIX domain sockets.
 requests_unixsocket.monkeypatch()

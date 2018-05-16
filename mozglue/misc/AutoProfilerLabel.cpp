@@ -26,13 +26,13 @@ AutoProfilerLabel::AutoProfilerLabel(const char* aLabel,
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  mPseudoStack = sEnter ? sEnter(aLabel, aDynamicString, this, aLine) : nullptr;
+  mProfilingStack = sEnter ? sEnter(aLabel, aDynamicString, this, aLine) : nullptr;
 }
 
 AutoProfilerLabel::~AutoProfilerLabel()
 {
-  if (sExit && mPseudoStack) {
-    sExit(mPseudoStack);
+  if (sExit && mProfilingStack) {
+    sExit(mProfilingStack);
   }
 }
 

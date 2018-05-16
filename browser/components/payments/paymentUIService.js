@@ -38,7 +38,7 @@ function PaymentUIService() {
 PaymentUIService.prototype = {
   classID: Components.ID("{01f8bd55-9017-438b-85ec-7c15d2b35cdc}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIPaymentUIService]),
-  DIALOG_URL: "chrome://payments/content/paymentDialogWrapper.xhtml",
+  DIALOG_URL: "chrome://payments/content/paymentDialogWrapper.xul",
   REQUEST_ID_PREFIX: "paymentRequest-",
 
   // nsIPaymentUIService implementation:

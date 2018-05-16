@@ -320,7 +320,7 @@ public:
 
     ImgDrawResult result =
       nsCSSRendering::PaintBorderWithStyleBorder(mFrame->PresContext(), *aCtx,
-                                                 mFrame, mVisibleRect,
+                                                 mFrame, GetPaintRect(),
                                                  bounds,
                                                  styleBorder,
                                                  mFrame->Style(),

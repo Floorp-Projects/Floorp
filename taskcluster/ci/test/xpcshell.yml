@@ -1,6 +1,5 @@
 job-defaults:
     mozharness:
-        no-read-buildbot-config: true
         script:
             by-test-platform:
                 android.*: android_emulator_unittest.py

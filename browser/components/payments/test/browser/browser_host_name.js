@@ -5,7 +5,7 @@ async function withBasicRequestDialogForOrigin(origin, dialogTaskFn) {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, dialogTaskFn, args, {
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, dialogTaskFn, args, {
     origin,
   });
 }

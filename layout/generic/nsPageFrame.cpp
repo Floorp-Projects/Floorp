@@ -587,7 +587,7 @@ nsPageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   content.AppendToTop(MakeDisplayItem<nsDisplayTransform>(aBuilder, child,
-      &content, content.GetVisibleRect(), ::ComputePageTransform));
+      &content, content.GetBuildingRect(), ::ComputePageTransform));
 
   set.Content()->AppendToTop(&content);
 

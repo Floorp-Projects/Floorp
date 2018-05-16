@@ -5124,7 +5124,7 @@ nsDisplayText::RenderToContext(gfxContext* aCtx, nsDisplayListBuilder* aBuilder,
   // This is temporary until we do this in the actual calculation of text extents.
   auto A2D = mFrame->PresContext()->AppUnitsPerDevPixel();
   LayoutDeviceRect extraVisible =
-    LayoutDeviceRect::FromAppUnits(mVisibleRect, A2D);
+    LayoutDeviceRect::FromAppUnits(GetPaintRect(), A2D);
   extraVisible.Inflate(1);
 
   gfxRect pixelVisible(extraVisible.x, extraVisible.y,

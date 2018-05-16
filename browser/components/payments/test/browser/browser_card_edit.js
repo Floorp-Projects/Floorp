@@ -7,7 +7,7 @@ add_task(async function test_add_link() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
     let {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -69,7 +69,7 @@ add_task(async function test_edit_link() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
     let {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -129,7 +129,7 @@ add_task(async function test_private_persist_defaults() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
     let {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -151,7 +151,8 @@ add_task(async function test_private_persist_defaults() {
        "checkbox is checked by default from a non-private session");
   }, args);
 
-  await spawnInDialogForPrivateMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
     let {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -171,7 +172,10 @@ add_task(async function test_private_persist_defaults() {
     let persistInput = content.document.querySelector("labelled-checkbox");
     ok(!Cu.waiveXrays(persistInput).checked,
        "checkbox is not checked by default from a private session");
-  }, args);
+  }, args, {
+    browser: privateWin.gBrowser,
+  });
+  await BrowserTestUtils.closeWindow(privateWin);
 });
 
 add_task(async function test_private_card_adding() {
@@ -179,7 +183,8 @@ add_task(async function test_private_card_adding() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForPrivateMerchantTask(PTU.ContentTasks.createRequest, async function check() {
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, async function check() {
     let {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
@@ -221,5 +226,8 @@ add_task(async function test_private_card_adding() {
 
     is(savedCardCount, Object.keys(state.savedBasicCards).length, "No card was saved in state");
     is(Object.keys(state.tempBasicCards).length, 1, "Card was added temporarily");
-  }, args);
+  }, args, {
+    browser: privateWin.gBrowser,
+  });
+  await BrowserTestUtils.closeWindow(privateWin);
 });

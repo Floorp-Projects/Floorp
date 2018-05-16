@@ -139,7 +139,7 @@ nsDisplayXULGroupBorder::Paint(nsDisplayListBuilder* aBuilder,
                                    gfxContext* aCtx)
 {
   ImgDrawResult result = static_cast<nsGroupBoxFrame*>(mFrame)
-    ->PaintBorder(*aCtx, ToReferenceFrame(), mVisibleRect);
+    ->PaintBorder(*aCtx, ToReferenceFrame(), GetPaintRect());
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
 }

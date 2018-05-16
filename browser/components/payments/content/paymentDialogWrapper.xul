@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://payments/content/paymentDialogWrapper.css"?>
+
+<!DOCTYPE window>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <popupset>
+    <!-- for select dropdowns. The menupopup is what shows the list of options,
+         and the popuponly menulist makes things like the menuactive attributes
+         work correctly on the menupopup. ContentSelectDropdown expects the
+         popuponly menulist to be its immediate parent. -->
+    <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
+      <menupopup rolluponmousewheel="true"
+                 activateontab="true" position="after_start"
+                 level="parent"
+                 />
+    </menulist>
+
+    <!-- same as above but with additional attributes for Windows -->
+    <menulist popuponly="true" id="ContentSelectDropdown-windows" hidden="true">
+      <menupopup rolluponmousewheel="true"
+                 activateontab="true" position="after_start"
+                 level="parent"
+                 consumeoutsideclicks="false" ignorekeys="shortcuts"
+                 />
+    </menulist>
+  </popupset>
+
+  <browser type="content"
+           id="paymentRequestFrame"
+           disablehistory="true"
+           nodefaultsrc="true"
+           remote="true"
+           selectmenulist="ContentSelectDropdown"
+           style="height:400px;width:700px"
+           transparent="true"></browser>
+  <script type="application/javascript" src="chrome://payments/content/paymentDialogWrapper.js"></script>
+</window>

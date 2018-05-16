@@ -10,7 +10,7 @@ add_task(async function test_total() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
 
 add_task(async function test_modifier_with_no_method_selected() {
@@ -24,7 +24,7 @@ add_task(async function test_modifier_with_no_method_selected() {
     methodData: [PTU.MethodData.bobPay, PTU.MethodData.basicCard],
     details: PTU.Details.bobPayPaymentModifier,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
 
 add_task(async function test_modifier_with_no_method_selected() {
@@ -41,6 +41,6 @@ add_task(async function test_modifier_with_no_method_selected() {
     methodData: [PTU.MethodData.bobPay, PTU.MethodData.basicCard],
     details: PTU.Details.bobPayPaymentModifier,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
   await cleanupFormAutofillStorage();
 });

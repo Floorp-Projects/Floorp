@@ -3,7 +3,6 @@ job-defaults:
     max-run-time: 5400
     mozharness:
         script: web_platform_tests.py
-        no-read-buildbot-config: true
         config:
             by-test-platform:
                 windows.*:

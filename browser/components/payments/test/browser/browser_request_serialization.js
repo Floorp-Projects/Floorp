@@ -25,7 +25,7 @@ add_task(async function test_serializeRequest_displayItems() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.twoDisplayItems,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
 
 add_task(async function test_serializeRequest_shippingOptions() {
@@ -55,7 +55,7 @@ add_task(async function test_serializeRequest_shippingOptions() {
     methodData: [PTU.MethodData.basicCard],
     details: PTU.Details.twoShippingOptions,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
 
 add_task(async function test_serializeRequest_paymentMethods() {
@@ -75,7 +75,7 @@ add_task(async function test_serializeRequest_paymentMethods() {
     methodData: [PTU.MethodData.basicCard, PTU.MethodData.bobPay],
     details: PTU.Details.total60USD,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
 
 add_task(async function test_serializeRequest_modifiers() {
@@ -111,8 +111,8 @@ add_task(async function test_serializeRequest_modifiers() {
   };
 
   const args = {
-    methodData: [PTU.MethodData.bobPay],
+    methodData: [PTU.MethodData.basicCard, PTU.MethodData.bobPay],
     details: PTU.Details.bobPayPaymentModifier,
   };
-  await spawnInDialogForMerchantTask(PTU.ContentTasks.createRequest, testTask, args);
+  await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
