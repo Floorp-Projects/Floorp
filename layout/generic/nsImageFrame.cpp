@@ -214,7 +214,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroy
       imageLoader->RemoveNativeObserver(mListener);
     }
 
-    reinterpret_cast<nsImageListener*>(mListener.get())->SetFrame(nullptr);
+    mListener->SetFrame(nullptr);
   }
 
   mListener = nullptr;
