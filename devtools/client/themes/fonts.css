@@ -160,6 +160,22 @@
   min-width: 50px;
 }
 
+/*
+  The value of font-weight goes from 100 to 900 in increments of 100.
+  Decorate the slider for font-weight to have 9 vertical notches using a linear gradient.
+*/
+.font-value-slider[name=font-weight] {
+  --notch-size: 2px;
+  /* Draw a vertical line to get one notch per background-image instance */
+  background-image: linear-gradient(90deg, var(--grey-30) var(--notch-size), transparent 0);
+  /* Offset the background so the notch aligns with the center of the slider thumb */
+  background-position: 7px center;
+  /* Repeat the background-image horizontally */
+  background-repeat: repeat-x;
+  /* Size the background to get nine visible notch instances. */
+  background-size: calc(12.5% - var(--notch-size)) 90%;
+}
+
 .font-value-slider:-moz-focusring {
   outline: none;
 }
