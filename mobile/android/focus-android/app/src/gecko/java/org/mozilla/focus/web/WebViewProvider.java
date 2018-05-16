@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -467,12 +468,29 @@ public class WebViewProvider {
 
         @Override
         public void restoreWebViewState(Session session) {
-            // TODO: restore navigation history, and reopen previously opened page
+            final Bundle stateData = session.getWebViewState();
+            final String desiredURL = session.getUrl().getValue();
+            final GeckoSession.SessionState sessionState = stateData.getParcelable("state");
+            if (sessionState != null) {
+                geckoSession.restoreState(sessionState);
+            }
+            loadUrl(desiredURL);
         }
 
         @Override
-        public void saveWebViewState(@NonNull Session session) {
-            // TODO: save anything needed for navigation history restoration.
+        public void saveWebViewState(@NonNull final Session session) {
+            final GeckoResponse<GeckoSession.SessionState> response = new GeckoResponse<GeckoSession.SessionState>() {
+                @Override
+                public void respond(GeckoSession.SessionState value) {
+                    if (value != null) {
+                        final Bundle bundle = new Bundle();
+                        bundle.putParcelable("state", value);
+                        session.saveWebViewState(bundle);
+                    }
+                }
+            };
+
+            geckoSession.saveState(response);
         }
 
         @Override
