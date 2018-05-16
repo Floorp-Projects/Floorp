@@ -7958,7 +7958,7 @@ IonBuilder::getElemTryReferenceElemOfTypedObject(bool* emitted,
 {
     MOZ_ASSERT(objPrediction.ofArrayKind());
 
-    ReferenceTypeDescr::Type elemType = elemPrediction.referenceType();
+    ReferenceType elemType = elemPrediction.referenceType();
     uint32_t elemSize = ReferenceTypeDescr::size(elemType);
 
     LinearSum indexAsByteOffset(alloc());
@@ -8016,7 +8016,7 @@ IonBuilder::pushScalarLoadFromTypedObject(MDefinition* obj,
 AbortReasonOr<Ok>
 IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                              const LinearSum& byteOffset,
-                                             ReferenceTypeDescr::Type type,
+                                             ReferenceType type,
                                              PropertyName* name)
 {
     // Find location within the owner object.
@@ -8033,7 +8033,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                                        typedObj, name, observedTypes);
 
     switch (type) {
-      case ReferenceTypeDescr::TYPE_ANY: {
+      case ReferenceType::TYPE_ANY: {
         // Make sure the barrier reflects the possibility of reading undefined.
         bool bailOnUndefined = barrier == BarrierKind::NoBarrier &&
                                !observedTypes->hasType(TypeSet::UndefinedType());
@@ -8042,7 +8042,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
         load = MLoadElement::New(alloc(), elements, scaledOffset, false, false, adjustment);
         break;
       }
-      case ReferenceTypeDescr::TYPE_OBJECT: {
+      case ReferenceType::TYPE_OBJECT: {
         // Make sure the barrier reflects the possibility of reading null. When
         // there is no other barrier needed we include the null bailout with
         // MLoadUnboxedObjectOrNull, which avoids the need to box the result
@@ -8056,7 +8056,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                              adjustment);
         break;
       }
-      case ReferenceTypeDescr::TYPE_STRING: {
+      case ReferenceType::TYPE_STRING: {
         load = MLoadUnboxedString::New(alloc(), elements, scaledOffset, adjustment);
         observedTypes->addType(TypeSet::StringType(), alloc().lifoAlloc());
         break;
@@ -8955,7 +8955,7 @@ IonBuilder::setElemTryReferenceElemOfTypedObject(bool* emitted,
                                                  MDefinition* value,
                                                  TypedObjectPrediction elemPrediction)
 {
-    ReferenceTypeDescr::Type elemType = elemPrediction.referenceType();
+    ReferenceType elemType = elemPrediction.referenceType();
     uint32_t elemSize = ReferenceTypeDescr::size(elemType);
 
     LinearSum indexAsByteOffset(alloc());
@@ -10603,7 +10603,7 @@ IonBuilder::getPropTryReferencePropOfTypedObject(bool* emitted, MDefinition* typ
                                                  TypedObjectPrediction fieldPrediction,
                                                  PropertyName* name)
 {
-    ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
+    ReferenceType fieldType = fieldPrediction.referenceType();
 
     TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER))
@@ -11718,7 +11718,7 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool* emitted,
                                                  TypedObjectPrediction fieldPrediction,
                                                  PropertyName* name)
 {
-    ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
+    ReferenceType fieldType = fieldPrediction.referenceType();
 
     TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
     if (globalKey->hasFlags(constraints(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER))
@@ -13563,7 +13563,7 @@ AbortReasonOr<Ok>
 IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
                                                 MDefinition* typedObj,
                                                 const LinearSum& byteOffset,
-                                                ReferenceTypeDescr::Type type,
+                                                ReferenceType type,
                                                 MDefinition* value,
                                                 PropertyName* name)
 {
@@ -13571,11 +13571,11 @@ IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
 
     // Make sure we aren't adding new type information for writes of object and value
     // references.
-    if (type != ReferenceTypeDescr::TYPE_STRING) {
-        MOZ_ASSERT(type == ReferenceTypeDescr::TYPE_ANY ||
-                   type == ReferenceTypeDescr::TYPE_OBJECT);
+    if (type != ReferenceType::TYPE_STRING) {
+        MOZ_ASSERT(type == ReferenceType::TYPE_ANY ||
+                   type == ReferenceType::TYPE_OBJECT);
         MIRType implicitType =
-            (type == ReferenceTypeDescr::TYPE_ANY) ? MIRType::Undefined : MIRType::Null;
+            (type == ReferenceType::TYPE_ANY) ? MIRType::Undefined : MIRType::Null;
 
         if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &typedObj, name, &value,
                                           /* canModify = */ true, implicitType))
@@ -13595,20 +13595,20 @@ IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
 
     MInstruction* store = nullptr;  // initialize to silence GCC warning
     switch (type) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceType::TYPE_ANY:
         if (needsPostBarrier(value))
             current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
         store = MStoreElement::New(alloc(), elements, scaledOffset, value, false, adjustment);
         store->toStoreElement()->setNeedsBarrier();
         break;
-      case ReferenceTypeDescr::TYPE_OBJECT:
+      case ReferenceType::TYPE_OBJECT:
         // Note: We cannot necessarily tell at this point whether a post
         // barrier is needed, because the type policy may insert ToObjectOrNull
         // instructions later, and those may require a post barrier. Therefore,
         // defer the insertion of post barriers to the type policy.
         store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);
         break;
-      case ReferenceTypeDescr::TYPE_STRING:
+      case ReferenceType::TYPE_STRING:
         // See previous comment. The StoreUnboxedString type policy may insert
         // ToString instructions that require a post barrier.
         store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);

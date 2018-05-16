@@ -306,14 +306,14 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
         MOZ_ALWAYS_TRUE(structDescr->fieldIndex(id, &fieldIndex));
 
         TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
-        ReferenceTypeDescr::Type type = fieldDescr->as<ReferenceTypeDescr>().type();
-        if (type == ReferenceTypeDescr::TYPE_ANY) {
+        ReferenceType type = fieldDescr->as<ReferenceTypeDescr>().type();
+        if (type == ReferenceType::TYPE_ANY) {
             // Ignore undefined values, which are included implicitly in type
             // information for this property.
             if (value.isUndefined())
                 addType = false;
         } else {
-            MOZ_ASSERT(type == ReferenceTypeDescr::TYPE_OBJECT);
+            MOZ_ASSERT(type == ReferenceType::TYPE_OBJECT);
 
             // Ignore null values being written here. Null is included
             // implicitly in type information for this property. Note that
