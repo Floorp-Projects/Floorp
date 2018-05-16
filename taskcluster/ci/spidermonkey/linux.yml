@@ -135,7 +135,6 @@ sm-tsan-linux64/opt:
         job-name: sm-tsan-linux64-opt
     treeherder:
         symbol: SM(tsan)
-        tier: 3
         platform: linux64/opt
     run:
         spidermonkey-variant: tsan
