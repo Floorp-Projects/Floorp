@@ -779,10 +779,15 @@ function addAllowDenyPermissions(permissionName, allowList, blockList) {
   blockList = blockList || [];
 
   for (let origin of allowList) {
-    Services.perms.add(origin,
-                       permissionName,
-                       Ci.nsIPermissionManager.ALLOW_ACTION,
-                       Ci.nsIPermissionManager.EXPIRE_POLICY);
+    try {
+      Services.perms.add(origin,
+                         permissionName,
+                         Ci.nsIPermissionManager.ALLOW_ACTION,
+                         Ci.nsIPermissionManager.EXPIRE_POLICY);
+    } catch (ex) {
+      log.error(`Added by default for ${permissionName} permission in the permission
+      manager - ${origin.spec}`);
+    }
   }
 
   for (let origin of blockList) {
