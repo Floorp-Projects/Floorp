@@ -152,13 +152,21 @@ enum reflectStatus {
   REFLECT_FAILURE
 };
 
-// Struct used to keep information about the histograms for which a
+// Structs used to keep information about the histograms for which a
 // snapshot should be created.
 struct HistogramSnapshotData {
   nsTArray<Histogram::Sample> mBucketRanges;
   nsTArray<Histogram::Count> mBucketCounts;
   int64_t mSampleSum; // Same type as Histogram::SampleSet::sum_
 };
+
+struct HistogramSnapshotInfo {
+  HistogramSnapshotData data;
+  HistogramID histogramID;
+};
+
+typedef mozilla::Vector<HistogramSnapshotInfo> HistogramSnapshotsArray;
+typedef mozilla::Vector<HistogramSnapshotsArray> HistogramProcessSnapshotsArray;
 
 // The following is used to handle snapshot information for keyed histograms.
 typedef nsDataHashtable<nsCStringHashKey, HistogramSnapshotData> KeyedHistogramSnapshotData;
@@ -747,6 +755,74 @@ internal_ShouldReflectHistogram(Histogram* h, HistogramID id)
   }
 
   return true;
+}
+
+/**
+ * Helper function to get a snapshot of the histograms.
+ *
+ * @param {aLock} the lock proof.
+ * @param {aDataset} the dataset for which the snapshot is being requested.
+ * @param {aClearSubsession} whether or not to clear the data after
+ *        taking the snapshot.
+ * @param {aIncludeGPU} whether or not to include data for the GPU.
+ * @param {aOutSnapshot} the container in which the snapshot data will be stored.
+ * @return {nsresult} NS_OK if the snapshot was successfully taken or
+ *         NS_ERROR_OUT_OF_MEMORY if it failed to allocate memory.
+ */
+nsresult
+internal_GetHistogramsSnapshot(const StaticMutexAutoLock& aLock,
+                               unsigned int aDataset,
+                               bool aClearSubsession,
+                               bool aIncludeGPU,
+                               HistogramProcessSnapshotsArray& aOutSnapshot)
+{
+  if (!aOutSnapshot.resize(static_cast<uint32_t>(ProcessID::Count))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+    HistogramSnapshotsArray& hArray = aOutSnapshot[process];
+
+    for (size_t i = 0; i < HistogramCount; ++i) {
+      const HistogramInfo& info = gHistogramInfos[i];
+      if (info.keyed) {
+        continue;
+      }
+
+      HistogramID id = HistogramID(i);
+
+      if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
+          ((ProcessID(process) == ProcessID::Gpu) && !aIncludeGPU)) {
+        continue;
+      }
+
+      if (!IsInDataset(info.dataset, aDataset)) {
+        continue;
+      }
+
+      bool shouldInstantiate =
+        info.histogramType == nsITelemetry::HISTOGRAM_FLAG;
+      Histogram* h = internal_GetHistogramById(id, ProcessID(process),
+                                               shouldInstantiate);
+      if (!h || internal_IsExpired(h) || !internal_ShouldReflectHistogram(h, id)) {
+        continue;
+      }
+
+      HistogramSnapshotData snapshotData;
+      if (NS_FAILED(internal_GetHistogramAndSamples(aLock, h, snapshotData))) {
+        continue;
+      }
+
+      if (!hArray.emplaceBack(HistogramSnapshotInfo{snapshotData, id})) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      if (aClearSubsession) {
+        h->Clear();
+      }
+    }
+  }
+  return NS_OK;
 }
 
 } // namespace
@@ -2225,61 +2301,16 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
     includeGPUProcess = gpm->AttemptedGPUProcess();
   }
 
-  // Struct used to keep information about the histograms for which a
-  // snapshot should be created
-  struct HistogramProcessInfo {
-    HistogramSnapshotData data;
-    HistogramID histogramID;
-  };
-
-  mozilla::Vector<mozilla::Vector<HistogramProcessInfo>> processHistArray;
+  HistogramProcessSnapshotsArray processHistArray;
   {
-    if (!processHistArray.resize(static_cast<uint32_t>(ProcessID::Count))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-      mozilla::Vector<HistogramProcessInfo>& hArray = processHistArray[process];
-
-      for (size_t i = 0; i < HistogramCount; ++i) {
-        const HistogramInfo& info = gHistogramInfos[i];
-        if (info.keyed) {
-          continue;
-        }
-
-        HistogramID id = HistogramID(i);
-
-        if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
-            ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
-          continue;
-        }
-
-        if (!IsInDataset(info.dataset, aDataset)) {
-          continue;
-        }
-
-        bool shouldInstantiate =
-          info.histogramType == nsITelemetry::HISTOGRAM_FLAG;
-        Histogram* h = internal_GetHistogramById(id, ProcessID(process),
-                                                 shouldInstantiate);
-        if (!h || internal_IsExpired(h) || !internal_ShouldReflectHistogram(h, id)) {
-          continue;
-        }
-
-        HistogramSnapshotData snapshotData;
-        if (NS_FAILED(internal_GetHistogramAndSamples(locker, h, snapshotData))) {
-          continue;
-        }
-
-        if (!hArray.emplaceBack(HistogramProcessInfo{snapshotData, id})) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        if (aClearSubsession) {
-          h->Clear();
-        }
-      }
+    nsresult rv = internal_GetHistogramsSnapshot(locker,
+                                                 aDataset,
+                                                 aClearSubsession,
+                                                 includeGPUProcess,
+                                                 processHistArray);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
   }
 
@@ -2295,9 +2326,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
       return NS_ERROR_FAILURE;
     }
 
-    const mozilla::Vector<HistogramProcessInfo>& hArray = processHistArray[process];
-    for (size_t i = 0; i < hArray.length(); ++i) {
-      const HistogramProcessInfo& hData = hArray[i];
+    for (const HistogramSnapshotInfo& hData : processHistArray[process]) {
       HistogramID id = hData.histogramID;
 
       JS::Rooted<JSObject*> hobj(aCx, JS_NewPlainObject(aCx));
