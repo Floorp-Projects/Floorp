@@ -134,8 +134,14 @@ class ExtensionControlledPopup {
     // multiple observer events in quick succession.
     this.removeObserver();
 
+    let targetWindow;
+    // Some notifications (e.g. browser-open-newtab-start) do not have a window subject.
+    if (subject && subject.document) {
+      targetWindow = subject;
+    }
+
     // Do this work in an idle callback to avoid interfering with new tab performance tracking.
-    this.topWindow.requestIdleCallback(() => this.open(subject));
+    this.topWindow.requestIdleCallback(() => this.open(targetWindow));
   }
 
   removeObserver() {
