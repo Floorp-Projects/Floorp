@@ -2425,14 +2425,12 @@ nsImageFrame::IconLoad::Notify(imgIRequest* aRequest,
 
 NS_IMPL_ISUPPORTS(nsImageListener, imgINotificationObserver)
 
-nsImageListener::nsImageListener(nsImageFrame *aFrame) :
-  mFrame(aFrame)
+nsImageListener::nsImageListener(nsImageFrame* aFrame)
+  : mFrame(aFrame)
 {
 }
 
-nsImageListener::~nsImageListener()
-{
-}
+nsImageListener::~nsImageListener() = default;
 
 NS_IMETHODIMP
 nsImageListener::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
