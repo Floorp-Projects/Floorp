@@ -718,9 +718,9 @@ JSAutoRealm::~JSAutoRealm()
     cx_->leaveCompartment(oldCompartment_);
 }
 
-JSAutoNullableCompartment::JSAutoNullableCompartment(JSContext* cx,
-                                                     JSObject* targetOrNull
-                                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
+                                         JSObject* targetOrNull
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -732,7 +732,7 @@ JSAutoNullableCompartment::JSAutoNullableCompartment(JSContext* cx,
         cx_->enterNullCompartment();
 }
 
-JSAutoNullableCompartment::~JSAutoNullableCompartment()
+JSAutoNullableRealm::~JSAutoNullableRealm()
 {
     cx_->leaveCompartment(oldCompartment_);
 }
