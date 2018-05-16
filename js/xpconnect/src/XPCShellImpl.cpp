@@ -542,7 +542,7 @@ XPCShellInterruptCallback(JSContext* cx)
     if (callback.isUndefined())
         return true;
 
-    JSAutoCompartment ac(cx, &callback.toObject());
+    JSAutoRealm ar(cx, &callback.toObject());
     RootedValue rv(cx);
     if (!JS_CallFunctionValue(cx, nullptr, callback, JS::HandleValueArray::empty(), &rv) ||
         !rv.isBoolean())
@@ -1339,7 +1339,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
             backstagePass->SetGlobalObject(glob);
 
-            JSAutoCompartment ac(cx, glob);
+            JSAutoRealm ar(cx, glob);
 
             if (!JS_InitReflectParse(cx, glob)) {
                 return 1;

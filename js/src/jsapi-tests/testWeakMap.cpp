@@ -86,7 +86,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
 
     JS::RootedObject delegateRoot(cx);
     {
-        JSAutoCompartment ac(cx, delegate);
+        JSAutoRealm ar(cx, delegate);
         delegateRoot = JS_NewPlainObject(cx);
         CHECK(delegateRoot);
         JS::RootedValue delegateValue(cx, JS::ObjectValue(*delegate));
@@ -185,13 +185,13 @@ JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
      */
     JS::RootedObject object(cx);
     {
-        JSAutoCompartment ac(cx, destZone);
+        JSAutoRealm ar(cx, destZone);
         object = JS_NewPlainObject(cx);
         if (!object)
             return nullptr;
     }
     {
-        JSAutoCompartment ac(cx, sourceZone);
+        JSAutoRealm ar(cx, sourceZone);
         if (!JS_WrapObject(cx, &object))
             return nullptr;
     }

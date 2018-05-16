@@ -795,13 +795,13 @@ public:
             if (subsumes && subsumes(cx->compartment()->principals(),
                                      obj->compartment()->principals()))
             {
-                ac_.emplace(cx, obj);
+                ar_.emplace(cx, obj);
             }
         }
     }
 
  private:
-    Maybe<JSAutoCompartment> ac_;
+    Maybe<JSAutoRealm> ar_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

@@ -211,11 +211,11 @@ StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
 {
     StackScopedCloneData data(cx, &options);
     {
-        // For parsing val we have to enter its compartment.
+        // For parsing val we have to enter its realm.
         // (unless it's a primitive)
-        Maybe<JSAutoCompartment> ac;
+        Maybe<JSAutoRealm> ar;
         if (val.isObject()) {
-            ac.emplace(cx, &val.toObject());
+            ar.emplace(cx, &val.toObject());
         } else if (val.isString() && !JS_WrapValue(cx, val)) {
             return false;
         }
@@ -224,7 +224,7 @@ StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
             return false;
     }
 
-    // Now recreate the clones in the target compartment.
+    // Now recreate the clones in the target realm.
     if (!data.Read(cx, val))
         return false;
 
@@ -300,7 +300,7 @@ FunctionForwarder(JSContext* cx, unsigned argc, Value* vp)
         // We manually implement the contents of CrossCompartmentWrapper::call
         // here, because certain function wrappers (notably content->nsEP) are
         // not callable.
-        JSAutoCompartment ac(cx, unwrappedFun);
+        JSAutoRealm ar(cx, unwrappedFun);
         if (!CheckSameOriginArg(cx, options, thisVal) || !JS_WrapValue(cx, &thisVal))
             return false;
 
@@ -399,8 +399,8 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
 
     {
         // We need to operate in the target scope from here on, let's enter
-        // its compartment.
-        JSAutoCompartment ac(cx, targetScope);
+        // its realm.
+        JSAutoRealm ar(cx, targetScope);
 
         // Unwrapping to see if we have a callable.
         funObj = UncheckedUnwrap(funObj);
@@ -483,7 +483,7 @@ CreateObjectIn(JSContext* cx, HandleValue vobj, CreateObjectInOptions& options,
 
     RootedObject obj(cx);
     {
-        JSAutoCompartment ac(cx, scope);
+        JSAutoRealm ar(cx, scope);
         JS_MarkCrossZoneId(cx, options.defineAs);
 
         obj = JS_NewPlainObject(cx);

@@ -38,7 +38,7 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
 
   RefPtr<StructuredCloneBlob> holder = StructuredCloneBlob::Create();
 
-  Maybe<JSAutoCompartment> ac;
+  Maybe<JSAutoRealm> ar;
   JS::RootedValue value(cx, aValue);
 
   if (aTargetGlobal) {
@@ -49,7 +49,7 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
       return nullptr;
     }
 
-    ac.emplace(cx, targetGlobal);
+    ar.emplace(cx, targetGlobal);
 
     if (!JS_WrapValue(cx, &value)) {
       aRv.NoteJSContextException(cx);
@@ -63,7 +63,7 @@ StructuredCloneBlob::Constructor(GlobalObject& aGlobal, JS::HandleValue aValue,
       return nullptr;
     }
 
-    ac.emplace(cx, obj);
+    ar.emplace(cx, obj);
     value = JS::ObjectValue(*obj);
   }
 
@@ -87,7 +87,7 @@ StructuredCloneBlob::Deserialize(JSContext* aCx, JS::HandleObject aTargetScope,
   }
 
   {
-    JSAutoCompartment ac(aCx, scope);
+    JSAutoRealm ar(aCx, scope);
 
     Read(xpc::NativeGlobal(scope), aCx, aResult, aRv);
     if (aRv.Failed()) {

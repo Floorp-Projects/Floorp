@@ -793,7 +793,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports* aArgs,
           NS_ASSERTION(prim == nullptr,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
-          JSAutoCompartment ac(cx, aScope);
+          JSAutoRealm ar(cx, aScope);
           rv = nsContentUtils::WrapNative(cx, arg, thisVal);
         }
       }
@@ -984,7 +984,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       JS::Rooted<JSObject*> scope(cx, GetWindowProxy());
       JS::Rooted<JS::Value> v(cx);
-      JSAutoCompartment ac(cx, scope);
+      JSAutoRealm ar(cx, scope);
       nsresult rv = nsContentUtils::WrapNative(cx, data, iid, &v);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1119,7 +1119,7 @@ nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
-  JSAutoCompartment ac(cx, aGlobalObj);
+  JSAutoRealm ar(cx, aGlobalObj);
 
   // Attempt to initialize profiling functions
   ::JS_DefineProfilingFunctions(cx, aGlobalObj);

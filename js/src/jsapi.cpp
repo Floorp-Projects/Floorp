@@ -693,8 +693,8 @@ JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment)
     cx->leaveCompartment(oldCompartment);
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSObject* target
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -703,8 +703,8 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSObject* target
     cx_->enterCompartmentOf(target);
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -713,7 +713,7 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
     cx_->enterCompartmentOf(target);
 }
 
-JSAutoCompartment::~JSAutoCompartment()
+JSAutoRealm::~JSAutoRealm()
 {
     cx_->leaveCompartment(oldCompartment_);
 }

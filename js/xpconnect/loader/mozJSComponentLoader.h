@@ -160,7 +160,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
 
             if (obj) {
                 mozilla::AutoJSContext cx;
-                JSAutoCompartment ac(cx, obj);
+                JSAutoRealm ar(cx, obj);
 
                 if (JS_HasExtensibleLexicalEnvironment(obj)) {
                     JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(obj));
