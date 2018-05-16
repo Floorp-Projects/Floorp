@@ -1440,6 +1440,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     nsresult rv =
       HTMLEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
                                               nsIEditor::eNoStrip);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1496,6 +1499,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     if (inString->IsEmpty()) {
       rv = HTMLEditorRef().InsertTextWithTransaction(
                              *doc, *inString, EditorRawDOMPoint(pointToInsert));
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1504,6 +1510,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
 
     WSRunObject wsObj(&HTMLEditorRef(), pointToInsert);
     rv = wsObj.InsertText(*doc, *inString, pointToInsert);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1564,6 +1573,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
             HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                            currentPoint,
                                                            nsIEditor::eNone);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!brElement)) {
             return NS_ERROR_FAILURE;
           }
@@ -1589,6 +1601,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
                                  *doc, subStr,
                                  EditorRawDOMPoint(currentPoint),
                                  &pointAfterInsertedString);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1625,6 +1640,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           EditorRawDOMPoint pointAfterInsertedSpaces;
           rv = wsObj.InsertText(*doc, spacesStr, currentPoint,
                                 &pointAfterInsertedSpaces);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1636,6 +1654,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
         else if (subStr.Equals(newlineStr)) {
           RefPtr<Element> newBRElement =
             wsObj.InsertBreak(SelectionRef(), currentPoint, nsIEditor::eNone);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!newBRElement)) {
             return NS_ERROR_FAILURE;
           }
@@ -1659,6 +1680,9 @@ HTMLEditRules::WillInsertText(EditAction aAction,
           EditorRawDOMPoint pointAfterInsertedString;
           rv = wsObj.InsertText(*doc, subStr, currentPoint,
                                 &pointAfterInsertedString);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -1677,12 +1701,13 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     "Failed to unset interline position");
 
   if (currentPoint.IsSet()) {
-    ErrorResult error;
-    SelectionRef().Collapse(currentPoint, error);
-    if (error.Failed()) {
-      NS_WARNING("Failed to collapse at current point");
-      error.SuppressException();
+    IgnoredErrorResult ignoredError;
+    SelectionRef().Collapse(currentPoint, ignoredError);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
     }
+    NS_WARNING_ASSERTION(!ignoredError.Failed(),
+      "Failed to collapse at current point");
   }
 
   // manually update the doc changed range so that AfterEdit will clean up
