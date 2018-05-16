@@ -89,7 +89,7 @@ public:
   nsresult ReadNoiseEntries(const Prefix& aPrefix,
                             const nsACString& aTableName,
                             uint32_t aCount,
-                            PrefixArray* aNoiseEntries);
+                            PrefixArray& aNoiseEntries);
 
 #ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
   nsresult DumpRawTableUpdates(const nsACString& aRawUpdates);
