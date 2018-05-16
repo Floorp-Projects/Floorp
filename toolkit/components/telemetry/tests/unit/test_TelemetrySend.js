@@ -334,9 +334,6 @@ add_task(async function test_discardBigPings() {
     h.clear();
   }
 
-  // Generate a 2MB string and create an oversized payload.
-  const OVERSIZED_PAYLOAD = {"data": generateRandomString(4 * 1024 * 1024)};
-
   // Submit a ping of a normal size and check that we don't count it in the histogram.
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
   await TelemetrySend.testWaitOnOutgoingPings();
@@ -351,6 +348,9 @@ add_task(async function test_discardBigPings() {
 
   // Submit an oversized ping and check that it gets discarded.
   TelemetryHealthPing.testReset();
+  // Ensure next ping has a 2 MB gzipped payload.
+  fakeGzipCompressStringForNextPing(2 * 1024 * 1024);
+  const OVERSIZED_PAYLOAD = {"data": "empty on purpose - policy takes care of size"};
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, OVERSIZED_PAYLOAD);
   await TelemetrySend.testWaitOnOutgoingPings();
   let ping = await PingServer.promiseNextPing();
@@ -376,12 +376,13 @@ add_task(async function test_largeButWithinLimit() {
   let histSuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
   histSuccess.clear();
 
-  // Generate a 900KB string and a large payload that is still within the 1MB limit.
-  const LARGE_PAYLOAD = {"data": generateRandomString(900 * 1024)};
+  // Next ping will have a 900KB gzip payload.
+  fakeGzipCompressStringForNextPing(900 * 1024);
+  const LARGE_PAYLOAD = {"data": "empty on purpose - policy takes care of size"};
 
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, LARGE_PAYLOAD);
   await TelemetrySend.testWaitOnOutgoingPings();
-  await PingServer.promiseNextPing();
+  await PingServer.promiseNextRequest();
 
   Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have sent large ping.");
 });
