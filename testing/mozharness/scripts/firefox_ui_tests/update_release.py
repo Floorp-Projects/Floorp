@@ -16,7 +16,7 @@ import urllib
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.python import PreScriptAction
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, EXIT_STATUS_DICT
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WARNING, EXIT_STATUS_DICT
 from mozharness.mozilla.testing.firefox_ui_tests import (
     FirefoxUIUpdateTests,
     firefox_ui_update_config_options
