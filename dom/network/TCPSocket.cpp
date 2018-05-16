@@ -859,7 +859,7 @@ TCPSocket::Send(JSContext* aCx,
     }
   } else {
     JS::Rooted<JSObject*> obj(aCx, aData.Obj());
-    JSAutoCompartment ac(aCx, obj);
+    JSAutoRealm ar(aCx, obj);
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*obj));
 
     stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");

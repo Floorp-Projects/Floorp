@@ -172,9 +172,9 @@ public:
   Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
          const T* data = nullptr) {
     JS::Rooted<JSObject*> creatorWrapper(cx);
-    Maybe<JSAutoCompartment> ac;
+    Maybe<JSAutoRealm> ar;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
-      ac.emplace(cx, creatorWrapper);
+      ar.emplace(cx, creatorWrapper);
     }
 
     return CreateCommon(cx, length, data);

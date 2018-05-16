@@ -77,8 +77,8 @@ public:
 
     JSContext* mCx;
 
-    // Handles switching to our global's compartment.
-    JSAutoCompartment mCompartment;
+    // Handles switching to our global's realm.
+    JSAutoRealm mRealm;
 
     // Set to a valid handle if a return value is expected.
     JS::Rooted<JS::Value> mRetValue;

@@ -316,13 +316,13 @@ IDBRequest::SetResultCallback(ResultCallback* aCallback)
   }
 
   AutoJSAPI autoJS;
-  Maybe<JSAutoCompartment> ac;
+  Maybe<JSAutoRealm> ar;
 
   if (GetScriptOwner()) {
     // If we have a script owner we want the SafeJSContext and then to enter the
-    // script owner's compartment.
+    // script owner's realm.
     autoJS.Init();
-    ac.emplace(autoJS.cx(), GetScriptOwner());
+    ar.emplace(autoJS.cx(), GetScriptOwner());
   } else {
     // Otherwise our owner is a window and we use that to initialize.
     MOZ_ASSERT(GetOwner());

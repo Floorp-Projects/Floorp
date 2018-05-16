@@ -188,7 +188,7 @@ nsXBLProtoImplMethod::CompileMember(AutoJSAPI& jsapi, const nsString& aClassStr,
   }
 
   JSContext *cx = jsapi.cx();
-  JSAutoCompartment ac(cx, aClassObject);
+  JSAutoRealm ar(cx, aClassObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(functionUri.get(),
                          uncompiledMethod->mBodyText.GetLineNumber());

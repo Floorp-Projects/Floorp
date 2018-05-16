@@ -18,7 +18,7 @@ DEF_TEST(DoesCrossCompartmentBoundaries, {
     ASSERT_TRUE(newGlobal);
     JSCompartment* newCompartment = nullptr;
     {
-      JSAutoCompartment ac(cx, newGlobal);
+      JSAutoRealm ar(cx, newGlobal);
       ASSERT_TRUE(JS_InitStandardClasses(cx, newGlobal));
       newCompartment = js::GetContextCompartment(cx);
     }

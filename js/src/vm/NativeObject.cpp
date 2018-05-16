@@ -302,6 +302,14 @@ js::NativeObject::slotIsFixed(uint32_t slot) const
     return slot < numFixedSlotsMaybeForwarded();
 }
 
+bool
+js::NativeObject::isNumFixedSlots(uint32_t nfixed) const
+{
+    // We call numFixedSlotsMaybeForwarded() to allow reading slots of
+    // associated objects in trace hooks that may be called during a moving GC.
+    return nfixed == numFixedSlotsMaybeForwarded();
+}
+
 #endif /* DEBUG */
 
 Shape*

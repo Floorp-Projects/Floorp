@@ -162,7 +162,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::HandleValue",
     "JS::HandleValueArray",
     "JS::IsAcceptableThis",
-    "JSAutoCompartment",
+    "JSAutoRealm",
     "JSAutoStructuredCloneBuffer",
     "JSClass",
     "JSClassOps",

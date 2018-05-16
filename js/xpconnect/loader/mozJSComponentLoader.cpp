@@ -446,7 +446,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
         if (isCriticalModule && !exn.isUndefined()) {
             AnnotateCrashReport();
 
-            JSAutoCompartment ac(cx, xpc::PrivilegedJunkScope());
+            JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
             JS_WrapValue(cx, &exn);
 
             nsAutoCString file;
@@ -468,7 +468,7 @@ mozJSComponentLoader::LoadModule(FileLocation& aFile)
     if (NS_FAILED(rv))
         return nullptr;
 
-    JSAutoCompartment ac(cx, entry->obj);
+    JSAutoRealm ar(cx, entry->obj);
     RootedObject entryObj(cx, entry->obj);
 
     RootedObject NSGetFactoryHolder(cx, ResolveModuleObjectProperty(cx, entryObj, "NSGetFactory"));
@@ -597,7 +597,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
 
     backstagePass->SetGlobalObject(global);
 
-    JSAutoCompartment ac(aCx, global);
+    JSAutoRealm ar(aCx, global);
     if (!JS_DefineFunctions(aCx, global, gGlobalFun) ||
         !JS_DefineProfilingFunctions(aCx, global)) {
         return;
@@ -692,7 +692,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     RootedObject thisObj(aCx, globalObj);
     NS_ENSURE_TRUE(thisObj, nullptr);
 
-    JSAutoCompartment ac(aCx, thisObj);
+    JSAutoRealm ar(aCx, thisObj);
 
     if (reuseGlobal) {
         thisObj = js::NewJSMEnvironment(aCx);
@@ -801,7 +801,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
     MOZ_ASSERT(JS_IsGlobalObject(obj) == !reuseGlobal);
 
-    JSAutoCompartment ac(cx, obj);
+    JSAutoRealm ar(cx, obj);
 
     RootedScript script(cx);
 
@@ -958,7 +958,7 @@ mozJSComponentLoader::UnloadModules()
         jsapi.Init();
         JSContext* cx = jsapi.cx();
         RootedObject global(cx, mLoaderGlobal);
-        JSAutoCompartment ac(cx, global);
+        JSAutoRealm ar(cx, global);
         MOZ_ASSERT(JS_HasExtensibleLexicalEnvironment(global));
         JS_SetAllNonReservedSlotsToUndefined(cx, JS_ExtensibleLexicalEnvironment(global));
         JS_SetAllNonReservedSlotsToUndefined(cx, global);
@@ -1011,9 +1011,9 @@ mozJSComponentLoader::ImportInto(const nsACString& registryLocation,
         FindTargetObject(cx, &targetObject);
     }
 
-    Maybe<JSAutoCompartment> ac;
+    Maybe<JSAutoRealm> ar;
     if (targetObject) {
-        ac.emplace(cx, targetObject);
+        ar.emplace(cx, targetObject);
     }
 
     RootedObject global(cx);
@@ -1188,7 +1188,7 @@ mozJSComponentLoader::ExtractExports(JSContext* aCx, ComponentLoaderInfo& aInfo,
     dom::AutoJSAPI jsapi;
     jsapi.Init();
     JSContext* cx = jsapi.cx();
-    JSAutoCompartment ac(cx, aMod->obj);
+    JSAutoRealm ar(cx, aMod->obj);
 
     RootedValue symbols(cx);
     {

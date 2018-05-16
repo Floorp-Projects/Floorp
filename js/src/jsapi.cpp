@@ -693,8 +693,8 @@ JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment)
     cx->leaveCompartment(oldCompartment);
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSObject* target
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -703,8 +703,8 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSObject* target
     cx_->enterCompartmentOf(target);
 }
 
-JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
-                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -713,14 +713,14 @@ JSAutoCompartment::JSAutoCompartment(JSContext* cx, JSScript* target
     cx_->enterCompartmentOf(target);
 }
 
-JSAutoCompartment::~JSAutoCompartment()
+JSAutoRealm::~JSAutoRealm()
 {
     cx_->leaveCompartment(oldCompartment_);
 }
 
-JSAutoNullableCompartment::JSAutoNullableCompartment(JSContext* cx,
-                                                     JSObject* targetOrNull
-                                                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
+                                         JSObject* targetOrNull
+                                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
     oldCompartment_(cx->compartment())
 {
@@ -732,7 +732,7 @@ JSAutoNullableCompartment::JSAutoNullableCompartment(JSContext* cx,
         cx_->enterNullCompartment();
 }
 
-JSAutoNullableCompartment::~JSAutoNullableCompartment()
+JSAutoNullableRealm::~JSAutoNullableRealm()
 {
     cx_->leaveCompartment(oldCompartment_);
 }
@@ -4939,21 +4939,18 @@ JS::Evaluate(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
     return ::Evaluate(cx, optionsArg, filename, rval);
 }
 
-JS_PUBLIC_API(JSFunction*)
-JS::GetModuleResolveHook(JSContext* cx)
+JS_PUBLIC_API(JS::ModuleResolveHook)
+JS::GetModuleResolveHook(JSRuntime* rt)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-    return cx->global()->moduleResolveHook();
+    return rt->moduleResolveHook;
 }
 
 JS_PUBLIC_API(void)
-JS::SetModuleResolveHook(JSContext* cx, HandleFunction func)
+JS::SetModuleResolveHook(JSRuntime* rt, JS::ModuleResolveHook func)
 {
     AssertHeapIsIdle();
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, func);
-    cx->global()->setModuleResolveHook(func);
+    rt->moduleResolveHook = func;
 }
 
 JS_PUBLIC_API(bool)

@@ -103,7 +103,7 @@ private:
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
     ErrorResult rv;
-    JSAutoCompartment ac(aCx, global);
+    JSAutoRealm ar(aCx, global);
     workerinternals::LoadMainScript(aWorkerPrivate, mScriptURL,
                                     DebuggerScript, rv);
     rv.WouldReportJSException();

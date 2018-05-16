@@ -1023,9 +1023,9 @@ nsFrameMessageManager::GetInitialProcessData(JSContext* aCx,
   JS::RootedValue init(aCx, mInitialProcessData);
   if (mChrome && init.isUndefined()) {
     // We create the initial object in the junk scope. If we created it in a
-    // normal compartment, that compartment would leak until shutdown.
+    // normal realm, that realm would leak until shutdown.
     JS::RootedObject global(aCx, xpc::PrivilegedJunkScope());
-    JSAutoCompartment ac(aCx, global);
+    JSAutoRealm ar(aCx, global);
 
     JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
     if (!obj) {

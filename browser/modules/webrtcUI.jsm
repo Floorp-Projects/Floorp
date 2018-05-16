@@ -670,7 +670,7 @@ function prompt(aBrowser, aRequest) {
               stream.getTracks().forEach(t => t.stop());
               return;
             }
-            video.src = chromeWin.URL.createObjectURL(stream);
+            video.srcObject = stream;
             video.stream = stream;
             doc.getElementById("webRTC-preview").hidden = false;
             video.onloadedmetadata = function(e) {

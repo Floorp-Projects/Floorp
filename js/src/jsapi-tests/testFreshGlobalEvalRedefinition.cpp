@@ -33,7 +33,7 @@ BEGIN_TEST(testRedefineGlobalEval)
     if (!g)
         return false;
 
-    JSAutoCompartment ac(cx, g);
+    JSAutoRealm ar(cx, g);
     JS::Rooted<JS::Value> v(cx);
     CHECK(JS_GetProperty(cx, g, "Object", &v));
 

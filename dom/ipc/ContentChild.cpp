@@ -472,7 +472,7 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (stack.isObject()) {
-        JSAutoCompartment ac(cx, &stack.toObject());
+        JSAutoRealm ar(cx, &stack.toObject());
 
         StructuredCloneData data;
         ErrorResult err;

@@ -1013,7 +1013,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  Maybe<JSAutoCompartment> ac;
+  Maybe<JSAutoRealm> ar;
   if (aSandbox.WasPassed()) {
     JS::Rooted<JSObject*> sandbox(aCx, js::CheckedUnwrap(aSandbox.Value()));
     if (!IsWorkerDebuggerSandbox(sandbox)) {
@@ -1021,7 +1021,7 @@ WorkerDebuggerGlobalScope::LoadSubScript(JSContext* aCx,
       return;
     }
 
-    ac.emplace(aCx, sandbox);
+    ar.emplace(aCx, sandbox);
   }
 
   nsTArray<nsString> urls;
