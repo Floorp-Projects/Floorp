@@ -5671,15 +5671,31 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  *aHandled = true;
+  rv = AlignContentsAtSelection(aAlignType);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
+      NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType)
+{
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
   // Convert the selection ranges into "promoted" selection ranges: This
   // basically just expands the range to include the immediate block parent,
   // and then further expands to include any ancestors whose children are all
   // in the range
-  *aHandled = true;
   nsTArray<OwningNonNull<nsINode>> nodeArray;
-  rv = GetNodesFromSelection(EditAction::align, nodeArray, TouchContent::yes);
+  nsresult rv =
+    GetNodesFromSelection(EditAction::align, nodeArray, TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -5766,6 +5782,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
       if (sibling && !IsBlockNode(*sibling)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertDiv);
         rv = HTMLEditorRef().DeleteNodeWithTransaction(*brContent);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -5774,6 +5793,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     RefPtr<Element> div =
       HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                 pointToInsertDiv);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!div)) {
       return NS_ERROR_FAILURE;
     }
@@ -5784,7 +5806,6 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    *aHandled = true;
     // Put in a moz-br so that it won't get deleted
     CreateElementResult createMozBrResult =
       CreateMozBR(EditorRawDOMPoint(div, 0));
@@ -5792,10 +5813,14 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
       return createMozBrResult.Rv();
     }
     EditorRawDOMPoint atStartOfDiv(div, 0);
-    ErrorResult error;
-    SelectionRef().Collapse(atStartOfDiv, error);
     // Don't restore the selection
     selectionRestorer.Abort();
+    ErrorResult error;
+    SelectionRef().Collapse(atStartOfDiv, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -5868,6 +5893,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
         HTMLEditorRef().mCSSEditUtils->SetCSSEquivalentToHTMLStyle(
                                          curNode->AsElement(), nullptr,
                                          nsGkAtoms::align, &aAlignType, false);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         curDiv = nullptr;
         continue;
       }
@@ -5905,6 +5933,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
       curDiv =
         HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curDiv)) {
         return NS_ERROR_FAILURE;
       }
@@ -5921,6 +5952,9 @@ HTMLEditRules::WillAlign(const nsAString& aAlignType,
     // Tuck the node into the end of the active div
     rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
                                                       *curDiv);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
