@@ -473,8 +473,9 @@ public class WebViewProvider {
             final GeckoSession.SessionState sessionState = stateData.getParcelable("state");
             if (sessionState != null) {
                 geckoSession.restoreState(sessionState);
+            } else {
+                loadUrl(desiredURL);
             }
-            loadUrl(desiredURL);
         }
 
         @Override
