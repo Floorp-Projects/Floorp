@@ -852,7 +852,7 @@ enum GetCapabilitiesExecutorSlots {
 static MOZ_MUST_USE PromiseObject*
 CreatePromiseObjectWithoutResolutionFunctions(JSContext* cx)
 {
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectInternal(cx));
+    PromiseObject* promise = CreatePromiseObjectInternal(cx);
     if (!promise)
         return nullptr;
 
@@ -2508,7 +2508,7 @@ MOZ_MUST_USE PromiseObject*
 js::CreatePromiseObjectForAsync(JSContext* cx, HandleValue generatorVal)
 {
     // Step 1.
-    Rooted<PromiseObject*> promise(cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    PromiseObject* promise = CreatePromiseObjectWithoutResolutionFunctions(cx);
     if (!promise)
         return nullptr;
 
