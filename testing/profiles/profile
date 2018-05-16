@@ -9,7 +9,7 @@
 # The beginning of this script is both valid shell and valid python,
 # such that the script starts with the shell and is reexecuted python
 '''which' mach > /dev/null 2>&1 && exec mach python "$0" "$@" ||
-echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/profiles/profile"; exit
+echo "mach not found, either add it to your \$PATH or run this script via ./mach python testing/profiles/profile"; exit  # noqa
 '''
 
 from __future__ import absolute_import, unicode_literals, print_function
@@ -67,24 +67,36 @@ def read_prefs(profile, pref_files=None):
     return prefs
 
 
+def get_profiles(key):
+    """Return a list of profile names for key."""
+    with open(os.path.join(here, 'profiles.json'), 'r') as fh:
+        profiles = json.load(fh)
+
+    if '+' in key:
+        keys = key.split('+')
+    else:
+        keys = [key]
+
+    names = set()
+    for key in keys:
+        if key in profiles:
+            names.update(profiles[key])
+        elif os.path.isdir(os.path.join(here, key)):
+            names.add(key)
+
+    if not names:
+        raise ValueError('{} is not a recognized suite or profile'.format(key))
+    return names
+
+
 def read(key):
     """Read preferences relevant to either a profile or suite.
 
     :param key: Can either be the name of a profile, or the name of
                 a suite as defined in suites.json.
     """
-    with open(os.path.join(here, 'profiles.json'), 'r') as fh:
-        profiles = json.load(fh)
-
-    if key in profiles:
-        names = profiles[key]
-    elif os.path.isdir(os.path.join(here, key)):
-        names = [key]
-    else:
-        raise ValueError('{} is not a recognized suite or profile'.format(key))
-
     prefs = {}
-    for profile in names:
+    for profile in get_profiles(key):
         prefs.update(read_prefs(profile))
     return prefs
 
