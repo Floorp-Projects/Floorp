@@ -17,6 +17,8 @@ const WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const stringToCopy = "foobazbarBug642615";
 
 add_task(async function() {
+  await pushPref("devtools.selfxss.count", 0);
+
   let {jsterm} = await openNewTabAndConsole(TEST_URI);
   jsterm.clearOutput();
   ok(!jsterm.completeNode.value, "no completeNode.value");
