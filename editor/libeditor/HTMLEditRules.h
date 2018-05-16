@@ -475,8 +475,13 @@ protected:
   MOZ_MUST_USE nsresult
   ReturnInListItem(Element& aListItem, nsINode& aNode, int32_t aOffset);
 
-  nsresult AfterEditInner(EditAction action,
-                          nsIEditor::EDirection aDirection);
+  /**
+   * Called after handling edit action.  This may adjust Selection, remove
+   * unnecessary empty nodes, create <br> elements if needed, etc.
+   */
+  MOZ_MUST_USE nsresult
+  AfterEditInner(EditAction action, nsIEditor::EDirection aDirection);
+
   nsresult RemovePartOfBlock(Element& aBlock, nsIContent& aStartChild,
                              nsIContent& aEndChild);
   void SplitBlock(Element& aBlock,
