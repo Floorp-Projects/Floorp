@@ -241,7 +241,9 @@ WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
     media::TimeUnit threshold = aTime;
     self->mMFTManager->SetSeekThreshold(threshold);
   });
-  mTaskQueue->Dispatch(runnable.forget());
+  nsresult rv = mTaskQueue->Dispatch(runnable.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 } // namespace mozilla
