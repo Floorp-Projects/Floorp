@@ -1,6 +1,6 @@
 const PREF_MULTISELECT_TABS = "browser.tabs.multiselect";
 
-async function triggerClickOn(target, options) {
+function triggerClickOn(target, options) {
   let promise = BrowserTestUtils.waitForEvent(target, "click");
   if (AppConstants.platform == "macosx") {
     options = { metaKey: options.ctrlKey };
@@ -10,7 +10,7 @@ async function triggerClickOn(target, options) {
 }
 
 async function addTab() {
-  const tab = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/");
+  const tab = BrowserTestUtils.addTab(gBrowser, "http://mochi.test:8888/", {skipAnimation: true});
   const browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
   return tab;
@@ -22,7 +22,13 @@ add_task(async function clickWithoutPrefSet() {
 
   isnot(gBrowser.selectedTab, tab, "Tab doesn't have focus");
 
-  await triggerClickOn(tab, { ctrlKey: true });
+  // We make sure that the tab-switch is completely done before executing checks
+  await BrowserTestUtils.switchTab(gBrowser, () => {
+    triggerClickOn(tab, { ctrlKey: true });
+  });
+
+  await TestUtils.waitForCondition(() => gBrowser.selectedTab == tab,
+    "Wait for the selectedTab getter to update");
 
   ok(!tab.multiselected && !mSelectedTabs.has(tab),
     "Multi-select tab doesn't work when multi-select pref is not set");

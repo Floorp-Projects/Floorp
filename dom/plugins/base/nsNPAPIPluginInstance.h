@@ -298,9 +298,6 @@ private:
   // This is only valid when the plugin is actually stopped!
   mozilla::TimeStamp mStopTime;
 
-  // is this instance Java and affected by bug 750480?
-  bool mHaveJavaC2PJSObjectQuirk;
-
   static uint32_t gInUnsafePluginCalls;
 
   // The arrays can only be released when the plugin instance is destroyed,

@@ -59,7 +59,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
 #ifdef XP_MACOSX
   , mCurrentPluginEvent(nullptr)
 #endif
-  , mHaveJavaC2PJSObjectQuirk(false)
   , mCachedParamLength(0)
   , mCachedParamNames(nullptr)
   , mCachedParamValues(nullptr)

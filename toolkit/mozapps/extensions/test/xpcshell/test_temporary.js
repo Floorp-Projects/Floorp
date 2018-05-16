@@ -172,6 +172,14 @@ add_task(async function() {
 
       let target;
       if (!packed) {
+        // Unpacked extensions don't support signing, which means that
+        // our mock signing service is not able to give them a
+        // privileged signed state, and we can't install them on release
+        // builds.
+        if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+          continue;
+        }
+
         target = tempdir.clone();
         target.append(ID);
 
@@ -362,6 +370,11 @@ add_task(async function test_samefile() {
 // Install a temporary add-on over the top of an existing add-on.
 // Uninstall it and make sure the existing add-on comes back.
 add_task(async function() {
+  // We can't install unpacked add-ons on release builds. See above.
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
+
   await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
@@ -464,6 +477,11 @@ add_task(async function() {
 // Install a temporary add-on as a version upgrade over the top of an
 // existing temporary add-on.
 add_task(async function() {
+  // We can't install unpacked add-ons on release builds. See above.
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
+
   const tempdir = gTmpD.clone();
 
   await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
@@ -515,6 +533,11 @@ add_task(async function() {
 // Install a temporary add-on as a version downgrade over the top of an
 // existing temporary add-on.
 add_task(async function() {
+  // We can't install unpacked add-ons on release builds. See above.
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
+
   const tempdir = gTmpD.clone();
 
   await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
@@ -564,6 +587,11 @@ add_task(async function() {
 // Installing a temporary add-on over an existing add-on with the same
 // version number should be installed as an upgrade.
 add_task(async function() {
+  // We can't install unpacked add-ons on release builds. See above.
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
+
   const tempdir = gTmpD.clone();
 
   await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
@@ -621,6 +649,11 @@ add_task(async function() {
 // Install a temporary add-on over the top of an existing disabled add-on.
 // After restart, the existing add-on should continue to be installed and disabled.
 add_task(async function() {
+  // We can't install unpacked add-ons on release builds. See above.
+  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    return;
+  }
+
   await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
