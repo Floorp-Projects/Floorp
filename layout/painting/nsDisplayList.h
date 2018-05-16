@@ -3474,10 +3474,9 @@ public:
       }
     }
     mOldItems.Clear();
+    mDAG.Clear();
     nsDisplayList::DeleteAll(aBuilder);
   }
-
-  void ClearDAG();
 
   DirectedAcyclicGraph<MergedListUnits> mDAG;
 
