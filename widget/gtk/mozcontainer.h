@@ -72,6 +72,7 @@ struct _MozContainer
     struct wl_subcompositor *subcompositor;
     struct wl_surface       *surface;
     struct wl_subsurface    *subsurface;
+    struct wl_egl_window    *eglwindow;
 #endif
 };
 
@@ -95,6 +96,8 @@ void       moz_container_move          (MozContainer *container,
 
 #ifdef MOZ_WAYLAND
 struct wl_surface* moz_container_get_wl_surface(MozContainer *container);
+struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer *container);
+gboolean moz_container_has_wl_egl_window(MozContainer *container);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */

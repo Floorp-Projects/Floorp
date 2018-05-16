@@ -271,3 +271,21 @@ wl_log_set_handler_client(wl_log_func_t handler)
 {
 }
 
+MOZ_EXPORT struct wl_egl_window *
+wl_egl_window_create(struct wl_surface *surface,
+                     int width, int height)
+{
+    return NULL;
+}
+
+MOZ_EXPORT void
+wl_egl_window_destroy(struct wl_egl_window *egl_window)
+{
+}
+
+MOZ_EXPORT void
+wl_egl_window_resize(struct wl_egl_window *egl_window,
+                     int width, int height,
+                     int dx, int dy)
+{
+}

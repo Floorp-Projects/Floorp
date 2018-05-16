@@ -250,25 +250,29 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return null;
     }
 
-    return style.display;
+    let display = null;
+    try {
+      display = style.display;
+    } catch (e) {
+      // Fails for <scrollbar> elements.
+    }
+    return display;
   },
 
   /**
-   * Is the node's display computed style value other than "none"
+   * Is the node currently displayed?
    */
   get isDisplayed() {
-    // Consider all non-element nodes as displayed.
-    if (InspectorActorUtils.isNodeDead(this) ||
-        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+    let type = this.displayType;
+
+    // Consider all non-elements or elements with no display-types to be displayed.
+    if (!type) {
       return true;
     }
 
-    let style = this.computedStyle;
-    if (!style) {
-      return true;
-    }
-
-    return style.display !== "none";
+    // Otherwise consider elements to be displayed only if their display-types is other
+    // than "none"".
+    return type !== "none";
   },
 
   /**
