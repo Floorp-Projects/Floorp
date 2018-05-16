@@ -27,8 +27,8 @@ from mozharness.base.config import BaseConfig, parse_config_file, DEFAULT_CONFIG
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.buildbot import (
-    BuildbotMixin,
+from mozharness.mozilla.automation import (
+    AutomationMixin,
     EXIT_STATUS_DICT,
     TBPL_STATUS_DICT,
     TBPL_EXCEPTION,
@@ -655,7 +655,7 @@ BUILD_BASE_CONFIG_OPTIONS = [
     [['--who'], {
         "dest": "who",
         "default": '',
-        "help": "stores who made the created the buildbot change."}],
+        "help": "stores who made the created the change."}],
 ]
 
 
@@ -667,7 +667,7 @@ def generate_build_UID():
     return uuid.uuid4().hex
 
 
-class BuildScript(BuildbotMixin, BalrogMixin,
+class BuildScript(AutomationMixin, BalrogMixin,
                   VirtualenvMixin, MercurialScript,
                   SecretsMixin, PerfherderResourceOptionsMixin):
     def __init__(self, **kwargs):
@@ -675,7 +675,7 @@ class BuildScript(BuildbotMixin, BalrogMixin,
         # have that attribute before calling BaseScript.__init__
         self.objdir = None
         super(BuildScript, self).__init__(**kwargs)
-        # epoch is only here to represent the start of the buildbot build
+        # epoch is only here to represent the start of the build
         # that this mozharn script came from. until I can grab bbot's
         # status.build.gettime()[0] this will have to do as a rough estimate
         # although it is about 4s off from the time it would be if it was
@@ -841,9 +841,7 @@ or run without that action (ie: --no-{action})"
             buildid = generate_build_ID()
 
         if c.get('is_automation') or os.environ.get("TASK_ID"):
-            self.set_buildbot_property('buildid',
-                                       buildid,
-                                       write_to_file=True)
+            self.set_property('buildid', buildid, write_to_file=True)
 
         self.buildid = buildid
         return self.buildid
@@ -864,7 +862,7 @@ or run without that action (ie: --no-{action})"
 
         # we actually supply the repo in mozharness so if it's in
         #  the config, we use that (automation does not require it in
-        # buildbot props)
+        # props)
         if not c.get('repo_path'):
             repo_path = 'projects/%s' % (self.branch,)
             self.info(
@@ -1125,7 +1123,7 @@ or run without that action (ie: --no-{action})"
                     self.info(pprint.pformat(build_props))
             for key, prop in build_props.iteritems():
                 if prop != 'UNKNOWN':
-                    self.set_buildbot_property(key, prop, write_to_file=True)
+                    self.set_property(key, prop, write_to_file=True)
         else:
             self.info("No mach_build_properties.json found - not importing properties.")
 
@@ -1176,22 +1174,22 @@ or run without that action (ie: --no-{action})"
                 base_cmd + [prop['ini_name']], cwd=dirs['abs_obj_dir'],
                 halt_on_failure=halt_on_failure, env=env
             )
-            self.set_buildbot_property(prop['prop_name'],
+            self.set_property(prop['prop_name'],
                                        prop_val,
                                        write_to_file=True)
 
         if self.config.get('is_automation'):
             self.info("Verifying buildid from application.ini matches buildid "
-                      "from buildbot")
+                      "from automation")
             app_ini_buildid = self._query_build_prop_from_app_ini('BuildID')
             # it would be hard to imagine query_buildid evaluating to a falsey
             #  value (e.g. 0), but incase it does, force it to None
-            buildbot_buildid = self.query_buildid() or None
+            automation_buildid = self.query_buildid() or None
             self.info(
-                'buildid from application.ini: "%s". buildid from buildbot '
-                'properties: "%s"' % (app_ini_buildid, buildbot_buildid)
+                'buildid from application.ini: "%s". buildid from automation '
+                'properties: "%s"' % (app_ini_buildid, automation_buildid)
             )
-            if app_ini_buildid == buildbot_buildid != None:
+            if app_ini_buildid == automation_buildid is not None:
                 self.info('buildids match.')
             else:
                 self.error(
@@ -1251,17 +1249,7 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
-        # XXX Bug 1037883 - mozconfigs can not find buildprops.json when builds
-        # are through mozharness. This is not pretty but it is a stopgap
-        # until an alternative solution is made or all builds that touch
-        # mozconfig.cache are converted to mozharness.
         dirs = self.query_abs_dirs()
-        buildprops = os.path.join(dirs['base_work_dir'], 'buildprops.json')
-        # not finding buildprops is not an error outside of buildbot
-        if os.path.exists(buildprops):
-            self.copyfile(
-                buildprops,
-                os.path.join(dirs['abs_work_dir'], 'buildprops.json'))
 
         if 'MOZILLABUILD' in os.environ:
             # We found many issues with intermittent build failures when not invoking mach via bash.
@@ -1307,13 +1295,8 @@ or run without that action (ie: --no-{action})"
         multi_config_pf = self.config.get('multi_locale_config_platform',
                                           'android')
 
-        # The l10n script location differs on buildbot and taskcluster
-        if self.config.get('taskcluster_nightly'):
-            multil10n_path = \
-                'build/src/testing/mozharness/scripts/multil10n.py'
-            base_work_dir = os.path.join(base_work_dir, 'workspace')
-        else:
-            multil10n_path = '%s/scripts/scripts/multil10n.py' % base_work_dir,
+        multil10n_path = 'build/src/testing/mozharness/scripts/multil10n.py'
+        base_work_dir = os.path.join(base_work_dir, 'workspace')
 
         cmd = [
             sys.executable,
@@ -1357,9 +1340,7 @@ or run without that action (ie: --no-{action})"
                          cwd=objdir, halt_on_failure=True,
                          output_parser=parser)
         for prop in parser.matches:
-            self.set_buildbot_property(prop,
-                                       parser.matches[prop],
-                                       write_to_file=True)
+            self.set_property(prop, parser.matches[prop], write_to_file=True)
         upload_files_cmd = [
             'make',
             'echo-variable-UPLOAD_FILES',
@@ -1773,7 +1754,7 @@ or run without that action (ie: --no-{action})"
         from the script run.
         """
         if self.config.get("is_automation"):
-            # let's ignore all mention of buildbot/tbpl status until this
+            # let's ignore all mention of tbpl status until this
             # point so it will be easier to manage
             if self.return_code not in AUTOMATION_EXIT_CODES:
                 self.error("Return code is set to: %s and is outside of "
@@ -1783,5 +1764,5 @@ or run without that action (ie: --no-{action})"
                 self.return_code = 2
             for status, return_code in EXIT_STATUS_DICT.iteritems():
                 if return_code == self.return_code:
-                    self.buildbot_status(status, TBPL_STATUS_DICT[status])
+                    self.record_status(status, TBPL_STATUS_DICT[status])
         self.summary()

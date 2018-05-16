@@ -27,7 +27,7 @@ from mozharness.base.errors import HgErrorList
 from mozharness.base.python import VirtualenvMixin, virtualenv_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.updates.balrog import BalrogMixin
-from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 
 VALID_MIGRATION_BEHAVIORS = (
@@ -38,7 +38,7 @@ VALID_MIGRATION_BEHAVIORS = (
 
 # GeckoMigration {{{1
 class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
-                     BuildbotMixin, MercurialRepoManipulationMixin):
+                     AutomationMixin, MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
             "action": "store",
