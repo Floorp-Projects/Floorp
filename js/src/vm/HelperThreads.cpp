@@ -2073,7 +2073,7 @@ HelperThread::handleParseWorkload(AutoLockHelperThreadState& locked)
             zone->setHelperThreadOwnerContext(nullptr);
         });
 
-        AutoCompartment ac(cx, task->parseGlobal);
+        AutoRealm ar(cx, task->parseGlobal);
 
         task->parse(cx);
 
