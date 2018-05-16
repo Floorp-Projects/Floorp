@@ -59,6 +59,7 @@ module.exports = {
     "reject-importGlobalProperties":
       require("../lib/rules/reject-importGlobalProperties"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
+    "rejects-requires-await": require("../lib/rules/rejects-requires-await"),
     "use-cc-etc": require("../lib/rules/use-cc-etc"),
     "use-chromeutils-generateqi": require("../lib/rules/use-chromeutils-generateqi"),
     "use-chromeutils-import": require("../lib/rules/use-chromeutils-import"),
