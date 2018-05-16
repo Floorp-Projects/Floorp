@@ -1088,52 +1088,24 @@ class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter
   public:
     AutoArrayRooter(JSContext* cx, size_t len, Value* vec
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, len), array(vec)
+      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::Array), array_(vec), length_(len)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        MOZ_ASSERT(tag_ >= 0);
     }
 
-    void changeLength(size_t newLength) {
-        tag_ = ptrdiff_t(newLength);
-        MOZ_ASSERT(tag_ >= 0);
-    }
-
-    void changeArray(Value* newArray, size_t newLength) {
-        changeLength(newLength);
-        array = newArray;
-    }
-
-    Value* start() {
-        return array;
+    Value* begin() {
+        return array_;
     }
 
     size_t length() {
-        MOZ_ASSERT(tag_ >= 0);
-        return size_t(tag_);
-    }
-
-    MutableHandleValue handleAt(size_t i) {
-        MOZ_ASSERT(i < size_t(tag_));
-        return MutableHandleValue::fromMarkedLocation(&array[i]);
-    }
-    HandleValue handleAt(size_t i) const {
-        MOZ_ASSERT(i < size_t(tag_));
-        return HandleValue::fromMarkedLocation(&array[i]);
-    }
-    MutableHandleValue operator[](size_t i) {
-        MOZ_ASSERT(i < size_t(tag_));
-        return MutableHandleValue::fromMarkedLocation(&array[i]);
-    }
-    HandleValue operator[](size_t i) const {
-        MOZ_ASSERT(i < size_t(tag_));
-        return HandleValue::fromMarkedLocation(&array[i]);
+        return length_;
     }
 
     friend void JS::AutoGCRooter::trace(JSTracer* trc);
 
   private:
-    Value* array;
+    Value* array_;
+    size_t length_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
