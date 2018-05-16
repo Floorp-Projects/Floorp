@@ -87,6 +87,7 @@ static decltype(ImmAssociateContextEx)* sImm32ImmAssociateContextExStub =
 static PluginInstanceChild* sCurrentPluginInstance = nullptr;
 static const HIMC sHookIMC = (const HIMC)0xefefefef;
 static bool sPopupMenuHookSet;
+static bool sSetWindowLongHookSet;
 
 using mozilla::gfx::SharedDIB;
 
@@ -1898,8 +1899,15 @@ PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
 void
 PluginInstanceChild::HookSetWindowLongPtr()
 {
-    if (!(GetQuirks() & QUIRK_FLASH_HOOK_SETLONGPTR))
+    if (!(GetQuirks() & QUIRK_FLASH_HOOK_SETLONGPTR)) {
         return;
+    }
+
+    // Only pass through here once
+    if (sSetWindowLongHookSet) {
+        return;
+    }
+    sSetWindowLongHookSet = true;
 
     sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
