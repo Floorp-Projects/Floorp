@@ -12987,6 +12987,17 @@
     "n_buckets": 10,
     "description": "Percentage of time taken by phases in expensive content paints."
   },
+  "CONTENT_SMALL_PAINT_PHASE_WEIGHT": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["mwoodrow@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1430897],
+    "expires_in_version": "66",
+    "keyed": true,
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 10,
+    "description": "Percentage of time taken by phases in normal content paints."
+  },
   "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["eisaacson@mozilla.com"],
