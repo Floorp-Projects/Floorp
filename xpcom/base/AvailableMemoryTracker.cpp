@@ -452,6 +452,12 @@ LowMemoryEventsVirtualDistinguishedAmount()
 }
 
 static int64_t
+LowMemoryEventsCommitSpaceDistinguishedAmount()
+{
+  return sNumLowCommitSpaceEvents;
+}
+
+static int64_t
 LowMemoryEventsPhysicalDistinguishedAmount()
 {
   return sNumLowPhysicalMemEvents;
@@ -478,7 +484,7 @@ public:
 
     MOZ_COLLECT_REPORT(
       "low-memory-events/commit-space", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
-      sNumLowCommitSpaceEvents,
+      LowMemoryEventsCommitSpaceDistinguishedAmount(),
 "Number of low-commit-space events fired since startup. We fire such an "
 "event if we notice there is less than memory.low_commit_space_threshold_mb of "
 "commit space available (if zero, this behavior is disabled). Windows will "
