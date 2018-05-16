@@ -42,7 +42,6 @@ import argparse
 import re
 import subprocess
 import sys
-import buildconfig
 
 # The obvious way to implement this script is to search for occurrences of
 # malloc et al, succeed if none are found, and fail is some are found.
@@ -77,8 +76,7 @@ def main():
     # -u: show only undefined symbols
     # -C: demangle symbol names
     # -A: show an object filename for each undefined symbol
-    nm = buildconfig.substs.get('NM', 'nm')
-    cmd = [nm, '-u', '-C', '-A', args.file]
+    cmd = ['nm', '-u', '-C', '-A', args.file]
     lines = subprocess.check_output(cmd, universal_newlines=True,
                                     stderr=subprocess.PIPE).split('\n')
 
