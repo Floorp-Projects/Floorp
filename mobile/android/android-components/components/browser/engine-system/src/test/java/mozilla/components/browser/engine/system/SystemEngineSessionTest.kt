@@ -44,6 +44,16 @@ class SystemEngineSessionTest {
     }
 
     @Test
+    fun testReload() {
+        val engineSession = spy(SystemEngineSession())
+        val webView = mock(WebView::class.java)
+        `when`(engineSession.currentView()).thenReturn(webView)
+
+        engineSession.reload()
+        verify(webView).reload()
+    }
+
+    @Test
     fun testGoBack() {
         val engineSession = spy(SystemEngineSession())
         val webView = mock(WebView::class.java)

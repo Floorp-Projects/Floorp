@@ -48,9 +48,14 @@ abstract class EngineSession {
     }
 
     /**
-     * Load the given URL.
+     * Loads the given URL.
      */
     abstract fun loadUrl(url: String)
+
+    /**
+     * Reloads the current URL.
+     */
+    abstract fun reload()
 
     /**
      * Navigates back in the history of this session.

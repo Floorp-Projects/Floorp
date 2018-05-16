@@ -58,7 +58,7 @@ class Components(private val applicationContext: Context) {
                 mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
                 iconTintColorResource = R.color.photonBlue90,
                 contentDescription = "Refresh") {
-            Toast.makeText(applicationContext, "Refresh", Toast.LENGTH_SHORT).show()
+            sessionUseCases.reload.invoke()
         }
 
         BrowserMenuItemToolbar(listOf(back, refresh))

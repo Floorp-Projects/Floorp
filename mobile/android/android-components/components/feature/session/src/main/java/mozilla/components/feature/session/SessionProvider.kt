@@ -9,6 +9,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.session.storage.SessionStorage
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -23,7 +24,7 @@ class SessionProvider(
     private val saveIntervalInSeconds: Long = 300,
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 ) {
-    private val sessions = mutableMapOf<Session, EngineSession>()
+    private val sessions = ConcurrentHashMap<Session, EngineSession>()
 
     val sessionManager: SessionManager = SessionManager(initialSession)
 
@@ -53,10 +54,17 @@ class SessionProvider(
 
     /**
      * Returns the engine session corresponding to the given (or currently selected)
+     * browser session.
+     */
+    fun getEngineSession(session: Session = selectedSession): EngineSession? {
+        return sessions[session]
+    }
+
+    /**
+     * Returns the engine session corresponding to the given (or currently selected)
      * browser session. A new engine session will be created if none exists for the
      * given browser session.
      */
-    @Synchronized
     fun getOrCreateEngineSession(engine: Engine, session: Session = selectedSession): EngineSession {
         return sessions.getOrPut(session, {
             val engineSession = engine.createSession()

@@ -31,6 +31,13 @@ class SystemEngineSession : EngineSession() {
     }
 
     /**
+     * See [EngineSession.reload]
+     */
+    override fun reload() {
+        currentView()?.reload()
+    }
+
+    /**
      * See [EngineSession.goBack]
      */
     override fun goBack() {

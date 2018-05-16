@@ -36,6 +36,13 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.reload]
+     */
+    override fun reload() {
+        geckoSession.reload()
+    }
+
+    /**
      * See [EngineSession.goBack]
      */
     override fun goBack() {

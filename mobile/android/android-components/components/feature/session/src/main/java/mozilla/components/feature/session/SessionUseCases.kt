@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 
 /**
@@ -26,6 +27,21 @@ class SessionUseCases(
         fun invoke(url: String) {
             val engineSession = sessionProvider.getOrCreateEngineSession(engine)
             engineSession.loadUrl(url)
+        }
+    }
+
+    class ReloadUrlUseCase internal constructor(
+        private val sessionProvider: SessionProvider
+    ) {
+        /**
+         * Reloads the current URL of the provided session (or the currently
+         * selected session if none is provided).
+         *
+         * @param session the session for which reload should be triggered.
+         */
+        fun invoke(session: Session = sessionProvider.selectedSession) {
+            val engineSession = sessionProvider.getEngineSession(session)
+            engineSession?.reload()
         }
     }
 
@@ -56,6 +72,7 @@ class SessionUseCases(
     }
 
     val loadUrl: LoadUrlUseCase by lazy { LoadUrlUseCase(sessionProvider, engine) }
+    val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(sessionProvider) }
     val goBack: GoBackUseCase by lazy { GoBackUseCase(sessionProvider, engine) }
     val goForward: GoForwardUseCase by lazy { GoForwardUseCase(sessionProvider, engine) }
 }

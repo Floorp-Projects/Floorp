@@ -19,6 +19,8 @@ class SessionProxyTest {
 
             override fun goForward() { }
 
+            override fun reload() { }
+
             override fun loadUrl(url: String) {
                 notifyObservers { onLocationChange(url) }
                 notifyObservers { onProgress(100) }

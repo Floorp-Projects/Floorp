@@ -9,6 +9,8 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.session.storage.SessionStorage
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
@@ -85,6 +87,22 @@ class SessionProviderTest {
         actualEngineSession = provider.getOrCreateEngineSession(engine, session)
         // Should still be the original (already created) engine session
         assertEquals(engineSession1, actualEngineSession)
+    }
+
+    @Test
+    fun testGetEngineSession() {
+        val provider = SessionProvider()
+        val session = mock(Session::class.java)
+
+        assertNull(provider.getEngineSession(session))
+
+        val engine = mock(Engine::class.java)
+        val engineSession = mock (EngineSession::class.java)
+        `when`(engine.createSession()).thenReturn(engineSession)
+        provider.getOrCreateEngineSession(engine, session)
+
+        assertNotNull(provider.getEngineSession(session))
+        assertEquals(engineSession, provider.getEngineSession(session))
     }
 
     @Test

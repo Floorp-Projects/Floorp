@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.session
 
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -13,37 +14,58 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class SessionUseCasesTest {
     private val sessionManager = mock(SessionManager::class.java)
     private val engine = mock(Engine::class.java)
-    private val engineSession = mock(EngineSession::class.java)
+    private val selectedEngineSession = mock(EngineSession::class.java)
+    private val selectedSession = mock(Session::class.java)
     private val sessionProvider = mock(SessionProvider::class.java)
     private val useCases = SessionUseCases(sessionProvider, engine)
 
     @Before
     fun setup() {
         `when`(sessionProvider.sessionManager).thenReturn(sessionManager)
-        `when`(sessionProvider.getOrCreateEngineSession(engine)).thenReturn(engineSession)
+        `when`(sessionProvider.selectedSession).thenReturn(selectedSession)
+        `when`(sessionProvider.getOrCreateEngineSession(engine)).thenReturn(selectedEngineSession)
     }
 
     @Test
     fun testLoadUrl() {
         useCases.loadUrl.invoke("http://mozilla.org")
-        verify(engineSession).loadUrl("http://mozilla.org")
+        verify(selectedEngineSession).loadUrl("http://mozilla.org")
+    }
+
+    @Test
+    fun testReload() {
+        val engineSession = mock(EngineSession::class.java)
+        val session = mock(Session::class.java)
+        `when`(sessionProvider.getEngineSession(session)).thenReturn(engineSession)
+
+        useCases.reload.invoke(session)
+        verify(engineSession).reload()
+
+        `when`(sessionProvider.getEngineSession(selectedSession)).thenReturn(null)
+        useCases.reload.invoke()
+        verify(selectedEngineSession, never()).reload()
+
+        `when`(sessionProvider.getEngineSession(selectedSession)).thenReturn(selectedEngineSession)
+        useCases.reload.invoke()
+        verify(selectedEngineSession).reload()
     }
 
     @Test
     fun testGoBack() {
         useCases.goBack.invoke()
-        verify(engineSession).goBack()
+        verify(selectedEngineSession).goBack()
     }
 
     @Test
     fun testGoForward() {
         useCases.goForward.invoke()
-        verify(engineSession).goForward()
+        verify(selectedEngineSession).goForward()
     }
 }

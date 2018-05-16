@@ -87,6 +87,8 @@ class EngineSessionTest {
 open class DummyEngineSession : EngineSession() {
     override fun loadUrl(url: String) {}
 
+    override fun reload() {}
+
     override fun goBack() {}
 
     override fun goForward() {}

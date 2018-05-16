@@ -94,6 +94,22 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun testReload() {
+        val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
+        engineSession.loadUrl("http://mozilla.org")
+
+        var reloadReceived = false
+        engineSession.geckoSession.eventDispatcher.registerUiThreadListener(object : BundleEventListener {
+            override fun handleMessage(event: String?, message: GeckoBundle?, callback: EventCallback?) {
+                reloadReceived = true
+            }
+        }, "GeckoView:Reload")
+
+        engineSession.reload()
+        assertTrue(reloadReceived)
+    }
+
+    @Test
     fun testGoBack() {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
         var eventReceived = false
