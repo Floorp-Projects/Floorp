@@ -1181,7 +1181,7 @@ nsSVGUtils::GetBBox(nsIFrame* aFrame, uint32_t aFlags,
         }
         matrix = clipContent->PrependLocalTransformsTo(matrix, eUserSpaceToParent);
         bbox =
-          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix, aFlags).ToThebesRect();
+          clipPathFrame->GetBBoxForClipPathFrame(bbox, matrix).ToThebesRect();
       }
 
       if (hasClip) {
