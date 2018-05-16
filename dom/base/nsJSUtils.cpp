@@ -142,7 +142,7 @@ nsJSUtils::ExecutionContext::ExecutionContext(JSContext* aCx,
                        __LINE__, js::ProfilingStackFrame::Category::JS),
 #endif
     mCx(aCx)
-  , mCompartment(aCx, aGlobal)
+  , mRealm(aCx, aGlobal)
   , mRetValue(aCx)
   , mScopeChain(aCx)
   , mRv(NS_OK)

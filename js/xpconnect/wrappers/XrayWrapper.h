@@ -305,7 +305,7 @@ public:
         }
 
         {
-            JSAutoCompartment ac(cx, target);
+            JSAutoRealm ar(cx, target);
             if (!JS_GetClassPrototype(cx, key, protop))
                 return false;
         }
@@ -419,7 +419,7 @@ public:
         // prototype. This is preferable to using a null prototype because it
         // lets things like |toString| and |__proto__| work.
         {
-            JSAutoCompartment ac(cx, target);
+            JSAutoRealm ar(cx, target);
             if (!JS_GetClassPrototype(cx, JSProto_Object, protop))
                 return false;
         }

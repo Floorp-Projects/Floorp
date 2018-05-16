@@ -3,7 +3,7 @@ use jsapi::root::*;
 use std::ptr;
 
 #[derive(Debug)]
-pub struct AutoCompartment(JSAutoCompartment);
+pub struct AutoCompartment(JSAutoRealm);
 
 impl AutoCompartment {
     #[cfg(feature = "debugmozjs")]
@@ -16,7 +16,7 @@ impl AutoCompartment {
         };
 
         AutoCompartment(
-            JSAutoCompartment::new(
+            JSAutoRealm::new(
                 cx,
                 target,
                 &mut notifier as *mut _))
@@ -27,7 +27,7 @@ impl AutoCompartment {
                            target: *mut JSObject)
                            -> AutoCompartment
     {
-        AutoCompartment(JSAutoCompartment::new(cx, target))
+        AutoCompartment(JSAutoRealm::new(cx, target))
     }
 
     #[cfg(feature = "debugmozjs")]
@@ -40,7 +40,7 @@ impl AutoCompartment {
         };
 
         AutoCompartment(
-            JSAutoCompartment::new1(
+            JSAutoRealm::new1(
                 cx,
                 target,
                 &mut notifier as *mut _))
@@ -51,6 +51,6 @@ impl AutoCompartment {
                               target: *mut JSScript)
                               -> AutoCompartment
     {
-        AutoCompartment(JSAutoCompartment::new1(cx, target))
+        AutoCompartment(JSAutoRealm::new1(cx, target))
     }
 }

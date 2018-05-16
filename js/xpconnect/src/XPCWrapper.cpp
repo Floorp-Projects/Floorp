@@ -67,7 +67,7 @@ AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject)
 {
   // Pushing a JSContext calls ActivateDebugger which calls this function, so
   // we can't use an AutoJSContext here until JSD is gone.
-  JSAutoCompartment ac(aCx, aGlobalObject);
+  JSAutoRealm ar(aCx, aGlobalObject);
   JSFunction* xpcnativewrapper =
     JS_DefineFunction(aCx, aGlobalObject, "XPCNativeWrapper",
                       XrayWrapperConstructor, 1,

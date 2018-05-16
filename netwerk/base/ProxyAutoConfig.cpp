@@ -651,7 +651,7 @@ private:
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JSAutoRequest ar(mContext);
+    JSAutoRequest areq(mContext);
 
     JS::CompartmentOptions options;
     options.creationOptions().setSystemZone();
@@ -663,7 +663,7 @@ private:
     }
     JS::Rooted<JSObject*> global(mContext, mGlobal);
 
-    JSAutoCompartment ac(mContext, global);
+    JSAutoRealm ar(mContext, global);
     AutoPACErrorReporter aper(mContext);
     if (!JS_InitStandardClasses(mContext, global)) {
       return NS_ERROR_FAILURE;
@@ -737,8 +737,8 @@ ProxyAutoConfig::SetupJS()
     return NS_ERROR_FAILURE;
 
   JSContext* cx = mJSContext->Context();
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, mJSContext->Global());
+  JSAutoRequest areq(cx);
+  JSAutoRealm ar(cx, mJSContext->Global());
   AutoPACErrorReporter aper(cx);
 
   // check if this is a data: uri so that we don't spam the js console with
@@ -797,8 +797,8 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
     return NS_ERROR_NOT_AVAILABLE;
 
   JSContext *cx = mJSContext->Context();
-  JSAutoRequest ar(cx);
-  JSAutoCompartment ac(cx, mJSContext->Global());
+  JSAutoRequest areq(cx);
+  JSAutoRealm ar(cx, mJSContext->Global());
   AutoPACErrorReporter aper(cx);
 
   // the sRunning flag keeps a new PAC file from being installed
@@ -865,7 +865,7 @@ ProxyAutoConfig::GC()
   if (!mJSContext || !mJSContext->IsOK())
     return;
 
-  JSAutoCompartment ac(mJSContext->Context(), mJSContext->Global());
+  JSAutoRealm ar(mJSContext->Context(), mJSContext->Global());
   JS_MaybeGC(mJSContext->Context());
 }
 

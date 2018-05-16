@@ -609,7 +609,7 @@ impl GCMethods for JS::Value {
 // ___________________________________________________________________________
 // Implementations for various things in jsapi.rs
 
-impl Drop for JSAutoCompartment {
+impl Drop for JSAutoRealm {
     fn drop(&mut self) {
         unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
     }

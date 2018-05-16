@@ -53,7 +53,7 @@ jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
     if (!newGlobal)
         return nullptr;
 
-    JSAutoCompartment ac(cx, newGlobal);
+    JSAutoRealm ar(cx, newGlobal);
 
     // Populate the global object with the standard globals like Object and
     // Array.

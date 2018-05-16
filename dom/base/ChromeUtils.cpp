@@ -215,7 +215,7 @@ ChromeUtils::ShallowClone(GlobalObject& aGlobal,
       return;
     }
 
-    JSAutoCompartment ac(cx, obj);
+    JSAutoRealm ar(cx, obj);
 
     if (!JS_Enumerate(cx, obj, &ids) ||
         !values.reserve(ids.length())) {
@@ -238,14 +238,14 @@ ChromeUtils::ShallowClone(GlobalObject& aGlobal,
 
   JS::RootedObject obj(cx);
   {
-    Maybe<JSAutoCompartment> ac;
+    Maybe<JSAutoRealm> ar;
     if (aTarget) {
       JS::RootedObject target(cx, js::CheckedUnwrap(aTarget));
       if (!target) {
         js::ReportAccessDenied(cx);
         return;
       }
-      ac.emplace(cx, target);
+      ar.emplace(cx, target);
     }
 
     obj = JS_NewPlainObject(cx);
@@ -481,7 +481,7 @@ namespace module_getter {
 
     JS::RootedValue value(aCx);
     {
-      JSAutoCompartment ac(aCx, moduleExports);
+      JSAutoRealm ar(aCx, moduleExports);
 
       if (!JS_GetPropertyById(aCx, moduleExports, id, &value)) {
         return false;
@@ -728,11 +728,11 @@ ChromeUtils::CreateError(const GlobalObject& aGlobal, const nsAString& aMessage,
     uint32_t line = 0;
     uint32_t column = 0;
 
-    Maybe<JSAutoCompartment> ac;
+    Maybe<JSAutoRealm> ar;
     JS::RootedObject stack(cx);
     if (aStack) {
       stack = UncheckedUnwrap(aStack);
-      ac.emplace(cx, stack);
+      ar.emplace(cx, stack);
 
       if (JS::GetSavedFrameLine(cx, stack, &line) != JS::SavedFrameResult::Ok ||
           JS::GetSavedFrameColumn(cx, stack, &column) != JS::SavedFrameResult::Ok ||
