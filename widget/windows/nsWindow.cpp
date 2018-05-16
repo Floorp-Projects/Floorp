@@ -70,6 +70,7 @@
 #include <limits>
 
 #include "nsWindow.h"
+#include "nsAppRunner.h"
 
 #include <shellapi.h>
 #include <windows.h>
@@ -5037,6 +5038,20 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   return res;
 }
 
+const char16_t*
+GetQuitType()
+{
+  if (Preferences::GetBool(PREF_WIN_REGISTER_APPLICATION_RESTART, false)) {
+    DWORD cchCmdLine = 0;
+    HRESULT rc =
+      ::GetApplicationRestartSettings(::GetCurrentProcess(), nullptr, &cchCmdLine, nullptr);
+    if (rc == S_OK) {
+      return u"os-restart";
+    }
+  }
+  return nullptr;
+}
+
 // The main windows message processing method for plugins.
 // The result means whether this method processed the native
 // event for plugin. If false, the native event should be
@@ -5209,7 +5224,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         nsCOMPtr<nsISupportsPRBool> cancelQuit =
           do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
         cancelQuit->SetData(false);
-        obsServ->NotifyObservers(cancelQuit, "quit-application-requested", nullptr);
+
+        const char16_t* quitType = GetQuitType();
+        obsServ->NotifyObservers(cancelQuit, "quit-application-requested", quitType);
 
         bool abortQuit;
         cancelQuit->GetData(&abortQuit);
@@ -5240,9 +5257,11 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           mozilla::services::GetObserverService();
         const char16_t* context = u"shutdown-persist";
         const char16_t* syncShutdown = u"syncShutdown";
+        const char16_t* quitType = GetQuitType();
+
         obsServ->NotifyObservers(nullptr, "quit-application-granted", syncShutdown);
         obsServ->NotifyObservers(nullptr, "quit-application-forced", nullptr);
-        obsServ->NotifyObservers(nullptr, "quit-application", nullptr);
+        obsServ->NotifyObservers(nullptr, "quit-application", quitType);
         obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context);
         obsServ->NotifyObservers(nullptr, "profile-change-teardown", context);
         obsServ->NotifyObservers(nullptr, "profile-before-change", context);

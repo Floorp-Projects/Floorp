@@ -1727,8 +1727,12 @@ var SessionStoreInternal = {
    *        String type of quitting
    */
   onQuitApplication: function ssi_onQuitApplication(aData) {
-    if (aData == "restart") {
+    if (aData == "restart" || aData == "os-restart") {
       if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        if (aData == "os-restart" &&
+            !this._prefBranch.getBoolPref("sessionstore.resume_session_once")) {
+          this._prefBranch.setBoolPref("sessionstore.resuming_after_os_restart", true);
+        }
         this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
       }
 
