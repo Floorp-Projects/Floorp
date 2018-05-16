@@ -3745,7 +3745,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
               return true;
             }
 
-            JSAutoCompartment ac(aCx, global);
+            JSAutoRealm ar(aCx, global);
             $*{declareProto}
 
             $*{createObject}
@@ -3906,9 +3906,9 @@ class CGWrapGlobalMethod(CGAbstractMethod):
               $*{failureCode}
             }
 
-            // aReflector is a new global, so has a new compartment.  Enter it
+            // aReflector is a new global, so has a new realm.  Enter it
             // before doing anything with it.
-            JSAutoCompartment ac(aCx, aReflector);
+            JSAutoRealm ar(aCx, aReflector);
 
             if (!DefineProperties(aCx, aReflector, ${properties}, ${chromeProperties})) {
               $*{failureCode}
@@ -3993,7 +3993,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 """
                 JS::Rooted<JS::Value> temp(aCx);
                 JSJitGetterCallArgs args(&temp);
-                JSAutoCompartment ac(aCx, obj);
+                JSAutoRealm ar(aCx, obj);
                 if (!get_${name}(aCx, obj, aObject, args)) {
                   js::SetReservedSlot(obj, ${slotIndex}, oldValue);
                   return false;
@@ -5388,12 +5388,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         templateBody = fill(
             """
-            { // Scope for our GlobalObject, FastErrorResult, JSAutoCompartment,
+            { // Scope for our GlobalObject, FastErrorResult, JSAutoRealm,
               // etc.
 
               JS::Rooted<JSObject*> globalObj(cx);
               $*{getPromiseGlobal}
-              JSAutoCompartment ac(cx, globalObj);
+              JSAutoRealm ar(cx, globalObj);
               GlobalObject promiseGlobal(cx, globalObj);
               if (promiseGlobal.Failed()) {
                 $*{exceptionCode}
@@ -7636,8 +7636,8 @@ class CGPerSignatureCall(CGThing):
                 # JSAPI types, present.  Effectively, we're emulating a
                 # CrossCompartmentWrapper, but working with the C++ types, not the
                 # original list of JS::Values.
-                cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;\n"))
-                xraySteps.append(CGGeneric("ac.emplace(cx, obj);\n"))
+                cgThings.append(CGGeneric("Maybe<JSAutoRealm> ar;\n"))
+                xraySteps.append(CGGeneric("ar.emplace(cx, obj);\n"))
                 xraySteps.append(CGGeneric(dedent(
                     """
                     if (!JS_WrapObject(cx, &desiredProto)) {
@@ -7847,17 +7847,17 @@ class CGPerSignatureCall(CGThing):
                 """
                 {
                   JS::Rooted<JSObject*> conversionScope(cx, ${conversionScope});
-                  JSAutoCompartment ac(cx, conversionScope);
+                  JSAutoRealm ar(cx, conversionScope);
                   do { // block we break out of when done wrapping
                     $*{wrapCode}
                   } while (false);
                   $*{postConversionSteps}
                 }
-                { // And now store things in the compartment of our slotStorage.
-                  JSAutoCompartment ac(cx, slotStorage);
+                { // And now store things in the realm of our slotStorage.
+                  JSAutoRealm ar(cx, slotStorage);
                   $*{slotStorageSteps}
                 }
-                // And now make sure args.rval() is in the caller compartment
+                // And now make sure args.rval() is in the caller realm.
                 return ${maybeWrap}(cx, args.rval());
                 """,
                 conversionScope=conversionScope,
@@ -10860,7 +10860,7 @@ class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
               // then use the fact that it created the objects as a flag
               // to avoid re-resolving the properties if someone deletes
               // them.
-              JSAutoCompartment ac(cx, obj);
+              JSAutoRealm ar(cx, obj);
               JS_MarkCrossZoneId(cx, id);
               JS::Rooted<JS::PropertyDescriptor> objDesc(cx);
               if (!self->DoResolve(cx, obj, id, &objDesc)) {
@@ -11555,7 +11555,7 @@ class CGDeleteNamedProperty(CGAbstractStaticMethod):
             MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(xray));
             MOZ_ASSERT(js::IsProxy(proxy));
             MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy));
-            JSAutoCompartment ac(cx, proxy);
+            JSAutoRealm ar(cx, proxy);
             bool deleteSucceeded = false;
             bool found = false;
             $*{namedBody}
@@ -12754,7 +12754,7 @@ class CGDictionary(CGThing):
                 // side-effects, followed by a call to JS::ToJSONMaybeSafely,
                 // which likewise guarantees no side-effects for the sorts of
                 // things we will pass it.
-                JSAutoCompartment ac(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+                JSAutoRealm ar(cx, UnprivilegedJunkScopeOrWorkerGlobal());
                 JS::Rooted<JS::Value> val(cx);
                 if (!ToObjectInternal(cx, &val)) {
                   return false;
@@ -15306,7 +15306,7 @@ class CGJSImplClass(CGBindingImplClass):
             }
 
             // Now define it on our chrome object
-            JSAutoCompartment ac(aCx, mImpl->CallbackOrNull());
+            JSAutoRealm ar(aCx, mImpl->CallbackOrNull());
             if (!JS_WrapObject(aCx, &obj)) {
               return nullptr;
             }
@@ -16684,7 +16684,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // It's safe to use UnprivilegedJunkScopeOrWorkerGlobal here because
             // all we want is to wrap into _some_ scope and then unwrap to find
             // the reflector, and wrapping has no side-effects.
-            JSAutoCompartment tempCompartment(cx, UnprivilegedJunkScopeOrWorkerGlobal());
+            JSAutoRealm tempRealm(cx, UnprivilegedJunkScopeOrWorkerGlobal());
             JS::Rooted<JS::Value> v(cx);
             if(!ToJSValue(cx, self, &v)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -16694,7 +16694,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // similarly across method generators, it's called obj here.
             JS::Rooted<JSObject*> obj(cx);
             obj = js::UncheckedUnwrap(&v.toObject(), /* stopAtWindowProxy = */ false);
-            JSAutoCompartment reflectorCompartment(cx, obj);
+            JSAutoRealm reflectorRealm(cx, obj);
             """ % self.getDefaultRetval())
 
     def getArgs(self, returnType, argList):

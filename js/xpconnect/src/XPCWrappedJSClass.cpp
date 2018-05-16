@@ -46,7 +46,7 @@ bool AutoScriptEvaluate::StartEvaluating(HandleObject scope)
     mEvaluated = true;
 
     JS_BeginRequest(mJSContext);
-    mAutoCompartment.emplace(mJSContext, scope);
+    mAutoRealm.emplace(mJSContext, scope);
 
     // Saving the exception state keeps us from interfering with another script
     // that may also be running on this context.  This occurred first with the
@@ -448,7 +448,7 @@ nsCString
 GetFunctionName(JSContext* cx, HandleObject obj)
 {
     RootedObject inner(cx, js::UncheckedUnwrap(obj));
-    JSAutoCompartment ac(cx, inner);
+    JSAutoRealm ar(cx, inner);
 
     RootedFunction fun(cx, JS_GetObjectFunction(inner));
     if (!fun) {
@@ -968,7 +968,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     RootedObject obj(cx, wrapper->GetJSObject());
     RootedObject thisObj(cx, obj);
 
-    JSAutoCompartment ac(cx, obj);
+    JSAutoRealm ar(cx, obj);
 
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);

@@ -774,11 +774,11 @@ CustomElementRegistry::Define(const nsAString& aName,
      */
     AutoSetRunningFlag as(this);
 
-    { // Enter constructor's compartment.
+    { // Enter constructor's realm.
       /**
        * 10.1. Let prototype be Get(constructor, "prototype"). Rethrow any exceptions.
        */
-      JSAutoCompartment ac(cx, constructor);
+      JSAutoRealm ar(cx, constructor);
       // The .prototype on the constructor passed could be an "expando" of a
       // wrapper. So we should get it from wrapper instead of the underlying
       // object.
@@ -794,7 +794,7 @@ CustomElementRegistry::Define(const nsAString& aName,
         aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("constructor.prototype"));
         return;
       }
-    } // Leave constructor's compartment.
+    } // Leave constructor's realm.
 
     JS::Rooted<JSObject*> constructorProtoUnwrapped(
       cx, js::CheckedUnwrap(&constructorPrototype.toObject()));
@@ -806,7 +806,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     }
 
     { // Enter constructorProtoUnwrapped's compartment
-      JSAutoCompartment ac(cx, constructorProtoUnwrapped);
+      JSAutoRealm ar(cx, constructorProtoUnwrapped);
 
       /**
        * 10.3. Let lifecycleCallbacks be a map with the four keys
@@ -847,8 +847,8 @@ CustomElementRegistry::Define(const nsAString& aName,
        *          any exceptions from the conversion.
        */
       if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
-        // Enter constructor's compartment.
-        JSAutoCompartment ac(cx, constructor);
+        // Enter constructor's realm.
+        JSAutoRealm ar(cx, constructor);
         JS::Rooted<JS::Value> observedAttributesIterable(cx);
 
         if (!JS_GetProperty(cx, constructor, "observedAttributes",
@@ -897,7 +897,7 @@ CustomElementRegistry::Define(const nsAString& aName,
             }
           }
         }
-      } // Leave constructor's compartment.
+      } // Leave constructor's realm.
     } // Leave constructorProtoUnwrapped's compartment.
   } // Unset mIsCustomDefinitionRunning
 

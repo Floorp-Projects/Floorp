@@ -246,12 +246,12 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     mAsyncStackSetter.emplace(cx, *mAsyncStack, aExecutionReason);
   }
 
-  // Enter the compartment of our callback, so we can actually work with it.
+  // Enter the realm of our callback, so we can actually work with it.
   //
   // Note that if the callback is a wrapper, this will not be the same
-  // compartment that we ended up in with mAutoEntryScript above, because the
+  // realm that we ended up in with mAutoEntryScript above, because the
   // entry point is based off of the unwrapped callback (realCallback).
-  mAc.emplace(cx, *mRootedCallable);
+  mAr.emplace(cx, *mRootedCallable);
 
   // And now we're ready to go.
   mCx = cx;
@@ -302,12 +302,12 @@ CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aExcepti
 
 CallbackObject::CallSetup::~CallSetup()
 {
-  // To get our nesting right we have to destroy our JSAutoCompartment first.
+  // To get our nesting right we have to destroy our JSAutoRealm first.
   // In particular, we want to do this before we try reporting any exceptions,
-  // so we end up reporting them while in the compartment of our entry point,
+  // so we end up reporting them while in the realm of our entry point,
   // not whatever cross-compartment wrappper mCallback might be.
-  // Be careful: the JSAutoCompartment might not have been constructed at all!
-  mAc.reset();
+  // Be careful: the JSAutoRealm might not have been constructed at all!
+  mAr.reset();
 
   // Now, if we have a JSContext, report any pending errors on it, unless we
   // were told to re-throw them.
@@ -332,7 +332,7 @@ CallbackObject::CallSetup::~CallSetup()
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to get the exception value.  Either way,
       // we'll just report the pending exception, if any, once ~mAutoEntryScript
-      // runs.  Note that we've already run ~mAc, effectively, so we don't have
+      // runs.  Note that we've already run ~mAr, effectively, so we don't have
       // to worry about ordering here.
       if (mErrorResult.IsJSContextException()) {
         // XXXkhuey bug 1117269.  When this is fixed, please consider fixing
@@ -376,7 +376,7 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
     return nullptr;
   }
 
-  JSAutoCompartment ac(cx, callback);
+  JSAutoRealm ar(cx, callback);
   RefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv =
     nsXPCWrappedJS::GetNewOrUsed(callback, aIID, getter_AddRefs(wrappedJS));

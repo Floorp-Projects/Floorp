@@ -185,7 +185,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript)
     {
         JS::RootedObject global2(cx, createGlobal());
         CHECK(global2);
-        JSAutoCompartment ac(cx, global2);
+        JSAutoRealm ar(cx, global2);
         CHECK(JS_WrapValue(cx, &fortyTwo));
         CHECK(JS_SetProperty(cx, global, "val", fortyTwo));
         JS::RootedValue value2(cx);

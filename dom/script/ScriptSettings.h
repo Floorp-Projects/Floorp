@@ -294,7 +294,7 @@ protected:
   AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, Type aType);
 
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
+  mozilla::Maybe<JSAutoNullableRealm> mAutoNullableRealm;
   JSContext *mCx;
 
   // Whether we're mainthread or not; set when we're initialized.

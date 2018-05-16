@@ -334,6 +334,11 @@ class MacroAssembler : public MacroAssemblerSpecific
 
   public:
     MoveResolver& moveResolver() {
+        // As an optimization, the MoveResolver is a persistent data structure
+        // shared between visitors in the CodeGenerator. This assertion
+        // checks that state is not leaking from visitor to visitor
+        // via an unresolved addMove().
+        MOZ_ASSERT(moveResolver_.hasNoPendingMoves());
         return moveResolver_;
     }
 

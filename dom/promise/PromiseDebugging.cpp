@@ -279,7 +279,7 @@ PromiseDebugging::FlushUncaughtRejectionsInternal()
 
       obs->OnLeftUncaught(promise, IgnoreErrors());
     }
-    JSAutoCompartment ac(cx, promise);
+    JSAutoRealm ar(cx, promise);
     Promise::ReportRejectedPromise(cx, promise);
   }
   storage->mUncaughtRejections.clear();

@@ -957,7 +957,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     MOZ_ASSERT(iid, "bad param");
 
     AutoJSContext cx;
-    JSAutoCompartment ac(cx, src);
+    JSAutoRealm ar(cx, src);
 
     *dest = nullptr;
      if (pErr)

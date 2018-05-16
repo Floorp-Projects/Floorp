@@ -1794,8 +1794,14 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   if (NS_FAILED(rv))
     return rv;
 
-  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv))
+  HANDLE hProcess;
+  if (!WinLaunchChild(exePath.get(), gRestartArgc, gRestartArgv, nullptr, &hProcess))
     return NS_ERROR_FAILURE;
+  // Keep the current process around until the restarted process has created
+  // its message queue, to avoid the launched process's windows being forced
+  // into the background.
+  ::WaitForInputIdle(hProcess, kWaitForInputIdleTimeoutMS);
+  ::CloseHandle(hProcess);
 
 #else
   nsAutoCString exePath;
