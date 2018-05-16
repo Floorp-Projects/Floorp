@@ -393,11 +393,6 @@ public:
                                             uint32_t aDelay);
   static void CancelIdleRunnable(nsIRunnable* aRunnable);
 
-  bool SkippedPaints() const
-  {
-    return mSkippedPaints;
-  }
-
   void NotifyDOMContentLoaded();
 
 private:
