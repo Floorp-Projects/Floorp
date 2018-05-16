@@ -1124,9 +1124,10 @@ public class GeckoPreferences
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
             final Boolean newBooleanValue = (Boolean) newValue;
             AdjustConstants.getAdjustHelper().setEnabled(newBooleanValue);
-            if (!newBooleanValue) {
-                MmaDelegate.stop();
-            }
+            // If Health Report has been disabled Mma should also be stopped.
+            // If it was just enabled, we should also try to start Mma immediately
+            // provided that all the other requirements to start Mma are met.
+            informMmaStatusChanged(newBooleanValue);
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             if ((Boolean) newValue) {
                 enableStumbler((CheckBoxPreference) preference);
@@ -1141,6 +1142,10 @@ public class GeckoPreferences
                 startActivityForResult(promptIntent, REQUEST_CODE_TAB_QUEUE);
                 return false;
             }
+        } else if (PREFS_NOTIFICATIONS_FEATURES_TIPS.equals(prefName)) {
+            // isChecked() returns the old value that hasn't yet been updated
+            final boolean isMmaEnabled = !((SwitchPreference) preference).isChecked();
+            informMmaStatusChanged(isMmaEnabled);
         } else if (HANDLERS.containsKey(prefName)) {
             PrefHandler handler = HANDLERS.get(prefName);
             handler.onChange(this, preference, newValue);
@@ -1186,6 +1191,12 @@ public class GeckoPreferences
                         broadcastStumblerPref(GeckoPreferences.this, true);
                     }
                 });
+    }
+
+    private void informMmaStatusChanged(boolean newStatus) {
+        final GeckoBundle newStatusBundle = new GeckoBundle(1);
+        newStatusBundle.putBoolean("isMmaEnabled", newStatus);
+        EventDispatcher.getInstance().dispatch("NotificationSettings:FeatureTipsStatusUpdated", newStatusBundle);
     }
 
     private TextInputLayout getTextBox(int aHintText) {
