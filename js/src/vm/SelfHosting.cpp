@@ -650,7 +650,7 @@ intrinsic_DefineProperty(JSContext* cx, unsigned argc, Value* vp)
     if (strict && !result.checkStrict(cx, obj, id))
         return false;
 
-    args.rval().setBoolean(bool(result));
+    args.rval().setBoolean(result.reallyOk());
     return true;
 }
 
