@@ -2710,8 +2710,7 @@ ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
         nsSVGUtils::eBBoxIncludeClipped |
         nsSVGUtils::eBBoxIncludeFill |
         nsSVGUtils::eBBoxIncludeMarkers |
-        nsSVGUtils::eBBoxIncludeStroke |
-        nsSVGUtils::eDoNotClipToBBoxOfContentInsideClipPath);
+        nsSVGUtils::eBBoxIncludeStroke);
     combinedClip = Some(cssToDevMatrix.TransformBounds(result));
   } else {
     // The code for this case is adapted from ComputeMaskGeometry().
