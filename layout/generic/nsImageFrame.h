@@ -140,6 +140,7 @@ public:
     NS_IF_RELEASE(sIOService);
   }
 
+  already_AddRefed<imgIRequest> GetCurrentRequest() const;
   nsresult Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData);
 
   /**
