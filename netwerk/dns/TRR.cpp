@@ -396,7 +396,7 @@ TRR::ReceivePush(nsIHttpChannel *pushed, nsHostRecord *pushedRec)
   nsresult rv;
   rv = mHostResolver->GetHostRecord(mHost.get(),
                                     pushedRec->flags, pushedRec->af,
-                                    pushedRec->pb, pushedRec->netInterface,
+                                    pushedRec->pb,
                                     pushedRec->originSuffix,
                                     getter_AddRefs(hostRecord));
   if (NS_FAILED(rv)) {

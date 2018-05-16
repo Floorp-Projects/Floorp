@@ -6238,12 +6238,6 @@ nsHttpChannel::BeginConnect()
         Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
     }
 
-    // Set network interface id only when it's not empty to avoid
-    // rebuilding hash key.
-    if (!mNetworkInterfaceId.IsEmpty()) {
-        mConnectionInfo->SetNetworkInterfaceId(mNetworkInterfaceId);
-    }
-
     mAuthProvider =
         do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
                           &rv);
