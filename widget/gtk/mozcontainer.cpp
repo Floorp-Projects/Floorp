@@ -10,6 +10,7 @@
 #ifdef MOZ_WAYLAND
 #include <gdk/gdkx.h>
 #include <gdk/gdkwayland.h>
+#include <wayland-egl.h>
 #endif
 #include <stdio.h>
 #include <dlfcn.h>
@@ -207,6 +208,11 @@ moz_container_init (MozContainer *container)
 
 #if defined(MOZ_WAYLAND)
     {
+      container->subcompositor = nullptr;
+      container->surface = nullptr;
+      container->subsurface = nullptr;
+      container->eglwindow = nullptr;
+
       GdkDisplay *gdk_display = gtk_widget_get_display(GTK_WIDGET(container));
       if (GDK_IS_WAYLAND_DISPLAY (gdk_display)) {
           // Available as of GTK 3.8+
@@ -289,6 +295,7 @@ moz_container_map_surface(MozContainer *container)
 static void
 moz_container_unmap_surface(MozContainer *container)
 {
+    g_clear_pointer(&container->eglwindow, wl_egl_window_destroy);
     g_clear_pointer(&container->subsurface, wl_subsurface_destroy);
     g_clear_pointer(&container->surface, wl_surface_destroy);
 }
@@ -434,6 +441,11 @@ moz_container_size_allocate (GtkWidget     *widget,
         gdk_window_get_position(gtk_widget_get_window(widget), &x, &y);
         wl_subsurface_set_position(container->subsurface, x, y);
     }
+    if (container->eglwindow) {
+        wl_egl_window_resize(container->eglwindow,
+                             allocation->width, allocation->height,
+                             0, 0);
+    }
 #endif
 }
 
@@ -558,5 +570,28 @@ moz_container_get_wl_surface(MozContainer *container)
     }
 
     return container->surface;
+}
+
+struct wl_egl_window *
+moz_container_get_wl_egl_window(MozContainer *container)
+{
+    if (!container->eglwindow) {
+        struct wl_surface *wlsurf = moz_container_get_wl_surface(container);
+        if (!wlsurf)
+            return nullptr;
+
+      GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
+      container->eglwindow
+            = wl_egl_window_create(wlsurf,
+                                   gdk_window_get_width(window),
+                                   gdk_window_get_height(window));
+    }
+    return container->eglwindow;
+}
+
+gboolean
+moz_container_has_wl_egl_window(MozContainer *container)
+{
+    return container->eglwindow ? true : false;
 }
 #endif

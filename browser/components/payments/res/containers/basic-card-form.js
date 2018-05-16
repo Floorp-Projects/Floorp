@@ -24,6 +24,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     this.genericErrorText = document.createElement("div");
 
     this.backButton = document.createElement("button");
+    this.backButton.className = "back-button";
     this.backButton.addEventListener("click", this);
 
     this.saveButton = document.createElement("button");

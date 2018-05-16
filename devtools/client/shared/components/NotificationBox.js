@@ -33,12 +33,22 @@ const PriorityLevels = {
  *
  * See also MDN for more info about <xul:notificationbox>:
  * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/notificationbox
+ *
+ * This component can maintain its own state (list of notifications)
+ * as well as consume list of notifications provided as a prop
+ * (coming e.g. from Redux store).
  */
 class NotificationBox extends Component {
   static get propTypes() {
     return {
+      // Optional box ID (used for mounted node ID attribute)
+      id: PropTypes.string,
+
       // List of notifications appended into the box.
-      notifications: PropTypes.arrayOf(PropTypes.shape({
+      // Use `PropTypes.arrayOf` validation (see below) as soon as
+      // ImmutableJS is removed. See bug 1461678 for more details.
+      notifications: PropTypes.object,
+      /* notifications: PropTypes.arrayOf(PropTypes.shape({
         // label to appear on the notification.
         label: PropTypes.string.isRequired,
 
@@ -74,7 +84,7 @@ class NotificationBox extends Component {
         // A function to call to notify you of interesting things that happen
         // with the notification box.
         eventCallback: PropTypes.func,
-      })),
+      })),*/
 
       // Message that should be shown when hovering over the close button
       closeButtonTooltip: PropTypes.string
@@ -109,43 +119,16 @@ class NotificationBox extends Component {
    * added behind it. See `propTypes` for arguments description.
    */
   appendNotification(label, value, image, priority, buttons = [], eventCallback) {
-    // Priority level must be within expected interval
-    // (see priority levels at the top of this file).
-    if (priority < PriorityLevels.PRIORITY_INFO_LOW ||
-      priority > PriorityLevels.PRIORITY_CRITICAL_BLOCK) {
-      throw new Error("Invalid notification priority " + priority);
-    }
-
-    // Custom image URL is not supported yet.
-    if (image) {
-      throw new Error("Custom image URL is not supported yet");
-    }
-
-    let type = "warning";
-    if (priority >= PriorityLevels.PRIORITY_CRITICAL_LOW) {
-      type = "critical";
-    } else if (priority <= PriorityLevels.PRIORITY_INFO_HIGH) {
-      type = "info";
-    }
-
-    let notifications = this.state.notifications.set(value, {
-      label: label,
-      value: value,
-      image: image,
-      priority: priority,
-      type: type,
-      buttons: Array.isArray(buttons) ? buttons : [],
-      eventCallback: eventCallback,
+    const newState = appendNotification(this.state, {
+      label,
+      value,
+      image,
+      priority,
+      buttons,
+      eventCallback,
     });
 
-    // High priorities must be on top.
-    notifications = notifications.sortBy((val, key) => {
-      return -val.priority;
-    });
-
-    this.setState({
-      notifications: notifications
-    });
+    this.setState(newState);
   }
 
   /**
@@ -190,6 +173,10 @@ class NotificationBox extends Component {
 
     if (notification.eventCallback) {
       notification.eventCallback("removed");
+    }
+
+    if (!this.state.notifications.get(notification.value)) {
+      return;
     }
 
     this.setState({
@@ -260,16 +247,92 @@ class NotificationBox extends Component {
    * notification is rendered at a time.
    */
   render() {
-    let notification = this.state.notifications.first();
-    let content = notification ?
+    const notifications = this.props.notifications || this.state.notifications;
+    const notification = notifications ? notifications.first() : null;
+    const content = notification ?
       this.renderNotification(notification) :
       null;
 
-    return div({className: "notificationbox"},
+    return div({
+      className: "notificationbox",
+      id: this.props.id},
       content
     );
   }
 }
 
+// Helpers
+
+/**
+ * Create a new notification. If another notification is already present with
+ * a higher priority, the new notification will be added behind it.
+ * See `propTypes` for arguments description.
+ */
+function appendNotification(state, props) {
+  const {
+    label,
+    value,
+    image,
+    priority,
+    buttons,
+    eventCallback
+  } = props;
+
+  // Priority level must be within expected interval
+  // (see priority levels at the top of this file).
+  if (priority < PriorityLevels.PRIORITY_INFO_LOW ||
+    priority > PriorityLevels.PRIORITY_CRITICAL_BLOCK) {
+    throw new Error("Invalid notification priority " + priority);
+  }
+
+  // Custom image URL is not supported yet.
+  if (image) {
+    throw new Error("Custom image URL is not supported yet");
+  }
+
+  let type = "warning";
+  if (priority >= PriorityLevels.PRIORITY_CRITICAL_LOW) {
+    type = "critical";
+  } else if (priority <= PriorityLevels.PRIORITY_INFO_HIGH) {
+    type = "info";
+  }
+
+  if (!state.notifications) {
+    state.notifications = new Immutable.OrderedMap();
+  }
+
+  let notifications = state.notifications.set(value, {
+    label: label,
+    value: value,
+    image: image,
+    priority: priority,
+    type: type,
+    buttons: Array.isArray(buttons) ? buttons : [],
+    eventCallback: eventCallback,
+  });
+
+  // High priorities must be on top.
+  notifications = notifications.sortBy((val, key) => {
+    return -val.priority;
+  });
+
+  return {
+    notifications: notifications
+  };
+}
+
+function getNotificationWithValue(notifications, value) {
+  return notifications ? notifications.get(value) : null;
+}
+
+function removeNotificationWithValue(notifications, value) {
+  return {
+    notifications: notifications.remove(value)
+  };
+}
+
 module.exports.NotificationBox = NotificationBox;
 module.exports.PriorityLevels = PriorityLevels;
+module.exports.appendNotification = appendNotification;
+module.exports.getNotificationWithValue = getNotificationWithValue;
+module.exports.removeNotificationWithValue = removeNotificationWithValue;
