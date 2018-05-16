@@ -5941,25 +5941,14 @@ void
 MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input, Register output, MIRType fromType,
                                        bool isUnsigned, bool isSaturating, Label* oolEntry)
 {
-    // vcvt* converts NaN into 0, so check for NaNs here.
-    if (!isSaturating) {
-        if (fromType == MIRType::Double)
-            asMasm().compareDouble(input, input);
-        else if (fromType == MIRType::Float32)
-            asMasm().compareFloat(input, input);
-        else
-            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
-
-        ma_b(oolEntry, Assembler::VFP_Unordered);
-    }
-
     ScratchDoubleScope scratchScope(asMasm());
     ScratchRegisterScope scratchReg(asMasm());
     FloatRegister scratch = scratchScope.uintOverlay();
 
     // ARM conversion instructions clamp the value to ensure it fits within the
     // target's type bounds, so every time we see those, we need to check the
-    // input.
+    // input. A NaN check is not necessary because NaN is converted to zero and
+    // on a zero result we branch out of line to do further processing anyway.
     if (isUnsigned) {
         if (fromType == MIRType::Double)
             ma_vcvt_F64_U32(input, scratch);
@@ -5978,6 +5967,18 @@ MacroAssemblerARM::wasmTruncateToInt32(FloatRegister input, Register output, MIR
         }
 
         return;
+    }
+
+    // vcvt* converts NaN into 0, so check for NaNs here.
+    if (!isSaturating) {
+        if (fromType == MIRType::Double)
+            asMasm().compareDouble(input, input);
+        else if (fromType == MIRType::Float32)
+            asMasm().compareFloat(input, input);
+        else
+            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
+
+        ma_b(oolEntry, Assembler::VFP_Unordered);
     }
 
     scratch = scratchScope.sintOverlay();
