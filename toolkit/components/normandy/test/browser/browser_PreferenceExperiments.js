@@ -420,6 +420,7 @@ decorate_task(
     experiments.test = experimentFactory({
       name: "test",
       expired: false,
+      branch: "fakebranch",
       preferenceName: "fake.preference",
       preferenceValue: "experimentvalue",
       preferenceType: "string",
@@ -442,11 +443,12 @@ decorate_task(
     );
 
     Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["unenroll", "preference_study", experiments.test.name, {
+      sendEventStub.args,
+      [["unenroll", "preference_study", experiments.test.name, {
         didResetValue: "true",
         reason: "test-reason",
-      }],
+        branch: "fakebranch",
+      }]],
       "stop should send the correct telemetry event"
     );
 
@@ -526,6 +528,7 @@ decorate_task(
     experiments.test = experimentFactory({
       name: "test",
       expired: false,
+      branch: "fakebranch",
       preferenceName: "fake.preference",
       preferenceValue: "experimentvalue",
       preferenceType: "string",
@@ -540,11 +543,12 @@ decorate_task(
       "stop did not modify the preference",
     );
     Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["unenroll", "preference_study", experiments.test.name, {
+      sendEventStub.args,
+      [["unenroll", "preference_study", experiments.test.name, {
         didResetValue: "false",
         reason: "test-reason",
-      }],
+        branch: "fakebranch"
+      }]],
       "stop should send the correct telemetry event"
     );
   }
@@ -721,21 +725,19 @@ decorate_task(
     Assert.deepEqual(setInactiveStub.args, [["test"]], "Experiment is unregistered by stop()");
 
     Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["enroll", "preference_study", "test", {
-        experimentType: "exp",
-        branch: "branch",
-      }],
-      "PreferenceExperiments.start() should send the correct telemetry event"
-    );
-
-    Assert.deepEqual(
-      sendEventStub.getCall(1).args,
-      ["unenroll", "preference_study", "test", {
-        reason: "test-reason",
-        didResetValue: "true",
-      }],
-      "PreferenceExperiments.stop() should send the correct telemetry event"
+      sendEventStub.args,
+      [
+        ["enroll", "preference_study", "test", {
+          experimentType: "exp",
+          branch: "branch",
+        }],
+        ["unenroll", "preference_study", "test", {
+          reason: "test-reason",
+          didResetValue: "true",
+          branch: "branch",
+        }],
+      ],
+      "PreferenceExperiments.start() and stop() should send the correct telemetry event"
     );
   },
 );
@@ -1056,6 +1058,7 @@ decorate_task(
     mockExperiments.test = experimentFactory({
       name: "test",
       expired: false,
+      branch: "fakebranch",
       preferenceName: "fake.preference",
       preferenceValue: "experimentvalue",
       preferenceType: "string",
@@ -1071,11 +1074,12 @@ decorate_task(
     await Promise.resolve();
 
     Assert.deepEqual(
-      sendEventStub.getCall(0).args,
-      ["unenroll", "preference_study", "test", {
+      sendEventStub.args,
+      [["unenroll", "preference_study", "test", {
         didResetValue: "false",
         reason: "user-preference-changed",
-      }],
+        branch: "fakebranch",
+      }]],
       "stop should send a telemetry event indicating the user unenrolled manually",
     );
   },
