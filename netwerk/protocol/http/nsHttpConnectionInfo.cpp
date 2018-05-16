@@ -105,13 +105,6 @@ nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
     SetOriginServer(host, port);
 }
 
-void
-nsHttpConnectionInfo::SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId)
-{
-    mNetworkInterfaceId = aNetworkInterfaceId;
-    BuildHashKey();
-}
-
 void nsHttpConnectionInfo::BuildHashKey()
 {
     //
@@ -147,11 +140,6 @@ void nsHttpConnectionInfo::BuildHashKey()
     mHashKey.AssignLiteral(".......[tlsflags0x00000000]");
 
     mHashKey.Append(keyHost);
-    if (!mNetworkInterfaceId.IsEmpty()) {
-        mHashKey.Append('(');
-        mHashKey.Append(mNetworkInterfaceId);
-        mHashKey.Append(')');
-    }
     mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);
     if (!mUsername.IsEmpty()) {
@@ -247,10 +235,6 @@ nsHttpConnectionInfo::Clone() const
                                          mOriginAttributes, mRoutedHost, mRoutedPort);
     }
 
-    if (!mNetworkInterfaceId.IsEmpty()) {
-        clone->SetNetworkInterfaceId(mNetworkInterfaceId);
-    }
-
     // Make sure the anonymous, insecure-scheme, and private flags are transferred
     clone->SetAnonymous(GetAnonymous());
     clone->SetPrivate(GetPrivate());
@@ -282,9 +266,6 @@ nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
     clone->SetNoSpdy(GetNoSpdy());
     clone->SetBeConservative(GetBeConservative());
     clone->SetTlsFlags(GetTlsFlags());
-    if (!mNetworkInterfaceId.IsEmpty()) {
-        clone->SetNetworkInterfaceId(mNetworkInterfaceId);
-    }
     clone.forget(outCI);
 }
 

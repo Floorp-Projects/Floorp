@@ -1603,18 +1603,6 @@ SocketTransportShim::GetTimeout(uint32_t aType, uint32_t *_retval)
 }
 
 NS_IMETHODIMP
-SocketTransportShim::GetNetworkInterfaceId(nsACString &aNetworkInterfaceId)
-{
-  return mWrapped->GetNetworkInterfaceId(aNetworkInterfaceId);
-}
-
-NS_IMETHODIMP
-SocketTransportShim::SetNetworkInterfaceId(const nsACString &aNetworkInterfaceId)
-{
-  return mWrapped->SetNetworkInterfaceId(aNetworkInterfaceId);
-}
-
-NS_IMETHODIMP
 SocketTransportShim::SetTimeout(uint32_t aType, uint32_t aValue)
 {
   return mWrapped->SetTimeout(aType, aValue);

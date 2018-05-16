@@ -29,8 +29,7 @@ DNSRequestParent::DNSRequestParent()
 void
 DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
                                  const OriginAttributes &originAttributes,
-                                 uint32_t flags,
-                                 const nsACString &networkInterface)
+                                 uint32_t flags)
 {
   nsresult rv;
   mFlags = flags;
@@ -38,10 +37,9 @@ DNSRequestParent::DoAsyncResolve(const nsACString &hostname,
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
     nsCOMPtr<nsICancelable> unused;
-    rv = dns->AsyncResolveExtendedNative(hostname, flags,
-                                         networkInterface, this,
-                                         main, originAttributes,
-                                         getter_AddRefs(unused));
+    rv = dns->AsyncResolveNative(hostname, flags, this,
+                                 main, originAttributes,
+                                 getter_AddRefs(unused));
   }
 
   if (NS_FAILED(rv) && !mIPCClosed) {
@@ -54,16 +52,14 @@ mozilla::ipc::IPCResult
 DNSRequestParent::RecvCancelDNSRequest(const nsCString& hostName,
                                        const OriginAttributes& originAttributes,
                                        const uint32_t& flags,
-                                       const nsCString& networkInterface,
                                        const nsresult& reason)
 {
   nsresult rv;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = dns->CancelAsyncResolveExtendedNative(hostName, flags,
-                                               networkInterface,
-                                               this, reason,
-                                               originAttributes);
+    rv = dns->CancelAsyncResolveNative(hostName, flags,
+                                       this, reason,
+                                       originAttributes);
   }
   return IPC_OK();
 }

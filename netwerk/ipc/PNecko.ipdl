@@ -80,7 +80,7 @@ parent:
   async PUDPSocket(Principal principal, nsCString filter);
 
   async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
-                    uint32_t flags, nsCString networkInterface);
+                    uint32_t flags);
 
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
