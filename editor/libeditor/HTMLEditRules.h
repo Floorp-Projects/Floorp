@@ -401,7 +401,16 @@ protected:
    */
   MOZ_MUST_USE nsresult DidAbsolutePosition();
 
-  nsresult AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
+  /**
+   * AlignInnerBlocks() calls AlignBlockContents() for every list item element
+   * and table cell element in aNode.
+   *
+   * @param aNode               The node whose descendants should be aligned
+   *                            to aAlignType.
+   * @param aAlignType          New value of align attribute of <div>.
+   */
+  MOZ_MUST_USE nsresult
+  AlignInnerBlocks(nsINode& aNode, const nsAString& aAlignType);
 
   /**
    * AlignBlockContents() sets align attribute of <div> element which is
