@@ -292,12 +292,8 @@ pref("devtools.webconsole.timestampMessages", false);
 // to automatically trigger multiline editing (equivalent to shift + enter).
 pref("devtools.webconsole.autoMultiline", true);
 
-// Enable the webconsole sidebar toggle in Nightly builds.
-#if defined(NIGHTLY_BUILD)
-pref("devtools.webconsole.sidebarToggle", true);
-#else
+// Enable the webconsole sidebar toggle
 pref("devtools.webconsole.sidebarToggle", false);
-#endif
 
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
