@@ -99,7 +99,7 @@ It is submitted to a single :ref:`keyed histogram <histogram-type-keyed>` whose 
 Create new remote settings
 ==========================
 
-Staff members can create new kinds of remote settings, following `this documentation <https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=66655528>`_.
+Staff members can create new kinds of remote settings, following `this documentation <mana docs>`_.
 
 It basically consists in:
 
@@ -112,6 +112,8 @@ And once done:
 
 #. Create, modify or delete entries and let reviewers approve the changes
 #. Wait for Firefox to pick-up the changes for your settings key
+
+.. _mana docs: https://mana.mozilla.org/wiki/pages/viewpage.action?pageId=66655528
 
 
 Debugging and testing
