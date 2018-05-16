@@ -39,15 +39,6 @@ module.exports = {
     "env": {
       "mozilla/browser-window": true
     }
-  },{
-    // XXX Bug 1421969. These files/directories are still being fixed,
-    // so turn off mozilla/use-services for them for now.
-    "files": [
-      "extensions/pref/**",
-    ],
-    "rules": {
-      "mozilla/use-services": "off",
-    }
   }, {
     // XXX Bug 1436303. These directories are still being fixed, so turn off
     // mozilla/no-cc-etc for now.
