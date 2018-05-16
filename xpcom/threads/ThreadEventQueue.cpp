@@ -152,6 +152,7 @@ ThreadEventQueue<InnerQueueT>::GetEvent(bool aMayWait,
       break;
     }
 
+    AUTO_PROFILER_LABEL("ThreadEventQueue::GetEvent::Wait", IDLE);
     mEventsAvailable.Wait();
   }
 
