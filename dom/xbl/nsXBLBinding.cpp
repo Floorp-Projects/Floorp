@@ -737,7 +737,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
         // that was...
 
         // Find the right prototype.
-        JSAutoCompartment ac(cx, scriptObject);
+        JSAutoRealm ar(cx, scriptObject);
 
         JS::Rooted<JSObject*> base(cx, scriptObject);
         JS::Rooted<JSObject*> proto(cx);
@@ -895,7 +895,7 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(scope) == scope);
 
   JS::Rooted<JSObject*> wrappedProto(cx, proto);
-  JSAutoCompartment ac(cx, scope);
+  JSAutoRealm ar(cx, scope);
   if (!JS_WrapObject(cx, &wrappedProto)) {
     return nullptr;
   }
@@ -974,14 +974,14 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   if (parent_proto) {
     holder = GetOrCreateMapEntryForPrototype(cx, parent_proto);
   } else {
-    JSAutoCompartment innerAC(cx, xblScope);
+    JSAutoRealm innerAR(cx, xblScope);
     holder = GetOrCreateClassObjectMap(cx, xblScope, "__ContentClassObjectMap__");
   }
   if (NS_WARN_IF(!holder)) {
     return NS_ERROR_FAILURE;
   }
   js::AssertSameCompartment(holder, xblScope);
-  JSAutoCompartment ac(cx, holder);
+  JSAutoRealm ar(cx, holder);
 
   // Look up the class on the property holder. The only properties on the
   // holder should be class objects. If we don't find the class object, we need
@@ -999,9 +999,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     MOZ_ASSERT(cachedBinding == aProtoBinding);
   } else {
 
-    // We need to create the prototype. First, enter the compartment where it's
+    // We need to create the prototype. First, enter the realm where it's
     // going to live, and create it.
-    JSAutoCompartment ac2(cx, global);
+    JSAutoRealm ar2(cx, global);
     proto = JS_NewObjectWithGivenProto(cx, &gPrototypeJSClass, parent_proto);
     if (!proto) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1018,9 +1018,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     NS_ADDREF(docInfo);
     JS_SetReservedSlot(proto, 0, JS::PrivateValue(aProtoBinding));
 
-    // Next, enter the compartment of the property holder, wrap the proto, and
+    // Next, enter the realm of the property holder, wrap the proto, and
     // stick it on.
-    JSAutoCompartment ac3(cx, holder);
+    JSAutoRealm ar3(cx, holder);
     if (!JS_WrapObject(cx, &proto) ||
         !JS_DefineUCProperty(cx, holder, aClassName.get(), -1, proto,
                              JSPROP_READONLY | JSPROP_PERMANENT))
@@ -1029,9 +1029,9 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
     }
   }
 
-  // Whew. We have the proto. Wrap it back into the compartment of |obj|,
+  // Whew. We have the proto. Wrap it back into the realm of |obj|,
   // splice it in, and return it.
-  JSAutoCompartment ac4(cx, obj);
+  JSAutoRealm ar4(cx, obj);
   if (!JS_WrapObject(cx, &proto) || !JS_SetPrototype(cx, obj, proto)) {
     return NS_ERROR_FAILURE;
   }
@@ -1110,7 +1110,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
 
   // Enter the xbl scope and invoke the internal version.
   {
-    JSAutoCompartment ac(aCx, xblScope);
+    JSAutoRealm ar(aCx, xblScope);
     JS::Rooted<jsid> id(aCx, aId);
     if (!LookupMemberInternal(aCx, name, id, aDesc, xblScope)) {
       return false;

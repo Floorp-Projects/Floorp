@@ -896,7 +896,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         RootedObject typedArray(cx);
         {
-            JSAutoCompartment ac(cx, unwrappedBuffer);
+            JSAutoRealm ar(cx, unwrappedBuffer);
 
             RootedObject wrappedProto(cx, protoRoot);
             if (!cx->compartment()->wrap(cx, &wrappedProto))
@@ -1177,7 +1177,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
             return nullptr;
         }
 
-        JSAutoCompartment ac(cx, unwrapped);
+        JSAutoRealm ar(cx, unwrapped);
 
         srcArray = &unwrapped->as<TypedArrayObject>();
 

@@ -195,7 +195,7 @@ SandboxImport(JSContext* cx, unsigned argc, Value* vp)
             funobj = XPCWrapper::UnsafeUnwrapSecurityWrapper(funobj);
         }
 
-        JSAutoCompartment ac(cx, funobj);
+        JSAutoRealm ar(cx, funobj);
 
         RootedValue funval(cx, ObjectValue(*funobj));
         JSFunction* fun = JS_ValueToFunction(cx, funval);
@@ -1070,7 +1070,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
       AccessCheck::isChrome(sandbox) ? false : options.wantXrays;
 
     {
-        JSAutoCompartment ac(cx, sandbox);
+        JSAutoRealm ar(cx, sandbox);
 
         nsCOMPtr<nsIScriptObjectPrincipal> sbp =
             new SandboxPrivate(principal, sandbox);
@@ -1156,7 +1156,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
 
     xpc::SetSandboxMetadata(cx, sandbox, options.metadata);
 
-    JSAutoCompartment ac(cx, sandbox);
+    JSAutoRealm ar(cx, sandbox);
     JS_FireOnNewGlobalObject(cx, sandbox);
 
     return NS_OK;
@@ -1791,7 +1791,7 @@ xpc::EvalInSandbox(JSContext* cx, HandleObject sandboxArg, const nsAString& sour
         // This is clearly Gecko-specific and not in any spec.
         mozilla::dom::AutoEntryScript aes(priv, "XPConnect sandbox evaluation");
         JSContext* sandcx = aes.cx();
-        JSAutoCompartment ac(sandcx, sandbox);
+        JSAutoRealm ar(sandcx, sandbox);
 
         JS::CompileOptions options(sandcx);
         options.setFileAndLine(filenameBuf.get(), lineNo);
@@ -1844,7 +1844,7 @@ xpc::GetSandboxMetadata(JSContext* cx, HandleObject sandbox, MutableHandleValue 
 
     RootedValue metadata(cx);
     {
-      JSAutoCompartment ac(cx, sandbox);
+      JSAutoRealm ar(cx, sandbox);
       metadata = JS_GetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT);
     }
 
@@ -1863,7 +1863,7 @@ xpc::SetSandboxMetadata(JSContext* cx, HandleObject sandbox, HandleValue metadat
 
     RootedValue metadata(cx);
 
-    JSAutoCompartment ac(cx, sandbox);
+    JSAutoRealm ar(cx, sandbox);
     if (!JS_StructuredClone(cx, metadataArg, &metadata, nullptr, nullptr))
         return NS_ERROR_UNEXPECTED;
 

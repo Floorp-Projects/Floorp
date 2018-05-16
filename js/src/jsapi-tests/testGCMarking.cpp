@@ -45,7 +45,7 @@ ConstructCCW(JSContext* cx, const JSClass* globalClasp,
 
     // Define an object in compartment 2, that is wrapped by a CCW into compartment 1.
     {
-        JSAutoCompartment ac(cx, global2);
+        JSAutoRealm ar(cx, global2);
         wrappee.set(JS_NewPlainObject(cx));
         if (wrappee->compartment() != global2->compartment()) {
             fprintf(stderr, "wrappee in wrong compartment");

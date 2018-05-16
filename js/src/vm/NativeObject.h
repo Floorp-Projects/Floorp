@@ -692,6 +692,11 @@ class NativeObject : public ShapedObject
      * Check whether a slot is a fixed slot.
      */
     bool slotIsFixed(uint32_t slot) const;
+
+    /*
+     * Check whether the supplied number of fixed slots is correct.
+     */
+    bool isNumFixedSlots(uint32_t nfixed) const;
 #endif
 
     /*
@@ -740,8 +745,10 @@ class NativeObject : public ShapedObject
     }
 
     // Get the number of fixed slots when the shape pointer may have been
-    // forwarded by a moving GC.
-    uint32_t numFixedSlotsMaybeForwarded() const;
+    // forwarded by a moving GC. You need to use this rather that
+    // numFixedSlots() in a trace hook if you access an object that is not the
+    // object being traced, since it may have a stale shape pointer.
+    inline uint32_t numFixedSlotsMaybeForwarded() const;
 
     uint32_t numUsedFixedSlots() const {
         uint32_t nslots = lastProperty()->slotSpan(getClass());
@@ -1411,7 +1418,7 @@ class NativeObject : public ShapedObject
          * Private pointers are stored immediately after the last fixed slot of
          * the object.
          */
-        MOZ_ASSERT(nfixed == numFixedSlots());
+        MOZ_ASSERT(isNumFixedSlots(nfixed));
         MOZ_ASSERT(hasPrivate());
         HeapSlot* end = &fixedSlots()[nfixed];
         return *reinterpret_cast<void**>(end);

@@ -377,7 +377,7 @@ ExecutionRunnable::RunOnWorkletThread()
   MOZ_ASSERT(workletThread);
 
   JSContext* cx = workletThread->GetJSContext();
-  JSAutoRequest ar(cx);
+  JSAutoRequest areq(cx);
 
   AutoJSAPI jsapi;
   jsapi.Init();
@@ -399,7 +399,7 @@ ExecutionRunnable::RunOnWorkletThread()
   compileOptions.setIsRunOnce(true);
   compileOptions.setNoScriptRval(true);
 
-  JSAutoCompartment comp(cx, globalObj);
+  JSAutoRealm ar(cx, globalObj);
 
   JS::SourceBufferHolder buffer(mScriptBuffer.release(), mScriptLength,
                                 JS::SourceBufferHolder::GiveOwnership);
@@ -538,7 +538,7 @@ Worklet::CreateGlobalScope(JSContext* aCx, WorkletType aWorkletType)
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(scope->WrapGlobalObject(aCx, &global), nullptr);
 
-  JSAutoCompartment ac(aCx, global);
+  JSAutoRealm ar(aCx, global);
 
   // Init Web IDL bindings
   if (!RegisterWorkletBindings(aCx, global)) {

@@ -146,7 +146,7 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
   }
 
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
-  JSAutoCompartment ac(cx, global);
+  JSAutoRealm ar(cx, global);
   if (!ToJSValue(cx, detail, &val)) {
     MOZ_CRASH("Failed to convert dictionary to JS::Value due to OOM.");
     return BrowserElementParent::OPEN_WINDOW_IGNORED;

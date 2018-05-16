@@ -535,7 +535,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
-  JSAutoCompartment ac(cx, aBuffer.Obj());
+  JSAutoRealm ar(cx, aBuffer.Obj());
 
   promise = Promise::Create(parentObject, aRv);
   if (aRv.Failed()) {

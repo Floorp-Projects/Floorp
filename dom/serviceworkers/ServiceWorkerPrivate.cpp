@@ -609,7 +609,7 @@ ServiceWorkerPrivate::SendMessageEvent(ipc::StructuredCloneData&& aData,
   // don't need a proxy here.
   global = js::UncheckedUnwrap(global);
 
-  JSAutoCompartment ac(cx, global);
+  JSAutoRealm ar(cx, global);
 
   JS::Rooted<JS::Value> messageData(cx);
   aData.Read(cx, &messageData, rv);

@@ -357,7 +357,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   if (aGlobal) {
     JS::ExposeObjectToActiveJS(aGlobal);
   }
-  mAutoNullableCompartment.emplace(mCx, aGlobal);
+  mAutoNullableRealm.emplace(mCx, aGlobal);
 
   ScriptSettingsStack::Push(this);
 
@@ -379,7 +379,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
       // particular, we do not expose this data to anyone, which is very
       // important; otherwise it could be a cross-origin information leak.
       exnObj = js::UncheckedUnwrap(exnObj);
-      JSAutoCompartment ac(aCx, exnObj);
+      JSAutoRealm ar(aCx, exnObj);
 
       nsAutoJSString stack, filename, name, message;
       int32_t line;
@@ -556,11 +556,10 @@ AutoJSAPI::ReportException()
     return;
   }
 
-  // AutoJSAPI uses a JSAutoNullableCompartment, and may be in a null
-  // compartment when the destructor is called. However, the JS engine
-  // requires us to be in a compartment when we fetch the pending exception.
-  // In this case, we enter the privileged junk scope and don't dispatch any
-  // error events.
+  // AutoJSAPI uses a JSAutoNullableRealm, and may be in a null realm
+  // when the destructor is called. However, the JS engine requires us
+  // to be in a realm when we fetch the pending exception. In this case,
+  // we enter the privileged junk scope and don't dispatch any error events.
   JS::Rooted<JSObject*> errorGlobal(cx(), JS::CurrentGlobalOrNull(cx()));
   if (!errorGlobal) {
     if (mIsMainThread) {
@@ -569,7 +568,7 @@ AutoJSAPI::ReportException()
       errorGlobal = GetCurrentThreadWorkerGlobal();
     }
   }
-  JSAutoCompartment ac(cx(), errorGlobal);
+  JSAutoRealm ar(cx(), errorGlobal);
   JS::Rooted<JS::Value> exn(cx());
   js::ErrorReport jsReport(cx());
   if (StealException(&exn) &&
@@ -820,8 +819,8 @@ AutoSlowOperation::CheckForInterrupt()
 {
   // For now we support only main thread!
   if (mIsMainThread) {
-    // JS_CheckForInterrupt expects us to be in a compartment.
-    JSAutoCompartment ac(cx(), xpc::UnprivilegedJunkScope());
+    // JS_CheckForInterrupt expects us to be in a realm.
+    JSAutoRealm ar(cx(), xpc::UnprivilegedJunkScope());
     JS_CheckForInterrupt(cx());
   }
 }
