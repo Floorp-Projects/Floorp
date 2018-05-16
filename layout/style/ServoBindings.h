@@ -371,7 +371,7 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       bool moz_legacy_syntax,
                                       uint32_t stops);
 
-const mozilla::css::URLValueData* Gecko_GetURLValue(const nsStyleImage* image);
+const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* image);
 nsAtom* Gecko_GetImageElement(const nsStyleImage* image);
 const nsStyleGradient* Gecko_GetGradientImageValue(const nsStyleImage* image);
 
