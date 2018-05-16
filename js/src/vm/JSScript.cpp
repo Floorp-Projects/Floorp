@@ -4444,12 +4444,12 @@ JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
     if (fun) {
         if (fun->compartment()->isSelfHosting) {
             // The self-hosting compartment is shared across runtimes, so we
-            // can't use JSAutoCompartment: it could cause races. Functions in
-            // the self-hosting compartment will never be lazy, so we can safely
+            // can't use JSAutoRealm: it could cause races. Functions in the
+            // self-hosting compartment will never be lazy, so we can safely
             // assume we don't have to delazify.
             script_ = fun->nonLazyScript();
         } else {
-            JSAutoCompartment ac(cx_, fun);
+            JSAutoRealm ar(cx_, fun);
             script_ = JSFunction::getOrCreateScript(cx_, fun);
             if (script_) {
                 oldDoNotRelazify_ = script_->doNotRelazify_;

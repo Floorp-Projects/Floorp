@@ -272,7 +272,7 @@ WorkerRunnable::Run()
                "ScriptExecutorRunnable");
     mWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(!JS_IsExceptionPending(mWorkerPrivate->GetJSContext()));
-    // We can't enter a useful compartment on the JSContext here; just pass it
+    // We can't enter a useful realm on the JSContext here; just pass it
     // in as-is.
     PostRun(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false);
     return NS_ERROR_FAILURE;
@@ -344,18 +344,18 @@ WorkerRunnable::Run()
   MOZ_ASSERT_IF(!targetIsWorkerThread && !isMainThread,
                 mWorkerPrivate->IsDedicatedWorker() && globalObject);
 
-  // If we're on the parent thread we might be in a null compartment in the
+  // If we're on the parent thread we might be in a null realm in the
   // situation described above when globalObject is null.  Make sure to enter
-  // the compartment of the worker's reflector if there is one.  There might
+  // the realm of the worker's reflector if there is one.  There might
   // not be one if we're just starting to compile the script for this worker.
-  Maybe<JSAutoCompartment> ac;
+  Maybe<JSAutoRealm> ar;
   if (!targetIsWorkerThread &&
       mWorkerPrivate->IsDedicatedWorker() &&
       mWorkerPrivate->ParentEventTargetRef()->GetWrapper()) {
     JSObject* wrapper = mWorkerPrivate->ParentEventTargetRef()->GetWrapper();
 
     // If we're on the parent thread and have a reflector and a globalObject,
-    // then the compartments of cx, globalObject, and the worker's reflector
+    // then the realms of cx, globalObject, and the worker's reflector
     // should all match.
     MOZ_ASSERT_IF(globalObject,
                   js::GetObjectCompartment(wrapper) ==
@@ -365,15 +365,15 @@ WorkerRunnable::Run()
                     js::GetObjectCompartment(globalObject->GetGlobalJSObject()));
 
     // If we're on the parent thread and have a reflector, then our
-    // JSContext had better be either in the null compartment (and hence
-    // have no globalObject) or in the compartment of our reflector.
+    // JSContext had better be either in the null realm (and hence
+    // have no globalObject) or in the realm of our reflector.
     MOZ_ASSERT(!js::GetContextCompartment(cx) ||
                js::GetObjectCompartment(wrapper) ==
                  js::GetContextCompartment(cx),
                "Must either be in the null compartment or in our reflector "
                "compartment");
 
-    ac.emplace(cx, wrapper);
+    ar.emplace(cx, wrapper);
   }
 
   MOZ_ASSERT(!jsapi->HasException());

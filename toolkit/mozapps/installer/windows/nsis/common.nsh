@@ -8114,3 +8114,49 @@
   Pop $1
   Exch $0 ; return elapsed seconds
 !macroend
+
+/**
+ * Create a process to execute a command line. If it is successfully created,
+ * wait on it with WaitForInputIdle, to avoid exiting the current process too
+ * early (exiting early can cause the created process's windows to be opened in
+ * the background).
+ *
+ * CMDLINE Is the command line to execute, like the argument to Exec
+ */
+!define ExecAndWaitForInputIdle "!insertmacro ExecAndWaitForInputIdle_"
+!define CREATE_DEFAULT_ERROR_MODE 0x04000000
+!macro ExecAndWaitForInputIdle_ CMDLINE
+  ; derived from https://stackoverflow.com/a/13960786/3444805 by Anders Kjersem
+  Push $0
+  Push $1
+  Push $2
+
+  ; Command line
+  StrCpy $0 ${CMDLINE}
+
+  ; STARTUPINFO
+  System::Alloc 68
+  Pop $1
+  ; fill in STARTUPINFO.cb (first field) with sizeof(STARTUPINFO)
+  System::Call "*$1(i 68)"
+
+  ; PROCESS_INFORMATION
+  System::Call "*(i, i, i, i) i . r2"
+
+  ; CREATE_DEFAULT_ERROR_MODE follows NSIS myCreateProcess used in Exec
+  System::Call "kernel32::CreateProcessW(i 0, t r0, i 0, i 0, i 0, i ${CREATE_DEFAULT_ERROR_MODE}, i 0, i 0, i r1, i r2) i . r0"
+
+  System::Free $1
+  ${If} $0 <> 0
+    System::Call "*$2(i . r0, i . r1)"
+    ; $0: hProcess, $1: hThread
+    System::Call "user32::WaitForInputIdle(i $0, i 10000)"
+    System::Call "kernel32::CloseHandle(i $0)"
+    System::Call "kernel32::CloseHandle(i $1)"
+  ${EndIf}
+  System::Free $2
+
+  Pop $2
+  Pop $1
+  Pop $0
+!macroend

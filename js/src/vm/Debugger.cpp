@@ -3197,8 +3197,8 @@ Debugger::trace(JSTracer* trc)
     if (frames.initialized()) {
         for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
             HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
-            MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
             TraceEdge(trc, &frameobj, "live Debugger.Frame");
+            MOZ_ASSERT(frameobj->getPrivate(frameobj->numFixedSlotsMaybeForwarded()));
         }
     }
 
@@ -9295,7 +9295,7 @@ DebuggerObject::promiseDependentPromisesGetter(JSContext* cx, unsigned argc, Val
 
     Rooted<GCVector<Value>> values(cx, GCVector<Value>(cx));
     {
-        JSAutoCompartment ac(cx, promise);
+        JSAutoRealm ar(cx, promise);
         if (!promise->dependentPromises(cx, &values))
             return false;
     }

@@ -937,6 +937,9 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // threads for purposes of wasm::InterruptRunningCode().
     js::ExclusiveData<js::wasm::InstanceVector> wasmInstances;
 
+    // The implementation-defined abstract operation HostResolveImportedModule.
+    js::MainThreadData<JS::ModuleResolveHook> moduleResolveHook;
+
   public:
 #if defined(JS_BUILD_BINAST)
     js::BinaryASTSupport& binast() {

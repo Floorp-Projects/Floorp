@@ -19,7 +19,7 @@ BEGIN_TEST(testStructuredClone_object)
     JS::RootedValue v1(cx);
 
     {
-        JSAutoCompartment ac(cx, g1);
+        JSAutoRealm ar(cx, g1);
         JS::RootedValue prop(cx, JS::Int32Value(1337));
 
         JS::RootedObject obj(cx, JS_NewPlainObject(cx));
@@ -29,7 +29,7 @@ BEGIN_TEST(testStructuredClone_object)
     }
 
     {
-        JSAutoCompartment ac(cx, g2);
+        JSAutoRealm ar(cx, g2);
         JS::RootedValue v2(cx);
 
         CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
@@ -57,7 +57,7 @@ BEGIN_TEST(testStructuredClone_string)
     JS::RootedValue v1(cx);
 
     {
-        JSAutoCompartment ac(cx, g1);
+        JSAutoRealm ar(cx, g1);
         JS::RootedValue prop(cx, JS::Int32Value(1337));
 
         v1 = JS::StringValue(JS_NewStringCopyZ(cx, "Hello World!"));
@@ -66,7 +66,7 @@ BEGIN_TEST(testStructuredClone_string)
     }
 
     {
-        JSAutoCompartment ac(cx, g2);
+        JSAutoRealm ar(cx, g2);
         JS::RootedValue v2(cx);
 
         CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
@@ -93,7 +93,7 @@ BEGIN_TEST(testStructuredClone_externalArrayBuffer)
     JS::RootedValue v1(cx);
 
     {
-        JSAutoCompartment ac(cx, g1);
+        JSAutoRealm ar(cx, g1);
 
         JS::RootedObject obj(cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
             &ExternalData::freeCallback, &data));
@@ -104,7 +104,7 @@ BEGIN_TEST(testStructuredClone_externalArrayBuffer)
     }
 
     {
-        JSAutoCompartment ac(cx, g2);
+        JSAutoRealm ar(cx, g2);
         JS::RootedValue v2(cx);
 
         CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
@@ -269,7 +269,7 @@ BEGIN_TEST(testStructuredClone_SavedFrame)
         JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), pp->principals,
                                                   JS::FireOnNewGlobalHook, options));
         CHECK(g);
-        JSAutoCompartment ac(cx, g);
+        JSAutoRealm ar(cx, g);
 
         CHECK(js::DefineTestingFunctions(cx, g, false, false));
 

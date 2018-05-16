@@ -30,7 +30,7 @@ AddFunctions(JSContext* cx, JS::Handle<JS::Value> val, const JSFunctionSpec* fun
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSAutoCompartment ac(cx, realIntlObj);
+  JSAutoRealm ar(cx, realIntlObj);
 
   if (!JS_DefineFunctions(cx, realIntlObj, funcs)) {
     return NS_ERROR_FAILURE;
@@ -73,7 +73,7 @@ MozIntlHelper::AddDateTimeFormatConstructor(JS::Handle<JS::Value> val, JSContext
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSAutoCompartment ac(cx, realIntlObj);
+  JSAutoRealm ar(cx, realIntlObj);
 
   if (!js::AddMozDateTimeFormatConstructor(cx, realIntlObj)) {
     return NS_ERROR_FAILURE;
@@ -94,7 +94,7 @@ MozIntlHelper::AddRelativeTimeFormatConstructor(JS::Handle<JS::Value> val, JSCon
     return NS_ERROR_INVALID_ARG;
   }
 
-  JSAutoCompartment ac(cx, realIntlObj);
+  JSAutoRealm ar(cx, realIntlObj);
 
   if (!js::AddRelativeTimeFormatConstructor(cx, realIntlObj)) {
     return NS_ERROR_FAILURE;
