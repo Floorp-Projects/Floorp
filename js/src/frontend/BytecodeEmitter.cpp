@@ -337,7 +337,7 @@ class TryFinallyControl : public BytecodeEmitter::NestableControl
 static inline void
 MarkAllBindingsClosedOver(LexicalScope::Data& data)
 {
-    BindingName* names = data.names;
+    TrailingNamesArray& names = data.trailingNames;
     for (uint32_t i = 0; i < data.length; i++)
         names[i] = BindingName(names[i].name(), true);
 }
@@ -9260,7 +9260,8 @@ BytecodeEmitter::isRestParameter(ParseNode* pn)
         if (bindings->nonPositionalFormalStart > 0) {
             // |paramName| can be nullptr when the rest destructuring syntax is
             // used: `function f(...[]) {}`.
-            JSAtom* paramName = bindings->names[bindings->nonPositionalFormalStart - 1].name();
+            JSAtom* paramName =
+                bindings->trailingNames[bindings->nonPositionalFormalStart - 1].name();
             return paramName && name == paramName;
         }
     }
