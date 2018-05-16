@@ -3118,6 +3118,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   , mDisableSubpixelAA(false)
   , mReusedItem(false)
   , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
+  , mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
 #endif
@@ -9612,7 +9613,7 @@ nsDisplayMask::PaintMask(nsDisplayListBuilder* aBuilder,
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(*aMaskContext,
-                                                  mFrame,  GetPaintRect(),
+                                                  mFrame,  GetBuildingRect(),
                                                   borderArea, aBuilder,
                                                   nullptr,
                                                   mHandleOpacity, imgParmas);
