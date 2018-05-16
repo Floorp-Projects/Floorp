@@ -66,20 +66,17 @@ WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedFunction wrapped(cx, &args.callee().as<JSFunction>());
-    RootedValue unwrappedVal(cx, wrapped->getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT));
-    RootedFunction unwrapped(cx, &unwrappedVal.toObject().as<JSFunction>());
-    RootedValue thisValue(cx, args.thisv());
+    RootedValue unwrappedVal(cx);
+    unwrappedVal = args.callee().as<JSFunction>().getExtendedSlot(WRAPPED_ASYNC_UNWRAPPED_SLOT);
 
     // Step 2.
     // Also does a part of 2.2 steps 1-2.
-    RootedValue generatorVal(cx);
     InvokeArgs args2(cx);
-    if (!args2.init(cx, argc))
+    if (!FillArgumentsFromArraylike(cx, args2, args))
         return false;
-    for (size_t i = 0, len = argc; i < len; i++)
-        args2[i].set(args[i]);
-    if (Call(cx, unwrappedVal, thisValue, args2, &generatorVal)) {
+
+    RootedValue generatorVal(cx);
+    if (Call(cx, unwrappedVal, args.thisv(), args2, &generatorVal)) {
         // Step 1.
         Rooted<PromiseObject*> resultPromise(cx, CreatePromiseObjectForAsync(cx, generatorVal));
         if (!resultPromise)
@@ -101,7 +98,7 @@ WrappedAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
     RootedValue exc(cx);
     if (!GetAndClearException(cx, &exc))
         return false;
-    RootedObject rejectPromise(cx, PromiseObject::unforgeableReject(cx, exc));
+    JSObject* rejectPromise = PromiseObject::unforgeableReject(cx, exc);
     if (!rejectPromise)
         return false;
 
@@ -131,10 +128,9 @@ js::WrapAsyncFunctionWithProto(JSContext* cx, HandleFunction unwrapped, HandleOb
         return nullptr;
 
     // Steps 3 (partially).
-    RootedFunction wrapped(cx, NewFunctionWithProto(cx, WrappedAsyncFunction, length,
-                                                    JSFunction::NATIVE_FUN, nullptr,
-                                                    funName, proto,
-                                                    AllocKind::FUNCTION_EXTENDED));
+    JSFunction* wrapped = NewFunctionWithProto(cx, WrappedAsyncFunction, length,
+                                               JSFunction::NATIVE_FUN, nullptr, funName, proto,
+                                               AllocKind::FUNCTION_EXTENDED);
     if (!wrapped)
         return nullptr;
 
