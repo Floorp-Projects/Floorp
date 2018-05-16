@@ -40,7 +40,13 @@ class GCTrace {
     void traceMajorGCEnd();
     void traceTypeNewScript(js::ObjectGroup* group);
 
-private:
+  private:
+    FILE* gcTraceFile = nullptr;
+
+    HashSet<const Class*, DefaultHasher<const Class*>, SystemAllocPolicy> tracedClasses;
+    HashSet<const ObjectGroup*, DefaultHasher<const ObjectGroup*>, SystemAllocPolicy> tracedGroups;
+
+    void maybeTraceClass(const Class* clasp);
     void maybeTraceGroup(ObjectGroup* group);
 
 #else
