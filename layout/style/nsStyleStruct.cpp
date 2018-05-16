@@ -3716,7 +3716,7 @@ nsStyleDisplay::FinishStyle(
       // ImageValue is created, in both Gecko and Stylo. That will
       // avoid doing a mutation here.
       if (shapeImage->GetType() == eStyleImageType_Image) {
-        shapeImage->GetImageRequest()->GetImageValue()->SetCORSMode(
+        shapeImage->ImageRequest()->GetImageValue()->SetCORSMode(
           CORSMode::CORS_ANONYMOUS);
       }
       const nsStyleImage* oldShapeImage =
