@@ -1524,7 +1524,7 @@ OutlineTypedObject::createDerived(JSContext* cx, HandleTypeDescr type,
 TypedObject::createZeroed(JSContext* cx, HandleTypeDescr descr, gc::InitialHeap heap)
 {
     // If possible, create an object with inline data.
-    if (descr->size() <= InlineTypedObject::MaximumSize) {
+    if (InlineTypedObject::canAccommodateType(descr)) {
         AutoSetNewObjectMetadata metadata(cx);
 
         InlineTypedObject* obj = InlineTypedObject::create(cx, descr, heap);
@@ -2893,7 +2893,7 @@ CreateTraceList(JSContext* cx, HandleTypeDescr descr)
     // for larger objects, both to limit the size of the trace lists and
     // because tracing outline typed objects is considerably more complicated
     // than inline ones.
-    if (descr->size() > InlineTypedObject::MaximumSize || descr->transparent())
+    if (!InlineTypedObject::canAccommodateType(descr) || descr->transparent())
         return true;
 
     TraceListVisitor visitor;
