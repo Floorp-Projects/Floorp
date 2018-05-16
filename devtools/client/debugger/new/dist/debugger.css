@@ -1796,7 +1796,7 @@ html .toggle-button.end.vertical svg {
   justify-content: center;
 }
 
-.source-footer > button.action:hover {
+.source-footer > .commands > button.action:hover {
   background: var(--theme-toolbar-background-hover);
 }
 
@@ -2920,7 +2920,8 @@ debug-expression-error {
 
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint,
-.breakpoints-exceptions {
+.breakpoints-exceptions,
+.breakpoints-exceptions-caught {
   padding: 0.25em 1em;
 }
 
@@ -2930,8 +2931,7 @@ debug-expression-error {
 }
 
 .breakpoints-list .breakpoint {
-    padding-top: 0.25em;
-    padding-bottom: 0.25em;
+ height: var(--breakpoint-expression-height);
 }
 
 .breakpoints-exceptions-caught {
@@ -2996,7 +2996,7 @@ html .breakpoints-list .breakpoint.paused {
 
 .breakpoints-list .breakpoint.disabled .breakpoint-label {
   color: var(--theme-comment);
-  transition: color 0.5s linear;
+  transition: color 0.15s linear;
 }
 
 .breakpoints-list .breakpoint:hover {
@@ -3096,8 +3096,11 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   min-width: initial !important;
 }
 
+.breakpoints-list .breakpoint .CodeMirror.cm-s-mozilla-breakpoint {
+  transition: opacity 0.15s linear;
+}
+
 .breakpoints-list .breakpoint.disabled .CodeMirror.cm-s-mozilla-breakpoint {
-  transition: opacity 0.5s linear;
   opacity: 0.5;
 }
 
@@ -3190,6 +3193,7 @@ html[dir="rtl"] .breakpoints-list .breakpoint .breakpoint-line {
   background-color: var(--theme-body-background);
   display: block;
   position: relative;
+  height: var(--breakpoint-expression-height);
 }
 
 .expression-container > .tree {
@@ -3800,9 +3804,10 @@ img.skipPausing {
   flex-direction: column;
   flex: 1;
   white-space: nowrap;
-  --breakpoint-expression-right-clear-space: 36px;
   -moz-user-select: none;
   user-select: none;
+ --breakpoint-expression-right-clear-space: 36px;
+ --breakpoint-expression-height: 2.4em;
 }
 
 /*
