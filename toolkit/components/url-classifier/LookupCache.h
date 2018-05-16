@@ -97,9 +97,9 @@ public:
   virtual ~CacheResult() {}
 
   template<typename T>
-  static T* Cast(CacheResult* aThat) {
+  static const T* Cast(const CacheResult* aThat) {
     return ((aThat && T::VER == aThat->Ver()) ?
-      reinterpret_cast<T*>(aThat) : nullptr);
+      reinterpret_cast<const T*>(aThat) : nullptr);
   }
 
   nsCString table;

@@ -266,7 +266,7 @@ private:
                     uint32_t aCount,
                     LookupResultArray& results);
 
-  nsresult CacheResultToTableUpdate(CacheResult* aCacheResult,
+  nsresult CacheResultToTableUpdate(const CacheResult* aCacheResult,
                                     RefPtr<TableUpdate> aUpdate);
 
   bool IsSameAsLastResults(const CacheResultArray& aResult) const;
