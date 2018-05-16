@@ -10197,10 +10197,10 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
     uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
     Telemetry::Accumulate(Telemetry::CONTENT_LARGE_PAINT_PHASE_WEIGHT, aKey, amount);
   };
-  auto recordSmall = [=](const nsString& aKey, double aDurationMs) -> void {
+  auto recordSmall = [=](const nsCString& aKey, double aDurationMs) -> void {
     MOZ_ASSERT(aDurationMs <= totalMs);
     uint32_t amount = static_cast<int32_t>((aDurationMs / totalMs) * 100.0);
-    Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_SMALL_PAINT_PHASE_WEIGHT, aKey, amount);
+    Telemetry::Accumulate(Telemetry::CONTENT_SMALL_PAINT_PHASE_WEIGHT, aKey, amount);
   };
 
   double dlMs = sMetrics[Metric::DisplayList];
@@ -10214,9 +10214,9 @@ PaintTelemetry::AutoRecordPaint::~AutoRecordPaint()
     recordLarge(NS_LITERAL_CSTRING("flb"), flbMs);
     recordLarge(NS_LITERAL_CSTRING("r"), rMs);
   } else {
-    recordSmall(NS_LITERAL_STRING("dl"), dlMs);
-    recordSmall(NS_LITERAL_STRING("flb"), flbMs);
-    recordSmall(NS_LITERAL_STRING("r"), rMs);
+    recordSmall(NS_LITERAL_CSTRING("dl"), dlMs);
+    recordSmall(NS_LITERAL_CSTRING("flb"), flbMs);
+    recordSmall(NS_LITERAL_CSTRING("r"), rMs);
   }
 }
 
