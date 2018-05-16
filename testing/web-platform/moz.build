@@ -14,13 +14,17 @@ TEST_HARNESS_FILES['web-platform'] += [
     'mach_test_package_commands.py',
     'outbound/**',
     'runtests.py',
-    'wptrunner.ini'
+    'wptrunner.ini',
 ]
 
-TEST_HARNESS_FILES['web-platform'].certs = [
+TEST_HARNESS_FILES['web-platform'].certs += [
     'certs/cacert.pem',
     'certs/web-platform.test.key',
     'certs/web-platform.test.pem',
+]
+
+TEST_HARNESS_FILES['web-platform'].prefs += [
+    '/build/sanitizers/lsan_suppressions.txt',
 ]
 
 with Files("**"):
