@@ -180,13 +180,39 @@ public:
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
 
+  // The kind of image frame we are.
+  enum class Kind : uint8_t
+  {
+    // For an nsImageLoadingContent, including generated ::before and ::after
+    // content, which are an nsGenConImageContent.
+    ImageElement,
+    // For css 'content: url(..)' on other elements.
+    NonGeneratedContentProperty,
+  };
+
+  // Whether this frame is for a non-generated image element, that is, one that
+  // isn't a ::before / ::after.
+  bool IsForNonGeneratedImageElement() const
+  {
+    return mKind == Kind::ImageElement &&
+      !HasAnyStateBits(NS_FRAME_GENERATED_CONTENT);
+  }
+
 private:
   friend nsIFrame* NS_NewImageFrame(nsIPresShell*, ComputedStyle*);
-  explicit nsImageFrame(ComputedStyle* aStyle)
-    : nsImageFrame(aStyle, kClassID) {}
+  friend nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+
+  nsImageFrame(ComputedStyle* aStyle, Kind aKind)
+    : nsImageFrame(aStyle, kClassID, aKind)
+  { }
+
+  nsImageFrame(ComputedStyle*, ClassID, Kind);
 
 protected:
-  nsImageFrame(ComputedStyle* aStyle, ClassID aID);
+  nsImageFrame(ComputedStyle* aStyle, ClassID aID)
+    : nsImageFrame(aStyle, aID, Kind::ImageElement)
+  { }
+
   virtual ~nsImageFrame();
 
   void EnsureIntrinsicSizeAndRatio();
@@ -338,12 +364,16 @@ private:
 
   RefPtr<nsImageListener> mListener;
 
+  // An image request created for content: url(..).
+  RefPtr<imgRequestProxy> mContentURLRequest;
+
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
   nsSize mComputedSize;
   mozilla::IntrinsicSize mIntrinsicSize;
   nsSize mIntrinsicRatio;
 
+  const Kind mKind;
   bool mDisplayingIcon;
   bool mFirstFrameComplete;
   bool mReflowCallbackPosted;
