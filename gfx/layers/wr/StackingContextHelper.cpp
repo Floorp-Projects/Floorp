@@ -51,6 +51,11 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
       && !aParentSC.mIsPreserve3D) {
     mInheritedTransform = transform2d * aParentSC.mInheritedTransform;
     mScale = mInheritedTransform.ScaleFactors(true);
+    if (aAnimation) {
+      mSnappingSurfaceTransform = gfx::Matrix::Scaling(mScale.width, mScale.height);
+    } else {
+      mSnappingSurfaceTransform = transform2d * aParentSC.mSnappingSurfaceTransform;
+    }
   } else {
     mInheritedTransform = aParentSC.mInheritedTransform;
     mScale = aParentSC.mScale;
