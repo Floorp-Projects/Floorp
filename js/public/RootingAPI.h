@@ -1030,10 +1030,10 @@ GetContextZone(const JSContext* cx)
     return JS::RootingContext::get(cx)->zone_;
 }
 
-inline PseudoStack*
+inline ProfilingStack*
 GetContextProfilingStack(JSContext* cx)
 {
-    return JS::RootingContext::get(cx)->geckoProfiler().getPseudoStack();
+    return JS::RootingContext::get(cx)->geckoProfiler().getProfilingStack();
 }
 
 /**

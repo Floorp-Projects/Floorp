@@ -806,26 +806,26 @@ private:
 // The most complicated part is the stack entry sequence that begins with
 // Label. Here are some examples.
 //
-// - PseudoStack entries without a dynamic string:
+// - ProfilingStack frames without a dynamic string:
 //
 //     Label("js::RunScript")
-//     Category(ProfileEntry::Category::JS)
+//     Category(ProfilingStackFrame::Category::JS)
 //
 //     Label("XREMain::XRE_main")
 //     LineNumber(4660)
-//     Category(ProfileEntry::Category::OTHER)
+//     Category(ProfilingStackFrame::Category::OTHER)
 //
 //     Label("ElementRestyler::ComputeStyleChangeFor")
 //     LineNumber(3003)
-//     Category(ProfileEntry::Category::CSS)
+//     Category(ProfilingStackFrame::Category::CSS)
 //
-// - PseudoStack entries with a dynamic string:
+// - ProfilingStack frames with a dynamic string:
 //
 //     Label("nsObserverService::NotifyObservers")
 //     DynamicStringFragment("domwindo")
 //     DynamicStringFragment("wopened")
 //     LineNumber(291)
-//     Category(ProfileEntry::Category::OTHER)
+//     Category(ProfilingStackFrame::Category::OTHER)
 //
 //     Label("")
 //     DynamicStringFragment("closeWin")
@@ -837,32 +837,32 @@ private:
 //     DynamicStringFragment("ay.js:5)")
 //     DynamicStringFragment("")          # this string holds the closing '\0'
 //     LineNumber(25)
-//     Category(ProfileEntry::Category::JS)
+//     Category(ProfilingStackFrame::Category::JS)
 //
 //     Label("")
 //     DynamicStringFragment("bound (s")
 //     DynamicStringFragment("elf-host")
 //     DynamicStringFragment("ed:914)")
 //     LineNumber(945)
-//     Category(ProfileEntry::Category::JS)
+//     Category(ProfilingStackFrame::Category::JS)
 //
-// - A pseudoStack entry with a dynamic string, but with privacy enabled:
+// - A profiling stack frame with a dynamic string, but with privacy enabled:
 //
 //     Label("nsObserverService::NotifyObservers")
 //     DynamicStringFragment("(private")
 //     DynamicStringFragment(")")
 //     LineNumber(291)
-//     Category(ProfileEntry::Category::OTHER)
+//     Category(ProfilingStackFrame::Category::OTHER)
 //
-// - A pseudoStack entry with an overly long dynamic string:
+// - A profiling stack frame with an overly long dynamic string:
 //
 //     Label("")
 //     DynamicStringFragment("(too lon")
 //     DynamicStringFragment("g)")
 //     LineNumber(100)
-//     Category(ProfileEntry::Category::NETWORK)
+//     Category(ProfilingStackFrame::Category::NETWORK)
 //
-// - A wasm JIT frame entry:
+// - A wasm JIT frame:
 //
 //     Label("")
 //     DynamicStringFragment("wasm-fun")
@@ -878,7 +878,7 @@ private:
 //     DynamicStringFragment("30bc1:38")
 //     DynamicStringFragment("29856)")
 //
-// - A JS frame entry in a synchronous sample:
+// - A JS frame in a synchronous sample:
 //
 //     Label("")
 //     DynamicStringFragment("u (https")

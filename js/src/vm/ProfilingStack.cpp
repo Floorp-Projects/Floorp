@@ -14,39 +14,39 @@
 
 using namespace js;
 
-PseudoStack::~PseudoStack()
+ProfilingStack::~ProfilingStack()
 {
-    // The label macros keep a reference to the PseudoStack to avoid a TLS
+    // The label macros keep a reference to the ProfilingStack to avoid a TLS
     // access. If these are somehow not all cleared we will get a
     // use-after-free so better to crash now.
     MOZ_RELEASE_ASSERT(stackPointer == 0);
 
-    delete[] entries;
+    delete[] frames;
 }
 
 bool
-PseudoStack::ensureCapacitySlow()
+ProfilingStack::ensureCapacitySlow()
 {
-    MOZ_ASSERT(stackPointer >= entryCapacity);
+    MOZ_ASSERT(stackPointer >= capacity);
     const uint32_t kInitialCapacity = 128;
 
     uint32_t sp = stackPointer;
-    auto newCapacity = std::max(sp + 1,  entryCapacity ? entryCapacity * 2 : kInitialCapacity);
+    auto newCapacity = std::max(sp + 1,  capacity ? capacity * 2 : kInitialCapacity);
 
-    auto* newEntries =
-        new (mozilla::fallible) js::ProfileEntry[newCapacity];
-    if (MOZ_UNLIKELY(!newEntries))
+    auto* newFrames =
+        new (mozilla::fallible) js::ProfilingStackFrame[newCapacity];
+    if (MOZ_UNLIKELY(!newFrames))
         return false;
 
-    // It's important that `entries` / `entryCapacity` / `stackPointer` remain consistent here at
+    // It's important that `frames` / `capacity` / `stackPointer` remain consistent here at
     // all times.
-    for (auto i : mozilla::IntegerRange(entryCapacity))
-        newEntries[i] = entries[i];
+    for (auto i : mozilla::IntegerRange(capacity))
+        newFrames[i] = frames[i];
 
-    js::ProfileEntry* oldEntries = entries;
-    entries = newEntries;
-    entryCapacity = newCapacity;
-    delete[] oldEntries;
+    js::ProfilingStackFrame* oldFrames = frames;
+    frames = newFrames;
+    capacity = newCapacity;
+    delete[] oldFrames;
 
     return true;
 }

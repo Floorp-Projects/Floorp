@@ -89,7 +89,7 @@ const TEST_CONDITIONS = {
 // Test that the update check is performed as part of the regular add-on update
 // check
 add_task(async function test_addon_update() {
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, true);
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
   await updateAllSystemAddons(await buildSystemAddonUpdates([
@@ -112,12 +112,12 @@ add_task(async function test_addon_update() {
 add_task(async function test_app_update_disabled() {
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
     { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
   ], root), testserver);
-  Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, undefined, false, distroDir);
 
@@ -130,12 +130,12 @@ add_task(async function test_safe_mode() {
 
   await setupSystemAddonConditions(TEST_CONDITIONS.blank, distroDir);
 
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, false);
+  Services.prefs.setBoolPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED, false);
   await updateAllSystemAddons(await buildSystemAddonUpdates([
     { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
     { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
   ], root), testserver);
-  Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_UPDATE_ENABLED);
 
   await verifySystemAddonState(TEST_CONDITIONS.blank.initialState, undefined, false, distroDir);
 

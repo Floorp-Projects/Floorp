@@ -273,7 +273,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         if self.revision:
             return self.revision
 
-        self.read_buildbot_config()
         config = self.config
         revision = None
         if config.get("revision"):

@@ -32,3 +32,4 @@ skip-if(!asyncPan) == 1437374-1.html 1437374-1-ref.html
 == 1453541-1.html 1453541-ref.html
 == 1453541-2.html 1453541-ref.html
 == 1452805-1.html 1452805-ref.html
+== 1461231-1.html about:blank

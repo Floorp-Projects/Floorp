@@ -12,6 +12,7 @@
 const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
                      .getService(Ci.nsIPaymentRequestService);
 
+ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -159,7 +160,10 @@ var paymentDialogWrapper = {
     this.mm = frame.frameLoader.messageManager;
     this.mm.addMessageListener("paymentContentToChrome", this);
     this.mm.loadFrameScript("chrome://payments/content/paymentDialogFrameScript.js", true);
-    this.frame.src = "resource://payments/paymentRequest.xhtml";
+    if (AppConstants.platform == "win") {
+      this.frame.setAttribute("selectmenulist", "ContentSelectDropdown-windows");
+    }
+    this.frame.loadURI("resource://payments/paymentRequest.xhtml");
   },
 
   createShowResponse({

@@ -2100,6 +2100,7 @@ public:
     , mDisableSubpixelAA(false)
     , mReusedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
+    , mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2125,7 +2126,6 @@ public:
 
   virtual void RestoreState()
   {
-    mVisibleRect = mState.mVisibleRect;
     mClipChain = mState.mClipChain;
     mClip = mState.mClip;
     mDisableSubpixelAA = false;
@@ -2168,11 +2168,13 @@ public:
     , mReferenceFrame(aOther.mReferenceFrame)
     , mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot)
     , mToReferenceFrame(aOther.mToReferenceFrame)
-    , mVisibleRect(aOther.mVisibleRect)
+    , mBuildingRect(aOther.mBuildingRect)
+    , mPaintRect(aOther.mPaintRect)
     , mForceNotVisible(aOther.mForceNotVisible)
     , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
     , mReusedItem(false)
     , mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden())
+    , mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -2648,26 +2650,29 @@ public:
   virtual RetainedDisplayList* GetChildren() const { return nullptr; }
 
   /**
-   * Returns the visible rect.
+   * Returns the building rectangle used by nsDisplayListBuilder when
+   * this item was constructed.
    */
-  const nsRect& GetVisibleRect() const { return mVisibleRect; }
+  const nsRect& GetBuildingRect() const { return mBuildingRect; }
 
-  void SetVisibleRect(const nsRect& aVisibleRect, bool aStore)
+  void SetBuildingRect(const nsRect& aBuildingRect)
   {
-    mVisibleRect = aVisibleRect;
-
-    if (aStore) {
-      mState.mVisibleRect = mVisibleRect;
-    }
+    mPaintRect = mBuildingRect = aBuildingRect;
   }
 
+  void SetPaintRect(const nsRect& aPaintRect) {
+    mPaintRect = aPaintRect;
+    mPaintRectValid = true;
+  }
+  bool HasPaintRect() const { return mPaintRectValid; }
+
   /**
-   * Returns the visible rect for the children, relative to their
-   * reference frame. Can be different from mVisibleRect for nsDisplayTransform,
+   * Returns the building rect for the children, relative to their
+   * reference frame. Can be different from mBuildingRect for nsDisplayTransform,
    * since the reference frame for the children is different from the reference
    * frame for the item itself.
    */
-  virtual const nsRect& GetVisibleRectForChildren() const { return mVisibleRect; }
+  virtual const nsRect& GetBuildingRectForChildren() const { return mBuildingRect; }
 
   /**
    * Stores the given opacity value to be applied when drawing. It is an error to
@@ -2842,6 +2847,10 @@ public:
     return mOldListIndex;
   }
 
+  const nsRect& GetPaintRect() const {
+    return mPaintRect;
+  }
+
 protected:
   nsDisplayItem() = delete;
 
@@ -2859,13 +2868,19 @@ protected:
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
   RefPtr<mozilla::DisplayItemData> mDisplayItemData;
-  // This is the rectangle that needs to be painted.
-  // Display item construction sets this to the dirty rect.
+
+private:
+  // This is the rectangle that nsDisplayListBuilder was using as the visible
+  // rect to decide which items to construct.
+  nsRect    mBuildingRect;
+
   // nsDisplayList::ComputeVisibility sets this to the visible region
-  // of the item by intersecting the current visible region with the bounds
+  // of the item by intersecting the visible region with the bounds
   // of the item. Paint implementations can use this to limit their drawing.
   // Guaranteed to be contained in GetBounds().
-  nsRect    mVisibleRect;
+  nsRect    mPaintRect;
+
+protected:
 
   mozilla::DebugOnly<uintptr_t> mOldList;
   OldListIndex mOldListIndex;
@@ -2874,13 +2889,13 @@ protected:
   bool      mDisableSubpixelAA;
   bool      mReusedItem;
   bool      mBackfaceHidden;
+  bool      mPaintRectValid;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool      mPainted;
 #endif
 
   struct {
-    nsRect mVisibleRect;
     RefPtr<const DisplayItemClipChain> mClipChain;
     const DisplayItemClip* mClip;
   } mState;
@@ -3157,14 +3172,14 @@ public:
    * If there is an item in this list which is not bounded with respect to
    * aASR (i.e. which does not have "finite bounds" with respect to aASR),
    * then this method trigger an assertion failure.
-   * The optional aVisibleRect out argument can be set to non-null if the
-   * caller is also interested to know the visible rect.  This can be used
+   * The optional aBuildingRect out argument can be set to non-null if the
+   * caller is also interested to know the building rect.  This can be used
    * to get the visible rect efficiently without traversing the display list
    * twice.
    */
   nsRect GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
                                           const ActiveScrolledRoot* aASR,
-                                          nsRect* aVisibleRect = nullptr) const;
+                                          nsRect* aBuildingRect = nullptr) const;
 
   /**
    * Find the topmost display item that returns a non-null frame, and return
@@ -3177,7 +3192,7 @@ public:
    * Compute the union of the visible rects of the items in the list. The
    * result is not cached.
    */
-  nsRect GetVisibleRect() const;
+  nsRect GetBuildingRect() const;
 
   void SetIsOpaque()
   {
@@ -3555,9 +3570,9 @@ public:
                      gfxContext* aCtx) override {
     MOZ_ASSERT(!!mPaint != !!mOldPaint);
     if (mPaint) {
-      mPaint(mFrame, aCtx->GetDrawTarget(), mVisibleRect, ToReferenceFrame());
+      mPaint(mFrame, aCtx->GetDrawTarget(), GetPaintRect(), ToReferenceFrame());
     } else {
-      mOldPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
+      mOldPaint(mFrame, aCtx, GetPaintRect(), ToReferenceFrame());
     }
   }
   virtual const char* Name() const override { return mName; }
@@ -5010,7 +5025,7 @@ public:
     , mHasZIndexOverride(false)
   {
     MOZ_COUNT_CTOR(nsDisplayWrapList);
-    mBaseVisibleRect = mVisibleRect;
+    mBaseBuildingRect = GetBuildingRect();
     mListPtr = &mList;
   }
 
@@ -5025,7 +5040,7 @@ public:
     , mFrameActiveScrolledRoot(aOther.mFrameActiveScrolledRoot)
     , mMergedFrames(aOther.mMergedFrames)
     , mBounds(aOther.mBounds)
-    , mBaseVisibleRect(aOther.mBaseVisibleRect)
+    , mBaseBuildingRect(aOther.mBaseBuildingRect)
     , mOverrideZIndex(aOther.mOverrideZIndex)
     , mIndex(aOther.mIndex)
     , mHasZIndexOverride(aOther.mHasZIndexOverride)
@@ -5073,9 +5088,9 @@ public:
       SetClipChain(clip, false);
     }
 
-    nsRect visibleRect;
+    nsRect buildingRect;
     mBounds =
-      mListPtr->GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot, &visibleRect);
+      mListPtr->GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot, &buildingRect);
     // The display list may contain content that's visible outside the visible
     // rect (i.e. the current dirty rect) passed in when the item was created.
     // This happens when the dirty rect has been restricted to the visual
@@ -5083,8 +5098,8 @@ public:
     // rects in nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay), but that
     // frame contains placeholders for out-of-flows that aren't descendants of
     // the frame.
-    mVisibleRect.UnionRect(mBaseVisibleRect, visibleRect);
-    mState.mVisibleRect = mVisibleRect;
+    buildingRect.UnionRect(mBaseBuildingRect, buildingRect);
+    SetBuildingRect(buildingRect);
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
@@ -5198,7 +5213,9 @@ protected:
   void MergeFromTrackingMergedFrames(const nsDisplayWrapList* aOther)
   {
     mBounds.UnionRect(mBounds, aOther->mBounds);
-    mVisibleRect.UnionRect(mVisibleRect, aOther->mVisibleRect);
+    nsRect buildingRect;
+    buildingRect.UnionRect(GetBuildingRect(), aOther->GetBuildingRect());
+    SetBuildingRect(buildingRect);
     mMergedFrames.AppendElement(aOther->mFrame);
     mMergedFrames.AppendElements(aOther->mMergedFrames);
   }
@@ -5212,9 +5229,9 @@ protected:
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
   nsRect mBounds;
-  // Visible rect contributed by this display item itself.
-  // Our mVisibleRect may include the visible areas of children.
-  nsRect mBaseVisibleRect;
+  // Displaylist building rect contributed by this display item itself.
+  // Our mBuildingRect may include the visible areas of children.
+  nsRect mBaseBuildingRect;
   int32_t mOverrideZIndex;
   uint32_t mIndex;
   bool mHasZIndexOverride;
@@ -6319,16 +6336,16 @@ public:
    * ferries the underlying frame to the nsDisplayItem constructor.
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
+                     nsDisplayList *aList, const nsRect& aChildrenBuildingRect,
                      uint32_t aIndex = 0, bool aAllowAsyncAnimation = false);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayItem *aItem, const nsRect& aChildrenVisibleRect,
+                     nsDisplayItem *aItem, const nsRect& aChildrenBuildingRect,
                      uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
+                     nsDisplayList *aList, const nsRect& aChildrenBuildingRect,
                      ComputeTransformFunction aTransformGetter, uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayList *aList, const nsRect& aChildrenVisibleRect,
+                     nsDisplayList *aList, const nsRect& aChildrenBuildingRect,
                      const Matrix4x4& aTransform, uint32_t aIndex = 0);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -6430,9 +6447,9 @@ public:
     return mAnimatedGeometryRootForScrollMetadata;
   }
 
-  virtual const nsRect& GetVisibleRectForChildren() const override
+  virtual const nsRect& GetBuildingRectForChildren() const override
   {
-    return mChildrenVisibleRect;
+    return mChildrenBuildingRect;
   }
 
   enum {
@@ -6486,8 +6503,20 @@ public:
                               const nsIFrame* aFrame,
                               nsRect *aOutRect);
 
-  bool UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
-                              nsRect* aOutRect) const;
+  bool UntransformRect(nsDisplayListBuilder* aBuilder,
+                       const nsRect& aRect,
+                       nsRect* aOutRect) const;
+  bool UntransformBuildingRect(nsDisplayListBuilder* aBuilder,
+                               nsRect* aOutRect) const
+  {
+    return UntransformRect(aBuilder, GetBuildingRect(), aOutRect);
+
+  }
+  bool UntransformPaintRect(nsDisplayListBuilder* aBuilder,
+                            nsRect* aOutRect) const
+  {
+    return UntransformRect(aBuilder, GetPaintRect(), aOutRect);
+  }
 
   static Point3D GetDeltaToTransformOrigin(const nsIFrame* aFrame,
                                            float aAppUnitsPerPixel,
@@ -6652,7 +6681,7 @@ private:
   ComputeTransformFunction mTransformGetter;
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForChildren;
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
-  nsRect mChildrenVisibleRect;
+  nsRect mChildrenBuildingRect;
   uint32_t mIndex;
   mutable nsRect mBounds;
   // True for mBounds is valid.

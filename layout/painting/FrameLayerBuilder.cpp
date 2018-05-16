@@ -290,10 +290,11 @@ DisplayItemData::EndUpdate(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 
 void
 DisplayItemData::BeginUpdate(Layer* aLayer, LayerState aState,
+                             bool aFirstUpdate,
                              nsDisplayItem* aItem /* = nullptr */)
 {
   BeginUpdate(aLayer, aState, aItem,
-              aItem ? aItem->IsReused() : false,
+              (aItem && !aFirstUpdate) ? aItem->IsReused() : false,
               aItem ? aItem->HasMergedFrames() : false);
 }
 
@@ -574,6 +575,7 @@ public:
   void Accumulate(ContainerState* aState,
                   nsDisplayItem* aItem,
                   const nsIntRect& aVisibleRect,
+                  const nsRect& aContentRect,
                   const DisplayItemClip& aClip,
                   LayerState aLayerState,
                   nsDisplayList *aList,
@@ -1695,6 +1697,10 @@ public:
   // region will be painted during a transaction than in a single call to
   // DrawPaintedLayer, for example when progressive paint is enabled.
   nsIntRegion mVisibilityComputedRegion;
+
+  // The area for which we called RecomputeVisibilityForItems on the
+  // previous paint.
+  nsRect mPreviousRecomputeVisibilityRect;
 
   // The number of items assigned to this layer on the previous paint.
   size_t mLastItemCount;
@@ -3612,6 +3618,7 @@ void
 PaintedLayerData::Accumulate(ContainerState* aState,
                              nsDisplayItem* aItem,
                              const nsIntRect& aVisibleRect,
+                             const nsRect& aContentRect,
                              const DisplayItemClip& aClip,
                              LayerState aLayerState,
                              nsDisplayList* aList,
@@ -3629,7 +3636,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
     mOpacityIndices.RemoveLastElement();
 
     AssignedDisplayItem item(aItem, aLayerState,
-                             nullptr, aType, hasOpacity);
+                             nullptr, aContentRect, aType, hasOpacity);
     mAssignedDisplayItems.AppendElement(Move(item));
     return;
   }
@@ -3668,7 +3675,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                                                aItem->GetPerFrameKey(),
                                                currentData);
   AssignedDisplayItem item(aItem, aLayerState,
-                           oldData, aType, hasOpacity);
+                           oldData, aContentRect, aType, hasOpacity);
   mAssignedDisplayItems.AppendElement(Move(item));
 
   if (aType == DisplayItemEntryType::PUSH_OPACITY) {
@@ -3785,7 +3792,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 
     if (!mOpaqueRegion.Contains(componentAlphaRect)) {
       if (IsItemAreaInWindowOpaqueRegion(aState->mBuilder, aItem,
-            componentAlphaBounds.Intersect(aItem->GetVisibleRect()))) {
+            componentAlphaBounds.Intersect(aItem->GetBuildingRect()))) {
         mNeedComponentAlpha = true;
       } else {
         aItem->DisableComponentAlpha();
@@ -4008,7 +4015,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 #ifdef MOZ_DUMP_PAINTING
   int32_t appUnitsPerDevPixel = AppUnitsPerDevPixel(aItem);
   nsIntRect itemVisibleRect =
-    aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
+    aItem->GetPaintRect().ToOutsidePixels(appUnitsPerDevPixel);
 
   RefPtr<DrawTarget> tempDT;
   if (gfxEnv::DumpPaint()) {
@@ -4473,12 +4480,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 #endif
 
     nsIntRect itemVisibleRect = itemDrawRect;
-    // We haven't computed visibility at this point, so item->GetVisibleRect()
-    // is just the dirty rect that item was initialized with. We intersect it
-    // with the clipped item bounds to get a tighter visible rect.
+    // We intersect the building rect with the clipped item bounds to get a
+    // tighter visible rect.
     if (!prerenderedTransform) {
       itemVisibleRect = itemVisibleRect.Intersect(
-        ScaleToOutsidePixels(item->GetVisibleRect(), false));
+        ScaleToOutsidePixels(item->GetBuildingRect(), false));
     }
 
     if (maxLayers != -1 && layerCount >= maxLayers) {
@@ -4770,7 +4776,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           // to avoid failure caused by singular transforms.
           newLayerEntry->mUntransformedVisibleRegion = true;
           newLayerEntry->mVisibleRegion =
-            item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel);
+            item->GetBuildingRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel);
         } else {
           newLayerEntry->mVisibleRegion = itemVisibleRegion;
         }
@@ -4784,7 +4790,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           (item->Frame()->IsPreserve3DLeaf() ||
            item->Frame()->HasPerspective());
         const nsIntRegion &visible = useChildrenVisible ?
-          item->GetVisibleRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel):
+          item->GetBuildingRectForChildren().ScaleToOutsidePixels(contentXScale, contentYScale, mAppUnitsPerDevPixel):
           itemVisibleRegion;
 
         SetOuterVisibleRegionForLayer(ownLayer, visible,
@@ -4843,7 +4849,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           static_cast<nsDisplayCompositorHitTestInfo*>(item);
         paintedLayerData->AccumulateHitTestInfo(this, hitTestInfo);
       } else {
-        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemClip,
+        paintedLayerData->Accumulate(this, item, itemVisibleRect, itemContent, itemClip,
                                      layerState, aList, marker);
 
         if (!paintedLayerData->mLayer) {
@@ -5092,7 +5098,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
 
     bool snap;
     nsRect visibleRect =
-      aItem.mItem->GetVisibleRect().Intersect(aItem.mItem->GetBounds(mDisplayListBuilder, &snap));
+      aItem.mItem->GetBuildingRect().Intersect(aItem.mItem->GetBounds(mDisplayListBuilder, &snap));
     nsIntRegion rgn = visibleRect.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
 
     // Convert the visible rect to a region and give the item
@@ -5169,7 +5175,7 @@ FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer,
 {
   if (aData) {
     if (!aData->mUsed) {
-      aData->BeginUpdate(aLayer, aState, aItem);
+      aData->BeginUpdate(aLayer, aState, false, aItem);
     }
     return aData;
   }
@@ -5184,7 +5190,7 @@ FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer,
     aItem->SetDisplayItemData(data);
   }
 
-  data->BeginUpdate(aLayer, aState, aItem);
+  data->BeginUpdate(aLayer, aState, true, aItem);
 
   lmd->mDisplayItems.PutEntry(data);
   return data;
@@ -5198,7 +5204,7 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 {
   DisplayItemData* oldData = GetDisplayItemData(aFrame, aDisplayItemKey);
   if (oldData && oldData->mFrameList.Length() == 1) {
-    oldData->BeginUpdate(aLayer, aState);
+    oldData->BeginUpdate(aLayer, aState, false);
     return;
   }
 
@@ -5208,7 +5214,7 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
   RefPtr<DisplayItemData> data =
     new (aFrame->PresContext()) DisplayItemData(lmd, aDisplayItemKey, aLayer, aFrame);
 
-  data->BeginUpdate(aLayer, aState);
+  data->BeginUpdate(aLayer, aState, true);
 
   lmd->mDisplayItems.PutEntry(data);
 }
@@ -5216,15 +5222,18 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 AssignedDisplayItem::AssignedDisplayItem(nsDisplayItem* aItem,
                                          LayerState aLayerState,
                                          DisplayItemData* aData,
+                                         const nsRect& aContentRect,
                                          DisplayItemEntryType aType,
                                          const bool aHasOpacity)
   : mItem(aItem)
   , mLayerState(aLayerState)
   , mDisplayItemData(aData)
+  , mContentRect(aContentRect)
+  , mType(aType)
   , mReused(aItem->IsReused())
   , mMerged(aItem->HasMergedFrames())
-  , mType(aType)
   , mHasOpacity(aHasOpacity)
+  , mHasPaintRect(aItem->HasPaintRect())
 {}
 
 AssignedDisplayItem::~AssignedDisplayItem()
@@ -5945,7 +5954,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters scaleParameters;
   nsRect bounds = aChildren->GetClippedBoundsWithRespectToASR(aBuilder, containerASR);
   nsRect childrenVisible =
-      aContainerItem ? aContainerItem->GetVisibleRectForChildren() :
+      aContainerItem ? aContainerItem->GetBuildingRectForChildren() :
           aContainerFrame->GetVisualOverflowRectRelativeToSelf();
   if (!ChooseScaleAndSetTransform(this, aBuilder, aContainerFrame,
                                   aContainerItem,
@@ -6158,6 +6167,7 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
 FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aItems,
                                                nsDisplayListBuilder *aBuilder,
                                                const nsIntRegion& aRegionToDraw,
+                                               nsRect& aPreviousRectToDraw,
                                                const nsIntPoint& aOffset,
                                                int32_t aAppUnitsPerDevPixel,
                                                float aXScale,
@@ -6174,6 +6184,12 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
   for (i = aItems.Length(); i > 0; --i) {
     AssignedDisplayItem* cdi = &aItems[i - 1];
     if (!cdi->mItem) {
+      continue;
+    }
+
+    if (cdi->mHasPaintRect &&
+        !cdi->mContentRect.Intersects(visible.GetBounds()) &&
+        !cdi->mContentRect.Intersects(aPreviousRectToDraw)) {
       continue;
     }
 
@@ -6218,6 +6234,8 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<AssignedDisplayItem>& aI
       }
     }
   }
+
+  aPreviousRectToDraw = visible.GetBounds();
 }
 
 /**
@@ -6336,7 +6354,7 @@ FrameLayerBuilder::PaintItems(nsTArray<AssignedDisplayItem>& aItems,
       continue;
     }
 
-    const nsRect& visibleRect = item->GetVisibleRect();
+    const nsRect& visibleRect = item->GetPaintRect();
     const nsRect paintRect = visibleRect.Intersect(boundRect);
 
     if (paintRect.IsEmpty() || emptyOpacityNesting > 0) {
@@ -6533,6 +6551,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     // then we can skip this.
     int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
     RecomputeVisibilityForItems(userData->mItems, builder, aDirtyRegion,
+                                userData->mPreviousRecomputeVisibilityRect,
                                 offset, appUnitsPerDevPixel,
                                 userData->mXScale, userData->mYScale);
     userData->mVisibilityComputedRegion = aDirtyRegion;

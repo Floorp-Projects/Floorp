@@ -69,7 +69,7 @@ ProfileBuffer::AddStoredMarker(ProfilerMarker *aStoredMarker)
 void
 ProfileBuffer::CollectCodeLocation(
   const char* aLabel, const char* aStr, int aLineNumber,
-  const Maybe<js::ProfileEntry::Category>& aCategory)
+  const Maybe<js::ProfilingStackFrame::Category>& aCategory)
 {
   AddEntry(ProfileBufferEntry::Label(aLabel));
 
@@ -153,20 +153,20 @@ ProfileBufferCollector::CollectWasmFrame(const char* aLabel)
 }
 
 void
-ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
+ProfileBufferCollector::CollectProfilingStackFrame(const js::ProfilingStackFrame& aFrame)
 {
   // WARNING: this function runs within the profiler's "critical section".
 
-  MOZ_ASSERT(aEntry.kind() == js::ProfileEntry::Kind::LABEL ||
-             aEntry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
+  MOZ_ASSERT(aFrame.kind() == js::ProfilingStackFrame::Kind::LABEL ||
+             aFrame.kind() == js::ProfilingStackFrame::Kind::JS_NORMAL);
 
-  const char* label = aEntry.label();
-  const char* dynamicString = aEntry.dynamicString();
+  const char* label = aFrame.label();
+  const char* dynamicString = aFrame.dynamicString();
   bool isChromeJSEntry = false;
   int lineno = -1;
 
-  if (aEntry.isJsFrame()) {
-    // There are two kinds of JS frames that get pushed onto the PseudoStack.
+  if (aFrame.isJsFrame()) {
+    // There are two kinds of JS frames that get pushed onto the ProfilingStack.
     //
     // - label = "", dynamic string = <something>
     // - label = "js::RunScript", dynamic string = nullptr
@@ -176,12 +176,12 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
     if (label[0] == '\0') {
       MOZ_ASSERT(dynamicString);
 
-      // We call aEntry.script() repeatedly -- rather than storing the result in
+      // We call aFrame.script() repeatedly -- rather than storing the result in
       // a local variable in order -- to avoid rooting hazards.
-      if (aEntry.script()) {
-        isChromeJSEntry = IsChromeJSScript(aEntry.script());
-        if (aEntry.pc()) {
-          lineno = JS_PCToLineNumber(aEntry.script(), aEntry.pc());
+      if (aFrame.script()) {
+        isChromeJSEntry = IsChromeJSScript(aFrame.script());
+        if (aFrame.pc()) {
+          lineno = JS_PCToLineNumber(aFrame.script(), aFrame.pc());
         }
       }
 
@@ -189,8 +189,8 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
       MOZ_ASSERT(strcmp(label, "js::RunScript") == 0 && !dynamicString);
     }
   } else {
-    MOZ_ASSERT(aEntry.isLabelFrame());
-    lineno = aEntry.line();
+    MOZ_ASSERT(aFrame.isLabelFrame());
+    lineno = aFrame.line();
   }
 
   if (dynamicString) {
@@ -203,5 +203,5 @@ ProfileBufferCollector::CollectPseudoEntry(const js::ProfileEntry& aEntry)
   }
 
   mBuf.CollectCodeLocation(label, dynamicString, lineno,
-                           Some(aEntry.category()));
+                           Some(aFrame.category()));
 }

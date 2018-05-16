@@ -25,28 +25,28 @@
 #include <mach/mach.h>
 #endif
 
-// Support pseudostack and native stack on these platforms.
+// Support profiling stack and native stack on these platforms.
 #if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
-#  define MOZ_THREADSTACKHELPER_PSEUDO
-#  define MOZ_THREADSTACKHELPER_NATIVE
+#  define MOZ_THREADSTACKHELPER_PROFILING_STACK
+#  define MOZ_THREADSTACKHELPER_NATIVE_STACK
 #endif
 
 
 // Android x86 builds consistently crash in the Background Hang Reporter. bug
 // 1368520.
 #if defined(__ANDROID__)
-#  undef MOZ_THREADSTACKHELPER_PSEUDO
-#  undef MOZ_THREADSTACKHELPER_NATIVE
+#  undef MOZ_THREADSTACKHELPER_PROFILING_STACK
+#  undef MOZ_THREADSTACKHELPER_NATIVE_STACK
 #endif
 
 namespace mozilla {
 
 /**
- * ThreadStackHelper is used to retrieve the profiler pseudo-stack of a
+ * ThreadStackHelper is used to retrieve the profiler's "profiling stack" of a
  * thread, as an alternative of using the profiler to take a profile.
  * The target thread first declares an ThreadStackHelper instance;
  * then another thread can call ThreadStackHelper::GetStack to retrieve
- * the pseudo-stack of the target thread at that instant.
+ * the profiling stack of the target thread at that instant.
  *
  * Only non-copying labels are included in the stack, which means labels
  * with custom text and markers are not included.
@@ -56,7 +56,6 @@ class ThreadStackHelper : public ProfilerStackCollector
 private:
   HangStack* mStackToFill;
   Array<char, nsThread::kRunnableNameBufSize>* mRunnableNameBuffer;
-  // const PseudoStack* const mPseudoStack;
   size_t mMaxStackSize;
   size_t mMaxBufferSize;
   size_t mDesiredStackSize;
@@ -76,7 +75,7 @@ public:
    * @param aStack        HangStack instance to be filled.
    * @param aRunnableName The name of the current runnable on the target thread.
    * @param aStackWalk    If true, native stack frames will be collected
-   *                      along with pseudostack frames.
+   *                      along with profiling stack frames.
    */
   void GetStack(HangStack& aStack, nsACString& aRunnableName, bool aStackWalk);
 
@@ -93,7 +92,7 @@ protected:
   virtual void CollectNativeLeafAddr(void* aAddr) override;
   virtual void CollectJitReturnAddr(void* aAddr) override;
   virtual void CollectWasmFrame(const char* aLabel) override;
-  virtual void CollectPseudoEntry(const js::ProfileEntry& aEntry) override;
+  virtual void CollectProfilingStackFrame(const js::ProfilingStackFrame& aEntry) override;
 
 private:
   void TryAppendFrame(mozilla::HangEntry aFrame);
