@@ -915,7 +915,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
 {
   auto tuV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
   if (tuV2) {
-    auto result = CacheResult::Cast<CacheResultV2>(aCacheResult);
+    const CacheResultV2* result = CacheResult::Cast<CacheResultV2>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (result->miss) {
@@ -934,7 +934,7 @@ nsUrlClassifierDBServiceWorker::CacheResultToTableUpdate(CacheResult* aCacheResu
 
   auto tuV4 = TableUpdate::Cast<TableUpdateV4>(aUpdate);
   if (tuV4) {
-    auto result = CacheResult::Cast<CacheResultV4>(aCacheResult);
+    const CacheResultV4* result = CacheResult::Cast<CacheResultV4>(aCacheResult);
     MOZ_ASSERT(result);
 
     if (LOG_ENABLED()) {
@@ -1006,7 +1006,7 @@ nsUrlClassifierDBServiceWorker::GetCacheInfo(const nsACString& aTable,
 }
 
 bool
-nsUrlClassifierDBServiceWorker::IsSameAsLastResults(CacheResultArray& aResult)
+nsUrlClassifierDBServiceWorker::IsSameAsLastResults(const CacheResultArray& aResult) const
 {
   if (!mLastResults || mLastResults->Length() != aResult.Length()) {
     return false;

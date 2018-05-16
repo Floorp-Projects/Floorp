@@ -600,7 +600,7 @@ LookupCacheV2::Has(const Completion& aCompletion,
 }
 
 bool
-LookupCacheV2::IsEmpty()
+LookupCacheV2::IsEmpty() const
 {
   bool isEmpty;
   mPrefixSet->IsEmpty(&isEmpty);
@@ -716,7 +716,7 @@ LookupCacheV2::LoadFromFile(nsIFile* aFile)
 }
 
 size_t
-LookupCacheV2::SizeOfPrefixSet()
+LookupCacheV2::SizeOfPrefixSet() const
 {
   return mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }

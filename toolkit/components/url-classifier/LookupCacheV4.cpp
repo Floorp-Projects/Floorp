@@ -36,7 +36,7 @@ public:
   void Merge(PrefixStringMap& aPrefixMap);
 
   // Find the smallest string from the map in VLPrefixSet.
-  bool GetSmallestPrefix(nsACString& aOutString);
+  bool GetSmallestPrefix(nsACString& aOutString) const;
 
   // Return the number of prefixes in the map
   uint32_t Count() const { return mCount; }
@@ -136,7 +136,7 @@ LookupCacheV4::Has(const Completion& aCompletion,
 }
 
 bool
-LookupCacheV4::IsEmpty()
+LookupCacheV4::IsEmpty() const
 {
   bool isEmpty;
   mVLPrefixSet->IsEmpty(&isEmpty);
@@ -210,7 +210,7 @@ LookupCacheV4::LoadFromFile(nsIFile* aFile)
 }
 
 size_t
-LookupCacheV4::SizeOfPrefixSet()
+LookupCacheV4::SizeOfPrefixSet() const
 {
   return mVLPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
 }
@@ -230,6 +230,21 @@ AppendPrefixToMap(PrefixStringMap& prefixes, const nsACString& prefix)
   }
 
   return NS_OK;
+}
+
+static nsresult
+InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
+{
+  nsresult rv;
+  aCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aCrypto->Init(nsICryptoHash::SHA256);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitCrypto failed");
+
+  return rv;
 }
 
 // Read prefix into a buffer and also update the hash which
@@ -377,21 +392,6 @@ LookupCacheV4::AddFullHashResponseToCache(const FullHashResponseMap& aResponseMa
   CopyClassHashTable<FullHashResponseMap>(aResponseMap, mFullHashCache);
 
   return NS_OK;
-}
-
-nsresult
-LookupCacheV4::InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto)
-{
-  nsresult rv;
-  aCrypto = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aCrypto->Init(nsICryptoHash::SHA256);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InitCrypto failed");
-
-  return rv;
 }
 
 nsresult
@@ -618,7 +618,7 @@ VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
 }
 
 bool
-VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) {
+VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
   PrefixString* pick = nullptr;
   for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
     PrefixString* str = iter.Data();
