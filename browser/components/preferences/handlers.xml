@@ -11,29 +11,6 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="handler" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
-    <implementation>
-      <property name="type" readonly="true">
-        <getter>
-          return this.getAttribute("type");
-        </getter>
-      </property>
-      <!-- Overriding listitem -->
-      <property name="selected" onget="return this.getAttribute('selected') == 'true';">
-        <setter><![CDATA[
-          if (val) {
-            this.setAttribute("selected", "true");
-            gMainPane.rebuildActionsMenu();
-          } else {
-            this.removeAttribute("selected");
-          }
-
-          document.getAnonymousElementByAttribute(this, "anonid", "selected").setAttribute("hidden", !val);
-          document.getAnonymousElementByAttribute(this, "anonid", "not-selected").setAttribute("hidden", !!val);
-
-          return val;
-        ]]></setter>
-      </property>
-    </implementation>
     <content>
       <xul:hbox flex="1" equalsize="always">
         <xul:hbox flex="1" align="center" xbl:inherits="tooltiptext=typeDescription">
