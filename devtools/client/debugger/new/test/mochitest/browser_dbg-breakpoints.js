@@ -36,13 +36,19 @@ function enableBreakpoints(dbg, count) {
 }
 
 function findBreakpoint(dbg, url, line) {
-  const { selectors: { getBreakpoint }, getState } = dbg;
+  const {
+    selectors: { getBreakpoint },
+    getState
+  } = dbg;
   const source = findSource(dbg, url);
   return getBreakpoint(getState(), { sourceId: source.id, line });
 }
 
 function findBreakpoints(dbg) {
-  const { selectors: { getBreakpoints }, getState } = dbg;
+  const {
+    selectors: { getBreakpoints },
+    getState
+  } = dbg;
   return getBreakpoints(getState());
 }
 

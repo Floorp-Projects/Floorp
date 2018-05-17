@@ -19,7 +19,10 @@ function getLabel(dbg, index) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
 
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
 

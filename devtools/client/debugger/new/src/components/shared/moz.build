@@ -18,5 +18,6 @@ DevToolsModules(
     'PreviewFunction.js',
     'ResultList.js',
     'SearchInput.js',
+    'SourceIcon.js',
     'Svg.js',
 )

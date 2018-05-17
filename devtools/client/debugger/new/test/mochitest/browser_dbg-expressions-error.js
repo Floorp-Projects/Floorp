@@ -24,7 +24,7 @@ function getValue(dbg, index) {
 
 async function addExpression(dbg, input) {
   const plusIcon = findElementWithSelector(dbg, expressionSelectors.plusIcon);
-  if(plusIcon) {
+  if (plusIcon) {
     plusIcon.click();
   }
 

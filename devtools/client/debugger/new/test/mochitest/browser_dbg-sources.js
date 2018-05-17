@@ -24,7 +24,10 @@ function getLabel(dbg, index) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-sources.html");
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
 
   await waitForSources(dbg, "simple1", "simple2", "nested-source", "long.js");
 
@@ -49,10 +52,7 @@ add_task(async function() {
   const selectedSource = getSelectedSource(getState()).get("url");
 
   ok(fourthNode.classList.contains("focused"), "4th node is focused");
-  ok(
-    selectedSource.includes("nested-source.js"),
-    "nested-source is selected"
-  );
+  ok(selectedSource.includes("nested-source.js"), "nested-source is selected");
 
   await waitForSelectedSource(dbg, "nested-source");
 

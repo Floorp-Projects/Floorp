@@ -19,7 +19,10 @@ function assertBpInGutter(dbg, lineNumber) {
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps2.html");
-  const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
+  const {
+    selectors: { getBreakpoint, getBreakpoints },
+    getState
+  } = dbg;
 
   await waitForSources(dbg, "main.js", "main.min.js");
 
