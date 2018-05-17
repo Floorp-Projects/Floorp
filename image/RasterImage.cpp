@@ -340,8 +340,7 @@ RasterImage::LookupFrame(const IntSize& aSize,
     aFlags &= ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   }
 
-  IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
-                        ? aSize : mSize;
+  IntSize requestedSize = GetDownscaleDecodeSize(aSize, aFlags);
   if (requestedSize.IsEmpty()) {
     // Can't decode to a surface of zero size.
     return LookupResult(MatchType::NOT_FOUND);
@@ -638,11 +637,7 @@ RasterImage::GetImageContainerSize(LayerManager* aManager,
     return IntSize(0, 0);
   }
 
-  if (!CanDownscaleDuringDecode(aSize, aFlags)) {
-    return mSize;
-  }
-
-  return aSize;
+  return GetDownscaleDecodeSize(aSize, aFlags);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1372,39 +1367,46 @@ HaveSkia()
 #endif
 }
 
-bool
-RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
+IntSize
+RasterImage::GetDownscaleDecodeSize(const IntSize& aSize, uint32_t aFlags)
 {
   // Check basic requirements: downscale-during-decode is enabled, Skia is
   // available, this image isn't transient, we have all the source data and know
   // our size, and the flags allow us to do it.
-  if (!mHasSize || mTransient || !HaveSkia() ||
+  if (!mHasSize || mTransient || !HaveSkia() || aSize == mSize ||
       !gfxPrefs::ImageDownscaleDuringDecodeEnabled() ||
       !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
-    return false;
+    return mSize;
   }
 
   // We don't downscale animated images during decode.
   if (mAnimationState) {
-    return false;
-  }
-
-  // Never upscale.
-  if (aSize.width >= mSize.width || aSize.height >= mSize.height) {
-    return false;
+    return mSize;
   }
 
   // Zero or negative width or height is unacceptable.
   if (aSize.width < 1 || aSize.height < 1) {
-    return false;
+    return mSize;
+  }
+
+  // We never upscale, but we may partially downscale nearer to the desired
+  // size if only one of the dimensions exceeds the native size.
+  IntSize decodeSize(aSize);
+  if (aSize.width > mSize.width) {
+    if (aSize.height > mSize.height) {
+      return mSize;
+    }
+    decodeSize.width = mSize.width;
+  } else if (aSize.height > mSize.height) {
+    decodeSize.height = mSize.height;
   }
 
   // There's no point in scaling if we can't store the result.
-  if (!SurfaceCache::CanHold(aSize)) {
-    return false;
+  if (!SurfaceCache::CanHold(decodeSize)) {
+    return mSize;
   }
 
-  return true;
+  return decodeSize;
 }
 
 ImgDrawResult
@@ -1434,7 +1436,8 @@ RasterImage::DrawInternal(DrawableSurface&& aSurface,
     aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
     region.Scale(1.0 / scale.width, 1.0 / scale.height);
 
-    couldRedecodeForBetterFrame = CanDownscaleDuringDecode(aSize, aFlags);
+    couldRedecodeForBetterFrame =
+      GetDownscaleDecodeSize(aSize, aFlags) != mSize;
   }
 
   if (!aSurface->Draw(aContext, region, aSamplingFilter, aFlags, aOpacity)) {
@@ -1859,15 +1862,12 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
     return IntSize(0, 0);
   }
 
-  IntSize destSize = IntSize::Ceil(aDest.width, aDest.height);
-
-  if (aSamplingFilter == SamplingFilter::GOOD &&
-      CanDownscaleDuringDecode(destSize, aFlags)) {
-    return destSize;
+  if (aSamplingFilter != SamplingFilter::GOOD) {
+    return mSize;
   }
 
-  // We can't scale to this size. Use our intrinsic size for now.
-  return mSize;
+  IntSize destSize = IntSize::Ceil(aDest.width, aDest.height);
+  return GetDownscaleDecodeSize(destSize, aFlags);
 }
 
 } // namespace image
