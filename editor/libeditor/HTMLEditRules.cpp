@@ -720,8 +720,17 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillAlign(*aInfo->alignType, aCancel, aHandled);
     case EditAction::makeBasicBlock:
       return WillMakeBasicBlock(*aInfo->blockType, aCancel, aHandled);
-    case EditAction::removeList:
-      return WillRemoveList(aInfo->bOrdered, aCancel, aHandled);
+    case EditAction::removeList: {
+      nsresult rv = WillRemoveList(aCancel, aHandled);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
+          NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      return NS_OK;
+    }
     case EditAction::makeDefListItem:
       return WillMakeDefListItem(aInfo->blockType,
                                  aInfo->entireList, aCancel, aHandled);
@@ -4233,10 +4242,8 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
   return NS_OK;
 }
 
-
 nsresult
-HTMLEditRules::WillRemoveList(bool aOrdered,
-                              bool* aCancel,
+HTMLEditRules::WillRemoveList(bool* aCancel,
                               bool* aHandled)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
