@@ -405,7 +405,21 @@ protected:
                                bool* aCancel, bool* aHandled);
   nsresult WillMakeBasicBlock(const nsAString& aBlockType,
                               bool* aCancel, bool* aHandled);
-  nsresult MakeBasicBlock(nsAtom& aBlockType);
+
+  /**
+   * MakeBasicBlock() applies or clears block style around Selection.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * need to check if the editor is still available even if this returns
+   * NS_OK.
+   *
+   * @param aBlockType          New block tag name.
+   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
+   *                            RemoveBlockStyle() will be called.
+   *                            If nsGkAtoms::blockquote, MakeBlockquote()
+   *                            will be called.
+   *                            Otherwise, ApplyBlockStyle() will be called.
+   */
+  MOZ_MUST_USE nsresult MakeBasicBlock(nsAtom& aBlockType);
 
   /**
    * Called after creating a basic block, indenting, outdenting or aligning
