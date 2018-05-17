@@ -144,7 +144,7 @@ struct JSContext : public JS::RootingContext,
 
     template <typename T>
     inline bool isInsideCurrentCompartment(T thing) const {
-        return thing->compartment() == compartment_;
+        return thing->compartment() == GetCompartmentForRealm(realm_);
     }
 
     void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
@@ -188,50 +188,50 @@ struct JSContext : public JS::RootingContext,
     bool lcovEnabled() const { return runtime_->lcovOutput().isEnabled(); }
 
     /*
-     * "Entering" a compartment changes cx->compartment (which changes
-     * cx->global). Note that this does not push any InterpreterFrame which means
-     * that it is possible for cx->fp()->compartment() != cx->compartment.
-     * This is not a problem since, in general, most places in the VM cannot
-     * know that they were called from script (e.g., they may have been called
-     * through the JSAPI via JS_CallFunction) and thus cannot expect fp.
+     * "Entering" a realm changes cx->realm (which changes cx->global). Note
+     * that this does not push an Activation so it's possible for the caller's
+     * realm to be != cx->realm(). This is not a problem since, in general, most
+     * places in the VM cannot know that they were called from script (e.g.,
+     * they may have been called through the JSAPI via JS_CallFunction) and thus
+     * cannot expect there is a scripted caller.
      *
-     * Compartments should be entered/left in a LIFO fasion. The depth of this
-     * enter/leave stack is maintained by enterCompartmentDepth_ and queried by
-     * hasEnteredCompartment.
+     * Realms should be entered/left in a LIFO fasion. The depth of this
+     * enter/leave stack is maintained by enterRealmDepth_ and queried by
+     * hasEnteredRealm.
      *
      * To enter a compartment, code should prefer using AutoRealm over
-     * manually calling cx->enterCompartment/leaveCompartment.
+     * manually calling cx->enterRealm/leaveRealm.
      */
   protected:
-    js::ThreadData<unsigned> enterCompartmentDepth_;
+    js::ThreadData<unsigned> enterRealmDepth_;
 
-    inline void setCompartment(JSCompartment* comp,
-                               const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    inline void setRealm(JS::Realm* realm,
+                         const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
   public:
-    bool hasEnteredCompartment() const {
-        return enterCompartmentDepth_ > 0;
+    bool hasEnteredRealm() const {
+        return enterRealmDepth_ > 0;
     }
 #ifdef DEBUG
-    unsigned getEnterCompartmentDepth() const {
-        return enterCompartmentDepth_;
+    unsigned getEnterRealmDepth() const {
+        return enterRealmDepth_;
     }
 #endif
 
   private:
-    // We distinguish between entering the atoms compartment and all other
-    // compartments. Entering the atoms compartment requires a lock.
-    inline void enterNonAtomsCompartment(JSCompartment* c);
-    inline void enterAtomsCompartment(JSCompartment* c,
-                                      const js::AutoLockForExclusiveAccess& lock);
+    // We distinguish between entering the atoms realm and all other realms.
+    // Entering the atoms realm requires a lock.
+    inline void enterNonAtomsRealm(JS::Realm* realm);
+    inline void enterAtomsRealm(JS::Realm* realm,
+                                const js::AutoLockForExclusiveAccess& lock);
 
     friend class js::AutoRealm;
 
   public:
     template <typename T>
-    inline void enterCompartmentOf(const T& target);
-    inline void enterNullCompartment();
-    inline void leaveCompartment(JSCompartment* oldCompartment,
-                                 const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
+    inline void enterRealmOf(const T& target);
+    inline void enterNullRealm();
+    inline void leaveRealm(JS::Realm* oldRealm,
+                           const js::AutoLockForExclusiveAccess* maybeLock = nullptr);
 
     void setHelperThread(js::HelperThread* helperThread);
     js::HelperThread* helperThread() const { return helperThread_; }
@@ -242,11 +242,14 @@ struct JSContext : public JS::RootingContext,
 
     // Threads may freely access any data in their compartment and zone.
     JSCompartment* compartment() const {
-        return compartment_;
+        return JS::GetCompartmentForRealm(realm_);
+    }
+    JS::Realm* realm() const {
+        return realm_;
     }
     JS::Zone* zone() const {
-        MOZ_ASSERT_IF(!compartment(), !zone_);
-        MOZ_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
+        MOZ_ASSERT_IF(!realm(), !zone_);
+        MOZ_ASSERT_IF(realm(), js::GetCompartmentZone(GetCompartmentForRealm(realm())) == zone_);
         return zoneRaw();
     }
 
@@ -307,8 +310,8 @@ struct JSContext : public JS::RootingContext,
     JSRuntime* runtime() { return runtime_; }
     const JSRuntime* runtime() const { return runtime_; }
 
-    static size_t offsetOfCompartment() {
-        return offsetof(JSContext, compartment_);
+    static size_t offsetOfRealm() {
+        return offsetof(JSContext, realm_);
     }
 
     friend class JS::AutoSaveExceptionState;

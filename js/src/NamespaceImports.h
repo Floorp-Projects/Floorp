@@ -151,6 +151,7 @@ using JS::HandleValueArray;
 using JS::ObjectOpResult;
 using JS::PropertyResult;
 
+using JS::Realm;
 using JS::Zone;
 
 using JS::Symbol;

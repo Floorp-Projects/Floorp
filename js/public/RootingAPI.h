@@ -22,6 +22,7 @@
 #include "js/GCPolicyAPI.h"
 #include "js/HeapAPI.h"
 #include "js/ProfilingStack.h"
+#include "js/Realm.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -827,8 +828,8 @@ class RootingContext
     // JSContext pointers. They are unrelated to rooting and are in place so
     // that inlined API functions can directly access the data.
 
-    /* The current compartment. */
-    JSCompartment*      compartment_;
+    /* The current realm. */
+    JS::Realm*          realm_;
 
     /* The current zone. */
     JS::Zone*           zone_;
@@ -1018,7 +1019,7 @@ namespace js {
 inline JSCompartment*
 GetContextCompartment(const JSContext* cx)
 {
-    return JS::RootingContext::get(cx)->compartment_;
+    return GetCompartmentForRealm(JS::RootingContext::get(cx)->realm_);
 }
 
 inline JS::Zone*
