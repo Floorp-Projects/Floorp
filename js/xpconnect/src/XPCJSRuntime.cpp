@@ -1197,17 +1197,17 @@ JSMainRuntimeTemporaryPeakDistinguishedAmount()
 }
 
 static int64_t
-JSMainRuntimeCompartmentsSystemDistinguishedAmount()
+JSMainRuntimeRealmsSystemDistinguishedAmount()
 {
     JSContext* cx = danger::GetJSContext();
-    return JS::SystemCompartmentCount(cx);
+    return JS::SystemRealmCount(cx);
 }
 
 static int64_t
-JSMainRuntimeCompartmentsUserDistinguishedAmount()
+JSMainRuntimeRealmsUserDistinguishedAmount()
 {
     JSContext* cx = XPCJSContext::Get()->Context();
-    return JS::UserCompartmentCount(cx);
+    return JS::UserRealmCount(cx);
 }
 
 class JSMainRuntimeTemporaryPeakReporter final : public nsIMemoryReporter
@@ -1233,10 +1233,10 @@ class JSMainRuntimeTemporaryPeakReporter final : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
 
-// The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
-// compartments and zones; they aggregate any entries smaller than
+// The REPORT* macros do an unconditional report.  The ZRREPORT* macros are for
+// realms and zones; they aggregate any entries smaller than
 // SUNDRIES_THRESHOLD into the "sundries/gc-heap" and "sundries/malloc-heap"
-// entries for the compartment.
+// entries for the realm.
 
 #define SUNDRIES_THRESHOLD js::MemoryReportingSundriesThreshold()
 
@@ -1259,8 +1259,8 @@ NS_IMPL_ISUPPORTS(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
         gcTotal += amount; \
     } while (0)
 
-// Report compartment/zone non-GC (KIND_HEAP) bytes.
-#define ZCREPORT_BYTES(_path, _amount, _desc) \
+// Report realm/zone non-GC (KIND_HEAP) bytes.
+#define ZRREPORT_BYTES(_path, _amount, _desc) \
     do { \
         /* Assign _descLiteral plus "" into a char* to prove that it's */ \
         /* actually a literal. */ \
@@ -1275,8 +1275,8 @@ NS_IMPL_ISUPPORTS(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
         } \
     } while (0)
 
-// Report compartment/zone GC bytes.
-#define ZCREPORT_GC_BYTES(_path, _amount, _desc) \
+// Report realm/zone GC bytes.
+#define ZRREPORT_GC_BYTES(_path, _amount, _desc) \
     do { \
         size_t amount = _amount;  /* evaluate _amount only once */ \
         if (amount >= SUNDRIES_THRESHOLD) { \
@@ -1329,79 +1329,79 @@ ReportZoneStats(const JS::ZoneStats& zStats,
 
     MOZ_ASSERT(!gcTotalOut == zStats.isTotals);
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("symbols/gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("symbols/gc-heap"),
         zStats.symbolsGCHeap,
         "Symbols.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-arena-admin"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-arena-admin"),
         zStats.gcHeapArenaAdmin,
         "Bookkeeping information and alignment padding within GC arenas.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("unused-gc-things"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("unused-gc-things"),
         zStats.unusedGCThings.totalSize(),
         "Unused GC thing cells within non-empty arenas.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("unique-id-map"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("unique-id-map"),
         zStats.uniqueIdMap,
         "Address-independent cell identities.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shape-tables"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("shape-tables"),
         zStats.shapeTables,
         "Tables storing shape information.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
         zStats.lazyScriptsGCHeap,
         "Scripts that haven't executed yet.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
         zStats.lazyScriptsMallocHeap,
         "Lazy script tables containing closed-over bindings or inner functions.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
         zStats.jitCodesGCHeap,
         "References to executable code pools used by the JITs.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/gc-heap"),
         zStats.objectGroupsGCHeap,
         "Classification and type inference information about objects.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/malloc-heap"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("object-groups/malloc-heap"),
         zStats.objectGroupsMallocHeap,
         "Object group addenda.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/gc-heap"),
         zStats.scopesGCHeap,
         "Scope information for scripts.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/malloc-heap"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("scopes/malloc-heap"),
         zStats.scopesMallocHeap,
         "Arrays of binding names and other binding-related data.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-shareds/gc-heap"),
+    ZRREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-shareds/gc-heap"),
         zStats.regExpSharedsGCHeap,
         "Shared compiled regexp data.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-shareds/malloc-heap"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-shareds/malloc-heap"),
         zStats.regExpSharedsMallocHeap,
         "Shared compiled regexp data.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-pool"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-pool"),
         zStats.typePool,
         "Type sets and related data.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-zone"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("regexp-zone"),
         zStats.regexpZone,
         "The regexp zone and regexp data.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-zone"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-zone"),
         zStats.jitZone,
         "The JIT zone.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("baseline/optimized-stubs"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("baseline/optimized-stubs"),
         zStats.baselineStubsOptimized,
         "The Baseline JIT's optimized IC stubs (excluding code).");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-cached-cfg"),
+    ZRREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-cached-cfg"),
         zStats.cachedCFG,
         "The cached CFG to construct Ion code out of it.");
 
@@ -1569,7 +1569,7 @@ ReportZoneStats(const JS::ZoneStats& zStats,
     }
 
     if (sundriesGCHeap > 0) {
-        // We deliberately don't use ZCREPORT_GC_BYTES here.
+        // We deliberately don't use ZRREPORT_GC_BYTES here.
         REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
             sundriesGCHeap,
             "The sum of all 'gc-heap' measurements that are too small to be "
@@ -1577,7 +1577,7 @@ ReportZoneStats(const JS::ZoneStats& zStats,
     }
 
     if (sundriesMallocHeap > 0) {
-        // We deliberately don't use ZCREPORT_BYTES here.
+        // We deliberately don't use ZRREPORT_BYTES here.
         REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("sundries/malloc-heap"),
             KIND_HEAP, sundriesMallocHeap,
             "The sum of all 'malloc-heap' measurements that are too small to "
@@ -1595,7 +1595,7 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
                  nsIHandleReportCallback* handleReport,
                  nsISupports* data, size_t& gcTotal)
 {
-    // We deliberately don't use ZCREPORT_BYTES, so that these per-class values
+    // We deliberately don't use ZRREPORT_BYTES, so that these per-class values
     // don't go into sundries.
 
     if (classInfo.objectsGCHeap > 0) {
@@ -1671,138 +1671,138 @@ ReportClassStats(const ClassInfo& classInfo, const nsACString& path,
 }
 
 static void
-ReportCompartmentStats(const JS::CompartmentStats& cStats,
-                       const xpc::CompartmentStatsExtras& extras,
-                       nsIHandleReportCallback* handleReport,
-                       nsISupports* data, size_t* gcTotalOut = nullptr)
+ReportRealmStats(const JS::RealmStats& realmStats,
+                 const xpc::RealmStatsExtras& extras,
+                 nsIHandleReportCallback* handleReport,
+                 nsISupports* data, size_t* gcTotalOut = nullptr)
 {
     static const nsDependentCString addonPrefix("explicit/add-ons/");
 
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
-    nsAutoCString cJSPathPrefix(extras.jsPathPrefix);
-    nsAutoCString cDOMPathPrefix(extras.domPathPrefix);
+    nsAutoCString realmJSPathPrefix(extras.jsPathPrefix);
+    nsAutoCString realmDOMPathPrefix(extras.domPathPrefix);
 
-    MOZ_ASSERT(!gcTotalOut == cStats.isTotals);
+    MOZ_ASSERT(!gcTotalOut == realmStats.isTotals);
 
-    nsCString nonNotablePath = cJSPathPrefix;
-    nonNotablePath += cStats.isTotals
+    nsCString nonNotablePath = realmJSPathPrefix;
+    nonNotablePath += realmStats.isTotals
                     ? NS_LITERAL_CSTRING("classes/")
                     : NS_LITERAL_CSTRING("classes/class(<non-notable classes>)/");
 
-    ReportClassStats(cStats.classInfo, nonNotablePath, handleReport, data,
+    ReportClassStats(realmStats.classInfo, nonNotablePath, handleReport, data,
                      gcTotal);
 
-    for (size_t i = 0; i < cStats.notableClasses.length(); i++) {
-        MOZ_ASSERT(!cStats.isTotals);
-        const JS::NotableClassInfo& classInfo = cStats.notableClasses[i];
+    for (size_t i = 0; i < realmStats.notableClasses.length(); i++) {
+        MOZ_ASSERT(!realmStats.isTotals);
+        const JS::NotableClassInfo& classInfo = realmStats.notableClasses[i];
 
-        nsCString classPath = cJSPathPrefix +
+        nsCString classPath = realmJSPathPrefix +
             nsPrintfCString("classes/class(%s)/", classInfo.className_);
 
         ReportClassStats(classInfo, classPath, handleReport, data, gcTotal);
     }
 
-    // Note that we use cDOMPathPrefix here.  This is because we measure orphan
+    // Note that we use realmDOMPathPrefix here.  This is because we measure orphan
     // DOM nodes in the JS reporter, but we want to report them in a "dom"
     // sub-tree rather than a "js" sub-tree.
-    ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-        cStats.objectsPrivate,
+    ZRREPORT_BYTES(realmDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
+        realmStats.objectsPrivate,
         "Orphan DOM nodes, i.e. those that are only reachable from JavaScript "
         "objects.");
 
-    ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
-        cStats.scriptsGCHeap,
+    ZRREPORT_GC_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
+        realmStats.scriptsGCHeap,
         "JSScript instances. There is one per user-defined function in a "
         "script, and one for the top-level code in a script.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/malloc-heap/data"),
-        cStats.scriptsMallocHeapData,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("scripts/malloc-heap/data"),
+        realmStats.scriptsMallocHeapData,
         "Various variable-length tables in JSScripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
-        cStats.baselineData,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
+        realmStats.baselineData,
         "The Baseline JIT's compilation data (BaselineScripts).");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/fallback-stubs"),
-        cStats.baselineStubsFallback,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("baseline/fallback-stubs"),
+        realmStats.baselineStubsFallback,
         "The Baseline JIT's fallback IC stubs (excluding code).");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
-        cStats.ionData,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
+        realmStats.ionData,
         "The IonMonkey JIT's compilation data (IonScripts).");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
-        cStats.typeInferenceTypeScripts,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
+        realmStats.typeInferenceTypeScripts,
         "Type sets associated with scripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
-        cStats.typeInferenceAllocationSiteTables,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
+        realmStats.typeInferenceAllocationSiteTables,
         "Tables of type objects associated with allocation sites.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
-        cStats.typeInferenceArrayTypeTables,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
+        realmStats.typeInferenceArrayTypeTables,
         "Tables of type objects associated with array literals.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
-        cStats.typeInferenceObjectTypeTables,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
+        realmStats.typeInferenceObjectTypeTables,
         "Tables of type objects associated with object literals.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-object"),
-        cStats.compartmentObject,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-object"),
+        realmStats.realmObject,
         "The JSCompartment object itself.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-tables"),
-        cStats.compartmentTables,
-        "Compartment-wide tables storing object group information and wasm instances.");
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("realm-tables"),
+        realmStats.realmTables,
+        "Realm-wide tables storing object group information and wasm instances.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("inner-views"),
-        cStats.innerViewsTable,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("inner-views"),
+        realmStats.innerViewsTable,
         "The table for array buffer inner views.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("lazy-array-buffers"),
-        cStats.lazyArrayBuffersTable,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("lazy-array-buffers"),
+        realmStats.lazyArrayBuffersTable,
         "The table for typed object lazy array buffers.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("object-metadata"),
-        cStats.objectMetadataTable,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("object-metadata"),
+        realmStats.objectMetadataTable,
         "The table used by debugging tools for tracking object metadata");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
-        cStats.crossCompartmentWrappersTable,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
+        realmStats.crossCompartmentWrappersTable,
         "The cross-compartment wrapper table.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
-        cStats.savedStacksSet,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("saved-stacks-set"),
+        realmStats.savedStacksSet,
         "The saved stacks set.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("non-syntactic-lexical-scopes-table"),
-        cStats.nonSyntacticLexicalScopesTable,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("non-syntactic-lexical-scopes-table"),
+        realmStats.nonSyntacticLexicalScopesTable,
         "The non-syntactic lexical scopes table.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("jit-compartment"),
-        cStats.jitCompartment,
-        "The JIT compartment.");
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("jit-realm"),
+        realmStats.jitRealm,
+        "The JIT realm.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("private-data"),
-        cStats.privateData,
-        "Extra data attached to the compartment by XPConnect, including "
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("private-data"),
+        realmStats.privateData,
+        "Extra data attached to the realm by XPConnect, including "
         "its wrapped-js.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
-        cStats.scriptCountsMap,
+    ZRREPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("script-counts-map"),
+        realmStats.scriptCountsMap,
         "Profiling-related information for scripts.");
 
     if (sundriesGCHeap > 0) {
-        // We deliberately don't use ZCREPORT_GC_BYTES here.
-        REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
+        // We deliberately don't use ZRREPORT_GC_BYTES here.
+        REPORT_GC_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
             sundriesGCHeap,
             "The sum of all 'gc-heap' measurements that are too small to be "
             "worth showing individually.");
     }
 
     if (sundriesMallocHeap > 0) {
-        // We deliberately don't use ZCREPORT_BYTES here.
-        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/malloc-heap"),
+        // We deliberately don't use ZRREPORT_BYTES here.
+        REPORT_BYTES(realmJSPathPrefix + NS_LITERAL_CSTRING("sundries/malloc-heap"),
             KIND_HEAP, sundriesMallocHeap,
             "The sum of all 'malloc-heap' measurements that are too small to "
             "be worth showing individually.");
@@ -1843,13 +1843,12 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
                         &gcTotal);
     }
 
-    for (size_t i = 0; i < rtStats.compartmentStatsVector.length(); i++) {
-        const JS::CompartmentStats& cStats = rtStats.compartmentStatsVector[i];
-        const xpc::CompartmentStatsExtras* extras =
-            static_cast<const xpc::CompartmentStatsExtras*>(cStats.extra);
+    for (size_t i = 0; i < rtStats.realmStatsVector.length(); i++) {
+        const JS::RealmStats& realmStats = rtStats.realmStatsVector[i];
+        const xpc::RealmStatsExtras* extras =
+            static_cast<const xpc::RealmStatsExtras*>(realmStats.extra);
 
-        ReportCompartmentStats(cStats, *extras, handleReport,
-                               data, &gcTotal);
+        ReportRealmStats(realmStats, *extras, handleReport, data, &gcTotal);
     }
 
     // Report the rtStats.runtime numbers under "runtime/", and compute their
@@ -1999,7 +1998,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
     if (rtTotalOut)
         *rtTotalOut = rtTotal;
 
-    // Report GC numbers that don't belong to a compartment.
+    // Report GC numbers that don't belong to a realm.
 
     // We don't want to report decommitted memory in "explicit", so we just
     // change the leading "explicit/" to "decommitted/".
@@ -2032,10 +2031,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
 
 } // namespace xpc
 
-class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
+class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter
 {
 
-    ~JSMainRuntimeCompartmentsReporter() {}
+    ~JSMainRuntimeRealmsReporter() {}
 
   public:
     NS_DECL_ISUPPORTS
@@ -2051,8 +2050,8 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
         nsCString path;
         GetCompartmentName(c, path, &data->anonymizeID, /* replaceSlashes = */ true);
         path.Insert(js::IsSystemCompartment(c)
-                    ? NS_LITERAL_CSTRING("js-main-runtime-compartments/system/")
-                    : NS_LITERAL_CSTRING("js-main-runtime-compartments/user/"),
+                    ? NS_LITERAL_CSTRING("js-main-runtime-realms/system/")
+                    : NS_LITERAL_CSTRING("js-main-runtime-realms/user/"),
                     0);
         mozilla::Unused << data->paths.append(path);
     }
@@ -2078,7 +2077,7 @@ class JSMainRuntimeCompartmentsReporter final : public nsIMemoryReporter
     }
 };
 
-NS_IMPL_ISUPPORTS(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(JSMainRuntimeRealmsReporter, nsIMemoryReporter)
 
 MOZ_DEFINE_MALLOC_SIZE_OF(OrphanMallocSizeOf)
 
@@ -2157,8 +2156,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
     {}
 
     ~XPCJSRuntimeStats() {
-        for (size_t i = 0; i != compartmentStatsVector.length(); ++i)
-            delete static_cast<xpc::CompartmentStatsExtras*>(compartmentStatsVector[i].extra);
+        for (size_t i = 0; i != realmStatsVector.length(); ++i)
+            delete static_cast<xpc::RealmStatsExtras*>(realmStatsVector[i].extra);
 
         for (size_t i = 0; i != zoneStatsVector.length(); ++i)
             delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
@@ -2190,10 +2189,10 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         zStats->extra = extras;
     }
 
-    virtual void initExtraCompartmentStats(JSCompartment* c,
-                                           JS::CompartmentStats* cstats) override
+    virtual void initExtraRealmStats(JSCompartment* c,
+                                     JS::RealmStats* realmStats) override
     {
-        xpc::CompartmentStatsExtras* extras = new xpc::CompartmentStatsExtras;
+        xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
         nsCString cName;
         GetCompartmentName(c, cName, &mAnonymizeID, /* replaceSlashes = */ true);
 
@@ -2229,24 +2228,24 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         if (needZone)
             extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/", (void*)js::GetCompartmentZone(c));
 
-        extras->jsPathPrefix += NS_LITERAL_CSTRING("compartment(") + cName + NS_LITERAL_CSTRING(")/");
+        extras->jsPathPrefix += NS_LITERAL_CSTRING("realm(") + cName + NS_LITERAL_CSTRING(")/");
 
-        // extras->jsPathPrefix is used for almost all the compartment-specific
+        // extras->jsPathPrefix is used for almost all the realm-specific
         // reports. At this point it has the form
-        // "<something>compartment(<cname>)/".
+        // "<something>realm(<rname>)/".
         //
         // extras->domPathPrefix is used for DOM orphan nodes, which are
         // counted by the JS reporter but reported as part of the DOM
         // measurements. At this point it has the form "<something>/dom/" if
-        // this compartment belongs to an nsGlobalWindow, and
+        // this realm belongs to an nsGlobalWindow, and
         // "explicit/dom/<something>?!/" otherwise (in which case it shouldn't
-        // be used, because non-nsGlobalWindow compartments shouldn't have
+        // be used, because non-nsGlobalWindow realms shouldn't have
         // orphan DOM nodes).
 
         MOZ_ASSERT(StartsWithExplicit(extras->jsPathPrefix));
         MOZ_ASSERT(StartsWithExplicit(extras->domPathPrefix));
 
-        cstats->extra = extras;
+        realmStats->extra = extras;
     }
 };
 
@@ -2300,12 +2299,11 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
                                           handleReport, data,
                                           anonymize, &rtTotal);
 
-    // Report the sums of the compartment numbers.
-    xpc::CompartmentStatsExtras cExtrasTotal;
-    cExtrasTotal.jsPathPrefix.AssignLiteral("js-main-runtime/compartments/");
-    cExtrasTotal.domPathPrefix.AssignLiteral("window-objects/dom/");
-    ReportCompartmentStats(rtStats.cTotals, cExtrasTotal,
-                           handleReport, data);
+    // Report the sums of the realm numbers.
+    xpc::RealmStatsExtras realmExtrasTotal;
+    realmExtrasTotal.jsPathPrefix.AssignLiteral("js-main-runtime/realms/");
+    realmExtrasTotal.domPathPrefix.AssignLiteral("window-objects/dom/");
+    ReportRealmStats(rtStats.realmTotals, realmExtrasTotal, handleReport, data);
 
     xpc::ZoneStatsExtras zExtrasTotal;
     zExtrasTotal.pathPrefix.AssignLiteral("js-main-runtime/zones/");
@@ -2333,7 +2331,7 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         KIND_OTHER, rtStats.runtime.wasmRuntime,
         "The memory used for wasm runtime bookkeeping.");
 
-    // Report the numbers for memory outside of compartments.
+    // Report the numbers for memory outside of realms.
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/unused-chunks"),
         KIND_OTHER, rtStats.gcHeapUnusedChunks,
@@ -2412,7 +2410,7 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
     size_t gcThingTotal = 0;
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/objects"),
-        KIND_OTHER, rtStats.cTotals.classInfo.objectsGCHeap,
+        KIND_OTHER, rtStats.realmTotals.classInfo.objectsGCHeap,
         "Used object cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/strings"),
@@ -2441,7 +2439,7 @@ JSReporter::CollectReports(WindowPaths* windowPaths,
         "Used scope cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/scripts"),
-        KIND_OTHER, rtStats.cTotals.scriptsGCHeap,
+        KIND_OTHER, rtStats.realmTotals.scriptsGCHeap,
         "Used script cells.");
 
     MREPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things/lazy-scripts"),
@@ -2878,12 +2876,12 @@ XPCJSRuntime::Initialize(JSContext* cx)
     js::SetSourceHook(cx, Move(hook));
 
     // Register memory reporters and distinguished amount functions.
-    RegisterStrongMemoryReporter(new JSMainRuntimeCompartmentsReporter());
+    RegisterStrongMemoryReporter(new JSMainRuntimeRealmsReporter());
     RegisterStrongMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     RegisterJSMainRuntimeGCHeapDistinguishedAmount(JSMainRuntimeGCHeapDistinguishedAmount);
     RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(JSMainRuntimeTemporaryPeakDistinguishedAmount);
-    RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
-    RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
+    RegisterJSMainRuntimeRealmsSystemDistinguishedAmount(JSMainRuntimeRealmsSystemDistinguishedAmount);
+    RegisterJSMainRuntimeRealmsUserDistinguishedAmount(JSMainRuntimeRealmsUserDistinguishedAmount);
     mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
 
     xpc_LocalizeRuntime(JS_GetRuntime(cx));
