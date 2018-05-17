@@ -154,7 +154,6 @@ const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
-const FILE_WEB_MANIFEST               = "manifest.json";
 
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_TEMPDIR                     = "TmpD";
@@ -799,11 +798,10 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
 
   let entry = await aPackage.getManifestFile();
   if (!entry) {
-    throw new Error("File " + aPackage.filePath + " does not contain a valid " +
-                    "install manifest");
+    throw new Error(`File ${aPackage.filePath} does not contain a valid manifest`);
   }
 
-  let isWebExtension = entry == FILE_WEB_MANIFEST;
+  let isWebExtension = entry == "manifest.json";
   let addon = isWebExtension ?
               await loadManifestFromWebManifest(aPackage.rootURI) :
               await loadFromRDF(aPackage.getURI("install.rdf"));
@@ -887,7 +885,7 @@ function flushChromeCaches() {
 function getTemporaryFile() {
   let file = FileUtils.getDir(KEY_TEMPDIR, []);
   let random = Math.round(Math.random() * 36 ** 3).toString(36);
-  file.append("tmp-" + random + ".xpi");
+  file.append(`tmp-${random}.xpi`);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   return file;
 }
@@ -1428,7 +1426,7 @@ class AddonInstall {
       logger.debug("Cancelling install of " + this.addon.id);
       let xpi = getFile(`${this.addon.id}.xpi`, this.location.installer.getStagingDir());
       flushJarCache(xpi);
-      this.location.installer.cleanStagingDir([this.addon.id, this.addon.id + ".xpi"]);
+      this.location.installer.cleanStagingDir([`${this.addon.id}.xpi`]);
       this.state = AddonManager.STATE_CANCELLED;
       XPIInstall.installs.delete(this);
 
@@ -1806,7 +1804,7 @@ class AddonInstall {
    */
   async stageInstall(restartRequired, stagedAddon, isUpgrade) {
     logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
-    stagedAddon.leafName = this.addon.id + ".xpi";
+    stagedAddon.leafName = `${this.addon.id}.xpi`;
 
     await OS.File.copy(this.file.path, stagedAddon.path);
 
@@ -3783,7 +3781,7 @@ var XPIInstall = {
   async installTemporaryAddon(aFile) {
     let installLocation = XPIInternal.TemporaryInstallLocation;
 
-    if (aFile.exists() && aFile.isFile()) {
+    if (XPIInternal.isXPI(aFile.leafName)) {
       flushJarCache(aFile);
     }
     let addon = await loadManifestFromFile(aFile, installLocation);
