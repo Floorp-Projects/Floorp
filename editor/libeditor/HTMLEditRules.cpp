@@ -5120,11 +5120,14 @@ HTMLEditRules::WillOutdent(bool* aCancel,
         // If it is a blockquote, remove it.  So we need to finish up dealng
         // with any curBlockQuote first.
         if (curBlockQuote) {
-          rv = OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                  curBlockQuoteIsIndentedWithCSS,
-                                  getter_AddRefs(rememberedLeftBQ),
-                                  getter_AddRefs(rememberedRightBQ));
-          NS_ENSURE_SUCCESS(rv, rv);
+          SplitRangeOffFromNodeResult outdentResult =
+            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                               curBlockQuoteIsIndentedWithCSS);
+          if (NS_WARN_IF(outdentResult.Failed())) {
+            return outdentResult.Rv();
+          }
+          rememberedLeftBQ = outdentResult.GetLeftContent();
+          rememberedRightBQ = outdentResult.GetRightContent();
           curBlockQuote = nullptr;
           firstBQChild = nullptr;
           lastBQChild = nullptr;
@@ -5161,11 +5164,14 @@ HTMLEditRules::WillOutdent(bool* aCancel,
         // So we need to finish up dealing with any curBlockQuote, and then pop
         // this list item.
         if (curBlockQuote) {
-          rv = OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                  curBlockQuoteIsIndentedWithCSS,
-                                  getter_AddRefs(rememberedLeftBQ),
-                                  getter_AddRefs(rememberedRightBQ));
-          NS_ENSURE_SUCCESS(rv, rv);
+          SplitRangeOffFromNodeResult outdentResult =
+            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                               curBlockQuoteIsIndentedWithCSS);
+          if (NS_WARN_IF(outdentResult.Failed())) {
+            return outdentResult.Rv();
+          }
+          rememberedLeftBQ = outdentResult.GetLeftContent();
+          rememberedRightBQ = outdentResult.GetRightContent();
           curBlockQuote = nullptr;
           firstBQChild = nullptr;
           lastBQChild = nullptr;
@@ -5188,11 +5194,14 @@ HTMLEditRules::WillOutdent(bool* aCancel,
         // Otherwise, we have progressed beyond end of curBlockQuote, so
         // let's handle it now.  We need to remove the portion of
         // curBlockQuote that contains [firstBQChild - lastBQChild].
-        rv = OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                                curBlockQuoteIsIndentedWithCSS,
-                                getter_AddRefs(rememberedLeftBQ),
-                                getter_AddRefs(rememberedRightBQ));
-        NS_ENSURE_SUCCESS(rv, rv);
+        SplitRangeOffFromNodeResult outdentResult =
+          OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                             curBlockQuoteIsIndentedWithCSS);
+        if (NS_WARN_IF(outdentResult.Failed())) {
+          return outdentResult.Rv();
+        }
+        rememberedLeftBQ = outdentResult.GetLeftContent();
+        rememberedRightBQ = outdentResult.GetRightContent();
         curBlockQuote = nullptr;
         firstBQChild = nullptr;
         lastBQChild = nullptr;
@@ -5305,11 +5314,14 @@ HTMLEditRules::WillOutdent(bool* aCancel,
     }
     if (curBlockQuote) {
       // We have a blockquote we haven't finished handling
-      rv = OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                              curBlockQuoteIsIndentedWithCSS,
-                              getter_AddRefs(rememberedLeftBQ),
-                              getter_AddRefs(rememberedRightBQ));
-      NS_ENSURE_SUCCESS(rv, rv);
+      SplitRangeOffFromNodeResult outdentResult =
+        OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                           curBlockQuoteIsIndentedWithCSS);
+      if (NS_WARN_IF(outdentResult.Failed())) {
+        return outdentResult.Rv();
+      }
+      rememberedLeftBQ = outdentResult.GetLeftContent();
+      rememberedRightBQ = outdentResult.GetRightContent();
     }
   }
   // Make sure selection didn't stick to last piece of content in old bq (only
@@ -5432,54 +5444,49 @@ HTMLEditRules::SplitRangeOffFromBlock(Element& aBlockElement,
   return SplitRangeOffFromNodeResult(splitAtStartResult, splitAtEndResult);
 }
 
-nsresult
-HTMLEditRules::OutdentPartOfBlock(Element& aBlock,
-                                  nsIContent& aStartChild,
-                                  nsIContent& aEndChild,
-                                  bool aIsBlockIndentedWithCSS,
-                                  nsIContent** aOutLeftNode,
-                                  nsIContent** aOutRightNode)
+SplitRangeOffFromNodeResult
+HTMLEditRules::OutdentPartOfBlock(Element& aBlockElement,
+                                  nsIContent& aStartOfOutdent,
+                                  nsIContent& aEndOfOutdent,
+                                  bool aIsBlockIndentedWithCSS)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aOutLeftNode && aOutRightNode);
 
   SplitRangeOffFromNodeResult splitResult =
-    SplitRangeOffFromBlock(aBlock, aStartChild, aEndChild);
+    SplitRangeOffFromBlock(aBlockElement, aStartOfOutdent, aEndOfOutdent);
   if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
-  if (aOutLeftNode) {
-    NS_IF_ADDREF(*aOutLeftNode = splitResult.GetLeftContent());
-  }
-  if (aOutRightNode) {
-    NS_IF_ADDREF(*aOutRightNode = splitResult.GetRightContent());
+    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
   if (NS_WARN_IF(!splitResult.GetMiddleContentAsElement())) {
-    return NS_ERROR_FAILURE;
+    return SplitRangeOffFromNodeResult(NS_ERROR_FAILURE);
   }
 
   if (!aIsBlockIndentedWithCSS) {
     nsresult rv =
       HTMLEditorRef().RemoveBlockContainerWithTransaction(
                         *splitResult.GetMiddleContentAsElement());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    return NS_OK;
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return SplitRangeOffFromNodeResult(rv);
+    }
+    return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(),
+                                       nullptr,
+                                       splitResult.GetRightContent());
   }
 
   if (splitResult.GetMiddleContentAsElement()) {
     nsresult rv =
       DecreaseMarginToOutdent(*splitResult.GetMiddleContentAsElement());
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return SplitRangeOffFromNodeResult(rv);
     }
-    return NS_OK;
+    return splitResult;
   }
 
-  return NS_OK;
+  return splitResult;
 }
 
 CreateElementResult
