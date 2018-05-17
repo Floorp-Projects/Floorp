@@ -9,7 +9,13 @@ def delete_session(session):
     return session.transport.send("DELETE", "session/{session_id}".format(**vars(session)))
 
 
-def test_delete_session_with_dismissed_beforeunload_prompt(session):
+def test_null_response_value(session):
+    response = delete_session(session)
+    value = assert_success(response)
+    assert value is None
+
+
+def test_dismissed_beforeunload_prompt(session):
     session.url = inline("""
       <input type="text">
       <script>
