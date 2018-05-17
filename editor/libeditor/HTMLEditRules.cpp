@@ -5071,262 +5071,26 @@ HTMLEditRules::WillOutdent(bool* aCancel,
   MOZ_ASSERT(aCancel && aHandled);
   *aCancel = false;
   *aHandled = true;
-  nsCOMPtr<nsIContent> rememberedLeftBQ, rememberedRightBQ;
-
-  bool useCSS = HTMLEditorRef().IsCSSEnabled();
 
   nsresult rv = NormalizeSelection();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  // Some scoping for selection resetting - we may need to tweak it
-  {
-    AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
-
-    // Convert the selection ranges into "promoted" selection ranges: this
-    // basically just expands the range to include the immediate block parent,
-    // and then further expands to include any ancestors whose children are all
-    // in the range
-    nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-    rv = GetNodesFromSelection(EditAction::outdent, arrayOfNodes,
-                               TouchContent::yes);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // Okay, now go through all the nodes and remove a level of blockquoting,
-    // or whatever is appropriate.  Wohoo!
-
-    nsCOMPtr<Element> curBlockQuote;
-    nsCOMPtr<nsIContent> firstBQChild, lastBQChild;
-    bool curBlockQuoteIsIndentedWithCSS = false;
-    for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
-      if (!arrayOfNodes[i]->IsContent()) {
-        continue;
-      }
-      OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
-
-      // Here's where we actually figure out what to do
-      int32_t offset;
-      nsCOMPtr<nsINode> curParent =
-        EditorBase::GetNodeLocation(curNode, &offset);
-      if (!curParent) {
-        continue;
-      }
-
-      // Is it a blockquote?
-      if (curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
-        // If it is a blockquote, remove it.  So we need to finish up dealng
-        // with any curBlockQuote first.
-        if (curBlockQuote) {
-          SplitRangeOffFromNodeResult outdentResult =
-            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                               curBlockQuoteIsIndentedWithCSS);
-          if (NS_WARN_IF(outdentResult.Failed())) {
-            return outdentResult.Rv();
-          }
-          rememberedLeftBQ = outdentResult.GetLeftContent();
-          rememberedRightBQ = outdentResult.GetRightContent();
-          curBlockQuote = nullptr;
-          firstBQChild = nullptr;
-          lastBQChild = nullptr;
-          curBlockQuoteIsIndentedWithCSS = false;
-        }
-        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-                               *curNode->AsElement());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        continue;
-      }
-      // Is it a block with a 'margin' property?
-      if (useCSS && IsBlockNode(curNode)) {
-        nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
-        nsAutoString value;
-        CSSEditUtils::GetSpecifiedProperty(curNode, marginProperty, value);
-        float f;
-        RefPtr<nsAtom> unit;
-        CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
-        if (f > 0) {
-          nsresult rv = DecreaseMarginToOutdent(*curNode->AsElement());
-          if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-            "Failed to decrease indentation");
-          continue;
-        }
-      }
-      // Is it a list item?
-      if (HTMLEditUtils::IsListItem(curNode)) {
-        // If it is a list item, that means we are not outdenting whole list.
-        // So we need to finish up dealing with any curBlockQuote, and then pop
-        // this list item.
-        if (curBlockQuote) {
-          SplitRangeOffFromNodeResult outdentResult =
-            OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                               curBlockQuoteIsIndentedWithCSS);
-          if (NS_WARN_IF(outdentResult.Failed())) {
-            return outdentResult.Rv();
-          }
-          rememberedLeftBQ = outdentResult.GetLeftContent();
-          rememberedRightBQ = outdentResult.GetRightContent();
-          curBlockQuote = nullptr;
-          firstBQChild = nullptr;
-          lastBQChild = nullptr;
-          curBlockQuoteIsIndentedWithCSS = false;
-        }
-        rv = PopListItem(*curNode->AsContent());
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        continue;
-      }
-      // Do we have a blockquote that we are already committed to removing?
-      if (curBlockQuote) {
-        // If so, is this node a descendant?
-        if (EditorUtils::IsDescendantOf(*curNode, *curBlockQuote)) {
-          lastBQChild = curNode;
-          // Then we don't need to do anything different for this node
-          continue;
-        }
-        // Otherwise, we have progressed beyond end of curBlockQuote, so
-        // let's handle it now.  We need to remove the portion of
-        // curBlockQuote that contains [firstBQChild - lastBQChild].
-        SplitRangeOffFromNodeResult outdentResult =
-          OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                             curBlockQuoteIsIndentedWithCSS);
-        if (NS_WARN_IF(outdentResult.Failed())) {
-          return outdentResult.Rv();
-        }
-        rememberedLeftBQ = outdentResult.GetLeftContent();
-        rememberedRightBQ = outdentResult.GetRightContent();
-        curBlockQuote = nullptr;
-        firstBQChild = nullptr;
-        lastBQChild = nullptr;
-        curBlockQuoteIsIndentedWithCSS = false;
-        // Fall out and handle curNode
-      }
-
-      // Are we inside a blockquote?
-      OwningNonNull<nsINode> n = curNode;
-      curBlockQuoteIsIndentedWithCSS = false;
-      // Keep looking up the hierarchy as long as we don't hit the body or the
-      // active editing host or a table element (other than an entire table)
-      while (!n->IsHTMLElement(nsGkAtoms::body) && 
-             HTMLEditorRef().IsDescendantOfEditorRoot(n) &&
-             (n->IsHTMLElement(nsGkAtoms::table) ||
-              !HTMLEditUtils::IsTableElement(n))) {
-        if (!n->GetParentNode()) {
-          break;
-        }
-        n = *n->GetParentNode();
-        if (n->IsHTMLElement(nsGkAtoms::blockquote)) {
-          // If so, remember it and the first node we are taking out of it.
-          curBlockQuote = n->AsElement();
-          firstBQChild = curNode;
-          lastBQChild = curNode;
-          break;
-        } else if (useCSS) {
-          nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
-          nsAutoString value;
-          CSSEditUtils::GetSpecifiedProperty(*n, marginProperty, value);
-          float f;
-          RefPtr<nsAtom> unit;
-          CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
-          if (f > 0 && !(HTMLEditUtils::IsList(curParent) &&
-                         HTMLEditUtils::IsList(curNode))) {
-            curBlockQuote = n->AsElement();
-            firstBQChild = curNode;
-            lastBQChild = curNode;
-            curBlockQuoteIsIndentedWithCSS = true;
-            break;
-          }
-        }
-      }
-
-      if (!curBlockQuote) {
-        // Couldn't find enclosing blockquote.  Handle list cases.
-        if (HTMLEditUtils::IsList(curParent)) {
-          // Move node out of list
-          if (HTMLEditUtils::IsList(curNode)) {
-            // Just unwrap this sublist
-            rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-                                   *curNode->AsElement());
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              return rv;
-            }
-          }
-          // handled list item case above
-        } else if (HTMLEditUtils::IsList(curNode)) {
-          // node is a list, but parent is non-list: move list items out
-          nsCOMPtr<nsIContent> child = curNode->GetLastChild();
-          while (child) {
-            if (HTMLEditUtils::IsListItem(child)) {
-              rv = PopListItem(*child);
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                return rv;
-              }
-            } else if (HTMLEditUtils::IsList(child)) {
-              // We have an embedded list, so move it out from under the parent
-              // list. Be sure to put it after the parent list because this
-              // loop iterates backwards through the parent's list of children.
-              EditorRawDOMPoint afterCurrentList(curParent, offset + 1);
-              rv = HTMLEditorRef().MoveNodeWithTransaction(*child,
-                                                           afterCurrentList);
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                return rv;
-              }
-            } else {
-              // Delete any non-list items for now
-              rv = HTMLEditorRef().DeleteNodeWithTransaction(*child);
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                return rv;
-              }
-            }
-            child = curNode->GetLastChild();
-          }
-          // Delete the now-empty list
-          rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
-                                 *curNode->AsElement());
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        } else if (useCSS) {
-          nsCOMPtr<Element> element;
-          if (curNode->GetAsText()) {
-            // We want to outdent the parent of text nodes
-            element = curNode->GetParentElement();
-          } else if (curNode->IsElement()) {
-            element = curNode->AsElement();
-          }
-          if (element) {
-            nsresult rv = DecreaseMarginToOutdent(*element);
-            if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-              return NS_ERROR_EDITOR_DESTROYED;
-            }
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-              "Failed to decrease indentation");
-          }
-        }
-      }
-    }
-    if (curBlockQuote) {
-      // We have a blockquote we haven't finished handling
-      SplitRangeOffFromNodeResult outdentResult =
-        OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
-                           curBlockQuoteIsIndentedWithCSS);
-      if (NS_WARN_IF(outdentResult.Failed())) {
-        return outdentResult.Rv();
-      }
-      rememberedLeftBQ = outdentResult.GetLeftContent();
-      rememberedRightBQ = outdentResult.GetRightContent();
-    }
+  // OutdentAroundSelection() creates AutoSelectionRestorer.  Therefore,
+  // even if it returns NS_OK, the editor might have been destroyed at
+  // restoring Selection.
+  SplitRangeOffFromNodeResult outdentResult = OutdentAroundSelection();
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
+  if (NS_WARN_IF(outdentResult.Failed())) {
+    return outdentResult.Rv();
+  }
+
   // Make sure selection didn't stick to last piece of content in old bq (only
   // a problem for collapsed selections)
-  if (!rememberedLeftBQ && !rememberedRightBQ) {
+  if (!outdentResult.GetLeftContent() && !outdentResult.GetRightContent()) {
     return NS_OK;
   }
 
@@ -5334,8 +5098,8 @@ HTMLEditRules::WillOutdent(bool* aCancel,
     return NS_OK;
   }
 
-  // Push selection past end of rememberedLeftBQ
-  if (rememberedLeftBQ) {
+  // Push selection past end of left element of last split indented element.
+  if (outdentResult.GetLeftContent()) {
     nsRange* firstRange = SelectionRef().GetRangeAt(0);
     if (NS_WARN_IF(!firstRange)) {
       return NS_OK;
@@ -5344,37 +5108,340 @@ HTMLEditRules::WillOutdent(bool* aCancel,
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
       return NS_ERROR_FAILURE;
     }
-    if (atStartOfSelection.Container() == rememberedLeftBQ ||
+    if (atStartOfSelection.Container() == outdentResult.GetLeftContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
-                                    *rememberedLeftBQ)) {
-      // Selection is inside rememberedLeftBQ - push it past it.
-      EditorRawDOMPoint afterRememberedLeftBQ(rememberedLeftBQ);
+                                    *outdentResult.GetLeftContent())) {
+      // Selection is inside the left node - push it past it.
+      EditorRawDOMPoint afterRememberedLeftBQ(outdentResult.GetLeftContent());
       afterRememberedLeftBQ.AdvanceOffset();
       IgnoredErrorResult error;
       SelectionRef().Collapse(afterRememberedLeftBQ, error);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(!error.Failed(),
         "Failed to collapse selection after the left <blockquote>");
     }
   }
-  // And pull selection before beginning of rememberedRightBQ
-  if (rememberedRightBQ) {
+  // And pull selection before beginning of right element of last split
+  // indented element.
+  if (outdentResult.GetRightContent()) {
     nsRange* firstRange = SelectionRef().GetRangeAt(0);
     const RangeBoundary& atStartOfSelection = firstRange->StartRef();
     if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
       return NS_ERROR_FAILURE;
     }
-    if (atStartOfSelection.Container() == rememberedRightBQ ||
+    if (atStartOfSelection.Container() == outdentResult.GetRightContent() ||
         EditorUtils::IsDescendantOf(*atStartOfSelection.Container(),
-                                    *rememberedRightBQ)) {
-      // Selection is inside rememberedRightBQ - push it before it.
-      EditorRawDOMPoint atRememberedRightBQ(rememberedRightBQ);
+                                    *outdentResult.GetRightContent())) {
+      // Selection is inside the right element - push it before it.
+      EditorRawDOMPoint atRememberedRightBQ(outdentResult.GetRightContent());
       IgnoredErrorResult error;
       SelectionRef().Collapse(atRememberedRightBQ, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(!error.Failed(),
         "Failed to collapse selection after the right <blockquote>");
     }
   }
   return NS_OK;
+}
+
+SplitRangeOffFromNodeResult
+HTMLEditRules::OutdentAroundSelection()
+{
+  MOZ_ASSERT(IsEditorDataAvailable());
+
+  AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
+
+  bool useCSS = HTMLEditorRef().IsCSSEnabled();
+
+  // Convert the selection ranges into "promoted" selection ranges: this
+  // basically just expands the range to include the immediate block parent,
+  // and then further expands to include any ancestors whose children are all
+  // in the range
+  nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
+  nsresult rv =
+    GetNodesFromSelection(EditAction::outdent, arrayOfNodes, TouchContent::yes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return SplitRangeOffFromNodeResult(rv);
+  }
+
+  // Okay, now go through all the nodes and remove a level of blockquoting,
+  // or whatever is appropriate.  Wohoo!
+
+  nsCOMPtr<nsIContent> leftContentOfLastOutdented;
+  nsCOMPtr<nsIContent> middleContentOfLastOutdented;
+  nsCOMPtr<nsIContent> rightContentOfLastOutdented;
+  nsCOMPtr<Element> curBlockQuote;
+  nsCOMPtr<nsIContent> firstBQChild, lastBQChild;
+  bool curBlockQuoteIsIndentedWithCSS = false;
+  for (uint32_t i = 0; i < arrayOfNodes.Length(); i++) {
+    if (!arrayOfNodes[i]->IsContent()) {
+      continue;
+    }
+    OwningNonNull<nsIContent> curNode = *arrayOfNodes[i]->AsContent();
+
+    // Here's where we actually figure out what to do
+    int32_t offset;
+    nsCOMPtr<nsINode> curParent =
+      EditorBase::GetNodeLocation(curNode, &offset);
+    if (!curParent) {
+      continue;
+    }
+
+    // Is it a blockquote?
+    if (curNode->IsHTMLElement(nsGkAtoms::blockquote)) {
+      // If it is a blockquote, remove it.  So we need to finish up dealng
+      // with any curBlockQuote first.
+      if (curBlockQuote) {
+        SplitRangeOffFromNodeResult outdentResult =
+          OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                             curBlockQuoteIsIndentedWithCSS);
+        if (NS_WARN_IF(outdentResult.Failed())) {
+          return outdentResult;
+        }
+        leftContentOfLastOutdented = outdentResult.GetLeftContent();
+        middleContentOfLastOutdented = outdentResult.GetMiddleContent();
+        rightContentOfLastOutdented = outdentResult.GetRightContent();
+        curBlockQuote = nullptr;
+        firstBQChild = nullptr;
+        lastBQChild = nullptr;
+        curBlockQuoteIsIndentedWithCSS = false;
+      }
+      rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
+                             *curNode->AsElement());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SplitRangeOffFromNodeResult(rv);
+      }
+      continue;
+    }
+
+    // Is it a block with a 'margin' property?
+    if (useCSS && IsBlockNode(curNode)) {
+      nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+      nsAutoString value;
+      CSSEditUtils::GetSpecifiedProperty(curNode, marginProperty, value);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      float f;
+      RefPtr<nsAtom> unit;
+      CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
+      if (f > 0) {
+        nsresult rv = DecreaseMarginToOutdent(*curNode->AsElement());
+        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+          "Failed to decrease indentation");
+        continue;
+      }
+    }
+
+    // Is it a list item?
+    if (HTMLEditUtils::IsListItem(curNode)) {
+      // If it is a list item, that means we are not outdenting whole list.
+      // So we need to finish up dealing with any curBlockQuote, and then pop
+      // this list item.
+      if (curBlockQuote) {
+        SplitRangeOffFromNodeResult outdentResult =
+          OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                             curBlockQuoteIsIndentedWithCSS);
+        if (NS_WARN_IF(outdentResult.Failed())) {
+          return outdentResult;
+        }
+        leftContentOfLastOutdented = outdentResult.GetLeftContent();
+        middleContentOfLastOutdented = outdentResult.GetMiddleContent();
+        rightContentOfLastOutdented = outdentResult.GetRightContent();
+        curBlockQuote = nullptr;
+        firstBQChild = nullptr;
+        lastBQChild = nullptr;
+        curBlockQuoteIsIndentedWithCSS = false;
+      }
+      rv = PopListItem(*curNode->AsContent());
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SplitRangeOffFromNodeResult(rv);
+      }
+      continue;
+    }
+
+    // Do we have a blockquote that we are already committed to removing?
+    if (curBlockQuote) {
+      // If so, is this node a descendant?
+      if (EditorUtils::IsDescendantOf(*curNode, *curBlockQuote)) {
+        lastBQChild = curNode;
+        // Then we don't need to do anything different for this node
+        continue;
+      }
+      // Otherwise, we have progressed beyond end of curBlockQuote, so
+      // let's handle it now.  We need to remove the portion of
+      // curBlockQuote that contains [firstBQChild - lastBQChild].
+      SplitRangeOffFromNodeResult outdentResult =
+        OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                           curBlockQuoteIsIndentedWithCSS);
+      if (NS_WARN_IF(outdentResult.Failed())) {
+        return outdentResult;
+      }
+      leftContentOfLastOutdented = outdentResult.GetLeftContent();
+      middleContentOfLastOutdented = outdentResult.GetMiddleContent();
+      rightContentOfLastOutdented = outdentResult.GetRightContent();
+      curBlockQuote = nullptr;
+      firstBQChild = nullptr;
+      lastBQChild = nullptr;
+      curBlockQuoteIsIndentedWithCSS = false;
+      // Fall out and handle curNode
+    }
+
+    // Are we inside a blockquote?
+    OwningNonNull<nsINode> n = curNode;
+    curBlockQuoteIsIndentedWithCSS = false;
+    // Keep looking up the hierarchy as long as we don't hit the body or the
+    // active editing host or a table element (other than an entire table)
+    while (!n->IsHTMLElement(nsGkAtoms::body) &&
+           HTMLEditorRef().IsDescendantOfEditorRoot(n) &&
+           (n->IsHTMLElement(nsGkAtoms::table) ||
+            !HTMLEditUtils::IsTableElement(n))) {
+      if (!n->GetParentNode()) {
+        break;
+      }
+      n = *n->GetParentNode();
+      if (n->IsHTMLElement(nsGkAtoms::blockquote)) {
+        // If so, remember it and the first node we are taking out of it.
+        curBlockQuote = n->AsElement();
+        firstBQChild = curNode;
+        lastBQChild = curNode;
+        break;
+      }
+
+      if (!useCSS) {
+        continue;
+      }
+
+      nsAtom& marginProperty = MarginPropertyAtomForIndent(curNode);
+      nsAutoString value;
+      CSSEditUtils::GetSpecifiedProperty(*n, marginProperty, value);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      float f;
+      RefPtr<nsAtom> unit;
+      CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
+      if (f > 0 && !(HTMLEditUtils::IsList(curParent) &&
+                     HTMLEditUtils::IsList(curNode))) {
+        curBlockQuote = n->AsElement();
+        firstBQChild = curNode;
+        lastBQChild = curNode;
+        curBlockQuoteIsIndentedWithCSS = true;
+        break;
+      }
+    }
+
+    if (curBlockQuote) {
+      continue;
+    }
+
+    // Couldn't find enclosing blockquote.
+    if (HTMLEditUtils::IsList(curParent)) {
+      // Move node out of list
+      if (HTMLEditUtils::IsList(curNode)) {
+        // Just unwrap this sublist
+        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
+                               *curNode->AsElement());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return SplitRangeOffFromNodeResult(rv);
+        }
+      }
+      continue;
+    }
+
+    if (HTMLEditUtils::IsList(curNode)) {
+      // node is a list, but parent is non-list: move list items out
+      nsCOMPtr<nsIContent> child = curNode->GetLastChild();
+      while (child) {
+        if (HTMLEditUtils::IsListItem(child)) {
+          rv = PopListItem(*child);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return SplitRangeOffFromNodeResult(rv);
+          }
+        } else if (HTMLEditUtils::IsList(child)) {
+          // We have an embedded list, so move it out from under the parent
+          // list. Be sure to put it after the parent list because this
+          // loop iterates backwards through the parent's list of children.
+          EditorRawDOMPoint afterCurrentList(curParent, offset + 1);
+          rv = HTMLEditorRef().MoveNodeWithTransaction(*child,
+                                                       afterCurrentList);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+          }
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return SplitRangeOffFromNodeResult(rv);
+          }
+        } else {
+          // Delete any non-list items for now
+          rv = HTMLEditorRef().DeleteNodeWithTransaction(*child);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+          }
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return SplitRangeOffFromNodeResult(rv);
+          }
+        }
+        child = curNode->GetLastChild();
+      }
+      // Delete the now-empty list
+      rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
+                             *curNode->AsElement());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return SplitRangeOffFromNodeResult(rv);
+      }
+      continue;
+    }
+
+    if (useCSS) {
+      nsCOMPtr<Element> element;
+      if (curNode->GetAsText()) {
+        // We want to outdent the parent of text nodes
+        element = curNode->GetParentElement();
+      } else if (curNode->IsElement()) {
+        element = curNode->AsElement();
+      }
+      if (element) {
+        nsresult rv = DecreaseMarginToOutdent(*element);
+        if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+          "Failed to decrease indentation");
+      }
+      continue;
+    }
+  }
+
+  if (!curBlockQuote) {
+    return SplitRangeOffFromNodeResult(leftContentOfLastOutdented,
+                                       middleContentOfLastOutdented,
+                                       rightContentOfLastOutdented);
+  }
+
+  // We have a <blockquote> we haven't finished handling.
+  SplitRangeOffFromNodeResult outdentResult =
+    OutdentPartOfBlock(*curBlockQuote, *firstBQChild, *lastBQChild,
+                       curBlockQuoteIsIndentedWithCSS);
+  if (NS_WARN_IF(outdentResult.Failed())) {
+    return outdentResult;
+  }
+  return outdentResult;
 }
 
 SplitRangeOffFromNodeResult
