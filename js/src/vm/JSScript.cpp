@@ -2626,12 +2626,6 @@ ScriptDataSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
      return size;
 }
 
-void
-JSScript::initCompartment(JSContext* cx)
-{
-    compartment_ = cx->compartment();
-}
-
 /* static */ JSScript*
 JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                  HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
@@ -2651,7 +2645,7 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
 
     PodZero(script.get());
 
-    script->initCompartment(cx);
+    script->realm_ = cx->realm();
 
 #ifndef JS_CODEGEN_NONE
     uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
