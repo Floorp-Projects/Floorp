@@ -10,6 +10,7 @@
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "nsIGfxInfo.h"
@@ -413,6 +414,10 @@ D3D11Checks::DoesRemotePresentWork(IDXGIAdapter* adapter)
 /* static */ bool
 D3D11Checks::DoesNV12Work(ID3D11Device* device)
 {
+  if(gfxVars::DXNV12Blocked()) {
+    return false;
+  }
+
   DXGI_ADAPTER_DESC desc;
   PodZero(&desc);
   if (!GetDxgiDesc(device, &desc)) {

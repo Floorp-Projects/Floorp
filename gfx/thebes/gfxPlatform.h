@@ -875,6 +875,7 @@ private:
     void InitOMTPConfig();
 
     static bool IsDXInterop2Blocked();
+    static bool IsDXNV12Blocked();
 
     RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
