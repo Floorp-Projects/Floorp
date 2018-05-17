@@ -4840,6 +4840,24 @@ CompareIRGenerator::tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId)
 }
 
 bool
+CompareIRGenerator::tryAttachNumber(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if (!cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    if (!lhsVal_.isNumber() || !rhsVal_.isNumber())
+        return false;
+
+    writer.guardIsNumber(lhsId);
+    writer.guardIsNumber(rhsId);
+    writer.compareDoubleResult(op_, lhsId, rhsId);
+    writer.returnFromIC();
+
+    trackAttached("Number");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4861,14 +4879,13 @@ CompareIRGenerator::tryAttachStub()
             return true;
         if (tryAttachStrictDifferentTypes(lhsId, rhsId))
             return true;
-
-        trackAttached(IRGenerator::NotAttached);
-        return false;
     }
 
     // We want these to come below to allow us to bypass the
     // strictly-different-types cases in the below attachment code
     if (tryAttachInt32(lhsId, rhsId))
+        return true;
+    if (tryAttachNumber(lhsId, rhsId))
         return true;
 
     trackAttached(IRGenerator::NotAttached);

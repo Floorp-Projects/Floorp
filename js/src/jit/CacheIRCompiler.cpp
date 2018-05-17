@@ -3113,6 +3113,30 @@ CacheIRCompiler::emitCompareInt32Result()
 }
 
 bool
+CacheIRCompiler::emitCompareDoubleResult()
+{
+    AutoOutputRegister output(*this);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg0);
+    allocator.loadDouble(masm, reader.valOperandId(), FloatReg1);
+    JSOp op = reader.jsop();
+
+    Label done, ifTrue;
+    masm.branchDouble(JSOpToDoubleCondition(op), FloatReg0, FloatReg1, &ifTrue);
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitCallPrintString()
 {
     const char* str = reinterpret_cast<char*>(reader.pointer());
