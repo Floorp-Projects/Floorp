@@ -144,7 +144,8 @@ add_task(async function test_4() {
   registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
                     "addon1@tests.mozilla.org", addon1Dir.path);
-  await promiseRestartManager();
+
+  await promiseShutdownManager();
 
   registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
                     "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
@@ -154,7 +155,7 @@ add_task(async function test_4() {
                     "addon2@tests.mozilla.org", addon1Dir.path);
   await promiseWriteInstallRDFForExtension(addon2, gProfD, "addon1");
 
-  await promiseRestartManager();
+  await promiseStartupManager();
 
   let [a1, a2, a3] = await AddonManager.getAddonsByIDs(IDS);
   equal(a1, null);
