@@ -287,8 +287,9 @@ protected:
    *                    be joined or it's impossible to join them but it's not
    *                    unexpected case, this returns true with this.
    */
-  EditActionResult TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
-                                                  nsIContent& aRightNode);
+  MOZ_MUST_USE EditActionResult
+  TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
+                                 nsIContent& aRightNode);
 
   /**
    * MoveBlock() moves the content from aRightBlock starting from aRightOffset

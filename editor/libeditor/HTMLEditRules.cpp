@@ -3428,6 +3428,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
     nsresult rv = WSRunObject::ScrubBlockBoundary(&HTMLEditorRef(),
                                                   WSRunObject::kBlockEnd,
                                                   leftBlock);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -3440,6 +3443,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
                                            WSRunObject::kAfterBlock,
                                            atRightBlockChild.GetContainer(),
                                            atRightBlockChild.Offset());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
@@ -3495,9 +3501,16 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
       // atRightBlockChild is now invalid.
       atRightBlockChild.Clear();
     }
-    if (brNode &&
-        NS_SUCCEEDED(HTMLEditorRef().DeleteNodeWithTransaction(*brNode))) {
-      ret.MarkAsHandled();
+    if (brNode) {
+      nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*brNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_SUCCEEDED(rv)) {
+        ret.MarkAsHandled();
+      } else {
+        NS_WARNING("Failed to remove the <br> element");
+      }
     }
     return ret;
   }
@@ -3513,6 +3526,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
     nsresult rv = WSRunObject::ScrubBlockBoundary(&HTMLEditorRef(),
                                                   WSRunObject::kBlockStart,
                                                   rightBlock);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditActionIgnored(rv);
     }
@@ -3524,6 +3540,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
       rv = WSRunObject::ScrubBlockBoundary(&HTMLEditorRef(),
                                            WSRunObject::kBeforeBlock,
                                            leftBlock, leftBlockChild.Offset());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
@@ -3600,6 +3619,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
                                &previousContentOffset,
                                nullptr, nullptr, nullptr,
                                getter_AddRefs(splittedPreviousContent));
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return EditActionIgnored(rv);
         }
@@ -3621,9 +3643,16 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
         return ret;
       }
     }
-    if (brNode &&
-        NS_SUCCEEDED(HTMLEditorRef().DeleteNodeWithTransaction(*brNode))) {
-      ret.MarkAsHandled();
+    if (brNode) {
+      nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*brNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_SUCCEEDED(rv)) {
+        ret.MarkAsHandled();
+      } else {
+        NS_WARNING("Failed to remove the <br> element");
+      }
     }
     return ret;
   }
@@ -3639,6 +3668,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
   // Adjust whitespace at block boundaries
   nsresult rv =
     WSRunObject::PrepareToJoinBlocks(&HTMLEditorRef(), leftBlock, rightBlock);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditActionIgnored(rv);
   }
@@ -3672,6 +3704,9 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
   }
   if (brNode) {
     rv = HTMLEditorRef().DeleteNodeWithTransaction(*brNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+    }
     // XXX In other top level if blocks, the result of
     //     DeleteNodeWithTransaction() is ignored.  Why does only this result
     //     is respected?
