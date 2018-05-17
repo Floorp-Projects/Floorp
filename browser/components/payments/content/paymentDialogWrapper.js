@@ -475,8 +475,13 @@ var paymentDialogWrapper = {
   },
 
   async onChangeShippingAddress({shippingAddressGUID}) {
-    let address = await this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
-    paymentSrv.changeShippingAddress(this.request.requestId, address);
+    if (shippingAddressGUID) {
+      // If a shipping address was de-selected e.g. the selected address was deleted, we'll
+      // just wait to send the address change when the shipping address is eventually selected
+      // before clicking Pay since it's a required field.
+      let address = await this._convertProfileAddressToPaymentAddress(shippingAddressGUID);
+      paymentSrv.changeShippingAddress(this.request.requestId, address);
+    }
   },
 
   onChangeShippingOption({optionID}) {

@@ -124,6 +124,11 @@ add_task(async function test_edit_link() {
         return Object.keys(state.savedAddresses).length == 1;
       }, "One saved address when starting test");
 
+      let picker = content.document
+                     .querySelector("address-picker[selected-state-key='selectedShippingAddress']");
+      Cu.waiveXrays(picker).dropdown.click();
+      Cu.waiveXrays(picker).dropdown.popupBox.children[0].click();
+
       let editLink = content.document.querySelector("address-picker .edit-link");
       is(editLink.textContent, "Edit", "Edit link text");
 
