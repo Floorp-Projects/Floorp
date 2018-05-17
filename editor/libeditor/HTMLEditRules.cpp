@@ -3909,12 +3909,34 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     return rv;
   }
 
+  // MakeList() creates AutoSelectionRestorer.
+  // Therefore, even if it returns NS_OK, editor might have been destroyed
+  // at restoring Selection.
+  rv = MakeList(listType, aEntireList, aBulletType, aCancel, *itemType);
+  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
+      NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditRules::MakeList(nsAtom& aListType,
+                        bool aEntireList,
+                        const nsAString* aBulletType,
+                        bool* aCancel,
+                        nsAtom& aItemType)
+{
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
 
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetListActionNodes(arrayOfNodes,
-                          aEntireList ? EntireList::yes : EntireList::no,
-                          TouchContent::yes);
+  nsresult rv =
+    GetListActionNodes(arrayOfNodes,
+                       aEntireList ? EntireList::yes : EntireList::no,
+                       TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3937,6 +3959,9 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     if (bOnlyBreaks) {
       for (auto& node : arrayOfNodes) {
         rv = HTMLEditorRef().DeleteNodeWithTransaction(*node);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -3955,40 +3980,48 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
 
     // Make sure we can put a list here.
     if (!HTMLEditorRef().CanContainTag(*atStartOfSelection.GetContainer(),
-                                       listType)) {
+                                       aListType)) {
       *aCancel = true;
       return NS_OK;
     }
 
     SplitNodeResult splitAtSelectionStartResult =
-      MaybeSplitAncestorsForInsertWithTransaction(listType, atStartOfSelection);
+      MaybeSplitAncestorsForInsertWithTransaction(aListType,
+                                                  atStartOfSelection);
     if (NS_WARN_IF(splitAtSelectionStartResult.Failed())) {
       return splitAtSelectionStartResult.Rv();
     }
     RefPtr<Element> theList =
       HTMLEditorRef().CreateNodeWithTransaction(
-                        *listType,
-                        splitAtSelectionStartResult.SplitPoint());
+                        aListType, splitAtSelectionStartResult.SplitPoint());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!theList)) {
       return NS_ERROR_FAILURE;
     }
 
     EditorRawDOMPoint atFirstListItemToInsertBefore(theList, 0);
     RefPtr<Element> theListItem =
-      HTMLEditorRef().CreateNodeWithTransaction(*itemType,
+      HTMLEditorRef().CreateNodeWithTransaction(aItemType,
                                                 atFirstListItemToInsertBefore);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!theListItem)) {
       return NS_ERROR_FAILURE;
     }
 
     // remember our new block for postprocessing
     mNewBlock = theListItem;
-    // put selection in new list item
-    *aHandled = true;
+    // Put selection in new list item and don't restore the Selection.
+    selectionRestorer.Abort();
     ErrorResult error;
     SelectionRef().Collapse(EditorRawDOMPoint(theListItem, 0), error);
-    // Don't restore the selection
-    selectionRestorer.Abort();
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!error.Failed())) {
       return error.StealNSResult();
     }
@@ -4026,6 +4059,9 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     if (HTMLEditorRef().IsEditable(curNode) &&
         (TextEditUtils::IsBreak(curNode) || IsEmptyInline(curNode))) {
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4043,16 +4079,22 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         // ConvertListType first: that routine handles converting the list
         // item types, if needed.
         rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
         CreateElementResult convertListTypeResult =
-          ConvertListType(*curNode->AsElement(), *listType, *itemType);
+          ConvertListType(*curNode->AsElement(), aListType, aItemType);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
           return convertListTypeResult.Rv();
         }
         rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
                                *convertListTypeResult.GetNewNode());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4060,7 +4102,7 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
       } else {
         // replace list with new list type
         CreateElementResult convertListTypeResult =
-          ConvertListType(*curNode->AsElement(), *listType, *itemType);
+          ConvertListType(*curNode->AsElement(), aListType, aItemType);
         if (NS_WARN_IF(convertListTypeResult.Failed())) {
           return convertListTypeResult.Rv();
         }
@@ -4076,7 +4118,7 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     }
     MOZ_ASSERT(atCurNode.IsSetAndValid());
     if (HTMLEditUtils::IsListItem(curNode)) {
-      if (!atCurNode.IsContainerHTMLElement(listType)) {
+      if (!atCurNode.IsContainerHTMLElement(&aListType)) {
         // list item is in wrong type of list. if we don't have a curList,
         // split the old list and make a new list of correct type.
         if (!curList || EditorUtils::IsDescendantOf(*curNode, *curList)) {
@@ -4086,28 +4128,41 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
           ErrorResult error;
           nsCOMPtr<nsIContent> newLeftNode =
             HTMLEditorRef().SplitNodeWithTransaction(atCurNode, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
           newBlock = newLeftNode ? newLeftNode->AsElement() : nullptr;
           EditorRawDOMPoint atParentOfCurNode(atCurNode.GetContainer());
           curList =
-            HTMLEditorRef().CreateNodeWithTransaction(*listType,
+            HTMLEditorRef().CreateNodeWithTransaction(aListType,
                                                       atParentOfCurNode);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!curList)) {
             return NS_ERROR_FAILURE;
           }
         }
         // move list item to new list
         rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
         // convert list item type if needed
-        if (!curNode->IsHTMLElement(itemType)) {
+        if (!curNode->IsHTMLElement(&aItemType)) {
           newBlock =
             HTMLEditorRef().ReplaceContainerWithTransaction(
-                              *curNode->AsElement(), *itemType);
+                              *curNode->AsElement(), aItemType);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!newBlock)) {
             return NS_ERROR_FAILURE;
           }
@@ -4120,14 +4175,20 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         } else if (atCurNode.GetContainer() != curList) {
           // move list item to new list
           rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode, *curList);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
         }
-        if (!curNode->IsHTMLElement(itemType)) {
+        if (!curNode->IsHTMLElement(&aItemType)) {
           newBlock =
             HTMLEditorRef().ReplaceContainerWithTransaction(
-                              *curNode->AsElement(), *itemType);
+                              *curNode->AsElement(), aItemType);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!newBlock)) {
             return NS_ERROR_FAILURE;
           }
@@ -4141,12 +4202,18 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         rv = HTMLEditorRef().SetAttributeWithTransaction(*curElement,
                                                          *nsGkAtoms::type,
                                                          *aBulletType);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       } else {
         rv = HTMLEditorRef().RemoveAttributeWithTransaction(*curElement,
                                                             *nsGkAtoms::type);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4162,6 +4229,9 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
       GetInnerContent(*curNode, arrayOfNodes, &j);
       rv = HTMLEditorRef().RemoveContainerWithTransaction(
                              *curNode->AsElement());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4172,13 +4242,16 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
     // need to make a list to put things in if we haven't already,
     if (!curList) {
       SplitNodeResult splitCurNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(listType, atCurNode);
+        MaybeSplitAncestorsForInsertWithTransaction(aListType, atCurNode);
       if (NS_WARN_IF(splitCurNodeResult.Failed())) {
         return splitCurNodeResult.Rv();
       }
       curList =
         HTMLEditorRef().CreateNodeWithTransaction(
-                          *listType, splitCurNodeResult.SplitPoint());
+                          aListType, splitCurNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curList)) {
         return NS_ERROR_FAILURE;
       }
@@ -4200,6 +4273,9 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         // the same list item.  use prevListItem
         rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode,
                                                           *prevListItem);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4208,13 +4284,19 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         if (curNode->IsHTMLElement(nsGkAtoms::p)) {
           listItem =
             HTMLEditorRef().ReplaceContainerWithTransaction(
-                              *curNode->AsElement(), *itemType);
+                              *curNode->AsElement(), aItemType);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!listItem)) {
             return NS_ERROR_FAILURE;
           }
         } else {
           listItem =
-            HTMLEditorRef().InsertContainerWithTransaction(*curNode, *itemType);
+            HTMLEditorRef().InsertContainerWithTransaction(*curNode, aItemType);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!listItem)) {
             return NS_ERROR_FAILURE;
           }
@@ -4233,6 +4315,9 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
       // if we made a new list item, deal with it: tuck the listItem into the
       // end of the active list
       rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*listItem, *curList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
