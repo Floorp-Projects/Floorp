@@ -26,12 +26,12 @@ impl WebDriverResponse {
             CloseWindow(ref x) => json::encode(&x.to_json()),
             Cookie(ref x) => json::encode(x),
             Cookies(ref x) => json::encode(x),
-            DeleteSession => Ok("{}".to_string()),
+            DeleteSession => Ok("null".to_string()),
             ElementRect(ref x) => json::encode(x),
             Generic(ref x) => json::encode(x),
             NewSession(ref x) => json::encode(x),
             Timeouts(ref x) => json::encode(x),
-            Void => Ok("{}".to_string()),
+            Void => Ok("null".to_string()),
             WindowRect(ref x) => json::encode(&x.to_json()),
         }.unwrap();
 
