@@ -289,6 +289,10 @@ def run_tests(config, test_paths, product, **kwargs):
         logger.error("No tests ran")
         return False
 
+    if unexpected_total and not kwargs["fail_on_unexpected"]:
+        logger.info("Tolerating %s unexpected results" % unexpected_total)
+        return True
+
     return unexpected_total == 0
 
 
