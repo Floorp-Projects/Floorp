@@ -59,8 +59,9 @@ NativeIterator::trace(JSTracer* trc)
         TraceNullableEdge(trc, str, "prop");
     TraceNullableEdge(trc, &obj, "obj");
 
+    HeapReceiverGuard* guards = guardArray();
     for (size_t i = 0; i < guard_length; i++)
-        guard_array[i].trace(trc);
+        guards[i].trace(trc);
 
     // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
     // GC removes any elements from the list, it won't remove this one.
@@ -572,10 +573,6 @@ NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, uint32_t ple
                   "objects; the additional-length calculation below assumes "
                   "this size-relationship when determining the extra space to "
                   "allocate");
-    static_assert(alignof(ReceiverGuard) == alignof(GCPtrFlatString),
-                  "the end of all properties must be exactly aligned adequate "
-                  "to begin storing ReceiverGuards, else the tacked-on memory "
-                  "below will be inadequate to store all properties/guards");
 
     size_t extraLength = plength + numGuards * 2;
     NativeIterator* ni =
@@ -621,7 +618,6 @@ NativeIterator::init(JSObject* obj, JSObject* iterObj, uint32_t numGuards, uint3
     this->obj.init(obj);
     this->iterObj_ = iterObj;
     this->flags = 0;
-    this->guard_array = (HeapReceiverGuard*) this->props_end;
     this->guard_length = numGuards;
     this->guard_key = key;
 }
@@ -686,9 +682,10 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& keys, uint32_
         JSObject* pobj = obj;
         size_t ind = 0;
         uint32_t key = 0;
+        HeapReceiverGuard* guards = ni->guardArray();
         do {
             ReceiverGuard guard(pobj);
-            ni->guard_array[ind++].init(guard);
+            guards[ind++].init(guard);
             key = mozilla::AddToHash(key, guard.hash());
 
             // The one caller of this method that passes |numGuards > 0|, does
@@ -740,7 +737,7 @@ IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
     if (ni->guard_key != lookup.key || ni->guard_length != lookup.numGuards)
         return false;
 
-    return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guard_array), lookup.guards,
+    return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guardArray()), lookup.guards,
                     ni->guard_length);
 }
 
@@ -840,8 +837,9 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
     NativeIterator* ni = iterobj->getNativeIterator();
     MOZ_ASSERT(ni->guard_length > 0);
 
-    IteratorHashPolicy::Lookup lookup(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
-                                      ni->guard_length, ni->guard_key);
+    IteratorHashPolicy::Lookup lookup(reinterpret_cast<ReceiverGuard*>(ni->guardArray()),
+                                      ni->guard_length,
+                                      ni->guard_key);
 
     JSCompartment::IteratorCache& cache = cx->compartment()->iteratorCache;
     bool ok;
