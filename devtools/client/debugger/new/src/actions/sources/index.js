@@ -4,6 +4,18 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _blackbox = require("./blackbox");
+
+Object.keys(_blackbox).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _blackbox[key];
+    }
+  });
+});
+
 var _loadSourceText = require("./loadSourceText");
 
 Object.keys(_loadSourceText).forEach(function (key) {
@@ -12,18 +24,6 @@ Object.keys(_loadSourceText).forEach(function (key) {
     enumerable: true,
     get: function () {
       return _loadSourceText[key];
-    }
-  });
-});
-
-var _prettyPrint = require("./prettyPrint");
-
-Object.keys(_prettyPrint).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _prettyPrint[key];
     }
   });
 });
@@ -40,14 +40,14 @@ Object.keys(_newSources).forEach(function (key) {
   });
 });
 
-var _blackbox = require("./blackbox");
+var _prettyPrint = require("./prettyPrint");
 
-Object.keys(_blackbox).forEach(function (key) {
+Object.keys(_prettyPrint).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function () {
-      return _blackbox[key];
+      return _prettyPrint[key];
     }
   });
 });
