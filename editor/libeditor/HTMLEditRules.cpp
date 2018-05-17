@@ -1918,7 +1918,14 @@ HTMLEditRules::WillInsertBreak(bool* aCancel,
     // Insert a new block first
     MOZ_ASSERT(separator == ParagraphSeparator::div ||
                separator == ParagraphSeparator::p);
+    // MakeBasicBlock() creates AutoSelectionRestorer.
+    // Therefore, even if it returns NS_OK, editor might have been destroyed
+    // at restoring Selection.
     nsresult rv = MakeBasicBlock(ParagraphSeparatorElement(separator));
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
+        NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     // We warn on failure, but don't handle it, because it might be harmless.
     // Instead we just check that a new block was actually created.
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -4327,7 +4334,13 @@ HTMLEditRules::WillMakeBasicBlock(const nsAString& aBlockType,
   *aCancel = false;
   *aHandled = true;
 
+  // MakeBasicBlock() creates AutoSelectionRestorer.
+  // Therefore, even if it returns NS_OK, editor might have been destroyed
+  // at restoring Selection.
   rv = MakeBasicBlock(blockType);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4343,6 +4356,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
   AutoTransactionsConserveSelection dontChangeMySelection(&HTMLEditorRef());
 
@@ -4382,6 +4396,9 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
       if (brContent && brContent->IsHTMLElement(nsGkAtoms::br)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
         rv = HTMLEditorRef().DeleteNodeWithTransaction(*brContent);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4391,6 +4408,9 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
         HTMLEditorRef().SplitNodeDeepWithTransaction(
                           *curBlock, pointToInsertBlock,
                           SplitAtEdges::eDoNotCreateEmptyContainer);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(splitNodeResult.Failed())) {
         return splitNodeResult.Rv();
       }
@@ -4399,15 +4419,22 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
       brContent =
         HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                        pointToInsertBrNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!brContent)) {
         return NS_ERROR_FAILURE;
       }
       // Put selection at the split point
       EditorRawDOMPoint atBrNode(brContent);
-      ErrorResult error;
-      SelectionRef().Collapse(atBrNode, error);
       // Don't restore the selection
       selectionRestorer.Abort();
+      ErrorResult error;
+      SelectionRef().Collapse(atBrNode, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        error.SuppressException();
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(error.Failed())) {
         return error.StealNSResult();
       }
@@ -4420,6 +4447,9 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
     if (brNode && brNode->IsHTMLElement(nsGkAtoms::br)) {
       AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*brNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4436,6 +4466,9 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
     RefPtr<Element> block =
       HTMLEditorRef().CreateNodeWithTransaction(blockType,
                                                 splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!block)) {
       return NS_ERROR_FAILURE;
     }
@@ -4445,15 +4478,21 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       arrayOfNodes.RemoveElementAt(0);
     }
-    // Put selection in new block
-    rv = SelectionRef().Collapse(block, 0);
     // Don't restore the selection
     selectionRestorer.Abort();
+    // Put selection in new block
+    rv = SelectionRef().Collapse(block, 0);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
