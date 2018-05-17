@@ -1310,14 +1310,6 @@ JS_ExtensibleLexicalEnvironment(JSObject* obj)
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForCompartmentOrNull(JSContext* cx, JSCompartment* c)
-{
-    AssertHeapIsIdleOrIterating();
-    assertSameCompartment(cx, c);
-    return c->maybeGlobal();
-}
-
-JS_PUBLIC_API(JSObject*)
 JS::CurrentGlobalOrNull(JSContext* cx)
 {
     AssertHeapIsIdleOrIterating();
