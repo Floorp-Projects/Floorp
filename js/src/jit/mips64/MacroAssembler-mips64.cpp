@@ -2040,7 +2040,7 @@ MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm)
 
     // Position all arguments.
     {
-        enoughMemory_ = enoughMemory_ && moveResolver_.resolve();
+        enoughMemory_ &= moveResolver_.resolve();
         if (!enoughMemory_)
             return;
 
