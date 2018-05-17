@@ -224,6 +224,7 @@ add_task(async function test_bad_pointer_id() {
   equal(addon.version, "1.0");
 
   await promiseWriteInstallRDFForExtension(addon2, sourceDir, addon1.id);
+  setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
   await promiseRestartManager();
 
@@ -299,7 +300,8 @@ add_task(async function test_change_pointer_sources() {
   notEqual(addon, null);
   equal(addon.version, "1.0");
 
-  await promiseWriteInstallRDFForExtension(addon1_2, sourceDir);
+  let dest = await promiseWriteInstallRDFForExtension(addon1_2, sourceDir);
+  setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
   await promiseRestartManager();
 
