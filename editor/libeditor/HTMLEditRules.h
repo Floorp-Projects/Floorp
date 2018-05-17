@@ -311,8 +311,9 @@ protected:
    *                                the nodes.
    *                                canceled is always false.
    */
-  EditActionResult MoveNodeSmart(nsIContent& aNode, Element& aDestElement,
-                                 int32_t* aInOutDestOffset);
+  MOZ_MUST_USE EditActionResult
+  MoveNodeSmart(nsIContent& aNode, Element& aDestElement,
+                int32_t* aInOutDestOffset);
 
   /**
    * MoveContents() moves the contents of aElement to (aDestElement,
