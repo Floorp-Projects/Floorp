@@ -41,6 +41,15 @@ def text_file(tmpdir_factory):
     return fh
 
 
+def test_null_response_value(session):
+    session.url = inline("<input>")
+    element = session.find.css("input", all=False)
+
+    response = element_clear(session, element)
+    value = assert_success(response)
+    assert value is None
+
+
 def test_closed_context(session, create_window):
     new_window = create_window()
     session.window_handle = new_window
