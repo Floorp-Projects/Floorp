@@ -531,12 +531,21 @@ protected:
 
   nsresult RemovePartOfBlock(Element& aBlock, nsIContent& aStartChild,
                              nsIContent& aEndChild);
-  void SplitBlock(Element& aBlock,
-                  nsIContent& aStartChild,
-                  nsIContent& aEndChild,
-                  nsIContent** aOutLeftNode = nullptr,
-                  nsIContent** aOutRightNode = nullptr,
-                  nsIContent** aOutMiddleNode = nullptr);
+
+  /**
+   * SplitRangeOffFromBlock() splits aBlock at two points, before aStartChild
+   * and after aEndChild.  If they are very start or very end of aBlcok, this
+   * won't create empty block.
+   *
+   * @param aBlockElement           A block element which will be split.
+   * @param aStartOfMiddleElement   Start node of middle block element.
+   * @param aEndOfMiddleElement     End node of middle block element.
+   */
+  MOZ_MUST_USE SplitRangeOffFromNodeResult
+  SplitRangeOffFromBlock(Element& aBlockElement,
+                         nsIContent& aStartOfMiddleElement,
+                         nsIContent& aEndOfMiddleElement);
+
   nsresult OutdentPartOfBlock(Element& aBlock,
                               nsIContent& aStartChild,
                               nsIContent& aEndChild,
