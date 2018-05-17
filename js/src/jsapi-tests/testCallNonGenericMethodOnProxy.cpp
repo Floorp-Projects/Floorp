@@ -37,7 +37,7 @@ CustomMethod(JSContext* cx, unsigned argc, Value* vp)
 BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 {
   // Create the first global object and compartment
-  JS::CompartmentOptions options;
+  JS::RealmOptions options;
   JS::RootedObject globalA(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
 						  JS::FireOnNewGlobalHook, options));
   CHECK(globalA);
@@ -57,7 +57,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 
   // Now create the second global object and compartment...
   {
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     JS::RootedObject globalB(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
 						    JS::FireOnNewGlobalHook, options));
     CHECK(globalB);

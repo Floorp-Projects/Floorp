@@ -550,8 +550,8 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-    const JS::CompartmentCreationOptions creationOptions_;
-    JS::CompartmentBehaviors behaviors_;
+    const JS::RealmCreationOptions creationOptions_;
+    JS::RealmBehaviors behaviors_;
 
   private:
     JS::Zone*                    zone_;
@@ -649,9 +649,9 @@ struct JSCompartment
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
 
-    const JS::CompartmentCreationOptions& creationOptions() const { return creationOptions_; }
-    JS::CompartmentBehaviors& behaviors() { return behaviors_; }
-    const JS::CompartmentBehaviors& behaviors() const { return behaviors_; }
+    const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
+    JS::RealmBehaviors& behaviors() { return behaviors_; }
+    const JS::RealmBehaviors& behaviors() const { return behaviors_; }
 
     JSRuntime* runtimeFromMainThread() const {
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
@@ -852,7 +852,7 @@ struct JSCompartment
     void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
 
   public:
-    JSCompartment(JS::Zone* zone, const JS::CompartmentOptions& options);
+    JSCompartment(JS::Zone* zone, const JS::RealmOptions& options);
     ~JSCompartment();
 
     MOZ_MUST_USE bool init(JSContext* maybecx);
@@ -1366,7 +1366,7 @@ class MOZ_RAII AutoWrapperVector : public JS::GCVector<WrapperValue, 8>,
     explicit AutoWrapperVector(JSContext* cx
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : JS::GCVector<WrapperValue, 8>(cx),
-        JS::AutoGCRooter(cx, WRAPVECTOR)
+        JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::WrapperVector)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -1380,7 +1380,7 @@ class MOZ_RAII AutoWrapperRooter : private JS::AutoGCRooter {
   public:
     AutoWrapperRooter(JSContext* cx, const WrapperValue& v
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : JS::AutoGCRooter(cx, WRAPPER), value(v)
+      : JS::AutoGCRooter(cx, JS::AutoGCRooter::Tag::Wrapper), value(v)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

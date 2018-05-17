@@ -86,7 +86,7 @@ add_task(async function test_flush_uninstall() {
 
   addon.uninstall();
 
-  equal(gCacheFlushCount, 1);
+  ok(gCacheFlushCount >= 1);
   gExpectedFile = null;
   gCacheFlushCount = 0;
 });

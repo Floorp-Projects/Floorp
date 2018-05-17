@@ -584,7 +584,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
             return false;
 
         replacementGroup->setNewScript(replacementNewScript);
-        gc::TraceTypeNewScript(replacementGroup);
+        gc::gcTracer.traceTypeNewScript(replacementGroup);
 
         group->clearNewScript(cx, replacementGroup);
     }
@@ -781,7 +781,7 @@ UnboxedObject::createInternal(JSContext* cx, js::gc::AllocKind kind, js::gc::Ini
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     cx->compartment()->setObjectPendingMetadata(cx, uobj);
 
-    js::gc::TraceCreateObject(uobj);
+    js::gc::gcTracer.traceCreateObject(uobj);
 
     return uobj;
 }

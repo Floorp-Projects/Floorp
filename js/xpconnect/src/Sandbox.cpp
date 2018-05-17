@@ -1019,9 +1019,9 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     }
     MOZ_ASSERT(principal);
 
-    JS::CompartmentOptions compartmentOptions;
+    JS::RealmOptions realmOptions;
 
-    auto& creationOptions = compartmentOptions.creationOptions();
+    auto& creationOptions = realmOptions.creationOptions();
 
     // XXXjwatt: Consider whether/when sandboxes should be able to see
     // [SecureContext] API (bug 1273687).  In that case we'd call
@@ -1043,12 +1043,12 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     creationOptions.setInvisibleToDebugger(options.invisibleToDebugger)
                    .setTrace(TraceXPCGlobal);
 
-    compartmentOptions.behaviors().setDiscardSource(options.discardSource);
+    realmOptions.behaviors().setDiscardSource(options.discardSource);
 
     const js::Class* clasp = &SandboxClass;
 
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, js::Jsvalify(clasp),
-                                                     principal, compartmentOptions));
+                                                     principal, realmOptions));
     if (!sandbox)
         return NS_ERROR_FAILURE;
 

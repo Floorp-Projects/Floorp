@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Test that the style-inspector views only refresh when they are active.
+// Test that the rule and computed view refreshes when they are active.
 
 const TEST_URI = `
   <div id="one" style="color:red;">one</div>
@@ -34,7 +34,6 @@ add_task(async function() {
 
   ok(getComputedViewPropertyValue(cView, "color"), "#00F",
     "The computed-view shows the properties for test node two");
-
-  is(getRuleViewPropertyValue(view, "element", "color"), "red",
-    "The rule-view doesn't the properties for test node two");
+  is(getRuleViewPropertyValue(view, "element", "color"), "blue",
+    "The rule-view shows the properties for test node two");
 });

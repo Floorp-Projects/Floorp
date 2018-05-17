@@ -1813,12 +1813,6 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(args.length() > 0);
     RootedPropertyName name(cx, args[args.length() - 1].toString()->asAtom().asPropertyName());
 
-    RootedValue selfHostedFun(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &selfHostedFun))
-        return false;
-
-    MOZ_ASSERT(selfHostedFun.toObject().is<JSFunction>());
-
     InvokeArgs args2(cx);
     if (!args2.init(cx, args.length() - 1))
         return false;
@@ -1826,19 +1820,21 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     for (size_t i = 0; i < args.length() - 1; i++)
         args2[i].set(args[i]);
 
-    return js::Call(cx, selfHostedFun, args.thisv(), args2, args.rval());
+    return CallSelfHostedFunction(cx, name, args.thisv(), args2, args.rval());
 }
 
+#ifdef DEBUG
 bool
 js::CallSelfHostedFunction(JSContext* cx, const char* name, HandleValue thisv,
                            const AnyInvokeArgs& args, MutableHandleValue rval)
 {
-    RootedAtom funAtom(cx, Atomize(cx, name, strlen(name)));
+    JSAtom* funAtom = Atomize(cx, name, strlen(name));
     if (!funAtom)
         return false;
     RootedPropertyName funName(cx, funAtom->asPropertyName());
     return CallSelfHostedFunction(cx, funName, thisv, args, rval);
 }
+#endif
 
 bool
 js::CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, HandleValue thisv,
@@ -2791,7 +2787,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     options.creationOptions().setNewZone();
     options.behaviors().setDiscardSource(true);
 
@@ -3334,18 +3330,6 @@ JSRuntime::assertSelfHostedFunctionHasCanonicalName(JSContext* cx, HandlePropert
     MOZ_ASSERT(selfHostedFun);
     MOZ_ASSERT(selfHostedFun->getExtendedSlot(HAS_SELFHOSTED_CANONICAL_NAME_SLOT).toBoolean());
 #endif
-}
-
-JSFunction*
-js::SelfHostedFunction(JSContext* cx, HandlePropertyName propName)
-{
-    RootedValue func(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), propName, &func))
-        return nullptr;
-
-    MOZ_ASSERT(func.isObject());
-    MOZ_ASSERT(func.toObject().is<JSFunction>());
-    return &func.toObject().as<JSFunction>();
 }
 
 bool

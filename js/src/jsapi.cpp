@@ -675,7 +675,7 @@ JS_SetExternalStringSizeofCallback(JSContext* cx, JSExternalStringSizeofCallback
 }
 
 JS_PUBLIC_API(JSCompartment*)
-JS_EnterCompartment(JSContext* cx, JSObject* target)
+JS::EnterRealm(JSContext* cx, JSObject* target)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
@@ -686,11 +686,11 @@ JS_EnterCompartment(JSContext* cx, JSObject* target)
 }
 
 JS_PUBLIC_API(void)
-JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment)
+JS::LeaveRealm(JSContext* cx, JSCompartment* oldRealm)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    cx->leaveCompartment(oldCompartment);
+    cx->leaveCompartment(oldRealm);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
@@ -1310,14 +1310,6 @@ JS_ExtensibleLexicalEnvironment(JSObject* obj)
 }
 
 JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForCompartmentOrNull(JSContext* cx, JSCompartment* c)
-{
-    AssertHeapIsIdleOrIterating();
-    assertSameCompartment(cx, c);
-    return c->maybeGlobal();
-}
-
-JS_PUBLIC_API(JSObject*)
 JS::CurrentGlobalOrNull(JSContext* cx)
 {
     AssertHeapIsIdleOrIterating();
@@ -1845,55 +1837,55 @@ JS_GetConstructor(JSContext* cx, HandleObject proto)
 }
 
 bool
-JS::CompartmentBehaviors::extraWarnings(JSContext* cx) const
+JS::RealmBehaviors::extraWarnings(JSContext* cx) const
 {
     return extraWarningsOverride_.get(cx->options().extraWarnings());
 }
 
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setSystemZone()
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setSystemZone()
 {
     zoneSpec_ = JS::SystemZone;
     zone_ = nullptr;
     return *this;
 }
 
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setExistingZone(JSObject* obj)
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setExistingZone(JSObject* obj)
 {
     zoneSpec_ = JS::ExistingZone;
     zone_ = obj->zone();
     return *this;
 }
 
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setNewZone()
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setNewZone()
 {
     zoneSpec_ = JS::NewZone;
     zone_ = nullptr;
     return *this;
 }
 
-const JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptionsRef(JSCompartment* compartment)
+const JS::RealmCreationOptions&
+JS::RealmCreationOptionsRef(JSCompartment* compartment)
 {
     return compartment->creationOptions();
 }
 
-const JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptionsRef(JSObject* obj)
+const JS::RealmCreationOptions&
+JS::RealmCreationOptionsRef(JSObject* obj)
 {
     return obj->compartment()->creationOptions();
 }
 
-const JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptionsRef(JSContext* cx)
+const JS::RealmCreationOptions&
+JS::RealmCreationOptionsRef(JSContext* cx)
 {
     return cx->compartment()->creationOptions();
 }
 
 bool
-JS::CompartmentCreationOptions::getSharedMemoryAndAtomicsEnabled() const
+JS::RealmCreationOptions::getSharedMemoryAndAtomicsEnabled() const
 {
 #if defined(ENABLE_SHARED_ARRAY_BUFFER)
     return sharedMemoryAndAtomics_;
@@ -1902,8 +1894,8 @@ JS::CompartmentCreationOptions::getSharedMemoryAndAtomicsEnabled() const
 #endif
 }
 
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
+JS::RealmCreationOptions&
+JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 {
 #if defined(ENABLE_SHARED_ARRAY_BUFFER)
     sharedMemoryAndAtomics_ = flag;
@@ -1911,20 +1903,20 @@ JS::CompartmentCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
     return *this;
 }
 
-JS::CompartmentBehaviors&
-JS::CompartmentBehaviorsRef(JSCompartment* compartment)
+JS::RealmBehaviors&
+JS::RealmBehaviorsRef(JSCompartment* compartment)
 {
     return compartment->behaviors();
 }
 
-JS::CompartmentBehaviors&
-JS::CompartmentBehaviorsRef(JSObject* obj)
+JS::RealmBehaviors&
+JS::RealmBehaviorsRef(JSObject* obj)
 {
     return obj->compartment()->behaviors();
 }
 
-JS::CompartmentBehaviors&
-JS::CompartmentBehaviorsRef(JSContext* cx)
+JS::RealmBehaviors&
+JS::RealmBehaviorsRef(JSContext* cx)
 {
     return cx->compartment()->behaviors();
 }
@@ -1932,7 +1924,7 @@ JS::CompartmentBehaviorsRef(JSContext* cx)
 JS_PUBLIC_API(JSObject*)
 JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions& options)
+                   const JS::RealmOptions& options)
 {
     MOZ_RELEASE_ASSERT(cx->runtime()->hasInitializedSelfHosting(),
                        "Must call JS::InitSelfHostedCode() before creating a global");

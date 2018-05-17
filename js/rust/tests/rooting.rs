@@ -22,7 +22,7 @@ fn rooting() {
 
         let cx = runtime.cx();
         let h_option = JS::OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = JS::CompartmentOptions::default();
+        let c_option = JS::RealmOptions::default();
 
         rooted!(in(cx) let global = JS_NewGlobalObject(cx,
                                                        &SIMPLE_GLOBAL_CLASS,

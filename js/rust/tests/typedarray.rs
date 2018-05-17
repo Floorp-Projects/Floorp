@@ -21,7 +21,7 @@ fn typedarray() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                JS::OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &JS::CompartmentOptions::default())
+                               &JS::RealmOptions::default())
         );
 
         let _ac = js::ac::AutoCompartment::with_obj(cx, global.get());
@@ -79,7 +79,7 @@ fn typedarray_update_panic() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                JS::OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &JS::CompartmentOptions::default())
+                               &JS::RealmOptions::default())
         );
 
         let _ac = js::ac::AutoCompartment::with_obj(cx, global.get());

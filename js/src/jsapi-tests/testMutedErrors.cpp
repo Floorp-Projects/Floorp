@@ -42,7 +42,7 @@ eval(const char* asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
         chars[i] = asciiChars[i];
     chars[len] = 0;
 
-    JS::CompartmentOptions globalOptions;
+    JS::RealmOptions globalOptions;
     JS::RootedObject global(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
 						   JS::FireOnNewGlobalHook, globalOptions));
     CHECK(global);

@@ -498,7 +498,7 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
 /* static */ GlobalObject*
 GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions& options)
+                   const JS::RealmOptions& options)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));

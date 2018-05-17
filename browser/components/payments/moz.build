@@ -7,7 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('Toolkit', 'WebPayments UI')
+    BUG_COMPONENT = ('Firefox', 'WebPayments UI')
 
 EXTRA_COMPONENTS += [
     'payments.manifest',
