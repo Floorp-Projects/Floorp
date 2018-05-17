@@ -45,7 +45,16 @@ except ImportError:
 from distutils.spawn import find_executable
 from contextlib import contextmanager
 from .pep508checker import lookup
-from .environments import PIPENV_MAX_ROUNDS, PIPENV_CACHE_DIR
+from .environments import (
+    PIPENV_MAX_ROUNDS,
+    PIPENV_CACHE_DIR,
+    PIPENV_MAX_RETRIES
+)
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 if six.PY2:
 
@@ -67,6 +76,8 @@ def _get_requests_session():
         return requests_session
     import requests
     requests_session = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(max_retries=PIPENV_MAX_RETRIES)
+    requests_session.mount('https://pypi.org/pypi', adapter)
     return requests_session
 
 
@@ -372,10 +383,11 @@ def actually_resolve_reps(
         resolved_tree.update(resolver.resolve(max_rounds=PIPENV_MAX_ROUNDS))
     except (NoCandidateFound, DistributionNotFound, HTTPError) as e:
         click_echo(
-            '{0}: Your dependencies could not be resolved. You likely have a mismatch in your sub-dependencies.\n  '
-            'You can use {1} to bypass this mechanism, then run {2} to inspect the situation.'
-            ''
-            'Hint: try {3} if it is a pre-release dependency'
+            '{0}: Your dependencies could not be resolved. You likely have a '
+            'mismatch in your sub-dependencies.\n  '
+            'You can use {1} to bypass this mechanism, then run {2} to inspect '
+            'the situation.\n  '
+            'Hint: try {3} if it is a pre-release dependency.'
             ''.format(
                 crayons.red('Warning', bold=True),
                 crayons.red('$ pipenv install --skip-lock'),
@@ -558,6 +570,10 @@ def multi_split(s, split):
 
 def convert_deps_from_pip(dep):
     """"Converts a pip-formatted dependency to a Pipfile-formatted one."""
+    try:
+        from collections.abc import Mapping
+    except ImportError:
+        from collections import Mapping
     dependency = {}
     req = get_requirement(dep)
     extras = {'extras': req.extras}
@@ -639,15 +655,20 @@ def is_star(val):
 
 
 def is_pinned(val):
+    if isinstance(val, Mapping):
+        val = val.get('version')
     return isinstance(val, six.string_types) and val.startswith('==')
 
 
 def convert_deps_to_pip(deps, project=None, r=True, include_index=False):
     """"Converts a Pipfile-formatted dependency to a pip-formatted one."""
+    from ._compat import NamedTemporaryFile
     dependencies = []
     for dep in deps.keys():
         # Default (e.g. '>1.10').
         extra = deps[dep] if isinstance(deps[dep], six.string_types) else ''
+        editable = False
+        extras = ''
         version = ''
         index = ''
         # Get rid of '*'.
@@ -666,7 +687,7 @@ def convert_deps_to_pip(deps, project=None, r=True, include_index=False):
             )
         # Support for extras (e.g. requests[socks])
         if 'extras' in deps[dep]:
-            extra = '[{0}]'.format(','.join(deps[dep]['extras']))
+            extras = '[{0}]'.format(','.join(deps[dep]['extras']))
         if 'version' in deps[dep]:
             if not is_star(deps[dep]['version']):
                 version = deps[dep]['version']
@@ -700,37 +721,35 @@ def convert_deps_to_pip(deps, project=None, r=True, include_index=False):
         # Support for version control
         maybe_vcs = [vcs for vcs in VCS_LIST if vcs in deps[dep]]
         vcs = maybe_vcs[0] if maybe_vcs else None
+        if not any(key in deps[dep] for key in ['path', 'vcs', 'file']):
+            extra += extras
+        if isinstance(deps[dep], Mapping):
+            editable = bool(deps[dep].get('editable', False))
         # Support for files.
         if 'file' in deps[dep]:
-            extra = '{1}{0}'.format(extra, deps[dep]['file']).strip()
+            dep_file = deps[dep]['file']
+            if is_valid_url(dep_file) and dep_file.startswith('http'):
+                dep_file += '#egg={0}'.format(dep)
+            extra = '{0}{1}'.format(dep_file, extras).strip()
             # Flag the file as editable if it is a local relative path
-            if 'editable' in deps[dep]:
-                dep = '-e '
-            else:
-                dep = ''
+            dep = '-e ' if editable else ''
         # Support for paths.
         elif 'path' in deps[dep]:
-            extra = '{1}{0}'.format(extra, deps[dep]['path']).strip()
+            extra = '{1}{0}'.format(extras, deps[dep]['path']).strip()
             # Flag the file as editable if it is a local relative path
-            if 'editable' in deps[dep]:
-                dep = '-e '
-            else:
-                dep = ''
+            dep = '-e ' if editable else ''
         if vcs:
             extra = '{0}+{1}'.format(vcs, deps[dep][vcs])
             # Support for @refs.
             if 'ref' in deps[dep]:
                 extra += '@{0}'.format(deps[dep]['ref'])
-            extra += '#egg={0}'.format(dep)
+            extra += '#egg={0}{1}'.format(dep, extras)
             # Support for subdirectory
             if 'subdirectory' in deps[dep]:
                 extra += '&subdirectory={0}'.format(deps[dep]['subdirectory'])
             # Support for editable.
-            if 'editable' in deps[dep]:
-                # Support for --egg.
-                dep = '-e '
-            else:
-                dep = ''
+            dep = '-e ' if editable else ''
+
         s = '{0}{1}{2}{3}{4} {5}'.format(
             dep, extra, version, specs, hash, index
         ).strip()
@@ -739,7 +758,7 @@ def convert_deps_to_pip(deps, project=None, r=True, include_index=False):
         return dependencies
 
     # Write requirements.txt to tmp directory.
-    f = tempfile.NamedTemporaryFile(suffix='-requirements.txt', delete=False)
+    f = NamedTemporaryFile(suffix='-requirements.txt', delete=False)
     f.write('\n'.join(dependencies).encode('utf-8'))
     f.close()
     return f.name
@@ -1214,8 +1233,9 @@ def is_readonly_path(fn):
 
 
 def set_write_bit(fn):
-    if os.path.exists(fn):
-        os.chmod(fn, stat.S_IWRITE | stat.S_IWUSR)
+    if isinstance(fn, six.string_types) and not os.path.exists(fn):
+        return
+    os.chmod(fn, stat.S_IWRITE | stat.S_IWUSR | stat.S_IRUSR)
     return
 
 
@@ -1253,55 +1273,7 @@ def handle_remove_readonly(func, path, exc):
     raise
 
 
-class TemporaryDirectory(object):
-    """Create and return a temporary directory.  This has the same
-    behavior as mkdtemp but can be used as a context manager.  For
-    example:
-
-        with TemporaryDirectory() as tmpdir:
-            ...
-
-    Upon exiting the context, the directory and everything contained
-    in it are removed.
-    """
-
-    def __init__(self, suffix, prefix, dir=None):
-        if 'RAM_DISK' in os.environ:
-            import uuid
-
-            name = uuid.uuid4().hex
-            dir_name = os.path.join(os.environ['RAM_DISK'].strip(), name)
-            os.mkdir(dir_name)
-            self.name = dir_name
-        else:
-            self.name = tempfile.mkdtemp(suffix, prefix, dir)
-        self._finalizer = finalize(
-            self,
-            self._cleanup,
-            self.name,
-            warn_message="Implicitly cleaning up {!r}".format(self),
-        )
-
-    @classmethod
-    def _cleanup(cls, name, warn_message):
-        rmtree(name)
-        warnings.warn(warn_message, ResourceWarning)
-
-    def __repr__(self):
-        return "<{} {!r}>".format(self.__class__.__name__, self.name)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc, value, tb):
-        self.cleanup()
-
-    def cleanup(self):
-        if self._finalizer.detach():
-            rmtree(self.name)
-
-
-def split_argument(req, short=None, long_=None):
+def split_argument(req, short=None, long_=None, num=-1):
     """Split an argument from a string (finds None if not present).
 
     Uses -short <arg>, --long <arg>, and --long=arg as permutations.
@@ -1309,17 +1281,80 @@ def split_argument(req, short=None, long_=None):
     returns string, index
     """
     index_entries = []
+    import re
     if long_:
-        long_ = ' --{0}'.format(long_)
-        index_entries.extend(['{0}{1}'.format(long_, s) for s in [' ', '=']])
+        index_entries.append('--{0}'.format(long_))
     if short:
-        index_entries.append(' -{0} '.format(short))
-    index = None
-    index_entry = first([entry for entry in index_entries if entry in req])
-    if index_entry:
-        req, index = req.split(index_entry)
-        remaining_line = index.split()
-        if len(remaining_line) > 1:
-            index, more_req = remaining_line[0], ' '.join(remaining_line[1:])
-            req = '{0} {1}'.format(req, more_req)
-    return req, index
+        index_entries.append('-{0}'.format(short))
+    match_string = '|'.join(index_entries)
+    matches = re.findall('(?<=\s)({0})([\s=])(\S+)'.format(match_string), req)
+    remove_strings = []
+    match_values = []
+    for match in matches:
+        match_values.append(match[-1])
+        remove_strings.append(''.join(match))
+    for string_to_remove in remove_strings:
+        req = req.replace(' {0}'.format(string_to_remove), '')
+    if not match_values:
+        return req, None
+    if num == 1:
+        return req, match_values[0]
+    if num == -1:
+        return req, match_values
+    return req, match_values[:num]
+
+
+@contextmanager
+def atomic_open_for_write(target, binary=False, newline=None, encoding=None):
+    """Atomically open `target` for writing.
+
+    This is based on Lektor's `atomic_open()` utility, but simplified a lot
+    to handle only writing, and skip many multi-process/thread edge cases
+    handled by Werkzeug.
+
+    How this works:
+
+    * Create a temp file (in the same directory of the actual target), and
+      yield for surrounding code to write to it.
+    * If some thing goes wrong, try to remove the temp file. The actual target
+      is not touched whatsoever.
+    * If everything goes well, close the temp file, and replace the actual
+      target with this new file.
+    """
+    from ._compat import NamedTemporaryFile
+
+    mode = 'w+b' if binary else 'w'
+    f = NamedTemporaryFile(
+        dir=os.path.dirname(target),
+        prefix='.__atomic-write',
+        mode=mode,
+        encoding=encoding,
+        newline=newline,
+        delete=False,
+    )
+    # set permissions to 0644
+    os.chmod(f.name, stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+    try:
+        yield f
+    except BaseException:
+        f.close()
+        try:
+            os.remove(f.name)
+        except OSError:
+            pass
+        raise
+    else:
+        f.close()
+        try:
+            os.remove(target)   # This is needed on Windows.
+        except OSError:
+            pass
+        os.rename(f.name, target)  # No os.replace() on Python 2.
+
+
+def safe_expandvars(value):
+    """Call os.path.expandvars if value is a string, otherwise do nothing.
+    """
+    if isinstance(value, six.string_types):
+        return os.path.expandvars(value)
+    return value
