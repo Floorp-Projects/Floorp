@@ -3576,6 +3576,7 @@ WorkerMain(void* arg)
 
     auto guard = mozilla::MakeScopeExit([&] {
         CancelOffThreadJobsForContext(cx);
+        sc->markObservers.reset();
         JS_DestroyContext(cx);
         js_delete(sc);
         js_delete(input);
