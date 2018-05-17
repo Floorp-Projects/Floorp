@@ -433,6 +433,7 @@ class QuickOpenModal extends _react.Component {
     const newResults = results && results.slice(0, 100);
     const items = this.highlightMatching(query, newResults || []);
     const expanded = !!items && items.length > 0;
+    const summaryMsg = this.isGotoQuery() ? L10N.getStr("shortcuts.gotoLine") : "";
     return _react2.default.createElement(_Modal2.default, {
       "in": enabled,
       handleClose: this.closeModal
@@ -441,7 +442,7 @@ class QuickOpenModal extends _react.Component {
       hasPrefix: true,
       count: this.getResultCount(),
       placeholder: L10N.getStr("sourceSearch.search"),
-      summaryMsg: "",
+      summaryMsg: summaryMsg,
       showErrorEmoji: this.shouldShowErrorEmoji(),
       onChange: this.onChange,
       onKeyDown: this.onKeyDown,

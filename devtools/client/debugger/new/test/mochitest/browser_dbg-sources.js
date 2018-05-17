@@ -8,7 +8,7 @@ async function waitForSourceCount(dbg, i) {
   // source tree batches its rendering.
   await waitUntil(() => {
     return findAllElements(dbg, "sourceNodes").length === i;
-  });
+  }, `waiting for ${i} sources`);
 }
 
 async function assertSourceCount(dbg, count) {
@@ -36,7 +36,7 @@ add_task(async function() {
   await clickElement(dbg, "sourceDirectoryLabel", 3);
   await assertSourceCount(dbg, 8);
 
-  const selected = waitForDispatch(dbg, "SELECT_SOURCE");
+  const selected = waitForDispatch(dbg, "SET_SELECTED_LOCATION");
   await clickElement(dbg, "sourceNode", 4);
   await selected;
   await waitForSelectedSource(dbg);

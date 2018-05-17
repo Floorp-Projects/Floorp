@@ -96,7 +96,7 @@ function loadSourceText(source) {
     const newSource = (0, _selectors.getSource)(getState(), source.get("id")).toJS();
 
     if ((0, _devtoolsSourceMap.isOriginalId)(newSource.id) && !newSource.isWasm) {
-      const generatedSource = (0, _selectors.getGeneratedSource)(getState(), source.toJS());
+      const generatedSource = (0, _selectors.getGeneratedSource)(getState(), source);
       await dispatch(loadSourceText(generatedSource));
     }
 
