@@ -1468,7 +1468,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(const nsACString& aID)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  JS::CompartmentOptions options;
+  JS::RealmOptions options;
   options.creationOptions().setSystemZone();
 
   xpc::InitGlobalObjectOptions(options, mPrincipal);

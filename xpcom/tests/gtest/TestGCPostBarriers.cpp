@@ -95,7 +95,7 @@ CreateGlobalAndRunTest(JSContext* cx)
     &GlobalClassOps
   };
 
-  JS::CompartmentOptions options;
+  JS::RealmOptions options;
   JS::PersistentRootedObject global(cx);
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
   ASSERT_TRUE(global != nullptr);

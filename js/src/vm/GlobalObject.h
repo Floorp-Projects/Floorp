@@ -260,7 +260,7 @@ class GlobalObject : public NativeObject
   public:
     static GlobalObject*
     new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
-         JS::OnNewGlobalHookOption hookOption, const JS::CompartmentOptions& options);
+         JS::OnNewGlobalHookOption hookOption, const JS::RealmOptions& options);
 
     /*
      * Create a constructor function with the specified name and length using

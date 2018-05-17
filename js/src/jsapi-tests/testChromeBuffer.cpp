@@ -49,7 +49,7 @@ BEGIN_TEST(testChromeBuffer)
 {
     JS_SetTrustedPrincipals(cx, &system_principals);
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     trusted_glob.init(cx, JS_NewGlobalObject(cx, &global_class, &system_principals,
                                              JS::FireOnNewGlobalHook, options));
     CHECK(trusted_glob);

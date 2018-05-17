@@ -85,7 +85,7 @@ testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts)
 JSObject*
 createTestGlobal(bool preserveJitCode)
 {
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     options.creationOptions().setPreserveJitCode(preserveJitCode);
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook, options);
 }

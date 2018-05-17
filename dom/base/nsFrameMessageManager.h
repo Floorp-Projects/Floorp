@@ -465,7 +465,7 @@ protected:
                                     bool aRunInGlobalScope);
   bool InitChildGlobalInternal(const nsACString& aID);
   virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 JS::MutableHandle<JSObject*> aReflector) = 0;
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();

@@ -2787,7 +2787,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     options.creationOptions().setNewZone();
     options.behaviors().setDiscardSource(true);
 

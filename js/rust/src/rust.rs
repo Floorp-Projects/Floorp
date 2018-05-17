@@ -551,7 +551,7 @@ impl Default for JS::Value {
     fn default() -> JS::Value { jsval::UndefinedValue() }
 }
 
-impl Default for JS::CompartmentOptions {
+impl Default for JS::RealmOptions {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
