@@ -9,7 +9,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/subtle-pattern.png
   skin/classic/browser/panel-expander-closed.png
   skin/classic/browser/panel-expander-closed@2x.png
   skin/classic/browser/panel-expander-open.png

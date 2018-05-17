@@ -887,24 +887,17 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
 
 #historySwipeAnimationContainer {
   overflow: hidden;
+  pointer-events: none;
 }
 
-#historySwipeAnimationPreviousPage,
-#historySwipeAnimationCurrentPage,
-#historySwipeAnimationNextPage {
-  background: none top left no-repeat white;
+#historySwipeAnimationPreviousArrow {
+  background: url("chrome://browser/content/history-swipe-arrow.svg")
+              center left / 64px 128px no-repeat transparent;
 }
-
-#historySwipeAnimationPreviousPage {
-  background-image: -moz-element(#historySwipeAnimationPreviousPageSnapshot);
-}
-
-#historySwipeAnimationCurrentPage {
-  background-image: -moz-element(#historySwipeAnimationCurrentPageSnapshot);
-}
-
-#historySwipeAnimationNextPage {
-  background-image: -moz-element(#historySwipeAnimationNextPageSnapshot);
+#historySwipeAnimationNextArrow {
+  background: url("chrome://browser/content/history-swipe-arrow.svg")
+              center left / 64px 128px no-repeat transparent;
+  transform: rotate(180deg);
 }
 
 /*  Full Screen UI */
