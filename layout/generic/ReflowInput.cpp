@@ -2547,15 +2547,14 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   const nsStyleDisplay* disp = mFrame->StyleDisplayWithOptionalParam(aDisplay);
   bool isThemed = mFrame->IsThemed(disp);
   bool needPaddingProp;
-  nsIntMargin widget;
+  LayoutDeviceIntMargin widgetPadding;
   if (isThemed &&
       presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                 mFrame, disp->mAppearance,
-                                                &widget)) {
-    ComputedPhysicalPadding().top = presContext->DevPixelsToAppUnits(widget.top);
-    ComputedPhysicalPadding().right = presContext->DevPixelsToAppUnits(widget.right);
-    ComputedPhysicalPadding().bottom = presContext->DevPixelsToAppUnits(widget.bottom);
-    ComputedPhysicalPadding().left = presContext->DevPixelsToAppUnits(widget.left);
+                                                &widgetPadding)) {
+    ComputedPhysicalPadding() =
+      LayoutDevicePixel::ToAppUnits(widgetPadding,
+                                    presContext->AppUnitsPerDevPixel());
     needPaddingProp = false;
   }
   else if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {

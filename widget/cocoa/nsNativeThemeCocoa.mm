@@ -3892,7 +3892,7 @@ bool
 nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext,
                                      nsIFrame* aFrame,
                                      uint8_t aWidgetType,
-                                     nsIntMargin* aResult)
+                                     LayoutDeviceIntMargin* aResult)
 {
   // We don't want CSS padding being used for certain widgets.
   // See bug 381639 for an example of why.
