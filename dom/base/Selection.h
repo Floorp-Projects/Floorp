@@ -595,7 +595,7 @@ private:
                                  nsINode* aEndNode, int32_t aEndOffset,
                                  bool aAllowAdjacent,
                                  int32_t* aStartIndex, int32_t* aEndIndex);
-  RangeData* FindRangeData(nsIDOMRange* aRange);
+  RangeData* FindRangeData(nsRange* aRange);
 
   void UserSelectRangesToAdd(nsRange* aItem, nsTArray<RefPtr<nsRange> >& rangesToAdd);
 

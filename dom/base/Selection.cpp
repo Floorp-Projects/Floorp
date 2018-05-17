@@ -392,7 +392,7 @@ void printRange(nsRange *aDomRange)
 {
   if (!aDomRange)
   {
-    printf("NULL nsIDOMRange\n");
+    printf("NULL Range\n");
   }
   nsINode* startNode = aDomRange->GetStartContainer();
   nsINode* endNode = aDomRange->GetEndContainer();
@@ -1926,7 +1926,7 @@ Selection::SetAncestorLimiter(nsIContent* aLimiter)
 }
 
 RangeData*
-Selection::FindRangeData(nsIDOMRange* aRange)
+Selection::FindRangeData(nsRange* aRange)
 {
   NS_ENSURE_TRUE(aRange, nullptr);
   for (uint32_t i = 0; i < mRanges.Length(); i++) {

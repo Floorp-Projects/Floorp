@@ -93,7 +93,7 @@ public:
 
   virtual nsresult Init(nsINode* aRoot) override;
 
-  virtual nsresult Init(nsIDOMRange* aRange) override;
+  virtual nsresult Init(nsRange* aRange) override;
 
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override;
@@ -259,20 +259,19 @@ nsContentIterator::Init(nsINode* aRoot)
 }
 
 nsresult
-nsContentIterator::Init(nsIDOMRange* aDOMRange)
+nsContentIterator::Init(nsRange* aRange)
 {
   mIsDone = false;
 
-  if (NS_WARN_IF(!aDOMRange)) {
+  if (NS_WARN_IF(!aRange)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRange* range = static_cast<nsRange*>(aDOMRange);
-  if (NS_WARN_IF(!range->IsPositioned())) {
+  if (NS_WARN_IF(!aRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  return InitInternal(range->StartRef().AsRaw(), range->EndRef().AsRaw());
+  return InitInternal(aRange->StartRef().AsRaw(), aRange->EndRef().AsRaw());
 }
 
 nsresult
@@ -852,7 +851,7 @@ public:
 
   virtual nsresult Init(nsINode* aRoot) override;
 
-  virtual nsresult Init(nsIDOMRange* aRange) override;
+  virtual nsresult Init(nsRange* aRange) override;
 
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override;
@@ -942,18 +941,17 @@ nsContentSubtreeIterator::Init(nsINode* aRoot)
 
 
 nsresult
-nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
+nsContentSubtreeIterator::Init(nsRange* aRange)
 {
   MOZ_ASSERT(aRange);
 
   mIsDone = false;
 
-  nsRange* range = static_cast<nsRange*>(aRange);
-  if (NS_WARN_IF(!range->IsPositioned())) {
+  if (NS_WARN_IF(!aRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mRange = range;
+  mRange = aRange;
 
   return InitWithRange();
 }

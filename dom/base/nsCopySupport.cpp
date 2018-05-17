@@ -15,7 +15,6 @@
 #include "nsWidgetsCID.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDOMRange.h"
 #include "nsRange.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
