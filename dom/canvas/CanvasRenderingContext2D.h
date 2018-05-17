@@ -690,8 +690,11 @@ protected:
 
   /**
    * Disposes an old target and prepares to lazily create a new target.
+   *
+   * Parameters are the new dimensions to be used, or if either is negative,
+   * existing dimensions will be left unchanged.
    */
-  void ClearTarget();
+  void ClearTarget(int32_t aWidth = -1, int32_t aHeight = -1);
 
   /*
    * Returns the target to the buffer provider. i.e. this will queue a frame for
