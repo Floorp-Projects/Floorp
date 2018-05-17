@@ -96,6 +96,7 @@ browser.jar:
         content/browser/defaultthemes/5.preview.jpg   (content/defaultthemes/5.preview.jpg)
         content/browser/defaultthemes/dark.icon.svg   (content/defaultthemes/dark.icon.svg)
         content/browser/defaultthemes/light.icon.svg  (content/defaultthemes/light.icon.svg)
+        content/browser/history-swipe-arrow.svg       (content/history-swipe-arrow.svg)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
         content/browser/pageinfo/pageInfo.css         (content/pageinfo/pageInfo.css)
