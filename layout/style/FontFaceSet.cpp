@@ -1685,7 +1685,8 @@ FontFaceSet::DispatchLoadingEventAndReplaceReadyPromise()
                             false))->PostDOMEvent();
 
   if (PrefEnabled()) {
-    if (mReady) {
+    if (mReady &&
+        mReady->State() != Promise::PromiseState::Pending) {
       if (GetParentObject()) {
         ErrorResult rv;
         mReady = Promise::Create(GetParentObject(), rv);
