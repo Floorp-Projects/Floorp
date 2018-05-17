@@ -51,6 +51,7 @@ for (const type of [
   "OPEN_LINK",
   "OPEN_NEW_WINDOW",
   "OPEN_PRIVATE_WINDOW",
+  "OPEN_WEBEXT_SETTINGS",
   "PAGE_PRERENDERED",
   "PLACES_BOOKMARK_ADDED",
   "PLACES_BOOKMARK_REMOVED",
@@ -82,11 +83,13 @@ for (const type of [
   "SET_PREF",
   "SHOW_DOWNLOAD_FILE",
   "SHOW_FIREFOX_ACCOUNTS",
+  "SKIPPED_SIGNIN",
   "SNIPPETS_BLOCKLIST_CLEARED",
   "SNIPPETS_BLOCKLIST_UPDATED",
   "SNIPPETS_DATA",
   "SNIPPETS_RESET",
   "SNIPPET_BLOCKED",
+  "SUBMIT_EMAIL",
   "SYSTEM_TICK",
   "TELEMETRY_IMPRESSION_STATS",
   "TELEMETRY_PERFORMANCE_EVENT",
@@ -108,6 +111,17 @@ for (const type of [
   "WEBEXT_DISMISS"
 ]) {
   actionTypes[type] = type;
+}
+
+// These are acceptable actions for AS Router messages to have. They can show up
+// as call-to-action buttons in snippets, onboarding tour, etc.
+const ASRouterActions = {};
+for (const type of [
+  "OPEN_PRIVATE_BROWSER_WINDOW",
+  "OPEN_URL",
+  "OPEN_ABOUT_PAGE"
+]) {
+  ASRouterActions[type] = type;
 }
 
 // Helper function for creating routed actions between content and main
@@ -305,6 +319,7 @@ function WebExtEvent(type, data, importContext = globalImportContext) {
 }
 
 this.actionTypes = actionTypes;
+this.ASRouterActions = ASRouterActions;
 
 this.actionCreators = {
   BroadcastToContent,
@@ -372,6 +387,7 @@ const EXPORTED_SYMBOLS = [
   "actionTypes",
   "actionCreators",
   "actionUtils",
+  "ASRouterActions",
   "globalImportContext",
   "UI_CODE",
   "BACKGROUND_PROCESS",
