@@ -8,7 +8,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
@@ -33,7 +32,6 @@ using namespace js::gcstats;
 
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
-using mozilla::PodZero;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
@@ -1118,13 +1116,19 @@ Statistics::endSlice()
         // Clear the timers at the end of a GC, preserving the data for PhaseKind::MUTATOR.
         auto mutatorStartTime = phaseStartTimes[Phase::MUTATOR];
         auto mutatorTime = phaseTimes[Phase::MUTATOR];
+
         for (mozilla::TimeStamp& t : phaseStartTimes)
             t = TimeStamp();
 #ifdef DEBUG
         for (mozilla::TimeStamp& t : phaseEndTimes)
             t = TimeStamp();
 #endif
-        PodZero(&phaseTimes);
+
+        for (TimeDuration& duration : phaseTimes) {
+            duration = TimeDuration();
+            MOZ_ASSERT(duration.IsZero());
+        }
+
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
         phaseTimes[Phase::MUTATOR] = mutatorTime;
     }
