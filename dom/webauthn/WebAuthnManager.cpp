@@ -431,7 +431,6 @@ WebAuthnManager::MakeCredential(const PublicKeyCredentialCreationOptions& aOptio
   mTransaction = Some(WebAuthnTransaction(promise,
                                           rpIdHash,
                                           clientDataJSON,
-                                          requestDirectAttestation,
                                           signal));
 
   mChild->SendRequestRegister(mTransaction.ref().mId, info);
@@ -639,7 +638,6 @@ WebAuthnManager::GetAssertion(const PublicKeyCredentialRequestOptions& aOptions,
   mTransaction = Some(WebAuthnTransaction(promise,
                                           rpIdHash,
                                           clientDataJSON,
-                                          false /* aDirectAttestation */,
                                           signal));
 
   mChild->SendRequestSign(mTransaction.ref().mId, info);
