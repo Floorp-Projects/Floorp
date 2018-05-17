@@ -1368,7 +1368,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 bool
 nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, uint8_t aWidgetType,
-                                   nsIntMargin* aResult)
+                                   LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON_FOCUS:
@@ -1402,17 +1402,10 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (!IsRegularMenuItem(aFrame))
           return false;
 
-        LayoutDeviceIntMargin border;
         GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame),
-                              &border);
-        // XXX will be removed in next part...
-        aResult->top = border.top;
-        aResult->right = border.right;
-        aResult->bottom = border.bottom;
-        aResult->left = border.left;
+                              aResult);
 
         gint horizontal_padding;
-
         if (aWidgetType == NS_THEME_MENUITEM)
           moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
         else
