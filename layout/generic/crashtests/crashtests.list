@@ -683,3 +683,6 @@ load 1431781.html
 load 1431781-2.html
 asserts(6) load 1458028.html # bug 847368
 load 1459697.html
+load 1460158-1.html
+load 1460158-2.html
+load 1460158-3.html
