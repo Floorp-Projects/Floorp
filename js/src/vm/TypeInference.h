@@ -508,7 +508,10 @@ class TypeSet
 
     // Clone a type set into an arbitrary allocator.
     TemporaryTypeSet* clone(LifoAlloc* alloc) const;
-    bool clone(LifoAlloc* alloc, TemporaryTypeSet* result) const;
+
+    // |*result| is not even partly initialized when this function is called:
+    // this function placement-new's its contents into existence.
+    bool cloneIntoUninitialized(LifoAlloc* alloc, TemporaryTypeSet* result) const;
 
     // Create a new TemporaryTypeSet where undefined and/or null has been filtered out.
     TemporaryTypeSet* filter(LifoAlloc* alloc, bool filterUndefined, bool filterNull) const;
