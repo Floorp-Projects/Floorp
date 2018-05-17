@@ -403,8 +403,17 @@ protected:
 
   nsresult WillMakeDefListItem(const nsAString* aBlockType, bool aEntireList,
                                bool* aCancel, bool* aHandled);
-  nsresult WillMakeBasicBlock(const nsAString& aBlockType,
-                              bool* aCancel, bool* aHandled);
+
+  /**
+   * WillMakeBasicBlock() called before changing block style around Selection.
+   * This method actually does something with calling MakeBasicBlock().
+   *
+   * @param aBlockType          Necessary block style as string.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult WillMakeBasicBlock(const nsAString& aBlockType,
+                                           bool* aCancel, bool* aHandled);
 
   /**
    * MakeBasicBlock() applies or clears block style around Selection.
