@@ -94,6 +94,7 @@ namespace jit {
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
     _(CompareInt32Result)                 \
+    _(CompareDoubleResult)                \
     _(ArrayJoinResult)                    \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
