@@ -115,7 +115,7 @@ public class MmaDelegate {
     }
 
     public static void notifyDefaultBrowserStatus(Activity activity) {
-        if (!isMmaEnabled(activity)) {
+        if (!isMmaAllowed(activity)) {
             return;
         }
 
@@ -136,7 +136,7 @@ public class MmaDelegate {
 
     static void trackJustInstalledPackage(@NonNull final Context context, @NonNull final String packageName,
                                           final boolean firstTimeInstall) {
-        if (!isMmaEnabled(context)) {
+        if (!isMmaAllowed(context)) {
             return;
         }
 
@@ -149,34 +149,45 @@ public class MmaDelegate {
     }
 
     public static void track(String event) {
-        if (applicationContext != null && isMmaEnabled(applicationContext)) {
+        if (applicationContext != null && isMmaAllowed(applicationContext)) {
             mmaHelper.event(event);
         }
     }
 
 
     public static void track(String event, long value) {
-        if (applicationContext != null && isMmaEnabled(applicationContext)) {
+        if (applicationContext != null && isMmaAllowed(applicationContext)) {
             mmaHelper.event(event, value);
         }
     }
 
-    // isMmaEnabled should use pass-in context. The context comes from
+    /**
+     * Convenience method to check if the Switchboard experiments related to MMA are enabled for us.<br>
+     * <ul>It will return <code>true</code> if we are in any of the following experiments:
+     * <li>{@link Experiments#LEANPLUM}</li>
+     * <li>{@link Experiments#LEANPLUM_DEBUG}</li>
+     * and <code>false</code> otherwise.</ul>
+     */
+    public static boolean isMmaExperimentEnabled(Context context) {
+        return SwitchBoard.isInExperiment(context, Experiments.LEANPLUM) ||
+                SwitchBoard.isInExperiment(context, Experiments.LEANPLUM_DEBUG);
+    }
+
+    // isMmaAllowed should use pass-in context. The context comes from
     // 1. track(), it's called from UI (where we inject events). Context is from weak reference to Activity (assigned in init())
     // 2. handleGcmMessage(), it's called from GcmListenerService (where we handle GCM messages). Context is from the Service
-    private static boolean isMmaEnabled(Context context) {
-
+    private static boolean isMmaAllowed(Context context) {
         if (context == null) {
             return false;
         }
-        final boolean healthReport = GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
-        final boolean inExperiment = SwitchBoard.isInExperiment(context, Experiments.LEANPLUM);
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
 
+        final boolean isMmaAvailable = GeckoPreferences.isMmaAvailableAndEnabled(context);
+
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         // if selected tab is private, mma should be disabled.
         final boolean isInPrivateBrowsing = selectedTab != null && selectedTab.isPrivate();
-        // only check Gecko Pref when Gecko is running
-        return inExperiment && healthReport && !isInPrivateBrowsing;
+
+        return isMmaAvailable && !isInPrivateBrowsing;
     }
 
     public static boolean isDefaultBrowser(Context context) {
@@ -192,7 +203,7 @@ public class MmaDelegate {
 
     // Always use pass-in context. Do not use applicationContext here. applicationContext will be null if MmaDelegate.init() is not called.
     public static boolean handleGcmMessage(@NonNull Context context, String from, @NonNull Bundle bundle) {
-        if (isMmaEnabled(context)) {
+        if (isMmaAllowed(context)) {
             mmaHelper.setCustomIcon(R.drawable.ic_status_logo);
             return mmaHelper.handleGcmMessage(context, from, bundle);
         } else {
