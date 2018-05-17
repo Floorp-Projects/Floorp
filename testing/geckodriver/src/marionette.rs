@@ -1102,7 +1102,7 @@ impl MarionetteCommand {
             GetWindowHandles => (Some("WebDriver:GetWindowHandles"), None),
             GetWindowRect => (Some("WebDriver:GetWindowRect"), None),
             GoBack => (Some("WebDriver:Back"), None),
-            GoForward => (Some("WebDriver::Forward"), None),
+            GoForward => (Some("WebDriver:Forward"), None),
             IsDisplayed(ref x) => (
                 Some("WebDriver:IsElementDisplayed"),
                 Some(x.to_marionette()),
