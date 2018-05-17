@@ -884,7 +884,7 @@ js::CreateWasmBuffer(JSContext* cx, const wasm::Limits& memory,
 #endif
 
     if (memory.shared == wasm::Shareable::True) {
-        if (!cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+        if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_SHMEM_LINK);
             return false;
         }

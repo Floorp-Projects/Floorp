@@ -291,7 +291,7 @@ CompileCompartment::hasAllocationMetadataBuilder()
 void
 CompileCompartment::setSingletonsAsValues()
 {
-    compartment()->behaviors().setSingletonsAsValues();
+    JS::GetRealmForCompartment(compartment())->behaviors().setSingletonsAsValues();
 }
 
 JitCompileOptions::JitCompileOptions()
@@ -303,7 +303,7 @@ JitCompileOptions::JitCompileOptions()
 
 JitCompileOptions::JitCompileOptions(JSContext* cx)
 {
-    cloneSingletons_ = cx->compartment()->creationOptions().cloneSingletons();
+    cloneSingletons_ = cx->realm()->creationOptions().cloneSingletons();
     profilerSlowAssertionsEnabled_ = cx->runtime()->geckoProfiler().enabled() &&
                                      cx->runtime()->geckoProfiler().slowAssertionsEnabled();
     offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);

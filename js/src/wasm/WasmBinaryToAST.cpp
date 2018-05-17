@@ -103,7 +103,7 @@ class AstDecodeContext
        d(d),
        generateNames(generateNames),
        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
-            cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+            cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
             ? Shareable::True
             : Shareable::False),
        module_(module),

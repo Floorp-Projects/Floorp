@@ -550,9 +550,6 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-    const JS::RealmCreationOptions creationOptions_;
-    JS::RealmBehaviors behaviors_;
-
   private:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
@@ -648,10 +645,6 @@ struct JSCompartment
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
-
-    const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
-    JS::RealmBehaviors& behaviors() { return behaviors_; }
-    const JS::RealmBehaviors& behaviors() const { return behaviors_; }
 
     JSRuntime* runtimeFromMainThread() const {
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
@@ -851,12 +844,12 @@ struct JSCompartment
     bool isAccessValid() const { return validAccessPtr ? *validAccessPtr : true; }
     void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
 
-  public:
-    JSCompartment(JS::Zone* zone, const JS::RealmOptions& options);
+  protected:
+    explicit JSCompartment(JS::Zone* zone);
     ~JSCompartment();
 
+  public:
     MOZ_MUST_USE bool init(JSContext* maybecx);
-    void destroy(js::FreeOp* fop);
 
     MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
@@ -925,9 +918,6 @@ struct JSCompartment
      */
     void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
     static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
-
-    /* Whether to preserve JIT code on non-shrinking GCs. */
-    bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
     void sweepAfterMinorGC(JSTracer* trc);
     void sweepMapAndSetObjectsAfterMinorGC();
@@ -1210,6 +1200,20 @@ struct JSCompartment
 
 class JS::Realm : public JSCompartment
 {
+    const JS::RealmCreationOptions creationOptions_;
+    JS::RealmBehaviors behaviors_;
+
+  public:
+    Realm(JS::Zone* zone, const JS::RealmOptions& options);
+
+    void destroy(js::FreeOp* fop);
+
+    const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
+    JS::RealmBehaviors& behaviors() { return behaviors_; }
+    const JS::RealmBehaviors& behaviors() const { return behaviors_; }
+
+    /* Whether to preserve JIT code on non-shrinking GCs. */
+    bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 };
 
 namespace js {

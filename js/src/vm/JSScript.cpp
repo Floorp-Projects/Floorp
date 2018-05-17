@@ -374,9 +374,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             // JSOP_OBJECT that then got modified.  So throw if we're not
             // cloning in JSOP_OBJECT or if we ever didn't clone in it in the
             // past.
-            JSCompartment* comp = cx->compartment();
-            if (!comp->creationOptions().cloneSingletons() ||
-                !comp->behaviors().getSingletonsAsTemplates())
+            Realm* realm = cx->realm();
+            if (!realm->creationOptions().cloneSingletons() ||
+                !realm->behaviors().getSingletonsAsTemplates())
             {
                 return xdr->fail(JS::TranscodeResult_Failure_RunOnceNotSupported);
             }

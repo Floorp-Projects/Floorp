@@ -95,7 +95,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
 
     baselineEnabled = cx->options().wasmBaseline() || gcEnabled;
     ionEnabled = cx->options().wasmIon() && !gcEnabled;
-    sharedMemoryEnabled = cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+    sharedMemoryEnabled = cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
     gcTypesEnabled = gcEnabled ? HasGcTypes::True : HasGcTypes::False;
     testTiering = (cx->options().testWasmAwaitTier2() || JitOptions.wasmDelayTier2) && !gcEnabled;
 
