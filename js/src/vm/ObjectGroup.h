@@ -11,6 +11,7 @@
 
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
+#include "gc/GCTrace.h"
 #include "js/CharacterEncoding.h"
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
@@ -87,6 +88,7 @@ enum NewObjectKind {
 class ObjectGroup : public gc::TenuredCell
 {
     friend class gc::GCRuntime;
+    friend class gc::GCTrace;
 
     /* Class shared by objects in this group. */
     const Class* clasp_;
