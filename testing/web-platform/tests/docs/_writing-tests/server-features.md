@@ -17,10 +17,10 @@ generation. This is supported through the
 Our test servers are guaranteed to be accessible through two domains
 and five subdomains under each. The 'main' domain is unnamed; the
 other is called 'alt'. These subdomains are: `www`, `www1`, `www2`,
-`天気の良い日`, and `élève`; there is also `nonexistent-origin` which
-is guaranteed not to resolve. In addition, the HTTP server listens on
-two ports, and the WebSockets server on one. These subdomains and
-ports must be used for cross-origin tests.
+`天気の良い日`, and `élève`; there is also `nonexistent` which is
+guaranteed not to resolve. In addition, the HTTP server listens on two
+ports, and the WebSockets server on one. These subdomains and ports
+must be used for cross-origin tests.
 
 Tests must not hardcode the hostname of the server that they expect to
 be running on or the port numbers, as these are not guaranteed by the
