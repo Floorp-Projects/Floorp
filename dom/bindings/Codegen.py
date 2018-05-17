@@ -3857,7 +3857,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache'),
-                Argument('JS::CompartmentOptions&', 'aOptions'),
+                Argument('JS::RealmOptions&', 'aOptions'),
                 Argument('JSPrincipals*', 'aPrincipal'),
                 Argument('bool', 'aInitStandardClasses'),
                 Argument('JS::MutableHandle<JSObject*>', 'aReflector')]

@@ -7909,7 +7909,7 @@ AutoPrepareForTracing::AutoPrepareForTracing(JSContext* cx)
 
 JSCompartment*
 js::NewCompartment(JSContext* cx, JSPrincipals* principals,
-                   const JS::CompartmentOptions& options)
+                   const JS::RealmOptions& options)
 {
     JSRuntime* rt = cx->runtime();
     JS_AbortIfWrongThread(cx);

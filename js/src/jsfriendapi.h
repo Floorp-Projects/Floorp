@@ -1804,7 +1804,7 @@ JS_NewFloat64ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
 /**
  * Create a new SharedArrayBuffer with the given byte length.  This
  * may only be called if
- * JS::CompartmentCreationOptionsRef(cx).getSharedMemoryAndAtomicsEnabled() is
+ * JS::RealmCreationOptionsRef(cx).getSharedMemoryAndAtomicsEnabled() is
  * true.
  */
 extern JS_FRIEND_API(JSObject*)

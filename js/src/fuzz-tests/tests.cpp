@@ -44,7 +44,7 @@ jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
 {
     /* Create the global object. */
     JS::RootedObject newGlobal(cx);
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
 #ifdef ENABLE_STREAMS
     options.creationOptions().setStreamsEnabled(true);
 #endif
