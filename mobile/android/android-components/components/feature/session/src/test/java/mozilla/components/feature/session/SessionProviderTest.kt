@@ -17,7 +17,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +33,7 @@ class SessionProviderTest {
 
         `when`(storage.restore(engine)).thenReturn(Pair(sessionMap, session.id))
 
-        val provider = SessionProvider(context = RuntimeEnvironment.application, sessionStorage = storage)
+        val provider = SessionProvider(sessionStorage = storage)
         provider.start(engine)
 
         assertEquals(2, provider.sessionManager.size)
@@ -43,13 +42,17 @@ class SessionProviderTest {
 
     @Test
     fun testStartSchedulesPeriodicSaves() {
+        val storage = mock(SessionStorage::class.java)
+        val engine = mock(Engine::class.java)
         val scheduler = mock(ScheduledExecutorService::class.java)
 
+        `when`(storage. restore(engine)).thenReturn(Pair(emptyMap(), ""))
+
         val provider = SessionProvider(
-                context = RuntimeEnvironment.application,
+                sessionStorage = storage,
                 savePeriodically = true,
                 scheduler = scheduler)
-        provider.start(mock(Engine::class.java))
+        provider.start(engine)
 
         verify(scheduler).scheduleAtFixedRate(any(Runnable::class.java), eq(300L), eq(300L), eq(TimeUnit.SECONDS))
     }
@@ -59,7 +62,6 @@ class SessionProviderTest {
         val scheduler = mock(ScheduledExecutorService::class.java)
 
         val provider = SessionProvider(
-                context = RuntimeEnvironment.application,
                 savePeriodically = true,
                 scheduler = scheduler)
         provider.stop()
@@ -69,7 +71,7 @@ class SessionProviderTest {
 
     @Test
     fun testGetOrCreateEngineSession() {
-        val provider = SessionProvider(RuntimeEnvironment.application)
+        val provider = SessionProvider()
         val session = mock(Session::class.java)
         val engine = mock(Engine::class.java)
         val engineSession1 = mock (EngineSession::class.java)
@@ -88,7 +90,7 @@ class SessionProviderTest {
     @Test
     fun testSelectedSession() {
         val session = Session("http://mozilla.org")
-        val provider = SessionProvider(context = RuntimeEnvironment.application, initialSession = session)
+        val provider = SessionProvider(initialSession = session)
         provider.sessionManager.select(session)
 
         assertEquals(session, provider.selectedSession)

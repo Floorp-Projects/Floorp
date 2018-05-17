@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.session
 
-import android.content.Context
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
@@ -18,10 +17,9 @@ import java.util.concurrent.TimeUnit
  * Manages access to active browser / engine sessions and their persistent state.
  */
 class SessionProvider(
-    private val context: Context,
     initialSession: Session = Session(""),
-    private val sessionStorage: SessionStorage = DefaultSessionStorage(context),
-    private val savePeriodically: Boolean = false,
+    private val sessionStorage: SessionStorage? = null,
+    private val savePeriodically: Boolean = true,
     private val saveIntervalInSeconds: Long = 300,
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 ) {
@@ -36,18 +34,20 @@ class SessionProvider(
      * Restores persisted session state and schedules periodic saves.
      */
     fun start(engine: Engine) {
-        val (restoredSessions, restoredSelectedSession) = sessionStorage.restore(engine)
-        sessions.putAll(restoredSessions)
-        sessions.keys.forEach {
-            sessionManager.add(it, it.id == restoredSelectedSession)
-        }
+        sessionStorage?.let {
+            val (restoredSessions, restoredSelectedSession) = sessionStorage.restore(engine)
+            restoredSessions.keys.forEach {
+                sessionManager.add(it, it.id == restoredSelectedSession)
+            }
+            sessions.putAll(restoredSessions)
 
-        if (savePeriodically) {
-            scheduler.scheduleAtFixedRate(
-                { sessionStorage.persist(sessions, selectedSession.id) },
-                saveIntervalInSeconds,
-                saveIntervalInSeconds,
-                TimeUnit.SECONDS)
+            if (savePeriodically) {
+                scheduler.scheduleAtFixedRate(
+                    { sessionStorage.persist(sessions, selectedSession.id) },
+                    saveIntervalInSeconds,
+                    saveIntervalInSeconds,
+                    TimeUnit.SECONDS)
+            }
         }
     }
 

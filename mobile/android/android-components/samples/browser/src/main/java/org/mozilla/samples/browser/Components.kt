@@ -12,6 +12,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.session.DefaultSessionStorage
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionProvider
 import mozilla.components.feature.session.SessionUseCases
@@ -27,7 +28,7 @@ class Components(private val applicationContext: Context) {
     val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
     // val engine : Engine by lazy { SystemEngine() }
 
-    val sessionProvider = SessionProvider(applicationContext, Session("https://www.mozilla.org"))
+    val sessionProvider = SessionProvider(Session("https://www.mozilla.org"), DefaultSessionStorage(applicationContext))
     val sessionUseCases = SessionUseCases(sessionProvider, engine)
     val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
 
