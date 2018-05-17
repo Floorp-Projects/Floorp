@@ -3103,7 +3103,7 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
     overlay->forwardTo(dst);
     insertIntoObjectFixupList(overlay);
 
-    TracePromoteToTenured(src, dst);
+    gcTracer.tracePromoteToTenured(src, dst);
     return dst;
 }
 
@@ -3135,7 +3135,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
     overlay->forwardTo(dst);
     insertIntoObjectFixupList(overlay);
 
-    TracePromoteToTenured(src, dst);
+    gcTracer.tracePromoteToTenured(src, dst);
     return dst;
 }
 
@@ -3248,7 +3248,7 @@ js::TenuringTracer::moveToTenured(JSString* src)
     overlay->forwardTo(dst);
     insertIntoStringFixupList(overlay);
 
-    TracePromoteToTenured(src, dst);
+    gcTracer.tracePromoteToTenured(src, dst);
     return dst;
 }
 

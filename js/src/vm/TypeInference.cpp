@@ -3696,7 +3696,7 @@ TypeNewScript::make(JSContext* cx, ObjectGroup* group, JSFunction* fun)
 
     group->setNewScript(newScript.forget());
 
-    gc::TraceTypeNewScript(group);
+    gc::gcTracer.traceTypeNewScript(group);
     return true;
 }
 

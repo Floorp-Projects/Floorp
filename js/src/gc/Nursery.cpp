@@ -329,7 +329,7 @@ js::Nursery::allocateObject(JSContext* cx, size_t size, size_t nDynamicSlots, co
     if (nDynamicSlots)
         static_cast<NativeObject*>(obj)->initSlots(slots);
 
-    TraceNurseryAlloc(obj, size);
+    gcTracer.traceNurseryAlloc(obj, size);
     return obj;
 }
 
@@ -346,7 +346,7 @@ js::Nursery::allocateString(Zone* zone, size_t size, AllocKind kind)
     header->zone = zone;
 
     auto cell = reinterpret_cast<Cell*>(&header->cell);
-    TraceNurseryAlloc(cell, kind);
+    gcTracer.traceNurseryAlloc(cell, kind);
     return cell;
 }
 
@@ -722,7 +722,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
 #endif
 
     rt->gc.stats().beginNurseryCollection(reason);
-    TraceMinorGCStart();
+    gcTracer.traceMinorGCStart();
 
     maybeClearProfileDurations();
     startProfile(ProfileKey::Total);
@@ -818,7 +818,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     rt->addTelemetry(JS_TELEMETRY_GC_PRETENURE_COUNT, pretenureCount);
 
     rt->gc.stats().endNurseryCollection(reason);
-    TraceMinorGCEnd();
+    gcTracer.traceMinorGCEnd();
     timeInChunkAlloc_ = mozilla::TimeDuration();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
