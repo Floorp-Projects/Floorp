@@ -1178,11 +1178,11 @@ using CapturesVector = GCVector<Value, 4>;
 
 struct JSSubString
 {
-    JSLinearString* base;
-    size_t          offset;
-    size_t          length;
+    JSLinearString* base = nullptr;
+    size_t offset = 0;
+    size_t length = 0;
 
-    JSSubString() { mozilla::PodZero(this); }
+    JSSubString() = default;
 
     void initEmpty(JSLinearString* base) {
         this->base = base;

@@ -414,7 +414,6 @@ BacktrackingAllocator::init()
     size_t numVregs = graph.numVirtualRegisters();
     if (!vregs.init(mir->alloc(), numVregs))
         return false;
-    memset(&vregs[0], 0, sizeof(VirtualRegister) * numVregs);
     for (uint32_t i = 0; i < numVregs; i++)
         new(&vregs[i]) VirtualRegister();
 
@@ -1150,9 +1149,9 @@ BacktrackingAllocator::mergeAndQueueRegisters()
             if (iter->isParameter()) {
                 for (size_t i = 0; i < iter->numDefs(); i++) {
                     DebugOnly<bool> found = false;
-                    VirtualRegister &paramVreg = vreg(iter->getDef(i));
+                    VirtualRegister& paramVreg = vreg(iter->getDef(i));
                     for (; original < paramVreg.vreg(); original++) {
-                        VirtualRegister &originalVreg = vregs[original];
+                        VirtualRegister& originalVreg = vregs[original];
                         if (*originalVreg.def()->output() == *iter->getDef(i)->output()) {
                             MOZ_ASSERT(originalVreg.ins()->isParameter());
                             if (!tryMergeBundles(originalVreg.firstBundle(), paramVreg.firstBundle()))
@@ -1186,7 +1185,7 @@ BacktrackingAllocator::mergeAndQueueRegisters()
         LBlock* block = graph.getBlock(i);
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi* phi = block->getPhi(j);
-            VirtualRegister &outputVreg = vreg(phi->getDef(0));
+            VirtualRegister& outputVreg = vreg(phi->getDef(0));
             for (size_t k = 0, kend = phi->numOperands(); k < kend; k++) {
                 VirtualRegister& inputVreg = vreg(phi->getOperand(k)->toUse());
                 if (!tryMergeBundles(inputVreg.firstBundle(), outputVreg.firstBundle()))
@@ -1386,7 +1385,7 @@ BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
 
     for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter; iter++) {
         LiveRange* range = LiveRange::get(*iter);
-        VirtualRegister &reg = vregs[range->vreg()];
+        VirtualRegister& reg = vregs[range->vreg()];
 
         if (range->hasDefinition()) {
             // Deal with any definition constraints/hints.
@@ -1448,7 +1447,7 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
 
     for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter; iter++) {
         LiveRange* range = LiveRange::get(*iter);
-        VirtualRegister &reg = vregs[range->vreg()];
+        VirtualRegister& reg = vregs[range->vreg()];
 
         if (!reg.isCompatible(r.reg))
             return true;

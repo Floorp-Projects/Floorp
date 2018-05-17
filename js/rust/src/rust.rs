@@ -551,7 +551,7 @@ impl Default for JS::Value {
     fn default() -> JS::Value { jsval::UndefinedValue() }
 }
 
-impl Default for JS::CompartmentOptions {
+impl Default for JS::RealmOptions {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 
@@ -611,7 +611,7 @@ impl GCMethods for JS::Value {
 
 impl Drop for JSAutoRealm {
     fn drop(&mut self) {
-        unsafe { JS_LeaveCompartment(self.cx_, self.oldCompartment_); }
+        unsafe { JS::LeaveRealm(self.cx_, self.oldCompartment_); }
     }
 }
 

@@ -10,6 +10,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Variant.h"
 
+#include "jsutil.h"
+
 #include "gc/DeletePolicy.h"
 #include "gc/Heap.h"
 #include "gc/Policy.h"
@@ -127,6 +129,48 @@ class BindingName
     }
 
     void trace(JSTracer* trc);
+};
+
+/**
+ * The various {Global,Module,...}Scope::Data classes consist of always-present
+ * bits, then a trailing array of BindingNames.  The various Data classes all
+ * end in a TrailingNamesArray that contains sized/aligned space for *one*
+ * BindingName.  Data instances that contain N BindingNames, are then allocated
+ * in sizeof(Data) + (space for (N - 1) BindingNames).  Because this class's
+ * |data_| field is properly sized/aligned, the N-BindingName array can start
+ * at |data_|.
+ *
+ * This is concededly a very low-level representation, but we want to only
+ * allocate once for data+bindings both, and this does so approximately as
+ * elegantly as C++ allows.
+ */
+class TrailingNamesArray
+{
+  private:
+    alignas(BindingName) unsigned char data_[sizeof(BindingName)];
+
+  private:
+    // Some versions of GCC treat it as a -Wstrict-aliasing violation (ergo a
+    // -Werror compile error) to reinterpret_cast<> |data_| to |T*|, even
+    // through |void*|.  Placing the latter cast in these separate functions
+    // breaks the chain such that affected GCC versions no longer warn/error.
+    void* ptr() {
+        return data_;
+    }
+
+  public:
+    // Explicitly ensure no one accidentally allocates scope data without
+    // poisoning its trailing names.
+    TrailingNamesArray() = delete;
+
+    explicit TrailingNamesArray(size_t nameCount) {
+        if (nameCount)
+            JS_POISON(&data_, 0xCC, sizeof(BindingName) * nameCount, MemCheckKind::MakeUndefined);
+    }
+
+    BindingName* start() { return reinterpret_cast<BindingName*>(ptr()); }
+
+    BindingName& operator[](size_t i) { return start()[i]; }
 };
 
 class BindingLocation
@@ -379,16 +423,19 @@ class LexicalScope : public Scope
         //
         //   lets - [0, constStart)
         // consts - [constStart, length)
-        uint32_t constStart;
-        uint32_t length;
+        uint32_t constStart = 0;
+        uint32_t length = 0;
 
         // Frame slots [0, nextFrameSlot) are live when this is the innermost
         // scope.
-        uint32_t nextFrameSlot;
+        uint32_t nextFrameSlot = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };
@@ -398,7 +445,7 @@ class LexicalScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -481,11 +528,11 @@ class FunctionScope : public Scope
         // The canonical function of the scope, as during a scope walk we
         // often query properties of the JSFunction (e.g., is the function an
         // arrow).
-        GCPtrFunction canonicalFunction;
+        GCPtrFunction canonicalFunction = {};
 
         // If parameter expressions are present, parameters act like lexical
         // bindings.
-        bool hasParameterExprs;
+        bool hasParameterExprs = false;
 
         // Bindings are sorted by kind in both frames and environments.
         //
@@ -500,17 +547,20 @@ class FunctionScope : public Scope
         // positional formals - [0, nonPositionalFormalStart)
         //      other formals - [nonPositionalParamStart, varStart)
         //               vars - [varStart, length)
-        uint16_t nonPositionalFormalStart;
-        uint16_t varStart;
-        uint32_t length;
+        uint16_t nonPositionalFormalStart = 0;
+        uint16_t varStart = 0;
+        uint32_t length = 0;
 
         // Frame slots [0, nextFrameSlot) are live when this is the innermost
         // scope.
-        uint32_t nextFrameSlot;
+        uint32_t nextFrameSlot = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
         Zone* zone() const;
@@ -521,7 +571,7 @@ class FunctionScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -604,15 +654,18 @@ class VarScope : public Scope
     struct Data
     {
         // All bindings are vars.
-        uint32_t length;
+        uint32_t length = 0;
 
         // Frame slots [firstFrameSlot(), nextFrameSlot) are live when this is
         // the innermost scope.
-        uint32_t nextFrameSlot;
+        uint32_t nextFrameSlot = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };
@@ -622,7 +675,7 @@ class VarScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -699,14 +752,17 @@ class GlobalScope : public Scope
         //            vars - [varStart, letStart)
         //            lets - [letStart, constStart)
         //          consts - [constStart, length)
-        uint32_t varStart;
-        uint32_t letStart;
-        uint32_t constStart;
-        uint32_t length;
+        uint32_t varStart = 0;
+        uint32_t letStart = 0;
+        uint32_t constStart = 0;
+        uint32_t length = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };
@@ -716,7 +772,7 @@ class GlobalScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -802,16 +858,19 @@ class EvalScope : public Scope
         //
         // top-level funcs - [0, varStart)
         //            vars - [varStart, length)
-        uint32_t varStart;
-        uint32_t length;
+        uint32_t varStart = 0;
+        uint32_t length = 0;
 
         // Frame slots [0, nextFrameSlot) are live when this is the innermost
         // scope.
-        uint32_t nextFrameSlot;
+        uint32_t nextFrameSlot = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };
@@ -821,7 +880,7 @@ class EvalScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -898,7 +957,7 @@ class ModuleScope : public Scope
     struct Data
     {
         // The module of the scope.
-        GCPtr<ModuleObject*> module;
+        GCPtr<ModuleObject*> module = {};
 
         // Bindings are sorted by kind.
         //
@@ -906,18 +965,21 @@ class ModuleScope : public Scope
         //    vars - [varStart, letStart)
         //    lets - [letStart, constStart)
         //  consts - [constStart, length)
-        uint32_t varStart;
-        uint32_t letStart;
-        uint32_t constStart;
-        uint32_t length;
+        uint32_t varStart = 0;
+        uint32_t letStart = 0;
+        uint32_t constStart = 0;
+        uint32_t length = 0;
 
         // Frame slots [0, nextFrameSlot) are live when this is the innermost
         // scope.
-        uint32_t nextFrameSlot;
+        uint32_t nextFrameSlot = 0;
 
         // The array of tagged JSAtom* names, allocated beyond the end of the
         // struct.
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
         Zone* zone() const;
@@ -928,7 +990,7 @@ class ModuleScope : public Scope
     }
 
     static void getDataNamesAndLength(Data* data, BindingName** names, uint32_t* length) {
-        *names = data->names;
+        *names = data->trailingNames.start();
         *length = data->length;
     }
 
@@ -970,15 +1032,18 @@ class WasmInstanceScope : public Scope
   public:
     struct Data
     {
-        uint32_t memoriesStart;
-        uint32_t globalsStart;
-        uint32_t length;
-        uint32_t nextFrameSlot;
+        uint32_t memoriesStart = 0;
+        uint32_t globalsStart = 0;
+        uint32_t length = 0;
+        uint32_t nextFrameSlot = 0;
 
         // The wasm instance of the scope.
-        GCPtr<WasmInstanceObject*> instance;
+        GCPtr<WasmInstanceObject*> instance = {};
 
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };
@@ -1030,11 +1095,14 @@ class WasmFunctionScope : public Scope
   public:
     struct Data
     {
-        uint32_t length;
-        uint32_t nextFrameSlot;
-        uint32_t funcIndex;
+        uint32_t length = 0;
+        uint32_t nextFrameSlot = 0;
+        uint32_t funcIndex = 0;
 
-        BindingName names[1];
+        TrailingNamesArray trailingNames;
+
+        explicit Data(size_t nameCount) : trailingNames(nameCount) {}
+        Data() = delete;
 
         void trace(JSTracer* trc);
     };

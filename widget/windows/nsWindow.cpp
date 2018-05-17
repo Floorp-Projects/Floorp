@@ -8364,6 +8364,23 @@ nsWindow::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
                   pPluginEvent->wParam, pPluginEvent->lParam);
 }
 
+void
+nsWindow::EnableIMEForPlugin(bool aEnable)
+{
+  // Current IME state isn't plugin, ignore this call
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled != IMEState::PLUGIN)) {
+    return;
+  }
+
+  InputContext inputContext = GetInputContext();
+  if (aEnable) {
+    inputContext.mHTMLInputType.AssignLiteral("text");
+  } else {
+    inputContext.mHTMLInputType.AssignLiteral("password");
+  }
+  SetInputContext(inputContext, InputContextAction());
+}
+
 nsresult
 nsWindow::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
                                    nsIKeyEventInPluginCallback* aCallback)

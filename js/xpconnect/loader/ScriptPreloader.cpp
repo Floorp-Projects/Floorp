@@ -374,6 +374,8 @@ ScriptPreloader::Observe(nsISupports* subject, const char* topic, const char16_t
 Result<nsCOMPtr<nsIFile>, nsresult>
 ScriptPreloader::GetCacheFile(const nsAString& suffix)
 {
+    NS_ENSURE_TRUE(mProfD, Err(NS_ERROR_NOT_INITIALIZED));
+
     nsCOMPtr<nsIFile> cacheFile;
     MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 

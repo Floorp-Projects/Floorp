@@ -9,7 +9,7 @@ const APP_SHUTDOWN                    = 2;
 const ADDON_DISABLE                   = 4;
 const ADDON_INSTALL                   = 5;
 const ADDON_UNINSTALL                 = 6;
-const ADDON_DOWNGRADE                 = 8;
+const ADDON_UPGRADE                   = 7;
 
 const ID = "undouninstall1@tests.mozilla.org";
 const INCOMPAT_ID = "incompatible@tests.mozilla.org";
@@ -244,9 +244,9 @@ add_task(async function reinstallAddonAwaitingUninstall() {
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
-  Assert.equal(getUninstallReason(ID), ADDON_DOWNGRADE);
-  Assert.equal(getInstallReason(ID), ADDON_DOWNGRADE);
-  Assert.equal(getStartupReason(ID), ADDON_DOWNGRADE);
+  Assert.equal(getUninstallReason(ID), ADDON_UPGRADE);
+  Assert.equal(getInstallReason(ID), ADDON_UPGRADE);
+  Assert.equal(getStartupReason(ID), ADDON_UPGRADE);
   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
   Assert.ok(a1.isActive);
   Assert.ok(!a1.userDisabled);
@@ -469,8 +469,8 @@ add_task(async function reinstallDisabledAddonAwaitingUninstall() {
 
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonNotStarted(ID, "1.0");
-  Assert.equal(getUninstallReason(ID), ADDON_DOWNGRADE);
-  Assert.equal(getInstallReason(ID), ADDON_DOWNGRADE);
+  Assert.equal(getUninstallReason(ID), ADDON_UPGRADE);
+  Assert.equal(getInstallReason(ID), ADDON_UPGRADE);
   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
   Assert.ok(!a1.isActive);
   Assert.ok(a1.userDisabled);

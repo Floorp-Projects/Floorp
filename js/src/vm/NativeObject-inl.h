@@ -557,7 +557,7 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
     else
         nobj = SetNewObjectMetadata(cx, nobj);
 
-    js::gc::TraceCreateObject(nobj);
+    js::gc::gcTracer.traceCreateObject(nobj);
 
     return nobj;
 }

@@ -38,9 +38,6 @@ using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 
-template<typename K, typename V> class AutoHashMapRooter;
-template<typename T> class AutoHashSetRooter;
-
 class MOZ_STACK_CLASS SourceBufferHolder;
 
 class HandleValueArray;
@@ -93,9 +90,6 @@ using JS::AutoObjectVector;
 using JS::ValueVector;
 using JS::IdVector;
 using JS::ScriptVector;
-
-using JS::AutoHashMapRooter;
-using JS::AutoHashSetRooter;
 
 using JS::GCVector;
 using JS::GCHashMap;

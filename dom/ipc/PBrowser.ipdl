@@ -322,6 +322,11 @@ parent:
     async SetCandidateWindowForPlugin(CandidateWindowPosition aPosition);
 
     /**
+     * Enable or Disable IME by windowless plugin if plugin has focus.
+     */
+    async EnableIMEForPlugin(bool aEnable);
+
+    /**
      * Notifies the parent process of native key event data received in a
      * plugin process directly.
      *

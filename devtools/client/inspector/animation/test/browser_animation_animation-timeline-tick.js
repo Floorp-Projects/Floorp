@@ -17,6 +17,7 @@ const { findOptimalTimeInterval } =
 const TIME_GRADUATION_MIN_SPACING = 40;
 
 add_task(async function() {
+  await pushPref("devtools.inspector.three-pane-enabled", false);
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".end-delay", ".negative-delay"]);
   const { animationInspector, inspector, panel } = await openAnimationInspector();

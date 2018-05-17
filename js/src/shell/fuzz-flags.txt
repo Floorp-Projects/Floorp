@@ -1,0 +1,28 @@
+# This lists all the possible flags we'd like to see tested out in the shell by
+# fuzzers. A non-empty line not starting with # should be considered a valid
+# one. Note the following flag is recommended in ALL the cases: --fuzzing-safe
+
+# general jit flags
+--ion-eager
+--baseline-eager
+--ion-offthread-compile=off
+--ion-check-range-analysis
+--ion-extra-checks
+--spectre-mitigations=on
+--spectre-mitigations=off
+--nursery-strings=on
+--ion-warmup-threshold=100
+--no-native-regexp
+--no-sse3
+--no-sse4
+
+# wasm flags
+--wasm-gc
+--no-wasm-baseline
+--no-wasm-ion
+--test-wasm-await-tier2
+
+# arm specific, no-ops on other platforms.
+--arm-sim-icache-checks
+--arm-asm-nop-fill=1
+--arm-hwcap=vfp

@@ -19,8 +19,8 @@ add_task(async function() {
   await promiseStartupManager();
 
   // Force a rescan of signatures
-  const { XPIProvider } = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-  await XPIProvider.verifySignatures();
+  const { XPIDatabase } = ChromeUtils.import("resource://gre/modules/addons/XPIDatabase.jsm", {});
+  await XPIDatabase.verifySignatures();
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.equal(addon, null, "Unsigned extensions should not be installed at startup");

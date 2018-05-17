@@ -16,6 +16,7 @@
 #include "gc/Tracer.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/SelfHosting.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
@@ -1131,12 +1132,11 @@ ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleObje
 static bool
 InvokeSelfHostedMethod(JSContext* cx, HandleModuleObject self, HandlePropertyName name)
 {
-    RootedValue fval(cx);
-    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), name, name, 0, &fval))
-        return false;
+    RootedValue thisv(cx, ObjectValue(*self));
+    FixedInvokeArgs<0> args(cx);
 
     RootedValue ignored(cx);
-    return Call(cx, fval, self, &ignored);
+    return CallSelfHostedFunction(cx, name, thisv, args, &ignored);
 }
 
 /* static */ bool

@@ -23,7 +23,7 @@ enum GCTraceEvent {
     TraceEventNurseryAlloc,
     TraceEventTenuredAlloc,
     TraceEventClassInfo,
-    TraceEventTypeInfo,
+    TraceEventGroupInfo,
     TraceEventTypeNewScript,
     TraceEventCreateObject,
     TraceEventMinorGCStart,
@@ -50,7 +50,7 @@ const unsigned TraceExtraBits = 8;
 const unsigned TraceEventShift = 56;
 const unsigned TraceEventBits = 8;
 
-const unsigned AllocKinds = 22;
-const unsigned LastObjectAllocKind = 11;
+const unsigned NumAllocKinds = 29;
+const unsigned LastObjectAllocKind = 13;
 
 #endif

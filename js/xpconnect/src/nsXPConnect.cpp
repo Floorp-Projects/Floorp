@@ -433,7 +433,7 @@ namespace xpc {
 
 JSObject*
 CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
-                   JS::CompartmentOptions& aOptions)
+                   JS::RealmOptions& aOptions)
 {
     MOZ_ASSERT(NS_IsMainThread(), "using a principal off the main thread?");
     MOZ_ASSERT(principal);
@@ -480,7 +480,7 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
 }
 
 void
-InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
+InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                         nsIPrincipal* aPrincipal)
 {
     bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
@@ -535,7 +535,7 @@ InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
                                 nsISupports* aCOMObj,
                                 nsIPrincipal* aPrincipal,
                                 uint32_t aFlags,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 MutableHandleObject aNewGlobal)
 {
     MOZ_ASSERT(aJSContext, "bad param");

@@ -899,6 +899,21 @@ nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
   return true;
 }
 
+bool
+nsPluginInstanceOwner::EnableIME(bool aEnable)
+{
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return false;
+    }
+  }
+
+  widget->EnableIMEForPlugin(aEnable);
+  return true;
+}
+
 #endif // #ifdef XP_WIN
 
 void

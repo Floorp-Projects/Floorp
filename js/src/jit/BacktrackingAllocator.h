@@ -506,34 +506,31 @@ class LiveBundle : public TempObject
 class VirtualRegister
 {
     // Instruction which defines this register.
-    LNode* ins_;
+    LNode* ins_ = nullptr;
 
     // Definition in the instruction for this register.
-    LDefinition* def_;
+    LDefinition* def_ = nullptr;
 
     // All live ranges for this register. These may overlap each other, and are
     // ordered by their start position.
     InlineForwardList<LiveRange::RegisterLink> ranges_;
 
     // Whether def_ is a temp or an output.
-    bool isTemp_;
+    bool isTemp_ = false;
 
     // Whether this vreg is an input for some phi. This use is not reflected in
     // any range on the vreg.
-    bool usedByPhi_;
+    bool usedByPhi_ = false;
 
     // If this register's definition is MUST_REUSE_INPUT, whether a copy must
     // be introduced before the definition that relaxes the policy.
-    bool mustCopyInput_;
+    bool mustCopyInput_ = false;
 
     void operator=(const VirtualRegister&) = delete;
     VirtualRegister(const VirtualRegister&) = delete;
 
   public:
-    explicit VirtualRegister()
-    {
-        // Note: This class is zeroed before it is constructed.
-    }
+    VirtualRegister() = default;
 
     void init(LNode* ins, LDefinition* def, bool isTemp) {
         MOZ_ASSERT(!ins_);

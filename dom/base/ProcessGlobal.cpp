@@ -129,7 +129,7 @@ ProcessGlobal::Init()
 
 bool
 ProcessGlobal::WrapGlobalObject(JSContext* aCx,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 JS::MutableHandle<JSObject*> aReflector)
 {
   bool ok = ContentProcessMessageManagerBinding::Wrap(aCx, this, this, aOptions,

@@ -68,7 +68,8 @@ async function testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property expands on container dbl-click");
 
   info("Getting computed property container");
-  let container = styleDocument.querySelector(".computed-property-view");
+  let container = styleDocument.querySelector(
+    "#computed-container .computed-property-view");
   ok(container, "Container found");
 
   container.scrollIntoView();
@@ -88,7 +89,8 @@ async function testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
   info("Testing that a property collapses on container dbl-click");
 
   info("Getting computed property container");
-  let container = styleDocument.querySelector(".computed-property-view");
+  let container = styleDocument.querySelector(
+    "#computed-container .computed-property-view");
   ok(container, "Container found");
 
   let onCollapse = inspector.once("computed-view-property-collapsed");
