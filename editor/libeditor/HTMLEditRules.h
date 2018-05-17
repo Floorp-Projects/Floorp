@@ -529,8 +529,27 @@ protected:
   MOZ_MUST_USE nsresult
   AfterEditInner(EditAction action, nsIEditor::EDirection aDirection);
 
-  nsresult RemovePartOfBlock(Element& aBlock, nsIContent& aStartChild,
-                             nsIContent& aEndChild);
+  /**
+   * SplitRangeOffFromBlockAndRemoveMiddleContainer() splits the nodes
+   * between aStartOfRange and aEndOfRange, then, removes the middle element
+   * and moves its content to where the middle element was.
+   *
+   * @param aBlockElement           The node which will be split.
+   * @param aStartOfRange           The first node which will be unwrapped
+   *                                from aBlockElement.
+   * @param aEndOfRange             The last node which will be unwrapped from
+   *                                aBlockElement.
+   * @return                        The left content is new created left
+   *                                element of aBlockElement.
+   *                                The right content is split element,
+   *                                i.e., must be aBlockElement.
+   *                                The middle content is nullptr since
+   *                                removing it is the job of this method.
+   */
+  MOZ_MUST_USE SplitRangeOffFromNodeResult
+  SplitRangeOffFromBlockAndRemoveMiddleContainer(Element& aBlockElement,
+                                                 nsIContent& aStartOfRange,
+                                                 nsIContent& aEndOfRange);
 
   /**
    * SplitRangeOffFromBlock() splits aBlock at two points, before aStartChild
