@@ -6,6 +6,7 @@
     <item name="share" type="id" />
     <item name="settings" type="id" />
     <item name="open_default" type="id" />
+    <item name="find_in_page" type="id" />
     <item name="open_select_browser" type="id" />
     <item name="custom_tab_menu_item" type="id" />
     <item name="finish" type="id" />

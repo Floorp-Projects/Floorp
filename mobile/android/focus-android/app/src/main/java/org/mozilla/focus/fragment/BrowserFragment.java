@@ -1047,6 +1047,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 TelemetryWrapper.reportSiteIssueEvent();
                 break;
 
+            case R.id.find_in_page:
+                Toast.makeText(getContext(), "Not Implemented", Toast.LENGTH_SHORT).show();
+                break;
+
             default:
                 throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");
         }

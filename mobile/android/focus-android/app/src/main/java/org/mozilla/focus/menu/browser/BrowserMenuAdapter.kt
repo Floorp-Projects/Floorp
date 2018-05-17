@@ -53,6 +53,8 @@ class BrowserMenuAdapter(
 
         items.add(MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)))
 
+        items.add(MenuItem(R.id.find_in_page, resources.getString(R.string.find_in_page)))
+
         if (browsers.hasMultipleThirdPartyBrowsers(context)) {
             items.add(MenuItem(R.id.open_select_browser, resources.getString(
                     R.string.menu_open_with_a_browser2)))
