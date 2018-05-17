@@ -341,7 +341,6 @@ var pktApi = (function() {
             path: "/firefox/save",
             data: sendData,
             success(data) {
-
                 // Update premium status, tags and since
                 var tags = data.tags;
                 if ((typeof tags !== "undefined") && Array.isArray(tags)) {
@@ -359,6 +358,55 @@ var pktApi = (function() {
                 // Save since value for further requests
                 setSetting("latestSince", data.since);
 
+                // Define variant for ho2
+                if (data.flags) {
+                    var showHo2 = (Services.locale.getAppLocaleAsLangTag() === "en-US") ? data.flags.show_ffx_mobile_prompt : "control";
+                    setSetting("test.ho2", showHo2);
+                }
+                data.ho2 = getSetting("test.ho2");
+
+                if (options.success) {
+                    options.success.apply(options, Array.apply(null, arguments));
+                }
+            },
+            error: options.error
+        });
+    }
+
+    /**
+     * Get a preview for saved URL
+     * @param {string} url     URL of the link
+     * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function getArticleInfo(url, options) {
+        return apiRequest({
+            path: "/getItemPreview",
+            data: {
+                access_token: getAccessToken(),
+                url,
+            },
+            success(data) {
+                if (options.success) {
+                    options.success.apply(options, Array.apply(null, arguments));
+                }
+            },
+            error: options.error
+        });
+    }
+
+    /**
+     * Request a email for mobile apps
+     * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function getMobileDownload(options) {
+        return apiRequest({
+            path: "/firefox/get-app",
+            data: {
+                access_token: getAccessToken()
+            },
+            success(data) {
                 if (options.success) {
                     options.success.apply(options, Array.apply(null, arguments));
                 }
@@ -676,5 +724,7 @@ var pktApi = (function() {
         getSuggestedTagsForURL,
         getSignupPanelTabTestVariant,
         retrieve,
+        getArticleInfo,
+        getMobileDownload
     };
 }());

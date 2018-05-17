@@ -19,7 +19,7 @@
     color: #333;
     display: block;
     font-size: 16px;
-    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
     position: relative;
@@ -55,7 +55,7 @@
 .pkt_ext_containersignup p {
     font-size: 14px;
     color: #333;
-    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     line-height: 1.3;
     margin: 0 auto 1.5em;
     max-width: 260px;
@@ -227,7 +227,7 @@
     border-radius: 2px;
     color: #fff;
     display: inline-block;
-    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 16px;
     font-weight: normal;
     line-height: 1;
