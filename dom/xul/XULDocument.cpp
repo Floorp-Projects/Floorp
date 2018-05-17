@@ -73,7 +73,6 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIObserverService.h"
 #include "nsNodeUtils.h"
-#include "nsIDocShellTreeOwner.h"
 #include "nsIXULWindow.h"
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
@@ -2659,27 +2658,6 @@ XULDocument::ResumeWalk()
         rv = DoneWalking();
     }
     return rv;
-}
-
-already_AddRefed<nsIXULWindow>
-XULDocument::GetXULWindowIfToplevelChrome() const
-{
-    nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
-    if (!item) {
-        return nullptr;
-    }
-    nsCOMPtr<nsIDocShellTreeOwner> owner;
-    item->GetTreeOwner(getter_AddRefs(owner));
-    nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
-    if (!xulWin) {
-        return nullptr;
-    }
-    nsCOMPtr<nsIDocShell> xulWinShell;
-    xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-    if (!SameCOMIdentity(xulWinShell, item)) {
-        return nullptr;
-    }
-    return xulWin.forget();
 }
 
 nsresult
