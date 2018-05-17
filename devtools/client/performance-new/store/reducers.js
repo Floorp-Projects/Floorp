@@ -88,7 +88,7 @@ function entries(state = 10000000, action) {
  * The features that are enabled for the profiler.
  * @param {array} state
  */
-function features(state = ["js", "stackwalk", "responsiveness"], action) {
+function features(state = ["js", "stackwalk"], action) {
   switch (action.type) {
     case "CHANGE_FEATURES":
       return action.features;

@@ -122,11 +122,8 @@ class TimeStamp;
   /* Do not include user-identifiable information. */ \
   macro(5, "privacy", Privacy) \
   \
-  /* Collect thread responsiveness information. */ \
-  macro(6, "responsiveness", Responsiveness) \
-  \
   /* Restyle profiling. */ \
-  macro(7, "restyle", Restyle) \
+  macro(6, "restyle", Restyle) \
   \
   /* Take a snapshot of the window on every composition. */ \
   macro(7, "screenshots", Screenshots) \
