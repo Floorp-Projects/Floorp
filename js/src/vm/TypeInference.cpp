@@ -4546,7 +4546,7 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep, AutoClearTypeInferenc
 
         // Freeze constraints on stack type sets need to be regenerated the
         // next time the script is analyzed.
-        hasFreezeConstraints_ = false;
+        bitFields_.hasFreezeConstraints_ = false;
 
         return;
     }
@@ -4561,7 +4561,7 @@ JSScript::sweepTypes(const js::AutoSweepTypeScript& sweep, AutoClearTypeInferenc
     if (oom->hadOOM()) {
         // It's possible we OOM'd while copying freeze constraints, so they
         // need to be regenerated.
-        hasFreezeConstraints_ = false;
+        bitFields_.hasFreezeConstraints_ = false;
     }
 }
 
