@@ -2879,7 +2879,7 @@ js::GetPCCountScriptContents(JSContext* cx, size_t index)
     StringBuffer buf(cx);
 
     {
-        AutoCompartment ac(cx, &script->global());
+        AutoRealm ar(cx, &script->global());
         if (!GetPCCountJSON(cx, sac, buf))
             return nullptr;
     }

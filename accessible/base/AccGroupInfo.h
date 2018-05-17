@@ -42,7 +42,7 @@ public:
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(Accessible* aAccessible)
+  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible)
   {
     mozilla::a11y::role role = aAccessible->Role();
     if (role != mozilla::a11y::roles::ROW &&
@@ -67,7 +67,7 @@ public:
   /**
    * Return a first item for the given container.
    */
-  static Accessible* FirstItemOf(Accessible* aContainer);
+  static Accessible* FirstItemOf(const Accessible* aContainer);
 
   /**
    * Return next item of the same group to the given item.
@@ -75,7 +75,7 @@ public:
   static Accessible* NextItemTo(Accessible* aItem);
 
 protected:
-  AccGroupInfo(Accessible* aItem, a11y::role aRole);
+  AccGroupInfo(const Accessible* aItem, a11y::role aRole);
 
 private:
   AccGroupInfo() = delete;
@@ -104,7 +104,7 @@ private:
   uint32_t mPosInSet;
   uint32_t mSetSize;
   Accessible* mParent;
-  Accessible* mItem;
+  const Accessible* mItem;
   a11y::role mRole;
 };
 

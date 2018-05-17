@@ -5,7 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
-from taskgraph.util.treeherder import split_symbol, join_symbol
+from taskgraph.util.treeherder import split_symbol, join_symbol, add_suffix
 from mozunit import main
 
 
@@ -22,6 +22,12 @@ class TestSymbols(unittest.TestCase):
 
     def test_join_with_group(self):
         self.assertEqual(join_symbol('ab', 'xy'), 'ab(xy)')
+
+    def test_add_suffix_no_group(self):
+        self.assertEqual(add_suffix('xy', 1), 'xy1')
+
+    def test_add_suffix_with_group(self):
+        self.assertEqual(add_suffix('ab(xy)', 1), 'ab(xy1)')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<title>Check whether we can load small BinAST file</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+    setup({allow_uncaught_exception: true});
+
+    var hadError = false;
+    function setError() { hadError = true; }
+
+    window.addEventListener("error", setError);
+
+    const test_load = async_test("Check we can load BinAST over HTTPS");
+    window.addEventListener("load", test_load.step_func_done(ev => {
+      assert_equals(hadError, false, "Didn't expect an error event");
+      assert_equals(binASTLoaded, true, "Expected to load BinAST version");
+    }));
+
+</script>
+<script src="./serve.py?name=small" onerror="setError()"></script>

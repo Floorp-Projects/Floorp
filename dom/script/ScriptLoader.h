@@ -20,6 +20,7 @@
 #include "nsIIncrementalStreamLoader.h"
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/dom/SRICheck.h"
@@ -397,6 +398,15 @@ private:
   nsresult RestartLoad(ScriptLoadRequest* aRequest);
 
   void HandleLoadError(ScriptLoadRequest *aRequest, nsresult aResult);
+
+  static bool BinASTEncodingEnabled()
+  {
+#ifdef JS_BUILD_BINAST
+    return DOMPrefs::BinASTEncodingEnabled();
+#else
+    return false;
+#endif
+  }
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there

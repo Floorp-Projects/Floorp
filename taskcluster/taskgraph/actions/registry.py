@@ -13,7 +13,7 @@ import yaml
 from slugid import nice as slugid
 from types import FunctionType
 from collections import namedtuple
-from taskgraph import create, GECKO
+from taskgraph import create
 from taskgraph.config import load_graph_config
 from taskgraph.util import taskcluster
 from taskgraph.parameters import Parameters
@@ -88,7 +88,7 @@ def register_task_action(name, title, description, order, context, schema=None):
     assert isinstance(title, basestring), 'title must be a string'
     assert isinstance(description, basestring), 'description must be a string'
     assert isinstance(order, int), 'order must be an integer'
-    assert is_json(schema), 'schema must be a JSON compatible  object'
+    assert callable(schema) or is_json(schema), 'schema must be a JSON compatible  object'
     mem = {"registered": False}  # workaround nonlocal missing in 2.x
 
     def register_task_template_builder(task_template_builder):
@@ -187,12 +187,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
             task_group_id = os.environ.get('TASK_ID', slugid())
 
-            # FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1454034
-            # trust-domain works, but isn't semantically correct here.
-            if graph_config['trust-domain'] == 'comm':
-                template = os.path.join(GECKO, 'comm', '.taskcluster.yml')
-            else:
-                template = os.path.join(GECKO, '.taskcluster.yml')
+            template = graph_config.taskcluster_yml
 
             with open(template, 'r') as f:
                 taskcluster_yml = yaml.safe_load(f)
@@ -258,7 +253,10 @@ def render_actions_json(parameters, graph_config):
                 'title': action.title,
                 'description': action.description,
                 'context': action.context,
-                'schema': action.schema,
+                'schema': (
+                    action.schema(graph_config=graph_config) if callable(action.schema)
+                    else action.schema
+                ),
                 'task': task,
             }
             if res['schema'] is None:

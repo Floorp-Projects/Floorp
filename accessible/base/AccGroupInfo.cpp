@@ -10,7 +10,7 @@
 
 using namespace mozilla::a11y;
 
-AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
+AccGroupInfo::AccGroupInfo(const Accessible* aItem, role aRole) :
   mPosInSet(0), mSetSize(0), mParent(nullptr), mItem(aItem), mRole(aRole)
 {
   MOZ_COUNT_CTOR(AccGroupInfo);
@@ -144,7 +144,7 @@ AccGroupInfo::Update()
 }
 
 Accessible*
-AccGroupInfo::FirstItemOf(Accessible* aContainer)
+AccGroupInfo::FirstItemOf(const Accessible* aContainer)
 {
   // ARIA tree can be arranged by ARIA groups case #1 (previous sibling of a
   // group is a parent) or by aria-level.

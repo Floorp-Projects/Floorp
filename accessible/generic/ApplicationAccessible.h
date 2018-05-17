@@ -40,14 +40,14 @@ public:
   virtual nsRect BoundsInAppUnits() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual GroupPos GroupPosition() override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual void Description(nsString& aDescription) override;
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual mozilla::a11y::role NativeRole() const override;
   virtual uint64_t State() override;
-  virtual uint64_t NativeState() override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual uint64_t NativeState() const override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;

@@ -58,7 +58,7 @@ jobs:
                   mozilla-release: "release-localtest"
                   default: "default"
       treeherder:
-         symbol: UV
+         symbol: UV(UV)
          platform: linux64/opt
          kind: test
          tier: 1
@@ -79,8 +79,8 @@ jobs:
                   mozilla-release: "release-localtest"
                   default: "default"
       treeherder:
-         symbol: UV
-         platform: linux/opt
+         symbol: UV(UV)
+         platform: linux32/opt
          kind: test
          tier: 1
       attributes:
@@ -100,8 +100,8 @@ jobs:
                   mozilla-release: "release-localtest"
                   default: "default"
       treeherder:
-         symbol: UV
-         platform: win64/opt
+         symbol: UV(UV)
+         platform: windows2012-64/opt
          kind: test
          tier: 1
       attributes:
@@ -121,8 +121,8 @@ jobs:
                   mozilla-release: "release-localtest"
                   default: "default"
       treeherder:
-         symbol: UV
-         platform: win32/opt
+         symbol: UV(UV)
+         platform: windows2012-32/opt
          kind: test
          tier: 1
       attributes:
@@ -142,8 +142,8 @@ jobs:
                   mozilla-release: "release-localtest"
                   default: "default"
       treeherder:
-         symbol: UV
-         platform: macosx64/opt
+         symbol: UV(UV)
+         platform: osx-cross/opt
          kind: test
          tier: 1
       attributes:
@@ -156,7 +156,7 @@ jobs:
          env:
             CHANNEL: "aurora-localtest"
       treeherder:
-         symbol: UV
+         symbol: UV(UV)
          platform: linux64-devedition/opt
          kind: test
          tier: 1
@@ -170,8 +170,8 @@ jobs:
          env:
             CHANNEL: "aurora-localtest"
       treeherder:
-         symbol: UV
-         platform: linux-devedition/opt
+         symbol: UV(UV)
+         platform: linux32-devedition/opt
          kind: test
          tier: 1
       attributes:
@@ -184,8 +184,8 @@ jobs:
          env:
             CHANNEL: "aurora-localtest"
       treeherder:
-         symbol: UV
-         platform: win64-devedition/opt
+         symbol: UV(UV)
+         platform: windows2012-64-devedition/opt
          kind: test
          tier: 1
       attributes:
@@ -198,8 +198,8 @@ jobs:
          env:
             CHANNEL: "aurora-localtest"
       treeherder:
-         symbol: UV
-         platform: win32-devedition/opt
+         symbol: UV(UV)
+         platform: windows2012-32-devedition/opt
          kind: test
          tier: 1
       attributes:
@@ -212,8 +212,8 @@ jobs:
          env:
             CHANNEL: "aurora-localtest"
       treeherder:
-         symbol: UV
-         platform: macosx64-devedition/opt
+         symbol: UV(UV)
+         platform: osx-cross-devedition/opt
          kind: test
          tier: 1
       attributes:

@@ -48,7 +48,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     AutoLockForExclusiveAccess lock(cx);
     Symbol* sym;
     {
-        AutoAtomsCompartment ac(cx, lock);
+        AutoAtomsRealm ar(cx, lock);
         sym = newInternal(cx, code, cx->compartment()->randomHashCode(), atom, lock);
     }
     if (sym)
@@ -74,7 +74,7 @@ Symbol::for_(JSContext* cx, HandleString description)
 
     Symbol* sym;
     {
-        AutoAtomsCompartment ac(cx, lock);
+        AutoAtomsRealm ar(cx, lock);
         // Rehash the hash of the atom to give the corresponding symbol a hash
         // that is different than the hash of the corresponding atom.
         HashNumber hash = mozilla::HashGeneric(atom->hash());

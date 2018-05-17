@@ -40,13 +40,13 @@ HTMLBRAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLBRAccessible::NativeState()
+HTMLBRAccessible::NativeState() const
 {
   return states::READONLY;
 }
 
 ENameValueFlag
-HTMLBRAccessible::NativeName(nsString& aName)
+HTMLBRAccessible::NativeName(nsString& aName) const
 {
   aName = static_cast<char16_t>('\n');    // Newline char
   return eNameOK;
@@ -57,14 +57,14 @@ HTMLBRAccessible::NativeName(nsString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 ENameValueFlag
-HTMLLabelAccessible::NativeName(nsString& aName)
+HTMLLabelAccessible::NativeName(nsString& aName) const
 {
   nsTextEquivUtils::GetNameFromSubtree(this, aName);
   return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
 }
 
 Relation
-HTMLLabelAccessible::RelationByType(RelationType aType)
+HTMLLabelAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR) {
@@ -76,7 +76,7 @@ HTMLLabelAccessible::RelationByType(RelationType aType)
 }
 
 uint8_t
-HTMLLabelAccessible::ActionCount()
+HTMLLabelAccessible::ActionCount() const
 {
   return nsCoreUtils::IsLabelWithControl(mContent) ? 1 : 0;
 }
@@ -91,7 +91,7 @@ HTMLLabelAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLLabelAccessible::DoAction(uint8_t aIndex)
+HTMLLabelAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != 0)
     return false;
@@ -106,7 +106,7 @@ HTMLLabelAccessible::DoAction(uint8_t aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 Relation
-HTMLOutputAccessible::RelationByType(RelationType aType)
+HTMLOutputAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::CONTROLLED_BY)
@@ -127,7 +127,7 @@ HTMLSummaryAccessible::
 }
 
 uint8_t
-HTMLSummaryAccessible::ActionCount()
+HTMLSummaryAccessible::ActionCount() const
 {
   return 1;
 }
@@ -157,7 +157,7 @@ HTMLSummaryAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLSummaryAccessible::DoAction(uint8_t aIndex)
+HTMLSummaryAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;
@@ -167,7 +167,7 @@ HTMLSummaryAccessible::DoAction(uint8_t aIndex)
 }
 
 uint64_t
-HTMLSummaryAccessible::NativeState()
+HTMLSummaryAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 

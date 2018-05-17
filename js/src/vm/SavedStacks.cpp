@@ -1474,7 +1474,7 @@ SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
         // needed to construct the SavedFrame::Lookup.
         Rooted<LocationValue> location(cx);
         {
-            AutoCompartmentUnchecked ac(cx, iter.compartment());
+            AutoRealmUnchecked ar(cx, iter.compartment());
             if (!cx->compartment()->savedStacks().getLocation(cx, iter, &location))
                 return false;
         }

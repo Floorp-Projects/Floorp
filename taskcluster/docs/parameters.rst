@@ -174,6 +174,9 @@ Release Promotion
 ``release_enable_emefree``
    Boolean which controls repacking vanilla Firefox builds into EME-free builds.
 
+``release_product``
+   The product that is being released.
+
 Comm Push Information
 ---------------------
 

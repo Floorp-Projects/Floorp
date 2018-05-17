@@ -37,7 +37,7 @@ HTMLLinkAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLLinkAccessible::NativeState()
+HTMLLinkAccessible::NativeState() const
 {
   return HyperTextAccessibleWrap::NativeState() & ~states::READONLY;
 }
@@ -73,7 +73,7 @@ HTMLLinkAccessible::NativeInteractiveState() const
 }
 
 void
-HTMLLinkAccessible::Value(nsString& aValue)
+HTMLLinkAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 
@@ -83,7 +83,7 @@ HTMLLinkAccessible::Value(nsString& aValue)
 }
 
 uint8_t
-HTMLLinkAccessible::ActionCount()
+HTMLLinkAccessible::ActionCount() const
 {
   return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
 }
@@ -104,7 +104,7 @@ HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLLinkAccessible::DoAction(uint8_t aIndex)
+HTMLLinkAccessible::DoAction(uint8_t aIndex) const
 {
   if (!IsLinked())
     return HyperTextAccessible::DoAction(aIndex);
@@ -128,7 +128,7 @@ HTMLLinkAccessible::IsLink() const
 }
 
 already_AddRefed<nsIURI>
-HTMLLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+HTMLLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   return aAnchorIndex == 0 ? mContent->GetHrefURI() : nullptr;
 }
