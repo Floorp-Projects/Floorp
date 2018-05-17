@@ -887,7 +887,7 @@ CheckLimits(JSContext* cx, uint32_t declaredMin, const Maybe<uint32_t>& declared
 static bool
 CheckSharing(JSContext* cx, bool declaredShared, bool isShared)
 {
-    if (isShared && !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+    if (isShared && !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_NO_SHMEM_LINK);
         return false;
     }

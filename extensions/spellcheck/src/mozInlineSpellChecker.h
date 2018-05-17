@@ -228,7 +228,7 @@ public:
   nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
                               nsIDOMNode *aNode,
                               int32_t aOffset,
-                              nsIDOMRange **aRange);
+                              nsRange** aRange);
 
   nsresult CleanupRangesInSelection(mozilla::dom::Selection *aSelection);
 

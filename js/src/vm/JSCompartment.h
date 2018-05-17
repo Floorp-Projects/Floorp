@@ -550,9 +550,6 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-    const JS::RealmCreationOptions creationOptions_;
-    JS::RealmBehaviors behaviors_;
-
   private:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
@@ -648,10 +645,6 @@ struct JSCompartment
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
-
-    const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
-    JS::RealmBehaviors& behaviors() { return behaviors_; }
-    const JS::RealmBehaviors& behaviors() const { return behaviors_; }
 
     JSRuntime* runtimeFromMainThread() const {
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
@@ -851,12 +844,12 @@ struct JSCompartment
     bool isAccessValid() const { return validAccessPtr ? *validAccessPtr : true; }
     void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
 
-  public:
-    JSCompartment(JS::Zone* zone, const JS::RealmOptions& options);
+  protected:
+    explicit JSCompartment(JS::Zone* zone);
     ~JSCompartment();
 
+  public:
     MOZ_MUST_USE bool init(JSContext* maybecx);
-    void destroy(js::FreeOp* fop);
 
     MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
@@ -925,9 +918,6 @@ struct JSCompartment
      */
     void traceOutgoingCrossCompartmentWrappers(JSTracer* trc);
     static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
-
-    /* Whether to preserve JIT code on non-shrinking GCs. */
-    bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
     void sweepAfterMinorGC(JSTracer* trc);
     void sweepMapAndSetObjectsAfterMinorGC();
@@ -1134,25 +1124,24 @@ struct JSCompartment
 
   private:
     /* Used by memory reporters and invalid otherwise. */
-    JS::CompartmentStats* compartmentStats_;
+    JS::RealmStats* realmStats_;
 
   public:
     // This should only be called when it is non-null, i.e. during memory
     // reporting.
-    JS::CompartmentStats& compartmentStats() {
+    JS::RealmStats& realmStats() {
         // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
-        // (inconclusive) evidence that compartmentStats_ can be nullptr
-        // unexpectedly.
-        MOZ_RELEASE_ASSERT(compartmentStats_);
-        return *compartmentStats_;
+        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
+        MOZ_RELEASE_ASSERT(realmStats_);
+        return *realmStats_;
     }
-    void nullCompartmentStats() {
-        MOZ_ASSERT(compartmentStats_);
-        compartmentStats_ = nullptr;
+    void nullRealmStats() {
+        MOZ_ASSERT(realmStats_);
+        realmStats_ = nullptr;
     }
-    void setCompartmentStats(JS::CompartmentStats* newStats) {
-        MOZ_ASSERT(!compartmentStats_ && newStats);
-        compartmentStats_ = newStats;
+    void setRealmStats(JS::RealmStats* newStats) {
+        MOZ_ASSERT(!realmStats_ && newStats);
+        realmStats_ = newStats;
     }
 
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
@@ -1209,6 +1198,24 @@ struct JSCompartment
     js::Vector<js::SetObject*, 0, js::SystemAllocPolicy> setsWithNurseryMemory;
 };
 
+class JS::Realm : public JSCompartment
+{
+    const JS::RealmCreationOptions creationOptions_;
+    JS::RealmBehaviors behaviors_;
+
+  public:
+    Realm(JS::Zone* zone, const JS::RealmOptions& options);
+
+    void destroy(js::FreeOp* fop);
+
+    const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
+    JS::RealmBehaviors& behaviors() { return behaviors_; }
+    const JS::RealmBehaviors& behaviors() const { return behaviors_; }
+
+    /* Whether to preserve JIT code on non-shrinking GCs. */
+    bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
+};
+
 namespace js {
 
 // We only set the maybeAlive flag for objects and scripts. It's assumed that,
@@ -1226,41 +1233,42 @@ inline js::Handle<js::GlobalObject*>
 JSContext::global() const
 {
     /*
-     * It's safe to use |unsafeGet()| here because any compartment that is
+     * It's safe to use |unsafeGet()| here because any realm that is
      * on-stack will be marked automatically, so there's no need for a read
-     * barrier on it. Once the compartment is popped, the handle is no longer
+     * barrier on it. Once the realm is popped, the handle is no longer
      * safe to use.
      */
-    MOZ_ASSERT(compartment_, "Caller needs to enter a compartment first");
-    return js::Handle<js::GlobalObject*>::fromMarkedLocation(compartment_->global_.unsafeGet());
+    MOZ_ASSERT(realm_, "Caller needs to enter a realm first");
+    JSCompartment* comp = GetCompartmentForRealm(realm_);
+    return js::Handle<js::GlobalObject*>::fromMarkedLocation(comp->global_.unsafeGet());
 }
 
 namespace js {
 
-class MOZ_RAII AssertCompartmentUnchanged
+class MOZ_RAII AssertRealmUnchanged
 {
   public:
-    explicit AssertCompartmentUnchanged(JSContext* cx
-                                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), oldCompartment(cx->compartment())
+    explicit AssertRealmUnchanged(JSContext* cx
+                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), oldRealm(cx->realm())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    ~AssertCompartmentUnchanged() {
-        MOZ_ASSERT(cx->compartment() == oldCompartment);
+    ~AssertRealmUnchanged() {
+        MOZ_ASSERT(cx->realm() == oldRealm);
     }
 
   protected:
-    JSContext * const cx;
-    JSCompartment * const oldCompartment;
+    JSContext* const cx;
+    JS::Realm* const oldRealm;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AutoRealm
 {
     JSContext* const cx_;
-    JSCompartment* const origin_;
+    JS::Realm* const origin_;
     const AutoLockForExclusiveAccess* maybeLock_;
 
   public:
@@ -1269,13 +1277,13 @@ class AutoRealm
     inline ~AutoRealm();
 
     JSContext* context() const { return cx_; }
-    JSCompartment* origin() const { return origin_; }
+    JS::Realm* origin() const { return origin_; }
 
   protected:
-    inline AutoRealm(JSContext* cx, JSCompartment* target);
+    inline AutoRealm(JSContext* cx, JS::Realm* target);
 
     // Used only for entering the atoms compartment.
-    inline AutoRealm(JSContext* cx, JSCompartment* target,
+    inline AutoRealm(JSContext* cx, JS::Realm* target,
                      AutoLockForExclusiveAccess& lock);
 
   private:
@@ -1402,7 +1410,7 @@ class MOZ_RAII AutoSuppressAllocationMetadataBuilder {
 
   public:
     explicit AutoSuppressAllocationMetadataBuilder(JSContext* cx)
-      : AutoSuppressAllocationMetadataBuilder(cx->compartment()->zone())
+      : AutoSuppressAllocationMetadataBuilder(cx->realm()->zone())
     { }
 
     explicit AutoSuppressAllocationMetadataBuilder(JS::Zone* zone)

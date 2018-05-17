@@ -123,7 +123,7 @@ function formatShortcutResults() {
 }
 
 function formatSources(sources, tabs) {
-  return sources.filter(source => !(0, _source.isPretty)(source)).map(source => formatSourcesForList(source, tabs)).filter(({
-    value
-  }) => value != "");
+  return sources.filter(source => !(0, _source.isPretty)(source)).filter(({
+    relativeUrl
+  }) => !!relativeUrl).map(source => formatSourcesForList(source, tabs));
 }

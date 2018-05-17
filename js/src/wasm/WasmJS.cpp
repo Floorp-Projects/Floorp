@@ -468,7 +468,7 @@ GetLimits(JSContext* cx, HandleObject obj, uint32_t maxInitial, uint32_t maxMaxi
                     return false;
                 }
 
-                if (!cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+                if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
                     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                               JSMSG_WASM_NO_SHMEM_LINK);
                     return false;

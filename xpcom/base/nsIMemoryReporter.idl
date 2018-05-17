@@ -362,8 +362,8 @@ interface nsIMemoryReporterManager : nsISupports
    * |JSMainRuntimeTemporaryPeak| (UNITS_BYTES)  Peak size of the transient
    * storage in the main JSRuntime.
    *
-   * |JSMainRuntimeCompartments{System,User}| (UNITS_COUNT)  The number of
-   * {system,user} compartments in the main JS runtime.
+   * |JSMainRuntimeRealms{System,User}| (UNITS_COUNT)  The number of
+   * {system,user} realms in the main JS runtime.
    *
    * |imagesContentUsedUncompressed| (UNITS_BYTES)  Memory used for decoded
    * raster images in content.
@@ -392,8 +392,8 @@ interface nsIMemoryReporterManager : nsISupports
 
   [must_use] readonly attribute int64_t JSMainRuntimeGCHeap;
   [must_use] readonly attribute int64_t JSMainRuntimeTemporaryPeak;
-  [must_use] readonly attribute int64_t JSMainRuntimeCompartmentsSystem;
-  [must_use] readonly attribute int64_t JSMainRuntimeCompartmentsUser;
+  [must_use] readonly attribute int64_t JSMainRuntimeRealmsSystem;
+  [must_use] readonly attribute int64_t JSMainRuntimeRealmsUser;
 
   [must_use] readonly attribute int64_t imagesContentUsedUncompressed;
 
@@ -495,8 +495,8 @@ typedef int64_t (*InfallibleAmountFn)();
 
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeGCHeap)
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeTemporaryPeak)
-DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
-DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsSystem)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsUser)
 
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, ImagesContentUsedUncompressed)
 DECL_UNREGISTER_DISTINGUISHED_AMOUNT(ImagesContentUsedUncompressed)

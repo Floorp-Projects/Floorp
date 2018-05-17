@@ -2092,7 +2092,7 @@ wasm::Validate(JSContext* cx, const ShareableBytes& bytecode, UniqueChars* error
 #endif
 
     ModuleEnvironment env(CompileMode::Once, Tier::Ion, DebugEnabled::False, gcSupport,
-                          cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+                          cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
                           ? Shareable::True
                           : Shareable::False);
     if (!DecodeModuleEnvironment(d, &env))

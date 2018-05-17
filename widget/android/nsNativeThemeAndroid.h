@@ -22,12 +22,12 @@ public:
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult) override;
+                             mozilla::LayoutDeviceIntMargin* aResult) override;
 
   bool GetWidgetPadding(nsDeviceContext* aContext,
                         nsIFrame* aFrame,
                         uint8_t aWidgetType,
-                        nsIntMargin* aResult) override;
+                        mozilla::LayoutDeviceIntMargin* aResult) override;
 
   bool GetWidgetOverflow(nsDeviceContext* aContext,
                          nsIFrame* aFrame,

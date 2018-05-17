@@ -208,6 +208,15 @@ Object.defineProperty(exports, "getVisibleBreakpoints", {
   }
 });
 
+var _inComponent = require("./inComponent");
+
+Object.defineProperty(exports, "inComponent", {
+  enumerable: true,
+  get: function () {
+    return _inComponent.inComponent;
+  }
+});
+
 var _isSelectedFrameVisible = require("./isSelectedFrameVisible");
 
 Object.defineProperty(exports, "isSelectedFrameVisible", {

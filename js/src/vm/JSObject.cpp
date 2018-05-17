@@ -1326,7 +1326,7 @@ js::DeepCloneObjectLiteral(JSContext* cx, HandleObject obj, NewObjectKind newKin
 {
     /* NB: Keep this in sync with XDRObjectLiteral. */
     MOZ_ASSERT_IF(obj->isSingleton(),
-                  cx->compartment()->behaviors().getSingletonsAsTemplates());
+                  cx->realm()->behaviors().getSingletonsAsTemplates());
     MOZ_ASSERT(obj->is<PlainObject>() || obj->is<UnboxedPlainObject>() ||
                obj->is<ArrayObject>());
     MOZ_ASSERT(newKind != SingletonObject);

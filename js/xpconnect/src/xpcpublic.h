@@ -420,24 +420,24 @@ private:
 };
 
 // ReportJSRuntimeExplicitTreeStats will expect this in the |extra| member
-// of JS::CompartmentStats.
-class CompartmentStatsExtras {
+// of JS::RealmStats.
+class RealmStatsExtras {
 public:
-    CompartmentStatsExtras() {}
+    RealmStatsExtras() {}
 
     nsCString jsPathPrefix;
     nsCString domPathPrefix;
     nsCOMPtr<nsIURI> location;
 
 private:
-    CompartmentStatsExtras(const CompartmentStatsExtras& other) = delete;
-    CompartmentStatsExtras& operator=(const CompartmentStatsExtras& other) = delete;
+    RealmStatsExtras(const RealmStatsExtras& other) = delete;
+    RealmStatsExtras& operator=(const RealmStatsExtras& other) = delete;
 };
 
 // This reports all the stats in |rtStats| that belong in the "explicit" tree,
 // (which isn't all of them).
 // @see ZoneStatsExtras
-// @see CompartmentStatsExtras
+// @see RealmStatsExtras
 void
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
                                  const nsACString& rtPath,

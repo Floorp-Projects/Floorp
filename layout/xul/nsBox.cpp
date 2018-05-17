@@ -175,13 +175,11 @@ nsBox::GetXULBorder(nsMargin& aMargin)
     // Go to the theme for the border.
     nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
-      nsIntMargin margin(0, 0, 0, 0);
+      LayoutDeviceIntMargin margin;
       gTheme->GetWidgetBorder(context->DeviceContext(), this,
                               disp->mAppearance, &margin);
-      aMargin.top = context->DevPixelsToAppUnits(margin.top);
-      aMargin.right = context->DevPixelsToAppUnits(margin.right);
-      aMargin.bottom = context->DevPixelsToAppUnits(margin.bottom);
-      aMargin.left = context->DevPixelsToAppUnits(margin.left);
+      aMargin = LayoutDevicePixel::ToAppUnits(margin,
+                                              context->AppUnitsPerDevPixel());
       return NS_OK;
     }
   }
@@ -192,31 +190,27 @@ nsBox::GetXULBorder(nsMargin& aMargin)
 }
 
 nsresult
-nsBox::GetXULPadding(nsMargin& aMargin)
+nsBox::GetXULPadding(nsMargin& aPadding)
 {
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->mAppearance && gTheme) {
     // Go to the theme for the padding.
     nsPresContext *context = PresContext();
     if (gTheme->ThemeSupportsWidget(context, this, disp->mAppearance)) {
-      nsIntMargin margin(0, 0, 0, 0);
-      bool useThemePadding;
-
-      useThemePadding = gTheme->GetWidgetPadding(context->DeviceContext(),
-                                                 this, disp->mAppearance,
-                                                 &margin);
+      LayoutDeviceIntMargin padding;
+      bool useThemePadding =
+        gTheme->GetWidgetPadding(context->DeviceContext(),
+                                 this, disp->mAppearance, &padding);
       if (useThemePadding) {
-        aMargin.top = context->DevPixelsToAppUnits(margin.top);
-        aMargin.right = context->DevPixelsToAppUnits(margin.right);
-        aMargin.bottom = context->DevPixelsToAppUnits(margin.bottom);
-        aMargin.left = context->DevPixelsToAppUnits(margin.left);
+        aPadding = LayoutDevicePixel::ToAppUnits(padding,
+                                                context->AppUnitsPerDevPixel());
         return NS_OK;
       }
     }
   }
 
-  aMargin.SizeTo(0,0,0,0);
-  StylePadding()->GetPadding(aMargin);
+  aPadding.SizeTo(0,0,0,0);
+  StylePadding()->GetPadding(aPadding);
 
   return NS_OK;
 }

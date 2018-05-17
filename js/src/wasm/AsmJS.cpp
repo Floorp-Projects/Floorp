@@ -1795,7 +1795,7 @@ class MOZ_STACK_CLASS ModuleValidator
         atomicsPresent_(false),
         simdPresent_(false),
         env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, HasGcTypes::False,
-             cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+             cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
                ? Shareable::True
                : Shareable::False,
              ModuleKind::AsmJS),
