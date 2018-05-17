@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
-  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -43,12 +42,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIDatabaseReconcile: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
-  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
-                                   "@mozilla.org/addons/addon-manager-startup;1",
-                                   "amIAddonManagerStartup");
+XPCOMUtils.defineLazyServiceGetters(this, {
+  aomStartup: ["@mozilla.org/addons/addon-manager-startup;1", "amIAddonManagerStartup"],
+  timerManager: ["@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager"],
+});
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
@@ -109,8 +108,6 @@ const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_SYSTEM_USER             = "app-system-user";
 const KEY_APP_TEMPORARY               = "app-temporary";
-
-const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 const TEMPORARY_ADDON_SUFFIX = "@temporary-addon";
 
@@ -341,7 +338,6 @@ function isWebExtension(type) {
   return type == "webextension" || type == "webextension-theme";
 }
 
-var gThemeAliases = null;
 /**
  * Helper function that determines whether an addon of a certain type is a
  * theme.
@@ -351,9 +347,7 @@ var gThemeAliases = null;
  * @returns {boolean}
  */
 function isTheme(type) {
-  if (!gThemeAliases)
-    gThemeAliases = getAllAliasesForTypes(["theme"]);
-  return gThemeAliases.includes(type);
+  return type == "theme" || TYPE_ALIASES[type] == "theme";
 }
 
 /**
@@ -1648,8 +1642,6 @@ var XPIProvider = {
   installLocations: null,
   // A dictionary of known install locations by name
   installLocationsByName: null,
-  // An array of currently active AddonInstalls
-  installs: null,
   // The value of the minCompatibleAppVersion preference
   minCompatibleAppVersion: null,
   // The value of the minCompatiblePlatformVersion preference
@@ -1888,7 +1880,6 @@ var XPIProvider = {
 
       logger.debug("startup");
       this.runPhase = XPI_STARTING;
-      this.installs = new Set();
 
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
@@ -2037,10 +2028,8 @@ var XPIProvider = {
       this.extensionsActive = true;
       this.runPhase = XPI_BEFORE_UI_STARTUP;
 
-      let timerManager = Cc["@mozilla.org/updates/timer-manager;1"].
-                         getService(Ci.nsIUpdateTimerManager);
       timerManager.registerTimer("xpi-signature-verification", () => {
-        this.verifySignatures();
+        XPIDatabase.verifySignatures();
       }, XPI_SIGNATURE_CHECK_PERIOD);
     } catch (e) {
       logger.error("startup failed", e);
@@ -2063,7 +2052,7 @@ var XPIProvider = {
     this.activeAddons.clear();
     this.allAppGlobal = true;
 
-    for (let install of this.installs) {
+    for (let install of XPIInstall.installs) {
       if (install.onShutdown()) {
         install.onShutdown();
       }
@@ -2084,7 +2073,6 @@ var XPIProvider = {
       await XPIDatabase.asyncLoadDB();
     }
 
-    this.installs = null;
     this.installLocations = null;
     this.installLocationsByName = null;
 
@@ -2118,45 +2106,6 @@ var XPIProvider = {
           cleanup();
         }
       }
-    }
-  },
-
-  /**
-   * Verifies that all installed add-ons are still correctly signed.
-   */
-  async verifySignatures() {
-    try {
-      let addons = await XPIDatabase.getAddonList(a => true);
-
-      let changes = {
-        enabled: [],
-        disabled: []
-      };
-
-      for (let addon of addons) {
-        // The add-on might have vanished, we'll catch that on the next startup
-        if (!addon._sourceBundle.exists())
-          continue;
-
-        let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
-
-        if (signedState != addon.signedState) {
-          addon.signedState = signedState;
-          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
-                                                 addon.wrapper,
-                                                 ["signedState"]);
-        }
-
-        let disabled = XPIDatabase.updateAddonDisabledState(addon);
-        if (disabled !== undefined)
-          changes[disabled ? "disabled" : "enabled"].push(addon.id);
-      }
-
-      XPIDatabase.saveChanges();
-
-      Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
-    } catch (err) {
-      logger.error("XPI_verifySignature: " + err);
     }
   },
 
@@ -2549,16 +2498,6 @@ var XPIProvider = {
    },
 
   /**
-   * Removes an AddonInstall from the list of active installs.
-   *
-   * @param {AddonInstall} aInstall
-   *        The AddonInstall to remove
-   */
-  removeActiveInstall(aInstall) {
-    this.installs.delete(aInstall);
-  },
-
-  /**
    * Called to get an Addon with a particular ID.
    *
    * @param {string} aId
@@ -2679,7 +2618,7 @@ var XPIProvider = {
 
     let aAddons = await XPIDatabase.getVisibleAddonsWithPendingOperations(typesToGet);
     let results = aAddons.map(a => a.wrapper);
-    for (let install of XPIProvider.installs) {
+    for (let install of XPIInstall.installs) {
       if (install.state == AddonManager.STATE_INSTALLED &&
           !(install.addon.inDatabase))
         results.push(install.addon.wrapper);
@@ -2687,54 +2626,8 @@ var XPIProvider = {
     return results;
   },
 
-  /**
-   * Called to get the current AddonInstalls, optionally limiting to a list of
-   * types.
-   *
-   * @param {Array<string>?} aTypes
-   *        An array of types or null to get all types
-   * @returns {AddonInstall[]}
-   */
-  getInstallsByTypes(aTypes) {
-    let results = [...this.installs];
-    if (aTypes) {
-      results = results.filter(install => {
-        return aTypes.includes(getExternalType(install.type));
-      });
-    }
-
-    return results.map(install => install.wrapper);
-  },
-
-  /**
-   * Called when a new add-on has been enabled when only one add-on of that type
-   * can be enabled.
-   *
-   * @param {string} aId
-   *        The ID of the newly enabled add-on
-   * @param {string} aType
-   *        The type of the newly enabled add-on
-   */
-  addonChanged(aId, aType) {
-    // We only care about themes in this provider
-    if (!isTheme(aType))
-      return;
-
-    let addons = XPIDatabase.getAddonsByType("webextension-theme");
-    for (let theme of addons) {
-      if (theme.visible && theme.id != aId)
-        XPIDatabase.updateAddonDisabledState(theme, true, undefined, true);
-    }
-
-    if (!aId && (!LightweightThemeManager.currentTheme ||
-                 LightweightThemeManager.currentTheme !== DEFAULT_THEME_ID)) {
-      let theme = LightweightThemeManager.getUsedTheme(DEFAULT_THEME_ID);
-      // This can only ever be null in tests.
-      // This can all go away once lightweight themes are gone.
-      if (theme) {
-        LightweightThemeManager.currentTheme = theme;
-      }
-    }
+  addonChanged(id, type) {
+    XPIDatabase.addonChanged(id, type);
   },
 
   /**
@@ -2813,9 +2706,10 @@ var XPIProvider = {
 };
 
 for (let meth of ["cancelUninstallAddon", "getInstallForFile",
-                  "getInstallForURL", "installTemporaryAddon",
-                  "isInstallAllowed", "isInstallEnabled",
-                  "uninstallAddon", "updateSystemAddons"]) {
+                  "getInstallForURL", "getInstallsByTypes",
+                  "installTemporaryAddon", "isInstallAllowed",
+                  "isInstallEnabled", "uninstallAddon",
+                  "updateSystemAddons"]) {
   XPIProvider[meth] = function() {
     return XPIInstall[meth](...arguments);
   };

@@ -31,9 +31,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
   Blocklist: "resource://gre/modules/Blocklist.jsm",
+  LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
+  verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
 const {nsIBlocklistService} = Ci;
@@ -97,6 +99,8 @@ const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_GLOBAL                  = "app-global";
 const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_TEMPORARY               = "app-temporary";
+
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
 // Properties to cache and reload when an addon installation is pending
 const PENDING_INSTALL_METADATA =
@@ -1734,6 +1738,76 @@ this.XPIDatabase = {
       delete this._saveTask;
       // re-enable the schema version setter
       delete this._schemaVersionSet;
+    }
+  },
+
+  /**
+   * Verifies that all installed add-ons are still correctly signed.
+   */
+  async verifySignatures() {
+    try {
+      let addons = await this.getAddonList(a => true);
+
+      let changes = {
+        enabled: [],
+        disabled: []
+      };
+
+      for (let addon of addons) {
+        // The add-on might have vanished, we'll catch that on the next startup
+        if (!addon._sourceBundle.exists())
+          continue;
+
+        let signedState = await verifyBundleSignedState(addon._sourceBundle, addon);
+
+        if (signedState != addon.signedState) {
+          addon.signedState = signedState;
+          AddonManagerPrivate.callAddonListeners("onPropertyChanged",
+                                                 addon.wrapper,
+                                                 ["signedState"]);
+        }
+
+        let disabled = this.updateAddonDisabledState(addon);
+        if (disabled !== undefined)
+          changes[disabled ? "disabled" : "enabled"].push(addon.id);
+      }
+
+      this.saveChanges();
+
+      Services.obs.notifyObservers(null, "xpi-signature-changed", JSON.stringify(changes));
+    } catch (err) {
+      logger.error("XPI_verifySignature: " + err);
+    }
+  },
+
+  /**
+   * Called when a new add-on has been enabled when only one add-on of that type
+   * can be enabled.
+   *
+   * @param {string} aId
+   *        The ID of the newly enabled add-on
+   * @param {string} aType
+   *        The type of the newly enabled add-on
+   */
+  addonChanged(aId, aType) {
+    // We only care about themes in this provider
+    if (!isTheme(aType))
+      return;
+
+    let addons = this.getAddonsByType("webextension-theme");
+    for (let theme of addons) {
+      if (theme.visible && theme.id != aId)
+        this.updateAddonDisabledState(theme, true, undefined, true);
+    }
+
+    if (!aId && (!LightweightThemeManager.currentTheme ||
+                 LightweightThemeManager.currentTheme !== DEFAULT_THEME_ID)) {
+      let theme = LightweightThemeManager.getUsedTheme(DEFAULT_THEME_ID);
+      // This can only ever be null in tests.
+      // This can all go away once lightweight themes are gone.
+      if (theme) {
+        LightweightThemeManager.currentTheme = theme;
+      }
     }
   },
 
