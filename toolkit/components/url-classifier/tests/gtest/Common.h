@@ -46,4 +46,4 @@ nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength);
 
 // Create a LookupCacheV4 object with sepecified prefix array.
 template<typename T>
-UniquePtr<T> SetupLookupCache(const _PrefixArray& prefixArray);
+RefPtr<T> SetupLookupCache(const _PrefixArray& prefixArray);
