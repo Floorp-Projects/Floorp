@@ -22,8 +22,6 @@ const EXPECTED_REFLOWS = [
 add_task(async function() {
   await ensureNoPreloadedBrowser();
 
-  let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
-
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
 
@@ -32,6 +30,7 @@ add_task(async function() {
     document.getAnonymousElementByAttribute(gBrowser.tabContainer,
                                             "anonid", "tabs-newtab-button")
             .getBoundingClientRect();
+  let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.
   await withPerfObserver(async function() {
@@ -66,16 +65,8 @@ add_task(async function() {
              // In tab strip
              r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
              r.x1 >= tabStripRect.left && r.x2 <= tabStripRect.right &&
-             // Width of one tab.
-             r.w == gBrowser.selectedTab.clientWidth
-          },
-          {name: "bug 1446454 - the border between tabs should be painted at" +
-                 " the same time as the tab switch",
-           condition: r =>
-             // In tab strip
-             r.y1 >= tabStripRect.top && r.y2 <= tabStripRect.bottom &&
-             // 1px border, 1px before the end of the first tab.
-             r.w == 1 && r.x1 == firstTabRect.right - 1
+             // Width of one tab plus tab separator(s)
+             inRange(gBrowser.selectedTab.clientWidth - r.w, 0, 2)
           },
           {name: "bug 1446449 - spurious tab switch spinner",
            condition: r =>
