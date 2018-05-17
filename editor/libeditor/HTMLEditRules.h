@@ -406,7 +406,13 @@ protected:
   nsresult WillMakeBasicBlock(const nsAString& aBlockType,
                               bool* aCancel, bool* aHandled);
   nsresult MakeBasicBlock(nsAtom& aBlockType);
-  nsresult DidMakeBasicBlock(RulesInfo* aInfo, nsresult aResult);
+
+  /**
+   * Called after creating a basic block, indenting, outdenting or aligning
+   * contents.  This method inserts moz-<br> element if start container of
+   * Selection needs it.
+   */
+  MOZ_MUST_USE nsresult DidMakeBasicBlock();
 
   /**
    * Called before changing an element to absolute positioned.
