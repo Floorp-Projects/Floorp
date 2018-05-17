@@ -57,10 +57,20 @@ var SessionCookiesInternal = {
       };
 
       let originAttributes = cookie.originAttributes || {};
-      if (!Services.cookies.cookieExists(cookieObj, originAttributes)) {
-        Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
-                             cookie.value, !!cookie.secure, !!cookie.httponly,
-                             /* isSession = */ true, expiry, originAttributes);
+      let exists = false;
+      try {
+        exists = Services.cookies.cookieExists(cookieObj, originAttributes);
+      } catch (ex) {
+        Cu.reportError(`nsCookieService::CookieExists failed with error '${ex}' for '${JSON.stringify(cookie)}'.`);
+      }
+      if (!exists) {
+        try {
+          Services.cookies.add(cookie.host, cookie.path || "", cookie.name || "",
+                               cookie.value, !!cookie.secure, !!cookie.httponly,
+                               /* isSession = */ true, expiry, originAttributes);
+        } catch (ex) {
+          Cu.reportError(`nsCookieService::Add failed with error '${ex}' for cookie ${JSON.stringify(cookie)}.`);
+        }
       }
     }
   },
