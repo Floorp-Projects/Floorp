@@ -37,7 +37,7 @@ function verifySignatures() {
 
     info("Verifying signatures");
     let XPIscope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-    XPIscope.XPIProvider.verifySignatures();
+    XPIscope.XPIDatabase.verifySignatures();
   });
 }
 
