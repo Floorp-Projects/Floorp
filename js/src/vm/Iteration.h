@@ -31,29 +31,51 @@ class PropertyIteratorObject;
 
 struct NativeIterator
 {
-    GCPtrObject obj;    // Object being iterated.
-    JSObject* iterObj_; // Internal iterator object.
-    GCPtrFlatString* props_cursor;
-    GCPtrFlatString* props_end; // also the start of HeapReceiverGuards
-    uint32_t guard_length;
-    uint32_t guard_key;
-    uint32_t flags;
+    // Object being iterated.
+    GCPtrObject obj = {};
+
+    // Internal iterator object.
+    JSObject* iterObj_ = nullptr;
+
+    // The next property, pointing into an array of strings directly after this
+    // NativeIterator as part of the overall allocation containing |*this|.
+    GCPtrFlatString* props_cursor; // initialized by constructor
+
+    // The limit/end of properties to iterate.  (This is also, after casting,
+    // the start of an array of HeapReceiverGuards included in the overall
+    // allocation that stores |*this| and the iterated strings.)
+    GCPtrFlatString* props_end; // initialized by constructor
+
+    uint32_t guard_length = 0;
+    uint32_t guard_key = 0;
+    uint32_t flags = 0;
 
   private:
     /* While in compartment->enumerators, these form a doubly linked list. */
-    NativeIterator* next_;
-    NativeIterator* prev_;
+    NativeIterator* next_ = nullptr;
+    NativeIterator* prev_ = nullptr;
 
     // No further fields appear after here *in NativeIterator*, but this class
-    // is always allocated with space tacked on immediately after |this| (see
-    // below) to store 1) a dynamically known number of iterated property names
-    // and 2) a dynamically known number of HeapReceiverGuards.  The limit of
-    // all such property names, and the start of HeapReceiverGuards, is
-    // |props_end|.  The next property name to iterate is |props_cursor| and
-    // equals |props_end| when this iterator is exhausted but not ready yet for
-    // possible reuse.
+    // is always allocated with space tacked on immediately after |this| to
+    // store iterated property names up to |props_end| and |guard_length|
+    // HeapReceiverGuards after that.
 
   public:
+    /**
+     * Initialize a NativeIterator properly allocated for |props.length()|
+     * properties and |numGuards| guards.
+     *
+     * Despite being a constructor, THIS FUNCTION CAN REPORT ERRORS.  Users
+     * MUST set |*hadError = false| on entry and consider |*hadError| on return
+     * to mean this function failed.
+     */
+    NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
+                   Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
+                   uint32_t numGuards, uint32_t guardKey, bool* hadError);
+
+    /** Initialize a |JSCompartment::enumerators| sentinel. */
+    NativeIterator();
+
     GCPtrFlatString* begin() const {
         static_assert(alignof(NativeIterator) >= alignof(GCPtrFlatString),
                       "GCPtrFlatStrings for properties must be able to appear "
@@ -123,16 +145,8 @@ struct NativeIterator
     }
 
     static NativeIterator* allocateSentinel(JSContext* maybecx);
-    static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength, uint32_t plength);
-    void init(JSObject* obj, JSObject* iterObj, uint32_t slength, uint32_t key);
-    bool initProperties(JSContext* cx, Handle<PropertyIteratorObject*> obj,
-                        const js::AutoIdVector& props);
 
     void trace(JSTracer* trc);
-
-    static void destroy(NativeIterator* iter) {
-        js_free(iter);
-    }
 };
 
 class PropertyIteratorObject : public NativeObject
