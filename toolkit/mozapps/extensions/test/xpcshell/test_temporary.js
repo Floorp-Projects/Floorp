@@ -787,3 +787,22 @@ add_task(async function() {
 
   await promiseRestartManager();
 });
+
+// Tests that XPIs with a .zip extension work when loaded temporarily.
+add_task(async function test_zip_extension() {
+  let xpi = createTempWebExtensionFile({
+    background() {
+      /* globals browser */
+      browser.test.sendMessage("started", "Hello.");
+    },
+  });
+  xpi.moveTo(null, xpi.leafName.replace(/\.xpi$/, ".zip"));
+
+  let extension = ExtensionTestUtils.loadExtensionXPI(xpi);
+  await extension.startup();
+
+  let msg = await extension.awaitMessage("started");
+  equal(msg, "Hello.", "Got expected background script message");
+
+  await extension.unload();
+});
