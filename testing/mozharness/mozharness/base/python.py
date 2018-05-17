@@ -342,18 +342,11 @@ class VirtualenvMixin(object):
         self.info("Creating virtualenv %s" % venv_path)
 
         # Always use the virtualenv that is vendored since that is deterministic.
-        for p in ('base_work_dir', 'abs_src_dir'):
-            if p not in dirs:
-                continue
-            third_party = os.path.join(dirs[p], 'third_party')
-            if os.path.exists(third_party):
-                break
-        else:
-            self.fatal("Can't find the virtualenv module")
-
+        # TODO Bug 1408051 - Use the copy of virtualenv under
+        # third_party/python/virtualenv once everything is off buildbot
         virtualenv = [
             sys.executable,
-            os.path.join(third_party, 'python', 'virtualenv', 'virtualenv.py'),
+            os.path.join(external_tools_path, 'virtualenv', 'virtualenv.py'),
         ]
         virtualenv_options = c.get('virtualenv_options', [])
         # Don't create symlinks. If we don't do this, permissions issues may
