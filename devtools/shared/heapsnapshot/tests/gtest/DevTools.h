@@ -51,7 +51,7 @@ struct DevTools : public ::testing::Test {
     global.init(cx, createGlobal());
     if (!global)
       return;
-    JS_EnterCompartment(cx, global);
+    JS::EnterRealm(cx, global);
 
     compartment = js::GetContextCompartment(cx);
     zone = js::GetContextZone(cx);
@@ -108,7 +108,7 @@ struct DevTools : public ::testing::Test {
     _initialized = false;
 
     if (global) {
-      JS_LeaveCompartment(cx, nullptr);
+      JS::LeaveRealm(cx, nullptr);
       global = nullptr;
     }
     if (cx)

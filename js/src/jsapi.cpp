@@ -675,7 +675,7 @@ JS_SetExternalStringSizeofCallback(JSContext* cx, JSExternalStringSizeofCallback
 }
 
 JS_PUBLIC_API(JSCompartment*)
-JS_EnterCompartment(JSContext* cx, JSObject* target)
+JS::EnterRealm(JSContext* cx, JSObject* target)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
@@ -686,11 +686,11 @@ JS_EnterCompartment(JSContext* cx, JSObject* target)
 }
 
 JS_PUBLIC_API(void)
-JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment)
+JS::LeaveRealm(JSContext* cx, JSCompartment* oldRealm)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    cx->leaveCompartment(oldCompartment);
+    cx->leaveCompartment(oldRealm);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
