@@ -467,35 +467,25 @@ function buildJarURI(aJarfile, aPath) {
 }
 
 /**
- * Gets a snapshot of directory entries.
+ * Iterates over the entries in a given directory.
  *
- * @param {nsIURI} aDir
- *        Directory to look at
- * @param {boolean} aSortEntries
- *        True to sort entries by filename
- * @returns {Array<nsIFile>}
- *        An array of nsIFile, or an empty array if aDir is not a readable directory
+ * Fails silently if the given directory does not exist.
+ *
+ * @param {nsIFile} aDir
+ *        Directory to iterate.
  */
-function getDirectoryEntries(aDir, aSortEntries) {
+function* iterDirectory(aDir) {
   let dirEnum;
   try {
-    dirEnum = aDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-    let entries = [];
-    while (dirEnum.hasMoreElements())
-      entries.push(dirEnum.nextFile);
-
-    if (aSortEntries) {
-      entries.sort(function(a, b) {
-        return a.path > b.path ? -1 : 1;
-      });
+    dirEnum = aDir.directoryEntries;
+    let file;
+    while ((file = dirEnum.nextFile)) {
+      yield file;
     }
-
-    return entries;
   } catch (e) {
     if (aDir.exists()) {
-      logger.warn("Can't iterate directory " + aDir.path, e);
+      logger.warn(`Can't iterate directory ${aDir.path}`, e);
     }
-    return [];
   } finally {
     if (dirEnum) {
       dirEnum.close();
@@ -1104,8 +1094,7 @@ class DirectoryLocation extends XPIStateLocation {
     // Use a snapshot of the directory contents to avoid possible issues with
     // iterating over a directory while removing files from it (the YAFFS2
     // embedded filesystem has this issue, see bug 772238).
-    let entries = getDirectoryEntries(this.dir);
-    for (let entry of entries) {
+    for (let entry of Array.from(iterDirectory(this.dir))) {
       let id = entry.leafName;
       if (id == DIR_STAGE || id == DIR_TRASH)
         continue;
@@ -2627,8 +2616,6 @@ var XPIProvider = {
     let distroDir;
     try {
       distroDir = FileUtils.getDir(KEY_APP_DISTRIBUTION, [DIR_EXTENSIONS]);
-      if (!distroDir.isDirectory())
-        return false;
     } catch (e) {
       return false;
     }
@@ -2636,21 +2623,18 @@ var XPIProvider = {
     let changed = false;
     let profileLocation = XPIStates.getLocation(KEY_APP_PROFILE);
 
-    let entries = distroDir.directoryEntries
-                           .QueryInterface(Ci.nsIDirectoryEnumerator);
-    let entry;
-    while ((entry = entries.nextFile)) {
-      let id = entry.leafName;
+    for (let file of iterDirectory(distroDir)) {
+      let id = file.leafName;
       if (id.endsWith(".xpi")) {
         id = id.slice(0, -4);
       } else {
-        logger.debug("Ignoring distribution add-on that isn't an XPI: " + entry.path);
+        logger.debug(`Ignoring distribution add-on that isn't an XPI: ${file.path}`);
         continue;
       }
 
       if (!gIDTest.test(id)) {
         logger.debug("Ignoring distribution add-on whose name is not a valid add-on ID: " +
-            entry.path);
+                     file.path);
         continue;
       }
 
@@ -2661,7 +2645,7 @@ var XPIProvider = {
       }
 
       try {
-        let addon = awaitPromise(XPIInstall.installDistributionAddon(id, entry, profileLocation));
+        let addon = awaitPromise(XPIInstall.installDistributionAddon(id, file, profileLocation));
 
         if (addon) {
           // aManifests may contain a copy of a newly installed add-on's manifest
@@ -2673,11 +2657,9 @@ var XPIProvider = {
           changed = true;
         }
       } catch (e) {
-        logger.error(`Failed to install distribution add-on ${entry.path}`, e);
+        logger.error(`Failed to install distribution add-on ${file.path}`, e);
       }
     }
-
-    entries.close();
 
     return changed;
   },
@@ -3143,6 +3125,7 @@ var XPIInternal = {
   getURIForResourceInFile,
   isTheme,
   isWebExtension,
+  iterDirectory,
 };
 
 var addonTypes = [
