@@ -421,6 +421,7 @@ def setup_wptrunner(venv, prompt=True, install=False, **kwargs):
 
     venv.install_requirements(os.path.join(wptrunner_path, "requirements.txt"))
 
+    kwargs['browser_version'] = setup_cls.browser.version(kwargs.get("binary"))
     return kwargs
 
 
