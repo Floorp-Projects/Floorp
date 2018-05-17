@@ -46,7 +46,7 @@ TextLeafAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
 }
 
 ENameValueFlag
-TextLeafAccessible::Name(nsString& aName)
+TextLeafAccessible::Name(nsString& aName) const
 {
   // Text node, ARIA can't be used.
   aName = mText;

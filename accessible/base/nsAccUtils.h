@@ -65,13 +65,13 @@ public:
   /**
    * Get default value of the level for the given accessible.
    */
-  static int32_t GetDefaultLevel(Accessible* aAcc);
+  static int32_t GetDefaultLevel(const Accessible* aAcc);
 
   /**
    * Return ARIA level value or the default one if ARIA is missed for the
    * given accessible.
    */
-  static int32_t GetARIAOrDefaultLevel(Accessible* aAccessible);
+  static int32_t GetARIAOrDefaultLevel(const Accessible* aAccessible);
 
   /**
    * Compute group level for nsIDOMXULContainerItemElement node.

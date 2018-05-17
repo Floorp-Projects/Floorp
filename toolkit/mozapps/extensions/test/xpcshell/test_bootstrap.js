@@ -167,7 +167,7 @@ async function checkBootstrappedPref() {
   let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
 
   let data = new Map();
-  for (let entry of XPIScope.XPIStates.bootstrappedAddons()) {
+  for (let entry of XPIScope.XPIStates.enabledAddons()) {
     data.set(entry.id, entry);
   }
 
@@ -406,7 +406,6 @@ add_task(async function test_5() {
   ok(!b1.userDisabled);
   ok(b1.isActive);
   ok(!b1.isSystem);
-  ok(!isExtensionInAddonsList(profileDir, b1.id));
 
   await checkBootstrappedPref();
 });

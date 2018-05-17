@@ -62,7 +62,7 @@ HTMLTableCellAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLTableCellAccessible::NativeState()
+HTMLTableCellAccessible::NativeState() const
 {
   uint64_t state = HyperTextAccessibleWrap::NativeState();
 
@@ -404,13 +404,13 @@ HTMLTableAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLTableAccessible::NativeState()
+HTMLTableAccessible::NativeState() const
 {
   return Accessible::NativeState() | states::READONLY;
 }
 
 ENameValueFlag
-HTMLTableAccessible::NativeName(nsString& aName)
+HTMLTableAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())
@@ -455,7 +455,7 @@ HTMLTableAccessible::NativeAttributes()
 // HTMLTableAccessible: Accessible
 
 Relation
-HTMLTableAccessible::RelationByType(RelationType aType)
+HTMLTableAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == RelationType::LABELLED_BY)
@@ -1104,7 +1104,7 @@ HTMLTableAccessible::IsProbablyLayoutTable()
 ////////////////////////////////////////////////////////////////////////////////
 
 Relation
-HTMLCaptionAccessible::RelationByType(RelationType aType)
+HTMLCaptionAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = HyperTextAccessible::RelationByType(aType);
   if (aType == RelationType::LABEL_FOR)

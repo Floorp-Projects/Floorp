@@ -197,7 +197,6 @@ add_task(async function() {
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
-  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
@@ -219,7 +218,6 @@ add_task(async function() {
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
@@ -240,7 +238,6 @@ add_task(async function() {
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
@@ -265,7 +262,6 @@ add_task(async function() {
   Assert.ok(!addon.appDisabled);
   Assert.ok(addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
-  Assert.ok(isExtensionInAddonsList(profileDir, ID));
 
   await promiseShutdownManager();
 
@@ -279,7 +275,6 @@ add_task(async function() {
   Assert.ok(addon.appDisabled);
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   let ids = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
   Assert.equal(ids.length, 1);

@@ -30,7 +30,7 @@ public:
   // HyperLinkAccessible
   virtual uint32_t AnchorCount() override;
   virtual Accessible* AnchorAt(uint32_t aAnchorIndex) override;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const override;
 
   /**
    * Update area children of the image map.
@@ -70,7 +70,7 @@ public:
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 

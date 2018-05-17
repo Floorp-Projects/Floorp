@@ -179,6 +179,14 @@ public:
     // function will get the result of the decoder by moving it to the main
     // thread before starting the execution of the script.
     MOZ_MUST_USE nsresult DecodeJoinAndExec(JS::OffThreadToken** aOffThreadToken);
+
+    MOZ_MUST_USE nsresult DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
+                                                  JS::MutableHandle<JSScript*> aScript);
+
+    // Decode a BinAST encoded script contained in a buffer, and execute it.
+    nsresult DecodeBinASTAndExec(JS::CompileOptions& aCompileOptions,
+                                 const uint8_t* aBuf, size_t aLength,
+                                 JS::MutableHandle<JSScript*> aScript);
   };
 
   static nsresult CompileModule(JSContext* aCx,

@@ -39,7 +39,7 @@ HTMLSelectListAccessible::
 // HTMLSelectListAccessible: Accessible public
 
 uint64_t
-HTMLSelectListAccessible::NativeState()
+HTMLSelectListAccessible::NativeState() const
 {
   uint64_t state = AccessibleWrap::NativeState();
   if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple))
@@ -148,7 +148,7 @@ HTMLSelectOptionAccessible::NativeRole() const
 }
 
 ENameValueFlag
-HTMLSelectOptionAccessible::NativeName(nsString& aName)
+HTMLSelectOptionAccessible::NativeName(nsString& aName) const
 {
   // CASE #1 -- great majority of the cases
   // find the label attribute - this is what the W3C says we should use
@@ -169,7 +169,7 @@ HTMLSelectOptionAccessible::NativeName(nsString& aName)
 }
 
 uint64_t
-HTMLSelectOptionAccessible::NativeState()
+HTMLSelectOptionAccessible::NativeState() const
 {
   // As a HTMLSelectOptionAccessible we can have the following states:
   // SELECTABLE, SELECTED, FOCUSED, FOCUSABLE, OFFSCREEN
@@ -265,13 +265,13 @@ HTMLSelectOptionAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 uint8_t
-HTMLSelectOptionAccessible::ActionCount()
+HTMLSelectOptionAccessible::ActionCount() const
 {
   return 1;
 }
 
 bool
-HTMLSelectOptionAccessible::DoAction(uint8_t aIndex)
+HTMLSelectOptionAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Select)
     return false;
@@ -324,7 +324,7 @@ HTMLSelectOptGroupAccessible::IsAcceptableChild(nsIContent* aEl) const
 }
 
 uint8_t
-HTMLSelectOptGroupAccessible::ActionCount()
+HTMLSelectOptGroupAccessible::ActionCount() const
 {
   return 0;
 }
@@ -336,7 +336,7 @@ HTMLSelectOptGroupAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-HTMLSelectOptGroupAccessible::DoAction(uint8_t aIndex)
+HTMLSelectOptGroupAccessible::DoAction(uint8_t aIndex) const
 {
   return false;
 }
@@ -397,7 +397,7 @@ HTMLComboboxAccessible::Shutdown()
 }
 
 uint64_t
-HTMLComboboxAccessible::NativeState()
+HTMLComboboxAccessible::NativeState() const
 {
   // As a HTMLComboboxAccessible we can have the following states:
   // FOCUSED, FOCUSABLE, HASPOPUP, EXPANDED, COLLAPSED
@@ -431,7 +431,7 @@ HTMLComboboxAccessible::Description(nsString& aDescription)
 }
 
 void
-HTMLComboboxAccessible::Value(nsString& aValue)
+HTMLComboboxAccessible::Value(nsString& aValue) const
 {
   // Use accessible name of selected option.
   Accessible* option = SelectedOption();
@@ -440,13 +440,13 @@ HTMLComboboxAccessible::Value(nsString& aValue)
 }
 
 uint8_t
-HTMLComboboxAccessible::ActionCount()
+HTMLComboboxAccessible::ActionCount() const
 {
   return 1;
 }
 
 bool
-HTMLComboboxAccessible::DoAction(uint8_t aIndex)
+HTMLComboboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;
@@ -568,7 +568,7 @@ HTMLComboboxListAccessible::NativeRole() const
 }
 
 uint64_t
-HTMLComboboxListAccessible::NativeState()
+HTMLComboboxListAccessible::NativeState() const
 {
   // As a HTMLComboboxListAccessible we can have the following states:
   // FOCUSED, FOCUSABLE, FLOATING, INVISIBLE

@@ -82,7 +82,7 @@ NS_IMPL_RELEASE_INHERITED(XULTreeAccessible, Accessible)
 // XULTreeAccessible: Accessible implementation
 
 uint64_t
-XULTreeAccessible::NativeState()
+XULTreeAccessible::NativeState() const
 {
   // Get focus status from base class.
   uint64_t state = Accessible::NativeState();
@@ -109,7 +109,7 @@ XULTreeAccessible::NativeState()
 }
 
 void
-XULTreeAccessible::Value(nsString& aValue)
+XULTreeAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
   if (!mTreeView)
@@ -433,7 +433,7 @@ XULTreeAccessible::ChildCount() const
 }
 
 Relation
-XULTreeAccessible::RelationByType(RelationType aType)
+XULTreeAccessible::RelationByType(RelationType aType) const
 {
   if (aType == RelationType::NODE_PARENT_OF) {
     if (mTreeView)
@@ -778,7 +778,7 @@ XULTreeItemAccessibleBase::SetSelected(bool aSelect)
 }
 
 void
-XULTreeItemAccessibleBase::TakeFocus()
+XULTreeItemAccessibleBase::TakeFocus() const
 {
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
@@ -790,7 +790,7 @@ XULTreeItemAccessibleBase::TakeFocus()
 }
 
 Relation
-XULTreeItemAccessibleBase::RelationByType(RelationType aType)
+XULTreeItemAccessibleBase::RelationByType(RelationType aType) const
 {
 
   switch (aType) {
@@ -824,7 +824,7 @@ XULTreeItemAccessibleBase::RelationByType(RelationType aType)
 }
 
 uint8_t
-XULTreeItemAccessibleBase::ActionCount()
+XULTreeItemAccessibleBase::ActionCount() const
 {
   // "activate" action is available for all treeitems, "expand/collapse" action
   // is avaible for treeitem which is container.
@@ -850,7 +850,7 @@ XULTreeItemAccessibleBase::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULTreeItemAccessibleBase::DoAction(uint8_t aIndex)
+XULTreeItemAccessibleBase::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click &&
       (aIndex != eAction_Expand || !IsExpandable()))
@@ -919,7 +919,7 @@ XULTreeItemAccessibleBase::GroupPosition()
 }
 
 uint64_t
-XULTreeItemAccessibleBase::NativeState()
+XULTreeItemAccessibleBase::NativeState() const
 {
 
   // focusable and selectable states
@@ -1099,7 +1099,7 @@ NS_IMPL_RELEASE_INHERITED(XULTreeItemAccessible, XULTreeItemAccessibleBase)
 // XULTreeItemAccessible: nsIAccessible implementation
 
 ENameValueFlag
-XULTreeItemAccessible::Name(nsString& aName)
+XULTreeItemAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 

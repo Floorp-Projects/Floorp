@@ -68,9 +68,9 @@ LeafAccessible::IsAcceptableChild(nsIContent* aEl) const
 // LinkableAccessible. nsIAccessible
 
 void
-LinkableAccessible::TakeFocus()
+LinkableAccessible::TakeFocus() const
 {
-  if (Accessible* actionAcc = ActionWalk()) {
+  if (const Accessible* actionAcc = ActionWalk()) {
     actionAcc->TakeFocus();
   } else {
     AccessibleWrap::TakeFocus();
@@ -81,8 +81,7 @@ uint64_t
 LinkableAccessible::NativeLinkState() const
 {
   bool isLink;
-  Accessible* actionAcc =
-    const_cast<LinkableAccessible*>(this)->ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     return states::LINKED | (actionAcc->LinkState() & states::TRAVERSED);
   }
@@ -91,7 +90,7 @@ LinkableAccessible::NativeLinkState() const
 }
 
 void
-LinkableAccessible::Value(nsString& aValue)
+LinkableAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 
@@ -101,23 +100,23 @@ LinkableAccessible::Value(nsString& aValue)
   }
 
   bool isLink;
-  Accessible* actionAcc = ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     actionAcc->Value(aValue);
   }
 }
 
 uint8_t
-LinkableAccessible::ActionCount()
+LinkableAccessible::ActionCount() const
 {
   bool isLink, isOnclick, isLabelWithControl;
   ActionWalk(&isLink, &isOnclick, &isLabelWithControl);
   return (isLink || isOnclick || isLabelWithControl) ? 1 : 0;
 }
 
-Accessible*
+const Accessible*
 LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
-                               bool* aIsLabelWithControl)
+                               bool* aIsLabelWithControl) const
 {
   if (aIsOnclick) {
     *aIsOnclick = false;
@@ -139,7 +138,7 @@ LinkableAccessible::ActionWalk(bool* aIsLink, bool* aIsOnclick,
   // XXX: The logic looks broken since the click listener may be registered
   // on non accessible node in parent chain but this node is skipped when tree
   // is traversed.
-  Accessible* walkUpAcc = this;
+  const Accessible* walkUpAcc = this;
   while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
     if (walkUpAcc->LinkState() & states::LINKED) {
       if (aIsLink) {
@@ -183,13 +182,13 @@ LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-LinkableAccessible::DoAction(uint8_t aIndex)
+LinkableAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Jump) {
     return false;
   }
 
-  if (Accessible* actionAcc = ActionWalk()) {
+  if (const Accessible* actionAcc = ActionWalk()) {
     return actionAcc->DoAction(aIndex);
   }
 
@@ -211,10 +210,10 @@ LinkableAccessible::AccessKey() const
 // LinkableAccessible: HyperLinkAccessible
 
 already_AddRefed<nsIURI>
-LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   bool isLink;
-  Accessible* actionAcc = ActionWalk(&isLink);
+  const Accessible* actionAcc = ActionWalk(&isLink);
   if (isLink) {
     NS_ASSERTION(actionAcc->IsLink(), "HyperLink isn't implemented.");
 
@@ -232,7 +231,7 @@ LinkableAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 uint64_t
-DummyAccessible::NativeState()
+DummyAccessible::NativeState() const
 {
   return 0;
 }

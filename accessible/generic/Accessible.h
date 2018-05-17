@@ -195,7 +195,7 @@ public:
   /**
    * Get the value of this accessible.
    */
-  virtual void Value(nsString& aValue);
+  virtual void Value(nsString& aValue) const;
 
   /**
    * Get help string for the accessible.
@@ -208,7 +208,7 @@ public:
    * Note: aName.IsVoid() when name was left empty by the author on purpose.
    * aName.IsEmpty() when the author missed name, AT can try to repair a name.
    */
-  virtual ENameValueFlag Name(nsString& aName);
+  virtual ENameValueFlag Name(nsString& aName) const;
 
   /**
    * Maps ARIA state attributes to state of accessible. Note the given state
@@ -222,7 +222,7 @@ public:
   /**
    * Return enumerated accessible role (see constants in Role.h).
    */
-  mozilla::a11y::role Role();
+  mozilla::a11y::role Role() const;
 
   /**
    * Return true if ARIA role is specified on the element.
@@ -293,7 +293,7 @@ public:
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
-  virtual uint64_t NativeState();
+  virtual uint64_t NativeState() const;
 
   /**
    * Return native interactice state (unavailable, focusable or selectable).
@@ -367,7 +367,7 @@ public:
   /**
    * Get the relation of the given type.
    */
-  virtual Relation RelationByType(RelationType aType);
+  virtual Relation RelationByType(RelationType aType) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods
@@ -542,7 +542,7 @@ public:
   /**
    * Focus the accessible.
    */
-  virtual void TakeFocus();
+  virtual void TakeFocus() const;
 
   /**
    * Scroll the accessible into view.
@@ -686,7 +686,7 @@ public:
   /**
    * Return the number of actions that can be performed on this accessible.
    */
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() const;
 
   /**
    * Return action name at given index.
@@ -706,7 +706,7 @@ public:
   /**
    * Invoke the accessible action.
    */
-  virtual bool DoAction(uint8_t aIndex);
+  virtual bool DoAction(uint8_t aIndex) const;
 
   /**
    * Return access key, such as Alt+D.
@@ -765,7 +765,7 @@ public:
   /**
    * Returns an anchor URI at the given index.
    */
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex);
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const;
 
   /**
    * Returns a text point for the accessible element.
@@ -989,7 +989,7 @@ protected:
    * Return the accessible name provided by native markup. It doesn't take
    * into account ARIA markup used to specify the name.
    */
-  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName);
+  virtual mozilla::a11y::ENameValueFlag NativeName(nsString& aName) const;
 
   /**
    * Return the accessible description provided by native markup. It doesn't take
@@ -1062,7 +1062,7 @@ protected:
   /**
    * Return ARIA role (helper method).
    */
-  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole);
+  mozilla::a11y::role ARIATransformRole(mozilla::a11y::role aRole) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // Name helpers
@@ -1070,7 +1070,7 @@ protected:
   /**
    * Returns the accessible name specified by ARIA.
    */
-  void ARIAName(nsString& aName);
+  void ARIAName(nsString& aName) const;
 
   /**
    * Return the name for XUL element.
@@ -1131,7 +1131,7 @@ protected:
   /**
    * Return group info.
    */
-  AccGroupInfo* GetGroupInfo();
+  AccGroupInfo* GetGroupInfo() const;
 
   // Data Members
   nsCOMPtr<nsIContent> mContent;
@@ -1155,7 +1155,7 @@ protected:
   /**
    * Keep in sync with StateFlags, ContextFlags, and AccTypes.
    */
-  uint32_t mStateFlags : kStateFlagsBits;
+  mutable uint32_t mStateFlags : kStateFlagsBits;
   uint32_t mContextFlags : kContextFlagsBits;
   uint32_t mType : kTypeBits;
   uint32_t mGenericTypes : kGenericTypesBits;
@@ -1187,7 +1187,7 @@ protected:
   {
     AccGroupInfo* groupInfo;
     ProxyAccessible* proxy;
-  } mBits;
+  } mutable mBits;
   friend class AccGroupInfo;
 
 private:

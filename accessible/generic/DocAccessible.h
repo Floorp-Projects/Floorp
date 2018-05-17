@@ -69,17 +69,17 @@ public:
   virtual nsINode* GetNode() const override { return mDocumentNode; }
   nsIDocument* DocumentNode() const { return mDocumentNode; }
 
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) override;
+  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName) const override;
   virtual void Description(nsString& aDescription) override;
   virtual Accessible* FocusedChild() override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual bool NativelyUnavailable() const override;
   virtual void ApplyARIAState(uint64_t* aState) const override;
   virtual already_AddRefed<nsIPersistentProperties> Attributes() override;
 
-  virtual void TakeFocus() override;
+  virtual void TakeFocus() const override;
 
 #ifdef A11Y_LOG
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;

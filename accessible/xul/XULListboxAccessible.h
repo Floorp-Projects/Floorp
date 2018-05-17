@@ -28,7 +28,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 };
 
 /**
@@ -42,12 +42,12 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   enum { eAction_Click = 0 };
 };
@@ -80,10 +80,10 @@ public:
   virtual Accessible* AsAccessible() override { return this; }
 
   // Accessible
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual TableAccessible* AsTable() override { return this; }
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // Widgets
   virtual bool IsWidget() const override;
@@ -114,7 +114,7 @@ public:
   // Accessible
   virtual void Description(nsString& aDesc) override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   // Actions
@@ -127,7 +127,7 @@ protected:
   virtual ~XULListitemAccessible();
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // XULListitemAccessible
 

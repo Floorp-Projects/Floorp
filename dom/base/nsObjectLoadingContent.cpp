@@ -3584,7 +3584,7 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
   JS::Rooted<JSObject*> pi_obj(aCx); // XPConnect-wrapped peer object, when we get it.
   JS::Rooted<JSObject*> pi_proto(aCx); // 'pi.__proto__'
 
-  rv = GetPluginJSObject(aCx, aObject, pi, &pi_obj, &pi_proto);
+  rv = GetPluginJSObject(aCx, pi, &pi_obj, &pi_proto);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -3668,15 +3668,10 @@ nsObjectLoadingContent::SetupProtoChain(JSContext* aCx,
 // static
 nsresult
 nsObjectLoadingContent::GetPluginJSObject(JSContext *cx,
-                                          JS::Handle<JSObject*> obj,
                                           nsNPAPIPluginInstance *plugin_inst,
                                           JS::MutableHandle<JSObject*> plugin_obj,
                                           JS::MutableHandle<JSObject*> plugin_proto)
 {
-  // NB: We need a JSAutoRealm because we can be called from nsPluginFrame when
-  // the plugin loads after the JS object for our content node has been created.
-  JSAutoRealm ar(cx, obj);
-
   if (plugin_inst) {
     plugin_inst->GetJSObject(cx, plugin_obj.address());
     if (plugin_obj) {

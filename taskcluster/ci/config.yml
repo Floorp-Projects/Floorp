@@ -65,6 +65,7 @@ treeherder:
         'Snap': 'Snap image generation'
         'langpack': 'Langpack sigatures and uploads'
         'TPS': 'Sync tests'
+        'UV': 'Update verify'
 
 index:
     products:
@@ -111,6 +112,53 @@ release-promotion:
         - 'devedition'
         - 'fennec'
         - 'firefox'
+    flavors:
+        promote_devedition:
+            product: devedition
+            target-tasks-method: promote_desktop
+        promote_fennec:
+            product: fennec
+            target-tasks-method: promote_fennec
+        promote_firefox:
+            product: firefox
+            target-tasks-method: promote_desktop
+        promote_firefox_partners:
+            product: firefox
+            rebuild-kinds:
+                - release-partner-repack
+                - release-partner-beetmover
+                - release-partner-repack-chunking-dummy
+                - release-partner-repackage-signing
+                - release-partner-repackage
+                - release-partner-signing
+            target-tasks-method: promote_desktop
+        promote_firefox_rc:
+            product: firefox
+            release-type: rc
+            target-tasks-method: promote_desktop
+        push_devedition:
+            product: devedition
+            target-tasks-method: push_desktop
+        push_firefox:
+            product: firefox
+            target-tasks-method: push_desktop
+        ship_devedition:
+            product: devedition
+            target-tasks-method: ship_desktop
+        ship_fennec:
+            product: fennec
+            target-tasks-method: ship_fennec
+        ship_fennec_rc:
+            product: fennec
+            release-type: rc
+            target-tasks-method: ship_fennec
+        ship_firefox:
+            product: firefox
+            target-tasks-method: ship_desktop
+        ship_firefox_rc:
+            product: firefox
+            release-type: rc
+            target-tasks-method: ship_desktop
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py

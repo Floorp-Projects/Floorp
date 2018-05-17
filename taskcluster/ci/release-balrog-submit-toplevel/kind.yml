@@ -57,7 +57,7 @@ jobs:
                default: []
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
-         platform: linux64/opt
+         platform: firefox-release/opt
          symbol: Rel(BPFx)
          tier: 1
          kind: build
@@ -93,7 +93,7 @@ jobs:
                default: []
          platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
       treeherder:
-         platform: linux64/opt
+         platform: devedition-release/opt
          symbol: Rel(BPDev)
          tier: 1
          kind: build

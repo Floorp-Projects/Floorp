@@ -21,7 +21,7 @@ from taskgraph.util.schema import (
     Schema,
 )
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.treeherder import split_symbol, join_symbol
+from taskgraph.util.treeherder import add_suffix
 from taskgraph.transforms.job import job_description_schema
 from taskgraph.transforms.task import task_description_schema
 from voluptuous import (
@@ -362,10 +362,8 @@ def chunk_locales(config, jobs):
                 chunked['attributes']['chunk_locales'] = [locale for locale, _ in chunked_locales]
 
                 # add the chunk number to the TH symbol
-                group, symbol = split_symbol(
-                    chunked.get('treeherder', {}).get('symbol', ''))
-                symbol += str(this_chunk)
-                chunked['treeherder']['symbol'] = join_symbol(group, symbol)
+                chunked["treeherder"]["symbol"] = add_suffix(
+                    chunked["treeherder"]["symbol"], this_chunk)
                 yield chunked
         else:
             job['mozharness']['options'] = job['mozharness'].get('options', [])

@@ -509,7 +509,7 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
 
     Rooted<GlobalObject*> global(cx);
     {
-        AutoCompartmentUnchecked ac(cx, compartment);
+        AutoRealmUnchecked ar(cx, compartment);
         global = GlobalObject::createInternal(cx, clasp);
         if (!global)
             return nullptr;

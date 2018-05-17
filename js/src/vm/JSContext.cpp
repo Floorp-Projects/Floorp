@@ -1149,7 +1149,7 @@ js::RunJobs(JSContext* cx)
                 continue;
 
             cx->jobQueue->get()[i] = nullptr;
-            AutoCompartment ac(cx, job);
+            AutoRealm ar(cx, job);
             {
                 if (!JS::Call(cx, UndefinedHandleValue, job, args, &rval)) {
                     // Nothing we can do about uncatchable exceptions.
