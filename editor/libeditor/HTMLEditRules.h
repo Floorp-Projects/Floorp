@@ -544,8 +544,22 @@ protected:
                               nsIContent** aOutLeftNode,
                               nsIContent** aOutRightNode);
 
-  already_AddRefed<Element> ConvertListType(Element* aList, nsAtom* aListType,
-                                            nsAtom* aItemType);
+  /**
+   * ConvertListType() replaces child list items of aListElement with
+   * new list item element whose tag name is aNewListItemTag.
+   * Note that if there are other list elements as children of aListElement,
+   * this calls itself recursively even though it's invalid structure.
+   *
+   * @param aListElement        The list element whose list items will be
+   *                            replaced.
+   * @param aNewListTag         New list tag name.
+   * @param aNewListItemTag     New list item tag name.
+   * @return                    New list element or an error code if it fails.
+   *                            New list element may be aListElement if its
+   *                            tag name is same as aNewListTag.
+   */
+  MOZ_MUST_USE CreateElementResult
+  ConvertListType(Element& aListElement, nsAtom& aListType, nsAtom& aItemType);
 
   /**
    * CreateStyleForInsertText() sets CSS properties which are stored in

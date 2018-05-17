@@ -3628,8 +3628,11 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
     if (pt.IsSet() && mergeLists) {
-      RefPtr<Element> newBlock =
-        ConvertListType(rightBlock, existingList, nsGkAtoms::li);
+      CreateElementResult convertListTypeResult =
+        ConvertListType(*rightBlock, *existingList, *nsGkAtoms::li);
+      if (NS_WARN_IF(convertListTypeResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
     }
     ret.MarkAsHandled();
   } else {
@@ -3985,7 +3988,7 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
   // or whatever is approriate.  Wohoo!
 
   uint32_t listCount = arrayOfNodes.Length();
-  nsCOMPtr<Element> curList, prevListItem;
+  RefPtr<Element> curList, prevListItem;
 
   for (uint32_t i = 0; i < listCount; i++) {
     // here's where we actually figure out what to do
@@ -4027,20 +4030,25 @@ HTMLEditRules::WillMakeList(const nsAString* aListType,
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        newBlock = ConvertListType(curNode->AsElement(), listType, itemType);
-        if (NS_WARN_IF(!newBlock)) {
-          return NS_ERROR_FAILURE;
+        CreateElementResult convertListTypeResult =
+          ConvertListType(*curNode->AsElement(), *listType, *itemType);
+        if (NS_WARN_IF(convertListTypeResult.Failed())) {
+          return convertListTypeResult.Rv();
         }
-        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(*newBlock);
+        rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(
+                               *convertListTypeResult.GetNewNode());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
+        newBlock = convertListTypeResult.forget();
       } else {
         // replace list with new list type
-        curList = ConvertListType(curNode->AsElement(), listType, itemType);
-        if (NS_WARN_IF(!curList)) {
-          return NS_ERROR_FAILURE;
+        CreateElementResult convertListTypeResult =
+          ConvertListType(*curNode->AsElement(), *listType, *itemType);
+        if (NS_WARN_IF(convertListTypeResult.Failed())) {
+          return convertListTypeResult.Rv();
         }
+        curList = convertListTypeResult.forget();
       }
       prevListItem = nullptr;
       continue;
@@ -5469,50 +5477,54 @@ HTMLEditRules::OutdentPartOfBlock(Element& aBlock,
   return NS_OK;
 }
 
-/**
- * ConvertListType() converts list type and list item type.
- */
-already_AddRefed<Element>
-HTMLEditRules::ConvertListType(Element* aList,
-                               nsAtom* aListType,
-                               nsAtom* aItemType)
+CreateElementResult
+HTMLEditRules::ConvertListType(Element& aListElement,
+                               nsAtom& aNewListTag,
+                               nsAtom& aNewListItemTag)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aList);
-  MOZ_ASSERT(aListType);
-  MOZ_ASSERT(aItemType);
 
-  nsCOMPtr<nsINode> child = aList->GetFirstChild();
+  nsCOMPtr<nsINode> child = aListElement.GetFirstChild();
   while (child) {
     if (child->IsElement()) {
       Element* element = child->AsElement();
       if (HTMLEditUtils::IsListItem(element) &&
-          !element->IsHTMLElement(aItemType)) {
+          !element->IsHTMLElement(&aNewListItemTag)) {
         child =
-          HTMLEditorRef().ReplaceContainerWithTransaction(*element, *aItemType);
+          HTMLEditorRef().ReplaceContainerWithTransaction(*element,
+                                                          aNewListItemTag);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+        }
         if (NS_WARN_IF(!child)) {
-          return nullptr;
+          return CreateElementResult(NS_ERROR_FAILURE);
         }
       } else if (HTMLEditUtils::IsList(element) &&
-                 !element->IsHTMLElement(aListType)) {
-        child = ConvertListType(child->AsElement(), aListType, aItemType);
-        if (NS_WARN_IF(!child)) {
-          return nullptr;
+                 !element->IsHTMLElement(&aNewListTag)) {
+        // XXX List elements shouldn't have other list elements as their
+        //     child.  Why do we handle such invalid tree?
+        CreateElementResult convertListTypeResult =
+          ConvertListType(*child->AsElement(), aNewListTag, aNewListItemTag);
+        if (NS_WARN_IF(convertListTypeResult.Failed())) {
+          return convertListTypeResult;
         }
+        child = convertListTypeResult.forget();
       }
     }
     child = child->GetNextSibling();
   }
 
-  if (aList->IsHTMLElement(aListType)) {
-    RefPtr<dom::Element> list = aList;
-    return list.forget();
+  if (aListElement.IsHTMLElement(&aNewListTag)) {
+    return CreateElementResult(&aListElement);
   }
 
   RefPtr<Element> listElement =
-    HTMLEditorRef().ReplaceContainerWithTransaction(*aList, *aListType);
+    HTMLEditorRef().ReplaceContainerWithTransaction(aListElement, aNewListTag);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   NS_WARNING_ASSERTION(listElement != nullptr, "Failed to create list element");
-  return listElement.forget();
+  return CreateElementResult(listElement.forget());
 }
 
 nsresult
