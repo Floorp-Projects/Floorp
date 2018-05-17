@@ -61,8 +61,11 @@ interface nsIPaymentDetails : nsISupports
   readonly attribute nsIArray shippingOptions;
   readonly attribute nsIArray modifiers;
   readonly attribute AString error;
+  [implicit_jscontext]
+  readonly attribute jsval shippingAddressErrors;
 
   void update(in nsIPaymentDetails aDetails, in boolean aRequestShipping);
+  AString shippingAddressErrorsJSON();
 };
 
 [scriptable, builtinclass, uuid(d53f9f20-138e-47cc-9fd5-db16a3f6d301)]
