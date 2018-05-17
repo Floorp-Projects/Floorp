@@ -88,7 +88,7 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isWebExtension */
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isWebExtension, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
@@ -103,6 +103,7 @@ const XPI_INTERNAL_SYMBOLS = [
   "getExternalType",
   "isTheme",
   "isWebExtension",
+  "iterDirectory",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
@@ -1095,7 +1096,7 @@ function recursiveRemove(aFile) {
   // iterating over a directory while removing files from it (the YAFFS2
   // embedded filesystem has this issue, see bug 772238), and to remove
   // normal files before their resource forks on OSX (see bug 733436).
-  let entries = getDirectoryEntries(aFile, true);
+  let entries = Array.from(iterDirectory(aFile));
   entries.forEach(recursiveRemove);
 
   try {
@@ -1270,44 +1271,6 @@ SafeInstallOperation.prototype = {
       recursiveRemove(this._createdDirs.pop());
   }
 };
-
-/**
- * Gets a snapshot of directory entries.
- *
- * @param {nsIFile} aDir
- *        Directory to look at
- * @param {boolean} aSortEntries
- *        True to sort entries by filename
- * @returns {nsIFile[]}
- *        An files in the directory, or an empty array if aDir is not a
- *        readable directory.
- */
-function getDirectoryEntries(aDir, aSortEntries) {
-  let dirEnum;
-  try {
-    dirEnum = aDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-    let entries = [];
-    while (dirEnum.hasMoreElements())
-      entries.push(dirEnum.nextFile);
-
-    if (aSortEntries) {
-      entries.sort(function(a, b) {
-        return a.path > b.path ? -1 : 1;
-      });
-    }
-
-    return entries;
-  } catch (e) {
-    if (aDir.exists()) {
-      logger.warn("Can't iterate directory " + aDir.path, e);
-    }
-    return [];
-  } finally {
-    if (dirEnum) {
-      dirEnum.close();
-    }
-  }
-}
 
 function getHashStringForCrypto(aCrypto) {
   // return the two-digit hexadecimal code for a byte
@@ -2841,13 +2804,9 @@ class DirectoryInstaller {
     if (this._stagingDirLock > 0)
       return;
 
-    let dirEntries = dir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-    try {
-      if (dirEntries.nextFile)
-        return;
-    } finally {
-      dirEntries.close();
-    }
+    // eslint-disable-next-line no-unused-vars
+    for (let file of iterDirectory(dir))
+      return;
 
     try {
       setFilePermissions(dir, FileUtils.PERMS_DIRECTORY);
