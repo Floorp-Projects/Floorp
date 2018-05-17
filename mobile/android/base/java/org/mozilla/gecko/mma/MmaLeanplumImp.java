@@ -20,6 +20,8 @@ import com.leanplum.LeanplumActivityHelper;
 import com.leanplum.LeanplumPushNotificationCustomizer;
 import com.leanplum.LeanplumPushService;
 import com.leanplum.internal.Constants;
+import com.leanplum.internal.LeanplumInternal;
+import com.leanplum.internal.VarCache;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
@@ -36,6 +38,11 @@ public class MmaLeanplumImp implements MmaInterface {
         if (activity == null) {
             return;
         }
+
+        // Need to call this in the eventuality that in this app session stop() has been called.
+        // It will allow LeanPlum to communicate again with the servers.
+        Leanplum.setIsTestModeEnabled(false);
+
         Leanplum.setApplicationContext(activity.getApplicationContext());
 
         LeanplumActivityHelper.enableLifecycleCallbacks(activity.getApplication());
@@ -100,9 +107,28 @@ public class MmaLeanplumImp implements MmaInterface {
 
     }
 
+    // This method digs deep into LeanPlum internals.
+    // It's currently the only way to achieve what we needed:
+    //      - fully stop LeanPlum: tracking events and displaying messages
+    //      - allow LP to be restarted in the same app session
+    // Did extensive testing to ensure all will work as intended
+    // but although this method uses LP public methods it should be maintained in accordance with LP SDK updates.
     @Override
     public void stop() {
+        // This will just inform LeanPlum server that we stopped current LeanPlum session
         Leanplum.stop();
+
+        // As written in LeanPlum SDK documentation, "This prevents Leanplum from communicating with the server."
+        // as this "isTestMode" flag is checked before LeanPlum SDK does anything.
+        // Also has the benefit effect of blocking the display of already downloaded messages.
+        //
+        // The reverse of this - setIsTestModeEnabled(false) must be called before trying to init LP in the same session.
+        Leanplum.setIsTestModeEnabled(true);
+
+        // This is just to allow restarting LP and it's functionality in the same app session
+        // as LP stores it's state internally and check against it.
+        LeanplumInternal.setCalledStart(false);
+        LeanplumInternal.setHasStarted(false);
     }
 
     @Override
