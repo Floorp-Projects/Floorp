@@ -299,8 +299,9 @@ protected:
    * @return            Sets handled to true if this actually joins the nodes.
    *                    canceled is always false.
    */
-  EditActionResult MoveBlock(Element& aLeftBlock, Element& aRightBlock,
-                             int32_t aLeftOffset, int32_t aRightOffset);
+  MOZ_MUST_USE EditActionResult
+  MoveBlock(Element& aLeftBlock, Element& aRightBlock,
+            int32_t aLeftOffset, int32_t aRightOffset);
 
   /**
    * MoveNodeSmart() moves aNode to (aDestElement, aInOutDestOffset).

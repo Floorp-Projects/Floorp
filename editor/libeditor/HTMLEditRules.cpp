@@ -3483,6 +3483,11 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
       EditActionResult retMoveBlock =
         MoveBlock(*leftBlock, *rightBlock,
                   -1, atRightBlockChild.Offset());
+      if (NS_WARN_IF(retMoveBlock.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+        return ret;
+      }
+      NS_WARNING_ASSERTION(retMoveBlock.Succeeded(),
+        "Failed to move contents of the right block to the left block");
       if (retMoveBlock.Handled()) {
         ret.MarkAsHandled();
       }
@@ -3706,6 +3711,9 @@ HTMLEditRules::MoveBlock(Element& aLeftBlock,
         return ret;
       }
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*arrayOfNodes[i]);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+      }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
         "Failed to remove a block node");
       ret.MarkAsHandled();
