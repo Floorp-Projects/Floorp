@@ -327,7 +327,15 @@ protected:
                         bool* aCancel, bool* aHandled,
                         const nsAString* aItemType = nullptr);
   nsresult WillRemoveList(bool aOrdered, bool* aCancel, bool* aHandled);
-  nsresult WillIndent(bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before indenting around Selection.  This method actually tries to
+   * indent the contents.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult WillIndent(bool* aCancel, bool* aHandled);
 
   /**
    * Called before indenting around Selection and it's in CSS mode.
