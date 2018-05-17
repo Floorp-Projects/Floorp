@@ -195,7 +195,15 @@ protected:
    */
   nsresult WillInsertBreak(bool* aCancel, bool* aHandled);
 
-  void DeleteNodeIfCollapsedText(nsINode& aNode);
+  /**
+   * If aNode is a text node that contains only collapsed whitespace, delete
+   * it.  It doesn't serve any useful purpose, and we don't want it to confuse
+   * code that doesn't correctly skip over it.
+   *
+   * If deleting the node fails (like if it's not editable), the caller should
+   * proceed as usual, so don't return any errors.
+   */
+  MOZ_MUST_USE nsresult DeleteNodeIfCollapsedText(nsINode& aNode);
 
   /**
    * InsertBRElement() inserts a <br> element into aInsertToBreak.
