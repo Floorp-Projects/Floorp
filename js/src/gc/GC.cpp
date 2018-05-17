@@ -8056,7 +8056,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
         }
 
         group->setGeneration(target->zone()->types.generation);
-        group->compartment_ = target;
+        group->realm_ = JS::GetRealmForCompartment(target);
 
         // Remove any unboxed layouts from the list in the off thread
         // compartment. These do not need to be reinserted in the target

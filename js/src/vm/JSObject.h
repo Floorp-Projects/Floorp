@@ -162,6 +162,7 @@ class JSObject : public js::gc::Cell
 
     JSCompartment* compartment() const { return group_->compartment(); }
     JSCompartment* maybeCompartment() const { return compartment(); }
+    JS::Realm* realm() const { return group_->realm(); }
 
     inline js::Shape* maybeShape() const;
     inline js::Shape* ensureShape(JSContext* cx);

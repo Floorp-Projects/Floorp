@@ -34,7 +34,7 @@ using mozilla::PodZero;
 // ObjectGroup
 /////////////////////////////////////////////////////////////////////
 
-ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* comp,
+ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JS::Realm* realm,
                          ObjectGroupFlags initialFlags)
 {
     PodZero(this);
@@ -45,7 +45,7 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* c
 
     this->clasp_ = clasp;
     this->proto_ = proto;
-    this->compartment_ = comp;
+    this->realm_ = realm;
     this->flags_ = initialFlags;
 
     setGeneration(zone()->types.generation);
@@ -1673,7 +1673,7 @@ ObjectGroupCompartment::makeGroup(JSContext* cx, const Class* clasp,
     ObjectGroup* group = Allocate<ObjectGroup>(cx);
     if (!group)
         return nullptr;
-    new(group) ObjectGroup(clasp, proto, cx->compartment(), initialFlags);
+    new(group) ObjectGroup(clasp, proto, cx->realm(), initialFlags);
 
     return group;
 }
