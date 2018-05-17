@@ -5,25 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'addon.js',
-    'appcache.js',
-    'calllog.js',
-    'cmd.js',
-    'cookie.js',
-    'csscoverage.js',
-    'folder.js',
-    'highlight.js',
     'index.js',
-    'inject.js',
-    'jsb.js',
-    'listen.js',
     'measure.js',
-    'media.js',
-    'pagemod.js',
     'paintflashing.js',
-    'qsa.js',
-    'restart.js',
     'rulers.js',
     'screenshot.js',
-    'security.js',
 )
