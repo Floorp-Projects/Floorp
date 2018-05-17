@@ -1247,13 +1247,6 @@ JS_HasExtensibleLexicalEnvironment(JSObject* obj);
 extern JS_PUBLIC_API(JSObject*)
 JS_ExtensibleLexicalEnvironment(JSObject* obj);
 
-/**
- * May return nullptr, if |c| never had a global (e.g. the atoms compartment),
- * or if |c|'s global has been collected.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForCompartmentOrNull(JSContext* cx, JSCompartment* c);
-
 namespace JS {
 
 extern JS_PUBLIC_API(JSObject*)
