@@ -37,6 +37,9 @@ with Files('*moz*'):
 with Files('GNUmakefile'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('Pipfile*'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
+
 with Files('*gradle*'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
     SCHEDULES.exclusive = ['android']
