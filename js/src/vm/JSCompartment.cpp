@@ -82,7 +82,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::RealmOptions& options = JS::R
     debugScriptMap(nullptr),
     debugEnvs(nullptr),
     enumerators(nullptr),
-    compartmentStats_(nullptr),
+    realmStats_(nullptr),
     scheduledForDestruction(false),
     maybeAlive(true),
     jitCompartment_(nullptr),

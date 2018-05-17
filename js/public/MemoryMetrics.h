@@ -799,7 +799,7 @@ struct ZoneStats
 #undef FOR_EACH_SIZE
 };
 
-struct CompartmentStats
+struct RealmStats
 {
     // We assume that |objectsPrivate| is on the malloc heap, but it's not
     // actually guaranteed. But for Servo, at least, it's a moot point because
@@ -816,8 +816,8 @@ struct CompartmentStats
     macro(Other,   MallocHeap, typeInferenceAllocationSiteTables) \
     macro(Other,   MallocHeap, typeInferenceArrayTypeTables) \
     macro(Other,   MallocHeap, typeInferenceObjectTypeTables) \
-    macro(Other,   MallocHeap, compartmentObject) \
-    macro(Other,   MallocHeap, compartmentTables) \
+    macro(Other,   MallocHeap, realmObject) \
+    macro(Other,   MallocHeap, realmTables) \
     macro(Other,   MallocHeap, innerViewsTable) \
     macro(Other,   MallocHeap, lazyArrayBuffersTable) \
     macro(Other,   MallocHeap, objectMetadataTable) \
@@ -825,11 +825,11 @@ struct CompartmentStats
     macro(Other,   MallocHeap, savedStacksSet) \
     macro(Other,   MallocHeap, varNamesSet) \
     macro(Other,   MallocHeap, nonSyntacticLexicalScopesTable) \
-    macro(Other,   MallocHeap, jitCompartment) \
+    macro(Other,   MallocHeap, jitRealm) \
     macro(Other,   MallocHeap, privateData) \
     macro(Other,   MallocHeap, scriptCountsMap)
 
-    CompartmentStats()
+    RealmStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
         classInfo(),
         extra(),
@@ -838,7 +838,7 @@ struct CompartmentStats
         isTotals(true)
     {}
 
-    CompartmentStats(CompartmentStats&& other)
+    RealmStats(RealmStats&& other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
         classInfo(mozilla::Move(other.classInfo)),
         extra(other.extra),
@@ -850,9 +850,9 @@ struct CompartmentStats
         MOZ_ASSERT(!other.isTotals);
     }
 
-    CompartmentStats(const CompartmentStats&) = delete; // disallow copying
+    RealmStats(const RealmStats&) = delete; // disallow copying
 
-    ~CompartmentStats() {
+    ~RealmStats() {
         // |allClasses| is usually deleted and set to nullptr before this
         // destructor runs. But there are failure cases due to OOMs that may
         // prevent that, so it doesn't hurt to try again here.
@@ -861,7 +861,7 @@ struct CompartmentStats
 
     bool initClasses();
 
-    void addSizes(const CompartmentStats& other) {
+    void addSizes(const RealmStats& other) {
         MOZ_ASSERT(isTotals);
         FOR_EACH_SIZE(ADD_OTHER_SIZE)
         classInfo.add(other.classInfo);
@@ -906,7 +906,7 @@ struct CompartmentStats
 #undef FOR_EACH_SIZE
 };
 
-typedef js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> CompartmentStatsVector;
+typedef js::Vector<RealmStats, 0, js::SystemAllocPolicy> RealmStatsVector;
 typedef js::Vector<ZoneStats, 0, js::SystemAllocPolicy> ZoneStatsVector;
 
 struct RuntimeStats
@@ -927,9 +927,9 @@ struct RuntimeStats
     explicit RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE)
         runtime(),
-        cTotals(),
+        realmTotals(),
         zTotals(),
-        compartmentStatsVector(),
+        realmStatsVector(),
         zoneStatsVector(),
         currZoneStats(nullptr),
         mallocSizeOf_(mallocSizeOf)
@@ -964,17 +964,17 @@ struct RuntimeStats
 
     RuntimeSizes runtime;
 
-    CompartmentStats cTotals;   // The sum of this runtime's compartments' measurements.
+    RealmStats realmTotals;     // The sum of this runtime's realms' measurements.
     ZoneStats zTotals;          // The sum of this runtime's zones' measurements.
 
-    CompartmentStatsVector compartmentStatsVector;
+    RealmStatsVector realmStatsVector;
     ZoneStatsVector zoneStatsVector;
 
     ZoneStats* currZoneStats;
 
     mozilla::MallocSizeOf mallocSizeOf_;
 
-    virtual void initExtraCompartmentStats(JSCompartment* c, CompartmentStats* cstats) = 0;
+    virtual void initExtraRealmStats(JSCompartment* c, RealmStats* rstats) = 0;
     virtual void initExtraZoneStats(JS::Zone* zone, ZoneStats* zstats) = 0;
 
 #undef FOR_EACH_SIZE
@@ -1004,10 +1004,10 @@ extern JS_PUBLIC_API(bool)
 CollectRuntimeStats(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVisitor* opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
-SystemCompartmentCount(JSContext* cx);
+SystemRealmCount(JSContext* cx);
 
 extern JS_PUBLIC_API(size_t)
-UserCompartmentCount(JSContext* cx);
+UserRealmCount(JSContext* cx);
 
 extern JS_PUBLIC_API(size_t)
 PeakSizeOfTemporary(const JSContext* cx);
