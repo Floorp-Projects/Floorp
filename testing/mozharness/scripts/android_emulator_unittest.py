@@ -30,6 +30,12 @@ from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
 
 
 class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMixin):
+    """
+       A mozharness script for Android functional tests (like mochitests and reftests)
+       run on an Android emulator. This script starts and manages an Android emulator
+       for the duration of the required tests. This is like desktop_unittest.py, but
+       for Android emulator test platforms.
+    """
     config_options = [[
         ["--test-suite"],
         {"action": "store",
@@ -71,8 +77,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 'virtualenv_modules': [],
                 'virtualenv_requirements': [],
                 'require_test_zip': True,
-                # IP address of the host as seen from the emulator
-                'remote_webserver': '10.0.2.2',
             }
         )
 
@@ -99,14 +103,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                     self.this_chunk = m.group(2)
         self.sdk_level = None
         self.xre_path = None
-
-    def _query_tests_dir(self):
-        dirs = self.query_abs_dirs()
-        try:
-            test_dir = self.config["suite_definitions"][self.test_suite]["testsdir"]
-        except Exception:
-            test_dir = self.test_suite
-        return os.path.join(dirs['abs_test_install_dir'], test_dir)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -141,6 +137,39 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 abs_dirs[key] = dirs[key]
         self.abs_dirs = abs_dirs
         return self.abs_dirs
+
+    def _query_tests_dir(self, test_suite):
+        dirs = self.query_abs_dirs()
+        try:
+            test_dir = self.config["suite_definitions"][test_suite]["testsdir"]
+        except Exception:
+            test_dir = test_suite
+        return os.path.join(dirs['abs_test_install_dir'], test_dir)
+
+    def _query_package_name(self):
+        if self.app_name is None:
+            # For convenience, assume geckoview.test/geckoview_example when install
+            # target looks like geckoview.
+            if 'androidTest' in self.installer_path:
+                self.app_name = 'org.mozilla.geckoview.test'
+            elif 'geckoview' in self.installer_path:
+                self.app_name = 'org.mozilla.geckoview_example'
+        if self.app_name is None:
+            # Find appname from package-name.txt - assumes download-and-extract
+            # has completed successfully.
+            # The app/package name will typically be org.mozilla.fennec,
+            # but org.mozilla.firefox for release builds, and there may be
+            # other variations. 'aapt dump badging <apk>' could be used as an
+            # alternative to package-name.txt, but introduces a dependency
+            # on aapt, found currently in the Android SDK build-tools component.
+            apk_dir = self.abs_dirs['abs_work_dir']
+            self.apk_path = os.path.join(apk_dir, self.installer_path)
+            unzip = self.query_exe("unzip")
+            package_path = os.path.join(apk_dir, 'package-name.txt')
+            unzip_cmd = [unzip, '-q', '-o',  self.apk_path]
+            self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
+            self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
+        return self.app_name
 
     def _launch_emulator(self):
         env = self.query_env()
@@ -192,13 +221,14 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         if "emulator_extra_args" in self.config:
             command += self.config["emulator_extra_args"].split()
 
-        tmp_file = tempfile.NamedTemporaryFile(mode='w')
-        tmp_stdout = open(tmp_file.name, 'w')
-        self.info("Trying to start the emulator with this command: %s" % ' '.join(command))
-        proc = subprocess.Popen(command, stdout=tmp_stdout, stderr=tmp_stdout, env=env)
+        dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        tmp_file = tempfile.NamedTemporaryFile(mode='w', prefix='emulator-',
+                                               suffix='.log', dir=dir, delete=False)
+        self.info("Launching the emulator with: %s" % ' '.join(command))
+        self.info("Writing log to %s" % tmp_file.name)
+        proc = subprocess.Popen(command, stdout=tmp_file, stderr=tmp_file, env=env)
         return {
             "process": proc,
-            "tmp_file": tmp_file,
         }
 
     def _retry(self, max_attempts, interval, func, description, max_time=0):
@@ -232,6 +262,10 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         timeout_cmd = ['timeout', '%s' % timeout] + cmd
         return self._run_proc(timeout_cmd, quiet=quiet)
 
+    def _run_adb_with_timeout(self, timeout, cmd, quiet=False):
+        cmd = [self.adb_path, '-s', self.emulator['device_id']] + cmd
+        return self._run_with_timeout(timeout, cmd, quiet)
+
     def _run_proc(self, cmd, quiet=False):
         self.info('Running %s' % subprocess.list2cmdline(cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -254,9 +288,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         return False
 
     def _is_boot_completed(self):
-        boot_cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                    'shell', 'getprop', 'sys.boot_completed']
-        out, _ = self._run_with_timeout(30, boot_cmd)
+        boot_cmd = ['shell', 'getprop', 'sys.boot_completed']
+        out, _ = self._run_adb_with_timeout(30, boot_cmd)
         if out.strip() == '1':
             return True
         return False
@@ -282,11 +315,9 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
     def _verify_emulator_and_restart_on_fail(self):
         emulator_ok = self._verify_emulator()
         if not emulator_ok:
-            self._dump_host_state()
             self._screenshot("emulator-startup-screenshot-")
             self._kill_processes(self.config["emulator_process_name"])
             self._run_proc(['ps', '-ef'])
-            self._dump_emulator_log()
             # remove emulator tmp files
             for dir in glob.glob("/tmp/android-*"):
                 self.rmtree(dir)
@@ -298,12 +329,10 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
     def _install_target_apk(self):
         install_ok = False
         if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g',
-                   self.installer_path]
+            cmd = ['install', '-r', '-g', self.installer_path]
         else:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
-                   self.installer_path]
-        out, err = self._run_with_timeout(300, cmd, True)
+            cmd = ['install', '-r', self.installer_path]
+        out, err = self._run_adb_with_timeout(300, cmd, True)
         if 'Success' in out or 'Success' in err:
             install_ok = True
         return install_ok
@@ -311,31 +340,18 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
     def _install_robocop_apk(self):
         install_ok = False
         if int(self.sdk_level) >= 23:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r', '-g',
-                   self.robocop_path]
+            cmd = ['install', '-r', '-g', self.robocop_path]
         else:
-            cmd = [self.adb_path, '-s', self.emulator['device_id'], 'install', '-r',
-                   self.robocop_path]
-        out, err = self._run_with_timeout(300, cmd, True)
+            cmd = ['install', '-r', self.robocop_path]
+        out, err = self._run_adb_with_timeout(300, cmd, True)
         if 'Success' in out or 'Success' in err:
             install_ok = True
         return install_ok
 
-    def _dump_host_state(self):
-        self._run_proc(['ps', '-ef'])
-        self._run_proc(['netstat', '-a', '-p', '-n', '-t', '-u'])
-
-    def _dump_emulator_log(self):
-        self.info("##### %s emulator log begins" % self.emulator["name"])
-        output = self.read_from_file(self.emulator_proc["tmp_file"].name, verbose=False)
-        if output:
-            self.info(output)
-        self.info("##### %s emulator log ends" % self.emulator["name"])
-
     def _kill_processes(self, process_name):
         p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
         out, err = p.communicate()
-        self.info("Let's kill every process called %s" % process_name)
+        self.info("Killing every process called %s" % process_name)
         for line in out.splitlines():
             if process_name in line:
                 pid = int(line.split(None, 1)[0])
@@ -348,7 +364,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
     def _screenshot(self, prefix):
         """
-           Save a screenshot of the entire screen to the blob upload directory.
+           Save a screenshot of the entire screen to the upload directory.
         """
         dirs = self.query_abs_dirs()
         utility = os.path.join(self.xre_path, "screentopng")
@@ -364,35 +380,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         except OSError, err:
             self.warning("Failed to take screenshot: %s" % err.strerror)
 
-    def _query_package_name(self):
-        if self.app_name is None:
-            # For convenience, assume geckoview.test/geckoview_example when install
-            # target looks like geckoview.
-            if 'androidTest' in self.installer_path:
-                self.app_name = 'org.mozilla.geckoview.test'
-            elif 'geckoview' in self.installer_path:
-                self.app_name = 'org.mozilla.geckoview_example'
-        if self.app_name is None:
-            # Find appname from package-name.txt - assumes download-and-extract
-            # has completed successfully.
-            # The app/package name will typically be org.mozilla.fennec,
-            # but org.mozilla.firefox for release builds, and there may be
-            # other variations. 'aapt dump badging <apk>' could be used as an
-            # alternative to package-name.txt, but introduces a dependency
-            # on aapt, found currently in the Android SDK build-tools component.
-            apk_dir = self.abs_dirs['abs_work_dir']
-            self.apk_path = os.path.join(apk_dir, self.installer_path)
-            unzip = self.query_exe("unzip")
-            package_path = os.path.join(apk_dir, 'package-name.txt')
-            unzip_cmd = [unzip, '-q', '-o',  self.apk_path]
-            self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
-            self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
-        return self.app_name
-
-    def preflight_install(self):
-        # in the base class, this checks for mozinstall, but we don't use it
-        pass
-
     def _build_command(self):
         c = self.config
         dirs = self.query_abs_dirs()
@@ -404,7 +391,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             self.query_python_path('python'),
             '-u',
             os.path.join(
-                self._query_tests_dir(),
+                self._query_tests_dir(self.test_suite),
                 self.config["suite_definitions"][self.test_suite]["run_filename"]
             ),
         ]
@@ -415,7 +402,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
                                           '%s_errorsummary.log' % self.test_suite)
         str_format_values = {
-            'remote_webserver': c['remote_webserver'],
+            # IP address of the host as seen from the emulator
+            'remote_webserver': '10.0.2.2',
             'xre_path': self.xre_path,
             'utility_path': self.xre_path,
             'certs_path': os.path.join(dirs['abs_work_dir'], 'tests/certs'),
@@ -505,7 +493,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
     def _install_emulator(self):
         dirs = self.query_abs_dirs()
-        self.mkdir_p(dirs['abs_work_dir'])
         if self.config.get('emulator_url'):
             self.download_unpack(self.config['emulator_url'], dirs['abs_work_dir'])
         elif self.config.get('emulator_manifest'):
@@ -542,23 +529,24 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             out, _ = self._run_proc(['ps', '-ef'], quiet=True)
             f.write(out)
 
+            f.write('\n\nHost netstat:\n')
+            out, _ = self._run_proc(['netstat', '-a', '-p', '-n', '-t', '-u'], quiet=True)
+            f.write(out)
+
             f.write('\n\nEmulator /proc/cpuinfo:\n')
-            cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                   'shell', 'cat', '/proc/cpuinfo']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
+            cmd = ['shell', 'cat', '/proc/cpuinfo']
+            out, _ = self._run_adb_with_timeout(30, cmd, quiet=True)
             f.write(out)
             cpuinfo = out
 
             f.write('\n\nEmulator /proc/meminfo:\n')
-            cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                   'shell', 'cat', '/proc/meminfo']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
+            cmd = ['shell', 'cat', '/proc/meminfo']
+            out, _ = self._run_adb_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
             f.write('\n\nEmulator process list:\n')
-            cmd = [self.adb_path, '-s', self.emulator['device_id'],
-                   'shell', 'ps']
-            out, _ = self._run_with_timeout(30, cmd, quiet=True)
+            cmd = ['shell', 'ps']
+            out, _ = self._run_adb_with_timeout(30, cmd, quiet=True)
             f.write(out)
 
         # Search android cpuinfo for "BogoMIPS"; if found and < 250, retry
@@ -608,6 +596,10 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
     # Actions for AndroidEmulatorTest        #
     ##########################################
 
+    def preflight_install(self):
+        # in the base class, this checks for mozinstall, but we don't use it
+        pass
+
     @PreScriptAction('create-virtualenv')
     def pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
@@ -632,6 +624,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         '''
         c = self.config
         dirs = self.query_abs_dirs()
+        self.mkdir_p(dirs['abs_work_dir'])
+        self.mkdir_p(dirs['abs_blob_upload_dir'])
 
         # Always start with a clean AVD: AVD includes Android images
         # which can be stateful.
@@ -679,7 +673,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         Check to see if the emulator can be contacted via adb.
         If any communication attempt fails, kill the emulator, re-launch, and re-check.
         '''
-        self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
         max_restarts = 5
         emulator_ok = self._retry(max_restarts, 10, self._verify_emulator_and_restart_on_fail,
                                   "Check emulator")
@@ -689,7 +682,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self._dump_perf_info()
         # Start logcat for the emulator. The adb process runs until the
         # corresponding emulator is killed. Output is written directly to
-        # the blobber upload directory so that it is uploaded automatically
+        # the upload directory so that it is uploaded automatically
         # at the end of the job.
         logcat_filename = 'logcat-%s.log' % self.emulator["device_id"]
         logcat_path = os.path.join(self.abs_dirs['abs_blob_upload_dir'], logcat_filename)
@@ -698,8 +691,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.info(logcat_cmd)
         os.system(logcat_cmd)
         # Get a post-boot emulator process list for diagnostics
-        ps_cmd = [self.adb_path, '-s', self.emulator["device_id"], 'shell', 'ps']
-        self._run_with_timeout(30, ps_cmd)
+        ps_cmd = ['shell', 'ps']
+        self._run_adb_with_timeout(30, ps_cmd)
 
     def download_and_extract(self):
         """
@@ -738,9 +731,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         assert self.installer_path is not None, \
             "Either add installer_path to the config or use --installer-path."
 
-        cmd = [self.adb_path, '-s', self.emulator['device_id'], 'shell',
-               'getprop', 'ro.build.version.sdk']
-        self.sdk_level, _ = self._run_with_timeout(30, cmd)
+        cmd = ['shell', 'getprop', 'ro.build.version.sdk']
+        self.sdk_level, _ = self._run_adb_with_timeout(30, cmd)
 
         # Install Fennec
         install_ok = self._retry(3, 30, self._install_target_apk, "Install app APK")
@@ -774,10 +766,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
 
             cmd = self._build_command()
 
-            try:
-                cwd = self._query_tests_dir()
-            except Exception:
-                self.fatal("Don't know how to run --test-suite '%s'!" % self.test_suite)
+            cwd = self._query_tests_dir(self.test_suite)
             env = self.query_env()
             if minidump:
                 env['MINIDUMP_STACKWALK'] = minidump
@@ -805,8 +794,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                             final_cmd.remove(arg)
                 final_cmd.extend(per_test_args)
 
-                self.info("Running on %s the command %s" % (self.emulator["name"],
-                          subprocess.list2cmdline(final_cmd)))
+                self.info("Running the command %s" % subprocess.list2cmdline(final_cmd))
                 self.info("##### %s log begins" % self.test_suite)
 
                 suite_category = self.test_suite
