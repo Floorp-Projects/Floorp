@@ -40,8 +40,7 @@ public:
   typedef uint32_t FrameFlags;
   enum {
     REQUEST_REQUIRES_REFLOW      = 1u << 0,
-    REQUEST_HAS_REQUESTED_REFLOW = 1u << 1,
-    REQUEST_HAS_BLOCKED_ONLOAD   = 1u << 2
+    REQUEST_HAS_BLOCKED_ONLOAD   = 1u << 1,
   };
 
   typedef mozilla::css::ImageValue Image;

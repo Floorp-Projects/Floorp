@@ -37,12 +37,13 @@ public final class Tab extends Actor {
         url = tab.optString("url", null);
         outerWindowID = tab.optLong("outerWindowID", -1);
         mTab = tab;
+        attach();
     }
 
     /**
      * Attach to the server tab.
      */
-    public void attach() {
+    private void attach() {
         sendPacket("{\"type\":\"attach\"}", TAB_STATE_PARSER).get();
     }
 
@@ -62,5 +63,16 @@ public final class Tab extends Actor {
         final String name = mTab.optString("consoleActor", null);
         final Actor console = connection.getActor(name);
         return (console != null) ? (Console) console : new Console(connection, name);
+    }
+
+    /**
+     * Get the promises object for access to the promises API.
+     *
+     * @return Promises object.
+     */
+    public Promises getPromises() {
+        final String name = mTab.optString("promisesActor", null);
+        final Actor promises = connection.getActor(name);
+        return (promises != null) ? (Promises) promises : new Promises(connection, name);
     }
 }

@@ -87,6 +87,8 @@
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 @BINPATH@/blocklist.xml
+@BINPATH@/defaults/settings/blocklists/addons.json
+@BINPATH@/defaults/settings/blocklists/certificates.json
 
 ; [Components]
 @BINPATH@/components/components.manifest

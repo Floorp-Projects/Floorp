@@ -26,139 +26,128 @@
 using namespace mozilla;
 extern LazyLogModule gPIPNSSLog;
 
-#define PIP_PKCS12_TMPFILENAME   NS_LITERAL_CSTRING(".pip_p12tmp")
-#define PIP_PKCS12_BUFFER_SIZE   2048
-#define PIP_PKCS12_USER_CANCELED       3
-#define PIP_PKCS12_NOSMARTCARD_EXPORT  4
-#define PIP_PKCS12_RESTORE_FAILED      5
-#define PIP_PKCS12_BACKUP_FAILED       6
-#define PIP_PKCS12_NSS_ERROR           7
+#define PIP_PKCS12_BUFFER_SIZE 2048
+#define PIP_PKCS12_NOSMARTCARD_EXPORT 4
+#define PIP_PKCS12_RESTORE_FAILED 5
+#define PIP_PKCS12_BACKUP_FAILED 6
+#define PIP_PKCS12_NSS_ERROR 7
 
-// constructor
 nsPKCS12Blob::nsPKCS12Blob()
-  : mCertArray(nullptr)
-  , mTmpFile(nullptr)
+  : mUIContext(new PipUIContext())
 {
-  mUIContext = new PipUIContext();
 }
 
-// nsPKCS12Blob::ImportFromFile
-//
 // Given a file handle, read a PKCS#12 blob from that file, decode it, and
 // import the results into the internal database.
 nsresult
-nsPKCS12Blob::ImportFromFile(nsIFile *file)
+nsPKCS12Blob::ImportFromFile(nsIFile* file)
 {
-  nsresult rv = NS_OK;
-
+  nsresult rv;
   RetryReason wantRetry;
-
   do {
-    rv = ImportFromFileHelper(file, im_standard_prompt, wantRetry);
+    rv = ImportFromFileHelper(file, ImportMode::StandardPrompt, wantRetry);
 
-    if (NS_SUCCEEDED(rv) && wantRetry == rr_auto_retry_empty_password_flavors) {
-      rv = ImportFromFileHelper(file, im_try_zero_length_secitem, wantRetry);
+    if (NS_SUCCEEDED(rv) && wantRetry == RetryReason::AutoRetryEmptyPassword) {
+      rv = ImportFromFileHelper(file, ImportMode::TryZeroLengthSecitem,
+                                wantRetry);
     }
-  }
-  while (NS_SUCCEEDED(rv) && (wantRetry != rr_do_not_retry));
+  } while (NS_SUCCEEDED(rv) && (wantRetry != RetryReason::DoNotRetry));
 
   return rv;
 }
 
-nsresult
-nsPKCS12Blob::ImportFromFileHelper(nsIFile *file,
-                                   nsPKCS12Blob::ImportMode aImportMode,
-                                   nsPKCS12Blob::RetryReason &aWantRetry)
+void
+nsPKCS12Blob::handleImportError(PRErrorCode nssError, RetryReason& retryReason,
+                                uint32_t passwordLengthInBytes)
 {
-  nsresult rv = NS_OK;
-  SECStatus srv = SECSuccess;
-  SEC_PKCS12DecoderContext *dcx = nullptr;
-  SECItem unicodePw = { siBuffer, nullptr, 0  };
+  if (nssError == SEC_ERROR_BAD_PASSWORD) {
+    // If the password is 2 bytes, it only consists of the wide character null
+    // terminator. In this case we want to retry with a zero-length password.
+    if (passwordLengthInBytes == 2) {
+      retryReason = nsPKCS12Blob::RetryReason::AutoRetryEmptyPassword;
+    } else {
+      retryReason = RetryReason::BadPassword;
+      handleError(PIP_PKCS12_NSS_ERROR, nssError);
+    }
+  } else {
+    handleError(PIP_PKCS12_NSS_ERROR, nssError);
+  }
+}
 
-  aWantRetry = rr_do_not_retry;
+// Returns a failing nsresult if some XPCOM operation failed, and NS_OK
+// otherwise. Returns by reference whether or not we want to retry the operation
+// immediately.
+nsresult
+nsPKCS12Blob::ImportFromFileHelper(nsIFile* file, ImportMode aImportMode,
+                                   RetryReason& aWantRetry)
+{
+  aWantRetry = RetryReason::DoNotRetry;
 
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
-    srv = SECFailure;
-    goto finish;
+    return NS_ERROR_FAILURE;
   }
 
-  if (aImportMode == im_try_zero_length_secitem) {
-    unicodePw.len = 0;
+  uint32_t passwordBufferLength;
+  UniquePtr<uint8_t[]> passwordBuffer;
+  if (aImportMode == ImportMode::TryZeroLengthSecitem) {
+    passwordBufferLength = 0;
+    passwordBuffer = nullptr;
   } else {
     // get file password (unicode)
-    rv = getPKCS12FilePassword(&unicodePw);
-    if (NS_FAILED(rv)) goto finish;
-    if (!unicodePw.data) {
-      handleError(PIP_PKCS12_USER_CANCELED);
+    nsresult rv = getPKCS12FilePassword(passwordBufferLength, passwordBuffer);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (!passwordBuffer) {
       return NS_OK;
     }
   }
 
   // initialize the decoder
-  dcx = SEC_PKCS12DecoderStart(&unicodePw, slot.get(), nullptr, nullptr,
-                               nullptr, nullptr, nullptr, nullptr);
+  SECItem unicodePw = { siBuffer, passwordBuffer.get(), passwordBufferLength };
+  UniqueSEC_PKCS12DecoderContext dcx(
+    SEC_PKCS12DecoderStart(&unicodePw, slot.get(), nullptr, nullptr, nullptr,
+                           nullptr, nullptr, nullptr));
   if (!dcx) {
-    srv = SECFailure;
-    goto finish;
+    return NS_ERROR_FAILURE;
   }
   // read input file and feed it to the decoder
-  rv = inputToDecoder(dcx, file);
+  PRErrorCode nssError;
+  nsresult rv = inputToDecoder(dcx, file, nssError);
   if (NS_FAILED(rv)) {
-    if (NS_ERROR_ABORT == rv) {
-      // inputToDecoder indicated a NSS error
-      srv = SECFailure;
-    }
-    goto finish;
+    return rv;
+  }
+  if (nssError != 0) {
+    handleImportError(nssError, aWantRetry, unicodePw.len);
+    return NS_OK;
   }
   // verify the blob
-  srv = SEC_PKCS12DecoderVerify(dcx);
-  if (srv) goto finish;
-  // validate bags
-  srv = SEC_PKCS12DecoderValidateBags(dcx, nickname_collision);
-  if (srv) goto finish;
-  // import cert and key
-  srv = SEC_PKCS12DecoderImportBags(dcx);
-  if (srv) goto finish;
-  // Later - check to see if this should become default email cert
-finish:
-  // If srv != SECSuccess, NSS probably set a specific error code.
-  // We should use that error code instead of inventing a new one
-  // for every error possible.
+  SECStatus srv = SEC_PKCS12DecoderVerify(dcx.get());
   if (srv != SECSuccess) {
-    if (SEC_ERROR_BAD_PASSWORD == PORT_GetError()) {
-      if (unicodePw.len == sizeof(char16_t))
-      {
-        // no password chars available,
-        // unicodeToItem allocated space for the trailing zero character only.
-        aWantRetry = rr_auto_retry_empty_password_flavors;
-      }
-      else
-      {
-        aWantRetry = rr_bad_password;
-        handleError(PIP_PKCS12_NSS_ERROR);
-      }
-    }
-    else
-    {
-      handleError(PIP_PKCS12_NSS_ERROR);
-    }
-  } else if (NS_FAILED(rv)) {
-    handleError(PIP_PKCS12_RESTORE_FAILED);
+    handleImportError(PR_GetError(), aWantRetry, unicodePw.len);
+    return NS_OK;
   }
-  // finish the decoder
-  if (dcx)
-    SEC_PKCS12DecoderFinish(dcx);
-  SECITEM_ZfreeItem(&unicodePw, false);
+  // validate bags
+  srv = SEC_PKCS12DecoderValidateBags(dcx.get(), nicknameCollision);
+  if (srv != SECSuccess) {
+    handleImportError(PR_GetError(), aWantRetry, unicodePw.len);
+    return NS_OK;
+  }
+  // import cert and key
+  srv = SEC_PKCS12DecoderImportBags(dcx.get());
+  if (srv != SECSuccess) {
+    handleImportError(PR_GetError(), aWantRetry, unicodePw.len);
+  }
   return NS_OK;
 }
 
 static bool
-isExtractable(SECKEYPrivateKey *privKey)
+isExtractable(UniqueSECKEYPrivateKey& privKey)
 {
   ScopedAutoSECItem value;
-  SECStatus rv = PK11_ReadRawAttribute(PK11_TypePrivKey, privKey,
-                                       CKA_EXTRACTABLE, &value);
+  SECStatus rv = PK11_ReadRawAttribute(
+    PK11_TypePrivKey, privKey.get(), CKA_EXTRACTABLE, &value);
   if (rv != SECSuccess) {
     return false;
   }
@@ -170,252 +159,216 @@ isExtractable(SECKEYPrivateKey *privKey)
   return isExtractable;
 }
 
-// nsPKCS12Blob::ExportToFile
-//
 // Having already loaded the certs, form them into a blob (loading the keys
 // also), encode the blob, and stuff it into the file.
 nsresult
-nsPKCS12Blob::ExportToFile(nsIFile *file,
-                           nsIX509Cert **certs, int numCerts)
+nsPKCS12Blob::ExportToFile(nsIFile* file, nsIX509Cert** certs, int numCerts)
 {
-  nsresult rv;
-  SECStatus srv = SECSuccess;
-  SEC_PKCS12ExportContext *ecx = nullptr;
-  SEC_PKCS12SafeInfo *certSafe = nullptr, *keySafe = nullptr;
-  SECItem unicodePw;
-  nsAutoString filePath;
-  int i;
-  nsCOMPtr<nsIFile> localFileRef;
-  // init slot
-
-  bool InformedUserNoSmartcardBackup = false;
-  int numCertsExported = 0;
+  bool informedUserNoSmartcardBackup = false;
 
   // get file password (unicode)
-  unicodePw.data = nullptr;
-  rv = newPKCS12FilePassword(&unicodePw);
-  if (NS_FAILED(rv)) goto finish;
-  if (!unicodePw.data) {
-    handleError(PIP_PKCS12_USER_CANCELED);
+  uint32_t passwordBufferLength;
+  UniquePtr<uint8_t[]> passwordBuffer;
+  nsresult rv = newPKCS12FilePassword(passwordBufferLength, passwordBuffer);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!passwordBuffer) {
     return NS_OK;
   }
-  // what about slotToUse in psm 1.x ???
-  // create export context
-  ecx = SEC_PKCS12CreateExportContext(nullptr, nullptr, nullptr /*slot*/, nullptr);
+  UniqueSEC_PKCS12ExportContext ecx(
+    SEC_PKCS12CreateExportContext(nullptr, nullptr, nullptr, nullptr));
   if (!ecx) {
-    srv = SECFailure;
-    goto finish;
+    handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+    return NS_ERROR_FAILURE;
   }
   // add password integrity
-  srv = SEC_PKCS12AddPasswordIntegrity(ecx, &unicodePw, SEC_OID_SHA1);
-  if (srv) goto finish;
-  for (i=0; i<numCerts; i++) {
-    nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
-    // get it as a CERTCertificate XXX
-    UniqueCERTCertificate nssCert(cert->GetCert());
+  SECItem unicodePw = { siBuffer, passwordBuffer.get(), passwordBufferLength };
+  SECStatus srv = SEC_PKCS12AddPasswordIntegrity(ecx.get(), &unicodePw,
+                                                 SEC_OID_SHA1);
+  if (srv != SECSuccess) {
+    handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+    return NS_ERROR_FAILURE;
+  }
+  for (int i = 0; i < numCerts; i++) {
+    UniqueCERTCertificate nssCert(certs[i]->GetCert());
     if (!nssCert) {
-      rv = NS_ERROR_FAILURE;
-      goto finish;
+      handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+      return NS_ERROR_FAILURE;
     }
-    // We can only successfully export certs that are on
-    // internal token.  Most, if not all, smart card vendors
-    // won't let you extract the private key (in any way
-    // shape or form) from the card.  So let's punt if
+    // We can probably only successfully export certs that are on the internal
+    // token. Most, if not all, smart card vendors won't let you extract the
+    // private key (in any way shape or form) from the card. So let's punt if
     // the cert is not in the internal db.
     if (nssCert->slot && !PK11_IsInternal(nssCert->slot)) {
-      // we aren't the internal token, see if the key is extractable.
-      SECKEYPrivateKey *privKey=PK11_FindKeyByDERCert(nssCert->slot,
-                                                      nssCert.get(), this);
-
-      if (privKey) {
-        bool privKeyIsExtractable = isExtractable(privKey);
-
-        SECKEY_DestroyPrivateKey(privKey);
-
-        if (!privKeyIsExtractable) {
-          if (!InformedUserNoSmartcardBackup) {
-            InformedUserNoSmartcardBackup = true;
-            handleError(PIP_PKCS12_NOSMARTCARD_EXPORT);
-          }
-          continue;
+      // We aren't the internal token, see if the key is extractable.
+      UniqueSECKEYPrivateKey privKey(
+        PK11_FindKeyByDERCert(nssCert->slot, nssCert.get(), mUIContext));
+      if (privKey && !isExtractable(privKey)) {
+        if (!informedUserNoSmartcardBackup) {
+          informedUserNoSmartcardBackup = true;
+          handleError(PIP_PKCS12_NOSMARTCARD_EXPORT, PR_GetError());
         }
+        continue;
       }
     }
 
-    // XXX this is why, to verify the slot is the same
-    // PK11_FindObjectForCert(nssCert, nullptr, slot);
-    // create the cert and key safes
-    keySafe = SEC_PKCS12CreateUnencryptedSafe(ecx);
+    // certSafe and keySafe are owned by ecx.
+    SEC_PKCS12SafeInfo* certSafe;
+    SEC_PKCS12SafeInfo* keySafe = SEC_PKCS12CreateUnencryptedSafe(ecx.get());
     if (!SEC_PKCS12IsEncryptionAllowed() || PK11_IsFIPS()) {
       certSafe = keySafe;
     } else {
-      certSafe = SEC_PKCS12CreatePasswordPrivSafe(ecx, &unicodePw,
-                           SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
+      certSafe = SEC_PKCS12CreatePasswordPrivSafe(
+        ecx.get(), &unicodePw,
+        SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC);
     }
     if (!certSafe || !keySafe) {
-      rv = NS_ERROR_FAILURE;
-      goto finish;
+      handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+      return NS_ERROR_FAILURE;
     }
     // add the cert and key to the blob
-    srv = SEC_PKCS12AddCertAndKey(ecx, certSafe, nullptr, nssCert.get(),
-                                  CERT_GetDefaultCertDB(), // XXX
-                                  keySafe, nullptr, true, &unicodePw,
-                      SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
-    if (srv) goto finish;
-    // cert was dup'ed, so release it
-    ++numCertsExported;
+    srv = SEC_PKCS12AddCertAndKey(
+      ecx.get(),
+      certSafe,
+      nullptr,
+      nssCert.get(),
+      CERT_GetDefaultCertDB(),
+      keySafe,
+      nullptr,
+      true,
+      &unicodePw,
+      SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC);
+    if (srv != SECSuccess) {
+      handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  if (!numCertsExported) goto finish;
-
-  // prepare the instance to write to an export file
-  this->mTmpFile = nullptr;
-  file->GetPath(filePath);
-  // Use the nsCOMPtr var localFileRef so that
-  // the reference to the nsIFile we create gets released as soon as
-  // we're out of scope, ie when this function exits.
-  if (filePath.RFind(".p12", true, -1, 4) < 0) {
-    // We're going to add the .p12 extension to the file name just like
-    // Communicator used to.  We create a new nsIFile and initialize
-    // it with the new patch.
-    filePath.AppendLiteral(".p12");
-    localFileRef = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) goto finish;
-    localFileRef->InitWithPath(filePath);
-    file = localFileRef;
+  UniquePRFileDesc prFile;
+  PRFileDesc* rawPRFile;
+  rv = file->OpenNSPRFileDesc(
+    PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0664, &rawPRFile);
+  if (NS_FAILED(rv) || !rawPRFile) {
+    handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+    return NS_ERROR_FAILURE;
   }
-  rv = file->OpenNSPRFileDesc(PR_RDWR|PR_CREATE_FILE|PR_TRUNCATE, 0664,
-                              &mTmpFile);
-  if (NS_FAILED(rv) || !this->mTmpFile) goto finish;
+  prFile.reset(rawPRFile);
   // encode and write
-  srv = SEC_PKCS12Encode(ecx, write_export_file, this);
-  if (srv) goto finish;
-finish:
-  if (NS_FAILED(rv) || srv != SECSuccess) {
-    handleError(PIP_PKCS12_BACKUP_FAILED);
+  srv = SEC_PKCS12Encode(ecx.get(), writeExportFile, prFile.get());
+  if (srv != SECSuccess) {
+    handleError(PIP_PKCS12_BACKUP_FAILED, PR_GetError());
+    return NS_ERROR_FAILURE;
   }
-  if (ecx)
-    SEC_PKCS12DestroyExportContext(ecx);
-  if (this->mTmpFile) {
-    PR_Close(this->mTmpFile);
-    this->mTmpFile = nullptr;
-  }
-  SECITEM_ZfreeItem(&unicodePw, false);
-  return rv;
+  return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////
-//
-//  private members
-//
-///////////////////////////////////////////////////////////////////////
-
-// unicodeToItem
-//
-// For the NSS PKCS#12 library, must convert PRUnichars (shorts) to
-// a buffer of octets.  Must handle byte order correctly.
-nsresult
-nsPKCS12Blob::unicodeToItem(const nsString& uni, SECItem* item)
+// For the NSS PKCS#12 library, must convert PRUnichars (shorts) to a buffer of
+// octets. Must handle byte order correctly.
+UniquePtr<uint8_t[]>
+nsPKCS12Blob::stringToBigEndianBytes(const nsString& uni, uint32_t& bytesLength)
 {
-  uint32_t len = uni.Length() + 1; // +1 for the null terminator.
-  if (!SECITEM_AllocItem(nullptr, item, sizeof(char16_t) * len)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  uint32_t wideLength = uni.Length() + 1; // +1 for the null terminator.
+  bytesLength = wideLength * 2;
+  auto buffer = MakeUnique<uint8_t[]>(bytesLength);
 
   // We have to use a cast here because on Windows, uni.get() returns
   // char16ptr_t instead of char16_t*.
   mozilla::NativeEndian::copyAndSwapToBigEndian(
-    item->data,
-    static_cast<const char16_t*>(uni.get()),
-    len);
+    buffer.get(), static_cast<const char16_t*>(uni.get()), wideLength);
 
-  return NS_OK;
+  return buffer;
 }
 
-// newPKCS12FilePassword
-//
 // Launch a dialog requesting the user for a new PKCS#12 file passowrd.
 // Handle user canceled by returning null password (caller must catch).
 nsresult
-nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
+nsPKCS12Blob::newPKCS12FilePassword(uint32_t& passwordBufferLength,
+                                    UniquePtr<uint8_t[]>& passwordBuffer)
 {
-  nsresult rv = NS_OK;
   nsAutoString password;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
-  rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
-                       NS_GET_IID(nsICertificateDialogs),
-                       NS_CERTIFICATEDIALOGS_CONTRACTID);
-  if (NS_FAILED(rv)) return rv;
-  bool pressedOK;
+  nsresult rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
+                                NS_GET_IID(nsICertificateDialogs),
+                                NS_CERTIFICATEDIALOGS_CONTRACTID);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  bool pressedOK = false;
   rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
-  if (NS_FAILED(rv) || !pressedOK) return rv;
-  return unicodeToItem(password, unicodePw);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!pressedOK) {
+    return NS_OK;
+  }
+  passwordBuffer = Move(stringToBigEndianBytes(password, passwordBufferLength));
+  return NS_OK;
 }
 
-// getPKCS12FilePassword
-//
 // Launch a dialog requesting the user for the password to a PKCS#12 file.
 // Handle user canceled by returning null password (caller must catch).
 nsresult
-nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
+nsPKCS12Blob::getPKCS12FilePassword(uint32_t& passwordBufferLength,
+                                    UniquePtr<uint8_t[]>& passwordBuffer)
 {
-  nsresult rv = NS_OK;
-  nsAutoString password;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
-  rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
-                       NS_GET_IID(nsICertificateDialogs),
-                       NS_CERTIFICATEDIALOGS_CONTRACTID);
-  if (NS_FAILED(rv)) return rv;
-  bool pressedOK;
+  nsresult rv = ::getNSSDialogs(getter_AddRefs(certDialogs),
+                                NS_GET_IID(nsICertificateDialogs),
+                                NS_CERTIFICATEDIALOGS_CONTRACTID);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsAutoString password;
+  bool pressedOK = false;
   rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
-  if (NS_FAILED(rv) || !pressedOK) return rv;
-  return unicodeToItem(password, unicodePw);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!pressedOK) {
+    return NS_OK;
+  }
+  passwordBuffer = Move(stringToBigEndianBytes(password, passwordBufferLength));
+  return NS_OK;
 }
 
-// inputToDecoder
-//
 // Given a decoder, read bytes from file and input them to the decoder.
 nsresult
-nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsIFile *file)
+nsPKCS12Blob::inputToDecoder(UniqueSEC_PKCS12DecoderContext& dcx, nsIFile* file,
+                             PRErrorCode& nssError)
 {
-  nsresult rv;
-  SECStatus srv;
-  uint32_t amount;
-  char buf[PIP_PKCS12_BUFFER_SIZE];
+  nssError = 0;
 
   nsCOMPtr<nsIInputStream> fileStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
-
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  char buf[PIP_PKCS12_BUFFER_SIZE];
+  uint32_t amount;
   while (true) {
     rv = fileStream->Read(buf, PIP_PKCS12_BUFFER_SIZE, &amount);
     if (NS_FAILED(rv)) {
       return rv;
     }
     // feed the file data into the decoder
-    srv = SEC_PKCS12DecoderUpdate(dcx,
-				  (unsigned char*) buf,
-				  amount);
-    if (srv) {
-      // don't allow the close call to overwrite our precious error code
-      int pr_err = PORT_GetError();
-      PORT_SetError(pr_err);
-      return NS_ERROR_ABORT;
+    SECStatus srv = SEC_PKCS12DecoderUpdate(
+      dcx.get(), (unsigned char*)buf, amount);
+    if (srv != SECSuccess) {
+      nssError = PR_GetError();
+      return NS_OK;
     }
-    if (amount < PIP_PKCS12_BUFFER_SIZE)
+    if (amount < PIP_PKCS12_BUFFER_SIZE) {
       break;
+    }
   }
   return NS_OK;
 }
 
-// nickname_collision
-// what to do when the nickname collides with one already in the db.
-// TODO: not handled, throw a dialog allowing the nick to be changed?
-SECItem *
-nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
+// What to do when the nickname collides with one already in the db.
+SECItem*
+nsPKCS12Blob::nicknameCollision(SECItem* oldNick, PRBool* cancel, void* wincx)
 {
   *cancel = false;
   int count = 1;
@@ -454,95 +407,83 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
     if (count > 1) {
       nickname.AppendPrintf(" #%d", count);
     }
-    UniqueCERTCertificate cert(CERT_FindCertByNickname(CERT_GetDefaultCertDB(),
-                                                       nickname.get()));
+    UniqueCERTCertificate cert(
+      CERT_FindCertByNickname(CERT_GetDefaultCertDB(), nickname.get()));
     if (!cert) {
       break;
     }
     count++;
   }
-  SECItem *newNick = new SECItem;
-  if (!newNick)
+  UniqueSECItem newNick(SECITEM_AllocItem(nullptr, nullptr,
+                                          nickname.Length() + 1));
+  if (!newNick) {
     return nullptr;
+  }
+  memcpy(newNick->data, nickname.get(), nickname.Length());
+  newNick->data[nickname.Length()] = 0;
 
-  newNick->type = siAsciiString;
-  newNick->data = (unsigned char*) strdup(nickname.get());
-  newNick->len  = strlen((char*)newNick->data);
-  return newNick;
+  return newNick.release();
 }
 
-// write_export_file
 // write bytes to the exported PKCS#12 file
 void
-nsPKCS12Blob::write_export_file(void *arg, const char *buf, unsigned long len)
+nsPKCS12Blob::writeExportFile(void* arg, const char* buf, unsigned long len)
 {
-  nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
-  PR_Write(cx->mTmpFile, buf, len);
-}
-
-// pip_ucs2_ascii_conversion_fn
-// required to be set by NSS (to do PKCS#12), but since we've already got
-// unicode make this a no-op.
-PRBool
-pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
-                             unsigned char *inBuf,
-                             unsigned int inBufLen,
-                             unsigned char *outBuf,
-                             unsigned int maxOutBufLen,
-                             unsigned int *outBufLen,
-                             PRBool swapBytes)
-{
-  // do a no-op, since I've already got unicode.  Hah!
-  *outBufLen = inBufLen;
-  memcpy(outBuf, inBuf, inBufLen);
-  return true;
+  PRFileDesc* file = static_cast<PRFileDesc*>(arg);
+  MOZ_RELEASE_ASSERT(file);
+  PR_Write(file, buf, len);
 }
 
 void
-nsPKCS12Blob::handleError(int myerr)
+nsPKCS12Blob::handleError(int myerr, PRErrorCode prerr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!NS_IsMainThread()) {
     return;
   }
 
-  int prerr = PORT_GetError();
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PKCS12: NSS/NSPR error(%d)", prerr));
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("PKCS12: I called(%d)", myerr));
 
-  const char * msgID = nullptr;
+  const char* msgID = nullptr;
 
   switch (myerr) {
-  case PIP_PKCS12_USER_CANCELED:
-    return;  /* Just ignore it for now */
-  case PIP_PKCS12_NOSMARTCARD_EXPORT: msgID = "PKCS12InfoNoSmartcardBackup"; break;
-  case PIP_PKCS12_RESTORE_FAILED:   msgID = "PKCS12UnknownErrRestore"; break;
-  case PIP_PKCS12_BACKUP_FAILED:    msgID = "PKCS12UnknownErrBackup"; break;
-  case PIP_PKCS12_NSS_ERROR:
-    switch (prerr) {
-    // The following errors have the potential to be "handled", by asking
-    // the user (via a dialog) whether s/he wishes to continue
-    case 0: break;
-    case SEC_ERROR_PKCS12_CERT_COLLISION:
-      /* pop a dialog saying the cert is already in the database */
-      /* ask to keep going?  what happens if one collision but others ok? */
-      // The following errors cannot be "handled", notify the user (via an alert)
-      // that the operation failed.
-    case SEC_ERROR_BAD_PASSWORD: msgID = "PK11BadPassword"; break;
-
-    case SEC_ERROR_BAD_DER:
-    case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
-    case SEC_ERROR_PKCS12_INVALID_MAC:
-      msgID = "PKCS12DecodeErr";
+    case PIP_PKCS12_NOSMARTCARD_EXPORT:
+      msgID = "PKCS12InfoNoSmartcardBackup";
       break;
+    case PIP_PKCS12_RESTORE_FAILED:
+      msgID = "PKCS12UnknownErrRestore";
+      break;
+    case PIP_PKCS12_BACKUP_FAILED:
+      msgID = "PKCS12UnknownErrBackup";
+      break;
+    case PIP_PKCS12_NSS_ERROR:
+      switch (prerr) {
+        case 0:
+          break;
+        case SEC_ERROR_PKCS12_CERT_COLLISION:
+          msgID = "PKCS12DupData";
+          break;
+        case SEC_ERROR_BAD_PASSWORD:
+          msgID = "PK11BadPassword";
+          break;
 
-    case SEC_ERROR_PKCS12_DUPLICATE_DATA: msgID = "PKCS12DupData"; break;
-    }
-    break;
+        case SEC_ERROR_BAD_DER:
+        case SEC_ERROR_PKCS12_CORRUPT_PFX_STRUCTURE:
+        case SEC_ERROR_PKCS12_INVALID_MAC:
+          msgID = "PKCS12DecodeErr";
+          break;
+
+        case SEC_ERROR_PKCS12_DUPLICATE_DATA:
+          msgID = "PKCS12DupData";
+          break;
+      }
+      break;
   }
 
-  if (!msgID)
+  if (!msgID) {
     msgID = "PKCS12UnknownErr";
+  }
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!wwatch) {

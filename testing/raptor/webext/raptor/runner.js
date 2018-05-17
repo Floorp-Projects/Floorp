@@ -14,6 +14,13 @@
 // to serve out the pages that we want to prototype with. Also
 // update the manifest content 'matches' accordingly
 
+// when the browser starts this webext runner will start automatically; we
+// want to give the browser some time (ms) to settle before starting tests
+var postStartupDelay = 30000;
+
+// have an optional delay (ms) between pageload cycles
+var pageloadDelay = 1000;
+
 var browserName;
 var ext;
 var testName = null;
@@ -136,7 +143,7 @@ function getBrowserInfo() {
 function testTabCreated(tab) {
   testTabID = tab.id;
   console.log("opened new empty tab " + testTabID);
-  nextCycle();
+  setTimeout(nextCycle, pageloadDelay);
 }
 
 async function testTabUpdated(tab) {
@@ -144,7 +151,7 @@ async function testTabUpdated(tab) {
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
-  nextCycle();
+  setTimeout(nextCycle, pageloadDelay);
 }
 
 function waitForResult() {
@@ -366,8 +373,12 @@ function runner() {
       ext.tabs.onCreated.addListener(testTabCreated);
       // timeout alarm listener
       ext.alarms.onAlarm.addListener(timeoutAlarmListener);
-      // create new empty tab, which starts the test
-      ext.tabs.create({url: "about:blank"});
+
+      // create new empty tab, which starts the test; we want to
+      // wait some time for the browser to settle before beginning
+      var text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
+      postToControlServer("status", text);
+      setTimeout(function() { ext.tabs.create({url: "about:blank"}); }, postStartupDelay);
     });
   });
 }

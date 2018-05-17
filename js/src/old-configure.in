@@ -797,11 +797,16 @@ case "$target" in
         ;;
     esac
 
+    if test -n "$GNU_CC"; then
+        CFLAGS="$CFLAGS -fno-keep-inline-dllexport"
+        CXXFLAGS="$CXXFLAGS -fno-keep-inline-dllexport"
+    fi
+
     case "$target" in
     i*86-*)
         if test -n "$GNU_CC"; then
-            CFLAGS="$CFLAGS -mstackrealign -fno-keep-inline-dllexport"
-            CXXFLAGS="$CXXFLAGS -mstackrealign -fno-keep-inline-dllexport"
+            CFLAGS="$CFLAGS -mstackrealign"
+            CXXFLAGS="$CXXFLAGS -mstackrealign"
             LDFLAGS="$LDFLAGS -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"

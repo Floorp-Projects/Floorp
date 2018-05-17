@@ -76,7 +76,7 @@ public final class RDPConnection implements Closeable {
                     if (RDPConnection.this.mSocket.isClosed()) {
                         quit = true;
                     } else {
-                        result = new RuntimeException(e);
+                        result = e;
                     }
                 }
                 if (result == null) {
@@ -119,8 +119,9 @@ public final class RDPConnection implements Closeable {
 
             mPendingPackets.decrementAndGet();
 
-            if (result instanceof RuntimeException) {
-                throw (RuntimeException) result;
+            if (result instanceof Throwable) {
+                final Throwable throwable = (Throwable) result;
+                throw new RuntimeException(throwable.getMessage(), throwable);
             }
 
             final JSONObject json = (JSONObject) result;
@@ -148,7 +149,7 @@ public final class RDPConnection implements Closeable {
             try {
                 length = Integer.valueOf(header.substring(header.lastIndexOf(' ') + 1));
             } catch (final NumberFormatException e) {
-                return new RuntimeException("Invalid packet header: " + header);
+                return new IllegalStateException("Invalid packet header: " + header);
             }
 
             if (header.startsWith("bulk ")) {
@@ -178,13 +179,12 @@ public final class RDPConnection implements Closeable {
             try {
                 json = new JSONObject(str);
             } catch (final JSONException e) {
-                return new RuntimeException(e);
+                return e;
             }
 
             final String error = json.optString("error", null);
             if (error != null) {
-                return new RuntimeException("Request failed: " + error + ": " +
-                                            json.optString("message", null));
+                return new Exception(error + ": " + json.optString("message", null));
             }
             return json;
         }

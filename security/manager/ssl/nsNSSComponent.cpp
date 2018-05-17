@@ -2645,6 +2645,21 @@ setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx)
   return NS_OK;
 }
 
+// NSS will call this during PKCS12 export to potentially switch the endianness
+// of the characters of `inBuf` to big (network) endian. Since we already did
+// that in nsPKCS12Blob::stringToBigEndianBytes, we just perform a memcpy here.
+extern "C" {
+PRBool
+pkcs12StringEndiannessConversion(PRBool, unsigned char* inBuf,
+                                 unsigned int inBufLen, unsigned char* outBuf,
+                                 unsigned int, unsigned int* outBufLen, PRBool)
+{
+  *outBufLen = inBufLen;
+  memcpy(outBuf, inBuf, inBufLen);
+  return true;
+}
+}
+
 namespace mozilla {
 namespace psm {
 
@@ -2680,7 +2695,7 @@ InitializeCipherSuite()
   SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
   SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
   SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
-  PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
+  PORT_SetUCS2_ASCIIConversionFunction(pkcs12StringEndiannessConversion);
 
   // PSM enforces a minimum RSA key size of 1024 bits, which is overridable.
   // NSS has its own minimum, which is not overridable (the default is 1023

@@ -7,12 +7,10 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Blocklisting')
 
-FINAL_TARGET_FILES.defaults.blocklists += ['addons.json',
-                                           'certificates.json',
-                                           'gfx.json',
-                                           'plugins.json']
-
-FINAL_TARGET_FILES.defaults.pinning += ['pins.json']
+FINAL_TARGET_FILES.defaults.settings.blocklists += ['addons.json',
+                                                    'certificates.json',
+                                                    'gfx.json',
+                                                    'plugins.json']
 
 if CONFIG['MOZ_BUILD_APP'] == 'browser':
     DIST_SUBDIR = 'browser'

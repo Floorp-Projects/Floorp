@@ -273,6 +273,7 @@ function backupCerts() {
   fp.appendFilter(bundle.getString("file_browse_PKCS12_spec"),
                   "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
+  fp.defaultExtension = "p12";
   fp.open(rv => {
     if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
       certdb.exportPKCS12File(fp.file, selected_certs.length, selected_certs);
