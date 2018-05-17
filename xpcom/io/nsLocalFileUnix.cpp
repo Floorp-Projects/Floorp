@@ -88,8 +88,7 @@ using namespace mozilla;
 
 /* directory enumerator */
 class nsDirEnumeratorUnix final
-  : public nsISimpleEnumerator
-  , public nsIDirectoryEnumerator
+  : public nsIDirectoryEnumerator
 {
 public:
   nsDirEnumeratorUnix();
@@ -1850,7 +1849,7 @@ nsLocalFile::SetFollowLinks(bool aFollowLinks)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator** aEntries)
+nsLocalFile::GetDirectoryEntriesImpl(nsIDirectoryEnumerator** aEntries)
 {
   RefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
 
