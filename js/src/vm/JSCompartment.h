@@ -1134,25 +1134,24 @@ struct JSCompartment
 
   private:
     /* Used by memory reporters and invalid otherwise. */
-    JS::CompartmentStats* compartmentStats_;
+    JS::RealmStats* realmStats_;
 
   public:
     // This should only be called when it is non-null, i.e. during memory
     // reporting.
-    JS::CompartmentStats& compartmentStats() {
+    JS::RealmStats& realmStats() {
         // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
-        // (inconclusive) evidence that compartmentStats_ can be nullptr
-        // unexpectedly.
-        MOZ_RELEASE_ASSERT(compartmentStats_);
-        return *compartmentStats_;
+        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
+        MOZ_RELEASE_ASSERT(realmStats_);
+        return *realmStats_;
     }
-    void nullCompartmentStats() {
-        MOZ_ASSERT(compartmentStats_);
-        compartmentStats_ = nullptr;
+    void nullRealmStats() {
+        MOZ_ASSERT(realmStats_);
+        realmStats_ = nullptr;
     }
-    void setCompartmentStats(JS::CompartmentStats* newStats) {
-        MOZ_ASSERT(!compartmentStats_ && newStats);
-        compartmentStats_ = newStats;
+    void setRealmStats(JS::RealmStats* newStats) {
+        MOZ_ASSERT(!realmStats_ && newStats);
+        realmStats_ = newStats;
     }
 
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
