@@ -1219,7 +1219,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
     helperThread_(nullptr),
     options_(options),
     arenas_(nullptr),
-    enterCompartmentDepth_(0),
+    enterRealmDepth_(0),
     jitActivation(nullptr),
     activation_(nullptr),
     profilingActivation_(nullptr),
@@ -1482,8 +1482,8 @@ JSContext::trace(JSTracer* trc)
     cycleDetectorVector().trace(trc);
     geckoProfiler().trace(trc);
 
-    if (trc->isMarkingTracer() && compartment_)
-        compartment_->mark();
+    if (trc->isMarkingTracer() && realm_)
+        realm_->mark();
 }
 
 void*
