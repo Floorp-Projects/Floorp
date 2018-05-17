@@ -82,7 +82,7 @@ jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
     *global = jsfuzz_createGlobal(*cx, nullptr);
     if (!*global)
         return false;
-    JS_EnterCompartment(*cx, *global);
+    JS::EnterRealm(*cx, *global);
     return true;
 }
 
@@ -90,7 +90,7 @@ static void
 jsfuzz_uninit(JSContext* cx, JSCompartment* oldCompartment)
 {
     if (oldCompartment) {
-        JS_LeaveCompartment(cx, oldCompartment);
+        JS::LeaveRealm(cx, oldCompartment);
         oldCompartment = nullptr;
     }
     if (cx) {

@@ -26,18 +26,18 @@ bool JSAPITest::init()
     createGlobal();
     if (!global)
         return false;
-    JS_EnterCompartment(cx, global);
+    JS::EnterRealm(cx, global);
     return true;
 }
 
 void JSAPITest::uninit()
 {
     if (oldCompartment) {
-        JS_LeaveCompartment(cx, oldCompartment);
+        JS::LeaveRealm(cx, oldCompartment);
         oldCompartment = nullptr;
     }
     if (global) {
-        JS_LeaveCompartment(cx, nullptr);
+        JS::LeaveRealm(cx, nullptr);
         global = nullptr;
     }
     if (cx) {

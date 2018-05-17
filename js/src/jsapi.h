@@ -1045,17 +1045,17 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * realm can be entered and left using separate function calls:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
- *     // in 'oldCompartment'
- *     JSCompartment* oldCompartment = JS_EnterCompartment(cx, obj);
- *     // in the compartment of 'obj'
- *     JS_LeaveCompartment(cx, oldCompartment);
- *     // back in 'oldCompartment'
+ *     // in 'oldRealm'
+ *     JSCompartment* oldRealm = JS::EnterRealm(cx, obj);
+ *     // in the realm of 'obj'
+ *     JS::LeaveRealm(cx, oldRealm);
+ *     // back in 'oldRealm'
  *   }
  *
  * Note: these calls must still execute in a LIFO manner w.r.t all other
  * enter/leave calls on the context. Furthermore, only the return value of a
- * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
- * the corresponding JS_LeaveCompartment call.
+ * JS::EnterRealm call may be passed as the 'oldRealm' argument of
+ * the corresponding JS::LeaveRealm call.
  *
  * Entering a realm roots the realm and its global object for the lifetime of
  * the JSAutoRealm.
@@ -1085,16 +1085,20 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+namespace JS {
+
 /** NB: This API is infallible; a nullptr return value does not indicate error.
  *
  * Entering a compartment roots the compartment and its global object until the
- * matching JS_LeaveCompartment() call.
+ * matching JS::LeaveRealm() call.
  */
 extern JS_PUBLIC_API(JSCompartment*)
-JS_EnterCompartment(JSContext* cx, JSObject* target);
+EnterRealm(JSContext* cx, JSObject* target);
 
 extern JS_PUBLIC_API(void)
-JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment);
+LeaveRealm(JSContext* cx, JSCompartment* oldRealm);
+
+} // namespace JS
 
 typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
 

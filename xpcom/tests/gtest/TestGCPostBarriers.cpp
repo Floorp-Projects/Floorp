@@ -100,7 +100,7 @@ CreateGlobalAndRunTest(JSContext* cx)
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
   ASSERT_TRUE(global != nullptr);
 
-  JSCompartment *oldCompartment = JS_EnterCompartment(cx, global);
+  JSCompartment* oldRealm = JS::EnterRealm(cx, global);
 
   typedef Heap<JSObject*> ElementT;
 
@@ -121,7 +121,7 @@ CreateGlobalAndRunTest(JSContext* cx)
     RunTest(cx, &array);
   }
 
-  JS_LeaveCompartment(cx, oldCompartment);
+  JS::LeaveRealm(cx, oldRealm);
 }
 
 TEST(GCPostBarriers, nsTArray) {
