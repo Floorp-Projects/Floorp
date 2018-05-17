@@ -12,38 +12,38 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
+runWithMSE(function(ms, v) {
   // Test that memory reporting works once we've played a video.
   once(v, "ended", () => {
     // Grab a memory report.
-    var mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
-          .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+    const mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+      .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
 
-    var amount = 0;
-    var resourcesPathSeen = false;
-    var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+    let amount = 0;
+    let resourcePathSeen = false;
+    const handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
       if (aPath == "explicit/media/resources") {
         resourcePathSeen = true;
         amount += aAmount;
       }
-    }
+    };
 
-    var finished = function () {
+    const finished = function() {
       ok(true, "Yay didn't crash!");
       ok(resourcePathSeen, "Got media resources amount");
       ok(amount > 0, "Non-zero amount reported for media resources");
       SimpleTest.finish();
-    }
+    };
 
     mgr.getReports(handleReport, null, finished, null, /* anonymized = */ false);
   });
 
   // Load a webm video and play it.
   ms.addEventListener("sourceopen", () => {
-    var sb = ms.addSourceBuffer("video/webm");
-    fetchAndLoad(sb, 'seek', [''], '.webm').then(function() {
+    const sb = ms.addSourceBuffer("video/webm");
+    fetchAndLoad(sb, "seek", [ "" ], ".webm").then(function() {
       ms.endOfStream();
-      v.play()
+      v.play();
     });
   });
 });

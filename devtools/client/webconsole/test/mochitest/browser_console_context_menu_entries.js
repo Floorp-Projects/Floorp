@@ -26,14 +26,14 @@ add_task(async function() {
   let menuPopup = await openContextMenu(hud, networkMessage.node);
   ok(menuPopup, "The context menu is displayed on a network message");
 
-  let expectedContextMenu = [
+  let expectedContextMenu = addPrefBasedEntries([
     "#console-menu-copy-url (a)",
     "#console-menu-open-url (T)",
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-select (A)"
-  ];
+    "#console-menu-select (A)",
+  ]);
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a network message");
 
@@ -47,17 +47,25 @@ add_task(async function() {
   menuPopup = await openContextMenu(hud, logMessage.node);
   ok(menuPopup, "The context menu is displayed on a log message");
 
-  expectedContextMenu = [
+  expectedContextMenu = addPrefBasedEntries([
     "#console-menu-store (S) [disabled]",
     "#console-menu-copy (C)",
     "#console-menu-copy-object (o) [disabled]",
-    "#console-menu-select (A)"
-  ];
+    "#console-menu-select (A)",
+  ]);
   is(getSimplifiedContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the expected entries for a simple log message");
 
   await hideContextMenu(hud);
 });
+
+function addPrefBasedEntries(expectedEntries) {
+  if (Services.prefs.getBoolPref("devtools.webconsole.sidebarToggle", false)) {
+    expectedEntries.push("#console-menu-open-sidebar (V) [disabled]");
+  }
+
+  return expectedEntries;
+}
 
 function getSimplifiedContextMenu(popupElement) {
   return [...popupElement.querySelectorAll("menuitem")]

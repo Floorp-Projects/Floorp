@@ -9,13 +9,12 @@ var Services = require("Services");
 var { ActorPool } = require("devtools/server/actors/common");
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
-var { ConsoleAPIListener } = require("devtools/server/actors/webconsole/listeners");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { assert, update } = DevToolsUtils;
+var { assert } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
-loader.lazyRequireGetter(this, "WebConsoleActor", "devtools/server/actors/webconsole", true);
+loader.lazyRequireGetter(this, "AddonConsoleActor", "devtools/server/actors/addon-console", true);
 
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
@@ -252,84 +251,3 @@ BrowserAddonActor.prototype.requestTypes = {
   "reload": BrowserAddonActor.prototype.onReload
 };
 
-/**
- * The AddonConsoleActor implements capabilities needed for the add-on web
- * console feature.
- *
- * @constructor
- * @param object addon
- *        The add-on that this console watches.
- * @param object connection
- *        The connection to the client, DebuggerServerConnection.
- * @param object parentActor
- *        The parent BrowserAddonActor actor.
- */
-function AddonConsoleActor(addon, connection, parentActor) {
-  this.addon = addon;
-  WebConsoleActor.call(this, connection, parentActor);
-}
-
-AddonConsoleActor.prototype = Object.create(WebConsoleActor.prototype);
-
-update(AddonConsoleActor.prototype, {
-  constructor: AddonConsoleActor,
-
-  actorPrefix: "addonConsole",
-
-  /**
-   * The add-on that this console watches.
-   */
-  addon: null,
-
-  /**
-   * The main add-on JS global
-   */
-  get window() {
-    return this.parentActor.global;
-  },
-
-  /**
-   * Destroy the current AddonConsoleActor instance.
-   */
-  destroy() {
-    WebConsoleActor.prototype.destroy.call(this);
-    this.addon = null;
-  },
-
-  /**
-   * Handler for the "startListeners" request.
-   *
-   * @param object request
-   *        The JSON request object received from the Web Console client.
-   * @return object
-   *         The response object which holds the startedListeners array.
-   */
-  onStartListeners: function ACAOnStartListeners(request) {
-    let startedListeners = [];
-
-    while (request.listeners.length > 0) {
-      let listener = request.listeners.shift();
-      switch (listener) {
-        case "ConsoleAPI":
-          if (!this.consoleAPIListener) {
-            this.consoleAPIListener =
-              new ConsoleAPIListener(null, this, { addonId: this.addon.id });
-            this.consoleAPIListener.init();
-          }
-          startedListeners.push(listener);
-          break;
-      }
-    }
-    return {
-      startedListeners: startedListeners,
-      nativeConsoleAPI: true,
-      traits: this.traits,
-    };
-  },
-});
-
-AddonConsoleActor.prototype.requestTypes = Object.create(
-  WebConsoleActor.prototype.requestTypes
-);
-AddonConsoleActor.prototype.requestTypes.startListeners =
-  AddonConsoleActor.prototype.onStartListeners;

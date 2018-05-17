@@ -2520,6 +2520,12 @@ nsMemoryReporterManager::GetLowMemoryEventsVirtual(int64_t* aAmount)
 }
 
 NS_IMETHODIMP
+nsMemoryReporterManager::GetLowMemoryEventsCommitSpace(int64_t* aAmount)
+{
+  return GetInfallibleAmount(mAmountFns.mLowMemoryEventsCommitSpace, aAmount);
+}
+
+NS_IMETHODIMP
 nsMemoryReporterManager::GetLowMemoryEventsPhysical(int64_t* aAmount)
 {
   return GetInfallibleAmount(mAmountFns.mLowMemoryEventsPhysical, aAmount);

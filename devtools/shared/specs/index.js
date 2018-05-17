@@ -225,6 +225,11 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/webaudio",
   },
   {
+    types: ["console"],
+    spec: "devtools/shared/specs/webconsole",
+    front: null,
+  },
+  {
     types: ["webExtensionInspectedWindow"],
     spec: "devtools/shared/specs/webextension-inspected-window",
     front: "devtools/shared/fronts/webextension-inspected-window",

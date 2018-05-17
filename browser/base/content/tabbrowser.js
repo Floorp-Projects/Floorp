@@ -1619,7 +1619,7 @@ window._gBrowser = {
 
     // Change the "remote" attribute.
     let parent = aBrowser.parentNode;
-    parent.removeChild(aBrowser);
+    aBrowser.remove();
     if (aShouldBeRemote) {
       aBrowser.setAttribute("remote", "true");
       aBrowser.setAttribute("remoteType", aOptions.remoteType);
@@ -2130,9 +2130,7 @@ window._gBrowser = {
     }
 
     aBrowser.destroy();
-
-    let notificationbox = this.getNotificationBox(aBrowser);
-    this.tabpanels.removeChild(notificationbox);
+    this.getNotificationBox(aBrowser).remove();
     tab.removeAttribute("linkedpanel");
 
     this._createLazyBrowser(tab);
@@ -2926,7 +2924,7 @@ window._gBrowser = {
     var wasPinned = aTab.pinned;
 
     // Remove the tab ...
-    this.tabContainer.removeChild(aTab);
+    aTab.remove();
 
     // Update hashiddentabs if this tab was hidden.
     if (aTab.hidden)

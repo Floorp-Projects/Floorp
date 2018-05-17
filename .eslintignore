@@ -218,8 +218,10 @@ dom/jsurl/**
 dom/locales/**
 dom/manifest/**
 dom/mathml/**
-dom/media/**
-!dom/media/*.js*
+dom/media/test/**
+dom/media/tests/**
+dom/media/webaudio/**
+dom/media/webspeech/**
 dom/messagechannel/**
 dom/midi/**
 dom/network/**

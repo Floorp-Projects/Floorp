@@ -11,41 +11,41 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var receivedSourceOpen = false;
+let receivedSourceOpen = false;
 runWithMSE(function(ms, v) {
   ms.addEventListener("sourceopen", function() {
     ok(true, "Receive a sourceopen event");
     ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
     receivedSourceOpen = true;
-    var sb = ms.addSourceBuffer("video/mp4");
+    const sb = ms.addSourceBuffer("video/mp4");
     ok(sb, "Create a SourceBuffer");
 
-    sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-    fetchAndLoad(sb, 'bipbop/bipbop', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['1'], '.m4s'))
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['2'], '.m4s'))
+    sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+    fetchAndLoad(sb, "bipbop/bipbop", [ "init" ], ".mp4")
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop", [ "1" ], ".m4s"))
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop", [ "2" ], ".m4s"))
     /* Note - Missing |bipbop3| segment here corresponding to (1.62, 2.41] */
     /* Note - Missing |bipbop4| segment here corresponding to (2.41, 3.20]  */
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop', ['5'], '.m4s'))
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop", [ "5" ], ".m4s"))
     .then(function() {
-        // last audio sample has a start time of 1.578956s
-        var promise = waitUntilTime(v, 1.57895);
-        info("Playing video. It should play for a bit, then fire 'waiting'");
-        v.play();
-        return promise;
-      }).then(function() {
-        window.firstStop = Date.now();
-        fetchAndLoad(sb, 'bipbop/bipbop', ['3'], '.m4s');
-        // last audio sample has a start time of 2.368435
-        return waitUntilTime(v, 2.36843);
-      }).then(function() {
-        var waitDuration = (Date.now() - window.firstStop) / 1000;
-        ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
-        once(v, 'ended', SimpleTest.finish.bind(SimpleTest));
-        return fetchAndLoad(sb, 'bipbop/bipbop', ['4'], '.m4s');
-      }).then(function() {
-        ms.endOfStream();
-      });;
+      // last audio sample has a start time of 1.578956s
+      const promise = waitUntilTime(v, 1.57895);
+      info("Playing video. It should play for a bit, then fire 'waiting'");
+      v.play();
+      return promise;
+    }).then(function() {
+      window.firstStop = Date.now();
+      fetchAndLoad(sb, "bipbop/bipbop", [ "3" ], ".m4s");
+      // last audio sample has a start time of 2.368435
+      return waitUntilTime(v, 2.36843);
+    }).then(function() {
+      const waitDuration = (Date.now() - window.firstStop) / 1000;
+      ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
+      once(v, "ended", SimpleTest.finish.bind(SimpleTest));
+      return fetchAndLoad(sb, "bipbop/bipbop", [ "4" ], ".m4s");
+    }).then(function() {
+      ms.endOfStream();
+    });
   });
 });
 </script>

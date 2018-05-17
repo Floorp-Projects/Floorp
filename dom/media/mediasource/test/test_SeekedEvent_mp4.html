@@ -35,35 +35,35 @@ runWithMSE(function(ms, el) {
     is(el._loadeddata, true, "must have received loadeddata prior playing");
     el._playing = true;
   });
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var videosb = ms.addSourceBuffer("video/mp4");
+    const videosb = ms.addSourceBuffer("video/mp4");
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    var promises = [];
-    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));
-    promises.push(once(el, "loadedmetadata"));
-    Promise.all(promises)
+    const metadataPromises = [];
+    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
+    metadataPromises.push(once(el, "loadedmetadata"));
+    Promise.all(metadataPromises)
     .then(function() {
       el.play();
       videosb.timestampOffset = 2;
       is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
       // Load [2, 3.606).
-      var promises = [];
-      promises.push(once(el, "play"));
-      promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['1'], '.m4s'));
-      return Promise.all(promises);
+      const playPromises = [];
+      playPromises.push(once(el, "play"));
+      playPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s"));
+      return Promise.all(playPromises);
     })
     .then(function() {
-      return fetchAndLoad(videosb, 'bipbop/bipbop_video', ['2'], '.m4s');
+      return fetchAndLoad(videosb, "bipbop/bipbop_video", [ "2" ], ".m4s");
     })
     .then(function() {
       // TODO: readyState should be at least HAVE_CURRENTDATA, see bug 1367993.
       ok(el.readyState >= el.HAVE_METADATA, "readyState is HAVE_METADATA");
       el.currentTime = 2;
-      var promises = [];
-      promises.push(once(el, "seeked"));
-      promises.push(once(el, "playing"));
-      return Promise.all(promises);
+      const seekedAndPlayingPromises = [];
+      seekedAndPlayingPromises.push(once(el, "seeked"));
+      seekedAndPlayingPromises.push(once(el, "playing"));
+      return Promise.all(seekedAndPlayingPromises);
     })
     .then(function() {
       ok(true, "completed seek");

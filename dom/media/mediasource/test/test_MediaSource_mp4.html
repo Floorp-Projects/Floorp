@@ -12,11 +12,11 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function () {
+runWithMSE(function() {
   SimpleTest.doesThrow(() => new SourceBuffer, "new SourceBuffer should fail");
   SimpleTest.doesThrow(() => new SourceBufferList, "new SourceBufferList direct should fail");
 
-  var ms = new MediaSource();
+  const ms = new MediaSource();
   ok(ms, "Create a MediaSource object");
   ok(ms instanceof EventTarget, "MediaSource must be an EventTarget");
   is(ms.readyState, "closed", "New MediaSource must be in closed state");
@@ -27,35 +27,35 @@ runWithMSE(function () {
   // Set an expando to force wrapper creation, tests for leaks.
   ms.foo = null;
 
-  var o = URL.createObjectURL(ms);
+  const o = URL.createObjectURL(ms);
   ok(o, "Create an objectURL from the MediaSource");
 
-  var v = document.createElement("video");
+  const v = document.createElement("video");
   v.preload = "auto";
   v.src = o;
   document.body.appendChild(v);
 
-  var loadedmetadataCount = 0;
-  var updatestartCount = 0;
-  var updateendCount = 0;
-  var updateCount = 0;
+  let loadedmetadataCount = 0;
+  let updatestartCount = 0;
+  let updateendCount = 0;
+  let updateCount = 0;
 
-  ms.addEventListener("sourceopen", function () {
+  ms.addEventListener("sourceopen", function() {
     ok(true, "Receive a sourceopen event");
     is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
-    var sb = ms.addSourceBuffer("video/mp4");
+    const sb = ms.addSourceBuffer("video/mp4");
     ok(sb, "Create a SourceBuffer");
     is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
     is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
     is(ms.activeSourceBuffers.length, 0, "MediaSource.activeSourceBuffers is expected length");
 
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
       is(sb.updating, true, "SourceBuffer.updating is expected value after appendBuffer");
     });
 
-    sb.addEventListener("update", function () {
+    sb.addEventListener("update", function() {
       is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
       updateCount++;
       /* Ensure that we endOfStream on the first update event only as endOfStream can
@@ -66,11 +66,11 @@ runWithMSE(function () {
       }
     });
 
-    sb.addEventListener("updatestart", function () {
+    sb.addEventListener("updatestart", function() {
       updatestartCount++;
     });
 
-    sb.addEventListener("updateend", function () {
+    sb.addEventListener("updateend", function() {
       is(ms.activeSourceBuffers[0], sb, "SourceBuffer in active list matches our SourceBuffer");
       is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
       updateendCount++;
@@ -78,16 +78,16 @@ runWithMSE(function () {
     });
   });
 
-  ms.addEventListener("sourceended", function () {
+  ms.addEventListener("sourceended", function() {
     ok(true, "Receive a sourceended event");
     is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
   });
 
-  v.addEventListener("loadedmetadata", function () {
+  v.addEventListener("loadedmetadata", function() {
     loadedmetadataCount++;
   });
 
-  v.addEventListener("ended", function () {
+  v.addEventListener("ended", function() {
     // The bipbop video doesn't start at 0. The old MSE code adjust the
     // timestamps and ignore the audio track. The new one doesn't.
     isfuzzy(v.duration, 1.696, 0.166, "Video has correct duration");

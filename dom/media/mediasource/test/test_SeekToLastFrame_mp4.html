@@ -13,21 +13,21 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
   el.controls = true;
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var sb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(sb, 'bipbop/bipbop_480_624kbps-video', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop_480_624kbps-video', range(1, 3), '.m4s'))
+    const sb = ms.addSourceBuffer("video/mp4");
+    fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", [ "init" ], ".mp4")
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop_480_624kbps-video", range(1, 3), ".m4s"))
     .then(function() {
       el.play();
       // let seek to the last audio frame.
       el.currentTime = 1.532517;
-      return once(el, 'seeked');
+      return once(el, "seeked");
     })
     .then(function() {
       ok(true, "seek completed");
       ms.endOfStream();
-      return once(el, 'ended');
+      return once(el, "ended");
     }).then(function() {
       SimpleTest.finish();
     });

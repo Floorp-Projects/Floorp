@@ -12,14 +12,14 @@
 SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var sb = ms.addSourceBuffer("video/webm");
+    const sb = ms.addSourceBuffer("video/webm");
     fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+      sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
       loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))()
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25223-318)))
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25223, 46712-25223)))
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25223 - 318)))
+      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25223, 46712 - 25223)))
       /* Note - Missing |46712, 67833 - 46712| segment here */
       .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 67833, 88966 - 67833)))
       .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966)))
@@ -28,12 +28,12 @@ runWithMSE(function(ms, el) {
         // has notified it of available data. Make sure that we get 'playing' before
         // we starting waiting for 'waiting'.
         info("Invoking play()");
-        var p = once(el, 'playing');
+        const p = once(el, "playing");
         el.play();
         return p;
       }).then(function() {
         ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-        var p = once(el, 'waiting');
+        const p = once(el, "waiting");
         el.play();
         return p;
       }).then(function() {
@@ -44,7 +44,7 @@ runWithMSE(function(ms, el) {
         ok(el.currentTime >= (sb.buffered.end(0) - 0.0465),
            "Got a waiting event at " + el.currentTime);
         info("Loading more data");
-        var p = once(el, 'ended');
+        const p = once(el, "ended");
         loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712)).then(() => ms.endOfStream());
         return p;
       }).then(function() {
