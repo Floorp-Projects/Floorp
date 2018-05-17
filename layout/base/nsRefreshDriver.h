@@ -393,11 +393,6 @@ public:
                                             uint32_t aDelay);
   static void CancelIdleRunnable(nsIRunnable* aRunnable);
 
-  bool SkippedPaints() const
-  {
-    return mSkippedPaints;
-  }
-
   void NotifyDOMContentLoaded();
 
 private:
@@ -436,8 +431,7 @@ private:
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
 
-  double GetRefreshTimerInterval() const;
-  double GetRegularTimerInterval(bool *outIsDefault = nullptr) const;
+  double GetRegularTimerInterval() const;
   static double GetThrottledTimerInterval();
 
   static mozilla::TimeDuration GetMinRecomputeVisibilityInterval();

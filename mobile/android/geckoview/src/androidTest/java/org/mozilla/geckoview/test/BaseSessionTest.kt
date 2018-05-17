@@ -112,4 +112,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     @Suppress("UNCHECKED_CAST")
     fun <T> Any?.asJSList(): List<T> = this as List<T>
+
+    fun Any?.asJSPromise(): GeckoSessionTestRule.PromiseWrapper =
+            this as GeckoSessionTestRule.PromiseWrapper
 }

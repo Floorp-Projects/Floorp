@@ -163,6 +163,13 @@
         ]
       }
     },
+    "en-CA": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "bing", "amazon-ca", "ddg", "twitter", "wikipedia"
+        ]
+      }
+    },
     "en-GB": {
       "default": {
         "visibleDefaultEngines": [

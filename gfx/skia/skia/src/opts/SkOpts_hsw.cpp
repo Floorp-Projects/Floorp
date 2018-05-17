@@ -12,7 +12,9 @@
 #include <immintrin.h>   // ODR safe
 #include <stdint.h>      // ODR safe
 
-#if defined(__AVX2__)
+// As described in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85525, MinGW will produce
+// unaligned instructions for this code, resulting in a crash.
+#if defined(__AVX2__) && !defined(__MINGW32__)
 
 namespace hsw {
 

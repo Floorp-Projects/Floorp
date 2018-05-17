@@ -239,6 +239,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CustomElementRegistry)
   tmp->mConstructors.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCustomDefinitions)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWhenDefinedPromiseMap)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElementCreationCallbacks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -246,6 +247,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementRegistry)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCustomDefinitions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWhenDefinedPromiseMap)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElementCreationCallbacks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -301,11 +303,40 @@ CustomElementRegistry::IsCustomElementEnabled(nsIDocument* aDoc)
   return XRE_IsParentProcess() && nsContentUtils::AllowXULXBLForPrincipal(aDoc->NodePrincipal());
 }
 
+NS_IMETHODIMP
+CustomElementRegistry::RunCustomElementCreationCallback::Run()
+{
+  ErrorResult er;
+  nsDependentAtomString value(mAtom);
+  mCallback->Call(value, er);
+  MOZ_ASSERT(NS_SUCCEEDED(er.StealNSResult()),
+    "chrome JavaScript error in the callback.");
+
+  MOZ_ASSERT(mRegistry->mCustomDefinitions.GetWeak(mAtom),
+    "Callback should define the definition of type.");
+  MOZ_ASSERT(!mRegistry->mElementCreationCallbacks.GetWeak(mAtom),
+    "Callback should be removed.");
+
+  return NS_OK;
+}
+
 CustomElementDefinition*
 CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
-                                                     nsAtom* aTypeAtom) const
+                                                     nsAtom* aTypeAtom)
 {
   CustomElementDefinition* data = mCustomDefinitions.GetWeak(aTypeAtom);
+
+  if (!data) {
+    RefPtr<CustomElementCreationCallback> callback;
+    mElementCreationCallbacks.Get(aTypeAtom, getter_AddRefs(callback));
+    if (callback) {
+      RefPtr<Runnable> runnable =
+        new RunCustomElementCreationCallback(this, aTypeAtom, callback);
+      nsContentUtils::AddScriptRunner(runnable);
+      mElementCreationCallbacks.Remove(aTypeAtom);
+    }
+  }
+
   if (data && data->mLocalName == aNameAtom) {
     return data;
   }
@@ -951,6 +982,28 @@ CustomElementRegistry::Define(const nsAString& aName,
     promise->MaybeResolveWithUndefined();
   }
 
+  /**
+   * Clean-up mElementCreationCallbacks (if it exists)
+   */
+  mElementCreationCallbacks.Remove(nameAtom);
+
+}
+
+void
+CustomElementRegistry::SetElementCreationCallback(const nsAString& aName,
+                                                  CustomElementCreationCallback& aCallback,
+                                                  ErrorResult& aRv)
+{
+  RefPtr<nsAtom> nameAtom(NS_Atomize(aName));
+  if (mElementCreationCallbacks.GetWeak(nameAtom) ||
+      mCustomDefinitions.GetWeak(nameAtom)) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  RefPtr<CustomElementCreationCallback> callback = &aCallback;
+  mElementCreationCallbacks.Put(nameAtom, callback.forget());
+  return;
 }
 
 void

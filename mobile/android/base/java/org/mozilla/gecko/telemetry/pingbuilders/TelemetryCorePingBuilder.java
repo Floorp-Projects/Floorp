@@ -17,6 +17,7 @@ import android.text.TextUtils;
 
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -62,6 +63,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
     private static final String DEFAULT_SEARCH_ENGINE = "defaultSearch";
     private static final String DEVICE = "device";
     private static final String DISTRIBUTION_ID = "distributionId";
+    private static final String DISPLAY_VERSION = "displayVersion";
     private static final String EXPERIMENTS = "experiments";
     private static final String LOCALE = "locale";
     private static final String OS_ATTR = "os";
@@ -101,6 +103,7 @@ public class TelemetryCorePingBuilder extends TelemetryPingBuilder {
         payload.put(OS_VERSION, Integer.toString(Build.VERSION.SDK_INT)); // A String for cross-platform reasons.
         payload.put(PING_CREATION_DATE, pingCreationDateFormat.format(nowCalendar.getTime()));
         payload.put(TIMEZONE_OFFSET, DateUtil.getTimezoneOffsetInMinutesForGivenDate(nowCalendar));
+        payload.put(DISPLAY_VERSION, AppConstants.MOZ_APP_VERSION_DISPLAY);
         payload.putArray(EXPERIMENTS, Experiments.getActiveExperiments(context));
         synchronized (this) {
             SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
