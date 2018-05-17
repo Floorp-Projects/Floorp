@@ -514,6 +514,7 @@ var AddonTestUtils = {
     for (let file of this.tempXPIs.splice(0)) {
       if (file.exists()) {
         try {
+          Services.obs.notifyObservers(file, "flush-cache-entry");
           file.remove(false);
         } catch (e) {
           Cu.reportError(e);
