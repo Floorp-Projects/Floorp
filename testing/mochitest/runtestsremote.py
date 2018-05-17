@@ -340,7 +340,7 @@ def run_test_harness(parser, options):
 
     mochitest = MochiRemote(options)
 
-    if options.log_mach is None:
+    if options.log_mach is None and not options.verify:
         mochitest.printDeviceInfo()
 
     try:
@@ -358,7 +358,7 @@ def run_test_harness(parser, options):
             traceback.print_exc()
         retVal = 1
 
-    if options.log_mach is None:
+    if options.log_mach is None and not options.verify:
         mochitest.printDeviceInfo(printLogcat=True)
 
     mochitest.message_logger.finish()
