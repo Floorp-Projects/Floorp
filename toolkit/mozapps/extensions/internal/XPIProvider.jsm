@@ -1595,6 +1595,7 @@ class BootstrapScope {
       this.callBootstrapMethod("uninstall", reason, extraArgs);
     }
     this.unloadBootstrapScope();
+    XPIInstall.flushJarCache(this.file);
     XPIInstall.flushChromeCaches();
   }
 
