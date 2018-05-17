@@ -287,6 +287,7 @@ public:
 
   virtual void SetCandidateWindowForPlugin(
                  const CandidateWindowPosition& aPosition) override;
+  virtual void EnableIMEForPlugin(bool aEnable) override;
 
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const FrameMetrics::ViewID& aViewId,
@@ -342,6 +343,10 @@ private:
   uint32_t GetCaretOffset();
 
   nsIWidgetListener* GetCurrentWidgetListener();
+
+  // When this widget caches input context and currently managed by
+  // IMEStateManager, the cache is valid.
+  bool HaveValidInputContextCache() const;
 
   class PaintTask : public Runnable {
   public:

@@ -234,6 +234,8 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvSetCandidateWindowForPlugin(
     const widget::CandidateWindowPosition& aPosition) override;
+  virtual mozilla::ipc::IPCResult
+  RecvEnableIMEForPlugin(const bool& aEnable) override;
 
   virtual mozilla::ipc::IPCResult
   RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent) override;

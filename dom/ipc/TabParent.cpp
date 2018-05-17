@@ -2428,6 +2428,17 @@ TabParent::RecvSetCandidateWindowForPlugin(
   return IPC_OK();
 }
 
+ mozilla::ipc::IPCResult
+TabParent::RecvEnableIMEForPlugin(const bool& aEnable)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return IPC_OK();
+  }
+  widget->EnableIMEForPlugin(aEnable);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 TabParent::RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
 {

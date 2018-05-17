@@ -2297,6 +2297,20 @@ PluginInstanceParent::RecvRequestCommitOrCancel(const bool& aCommitted)
     return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+PluginInstanceParent::RecvEnableIME(const bool& aEnable)
+{
+#if defined(OS_WIN)
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (owner) {
+        owner->EnableIME(aEnable);
+    }
+#else
+    MOZ_CRASH("Not reachable");
+#endif
+    return IPC_OK();
+}
+
 nsresult
 PluginInstanceParent::HandledWindowedPluginKeyEvent(
                         const NativeEventData& aKeyEventData,

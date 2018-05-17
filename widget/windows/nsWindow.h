@@ -320,6 +320,7 @@ public:
                    aPosition) override;
   virtual void DefaultProcOfPluginEvent(
                  const mozilla::WidgetPluginEvent& aEvent) override;
+  virtual void EnableIMEForPlugin(bool aEnable) override;
   virtual nsresult OnWindowedPluginKeyEvent(
                      const mozilla::NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
