@@ -91,17 +91,25 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
 // bug 1068684, bug 1073934 for details.  The limiting case seems to be
 // Windows Vista Home 64-bit, where the per-process address space is limited
 // to 8TB.  Thus we track the number of live objects, and set a limit of
-// 1000 live objects per process; we run synchronous GC if necessary; and
-// we throw an OOM error if the per-process limit is exceeded.
+// 1000 live objects per process and we throw an OOM error if the per-process
+// limit is exceeded.
 //
 // Since the MaximumLiveMappedBuffers limit is not generally accounted for by
 // any existing GC-trigger heuristics, we need an extra heuristic for triggering
 // GCs when the caller is allocating memories rapidly without other garbage.
 // Thus, once the live buffer count crosses a certain threshold, we start
-// triggering GCs every N allocations.
+// triggering GCs every N allocations. As we get close to the limit, perform
+// expensive non-incremental full GCs as a last-ditch effort to avoid
+// unnecessary failure. The *Sans use a ton of vmem for bookkeeping leaving a
+// lot less for the program so use a lower limit.
 
+#if defined(MOZ_TSAN) || defined(MOZ_ASAN)
+static const int32_t MaximumLiveMappedBuffers = 500;
+#else
 static const int32_t MaximumLiveMappedBuffers = 1000;
-static const int32_t StartTriggeringAtLiveBufferCount = 200;
+#endif
+static const int32_t StartTriggeringAtLiveBufferCount = 100;
+static const int32_t StartSyncFullGCAtLiveBufferCount = MaximumLiveMappedBuffers - 100;
 static const int32_t AllocatedBuffersPerTrigger = 100;
 
 static Atomic<int32_t, mozilla::ReleaseAcquire> liveBufferCount(0);
@@ -838,8 +846,12 @@ CreateBuffer(JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize
 
     maybeSharedObject.set(object);
 
-    // See StartTriggeringAtLiveBufferCount comment above.
-    if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
+    // See MaximumLiveMappedBuffers comment above.
+    if (liveBufferCount > StartSyncFullGCAtLiveBufferCount) {
+        JS::PrepareForFullGC(cx);
+        JS::GCForReason(cx, GC_NORMAL, JS::gcreason::TOO_MUCH_WASM_MEMORY);
+        allocatedSinceLastTrigger = 0;
+    } else if (liveBufferCount > StartTriggeringAtLiveBufferCount) {
         allocatedSinceLastTrigger++;
         if (allocatedSinceLastTrigger > AllocatedBuffersPerTrigger) {
             Unused << cx->runtime()->gc.triggerGC(JS::gcreason::TOO_MUCH_WASM_MEMORY);
