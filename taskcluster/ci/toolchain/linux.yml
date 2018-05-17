@@ -70,33 +70,33 @@ linux64-clang-5:
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-6-pre:
-    description: "Clang 6 Pre toolchain build"
+linux64-clang-6:
+    description: "Clang 6 toolchain build"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(clang6p)
+        symbol: TL(clang6)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux-xlarge
     worker:
         max-run-time: 7200
     run:
         using: toolchain-script
-        script: build-clang-6-pre-linux.sh
+        script: build-clang-6-linux.sh
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-6-pre-linux64.json'
+            - 'build/build-clang/clang-6-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc-4.9
 
-linux64-clang-6-pre-macosx-cross:
-    description: "Clang 6 Pre toolchain build with MacOS Compiler RT libs"
+linux64-clang-6-macosx-cross:
+    description: "Clang 6 toolchain build with MacOS Compiler RT libs"
     treeherder:
         kind: build
         platform: toolchains/opt
-        symbol: TL(clang6p-macosx-cross)
+        symbol: TL(clang6-macosx-cross)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
@@ -105,16 +105,16 @@ linux64-clang-6-pre-macosx-cross:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
         using: toolchain-script
-        script: build-clang-6-pre-linux-macosx-cross.sh
+        script: build-clang-6-linux-macosx-cross.sh
         resources:
             - 'build/build-clang/build-clang.py'
-            - 'build/build-clang/clang-6-pre-macosx64.json'
+            - 'build/build-clang/clang-6-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
-        - linux64-clang-6-pre
+        - linux64-clang-6
         - linux64-gcc-4.9
 
 linux64-clang-tidy:
