@@ -680,61 +680,61 @@ JS::EnterRealm(JSContext* cx, JSObject* target)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    JSCompartment* oldCompartment = cx->compartment();
-    cx->enterCompartmentOf(target);
-    return oldCompartment;
+    Realm* oldRealm = cx->realm();
+    cx->enterRealmOf(target);
+    return JS::GetRealmForCompartment(oldRealm);
 }
 
 JS_PUBLIC_API(void)
-JS::LeaveRealm(JSContext* cx, JSCompartment* oldRealm)
+JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    cx->leaveCompartment(oldRealm);
+    cx->leaveRealm(oldRealm);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterCompartmentOf(target);
+    cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterCompartmentOf(target);
+    cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::~JSAutoRealm()
 {
-    cx_->leaveCompartment(oldCompartment_);
+    cx_->leaveRealm(oldRealm_);
 }
 
 JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
                                          JSObject* targetOrNull
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (targetOrNull)
-        cx_->enterCompartmentOf(targetOrNull);
+        cx_->enterRealmOf(targetOrNull);
     else
-        cx_->enterNullCompartment();
+        cx_->enterNullRealm();
 }
 
 JSAutoNullableRealm::~JSAutoNullableRealm()
 {
-    cx_->leaveCompartment(oldCompartment_);
+    cx_->leaveRealm(oldRealm_);
 }
 
 JS_PUBLIC_API(void)

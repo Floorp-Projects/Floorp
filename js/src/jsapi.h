@@ -1064,7 +1064,7 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
 class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
 {
     JSContext* cx_;
-    JSCompartment* oldCompartment_;
+    JS::Realm* oldRealm_;
   public:
     JSAutoRealm(JSContext* cx, JSObject* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     JSAutoRealm(JSContext* cx, JSScript* target MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
@@ -1076,7 +1076,7 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoRealm)
 class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
 {
     JSContext* cx_;
-    JSCompartment* oldCompartment_;
+    JS::Realm* oldRealm_;
   public:
     explicit JSAutoNullableRealm(JSContext* cx, JSObject* targetOrNull
                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
@@ -1096,7 +1096,7 @@ extern JS_PUBLIC_API(JSCompartment*)
 EnterRealm(JSContext* cx, JSObject* target);
 
 extern JS_PUBLIC_API(void)
-LeaveRealm(JSContext* cx, JSCompartment* oldRealm);
+LeaveRealm(JSContext* cx, JS::Realm* oldRealm);
 
 } // namespace JS
 

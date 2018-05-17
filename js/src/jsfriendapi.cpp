@@ -39,7 +39,7 @@ using mozilla::Move;
 using mozilla::PodArrayZero;
 
 JS::RootingContext::RootingContext()
-  : autoGCRooters_(nullptr), compartment_(nullptr), zone_(nullptr)
+  : autoGCRooters_(nullptr), realm_(nullptr), zone_(nullptr)
 {
     for (auto& stackRootPtr : stackRoots_)
         stackRootPtr = nullptr;
@@ -1312,9 +1312,9 @@ js::GetTestingFunctions(JSContext* cx)
 
 #ifdef DEBUG
 JS_FRIEND_API(unsigned)
-js::GetEnterCompartmentDepth(JSContext* cx)
+js::GetEnterRealmDepth(JSContext* cx)
 {
-  return cx->getEnterCompartmentDepth();
+  return cx->getEnterRealmDepth();
 }
 #endif
 
