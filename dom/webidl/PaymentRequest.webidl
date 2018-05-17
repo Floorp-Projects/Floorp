@@ -54,9 +54,25 @@ dictionary PaymentDetailsInit : PaymentDetailsBase {
   required PaymentItem total;
 };
 
+dictionary AddressErrors {
+  DOMString addressLine;
+  DOMString city;
+  DOMString country;
+  DOMString dependentLocality;
+  DOMString languageCode;
+  DOMString organization;
+  DOMString phone;
+  DOMString postalCode;
+  DOMString recipient;
+  DOMString region;
+  DOMString regionCode;
+  DOMString sortingCode;
+};
+
 dictionary PaymentDetailsUpdate : PaymentDetailsBase {
-  DOMString   error;
-  PaymentItem total;
+  DOMString     error;
+  AddressErrors shippingAddressErrors;
+  PaymentItem   total;
 };
 
 enum PaymentShippingType {
