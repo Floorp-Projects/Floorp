@@ -423,6 +423,16 @@ internal_CanRecordExtended() {
   return gCanRecordExtended;
 }
 
+bool
+internal_AttemptedGPUProcess() {
+  // Check if it was tried to launch a process.
+  bool attemptedGPUProcess = false;
+  if (auto gpm = mozilla::gfx::GPUProcessManager::Get()) {
+    attemptedGPUProcess = gpm->AttemptedGPUProcess();
+  }
+  return attemptedGPUProcess;
+}
+
 // Note: this is completely unrelated to mozilla::IsEmpty.
 bool
 internal_IsEmpty(const Histogram *h)
@@ -2368,10 +2378,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
 
   // Include the GPU process in histogram snapshots only if we actually tried
   // to launch a process for it.
-  bool includeGPUProcess = false;
-  if (auto gpm = mozilla::gfx::GPUProcessManager::Get()) {
-    includeGPUProcess = gpm->AttemptedGPUProcess();
-  }
+  bool includeGPUProcess = internal_AttemptedGPUProcess();
 
   HistogramProcessSnapshotsArray processHistArray;
   {
@@ -2437,10 +2444,7 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
 
   // Include the GPU process in histogram snapshots only if we actually tried
   // to launch a process for it.
-  bool includeGPUProcess = false;
-  if (auto gpm = mozilla::gfx::GPUProcessManager::Get()) {
-    includeGPUProcess = gpm->AttemptedGPUProcess();
-  }
+  bool includeGPUProcess = internal_AttemptedGPUProcess();
 
   // Get a snapshot of all the data while holding the mutex.
   KeyedHistogramProcessSnapshotsArray processHistArray;
