@@ -586,7 +586,10 @@ var gHistorySwipeAnimation = {
 
     this.isLTR = document.documentElement.matches(":-moz-locale-dir(ltr)");
     this._isStoppingAnimation = false;
-    this.active = true;
+    if (!Services.prefs.getBoolPref("browser.history_swipe_animation.disabled",
+                                    false)) {
+      this.active = true;
+    }
   },
 
   /**
