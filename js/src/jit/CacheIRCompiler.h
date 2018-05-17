@@ -93,6 +93,7 @@ namespace jit {
     _(LoadObjectTruthyResult)             \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
+    _(CompareInt32Result)                 \
     _(ArrayJoinResult)                    \
     _(CallPrintString)                    \
     _(Breakpoint)                         \

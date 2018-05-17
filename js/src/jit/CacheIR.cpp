@@ -4814,6 +4814,32 @@ CompareIRGenerator::tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperand
 }
 
 bool
+CompareIRGenerator::tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId)
+{
+    if ((!lhsVal_.isInt32() && !lhsVal_.isBoolean()) ||
+        (!rhsVal_.isInt32() && !rhsVal_.isBoolean()))
+    {
+        return false;
+    }
+
+    Int32OperandId lhsIntId = lhsVal_.isBoolean() ? writer.guardIsBoolean(lhsId)
+                                                  : writer.guardIsInt32(lhsId);
+    Int32OperandId rhsIntId = rhsVal_.isBoolean() ? writer.guardIsBoolean(rhsId)
+                                                  : writer.guardIsInt32(rhsId);
+
+    // Strictly different types should have been handed by
+    // tryAttachStrictDifferentTypes
+    MOZ_ASSERT_IF(op_ == JSOP_STRICTEQ || op_ == JSOP_STRICTNE,
+                  lhsVal_.isInt32() == rhsVal_.isInt32());
+
+    writer.compareInt32Result(op_, lhsIntId, rhsIntId);
+    writer.returnFromIC();
+
+    trackAttached(lhsVal_.isBoolean() ? "Boolean" : "Int32");
+    return true;
+}
+
+bool
 CompareIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
@@ -4839,6 +4865,11 @@ CompareIRGenerator::tryAttachStub()
         trackAttached(IRGenerator::NotAttached);
         return false;
     }
+
+    // We want these to come below to allow us to bypass the
+    // strictly-different-types cases in the below attachment code
+    if (tryAttachInt32(lhsId, rhsId))
+        return true;
 
     trackAttached(IRGenerator::NotAttached);
     return false;
