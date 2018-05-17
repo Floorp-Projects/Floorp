@@ -33,7 +33,6 @@ struct NativeIterator
 {
     GCPtrObject obj;    // Object being iterated.
     JSObject* iterObj_; // Internal iterator object.
-    GCPtrFlatString* props_array;
     GCPtrFlatString* props_cursor;
     GCPtrFlatString* props_end;
     HeapReceiverGuard* guard_array;
@@ -46,12 +45,30 @@ struct NativeIterator
     NativeIterator* next_;
     NativeIterator* prev_;
 
+    // No further fields appear after here *in NativeIterator*, but this class
+    // is always allocated with space tacked on immediately after |this| (see
+    // below) to store 1) a dynamically known number of iterated property names
+    // and 2) a dynamically known number of HeapReceiverGuards.  The limit of
+    // all such property names, and the start of HeapReceiverGuards, is
+    // |props_end|.  The next property name to iterate is |props_cursor| and
+    // equals |props_end| when this iterator is exhausted but not ready yet for
+    // possible reuse.
+
   public:
-    inline GCPtrFlatString* begin() const {
-        return props_array;
+    GCPtrFlatString* begin() const {
+        static_assert(alignof(NativeIterator) >= alignof(GCPtrFlatString),
+                      "GCPtrFlatStrings for properties must be able to appear "
+                      "directly after NativeIterator, with no padding space "
+                      "required for correct alignment");
+
+        // Note that JIT code inlines this computation to reset |props_cursor|
+        // when an iterator ends: see |CodeGenerator::visitIteratorEnd|.
+        const NativeIterator* immediatelyAfter = this + 1;
+        auto* afterNonConst = const_cast<NativeIterator*>(immediatelyAfter);
+        return reinterpret_cast<GCPtrFlatString*>(afterNonConst);
     }
 
-    inline GCPtrFlatString* end() const {
+    GCPtrFlatString* end() const {
         return props_end;
     }
 
