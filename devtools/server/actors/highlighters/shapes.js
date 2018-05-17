@@ -526,7 +526,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       case "mouseup":
         if (this[_dragging]) {
           this[_dragging] = null;
-          this._handleMarkerHover(null);
+          this._handleMarkerHover(this.hoveredPoint);
         }
         break;
       case "mousemove":
