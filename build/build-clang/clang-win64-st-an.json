@@ -1,23 +1,19 @@
 {
-    "llvm_revision": "317840",
+    "llvm_revision": "326563",
     "stages": "3",
     "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
-    "lld_repo": "https://llvm.org/svn/llvm-project/lld/trunk",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_600/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_600/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_600/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_600/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_600/final",
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "r318309.patch",
-      "r320462.patch",
-      "loosen-msvc-detection.patch",
-      "hide-gcda-profiling-symbols.patch",
-      "fflush-before-unlocking.patch"
+      "loosen-msvc-detection.patch"
     ]
 }
