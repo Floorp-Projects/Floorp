@@ -330,7 +330,15 @@ protected:
   nsresult WillIndent(bool* aCancel, bool* aHandled);
   nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
   nsresult WillHTMLIndent(bool* aCancel, bool* aHandled);
-  nsresult WillOutdent(bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before outdenting around Selection.  This method actually tries
+   * to indent the contents.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult WillOutdent(bool* aCancel, bool* aHandled);
 
   /**
    * Called before aligning contents around Selection.  This method actually
@@ -528,6 +536,21 @@ protected:
    */
   MOZ_MUST_USE nsresult
   AfterEditInner(EditAction action, nsIEditor::EDirection aDirection);
+
+  /**
+   * OutdentAroundSelection() outdents contents around Selection.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * need to check if the editor is still available even if this returns
+   * NS_OK.
+   *
+   * @return                    The left content is left content of last
+   *                            outdented element.
+   *                            The right content is right content of last
+   *                            outdented element.
+   *                            The middle content is middle content of last
+   *                            outdented element.
+   */
+  MOZ_MUST_USE SplitRangeOffFromNodeResult OutdentAroundSelection();
 
   /**
    * SplitRangeOffFromBlockAndRemoveMiddleContainer() splits the nodes
