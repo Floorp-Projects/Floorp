@@ -2467,11 +2467,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority)
     nsTArray<BlobURLRegistrationData> registrations;
     if (nsHostObjectProtocolHandler::GetAllBlobURLEntries(registrations,
                                                           this)) {
-      for (const BlobURLRegistrationData& registration : registrations) {
-        rv = TransmitPermissionsForPrincipal(registration.principal());
-        Unused << NS_WARN_IF(NS_FAILED(rv));
-      }
-
       Unused << SendInitBlobURLs(registrations);
     }
   }
@@ -5152,13 +5147,8 @@ ContentParent::BroadcastBlobURLRegistration(const nsACString& aURI,
 
   for (auto* cp : AllProcesses(eLive)) {
     if (cp != aIgnoreThisCP) {
-      nsresult rv = cp->TransmitPermissionsForPrincipal(principal);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        break;
-      }
-
       IPCBlob ipcBlob;
-      rv = IPCBlobUtils::Serialize(aBlobImpl, cp, ipcBlob);
+      nsresult rv = IPCBlobUtils::Serialize(aBlobImpl, cp, ipcBlob);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         break;
       }
