@@ -11,26 +11,26 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var receivedSourceOpen = false;
+let receivedSourceOpen = false;
 runWithMSE(function(ms, v) {
   ms.addEventListener("sourceopen", function() {
     ok(true, "Receive a sourceopen event");
     ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
     receivedSourceOpen = true;
-    var sb = ms.addSourceBuffer("video/mp4");
+    const sb = ms.addSourceBuffer("video/mp4");
     ok(sb, "Create a SourceBuffer");
-    sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-    sb.mode = 'sequence';
+    sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
+    sb.mode = "sequence";
 
-    fetchAndLoad(sb, 'bipbop/bipbop_video', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop_video', ['5'], '.m4s'))
-    .then(fetchAndLoad.bind(null, sb, 'bipbop/bipbop_video', ['2'], '.m4s'))
+    fetchAndLoad(sb, "bipbop/bipbop_video", [ "init" ], ".mp4")
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop_video", [ "5" ], ".m4s"))
+    .then(fetchAndLoad.bind(null, sb, "bipbop/bipbop_video", [ "2" ], ".m4s"))
     .then(function() {
-        is(v.buffered.length, 1, "Continuous buffered range");
-        is(v.buffered.start(0), 0, "Buffered range starts at 0");
-        ok(sb.timestampOffset > 0, "SourceBuffer.timestampOffset set to allow continuous range");
-        SimpleTest.finish();
-      });
+      is(v.buffered.length, 1, "Continuous buffered range");
+      is(v.buffered.start(0), 0, "Buffered range starts at 0");
+      ok(sb.timestampOffset > 0, "SourceBuffer.timestampOffset set to allow continuous range");
+      SimpleTest.finish();
+    });
   });
 });
 </script>

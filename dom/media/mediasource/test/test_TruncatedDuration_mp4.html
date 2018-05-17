@@ -24,21 +24,21 @@ function round(n) {
 }
 
 function do_seeking(e) {
-  var v = e.target;
+  const v = e.target;
   v.removeEventListener("seeking", do_seeking);
   SimpleTest.finish();
 }
 
 function do_seeked(e) {
-  var v = e.target;
+  const v = e.target;
   v.removeEventListener("seeked", do_seeked);
-  var duration = round(v.duration / 3);
+  const duration = round(v.duration / 3);
   is(v._sb.updating, false, "sourcebuffer isn't updating");
   v._sb.remove(duration, Infinity);
   once(v._sb, "updateend", function() {
-    v._ms.duration = duration
+    v._ms.duration = duration;
     // frames aren't truncated, so duration may be slightly more.
-    isfuzzy(v.duration, duration, 1/30, "element duration was updated");
+    isfuzzy(v.duration, duration, 1 / 30, "element duration was updated");
     v._sb.abort(); // this shouldn't abort updating the duration (bug 1130826).
     ok(v.seeking, "seeking is true");
     // test playback position was updated (bug 1130839).
@@ -49,13 +49,13 @@ function do_seeked(e) {
   });
 }
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/mp4");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/mp4");
     v._sb = sb;
     v._ms = ms;
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
       once(sb, "updateend", function() {
         // mp4 metadata states 10s when we only have 1.6s worth of video.

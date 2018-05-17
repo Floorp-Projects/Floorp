@@ -12,18 +12,18 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/mp4");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/mp4");
 
-    v.addEventListener("loadedmetadata", function () {
+    v.addEventListener("loadedmetadata", function() {
       ok(true, "Got loadedmetadata event");
       is(v.videoWidth, 400, "videoWidth has correct initial value");
       is(v.videoHeight, 300, "videoHeight has correct initial value");
       SimpleTest.finish();
     });
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
+    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
       v.play();
     });

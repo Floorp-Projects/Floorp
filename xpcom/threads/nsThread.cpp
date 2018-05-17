@@ -1271,11 +1271,9 @@ nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
         if (mpPending == MemPressure_Stopping) {
           os->NotifyObservers(nullptr, "memory-pressure-stop", nullptr);
         } else {
-          // Use no-forward to prevent the notifications from being transferred to
-          // the children of this process.
           os->NotifyObservers(nullptr, "memory-pressure",
-                              mpPending == MemPressure_New ? u"low-memory-no-forward" :
-                              u"low-memory-ongoing-no-forward");
+                              mpPending == MemPressure_New ? u"low-memory" :
+                              u"low-memory-ongoing");
         }
       } else {
         NS_WARNING("Can't get observer service!");
