@@ -18,6 +18,7 @@
  * Note: MOZ_NORETURN seems to break crash stacks on ARM, so we don't
  * use that annotation there.
  */
+extern "C"
 MFBT_API
 #if !defined(__arm__)
   MOZ_NORETURN
