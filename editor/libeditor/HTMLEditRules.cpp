@@ -772,7 +772,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
     case EditAction::insertIMEText:
       return NS_OK;
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aInfo->collapsedAction, aResult);
+      return DidDeleteSelection();
     case EditAction::makeBasicBlock:
     case EditAction::indent:
     case EditAction::outdent:
@@ -3815,8 +3815,7 @@ HTMLEditRules::DeleteNonTableElements(nsINode* aNode)
 }
 
 nsresult
-HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
-                                  nsresult aResult)
+HTMLEditRules::DidDeleteSelection()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -3838,6 +3837,9 @@ HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
       {
         AutoEditorDOMPointChildInvalidator lockOffset(atCiteNode);
         nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*citeNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -3846,11 +3848,17 @@ HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
         RefPtr<Element> brElement =
           HTMLEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                          atCiteNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }
         IgnoredErrorResult error;
         SelectionRef().Collapse(EditorRawDOMPoint(brElement), error);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         NS_WARNING_ASSERTION(!error.Failed(),
           "Failed to collapse selection at the new <br> element");
       }
@@ -3858,7 +3866,11 @@ HTMLEditRules::DidDeleteSelection(nsIEditor::EDirection aDir,
   }
 
   // call through to base class
-  return TextEditRules::DidDeleteSelection();
+  nsresult rv = TextEditRules::DidDeleteSelection();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult
