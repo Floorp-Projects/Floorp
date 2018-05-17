@@ -34,8 +34,7 @@ struct NativeIterator
     GCPtrObject obj;    // Object being iterated.
     JSObject* iterObj_; // Internal iterator object.
     GCPtrFlatString* props_cursor;
-    GCPtrFlatString* props_end;
-    HeapReceiverGuard* guard_array;
+    GCPtrFlatString* props_end; // also the start of HeapReceiverGuards
     uint32_t guard_length;
     uint32_t guard_key;
     uint32_t flags;
@@ -70,6 +69,15 @@ struct NativeIterator
 
     GCPtrFlatString* end() const {
         return props_end;
+    }
+
+    HeapReceiverGuard* guardArray() const {
+        static_assert(alignof(ReceiverGuard) == alignof(GCPtrFlatString),
+                      "the end of all properties must be exactly aligned "
+                      "adequate to begin storing ReceiverGuards, else the "
+                      "full tacked-on memory won't be enough to store all "
+                      "properties/guards");
+        return reinterpret_cast<HeapReceiverGuard*>(props_end);
     }
 
     size_t numKeys() const {
