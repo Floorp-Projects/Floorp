@@ -91,7 +91,6 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mContinueModalLoop(false),
     mDebuting(false),
     mChromeLoaded(false),
-    mPersistentWindowStateLoaded(false),
     mSizingShellFromXUL(false),
     mShowAfterLoad(false),
     mIntrinsicallySized(false),
@@ -1124,7 +1123,6 @@ void nsXULWindow::OnChromeLoaded()
   if (NS_SUCCEEDED(rv)) {
     mChromeLoaded = true;
     ApplyChromeFlags();
-    LoadPersistentWindowState();
     SyncAttributesToWidget();
     SizeShell();
 
@@ -2435,12 +2433,6 @@ nsXULWindow::BeforeStartLayout()
 void
 nsXULWindow::LoadPersistentWindowState()
 {
-  // Only apply the persisted state once.
-  if (mPersistentWindowStateLoaded) {
-    return;
-  }
-  mPersistentWindowStateLoaded = true;
-
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement) {
     return;
