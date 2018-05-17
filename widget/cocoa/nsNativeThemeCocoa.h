@@ -384,10 +384,10 @@ public:
                              uint8_t aWidgetType,
                              mozilla::LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
-                                  nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  nsIntMargin* aResult) override;
+   bool GetWidgetPadding(nsDeviceContext* aContext,
+                         nsIFrame* aFrame,
+                         uint8_t aWidgetType,
+                         mozilla::LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                    uint8_t aWidgetType, nsRect* aOverflowRect) override;

@@ -1395,25 +1395,20 @@ nsIFrame::GetUsedPadding() const
     return padding;
 
   // Theme methods don't use const-ness.
-  nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
+  nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
 
-  const nsStyleDisplay *disp = StyleDisplay();
+  const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    nsPresContext *presContext = PresContext();
-    nsIntMargin widget;
-    if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
-                                                  mutable_this,
-                                                  disp->mAppearance,
-                                                  &widget)) {
-      padding.top = presContext->DevPixelsToAppUnits(widget.top);
-      padding.right = presContext->DevPixelsToAppUnits(widget.right);
-      padding.bottom = presContext->DevPixelsToAppUnits(widget.bottom);
-      padding.left = presContext->DevPixelsToAppUnits(widget.left);
-      return padding;
+    nsPresContext* pc = PresContext();
+    LayoutDeviceIntMargin widgetPadding;
+    if (pc->GetTheme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
+                                         disp->mAppearance, &widgetPadding)) {
+      return LayoutDevicePixel::ToAppUnits(widgetPadding,
+                                           pc->AppUnitsPerDevPixel());
     }
   }
 
-  nsMargin *p = GetProperty(UsedPaddingProperty());
+  nsMargin* p = GetProperty(UsedPaddingProperty());
   if (p) {
     padding = *p;
   } else {
@@ -5544,7 +5539,7 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, nscoord aPercentageBasis, bool aForISize)
       presContext->DevPixelsToAppUnits(verticalAxis ? border.TopBottom()
                                                     : border.LeftRight());
 
-    nsIntMargin padding;
+    LayoutDeviceIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   aFrame, disp->mAppearance,
                                                   &padding)) {
