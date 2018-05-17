@@ -3093,6 +3093,26 @@ CacheIRCompiler::emitCompareSymbolResult()
 }
 
 bool
+CacheIRCompiler::emitCompareInt32Result()
+{
+    AutoOutputRegister output(*this);
+    Register left = allocator.useRegister(masm, reader.int32OperandId());
+    Register right = allocator.useRegister(masm, reader.int32OperandId());
+    JSOp op = reader.jsop();
+
+    Label ifTrue, done;
+    masm.branch32(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
+
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitCallPrintString()
 {
     const char* str = reinterpret_cast<char*>(reader.pointer());

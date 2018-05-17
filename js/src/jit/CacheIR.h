@@ -324,6 +324,7 @@ extern const char* CacheKindNames[];
     _(CompareStringResult)                \
     _(CompareObjectResult)                \
     _(CompareSymbolResult)                \
+    _(CompareInt32Result)                 \
                                           \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
@@ -1262,6 +1263,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(rhs);
         buffer_.writeByte(uint32_t(op));
     }
+    void compareInt32Result(uint32_t op, Int32OperandId lhs, Int32OperandId rhs) {
+        writeOpWithOperandId(CacheOp::CompareInt32Result, lhs);
+        writeOperandId(rhs);
+        buffer_.writeByte(uint32_t(op));
+    }
 
     void callPrintString(const char* str) {
         writeOp(CacheOp::CallPrintString);
@@ -1816,6 +1822,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator
     bool tryAttachObject(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachSymbol(ValOperandId lhsId, ValOperandId rhsId);
     bool tryAttachStrictDifferentTypes(ValOperandId lhsId, ValOperandId rhsId);
+    bool tryAttachInt32(ValOperandId lhsId, ValOperandId rhsId);
 
     void trackAttached(const char* name);
 
