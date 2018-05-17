@@ -899,7 +899,7 @@ mozInlineSpellChecker::SpellCheckAfterEditorChange(
 //    Supply a nullptr range and this will check the entire editor.
 
 nsresult
-mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
+mozInlineSpellChecker::SpellCheckRange(nsRange* aRange)
 {
   if (!mSpellCheck) {
     NS_WARNING_ASSERTION(
@@ -909,8 +909,7 @@ mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
   }
 
   auto status = MakeUnique<mozInlineSpellStatus>(this);
-  nsRange* range = static_cast<nsRange*>(aRange);
-  nsresult rv = status->InitForRange(range);
+  nsresult rv = status->InitForRange(aRange);
   NS_ENSURE_SUCCESS(rv, rv);
   return ScheduleSpellCheck(Move(status));
 }
@@ -919,7 +918,7 @@ mozInlineSpellChecker::SpellCheckRange(nsIDOMRange* aRange)
 
 NS_IMETHODIMP
 mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
-                                         nsIDOMRange **newword)
+                                         nsRange** newword)
 {
   if (NS_WARN_IF(!aNode)) {
     return NS_ERROR_INVALID_ARG;
@@ -941,7 +940,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMRange> range;
+  RefPtr<nsRange> range;
   nsresult res = GetMisspelledWord(aNode, aOffset, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
 
@@ -950,7 +949,7 @@ mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
     // This range was retrieved from the spellchecker selection. As
     // ranges cannot be shared between selections, we must clone it
     // before adding it to the editor's selection.
-    RefPtr<nsRange> editorRange = static_cast<nsRange*>(range.get())->CloneRange();
+    RefPtr<nsRange> editorRange = range->CloneRange();
 
     AutoPlaceholderBatch phb(mTextEditor, nullptr);
 
@@ -1619,7 +1618,7 @@ nsresult
 mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
                                           nsIDOMNode *aNode,
                                           int32_t aOffset,
-                                          nsIDOMRange **aRange)
+                                          nsRange** aRange)
 {
   *aRange = nullptr;
 

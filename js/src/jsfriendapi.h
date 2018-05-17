@@ -1202,7 +1202,7 @@ GetErrorTypeName(JSContext* cx, int16_t exnType);
 
 #ifdef JS_DEBUG
 extern JS_FRIEND_API(unsigned)
-GetEnterCompartmentDepth(JSContext* cx);
+GetEnterRealmDepth(JSContext* cx);
 #endif
 
 extern JS_FRIEND_API(RegExpShared*)

@@ -733,10 +733,10 @@ class MOZ_RAII AutoSetCreatedForHelperThread
 static JSObject*
 CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 {
-    JSCompartment* currentCompartment = cx->compartment();
+    JS::Realm* currentRealm = cx->realm();
 
-    JS::RealmOptions realmOptions(currentCompartment->creationOptions(),
-                                  currentCompartment->behaviors());
+    JS::RealmOptions realmOptions(currentRealm->creationOptions(),
+                                  currentRealm->behaviors());
 
     auto& creationOptions = realmOptions.creationOptions();
 
@@ -754,7 +754,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    JS_SetCompartmentPrincipals(global->compartment(), currentCompartment->principals());
+    JS_SetCompartmentPrincipals(global->compartment(), currentRealm->principals());
 
     return global;
 }

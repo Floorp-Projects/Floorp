@@ -182,6 +182,7 @@ class SearchBar extends _react.Component {
 
       this.traverseResults(e, e.shiftKey);
       e.preventDefault();
+      return this.doSearch(e.target.value);
     };
 
     this.renderSearchModifiers = () => {

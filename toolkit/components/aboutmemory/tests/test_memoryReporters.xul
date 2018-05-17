@@ -93,10 +93,10 @@
       storageSqliteAmounts.push(aAmount);
 
     // Check the presence of some other notable reporters.
-    } else if (aPath.search(/^explicit\/js-non-window\/.*compartment\(/) >= 0) {
-      present.jsNonWindowCompartments = true;
-    } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js-compartment\(/) >= 0) {
-      present.windowObjectsJsCompartments = true;
+    } else if (aPath.search(/^explicit\/js-non-window\/.*realm\(/) >= 0) {
+      present.jsNonWindowRealms = true;
+    } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js-realm\(/) >= 0) {
+      present.windowObjectsJsRealms = true;
     } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
       present.places = true;
     } else if (aPath.search(/^explicit\/images/) >= 0) {
@@ -152,8 +152,8 @@
     "heapOverheadFraction",
     "JSMainRuntimeGCHeap",
     "JSMainRuntimeTemporaryPeak",
-    "JSMainRuntimeCompartmentsSystem",
-    "JSMainRuntimeCompartmentsUser",
+    "JSMainRuntimeRealmsSystem",
+    "JSMainRuntimeRealmsUser",
     "imagesContentUsedUncompressed",
     "storageSQLite",
     "lowMemoryEventsVirtual",
@@ -255,8 +255,8 @@
     checkSizeReasonable("js-main-runtime-gc-heap-committed/used/gc-things",
                         jsGcHeapUsedGcThingsTotal);
 
-    ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
-    ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
+    ok(present.jsNonWindowRealms,           "js-non-window realms are present");
+    ok(present.windowObjectsJsRealms,       "window-objects/.../js realms are present");
     ok(present.places,                      "places is present");
     ok(present.images,                      "images is present");
     ok(present.dynamicAtomObjects,          "dynamic/atom-objects is present");

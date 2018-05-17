@@ -7,10 +7,10 @@
 #include "nsISupports.idl"
 
 interface nsIDOMNode;
-interface nsIDOMRange;
 
 webidl Element;
 webidl Node;
+webidl Range;
 
 [scriptable, builtinclass, uuid(4805e684-49b9-11d3-9ce4-ed60bd6cb5bc)]
 interface nsITableEditor : nsISupports
@@ -282,7 +282,7 @@ interface nsITableEditor : nsISupports
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
-  Element getFirstSelectedCell(out nsIDOMRange aRange);
+  Element getFirstSelectedCell(out Range aRange);
 
   /** Get first selected element in the table
     *   This is the upper-left-most selected cell in table,
@@ -313,5 +313,5 @@ interface nsITableEditor : nsISupports
     *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
     *    passes NS_SUCCEEDED macro)
     */
-  Element getNextSelectedCell(out nsIDOMRange aRange);
+  Element getNextSelectedCell(out Range aRange);
 };

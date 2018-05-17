@@ -608,10 +608,13 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
   }
 }
 
-nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, HTHEME aTheme,
-                                                 nsUXThemeClass aThemeClass, uint8_t aWidgetType,
-                                                 int32_t aPart, int32_t aState,
-                                                 nsIntMargin * aResult)
+nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame* aFrame,
+                                                 HTHEME aTheme,
+                                                 nsUXThemeClass aThemeClass,
+                                                 uint8_t aWidgetType,
+                                                 int32_t aPart,
+                                                 int32_t aState,
+                                                 LayoutDeviceIntMargin* aResult)
 {
   int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
   int32_t cacheBitIndex = cacheIndex / 8;
@@ -1839,7 +1842,7 @@ RENDER_AGAIN:
   }
   else if (aWidgetType == NS_THEME_FOCUS_OUTLINE) {
     // Inflate 'widgetRect' with the focus outline size.
-    nsIntMargin border;
+    LayoutDeviceIntMargin border;
     if (NS_SUCCEEDED(GetWidgetBorder(aFrame->PresContext()->DeviceContext(),
                                      aFrame, aWidgetType, &border))) {
       widgetRect.left -= border.left;
@@ -1925,6 +1928,18 @@ RENDER_AGAIN:
 }
 
 static void
+ScaleForFrameDPI(LayoutDeviceIntMargin* aMargin, nsIFrame* aFrame)
+{
+  double themeScale = GetThemeDpiScaleFactor(aFrame);
+  if (themeScale != 1.0) {
+    aMargin->top = NSToIntRound(aMargin->top * themeScale);
+    aMargin->left = NSToIntRound(aMargin->left * themeScale);
+    aMargin->bottom = NSToIntRound(aMargin->bottom * themeScale);
+    aMargin->right = NSToIntRound(aMargin->right * themeScale);
+  }
+}
+
+static void
 ScaleForFrameDPI(nsIntMargin* aMargin, nsIFrame* aFrame)
 {
   double themeScale = GetThemeDpiScaleFactor(aFrame);
@@ -1950,7 +1965,7 @@ NS_IMETHODIMP
 nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult)
+                                  LayoutDeviceIntMargin* aResult)
 {
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
   HTHEME theme = NULL;
@@ -2031,7 +2046,7 @@ bool
 nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext, 
                                    nsIFrame* aFrame,
                                    uint8_t aWidgetType,
-                                   nsIntMargin* aResult)
+                                   LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
     // Radios and checkboxes return a fixed size in GetMinimumWidgetSize
@@ -2207,7 +2222,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
 #endif
 
   if (aWidgetType == NS_THEME_FOCUS_OUTLINE) {
-    nsIntMargin border;
+    LayoutDeviceIntMargin border;
     nsresult rv = GetWidgetBorder(aContext, aFrame, aWidgetType, &border);
     if (NS_SUCCEEDED(rv)) {
       int32_t p2a = aContext->AppUnitsPerDevPixel();
@@ -2761,7 +2776,7 @@ nsresult
 nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult)
+                                  LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_GROUPBOX:
@@ -2815,7 +2830,7 @@ bool
 nsNativeThemeWin::ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    uint8_t aWidgetType,
-                                   nsIntMargin* aResult)
+                                   LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_MENUITEM:

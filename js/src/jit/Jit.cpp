@@ -88,7 +88,7 @@ EnterJit(JSContext* cx, RunState& state, uint8_t* code)
 
     RootedValue result(cx, Int32Value(numActualArgs));
     {
-        AssertCompartmentUnchanged pcc(cx);
+        AssertRealmUnchanged aru(cx);
         ActivationEntryMonitor entryMonitor(cx, calleeToken);
         JitActivation activation(cx);
         EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();

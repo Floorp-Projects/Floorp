@@ -11,6 +11,7 @@ DevToolsModules(
     'breakpointAtLocation.js',
     'getCallStackFrames.js',
     'getRelativeSources.js',
+    'inComponent.js',
     'index.js',
     'isSelectedFrameVisible.js',
     'visibleBreakpoints.js',

@@ -9,6 +9,8 @@
 interface nsIEditor;
 interface nsIEditorSpellCheck;
 
+webidl Range;
+
 [scriptable, uuid(b7b7a77c-40c4-4196-b0b7-b0338243b3fe)]
 interface nsIInlineSpellChecker : nsISupports
 {
@@ -19,9 +21,9 @@ interface nsIInlineSpellChecker : nsISupports
 
   attribute boolean enableRealTimeSpell;
 
-  void spellCheckRange(in nsIDOMRange aSelection);
+  void spellCheckRange(in Range aSelection);
 
-  nsIDOMRange getMisspelledWord(in nsIDOMNode aNode, in long aOffset);
+  Range getMisspelledWord(in nsIDOMNode aNode, in long aOffset);
   void replaceWord(in nsIDOMNode aNode, in long aOffset, in AString aNewword);
   void addWordToDictionary(in AString aWord);
   void removeWordFromDictionary(in AString aWord);
