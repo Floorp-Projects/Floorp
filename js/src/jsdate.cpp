@@ -1312,7 +1312,7 @@ static ClippedTime
 NowAsMillis(JSContext* cx)
 {
     double now = PRMJ_Now();
-    bool clampAndJitter = JS::CompartmentCreationOptionsRef(js::GetContextCompartment(cx)).clampAndJitterTime();
+    bool clampAndJitter = JS::RealmCreationOptionsRef(js::GetContextCompartment(cx)).clampAndJitterTime();
     if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback)
         now = sReduceMicrosecondTimePrecisionCallback(now);
     else if (clampAndJitter && sResolutionUsec) {

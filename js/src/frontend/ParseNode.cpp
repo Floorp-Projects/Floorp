@@ -334,7 +334,7 @@ LexicalScopeNode::dump(GenericPrinter& out, int indent)
     if (!isEmptyScope()) {
         LexicalScope::Data* bindings = scopeBindings();
         for (uint32_t i = 0; i < bindings->length; i++) {
-            JSAtom* name = bindings->names[i].name();
+            JSAtom* name = bindings->trailingNames[i].name();
             JS::AutoCheckCannotGC nogc;
             if (name->hasLatin1Chars())
                 DumpName(out, name->latin1Chars(nogc), name->length());

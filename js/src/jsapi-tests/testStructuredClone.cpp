@@ -265,7 +265,7 @@ BEGIN_TEST(testStructuredClone_SavedFrame)
     for (auto* pp = principalsToTest; pp->principals != DONE; pp++) {
         fprintf(stderr, "Testing with principals '%s'\n", pp->name);
 
-	JS::CompartmentOptions options;
+        JS::RealmOptions options;
         JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), pp->principals,
                                                   JS::FireOnNewGlobalHook, options));
         CHECK(g);

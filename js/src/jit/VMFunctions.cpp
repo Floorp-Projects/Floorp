@@ -17,6 +17,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/BaselineFrame-inl.h"
@@ -926,22 +927,14 @@ InterpretResume(JSContext* cx, HandleObject obj, HandleValue val, HandleProperty
 {
     MOZ_ASSERT(obj->is<GeneratorObject>());
 
-    RootedValue selfHostedFun(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().InterpretGeneratorResume,
-                                         &selfHostedFun))
-    {
-        return false;
-    }
-
-    MOZ_ASSERT(selfHostedFun.toObject().is<JSFunction>());
-
     FixedInvokeArgs<3> args(cx);
 
     args[0].setObject(*obj);
     args[1].set(val);
     args[2].setString(kind);
 
-    return Call(cx, selfHostedFun, UndefinedHandleValue, args, rval);
+    return CallSelfHostedFunction(cx, cx->names().InterpretGeneratorResume, UndefinedHandleValue,
+                                  args, rval);
 }
 
 bool

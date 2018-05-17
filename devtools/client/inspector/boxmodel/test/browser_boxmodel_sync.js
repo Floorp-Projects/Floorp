@@ -21,23 +21,15 @@ add_task(async function() {
   EventUtils.synthesizeMouseAtCenter(span, {}, boxmodel.document.defaultView);
   let editor = boxmodel.document.querySelector(".styleinspector-propertyeditor");
 
+  let onRuleViewRefreshed = once(inspector, "rule-view-refreshed");
   EventUtils.synthesizeKey("7", {}, boxmodel.document.defaultView);
   await waitForUpdate(inspector);
+  await onRuleViewRefreshed;
   is(editor.value, "7", "Should have the right value in the editor.");
   EventUtils.synthesizeKey("VK_RETURN", {}, boxmodel.document.defaultView);
 
-  let onRuleViewRefreshed = once(inspector, "rule-view-refreshed");
-  let onRuleViewSelected = once(inspector.sidebar, "ruleview-selected");
-  info("Select the rule view and check that the property was synced there");
+  info("Check that the property was synced with the rule view");
   let ruleView = selectRuleView(inspector);
-
-  info("Wait for the rule view to be selected");
-  await onRuleViewSelected;
-
-  info("Wait for the rule view to be refreshed");
-  await onRuleViewRefreshed;
-  ok(true, "The rule view was refreshed");
-
   let ruleEditor = getRuleViewRuleEditor(ruleView, 0);
   let textProp = ruleEditor.rule.textProps[0];
   is(textProp.value, "7px", "The property has the right value");

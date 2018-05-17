@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
   this);
 
 function isActiveSidebarTabTitle(inspector, expectedTabTitle, message) {
-  const actualTabTitle = inspector.panelDoc.querySelector(".tabs-menu-item.is-active").innerText;
+  const actualTabTitle = inspector.panelDoc.querySelector("#inspector-sidebar .tabs-menu-item.is-active").innerText;
   is(actualTabTitle, expectedTabTitle, message);
 }
 

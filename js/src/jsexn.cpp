@@ -1092,7 +1092,7 @@ js::GetInternalError(JSContext* cx, unsigned errorNumber, MutableHandleValue err
 {
     FixedInvokeArgs<1> args(cx);
     args[0].set(Int32Value(errorNumber));
-    return CallSelfHostedFunction(cx, "GetInternalError", NullHandleValue, args, error);
+    return CallSelfHostedFunction(cx, cx->names().GetInternalError, NullHandleValue, args, error);
 }
 
 bool
@@ -1100,5 +1100,5 @@ js::GetTypeError(JSContext* cx, unsigned errorNumber, MutableHandleValue error)
 {
     FixedInvokeArgs<1> args(cx);
     args[0].set(Int32Value(errorNumber));
-    return CallSelfHostedFunction(cx, "GetTypeError", NullHandleValue, args, error);
+    return CallSelfHostedFunction(cx, cx->names().GetTypeError, NullHandleValue, args, error);
 }
