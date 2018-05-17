@@ -673,7 +673,7 @@ const reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, Tex
 /**
  * Generic rep that is used for rendering native JS types or an object.
  * The right template used for rendering is picked automatically according
- * to the current value type. The value must be passed is as 'object'
+ * to the current value type. The value must be passed in as the 'object'
  * property.
  */
 const Rep = function (props) {
@@ -2587,6 +2587,10 @@ module.exports = {
 "use strict";
 
 
+const { getValue, nodeHasFullText } = __webpack_require__(3667); /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                 * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                 * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 async function enumIndexedProperties(objectClient, start, end) {
   try {
     const { iterator } = await objectClient.enumProperties({
@@ -2598,9 +2602,7 @@ async function enumIndexedProperties(objectClient, start, end) {
     console.error("Error in enumIndexedProperties", e);
     return {};
   }
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 async function enumNonIndexedProperties(objectClient, start, end) {
   try {
@@ -2645,8 +2647,14 @@ async function getPrototype(objectClient) {
   return objectClient.getPrototype();
 }
 
-async function getFullText(longStringClient, object) {
-  const { initial, length } = object;
+async function getFullText(longStringClient, item) {
+  const { initial, fullText, length } = getValue(item);
+
+  // Return fullText property if it exists so that it can be added to the
+  // loadedProperties map.
+  if (nodeHasFullText(item)) {
+    return Promise.resolve({ fullText });
+  }
 
   return new Promise((resolve, reject) => {
     longStringClient.substring(initial.length, length, response => {
@@ -2753,7 +2761,7 @@ function loadItemProperties(item, createObjectClient, createLongStringClient, lo
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
-    promises.push(getFullText(createLongStringClient(value), value));
+    promises.push(getFullText(createLongStringClient(value), item));
   }
 
   return Promise.all(promises).then(mergeResponses);

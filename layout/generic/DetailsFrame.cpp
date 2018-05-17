@@ -130,23 +130,23 @@ DetailsFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 bool
 DetailsFrame::HasMainSummaryFrame(nsIFrame* aSummaryFrame)
 {
-  nsIFrame* firstChild = nullptr;
+  const ChildListIDs flowLists(kPrincipalList | kOverflowList);
   for (nsIFrame* frag = this; frag; frag = frag->GetNextInFlow()) {
-    firstChild = frag->PrincipalChildList().FirstChild();
-    if (!firstChild) {
-      nsFrameList* overflowFrames = GetOverflowFrames();
-      if (overflowFrames) {
-        firstChild = overflowFrames->FirstChild();
+    for (ChildListIterator lists(frag); !lists.IsDone(); lists.Next()) {
+      if (!flowLists.Contains(lists.CurrentID())) {
+        continue;
+      }
+      for (nsIFrame* child : lists.CurrentList()) {
+        child = nsPlaceholderFrame::GetRealFrameFor(child);
+        // We skip any non-primary frames such as a list-style-position:inside
+        // bullet frame for the <details> itself.
+        if (child->IsPrimaryFrame()) {
+          return aSummaryFrame == child;
+        }
       }
     }
-    if (firstChild) {
-      firstChild = nsPlaceholderFrame::GetRealFrameFor(firstChild);
-      MOZ_ASSERT(firstChild && firstChild->IsPrimaryFrame(),
-                 "this is probably not the frame you were looking for");
-      break;
-    }
   }
-  return aSummaryFrame == firstChild;
+  return false;
 }
 
 } // namespace mozilla

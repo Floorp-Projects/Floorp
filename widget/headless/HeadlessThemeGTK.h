@@ -25,12 +25,12 @@ public:
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult) override;
+                             mozilla::LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
-                                nsIFrame* aFrame,
-                                uint8_t aWidgetType,
-                                nsIntMargin* aResult) override;
+  bool GetWidgetPadding(nsDeviceContext* aContext,
+                        nsIFrame* aFrame,
+                        uint8_t aWidgetType,
+                        mozilla::LayoutDeviceIntMargin* aResult) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
                                   nsIFrame* aFrame, uint8_t aWidgetType,
                                   mozilla::LayoutDeviceIntSize* aResult,

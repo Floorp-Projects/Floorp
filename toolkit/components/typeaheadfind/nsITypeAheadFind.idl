@@ -6,7 +6,6 @@
 
 /********************************* #includes *********************************/
 
-#include "domstubs.idl"                 // nsIDOMRange
 #include "nsISupports.idl"              // nsISupports
 
 
@@ -16,6 +15,7 @@ interface mozIDOMWindow;
 interface nsIDocShell;
 
 webidl Element;
+webidl Range;
 
 
 /****************************** nsTypeAheadFind ******************************/
@@ -41,7 +41,7 @@ interface nsITypeAheadFind : nsISupports
   unsigned short findAgain(in boolean findBackwards, in boolean aLinksOnly);
 
   /* Return the range of the most recent match. */
-  nsIDOMRange getFoundRange();
+  Range getFoundRange();
 
 
   /**************************** Helper functions ***************************/
@@ -60,10 +60,10 @@ interface nsITypeAheadFind : nsISupports
   void collapseSelection();
 
   /* Check if a range is visible using heuristics */
-  boolean isRangeVisible(in nsIDOMRange aRange, in boolean aMustBeInViewPort);
+  boolean isRangeVisible(in Range aRange, in boolean aMustBeInViewPort);
 
   /* Check if a range is actually rendered (out of viewport always false) */
-  boolean isRangeRendered(in nsIDOMRange aRange);
+  boolean isRangeRendered(in Range aRange);
 
   /******************************* Attributes ******************************/
 

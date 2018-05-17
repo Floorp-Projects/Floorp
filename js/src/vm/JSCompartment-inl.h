@@ -46,47 +46,47 @@ JSCompartment::globalIsAboutToBeFinalized()
 template <typename T>
 js::AutoRealm::AutoRealm(JSContext* cx, const T& target)
   : cx_(cx),
-    origin_(cx->compartment()),
+    origin_(cx->realm()),
     maybeLock_(nullptr)
 {
-    cx_->enterCompartmentOf(target);
+    cx_->enterRealmOf(target);
 }
 
 // Protected constructor that bypasses assertions in enterCompartmentOf. Used
 // only for entering the atoms compartment.
-js::AutoRealm::AutoRealm(JSContext* cx, JSCompartment* target,
+js::AutoRealm::AutoRealm(JSContext* cx, JS::Realm* target,
                          js::AutoLockForExclusiveAccess& lock)
   : cx_(cx),
-    origin_(cx->compartment()),
+    origin_(cx->realm()),
     maybeLock_(&lock)
 {
     MOZ_ASSERT(target->isAtomsCompartment());
-    cx_->enterAtomsCompartment(target, lock);
+    cx_->enterAtomsRealm(target, lock);
 }
 
 // Protected constructor that bypasses assertions in enterCompartmentOf. Should
 // not be used to enter the atoms compartment.
-js::AutoRealm::AutoRealm(JSContext* cx, JSCompartment* target)
+js::AutoRealm::AutoRealm(JSContext* cx, JS::Realm* target)
   : cx_(cx),
-    origin_(cx->compartment()),
+    origin_(cx->realm()),
     maybeLock_(nullptr)
 {
     MOZ_ASSERT(!target->isAtomsCompartment());
-    cx_->enterNonAtomsCompartment(target);
+    cx_->enterNonAtomsRealm(target);
 }
 
 js::AutoRealm::~AutoRealm()
 {
-    cx_->leaveCompartment(origin_, maybeLock_);
+    cx_->leaveRealm(origin_, maybeLock_);
 }
 
 js::AutoAtomsRealm::AutoAtomsRealm(JSContext* cx,
                                    js::AutoLockForExclusiveAccess& lock)
-  : AutoRealm(cx, cx->atomsCompartment(lock), lock)
+  : AutoRealm(cx, JS::GetRealmForCompartment(cx->atomsCompartment(lock)), lock)
 {}
 
 js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JSCompartment* target)
-  : AutoRealm(cx, target)
+  : AutoRealm(cx, JS::GetRealmForCompartment(target))
 {}
 
 inline bool

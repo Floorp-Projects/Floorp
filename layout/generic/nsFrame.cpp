@@ -1363,23 +1363,20 @@ nsIFrame::GetUsedBorder() const
     return border;
 
   // Theme methods don't use const-ness.
-  nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
+  nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
 
-  const nsStyleDisplay *disp = StyleDisplay();
+  const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    nsIntMargin result;
-    nsPresContext *presContext = PresContext();
-    presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
-                                             mutable_this, disp->mAppearance,
-                                             &result);
-    border.left = presContext->DevPixelsToAppUnits(result.left);
-    border.top = presContext->DevPixelsToAppUnits(result.top);
-    border.right = presContext->DevPixelsToAppUnits(result.right);
-    border.bottom = presContext->DevPixelsToAppUnits(result.bottom);
+    LayoutDeviceIntMargin widgetBorder;
+    nsPresContext* pc = PresContext();
+    pc->GetTheme()->GetWidgetBorder(pc->DeviceContext(), mutable_this,
+                                    disp->mAppearance, &widgetBorder);
+    border = LayoutDevicePixel::ToAppUnits(widgetBorder,
+                                           pc->AppUnitsPerDevPixel());
     return border;
   }
 
-  nsMargin *b = GetProperty(UsedBorderProperty());
+  nsMargin* b = GetProperty(UsedBorderProperty());
   if (b) {
     border = *b;
   } else {
@@ -1398,25 +1395,20 @@ nsIFrame::GetUsedPadding() const
     return padding;
 
   // Theme methods don't use const-ness.
-  nsIFrame *mutable_this = const_cast<nsIFrame*>(this);
+  nsIFrame* mutable_this = const_cast<nsIFrame*>(this);
 
-  const nsStyleDisplay *disp = StyleDisplay();
+  const nsStyleDisplay* disp = StyleDisplay();
   if (mutable_this->IsThemed(disp)) {
-    nsPresContext *presContext = PresContext();
-    nsIntMargin widget;
-    if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
-                                                  mutable_this,
-                                                  disp->mAppearance,
-                                                  &widget)) {
-      padding.top = presContext->DevPixelsToAppUnits(widget.top);
-      padding.right = presContext->DevPixelsToAppUnits(widget.right);
-      padding.bottom = presContext->DevPixelsToAppUnits(widget.bottom);
-      padding.left = presContext->DevPixelsToAppUnits(widget.left);
-      return padding;
+    nsPresContext* pc = PresContext();
+    LayoutDeviceIntMargin widgetPadding;
+    if (pc->GetTheme()->GetWidgetPadding(pc->DeviceContext(), mutable_this,
+                                         disp->mAppearance, &widgetPadding)) {
+      return LayoutDevicePixel::ToAppUnits(widgetPadding,
+                                           pc->AppUnitsPerDevPixel());
     }
   }
 
-  nsMargin *p = GetProperty(UsedPaddingProperty());
+  nsMargin* p = GetProperty(UsedPaddingProperty());
   if (p) {
     padding = *p;
   } else {
@@ -5539,7 +5531,7 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, nscoord aPercentageBasis, bool aForISize)
   if (aFrame->IsThemed(disp)) {
     nsPresContext* presContext = aFrame->PresContext();
 
-    nsIntMargin border;
+    LayoutDeviceIntMargin border;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              aFrame, disp->mAppearance,
                                              &border);
@@ -5547,7 +5539,7 @@ IntrinsicSizeOffsets(nsIFrame* aFrame, nscoord aPercentageBasis, bool aForISize)
       presContext->DevPixelsToAppUnits(verticalAxis ? border.TopBottom()
                                                     : border.LeftRight());
 
-    nsIntMargin padding;
+    LayoutDeviceIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   aFrame, disp->mAppearance,
                                                   &padding)) {

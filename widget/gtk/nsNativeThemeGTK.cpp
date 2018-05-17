@@ -1250,7 +1250,7 @@ nsNativeThemeGTK::NativeThemeToGtkTheme(uint8_t aWidgetType, nsIFrame* aFrame)
 void
 nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
                                         GtkTextDirection aDirection,
-                                        nsIntMargin* aResult)
+                                        LayoutDeviceIntMargin* aResult)
 {
   aResult->SizeTo(0, 0, 0, 0);
 
@@ -1277,7 +1277,8 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType, nsIntMargin* aResult)
+                                  uint8_t aWidgetType,
+                                  LayoutDeviceIntMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
@@ -1367,7 +1368,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 bool
 nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, uint8_t aWidgetType,
-                                   nsIntMargin* aResult)
+                                   LayoutDeviceIntMargin* aResult)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON_FOCUS:
@@ -1405,7 +1406,6 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                               aResult);
 
         gint horizontal_padding;
-
         if (aWidgetType == NS_THEME_MENUITEM)
           moz_gtk_menuitem_get_horizontal_padding(&horizontal_padding);
         else
@@ -1657,7 +1657,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       // descendants; the value returned here will not be helpful, but the
       // box model may consider border and padding with child minimum sizes.
 
-      nsIntMargin border;
+      LayoutDeviceIntMargin border;
       GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame), &border);
       aResult->width += border.left + border.right;
       aResult->height += border.top + border.bottom;

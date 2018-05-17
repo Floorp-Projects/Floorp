@@ -13,7 +13,6 @@
 #include "nsIFind.h"
 #include "nsIWebBrowserFind.h"
 #include "nsWeakReference.h"
-#include "nsIDOMRange.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsITypeAheadFind.h"
 #include "nsISound.h"

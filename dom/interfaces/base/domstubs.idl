@@ -37,6 +37,3 @@ interface nsIDOMEventListener;
 
 // HTML
 interface nsIDOMHTMLHeadElement;
-
-// Range
-interface nsIDOMRange;

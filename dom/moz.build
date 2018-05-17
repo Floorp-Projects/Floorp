@@ -19,7 +19,6 @@ interfaces = [
     'html',
     'events',
     'sidebar',
-    'range',
     'xul',
     'security',
     'storage',

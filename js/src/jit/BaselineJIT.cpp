@@ -136,7 +136,7 @@ EnterBaseline(JSContext* cx, EnterJitData& data)
 
     data.result.setInt32(data.numActualArgs);
     {
-        AssertCompartmentUnchanged pcc(cx);
+        AssertRealmUnchanged aru(cx);
         ActivationEntryMonitor entryMonitor(cx, data.calleeToken);
         JitActivation activation(cx);
 

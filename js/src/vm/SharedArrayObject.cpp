@@ -262,7 +262,7 @@ SharedArrayBufferObject*
 SharedArrayBufferObject::New(JSContext* cx, SharedArrayRawBuffer* buffer, uint32_t length,
                              HandleObject proto)
 {
-    MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
+    MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
     AutoSetNewObjectMetadata metadata(cx);
     Rooted<SharedArrayBufferObject*> obj(cx,
@@ -358,7 +358,7 @@ SharedArrayBufferObject*
 SharedArrayBufferObject::createFromNewRawBuffer(JSContext* cx, SharedArrayRawBuffer* buffer,
                                                 uint32_t initialSize)
 {
-    MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
+    MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
     AutoSetNewObjectMetadata metadata(cx);
     SharedArrayBufferObject* obj = NewObjectWithClassProto<SharedArrayBufferObject>(cx, nullptr);
@@ -484,7 +484,7 @@ js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, bool* isS
 JS_FRIEND_API(JSObject*)
 JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes)
 {
-    MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
+    MOZ_ASSERT(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
 
     MOZ_ASSERT(nbytes <= INT32_MAX);
     return SharedArrayBufferObject::New(cx, nbytes, /* proto = */ nullptr);

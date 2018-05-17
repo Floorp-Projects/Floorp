@@ -38,7 +38,6 @@ protected:
   virtual ~nsFind();
 
   // Parameters set from the interface:
-  //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
   bool mFindBackward;
   bool mCaseSensitive;
 

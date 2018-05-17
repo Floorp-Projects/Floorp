@@ -3294,7 +3294,7 @@ static bool
 SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
+    args.rval().setBoolean(cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled());
     return true;
 }
 
@@ -4125,7 +4125,7 @@ SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool disable = !args.hasDefined(0) || ToBoolean(args[0]);
-    cx->compartment()->behaviors().setDisableLazyParsing(disable);
+    cx->realm()->behaviors().setDisableLazyParsing(disable);
 
     args.rval().setUndefined();
     return true;
@@ -4137,7 +4137,7 @@ SetDiscardSource(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool discard = !args.hasDefined(0) || ToBoolean(args[0]);
-    cx->compartment()->behaviors().setDiscardSource(discard);
+    cx->realm()->behaviors().setDiscardSource(discard);
 
     args.rval().setUndefined();
     return true;

@@ -40,12 +40,12 @@ public:
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult) override;
+                             mozilla::LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
-                                nsIFrame* aFrame,
-                                uint8_t aWidgetType,
-                                nsIntMargin* aResult) override;
+  bool GetWidgetPadding(nsDeviceContext* aContext,
+                        nsIFrame* aFrame,
+                        uint8_t aWidgetType,
+                        mozilla::LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                  nsIFrame* aFrame,
@@ -101,9 +101,10 @@ private:
   // by widget type.  Each bit in mBorderCacheValid says whether the
   // corresponding entry in mBorderCache is valid.
   void GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
-                             GtkTextDirection aDirection, nsIntMargin* aResult);
+                             GtkTextDirection aDirection,
+                             mozilla::LayoutDeviceIntMargin* aResult);
   uint8_t mBorderCacheValid[(MOZ_GTK_WIDGET_NODE_COUNT + 7) / 8];
-  nsIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
+  mozilla::LayoutDeviceIntMargin mBorderCache[MOZ_GTK_WIDGET_NODE_COUNT];
 };
 
 #endif
