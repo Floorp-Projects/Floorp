@@ -2647,7 +2647,11 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       //     non-empty text node.  For now, we should keep our traditional
       //     behavior same as Chromium for backward compatibility.
 
-      DeleteNodeIfCollapsedText(nodeAsText);
+      rv = DeleteNodeIfCollapsedText(nodeAsText);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove collapsed text");
 
       rv = InsertBRIfNeeded();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3198,8 +3202,18 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     AutoTrackDOMPoint endTracker(HTMLEditorRef().mRangeUpdater,
                                  address_of(endNode), &endOffset);
 
-    DeleteNodeIfCollapsedText(*startNode);
-    DeleteNodeIfCollapsedText(*endNode);
+    nsresult rv = DeleteNodeIfCollapsedText(*startNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to delete start node even though it's collapsed text");
+    rv = DeleteNodeIfCollapsedText(*endNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to delete end node even though it's collapsed text");
   }
 
   // If we're joining blocks: if deleting forward the selection should be
@@ -3224,30 +3238,29 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
   return NS_OK;
 }
 
-/**
- * If aNode is a text node that contains only collapsed whitespace, delete it.
- * It doesn't serve any useful purpose, and we don't want it to confuse code
- * that doesn't correctly skip over it.
- *
- * If deleting the node fails (like if it's not editable), the caller should
- * proceed as usual, so don't return any errors.
- */
-void
+nsresult
 HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   Text* text = aNode.GetAsText();
   if (!text) {
-    return;
+    return NS_OK;
   }
 
-  if (!HTMLEditorRef().IsVisibleTextNode(*text)) {
-    DebugOnly<nsresult> rv = HTMLEditorRef().DeleteNodeWithTransaction(aNode);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove aNode");
+  if (HTMLEditorRef().IsVisibleTextNode(*text)) {
+    return NS_OK;
   }
+
+  nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(aNode);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
-
 
 /**
  * InsertBRIfNeeded() determines if a br is needed for current selection to not
