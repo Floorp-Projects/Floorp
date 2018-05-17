@@ -888,16 +888,14 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, const GdkRectangle* aRect,
         // in case of horizontal scrollbars).
         GtkOrientation orientation = flags & MOZ_GTK_STEPPER_VERTICAL ?
             GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
-        const auto& metrics = sScrollbarMetrics[orientation];
-        if (!metrics.initialized) {
-            NS_WARNING("Didn't measure before drawing?");
-        }
+
+        const ScrollbarGTKMetrics* metrics = GetScrollbarMetrics(orientation);
         if (flags & MOZ_GTK_STEPPER_VERTICAL) {
-            rect.x += metrics.border.track.left;
-            rect.width = metrics.size.thumb.width;
+            rect.x += metrics->border.track.left;
+            rect.width = metrics->size.thumb.width;
         } else {
-            rect.y += metrics.border.track.top;
-            rect.height = metrics.size.thumb.height;
+            rect.y += metrics->border.track.top;
+            rect.height = metrics->size.thumb.height;
         }
     }
 
