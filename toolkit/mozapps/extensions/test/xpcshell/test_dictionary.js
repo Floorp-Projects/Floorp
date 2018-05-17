@@ -287,7 +287,6 @@ add_task(async function test_5() {
   ok(!addon.appDisabled);
   ok(!addon.userDisabled);
   ok(addon.isActive);
-  ok(!isExtensionInAddonsList(profileDir, addon.id));
 });
 
 // Tests that uninstalling doesn't require a restart

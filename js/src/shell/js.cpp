@@ -791,7 +791,7 @@ EnvironmentPreparer::invoke(HandleObject scope, Closure& closure)
     JSContext* cx = TlsContext.get();
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
 
-    AutoCompartment ac(cx, scope);
+    AutoRealm ar(cx, scope);
     AutoReportException are(cx);
     if (!closure(cx))
         return;
@@ -1007,7 +1007,7 @@ ForwardingPromiseRejectionTrackerCallback(JSContext* cx, JS::HandleObject promis
         return;
     }
 
-    AutoCompartment ac(cx, &callback.toObject());
+    AutoRealm ar(cx, &callback.toObject());
 
     FixedInvokeArgs<2> args(cx);
     args[0].setObject(*promise);

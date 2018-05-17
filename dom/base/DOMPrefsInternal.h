@@ -42,6 +42,9 @@ DOM_PREF(EnableAutoDeclineCanvasPrompts, "privacy.resistFingerprinting.autoDecli
 DOM_PREF(DevToolsEnabled, "devtools.enabled")
 DOM_PREF(PerformanceObserverEnabled, "dom.enable_performance_observer")
 DOM_PREF(IndexedDBStorageOptionsEnabled, "dom.indexedDB.storageOption.enabled")
+#ifdef JS_BUILD_BINAST
+DOM_PREF(BinASTEncodingEnabled, "dom.script_loader.binast_encoding.enabled")
+#endif
 
 DOM_WEBIDL_PREF(ImageBitmapExtensionsEnabled)
 DOM_WEBIDL_PREF(DOMCachesEnabled)

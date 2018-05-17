@@ -345,6 +345,91 @@ nsJSUtils::ExecutionContext::DecodeJoinAndExec(JS::OffThreadToken** aOffThreadTo
 }
 
 nsresult
+nsJSUtils::ExecutionContext::DecodeBinASTJoinAndExec(JS::OffThreadToken** aOffThreadToken,
+                                                     JS::MutableHandle<JSScript*> aScript)
+{
+#ifdef JS_BUILD_BINAST
+  if (mSkip) {
+    return mRv;
+  }
+
+  MOZ_ASSERT(!mWantsReturnValue);
+  MOZ_ASSERT(!mExpectScopeChain);
+
+  aScript.set(JS::FinishOffThreadBinASTDecode(mCx, *aOffThreadToken));
+  *aOffThreadToken = nullptr; // Mark the token as having been finished.
+
+  if (!aScript) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (mEncodeBytecode && !StartIncrementalEncoding(mCx, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (!JS_ExecuteScript(mCx, mScopeChain, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult
+nsJSUtils::ExecutionContext::DecodeBinASTAndExec(JS::CompileOptions& aCompileOptions,
+                                                 const uint8_t* aBuf, size_t aLength,
+                                                 JS::MutableHandle<JSScript*> aScript)
+{
+#ifdef JS_BUILD_BINAST
+  MOZ_ASSERT(mScopeChain.length() == 0,
+             "BinAST decoding is not supported in non-syntactic scopes");
+
+  if (mSkip) {
+    return mRv;
+  }
+
+  MOZ_ASSERT(aBuf);
+  MOZ_ASSERT(mRetValue.isUndefined());
+#ifdef DEBUG
+  mWantsReturnValue = !aCompileOptions.noScriptRval;
+#endif
+
+  aScript.set(JS::DecodeBinAST(mCx, aCompileOptions, aBuf, aLength));
+
+  if (!aScript) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (mEncodeBytecode && !StartIncrementalEncoding(mCx, aScript)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  MOZ_ASSERT(!mCoerceToString || mWantsReturnValue);
+  if (!JS_ExecuteScript(mCx, mScopeChain, aScript, &mRetValue)) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult
 nsJSUtils::ExecutionContext::ExtractReturnValue(JS::MutableHandle<JS::Value> aRetValue)
 {
   MOZ_ASSERT(aRetValue.isUndefined());

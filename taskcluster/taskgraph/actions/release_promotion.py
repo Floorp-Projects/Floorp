@@ -28,67 +28,6 @@ from taskgraph.decision import taskgraph_decision
 from taskgraph.parameters import Parameters
 from taskgraph.util.attributes import RELEASE_PROMOTION_PROJECTS
 
-RELEASE_PROMOTION_CONFIG = {
-    'promote_fennec': {
-        'target_tasks_method': 'promote_fennec',
-        'product': 'fennec',
-    },
-    'ship_fennec': {
-        'target_tasks_method': 'ship_fennec',
-        'product': 'fennec',
-    },
-    'ship_fennec_rc': {
-        'target_tasks_method': 'ship_fennec',
-        'product': 'fennec',
-        'release_type': 'rc',
-    },
-    'promote_firefox': {
-        'target_tasks_method': 'promote_firefox',
-        'product': 'firefox',
-    },
-    'push_firefox': {
-        'target_tasks_method': 'push_firefox',
-        'product': 'firefox',
-    },
-    'ship_firefox': {
-        'target_tasks_method': 'ship_firefox',
-        'product': 'firefox',
-    },
-    'promote_firefox_rc': {
-        'target_tasks_method': 'promote_firefox',
-        'product': 'firefox',
-        'release_type': 'rc',
-    },
-    'ship_firefox_rc': {
-        'target_tasks_method': 'ship_firefox',
-        'product': 'firefox',
-        'release_type': 'rc',
-    },
-    'promote_firefox_partners': {
-        'target_tasks_method': 'promote_firefox',
-        'product': 'firefox',
-        'rebuild_kinds': [
-            'release-partner-repack',
-            'release-partner-beetmover',
-            'release-partner-repack-chunking-dummy',
-            'release-partner-repackage-signing',
-            'release-partner-repackage',
-            'release-partner-signing',
-        ],
-    },
-    'promote_devedition': {
-        'target_tasks_method': 'promote_devedition',
-        'product': 'devedition',
-    },
-    'push_devedition': {
-        'target_tasks_method': 'push_devedition',
-        'product': 'devedition',
-    },
-    'ship_devedition': {
-        'target_tasks_method': 'ship_devedition',
-        'product': 'devedition',
-    },
-}
 
 VERSION_BUMP_FLAVORS = (
     'ship_fennec',
@@ -128,7 +67,7 @@ def get_partner_config(partner_url_config, github_token):
     order=10000,
     context=[],
     available=is_release_promotion_available,
-    schema={
+    schema=lambda graph_config: {
         'type': 'object',
         'properties': {
             'build_number': {
@@ -159,7 +98,7 @@ def get_partner_config(partner_url_config, github_token):
             'release_promotion_flavor': {
                 'type': 'string',
                 'description': 'The flavor of release promotion to perform.',
-                'enum': sorted(RELEASE_PROMOTION_CONFIG.keys()),
+                'enum': sorted(graph_config['release-promotion']['flavors'].keys()),
             },
             'rebuild_kinds': {
                 'type': 'array',
@@ -272,7 +211,7 @@ def get_partner_config(partner_url_config, github_token):
 )
 def release_promotion_action(parameters, graph_config, input, task_group_id, task_id, task):
     release_promotion_flavor = input['release_promotion_flavor']
-    promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
+    promotion_config = graph_config['release-promotion']['flavors'][release_promotion_flavor]
     release_history = {}
     product = promotion_config['product']
 
@@ -300,16 +239,14 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
                 partial_updates=input['partial_updates']
             )
 
-    promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
-
-    target_tasks_method = promotion_config['target_tasks_method'].format(
+    target_tasks_method = promotion_config['target-tasks-method'].format(
         project=parameters['project']
     )
     rebuild_kinds = input.get(
-        'rebuild_kinds', promotion_config.get('rebuild_kinds', [])
+        'rebuild_kinds', promotion_config.get('rebuild-kinds', [])
     )
     do_not_optimize = input.get(
-        'do_not_optimize', promotion_config.get('do_not_optimize', [])
+        'do_not_optimize', promotion_config.get('do-not-optimize', [])
     )
     release_enable_partners = input.get(
         'release_enable_partners',
@@ -351,11 +288,12 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters['build_number'] = int(input['build_number'])
     parameters['next_version'] = next_version
     parameters['release_history'] = release_history
-    parameters['release_type'] = promotion_config.get('release_type', '')
+    parameters['release_type'] = promotion_config.get('release-type', '')
     parameters['release_eta'] = input.get('release_eta', '')
     parameters['release_enable_partners'] = release_enable_partners
     parameters['release_partners'] = input.get('release_partners')
     parameters['release_enable_emefree'] = release_enable_emefree
+    parameters['release_product'] = product
     # When doing staging releases on try, we still want to re-use tasks from
     # previous graphs.
     parameters['optimize_target_tasks'] = True

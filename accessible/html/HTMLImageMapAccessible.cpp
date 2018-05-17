@@ -57,7 +57,7 @@ HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex)
 }
 
 already_AddRefed<nsIURI>
-HTMLImageMapAccessible::AnchorURIAt(uint32_t aAnchorIndex)
+HTMLImageMapAccessible::AnchorURIAt(uint32_t aAnchorIndex) const
 {
   Accessible* area = GetChildAt(aAnchorIndex);
   if (!area)
@@ -143,7 +143,7 @@ HTMLAreaAccessible::
 // HTMLAreaAccessible: Accessible
 
 ENameValueFlag
-HTMLAreaAccessible::NativeName(nsString& aName)
+HTMLAreaAccessible::NativeName(nsString& aName) const
 {
   ENameValueFlag nameFlag = Accessible::NativeName(aName);
   if (!aName.IsEmpty())

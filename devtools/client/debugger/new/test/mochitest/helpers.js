@@ -735,7 +735,7 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
   ok(
     getBreakpoint(getState(), { sourceId: source.id, line, column }),
-    "Breakpoint has correct line"
+    `Breakpoint has correct line ${line}, column ${column}`
   );
 
   return source;
@@ -1199,6 +1199,7 @@ function hoverAtPos(dbg, { line, ch }) {
 
   const coords = getCoordsFromPosition(cm, { line: line - 1, ch });
   const tokenEl = dbg.win.document.elementFromPoint(coords.left, coords.top);
+
   tokenEl.dispatchEvent(
     new MouseEvent("mouseover", {
       bubbles: true,
@@ -1208,8 +1209,29 @@ function hoverAtPos(dbg, { line, ch }) {
   );
 }
 
-async function assertPreviewTextValue(dbg, { text, expression }) {
-  const previewEl = await waitForElement(dbg, "previewPopup");
+function tryHovering(dbg, line, column, elementName) {
+  return new Promise((resolve, reject) => {
+    const element = waitForElement(dbg, elementName);
+    let count = 0;
+
+    element.then(() => {
+      clearInterval(interval);
+      resolve(element);
+    });
+
+    const interval = setInterval(() => {
+      if (count++ == 5) {
+        clearInterval(interval);
+        reject("failed to preview");
+      }
+
+      hoverAtPos(dbg, { line, ch: column - 1 });
+    }, 200);
+  });
+}
+
+async function assertPreviewTextValue(dbg, line, column, { text, expression }) {
+  const previewEl = await tryHovering(dbg, line, column, "previewPopup");
 
   is(previewEl.innerText, text, "Preview text shown to user");
 
@@ -1218,8 +1240,9 @@ async function assertPreviewTextValue(dbg, { text, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
-async function assertPreviewTooltip(dbg, { result, expression }) {
-  const previewEl = await waitForElement(dbg, "tooltip");
+async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
+  const previewEl = await tryHovering(dbg, line, column, "tooltip");
+
   is(previewEl.innerText, result, "Preview text shown to user");
 
   const preview = dbg.selectors.getPreview(dbg.getState());
@@ -1228,8 +1251,14 @@ async function assertPreviewTooltip(dbg, { result, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
-async function assertPreviewPopup(dbg, { field, value, expression }) {
-  const previewEl = await waitForElement(dbg, "popup");
+async function assertPreviewPopup(
+  dbg,
+  line,
+  column,
+  { field, value, expression }
+) {
+  await tryHovering(dbg, line, column, "popup");
+
   const preview = dbg.selectors.getPreview(dbg.getState());
 
   const properties =
@@ -1244,18 +1273,23 @@ async function assertPreviewPopup(dbg, { field, value, expression }) {
 
 async function assertPreviews(dbg, previews) {
   for (const { line, column, expression, result, fields } of previews) {
-    hoverAtPos(dbg, { line, ch: column - 1 });
-
     if (fields && result) {
       throw new Error("Invalid test fixture");
     }
 
     if (fields) {
       for (const [field, value] of fields) {
-        await assertPreviewPopup(dbg, { expression, field, value });
+        await assertPreviewPopup(dbg, line, column, {
+          expression,
+          field,
+          value
+        });
       }
     } else {
-      await assertPreviewTextValue(dbg, { expression, text: result });
+      await assertPreviewTextValue(dbg, line, column, {
+        expression,
+        text: result
+      });
     }
 
     dbg.actions.clearPreview();

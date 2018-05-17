@@ -71,7 +71,7 @@ HyperTextAccessible::NativeRole() const
 }
 
 uint64_t
-HyperTextAccessible::NativeState()
+HyperTextAccessible::NativeState() const
 {
   uint64_t states = AccessibleWrap::NativeState();
 
@@ -1868,7 +1868,7 @@ HyperTextAccessible::RangeAtPoint(int32_t aX, int32_t aY,
 
 // Accessible protected
 ENameValueFlag
-HyperTextAccessible::NativeName(nsString& aName)
+HyperTextAccessible::NativeName(nsString& aName) const
 {
   // Check @alt attribute for invalid img elements.
   bool hasImgAlt = false;
@@ -1922,7 +1922,7 @@ HyperTextAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
 }
 
 Relation
-HyperTextAccessible::RelationByType(RelationType aType)
+HyperTextAccessible::RelationByType(RelationType aType) const
 {
   Relation rel = Accessible::RelationByType(aType);
 

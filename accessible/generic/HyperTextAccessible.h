@@ -58,12 +58,12 @@ public:
   virtual int32_t GetLevelInternal() override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   virtual void Shutdown() override;
   virtual bool RemoveChild(Accessible* aAccessible) override;
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   // HyperTextAccessible (static helper method)
 
@@ -435,7 +435,7 @@ protected:
   virtual ~HyperTextAccessible() { }
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HyperTextAccessible
 

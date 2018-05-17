@@ -32,7 +32,7 @@ ProgressMeterAccessible<Max>::NativeRole() const
 
 template<int Max>
 uint64_t
-ProgressMeterAccessible<Max>::NativeState()
+ProgressMeterAccessible<Max>::NativeState() const
 {
   uint64_t state = LeafAccessible::NativeState();
 
@@ -61,7 +61,7 @@ ProgressMeterAccessible<Max>::IsWidget() const
 
 template<int Max>
 void
-ProgressMeterAccessible<Max>::Value(nsString& aValue)
+ProgressMeterAccessible<Max>::Value(nsString& aValue) const
 {
   LeafAccessible::Value(aValue);
   if (!aValue.IsEmpty())
@@ -153,7 +153,7 @@ RadioButtonAccessible::
 }
 
 uint8_t
-RadioButtonAccessible::ActionCount()
+RadioButtonAccessible::ActionCount() const
 {
   return 1;
 }
@@ -166,7 +166,7 @@ RadioButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-RadioButtonAccessible::DoAction(uint8_t aIndex)
+RadioButtonAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;

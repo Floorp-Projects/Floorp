@@ -2177,7 +2177,7 @@ js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
     }
 
     {
-        AutoCompartment ac(cx, globalObj);
+        AutoRealm ar(cx, globalObj);
         Handle<GlobalObject*> global = globalObj.as<GlobalObject>();
         obj.set(GlobalObject::getOrCreateObjectPrototype(cx, global));
         if (!obj)

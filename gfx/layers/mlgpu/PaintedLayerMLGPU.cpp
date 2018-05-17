@@ -165,11 +165,11 @@ PaintedLayerMLGPU::AssignTileBufferToView(FrameBuilder* aBuilder,
       continue;
     }
 
-    TileIntPoint pos =  aTiles.GetPlacement().TilePosition(i);
+    TileCoordIntPoint coord =  aTiles.GetPlacement().TileCoord(i);
     // A sanity check that catches a lot of mistakes.
-    MOZ_ASSERT(pos.x == tile.mTilePosition.x && pos.y == tile.mTilePosition.y);
+    MOZ_ASSERT(coord.x == tile.mTileCoord.x && coord.y == tile.mTileCoord.y);
 
-    IntPoint offset = aTiles.GetTileOffset(pos);
+    IntPoint offset = aTiles.GetTileOffset(coord);
 
     // Use LayerIntRect here so we don't have to keep re-allocating the region
     // to change the unit type.

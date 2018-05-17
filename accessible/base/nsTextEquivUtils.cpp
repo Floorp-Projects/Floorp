@@ -21,13 +21,13 @@ using namespace mozilla::a11y;
  * for bailing out during recursive text computation, or for special cases
  * like step f. of the ARIA implementation guide.
  */
-static Accessible* sInitiatorAcc = nullptr;
+static const Accessible* sInitiatorAcc = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsTextEquivUtils. Public.
 
 nsresult
-nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
+nsTextEquivUtils::GetNameFromSubtree(const Accessible* aAccessible,
                                      nsAString& aName)
 {
   aName.Truncate();
@@ -53,7 +53,7 @@ nsTextEquivUtils::GetNameFromSubtree(Accessible* aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::GetTextEquivFromIDRefs(Accessible* aAccessible,
+nsTextEquivUtils::GetTextEquivFromIDRefs(const Accessible* aAccessible,
                                          nsAtom *aIDRefsAttr,
                                          nsAString& aTextEquiv)
 {
@@ -78,7 +78,7 @@ nsTextEquivUtils::GetTextEquivFromIDRefs(Accessible* aAccessible,
 }
 
 nsresult
-nsTextEquivUtils::AppendTextEquivFromContent(Accessible* aInitiatorAcc,
+nsTextEquivUtils::AppendTextEquivFromContent(const Accessible* aInitiatorAcc,
                                              nsIContent *aContent,
                                              nsAString *aString)
 {
@@ -170,7 +170,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
 // nsTextEquivUtils. Private.
 
 nsresult
-nsTextEquivUtils::AppendFromAccessibleChildren(Accessible* aAccessible,
+nsTextEquivUtils::AppendFromAccessibleChildren(const Accessible* aAccessible,
                                                nsAString *aString)
 {
   nsresult rv = NS_OK_NO_NAME_CLAUSE_HANDLED;

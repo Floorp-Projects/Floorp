@@ -67,7 +67,7 @@ public:
     mTextureHostOnWhite = o.mTextureHostOnWhite;
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
-    mTilePosition = o.mTilePosition;
+    mTileCoord = o.mTileCoord;
   }
   TileHost& operator=(const TileHost& o) {
     if (this == &o) {
@@ -77,7 +77,7 @@ public:
     mTextureHostOnWhite = o.mTextureHostOnWhite;
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
-    mTilePosition = o.mTilePosition;
+    mTileCoord = o.mTileCoord;
     return *this;
   }
 
@@ -115,7 +115,7 @@ public:
   mutable CompositableTextureSourceRef mTextureSource;
   mutable CompositableTextureSourceRef mTextureSourceOnWhite;
   // This is not strictly necessary but makes debugging whole lot easier.
-  TileIntPoint mTilePosition;
+  TileCoordIntPoint mTileCoord;
   TimeStamp mFadeStart;
 };
 

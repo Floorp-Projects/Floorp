@@ -34,7 +34,7 @@ ApplicationAccessible::ApplicationAccessible() :
 // nsIAccessible
 
 ENameValueFlag
-ApplicationAccessible::Name(nsString& aName)
+ApplicationAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -69,7 +69,7 @@ ApplicationAccessible::Description(nsString& aDescription)
 }
 
 void
-ApplicationAccessible::Value(nsString& aValue)
+ApplicationAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 }
@@ -110,7 +110,7 @@ ApplicationAccessible::FocusedChild()
 }
 
 Relation
-ApplicationAccessible::RelationByType(RelationType aRelationType)
+ApplicationAccessible::RelationByType(RelationType aRelationType) const
 {
   return Relation();
 }
@@ -148,7 +148,7 @@ ApplicationAccessible::NativeRole() const
 }
 
 uint64_t
-ApplicationAccessible::NativeState()
+ApplicationAccessible::NativeState() const
 {
   return 0;
 }

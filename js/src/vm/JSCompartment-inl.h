@@ -44,7 +44,7 @@ JSCompartment::globalIsAboutToBeFinalized()
 }
 
 template <typename T>
-js::AutoCompartment::AutoCompartment(JSContext* cx, const T& target)
+js::AutoRealm::AutoRealm(JSContext* cx, const T& target)
   : cx_(cx),
     origin_(cx->compartment()),
     maybeLock_(nullptr)
@@ -54,8 +54,8 @@ js::AutoCompartment::AutoCompartment(JSContext* cx, const T& target)
 
 // Protected constructor that bypasses assertions in enterCompartmentOf. Used
 // only for entering the atoms compartment.
-js::AutoCompartment::AutoCompartment(JSContext* cx, JSCompartment* target,
-                                     js::AutoLockForExclusiveAccess& lock)
+js::AutoRealm::AutoRealm(JSContext* cx, JSCompartment* target,
+                         js::AutoLockForExclusiveAccess& lock)
   : cx_(cx),
     origin_(cx->compartment()),
     maybeLock_(&lock)
@@ -66,7 +66,7 @@ js::AutoCompartment::AutoCompartment(JSContext* cx, JSCompartment* target,
 
 // Protected constructor that bypasses assertions in enterCompartmentOf. Should
 // not be used to enter the atoms compartment.
-js::AutoCompartment::AutoCompartment(JSContext* cx, JSCompartment* target)
+js::AutoRealm::AutoRealm(JSContext* cx, JSCompartment* target)
   : cx_(cx),
     origin_(cx->compartment()),
     maybeLock_(nullptr)
@@ -75,18 +75,18 @@ js::AutoCompartment::AutoCompartment(JSContext* cx, JSCompartment* target)
     cx_->enterNonAtomsCompartment(target);
 }
 
-js::AutoCompartment::~AutoCompartment()
+js::AutoRealm::~AutoRealm()
 {
     cx_->leaveCompartment(origin_, maybeLock_);
 }
 
-js::AutoAtomsCompartment::AutoAtomsCompartment(JSContext* cx,
-                                               js::AutoLockForExclusiveAccess& lock)
-  : AutoCompartment(cx, cx->atomsCompartment(lock), lock)
+js::AutoAtomsRealm::AutoAtomsRealm(JSContext* cx,
+                                   js::AutoLockForExclusiveAccess& lock)
+  : AutoRealm(cx, cx->atomsCompartment(lock), lock)
 {}
 
-js::AutoCompartmentUnchecked::AutoCompartmentUnchecked(JSContext* cx, JSCompartment* target)
-  : AutoCompartment(cx, target)
+js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JSCompartment* target)
+  : AutoRealm(cx, target)
 {}
 
 inline bool

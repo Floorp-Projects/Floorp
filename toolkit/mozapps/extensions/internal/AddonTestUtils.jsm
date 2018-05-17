@@ -199,7 +199,6 @@ function escaped(strings, ...values) {
 class AddonsList {
   constructor(file) {
     this.extensions = [];
-    this.bootstrapped = [];
     this.themes = [];
     this.xpis = [];
 
@@ -232,8 +231,6 @@ class AddonsList {
 
           if (addon.type == "theme") {
             this.themes.push(file);
-          } else if (addon.bootstrapped) {
-            this.bootstrapped.push(file);
           } else {
             this.extensions.push(file);
           }
@@ -263,10 +260,6 @@ class AddonsList {
 
   hasTheme(dir, id) {
     return this.hasItem("themes", dir, id);
-  }
-
-  hasBootstrapped(dir, id) {
-    return this.hasItem("bootstrapped", dir, id);
   }
 
   hasExtension(dir, id) {
