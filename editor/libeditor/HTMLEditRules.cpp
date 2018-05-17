@@ -5376,7 +5376,13 @@ HTMLEditRules::RemovePartOfBlock(Element& aBlock,
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  SplitBlock(aBlock, aStartChild, aEndChild);
+  SplitRangeOffFromNodeResult splitResult =
+    SplitRangeOffFromBlock(aBlock, aStartChild, aEndChild);
+  if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(splitResult.Succeeded(),
+    "Failed to split the range off from the block element");
   // Get rid of part of blockquote we are outdenting
   nsresult rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(aBlock);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -5385,55 +5391,45 @@ HTMLEditRules::RemovePartOfBlock(Element& aBlock,
   return NS_OK;
 }
 
-void
-HTMLEditRules::SplitBlock(Element& aBlock,
-                          nsIContent& aStartChild,
-                          nsIContent& aEndChild,
-                          nsIContent** aOutLeftNode,
-                          nsIContent** aOutRightNode,
-                          nsIContent** aOutMiddleNode)
+SplitRangeOffFromNodeResult
+HTMLEditRules::SplitRangeOffFromBlock(Element& aBlockElement,
+                                      nsIContent& aStartOfMiddleElement,
+                                      nsIContent& aEndOfMiddleElement)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // aStartChild and aEndChild must be exclusive descendants of aBlock
-  MOZ_ASSERT(EditorUtils::IsDescendantOf(aStartChild, aBlock) &&
-             EditorUtils::IsDescendantOf(aEndChild, aBlock));
+  // aStartOfMiddleElement and aEndOfMiddleElement must be exclusive
+  // descendants of aBlockElement.
+  MOZ_ASSERT(EditorUtils::IsDescendantOf(aStartOfMiddleElement, aBlockElement));
+  MOZ_ASSERT(EditorUtils::IsDescendantOf(aEndOfMiddleElement, aBlockElement));
 
   // Split at the start.
   SplitNodeResult splitAtStartResult =
     HTMLEditorRef().SplitNodeDeepWithTransaction(
-                      aBlock, EditorRawDOMPoint(&aStartChild),
+                      aBlockElement, EditorRawDOMPoint(&aStartOfMiddleElement),
                       SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   NS_WARNING_ASSERTION(splitAtStartResult.Succeeded(),
-    "Failed to split aBlock at start");
+    "Failed to split aBlockElement at start");
 
   // Split at after the end
-  EditorRawDOMPoint atAfterEnd(&aEndChild);
+  EditorRawDOMPoint atAfterEnd(&aEndOfMiddleElement);
   DebugOnly<bool> advanced = atAfterEnd.AdvanceOffset();
   NS_WARNING_ASSERTION(advanced,
     "Failed to advance offset after the end node");
   SplitNodeResult splitAtEndResult =
     HTMLEditorRef().SplitNodeDeepWithTransaction(
-                      aBlock, atAfterEnd,
+                      aBlockElement, atAfterEnd,
                       SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   NS_WARNING_ASSERTION(splitAtEndResult.Succeeded(),
-    "Failed to split aBlock at after end");
+    "Failed to split aBlockElement at after end");
 
-  if (aOutLeftNode) {
-    NS_IF_ADDREF(*aOutLeftNode = splitAtStartResult.GetPreviousNode());
-  }
-
-  if (aOutRightNode) {
-    NS_IF_ADDREF(*aOutRightNode = splitAtEndResult.GetNextNode());
-  }
-
-  if (aOutMiddleNode) {
-    if (splitAtEndResult.GetPreviousNode()) {
-      NS_IF_ADDREF(*aOutMiddleNode = splitAtEndResult.GetPreviousNode());
-    } else {
-      NS_IF_ADDREF(*aOutMiddleNode = splitAtStartResult.GetNextNode());
-    }
-  }
+  return SplitRangeOffFromNodeResult(splitAtStartResult, splitAtEndResult);
 }
 
 nsresult
@@ -5447,27 +5443,36 @@ HTMLEditRules::OutdentPartOfBlock(Element& aBlock,
   MOZ_ASSERT(IsEditorDataAvailable());
   MOZ_ASSERT(aOutLeftNode && aOutRightNode);
 
-  nsCOMPtr<nsIContent> middleNode;
-  SplitBlock(aBlock, aStartChild, aEndChild, aOutLeftNode, aOutRightNode,
-             getter_AddRefs(middleNode));
+  SplitRangeOffFromNodeResult splitResult =
+    SplitRangeOffFromBlock(aBlock, aStartChild, aEndChild);
+  if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
 
-  if (NS_WARN_IF(!middleNode) || NS_WARN_IF(!middleNode->IsElement())) {
+  if (aOutLeftNode) {
+    NS_IF_ADDREF(*aOutLeftNode = splitResult.GetLeftContent());
+  }
+  if (aOutRightNode) {
+    NS_IF_ADDREF(*aOutRightNode = splitResult.GetRightContent());
+  }
+
+  if (NS_WARN_IF(!splitResult.GetMiddleContentAsElement())) {
     return NS_ERROR_FAILURE;
   }
 
   if (!aIsBlockIndentedWithCSS) {
     nsresult rv =
       HTMLEditorRef().RemoveBlockContainerWithTransaction(
-                        *middleNode->AsElement());
+                        *splitResult.GetMiddleContentAsElement());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  if (middleNode->IsElement()) {
-    // We do nothing if middleNode isn't an element
-    nsresult rv = DecreaseMarginToOutdent(*middleNode->AsElement());
+  if (splitResult.GetMiddleContentAsElement()) {
+    nsresult rv =
+      DecreaseMarginToOutdent(*splitResult.GetMiddleContentAsElement());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
