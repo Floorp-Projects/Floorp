@@ -594,7 +594,7 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
         } else {
             t->finalize(fop);
             JS_POISON(t, JS_SWEPT_TENURED_PATTERN, thingSize, MemCheckKind::MakeUndefined);
-            TraceTenuredFinalize(t);
+            gcTracer.traceTenuredFinalize(t);
         }
     }
 
@@ -1294,7 +1294,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 #endif
 
-    if (!InitTrace(*this))
+    if (!gcTracer.initTrace(*this))
         return false;
 
     if (!marker.init(mode))
@@ -1346,7 +1346,7 @@ GCRuntime::finish()
     FreeChunkPool(availableChunks_.ref());
     FreeChunkPool(emptyChunks_.ref());
 
-    FinishTrace();
+    gcTracer.finishTrace();
 
     nursery().printTotalProfileTimes();
     stats().printTotalProfileTimes();
@@ -5846,7 +5846,9 @@ GCRuntime::beginSweepPhase(JS::gcreason::Reason reason, AutoTraceSession& sessio
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
 
     sweepOnBackgroundThread =
-        reason != JS::gcreason::DESTROY_RUNTIME && !TraceEnabled() && CanUseExtraThreads();
+        reason != JS::gcreason::DESTROY_RUNTIME &&
+        !gcTracer.traceEnabled() &&
+        CanUseExtraThreads();
 
     releaseObservedTypes = shouldReleaseObservedTypes();
 
@@ -7471,7 +7473,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
         return result;
     }
 
-    TraceMajorGCStart();
+    gcTracer.traceMajorGCStart();
 
     incrementalCollectSlice(budget, reason, session);
 
@@ -7482,7 +7484,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     clearSelectedForMarking();
 #endif
 
-    TraceMajorGCEnd();
+    gcTracer.traceMajorGCEnd();
 
     return IncrementalResult::Ok;
 }

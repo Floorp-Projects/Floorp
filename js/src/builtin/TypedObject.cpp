@@ -2334,7 +2334,7 @@ TypedObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap h
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     cx->compartment()->setObjectPendingMetadata(cx, tobj);
 
-    js::gc::TraceCreateObject(tobj);
+    js::gc::gcTracer.traceCreateObject(tobj);
 
     return tobj;
 }

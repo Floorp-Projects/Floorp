@@ -191,7 +191,7 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     cx->compartment()->setObjectPendingMetadata(cx, pobj);
 
-    js::gc::TraceCreateObject(pobj);
+    js::gc::gcTracer.traceCreateObject(pobj);
 
     if (newKind == SingletonObject) {
         Rooted<ProxyObject*> pobjRoot(cx, pobj);
