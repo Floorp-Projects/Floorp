@@ -5127,14 +5127,12 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
     layerBuilder->WillEndTransaction();
     tempManager->AbortTransaction();
 
-#ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) {
       fprintf_stderr(gfxUtils::sDumpPaintFile, "Basic layer tree for painting contents of display item %s(%p):\n", aItem.mItem->Name(), aItem.mItem->Frame());
       std::stringstream stream;
       tempManager->Dump(stream, "", gfxEnv::DumpPaintToFile());
       fprint_stderr(gfxUtils::sDumpPaintFile, stream);  // not a typo, fprint_stderr declared in LayersLogging.h
     }
-#endif
 
     nsIntPoint offset = GetLastPaintOffset(layer) - GetTranslationForPaintedLayer(layer);
     props->MoveBy(-offset);

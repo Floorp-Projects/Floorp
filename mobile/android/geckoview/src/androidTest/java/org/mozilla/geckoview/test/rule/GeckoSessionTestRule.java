@@ -13,6 +13,7 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.test.rdp.Actor;
+import org.mozilla.geckoview.test.rdp.Promise;
 import org.mozilla.geckoview.test.rdp.RDPConnection;
 import org.mozilla.geckoview.test.rdp.Tab;
 import org.mozilla.geckoview.test.util.Callbacks;
@@ -298,6 +299,69 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public static class TimeoutException extends RuntimeException {
         public TimeoutException(final String detailMessage) {
             super(detailMessage);
+        }
+    }
+
+    public static class RejectedPromiseException extends RuntimeException {
+        private final Object mReason;
+
+        /* package */ RejectedPromiseException(final Object reason) {
+            super(String.valueOf(reason));
+            mReason = reason;
+        }
+
+        public Object getReason() {
+            return mReason;
+        }
+    }
+
+    public static class PromiseWrapper {
+        private final Promise mPromise;
+        private final long mTimeoutMillis;
+
+        /* package */ PromiseWrapper(final @NonNull Promise promise, final long timeoutMillis) {
+            mPromise = promise;
+            mTimeoutMillis = timeoutMillis;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            return (o instanceof PromiseWrapper) && mPromise.equals(((PromiseWrapper) o).mPromise);
+        }
+
+        @Override
+        public int hashCode() {
+            return mPromise.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return mPromise.toString();
+        }
+
+        /**
+         * Return whether this promise is pending.
+         *
+         * @return True if this promise is pending.
+         */
+        public boolean isPending() {
+            return mPromise.isPending();
+        }
+
+        /**
+         * Wait for this promise to settle. If the promise is fulfilled, return its value.
+         * If the promise is rejected, throw an exception containing the reason.
+         *
+         * @return Fulfilled value of the promise.
+         */
+        public Object getValue() {
+            while (mPromise.isPending()) {
+                loopUntilIdle(mTimeoutMillis);
+            }
+            if (mPromise.isRejected()) {
+                throw new RejectedPromiseException(mPromise.getReason());
+            }
+            return mPromise.getValue();
         }
     }
 
@@ -1039,7 +1103,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 sRDPConnection.setTimeout(mTimeoutMillis);
             }
             final Tab tab = sRDPConnection.getMostRecentTab();
-            tab.attach();
             mRDPTabs.put(session, tab);
         }
     }
@@ -1085,6 +1148,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected void cleanupSession(final GeckoSession session) {
         final Tab tab = (mRDPTabs != null) ? mRDPTabs.get(session) : null;
         if (tab != null) {
+            tab.getPromises().detach();
             tab.detach();
             mRDPTabs.remove(session);
         }
@@ -1760,7 +1824,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             mRDPChromeProcess = sRDPConnection.getChromeProcess();
             assertThat("Should have chrome process object",
                        mRDPChromeProcess, notNullValue());
-            mRDPChromeProcess.attach();
         }
         return evaluateJS(mRDPChromeProcess, js);
     }
@@ -1770,7 +1833,24 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         while (!reply.hasResult()) {
             loopUntilIdle(mTimeoutMillis);
         }
-        return reply.get();
+
+        final Object result = reply.get();
+        if (result instanceof Promise) {
+            // Map the static Promise into a live Promise. In order to perform the mapping, we set
+            // a tag on the static Promise, fetch a list of live Promises, and see which live
+            // Promise has the same tag on it.
+            final String tag = String.valueOf(result.hashCode());
+            tab.getConsole().evaluateJS("$_.tag = " + JSONObject.quote(tag) + ", $_");
+
+            final Promise[] promises = tab.getPromises().listPromises();
+            for (final Promise promise : promises) {
+                if (tag.equals(promise.getProperty("tag"))) {
+                    return new PromiseWrapper(promise, mTimeoutMillis);
+                }
+            }
+            throw new AssertionError("Cannot find Promise");
+        }
+        return result;
     }
 
     /**

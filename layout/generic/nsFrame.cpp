@@ -904,7 +904,7 @@ nsIFrame::AddDisplayItem(nsDisplayItem* aItem)
     items = new DisplayItemArray();
     AddProperty(DisplayItems(), items);
   }
-  MOZ_ASSERT(!items->Contains(aItem));
+  MOZ_DIAGNOSTIC_ASSERT(!items->Contains(aItem));
   items->AppendElement(aItem);
 }
 
@@ -2710,7 +2710,8 @@ ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
         nsSVGUtils::eBBoxIncludeClipped |
         nsSVGUtils::eBBoxIncludeFill |
         nsSVGUtils::eBBoxIncludeMarkers |
-        nsSVGUtils::eBBoxIncludeStroke);
+        nsSVGUtils::eBBoxIncludeStroke |
+        nsSVGUtils::eDoNotClipToBBoxOfContentInsideClipPath);
     combinedClip = Some(cssToDevMatrix.TransformBounds(result));
   } else {
     // The code for this case is adapted from ComputeMaskGeometry().

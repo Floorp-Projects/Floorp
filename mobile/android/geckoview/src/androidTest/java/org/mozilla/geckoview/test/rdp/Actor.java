@@ -137,6 +137,9 @@ public class Actor {
     }
 
     protected void onPacket(final @NonNull JSONObject packet) {
+        if (mPendingReplies == null) {
+            return;
+        }
         for (final Iterator<Reply<?>> it = mPendingReplies.iterator(); it.hasNext();) {
             final Reply<?> reply = it.next();
             if (reply.parser.canParse(packet)) {

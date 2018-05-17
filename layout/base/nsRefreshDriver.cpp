@@ -145,7 +145,6 @@ class RefreshDriverTimer {
 public:
   RefreshDriverTimer()
     : mLastFireEpoch(0)
-    , mLastFireSkipped(false)
   {
   }
 
@@ -233,11 +232,6 @@ public:
 
   virtual TimeDuration GetTimerRate() = 0;
 
-  bool LastTickSkippedAnyPaints() const
-  {
-    return mLastFireSkipped;
-  }
-
   TimeStamp GetIdleDeadlineHint(TimeStamp aDefault)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -305,8 +299,6 @@ protected:
       }
 
       TickDriver(driver, aJsNow, aNow);
-
-      mLastFireSkipped = mLastFireSkipped || driver->mSkippedPaints;
     }
   }
 
@@ -319,7 +311,6 @@ protected:
 
     mLastFireEpoch = jsnow;
     mLastFireTime = now;
-    mLastFireSkipped = false;
 
     LOG("[%p] ticking drivers...", this);
     // RD is short for RefreshDriver
@@ -338,7 +329,6 @@ protected:
   }
 
   int64_t mLastFireEpoch;
-  bool mLastFireSkipped;
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
 
@@ -946,7 +936,6 @@ protected:
 
     mLastFireEpoch = jsnow;
     mLastFireTime = now;
-    mLastFireSkipped = false;
 
     nsTArray<RefPtr<nsRefreshDriver>> drivers(mContentRefreshDrivers);
     drivers.AppendElements(mRootRefreshDrivers);
@@ -956,7 +945,6 @@ protected:
         !drivers[index]->IsTestControllingRefreshesEnabled())
     {
       TickDriver(drivers[index], jsnow, now);
-      mLastFireSkipped = mLastFireSkipped || drivers[index]->SkippedPaints();
     }
 
     mNextDriverIndex++;
@@ -1072,21 +1060,12 @@ nsRefreshDriver::DefaultInterval()
 // Backends which block on swap/present/etc should try to not block
 // when layout.frame_rate=0 - to comply with "ASAP" as much as possible.
 double
-nsRefreshDriver::GetRegularTimerInterval(bool *outIsDefault) const
+nsRefreshDriver::GetRegularTimerInterval() const
 {
   int32_t rate = Preferences::GetInt("layout.frame_rate", -1);
   if (rate < 0) {
     rate = gfxPlatform::GetDefaultFrameRate();
-    if (outIsDefault) {
-      *outIsDefault = true;
-    }
-  } else {
-    if (outIsDefault) {
-      *outIsDefault = false;
-    }
-  }
-
-  if (rate == 0) {
+  } else if (rate == 0) {
     rate = 10000;
   }
 
@@ -1114,12 +1093,6 @@ nsRefreshDriver::GetMinRecomputeVisibilityInterval()
   return TimeDuration::FromMilliseconds(interval);
 }
 
-double
-nsRefreshDriver::GetRefreshTimerInterval() const
-{
-  return mThrottled ? GetThrottledTimerInterval() : GetRegularTimerInterval();
-}
-
 RefreshDriverTimer*
 nsRefreshDriver::ChooseTimer() const
 {
@@ -1131,8 +1104,7 @@ nsRefreshDriver::ChooseTimer() const
   }
 
   if (!sRegularRateTimer) {
-    bool isDefault = true;
-    double rate = GetRegularTimerInterval(&isDefault);
+    double rate = GetRegularTimerInterval();
 
     // Try to use vsync-base refresh timer first for sRegularRateTimer.
     CreateVsyncRefreshTimer();

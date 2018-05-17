@@ -9,6 +9,7 @@ import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.RejectedPromiseException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutException
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.TimeoutMillis
@@ -1250,6 +1251,52 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
                    (array dot 0) as String, equalTo("foo"))
         assertThat("JS array toString should be expanded after evaluation",
                    array.toString(), equalTo("[Array(2)][foo, bar]"))
+
+        assertThat("JS user function toString should be correct",
+                   sessionRule.session.evaluateJS("(function foo(){})").toString(),
+                   equalTo("[Function(foo)]"))
+
+        assertThat("JS window function toString should be correct",
+                   sessionRule.session.evaluateJS("window.alert").toString(),
+                   equalTo("[Function(alert)]"))
+
+        assertThat("JS pending promise toString should be correct",
+                   sessionRule.session.evaluateJS("new Promise(_=>{})").toString(),
+                   equalTo("[Promise(pending)]"))
+
+        assertThat("JS fulfilled promise toString should be correct",
+                   sessionRule.session.evaluateJS("Promise.resolve('foo')").toString(),
+                   equalTo("[Promise(fulfilled)](foo)"))
+
+        assertThat("JS rejected promise toString should be correct",
+                   sessionRule.session.evaluateJS("Promise.reject('bar')").toString(),
+                   equalTo("[Promise(rejected)](bar)"))
+    }
+
+    @WithDevToolsAPI
+    @Test fun evaluateJS_supportPromises() {
+        assertThat("Can get resolved promise",
+                   sessionRule.session.evaluateJS(
+                           "Promise.resolve('foo')").asJSPromise().value as String,
+                   equalTo("foo"))
+
+        val promise = sessionRule.session.evaluateJS(
+                "let resolve; new Promise(r => resolve = r)").asJSPromise()
+        assertThat("Promise is initially pending",
+                   promise.isPending, equalTo(true))
+
+        sessionRule.session.evaluateJS("resolve('bar')")
+
+        assertThat("Can wait for promise to resolve",
+                   promise.value as String, equalTo("bar"))
+        assertThat("Resolved promise is no longer pending",
+                   promise.isPending, equalTo(false))
+    }
+
+    @WithDevToolsAPI
+    @Test(expected = RejectedPromiseException::class)
+    fun evaluateJS_throwOnRejectedPromise() {
+        sessionRule.session.evaluateJS("Promise.reject('foo')").asJSPromise().value
     }
 
     @WithDevToolsAPI
