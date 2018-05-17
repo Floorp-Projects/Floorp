@@ -1060,11 +1060,7 @@ AppendToFaceList(nsCString& aFaceList,
     aFaceList.Append(',');
     aFaceList.AppendInt(aFontEntry->mFTFontIndex);
     aFaceList.Append(',');
-    // Note that ToString() appends to the destination string without
-    // replacing existing contents (see FontPropertyTypes.h)
-    aFontEntry->SlantStyle().Min().ToString(aFaceList);
-    aFaceList.Append(':');
-    aFontEntry->SlantStyle().Max().ToString(aFaceList);
+    aFaceList.Append(aFontEntry->IsItalic() ? '1' : '0');
     aFaceList.Append(',');
     aFaceList.AppendFloat(aFontEntry->Weight().Min().ToFloat());
     aFaceList.Append(':');
