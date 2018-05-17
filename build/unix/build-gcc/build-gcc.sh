@@ -9,15 +9,15 @@ make_flags="-j$(nproc)"
 
 prepare() {
   pushd $root_dir
-  download_and_check ftp://ftp.gnu.org/gnu/binutils binutils-$binutils_version.tar.$binutils_ext.sig
+  download_and_check https://ftp.gnu.org/gnu/binutils binutils-$binutils_version.tar.$binutils_ext.sig
   tar xaf $TMPDIR/binutils-$binutils_version.tar.$binutils_ext
 
   case "$gcc_version" in
   *-*)
-    download ftp://gcc.gnu.org/pub/gcc/snapshots/$gcc_version/gcc-$gcc_version.tar.$gcc_ext
+    download https://gcc.gnu.org/pub/gcc/snapshots/$gcc_version/gcc-$gcc_version.tar.$gcc_ext
     ;;
   *)
-    download_and_check ftp://ftp.gnu.org/gnu/gcc/gcc-$gcc_version gcc-$gcc_version.tar.$gcc_ext.sig
+    download_and_check https://ftp.gnu.org/gnu/gcc/gcc-$gcc_version gcc-$gcc_version.tar.$gcc_ext.sig
     ;;
   esac
   tar xaf $TMPDIR/gcc-$gcc_version.tar.$gcc_ext
