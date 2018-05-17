@@ -25,11 +25,11 @@ function getBreakpoints(dbg) {
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
 
-  dump(`>> meh`)
+  dump(`>> meh`);
 
   await navigate(dbg, "sourcemaps-reload/doc-sourcemaps-reload.html", "v1");
 
-  dump(`>> select v1`)
+  dump(`>> select v1`);
   await selectSource(dbg, "v1");
   await addBreakpoint(dbg, "v1", 6);
   let breakpoint = getBreakpoints(dbg)[0];
