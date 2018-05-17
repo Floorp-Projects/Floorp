@@ -789,10 +789,6 @@ class TupBackend(CommonBackend):
         if self.environment.is_artifact_build:
             return
 
-        dist_idl_backend_file = self._get_backend_file('dist/idl')
-        for idl in manager.idls.values():
-            dist_idl_backend_file.symlink_rule(idl['source'], output_group=self._installed_idls)
-
         backend_file = self._get_backend_file('xpcom/xpidl')
         backend_file.export_shell()
 

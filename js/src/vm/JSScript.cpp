@@ -374,9 +374,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
             // JSOP_OBJECT that then got modified.  So throw if we're not
             // cloning in JSOP_OBJECT or if we ever didn't clone in it in the
             // past.
-            JSCompartment* comp = cx->compartment();
-            if (!comp->creationOptions().cloneSingletons() ||
-                !comp->behaviors().getSingletonsAsTemplates())
+            Realm* realm = cx->realm();
+            if (!realm->creationOptions().cloneSingletons() ||
+                !realm->behaviors().getSingletonsAsTemplates())
             {
                 return xdr->fail(JS::TranscodeResult_Failure_RunOnceNotSupported);
             }
@@ -2626,12 +2626,6 @@ ScriptDataSize(uint32_t nscopes, uint32_t nconsts, uint32_t nobjects,
      return size;
 }
 
-void
-JSScript::initCompartment(JSContext* cx)
-{
-    compartment_ = cx->compartment();
-}
-
 /* static */ JSScript*
 JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
                  HandleObject sourceObject, uint32_t bufStart, uint32_t bufEnd,
@@ -2651,7 +2645,7 @@ JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
 
     PodZero(script.get());
 
-    script->initCompartment(cx);
+    script->realm_ = cx->realm();
 
 #ifndef JS_CODEGEN_NONE
     uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;

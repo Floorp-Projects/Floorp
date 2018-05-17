@@ -90,7 +90,7 @@ static void
 jsfuzz_uninit(JSContext* cx, JSCompartment* oldCompartment)
 {
     if (oldCompartment) {
-        JS::LeaveRealm(cx, oldCompartment);
+        JS::LeaveRealm(cx, JS::GetRealmForCompartment(oldCompartment));
         oldCompartment = nullptr;
     }
     if (cx) {

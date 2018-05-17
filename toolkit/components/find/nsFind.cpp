@@ -93,7 +93,7 @@ public:
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsresult Init(nsIDOMRange* aRange) override
+  virtual nsresult Init(nsRange* aRange) override
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -922,9 +922,9 @@ nsFind::ResetAll()
 // Take nodes out of the tree with NextNode, until null (NextNode will return 0
 // at the end of our range).
 NS_IMETHODIMP
-nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
-             nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-             nsIDOMRange** aRangeRet)
+nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
+             nsRange* aStartPoint, nsRange* aEndPoint,
+             nsRange** aRangeRet)
 {
 #ifdef DEBUG_FIND
   printf("============== nsFind::Find('%s'%s, %p, %p, %p)\n",
@@ -938,11 +938,6 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
   NS_ENSURE_ARG(aEndPoint);
   NS_ENSURE_ARG_POINTER(aRangeRet);
   *aRangeRet = 0;
-
-  // Casts are safe because nsIDOMRange is builtinclass.
-  nsRange* searchRange = static_cast<nsRange*>(aSearchRange);
-  nsRange* startPoint = static_cast<nsRange*>(aStartPoint);
-  nsRange* endPoint = static_cast<nsRange*>(aEndPoint);
 
   if (!aPatText) {
     return NS_ERROR_NULL_POINTER;
@@ -990,8 +985,8 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
   int32_t matchAnchorOffset = 0;
 
   // Get the end point, so we know when to end searches:
-  nsCOMPtr<nsINode> endNode = endPoint->GetEndContainer();;
-  uint32_t endOffset = endPoint->EndOffset();
+  nsCOMPtr<nsINode> endNode = aEndPoint->GetEndContainer();;
+  uint32_t endOffset = aEndPoint->EndOffset();
 
   char16_t c = 0;
   char16_t patc = 0;
@@ -1006,11 +1001,11 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
     if (!frag) {
 
       tc = nullptr;
-      NextNode(searchRange, startPoint, endPoint, false);
+      NextNode(aSearchRange, aStartPoint, aEndPoint, false);
       if (!mIterNode) { // Out of nodes
         // Are we in the middle of a match? If so, try again with continuation.
         if (matchAnchorNode) {
-          NextNode(searchRange, startPoint, endPoint, true);
+          NextNode(aSearchRange, aStartPoint, aEndPoint, true);
         }
 
         // Reset the iterator, so this nsFind will be usable if the user wants
@@ -1258,7 +1253,7 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
             nextChar = (t2b ? t2b[nextfindex] : CHAR_TO_UNICHAR(t1b[nextfindex]));
           // Get next character from the next node.
           else
-            nextChar = PeekNextChar(searchRange, startPoint, endPoint);
+            nextChar = PeekNextChar(aSearchRange, aStartPoint, aEndPoint);
 
           if (nextChar == NBSP_CHARCODE)
             nextChar = CHAR_TO_UNICHAR(' ');

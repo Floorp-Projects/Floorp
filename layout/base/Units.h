@@ -380,6 +380,13 @@ struct LayoutDevicePixel {
                   NSFloatPixelsToAppUnits(aRect.Width(), aAppUnitsPerDevPixel),
                   NSFloatPixelsToAppUnits(aRect.Height(), aAppUnitsPerDevPixel));
   }
+
+  static nsMargin ToAppUnits(const LayoutDeviceIntMargin& aMargin, nscoord aAppUnitsPerDevPixel) {
+    return nsMargin(aMargin.top * aAppUnitsPerDevPixel,
+                    aMargin.right * aAppUnitsPerDevPixel,
+                    aMargin.bottom * aAppUnitsPerDevPixel,
+                    aMargin.left * aAppUnitsPerDevPixel);
+  }
 };
 
 /*

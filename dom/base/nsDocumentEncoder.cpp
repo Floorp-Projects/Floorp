@@ -287,9 +287,9 @@ nsDocumentEncoder::SetSelection(Selection* aSelection)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetRange(nsIDOMRange* aRange)
+nsDocumentEncoder::SetRange(nsRange* aRange)
 {
-  mRange = static_cast<nsRange*>(aRange);
+  mRange = aRange;
   return NS_OK;
 }
 

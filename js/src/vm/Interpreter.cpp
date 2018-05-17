@@ -3290,13 +3290,13 @@ END_CASE(JSOP_SYMBOL)
 CASE(JSOP_OBJECT)
 {
     ReservedRooted<JSObject*> ref(&rootObject0, script->getObject(REGS.pc));
-    if (cx->compartment()->creationOptions().cloneSingletons()) {
+    if (cx->realm()->creationOptions().cloneSingletons()) {
         JSObject* obj = DeepCloneObjectLiteral(cx, ref, TenuredObject);
         if (!obj)
             goto error;
         PUSH_OBJECT(*obj);
     } else {
-        cx->compartment()->behaviors().setSingletonsAsValues();
+        cx->realm()->behaviors().setSingletonsAsValues();
         PUSH_OBJECT(*ref);
     }
 }

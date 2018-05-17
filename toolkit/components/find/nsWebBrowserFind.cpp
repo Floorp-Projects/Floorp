@@ -7,7 +7,7 @@
 #include "nsWebBrowserFind.h"
 
 // Only need this for NS_FIND_CONTRACTID,
-// else we could use nsIDOMRange.h and nsIFind.h.
+// else we could use nsRange.h and nsIFind.h.
 #include "nsFind.h"
 
 #include "nsIComponentManager.h"
@@ -722,7 +722,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
   RefPtr<nsRange> endPt = new nsRange(theDoc);
   NS_ENSURE_ARG_POINTER(endPt);
 
-  nsCOMPtr<nsIDOMRange> foundRange;
+  RefPtr<nsRange> foundRange;
 
   // If !aWrapping, search from selection to end
   if (!aWrapping)
@@ -743,7 +743,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
     sel->RemoveAllRanges(IgnoreErrors());
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
-    SetSelectionAndScroll(aWindow, static_cast<nsRange*>(foundRange.get()));
+    SetSelectionAndScroll(aWindow, foundRange);
   }
 
   return rv;

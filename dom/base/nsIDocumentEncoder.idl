@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMRange;
 interface nsIDOMNode;
 interface nsIOutputStream;
 
 webidl Selection;
 webidl Document;
+webidl Range;
 
 %{ C++
 class nsINode;
@@ -257,7 +257,7 @@ interface nsIDocumentEncoder : nsISupports
    *  document or selection is encoded.
    * @param aRange The range to encode.
    */
-  void setRange(in nsIDOMRange aRange);
+  void setRange(in Range aRange);
 
   /**
    *  If the node is set to a non-null value, then the

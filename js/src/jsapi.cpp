@@ -680,61 +680,61 @@ JS::EnterRealm(JSContext* cx, JSObject* target)
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
 
-    JSCompartment* oldCompartment = cx->compartment();
-    cx->enterCompartmentOf(target);
-    return oldCompartment;
+    Realm* oldRealm = cx->realm();
+    cx->enterRealmOf(target);
+    return JS::GetRealmForCompartment(oldRealm);
 }
 
 JS_PUBLIC_API(void)
-JS::LeaveRealm(JSContext* cx, JSCompartment* oldRealm)
+JS::LeaveRealm(JSContext* cx, JS::Realm* oldRealm)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    cx->leaveCompartment(oldRealm);
+    cx->leaveRealm(oldRealm);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSObject* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterCompartmentOf(target);
+    cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::JSAutoRealm(JSContext* cx, JSScript* target
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    cx_->enterCompartmentOf(target);
+    cx_->enterRealmOf(target);
 }
 
 JSAutoRealm::~JSAutoRealm()
 {
-    cx_->leaveCompartment(oldCompartment_);
+    cx_->leaveRealm(oldRealm_);
 }
 
 JSAutoNullableRealm::JSAutoNullableRealm(JSContext* cx,
                                          JSObject* targetOrNull
                                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : cx_(cx),
-    oldCompartment_(cx->compartment())
+    oldRealm_(cx->realm())
 {
     AssertHeapIsIdleOrIterating();
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (targetOrNull)
-        cx_->enterCompartmentOf(targetOrNull);
+        cx_->enterRealmOf(targetOrNull);
     else
-        cx_->enterNullCompartment();
+        cx_->enterNullRealm();
 }
 
 JSAutoNullableRealm::~JSAutoNullableRealm()
 {
-    cx_->leaveCompartment(oldCompartment_);
+    cx_->leaveRealm(oldRealm_);
 }
 
 JS_PUBLIC_API(void)
@@ -1869,19 +1869,19 @@ JS::RealmCreationOptions::setNewZone()
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSCompartment* compartment)
 {
-    return compartment->creationOptions();
+    return JS::GetRealmForCompartment(compartment)->creationOptions();
 }
 
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSObject* obj)
 {
-    return obj->compartment()->creationOptions();
+    return obj->realm()->creationOptions();
 }
 
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSContext* cx)
 {
-    return cx->compartment()->creationOptions();
+    return cx->realm()->creationOptions();
 }
 
 bool
@@ -1906,19 +1906,19 @@ JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSCompartment* compartment)
 {
-    return compartment->behaviors();
+    return JS::GetRealmForCompartment(compartment)->behaviors();
 }
 
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSObject* obj)
 {
-    return obj->compartment()->behaviors();
+    return obj->realm()->behaviors();
 }
 
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSContext* cx)
 {
-    return cx->compartment()->behaviors();
+    return cx->realm()->behaviors();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -1955,7 +1955,7 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
     // we know the global is live.
     global->compartment()->traceGlobal(trc);
 
-    if (JSTraceOp trace = global->compartment()->creationOptions().getTrace())
+    if (JSTraceOp trace = global->realm()->creationOptions().getTrace())
         trace(trc, global);
 }
 
@@ -4064,7 +4064,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       introductionScriptRoot(cx)
 {
     strictOption = cx->options().strictMode();
-    extraWarningsOption = cx->compartment()->behaviors().extraWarnings(cx);
+    extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
     isProbablySystemCode = cx->compartment()->isProbablySystemCode();
     werrorOption = cx->options().werror();
     if (!cx->options().asmJS())

@@ -14,7 +14,6 @@
 
 class nsAtom;
 class nsIDOMNode;
-class nsIDOMRange;
 class nsINode;
 class nsITextServicesFilter;
 class nsRange;
@@ -31,7 +30,7 @@ public:
 
   /* nsIContentIterator */
   virtual nsresult Init(nsINode* aRoot) override;
-  virtual nsresult Init(nsIDOMRange* aRange) override;
+  virtual nsresult Init(nsRange* aRange) override;
   virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset) override;
   virtual nsresult Init(const mozilla::RawRangeBoundary& aStart,

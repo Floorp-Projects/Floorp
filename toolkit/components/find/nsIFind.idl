@@ -5,8 +5,9 @@
  
 #include "nsISupports.idl"
 
-interface nsIDOMRange;
 interface nsIWordBreaker;
+
+webidl Range;
 
 [scriptable, uuid(40aba110-2a56-4678-be90-e2c17a9ae7d7)]
 interface nsIFind : nsISupports
@@ -29,6 +30,6 @@ interface nsIFind : nsISupports
    *                     end (forward) or start (backward).
    * @retval             A range spanning the match that was found (or null).
    */
-  nsIDOMRange Find(in wstring aPatText, in nsIDOMRange aSearchRange,
-                   in nsIDOMRange aStartPoint, in nsIDOMRange aEndPoint);
+  Range Find(in wstring aPatText, in Range aSearchRange,
+             in Range aStartPoint, in Range aEndPoint);
 };
