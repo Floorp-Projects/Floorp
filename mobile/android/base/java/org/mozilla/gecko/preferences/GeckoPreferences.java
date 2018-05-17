@@ -30,6 +30,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.SwitchPreference;
 import android.preference.TwoStatePreference;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.LocalBroadcastManager;
@@ -817,9 +818,7 @@ public class GeckoPreferences
                         continue;
                     }
                 } else if (PREFS_NOTIFICATIONS_FEATURES_TIPS.equals(key)) {
-                    final boolean isLeanplumAvailable =
-                            SwitchBoard.isInExperiment(this, Experiments.LEANPLUM) ||
-                            SwitchBoard.isInExperiment(this, Experiments.LEANPLUM_DEBUG);
+                    final boolean isLeanplumAvailable = MmaDelegate.isMmaExperimentEnabled(this);
 
                     if (!isLeanplumAvailable) {
                         preferences.removePreference(pref);
@@ -828,7 +827,7 @@ public class GeckoPreferences
                     }
 
                     // Mma can only work if Health Report is enabled
-                    boolean isHealthReportEnabled = isHealthReportEnabled(getApplicationContext());
+                    boolean isHealthReportEnabled = isHealthReportEnabled(this);
                     if (!isHealthReportEnabled) {
                         ((SwitchPreference) pref).setChecked(isHealthReportEnabled);
                         pref.setEnabled(isHealthReportEnabled);
@@ -1439,6 +1438,18 @@ public class GeckoPreferences
         Bundle fragmentArgs = new Bundle();
         fragmentArgs.putString("resource", resource);
         intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
+    }
+
+    /**
+     * Get if Mma is available for the device and enabled by the user.
+     */
+    public static boolean isMmaAvailableAndEnabled(@NonNull Context context) {
+        final boolean isInMmaExperiment = MmaDelegate.isMmaExperimentEnabled(context);
+        final boolean isHealthReportEnabled = isHealthReportEnabled(context);
+        final boolean areMmaMessagesAllowed = GeckoPreferences.getBooleanPref(context,
+                GeckoPreferences.PREFS_NOTIFICATIONS_FEATURES_TIPS, true);
+
+        return isHealthReportEnabled && isInMmaExperiment && areMmaMessagesAllowed;
     }
 
     public static boolean isHealthReportEnabled(Context context) {
