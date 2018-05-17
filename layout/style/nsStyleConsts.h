@@ -899,9 +899,6 @@ enum class StyleWhiteSpace : uint8_t {
 // See nsStyleText
 #define NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE        0
 #define NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL         1
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2    2
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_3    3
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_4    4
 
 // See nsStyleText
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0
