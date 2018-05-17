@@ -30,16 +30,19 @@ SetupLookupCacheV4(Classifier* classifier,
                    const _PrefixArray& aPrefixArray,
                    const nsACString& aTable)
 {
-  LookupCacheV4* lookupCache =
-    LookupCache::Cast<LookupCacheV4>(classifier->GetLookupCache(aTable, false));
+  RefPtr<LookupCache> lookupCache = classifier->GetLookupCache(aTable, false);
   if (!lookupCache) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<LookupCacheV4> lookupCacheV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+  if (!lookupCacheV4) {
     return NS_ERROR_FAILURE;
   }
 
   PrefixStringMap map;
   PrefixArrayToPrefixStringMap(aPrefixArray, map);
 
-  return lookupCache->Build(map);
+  return lookupCacheV4->Build(map);
 }
 
 static nsresult
@@ -47,9 +50,13 @@ SetupLookupCacheV2(Classifier* classifier,
                    const _PrefixArray& aPrefixArray,
                    const nsACString& aTable)
 {
-  LookupCacheV2* lookupCache =
-    LookupCache::Cast<LookupCacheV2>(classifier->GetLookupCache(aTable, false));
+  RefPtr<LookupCache> lookupCache = classifier->GetLookupCache(aTable, false);
   if (!lookupCache) {
+    return NS_ERROR_FAILURE;
+  }
+  RefPtr<LookupCacheV2> lookupCacheV2 =
+    LookupCache::Cast<LookupCacheV2>(lookupCache);
+  if (!lookupCacheV2) {
     return NS_ERROR_FAILURE;
   }
 
@@ -61,7 +68,7 @@ SetupLookupCacheV2(Classifier* classifier,
   }
 
   EntrySort(prefixes);
-  return lookupCache->Build(prefixes, completions);
+  return lookupCacheV2->Build(prefixes, completions);
 }
 
 static void

@@ -182,7 +182,7 @@ BuildCache(LookupCacheV4* cache, const _PrefixArray& prefixArray)
 }
 
 template<typename T>
-UniquePtr<T>
+RefPtr<T>
 SetupLookupCache(const _PrefixArray& prefixArray)
 {
   nsCOMPtr<nsIFile> file;
@@ -190,12 +190,12 @@ SetupLookupCache(const _PrefixArray& prefixArray)
 
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
-  UniquePtr<T> cache = MakeUnique<T>(GTEST_TABLE, EmptyCString(), file);
+  RefPtr<T> cache = new T(GTEST_TABLE, EmptyCString(), file);
   nsresult rv = cache->Init();
   EXPECT_EQ(rv, NS_OK);
 
-  rv = BuildCache(cache.get(), prefixArray);
+  rv = BuildCache(cache, prefixArray);
   EXPECT_EQ(rv, NS_OK);
 
-  return std::move(cache);
+  return cache;
 }

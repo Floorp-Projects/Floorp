@@ -184,7 +184,8 @@ public:
   LookupCache(const nsACString& aTableName,
               const nsACString& aProvider,
               nsIFile* aStoreFile);
-  virtual ~LookupCache() {}
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LookupCache);
 
   const nsCString &TableName() const { return mTableName; }
 
@@ -243,6 +244,8 @@ private:
   virtual int Ver() const = 0;
 
 protected:
+  virtual ~LookupCache() {}
+
   // Check completions in positive cache and prefix in negative cache.
   // 'aHas' and 'aConfirmed' are output parameters.
   nsresult CheckCache(const Completion& aCompletion,
@@ -262,6 +265,8 @@ protected:
   FullHashResponseMap mFullHashCache;
 };
 
+typedef nsTArray<RefPtr<LookupCache>> LookupCacheArray;
+
 class LookupCacheV2 final : public LookupCache
 {
 public:
@@ -269,7 +274,6 @@ public:
                          const nsACString& aProvider,
                          nsIFile* aStoreFile)
     : LookupCache(aTableName, aProvider, aStoreFile) {}
-  ~LookupCacheV2() {}
 
   virtual nsresult Init() override;
   virtual nsresult Open() override;
@@ -307,6 +311,8 @@ protected:
   virtual size_t SizeOfPrefixSet() const override;
 
 private:
+  ~LookupCacheV2() {}
+
   virtual int Ver() const override { return VER; }
 
   // Construct a Prefix Set with known prefixes.

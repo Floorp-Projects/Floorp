@@ -21,7 +21,6 @@ public:
                          const nsACString& aProvider,
                          nsIFile* aStoreFile)
     : LookupCache(aTableName, aProvider, aStoreFile) {}
-  ~LookupCacheV4() {}
 
   virtual nsresult Init() override;
   virtual nsresult Has(const Completion& aCompletion,
@@ -56,6 +55,8 @@ protected:
   virtual size_t SizeOfPrefixSet() const override;
 
 private:
+  ~LookupCacheV4() {}
+
   virtual int Ver() const override { return VER; }
 
   nsresult VerifyChecksum(const nsACString& aChecksum);
