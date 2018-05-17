@@ -397,7 +397,7 @@ Zone::deleteEmptyCompartment(JSCompartment* comp)
     for (auto& i : compartments()) {
         if (i == comp) {
             compartments().erase(&i);
-            comp->destroy(runtimeFromMainThread()->defaultFreeOp());
+            JS::GetRealmForCompartment(comp)->destroy(runtimeFromMainThread()->defaultFreeOp());
             return;
         }
     }
