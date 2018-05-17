@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import argparse
+import logging
 import os
 import sys
 
@@ -19,6 +20,8 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+
+import mozinfo
 
 def setup_awsy_argument_parser():
     from marionette_harness.runtests import MarionetteArguments
@@ -139,6 +142,12 @@ class MachCommands(MachCommandBase):
 
             if 'DMD' not in os.environ:
                 os.environ['DMD'] = '1'
+
+            # Work around a startup crash with DMD on windows
+            if mozinfo.os == 'win':
+                kwargs['pref'] = 'security.sandbox.content.level:0'
+                self.log(logging.WARNING, 'awsy', {},
+                    'Forcing \'security.sandbox.content.level\' = 0 because DMD is enabled.')
 
             # Also add the bin dir to the python path so we can use dmd.py
             if bin_dir not in sys.path:
