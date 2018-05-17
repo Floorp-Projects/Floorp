@@ -35,9 +35,10 @@ class MainActivity : AppCompatActivity() {
             engineView)
 
         toolbarFeature = ToolbarFeature(
+            toolbar,
             components.sessionProvider.sessionManager,
             components.sessionUseCases.loadUrl,
-            toolbar)
+            components.defaultSearchUseCase)
 
         components.sessionIntentProcessor.process(intent)
     }

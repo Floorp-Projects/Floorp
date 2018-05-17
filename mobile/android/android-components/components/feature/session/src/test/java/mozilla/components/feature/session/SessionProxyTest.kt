@@ -34,6 +34,7 @@ class SessionProxyTest {
 
         engineSession.loadUrl("http://mozilla.org")
         assertEquals("http://mozilla.org", session.url)
+        assertEquals("", session.searchTerms)
         assertEquals(100, session.progress)
         assertEquals(true, session.loading)
         assertEquals(true, session.canGoForward)

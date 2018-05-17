@@ -13,8 +13,8 @@ import mozilla.components.browser.session.SessionManager
  * the state of the selected session changes.
  */
 class ToolbarPresenter(
-    private val sessionManager: SessionManager,
-    private val toolbar: Toolbar
+    private val toolbar: Toolbar,
+    private val sessionManager: SessionManager
 ) : SessionManager.Observer, Session.Observer {
 
     var session: Session = sessionManager.selectedSession
@@ -57,10 +57,15 @@ class ToolbarPresenter(
 
     override fun onUrlChanged() {
         toolbar.displayUrl(session.url)
+        toolbar.setSearchTerms(session.searchTerms)
     }
 
     override fun onProgress() {
         toolbar.displayProgress(session.progress)
+    }
+
+    override fun onSearch() {
+        toolbar.setSearchTerms(session.searchTerms)
     }
 
     override fun onLoadingStateChanged() { }

@@ -6,14 +6,16 @@ package mozilla.components.feature.toolbar
 
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 
 /**
  * Connects a toolbar instance to the browser engine via use cases
  */
 class ToolbarInteractor(
+    private val toolbar: Toolbar,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-    private val toolbar: Toolbar
+    private val searchUseCase: SearchUseCase? = null
 ) {
 
     /**
@@ -22,7 +24,13 @@ class ToolbarInteractor(
      * in response.
      */
     fun start() {
-        toolbar.setOnUrlChangeListener { url -> loadUrlUseCase.invoke(url.toNormalizedUrl()) }
+        toolbar.setOnUrlChangeListener { text ->
+            if (text.isUrl()) {
+                loadUrlUseCase.invoke(text.toNormalizedUrl())
+            } else {
+                searchUseCase?.invoke(text) ?: loadUrlUseCase.invoke(text)
+            }
+        }
     }
 
     /**

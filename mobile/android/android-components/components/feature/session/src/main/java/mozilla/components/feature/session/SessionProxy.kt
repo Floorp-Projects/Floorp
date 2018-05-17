@@ -22,6 +22,7 @@ class SessionProxy(
 
     override fun onLocationChange(url: String) {
         session.url = url
+        session.searchTerms = ""
     }
 
     override fun onProgress(progress: Int) {

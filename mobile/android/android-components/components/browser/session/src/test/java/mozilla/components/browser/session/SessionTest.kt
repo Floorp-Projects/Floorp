@@ -139,4 +139,19 @@ class SessionTest {
         assertNotNull(session.id)
         assertEquals("s1", session.id)
     }
+
+    @Test
+    fun `observer is notified when search terms are set`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.searchTerms = ""
+        session.searchTerms = "mozilla android"
+
+        assertEquals("mozilla android", session.searchTerms)
+        verify(observer, times(1)).onSearch()
+        verifyNoMoreInteractions(observer)
+    }
 }

@@ -35,10 +35,12 @@ dependencies {
     implementation project(':browser-engine-system')
     implementation project(':browser-engine-gecko')
 
+    implementation project(':browser-search')
     implementation project(':browser-session')
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
 
+    implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-toolbar')
 
@@ -48,6 +50,7 @@ dependencies {
     //implementation "org.mozilla:geckoview-nightly-x86:${rootProject.ext.gecko['version']}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
 
     implementation "com.android.support:appcompat-v7:${rootProject.ext.dependencies['supportLibraries']}"
 }

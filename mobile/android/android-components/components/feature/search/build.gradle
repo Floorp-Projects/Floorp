@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion rootProject.ext.build['compileSdkVersion']
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.build['minSdkVersion']
+        targetSdkVersion rootProject.ext.build['targetSdkVersion']
+    }
+
+    lintOptions {
+        warningsAsErrors true
+        abortOnError true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':browser-search')
+
+    implementation project(':feature-session')
+    implementation project(':browser-session')
+    implementation project(':concept-engine')
+    implementation project(':concept-session-storage')
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+
+    testImplementation "junit:junit:${rootProject.ext.dependencies['junit']}"
+    testImplementation "org.robolectric:robolectric:${rootProject.ext.dependencies['robolectric']}"
+    testImplementation "org.mockito:mockito-core:${rootProject.ext.dependencies['mockito']}"
+}
+
+archivesBaseName = "feature-search"
+
+apply from: '../../../publish.gradle'
+ext.configurePublish(
+        'org.mozilla.components',
+        'feature-search',
+        'Feature implementation connecting an engine implementation with the search module.')

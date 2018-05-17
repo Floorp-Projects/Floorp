@@ -9,15 +9,22 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases
 
 /**
+ * A function representing the search use case, accepting
+ * the search terms as string.
+ */
+typealias SearchUseCase = (String) -> Unit
+
+/**
  * Feature implementation for connecting a toolbar implementation with the session module.
  */
 class ToolbarFeature(
+    val toolbar: Toolbar,
     sessionManager: SessionManager,
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
-    val toolbar: Toolbar
+    searchUseCase: SearchUseCase? = null
 ) {
-    private val presenter = ToolbarPresenter(sessionManager, toolbar)
-    private val interactor = ToolbarInteractor(loadUrlUseCase, toolbar)
+    private val presenter = ToolbarPresenter(toolbar, sessionManager)
+    private val interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 
     /**
      * Start feature: App is in the foreground.

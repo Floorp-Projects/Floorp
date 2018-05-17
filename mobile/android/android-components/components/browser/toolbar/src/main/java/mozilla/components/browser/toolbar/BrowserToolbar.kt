@@ -48,6 +48,7 @@ class BrowserToolbar @JvmOverloads constructor(
 
     private var state: State = State.DISPLAY
     private var url: String = ""
+    private var searchTerms: String = ""
     private var listener: ((String) -> Unit)? = null
 
     init {
@@ -96,6 +97,10 @@ class BrowserToolbar @JvmOverloads constructor(
         this.url = url
     }
 
+    override fun setSearchTerms(searchTerms: String) {
+        this.searchTerms = searchTerms
+    }
+
     override fun displayProgress(progress: Int) {
         displayToolbar.updateProgress(progress)
     }
@@ -118,7 +123,8 @@ class BrowserToolbar @JvmOverloads constructor(
      * Switches to URL editing mode.
      */
     fun editMode() {
-        editToolbar.updateUrl(url)
+        val urlValue = if (searchTerms.isEmpty()) url else searchTerms
+        editToolbar.updateUrl(urlValue)
 
         updateState(State.EDIT)
 

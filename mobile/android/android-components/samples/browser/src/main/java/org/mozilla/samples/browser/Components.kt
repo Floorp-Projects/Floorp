@@ -6,12 +6,15 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import android.widget.Toast
+import kotlinx.coroutines.experimental.async
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.DefaultSessionStorage
 import mozilla.components.feature.session.SessionIntentProcessor
 import mozilla.components.feature.session.SessionProvider
@@ -22,16 +25,27 @@ import org.mozilla.geckoview.GeckoRuntime
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(private val applicationContext: Context) {
+    // Engine
     private val geckoRuntime by lazy {
         GeckoRuntime.getDefault(applicationContext)
     }
     val engine : Engine by lazy { GeckoEngine(geckoRuntime) }
-    // val engine : Engine by lazy { SystemEngine() }
 
+    // Session
     val sessionProvider = SessionProvider(Session("https://www.mozilla.org"), DefaultSessionStorage(applicationContext))
     val sessionUseCases = SessionUseCases(sessionProvider, engine)
     val sessionIntentProcessor = SessionIntentProcessor(sessionUseCases)
 
+    // Search
+    private val searchEngineManager by lazy {
+        SearchEngineManager().apply {
+            async { load(applicationContext) }
+        }
+    }
+    private val searchUseCases = SearchUseCases(applicationContext, searchEngineManager, sessionProvider)
+    val defaultSearchUseCase = { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) }
+
+    // Menu
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {

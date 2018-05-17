@@ -22,6 +22,7 @@ class Session(
         fun onProgress()
         fun onLoadingStateChanged()
         fun onNavigationStateChanged()
+        fun onSearch()
     }
 
     private val observers = mutableListOf<Observer>()
@@ -59,6 +60,13 @@ class Session(
      */
     var canGoForward: Boolean by Delegates.observable(false) {
         _, old, new -> notifyObservers (old, new, { onNavigationStateChanged() })
+    }
+
+    /**
+     * The currently / last used search terms.
+     */
+    var searchTerms: String by Delegates.observable("") {
+        _, _, new -> notifyObservers ({ if (!new.isEmpty()) onSearch() })
     }
 
     /**

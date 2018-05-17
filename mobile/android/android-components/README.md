@@ -52,9 +52,11 @@ _API contracts and abstraction layers for browser components._
 
 _Combined components to implement feature-specific use cases._
 
-* 🔴 **Session** - A component thats connects an (concept) engine implementation with the browser session module.
+* 🔴 **Search** - A component that connects an (concept) engine implementation with the browser search module.
 
-* 🔴 **Toolbar** - A component thats connects a (concept) toolbar implementation with the browser session module.
+* 🔴 **Session** - A component that connects an (concept) engine implementation with the browser session module.
+
+* 🔴 **Toolbar** - A component that connects a (concept) toolbar implementation with the browser session module.
 
 ## UI
 

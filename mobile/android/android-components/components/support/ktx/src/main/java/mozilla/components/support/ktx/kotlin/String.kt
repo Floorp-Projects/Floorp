@@ -11,10 +11,22 @@ import android.text.TextUtils
  * Normalizes a URL string.
  */
 fun String.toNormalizedUrl(): String {
-    val trimmedInput = this.trim({ it <= ' ' })
+    val trimmedInput = this.trim()
     var uri = Uri.parse(trimmedInput)
     if (TextUtils.isEmpty(uri.scheme)) {
         uri = Uri.parse("http://" + trimmedInput)
     }
     return uri.toString()
+}
+
+/**
+ * Checks if this string is a URL.
+ */
+fun String.isUrl(): Boolean {
+    val trimmedUrl = this.trim()
+    if (trimmedUrl.contains(" ")) {
+        return false
+    }
+
+    return trimmedUrl.contains(".") || trimmedUrl.contains(":")
 }

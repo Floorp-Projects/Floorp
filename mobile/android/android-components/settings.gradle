@@ -19,6 +19,9 @@ project(':concept-session-storage').projectDir = new File(rootDir, 'components/c
 // Features
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+include ':feature-search'
+project(':feature-search').projectDir = new File(rootDir, 'components/feature/search')
+
 include ':feature-session'
 project(':feature-session').projectDir = new File(rootDir, 'components/feature/session')
 

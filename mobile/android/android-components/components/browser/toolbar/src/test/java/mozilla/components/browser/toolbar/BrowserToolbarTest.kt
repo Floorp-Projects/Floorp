@@ -248,4 +248,25 @@ class BrowserToolbarTest {
 
         verify(displayToolbar).addAction(action)
     }
+
+    fun `URL update does not override search terms in edit mode`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = mock(DisplayToolbar::class.java)
+        val editToolbar = mock(EditToolbar::class.java)
+
+        toolbar.displayToolbar = displayToolbar
+        toolbar.editToolbar = editToolbar
+
+        toolbar.setSearchTerms("mozilla android")
+        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.editMode()
+        verify(displayToolbar).updateUrl("https://www.mozilla.org")
+        verify(editToolbar).updateUrl("mozilla android")
+
+        toolbar.setSearchTerms("")
+        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.editMode()
+        verify(displayToolbar).updateUrl("https://www.mozilla.org")
+        verify(editToolbar).updateUrl("https://www.mozilla.org")
+    }
 }

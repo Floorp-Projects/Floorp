@@ -18,6 +18,13 @@ interface Toolbar {
     fun displayUrl(url: String)
 
     /**
+     * Displays the currently used search terms as part of this Toolbar.
+     *
+     * @param searchTerms the search terms used by the current session
+     */
+    fun setSearchTerms(searchTerms: String)
+
+    /**
      * Displays the given loading progress. Expects values in the range [0, 100].
      */
     fun displayProgress(progress: Int)
