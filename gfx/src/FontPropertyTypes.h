@@ -347,9 +347,8 @@ public:
         return Oblique(angle);
       }
       // Not recognized as an oblique angle; maybe it's from a startup-cache
-      // created by an older version. The style field there used a simple 0/1
-      // for normal/italic respectively.
-      return aString[0] == '0' ? Normal() : Italic();
+      // created by an older version. Just treat it as 'normal'.      
+      return Normal();
     }
   }
 
