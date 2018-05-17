@@ -25,7 +25,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "sjs_code_reload", 2);
 
   await reload(dbg, "sjs_code_reload.sjs");
-  await waitForSelectedSource(dbg, "sjs_code_reload.sjs")
+  await waitForSelectedSource(dbg, "sjs_code_reload.sjs");
 
   const source = findSource(dbg, "sjs_code_reload");
   const location = { sourceId: source.id, line: 6 };

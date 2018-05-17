@@ -106,6 +106,10 @@ class ConditionalPanel extends _react.PureComponent {
     return this.clearConditionalPanel();
   }
 
+  componentDidUpdate(prevProps) {
+    this.keepFocusOnInput();
+  }
+
   componentWillUnmount() {
     // This is called if CodeMirror is re-initializing itself before the
     // user closes the conditional panel. Clear the widget, and re-render it
@@ -150,8 +154,6 @@ class ConditionalPanel extends _react.PureComponent {
         this.scrollParent.addEventListener("scroll", this.repositionOnScroll);
         this.repositionOnScroll();
       }
-
-      this.input.focus();
     }
   }
 
