@@ -107,7 +107,7 @@ class CompileCompartment
 
     bool hasAllocationMetadataBuilder();
 
-    // Mirror CompartmentOptions.
+    // Mirror RealmOptions.
     void setSingletonsAsValues();
 };
 

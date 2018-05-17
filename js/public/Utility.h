@@ -549,7 +549,7 @@ js_delete_poison(const T* p)
 {
     if (p) {
         p->~T();
-        memset(const_cast<T*>(p), 0x3B, sizeof(T));
+        memset(static_cast<void*>(const_cast<T*>(p)), 0x3B, sizeof(T));
         js_free(const_cast<T*>(p));
     }
 }

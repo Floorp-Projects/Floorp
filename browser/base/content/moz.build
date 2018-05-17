@@ -34,6 +34,9 @@ with Files("test/contextMenu/**"):
 with Files("test/forms/**"):
     BUG_COMPONENT = ("Core", "Layout: Form Controls")
 
+with Files("test/historySwipeAnimation/**"):
+    BUG_COMPONENT = ("Core", "Widget: Cocoa")
+
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 

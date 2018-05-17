@@ -253,14 +253,14 @@ typedef Vector<AsmJSImport, 0, SystemAllocPolicy> AsmJSImportVector;
 // case the function is toString()ed.
 class AsmJSExport
 {
-    uint32_t funcIndex_;
+    uint32_t funcIndex_ = 0;
 
     // All fields are treated as cacheable POD:
-    uint32_t startOffsetInModule_;  // Store module-start-relative offsets
-    uint32_t endOffsetInModule_;    // so preserved by serialization.
+    uint32_t startOffsetInModule_ = 0;  // Store module-start-relative offsets
+    uint32_t endOffsetInModule_ = 0;    // so preserved by serialization.
 
   public:
-    AsmJSExport() { PodZero(this); }
+    AsmJSExport() = default;
     AsmJSExport(uint32_t funcIndex, uint32_t startOffsetInModule, uint32_t endOffsetInModule)
       : funcIndex_(funcIndex),
         startOffsetInModule_(startOffsetInModule),
@@ -292,12 +292,12 @@ enum class CacheResult
 
 struct AsmJSMetadataCacheablePod
 {
-    uint32_t                numFFIs;
-    uint32_t                srcLength;
-    uint32_t                srcLengthWithRightBrace;
-    bool                    usesSimd;
+    uint32_t                numFFIs = 0;
+    uint32_t                srcLength = 0;
+    uint32_t                srcLengthWithRightBrace = 0;
+    bool                    usesSimd = false;
 
-    AsmJSMetadataCacheablePod() { PodZero(this); }
+    AsmJSMetadataCacheablePod() = default;
 };
 
 struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod

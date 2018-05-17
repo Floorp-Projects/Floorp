@@ -10,7 +10,7 @@ use js::conversions::ConversionBehavior;
 use js::conversions::ConversionResult;
 use js::conversions::FromJSValConvertible;
 use js::conversions::ToJSValConvertible;
-use js::jsapi::root::JS::CompartmentOptions;
+use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JS_InitStandardClasses;
 use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
@@ -34,7 +34,7 @@ fn vec_conversion() {
     let cx = rt.cx();
 
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = CompartmentOptions::default();
+    let c_option = RealmOptions::default();
 
     unsafe {
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,

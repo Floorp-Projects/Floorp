@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate js;
 
-use js::jsapi::root::JS::CompartmentOptions;
+use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
@@ -20,7 +20,7 @@ fn stack_limit() {
 
     unsafe {
         let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-        let c_option = CompartmentOptions::default();
+        let c_option = RealmOptions::default();
         let global = JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS,
                                         ptr::null_mut(), h_option, &c_option);
         rooted!(in(cx) let global_root = global);

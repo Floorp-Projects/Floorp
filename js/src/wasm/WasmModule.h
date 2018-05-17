@@ -43,11 +43,11 @@ struct CompileArgs;
 
 struct LinkDataTierCacheablePod
 {
-    uint32_t outOfBoundsOffset;
-    uint32_t unalignedAccessOffset;
-    uint32_t trapOffset;
+    uint32_t outOfBoundsOffset = 0;
+    uint32_t unalignedAccessOffset = 0;
+    uint32_t trapOffset = 0;
 
-    LinkDataTierCacheablePod() { mozilla::PodZero(this); }
+    LinkDataTierCacheablePod() = default;
 };
 
 struct LinkDataTier : LinkDataTierCacheablePod

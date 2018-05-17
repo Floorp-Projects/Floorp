@@ -30,9 +30,15 @@ var instance = wasmEvalText(`(module
 var callToMain;
 
 function main() {
-    var arr = [instance.add, (x,y)=>x+y];
-    var arrayCallLine = nextLineNumber(6);
+    var arrayCallLine = nextLineNumber(13);
     for (var i = 0; i < ITER; i++) {
+        var arr = [instance.add, (x,y)=>x+y];
+        if (i === EXCEPTION_ITER) {
+            arr[0] = instance.add64;
+        } else if (i === EXCEPTION_ITER + 1) {
+            arr[0] = instance.add;
+        }
+
         var caught = null;
 
         startProfiling();
@@ -42,12 +48,6 @@ function main() {
             caught = e;
         }
         let profilingStack = endProfiling();
-
-        if (i === EXCEPTION_ITER - 1) {
-            arr[0] = instance.add64;
-        } else if (i === EXCEPTION_ITER) {
-            arr[0] = instance.add;
-        }
 
         assertEq(!!caught, i === EXCEPTION_ITER);
         if (caught) {

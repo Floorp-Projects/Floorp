@@ -428,7 +428,7 @@ XPCShellEnvironment::Init()
         return false;
     }
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     options.creationOptions().setSystemZone();
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);

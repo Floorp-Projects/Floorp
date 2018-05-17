@@ -49,20 +49,20 @@ pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.remote", false);
-// Enable the 3 pane mode toggle in the inspector
+
 #if defined(NIGHTLY_BUILD)
+// Show the 3 pane onboarding tooltip in the inspector
+pref("devtools.inspector.show-three-pane-tooltip", true);
+// Enable the 3 pane mode in the inspector
+pref("devtools.inspector.three-pane-enabled", true);
+// Enable the 3 pane mode toggle in the inspector
 pref("devtools.inspector.three-pane-toggle", true);
 #else
+pref("devtools.inspector.show-three-pane-tooltip", false);
+pref("devtools.inspector.three-pane-enabled", false);
 pref("devtools.inspector.three-pane-toggle", false);
 #endif
-// Enable the 3 pane mode in the inspector
-pref("devtools.inspector.three-pane-enabled", false);
-// Show the 3 pane onboarding tooltip in the inspector
-#if defined(NIGHTLY_BUILD)
-pref("devtools.inspector.show-three-pane-tooltip", true);
-#else
-pref("devtools.inspector.show-three-pane-tooltip", false);
-#endif
+
 // Collapse pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", false);
 // The default size for image preview tooltips in the rule-view/computed-view/markup-view

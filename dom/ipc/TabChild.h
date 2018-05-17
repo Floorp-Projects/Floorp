@@ -99,7 +99,7 @@ public:
     MOZ_CRASH("We should never get here!");
   }
   bool WrapGlobalObject(JSContext* aCx,
-                        JS::CompartmentOptions& aOptions,
+                        JS::RealmOptions& aOptions,
                         JS::MutableHandle<JSObject*> aReflector);
 
   virtual already_AddRefed<nsPIDOMWindowOuter> GetContent(ErrorResult& aError) override;
@@ -163,7 +163,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TabChildBase)
 
   virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 JS::MutableHandle<JSObject*> aReflector) override
   {
     return mTabChildGlobal->WrapGlobalObject(aCx, aOptions, aReflector);

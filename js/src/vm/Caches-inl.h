@@ -76,7 +76,7 @@ NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::Initi
         obj = static_cast<NativeObject*>(SetNewObjectMetadata(cx, obj));
 
     probes::CreateObject(cx, obj);
-    gc::TraceCreateObject(obj);
+    gc::gcTracer.traceCreateObject(obj);
     return obj;
 }
 
