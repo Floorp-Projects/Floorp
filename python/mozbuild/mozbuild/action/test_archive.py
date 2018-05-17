@@ -370,12 +370,6 @@ ARCHIVE_FILES = {
             'base': 'testing',
             'pattern': 'mozharness/**',
         },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'third_party/python/virtualenv',
-            'dest': 'third_party/python/virtualenv',
-            'pattern': '**',
-        },
     ],
     'reftest': [
         {
