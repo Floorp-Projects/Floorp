@@ -3,7 +3,8 @@
 # Taken from pip
 # see https://github.com/pypa/pip/blob/95bcf8c5f6394298035a7332c441868f3b0169f4/tasks/vendoring/__init__.py
 from pathlib import Path
-from pipenv.utils import TemporaryDirectory, mkdir_p
+from pipenv._compat import TemporaryDirectory
+from pipenv.utils import mkdir_p
 # from tempfile import TemporaryDirectory
 import tarfile
 import zipfile
@@ -16,13 +17,14 @@ import requests
 
 TASK_NAME = 'update'
 
-LIBRARY_OVERRIDES = {
+LIBRARY_DIRNAMES = {
     'requirements-parser': 'requirements',
     'backports.shutil_get_terminal_size': 'backports/shutil_get_terminal_size',
     'backports.weakref': 'backports/weakref',
     'shutil_backports': 'backports/shutil_get_terminal_size',
     'python-dotenv': 'dotenv',
-    'pip-tools': 'piptools'
+    'pip-tools': 'piptools',
+    'setuptools': 'pkg_resources',
 }
 
 # from time to time, remove the no longer needed ones
@@ -37,7 +39,10 @@ HARDCODED_LICENSE_URLS = {
     'semver': 'https://raw.githubusercontent.com/k-bx/python-semver/master/LICENSE.txt',
     'crayons': 'https://raw.githubusercontent.com/kennethreitz/crayons/master/LICENSE',
     'pip-tools': 'https://raw.githubusercontent.com/jazzband/pip-tools/master/LICENSE',
-    'pew': 'https://raw.githubusercontent.com/berdario/pew/master/LICENSE'
+    'pew': 'https://raw.githubusercontent.com/berdario/pew/master/LICENSE',
+    'pytoml': 'https://github.com/avakar/pytoml/raw/master/LICENSE',
+    'webencodings': 'https://github.com/SimonSapin/python-webencodings/raw/'
+                    'master/LICENSE',
 }
 
 FILE_WHITE_LIST = (
@@ -49,7 +54,8 @@ FILE_WHITE_LIST = (
     'README.md',
     'appdirs.py',
     'safety.zip',
-    'cacert.pem'
+    'cacert.pem',
+    'vendor_pip.txt',
 )
 
 LIBRARY_RENAMES = {
@@ -78,14 +84,16 @@ def log(msg):
     print('[vendoring.%s] %s' % (TASK_NAME, msg))
 
 
+def _get_git_root(ctx):
+    return Path(ctx.run('git rev-parse --show-toplevel', hide=True).stdout.strip())
+
+
 def _get_vendor_dir(ctx):
-    git_root = ctx.run('git rev-parse --show-toplevel', hide=True).stdout
-    return Path(git_root.strip()) / 'pipenv' / 'vendor'
+    return _get_git_root(ctx) / 'pipenv' / 'vendor'
 
 
 def _get_patched_dir(ctx):
-    git_root = ctx.run('git rev-parse --show-toplevel', hide=True).stdout
-    return Path(git_root.strip()) / 'pipenv' / 'patched'
+    return _get_git_root(ctx) / 'pipenv' / 'patched'
 
 
 def clean_vendor(ctx, vendor_dir):
@@ -211,14 +219,6 @@ cli(prog_name="safety")
             else:
                 lib = yaml_build_dir / 'lib3' / 'yaml'
             shutil.copytree(str(lib.absolute()), str(safety_dir / 'yaml{0}'.format(version_choices[0])))
-#             yaml_init = yaml_dir / '__init__.py'
-#             yaml_init.write_text("""
-# import sys
-# if sys.version_info[0] == 3:
-#     from .yaml3 import *
-# else:
-#     from .yaml2 import *
-#             """.strip())
         requests_dir = safety_dir / 'requests'
         cacert = vendor_dir / 'requests' / 'cacert.pem'
         if not cacert.exists():
@@ -246,8 +246,8 @@ cli(prog_name="safety")
 def rename_if_needed(ctx, vendor_dir, item):
     rename_dict = LIBRARY_RENAMES if vendor_dir.name != 'patched' else PATCHED_RENAMES
     new_path = None
-    if item.name in rename_dict or item.name in LIBRARY_OVERRIDES:
-        new_name = rename_dict.get(item.name, LIBRARY_OVERRIDES.get(item.name))
+    if item.name in rename_dict or item.name in LIBRARY_DIRNAMES:
+        new_name = rename_dict.get(item.name, LIBRARY_DIRNAMES.get(item.name))
         new_path = item.parent / new_name
         log('Renaming %s => %s' % (item.name, new_path))
         # handle existing directories
@@ -306,7 +306,6 @@ def vendor(ctx, vendor_dir, rewrite=True):
                 apply_patch(ctx, patch)
 
     # Global import rewrites
-    # log("Rewriting all imports related to vendored libs")
     log('Renaming specified libs...')
     for item in vendor_dir.iterdir():
         if item.is_dir():
@@ -324,7 +323,7 @@ def vendor(ctx, vendor_dir, rewrite=True):
                 rewrite_file_imports(item, vendored_libs, vendor_dir)
     write_backport_imports(ctx, vendor_dir)
     log('Applying post-patches...')
-    patches = patch_dir.glob('*.patch' if not is_patched else '_post*.patch') 
+    patches = patch_dir.glob('*.patch' if not is_patched else '_post*.patch')
     for patch in patches:
         apply_patch(ctx, patch)
     if is_patched:
@@ -400,16 +399,17 @@ def find_and_extract_license(vendor_dir, tar, members):
 
 def license_fallback(vendor_dir, sdist_name):
     """Hardcoded license URLs. Check when updating if those are still needed"""
-    for libname, url in HARDCODED_LICENSE_URLS.items():
-        if libname in sdist_name:
-            _, _, name = url.rpartition('/')
-            dest = license_destination(vendor_dir, libname, name)
-            r = requests.get(url, allow_redirects=True)
-            log('Downloading {}'.format(url))
-            r.raise_for_status()
-            dest.write_bytes(r.content)
-            return
-    raise ValueError('No hardcoded URL for {} license'.format(sdist_name))
+    libname = libname_from_dir(sdist_name)
+    if libname not in HARDCODED_LICENSE_URLS:
+        raise ValueError('No hardcoded URL for {} license'.format(libname))
+
+    url = HARDCODED_LICENSE_URLS[libname]
+    _, _, name = url.rpartition('/')
+    dest = license_destination(vendor_dir, libname, name)
+    r = requests.get(url, allow_redirects=True)
+    log('Downloading {}'.format(url))
+    r.raise_for_status()
+    dest.write_bytes(r.content)
 
 
 def libname_from_dir(dirname):
@@ -419,7 +419,7 @@ def libname_from_dir(dirname):
         if part[0].isdigit():
             break
         parts.append(part)
-    return'-'.join(parts)
+    return '-'.join(parts)
 
 
 def license_destination(vendor_dir, libname, filename):
@@ -431,16 +431,17 @@ def license_destination(vendor_dir, libname, filename):
     if lowercase.is_dir():
         return lowercase / filename
     rename_dict = LIBRARY_RENAMES if vendor_dir.name != 'patched' else PATCHED_RENAMES
+    # Short circuit all logic if we are renaming the whole library
     if libname in rename_dict:
         return vendor_dir / rename_dict[libname] / filename
-    if libname in LIBRARY_OVERRIDES:
-        override = vendor_dir / LIBRARY_OVERRIDES[libname]
+    if libname in LIBRARY_DIRNAMES:
+        override = vendor_dir / LIBRARY_DIRNAMES[libname]
         if not override.exists() and override.parent.exists():
             # for flattened subdeps, specifically backports/weakref.py
-            target_dir = vendor_dir / override.parent
-            target_file = '{0}.{1}'.format(override.name, filename)
-            return target_dir / target_file
-        return vendor_dir / LIBRARY_OVERRIDES[libname] / filename
+            return (
+                vendor_dir / override.parent
+            ) / '{0}.{1}'.format(override.name, filename)
+        return vendor_dir / LIBRARY_DIRNAMES[libname] / filename
     # fallback to libname.LICENSE (used for nondirs)
     return vendor_dir / '{}.{}'.format(libname, filename)
 
@@ -450,8 +451,6 @@ def extract_license_member(vendor_dir, tar, member, name):
     dirname = list(mpath.parents)[-2].name  # -1 is .
     libname = libname_from_dir(dirname)
     dest = license_destination(vendor_dir, libname, mpath.name)
-    # dest_relative = dest.relative_to(Path.cwd())
-    # log('Extracting {} into {}'.format(name, dest_relative))
     log('Extracting {} into {}'.format(name, dest))
     try:
         fileobj = tar.extractfile(member)
@@ -460,34 +459,20 @@ def extract_license_member(vendor_dir, tar, member, name):
         dest.write_bytes(tar.read(member))
 
 
-@invoke.task
-def update_stubs(ctx):
-    vendor_dir = _get_vendor_dir(ctx)
-    vendored_libs = detect_vendored_libs(vendor_dir)
-
-    print("[vendoring.update_stubs] Add mypy stubs")
-
-    extra_stubs_needed = {
-        # Some projects need stubs other than a simple <name>.pyi
-        "six": ["six.__init__", "six.moves"],
-        # Some projects should not have stubs coz they're single file modules
-        "appdirs": [],
-    }
-
-    for lib in vendored_libs:
-        if lib not in extra_stubs_needed:
-            (vendor_dir / (lib + ".pyi")).write_text("from %s import *" % lib)
-            continue
-
-        for selector in extra_stubs_needed[lib]:
-            fname = selector.replace(".", os.sep) + ".pyi"
-            if selector.endswith(".__init__"):
-                selector = selector[:-9]
-
-            f_path = vendor_dir / fname
-            if not f_path.parent.exists():
-                f_path.parent.mkdir()
-        f_path.write_text("from %s import *" % selector)
+@invoke.task()
+def generate_patch(ctx, package_path, patch_description, base='HEAD'):
+    pkg = Path(package_path)
+    if len(pkg.parts) != 2 or pkg.parts[0] not in ('vendor', 'patched'):
+        raise ValueError('example usage: generate-patch patched/pew some-description')
+    patch_fn = '{0}-{1}.patch'.format(pkg.parts[1], patch_description)
+    command = 'git diff {base} -p {root} > {out}'.format(
+        base=base,
+        root=Path('pipenv').joinpath(pkg),
+        out=Path(__file__).parent.joinpath('patches', pkg.parts[0], patch_fn),
+    )
+    with ctx.cd(str(_get_git_root(ctx))):
+        log(command)
+        ctx.run(command)
 
 
 @invoke.task(name=TASK_NAME)
@@ -501,5 +486,11 @@ def main(ctx):
     vendor(ctx, patched_dir, rewrite=False)
     download_licenses(ctx, vendor_dir)
     download_licenses(ctx, patched_dir, 'patched.txt')
+    for pip_dir in [vendor_dir / 'pip9', patched_dir / 'notpip']:
+        _vendor_dir = pip_dir / '_vendor'
+        vendor_src_file = vendor_dir / 'vendor_pip.txt'
+        vendor_file = _vendor_dir / 'vendor.txt'
+        vendor_file.write_bytes(vendor_src_file.read_bytes())
+        download_licenses(ctx, _vendor_dir)
     # update_safety(ctx)
     log('Revendoring complete')
