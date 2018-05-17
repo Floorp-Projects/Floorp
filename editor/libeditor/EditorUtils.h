@@ -359,6 +359,102 @@ private:
 };
 
 /***************************************************************************
+ * SplitRangeOffFromNodeResult class is a simple class for methods which split a
+ * node at 2 points for making part of the node split off from the node.
+ */
+class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final
+{
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+
+  /**
+   * GetLeftContent() returns new created node before the part of quarried out.
+   * This may return nullptr if the method didn't split at start edge of
+   * the node.
+   */
+  nsIContent* GetLeftContent() const { return mLeftContent; }
+  dom::Element* GetLeftContentAsElement() const
+  {
+    return mLeftContent && mLeftContent->IsElement() ?
+             mLeftContent->AsElement() : nullptr;
+  }
+
+  /**
+   * GetMiddleContent() returns new created node between left node and right
+   * node.  I.e., this is quarried out from the node.  This may return nullptr
+   * if the method unwrapped the middle node.
+   */
+  nsIContent* GetMiddleContent() const { return mMiddleContent; }
+  dom::Element* GetMiddleContentAsElement() const
+  {
+    return mMiddleContent && mMiddleContent->IsElement() ?
+             mMiddleContent->AsElement() : nullptr;
+  }
+
+  /**
+   * GetRightContent() returns the right node after the part of quarried out.
+   * This may return nullptr it the method didn't split at end edge of the
+   * node.
+   */
+  nsIContent* GetRightContent() const { return mRightContent; }
+  dom::Element* GetRightContentAsElement() const
+  {
+    return mRightContent && mRightContent->IsElement() ?
+             mRightContent->AsElement() : nullptr;
+  }
+
+  SplitRangeOffFromNodeResult(nsIContent* aLeftContent, nsIContent* aMiddleContent,
+                   nsIContent* aRightContent)
+    : mLeftContent(aLeftContent)
+    , mMiddleContent(aMiddleContent)
+    , mRightContent(aRightContent)
+    , mRv(NS_OK)
+  {
+  }
+
+  SplitRangeOffFromNodeResult(SplitNodeResult& aSplitResultAtLeftOfMiddleNode,
+                         SplitNodeResult& aSplitResultAtRightOfMiddleNode)
+    : mRv(NS_OK)
+  {
+    if (aSplitResultAtLeftOfMiddleNode.Succeeded()) {
+      mLeftContent = aSplitResultAtLeftOfMiddleNode.GetPreviousNode();
+    }
+    if (aSplitResultAtRightOfMiddleNode.Succeeded()) {
+      mRightContent = aSplitResultAtRightOfMiddleNode.GetNextNode();
+      mMiddleContent = aSplitResultAtRightOfMiddleNode.GetPreviousNode();
+    }
+    if (!mMiddleContent && aSplitResultAtLeftOfMiddleNode.Succeeded()) {
+      mMiddleContent = aSplitResultAtLeftOfMiddleNode.GetNextNode();
+    }
+  }
+
+  explicit SplitRangeOffFromNodeResult(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  SplitRangeOffFromNodeResult(
+    const SplitRangeOffFromNodeResult& aOther) = delete;
+  SplitRangeOffFromNodeResult&
+  operator=(const SplitRangeOffFromNodeResult& aOther) = delete;
+  SplitRangeOffFromNodeResult(SplitRangeOffFromNodeResult&& aOther) = default;
+  SplitRangeOffFromNodeResult&
+  operator=(SplitRangeOffFromNodeResult&& aOther) = default;
+
+private:
+  nsCOMPtr<nsIContent> mLeftContent;
+  nsCOMPtr<nsIContent> mMiddleContent;
+  nsCOMPtr<nsIContent> mRightContent;
+
+  nsresult mRv;
+
+  SplitRangeOffFromNodeResult() = delete;
+};
+
+/***************************************************************************
  * stack based helper class for batching a collection of transactions inside a
  * placeholder transaction.
  */
