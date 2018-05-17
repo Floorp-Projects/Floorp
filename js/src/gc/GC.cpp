@@ -8031,7 +8031,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
 
     for (auto script = source->zone()->cellIter<JSScript>(); !script.done(); script.next()) {
         MOZ_ASSERT(script->compartment() == source);
-        script->compartment_ = target;
+        script->realm_ = JS::GetRealmForCompartment(target);
         script->setTypesGeneration(target->zone()->types.generation);
     }
 
