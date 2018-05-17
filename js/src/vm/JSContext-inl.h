@@ -464,83 +464,81 @@ JSContext::runningWithTrustedPrincipals()
 }
 
 inline void
-JSContext::enterNonAtomsCompartment(JSCompartment* c)
+JSContext::enterNonAtomsRealm(JS::Realm* realm)
 {
-    enterCompartmentDepth_++;
+    enterRealmDepth_++;
 
-    MOZ_ASSERT(!c->zone()->isAtomsZone());
+    MOZ_ASSERT(!realm->zone()->isAtomsZone());
 
-    c->enter();
-    setCompartment(c, nullptr);
+    realm->enter();
+    setRealm(realm, nullptr);
 }
 
 inline void
-JSContext::enterAtomsCompartment(JSCompartment* c,
-                                 const js::AutoLockForExclusiveAccess& lock)
+JSContext::enterAtomsRealm(JS::Realm* realm,
+                           const js::AutoLockForExclusiveAccess& lock)
 {
-    enterCompartmentDepth_++;
+    enterRealmDepth_++;
 
-    MOZ_ASSERT(c->zone()->isAtomsZone());
+    MOZ_ASSERT(realm->zone()->isAtomsZone());
 
-    c->enter();
-    setCompartment(c, &lock);
+    realm->enter();
+    setRealm(realm, &lock);
 }
 
 template <typename T>
 inline void
-JSContext::enterCompartmentOf(const T& target)
+JSContext::enterRealmOf(const T& target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
-    enterNonAtomsCompartment(target->compartment());
+    enterNonAtomsRealm(JS::GetRealmForCompartment(target->compartment()));
 }
 
 inline void
-JSContext::enterNullCompartment()
+JSContext::enterNullRealm()
 {
-    enterCompartmentDepth_++;
-    setCompartment(nullptr);
+    enterRealmDepth_++;
+    setRealm(nullptr);
 }
 
 inline void
-JSContext::leaveCompartment(
-    JSCompartment* oldCompartment,
-    const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+JSContext::leaveRealm(JS::Realm* oldRealm,
+                      const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
 {
-    MOZ_ASSERT(hasEnteredCompartment());
-    enterCompartmentDepth_--;
+    MOZ_ASSERT(hasEnteredRealm());
+    enterRealmDepth_--;
 
-    // Only call leave() after we've setCompartment()-ed away from the current
-    // compartment.
-    JSCompartment* startingCompartment = compartment_;
-    setCompartment(oldCompartment, maybeLock);
-    if (startingCompartment)
-        startingCompartment->leave();
+    // Only call leave() after we've setRealm()-ed away from the current realm.
+    JS::Realm* startingRealm = realm_;
+    setRealm(oldRealm, maybeLock);
+    if (startingRealm)
+        startingRealm->leave();
 }
 
 inline void
-JSContext::setCompartment(JSCompartment* comp,
-                          const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
+JSContext::setRealm(JS::Realm* realm,
+                    const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
 {
-    // Only one thread can be in the atoms compartment at a time.
-    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(comp), maybeLock != nullptr);
-    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(comp) || runtime_->isAtomsCompartment(compartment_),
+    // Only one thread can be in the atoms realm at a time.
+    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(realm), maybeLock != nullptr);
+    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(realm) || runtime_->isAtomsCompartment(realm_),
                   runtime_->currentThreadHasExclusiveAccess());
 
-    // Make sure that the atoms compartment has its own zone.
-    MOZ_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),
-                  !comp->zone()->isAtomsZone());
+    // Make sure that the atoms realm has its own zone.
+    MOZ_ASSERT_IF(realm && !runtime_->isAtomsCompartment(realm),
+                  !realm->zone()->isAtomsZone());
 
-    // Both the current and the new compartment should be properly marked as
+    // Both the current and the new realm should be properly marked as
     // entered at this point.
-    MOZ_ASSERT_IF(compartment_, compartment_->hasBeenEntered());
-    MOZ_ASSERT_IF(comp, comp->hasBeenEntered());
+    MOZ_ASSERT_IF(realm_, realm_->hasBeenEntered());
+    MOZ_ASSERT_IF(realm, realm->hasBeenEntered());
 
     // This thread must have exclusive access to the zone.
-    MOZ_ASSERT_IF(comp && !comp->zone()->isAtomsZone(),
-                  CurrentThreadCanAccessZone(comp->zone()));
+    MOZ_ASSERT_IF(realm && !realm->zone()->isAtomsZone(),
+                  CurrentThreadCanAccessZone(realm->zone()));
 
-    compartment_ = comp;
-    zone_ = comp ? comp->zone() : nullptr;
+    realm_ = realm;
+    zone_ = realm ? realm->zone() : nullptr;
     arenas_ = zone_ ? &zone_->arenas : nullptr;
 }
 

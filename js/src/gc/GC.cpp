@@ -1334,7 +1334,7 @@ GCRuntime::finish()
         AutoSetThreadIsSweeping threadIsSweeping;
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
             for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-                js_delete(comp.get());
+                js_delete(JS::GetRealmForCompartment(comp.get()));
             zone->compartments().clear();
             js_delete(zone.get());
         }
@@ -3803,11 +3803,11 @@ JS::Zone::sweepUniqueIds()
 }
 
 void
-JSCompartment::destroy(FreeOp* fop)
+Realm::destroy(FreeOp* fop)
 {
     JSRuntime* rt = fop->runtime();
     if (auto callback = rt->destroyRealmCallback)
-        callback(fop, JS::GetRealmForCompartment(this));
+        callback(fop, this);
     if (auto callback = rt->destroyCompartmentCallback)
         callback(fop, this);
     if (principals())
@@ -3853,7 +3853,7 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
          */
         bool dontDelete = read == end && !foundOne && keepAtleastOne;
         if ((!comp->marked && !dontDelete) || destroyingRuntime) {
-            comp->destroy(fop);
+            JS::GetRealmForCompartment(comp)->destroy(fop);
         } else {
             *write++ = comp;
             foundOne = true;
@@ -4047,7 +4047,7 @@ GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
 
     if (alwaysPreserveCode)
         return true;
-    if (comp->preserveJitCode())
+    if (JS::GetRealmForCompartment(comp)->preserveJitCode())
         return true;
     if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
@@ -7949,7 +7949,7 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
         }
     }
 
-    ScopedJSDeletePtr<JSCompartment> compartment(cx->new_<JSCompartment>(zone, options));
+    ScopedJSDeletePtr<Realm> compartment(cx->new_<Realm>(zone, options));
     if (!compartment || !compartment->init(cx))
         return nullptr;
 
@@ -7994,10 +7994,11 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 void
 GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
 {
-    // The source compartment must be specifically flagged as mergable.  This
-    // also implies that the compartment is not visible to the debugger.
-    MOZ_ASSERT(source->creationOptions_.mergeable());
-    MOZ_ASSERT(source->creationOptions_.invisibleToDebugger());
+    // The source realm must be specifically flagged as mergable.  This
+    // also implies that the realm is not visible to the debugger.
+    mozilla::DebugOnly<Realm*> sourceRealm = JS::GetRealmForCompartment(source);
+    MOZ_ASSERT(sourceRealm->creationOptions().mergeable());
+    MOZ_ASSERT(sourceRealm->creationOptions().invisibleToDebugger());
 
     MOZ_ASSERT(!source->hasBeenEntered());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
@@ -8031,7 +8032,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
 
     for (auto script = source->zone()->cellIter<JSScript>(); !script.done(); script.next()) {
         MOZ_ASSERT(script->compartment() == source);
-        script->compartment_ = target;
+        script->realm_ = JS::GetRealmForCompartment(target);
         script->setTypesGeneration(target->zone()->types.generation);
     }
 
@@ -8056,7 +8057,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
         }
 
         group->setGeneration(target->zone()->types.generation);
-        group->compartment_ = target;
+        group->realm_ = JS::GetRealmForCompartment(target);
 
         // Remove any unboxed layouts from the list in the off thread
         // compartment. These do not need to be reinserted in the target

@@ -76,18 +76,17 @@ nsFilteredContentIterator::Init(nsINode* aRoot)
 
 //------------------------------------------------------------
 nsresult
-nsFilteredContentIterator::Init(nsIDOMRange* aRange)
+nsFilteredContentIterator::Init(nsRange* aRange)
 {
   if (NS_WARN_IF(!aRange)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRange* range = static_cast<nsRange*>(aRange);
-  if (NS_WARN_IF(!range->IsPositioned())) {
+  if (NS_WARN_IF(!aRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  mRange = range->CloneRange();
+  mRange = aRange->CloneRange();
 
   return InitWithRange();
 }

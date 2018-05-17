@@ -2056,7 +2056,7 @@ JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp)
     // transmission point, but that's tricky, and it will be a very rare problem
     // in any case.  Just fail at the receiving end if we can't handle it.
 
-    if (!context()->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+    if (!context()->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_SAB_DISABLED);
         return false;
     }

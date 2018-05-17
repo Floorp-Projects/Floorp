@@ -1057,7 +1057,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
             MOZ_ASSERT_IF(fun->infallibleIsDefaultClassConstructor(cx),
                           !cx->runtime()->sourceHook.ref() ||
                           !script->scriptSource()->sourceRetrievable() ||
-                          fun->compartment()->behaviors().discardSource());
+                          fun->realm()->behaviors().discardSource());
 
             if (!out.append("() {\n    [sourceless code]\n}"))
                 return nullptr;

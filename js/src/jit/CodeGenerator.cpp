@@ -2537,8 +2537,8 @@ CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
     addOutOfLineCode(ool, ins->mir());
 
     masm.loadJSContext(temp);
-    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
-    size_t offset = JSCompartment::offsetOfRegExps() +
+    masm.loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
+    size_t offset = Realm::offsetOfRegExps() +
                     RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape();
     masm.loadPtr(Address(temp, offset), temp);
 
@@ -2597,8 +2597,8 @@ CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
     addOutOfLineCode(ool, ins->mir());
 
     masm.loadJSContext(temp);
-    masm.loadPtr(Address(temp, JSContext::offsetOfCompartment()), temp);
-    size_t offset = JSCompartment::offsetOfRegExps() +
+    masm.loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
+    size_t offset = Realm::offsetOfRegExps() +
                     RegExpCompartment::offsetOfOptimizableRegExpInstanceShape();
     masm.loadPtr(Address(temp, offset), temp);
 

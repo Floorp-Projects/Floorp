@@ -72,7 +72,7 @@ var FinderIterator = {
    *                                          Optional, defaults to `false`.
    * @param {Object}  options.listener        Listener object that implements the
    *                                          following callback functions:
-   *                                           - onIteratorRangeFound({nsIDOMRange} range);
+   *                                           - onIteratorRangeFound({Range} range);
    *                                           - onIteratorReset();
    *                                           - onIteratorRestart({Object} iterParams);
    *                                           - onIteratorStart({Object} iterParams);
@@ -350,7 +350,7 @@ var FinderIterator = {
    * @param {Boolean}      [withPause] Whether to pause after each `kIterationSizeMax`
    *                                   number of ranges yielded. Optional, defaults
    *                                   to `true`.
-   * @yield {nsIDOMRange}
+   * @yield {Range}
    */
   async _yieldResult(listener, rangeSource, window, withPause = true) {
     // We keep track of the number of iterations to allow a short pause between
@@ -402,7 +402,7 @@ var FinderIterator = {
    * @param {Object}       listener Listener object
    * @param {nsIDOMWindow} window   The window object is only really used
    *                                for access to `setTimeout`
-   * @yield {nsIDOMRange}
+   * @yield {Range}
    */
   async _yieldPreviousResult(listener, window) {
     this._notifyListeners("start", this.params, [listener]);
@@ -422,7 +422,7 @@ var FinderIterator = {
    * @param {Object}       listener Listener object
    * @param {nsIDOMWindow} window   The window object is only really used
    *                                for access to `setTimeout`
-   * @yield {nsIDOMRange}
+   * @yield {Range}
    */
   async _yieldIntermediateResult(listener, window) {
     this._notifyListeners("start", this.params, [listener]);
@@ -438,7 +438,7 @@ var FinderIterator = {
    * @param {Number}       spawnId Since `stop()` is synchronous and this method
    *                               is not, this identifier is used to learn if
    *                               it's supposed to still continue after a pause.
-   * @yield {nsIDOMRange}
+   * @yield {Range}
    */
   async _findAllRanges(finder, spawnId) {
     if (this._timeout) {
@@ -529,7 +529,7 @@ var FinderIterator = {
    *                                             mode
    * @param {String}       options.word          The word to search for
    * @param {nsIDOMWindow} window                The window to search in
-   * @yield {nsIDOMRange}
+   * @yield {Range}
    */
   * _iterateDocument({ caseSensitive, entireWord, word }, window) {
     let doc = window.document;
@@ -597,15 +597,15 @@ var FinderIterator = {
    * Internal; helper method to extract the docShell reference from a Window or
    * Range object.
    *
-   * @param  {nsIDOMRange} windowOrRange Window object to query. May also be a
-   *                                     Range, from which the owner window will
-   *                                     be queried.
+   * @param  {Range} windowOrRange Window object to query. May also be a
+   *                               Range, from which the owner window will
+   *                               be queried.
    * @return {nsIDocShell}
    */
   _getDocShell(windowOrRange) {
     let window = windowOrRange;
     // Ranges may also be passed in, so fetch its window.
-    if (windowOrRange instanceof Ci.nsIDOMRange)
+    if (ChromeUtils.getClassName(windowOrRange) === "Range")
       window = windowOrRange.startContainer.ownerGlobal;
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
@@ -615,7 +615,7 @@ var FinderIterator = {
   /**
    * Internal; determines whether a range is inside a link.
    *
-   * @param  {nsIDOMRange} range the range to check
+   * @param  {Range} range the range to check
    * @return {Boolean}     True if the range starts in a link
    */
   _rangeStartsInLink(range) {

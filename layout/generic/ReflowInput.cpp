@@ -2547,15 +2547,14 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   const nsStyleDisplay* disp = mFrame->StyleDisplayWithOptionalParam(aDisplay);
   bool isThemed = mFrame->IsThemed(disp);
   bool needPaddingProp;
-  nsIntMargin widget;
+  LayoutDeviceIntMargin widgetPadding;
   if (isThemed &&
       presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                 mFrame, disp->mAppearance,
-                                                &widget)) {
-    ComputedPhysicalPadding().top = presContext->DevPixelsToAppUnits(widget.top);
-    ComputedPhysicalPadding().right = presContext->DevPixelsToAppUnits(widget.right);
-    ComputedPhysicalPadding().bottom = presContext->DevPixelsToAppUnits(widget.bottom);
-    ComputedPhysicalPadding().left = presContext->DevPixelsToAppUnits(widget.left);
+                                                &widgetPadding)) {
+    ComputedPhysicalPadding() =
+      LayoutDevicePixel::ToAppUnits(widgetPadding,
+                                    presContext->AppUnitsPerDevPixel());
     needPaddingProp = false;
   }
   else if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
@@ -2599,18 +2598,13 @@ SizeComputationInput::InitOffsets(WritingMode aWM,
   }
 
   if (isThemed) {
-    nsIntMargin widget;
+    LayoutDeviceIntMargin border;
     presContext->GetTheme()->GetWidgetBorder(presContext->DeviceContext(),
                                              mFrame, disp->mAppearance,
-                                             &widget);
-    ComputedPhysicalBorderPadding().top =
-      presContext->DevPixelsToAppUnits(widget.top);
-    ComputedPhysicalBorderPadding().right =
-      presContext->DevPixelsToAppUnits(widget.right);
-    ComputedPhysicalBorderPadding().bottom =
-      presContext->DevPixelsToAppUnits(widget.bottom);
-    ComputedPhysicalBorderPadding().left =
-      presContext->DevPixelsToAppUnits(widget.left);
+                                             &border);
+    ComputedPhysicalBorderPadding() =
+      LayoutDevicePixel::ToAppUnits(border,
+                                    presContext->AppUnitsPerDevPixel());
   }
   else if (nsSVGUtils::IsInSVGTextSubtree(mFrame)) {
     ComputedPhysicalBorderPadding().SizeTo(0, 0, 0, 0);

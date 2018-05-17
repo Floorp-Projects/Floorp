@@ -40,7 +40,6 @@ class nsITransferable;
 class nsIClipboard;
 class nsILinkHandler;
 class nsTableWrapperFrame;
-class nsIDOMRange;
 class nsRange;
 
 namespace mozilla {

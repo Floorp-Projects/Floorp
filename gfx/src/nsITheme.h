@@ -87,12 +87,12 @@ public:
                                                 const nsRect& aRect) { return false; }
 
   /**
-   * Get the computed CSS border for the widget, in pixels.
+   * Get the border for the widget, in device pixels.
    */
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult)=0;
+                             mozilla::LayoutDeviceIntMargin* aResult) = 0;
 
   /**
    * This method can return false to indicate that the CSS padding
@@ -106,7 +106,7 @@ public:
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult) = 0;
+                                  mozilla::LayoutDeviceIntMargin* aResult) = 0;
 
   /**
    * On entry, *aResult is positioned at 0,0 and sized to the new size

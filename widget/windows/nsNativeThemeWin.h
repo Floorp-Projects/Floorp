@@ -40,12 +40,12 @@ public:
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult) override;
+                             mozilla::LayoutDeviceIntMargin* aResult) override;
 
-  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
-                                  nsIFrame* aFrame,
-                                  uint8_t aWidgetType,
-                                  nsIntMargin* aResult) override;
+  bool GetWidgetPadding(nsDeviceContext* aContext,
+                        nsIFrame* aFrame,
+                        uint8_t aWidgetType,
+                        mozilla::LayoutDeviceIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
@@ -100,11 +100,11 @@ protected:
   nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult);
+                                  mozilla::LayoutDeviceIntMargin* aResult);
   bool ClassicGetWidgetPadding(nsDeviceContext* aContext,
                                nsIFrame* aFrame,
                                uint8_t aWidgetType,
-                               nsIntMargin* aResult);
+                               mozilla::LayoutDeviceIntMargin* aResult);
   nsresult ClassicGetMinimumWidgetSize(nsIFrame* aFrame, uint8_t aWidgetType,
                                        mozilla::LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable);
@@ -124,7 +124,7 @@ protected:
 
   nsresult GetCachedWidgetBorder(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
                                  uint8_t aWidgetType, int32_t aPart, int32_t aState,
-                                 nsIntMargin* aResult);
+                                 mozilla::LayoutDeviceIntMargin* aResult);
 
   nsresult GetCachedMinimumWidgetSize(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
                                       uint8_t aWidgetType, int32_t aPart, int32_t aState,
@@ -142,7 +142,7 @@ private:
   // the aWidgetType value instead, but there would be some uncacheable values, since
   // we derive some theme parts from other arguments.
   uint8_t mBorderCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
-  nsIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
+  mozilla::LayoutDeviceIntMargin mBorderCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
 
   // See the above not for mBorderCache and friends. However mozilla::LayoutDeviceIntSize
   // is half the size of nsIntMargin, making the cache roughly half as large. In total

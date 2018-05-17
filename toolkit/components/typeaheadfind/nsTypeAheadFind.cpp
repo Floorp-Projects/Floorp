@@ -452,10 +452,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
   while (true) {    // ----- Outer while loop: go through all docs -----
     while (true) {  // === Inner while loop: go through a single doc ===
-      nsCOMPtr<nsIDOMRange> tempFoundRange;
       mFind->Find(mTypeAheadBuffer.get(), mSearchRange, mStartPointRange,
-                  mEndPointRange, getter_AddRefs(tempFoundRange));
-      returnRange = static_cast<nsRange*>(tempFoundRange.get());
+                  mEndPointRange, getter_AddRefs(returnRange));
       if (!returnRange) {
         break;  // Nothing found in this doc, go to outer loop (try next doc)
       }
@@ -1161,7 +1159,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::GetFoundRange(nsIDOMRange** aFoundRange)
+nsTypeAheadFind::GetFoundRange(nsRange** aFoundRange)
 {
   NS_ENSURE_ARG_POINTER(aFoundRange);
   if (mFoundRange == nullptr) {
@@ -1174,12 +1172,11 @@ nsTypeAheadFind::GetFoundRange(nsIDOMRange** aFoundRange)
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
+nsTypeAheadFind::IsRangeVisible(nsRange* aRange,
                                 bool aMustBeInViewPort,
                                 bool *aResult)
 {
-  nsRange* range = static_cast<nsRange*>(aRange);
-  nsCOMPtr<nsINode> node = range->GetStartContainer();
+  nsCOMPtr<nsINode> node = aRange->GetStartContainer();
 
   nsIDocument* doc = node->OwnerDoc();
   nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
@@ -1188,7 +1185,7 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
   }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   RefPtr<nsRange> ignored;
-  *aResult = IsRangeVisible(presShell, presContext, range,
+  *aResult = IsRangeVisible(presShell, presContext, aRange,
                             aMustBeInViewPort, false,
                             getter_AddRefs(ignored),
                             nullptr);
@@ -1365,11 +1362,10 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 }
 
 NS_IMETHODIMP
-nsTypeAheadFind::IsRangeRendered(nsIDOMRange *aRange,
-                                bool *aResult)
+nsTypeAheadFind::IsRangeRendered(nsRange* aRange,
+                                 bool* aResult)
 {
-  nsRange* range = static_cast<nsRange*>(aRange);
-  nsINode* node = range->GetStartContainer();
+  nsINode* node = aRange->GetStartContainer();
 
   nsIDocument* doc = node->OwnerDoc();
   nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
@@ -1377,7 +1373,7 @@ nsTypeAheadFind::IsRangeRendered(nsIDOMRange *aRange,
     return NS_ERROR_UNEXPECTED;
   }
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-  *aResult = IsRangeRendered(presShell, presContext, range);
+  *aResult = IsRangeRendered(presShell, presContext, aRange);
   return NS_OK;
 }
 

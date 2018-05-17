@@ -3275,7 +3275,7 @@ MacroAssembler::branchTestObjCompartment(Condition cond, Register obj, const Add
 {
     MOZ_ASSERT(obj != scratch);
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-    loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
     branchPtr(cond, compartment, scratch, label);
 }
 
@@ -3286,7 +3286,7 @@ MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
 {
     MOZ_ASSERT(obj != scratch);
     loadPtr(Address(obj, JSObject::offsetOfGroup()), scratch);
-    loadPtr(Address(scratch, ObjectGroup::offsetOfCompartment()), scratch);
+    loadPtr(Address(scratch, ObjectGroup::offsetOfRealm()), scratch);
     branchPtr(cond, scratch, ImmPtr(compartment), label);
 }
 
