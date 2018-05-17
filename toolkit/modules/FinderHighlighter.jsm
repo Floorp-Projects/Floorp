@@ -274,7 +274,7 @@ FinderHighlighter.prototype = {
    * Add a range to the find selection, i.e. highlight it, and if it's inside an
    * editable node, track it.
    *
-   * @param {nsIDOMRange} range Range object to be highlighted
+   * @param {Range} range Range object to be highlighted
    */
   highlightRange(range) {
     let node = range.startContainer;
@@ -331,7 +331,7 @@ FinderHighlighter.prototype = {
    *
    * @param {nsIDOMWindow} window    The dimmed background will overlay this window.
    *                                 Optional, defaults to the finder window.
-   * @param {nsIDOMRange}  skipRange A range that should not be removed from the
+   * @param {Range}        skipRange A range that should not be removed from the
    *                                 find selection.
    * @param {Event}        event     When called from an event handler, this will
    *                                 be the triggering event.
@@ -520,7 +520,7 @@ FinderHighlighter.prototype = {
    * controller. Optionally skips a specific range.
    *
    * @param  {nsISelectionController} controller
-   * @param  {nsIDOMRange}            restoreRange
+   * @param  {Range}                  restoreRange
    */
   _clearSelection(controller, restoreRange = null) {
     if (!controller)
@@ -671,7 +671,7 @@ FinderHighlighter.prototype = {
    * Utility; get all available font styles as applied to the content of a given
    * range. The CSS properties we look for can be found in `kFontPropsCSS`.
    *
-   * @param  {nsIDOMRange} range Range to fetch style info from.
+   * @param  {Range} range Range to fetch style info from.
    * @return {Object} Dictionary consisting of the styles that were found.
    */
   _getRangeFontStyle(range) {
@@ -787,7 +787,7 @@ FinderHighlighter.prototype = {
    * (i)frames and elements that have their overflow styles set to 'auto' or
    * 'scroll'.
    *
-   * @param  {nsIDOMRange} range Range that be enclosed in a dynamic container
+   * @param  {Range} range Range that be enclosed in a dynamic container
    * @return {Boolean}
    */
   _isInDynamicContainer(range) {
@@ -822,10 +822,10 @@ FinderHighlighter.prototype = {
    * Read and store the rectangles that encompass the entire region of a range
    * for use by the drawing function of the highlighter.
    *
-   * @param  {nsIDOMRange} range  Range to fetch the rectangles from
-   * @param  {Object}      [dict] Dictionary of properties belonging to
-   *                              the currently active window
-   * @return {Set}         Set of rects that were found for the range
+   * @param  {Range}  range  Range to fetch the rectangles from
+   * @param  {Object} [dict] Dictionary of properties belonging to
+   *                         the currently active window
+   * @return {Set}    Set of rects that were found for the range
    */
   _getRangeRectsAndTexts(range, dict = null) {
     let window = range.startContainer.ownerGlobal;
@@ -862,14 +862,14 @@ FinderHighlighter.prototype = {
    * for use by the drawing function of the highlighter and store them in the
    * cache.
    *
-   * @param  {nsIDOMRange} range            Range to fetch the rectangles from
-   * @param  {Boolean}     [checkIfDynamic] Whether we should check if the range
-   *                                        is dynamic as per the rules in
-   *                                        `_isInDynamicContainer()`. Optional,
-   *                                        defaults to `true`
-   * @param  {Object}      [dict]           Dictionary of properties belonging to
-   *                                        the currently active window
-   * @return {Set}         Set of rects that were found for the range
+   * @param  {Range}   range            Range to fetch the rectangles from
+   * @param  {Boolean} [checkIfDynamic] Whether we should check if the range
+   *                                    is dynamic as per the rules in
+   *                                    `_isInDynamicContainer()`. Optional,
+   *                                    defaults to `true`
+   * @param  {Object}  [dict]           Dictionary of properties belonging to
+   *                                    the currently active window
+   * @return {Set}     Set of rects that were found for the range
    */
   _updateRangeRects(range, checkIfDynamic = true, dict = null) {
     let window = range.startContainer.ownerGlobal;
@@ -1081,7 +1081,7 @@ FinderHighlighter.prototype = {
    * Add a range to the list of ranges to highlight on, or cut out of, the dimmed
    * background.
    *
-   * @param {nsIDOMRange}  range  Range object that should be inspected
+   * @param {Range}        range  Range object that should be inspected
    * @param {nsIDOMWindow} window Window object, whose DOM tree is being traversed
    */
   _modalHighlight(range, controller, window) {

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.SourceRecordClass = undefined;
+exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.RelativeSourceRecordClass = exports.SourceRecordClass = undefined;
 exports.initialSourcesState = initialSourcesState;
 exports.removeSourceFromTabList = removeSourceFromTabList;
 exports.removeSourcesFromTabList = removeSourcesFromTabList;
@@ -51,7 +51,7 @@ function initialSourcesState() {
   })();
 }
 
-const SourceRecordClass = exports.SourceRecordClass = new I.Record({
+const sourceRecordProperties = {
   id: undefined,
   url: undefined,
   sourceMapURL: undefined,
@@ -62,7 +62,11 @@ const SourceRecordClass = exports.SourceRecordClass = new I.Record({
   contentType: "",
   error: undefined,
   loadedState: "unloaded"
-});
+};
+const SourceRecordClass = exports.SourceRecordClass = new I.Record(sourceRecordProperties);
+const RelativeSourceRecordClass = exports.RelativeSourceRecordClass = new I.Record(_objectSpread({}, sourceRecordProperties, {
+  relativeUrl: undefined
+}));
 
 function update(state = initialSourcesState(), action) {
   let location = null;

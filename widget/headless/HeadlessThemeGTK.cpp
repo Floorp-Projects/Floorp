@@ -25,7 +25,8 @@ HeadlessThemeGTK::DrawWidgetBackground(gfxContext* aContext,
 
 NS_IMETHODIMP
 HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType, nsIntMargin* aResult)
+                                  uint8_t aWidgetType,
+                                  LayoutDeviceIntMargin* aResult)
 {
   aResult->top = aResult->right = aResult->bottom = aResult->left = 0;
   // The following values are generated from the Ubuntu GTK theme.
@@ -117,7 +118,7 @@ HeadlessThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
 bool
 HeadlessThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, uint8_t aWidgetType,
-                                   nsIntMargin* aResult)
+                                   LayoutDeviceIntMargin* aResult)
 {
   // The following values are generated from the Ubuntu GTK theme.
   switch (aWidgetType) {

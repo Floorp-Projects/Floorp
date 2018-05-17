@@ -222,7 +222,7 @@ JSRuntime::init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes)
         return false;
 
     JS::RealmOptions options;
-    ScopedJSDeletePtr<JSCompartment> atomsCompartment(js_new<JSCompartment>(atomsZone.get(), options));
+    ScopedJSDeletePtr<Realm> atomsCompartment(js_new<Realm>(atomsZone.get(), options));
     if (!atomsCompartment || !atomsCompartment->init(nullptr))
         return false;
 

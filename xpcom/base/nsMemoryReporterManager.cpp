@@ -2487,16 +2487,16 @@ nsMemoryReporterManager::GetJSMainRuntimeTemporaryPeak(int64_t* aAmount)
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetJSMainRuntimeCompartmentsSystem(int64_t* aAmount)
+nsMemoryReporterManager::GetJSMainRuntimeRealmsSystem(int64_t* aAmount)
 {
-  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsSystem,
+  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeRealmsSystem,
                              aAmount);
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetJSMainRuntimeCompartmentsUser(int64_t* aAmount)
+nsMemoryReporterManager::GetJSMainRuntimeRealmsUser(int64_t* aAmount)
 {
-  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeCompartmentsUser,
+  return GetInfallibleAmount(mAmountFns.mJSMainRuntimeRealmsUser,
                              aAmount);
 }
 
@@ -2785,8 +2785,8 @@ UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter)
 
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeGCHeap)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeTemporaryPeak)
-DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
-DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsSystem)
+DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeRealmsUser)
 
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, ImagesContentUsedUncompressed)
 DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT(ImagesContentUsedUncompressed)

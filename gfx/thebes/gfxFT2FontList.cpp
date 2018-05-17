@@ -1006,7 +1006,7 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(
         int32_t colon = minStyle.FindChar(':');
         if (colon > 0) {
             maxStyle.Assign(minStyle.BeginReading() + colon + 1);
-            minStyle.Truncate(colon - 1);
+            minStyle.Truncate(colon);
         }
 
         beginning = end + 1;
@@ -1060,7 +1060,11 @@ AppendToFaceList(nsCString& aFaceList,
     aFaceList.Append(',');
     aFaceList.AppendInt(aFontEntry->mFTFontIndex);
     aFaceList.Append(',');
-    aFaceList.Append(aFontEntry->IsItalic() ? '1' : '0');
+    // Note that ToString() appends to the destination string without
+    // replacing existing contents (see FontPropertyTypes.h)
+    aFontEntry->SlantStyle().Min().ToString(aFaceList);
+    aFaceList.Append(':');
+    aFontEntry->SlantStyle().Max().ToString(aFaceList);
     aFaceList.Append(',');
     aFaceList.AppendFloat(aFontEntry->Weight().Min().ToFloat());
     aFaceList.Append(':');
