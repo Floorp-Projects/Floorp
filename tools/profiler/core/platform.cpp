@@ -1794,8 +1794,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
      // java thread, we have to get thread id and name via JNI.
      RefPtr<ThreadInfo> threadInfo =
        new ThreadInfo("Java Main Thread", 0, false);
-     ProfiledThreadData profiledThreadData(threadInfo, nullptr,
-                                           ActivePS::FeatureResponsiveness(aLock));
+     ProfiledThreadData profiledThreadData(threadInfo, nullptr);
      profiledThreadData.StreamJSON(*javaBuffer.get(), nullptr, aWriter,
                                    CorePS::ProcessStartTime(), aSinceTime);
 
@@ -2090,10 +2089,7 @@ SamplerThread::Run()
             }
           }
 
-          ThreadResponsiveness* resp = profiledThreadData->GetThreadResponsiveness();
-          if (resp) {
-            resp->Update();
-          }
+          profiledThreadData->GetThreadResponsiveness()->Update();
 
           TimeStamp now = TimeStamp::Now();
           SuspendAndSampleAndResumeThread(lock, *registeredThread,
@@ -2273,8 +2269,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData =
       ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
-        MakeUnique<ProfiledThreadData>(info, eventTarget,
-                                       ActivePS::FeatureResponsiveness(aLock)));
+        MakeUnique<ProfiledThreadData>(info, eventTarget));
 
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
@@ -2876,8 +2871,7 @@ locked_profiler_start(PSLockRef aLock, uint32_t aEntries, double aInterval,
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData =
         ActivePS::AddLiveProfiledThread(aLock, registeredThread.get(),
-          MakeUnique<ProfiledThreadData>(info, eventTarget,
-                                         ActivePS::FeatureResponsiveness(aLock)));
+          MakeUnique<ProfiledThreadData>(info, eventTarget));
       if (ActivePS::FeatureJS(aLock)) {
         registeredThread->StartJSSampling(
           ActivePS::FeatureTrackOptimizations(aLock));

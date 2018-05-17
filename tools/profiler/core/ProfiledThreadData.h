@@ -42,8 +42,7 @@
 class ProfiledThreadData final
 {
 public:
-  ProfiledThreadData(ThreadInfo* aThreadInfo, nsIEventTarget* aEventTarget,
-                     bool aIncludeResponsiveness);
+  ProfiledThreadData(ThreadInfo* aThreadInfo, nsIEventTarget* aEventTarget);
   ~ProfiledThreadData();
 
   void NotifyUnregistered(uint64_t aBufferPosition)
@@ -64,8 +63,8 @@ public:
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime);
 
-  // Returns nullptr if this is not the main thread, the responsiveness
-  // feature is not turned on, or if this thread is not being profiled.
+  // Returns nullptr if this is not the main thread or if this thread is not
+  // being profiled.
   ThreadResponsiveness* GetThreadResponsiveness()
   {
     ThreadResponsiveness* responsiveness = mResponsiveness.ptrOr(nullptr);
