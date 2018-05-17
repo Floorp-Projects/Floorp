@@ -768,9 +768,9 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
     case EditAction::indent:
     case EditAction::outdent:
     case EditAction::align:
-      return DidMakeBasicBlock(aInfo, aResult);
+      return DidMakeBasicBlock();
     case EditAction::setAbsolutePosition: {
-      nsresult rv = DidMakeBasicBlock(aInfo, aResult);
+      nsresult rv = DidMakeBasicBlock();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4483,8 +4483,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
 }
 
 nsresult
-HTMLEditRules::DidMakeBasicBlock(RulesInfo* aInfo,
-                                 nsresult aResult)
+HTMLEditRules::DidMakeBasicBlock()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
