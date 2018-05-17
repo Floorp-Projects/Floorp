@@ -285,13 +285,13 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DelayNode", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "DeviceLightEvent", insecureContext: true, disabled: isEarlyBetaOrEarlier},
+    {name: "DeviceLightEvent", insecureContext: true, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DeviceMotionEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "DeviceOrientationEvent", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "DeviceProximityEvent", insecureContext: true, disabled: isEarlyBetaOrEarlier},
+    {name: "DeviceProximityEvent", insecureContext: true, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Directory", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1145,7 +1145,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "URLSearchParams", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "UserProximityEvent", insecureContext: true, disabled: isEarlyBetaOrEarlier},
+    {name: "UserProximityEvent", insecureContext: true, disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ValidityState", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
