@@ -1780,6 +1780,12 @@ policies and contribution forms [3].
             }
         };
 
+        if (self.Promise) {
+            this.done = new Promise(function(resolve) {
+                this_obj.doneResolve = resolve;
+            });
+        }
+
         this.message_target.addEventListener("message", this.message_handler);
     }
 
@@ -1829,6 +1835,10 @@ policies and contribution forms [3].
         this.running = false;
         this.remote = null;
         this.message_target = null;
+        if (this.doneResolve) {
+            this.doneResolve();
+        }
+
         if (tests.all_done()) {
             tests.complete();
         }
@@ -2187,11 +2197,13 @@ policies and contribution forms [3].
             return;
         }
 
-        this.pending_remotes.push(this.create_remote_worker(worker));
+        var remoteContext = this.create_remote_worker(worker);
+        this.pending_remotes.push(remoteContext);
+        return remoteContext.done;
     };
 
     function fetch_tests_from_worker(port) {
-        tests.fetch_tests_from_worker(port);
+        return tests.fetch_tests_from_worker(port);
     }
     expose(fetch_tests_from_worker, 'fetch_tests_from_worker');
 
