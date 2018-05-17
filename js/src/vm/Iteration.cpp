@@ -565,20 +565,36 @@ NewPropertyIteratorObject(JSContext* cx)
 NativeIterator*
 NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, uint32_t plength)
 {
-    JS_STATIC_ASSERT(sizeof(ReceiverGuard) == 2 * sizeof(void*));
+    static_assert(sizeof(ReceiverGuard) == 2 * sizeof(GCPtrFlatString),
+                  "NativeIterators are allocated in space for 1) themselves, "
+                  "2) the properties a NativeIterator iterates (as "
+                  "GCPtrFlatStrings), and 3) |numGuards| ReceiverGuard "
+                  "objects; the additional-length calculation below assumes "
+                  "this size-relationship when determining the extra space to "
+                  "allocate");
+    static_assert(alignof(ReceiverGuard) == alignof(GCPtrFlatString),
+                  "the end of all properties must be exactly aligned adequate "
+                  "to begin storing ReceiverGuards, else the tacked-on memory "
+                  "below will be inadequate to store all properties/guards");
 
     size_t extraLength = plength + numGuards * 2;
-    NativeIterator* ni = cx->zone()->pod_malloc_with_extra<NativeIterator, void*>(extraLength);
+    NativeIterator* ni =
+        cx->zone()->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraLength);
     if (!ni) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    void** extra = reinterpret_cast<void**>(ni + 1);
+    // Zero out the NativeIterator first.
     PodZero(ni);
+
+    // Zero out the remaining space for GCPtrFlatStrings for properties and
+    // ReceiverGuards for guards.
+    GCPtrFlatString* extra = ni->begin();
     PodZero(extra, extraLength);
-    ni->props_array = ni->props_cursor = reinterpret_cast<GCPtrFlatString*>(extra);
-    ni->props_end = ni->props_array + plength;
+
+    ni->props_cursor = extra;
+    ni->props_end = extra + plength;
     return ni;
 }
 
@@ -621,11 +637,12 @@ NativeIterator::initProperties(JSContext* cx, Handle<PropertyIteratorObject*> ob
     size_t plength = props.length();
     MOZ_ASSERT(plength == size_t(end() - begin()));
 
+    GCPtrFlatString* propNames = begin();
     for (size_t i = 0; i < plength; i++) {
         JSFlatString* str = IdToString(cx, props[i]);
         if (!str)
             return false;
-        props_array[i].init(str);
+        propNames[i].init(str);
     }
 
     return true;
@@ -1136,7 +1153,7 @@ js::CloseIterator(JSObject* obj)
          * Reset the enumerator; it may still be in the cached iterators
          * for this thread, and can be reused.
          */
-        ni->props_cursor = ni->props_array;
+        ni->props_cursor = ni->begin();
     }
 }
 
