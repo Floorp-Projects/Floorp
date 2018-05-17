@@ -326,7 +326,19 @@ protected:
   EditActionResult MoveContents(Element& aElement, Element& aDestElement,
                                 int32_t* aInOutDestOffset);
 
-  nsresult DeleteNonTableElements(nsINode* aNode);
+  /**
+   * DeleteElementsExceptTableRelatedElements() removes elements except
+   * table related elements (except <table> itself) and their contents
+   * from the DOM tree.
+   *
+   * @param aNode               If this is not a table related element, this
+   *                            node will be removed from the DOM tree.
+   *                            Otherwise, this method calls itself recursively
+   *                            with its children.
+   *
+   */
+  MOZ_MUST_USE nsresult
+  DeleteElementsExceptTableRelatedElements(nsINode& aNode);
 
   /**
    * XXX Should document what this does.
