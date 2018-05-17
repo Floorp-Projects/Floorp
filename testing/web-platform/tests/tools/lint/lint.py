@@ -443,7 +443,7 @@ def check_parsed(repo_root, path, f):
             not source_file.spec_links):
             return [("MISSING-LINK", "Testcase file must have a link to a spec", path, None)]
 
-    if source_file.name_is_non_test or source_file.name_is_manual:
+    if source_file.name_is_non_test:
         return []
 
     if source_file.markup_type is None:
@@ -453,10 +453,10 @@ def check_parsed(repo_root, path, f):
         return [("PARSE-FAILED", "Unable to parse file", path, None)]
 
     if source_file.type == "manual" and not source_file.name_is_manual:
-        return [("CONTENT-MANUAL", "Manual test whose filename doesn't end in '-manual'", path, None)]
+        errors.append(("CONTENT-MANUAL", "Manual test whose filename doesn't end in '-manual'", path, None))
 
     if source_file.type == "visual" and not source_file.name_is_visual:
-        return [("CONTENT-VISUAL", "Visual test whose filename doesn't end in '-visual'", path, None)]
+        errors.append(("CONTENT-VISUAL", "Visual test whose filename doesn't end in '-visual'", path, None))
 
     for reftest_node in source_file.reftest_nodes:
         href = reftest_node.attrib.get("href", "").strip(space_chars)
