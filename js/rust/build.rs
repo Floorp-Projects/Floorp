@@ -148,7 +148,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::AutoObjectVector",
     "JS::CallArgs",
     "js::Class",
-    "JS::CompartmentOptions",
+    "JS::RealmOptions",
     "JS::ContextOptions",
     "js::DOMCallbacks",
     "js::DOMProxyShadowsResult",

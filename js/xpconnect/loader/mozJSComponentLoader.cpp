@@ -573,7 +573,7 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     nsresult rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    CompartmentOptions options;
+    RealmOptions options;
 
     options.creationOptions()
            .setSystemZone();

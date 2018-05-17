@@ -1562,9 +1562,9 @@ InitializeLegacyNetscapeObject(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   return JS_DefineFunctions(aCx, obj, EnablePrivilegeSpec);
 }
 
-static JS::CompartmentCreationOptions&
+static JS::RealmCreationOptions&
 SelectZone(nsGlobalWindowInner* aNewInner,
-           JS::CompartmentCreationOptions& aOptions)
+           JS::RealmCreationOptions& aOptions)
 {
   if (aNewInner->GetOuterWindow()) {
     nsGlobalWindowOuter *top = aNewInner->GetTopInternal();
@@ -1600,7 +1600,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   nsCOMPtr<nsIExpandedPrincipal> nsEP = do_QueryInterface(aPrincipal);
   MOZ_RELEASE_ASSERT(!nsEP, "DOMWindow with nsEP is not supported");
 
-  JS::CompartmentOptions options;
+  JS::RealmOptions options;
 
   SelectZone(aNewInner, options.creationOptions());
 

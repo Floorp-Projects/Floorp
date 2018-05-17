@@ -124,7 +124,7 @@ IterateScripts(JSContext* cx, JSCompartment* compartment,
 
 JSCompartment*
 NewCompartment(JSContext* cx, JSPrincipals* principals,
-               const JS::CompartmentOptions& options);
+               const JS::RealmOptions& options);
 
 namespace gc {
 

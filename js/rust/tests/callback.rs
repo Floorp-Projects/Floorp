@@ -8,7 +8,7 @@ extern crate libc;
 
 use js::ac::AutoCompartment;
 use js::jsapi::root::JS::CallArgs;
-use js::jsapi::root::JS::CompartmentOptions;
+use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::JSContext;
 use js::jsapi::root::JS_DefineFunction;
 use js::jsapi::root::JS_EncodeStringToUTF8;
@@ -28,7 +28,7 @@ fn callback() {
     let runtime = Runtime::new(false).unwrap();
     let context = runtime.cx();
     let h_option = OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = CompartmentOptions::default();
+    let c_option = RealmOptions::default();
 
     unsafe {
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(), h_option, &c_option);

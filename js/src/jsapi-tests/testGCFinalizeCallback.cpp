@@ -132,7 +132,7 @@ BEGIN_TEST(testGCFinalizeCallback)
 
 JSObject* createTestGlobal()
 {
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook, options);
 }
 

@@ -3135,7 +3135,7 @@ struct CreateGlobalOptions<nsGlobalWindowInner>
 template <class T, ProtoHandleGetter GetProto>
 bool
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
-             const JSClass* aClass, JS::CompartmentOptions& aOptions,
+             const JSClass* aClass, JS::RealmOptions& aOptions,
              JSPrincipals* aPrincipal, bool aInitStandardClasses,
              JS::MutableHandle<JSObject*> aGlobal)
 {

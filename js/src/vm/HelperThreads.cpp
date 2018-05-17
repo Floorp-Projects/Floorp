@@ -735,10 +735,10 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
 {
     JSCompartment* currentCompartment = cx->compartment();
 
-    JS::CompartmentOptions compartmentOptions(currentCompartment->creationOptions(),
-                                              currentCompartment->behaviors());
+    JS::RealmOptions realmOptions(currentCompartment->creationOptions(),
+                                  currentCompartment->behaviors());
 
-    auto& creationOptions = compartmentOptions.creationOptions();
+    auto& creationOptions = realmOptions.creationOptions();
 
     creationOptions.setInvisibleToDebugger(true)
                    .setMergeable(true)
@@ -748,7 +748,7 @@ CreateGlobalForOffThreadParse(JSContext* cx, const gc::AutoSuppressGC& nogc)
     creationOptions.setTrace(nullptr);
 
     JSObject* obj = JS_NewGlobalObject(cx, &parseTaskGlobalClass, nullptr,
-                                       JS::DontFireOnNewGlobalHook, compartmentOptions);
+                                       JS::DontFireOnNewGlobalHook, realmOptions);
     if (!obj)
         return nullptr;
 

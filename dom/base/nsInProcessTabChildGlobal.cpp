@@ -178,7 +178,7 @@ NS_IMPL_RELEASE_INHERITED(nsInProcessTabChildGlobal, DOMEventTargetHelper)
 
 bool
 nsInProcessTabChildGlobal::WrapGlobalObject(JSContext* aCx,
-                                            JS::CompartmentOptions& aOptions,
+                                            JS::RealmOptions& aOptions,
                                             JS::MutableHandle<JSObject*> aReflector)
 {
   bool ok = ContentFrameMessageManagerBinding::Wrap(aCx, this, this, aOptions,

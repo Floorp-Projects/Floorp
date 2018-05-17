@@ -1722,17 +1722,17 @@ enum ZoneSpecifier {
 };
 
 /**
- * CompartmentCreationOptions specifies options relevant to creating a new
- * compartment, that are either immutable characteristics of that compartment
- * or that are discarded after the compartment has been created.
+ * RealmCreationOptions specifies options relevant to creating a new realm, that
+ * are either immutable characteristics of that realm or that are discarded
+ * after the realm has been created.
  *
- * Access to these options on an existing compartment is read-only: if you
- * need particular selections, make them before you create the compartment.
+ * Access to these options on an existing realm is read-only: if you need
+ * particular selections, make them before you create the realm.
  */
-class JS_PUBLIC_API(CompartmentCreationOptions)
+class JS_PUBLIC_API(RealmCreationOptions)
 {
   public:
-    CompartmentCreationOptions()
+    RealmCreationOptions()
       : traceGlobal_(nullptr),
         zoneSpec_(NewZone),
         zone_(nullptr),
@@ -1748,7 +1748,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JSTraceOp getTrace() const {
         return traceGlobal_;
     }
-    CompartmentCreationOptions& setTrace(JSTraceOp op) {
+    RealmCreationOptions& setTrace(JSTraceOp op) {
         traceGlobal_ = op;
         return *this;
     }
@@ -1756,60 +1756,60 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JS::Zone* zone() const { return zone_; }
     ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
 
-    // Set the zone to use for the compartment. See ZoneSpecifier above.
-    CompartmentCreationOptions& setSystemZone();
-    CompartmentCreationOptions& setExistingZone(JSObject* obj);
-    CompartmentCreationOptions& setNewZone();
+    // Set the zone to use for the realm. See ZoneSpecifier above.
+    RealmCreationOptions& setSystemZone();
+    RealmCreationOptions& setExistingZone(JSObject* obj);
+    RealmCreationOptions& setNewZone();
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
-    // This flag causes the this compartment to skip firing onNewGlobalObject
-    // and makes addDebuggee a no-op for this global.
+    // This flag causes the this realm to skip firing onNewGlobalObject and
+    // makes addDebuggee a no-op for this global.
     bool invisibleToDebugger() const { return invisibleToDebugger_; }
-    CompartmentCreationOptions& setInvisibleToDebugger(bool flag) {
+    RealmCreationOptions& setInvisibleToDebugger(bool flag) {
         invisibleToDebugger_ = flag;
         return *this;
     }
 
-    // Compartments used for off-thread compilation have their contents merged
-    // into a target compartment when the compilation is finished. This is only
-    // allowed if this flag is set. The invisibleToDebugger flag must also be
-    // set for such compartments.
+    // Realms used for off-thread compilation have their contents merged into a
+    // target realm when the compilation is finished. This is only allowed if
+    // this flag is set. The invisibleToDebugger flag must also be set for such
+    // realms.
     bool mergeable() const { return mergeable_; }
-    CompartmentCreationOptions& setMergeable(bool flag) {
+    RealmCreationOptions& setMergeable(bool flag) {
         mergeable_ = flag;
         return *this;
     }
 
-    // Determines whether this compartment should preserve JIT code on
-    // non-shrinking GCs.
+    // Determines whether this realm should preserve JIT code on non-shrinking
+    // GCs.
     bool preserveJitCode() const { return preserveJitCode_; }
-    CompartmentCreationOptions& setPreserveJitCode(bool flag) {
+    RealmCreationOptions& setPreserveJitCode(bool flag) {
         preserveJitCode_ = flag;
         return *this;
     }
 
     bool cloneSingletons() const { return cloneSingletons_; }
-    CompartmentCreationOptions& setCloneSingletons(bool flag) {
+    RealmCreationOptions& setCloneSingletons(bool flag) {
         cloneSingletons_ = flag;
         return *this;
     }
 
     bool getSharedMemoryAndAtomicsEnabled() const;
-    CompartmentCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
+    RealmCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
 
     // This flag doesn't affect JS engine behavior.  It is used by Gecko to
     // mark whether content windows and workers are "Secure Context"s. See
     // https://w3c.github.io/webappsec-secure-contexts/
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1162772#c34
     bool secureContext() const { return secureContext_; }
-    CompartmentCreationOptions& setSecureContext(bool flag) {
+    RealmCreationOptions& setSecureContext(bool flag) {
         secureContext_ = flag;
         return *this;
     }
 
     bool clampAndJitterTime() const { return clampAndJitterTime_; }
-    CompartmentCreationOptions& setClampAndJitterTime(bool flag) {
+    RealmCreationOptions& setClampAndJitterTime(bool flag) {
         clampAndJitterTime_ = flag;
         return *this;
     }
@@ -1828,10 +1828,10 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
 };
 
 /**
- * CompartmentBehaviors specifies behaviors of a compartment that can be
- * changed after the compartment's been created.
+ * RealmBehaviors specifies behaviors of a realm that can be changed after the
+ * realm's been created.
  */
-class JS_PUBLIC_API(CompartmentBehaviors)
+class JS_PUBLIC_API(RealmBehaviors)
 {
   public:
     class Override {
@@ -1862,7 +1862,7 @@ class JS_PUBLIC_API(CompartmentBehaviors)
         Mode mode_;
     };
 
-    CompartmentBehaviors()
+    RealmBehaviors()
       : discardSource_(false)
       , disableLazyParsing_(false)
       , singletonsAsTemplates_(true)
@@ -1872,13 +1872,13 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     // For certain globals, we know enough about the code that will run in them
     // that we can discard script source entirely.
     bool discardSource() const { return discardSource_; }
-    CompartmentBehaviors& setDiscardSource(bool flag) {
+    RealmBehaviors& setDiscardSource(bool flag) {
         discardSource_ = flag;
         return *this;
     }
 
     bool disableLazyParsing() const { return disableLazyParsing_; }
-    CompartmentBehaviors& setDisableLazyParsing(bool flag) {
+    RealmBehaviors& setDisableLazyParsing(bool flag) {
         disableLazyParsing_ = flag;
         return *this;
     }
@@ -1889,7 +1889,7 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     bool getSingletonsAsTemplates() const {
         return singletonsAsTemplates_;
     }
-    CompartmentBehaviors& setSingletonsAsValues() {
+    RealmBehaviors& setSingletonsAsValues() {
         singletonsAsTemplates_ = false;
         return *this;
     }
@@ -1906,66 +1906,64 @@ class JS_PUBLIC_API(CompartmentBehaviors)
 };
 
 /**
- * CompartmentOptions specifies compartment characteristics: both those that
- * can't be changed on a compartment once it's been created
- * (CompartmentCreationOptions), and those that can be changed on an existing
- * compartment (CompartmentBehaviors).
+ * RealmOptions specifies realm characteristics: both those that can't be
+ * changed on a realm once it's been created (RealmCreationOptions), and those
+ * that can be changed on an existing realm (RealmBehaviors).
  */
-class JS_PUBLIC_API(CompartmentOptions)
+class JS_PUBLIC_API(RealmOptions)
 {
   public:
-    explicit CompartmentOptions()
+    explicit RealmOptions()
       : creationOptions_(),
         behaviors_()
     {}
 
-    CompartmentOptions(const CompartmentCreationOptions& compartmentCreation,
-                       const CompartmentBehaviors& compartmentBehaviors)
-      : creationOptions_(compartmentCreation),
-        behaviors_(compartmentBehaviors)
+    RealmOptions(const RealmCreationOptions& realmCreation, const RealmBehaviors& realmBehaviors)
+      : creationOptions_(realmCreation),
+        behaviors_(realmBehaviors)
     {}
 
-    // CompartmentCreationOptions specify fundamental compartment
-    // characteristics that must be specified when the compartment is created,
-    // that can't be changed after the compartment is created.
-    CompartmentCreationOptions& creationOptions() {
+    // RealmCreationOptions specify fundamental realm characteristics that must
+    // be specified when the realm is created, that can't be changed after the
+    // realm is created.
+    RealmCreationOptions& creationOptions() {
         return creationOptions_;
     }
-    const CompartmentCreationOptions& creationOptions() const {
+    const RealmCreationOptions& creationOptions() const {
         return creationOptions_;
     }
 
-    // CompartmentBehaviors specify compartment characteristics that can be
-    // changed after the compartment is created.
-    CompartmentBehaviors& behaviors() {
+    // RealmBehaviors specify realm characteristics that can be changed after
+    // the realm is created.
+    RealmBehaviors& behaviors() {
         return behaviors_;
     }
-    const CompartmentBehaviors& behaviors() const {
+    const RealmBehaviors& behaviors() const {
         return behaviors_;
     }
 
   private:
-    CompartmentCreationOptions creationOptions_;
-    CompartmentBehaviors behaviors_;
+    RealmCreationOptions creationOptions_;
+    RealmBehaviors behaviors_;
 };
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSCompartment* compartment);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSCompartment* compartment);
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSObject* obj);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSObject* obj);
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSContext* cx);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSContext* cx);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSCompartment* compartment);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSCompartment* compartment);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSObject* obj);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSObject* obj);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSContext* cx);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSContext* cx);
 
 /**
  * During global creation, we fire notifications to callbacks registered
@@ -1999,7 +1997,7 @@ enum OnNewGlobalHookOption {
 extern JS_PUBLIC_API(JSObject*)
 JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions& options);
+                   const JS::RealmOptions& options);
 /**
  * Spidermonkey does not have a good way of keeping track of what compartments should be marked on
  * their own. We can mark the roots unconditionally, but marking GC things only relevant in live
@@ -2007,7 +2005,7 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
  * object, from which we can be sure the compartment is relevant, and mark it.
  *
  * It is still possible to specify custom trace hooks for global object classes. They can be
- * provided via the CompartmentOptions passed to JS_NewGlobalObject.
+ * provided via the RealmOptions passed to JS_NewGlobalObject.
  */
 extern JS_PUBLIC_API(void)
 JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global);

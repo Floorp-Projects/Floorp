@@ -41,7 +41,7 @@ using namespace js::jit;
 
 using mozilla::PodArrayZero;
 
-JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options = JS::CompartmentOptions())
+JSCompartment::JSCompartment(Zone* zone, const JS::RealmOptions& options = JS::RealmOptions())
   : creationOptions_(options.creationOptions()),
     behaviors_(options.behaviors()),
     zone_(zone),

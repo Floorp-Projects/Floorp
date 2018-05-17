@@ -75,7 +75,7 @@ BEGIN_TEST(test_ubiNodeZone)
     CHECK(global1);
     CHECK(JS::ubi::Node(global1).zone() == cx->zone());
 
-    JS::CompartmentOptions globalOptions;
+    JS::RealmOptions globalOptions;
     RootedObject global2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                                 JS::FireOnNewGlobalHook, globalOptions));
     CHECK(global2);
@@ -119,7 +119,7 @@ BEGIN_TEST(test_ubiNodeCompartment)
     CHECK(global1);
     CHECK(JS::ubi::Node(global1).compartment() == cx->compartment());
 
-    JS::CompartmentOptions globalOptions;
+    JS::RealmOptions globalOptions;
     RootedObject global2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                                 JS::FireOnNewGlobalHook, globalOptions));
     CHECK(global2);

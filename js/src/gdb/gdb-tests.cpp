@@ -85,7 +85,7 @@ main(int argc, const char** argv)
     JSAutoRequest areq(cx);
 
     /* Create the global object. */
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class,
                         nullptr, JS::FireOnNewGlobalHook, options)));
     JSAutoRealm ar(cx, global);

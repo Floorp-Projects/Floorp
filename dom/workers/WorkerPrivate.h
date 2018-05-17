@@ -671,11 +671,11 @@ public:
   }
 
   void
-  CopyJSCompartmentOptions(JS::CompartmentOptions& aOptions)
+  CopyJSRealmOptions(JS::RealmOptions& aOptions)
   {
     mozilla::MutexAutoLock lock(mMutex);
-    aOptions = IsChromeWorker() ? mJSSettings.chrome.compartmentOptions
-                                : mJSSettings.content.compartmentOptions;
+    aOptions = IsChromeWorker() ? mJSSettings.chrome.realmOptions
+                                : mJSSettings.content.realmOptions;
   }
 
   // The ability to be a chrome worker is orthogonal to the type of

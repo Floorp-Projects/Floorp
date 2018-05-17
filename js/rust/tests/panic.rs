@@ -18,7 +18,7 @@ fn panic() {
     let runtime = Runtime::new(false).unwrap();
     let context = runtime.cx();
     let h_option = JS::OnNewGlobalHookOption::FireOnNewGlobalHook;
-    let c_option = JS::CompartmentOptions::default();
+    let c_option = JS::RealmOptions::default();
 
     unsafe {
         let global = JS_NewGlobalObject(context, &SIMPLE_GLOBAL_CLASS,

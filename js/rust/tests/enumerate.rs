@@ -7,7 +7,7 @@ extern crate js;
 
 use js::glue::RUST_JSID_IS_STRING;
 use js::glue::RUST_JSID_TO_STRING;
-use js::jsapi::root::JS::CompartmentOptions;
+use js::jsapi::root::JS::RealmOptions;
 use js::jsapi::root::js::GetPropertyKeys;
 use js::jsapi::root::JSITER_OWNONLY;
 use js::jsapi::root::JS_NewGlobalObject;
@@ -28,7 +28,7 @@ fn enumerate() {
         rooted!(in(cx) let global =
             JS_NewGlobalObject(cx, &SIMPLE_GLOBAL_CLASS, ptr::null_mut(),
                                OnNewGlobalHookOption::FireOnNewGlobalHook,
-                               &CompartmentOptions::default())
+                               &RealmOptions::default())
         );
 
         rooted!(in(cx) let mut rval = UndefinedValue());
