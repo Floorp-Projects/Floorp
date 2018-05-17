@@ -33,6 +33,7 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/favicons/browser.ini',
     'content/test/forms/browser.ini',
     'content/test/general/browser.ini',
+    'content/test/historySwipeAnimation/browser.ini',
     'content/test/metaTags/browser.ini',
     'content/test/pageinfo/browser.ini',
     'content/test/performance/browser.ini',

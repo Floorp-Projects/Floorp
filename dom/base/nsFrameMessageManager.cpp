@@ -558,11 +558,6 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
   NS_ASSERTION(!GetParentManager(),
                "Should not have parent manager in content!");
 
-  if (!AllowMessage(aData.DataLength(), aMessageName)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
 #ifdef FUZZING
   if (aData.DataLength() > 0) {
     MessageManagerFuzzer::TryMutate(
@@ -572,6 +567,11 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
       JS::UndefinedHandleValue);
   }
 #endif
+
+  if (!AllowMessage(aData.DataLength(), aMessageName)) {
+    aError.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 
   if (!mCallback) {
     aError.Throw(NS_ERROR_NOT_INITIALIZED);
@@ -643,39 +643,6 @@ nsFrameMessageManager::DispatchAsyncMessageInternal(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult
-nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
-                                            const JS::Value& aJSON,
-                                            const JS::Value& aObjects,
-                                            nsIPrincipal* aPrincipal,
-                                            const JS::Value& aTransfers,
-                                            JSContext* aCx,
-                                            uint8_t aArgc)
-{
-  StructuredCloneData data;
-  if (aArgc >= 2 && !GetParamsForMessage(aCx, aJSON, aTransfers, data)) {
-    return NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-#ifdef FUZZING
-  if (data.DataLength()) {
-    MessageManagerFuzzer::TryMutate(aCx, aMessageName, &data, aTransfers);
-  }
-#endif
-
-  if (!AllowMessage(data.DataLength(), aMessageName)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::Rooted<JSObject*> objects(aCx);
-  if (aArgc >= 3 && aObjects.isObject()) {
-    objects = &aObjects.toObject();
-  }
-
-  return DispatchAsyncMessageInternal(aCx, aMessageName, data, objects,
-                                      aPrincipal);
-}
-
 void
 nsFrameMessageManager::DispatchAsyncMessage(JSContext* aCx,
                                             const nsAString& aMessageName,
@@ -688,6 +655,17 @@ nsFrameMessageManager::DispatchAsyncMessage(JSContext* aCx,
   StructuredCloneData data;
   if (!aObj.isUndefined() && !GetParamsForMessage(aCx, aObj, aTransfers, data)) {
     aError.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
+    return;
+  }
+
+#ifdef FUZZING
+  if (data.DataLength()) {
+    MessageManagerFuzzer::TryMutate(aCx, aMessageName, &data, aTransfers);
+  }
+#endif
+
+  if (!AllowMessage(data.DataLength(), aMessageName)) {
+    aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
@@ -1468,7 +1446,7 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(const nsACString& aID)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  JS::CompartmentOptions options;
+  JS::RealmOptions options;
   options.creationOptions().setSystemZone();
 
   xpc::InitGlobalObjectOptions(options, mPrincipal);

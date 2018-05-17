@@ -15,41 +15,61 @@ class ObjectGroup;
 
 namespace gc {
 
+/*
+ * Tracing code is declared within this class, so the class can be a friend of
+ * something and access private details used for tracing.
+ */
+class GCTrace {
+  public:
+    GCTrace() { };
+
 #ifdef JS_GC_TRACE
 
-extern MOZ_MUST_USE bool InitTrace(GCRuntime& gc);
-extern void FinishTrace();
-extern bool TraceEnabled();
-extern void TraceNurseryAlloc(Cell* thing, size_t size);
-extern void TraceNurseryAlloc(Cell* thing, AllocKind kind);
-extern void TraceTenuredAlloc(Cell* thing, AllocKind kind);
-extern void TraceCreateObject(JSObject* object);
-extern void TraceMinorGCStart();
-extern void TracePromoteToTenured(Cell* src, Cell* dst);
-extern void TraceMinorGCEnd();
-extern void TraceMajorGCStart();
-extern void TraceTenuredFinalize(Cell* thing);
-extern void TraceMajorGCEnd();
-extern void TraceTypeNewScript(js::ObjectGroup* group);
+    MOZ_MUST_USE bool initTrace(GCRuntime& gc);
+    void finishTrace();
+    bool traceEnabled();
+    void traceNurseryAlloc(Cell* thing, size_t size);
+    void traceNurseryAlloc(Cell* thing, AllocKind kind);
+    void traceTenuredAlloc(Cell* thing, AllocKind kind);
+    void traceCreateObject(JSObject* object);
+    void traceMinorGCStart();
+    void tracePromoteToTenured(Cell* src, Cell* dst);
+    void traceMinorGCEnd();
+    void traceMajorGCStart();
+    void traceTenuredFinalize(Cell* thing);
+    void traceMajorGCEnd();
+    void traceTypeNewScript(js::ObjectGroup* group);
+
+  private:
+    FILE* gcTraceFile = nullptr;
+
+    HashSet<const Class*, DefaultHasher<const Class*>, SystemAllocPolicy> tracedClasses;
+    HashSet<const ObjectGroup*, DefaultHasher<const ObjectGroup*>, SystemAllocPolicy> tracedGroups;
+
+    void maybeTraceClass(const Class* clasp);
+    void maybeTraceGroup(ObjectGroup* group);
 
 #else
 
-inline MOZ_MUST_USE bool InitTrace(GCRuntime& gc) { return true; }
-inline void FinishTrace() {}
-inline bool TraceEnabled() { return false; }
-inline void TraceNurseryAlloc(Cell* thing, size_t size) {}
-inline void TraceNurseryAlloc(Cell* thing, AllocKind kind) {}
-inline void TraceTenuredAlloc(Cell* thing, AllocKind kind) {}
-inline void TraceCreateObject(JSObject* object) {}
-inline void TraceMinorGCStart() {}
-inline void TracePromoteToTenured(Cell* src, Cell* dst) {}
-inline void TraceMinorGCEnd() {}
-inline void TraceMajorGCStart() {}
-inline void TraceTenuredFinalize(Cell* thing) {}
-inline void TraceMajorGCEnd() {}
-inline void TraceTypeNewScript(js::ObjectGroup* group) {}
+    MOZ_MUST_USE bool initTrace(GCRuntime& gc) { return true; }
+    void finishTrace() {}
+    bool traceEnabled() { return false; }
+    void traceNurseryAlloc(Cell* thing, size_t size) {}
+    void traceNurseryAlloc(Cell* thing, AllocKind kind) {}
+    void traceTenuredAlloc(Cell* thing, AllocKind kind) {}
+    void traceCreateObject(JSObject* object) {}
+    void traceMinorGCStart() {}
+    void tracePromoteToTenured(Cell* src, Cell* dst) {}
+    void traceMinorGCEnd() {}
+    void traceMajorGCStart() {}
+    void traceTenuredFinalize(Cell* thing) {}
+    void traceMajorGCEnd() {}
+    void traceTypeNewScript(js::ObjectGroup* group) {}
 
 #endif
+}; /* GCTrace */
+
+extern GCTrace gcTracer;
 
 } /* namespace gc */
 } /* namespace js */

@@ -256,14 +256,6 @@ public:
     return mCallback;
   }
 
-  nsresult DispatchAsyncMessage(const nsAString& aMessageName,
-                                const JS::Value& aJSON,
-                                const JS::Value& aObjects,
-                                nsIPrincipal* aPrincipal,
-                                const JS::Value& aTransfers,
-                                JSContext* aCx,
-                                uint8_t aArgc);
-
   nsresult DispatchAsyncMessageInternal(JSContext* aCx,
                                         const nsAString& aMessage,
                                         StructuredCloneData& aData,
@@ -465,7 +457,7 @@ protected:
                                     bool aRunInGlobalScope);
   bool InitChildGlobalInternal(const nsACString& aID);
   virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 JS::MutableHandle<JSObject*> aReflector) = 0;
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();

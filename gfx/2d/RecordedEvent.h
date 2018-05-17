@@ -193,11 +193,11 @@ struct MemStream {
     if (mLength > mCapacity) {
       mCapacity = mCapacity * 2;
       // check if the doubled capacity is enough
-      // otherwise use mLength
+      // otherwise use double mLength
       if (mLength > mCapacity) {
-        mCapacity = mLength;
+        mCapacity = mLength * 2;
       }
-      mData = (char*)realloc(mData, mCapacity * 2);
+      mData = (char*)realloc(mData, mCapacity);
     }
   }
 

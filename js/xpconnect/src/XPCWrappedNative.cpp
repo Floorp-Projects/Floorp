@@ -152,7 +152,7 @@ nsresult
 XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
                                 nsIPrincipal* principal,
                                 bool initStandardClasses,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 XPCWrappedNative** wrappedGlobal)
 {
     AutoJSContext cx;

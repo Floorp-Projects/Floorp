@@ -137,7 +137,7 @@ bool TestViewType(JSContext* cx)
         CHECK(len == ExpectedLength);
     }
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     JS::RootedObject otherGlobal(cx, JS_NewGlobalObject(cx, basicGlobalClass(), nullptr,
                                                         JS::DontFireOnNewGlobalHook, options));
     CHECK(otherGlobal);

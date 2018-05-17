@@ -984,10 +984,10 @@ add_task(async function test_19() {
   equal(getInstallReason(), ADDON_DOWNGRADE);
   equal(getStartupReason(), ADDON_DOWNGRADE);
 
-  equal(getShutdownNewVersion(), undefined);
-  equal(getUninstallNewVersion(), undefined);
-  equal(getInstallOldVersion(), undefined);
-  equal(getStartupOldVersion(), undefined);
+  equal(getShutdownNewVersion(), "1.0");
+  equal(getUninstallNewVersion(), "1.0");
+  equal(getInstallOldVersion(), "2.0");
+  equal(getStartupOldVersion(), "2.0");
 
   await checkBootstrappedPref();
 });

@@ -108,7 +108,7 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
     jsapi.Init();
     JSContext* cx = jsapi.cx();
 
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
     options.creationOptions()
            .setInvisibleToDebugger(true)
            // Put our SimpleGlobalObjects in the system zone, so we won't create

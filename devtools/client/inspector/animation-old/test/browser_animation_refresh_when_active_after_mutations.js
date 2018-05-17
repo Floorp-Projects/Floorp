@@ -15,6 +15,9 @@ const EXPECTED_GRAPH_PATH_SEGMENTS = [{ x: 0, y: 0 },
                                       { x: 100000, y: 0 }];
 
 add_task(async function() {
+  info("Switch to 2 pane inspector to see if the panel only refreshes when visible");
+  await pushPref("devtools.inspector.three-pane-enabled", false);
+
   info("Open animation inspector once so that activate animation mutations listener");
   await addTab("data:text/html;charset=utf8,<div id='target'>test</div>");
   const { controller, inspector, panel } = await openAnimationInspector();

@@ -813,7 +813,7 @@ void
 MacroAssembler::checkAllocatorState(Label* fail)
 {
     // Don't execute the inline path if we are tracing allocations.
-    if (js::gc::TraceEnabled())
+    if (js::gc::gcTracer.traceEnabled())
         jump(fail);
 
 #ifdef JS_GC_ZEAL
@@ -1364,6 +1364,15 @@ MacroAssembler::initGCSlots(Register obj, Register temp, const NativeTemplateObj
     }
 }
 
+#ifdef JS_GC_TRACE
+static void
+TraceCreateObject(JSObject *obj)
+{
+    AutoUnsafeCallWithABI unsafe;
+    js::gc::gcTracer.traceCreateObject(obj);
+}
+#endif
+
 void
 MacroAssembler::initGCThing(Register obj, Register temp, const TemplateObject& templateObj,
                             bool initContents)
@@ -1456,18 +1465,18 @@ MacroAssembler::initGCThing(Register obj, Register temp, const TemplateObject& t
     }
 
 #ifdef JS_GC_TRACE
-    RegisterSet regs = RegisterSet::Volatile();
-    PushRegsInMask(regs);
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    LiveRegisterSet save(regs.asLiveSet());
+    PushRegsInMask(save);
+
     regs.takeUnchecked(obj);
-    Register temp = regs.takeAnyGeneral();
+    Register temp2 = regs.takeAnyGeneral();
 
-    setupUnalignedABICall(temp);
+    setupUnalignedABICall(temp2);
     passABIArg(obj);
-    movePtr(ImmGCPtr(templateObj->type()), temp);
-    passABIArg(temp);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void*, js::gc::TraceCreateObject));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceCreateObject));
 
-    PopRegsInMask(RegisterSet::Volatile());
+    PopRegsInMask(save);
 #endif
 }
 
@@ -3169,7 +3178,7 @@ MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result, CheckUnsaf
         loadJSContext(ReturnReg);
         Address flagAddr(ReturnReg, JSContext::offsetOfInUnsafeCallWithABI());
         branch32(Assembler::Equal, flagAddr, Imm32(0), &ok);
-        assumeUnreachable("callWithABI: callee did not use AutoInUnsafeCallWithABI");
+        assumeUnreachable("callWithABI: callee did not use AutoUnsafeCallWithABI");
         bind(&ok);
         pop(ReturnReg);
     }

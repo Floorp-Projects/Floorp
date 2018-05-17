@@ -44,7 +44,7 @@ jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals)
 {
     /* Create the global object. */
     JS::RootedObject newGlobal(cx);
-    JS::CompartmentOptions options;
+    JS::RealmOptions options;
 #ifdef ENABLE_STREAMS
     options.creationOptions().setStreamsEnabled(true);
 #endif
@@ -82,7 +82,7 @@ jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
     *global = jsfuzz_createGlobal(*cx, nullptr);
     if (!*global)
         return false;
-    JS_EnterCompartment(*cx, *global);
+    JS::EnterRealm(*cx, *global);
     return true;
 }
 
@@ -90,7 +90,7 @@ static void
 jsfuzz_uninit(JSContext* cx, JSCompartment* oldCompartment)
 {
     if (oldCompartment) {
-        JS_LeaveCompartment(cx, oldCompartment);
+        JS::LeaveRealm(cx, oldCompartment);
         oldCompartment = nullptr;
     }
     if (cx) {

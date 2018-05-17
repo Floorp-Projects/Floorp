@@ -262,6 +262,7 @@ public:
   bool SetCandidateWindow(
            const mozilla::widget::CandidateWindowPosition& aPosition);
   bool RequestCommitOrCancel(bool aCommitted);
+  bool EnableIME(bool aEnable);
 
   // See nsIKeyEventInPluginCallback
   virtual void HandledWindowedPluginKeyEvent(

@@ -1,3 +1,5 @@
+// |jit-test| slow
+
 if (!('oomTest' in this))
     quit();
 

@@ -79,7 +79,7 @@ class MOZ_RAII AutoValueArray : public AutoGCRooter
   public:
     explicit AutoValueArray(JSContext* cx
                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, VALARRAY), length_(N)
+      : AutoGCRooter(cx, AutoGCRooter::Tag::ValueArray), length_(N)
     {
         /* Always initialize in case we GC before assignment. */
         mozilla::PodArrayZero(elements_);
@@ -107,231 +107,6 @@ using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
 using StringVector = JS::GCVector<JSString*>;
 
-template<class Key, class Value>
-class MOZ_RAII AutoHashMapRooter : protected AutoGCRooter
-{
-  private:
-    typedef js::HashMap<Key, Value> HashMapImpl;
-
-  public:
-    explicit AutoHashMapRooter(JSContext* cx, ptrdiff_t tag
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, tag), map(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    typedef Key KeyType;
-    typedef Value ValueType;
-    typedef typename HashMapImpl::Entry Entry;
-    typedef typename HashMapImpl::Lookup Lookup;
-    typedef typename HashMapImpl::Ptr Ptr;
-    typedef typename HashMapImpl::AddPtr AddPtr;
-
-    bool init(uint32_t len = 16) {
-        return map.init(len);
-    }
-    bool initialized() const {
-        return map.initialized();
-    }
-    Ptr lookup(const Lookup& l) const {
-        return map.lookup(l);
-    }
-    void remove(Ptr p) {
-        map.remove(p);
-    }
-    AddPtr lookupForAdd(const Lookup& l) const {
-        return map.lookupForAdd(l);
-    }
-
-    template<typename KeyInput, typename ValueInput>
-    bool add(AddPtr& p, const KeyInput& k, const ValueInput& v) {
-        return map.add(p, k, v);
-    }
-
-    bool add(AddPtr& p, const Key& k) {
-        return map.add(p, k);
-    }
-
-    template<typename KeyInput, typename ValueInput>
-    bool relookupOrAdd(AddPtr& p, const KeyInput& k, const ValueInput& v) {
-        return map.relookupOrAdd(p, k, v);
-    }
-
-    typedef typename HashMapImpl::Range Range;
-    Range all() const {
-        return map.all();
-    }
-
-    typedef typename HashMapImpl::Enum Enum;
-
-    void clear() {
-        map.clear();
-    }
-
-    void finish() {
-        map.finish();
-    }
-
-    bool empty() const {
-        return map.empty();
-    }
-
-    uint32_t count() const {
-        return map.count();
-    }
-
-    size_t capacity() const {
-        return map.capacity();
-    }
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfExcludingThis(mallocSizeOf);
-    }
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return map.sizeOfIncludingThis(mallocSizeOf);
-    }
-
-    /************************************************** Shorthand operations */
-
-    bool has(const Lookup& l) const {
-        return map.has(l);
-    }
-
-    template<typename KeyInput, typename ValueInput>
-    bool put(const KeyInput& k, const ValueInput& v) {
-        return map.put(k, v);
-    }
-
-    template<typename KeyInput, typename ValueInput>
-    bool putNew(const KeyInput& k, const ValueInput& v) {
-        return map.putNew(k, v);
-    }
-
-    Ptr lookupWithDefault(const Key& k, const Value& defaultValue) {
-        return map.lookupWithDefault(k, defaultValue);
-    }
-
-    void remove(const Lookup& l) {
-        map.remove(l);
-    }
-
-    friend void AutoGCRooter::trace(JSTracer* trc);
-
-  private:
-    AutoHashMapRooter(const AutoHashMapRooter& hmr) = delete;
-    AutoHashMapRooter& operator=(const AutoHashMapRooter& hmr) = delete;
-
-    HashMapImpl map;
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-template<class T>
-class MOZ_RAII AutoHashSetRooter : protected AutoGCRooter
-{
-  private:
-    typedef js::HashSet<T> HashSetImpl;
-
-  public:
-    explicit AutoHashSetRooter(JSContext* cx, ptrdiff_t tag
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, tag), set(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    typedef typename HashSetImpl::Lookup Lookup;
-    typedef typename HashSetImpl::Ptr Ptr;
-    typedef typename HashSetImpl::AddPtr AddPtr;
-
-    bool init(uint32_t len = 16) {
-        return set.init(len);
-    }
-    bool initialized() const {
-        return set.initialized();
-    }
-    Ptr lookup(const Lookup& l) const {
-        return set.lookup(l);
-    }
-    void remove(Ptr p) {
-        set.remove(p);
-    }
-    AddPtr lookupForAdd(const Lookup& l) const {
-        return set.lookupForAdd(l);
-    }
-
-    bool add(AddPtr& p, const T& t) {
-        return set.add(p, t);
-    }
-
-    bool relookupOrAdd(AddPtr& p, const Lookup& l, const T& t) {
-        return set.relookupOrAdd(p, l, t);
-    }
-
-    typedef typename HashSetImpl::Range Range;
-    Range all() const {
-        return set.all();
-    }
-
-    typedef typename HashSetImpl::Enum Enum;
-
-    void clear() {
-        set.clear();
-    }
-
-    void finish() {
-        set.finish();
-    }
-
-    bool empty() const {
-        return set.empty();
-    }
-
-    uint32_t count() const {
-        return set.count();
-    }
-
-    size_t capacity() const {
-        return set.capacity();
-    }
-
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return set.sizeOfExcludingThis(mallocSizeOf);
-    }
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        return set.sizeOfIncludingThis(mallocSizeOf);
-    }
-
-    /************************************************** Shorthand operations */
-
-    bool has(const Lookup& l) const {
-        return set.has(l);
-    }
-
-    bool put(const T& t) {
-        return set.put(t);
-    }
-
-    bool putNew(const T& t) {
-        return set.putNew(t);
-    }
-
-    void remove(const Lookup& l) {
-        set.remove(l);
-    }
-
-    friend void AutoGCRooter::trace(JSTracer* trc);
-
-  private:
-    AutoHashSetRooter(const AutoHashSetRooter& hmr) = delete;
-    AutoHashSetRooter& operator=(const AutoHashSetRooter& hmr) = delete;
-
-    HashSetImpl set;
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 /**
  * Custom rooting behavior for internal and external clients.
  */
@@ -340,7 +115,7 @@ class MOZ_RAII JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
   public:
     template <typename CX>
     explicit CustomAutoRooter(const CX& cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, CUSTOM)
+      : AutoGCRooter(cx, AutoGCRooter::Tag::Custom)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -1270,17 +1045,17 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  * realm can be entered and left using separate function calls:
  *
  *   void foo(JSContext* cx, JSObject* obj) {
- *     // in 'oldCompartment'
- *     JSCompartment* oldCompartment = JS_EnterCompartment(cx, obj);
- *     // in the compartment of 'obj'
- *     JS_LeaveCompartment(cx, oldCompartment);
- *     // back in 'oldCompartment'
+ *     // in 'oldRealm'
+ *     JSCompartment* oldRealm = JS::EnterRealm(cx, obj);
+ *     // in the realm of 'obj'
+ *     JS::LeaveRealm(cx, oldRealm);
+ *     // back in 'oldRealm'
  *   }
  *
  * Note: these calls must still execute in a LIFO manner w.r.t all other
  * enter/leave calls on the context. Furthermore, only the return value of a
- * JS_EnterCompartment call may be passed as the 'oldCompartment' argument of
- * the corresponding JS_LeaveCompartment call.
+ * JS::EnterRealm call may be passed as the 'oldRealm' argument of
+ * the corresponding JS::LeaveRealm call.
  *
  * Entering a realm roots the realm and its global object for the lifetime of
  * the JSAutoRealm.
@@ -1310,16 +1085,20 @@ class MOZ_RAII JS_PUBLIC_API(JSAutoNullableRealm)
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+namespace JS {
+
 /** NB: This API is infallible; a nullptr return value does not indicate error.
  *
  * Entering a compartment roots the compartment and its global object until the
- * matching JS_LeaveCompartment() call.
+ * matching JS::LeaveRealm() call.
  */
 extern JS_PUBLIC_API(JSCompartment*)
-JS_EnterCompartment(JSContext* cx, JSObject* target);
+EnterRealm(JSContext* cx, JSObject* target);
 
 extern JS_PUBLIC_API(void)
-JS_LeaveCompartment(JSContext* cx, JSCompartment* oldCompartment);
+LeaveRealm(JSContext* cx, JSCompartment* oldRealm);
+
+} // namespace JS
 
 typedef void (*JSIterateCompartmentCallback)(JSContext* cx, void* data, JSCompartment* compartment);
 
@@ -1467,13 +1246,6 @@ JS_HasExtensibleLexicalEnvironment(JSObject* obj);
 
 extern JS_PUBLIC_API(JSObject*)
 JS_ExtensibleLexicalEnvironment(JSObject* obj);
-
-/**
- * May return nullptr, if |c| never had a global (e.g. the atoms compartment),
- * or if |c|'s global has been collected.
- */
-extern JS_PUBLIC_API(JSObject*)
-JS_GetGlobalForCompartmentOrNull(JSContext* cx, JSCompartment* c);
 
 namespace JS {
 
@@ -1947,17 +1719,17 @@ enum ZoneSpecifier {
 };
 
 /**
- * CompartmentCreationOptions specifies options relevant to creating a new
- * compartment, that are either immutable characteristics of that compartment
- * or that are discarded after the compartment has been created.
+ * RealmCreationOptions specifies options relevant to creating a new realm, that
+ * are either immutable characteristics of that realm or that are discarded
+ * after the realm has been created.
  *
- * Access to these options on an existing compartment is read-only: if you
- * need particular selections, make them before you create the compartment.
+ * Access to these options on an existing realm is read-only: if you need
+ * particular selections, make them before you create the realm.
  */
-class JS_PUBLIC_API(CompartmentCreationOptions)
+class JS_PUBLIC_API(RealmCreationOptions)
 {
   public:
-    CompartmentCreationOptions()
+    RealmCreationOptions()
       : traceGlobal_(nullptr),
         zoneSpec_(NewZone),
         zone_(nullptr),
@@ -1973,7 +1745,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JSTraceOp getTrace() const {
         return traceGlobal_;
     }
-    CompartmentCreationOptions& setTrace(JSTraceOp op) {
+    RealmCreationOptions& setTrace(JSTraceOp op) {
         traceGlobal_ = op;
         return *this;
     }
@@ -1981,60 +1753,60 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     JS::Zone* zone() const { return zone_; }
     ZoneSpecifier zoneSpecifier() const { return zoneSpec_; }
 
-    // Set the zone to use for the compartment. See ZoneSpecifier above.
-    CompartmentCreationOptions& setSystemZone();
-    CompartmentCreationOptions& setExistingZone(JSObject* obj);
-    CompartmentCreationOptions& setNewZone();
+    // Set the zone to use for the realm. See ZoneSpecifier above.
+    RealmCreationOptions& setSystemZone();
+    RealmCreationOptions& setExistingZone(JSObject* obj);
+    RealmCreationOptions& setNewZone();
 
     // Certain scopes (i.e. XBL compilation scopes) are implementation details
     // of the embedding, and references to them should never leak out to script.
-    // This flag causes the this compartment to skip firing onNewGlobalObject
-    // and makes addDebuggee a no-op for this global.
+    // This flag causes the this realm to skip firing onNewGlobalObject and
+    // makes addDebuggee a no-op for this global.
     bool invisibleToDebugger() const { return invisibleToDebugger_; }
-    CompartmentCreationOptions& setInvisibleToDebugger(bool flag) {
+    RealmCreationOptions& setInvisibleToDebugger(bool flag) {
         invisibleToDebugger_ = flag;
         return *this;
     }
 
-    // Compartments used for off-thread compilation have their contents merged
-    // into a target compartment when the compilation is finished. This is only
-    // allowed if this flag is set. The invisibleToDebugger flag must also be
-    // set for such compartments.
+    // Realms used for off-thread compilation have their contents merged into a
+    // target realm when the compilation is finished. This is only allowed if
+    // this flag is set. The invisibleToDebugger flag must also be set for such
+    // realms.
     bool mergeable() const { return mergeable_; }
-    CompartmentCreationOptions& setMergeable(bool flag) {
+    RealmCreationOptions& setMergeable(bool flag) {
         mergeable_ = flag;
         return *this;
     }
 
-    // Determines whether this compartment should preserve JIT code on
-    // non-shrinking GCs.
+    // Determines whether this realm should preserve JIT code on non-shrinking
+    // GCs.
     bool preserveJitCode() const { return preserveJitCode_; }
-    CompartmentCreationOptions& setPreserveJitCode(bool flag) {
+    RealmCreationOptions& setPreserveJitCode(bool flag) {
         preserveJitCode_ = flag;
         return *this;
     }
 
     bool cloneSingletons() const { return cloneSingletons_; }
-    CompartmentCreationOptions& setCloneSingletons(bool flag) {
+    RealmCreationOptions& setCloneSingletons(bool flag) {
         cloneSingletons_ = flag;
         return *this;
     }
 
     bool getSharedMemoryAndAtomicsEnabled() const;
-    CompartmentCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
+    RealmCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
 
     // This flag doesn't affect JS engine behavior.  It is used by Gecko to
     // mark whether content windows and workers are "Secure Context"s. See
     // https://w3c.github.io/webappsec-secure-contexts/
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1162772#c34
     bool secureContext() const { return secureContext_; }
-    CompartmentCreationOptions& setSecureContext(bool flag) {
+    RealmCreationOptions& setSecureContext(bool flag) {
         secureContext_ = flag;
         return *this;
     }
 
     bool clampAndJitterTime() const { return clampAndJitterTime_; }
-    CompartmentCreationOptions& setClampAndJitterTime(bool flag) {
+    RealmCreationOptions& setClampAndJitterTime(bool flag) {
         clampAndJitterTime_ = flag;
         return *this;
     }
@@ -2053,10 +1825,10 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
 };
 
 /**
- * CompartmentBehaviors specifies behaviors of a compartment that can be
- * changed after the compartment's been created.
+ * RealmBehaviors specifies behaviors of a realm that can be changed after the
+ * realm's been created.
  */
-class JS_PUBLIC_API(CompartmentBehaviors)
+class JS_PUBLIC_API(RealmBehaviors)
 {
   public:
     class Override {
@@ -2087,7 +1859,7 @@ class JS_PUBLIC_API(CompartmentBehaviors)
         Mode mode_;
     };
 
-    CompartmentBehaviors()
+    RealmBehaviors()
       : discardSource_(false)
       , disableLazyParsing_(false)
       , singletonsAsTemplates_(true)
@@ -2097,13 +1869,13 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     // For certain globals, we know enough about the code that will run in them
     // that we can discard script source entirely.
     bool discardSource() const { return discardSource_; }
-    CompartmentBehaviors& setDiscardSource(bool flag) {
+    RealmBehaviors& setDiscardSource(bool flag) {
         discardSource_ = flag;
         return *this;
     }
 
     bool disableLazyParsing() const { return disableLazyParsing_; }
-    CompartmentBehaviors& setDisableLazyParsing(bool flag) {
+    RealmBehaviors& setDisableLazyParsing(bool flag) {
         disableLazyParsing_ = flag;
         return *this;
     }
@@ -2114,7 +1886,7 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     bool getSingletonsAsTemplates() const {
         return singletonsAsTemplates_;
     }
-    CompartmentBehaviors& setSingletonsAsValues() {
+    RealmBehaviors& setSingletonsAsValues() {
         singletonsAsTemplates_ = false;
         return *this;
     }
@@ -2131,66 +1903,64 @@ class JS_PUBLIC_API(CompartmentBehaviors)
 };
 
 /**
- * CompartmentOptions specifies compartment characteristics: both those that
- * can't be changed on a compartment once it's been created
- * (CompartmentCreationOptions), and those that can be changed on an existing
- * compartment (CompartmentBehaviors).
+ * RealmOptions specifies realm characteristics: both those that can't be
+ * changed on a realm once it's been created (RealmCreationOptions), and those
+ * that can be changed on an existing realm (RealmBehaviors).
  */
-class JS_PUBLIC_API(CompartmentOptions)
+class JS_PUBLIC_API(RealmOptions)
 {
   public:
-    explicit CompartmentOptions()
+    explicit RealmOptions()
       : creationOptions_(),
         behaviors_()
     {}
 
-    CompartmentOptions(const CompartmentCreationOptions& compartmentCreation,
-                       const CompartmentBehaviors& compartmentBehaviors)
-      : creationOptions_(compartmentCreation),
-        behaviors_(compartmentBehaviors)
+    RealmOptions(const RealmCreationOptions& realmCreation, const RealmBehaviors& realmBehaviors)
+      : creationOptions_(realmCreation),
+        behaviors_(realmBehaviors)
     {}
 
-    // CompartmentCreationOptions specify fundamental compartment
-    // characteristics that must be specified when the compartment is created,
-    // that can't be changed after the compartment is created.
-    CompartmentCreationOptions& creationOptions() {
+    // RealmCreationOptions specify fundamental realm characteristics that must
+    // be specified when the realm is created, that can't be changed after the
+    // realm is created.
+    RealmCreationOptions& creationOptions() {
         return creationOptions_;
     }
-    const CompartmentCreationOptions& creationOptions() const {
+    const RealmCreationOptions& creationOptions() const {
         return creationOptions_;
     }
 
-    // CompartmentBehaviors specify compartment characteristics that can be
-    // changed after the compartment is created.
-    CompartmentBehaviors& behaviors() {
+    // RealmBehaviors specify realm characteristics that can be changed after
+    // the realm is created.
+    RealmBehaviors& behaviors() {
         return behaviors_;
     }
-    const CompartmentBehaviors& behaviors() const {
+    const RealmBehaviors& behaviors() const {
         return behaviors_;
     }
 
   private:
-    CompartmentCreationOptions creationOptions_;
-    CompartmentBehaviors behaviors_;
+    RealmCreationOptions creationOptions_;
+    RealmBehaviors behaviors_;
 };
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSCompartment* compartment);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSCompartment* compartment);
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSObject* obj);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSObject* obj);
 
-JS_PUBLIC_API(const CompartmentCreationOptions&)
-CompartmentCreationOptionsRef(JSContext* cx);
+JS_PUBLIC_API(const RealmCreationOptions&)
+RealmCreationOptionsRef(JSContext* cx);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSCompartment* compartment);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSCompartment* compartment);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSObject* obj);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSObject* obj);
 
-JS_PUBLIC_API(CompartmentBehaviors&)
-CompartmentBehaviorsRef(JSContext* cx);
+JS_PUBLIC_API(RealmBehaviors&)
+RealmBehaviorsRef(JSContext* cx);
 
 /**
  * During global creation, we fire notifications to callbacks registered
@@ -2224,7 +1994,7 @@ enum OnNewGlobalHookOption {
 extern JS_PUBLIC_API(JSObject*)
 JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals,
                    JS::OnNewGlobalHookOption hookOption,
-                   const JS::CompartmentOptions& options);
+                   const JS::RealmOptions& options);
 /**
  * Spidermonkey does not have a good way of keeping track of what compartments should be marked on
  * their own. We can mark the roots unconditionally, but marking GC things only relevant in live
@@ -2232,7 +2002,7 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
  * object, from which we can be sure the compartment is relevant, and mark it.
  *
  * It is still possible to specify custom trace hooks for global object classes. They can be
- * provided via the CompartmentOptions passed to JS_NewGlobalObject.
+ * provided via the RealmOptions passed to JS_NewGlobalObject.
  */
 extern JS_PUBLIC_API(void)
 JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global);

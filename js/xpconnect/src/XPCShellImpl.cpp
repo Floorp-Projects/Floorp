@@ -1282,7 +1282,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
 
         // Make the default XPCShell global use a fresh zone (rather than the
         // System Zone) to improve cross-zone test coverage.
-        JS::CompartmentOptions options;
+        JS::RealmOptions options;
         options.creationOptions().setNewZone();
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
@@ -1335,7 +1335,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
             // Even if we're building in a configuration where source is
             // discarded, there's no reason to do that on XPCShell, and doing so
             // might break various automation scripts.
-            JS::CompartmentBehaviorsRef(glob).setDiscardSource(false);
+            JS::RealmBehaviorsRef(glob).setDiscardSource(false);
 
             backstagePass->SetGlobalObject(glob);
 
