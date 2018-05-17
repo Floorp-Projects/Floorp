@@ -73,10 +73,6 @@ const LOGGER_ID = "addons.xpi-utils";
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
-const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
-                                               "nsIFileInputStream", "init");
-const ConverterInputStream = Components.Constructor("@mozilla.org/intl/converter-input-stream;1",
-                                                    "nsIConverterInputStream", "init");
 const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
                                          "nsIZipReader", "open");
 
@@ -158,6 +154,32 @@ function promiseIdleSlice() {
   return new Promise((resolve) => {
     ChromeUtils.idleDispatch(resolve);
   });
+}
+
+let arrayForEach = Function.call.bind(Array.prototype.forEach);
+
+/**
+ * Loops over the given array, in the same way as Array forEach, but
+ * splitting the work among idle tasks.
+ *
+ * @param {Array} array
+ *        The array to loop over.
+ * @param {function} func
+ *        The function to call on each array element.
+ * @param {integer} [taskTimeMS = 5]
+ *        The minimum time to allocate to each task. If less time than
+ *        this is available in a given idle slice, and there are more
+ *        elements to loop over, they will be deferred until the next
+ *        idle slice.
+ */
+async function idleForEach(array, func, taskTimeMS = 5) {
+  let deadline;
+  for (let i = 0; i < array.length; i++) {
+    if (!deadline || deadline.timeRemaining() < taskTimeMS) {
+      deadline = await promiseIdleSlice();
+    }
+    func(array[i], i);
+  }
 }
 
 /**
@@ -1323,6 +1345,7 @@ this.XPIDatabase = {
   // The database file
   jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   rebuildingDatabase: false,
+  syncLoadingDB: false,
 
   _saveTask: null,
 
@@ -1417,18 +1440,9 @@ this.XPIDatabase = {
   },
 
   /**
-   * Synchronously opens and reads the database file, upgrading from old
-   * databases or making a new DB if needed.
-   *
-   * The possibilities, in order of priority, are:
-   * 1) Perfectly good, up to date database
-   * 2) Out of date JSON database needs to be upgraded => upgrade
-   * 3) JSON database exists but is mangled somehow => build new JSON
-   * 4) no JSON DB, but a usable SQLITE db we can upgrade from => upgrade
-   * 5) useless SQLITE DB => build new JSON
-   * 6) usable RDF DB => upgrade
-   * 7) useless RDF DB => build new JSON
-   * 8) Nothing at all => build new JSON
+   * Synchronously loads the database, by running the normal async load
+   * operation with idle dispatch disabled, and spinning the event loop
+   * until it finishes.
    *
    * @param {boolean} aRebuildOnError
    *        A boolean indicating whether add-on information should be loaded
@@ -1436,50 +1450,13 @@ this.XPIDatabase = {
    *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   syncLoadDB(aRebuildOnError) {
-    let fstream = null;
-    let data = "";
+    logger.warn(new Error("Synchronously loading the add-ons database"));
     try {
-      let readTimer = AddonManagerPrivate.simpleTimer("XPIDB_syncRead_MS");
-      logger.debug("Opening XPI database " + this.jsonFile.path);
-      fstream = new FileInputStream(this.jsonFile, -1, 0, 0);
-      let cstream = null;
-      try {
-        cstream = new ConverterInputStream(fstream, "UTF-8", 0, 0);
-
-        let str = {};
-        let read = 0;
-        do {
-          read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-          data += str.value;
-        } while (read != 0);
-
-        readTimer.done();
-        this.parseDB(data, aRebuildOnError);
-      } catch (e) {
-        logger.error("Failed to load XPI JSON data from profile", e);
-        let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildReadFailed_MS");
-        this.rebuildDatabase(aRebuildOnError);
-        rebuildTimer.done();
-      } finally {
-        if (cstream)
-          cstream.close();
-      }
-    } catch (e) {
-      if (e.result === Cr.NS_ERROR_FILE_NOT_FOUND) {
-        this.upgradeDB(aRebuildOnError);
-      } else {
-        this.rebuildUnreadableDB(e, aRebuildOnError);
-      }
+      this.syncLoadingDB = true;
+      XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
     } finally {
-      if (fstream)
-        fstream.close();
+      this.syncLoadingDB = false;
     }
-    // If an async load was also in progress, record in telemetry.
-    if (this._dbPromise) {
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_overlapped_load", 1);
-    }
-    this._dbPromise = Promise.resolve(this.addonDB);
-    Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
   },
 
   /**
@@ -1490,7 +1467,7 @@ this.XPIDatabase = {
    * @param {boolean} aRebuildOnError
    *        If true, synchronously reconstruct the database from installed add-ons
    */
-  parseDB(aData, aRebuildOnError) {
+  async parseDB(aData, aRebuildOnError) {
     let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
       let inputAddons = JSON.parse(aData);
@@ -1514,10 +1491,13 @@ this.XPIDatabase = {
                                                 `schemaMismatch-${inputAddons.schemaVersion}`);
         logger.debug(`JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`);
       }
+
+      let forEach = this.syncLoadingDB ? arrayForEach : idleForEach;
+
       // If we got here, we probably have good data
       // Make AddonInternal instances from the loaded data and save them
       let addonDB = new Map();
-      for (let loadedAddon of inputAddons.addons) {
+      await forEach(inputAddons.addons, loadedAddon => {
         try {
           if (!loadedAddon.path) {
             loadedAddon.path = descriptorToPath(loadedAddon.descriptor);
@@ -1531,7 +1511,8 @@ this.XPIDatabase = {
 
         let newAddon = new DBAddonInternal(loadedAddon);
         addonDB.set(newAddon._key, newAddon);
-      }
+      });
+
       parseTimer.done();
       this.addonDB = addonDB;
       logger.debug("Successfully read XPI database");
@@ -1594,16 +1575,26 @@ this.XPIDatabase = {
     this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
   },
 
+  async maybeIdleDispatch() {
+    if (!this.syncLoadingDB) {
+      await promiseIdleSlice();
+    }
+  },
+
   /**
    * Open and read the XPI database asynchronously, upgrading if
    * necessary. If any DB load operation fails, we need to
    * synchronously rebuild the DB from the installed extensions.
    *
+   * @param {boolean} [aRebuildOnError = true]
+   *        A boolean indicating whether add-on information should be loaded
+   *        from the install locations if the database needs to be rebuilt.
+   *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    * @returns {Promise<AddonDB>}
    *        Resolves to the Map of loaded JSON data stored in
    *        this.addonDB; never rejects.
    */
-  asyncLoadDB() {
+  asyncLoadDB(aRebuildOnError = true) {
     // Already started (and possibly finished) loading
     if (this._dbPromise) {
       return this._dbPromise;
@@ -1622,37 +1613,23 @@ this.XPIDatabase = {
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
                                                 readOptions.outExecutionDuration);
 
-        if (this.addonDB) {
-          logger.debug("Synchronous load completed while waiting for async load");
-          return this.addonDB;
-        }
-
         logger.debug("Finished async read of XPI database, parsing...");
-        await promiseIdleSlice();
-        let decodeTimer = AddonManagerPrivate.simpleTimer("XPIDB_decode_MS");
-        let text;
-        try {
-          text = new TextDecoder().decode(byteArray);
-        } finally {
-          decodeTimer.done();
-        }
+        await this.maybeIdleDispatch();
+        let text = AddonManagerPrivate.recordTiming(
+          "XPIDB_decode_MS",
+          () => new TextDecoder().decode(byteArray));
 
-        await promiseIdleSlice();
-        this.parseDB(text, true);
-        return this.addonDB;
+        await this.maybeIdleDispatch();
+        await this.parseDB(text, true);
       } catch (error) {
-        if (this.addonDB) {
-          logger.debug("Synchronous load completed while waiting for async load");
-          return this.addonDB;
-        }
         if (error.becauseNoSuchFile) {
-          this.upgradeDB(true);
+          this.upgradeDB(aRebuildOnError);
         } else {
           // it's there but unreadable
-          this.rebuildUnreadableDB(error, true);
+          this.rebuildUnreadableDB(error, aRebuildOnError);
         }
-        return this.addonDB;
       }
+      return this.addonDB;
     })();
 
     this._dbPromise.then(() => {
