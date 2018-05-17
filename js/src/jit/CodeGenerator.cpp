@@ -9879,7 +9879,7 @@ CodeGenerator::visitIteratorMore(LIteratorMore* lir)
     masm.loadPtr(Address(temp, 0), temp);
 
     // Increase the cursor.
-    masm.addPtr(Imm32(sizeof(JSString*)), cursorAddr);
+    masm.addPtr(Imm32(sizeof(GCPtrFlatString)), cursorAddr);
 
     masm.tagValue(JSVAL_TYPE_STRING, temp, output);
     masm.jump(ool->rejoin());
@@ -9923,8 +9923,9 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
 
     // Reset property cursor.
-    masm.loadPtr(Address(temp1, offsetof(NativeIterator, props_array)), temp2);
-    masm.storePtr(temp2, Address(temp1, offsetof(NativeIterator, props_cursor)));
+    Address propCursor(temp1, offsetof(NativeIterator, props_cursor));
+    masm.computeEffectiveAddress(Address(temp1, sizeof(NativeIterator)), temp2);
+    masm.storePtr(temp2, propCursor);
 
     // Unlink from the iterator list.
     const Register next = temp2;
