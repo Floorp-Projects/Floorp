@@ -323,8 +323,9 @@ protected:
    *                                the nodes.
    *                                canceled is always false.
    */
-  EditActionResult MoveContents(Element& aElement, Element& aDestElement,
-                                int32_t* aInOutDestOffset);
+  MOZ_MUST_USE EditActionResult
+  MoveContents(Element& aElement, Element& aDestElement,
+               int32_t* aInOutDestOffset);
 
   /**
    * DeleteElementsExceptTableRelatedElements() removes elements except
