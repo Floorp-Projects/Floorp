@@ -401,8 +401,19 @@ protected:
   MOZ_MUST_USE nsresult
   WillRelativeChangeZIndex(int32_t aChange, bool* aCancel, bool* aHandled);
 
-  nsresult WillMakeDefListItem(const nsAString* aBlockType, bool aEntireList,
-                               bool* aCancel, bool* aHandled);
+  /**
+   * Called before creating aDefinitionListItemTag around Selection.  This
+   * method just calls WillMakeList() with "dl" as aListType and
+   * aDefinitionListItemTag as aItemType.
+   *
+   * @param aDefinitionListItemTag  Should be "dt" or "dd".
+   * @param aEntireList             XXX not sure
+   * @param aCancel                 Returns true if the operation is canceled.
+   * @param aHandled                Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillMakeDefListItem(const nsAString* aBlockType, bool aEntireList,
+                      bool* aCancel, bool* aHandled);
 
   /**
    * WillMakeBasicBlock() called before changing block style around Selection.
