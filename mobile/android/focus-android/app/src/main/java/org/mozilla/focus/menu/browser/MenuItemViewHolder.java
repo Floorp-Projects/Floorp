@@ -22,12 +22,12 @@ import org.mozilla.focus.R;
     }
 
     /* package-private */ void bind(BrowserMenuAdapter.MenuItem menuItem) {
-        menuItemView.setId(menuItem.id);
-        menuItemView.setText(menuItem.label);
+        menuItemView.setId(menuItem.getId());
+        menuItemView.setText(menuItem.getLabel());
 
         final boolean isLoading = browserFragment.getSession().getLoading().getValue();
 
-        if (menuItem.id == R.id.add_to_homescreen && isLoading) {
+        if (menuItem.getId() == R.id.add_to_homescreen && isLoading) {
             menuItemView.setTextColor(browserFragment.getResources().getColor(R.color.colorTextInactive));
             menuItemView.setClickable(false);
         } else {

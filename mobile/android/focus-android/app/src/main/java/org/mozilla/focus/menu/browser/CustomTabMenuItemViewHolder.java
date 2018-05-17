@@ -56,6 +56,6 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
     /* package-private */ void bind(BrowserMenuAdapter.MenuItem menuItem) {
         super.bind(menuItem);
 
-        pendingIntent = menuItem.pendingIntent;
+        pendingIntent = menuItem.getPendingIntent();
     }
 }
