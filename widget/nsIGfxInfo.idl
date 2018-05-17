@@ -135,8 +135,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_D3D11_KEYED_MUTEX = 23;
   /* Whether WebRender is supported, starting in 62 */
   const long FEATURE_WEBRENDER = 24;
+  /* Whether WebRender is supported, starting in 62 */
+  const long FEATURE_DX_NV12 = 25;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER;
+  const long FEATURE_MAX_VALUE = FEATURE_DX_NV12;
 
   /*
    * A set of return values from GetFeatureStatus
