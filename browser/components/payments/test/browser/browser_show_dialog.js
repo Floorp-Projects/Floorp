@@ -85,6 +85,11 @@ add_task(async function test_show_completePayment() {
       }
     );
 
+    info("select the shipping address");
+    await spawnPaymentDialogTask(frame,
+                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "US");
+
     info("entering CSC");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
       securityCode: "999",
@@ -115,7 +120,7 @@ add_task(async function test_show_completePayment() {
   });
 });
 
-add_task(async function test_show_completePayment() {
+add_task(async function test_show_completePayment2() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
     url: BLANK_PAGE_URL,

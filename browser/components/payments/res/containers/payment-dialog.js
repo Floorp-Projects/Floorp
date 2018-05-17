@@ -135,7 +135,6 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     // Check if any foreign-key constraints were invalidated.
     state = this.requestStore.getState();
     let {
-      request: {paymentOptions: {requestShipping: requestShipping}},
       savedAddresses,
       selectedPayerAddress,
       selectedPaymentCard,
@@ -147,8 +146,8 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
     let oldShippingAddress = selectedShippingAddress &&
                              oldSavedAddresses[selectedShippingAddress];
 
-    // Ensure `selectedShippingAddress` never refers to a deleted address and refers
-    // to an address if one exists. We also compare address timestamps to handle changes
+    // Ensure `selectedShippingAddress` never refers to a deleted address.
+    // We also compare address timestamps to notify about changes
     // made outside the payments UI.
     if (shippingAddress) {
       // invalidate the cached value if the address was modified
@@ -157,16 +156,12 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
           shippingAddress.timeLastModified != oldShippingAddress.timeLastModified) {
         delete this._cachedState.selectedShippingAddress;
       }
-    } else {
-      // assign selectedShippingAddress as value if it is undefined,
-      // or if the address it pointed to was removed from storage
-      let defaultShippingAddress = null;
-      if (requestShipping) {
-        defaultShippingAddress = Object.keys(savedAddresses)[0];
-        log.debug("selecting the default shipping address");
-      }
+    } else if (selectedShippingAddress !== null) {
+      // null out the `selectedShippingAddress` property if it is undefined,
+      // or if the address it pointed to was removed from storage.
+      log.debug("resetting invalid/deleted shipping address");
       this.requestStore.setState({
-        selectedShippingAddress: defaultShippingAddress || null,
+        selectedShippingAddress: null,
       });
     }
 
