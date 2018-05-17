@@ -1523,7 +1523,7 @@ public:
     static nsresult
     WrapNewGlobal(xpcObjectHelper& nativeHelper,
                   nsIPrincipal* principal, bool initStandardClasses,
-                  JS::CompartmentOptions& aOptions,
+                  JS::RealmOptions& aOptions,
                   XPCWrappedNative** wrappedGlobal);
 
     static nsresult
@@ -2727,7 +2727,7 @@ public:
 
 JSObject*
 CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
-                   JS::CompartmentOptions& aOptions);
+                   JS::RealmOptions& aOptions);
 
 // Modify the provided compartment options, consistent with |aPrincipal| and
 // with globally-cached values of various preferences.
@@ -2735,10 +2735,10 @@ CreateGlobalObject(JSContext* cx, const JSClass* clasp, nsIPrincipal* principal,
 // Call this function *before* |aOptions| is used to create the corresponding
 // global object, as not all of the options it sets can be modified on an
 // existing global object.  (The type system should make this obvious, because
-// you can't get a *mutable* JS::CompartmentOptions& from an existing global
+// you can't get a *mutable* JS::RealmOptions& from an existing global
 // object.)
 void
-InitGlobalObjectOptions(JS::CompartmentOptions& aOptions,
+InitGlobalObjectOptions(JS::RealmOptions& aOptions,
                         nsIPrincipal* aPrincipal);
 
 // Finish initializing an already-created, not-yet-exposed-to-script global

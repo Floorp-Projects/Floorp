@@ -69,7 +69,7 @@ public:
     MOZ_CRASH("We should never get here!");
   }
   virtual bool WrapGlobalObject(JSContext* aCx,
-                                JS::CompartmentOptions& aOptions,
+                                JS::RealmOptions& aOptions,
                                 JS::MutableHandle<JSObject*> aReflector) override;
 
   virtual already_AddRefed<nsPIDOMWindowOuter>

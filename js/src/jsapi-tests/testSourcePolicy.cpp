@@ -8,7 +8,7 @@
 BEGIN_TEST(testBug795104)
 {
     JS::CompileOptions opts(cx);
-    JS::CompartmentBehaviorsRef(cx->compartment()).setDiscardSource(true);
+    JS::RealmBehaviorsRef(cx->compartment()).setDiscardSource(true);
 
     const size_t strLen = 60002;
     char* s = static_cast<char*>(JS_malloc(cx, strLen));

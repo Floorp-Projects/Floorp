@@ -2717,13 +2717,13 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
     }
 
     if (mIsSecureContext) {
-      mJSSettings.chrome.compartmentOptions
+      mJSSettings.chrome.realmOptions
                  .creationOptions().setSecureContext(true);
-      mJSSettings.chrome.compartmentOptions
+      mJSSettings.chrome.realmOptions
                  .creationOptions().setClampAndJitterTime(false);
-      mJSSettings.content.compartmentOptions
+      mJSSettings.content.realmOptions
                  .creationOptions().setSecureContext(true);
-      mJSSettings.content.compartmentOptions
+      mJSSettings.content.realmOptions
                  .creationOptions().setClampAndJitterTime(false);
     }
 

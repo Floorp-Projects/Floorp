@@ -54,7 +54,7 @@ BEGIN_TEST(testBug604087)
     options.setClass(&OuterWrapperClass);
     options.setSingleton(true);
     JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, &js::Wrapper::singleton, options));
-    JS::CompartmentOptions globalOptions;
+    JS::RealmOptions globalOptions;
     JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                                                          JS::FireOnNewGlobalHook, globalOptions));
     CHECK(compartment2 != nullptr);

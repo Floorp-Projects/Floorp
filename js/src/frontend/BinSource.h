@@ -36,7 +36,7 @@ class BinASTParserBase: private JS::AutoGCRooter
 {
   public:
     BinASTParserBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames)
-        : AutoGCRooter(cx, BINPARSER)
+        : AutoGCRooter(cx, AutoGCRooter::Tag::BinParser)
         , cx_(cx)
         , alloc_(alloc)
         , traceListHead_(nullptr)

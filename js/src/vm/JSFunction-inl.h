@@ -144,7 +144,7 @@ JSFunction::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap he
                "building of metadata for it");
     fun = SetNewObjectMetadata(cx, fun);
 
-    js::gc::TraceCreateObject(fun);
+    js::gc::gcTracer.traceCreateObject(fun);
 
     return fun;
 }

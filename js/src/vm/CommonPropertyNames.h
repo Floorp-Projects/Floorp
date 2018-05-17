@@ -157,6 +157,7 @@
     macro(GeneratorReturn, GeneratorReturn, "GeneratorReturn") \
     macro(GeneratorThrow, GeneratorThrow, "GeneratorThrow") \
     macro(get, get, "get") \
+    macro(GetInternalError, GetInternalError, "GetInternalError") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
@@ -164,6 +165,7 @@
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
     macro(getPropertySuper, getPropertySuper, "getPropertySuper") \
     macro(getPrototypeOf, getPrototypeOf, "getPrototypeOf") \
+    macro(GetTypeError, GetTypeError, "GetTypeError") \
     macro(global, global, "global") \
     macro(group, group, "group") \
     macro(Handle, Handle, "Handle") \
