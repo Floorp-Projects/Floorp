@@ -956,10 +956,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
         GP("Inner group size change\n");
         groupData->mFollowingGroup.ClearItems();
         if (groupData->mFollowingGroup.mKey) {
-          LayerIntRect layerBounds = LayerIntRect::FromUnknownRect(currentGroup->mGroupBounds.ScaleToOutsidePixels(currentGroup->mScale.width,
-                                                                                                                   currentGroup->mScale.height,
-                                                                                                                   mAppUnitsPerDevPixel));
-          groupData->mFollowingGroup.mInvalidRect = IntRect(IntPoint(0, 0), layerBounds.Size().ToUnknownSize());
+          MOZ_RELEASE_ASSERT(groupData->mFollowingGroup.mInvalidRect.IsEmpty());
           aCommandBuilder->mManager->AddImageKeyForDiscard(groupData->mFollowingGroup.mKey.value());
           groupData->mFollowingGroup.mKey = Nothing();
         }
@@ -1090,8 +1087,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
 
     group.ClearItems();
     if (group.mKey) {
-      IntSize size = groupBounds.Size().ScaleToNearestPixels(scale.width, scale.height, g.mAppUnitsPerDevPixel);
-      group.mInvalidRect = IntRect(IntPoint(0, 0), size);
+      MOZ_RELEASE_ASSERT(group.mInvalidRect.IsEmpty());
       mManager->AddImageKeyForDiscard(group.mKey.value());
       group.mKey = Nothing();
     }
