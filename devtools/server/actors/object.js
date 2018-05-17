@@ -484,8 +484,7 @@ const proto = {
    */
   property: function(name) {
     if (!name) {
-      return { error: "missingParameter",
-               message: "no property name was specified" };
+      return this.throwError("missingParameter", "no property name was specified");
     }
 
     return { descriptor: this._propertyDescriptor(name) };
@@ -575,9 +574,8 @@ const proto = {
    */
   decompile: function(pretty) {
     if (this.obj.class !== "Function") {
-      return { error: "objectNotFunction",
-               message: "decompile request is only valid for object grips " +
-                        "with a 'Function' class." };
+      return this.throwError("objectNotFunction",
+        "decompile request is only valid for grips  with a 'Function' class.");
     }
 
     return { decompiledCode: this.obj.decompile(!!pretty) };
@@ -588,9 +586,8 @@ const proto = {
    */
   parameterNames: function() {
     if (this.obj.class !== "Function") {
-      return { error: "objectNotFunction",
-               message: "'parameterNames' request is only valid for object " +
-                        "grips with a 'Function' class." };
+      return this.throwError("objectNotFunction",
+        "'parameterNames' request is only valid for grips with a 'Function' class.");
     }
 
     return { parameterNames: this.obj.parameterNames };
@@ -601,20 +598,16 @@ const proto = {
    */
   scope: function() {
     if (this.obj.class !== "Function") {
-      return {
-        error: "objectNotFunction",
-        message: "scope request is only valid for object grips with a 'Function' class."
-      };
+      return this.throwError("objectNotFunction",
+        "scope request is only valid for grips with a 'Function' class.");
     }
 
     const { createEnvironmentActor } = this.hooks;
     const envActor = createEnvironmentActor(this.obj.environment, this.registeredPool);
 
     if (!envActor) {
-      return {
-        error: "notDebuggee",
-        message: "cannot access the environment of this function."
-      };
+      return this.throwError("notDebuggee",
+        "cannot access the environment of this function.");
     }
 
     return {
@@ -632,9 +625,8 @@ const proto = {
    */
   dependentPromises: function() {
     if (this.obj.class != "Promise") {
-      return { error: "objectNotPromise",
-               message: "'dependentPromises' request is only valid for " +
-                        "object grips with a 'Promise' class." };
+      return this.throwError("objectNotPromise",
+        "'dependentPromises' request is only valid for grips with a 'Promise' class.");
     }
 
     const promises = this.obj.promiseDependentPromises
@@ -648,9 +640,8 @@ const proto = {
    */
   allocationStack: function() {
     if (this.obj.class != "Promise") {
-      return { error: "objectNotPromise",
-               message: "'allocationStack' request is only valid for " +
-                        "object grips with a 'Promise' class." };
+      return this.throwError("objectNotPromise",
+        "'allocationStack' request is only valid for grips with a 'Promise' class.");
     }
 
     let stack = this.obj.promiseAllocationSite;
@@ -675,9 +666,8 @@ const proto = {
    */
   fulfillmentStack: function() {
     if (this.obj.class != "Promise") {
-      return { error: "objectNotPromise",
-               message: "'fulfillmentStack' request is only valid for " +
-                        "object grips with a 'Promise' class." };
+      return this.throwError("objectNotPromise",
+        "'fulfillmentStack' request is only valid for grips with a 'Promise' class.");
     }
 
     let stack = this.obj.promiseResolutionSite;
@@ -702,9 +692,8 @@ const proto = {
    */
   rejectionStack: function() {
     if (this.obj.class != "Promise") {
-      return { error: "objectNotPromise",
-               message: "'rejectionStack' request is only valid for " +
-                        "object grips with a 'Promise' class." };
+      return this.throwError("objectNotPromise",
+        "'rejectionStack' request is only valid for grips with a 'Promise' class.");
     }
 
     let stack = this.obj.promiseResolutionSite;
