@@ -4,11 +4,16 @@ import warnings
 
 import pytest
 
-from pipenv.utils import TemporaryDirectory
+from pipenv._compat import TemporaryDirectory
 from pipenv.vendor import delegator
 from pipenv.vendor import requests
 from pipenv.vendor import six
 from pipenv.vendor import toml
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pipenv.vendor.pathlib2 import Path
 
 
 if six.PY2:
@@ -45,7 +50,7 @@ class _PipenvInstance(object):
         self.original_umask = os.umask(0o007)
         self.original_dir = os.path.abspath(os.curdir)
         self._path = TemporaryDirectory(suffix='-project', prefix='pipenv-')
-        self.path = self._path.name
+        self.path = str(Path(self._path.name).resolve())
         # set file creation perms
         self.pipfile_path = None
         self.chdir = chdir
@@ -113,9 +118,13 @@ class _PipenvInstance(object):
 
     @property
     def lockfile(self):
-        p_path = os.sep.join([self.path, 'Pipfile.lock'])
+        p_path = self.lockfile_path
         with open(p_path, 'r') as f:
             return json.loads(f.read())
+
+    @property
+    def lockfile_path(self):
+        return os.sep.join([self.path, 'Pipfile.lock'])
 
 
 @pytest.fixture()

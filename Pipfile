@@ -1,0 +1,13 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+pipenv = "==2018.5.18"
+virtualenv = "==15.2.0"
+
+[requires]
+python_version = "2.7"
