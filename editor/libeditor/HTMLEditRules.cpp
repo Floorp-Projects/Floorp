@@ -3544,6 +3544,11 @@ HTMLEditRules::TryToJoinBlocksWithTransaction(nsIContent& aLeftNode,
       int32_t offset = leftBlockChild.Offset();
       EditActionResult retMoveContents =
         MoveContents(*rightList, *leftList, &offset);
+      if (NS_WARN_IF(retMoveContents.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+        return ret;
+      }
+      NS_WARNING_ASSERTION(retMoveContents.Succeeded(),
+        "Failed to move contents from the right list to the left list");
       if (retMoveContents.Handled()) {
         ret.MarkAsHandled();
       }
