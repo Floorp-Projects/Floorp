@@ -3747,8 +3747,8 @@ nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBui
   }
 }
 
-nsIntMargin
-nsNativeThemeCocoa::DirectionAwareMargin(const nsIntMargin& aMargin,
+LayoutDeviceIntMargin
+nsNativeThemeCocoa::DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                          nsIFrame* aFrame)
 {
   // Assuming aMargin was originally specified for a horizontal LTR context,
@@ -3757,18 +3757,18 @@ nsNativeThemeCocoa::DirectionAwareMargin(const nsIntMargin& aMargin,
   WritingMode wm = aFrame->GetWritingMode();
   nsMargin m = LogicalMargin(wm, aMargin.top, aMargin.right, aMargin.bottom,
                              aMargin.left).GetPhysicalMargin(wm);
-  return nsIntMargin(m.top, m.right, m.bottom, m.left);
+  return LayoutDeviceIntMargin(m.top, m.right, m.bottom, m.left);
 }
 
-static const nsIntMargin kAquaDropdownBorder(1, 22, 2, 5);
-static const nsIntMargin kAquaComboboxBorder(3, 20, 3, 4);
-static const nsIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
+static const LayoutDeviceIntMargin kAquaDropdownBorder(1, 22, 2, 5);
+static const LayoutDeviceIntMargin kAquaComboboxBorder(3, 20, 3, 4);
+static const LayoutDeviceIntMargin kAquaSearchfieldBorder(3, 5, 2, 19);
 
 NS_IMETHODIMP
 nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
                                     nsIFrame* aFrame,
                                     uint8_t aWidgetType,
-                                    nsIntMargin* aResult)
+                                    LayoutDeviceIntMargin* aResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -3780,14 +3780,14 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       if (IsButtonTypeMenu(aFrame)) {
         *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       } else {
-        *aResult = DirectionAwareMargin(nsIntMargin(1, 7, 3, 7), aFrame);
+        *aResult = DirectionAwareMargin(LayoutDeviceIntMargin(1, 7, 3, 7), aFrame);
       }
       break;
     }
 
     case NS_THEME_TOOLBARBUTTON:
     {
-      *aResult = DirectionAwareMargin(nsIntMargin(1, 4, 1, 4), aFrame);
+      *aResult = DirectionAwareMargin(LayoutDeviceIntMargin(1, 4, 1, 4), aFrame);
       break;
     }
 

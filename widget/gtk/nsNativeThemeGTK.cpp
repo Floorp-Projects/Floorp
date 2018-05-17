@@ -1250,7 +1250,7 @@ nsNativeThemeGTK::NativeThemeToGtkTheme(uint8_t aWidgetType, nsIFrame* aFrame)
 void
 nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
                                         GtkTextDirection aDirection,
-                                        nsIntMargin* aResult)
+                                        LayoutDeviceIntMargin* aResult)
 {
   aResult->SizeTo(0, 0, 0, 0);
 
@@ -1277,7 +1277,8 @@ nsNativeThemeGTK::GetCachedWidgetBorder(nsIFrame* aFrame, uint8_t aWidgetType,
 
 NS_IMETHODIMP
 nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                  uint8_t aWidgetType, nsIntMargin* aResult)
+                                  uint8_t aWidgetType,
+                                  LayoutDeviceIntMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
@@ -1401,8 +1402,14 @@ nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
         if (!IsRegularMenuItem(aFrame))
           return false;
 
+        LayoutDeviceIntMargin border;
         GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame),
-                              aResult);
+                              &border);
+        // XXX will be removed in next part...
+        aResult->top = border.top;
+        aResult->right = border.right;
+        aResult->bottom = border.bottom;
+        aResult->left = border.left;
 
         gint horizontal_padding;
 
@@ -1657,7 +1664,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       // descendants; the value returned here will not be helpful, but the
       // box model may consider border and padding with child minimum sizes.
 
-      nsIntMargin border;
+      LayoutDeviceIntMargin border;
       GetCachedWidgetBorder(aFrame, aWidgetType, GetTextDirection(aFrame), &border);
       aResult->width += border.left + border.right;
       aResult->height += border.top + border.bottom;

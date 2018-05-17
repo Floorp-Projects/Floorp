@@ -206,9 +206,10 @@ nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
 
 NS_IMETHODIMP
 nsNativeThemeAndroid::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
-                                      uint8_t aWidgetType, nsIntMargin* aResult)
+                                      uint8_t aWidgetType,
+                                      LayoutDeviceIntMargin* aResult)
 {
-  *aResult = nsIntMargin();
+  *aResult = LayoutDeviceIntMargin();
   return NS_OK;
 }
 
