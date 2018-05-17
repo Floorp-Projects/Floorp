@@ -63,14 +63,11 @@ Please set a repository url with --repo on either googlesource or github.''' % h
         try:
             info = req.json()
         except ValueError as e:
-            if 'No JSON object' in e.message:
-                # As of 2017 May, googlesource sends 4 garbage characters
-                # at the beginning of the json response. Work around this.
-                # https://bugs.chromium.org/p/chromium/issues/detail?id=718550
-                import json
-                info = json.loads(req.text[4:])
-            else:
-                raise
+            # As of 2017 May, googlesource sends 4 garbage characters
+            # at the beginning of the json response. Work around this.
+            # https://bugs.chromium.org/p/chromium/issues/detail?id=718550
+            import json
+            info = json.loads(req.text[4:])
         return (info['commit'], info['committer']['time'])
 
     def upstream_github_commit(self, revision):
