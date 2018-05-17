@@ -1251,7 +1251,6 @@ const KTableEntry nsCSSProps::kTextJustifyKTable[] = {
 const KTableEntry nsCSSProps::kTextCombineUprightKTable[] = {
   { eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE },
   { eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL },
-  { eCSSKeyword_digits, NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2 }, // w/o number ==> 2
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

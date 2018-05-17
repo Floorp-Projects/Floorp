@@ -6320,11 +6320,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
     };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright-digits.enabled")) {
-  gCSSProperties["text-combine-upright"].other_values.push(
-    "digits", "digits 2", "digits 3", "digits 4", "digits     3");
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.text-justify.enabled")) {
   gCSSProperties["text-justify"] = {
     domProp: "textJustify",
