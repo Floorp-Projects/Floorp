@@ -284,7 +284,7 @@ Classifier::ResetTables(ClearType aType, const nsTArray<nsCString>& aTables)
 {
   for (uint32_t i = 0; i < aTables.Length(); i++) {
     LOG(("Resetting table: %s", aTables[i].get()));
-    LookupCache *cache = GetLookupCache(aTables[i]);
+    RefPtr<LookupCache> cache = GetLookupCache(aTables[i]);
     if (cache) {
       // Remove any cached Completes for this table if clear type is Clear_Cache
       if (aType == Clear_Cache) {
@@ -427,10 +427,10 @@ Classifier::Check(const nsACString& aSpec,
   nsTArray<nsCString> activeTables;
   SplitTables(aTables, activeTables);
 
-  nsTArray<LookupCache*> cacheArray;
+  LookupCacheArray cacheArray;
   for (uint32_t i = 0; i < activeTables.Length(); i++) {
     LOG(("Checking table %s", activeTables[i].get()));
-    LookupCache *cache = GetLookupCache(activeTables[i]);
+    RefPtr<LookupCache> cache = GetLookupCache(activeTables[i]);
     if (cache) {
       cacheArray.AppendElement(cache);
     } else {
@@ -451,7 +451,7 @@ Classifier::Check(const nsACString& aSpec,
     }
 
     for (uint32_t i = 0; i < cacheArray.Length(); i++) {
-      LookupCache *cache = cacheArray[i];
+      RefPtr<LookupCache> cache = cacheArray[i];
       bool has, confirmed;
       uint32_t matchLength;
 
@@ -553,9 +553,6 @@ void
 Classifier::RemoveUpdateIntermediaries()
 {
   // Remove old LookupCaches.
-  for (auto c: mNewLookupCaches) {
-    delete c;
-  }
   mNewLookupCaches.Clear();
 
   // Remove the "old" directory. (despite its looking-new name)
@@ -876,7 +873,7 @@ void
 Classifier::GetCacheInfo(const nsACString& aTable,
                          nsIUrlClassifierCacheInfo** aCache)
 {
-  LookupCache* lookupCache = GetLookupCache(aTable);
+  RefPtr<LookupCache> lookupCache = GetLookupCache(aTable);
   if (!lookupCache) {
     return;
   }
@@ -887,9 +884,6 @@ Classifier::GetCacheInfo(const nsACString& aTable,
 void
 Classifier::DropStores()
 {
-  for (uint32_t i = 0; i < mLookupCaches.Length(); i++) {
-    delete mLookupCaches[i];
-  }
   mLookupCaches.Clear();
 }
 
@@ -904,7 +898,7 @@ Classifier::RegenActiveTables()
   for (uint32_t i = 0; i < foundTables.Length(); i++) {
     nsCString table(foundTables[i]);
 
-    LookupCache *lookupCache = GetLookupCache(table);
+    RefPtr<LookupCache> lookupCache = GetLookupCache(table);
     if (!lookupCache) {
       LOG(("Inactive table (no cache): %s", table.get()));
       continue;
@@ -1200,14 +1194,19 @@ Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Read the part of the store that is (only) in the cache
-  LookupCacheV2* lookupCache =
-    LookupCache::Cast<LookupCacheV2>(GetLookupCacheForUpdate(store.TableName()));
-  if (!lookupCache) {
+  RefPtr<LookupCacheV2> lookupCacheV2;
+  {
+    RefPtr<LookupCache> lookupCache = GetLookupCacheForUpdate(store.TableName());
+    if (lookupCache) {
+      lookupCacheV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
+    }
+  }
+  if (!lookupCacheV2) {
     return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
   FallibleTArray<uint32_t> AddPrefixHashes;
-  rv = lookupCache->GetPrefixes(AddPrefixHashes);
+  rv = lookupCacheV2->GetPrefixes(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = store.AugmentAdds(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1260,13 +1259,13 @@ Classifier::UpdateHashStore(TableUpdateArray& aUpdates,
 
   // At this point the store is updated and written out to disk, but
   // the data is still in memory.  Build our quick-lookup table here.
-  rv = lookupCache->Build(store.AddPrefixes(), store.AddCompletes());
+  rv = lookupCacheV2->Build(store.AddPrefixes(), store.AddCompletes());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE);
 
 #if defined(DEBUG)
-  lookupCache->DumpCompletions();
+  lookupCacheV2->DumpCompletions();
 #endif
-  rv = lookupCache->WriteFile();
+  rv = lookupCacheV2->WriteFile();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
 
   LOG(("Successfully updated %s", store.TableName().get()));
@@ -1290,9 +1289,14 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
     return NS_OK;
   }
 
-  LookupCacheV4* lookupCache =
-    LookupCache::Cast<LookupCacheV4>(GetLookupCacheForUpdate(aTable));
-  if (!lookupCache) {
+  RefPtr<LookupCacheV4> lookupCacheV4;
+  {
+    RefPtr<LookupCache> lookupCache = GetLookupCacheForUpdate(aTable);
+    if (lookupCache) {
+     lookupCacheV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+    }
+  }
+  if (!lookupCacheV4) {
     return NS_ERROR_UC_UPDATE_TABLE_NOT_FOUND;
   }
 
@@ -1317,7 +1321,7 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
     if (updateV4->IsFullUpdate()) {
       input->Clear();
       output->Clear();
-      rv = lookupCache->ApplyUpdate(updateV4, *input, *output);
+      rv = lookupCacheV4->ApplyUpdate(updateV4, *input, *output);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1326,7 +1330,7 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
       // without a prior full/partial update in the loop. In this case we should
       // get prefixes from the lookup cache first.
       if (prefixes1.IsEmpty() && prefixes2.IsEmpty()) {
-        lookupCache->GetPrefixes(prefixes1);
+        lookupCacheV4->GetPrefixes(prefixes1);
       } else {
         MOZ_ASSERT(prefixes1.IsEmpty() ^ prefixes2.IsEmpty());
 
@@ -1337,7 +1341,7 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
         output = prefixes1.IsEmpty() ? &prefixes1 : &prefixes2;
       }
 
-      rv = lookupCache->ApplyUpdate(updateV4, *input, *output);
+      rv = lookupCacheV4->ApplyUpdate(updateV4, *input, *output);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1351,15 +1355,15 @@ Classifier::UpdateTableV4(TableUpdateArray& aUpdates,
     aUpdates[i] = nullptr;
   }
 
-  rv = lookupCache->Build(*output);
+  rv = lookupCacheV4->Build(*output);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_BUILD_PREFIX_FAILURE);
 
-  rv = lookupCache->WriteFile();
+  rv = lookupCacheV4->WriteFile();
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
 
   if (lastAppliedUpdate) {
     LOG(("Write meta data of the last applied update."));
-    rv = lookupCache->WriteMetadata(lastAppliedUpdate);
+    rv = lookupCacheV4->WriteMetadata(lastAppliedUpdate);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_UC_UPDATE_FAIL_TO_WRITE_DISK);
   }
 
@@ -1378,18 +1382,18 @@ Classifier::UpdateCache(RefPtr<const TableUpdate> aUpdate)
   nsAutoCString table(aUpdate->TableName());
   LOG(("Classifier::UpdateCache(%s)", table.get()));
 
-  LookupCache *lookupCache = GetLookupCache(table);
+  RefPtr<LookupCache> lookupCache = GetLookupCache(table);
   if (!lookupCache) {
     return NS_ERROR_FAILURE;
   }
 
-  auto lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
+  RefPtr<LookupCacheV2> lookupV2 = LookupCache::Cast<LookupCacheV2>(lookupCache);
   if (lookupV2) {
     RefPtr<const TableUpdateV2> updateV2 = TableUpdate::Cast<TableUpdateV2>(aUpdate);
     lookupV2->AddGethashResultToCache(updateV2->AddCompletes(),
                                       updateV2->MissPrefixes());
   } else {
-    auto lookupV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+    RefPtr<LookupCacheV4> lookupV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
     if (!lookupV4) {
       return NS_ERROR_FAILURE;
     }
@@ -1405,14 +1409,14 @@ Classifier::UpdateCache(RefPtr<const TableUpdate> aUpdate)
   return NS_OK;
 }
 
-LookupCache *
+RefPtr<LookupCache>
 Classifier::GetLookupCache(const nsACString& aTable, bool aForUpdate)
 {
   // GetLookupCache(aForUpdate==true) can only be called on update thread.
   MOZ_ASSERT_IF(aForUpdate, NS_GetCurrentThread() == mUpdateThread);
 
-  nsTArray<LookupCache*>& lookupCaches = aForUpdate ? mNewLookupCaches
-                                                    : mLookupCaches;
+  LookupCacheArray& lookupCaches = aForUpdate ? mNewLookupCaches
+                                              : mLookupCaches;
   auto& rootStoreDirectory = aForUpdate ? mUpdatingDirectory
                                         : mRootStoreDirectory;
 
@@ -1430,12 +1434,12 @@ Classifier::GetLookupCache(const nsACString& aTable, bool aForUpdate)
   // TODO : Bug 1302600, It would be better if we have a more general non-main
   //        thread method to convert table name to protocol version. Currently
   //        we can only know this by checking if the table name ends with '-proto'.
-  UniquePtr<LookupCache> cache;
+  RefPtr<LookupCache> cache;
   nsCString provider = GetProvider(aTable);
   if (StringEndsWith(aTable, NS_LITERAL_CSTRING("-proto"))) {
-    cache = MakeUnique<LookupCacheV4>(aTable, provider, rootStoreDirectory);
+    cache = new LookupCacheV4(aTable, provider, rootStoreDirectory);
   } else {
-    cache = MakeUnique<LookupCacheV2>(aTable, provider, rootStoreDirectory);
+    cache = new LookupCacheV2(aTable, provider, rootStoreDirectory);
   }
 
   nsresult rv = cache->Init();
@@ -1444,8 +1448,8 @@ Classifier::GetLookupCache(const nsACString& aTable, bool aForUpdate)
   }
   rv = cache->Open();
   if (NS_SUCCEEDED(rv)) {
-    lookupCaches.AppendElement(cache.get());
-    return cache.release();
+    lookupCaches.AppendElement(cache);
+    return cache;
   }
 
   // At this point we failed to open LookupCache.
@@ -1476,12 +1480,12 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
   FallibleTArray<uint32_t> prefixes;
   nsresult rv;
 
-  LookupCache *cache = GetLookupCache(aTableName);
+  RefPtr<LookupCache> cache = GetLookupCache(aTableName);
   if (!cache) {
     return NS_ERROR_FAILURE;
   }
 
-  LookupCacheV2* cacheV2 = LookupCache::Cast<LookupCacheV2>(cache);
+  RefPtr<LookupCacheV2> cacheV2 = LookupCache::Cast<LookupCacheV2>(cache);
   if (cacheV2) {
     rv = cacheV2->GetPrefixes(prefixes);
   } else {
@@ -1562,15 +1566,20 @@ Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult)
     }
     tableName.Cut(dot, METADATA_SUFFIX.Length());
 
-    LookupCacheV4* lookupCache =
-      LookupCache::Cast<LookupCacheV4>(GetLookupCache(tableName));
-    if (!lookupCache) {
+    RefPtr<LookupCacheV4> lookupCacheV4;
+    {
+      RefPtr<LookupCache> lookupCache = GetLookupCache(tableName);
+      if (lookupCache) {
+        lookupCacheV4 = LookupCache::Cast<LookupCacheV4>(lookupCache);
+      }
+    }
+    if (!lookupCacheV4) {
       continue;
     }
 
     nsCString state;
     nsCString checksum;
-    rv = lookupCache->LoadMetadata(state, checksum);
+    rv = lookupCacheV4->LoadMetadata(state, checksum);
     if (NS_FAILED(rv)) {
       LOG(("Failed to get metadata for table %s", tableName.get()));
       continue;

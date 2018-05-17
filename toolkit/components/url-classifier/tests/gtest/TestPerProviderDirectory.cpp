@@ -23,8 +23,9 @@ using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
 template<typename T>
-void VerifyPrivateStorePath(const char* aTableName,
-                            const char* aProvider,
+void VerifyPrivateStorePath(T* target,
+                            const nsCString& aTableName,
+                            const nsCString& aProvider,
                             nsIFile* aRootDir,
                             bool aUsePerProviderStore)
 {
@@ -32,10 +33,8 @@ void VerifyPrivateStorePath(const char* aTableName,
   nsresult rv = aRootDir->GetPath(rootStorePath);
   EXPECT_EQ(rv, NS_OK);
 
-  T target(nsCString(aTableName), nsCString(aProvider), aRootDir);
-
   nsIFile* privateStoreDirectory =
-    PerProviderDirectoryTestUtils::InspectStoreDirectory(target);
+    PerProviderDirectoryTestUtils::InspectStoreDirectory(*target);
 
   nsString privateStorePath;
   rv = privateStoreDirectory->GetPath(privateStorePath);
@@ -49,14 +48,14 @@ void VerifyPrivateStorePath(const char* aTableName,
     rv = aRootDir->Clone(getter_AddRefs(expectedPrivateStoreDir));
     ASSERT_EQ(rv, NS_OK);
 
-    expectedPrivateStoreDir->AppendNative(nsCString(aProvider));
+    expectedPrivateStoreDir->AppendNative(aProvider);
     rv = expectedPrivateStoreDir->GetPath(expectedPrivateStorePath);
     ASSERT_EQ(rv, NS_OK);
   }
 
   printf("table: %s\nprovider: %s\nroot path: %s\nprivate path: %s\n\n",
-         aTableName,
-         aProvider,
+         aTableName.get(),
+         aProvider.get(),
          NS_ConvertUTF16toUTF8(rootStorePath).get(),
          NS_ConvertUTF16toUTF8(privateStorePath).get());
 
@@ -71,12 +70,27 @@ TEST(UrlClassifierPerProviderDirectory, LookupCache)
 
     // For V2 tables (NOT ending with '-proto'), root directory should be
     // used as the private store.
-    VerifyPrivateStorePath<LookupCacheV2>("goog-phish-shavar", "google", rootDir, false);
+    {
+      nsAutoCString table("goog-phish-shavar");
+      nsAutoCString provider("google");
+      RefPtr<LookupCacheV2> lc = new LookupCacheV2(table, provider, rootDir);
+      VerifyPrivateStorePath<LookupCacheV2>(lc, table, provider, rootDir, false);
+    }
 
     // For V4 tables, if provider is found, use per-provider subdirectory;
     // If not found, use root directory.
-    VerifyPrivateStorePath<LookupCacheV4>("goog-noprovider-proto", "", rootDir, false);
-    VerifyPrivateStorePath<LookupCacheV4>("goog-phish-proto", "google4", rootDir, true);
+    {
+      nsAutoCString table("goog-noprovider-proto");
+      nsAutoCString provider("");
+      RefPtr<LookupCacheV4> lc = new LookupCacheV4(table, provider, rootDir);
+      VerifyPrivateStorePath<LookupCacheV4>(lc, table, provider, rootDir, false);
+    }
+    {
+      nsAutoCString table("goog-phish-proto");
+      nsAutoCString provider("google4");
+      RefPtr<LookupCacheV4> lc = new LookupCacheV4(table, provider, rootDir);
+      VerifyPrivateStorePath<LookupCacheV4>(lc, table, provider, rootDir, true);
+    }
   });
 }
 
@@ -88,11 +102,25 @@ TEST(UrlClassifierPerProviderDirectory, HashStore)
 
     // For V2 tables (NOT ending with '-proto'), root directory should be
     // used as the private store.
-    VerifyPrivateStorePath<HashStore>("goog-phish-shavar", "google", rootDir, false);
-
+    {
+      nsAutoCString table("goog-phish-shavar");
+      nsAutoCString provider("google");
+      HashStore hs(table, provider, rootDir);
+      VerifyPrivateStorePath(&hs, table, provider, rootDir, false);
+    }
     // For V4 tables, if provider is found, use per-provider subdirectory;
     // If not found, use root directory.
-    VerifyPrivateStorePath<HashStore>("goog-noprovider-proto", "", rootDir, false);
-    VerifyPrivateStorePath<HashStore>("goog-phish-proto", "google4", rootDir, true);
+    {
+      nsAutoCString table("goog-noprovider-proto");
+      nsAutoCString provider("");
+      HashStore hs(table, provider, rootDir);
+      VerifyPrivateStorePath(&hs, table, provider, rootDir, false);
+    }
+    {
+      nsAutoCString table("goog-phish-proto");
+      nsAutoCString provider("google4");
+      HashStore hs(table, provider, rootDir);
+      VerifyPrivateStorePath(&hs, table, provider, rootDir, true);
+    }
   });
 }

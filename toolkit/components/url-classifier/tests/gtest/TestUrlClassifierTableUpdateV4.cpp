@@ -255,11 +255,12 @@ testOpenLookupCache()
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
 
   RunTestInNewThread([&] () -> void {
-    LookupCacheV4 cache(nsCString(GTEST_TABLE), EmptyCString(), file);
-    nsresult rv = cache.Init();
+    RefPtr<LookupCacheV4> cache = new LookupCacheV4(nsCString(GTEST_TABLE),
+                                                    EmptyCString(), file);
+    nsresult rv = cache->Init();
     ASSERT_EQ(rv, NS_OK);
 
-    rv = cache.Open();
+    rv = cache->Open();
     ASSERT_EQ(rv, NS_OK);
   });
 }
@@ -798,7 +799,7 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate2)
   _PrefixArray array;
   CreateRandomSortedPrefixArray(100, 4, 4, array);
   CreateRandomSortedPrefixArray(10, 5, 32, array);
-  UniquePtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
+  RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
 
   // Setup TableUpdate object with only checksum from previous update(initial data).
   nsCString checksum;
