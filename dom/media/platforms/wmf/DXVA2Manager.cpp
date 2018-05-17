@@ -159,7 +159,6 @@ private:
   RefPtr<IDirectXVideoDecoder> mDecoder;
   GUID mDecoderGUID;
   UINT32 mResetToken = 0;
-  bool mFirstFrame = true;
 };
 
 void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType *pType,
