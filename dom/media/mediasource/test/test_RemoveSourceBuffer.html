@@ -9,19 +9,19 @@
 <body>
 <pre id="test"><script class="testbody" type="text/javascript">
 
-var videoURL = "seek.webm";
+const videoURL = "seek.webm";
 
 SimpleTest.waitForExplicitFinish();
 
 runWithMSE(async function(ms, el) {
   info("- wait for sourceopen -");
-  await once(ms, 'sourceopen');
+  await once(ms, "sourceopen");
 
   info("- wait for fetching data -");
-  var arrayBuffer = await fetchWithXHR(videoURL);
+  const arrayBuffer = await fetchWithXHR(videoURL);
 
   info("- create source buffer and append data -");
-  var sourceBuffer = ms.addSourceBuffer("video/webm");
+  const sourceBuffer = ms.addSourceBuffer("video/webm");
   sourceBuffer.appendBuffer(arrayBuffer);
   await once(sourceBuffer, "updateend");
   is(ms.sourceBuffers.length, 1,

@@ -12,13 +12,13 @@
 
 SimpleTest.waitForExplicitFinish();
 
-addMSEPrefs(["media.mediasource.webm.enabled", true]);
+addMSEPrefs([ "media.mediasource.webm.enabled", true ]);
 
-runWithMSE(function (ms, v) {
-  ms.addEventListener("sourceopen", function () {
-    var sb = ms.addSourceBuffer("video/webm");
+runWithMSE(function(ms, v) {
+  ms.addEventListener("sourceopen", function() {
+    const sb = ms.addSourceBuffer("video/webm");
 
-    fetchWithXHR("tags_before_cluster.webm", async function (arrayBuffer) {
+    fetchWithXHR("tags_before_cluster.webm", async function(arrayBuffer) {
       info("- append buffer -");
       sb.appendBuffer(new Uint8Array(arrayBuffer));
 

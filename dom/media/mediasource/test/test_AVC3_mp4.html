@@ -14,14 +14,14 @@ SimpleTest.waitForExplicitFinish();
 
 runWithMSE(function(ms, el) {
 
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var videosb = ms.addSourceBuffer("video/mp4");
+    const videosb = ms.addSourceBuffer("video/mp4");
 
-    fetchAndLoad(videosb, 'avc3/init', [''], '.mp4')
+    fetchAndLoad(videosb, "avc3/init", [ "" ], ".mp4")
     .then(function() {
-      var promises = [];
-      promises.push(fetchAndLoad(videosb, 'avc3/segment', range(1, 2), '.m4s'));
+      const promises = [];
+      promises.push(fetchAndLoad(videosb, "avc3/segment", range(1, 2), ".m4s"));
       promises.push(once(el, "loadeddata"));
       return Promise.all(promises);
     }).then(function() {
@@ -33,7 +33,7 @@ runWithMSE(function(ms, el) {
       ok(true, "endOfStream completed");
       // Now ensure that we can play to the end.
       el.play();
-      once(el, 'ended').then(SimpleTest.finish.bind(SimpleTest));
+      once(el, "ended").then(SimpleTest.finish.bind(SimpleTest));
     });
   });
 });

@@ -13,54 +13,54 @@
 SimpleTest.waitForExplicitFinish();
 
 function range(start, end) {
-  var rv = [];
-  for (var i = start; i < end; ++i) {
+  const rv = [];
+  for (let i = start; i < end; ++i) {
     rv.push(i);
   }
   return rv;
 }
 
-var eps = 0.01;
+const eps = 0.01;
 runWithMSE(function(ms, el) {
 
-  once(ms, 'sourceopen').then(function() {
+  once(ms, "sourceopen").then(function() {
     ok(true, "Receive a sourceopen event");
-    var audiosb = ms.addSourceBuffer("audio/mp4");
-    var videosb = ms.addSourceBuffer("video/mp4");
+    const audiosb = ms.addSourceBuffer("audio/mp4");
+    const videosb = ms.addSourceBuffer("video/mp4");
     // We divide the video into 3 chunks:
     // chunk 0: segments 1-4
     // chunk 1: segments 5-8
     // chunk 2: segments 9-13
     // We then fill the timeline so that it seamlessly plays the chunks in order 0, 2, 1.
-    var vchunks = [ {start: 0, end: 3.2033}, { start: 3.2033, end: 6.4066}, { start: 6.4066, end: 10.01} ];
-    var firstvoffset = vchunks[2].end - vchunks[2].start; // Duration of chunk 2
-    var secondvoffset = -(vchunks[1].end - vchunks[1].start); // -(Duration of chunk 1)
+    const vchunks = [ {start: 0, end: 3.2033}, { start: 3.2033, end: 6.4066}, { start: 6.4066, end: 10.01} ];
+    const firstvoffset = vchunks[2].end - vchunks[2].start; // Duration of chunk 2
+    const secondvoffset = -(vchunks[1].end - vchunks[1].start); // -(Duration of chunk 1)
 
-    fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4')
-    .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', range(1, 5), '.m4s'))
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4")
+    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 5), ".m4s"))
     .then(function() {
       is(videosb.buffered.length, 1, "No discontinuity");
       isfuzzy(videosb.buffered.start(0), vchunks[0].start, eps, "Chunk start");
       isfuzzy(videosb.buffered.end(0), vchunks[0].end, eps, "Chunk end");
       videosb.timestampOffset = firstvoffset;
-      return fetchAndLoad(videosb, 'bipbop/bipbop_video', range(5, 9), '.m4s');
+      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 9), ".m4s");
     })
     .then(function(data) {
       is(videosb.buffered.length, 2, "One discontinuity");
       isfuzzy(videosb.buffered.start(0), vchunks[0].start, eps, "First Chunk start");
       isfuzzy(videosb.buffered.end(0), vchunks[0].end, eps, "First chunk end");
-      isfuzzy(videosb.buffered.start(1),  vchunks[1].start + firstvoffset, eps, "Second chunk start");
+      isfuzzy(videosb.buffered.start(1), vchunks[1].start + firstvoffset, eps, "Second chunk start");
       isfuzzy(videosb.buffered.end(1), vchunks[1].end + firstvoffset, eps, "Second chunk end");
       videosb.timestampOffset = secondvoffset;
-      return fetchAndLoad(videosb, 'bipbop/bipbop_video', range(9, 14), '.m4s');
+      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(9, 14), ".m4s");
     })
     .then(function() {
       is(videosb.buffered.length, 1, "No discontinuity (end)");
       isfuzzy(videosb.buffered.start(0), vchunks[0].start, eps, "Chunk start");
       isfuzzy(videosb.buffered.end(0), vchunks[2].end, eps, "Chunk end");
       audiosb.timestampOffset = 3;
-    }).then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4'))
-    .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(1, 12), '.m4s'))
+    }).then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4"))
+    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(1, 12), ".m4s"))
     .then(function() {
       is(audiosb.buffered.length, 1, "No audio discontinuity");
       isfuzzy(audiosb.buffered.start(0), 3, eps, "Audio starts at 3");
@@ -68,14 +68,14 @@ runWithMSE(function(ms, el) {
       // Trim the rest of the audio.
       audiosb.remove(videosb.buffered.end(0), Infinity);
       videosb.remove(videosb.buffered.end(0), Infinity);
-      return Promise.all([audiosb.updating ? once(audiosb, 'updateend') : Promise.resolve(),
-                          videosb.updating ? once(videosb, 'updateend') : Promise.resolve()]);
+      return Promise.all([ audiosb.updating ? once(audiosb, "updateend") : Promise.resolve(),
+        videosb.updating ? once(videosb, "updateend") : Promise.resolve() ]);
     }).then(function() {
       info("waiting for play to complete");
       el.play();
       el.currentTime = el.buffered.start(0);
       ms.endOfStream();
-      Promise.all([once(el, 'ended'), once(el, 'seeked')]).then(SimpleTest.finish.bind(SimpleTest));
+      Promise.all([ once(el, "ended"), once(el, "seeked") ]).then(SimpleTest.finish.bind(SimpleTest));
     });
   });
 });

@@ -157,6 +157,7 @@
     "imagesContentUsedUncompressed",
     "storageSQLite",
     "lowMemoryEventsVirtual",
+    "lowMemoryEventsCommitSpace",
     "lowMemoryEventsPhysical",
     "ghostWindows",
     "pageFaultsHard",
