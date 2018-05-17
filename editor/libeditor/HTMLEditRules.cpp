@@ -5377,30 +5377,32 @@ HTMLEditRules::WillOutdent(bool* aCancel,
   return NS_OK;
 }
 
-/**
- * RemovePartOfBlock() splits aBlock and move aStartChild to aEndChild out of
- * aBlock.
- */
-nsresult
-HTMLEditRules::RemovePartOfBlock(Element& aBlock,
-                                 nsIContent& aStartChild,
-                                 nsIContent& aEndChild)
+SplitRangeOffFromNodeResult
+HTMLEditRules::SplitRangeOffFromBlockAndRemoveMiddleContainer(
+                 Element& aBlockElement,
+                 nsIContent& aStartOfRange,
+                 nsIContent& aEndOfRange)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   SplitRangeOffFromNodeResult splitResult =
-    SplitRangeOffFromBlock(aBlock, aStartChild, aEndChild);
+    SplitRangeOffFromBlock(aBlockElement, aStartOfRange, aEndOfRange);
   if (NS_WARN_IF(splitResult.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return splitResult;
   }
   NS_WARNING_ASSERTION(splitResult.Succeeded(),
     "Failed to split the range off from the block element");
-  // Get rid of part of blockquote we are outdenting
-  nsresult rv = HTMLEditorRef().RemoveBlockContainerWithTransaction(aBlock);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsresult rv =
+    HTMLEditorRef().RemoveBlockContainerWithTransaction(aBlockElement);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  return NS_OK;
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return SplitRangeOffFromNodeResult(rv);
+  }
+  return SplitRangeOffFromNodeResult(splitResult.GetLeftContent(),
+                                     nullptr,
+                                     splitResult.GetRightContent());
 }
 
 SplitRangeOffFromNodeResult
@@ -8450,9 +8452,11 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     if (HTMLEditUtils::IsFormatNode(curNode)) {
       // Process any partial progress saved
       if (curBlock) {
-        nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        SplitRangeOffFromNodeResult removeMiddleContainerResult =
+          SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock,
+                                                         *firstNode, *lastNode);
+        if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
+          return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
       }
@@ -8483,9 +8487,11 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         HTMLEditUtils::IsList(curNode)) {
       // Process any partial progress saved
       if (curBlock) {
-        nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        SplitRangeOffFromNodeResult removeMiddleContainerResult =
+          SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock,
+                                                         *firstNode, *lastNode);
+        if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
+          return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
       }
@@ -8513,9 +8519,11 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
         // Otherwise, we have progressed beyond end of curBlock, so let's
         // handle it now.  We need to remove the portion of curBlock that
         // contains [firstNode - lastNode].
-        nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        SplitRangeOffFromNodeResult removeMiddleContainerResult =
+          SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock,
+                                                         *firstNode, *lastNode);
+        if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
+          return removeMiddleContainerResult.Rv();
         }
         firstNode = lastNode = curBlock = nullptr;
         // Fall out and handle curNode
@@ -8534,9 +8542,11 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
     if (curBlock) {
       // Some node that is already sans block style.  Skip over it and process
       // any partial progress saved.
-      nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      SplitRangeOffFromNodeResult removeMiddleContainerResult =
+        SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock,
+                                                       *firstNode, *lastNode);
+      if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
+        return removeMiddleContainerResult.Rv();
       }
       firstNode = lastNode = curBlock = nullptr;
       continue;
@@ -8544,9 +8554,11 @@ HTMLEditRules::RemoveBlockStyle(nsTArray<OwningNonNull<nsINode>>& aNodeArray)
   }
   // Process any partial progress saved
   if (curBlock) {
-    nsresult rv = RemovePartOfBlock(*curBlock, *firstNode, *lastNode);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    SplitRangeOffFromNodeResult removeMiddleContainerResult =
+      SplitRangeOffFromBlockAndRemoveMiddleContainer(*curBlock,
+                                                     *firstNode, *lastNode);
+    if (NS_WARN_IF(removeMiddleContainerResult.Failed())) {
+      return removeMiddleContainerResult.Rv();
     }
     firstNode = lastNode = curBlock = nullptr;
   }
