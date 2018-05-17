@@ -328,7 +328,15 @@ protected:
                         const nsAString* aItemType = nullptr);
   nsresult WillRemoveList(bool aOrdered, bool* aCancel, bool* aHandled);
   nsresult WillIndent(bool* aCancel, bool* aHandled);
-  nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
+
+  /**
+   * Called before indenting around Selection and it's in CSS mode.
+   * This method actually tries to indent the contents.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
 
   /**
    * Called before indenting around Selection and it's not in CSS mode.
@@ -544,6 +552,14 @@ protected:
    */
   MOZ_MUST_USE nsresult
   AfterEditInner(EditAction action, nsIEditor::EDirection aDirection);
+
+  /**
+   * IndentAroundSelectionWithCSS() indents around Selection with CSS.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * need to check if the editor is still available even if this returns
+   * NS_OK.
+   */
+  MOZ_MUST_USE nsresult IndentAroundSelectionWithCSS();
 
   /**
    * IndentAroundSelectionWithHTML() indents around Selection with HTML.

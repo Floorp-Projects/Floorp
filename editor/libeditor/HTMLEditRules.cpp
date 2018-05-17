@@ -4552,6 +4552,25 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // IndentAroundSelectionWithCSS() creates AutoSelectionRestorer.
+  // Therefore, even if it returns NS_OK, editor might have been destroyed
+  // at restoring Selection.
+  rv = IndentAroundSelectionWithCSS();
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditRules::IndentAroundSelectionWithCSS()
+{
+  MOZ_ASSERT(IsEditorDataAvailable());
+
   AutoSelectionRestorer selectionRestorer(&SelectionRef(), &HTMLEditorRef());
   nsTArray<OwningNonNull<nsRange>> arrayOfRanges;
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
@@ -4580,8 +4599,9 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    rv = GetNodesFromSelection(EditAction::indent, arrayOfNodes,
-                               TouchContent::yes);
+    nsresult rv =
+      GetNodesFromSelection(EditAction::indent, arrayOfNodes,
+                            TouchContent::yes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -4610,6 +4630,9 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     RefPtr<Element> theBlock =
       HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                 splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!theBlock)) {
       return NS_ERROR_FAILURE;
     }
@@ -4624,18 +4647,24 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     while (!arrayOfNodes.IsEmpty()) {
       OwningNonNull<nsINode> curNode = arrayOfNodes[0];
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*curNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
       arrayOfNodes.RemoveElementAt(0);
     }
     // put selection in new block
-    *aHandled = true;
     EditorRawDOMPoint atStartOfTheBlock(theBlock, 0);
-    ErrorResult error;
-    SelectionRef().Collapse(atStartOfTheBlock, error);
     // Don't restore the selection
     selectionRestorer.Abort();
+    ErrorResult error;
+    SelectionRef().Collapse(atStartOfTheBlock, error);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      error.SuppressException();
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(!error.Failed())) {
       return error.StealNSResult();
     }
@@ -4669,9 +4698,13 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
             sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
             sibling->NodeInfo()->NamespaceID()) {
-        rv = HTMLEditorRef().MoveNodeWithTransaction(
-                               *curNode->AsContent(),
-                               EditorRawDOMPoint(sibling, 0));
+        nsresult rv =
+          HTMLEditorRef().MoveNodeWithTransaction(
+                            *curNode->AsContent(),
+                            EditorRawDOMPoint(sibling, 0));
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4687,8 +4720,12 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
             sibling->NodeInfo()->NameAtom() &&
           atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
             sibling->NodeInfo()->NamespaceID()) {
-        rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                          *sibling);
+        nsresult rv =
+          HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
+                                                       *sibling);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -4715,6 +4752,9 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
         curList =
           HTMLEditorRef().CreateNodeWithTransaction(
                             *containerName, splitNodeResult.SplitPoint());
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(!curList)) {
           return NS_ERROR_FAILURE;
         }
@@ -4723,8 +4763,12 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
         mNewBlock = curList;
       }
       // tuck the node into the end of the active list
-      rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                        *curList);
+      nsresult rv =
+        HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
+                                                     *curList);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4758,6 +4802,9 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
       curQuote =
         HTMLEditorRef().CreateNodeWithTransaction(*nsGkAtoms::div,
                                                   splitNodeResult.SplitPoint());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(!curQuote)) {
         return NS_ERROR_FAILURE;
       }
@@ -4772,8 +4819,12 @@ HTMLEditRules::WillCSSIndent(bool* aCancel,
     }
 
     // tuck the node into the end of the active blockquote
-    rv = HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
-                                                      *curQuote);
+    nsresult rv =
+      HTMLEditorRef().MoveNodeToEndWithTransaction(*curNode->AsContent(),
+                                                   *curQuote);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
