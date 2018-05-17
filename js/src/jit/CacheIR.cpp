@@ -1048,7 +1048,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     if (!cx_->compartment()->wrap(cx_, &wrappedGlobal))
         return false;
 
-    AutoCompartment ac(cx_, unwrapped);
+    AutoRealm ar(cx_, unwrapped);
 
     // The first CCW for iframes is almost always wrapping another WindowProxy
     // so we optimize for that case as well.
@@ -4601,7 +4601,7 @@ jit::NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj)
 
     RootedObject wrapper(cx);
     {
-        AutoCompartment ac(cx, obj);
+        AutoRealm ar(cx, obj);
         wrapper = NewObjectWithClassProto(cx, &shapeContainerClass, nullptr);
         if (!obj)
             return nullptr;

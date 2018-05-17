@@ -351,6 +351,9 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 // General purpose user32.dll hook object
 static WindowsDllInterceptor sUser32Intercept;
 
+// AddHook success checks
+static mozilla::Maybe<bool> sHookedGetWindowInfo;
+
 // 2 pixel offset for eTransparencyBorderlessGlass which equals the size of
 // the default window border Windows paints. Glass will be extended inward
 // this distance to remove the border.
@@ -2496,11 +2499,15 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption)
   if (!mWnd)
     return;
 
-  if (!sGetWindowInfoPtrStub) {
+  if (sHookedGetWindowInfo.isNothing()) {
     sUser32Intercept.Init("user32.dll");
-    if (!sUser32Intercept.AddHook("GetWindowInfo", reinterpret_cast<intptr_t>(GetWindowInfoHook),
-                                  (void**) &sGetWindowInfoPtrStub))
+    sHookedGetWindowInfo =
+      Some(sUser32Intercept.AddHook("GetWindowInfo",
+                                    reinterpret_cast<intptr_t>(GetWindowInfoHook),
+                                    (void**) &sGetWindowInfoPtrStub));
+    if (!sHookedGetWindowInfo.value()) {
       return;
+    }
   }
   // Update our internally tracked caption status
   SetPropW(mWnd, kManageWindowInfoProperty, 

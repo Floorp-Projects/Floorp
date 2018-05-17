@@ -91,16 +91,13 @@ Used for both `BEETMOVER_SCOPE_ALIAS_TO_TARGET_TASK` and `get_release_build_numb
 """
 BEETMOVER_CANDIDATES_TARGET_TASKS = set([
     'promote_fennec',
-    'promote_firefox',
-    'promote_devedition',
+    'promote_desktop',
 ])
 BEETMOVER_PUSH_TARGET_TASKS = set([
     'push_fennec',
     'ship_fennec',
-    'push_firefox',
-    'ship_firefox',
-    'push_devedition',
-    'ship_devedition',
+    'push_desktop',
+    'ship_desktop',
 ])
 BEETMOVER_RELEASE_TARGET_TASKS = BEETMOVER_CANDIDATES_TARGET_TASKS | BEETMOVER_PUSH_TARGET_TASKS
 

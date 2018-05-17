@@ -22,8 +22,5 @@ add_task(async function() {
     }
   ]);
 
-  const tooltipPreviewed = waitForDispatch(dbg, "SET_PREVIEW");
-  hoverAtPos(dbg, { line: 2, ch: 7 });
-  await tooltipPreviewed;
-  await assertPreviewTooltip(dbg, { result: "3", expression: "func" });
+  await assertPreviewTooltip(dbg, 2, 7, { result: "3", expression: "func" });
 });

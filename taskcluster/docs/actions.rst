@@ -187,6 +187,11 @@ all properties as ``required`` in the JSON schema. Furthermore, it's good
 practice to provide ``default`` values for properties, as user interface generators
 will often take advantage of such properties.
 
+It is possible to specify the ``schema`` parameter as a callable that returns
+the JSON schema. It will be called with a keyword parameter ``graph_config``
+with the `graph configuration <taskgraph-graph-config>` of the current
+taskgraph.
+
 Once you have specified input and context as applicable for your action you can
 do pretty much anything you want from within your callback. Whether you want
 to create one or more tasks or run a specific piece of code like a test.

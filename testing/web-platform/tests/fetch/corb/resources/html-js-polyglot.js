@@ -4,6 +4,6 @@
 // which found out that some script resources are served
 // with text/html content-type and with a body that is
 // both a valid html and a valid javascript.
-window.polyglot = 123;
+window.polyglot = "html-js-polyglot.js";
 
 //--></script></body></html>

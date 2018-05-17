@@ -69,14 +69,12 @@ add_task(async function test_migrate_prefs() {
 
   let addon1 = states.findAddon(ID1);
   ok(addon1.enabled, "Addon 1 should be enabled");
-  ok(addon1.bootstrapped, "Addon 1 should be bootstrapped");
   equal(addon1.version, "0.1", "Addon 1 has the correct version");
   equal(addon1.mtime, mt(file1), "Addon 1 has the correct timestamp");
   ok(addon1.hasEmbeddedWebExtension, "Addon 1 has an embedded WebExtension");
 
   let addon2 = states.findAddon(ID2);
   ok(!addon2.enabled, "Addon 2 should not be enabled");
-  ok(!addon2.bootstrapped, "Addon 2 should be bootstrapped, because that information is not stored in xpiStates");
   equal(addon2.version, "0.2", "Addon 2 has the correct version");
   equal(addon2.mtime, mt(file2), "Addon 2 has the correct timestamp");
   ok(!addon2.hasEmbeddedWebExtension, "Addon 2 no embedded WebExtension");

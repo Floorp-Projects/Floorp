@@ -1366,7 +1366,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
 
     MOZ_RELEASE_ASSERT(obj->is<PropertyIteratorObject>());
     {
-        AutoCompartment ac(cx, obj);
+        AutoRealm ar(cx, obj);
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
         NativeIteratorNext(ni, rval);
     }

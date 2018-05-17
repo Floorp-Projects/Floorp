@@ -37,12 +37,12 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
   virtual bool IsWidget() const override;
@@ -71,12 +71,12 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 };
 
 /**
@@ -90,12 +90,12 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
 private:
   bool DropmarkerOpen(bool aToggleOpen) const;
@@ -111,11 +111,11 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 /**
@@ -128,7 +128,7 @@ public:
   XULRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
@@ -194,7 +194,7 @@ public:
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 /**
@@ -208,7 +208,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
 };
 
 } // namespace a11y

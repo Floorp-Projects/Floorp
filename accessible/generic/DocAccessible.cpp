@@ -170,7 +170,7 @@ NS_IMPL_RELEASE_INHERITED(DocAccessible, HyperTextAccessible)
 // nsIAccessible
 
 ENameValueFlag
-DocAccessible::Name(nsString& aName)
+DocAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -236,7 +236,7 @@ DocAccessible::Description(nsString& aDescription)
 
 // Accessible public method
 uint64_t
-DocAccessible::NativeState()
+DocAccessible::NativeState() const
 {
   // Document is always focusable.
   uint64_t state = states::FOCUSABLE; // keep in sync with NativeInteractiveState() impl
@@ -320,7 +320,7 @@ DocAccessible::FocusedChild()
 }
 
 void
-DocAccessible::TakeFocus()
+DocAccessible::TakeFocus() const
 {
   // Focus the document.
   nsFocusManager* fm = nsFocusManager::GetFocusManager();

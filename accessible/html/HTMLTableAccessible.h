@@ -35,7 +35,7 @@ public:
   // Accessible
   virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual mozilla::a11y::GroupPos GroupPosition() override;
@@ -163,9 +163,9 @@ public:
   virtual TableAccessible* AsTable() override { return this; }
   virtual void Description(nsString& aDescription) override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
-  virtual Relation RelationByType(RelationType aRelationType) override;
+  virtual Relation RelationByType(RelationType aRelationType) const override;
 
   virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
 
@@ -173,7 +173,7 @@ protected:
   virtual ~HTMLTableAccessible() {}
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   // HTMLTableAccessible
 
@@ -224,7 +224,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual Relation RelationByType(RelationType aRelationType) override;
+  virtual Relation RelationByType(RelationType aRelationType) const override;
 
 protected:
   virtual ~HTMLCaptionAccessible() { }
