@@ -46,6 +46,11 @@ html|input[type="checkbox"]:-moz-focusring + html|label:before {
   outline: 1px dotted;
 }
 
+*|button.primary:focus {
+  outline: 1px dotted;
+  outline-offset: -3px;
+}
+
 /* Use a 2px border so that selected row highlight is still visible behind
     an existing high-contrast border that uses the background color */
 @media (-moz-windows-default-theme: 0) {
