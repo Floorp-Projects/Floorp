@@ -2466,6 +2466,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     HTMLEditorRef().GetFirstSelectedCell(nullptr, getter_AddRefs(cell));
   if (NS_SUCCEEDED(rv) && cell) {
     rv = HTMLEditorRef().DeleteTableCellContents();
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     *aHandled = true;
     return rv;
   }
@@ -2571,11 +2574,17 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       *aHandled = true;
       if (aAction == nsIEditor::eNext) {
         rv = wsObj.DeleteWSForward();
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       } else {
         rv = wsObj.DeleteWSBackward();
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2623,6 +2632,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       rv = WSRunObject::PrepareToDeleteRange(&HTMLEditorRef(),
                                              address_of(visNode),
                                              &so, address_of(visNode), &eo);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2630,6 +2642,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       rv = HTMLEditorRef().DeleteTextWithTransaction(nodeAsText,
                                                      std::min(so, eo),
                                                      DeprecatedAbs(eo - so));
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2671,6 +2686,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       if (visNode->IsHTMLElement(nsGkAtoms::br) &&
           !HTMLEditorRef().IsVisibleBRElement(visNode)) {
         rv = HTMLEditorRef().DeleteNodeWithTransaction(*visNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2724,6 +2742,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           IgnoredErrorResult ignoredError;
           SelectionRef().Collapse(RawRangeBoundary(selNode, selOffset),
                                   ignoredError);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           NS_WARNING_ASSERTION(!ignoredError.Failed(),
             "Failed to collapse selection at after the <hr>");
           (ErrorResult&)ignoredError = NS_OK;
@@ -2752,10 +2773,16 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
             nsIContent* otherContent = otherNode->AsContent();
             rv = WSRunObject::PrepareToDeleteNode(&HTMLEditorRef(),
                                                   otherContent);
+            if (NS_WARN_IF(!CanHandleEditAction())) {
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
             if (NS_WARN_IF(NS_FAILED(rv))) {
               return rv;
             }
             rv = HTMLEditorRef().DeleteNodeWithTransaction(*otherContent);
+            if (NS_WARN_IF(!CanHandleEditAction())) {
+              return NS_ERROR_EDITOR_DESTROYED;
+            }
             if (NS_WARN_IF(NS_FAILED(rv))) {
               return rv;
             }
@@ -2772,6 +2799,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       // Found break or image, or hr.
       rv = WSRunObject::PrepareToDeleteNode(&HTMLEditorRef(),
                                             visNode->AsContent());
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2780,6 +2810,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
         HTMLEditorRef().GetPriorHTMLSibling(visNode);
       // Delete the node, and join like nodes if appropriate
       rv = HTMLEditorRef().DeleteNodeWithTransaction(*visNode);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2806,6 +2839,10 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
         // Fix up selection
         ErrorResult error;
         SelectionRef().Collapse(pt, error);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          error.SuppressException();
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(error.Failed())) {
           return error.StealNSResult();
         }
@@ -2859,6 +2896,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
       if (otherNode->IsHTMLElement(nsGkAtoms::br)) {
         rv = HTMLEditorRef().DeleteNodeWithTransaction(*otherNode);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -2885,6 +2925,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
         }
         IgnoredErrorResult error;
         SelectionRef().Collapse(newSel, error);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         NS_WARNING_ASSERTION(!error.Failed(),
           "Failed to collapse selection at edge of the block");
         return NS_OK;
@@ -2921,6 +2964,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           aAction == nsIEditor::ePrevious ?
             static_cast<int32_t>(leafNode->Length()) : 0;
         rv = SelectionRef().Collapse(leafNode, offset);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
           "Failed to collapse selection at the leaf node");
         rv = WillDeleteSelection(aAction, aStripWrappers, aCancel, aHandled);
@@ -2932,6 +2978,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
 
       // Otherwise, we must have deleted the selection as user expected.
       rv = SelectionRef().Collapse(selPointNode, selPointOffset);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
         "Failed to selection at deleted point");
       return NS_OK;
@@ -2992,6 +3041,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
         }
       }
       rv = SelectionRef().Collapse(selPointNode, selPointOffset);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
       return NS_OK;
     }
@@ -3030,6 +3082,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     rv = WSRunObject::PrepareToDeleteRange(&HTMLEditorRef(),
                                            address_of(startNode), &startOffset,
                                            address_of(endNode), &endOffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -3047,6 +3102,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
     if (endNode == startNode) {
       rv = HTMLEditorRef().DeleteSelectionWithTransaction(aAction,
                                                           aStripWrappers);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -3071,6 +3129,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
       // Are endpoint block parents the same?  Use default deletion
       if (leftParent && leftParent == rightParent) {
         HTMLEditorRef().DeleteSelectionWithTransaction(aAction, aStripWrappers);
+        if (NS_WARN_IF(!CanHandleEditAction())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
       } else {
         // Deleting across blocks.  Are the blocks of same type?
         if (NS_WARN_IF(!leftParent) || NS_WARN_IF(!rightParent)) {
@@ -3091,6 +3152,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           // First delete the selection
           rv = HTMLEditorRef().DeleteSelectionWithTransaction(aAction,
                                                               aStripWrappers);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -3098,12 +3162,19 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           EditorDOMPoint pt =
             HTMLEditorRef().JoinNodesDeepWithTransaction(*leftParent,
                                                          *rightParent);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(!pt.IsSet())) {
             return NS_ERROR_FAILURE;
           }
           // Fix up selection
           ErrorResult error;
           SelectionRef().Collapse(pt, error);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            error.SuppressException();
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(error.Failed())) {
             return error.StealNSResult();
           }
@@ -3167,6 +3238,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           rv = HTMLEditorRef().DeleteTextWithTransaction(
                                  dataNode, startOffset,
                                  startNode->Length() - startOffset);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -3177,6 +3251,9 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
             *static_cast<CharacterData*>(endNode.get());
           rv = HTMLEditorRef().DeleteTextWithTransaction(dataNode, 0,
                                                          endOffset);
+          if (NS_WARN_IF(!CanHandleEditAction())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
           if (NS_WARN_IF(NS_FAILED(rv))) {
             return rv;
           }
@@ -3226,11 +3303,17 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
   // in the first block). See Bug 507936
   if (aAction == (join ? nsIEditor::eNext : nsIEditor::ePrevious)) {
     rv = SelectionRef().Collapse(endNode, endOffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
     rv = SelectionRef().Collapse(startNode, startOffset);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
