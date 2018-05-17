@@ -1,6 +1,7 @@
 import {EventEmitter, FakePerformance, FakePrefs, GlobalOverrider} from "test/unit/utils";
 import Adapter from "enzyme-adapter-react-16";
 import {chaiAssertions} from "test/schemas/pings";
+import chaiJsonSchema from "chai-json-schema";
 import enzyme from "enzyme";
 enzyme.configure({adapter: new Adapter()});
 
@@ -31,6 +32,7 @@ const files = req.keys();
 sinon.assert.expose(assert, {prefix: ""});
 
 chai.use(chaiAssertions);
+chai.use(chaiJsonSchema);
 
 const overrider = new GlobalOverrider();
 const TEST_GLOBAL = {

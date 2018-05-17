@@ -154,6 +154,10 @@ const PREFS_CONFIG = new Map([
   ["asrouterExperimentEnabled", {
     title: "Is the message center experiment on?",
     value: false
+  }],
+  ["asrouter.snippetsUrl", {
+    title: "A custom URL for the AS router snippets",
+    value: ""
   }]
 ]);
 
