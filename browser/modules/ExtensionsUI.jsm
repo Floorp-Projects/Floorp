@@ -353,7 +353,7 @@ var ExtensionsUI = {
         } else if (topic == "swapping") {
           return true;
         }
-        if (topic == "removed" || topic == "dismissed") {
+        if (topic == "removed") {
           Services.tm.dispatchToMainThread(() => {
             resolve(false);
           });
@@ -367,6 +367,7 @@ var ExtensionsUI = {
         persistent: true,
         eventCallback,
         name: strings.addonName,
+        removeOnDismissal: true,
       };
 
       let action = {
