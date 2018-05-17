@@ -118,7 +118,6 @@ import org.mozilla.gecko.media.VideoPlayer;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
 import org.mozilla.gecko.mma.MmaDelegate;
-import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.NotificationHelper;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
@@ -747,7 +746,7 @@ public class BrowserApp extends GeckoApp
           return;
         }
 
-        initSwitchboard(this, intent, isInAutomation);
+        initSwitchboardAndMma(this, intent, isInAutomation);
         initTelemetryUploader(isInAutomation);
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
@@ -1000,7 +999,7 @@ public class BrowserApp extends GeckoApp
      * Initializes the default Switchboard URLs the first time.
      * @param intent
      */
-    private void initSwitchboard(final Context context, final SafeIntent intent, final boolean isInAutomation) {
+    private void initSwitchboardAndMma(final Context context, final SafeIntent intent, final boolean isInAutomation) {
         if (isInAutomation) {
             Log.d(LOGTAG, "Switchboard disabled - in automation");
             return;
@@ -1016,8 +1015,7 @@ public class BrowserApp extends GeckoApp
             protected Void doInBackground(Void... params) {
                 super.doInBackground(params);
                 SwitchBoard.loadConfig(context, serverUrl);
-                if (SwitchBoard.isInExperiment(context, Experiments.LEANPLUM) &&
-                        GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
+                if (GeckoPreferences.isMmaAvailableAndEnabled(context)) {
                     // Do LeanPlum start/init here
                     MmaDelegate.init(BrowserApp.this);
                 }
