@@ -606,7 +606,7 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 	// 24bits * 3 won't overflow either
 	clut_size = clut_size * num_out_channels;
 
-	if (clut_size == 0 || clut_size > MAX_CLUT_SIZE)
+	if (clut_size > MAX_CLUT_SIZE)
 		return NULL;
 
 	lut = malloc(sizeof(struct lutmABType) + (clut_size) * sizeof(float));

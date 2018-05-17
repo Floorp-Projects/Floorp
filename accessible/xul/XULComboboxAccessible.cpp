@@ -50,7 +50,7 @@ XULComboboxAccessible::NativeRole() const
 }
 
 uint64_t
-XULComboboxAccessible::NativeState()
+XULComboboxAccessible::NativeState() const
 {
   // As a nsComboboxAccessible we can have the following states:
   //     STATE_FOCUSED
@@ -96,7 +96,7 @@ XULComboboxAccessible::Description(nsString& aDescription)
 }
 
 void
-XULComboboxAccessible::Value(nsString& aValue)
+XULComboboxAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 
@@ -107,14 +107,14 @@ XULComboboxAccessible::Value(nsString& aValue)
 }
 
 uint8_t
-XULComboboxAccessible::ActionCount()
+XULComboboxAccessible::ActionCount() const
 {
   // Just one action (click).
   return 1;
 }
 
 bool
-XULComboboxAccessible::DoAction(uint8_t aIndex)
+XULComboboxAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != XULComboboxAccessible::eAction_Click)
     return false;

@@ -61,14 +61,14 @@ public:
    * @param aAccessible [in] the given accessible
    * @param aName       [out] accessible name
    */
-  static nsresult GetNameFromSubtree(Accessible* aAccessible,
+  static nsresult GetNameFromSubtree(const Accessible* aAccessible,
                                      nsAString& aName);
 
   /**
    * Calculates text equivalent from the subtree. Similar to GetNameFromSubtree.
    * However it returns not empty result for things like HTML p.
    */
-  static void GetTextEquivFromSubtree(Accessible* aAccessible,
+  static void GetTextEquivFromSubtree(const Accessible* aAccessible,
                                       nsString& aTextEquiv)
   {
     aTextEquiv.Truncate();
@@ -85,7 +85,7 @@ public:
    * @param aIDRefsAttr  [in] IDRefs attribute on DOM node of the accessible
    * @param aTextEquiv   [out] result text equivalent
    */
-  static nsresult GetTextEquivFromIDRefs(Accessible* aAccessible,
+  static nsresult GetTextEquivFromIDRefs(const Accessible* aAccessible,
                                          nsAtom *aIDRefsAttr,
                                          nsAString& aTextEquiv);
 
@@ -100,7 +100,7 @@ public:
    *                       computed from
    * @param aString        [in, out] the string
    */
-  static nsresult AppendTextEquivFromContent(Accessible* aInitiatorAcc,
+  static nsresult AppendTextEquivFromContent(const Accessible* aInitiatorAcc,
                                              nsIContent *aContent,
                                              nsAString *aString);
 
@@ -119,7 +119,7 @@ private:
    * Iterates accessible children and calculates text equivalent from each
    * child.
    */
-  static nsresult AppendFromAccessibleChildren(Accessible* aAccessible,
+  static nsresult AppendFromAccessibleChildren(const Accessible* aAccessible,
                                                nsAString *aString);
 
   /**

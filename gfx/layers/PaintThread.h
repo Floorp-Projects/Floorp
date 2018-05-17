@@ -270,6 +270,8 @@ public:
   static bool IsOnPaintThread();
   bool IsOnPaintWorkerThread();
 
+  void UpdateRenderMode();
+
   void PrepareBuffer(CapturedBufferState* aState);
 
   void PaintContents(CapturedPaintState* aState,
@@ -308,6 +310,7 @@ private:
   bool Init();
   void ShutdownOnPaintThread();
   void InitOnPaintThread();
+  void InitPaintWorkers();
 
   void AsyncPrepareBuffer(CompositorBridgeChild* aBridge,
                           CapturedBufferState* aState);

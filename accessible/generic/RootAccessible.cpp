@@ -73,7 +73,7 @@ RootAccessible::~RootAccessible()
 // Accessible
 
 ENameValueFlag
-RootAccessible::Name(nsString& aName)
+RootAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -123,7 +123,7 @@ RootAccessible::GetChromeFlags() const
 #endif
 
 uint64_t
-RootAccessible::NativeState()
+RootAccessible::NativeState() const
 {
   uint64_t state = DocAccessibleWrap::NativeState();
   if (state & states::DEFUNCT)
@@ -480,7 +480,7 @@ RootAccessible::Shutdown()
 }
 
 Relation
-RootAccessible::RelationByType(RelationType aType)
+RootAccessible::RelationByType(RelationType aType) const
 {
   if (!mDocumentNode || aType != RelationType::EMBEDS)
     return DocAccessibleWrap::RelationByType(aType);

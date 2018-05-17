@@ -49,7 +49,7 @@ jobs:
       description: linux64 secondary channel update verify
       shipping-product: firefox
       treeherder:
-         symbol: UVS
+         symbol: UV(UVS)
          platform: linux64/opt
          kind: test
          tier: 1
@@ -60,8 +60,8 @@ jobs:
       description: linux secondary channel update verify
       shipping-product: firefox
       treeherder:
-         symbol: UVS
-         platform: linux/opt
+         symbol: UV(UVS)
+         platform: linux32/opt
          kind: test
          tier: 1
       attributes:
@@ -71,8 +71,8 @@ jobs:
       description: win64 secondary channel update verify
       shipping-product: firefox
       treeherder:
-         symbol: UVS
-         platform: win64/opt
+         symbol: UV(UVS)
+         platform: windows2012-64/opt
          kind: test
          tier: 1
       attributes:
@@ -82,8 +82,8 @@ jobs:
       description: win32 secondary channel update verify
       shipping-product: firefox
       treeherder:
-         symbol: UVS
-         platform: win32/opt
+         symbol: UV(UVS)
+         platform: windows2012-32/opt
          kind: test
          tier: 1
       attributes:
@@ -93,8 +93,8 @@ jobs:
       description: macosx64 secondary channel update verify
       shipping-product: firefox
       treeherder:
-         symbol: UVS
-         platform: macosx64/opt
+         symbol: UV(UVS)
+         platform: osx-cross/opt
          kind: test
          tier: 1
       attributes:

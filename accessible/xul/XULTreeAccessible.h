@@ -40,15 +40,15 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual void Value(nsString& aValue) override;
+  virtual void Value(nsString& aValue) const override;
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild) override;
 
   virtual Accessible* GetChildAt(uint32_t aIndex) const override;
   virtual uint32_t ChildCount() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
 
   // SelectAccessible
   virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
@@ -149,18 +149,18 @@ public:
   virtual nsRect BoundsInAppUnits() const override;
   virtual nsIntRect BoundsInCSSPixels() const override;
   virtual GroupPos GroupPosition() override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
   virtual int32_t IndexInParent() const override;
-  virtual Relation RelationByType(RelationType aType) override;
+  virtual Relation RelationByType(RelationType aType) const override;
   virtual Accessible* FocusedChild() override;
   virtual void SetSelected(bool aSelect) override;
-  virtual void TakeFocus() override;
+  virtual void TakeFocus() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // Widgets
   virtual Accessible* ContainerWidget() const override;
@@ -234,7 +234,7 @@ public:
 
   // Accessible
   virtual void Shutdown() override;
-  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
   virtual a11y::role NativeRole() const override;
 
   // XULTreeItemAccessibleBase

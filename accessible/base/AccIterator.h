@@ -279,7 +279,7 @@ private:
 class ItemIterator : public AccIterable
 {
 public:
-  explicit ItemIterator(Accessible* aItemContainer) :
+  explicit ItemIterator(const Accessible* aItemContainer) :
     mContainer(aItemContainer), mAnchor(nullptr) { }
   virtual ~ItemIterator() { }
 
@@ -290,7 +290,7 @@ private:
   ItemIterator(const ItemIterator&) = delete;
   ItemIterator& operator = (const ItemIterator&) = delete;
 
-  Accessible* mContainer;
+  const Accessible* mContainer;
   Accessible* mAnchor;
 };
 

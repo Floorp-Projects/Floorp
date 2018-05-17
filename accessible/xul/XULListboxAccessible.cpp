@@ -41,7 +41,7 @@ XULColumAccessible::NativeRole() const
 }
 
 uint64_t
-XULColumAccessible::NativeState()
+XULColumAccessible::NativeState() const
 {
   return states::READONLY;
 }
@@ -64,13 +64,13 @@ XULColumnItemAccessible::NativeRole() const
 }
 
 uint64_t
-XULColumnItemAccessible::NativeState()
+XULColumnItemAccessible::NativeState() const
 {
   return states::READONLY;
 }
 
 uint8_t
-XULColumnItemAccessible::ActionCount()
+XULColumnItemAccessible::ActionCount() const
 {
   return 1;
 }
@@ -83,7 +83,7 @@ XULColumnItemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULColumnItemAccessible::DoAction(uint8_t aIndex)
+XULColumnItemAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;
@@ -116,7 +116,7 @@ XULListboxAccessible::
 // XULListboxAccessible: Accessible
 
 uint64_t
-XULListboxAccessible::NativeState()
+XULListboxAccessible::NativeState() const
 {
   // As a XULListboxAccessible we can have the following states:
   //   FOCUSED, READONLY, FOCUSABLE
@@ -138,7 +138,7 @@ XULListboxAccessible::NativeState()
   * Our value is the label of our ( first ) selected child.
   */
 void
-XULListboxAccessible::Value(nsString& aValue)
+XULListboxAccessible::Value(nsString& aValue) const
 {
   aValue.Truncate();
 
@@ -577,7 +577,7 @@ XULListitemAccessible::Description(nsString& aDesc)
   *   default to getting the name from GetXULName
   */
 ENameValueFlag
-XULListitemAccessible::NativeName(nsString& aName)
+XULListitemAccessible::NativeName(nsString& aName) const
 {
   nsIContent* childContent = mContent->GetFirstChild();
   if (childContent) {
@@ -613,7 +613,7 @@ XULListitemAccessible::NativeRole() const
 }
 
 uint64_t
-XULListitemAccessible::NativeState()
+XULListitemAccessible::NativeState() const
 {
   if (mIsCheckbox)
     return XULMenuitemAccessible::NativeState();

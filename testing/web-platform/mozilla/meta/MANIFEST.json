@@ -8,6 +8,31 @@
      {}
     ]
    ],
+   "binast/large.binjs": [
+    [
+     {}
+    ]
+   ],
+   "binast/large.js": [
+    [
+     {}
+    ]
+   ],
+   "binast/serve.py": [
+    [
+     {}
+    ]
+   ],
+   "binast/small.binjs": [
+    [
+     {}
+    ]
+   ],
+   "binast/small.js": [
+    [
+     {}
+    ]
+   ],
    "dom/throttling/resources/test.html": [
     [
      {}
@@ -418,6 +443,24 @@
    "baselinecoverage/wpt_baselinecoverage.html": [
     [
      "/_mozilla/baselinecoverage/wpt_baselinecoverage.html",
+     {}
+    ]
+   ],
+   "binast/insecure.html": [
+    [
+     "/_mozilla/binast/insecure.html",
+     {}
+    ]
+   ],
+   "binast/large.https.html": [
+    [
+     "/_mozilla/binast/large.https.html",
+     {}
+    ]
+   ],
+   "binast/small.https.html": [
+    [
+     "/_mozilla/binast/small.https.html",
      {}
     ]
    ],
@@ -1001,6 +1044,38 @@
   "baselinecoverage/wpt_baselinecoverage.html": [
    "8deca29e7b82fc7ef4c11d2a16e8611dfb8cf487",
    "testharness"
+  ],
+  "binast/insecure.html": [
+   "04b9d7807d0adf6a471d0621f18ddf20010fdac1",
+   "testharness"
+  ],
+  "binast/large.binjs": [
+   "b83da2863c47d8cedec22bf136fbea077ba8a86b",
+   "support"
+  ],
+  "binast/large.https.html": [
+   "35b870a066dc31ecab2f0de8fb38a6d54345f332",
+   "testharness"
+  ],
+  "binast/large.js": [
+   "1477587b19402f93514b1099a559cc7a376d2ab7",
+   "support"
+  ],
+  "binast/serve.py": [
+   "2421d4ce3c58c8d42c440e2455fd95db898b2b91",
+   "support"
+  ],
+  "binast/small.binjs": [
+   "0a8c0455cc13c1e8fe36540d768f0fad2e31aa2f",
+   "support"
+  ],
+  "binast/small.https.html": [
+   "aedfb37a31775d878fc64237656cdb956331fb86",
+   "testharness"
+  ],
+  "binast/small.js": [
+   "047cbda8fa0155dc777deecb7f98779e94d84b1a",
+   "support"
   ],
   "dom/classList.html": [
    "17c65652a2943738a0cc5152aec737f243a02d3d",

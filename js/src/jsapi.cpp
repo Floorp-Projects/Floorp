@@ -890,7 +890,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         // destination, then we know that we won't find a wrapper in the
         // destination's cross compartment map and that the same
         // object will continue to work.
-        AutoCompartmentUnchecked ac(cx, origobj->compartment());
+        AutoRealmUnchecked ar(cx, origobj->compartment());
         if (!JSObject::swap(cx, origobj, target))
             MOZ_CRASH();
         newIdentity = origobj;
@@ -905,7 +905,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
         destination->removeWrapper(p);
         NukeCrossCompartmentWrapper(cx, newIdentity);
 
-        AutoCompartment ac(cx, newIdentity);
+        AutoRealm ar(cx, newIdentity);
         if (!JSObject::swap(cx, newIdentity, target))
             MOZ_CRASH();
     } else {
@@ -924,7 +924,7 @@ JS_TransplantObject(JSContext* cx, HandleObject origobj, HandleObject target)
     // Lastly, update the original object to point to the new one.
     if (origobj->compartment() != destination) {
         RootedObject newIdentityWrapper(cx, newIdentity);
-        AutoCompartmentUnchecked ac(cx, origobj->compartment());
+        AutoRealmUnchecked ar(cx, origobj->compartment());
         if (!JS_WrapObject(cx, &newIdentityWrapper))
             MOZ_CRASH();
         MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
@@ -3675,7 +3675,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
     // Note that funobj can be in a different compartment.
 
     if (!funobj->is<JSFunction>()) {
-        AutoCompartment ac(cx, funobj);
+        AutoRealm ar(cx, funobj);
         RootedValue v(cx, ObjectValue(*funobj));
         ReportIsNotFunction(cx, v);
         return nullptr;
@@ -3683,7 +3683,7 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject env, Handle
 
     RootedFunction fun(cx, &funobj->as<JSFunction>());
     if (fun->isInterpretedLazy()) {
-        AutoCompartment ac(cx, funobj);
+        AutoRealm ar(cx, funobj);
         if (!JSFunction::getOrCreateScript(cx, fun))
             return nullptr;
     }
@@ -4267,7 +4267,7 @@ JS::FinishOffThreadBinASTDecode(JSContext* cx, JS::OffThreadToken* token)
 #endif /* JS_BUILD_BINAST */
 
 enum class OffThread {
-    Compile, Decode,
+    Compile, Decode, DecodeBinAST
 };
 
 static bool
@@ -4276,6 +4276,11 @@ CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t leng
     static const size_t TINY_LENGTH = 5 * 1000;
     static const size_t HUGE_SRC_LENGTH = 100 * 1000;
     static const size_t HUGE_BC_LENGTH = 367 * 1000;
+    static const size_t HUGE_BINAST_LENGTH = 70 * 1000;
+
+    // TODO: We can't decode BinAST off main thread until bug 1459555 is fixed.
+    if (what == OffThread::DecodeBinAST)
+        return false;
 
     // These are heuristics which the caller may choose to ignore (e.g., for
     // testing purposes).
@@ -4292,6 +4297,8 @@ CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t leng
             if (what == OffThread::Compile && length < HUGE_SRC_LENGTH)
                 return false;
             if (what == OffThread::Decode && length < HUGE_BC_LENGTH)
+                return false;
+            if (what == OffThread::DecodeBinAST && length < HUGE_BINAST_LENGTH)
                 return false;
         }
     }
@@ -4310,6 +4317,14 @@ JS::CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, siz
 {
     return CanDoOffThread(cx, options, length, OffThread::Decode);
 }
+
+#ifdef JS_BUILD_BINAST
+JS_PUBLIC_API(bool)
+JS::CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
+{
+    return CanDoOffThread(cx, options, length, OffThread::DecodeBinAST);
+}
+#endif
 
 JS_PUBLIC_API(bool)
 JS::CompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
@@ -4517,7 +4532,7 @@ JS_GetFunctionScript(JSContext* cx, HandleFunction fun)
     if (fun->isNative())
         return nullptr;
     if (fun->isInterpretedLazy()) {
-        AutoCompartment funCompartment(cx, fun);
+        AutoRealm ar(cx, fun);
         JSScript* script = JSFunction::getOrCreateScript(cx, fun);
         if (!script)
             MOZ_CRASH();
@@ -5237,7 +5252,7 @@ ResolveOrRejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleVal
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, promiseObj, resultOrReason_);
 
-    mozilla::Maybe<AutoCompartment> ac;
+    mozilla::Maybe<AutoRealm> ar;
     Rooted<PromiseObject*> promise(cx);
     RootedValue resultOrReason(cx, resultOrReason_);
     if (IsWrapper(promiseObj)) {
@@ -5247,7 +5262,7 @@ ResolveOrRejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleVal
             return false;
         }
         promise = &unwrappedPromiseObj->as<PromiseObject>();
-        ac.emplace(cx, promise);
+        ar.emplace(cx, promise);
         if (!cx->compartment()->wrap(cx, &resultOrReason))
             return false;
     } else {
@@ -5285,7 +5300,7 @@ CallOriginalPromiseThenImpl(JSContext* cx, JS::HandleObject promiseObj,
     MOZ_ASSERT_IF(onRejectedObj_, IsCallable(onRejectedObj_));
 
     {
-        mozilla::Maybe<AutoCompartment> ac;
+        mozilla::Maybe<AutoRealm> ar;
         Rooted<PromiseObject*> promise(cx);
         RootedObject onResolvedObj(cx, onResolvedObj_);
         RootedObject onRejectedObj(cx, onRejectedObj_);
@@ -5296,7 +5311,7 @@ CallOriginalPromiseThenImpl(JSContext* cx, JS::HandleObject promiseObj,
                 return false;
             }
             promise = &unwrappedPromiseObj->as<PromiseObject>();
-            ac.emplace(cx, promise);
+            ar.emplace(cx, promise);
             if (!cx->compartment()->wrap(cx, &onResolvedObj) ||
                 !cx->compartment()->wrap(cx, &onRejectedObj))
             {
