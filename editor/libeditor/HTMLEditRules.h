@@ -224,9 +224,19 @@ protected:
    */
   MOZ_MUST_USE nsresult SplitMailCites(bool* aHandled);
 
-  nsresult WillDeleteSelection(nsIEditor::EDirection aAction,
-                               nsIEditor::EStripWrappers aStripWrappers,
-                               bool* aCancel, bool* aHandled);
+  /**
+   * Called before deleting selected contents.  This method actually removes
+   * selected contents.
+   *
+   * @param aAction             Direction of the deletion.
+   * @param aStripWrappers      Must be eStrip or eNoStrip.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillDeleteSelection(nsIEditor::EDirection aAction,
+                      nsIEditor::EStripWrappers aStripWrappers,
+                      bool* aCancel, bool* aHandled);
 
   /**
    * Called after deleting selected content.
