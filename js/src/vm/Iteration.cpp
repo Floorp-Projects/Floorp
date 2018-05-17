@@ -14,6 +14,8 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Unused.h"
 
+#include <new>
+
 #include "jstypes.h"
 #include "jsutil.h"
 
@@ -46,7 +48,6 @@ using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
-using mozilla::PodZero;
 
 typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
 
@@ -534,7 +535,17 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
                     props);
 }
 
-static inline PropertyIteratorObject*
+static inline void
+RegisterEnumerator(JSContext* cx, NativeIterator* ni)
+{
+    /* Register non-escaping native enumerators (for-in) with the current context. */
+    ni->link(cx->compartment()->enumerators);
+
+    MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
+    ni->flags |= JSITER_ACTIVE;
+}
+
+static PropertyIteratorObject*
 NewPropertyIteratorObject(JSContext* cx)
 {
     RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &PropertyIteratorObject::class_,
@@ -563,129 +574,139 @@ NewPropertyIteratorObject(JSContext* cx)
     return res;
 }
 
-NativeIterator*
-NativeIterator::allocateIterator(JSContext* cx, uint32_t numGuards, uint32_t plength)
+static PropertyIteratorObject*
+CreatePropertyIterator(JSContext* cx, Handle<JSObject*> objBeingIterated,
+                       const AutoIdVector& props, uint32_t numGuards, uint32_t guardKey)
 {
+    Rooted<PropertyIteratorObject*> propIter(cx, NewPropertyIteratorObject(cx));
+    if (!propIter)
+        return nullptr;
+
     static_assert(sizeof(ReceiverGuard) == 2 * sizeof(GCPtrFlatString),
                   "NativeIterators are allocated in space for 1) themselves, "
                   "2) the properties a NativeIterator iterates (as "
-                  "GCPtrFlatStrings), and 3) |numGuards| ReceiverGuard "
+                  "GCPtrFlatStrings), and 3) |numGuards| HeapReceiverGuard "
                   "objects; the additional-length calculation below assumes "
                   "this size-relationship when determining the extra space to "
                   "allocate");
 
-    size_t extraLength = plength + numGuards * 2;
-    NativeIterator* ni =
-        cx->zone()->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraLength);
-    if (!ni) {
+    size_t extraCount = props.length() + numGuards * 2;
+    void* mem =
+        cx->zone()->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(extraCount);
+    if (!mem) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    // Zero out the NativeIterator first.
-    PodZero(ni);
+    // This also registers |ni| with |propIter|.
+    bool hadError = false;
+    NativeIterator* ni =
+        new (mem) NativeIterator(cx, propIter, objBeingIterated, props, numGuards, guardKey,
+                                 &hadError);
+    if (hadError)
+        return nullptr;
 
-    // Zero out the remaining space for GCPtrFlatStrings for properties and
-    // ReceiverGuards for guards.
-    GCPtrFlatString* extra = ni->begin();
-    PodZero(extra, extraLength);
+    RegisterEnumerator(cx, ni);
+    return propIter;
+}
 
-    ni->props_cursor = extra;
-    ni->props_end = extra + plength;
-    return ni;
+/**
+ * Initialize a sentinel NativeIterator whose purpose is only to act as the
+ * start/end of the circular linked list of NativeIterators in
+ * JSCompartment::enumerators.
+ */
+NativeIterator::NativeIterator()
+{
+    // Do our best to enforce that nothing in |this| except the two fields set
+    // below is ever observed.
+    JS_POISON(static_cast<void*>(this), 0xCC, sizeof(*this), MemCheckKind::MakeUndefined);
+
+    // These are the only two fields in sentinel NativeIterators that are
+    // examined, in JSCompartment::sweepNativeIterators.  Everything else is
+    // only examined *if* it's a NativeIterator being traced by a
+    // PropertyIteratorObject that owns it, and nothing owns this iterator.
+    prev_ = next_ = this;
 }
 
 NativeIterator*
 NativeIterator::allocateSentinel(JSContext* maybecx)
 {
-    NativeIterator* ni = js_pod_malloc<NativeIterator>();
+    NativeIterator* ni = js_new<NativeIterator>();
     if (!ni) {
         if (maybecx)
             ReportOutOfMemory(maybecx);
-        return nullptr;
     }
 
-    PodZero(ni);
-
-    ni->next_ = ni;
-    ni->prev_ = ni;
     return ni;
 }
 
-inline void
-NativeIterator::init(JSObject* obj, JSObject* iterObj, uint32_t numGuards, uint32_t key)
+/**
+ * Initialize a fresh NativeIterator.
+ *
+ * This definition is a bit tricky: some parts of initializing are fallible, so
+ * as we initialize, we must carefully keep this in GC-safe state (see
+ * NativeIterator::trace).
+ */
+NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
+                               Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
+                               uint32_t numGuards, uint32_t guardKey, bool* hadError)
+  : obj(objBeingIterated),
+    iterObj_(propIter),
+    // NativeIterator initially acts as if it contains no properties.
+    props_cursor(begin()),
+    props_end(props_cursor),
+    // ...and no HeapReceiverGuards.
+    guard_length(0),
+    guard_key(guardKey),
+    flags(0)
 {
-    this->obj.init(obj);
-    this->iterObj_ = iterObj;
-    this->flags = 0;
-    this->guard_length = numGuards;
-    this->guard_key = key;
-}
+    MOZ_ASSERT(!*hadError);
 
-bool
-NativeIterator::initProperties(JSContext* cx, Handle<PropertyIteratorObject*> obj,
-                               const AutoIdVector& props)
-{
-    // The obj parameter is just so that we can ensure that this object will get
-    // traced if we GC.
-    MOZ_ASSERT(this == obj->getNativeIterator());
+    // NOTE: This must be done first thing: PropertyIteratorObject::finalize
+    //       can only free |this| (and not leak it) if this has happened.
+    propIter->setNativeIterator(this);
 
-    size_t plength = props.length();
-    MOZ_ASSERT(plength == size_t(end() - begin()));
-
-    GCPtrFlatString* propNames = begin();
-    for (size_t i = 0; i < plength; i++) {
+    for (size_t i = 0, len = props.length(); i < len; i++) {
         JSFlatString* str = IdToString(cx, props[i]);
-        if (!str)
-            return false;
-        propNames[i].init(str);
+        if (!str) {
+            *hadError = true;
+            return;
+        }
+
+        // Placement-new the next property string at the end of the currently
+        // computed property strings.
+        GCPtrFlatString* loc = props_end;
+
+        // Increase the overall property string count before initializing the
+        // property string, so this construction isn't on a location not known
+        // to the GC yet.
+        props_end++;
+
+        new (loc) GCPtrFlatString(str);
     }
 
-    return true;
-}
-
-static inline void
-RegisterEnumerator(JSContext* cx, NativeIterator* ni)
-{
-    /* Register non-escaping native enumerators (for-in) with the current context. */
-    ni->link(cx->compartment()->enumerators);
-
-    MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
-    ni->flags |= JSITER_ACTIVE;
-}
-
-static inline PropertyIteratorObject*
-VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& keys, uint32_t numGuards)
-{
-    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
-        return nullptr;
-    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
-
-    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx));
-    if (!iterobj)
-        return nullptr;
-
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, numGuards, keys.length());
-    if (!ni)
-        return nullptr;
-
-    iterobj->setNativeIterator(ni);
-    ni->init(obj, iterobj, numGuards, 0);
-    if (!ni->initProperties(cx, iterobj, keys))
-        return nullptr;
-
-    if (numGuards) {
-        // Fill in the guard array from scratch. Also recompute the guard key
-        // as we might have reshaped the object (see for instance the
-        // setIteratedSingleton call above) or GC might have moved shapes and
-        // groups in memory.
-        JSObject* pobj = obj;
-        size_t ind = 0;
+    if (numGuards > 0) {
+        // Construct guards into the guard array.  Also recompute the guard key,
+        // which incorporates Shape* and ObjectGroup* addresses that could have
+        // changed during a GC triggered in (among other places) |IdToString|
+        //. above.
+        JSObject* pobj = objBeingIterated;
         uint32_t key = 0;
-        HeapReceiverGuard* guards = ni->guardArray();
+        HeapReceiverGuard* guards = guardArray();
         do {
             ReceiverGuard guard(pobj);
-            guards[ind++].init(guard);
+
+            // Placement-new the next HeapReceiverGuard at the end of the
+            // currently initialized HeapReceiverGuards.
+            uint32_t index = guard_length;
+
+            // Increase the overall guard-count before initializing the
+            // HeapReceiverGuard, so this construction isn't on a location not
+            // known to the GC.
+            guard_length++;
+
+            new (&guards[index]) HeapReceiverGuard(guard);
+
             key = mozilla::AddToHash(key, guard.hash());
 
             // The one caller of this method that passes |numGuards > 0|, does
@@ -693,12 +714,22 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& keys, uint32_
             // necessarily have static prototypes).
             pobj = pobj->staticPrototype();
         } while (pobj);
-        ni->guard_key = key;
-        MOZ_ASSERT(ind == numGuards);
+
+        guard_key = key;
+        MOZ_ASSERT(guard_length == numGuards);
     }
 
-    RegisterEnumerator(cx, ni);
-    return iterobj;
+    MOZ_ASSERT(!*hadError);
+}
+
+static inline PropertyIteratorObject*
+VectorToKeyIterator(JSContext* cx, HandleObject obj, AutoIdVector& props, uint32_t numGuards)
+{
+    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
+        return nullptr;
+    MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
+
+    return CreatePropertyIterator(cx, obj, props, numGuards, 0);
 }
 
 
@@ -712,22 +743,8 @@ js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, AutoIdVector& 
 JSObject*
 js::NewEmptyPropertyIterator(JSContext* cx)
 {
-    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx));
-    if (!iterobj)
-        return nullptr;
-
-    AutoIdVector keys(cx); // Empty
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, keys.length());
-    if (!ni)
-        return nullptr;
-
-    iterobj->setNativeIterator(ni);
-    ni->init(nullptr, iterobj, 0, 0);
-    if (!ni->initProperties(cx, iterobj, keys))
-        return nullptr;
-
-    RegisterEnumerator(cx, ni);
-    return iterobj;
+    AutoIdVector props(cx); // Empty
+    return CreatePropertyIterator(cx, nullptr, props, 0, 0);
 }
 
 /* static */ bool
