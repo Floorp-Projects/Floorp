@@ -3125,25 +3125,27 @@ HTMLEditRules::WillDeleteSelection(nsIEditor::EDirection aAction,
           // Now that we have the list, delete non-table elements
           int32_t listCount = arrayOfNodes.Length();
           for (int32_t j = 0; j < listCount; j++) {
-            nsCOMPtr<nsINode> somenode = do_QueryInterface(arrayOfNodes[0]);
-            if (NS_WARN_IF(!somenode)) {
-              return NS_ERROR_FAILURE;
+            OwningNonNull<nsINode> node = arrayOfNodes[0];
+            nsresult rv = DeleteElementsExceptTableRelatedElements(node);
+            if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+              return NS_ERROR_EDITOR_DESTROYED;
             }
-            DeleteNonTableElements(somenode);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+              "Failed to elements except table related elements");
             arrayOfNodes.RemoveElementAt(0);
             // If something visible is deleted, no need to join.  Visible means
             // all nodes except non-visible textnodes and breaks.
             if (join && origCollapsed) {
-              if (!somenode->IsContent()) {
+              if (!node->IsContent()) {
                 join = false;
                 continue;
               }
-              nsCOMPtr<nsIContent> content = somenode->AsContent();
+              nsIContent* content = node->AsContent();
               if (Text* text = content->GetAsText()) {
                 join = !HTMLEditorRef().IsInVisibleTextFrames(*text);
               } else {
                 join = content->IsHTMLElement(nsGkAtoms::br) &&
-                       !HTMLEditorRef().IsVisibleBRElement(somenode);
+                       !HTMLEditorRef().IsVisibleBRElement(node);
               }
             }
           }
@@ -3787,29 +3789,38 @@ HTMLEditRules::MoveContents(Element& aElement,
   return ret;
 }
 
-
 nsresult
-HTMLEditRules::DeleteNonTableElements(nsINode* aNode)
+HTMLEditRules::DeleteElementsExceptTableRelatedElements(nsINode& aNode)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aNode);
-  if (!HTMLEditUtils::IsTableElementButNotTable(aNode)) {
-    nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(*aNode);
+
+  if (!HTMLEditUtils::IsTableElementButNotTable(&aNode)) {
+    nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(aNode);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
     return NS_OK;
   }
 
-  AutoTArray<nsCOMPtr<nsIContent>, 10> childList;
-  for (nsIContent* child = aNode->GetFirstChild();
+  // XXX For performance, this should just call
+  //     DeleteElementsExceptTableRelatedElements() while there are children
+  //     in aNode.  If we need to avoid infinite loop because mutation event
+  //     listeners can add unexpected nodes into aNode, we should just loop
+  //     only original count of the children.
+  AutoTArray<OwningNonNull<nsIContent>, 10> childList;
+  for (nsIContent* child = aNode.GetFirstChild();
        child; child = child->GetNextSibling()) {
-    childList.AppendElement(child);
+    childList.AppendElement(*child);
   }
 
   for (const auto& child: childList) {
-    nsresult rv = DeleteNonTableElements(child);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = DeleteElementsExceptTableRelatedElements(child);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
