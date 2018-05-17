@@ -526,6 +526,12 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
   if (!content_type)
     return NS_ERROR_FAILURE;
 
+  // GIO returns "unknown" appinfo for the application/octet-stream, which is
+  // useless. It's better to fallback to create appinfo from file extension later.
+  if (g_content_type_is_unknown(content_type)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   GAppInfo *app_info = g_app_info_get_default_for_type(content_type, false);
   if (app_info) {
     nsGIOMimeApp *mozApp = new nsGIOMimeApp(app_info);
