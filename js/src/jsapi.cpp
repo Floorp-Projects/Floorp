@@ -1869,19 +1869,19 @@ JS::RealmCreationOptions::setNewZone()
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSCompartment* compartment)
 {
-    return compartment->creationOptions();
+    return JS::GetRealmForCompartment(compartment)->creationOptions();
 }
 
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSObject* obj)
 {
-    return obj->compartment()->creationOptions();
+    return obj->realm()->creationOptions();
 }
 
 const JS::RealmCreationOptions&
 JS::RealmCreationOptionsRef(JSContext* cx)
 {
-    return cx->compartment()->creationOptions();
+    return cx->realm()->creationOptions();
 }
 
 bool
@@ -1906,19 +1906,19 @@ JS::RealmCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSCompartment* compartment)
 {
-    return compartment->behaviors();
+    return JS::GetRealmForCompartment(compartment)->behaviors();
 }
 
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSObject* obj)
 {
-    return obj->compartment()->behaviors();
+    return obj->realm()->behaviors();
 }
 
 JS::RealmBehaviors&
 JS::RealmBehaviorsRef(JSContext* cx)
 {
-    return cx->compartment()->behaviors();
+    return cx->realm()->behaviors();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -1955,7 +1955,7 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
     // we know the global is live.
     global->compartment()->traceGlobal(trc);
 
-    if (JSTraceOp trace = global->compartment()->creationOptions().getTrace())
+    if (JSTraceOp trace = global->realm()->creationOptions().getTrace())
         trace(trc, global);
 }
 
@@ -4064,7 +4064,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
       introductionScriptRoot(cx)
 {
     strictOption = cx->options().strictMode();
-    extraWarningsOption = cx->compartment()->behaviors().extraWarnings(cx);
+    extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
     isProbablySystemCode = cx->compartment()->isProbablySystemCode();
     werrorOption = cx->options().werror();
     if (!cx->options().asmJS())

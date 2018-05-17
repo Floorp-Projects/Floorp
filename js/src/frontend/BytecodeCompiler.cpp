@@ -193,7 +193,7 @@ BytecodeCompiler::createScriptSource(const Maybe<uint32_t>& parameterListEnd)
 
     scriptSource = sourceObject->source();
 
-    if (!cx->compartment()->behaviors().discardSource()) {
+    if (!cx->realm()->behaviors().discardSource()) {
         if (options.sourceIsLazy) {
             scriptSource->setSourceRetrievable();
         } else if (!scriptSource->setSourceCopy(cx, sourceBuffer)) {
@@ -208,8 +208,8 @@ bool
 BytecodeCompiler::canLazilyParse()
 {
     return options.canLazilyParse &&
-           !cx->compartment()->behaviors().disableLazyParsing() &&
-           !cx->compartment()->behaviors().discardSource() &&
+           !cx->realm()->behaviors().disableLazyParsing() &&
+           !cx->realm()->behaviors().discardSource() &&
            !options.sourceIsLazy &&
            !cx->lcovEnabled();
 }

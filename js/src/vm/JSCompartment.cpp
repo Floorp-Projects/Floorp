@@ -41,10 +41,8 @@ using namespace js::jit;
 
 using mozilla::PodArrayZero;
 
-JSCompartment::JSCompartment(Zone* zone, const JS::RealmOptions& options = JS::RealmOptions())
-  : creationOptions_(options.creationOptions()),
-    behaviors_(options.behaviors()),
-    zone_(zone),
+JSCompartment::JSCompartment(Zone* zone)
+  : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
     principals_(nullptr),
     isSystem_(false),
@@ -92,6 +90,13 @@ JSCompartment::JSCompartment(Zone* zone, const JS::RealmOptions& options = JS::R
     lcovOutput()
 {
     runtime_->numCompartments++;
+}
+
+JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
+  : JSCompartment(zone),
+    creationOptions_(options.creationOptions()),
+    behaviors_(options.behaviors())
+{
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
 }

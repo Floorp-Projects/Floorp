@@ -370,7 +370,7 @@ checkReportFlags(JSContext* cx, unsigned* flags)
 {
     if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
-        if (!cx->compartment()->behaviors().extraWarnings(cx))
+        if (!cx->realm()->behaviors().extraWarnings(cx))
             return true;
     }
 

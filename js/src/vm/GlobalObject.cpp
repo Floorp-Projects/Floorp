@@ -112,7 +112,7 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
       // Return true if the given constructor has been disabled at run-time.
       case JSProto_Atomics:
       case JSProto_SharedArrayBuffer:
-        return !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+        return !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
       default:
         return false;
     }
