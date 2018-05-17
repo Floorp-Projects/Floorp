@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef JS_GC_TRACE
-
 #include "gc/GCTrace.h"
 
 #include <stdio.h>
@@ -23,6 +21,8 @@ namespace js {
 namespace gc {
 
 GCTrace gcTracer;
+
+#ifdef JS_GC_TRACE
 
 JS_STATIC_ASSERT(NumAllocKinds == unsigned(AllocKind::LIMIT));
 JS_STATIC_ASSERT(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
@@ -254,7 +254,7 @@ GCTrace::traceMajorGCEnd()
     TraceEvent(gcTraceFile, TraceEventMajorGCEnd);
 }
 
+#endif
+
 } // js
 } // gc
-
-#endif
