@@ -321,11 +321,15 @@ protected:
                                 int32_t* aInOutDestOffset);
 
   nsresult DeleteNonTableElements(nsINode* aNode);
-  nsresult WillMakeList(const nsAString* aListType,
-                        bool aEntireList,
-                        const nsAString* aBulletType,
-                        bool* aCancel, bool* aHandled,
-                        const nsAString* aItemType = nullptr);
+
+  /**
+   * XXX Should document what this does.
+   */
+  MOZ_MUST_USE nsresult
+  WillMakeList(const nsAString* aListType, bool aEntireList,
+               const nsAString* aBulletType,
+               bool* aCancel, bool* aHandled,
+               const nsAString* aItemType = nullptr);
 
   /**
    * Called before removing a list element.  This method actually removes
@@ -704,6 +708,16 @@ protected:
   OutdentPartOfBlock(Element& aBlockElement,
                      nsIContent& aStartOfOutdent, nsIContent& aEndOutdent,
                      bool aIsBlockIndentedWithCSS);
+
+  /**
+   * XXX Should document what this does.
+   * This method creates AutoSelectionRestorer.  Therefore, each caller
+   * need to check if the editor is still available even if this returns
+   * NS_OK.
+   */
+  MOZ_MUST_USE nsresult
+  MakeList(nsAtom& aListType, bool aEntireList, const nsAString* aBulletType,
+           bool* aCancel, nsAtom& aItemType);
 
   /**
    * ConvertListType() replaces child list items of aListElement with
