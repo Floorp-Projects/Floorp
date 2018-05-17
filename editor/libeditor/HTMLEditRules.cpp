@@ -3713,6 +3713,11 @@ HTMLEditRules::MoveBlock(Element& aLeftBlock,
       // Otherwise move the content as is, checking against the DTD.
       ret |=
         MoveNodeSmart(*arrayOfNodes[i]->AsContent(), aLeftBlock, &aLeftOffset);
+      if (NS_WARN_IF(ret.Rv() == NS_ERROR_EDITOR_DESTROYED)) {
+        return ret;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+        "Failed to move current node to the left block");
     }
   }
 
@@ -3738,6 +3743,9 @@ HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
     if (*aInOutDestOffset == -1) {
       nsresult rv =
         HTMLEditorRef().MoveNodeToEndWithTransaction(aNode, aDestElement);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
@@ -3745,6 +3753,9 @@ HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
       EditorRawDOMPoint pointToInsert(&aDestElement, *aInOutDestOffset);
       nsresult rv =
         HTMLEditorRef().MoveNodeWithTransaction(aNode, pointToInsert);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return EditActionIgnored(rv);
       }
@@ -3766,6 +3777,9 @@ HTMLEditRules::MoveNodeSmart(nsIContent& aNode,
   }
 
   nsresult rv = HTMLEditorRef().DeleteNodeWithTransaction(aNode);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return ret.SetResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return ret.SetResult(rv);
   }
