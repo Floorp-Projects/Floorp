@@ -2295,7 +2295,7 @@ inline bool
 MarkStack::ensureSpace(size_t count)
 {
     if ((tos_ + count) <= end_)
-        return true;
+        return !js::oom::ShouldFailWithOOM();
 
     return enlarge(count);
 }
