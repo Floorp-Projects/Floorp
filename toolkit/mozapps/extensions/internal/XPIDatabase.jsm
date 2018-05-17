@@ -47,7 +47,6 @@ const {nsIBlocklistService} = Ci;
  *         SIGNED_TYPES,
  *         XPIProvider,
  *         XPIStates,
- *         descriptorToPath,
  *         isTheme,
  *         isWebExtension,
  *         recordAddonTelemetry,
@@ -59,7 +58,6 @@ for (let sym of [
   "SIGNED_TYPES",
   "XPIProvider",
   "XPIStates",
-  "descriptorToPath",
   "isTheme",
   "isWebExtension",
   "recordAddonTelemetry",
@@ -264,10 +262,6 @@ class AddonInternal {
     this.hasEmbeddedWebExtension = false;
 
     if (addonData) {
-      if (addonData.descriptor && !addonData.path) {
-        addonData.path = descriptorToPath(addonData.descriptor);
-      }
-
       copyProperties(addonData, PROP_JSON_FIELDS, this);
       this.location = addonData.location;
 
@@ -1429,9 +1423,6 @@ this.XPIDatabase = {
       let addonDB = new Map();
       await forEach(inputAddons.addons, loadedAddon => {
         try {
-          if (!loadedAddon.path) {
-            loadedAddon.path = descriptorToPath(loadedAddon.descriptor);
-          }
           loadedAddon._sourceBundle = new nsIFile(loadedAddon.path);
         } catch (e) {
           // We can fail here when the path is invalid, usually from the
