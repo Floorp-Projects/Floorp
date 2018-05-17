@@ -41,6 +41,7 @@
 #include "gfxGDIFont.h"
 
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/PaintThread.h"
 #include "mozilla/layers/ReadbackManagerD3D11.h"
 
 #include "gfxDWriteFontList.h"
@@ -492,6 +493,10 @@ gfxWindowsPlatform::UpdateRenderMode()
   bool didReset = HandleDeviceReset();
 
   UpdateBackendPrefs();
+
+  if (PaintThread::Get()) {
+    PaintThread::Get()->UpdateRenderMode();
+  }
 
   if (didReset) {
     mScreenReferenceDrawTarget =

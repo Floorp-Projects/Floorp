@@ -293,7 +293,7 @@ XULTreeGridRowAccessible::NativeRole() const
 }
 
 ENameValueFlag
-XULTreeGridRowAccessible::Name(nsString& aName)
+XULTreeGridRowAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -476,7 +476,7 @@ XULTreeGridCellAccessible::FocusedChild()
 }
 
 ENameValueFlag
-XULTreeGridCellAccessible::Name(nsString& aName)
+XULTreeGridCellAccessible::Name(nsString& aName) const
 {
   aName.Truncate();
 
@@ -535,7 +535,7 @@ XULTreeGridCellAccessible::BoundsInAppUnits() const
 }
 
 uint8_t
-XULTreeGridCellAccessible::ActionCount()
+XULTreeGridCellAccessible::ActionCount() const
 {
   bool isCycler = false;
   mColumn->GetCycler(&isCycler);
@@ -578,7 +578,7 @@ XULTreeGridCellAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 }
 
 bool
-XULTreeGridCellAccessible::DoAction(uint8_t aIndex)
+XULTreeGridCellAccessible::DoAction(uint8_t aIndex) const
 {
   if (aIndex != eAction_Click)
     return false;
@@ -688,7 +688,7 @@ XULTreeGridCellAccessible::NativeRole() const
 }
 
 uint64_t
-XULTreeGridCellAccessible::NativeState()
+XULTreeGridCellAccessible::NativeState() const
 {
   if (!mTreeView)
     return states::DEFUNCT;
@@ -732,7 +732,7 @@ XULTreeGridCellAccessible::IndexInParent() const
 }
 
 Relation
-XULTreeGridCellAccessible::RelationByType(RelationType aType)
+XULTreeGridCellAccessible::RelationByType(RelationType aType) const
 {
   return Relation();
 }

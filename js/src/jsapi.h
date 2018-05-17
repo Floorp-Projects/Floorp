@@ -4243,6 +4243,9 @@ DecodeBinAST(JSContext* cx, const ReadOnlyCompileOptions& options,
              const uint8_t* buf, size_t length);
 
 extern JS_PUBLIC_API(bool)
+CanDecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
+
+extern JS_PUBLIC_API(bool)
 DecodeBinASTOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
                       const uint8_t* buf, size_t length,
                       OffThreadCompileCallback callback, void* callbackData);

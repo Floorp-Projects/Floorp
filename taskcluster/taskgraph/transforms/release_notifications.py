@@ -33,6 +33,7 @@ def add_notifications(config, jobs):
             )
             subject = notifications['subject'].format(**format_kwargs)
             message = notifications['message'].format(**format_kwargs)
+            emails = [email.format(**format_kwargs) for email in emails]
             # Don't need this any more
             del job['notifications']
 

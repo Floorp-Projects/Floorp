@@ -33,13 +33,13 @@ XULAlertAccessible::NativeRole() const
 }
 
 uint64_t
-XULAlertAccessible::NativeState()
+XULAlertAccessible::NativeState() const
 {
   return Accessible::NativeState() | states::ALERT;
 }
 
 ENameValueFlag
-XULAlertAccessible::Name(nsString& aName)
+XULAlertAccessible::Name(nsString& aName) const
 {
   // Screen readers need to read contents of alert, not the accessible name.
   // If we have both some screen readers will read the alert twice.

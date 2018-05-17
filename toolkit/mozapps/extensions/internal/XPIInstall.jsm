@@ -74,7 +74,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 const hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
-const PREF_ALLOW_NON_RESTARTLESS      = "extensions.legacy.non-restartless.enabled";
 const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
@@ -184,13 +183,6 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
   dictionary: true,
   "webextension-dictionary": true,
 };
-
-const RESTARTLESS_TYPES = new Set([
-  "dictionary",
-  "webextension",
-  "webextension-dictionary",
-  "webextension-theme",
-]);
 
 // This is a random number array that can be used as "salt" when generating
 // an automatic ID based on the directory path of an add-on. It will prevent
@@ -464,7 +456,6 @@ async function loadManifestFromWebManifest(aUri) {
   addon.type = extension.type === "extension" ?
                "webextension" : `webextension-${extension.type}`;
   addon.strictCompatibility = true;
-  addon.bootstrap = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
   addon.optionsBrowserStyle = true;
@@ -649,9 +640,9 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
 
   // Only read these properties for extensions.
   if (addon.type == "extension") {
-    addon.bootstrap = manifest.bootstrap == "true";
-    if (!addon.bootstrap && !Services.prefs.getBoolPref(PREF_ALLOW_NON_RESTARTLESS, false))
-        throw new Error(`Non-restartless extensions no longer supported`);
+    if (manifest.bootstrap != "true") {
+      throw new Error("Non-restartless extensions no longer supported");
+    }
 
     addon.hasEmbeddedWebExtension = manifest.hasEmbeddedWebExtension == "true";
 
@@ -674,10 +665,6 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
       }
     }
   } else {
-    // Some add-on types are always restartless.
-    if (RESTARTLESS_TYPES.has(addon.type)) {
-      addon.bootstrap = true;
-    }
     // Convert legacy dictionaries into a format the WebExtension
     // dictionary loader can process.
     if (addon.type === "dictionary") {
@@ -1792,22 +1779,20 @@ class AddonInstall {
 
         callUpdate = isWebExtension(this.addon.type) && isWebExtension(this.existingAddon.type);
 
-        if (this.existingAddon.bootstrap) {
-          let file = this.existingAddon._sourceBundle;
-          if (this.existingAddon.active) {
-            XPIProvider.callBootstrapMethod(this.existingAddon, file,
-                                            "shutdown", reason,
-                                            { newVersion: this.addon.version });
-          }
-
-          if (!callUpdate) {
-            XPIProvider.callBootstrapMethod(this.existingAddon, file,
-                                            "uninstall", reason,
-                                            { newVersion: this.addon.version });
-          }
-          XPIProvider.unloadBootstrapScope(this.existingAddon.id);
-          flushChromeCaches();
+        let file = this.existingAddon._sourceBundle;
+        if (this.existingAddon.active) {
+          XPIProvider.callBootstrapMethod(this.existingAddon, file,
+                                          "shutdown", reason,
+                                          { newVersion: this.addon.version });
         }
+
+        if (!callUpdate) {
+          XPIProvider.callBootstrapMethod(this.existingAddon, file,
+                                          "uninstall", reason,
+                                          { newVersion: this.addon.version });
+        }
+        XPIProvider.unloadBootstrapScope(this.existingAddon.id);
+        flushChromeCaches();
 
         if (!isUpgrade && this.existingAddon.active) {
           XPIDatabase.updateAddonActive(this.existingAddon, false);
@@ -1849,11 +1834,9 @@ class AddonInstall {
         extraParams.oldVersion = this.existingAddon.version;
       }
 
-      if (this.addon.bootstrap) {
-        let method = callUpdate ? "update" : "install";
-        XPIProvider.callBootstrapMethod(this.addon, file, method,
-                                        reason, extraParams);
-      }
+      let method = callUpdate ? "update" : "install";
+      XPIProvider.callBootstrapMethod(this.addon, file, method,
+                                      reason, extraParams);
 
       AddonManagerPrivate.callAddonListeners("onInstalled",
                                              this.addon.wrapper);
@@ -1862,15 +1845,13 @@ class AddonInstall {
       this.state = AddonManager.STATE_INSTALLED;
       this._callInstallListeners("onInstallEnded", this.addon.wrapper);
 
-      if (this.addon.bootstrap) {
-        if (this.addon.active) {
-          XPIProvider.callBootstrapMethod(this.addon, file, "startup",
-                                          reason, extraParams);
-        } else {
-          // XXX this makes it dangerous to do some things in onInstallEnded
-          // listeners because important cleanup hasn't been done yet
-          XPIProvider.unloadBootstrapScope(this.addon.id);
-        }
+      if (this.addon.active) {
+        XPIProvider.callBootstrapMethod(this.addon, file, "startup",
+                                        reason, extraParams);
+      } else {
+        // XXX this makes it dangerous to do some things in onInstallEnded
+        // listeners because important cleanup hasn't been done yet
+        XPIProvider.unloadBootstrapScope(this.addon.id);
       }
       XPIDatabase.recordAddonTelemetry(this.addon);
 
@@ -3903,9 +3884,6 @@ var XPIInstall = {
       throw new Error(message);
     }
 
-    if (!addon.bootstrap) {
-      throw new Error(`Only restartless (bootstrap) add-ons can be installed from sources: ${addon.id}`);
-    }
     let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
     let oldAddon = await XPIDatabase.getVisibleAddonForID(addon.id);
     let callUpdate = false;
@@ -3913,45 +3891,39 @@ var XPIInstall = {
     let extraParams = {};
     extraParams.temporarilyInstalled = true;
     if (oldAddon) {
-      if (!oldAddon.bootstrap) {
-        logger.warn("Non-restartless Add-on is already installed", addon.id);
-        throw new Error("Non-restartless add-on with ID "
-                        + oldAddon.id + " is already installed");
-      } else {
-        logger.warn("Addon with ID " + oldAddon.id + " already installed,"
-                    + " older version will be disabled");
+      logger.warn("Addon with ID " + oldAddon.id + " already installed,"
+                  + " older version will be disabled");
 
-        addon.installDate = oldAddon.installDate;
+      addon.installDate = oldAddon.installDate;
 
-        let existingAddonID = oldAddon.id;
-        let existingAddon = oldAddon._sourceBundle;
+      let existingAddonID = oldAddon.id;
+      let existingAddon = oldAddon._sourceBundle;
 
-        // We'll be replacing a currently active bootstrapped add-on so
-        // call its uninstall method
-        let newVersion = addon.version;
-        let oldVersion = oldAddon.version;
+      // We'll be replacing a currently active bootstrapped add-on so
+      // call its uninstall method
+      let newVersion = addon.version;
+      let oldVersion = oldAddon.version;
 
-        installReason = newVersionReason(oldVersion, newVersion);
-        let uninstallReason = installReason;
+      installReason = newVersionReason(oldVersion, newVersion);
+      let uninstallReason = installReason;
 
-        extraParams.newVersion = newVersion;
-        extraParams.oldVersion = oldVersion;
+      extraParams.newVersion = newVersion;
+      extraParams.oldVersion = oldVersion;
 
-        callUpdate = isWebExtension(oldAddon.type) && isWebExtension(addon.type);
+      callUpdate = isWebExtension(oldAddon.type) && isWebExtension(addon.type);
 
-        if (oldAddon.active) {
-          XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
-                                          "shutdown", uninstallReason,
-                                          extraParams);
-        }
-
-        if (!callUpdate) {
-          XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
-                                          "uninstall", uninstallReason, extraParams);
-        }
-        XPIProvider.unloadBootstrapScope(existingAddonID);
-        flushChromeCaches();
+      if (oldAddon.active) {
+        XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
+                                        "shutdown", uninstallReason,
+                                        extraParams);
       }
+
+      if (!callUpdate) {
+        XPIProvider.callBootstrapMethod(oldAddon, existingAddon,
+                                        "uninstall", uninstallReason, extraParams);
+      }
+      XPIProvider.unloadBootstrapScope(existingAddonID);
+      flushChromeCaches();
     } else {
       addon.installDate = Date.now();
     }
@@ -4069,20 +4041,19 @@ var XPIInstall = {
     }
 
     if (!aForcePending) {
-      if (aAddon.bootstrap) {
-        if (aAddon.active) {
-          XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
-                                          reason);
-        }
-
-        if (!callUpdate) {
-          XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
-                                          reason);
-        }
-        XPIStates.disableAddon(aAddon.id);
-        XPIProvider.unloadBootstrapScope(aAddon.id);
-        flushChromeCaches();
+      if (aAddon.active) {
+        XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown",
+                                        reason);
       }
+
+      if (!callUpdate) {
+        XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "uninstall",
+                                        reason);
+      }
+      XPIStates.disableAddon(aAddon.id);
+      XPIProvider.unloadBootstrapScope(aAddon.id);
+      flushChromeCaches();
+
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
       XPIStates.removeAddon(aAddon.location, aAddon.id);
@@ -4099,22 +4070,20 @@ var XPIInstall = {
           XPIDatabase.updateAddonActive(existing, true);
         }
 
-        if (aAddon.bootstrap) {
-          let method = callUpdate ? "update" : "install";
-          XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
-                                          method, reason);
+        let method = callUpdate ? "update" : "install";
+        XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
+                                        method, reason);
 
-          if (existing.active) {
-            XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
-                                            "startup", reason);
-          } else {
-            XPIProvider.unloadBootstrapScope(existing.id);
-          }
+        if (existing.active) {
+          XPIProvider.callBootstrapMethod(existing, existing._sourceBundle,
+                                          "startup", reason);
+        } else {
+          XPIProvider.unloadBootstrapScope(existing.id);
         }
 
         AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
       }
-    } else if (aAddon.bootstrap && aAddon.active) {
+    } else if (aAddon.active) {
       XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "shutdown", reason);
       XPIStates.disableAddon(aAddon.id);
       XPIProvider.unloadBootstrapScope(aAddon.id);
@@ -4157,7 +4126,7 @@ var XPIInstall = {
     let wrapper = aAddon.wrapper;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", wrapper);
 
-    if (aAddon.bootstrap && !aAddon.disabled) {
+    if (!aAddon.disabled) {
       XPIProvider.callBootstrapMethod(aAddon, aAddon._sourceBundle, "startup",
                                       BOOTSTRAP_REASONS.ADDON_INSTALL);
       XPIDatabase.updateAddonActive(aAddon, true);

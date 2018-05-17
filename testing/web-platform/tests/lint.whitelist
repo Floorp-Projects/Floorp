@@ -300,8 +300,6 @@ SET TIMEOUT: acid/acid3/test.html
 # Travis
 WEB-PLATFORM.TEST: .travis.yml
 
-# Config
-WEB-PLATFORM.TEST: config.default.json
 
 # Third party code
 *: css/tools/apiclient/*
@@ -773,6 +771,7 @@ MISSING-LINK: css/filter-effects/*.any.js
 
 # Tests that use WebKit/Blink testing APIs
 LAYOUTTESTS APIS: css/css-regions/interactivity/*
+LAYOUTTESTS APIS: resources/chromium/generic_sensor_mocks.js
 
 # Existing use of WEB-PLATFORM.TEST
 WEB-PLATFORM.TEST: clear-site-data/support/test_utils.sub.js

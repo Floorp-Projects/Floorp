@@ -23,13 +23,13 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
-  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeState() const override;
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() override;
+  virtual uint8_t ActionCount() const override;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t aIndex) override;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   // ImageAccessible
   nsIntPoint Position(uint32_t aCoordType);
@@ -39,7 +39,7 @@ protected:
   virtual ~ImageAccessible();
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 
 private:
   /**
@@ -67,7 +67,7 @@ private:
    *
    * @returns  true if index is valid for longdesc action.
    */
-  inline bool IsLongDescIndex(uint8_t aIndex);
+  inline bool IsLongDescIndex(uint8_t aIndex) const;
 
 };
 

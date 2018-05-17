@@ -78,7 +78,7 @@ toplevel_event_watcher(GSignalInvocationHint* ihint,
 }
 
 ENameValueFlag
-ApplicationAccessibleWrap::Name(nsString& aName)
+ApplicationAccessibleWrap::Name(nsString& aName) const
 {
   // ATK doesn't provide a way to obtain an application name (for example,
   // Firefox or Thunderbird) like IA2 does. Thus let's return an application
