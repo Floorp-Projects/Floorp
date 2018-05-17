@@ -3136,13 +3136,26 @@ CharSplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, HandleObj
     RootedArrayObject splits(cx, NewFullyAllocatedStringArray(cx, group, resultlen));
     if (!splits)
         return nullptr;
-    splits->ensureDenseInitializedLength(cx, 0, resultlen);
 
-    for (size_t i = 0; i < resultlen; ++i) {
-        JSString* sub = staticStrings.getUnitStringForElement(cx, str, i);
-        if (!sub)
-            return nullptr;
-        splits->initDenseElement(i, StringValue(sub));
+    if (str->hasLatin1Chars()) {
+        splits->setDenseInitializedLength(resultlen);
+
+        JS::AutoCheckCannotGC nogc;
+        const Latin1Char* latin1Chars = str->latin1Chars(nogc);
+        for (size_t i = 0; i < resultlen; ++i) {
+            Latin1Char c = latin1Chars[i];
+            MOZ_ASSERT(staticStrings.hasUnit(c));
+            splits->initDenseElement(i, StringValue(staticStrings.getUnit(c)));
+        }
+    } else {
+        splits->ensureDenseInitializedLength(cx, 0, resultlen);
+
+        for (size_t i = 0; i < resultlen; ++i) {
+            JSString* sub = staticStrings.getUnitStringForElement(cx, str, i);
+            if (!sub)
+                return nullptr;
+            splits->initDenseElement(i, StringValue(sub));
+        }
     }
 
     return splits;
