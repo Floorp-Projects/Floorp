@@ -1,20 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 Cu.importGlobalProperties(["fetch"]);
+const {ASRouterActions: ra} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
 
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
-// This is a temporary endpoint until we have something for snippets
-const SNIPPETS_ENDPOINT = "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br";
-
+const SNIPPETS_ENDPOINT_PREF = "browser.newtabpage.activity-stream.asrouter.snippetsUrl";
+// Note: currently a restart is required when this pref is changed, this will be fixed in Bug 1462114
+const SNIPPETS_ENDPOINT = Services.prefs.getStringPref(SNIPPETS_ENDPOINT_PREF,
+  "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br");
 const LOCAL_TEST_MESSAGES = [
   {
-    id: "LOCAL_TEST_THEMES",
-    template: "simple_snippet",
+    id: "ONBOARDING_1",
+    template: "onboarding",
+    bundled: 3,
     content: {
-      text: "Your browser is ready for a makeover. Don't worry, you've got tons of options.",
-      button_label: "Check them out here",
-      button_url: "https://addons.mozilla.org/en-US/firefox/themes"
+      title: "Private Browsing",
+      text: "Browse by yourself. Private Browsing with Tracking Protection blocks online trackers that follow you around the web.",
+      icon: "privatebrowsing",
+      button_label: "Try It Now",
+      button_action: "OPEN_PRIVATE_BROWSER_WINDOW",
+      button_action_params: "about:home"
+    }
+  },
+  {
+    id: "ONBOARDING_2",
+    template: "onboarding",
+    bundled: 3,
+    content: {
+      title: "Screenshots",
+      text: "Take, save and share screenshots - without leaving Firefox. Capture a region or an entire page as you browse. Then save to the web for easy access and sharing.",
+      icon: "screenshots",
+      button_label: "Try It Now",
+      button_action: "OPEN_URL",
+      button_action_params: "https://screenshots.firefox.com/#tour"
+    }
+  },
+  {
+    id: "ONBOARDING_3",
+    template: "onboarding",
+    bundled: 3,
+    content: {
+      title: "Add-ons",
+      text: "Add even more features that make Firefox work harder for you. Compare prices, check the weather or express your personality with a custom theme.",
+      icon: "addons",
+      button_label: "Try It Now",
+      button_action: "OPEN_ABOUT_PAGE",
+      button_action_params: "addons"
     }
   }
 ];
@@ -231,15 +268,39 @@ class _ASRouter {
     this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "ADMIN_SET_STATE", data: state});
   }
 
-  async sendNextMessage(target, id) {
+  _getBundledMessages(originalMessage) {
+    let bundledMessages = [];
+    bundledMessages.push({content: originalMessage.content, id: originalMessage.id});
+    for (const msg of this.state.messages) {
+      if (msg.bundled && msg.template === originalMessage.template && msg.id !== originalMessage.id && !this.state.blockList.includes(msg.id)) {
+        // only copy the content - that's what the UI cares about
+        bundledMessages.push({content: msg.content, id: msg.id});
+      }
+      if (bundledMessages.length === originalMessage.bundled) {
+        break;
+      }
+    }
+    return {bundle: bundledMessages, provider: originalMessage.provider, template: originalMessage.template};
+  }
+
+  async sendNextMessage(target) {
     let message;
+    let bundledMessages;
 
     await this.setState(state => {
       message = getRandomItemFromArray(state.messages.filter(item => item.id !== state.currentId && !state.blockList.includes(item.id)));
       return {currentId: message ? message.id : null};
     });
-    if (message) {
+    // If this message needs to be bundled with other messages of the same template, find them and bundle them together
+    if (message && message.bundled) {
+      bundledMessages = this._getBundledMessages(message);
+    }
+    if (message && !bundledMessages) {
+      // If we only need to send 1 message, send the message
       target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: message});
+    } else if (bundledMessages) {
+      // If the message we want is bundled with other messages, send the entire bundle
+      target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: bundledMessages});
     } else {
       target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
     }
@@ -249,7 +310,13 @@ class _ASRouter {
     await this.setState({currentId: id});
     const newMessage = this.getMessageById(id);
     if (newMessage) {
-      this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: newMessage});
+      // If this message needs to be bundled with other messages of the same template, find them and bundle them together
+      if (newMessage.bundled) {
+        let bundledMessages = this._getBundledMessages(newMessage);
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: bundledMessages});
+      } else {
+        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "SET_MESSAGE", data: newMessage});
+      }
     }
   }
 
@@ -258,6 +325,19 @@ class _ASRouter {
       await this.setState({currentId: null});
     }
     target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
+  }
+
+  openLinkIn(url, target, {isPrivate = false, trusted = false, where = ""}) {
+    const win = target.browser.ownerGlobal;
+    const params = {
+      private: isPrivate,
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})
+    };
+    if (trusted) {
+      win.openTrustedLinkIn(url, where);
+    } else {
+      win.openLinkIn(url, where, params);
+    }
   }
 
   async onMessage({data: action, target}) {
@@ -270,6 +350,15 @@ class _ASRouter {
         await this.loadMessagesFromAllProviders();
         await this.sendNextMessage(target);
         break;
+      case ra.OPEN_PRIVATE_BROWSER_WINDOW:
+        this.openLinkIn(action.data.button_action_params, target, {isPrivate: true, where: "window"});
+        break;
+      case ra.OPEN_URL:
+        this.openLinkIn(action.data.button_action_params, target, {isPrivate: false, where: "tabshifted"});
+        break;
+      case ra.OPEN_ABOUT_PAGE:
+        this.openLinkIn(`about:${action.data.button_action_params}`, target, {isPrivate: false, trusted: true, where: "tab"});
+        break;
       case "BLOCK_MESSAGE_BY_ID":
         await this.setState(state => {
           const blockList = [...state.blockList];
@@ -280,10 +369,33 @@ class _ASRouter {
         });
         await this.clearMessage(target, action.data.id);
         break;
+      case "BLOCK_BUNDLE":
+        await this.setState(state => {
+          const blockList = [...state.blockList];
+          for (let message of action.data.bundle) {
+            blockList.push(message.id);
+          }
+          this._storage.set("blockList", blockList);
+
+          return {blockList};
+        });
+        await this.setState({currentId: null});
+        target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
+        break;
       case "UNBLOCK_MESSAGE_BY_ID":
         await this.setState(state => {
           const blockList = [...state.blockList];
           blockList.splice(blockList.indexOf(action.data.id), 1);
+          this._storage.set("blockList", blockList);
+          return {blockList};
+        });
+        break;
+      case "UNBLOCK_BUNDLE":
+        await this.setState(state => {
+          const blockList = [...state.blockList];
+          for (let message of action.data.bundle) {
+            blockList.splice(blockList.indexOf(message.id), 1);
+          }
           this._storage.set("blockList", blockList);
           return {blockList};
         });
