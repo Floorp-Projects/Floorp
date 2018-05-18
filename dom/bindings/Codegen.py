@@ -1579,7 +1579,7 @@ class CGAbstractMethod(CGThing):
     def _auto_profiler_label(self):
         profiler_label_and_jscontext = self.profiler_label_and_jscontext()
         if profiler_label_and_jscontext:
-            return 'AUTO_PROFILER_LABEL_FAST("%s", OTHER, %s);' % profiler_label_and_jscontext
+            return 'AUTO_PROFILER_LABEL_FAST("%s", DOM, %s);' % profiler_label_and_jscontext
         return None
 
     def declare(self):
