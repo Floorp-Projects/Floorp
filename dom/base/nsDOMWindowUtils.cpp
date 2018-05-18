@@ -1239,7 +1239,7 @@ nsDOMWindowUtils::GetWidgetForElement(Element* aElement)
 NS_IMETHODIMP
 nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener)
 {
-  AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GC);
+  AUTO_PROFILER_LABEL("nsDOMWindowUtils::GarbageCollect", GCCC);
 
   nsJSContext::GarbageCollectNow(JS::gcreason::DOM_UTILS);
   nsJSContext::CycleCollectNow(aListener);
