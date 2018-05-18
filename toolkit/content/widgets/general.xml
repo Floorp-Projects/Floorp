@@ -80,14 +80,4 @@
     </implementation>
   </binding>
 
-  <binding id="dropmarker" extends="xul:button">
-    <resources>
-      <stylesheet src="chrome://global/skin/dropmarker.css"/>
-    </resources>
-
-    <content>
-      <xul:image class="dropmarker-icon"/>
-    </content>
-  </binding>
-
 </bindings>

@@ -20,7 +20,6 @@ TEST_HARNESS_FILES.reftest += [
     '/testing/mochitest/server.js',
     'mach_test_package_commands.py',
     'output.py',
-    'reftest-preferences.js',
     'reftestcommandline.py',
     'remotereftest.py',
     'runreftest.py',

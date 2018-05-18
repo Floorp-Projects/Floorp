@@ -9,15 +9,15 @@ make_flags="-j$(nproc)"
 
 prepare() {
   pushd $root_dir
-  download_and_check ftp://ftp.gnu.org/gnu/binutils binutils-$binutils_version.tar.$binutils_ext.sig
+  download_and_check https://ftp.gnu.org/gnu/binutils binutils-$binutils_version.tar.$binutils_ext.sig
   tar xaf $TMPDIR/binutils-$binutils_version.tar.$binutils_ext
 
   case "$gcc_version" in
   *-*)
-    download ftp://gcc.gnu.org/pub/gcc/snapshots/$gcc_version/gcc-$gcc_version.tar.$gcc_ext
+    download https://gcc.gnu.org/pub/gcc/snapshots/$gcc_version/gcc-$gcc_version.tar.$gcc_ext
     ;;
   *)
-    download_and_check ftp://ftp.gnu.org/gnu/gcc/gcc-$gcc_version gcc-$gcc_version.tar.$gcc_ext.sig
+    download_and_check https://ftp.gnu.org/gnu/gcc/gcc-$gcc_version gcc-$gcc_version.tar.$gcc_ext.sig
     ;;
   esac
   tar xaf $TMPDIR/gcc-$gcc_version.tar.$gcc_ext
@@ -43,12 +43,12 @@ prepare() {
     gmp-*.tar.*)
       # If download_prerequisites wants 4.3.2, use 5.1.3 instead.
       file=${file/4.3.2/5.1.3}
-      download_and_check https://gmplib.org/download/gmp $file.sig
+      download_and_check https://ftp.gnu.org/gnu/gmp/ $file.sig
       ;;
     mpfr-*.tar.*)
       # If download_prerequisites wants 2.4.2, use 3.1.5 instead.
       file=${file/2.4.2/3.1.5}
-      download_and_check http://www.mpfr.org/${file%.tar.*} $file.asc
+      download_and_check https://ftp.gnu.org/gnu/mpfr/ $file.sig
       ;;
     mpc-*.tar.*)
       # If download_prerequisites wants 0.8.1, use 0.8.2 instead.
@@ -61,7 +61,19 @@ prepare() {
         ext=sig
         ;;
       esac
-      download_and_check http://www.multiprecision.org/downloads $file.$ext
+      case "$file" in
+      *-0.8.2.tar*)
+          # The ftp.gnu.org mirror doesn't have 0.8.2, so we use
+          # a debian source tarball instead. It has a different name,
+          # so we can't use `download`. Manually do what it does, but
+          # handling the difference in file name.
+          wget -c --progress=dot:mega -O $TMPDIR/$file http://snapshot.debian.org/archive/debian/20100527T162226Z/pool/main/m/mpclib/mpclib_0.8.2.orig.tar.gz
+          (cd $TMPDIR; sha256sum $file) >> $root_dir/downloads
+          ;;
+      *)
+          download_and_check https://ftp.gnu.org/gnu/mpc $file.$ext
+          ;;
+      esac
       ;;
     *)
       download $(dirname $url) $file

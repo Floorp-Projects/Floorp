@@ -10,13 +10,13 @@
   },
   "A11Y_CONSUMERS": {
     "record_in_processes": ["main"],
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 11,
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1382820],
+    "bug_numbers": [1382820, 1462238],
     "description": "A list of known accessibility clients that inject into Firefox process space (see https://dxr.mozilla.org/mozilla-central/source/accessible/windows/msaa/Compatibility.h).",
-    "alert_emails": ["accessibility@mozilla.com"]
+    "alert_emails": ["accessibility@mozilla.com", "jteh@mozilla.com"]
   },
   "A11Y_ISIMPLEDOM_USAGE_FLAG": {
     "record_in_processes": ["main"],

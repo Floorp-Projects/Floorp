@@ -49,7 +49,8 @@ add_task(async function setup() {
   // Ensure preferences status.
   Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));
   Assert.ok(!Services.prefs.getBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS));
-  Assert.throws(() => Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML));
+  Assert.throws(() => Services.prefs.getBoolPref(PREF_IMPORT_BOOKMARKS_HTML),
+    /NS_ERROR_UNEXPECTED/);
 });
 
 add_task(async function test_version_0() {
