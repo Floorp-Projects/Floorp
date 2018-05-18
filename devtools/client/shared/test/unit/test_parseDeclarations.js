@@ -71,11 +71,58 @@ const TEST_DATA = [
       {name: "p2", value: "v2", priority: "important", offsets: [21, 40]}
     ]
   },
+  // Test simple priority
+  {
+    input: "p1: v1 !/*comment*/important;",
+    expected: [
+      {name: "p1", value: "v1", priority: "important", offsets: [0, 29]},
+    ]
+  },
+  // Test priority without terminating ";".
+  {
+    input: "p1: v1 !important",
+    expected: [
+      {name: "p1", value: "v1", priority: "important", offsets: [0, 17]},
+    ]
+  },
+  // Test trailing "!" without terminating ";".
+  {
+    input: "p1: v1 !",
+    expected: [
+      {name: "p1", value: "v1 !", priority: "", offsets: [0, 8]},
+    ]
+  },
   // Test invalid priority
   {
     input: "p1: v1 important;",
     expected: [
       {name: "p1", value: "v1 important", priority: "", offsets: [0, 17]}
+    ]
+  },
+  // Test invalid priority (in the middle of the declaration).
+  // See bug 1462553.
+  {
+    input: "p1: v1 !important v2;",
+    expected: [
+      {name: "p1", value: "v1 !important v2", priority: "", offsets: [0, 21]}
+    ]
+  },
+  {
+    input: "p1: v1 !    important v2;",
+    expected: [
+      {name: "p1", value: "v1 ! important v2", priority: "", offsets: [0, 25]}
+    ]
+  },
+  {
+    input: "p1: v1 !  /*comment*/  important v2;",
+    expected: [
+      {name: "p1", value: "v1 ! important v2", priority: "", offsets: [0, 36]}
+    ]
+  },
+  {
+    input: "p1: v1 !/*hi*/important v2;",
+    expected: [
+      {name: "p1", value: "v1 ! important v2", priority: "", offsets: [0, 27]}
     ]
   },
   // Test various types of background-image urls
