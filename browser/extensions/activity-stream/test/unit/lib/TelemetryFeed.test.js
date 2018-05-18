@@ -1,6 +1,7 @@
 /* global Services */
 import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
 import {
+  ASRouterEventPing,
   BasePing,
   ImpressionStatsPing,
   PerfPing,
@@ -474,12 +475,17 @@ describe("TelemetryFeed", () => {
   });
   describe("#createASRouterEvent", () => {
     it("should create a valid AS Router event", async () => {
-      const data = {source: "SNIPPETS", event: "CLICK"};
+      const data = {
+        action: "snippet_user_event",
+        source: "SNIPPETS",
+        event: "CLICK",
+        message_id: "snippets_message_01"
+      };
       const action = ac.ASRouterUserEvent(data);
       const ping = await instance.createASRouterEvent(action);
 
-      // TODO check the payload with the Joi schema
-
+      assert.validate(ping, ASRouterEventPing);
+      assert.propertyVal(ping, "client_id", "n/a");
       assert.propertyVal(ping, "source", "SNIPPETS");
       assert.propertyVal(ping, "event", "CLICK");
     });

@@ -1477,4 +1477,8 @@ main {
   margin-inline-end: 12px;
   flex-shrink: 0; }
 
+.SimpleSnippet .ASRouterAnchor {
+  color: inherit;
+  text-decoration: underline; }
+
 /*# sourceMappingURL=activity-stream-linux.css.map */
