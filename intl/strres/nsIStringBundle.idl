@@ -7,6 +7,7 @@
 #include "nsISimpleEnumerator.idl"
 
 %{C++
+#include "mozilla/MemoryReporting.h"
 
 // Define Contractid and CID
 // {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
@@ -57,11 +58,16 @@ interface nsIStringBundle : nsISupports
                                   in unsigned long length);
 
   /*
-  Implements nsISimpleEnumerator, replaces nsIEnumerator 
+  Implements nsISimpleEnumerator, replaces nsIEnumerator
   */
   nsISimpleEnumerator getSimpleEnumeration();
   // Preloads string bundle data asynchronously
   void asyncPreload();
+
+%{C++
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+%}
 };
 
 [scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
@@ -83,11 +89,15 @@ interface nsIStringBundleService : nsISupports
   /**
    * flushes the string bundle cache - useful when the locale changes or
    * when we need to get some extra memory back
-   * 
+   *
    * at some point, we might want to make this flush all the bundles,
    * because any bundles that are floating around when the locale changes
    * will suddenly contain bad data
    *
    */
   void flushBundles();
+
+  %{C++
+    virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  %}
 };
