@@ -138,10 +138,10 @@ inline js::GlobalObject&
 JSScript::global() const
 {
     /*
-     * A JSScript always marks its compartment's global (via bindings) so we
-     * can assert that maybeGlobal is non-null here.
+     * A JSScript always marks its realm's global (via bindings) so we can
+     * assert that maybeGlobal is non-null here.
      */
-    return *compartment()->maybeGlobal();
+    return *realm()->maybeGlobal();
 }
 
 inline js::LexicalScope*

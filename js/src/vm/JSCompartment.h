@@ -550,7 +550,7 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-  private:
+  protected:
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 
@@ -618,7 +618,6 @@ struct JSCompartment
   private:
     friend struct JSRuntime;
     friend struct JSContext;
-    js::ReadBarrieredGlobalObject global_;
 
     unsigned                     enterCompartmentDepth;
 
@@ -649,38 +648,24 @@ struct JSCompartment
         return runtime_;
     }
 
-    /* The global object for this compartment.
-     *
-     * This returns nullptr if this is the atoms realm.  (The global_
-     * field is also null briefly during GC, after the global object is
-     * collected; but when that happens the JSCompartment is destroyed during
-     * the same GC.)
-     *
-     * In contrast, JSObject::global() is infallible because marking a JSObject
-     * always marks its global as well.
-     * TODO: add infallible JSScript::global()
-     */
-    inline js::GlobalObject* maybeGlobal() const;
-
-    /* An unbarriered getter for use while tracing. */
-    inline js::GlobalObject* unsafeUnbarrieredMaybeGlobal() const;
-
-    /* True if a global object exists, but it's being collected. */
-    inline bool globalIsAboutToBeFinalized();
-
-    inline void initGlobal(js::GlobalObject& global);
-
   public:
     void*                        data;
     void*                        realmData;
 
-  private:
+  protected:
     const js::AllocationMetadataBuilder *allocationMetadataBuilder;
 
     js::SavedStacks              savedStacks_;
 
+  private:
     js::WrapperMap               crossCompartmentWrappers;
 
+  public:
+    void assertNoCrossCompartmentWrappers() {
+        MOZ_ASSERT(crossCompartmentWrappers.empty());
+    }
+
+  protected:
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
     // VariableDeclaration declarations in global code in this compartment.
@@ -716,7 +701,7 @@ struct JSCompartment
     // might be detached.
     int32_t                      detachedTypedObjects;
 
-  private:
+  protected:
     friend class js::AutoSetNewObjectMetadata;
     js::NewObjectMetadataState objectMetadataState;
 
@@ -786,7 +771,7 @@ struct JSCompartment
     // WebAssembly state for the compartment.
     js::wasm::Compartment wasm;
 
-  private:
+  protected:
     // All non-syntactic lexical environments in the compartment. These are kept in
     // a map because when loading scripts into a non-syntactic environment, we need
     // to use the same lexical environment to persist lexical bindings.
@@ -889,20 +874,6 @@ struct JSCompartment
     js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(JSObject* enclosing) const;
 
     /*
-     * This method traces data that is live iff we know that this compartment's
-     * global is still live.
-     */
-    void traceGlobal(JSTracer* trc);
-    /*
-     * This method traces JSCompartment-owned GC roots that are considered live
-     * regardless of whether the compartment's global is still live.
-     */
-    void traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark);
-    /*
-     * This method clears out tables of roots in preparation for the final GC.
-     */
-    void finishRoots();
-    /*
      * These methods mark pointers that cross compartment boundaries. They are
      * called in per-zone GCs to prevent the wrappers' outgoing edges from
      * dangling (full GCs naturally follow pointers across compartments) and
@@ -916,7 +887,6 @@ struct JSCompartment
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
-    void sweepGlobalObject();
     void sweepSelfHostingScriptSource();
     void sweepJitCompartment();
     void sweepRegExps();
@@ -926,11 +896,9 @@ struct JSCompartment
     void sweepVarNames();
 
     void purge();
-    void clearTables();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
-    void fixupGlobal();
     void fixupScriptMapsAfterMovingGC();
 
     bool hasAllocationMetadataBuilder() const { return allocationMetadataBuilder; }
@@ -1143,7 +1111,7 @@ struct JSCompartment
     bool scheduledForDestruction;
     bool maybeAlive;
 
-  private:
+  protected:
     js::jit::JitCompartment* jitCompartment_;
 
     js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_;
@@ -1199,6 +1167,7 @@ class JS::Realm : public JSCompartment
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
 
     void destroy(js::FreeOp* fop);
+    void clearTables();
 
     const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
     JS::RealmBehaviors& behaviors() { return behaviors_; }
@@ -1216,6 +1185,48 @@ class JS::Realm : public JSCompartment
     void setIsAtomsRealm() {
         isAtomsRealm_ = true;
     }
+
+  private:
+    friend struct ::JSContext;
+    js::ReadBarrieredGlobalObject global_;
+  public:
+    /* The global object for this realm.
+     *
+     * This returns nullptr if this is the atoms realm.  (The global_ field is
+     * also null briefly during GC, after the global object is collected; but
+     * when that happens the Realm is destroyed during the same GC.)
+     *
+     * In contrast, JSObject::global() is infallible because marking a JSObject
+     * always marks its global as well.
+     */
+    inline js::GlobalObject* maybeGlobal() const;
+
+    /* An unbarriered getter for use while tracing. */
+    inline js::GlobalObject* unsafeUnbarrieredMaybeGlobal() const;
+
+    /* True if a global object exists, but it's being collected. */
+    inline bool globalIsAboutToBeFinalized();
+
+    inline void initGlobal(js::GlobalObject& global);
+
+    /*
+     * This method traces data that is live iff we know that this realm's
+     * global is still live.
+     */
+    void traceGlobal(JSTracer* trc);
+
+    void sweepGlobalObject();
+    void fixupGlobal();
+
+    /*
+     * This method traces Realm-owned GC roots that are considered live
+     * regardless of whether the realm's global is still live.
+     */
+    void traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark);
+    /*
+     * This method clears out tables of roots in preparation for the final GC.
+     */
+    void finishRoots();
 };
 
 namespace js {
@@ -1241,8 +1252,7 @@ JSContext::global() const
      * safe to use.
      */
     MOZ_ASSERT(realm_, "Caller needs to enter a realm first");
-    JSCompartment* comp = GetCompartmentForRealm(realm_);
-    return js::Handle<js::GlobalObject*>::fromMarkedLocation(comp->global_.unsafeGet());
+    return js::Handle<js::GlobalObject*>::fromMarkedLocation(realm_->global_.unsafeGet());
 }
 
 namespace js {

@@ -1808,7 +1808,8 @@ SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
 void
 SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
 {
-    GlobalObject* global = compartment->maybeGlobal();
+    Realm* realm = JS::GetRealmForCompartment(compartment);
+    GlobalObject* global = realm->maybeGlobal();
     if (!global)
         return;
 
