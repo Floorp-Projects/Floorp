@@ -5,18 +5,22 @@
 
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.CursorAnchorInfo;
@@ -24,6 +28,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -35,6 +40,8 @@ import java.lang.annotation.RetentionPolicy;
  * SessionTextInput.
  */
 public final class SessionTextInput {
+    /* package */ static final String LOGTAG = "GeckoSessionTextInput";
+
     /**
      * Interface that SessionTextInput uses for performing operations such as opening and closing
      * the software keyboard. If the delegate is not set, these operations are forwarded to the
@@ -167,6 +174,107 @@ public final class SessionTextInput {
         void onTextChange();
         void onDefaultKeyEvent(KeyEvent event);
         void updateCompositionRects(final RectF[] aRects);
+    }
+
+    private final class DefaultDelegate implements Delegate {
+        private InputMethodManager getInputMethodManager(@Nullable final View view) {
+            if (view == null) {
+                return null;
+            }
+            return (InputMethodManager) view.getContext()
+                                            .getSystemService(Context.INPUT_METHOD_SERVICE);
+        }
+
+        @Override
+        public void restartInput(int reason) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm == null) {
+                return;
+            }
+
+            // InputMethodManager has internal logic to detect if we are restarting input
+            // in an already focused View, which is the case here because all content text
+            // fields are inside one LayerView. When this happens, InputMethodManager will
+            // tell the input method to soft reset instead of hard reset. Stock latin IME
+            // on Android 4.2+ has a quirk that when it soft resets, it does not clear the
+            // composition. The following workaround tricks the IME into clearing the
+            // composition when soft resetting.
+            if (InputMethods.needsSoftResetWorkaround(
+                    InputMethods.getCurrentInputMethod(view.getContext()))) {
+                // Fake a selection change, because the IME clears the composition when
+                // the selection changes, even if soft-resetting. Offsets here must be
+                // different from the previous selection offsets, and -1 seems to be a
+                // reasonable, deterministic value
+                imm.updateSelection(view, -1, -1, -1, -1);
+            }
+
+            try {
+                imm.restartInput(view);
+            } catch (RuntimeException e) {
+                Log.e(LOGTAG, "Error restarting input", e);
+            }
+        }
+
+        @Override
+        public void showSoftInput() {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                if (view.hasFocus() && !imm.isActive(view)) {
+                    // Marshmallow workaround: The view has focus but it is not the active
+                    // view for the input method. (Bug 1211848)
+                    view.clearFocus();
+                    view.requestFocus();
+                }
+                imm.showSoftInput(view, 0);
+            }
+        }
+
+        @Override
+        public void hideSoftInput() {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+
+        @Override
+        public void updateSelection(final int selStart, final int selEnd,
+                                    final int compositionStart, final int compositionEnd) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateSelection(view, selStart, selEnd, compositionStart, compositionEnd);
+            }
+        }
+
+        @Override
+        public void updateExtractedText(@NonNull final ExtractedTextRequest request,
+                                        @NonNull final ExtractedText text) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateExtractedText(view, request.token, text);
+            }
+        }
+
+        @TargetApi(21)
+        @Override
+        public void updateCursorAnchorInfo(@NonNull final CursorAnchorInfo info) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateCursorAnchorInfo(view, info);
+            }
+        }
     }
 
     private final GeckoSession mSession;
@@ -353,6 +461,9 @@ public final class SessionTextInput {
      */
     public Delegate getDelegate() {
         ThreadUtils.assertOnUiThread();
+        if (mDelegate == null) {
+            mDelegate = new DefaultDelegate();
+        }
         return mDelegate;
     }
 }
