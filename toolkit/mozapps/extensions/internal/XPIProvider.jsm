@@ -1862,8 +1862,6 @@ var XPIProvider = {
   activeAddons: new Map(),
   // True if the platform could have activated extensions
   extensionsActive: false,
-  // New distribution addons awaiting permissions approval
-  newDistroAddons: null,
   // Keep track of startup phases for telemetry
   runPhase: XPI_STARTING,
   // Per-addon telemetry information
@@ -2414,12 +2412,6 @@ var XPIProvider = {
     }
 
     return changed;
-  },
-
-  getNewDistroAddons() {
-    let addons = this.newDistroAddons;
-    this.newDistroAddons = null;
-    return addons;
   },
 
   getDependentAddons(aAddon) {

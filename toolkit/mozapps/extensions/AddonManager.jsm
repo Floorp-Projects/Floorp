@@ -2849,17 +2849,6 @@ var AddonManagerPrivate = {
                                .getNewSideloads();
   },
 
-  /**
-   * Gets a set of (ids of) distribution addons which were installed into the
-   * current profile at browser startup, or null if none were installed.
-   *
-   * @return {Set<String> | null}
-   */
-  getNewDistroAddons() {
-    return AddonManagerInternal._getProviderByName("XPIProvider")
-                               .getNewDistroAddons();
-  },
-
   get browserUpdated() {
     return gBrowserUpdated;
   },
