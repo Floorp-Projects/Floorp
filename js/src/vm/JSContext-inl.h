@@ -520,12 +520,12 @@ JSContext::setRealm(JS::Realm* realm,
                     const js::AutoLockForExclusiveAccess* maybeLock /* = nullptr */)
 {
     // Only one thread can be in the atoms realm at a time.
-    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(realm), maybeLock != nullptr);
-    MOZ_ASSERT_IF(runtime_->isAtomsCompartment(realm) || runtime_->isAtomsCompartment(realm_),
+    MOZ_ASSERT_IF(realm && realm->isAtomsRealm(), maybeLock != nullptr);
+    MOZ_ASSERT_IF((realm && realm->isAtomsRealm()) || (realm_ && realm_->isAtomsRealm()),
                   runtime_->currentThreadHasExclusiveAccess());
 
     // Make sure that the atoms realm has its own zone.
-    MOZ_ASSERT_IF(realm && !runtime_->isAtomsCompartment(realm),
+    MOZ_ASSERT_IF(realm && !realm->isAtomsRealm(),
                   !realm->zone()->isAtomsZone());
 
     // Both the current and the new realm should be properly marked as

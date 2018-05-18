@@ -46,7 +46,6 @@ JSCompartment::JSCompartment(Zone* zone)
     runtime_(zone->runtimeFromAnyThread()),
     principals_(nullptr),
     isSystem_(false),
-    isAtomsCompartment_(false),
     isSelfHosting(false),
     marked(true),
     warnedAboutStringGenericsMethods(0),
@@ -167,7 +166,7 @@ JSCompartment::init(JSContext* maybecx)
 jit::JitRuntime*
 JSRuntime::createJitRuntime(JSContext* cx)
 {
-    // The shared stubs are created in the atoms compartment, which may be
+    // The shared stubs are created in the atoms zone, which may be
     // accessed by other threads with an exclusive context.
     AutoLockForExclusiveAccess atomsLock(cx);
 
@@ -606,7 +605,7 @@ bool
 JSCompartment::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 {
     MOZ_ASSERT(name);
-    MOZ_ASSERT(!isAtomsCompartment());
+    MOZ_ASSERT(!JS::GetRealmForCompartment(this)->isAtomsRealm());
 
     if (varNames_.put(name))
         return true;

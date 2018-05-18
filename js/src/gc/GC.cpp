@@ -3388,7 +3388,7 @@ GCRuntime::triggerZoneGC(Zone* zone, JS::gcreason::Reason reason, size_t used, s
 #endif
 
     if (zone->isAtomsZone()) {
-        /* We can't do a zone GC of the atoms compartment. */
+        /* We can't do a zone GC of the atoms zone. */
         if (rt->mainContextFromOwnThread()->keepAtoms || rt->hasHelperThreadZones()) {
             /* Skip GC and retrigger later, since atoms zone won't be collected
              * if keepAtoms is true. */
@@ -3845,7 +3845,7 @@ Zone::sweepCompartments(FreeOp* fop, bool keepAtleastOne, bool destroyingRuntime
     bool foundOne = false;
     while (read < end) {
         JSCompartment* comp = *read++;
-        MOZ_ASSERT(!rt->isAtomsCompartment(comp));
+        MOZ_ASSERT(!JS::GetRealmForCompartment(comp)->isAtomsRealm());
 
         /*
          * Don't delete the last compartment if all the ones before it were
@@ -4490,7 +4490,7 @@ GCRuntime::markCompartments()
 
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
         MOZ_ASSERT(!comp->scheduledForDestruction);
-        if (!comp->maybeAlive && !rt->isAtomsCompartment(comp))
+        if (!comp->maybeAlive && !JS::GetRealmForCompartment(comp)->isAtomsRealm())
             comp->scheduledForDestruction = true;
     }
 }
@@ -5334,9 +5334,9 @@ GCRuntime::endMarkingSweepGroup(FreeOp* fop, SliceBudget& budget)
 
     /*
      * Change state of current group to MarkGray to restrict marking to this
-     * group.  Note that there may be pointers to the atoms compartment, and
+     * group.  Note that there may be pointers to the atoms zone, and
      * these will be marked through, as they are not marked with
-     * MarkCrossCompartmentXXX.
+     * TraceCrossCompartmentEdge.
      */
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next())
         zone->changeGCState(Zone::Mark, Zone::MarkGray);
