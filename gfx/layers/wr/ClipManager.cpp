@@ -146,6 +146,14 @@ ClipManager::BeginItem(nsDisplayItem* aItem,
 
   const DisplayItemClipChain* clip = aItem->GetClipChain();
   const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
+  if (aItem->GetType() == DisplayItemType::TYPE_STICKY_POSITION) {
+    // For sticky position items, the ASR is computed differently depending
+    // on whether the item has a fixed descendant or not. But for WebRender
+    // purposes we always want to use the ASR that would have been used if it
+    // didn't have fixed descendants, which is stored as the "container ASR" on
+    // the sticky item.
+    asr = static_cast<nsDisplayStickyPosition*>(aItem)->GetContainerASR();
+  }
 
   ItemClips clips(asr, clip);
   MOZ_ASSERT(!mItemClipStack.empty());
