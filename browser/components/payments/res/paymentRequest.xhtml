@@ -104,6 +104,8 @@
 
           <div><label>&paymentMethodsLabel;</label></div>
           <payment-method-picker selected-state-key="selectedPaymentCard"
+                                 data-add-basic-card-title="&basicCard.addPage.title;"
+                                 data-edit-basic-card-title="&basicCard.editPage.title;"
                                  data-add-link-label="&basicCard.addLink.label;"
                                  data-edit-link-label="&basicCard.editLink.label;">
           </payment-method-picker>
@@ -133,12 +135,9 @@
 
       <basic-card-form id="basic-card-page"
                        class="page"
-                       data-add-basic-card-title="&basicCard.addPage.title;"
-                       data-edit-basic-card-title="&basicCard.editPage.title;"
                        data-error-generic-save="&basicCardPage.error.genericSave;"
                        data-back-button-label="&basicCardPage.backButton.label;"
                        data-save-button-label="&basicCardPage.saveButton.label;"
-                       data-cancel-button-label="&cancelPaymentButton.label;"
                        data-persist-checkbox-label="&basicCardPage.persistCheckbox.label;"
                        hidden="hidden"></basic-card-form>
 
