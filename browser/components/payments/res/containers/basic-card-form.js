@@ -23,11 +23,16 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     this.pageTitle = document.createElement("h1");
     this.genericErrorText = document.createElement("div");
 
+    this.cancelButton = document.createElement("button");
+    this.cancelButton.className = "cancel-button";
+    this.cancelButton.addEventListener("click", this);
+
     this.backButton = document.createElement("button");
     this.backButton.className = "back-button";
     this.backButton.addEventListener("click", this);
 
     this.saveButton = document.createElement("button");
+    this.saveButton.className = "save-button";
     this.saveButton.addEventListener("click", this);
 
     this.persistCheckbox = new LabelledCheckbox();
@@ -69,6 +74,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
       this.appendChild(this.persistCheckbox);
       this.appendChild(this.genericErrorText);
+      this.appendChild(this.cancelButton);
       this.appendChild(this.backButton);
       this.appendChild(this.saveButton);
       // Only call the connected super callback(s) once our markup is fully
@@ -84,10 +90,14 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       selectedShippingAddress,
     } = state;
 
-    this.pageTitle.textContent = page.title;
+    this.cancelButton.textContent = this.dataset.cancelButtonLabel;
     this.backButton.textContent = this.dataset.backButtonLabel;
     this.saveButton.textContent = this.dataset.saveButtonLabel;
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
+
+    // The back button is temporarily hidden(See Bug 1462461).
+    this.backButton.hidden = !!page.onboardingWizard;
+    this.cancelButton.hidden = !page.onboardingWizard;
 
     let record = {};
     let basicCards = paymentRequest.getBasicCards(state);
@@ -99,6 +109,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
     // If a card is selected we want to edit it.
     if (editing) {
+      this.pageTitle.textContent = this.dataset.editBasicCardTitle;
       record = basicCards[page.guid];
       if (!record) {
         throw new Error("Trying to edit a non-existing card: " + page.guid);
@@ -106,6 +117,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
     } else {
+      this.pageTitle.textContent = this.dataset.addBasicCardTitle;
       if (selectedShippingAddress) {
         record.billingAddressGUID = selectedShippingAddress;
       }
@@ -128,6 +140,10 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
   onClick(evt) {
     switch (evt.target) {
+      case this.cancelButton: {
+        paymentRequest.cancel();
+        break;
+      }
       case this.backButton: {
         this.requestStore.setState({
           page: {
