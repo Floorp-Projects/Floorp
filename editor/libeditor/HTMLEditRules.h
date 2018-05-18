@@ -259,7 +259,12 @@ protected:
    */
   MOZ_MUST_USE nsresult DidDeleteSelection();
 
-  nsresult InsertBRIfNeeded();
+  /**
+   * InsertBRIfNeeded() determines if a br is needed for current selection to
+   * not be spastic.  If so, it inserts one.  Callers responsibility to only
+   * call with collapsed selection.
+   */
+  MOZ_MUST_USE nsresult InsertBRIfNeeded();
 
   /**
    * CanContainParagraph() returns true if aElement can have a <p> element as
