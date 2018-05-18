@@ -650,24 +650,16 @@ CustomElementRegistry::GetDocGroup() const
 
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
 void
-CustomElementRegistry::Define(const nsAString& aName,
+CustomElementRegistry::Define(JSContext* aCx,
+                              const nsAString& aName,
                               Function& aFunctionConstructor,
                               const ElementDefinitionOptions& aOptions,
                               ErrorResult& aRv)
 {
-  aRv.MightThrowJSException();
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  JSContext *cx = jsapi.cx();
   // Note: No calls that might run JS or trigger CC before this point, or
   // there's a (vanishingly small) chance of our constructor being nulled
   // before we access it.
-  JS::Rooted<JSObject*> constructor(cx, aFunctionConstructor.CallableOrNull());
+  JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
   /**
    * 1. If IsConstructor(constructor) is false, then throw a TypeError and abort
@@ -675,7 +667,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    */
   // For now, all wrappers are constructable if they are callable. So we need to
   // unwrap constructor to check it is really constructable.
-  JS::Rooted<JSObject*> constructorUnwrapped(cx, js::CheckedUnwrap(constructor));
+  JS::Rooted<JSObject*> constructorUnwrapped(aCx, js::CheckedUnwrap(constructor));
   if (!constructorUnwrapped) {
     // If the caller's compartment does not have permission to access the
     // unwrapped constructor then throw.
@@ -763,7 +755,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     return;
   }
 
-  JS::Rooted<JS::Value> constructorPrototype(cx);
+  JS::Rooted<JS::Value> constructorPrototype(aCx);
   nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
   nsTArray<RefPtr<nsAtom>> observedAttributes;
   { // Set mIsCustomDefinitionRunning.
@@ -776,12 +768,12 @@ CustomElementRegistry::Define(const nsAString& aName,
       /**
        * 10.1. Let prototype be Get(constructor, "prototype"). Rethrow any exceptions.
        */
-      JSAutoRealm ar(cx, constructor);
+      JSAutoRealm ar(aCx, constructor);
       // The .prototype on the constructor passed could be an "expando" of a
       // wrapper. So we should get it from wrapper instead of the underlying
       // object.
-      if (!JS_GetProperty(cx, constructor, "prototype", &constructorPrototype)) {
-        aRv.StealExceptionFromJSContext(cx);
+      if (!JS_GetProperty(aCx, constructor, "prototype", &constructorPrototype)) {
+        aRv.NoteJSContextException(aCx);
         return;
       }
 
@@ -795,7 +787,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     } // Leave constructor's realm.
 
     JS::Rooted<JSObject*> constructorProtoUnwrapped(
-      cx, js::CheckedUnwrap(&constructorPrototype.toObject()));
+      aCx, js::CheckedUnwrap(&constructorPrototype.toObject()));
     if (!constructorProtoUnwrapped) {
       // If the caller's compartment does not have permission to access the
       // unwrapped prototype then throw.
@@ -804,7 +796,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     }
 
     { // Enter constructorProtoUnwrapped's compartment
-      JSAutoRealm ar(cx, constructorProtoUnwrapped);
+      JSAutoRealm ar(aCx, constructorProtoUnwrapped);
 
       /**
        * 10.3. Let lifecycleCallbacks be a map with the four keys
@@ -821,9 +813,9 @@ CustomElementRegistry::Define(const nsAString& aName,
        */
       // Note: We call the init from the constructorProtoUnwrapped's compartment
       //       here.
-      JS::RootedValue rootedv(cx, JS::ObjectValue(*constructorProtoUnwrapped));
-      if (!JS_WrapValue(cx, &rootedv) || !callbacksHolder->Init(cx, rootedv)) {
-        aRv.StealExceptionFromJSContext(cx);
+      JS::RootedValue rootedv(aCx, JS::ObjectValue(*constructorProtoUnwrapped));
+      if (!JS_WrapValue(aCx, &rootedv) || !callbacksHolder->Init(aCx, rootedv)) {
+        aRv.NoteJSContextException(aCx);
         return;
       }
 
@@ -840,12 +832,12 @@ CustomElementRegistry::Define(const nsAString& aName,
        */
       if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
         // Enter constructor's realm.
-        JSAutoRealm ar(cx, constructor);
-        JS::Rooted<JS::Value> observedAttributesIterable(cx);
+        JSAutoRealm ar(aCx, constructor);
+        JS::Rooted<JS::Value> observedAttributesIterable(aCx);
 
-        if (!JS_GetProperty(cx, constructor, "observedAttributes",
+        if (!JS_GetProperty(aCx, constructor, "observedAttributes",
                             &observedAttributesIterable)) {
-          aRv.StealExceptionFromJSContext(cx);
+          aRv.NoteJSContextException(aCx);
           return;
         }
 
@@ -855,9 +847,9 @@ CustomElementRegistry::Define(const nsAString& aName,
             return;
           }
 
-          JS::ForOfIterator iter(cx);
+          JS::ForOfIterator iter(aCx);
           if (!iter.init(observedAttributesIterable, JS::ForOfIterator::AllowNonIterable)) {
-            aRv.StealExceptionFromJSContext(cx);
+            aRv.NoteJSContextException(aCx);
             return;
           }
 
@@ -866,11 +858,11 @@ CustomElementRegistry::Define(const nsAString& aName,
             return;
           }
 
-          JS::Rooted<JS::Value> attribute(cx);
+          JS::Rooted<JS::Value> attribute(aCx);
           while (true) {
             bool done;
             if (!iter.next(&attribute, &done)) {
-              aRv.StealExceptionFromJSContext(cx);
+              aRv.NoteJSContextException(aCx);
               return;
             }
             if (done) {
@@ -878,8 +870,8 @@ CustomElementRegistry::Define(const nsAString& aName,
             }
 
             nsAutoString attrStr;
-            if (!ConvertJSValueToString(cx, attribute, eStringify, eStringify, attrStr)) {
-              aRv.StealExceptionFromJSContext(cx);
+            if (!ConvertJSValueToString(aCx, attribute, eStringify, eStringify, attrStr)) {
+              aRv.NoteJSContextException(aCx);
               return;
             }
 

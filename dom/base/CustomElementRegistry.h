@@ -510,7 +510,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void Define(const nsAString& aName, Function& aFunctionConstructor,
+  void Define(JSContext* aCx, const nsAString& aName,
+              Function& aFunctionConstructor,
               const ElementDefinitionOptions& aOptions, ErrorResult& aRv);
 
   void Get(JSContext* cx, const nsAString& name,
