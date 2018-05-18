@@ -30,7 +30,7 @@ import android.view.inputmethod.InputConnection;
 public final class SessionTextInput {
 
     // Interface to access GeckoInputConnection from SessionTextInput.
-    /* package */ interface Delegate {
+    /* package */ interface InputConnectionClient {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
@@ -93,7 +93,7 @@ public final class SessionTextInput {
     private final GeckoEditable mEditable = new GeckoEditable();
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private boolean mShowSoftInputOnFocus = true;
-    private Delegate mInputConnection;
+    private InputConnectionClient mInputConnection;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
                                    final @NonNull NativeQueue queue) {
