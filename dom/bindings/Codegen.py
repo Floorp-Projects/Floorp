@@ -3063,12 +3063,19 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
+        toStringTag = self.descriptor.interface.toStringTag
+        if toStringTag:
+            toStringTag = '"%s"' % toStringTag
+        else:
+            toStringTag = "nullptr"
+
         call = fill(
             """
             JS::Heap<JSObject*>* protoCache = ${protoCache};
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
+                                        ${toStringTag},
                                         ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${namedConstructors},
                                         interfaceCache,
                                         ${properties},
@@ -3080,6 +3087,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             protoClass=protoClass,
             parentProto=parentProto,
             protoCache=protoCache,
+            toStringTag=toStringTag,
             constructorProto=constructorProto,
             interfaceClass=interfaceClass,
             constructArgs=constructArgs,
