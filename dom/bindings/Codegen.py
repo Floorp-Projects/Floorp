@@ -2882,32 +2882,58 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
     """
     Generate the JsonifyAttributes method for an interface descriptor
     """
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, jsonifierMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JS::Rooted<JSObject*>&', 'aResult')]
         CGAbstractMethod.__init__(self, descriptor, 'JsonifyAttributes',
                                   'bool', args, canRunScript=True)
+        self.jsonifierMethod = jsonifierMethod
 
     def definition_body(self):
         ret = ''
         interface = self.descriptor.interface
+        jsonifierCondition = PropertyDefiner.getControllingCondition(self.jsonifierMethod,
+                                                                     self.descriptor)
         for m in interface.members:
             if m.isAttr() and not m.isStatic() and m.type.isJSONType():
-                ret += fill(
+                getAndDefine = fill(
                     """
-                    { // scope for "temp"
-                      JS::Rooted<JS::Value> temp(aCx);
-                      if (!get_${name}(aCx, obj, self, JSJitGetterCallArgs(&temp))) {
-                        return false;
-                      }
-                      if (!JS_DefineProperty(aCx, aResult, "${name}", temp, JSPROP_ENUMERATE)) {
-                        return false;
-                      }
+                    JS::Rooted<JS::Value> temp(aCx);
+                    if (!get_${name}(aCx, obj, self, JSJitGetterCallArgs(&temp))) {
+                      return false;
+                    }
+                    if (!JS_DefineProperty(aCx, aResult, "${name}", temp, JSPROP_ENUMERATE)) {
+                      return false;
                     }
                     """,
                     name=IDLToCIdentifier(m.identifier.name))
+                # Make sure we don't include things which are supposed to be
+                # disabled.  Things that either don't have disablers or whose
+                # disablers match the disablers for our jsonifier method can't
+                # possibly be disabled, but other things might be.
+                condition = PropertyDefiner.getControllingCondition(m, self.descriptor)
+                if condition.hasDisablers() and condition != jsonifierCondition:
+                    ret += fill(
+                        """
+                        // This is unfortunately a linear scan through sAttributes, but we
+                        // only do it for things which _might_ be disabled, which should
+                        // help keep the performance problems down.
+                        if (IsGetterEnabled(aCx, obj, (JSJitGetterOp)get_${name}, sAttributes)) {
+                          $*{getAndDefine}
+                        }
+                        """,
+                        name=IDLToCIdentifier(m.identifier.name),
+                        getAndDefine=getAndDefine)
+                else:
+                    ret += fill(
+                        """
+                        { // scope for "temp"
+                          $*{getAndDefine}
+                        }
+                        """,
+                        getAndDefine=getAndDefine)
         ret += 'return true;\n'
         return ret
 
@@ -12365,7 +12391,6 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGConstDefinition(m))
 
         if jsonifierMethod:
-            cgThings.append(CGJsonifyAttributesMethod(descriptor))
             cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
             cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
         if descriptor.interface.isNavigatorProperty():
@@ -12390,6 +12415,11 @@ class CGDescriptor(CGThing):
         properties = PropertyArrays(descriptor)
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
+
+        if jsonifierMethod:
+            # Now that we know about our property arrays, we can
+            # output our "jsonify attributes" method, which uses those.
+            cgThings.append(CGJsonifyAttributesMethod(descriptor, jsonifierMethod))
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructor(descriptor,
