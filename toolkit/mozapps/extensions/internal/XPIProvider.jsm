@@ -139,14 +139,6 @@ const ALL_EXTERNAL_TYPES = new Set([
   "theme",
 ]);
 
-// Keep track of where we are in startup for telemetry
-// event happened during XPIDatabase.startup()
-const XPI_STARTING = "XPIStarting";
-// event happened after startup() but before the final-ui-startup event
-const XPI_BEFORE_UI_STARTUP = "BeforeFinalUIStartup";
-// event happened after final-ui-startup
-const XPI_AFTER_UI_STARTUP = "AfterFinalUIStartup";
-
 var gGlobalScope = this;
 
 /**
@@ -678,7 +670,7 @@ class XPIStateLocation extends Map {
     let xpiState = this._addState(addon.id, {file: addon._sourceBundle});
     xpiState.syncWithDB(addon, true);
 
-    XPIProvider.setTelemetry(addon.id, "location", this.name);
+    XPIProvider.addTelemetry(addon.id, {location: this.name});
   }
 
   /**
@@ -1278,7 +1270,7 @@ var XPIStates = {
             logger.debug("Existing add-on ${id} in ${loc}", {id, loc: loc.name});
           }
         }
-        XPIProvider.setTelemetry(id, "location", loc.name);
+        XPIProvider.addTelemetry(id, {location: loc.name});
       }
 
       // Anything left behind in oldState was removed from the file system.
@@ -1514,7 +1506,6 @@ class BootstrapScope {
     if (Services.appinfo.inSafeMode && !runInSafeMode)
       return null;
 
-    let timeStart = new Date();
     if (addon.type == "extension" && aMethod == "startup") {
       logger.debug(`Registering manifest for ${this.file.path}`);
       Components.manager.addBootstrappedManifestLocation(this.file);
@@ -1610,7 +1601,6 @@ class BootstrapScope {
         logger.debug(`Removing manifest for ${this.file.path}`);
         Components.manager.removeBootstrappedManifestLocation(this.file);
       }
-      XPIProvider.setTelemetry(addon.id, `${aMethod}_MS`, new Date() - timeStart);
     }
   }
 
@@ -1862,8 +1852,6 @@ var XPIProvider = {
   activeAddons: new Map(),
   // True if the platform could have activated extensions
   extensionsActive: false,
-  // Keep track of startup phases for telemetry
-  runPhase: XPI_STARTING,
   // Per-addon telemetry information
   _telemetryDetails: {},
   // Have we started shutting down bootstrap add-ons?
@@ -1940,12 +1928,12 @@ var XPIProvider = {
   },
 
   /*
-   * Set a value in the telemetry hash for a given ID
+   * Adds metadata to the telemetry payload for the given add-on.
    */
-  setTelemetry(aId, aName, aValue) {
+  addTelemetry(aId, aPayload) {
     if (!this._telemetryDetails[aId])
       this._telemetryDetails[aId] = {};
-    this._telemetryDetails[aId][aName] = aValue;
+    Object.assign(this._telemetryDetails[aId], aPayload);
   },
 
   setupInstallLocations(aAppChanged) {
@@ -2055,7 +2043,6 @@ var XPIProvider = {
       AddonManagerPrivate.recordTimestamp("XPI_startup_begin");
 
       logger.debug("startup");
-      this.runPhase = XPI_STARTING;
 
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
@@ -2156,7 +2143,6 @@ var XPIProvider = {
       // Detect final-ui-startup for telemetry reporting
       Services.obs.addObserver(function observer() {
         AddonManagerPrivate.recordTimestamp("XPI_finalUIStartup");
-        XPIProvider.runPhase = XPI_AFTER_UI_STARTUP;
         Services.obs.removeObserver(observer, "final-ui-startup");
       }, "final-ui-startup");
 
@@ -2195,7 +2181,6 @@ var XPIProvider = {
       AddonManagerPrivate.recordTimestamp("XPI_startup_end");
 
       this.extensionsActive = true;
-      this.runPhase = XPI_BEFORE_UI_STARTUP;
 
       timerManager.registerTimer("xpi-signature-verification", () => {
         XPIDatabase.verifySignatures();
@@ -2230,7 +2215,6 @@ var XPIProvider = {
     // If there are pending operations then we must update the list of active
     // add-ons
     if (Services.prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_pending_ops", 1);
       XPIDatabase.updateActiveAddons();
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
     }
