@@ -347,7 +347,7 @@ js::HasOffThreadIonCompile(JSCompartment* comp)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads || comp->isAtomsCompartment())
+    if (!HelperThreadState().threads || JS::GetRealmForCompartment(comp)->isAtomsRealm())
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
@@ -665,11 +665,10 @@ bool
 js::OffThreadParsingMustWaitForGC(JSRuntime* rt)
 {
     // Off thread parsing can't occur during incremental collections on the
-    // atoms compartment, to avoid triggering barriers. (Outside the atoms
-    // compartment, the compilation will use a new zone that is never
-    // collected.) If an atoms-zone GC is in progress, hold off on executing the
-    // parse task until the atoms-zone GC completes (see
-    // EnqueuePendingParseTasksAfterGC).
+    // atoms zone, to avoid triggering barriers. (Outside the atoms zone, the
+    // compilation will use a new zone that is never collected.) If an
+    // atoms-zone GC is in progress, hold off on executing the parse task until
+    // the atoms-zone GC completes (see EnqueuePendingParseTasksAfterGC).
     return rt->activeGCInAtomsZone();
 }
 
@@ -785,7 +784,7 @@ bool
 StartOffThreadParseTask(JSContext* cx, ParseTask* task, const ReadOnlyCompileOptions& options)
 {
     // Suppress GC so that calls below do not trigger a new incremental GC
-    // which could require barriers on the atoms compartment.
+    // which could require barriers on the atoms zone.
     gc::AutoSuppressGC nogc(cx);
     gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);

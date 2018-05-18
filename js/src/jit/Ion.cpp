@@ -337,7 +337,7 @@ JitRuntime::debugTrapHandler(JSContext* cx)
 {
     if (!debugTrapHandler_) {
         // JitRuntime code stubs are shared across compartments and have to
-        // be allocated in the atoms compartment.
+        // be allocated in the atoms zone.
         AutoLockForExclusiveAccess lock(cx);
         AutoAtomsRealm ar(cx, lock);
         debugTrapHandler_ = generateDebugTrapHandler(cx);
@@ -587,12 +587,12 @@ JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapMinorCollecting());
 
-    // Shared stubs are allocated in the atoms compartment, so do not iterate
+    // Shared stubs are allocated in the atoms zone, so do not iterate
     // them after the atoms heap after it has been "finished."
     if (trc->runtime()->atomsAreFinished())
         return;
 
-    Zone* zone = trc->runtime()->atomsCompartment(lock)->zone();
+    Zone* zone = trc->runtime()->atomsRealm(lock)->zone();
     for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
         JitCode* code = i;
         TraceRoot(trc, &code, "wrapper");
