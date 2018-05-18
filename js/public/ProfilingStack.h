@@ -196,6 +196,7 @@ class ProfilingStackFrame
         GCCC,
         NETWORK,
         GRAPHICS,
+        DOM,
         STORAGE,
 
         FIRST    = OTHER,
