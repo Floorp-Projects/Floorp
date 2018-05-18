@@ -315,7 +315,7 @@ public class GeckoSession extends LayerSession
                     final int type;
                     if ("geolocation".equals(typeString)) {
                         type = PermissionDelegate.PERMISSION_GEOLOCATION;
-                    } else if ("desktop_notification".equals(typeString)) {
+                    } else if ("desktop-notification".equals(typeString)) {
                         type = PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION;
                     } else {
                         throw new IllegalArgumentException("Unknown permission request: " + typeString);
