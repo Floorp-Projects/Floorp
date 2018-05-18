@@ -31,13 +31,13 @@ var obj = {
   [Symbol.iterator]() {
     return {
       next() {
-	return { value: 1, done: false };
+        return { value: 1, done: false };
       },
       return() {
-	return {
-	  value: Promise.resolve(42),
-	  done: true
-	};
+        return {
+          value: Promise.resolve(42),
+          done: true
+        };
       }
     };
   }
@@ -55,8 +55,8 @@ iter.next().then(function (result) {
       assert.sameValue(result.value, 42, "Result.value should be unwrapped, got: " + result.value);
 
       iter.next().then(({ done, value }) => {
-	assert.sameValue(done, true, 'the iterator is completed');
-	assert.sameValue(value, undefined, 'value is undefined');
+        assert.sameValue(done, true, 'the iterator is completed');
+        assert.sameValue(value, undefined, 'value is undefined');
       }).then($DONE, $DONE);
     }
   ).catch($DONE);

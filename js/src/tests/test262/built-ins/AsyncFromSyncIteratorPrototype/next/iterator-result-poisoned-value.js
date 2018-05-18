@@ -28,12 +28,12 @@ var obj = {
   [Symbol.iterator]() {
     return {
       next() {
-	return {
-	  get value() {
-	    throw thrownError;
-	  },
-	  done: false
-	}
+        return {
+          get value() {
+            throw thrownError;
+          },
+          done: false
+        }
       }
     };
   }
