@@ -11,6 +11,9 @@
 #include "webrtc/modules/video_capture/video_capture.h"
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "mozilla/jni/Utils.h"
+#endif
 
 namespace mozilla {
 namespace camera {
@@ -23,10 +26,11 @@ mozilla::LazyLogModule gVideoEngineLog("VideoEngine");
 
 int VideoEngine::sId = 0;
 #if defined(ANDROID)
-int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
+int VideoEngine::SetAndroidObjects() {
   LOG((__PRETTY_FUNCTION__));
 
-  if (webrtc::SetCaptureAndroidVM(javaVM) != 0) {
+  JavaVM* const javaVM = mozilla::jni::GetVM();
+  if (!javaVM || webrtc::SetCaptureAndroidVM(javaVM) != 0) {
     LOG(("Could not set capture Android VM"));
     return -1;
   }
@@ -146,6 +150,12 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
 
   switch (mCaptureDevInfo.type) {
     case webrtc::CaptureDeviceType::Camera: {
+#ifdef MOZ_WIDGET_ANDROID
+      if (SetAndroidObjects()) {
+        LOG(("VideoEngine::SetAndroidObjects Failed"));
+        break;
+      }
+#endif
       mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());
       LOG(("webrtc::CaptureDeviceType::Camera: Finished creating new device."));
       break;

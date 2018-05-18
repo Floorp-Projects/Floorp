@@ -485,7 +485,7 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
         return nullptr;
     global->setReservedSlot(EMPTY_GLOBAL_SCOPE, PrivateGCThingValue(emptyGlobalScope));
 
-    cx->compartment()->initGlobal(*global);
+    cx->realm()->initGlobal(*global);
 
     if (!JSObject::setQualifiedVarObj(cx, global))
         return nullptr;
@@ -501,7 +501,7 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
                    const JS::RealmOptions& options)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT_IF(cx->realm(), !cx->realm()->isAtomsRealm());
 
     JSCompartment* compartment = NewCompartment(cx, principals, options);
     if (!compartment)

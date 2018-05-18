@@ -76,6 +76,7 @@ struct BoxQuadOptions;
 struct ConvertCoordinateOptions;
 class DocGroup;
 class DocumentFragment;
+class DocumentOrShadowRoot;
 class DOMPoint;
 class DOMQuad;
 class DOMRectReadOnly;
@@ -686,6 +687,12 @@ public:
   {
     return IsInUncomposedDoc() || (IsInShadowTree() && GetComposedDocInternal());
   }
+
+  /**
+   * Returns OwnerDoc() if the node is in uncomposed document and ShadowRoot if
+   * the node is in Shadow DOM and is in composed document.
+   */
+  mozilla::dom::DocumentOrShadowRoot* GetUncomposedDocOrConnectedShadowRoot();
 
   /**
    * The values returned by this function are the ones defined for

@@ -83,7 +83,7 @@ AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime, DenseBitm
     if (!bitmap.ensureSpace(allocatedWords))
         return false;
 
-    Zone* atomsZone = runtime->unsafeAtomsCompartment()->zone();
+    Zone* atomsZone = runtime->unsafeAtomsRealm()->zone();
     for (auto thingKind : AllAllocKinds()) {
         for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
@@ -117,7 +117,7 @@ AddBitmapToChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap)
     static_assert(ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
                   "ArenaBitmapWords must evenly divide ArenaBitmapBits");
 
-    Zone* atomsZone = runtime->unsafeAtomsCompartment()->zone();
+    Zone* atomsZone = runtime->unsafeAtomsRealm()->zone();
     for (auto thingKind : AllAllocKinds()) {
         for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();

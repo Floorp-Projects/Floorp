@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/PaymentRequestBinding.h"
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsPrimitives.h"
@@ -339,13 +340,15 @@ PaymentDetails::PaymentDetails(const nsAString& aId,
                                nsIArray* aDisplayItems,
                                nsIArray* aShippingOptions,
                                nsIArray* aModifiers,
-                               const nsAString& aError)
+                               const nsAString& aError,
+                               const nsAString& aShippingAddressErrors)
   : mId(aId)
   , mTotalItem(aTotalItem)
   , mDisplayItems(aDisplayItems)
   , mShippingOptions(aShippingOptions)
   , mModifiers(aModifiers)
   , mError(aError)
+  , mShippingAddressErrors(aShippingAddressErrors)
 {
 }
 
@@ -417,7 +420,8 @@ PaymentDetails::Create(const IPCPaymentDetails& aIPCDetails,
 
   nsCOMPtr<nsIPaymentDetails> details =
     new PaymentDetails(aIPCDetails.id(), total, displayItems, shippingOptions,
-                       modifiers, aIPCDetails.error());
+                       modifiers, aIPCDetails.error(),
+                       aIPCDetails.shippingAddressErrors());
 
   details.forget(aDetails);
   return NS_OK;
@@ -475,6 +479,17 @@ PaymentDetails::GetError(nsAString& aError)
 }
 
 NS_IMETHODIMP
+PaymentDetails::GetShippingAddressErrors(JSContext* aCx, JS::MutableHandleValue aErrors)
+{
+  AddressErrors errors;
+  errors.Init(mShippingAddressErrors);
+  if (!ToJSValue(aCx, errors, aErrors)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
 {
   MOZ_ASSERT(aDetails);
@@ -523,9 +538,18 @@ PaymentDetails::Update(nsIPaymentDetails* aDetails, const bool aRequestShipping)
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  aDetails->ShippingAddressErrorsJSON(mShippingAddressErrors);
   return NS_OK;
 
 }
+NS_IMETHODIMP
+PaymentDetails::ShippingAddressErrorsJSON(nsAString& aErrors)
+{
+  aErrors = mShippingAddressErrors;
+  return NS_OK;
+}
+
 /* PaymentOptions */
 
 NS_IMPL_ISUPPORTS(PaymentOptions,

@@ -1242,8 +1242,9 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
     let normalized;
     if (stack instanceof Ci.nsIStackFrame) {
       let frames = [];
-      for (let frame = stack; frame; frame = frame.caller) {
-        frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+      for (let frame = stack; frame; frame = frame.asyncCaller || frame.caller) {
+        let msg = `${frame.filename}:${frame.name}:${frame.lineNumber}`;
+        frames.push(frame.asyncCause ? `${frame.asyncCause}*${msg}` : msg);
       }
       normalized = frames.join("\n");
     } else {

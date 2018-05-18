@@ -439,7 +439,7 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
     }
 
     if (varobj->is<GlobalObject>()) {
-        if (!varobj->compartment()->addToVarNames(cx, dn))
+        if (!varobj->realm()->addToVarNames(cx, dn))
             return false;
     }
 
