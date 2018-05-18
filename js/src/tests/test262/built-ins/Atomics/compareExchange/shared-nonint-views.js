@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')) -- Atomics,SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -7,17 +7,13 @@ esid: sec-atomics.compareexchange
 description: >
   Test Atomics.compareExchange on shared non-integer TypedArrays
 includes: [testTypedArray.js]
-features: [Atomics, TypedArray]
+features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
-var sab = new SharedArrayBuffer(1024);
+var buffer = new SharedArrayBuffer(1024);
 
-var other_views = [Uint8ClampedArray, Float32Array, Float64Array];
-
-testWithTypedArrayConstructors(function(View) {
-  var view = new View(sab);
-
-  assert.throws(TypeError, (() => Atomics.compareExchange(view, 0, 0, 0)));
-}, other_views);
+testWithTypedArrayConstructors(function(TA) {
+  assert.throws(TypeError, (() => Atomics.compareExchange(new TA(buffer), 0, 0, 0)));
+}, floatArrayConstructors);
 
 reportCompare(0, 0);
