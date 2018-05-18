@@ -27,5 +27,5 @@ interface RTCSessionDescription {
   attribute RTCSdpType type;
   attribute DOMString sdp;
 
-  jsonifier;
+  [Default] object toJSON();
 };

@@ -1017,10 +1017,9 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                                   [self.location])
 
             for m in self.members:
-                if ((m.isMethod() and m.isJsonifier()) or
-                    m.identifier.name == "toJSON"):
+                if m.identifier.name == "toJSON":
                     raise WebIDLError("Unforgeable interface %s has a "
-                                      "jsonifier so we won't be able to add "
+                                      "toJSON so we won't be able to add "
                                       "one ourselves" % self.identifier.name,
                                       [self.location, m.location])
 
@@ -1115,15 +1114,12 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                 memberType = "deleters"
             elif member.isStringifier():
                 memberType = "stringifiers"
-            elif member.isJsonifier():
-                memberType = "jsonifiers"
             elif member.isLegacycaller():
                 memberType = "legacycallers"
             else:
                 continue
 
-            if (memberType != "stringifiers" and memberType != "legacycallers" and
-                memberType != "jsonifiers"):
+            if (memberType != "stringifiers" and memberType != "legacycallers"):
                 if member.isNamed():
                     memberType = "named " + memberType
                 else:
@@ -2818,7 +2814,7 @@ class IDLWrapperType(IDLType):
                 return False
             iface = self.inner
             while iface:
-                if any(m.isMethod() and m.isJsonifier() for m in self.inner.members):
+                if any(m.isMethod() and m.isToJSON() for m in self.inner.members):
                     return True
                 iface = iface.parent
             return False
@@ -4671,7 +4667,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def __init__(self, location, identifier, returnType, arguments,
                  static=False, getter=False, setter=False,
                  deleter=False, specialType=NamedOrIndexed.Neither,
-                 legacycaller=False, stringifier=False, jsonifier=False,
+                 legacycaller=False, stringifier=False,
                  maplikeOrSetlikeOrIterable=None, htmlConstructor=False):
         # REVIEW: specialType is NamedOrIndexed -- wow, this is messed up.
         IDLInterfaceMember.__init__(self, location, identifier,
@@ -4696,8 +4692,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         self._legacycaller = legacycaller
         assert isinstance(stringifier, bool)
         self._stringifier = stringifier
-        assert isinstance(jsonifier, bool)
-        self._jsonifier = jsonifier
         assert maplikeOrSetlikeOrIterable is None or isinstance(maplikeOrSetlikeOrIterable, IDLMaplikeOrSetlikeOrIterableBase)
         self.maplikeOrSetlikeOrIterable = maplikeOrSetlikeOrIterable
         assert isinstance(htmlConstructor, bool)
@@ -4745,12 +4739,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             assert len(overload.arguments) == 0
             assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.domstring]
 
-        if self._jsonifier:
-            assert len(self._overloads) == 1
-            overload = self._overloads[0]
-            assert len(overload.arguments) == 0
-            assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.object]
-
     def isStatic(self):
         return self._static
 
@@ -4782,8 +4770,11 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
     def isStringifier(self):
         return self._stringifier
 
-    def isJsonifier(self):
-        return self._jsonifier
+    def isToJSON(self):
+        return self.identifier.name == "toJSON"
+
+    def isDefaultToJSON(self):
+        return self.isToJSON() and self.getExtendedAttribute("Default")
 
     def isMaplikeOrSetlikeOrIterableMethod(self):
         """
@@ -4797,8 +4788,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 self.isSetter() or
                 self.isDeleter() or
                 self.isLegacycaller() or
-                self.isStringifier() or
-                self.isJsonifier())
+                self.isStringifier())
 
     def isHTMLConstructor(self):
         return self._htmlConstructor
@@ -4854,8 +4844,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         assert not method.isDeleter()
         assert not self.isStringifier()
         assert not method.isStringifier()
-        assert not self.isJsonifier()
-        assert not method.isJsonifier()
         assert not self.isHTMLConstructor()
         assert not method.isHTMLConstructor()
 
@@ -5124,6 +5112,14 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 raise WebIDLError("[CEReactions] is only allowed on operation, "
                                   "attribute, setter, and deleter",
                                   [attr.location, self.location])
+        elif identifier == "Default":
+            if not attr.noArguments():
+                raise WebIDLError("[Default] must take no arguments",
+                                  [attr.location])
+
+            if not self.isToJSON():
+                raise WebIDLError("[Default] is only allowed on toJSON operations",
+                                  [attr.location, self.location])
         elif (identifier == "Throws" or
               identifier == "CanOOM" or
               identifier == "NewObject" or
@@ -5311,7 +5307,6 @@ class Tokenizer(object):
         "false": "FALSE",
         "serializer": "SERIALIZER",
         "stringifier": "STRINGIFIER",
-        "jsonifier": "JSONIFIER",
         "unrestricted": "UNRESTRICTED",
         "attribute": "ATTRIBUTE",
         "readonly": "READONLY",
@@ -6142,19 +6137,6 @@ class Parser(Tokenizer):
                            stringifier=True)
         p[0] = method
 
-    def p_Jsonifier(self, p):
-        """
-            Operation : JSONIFIER SEMICOLON
-        """
-        identifier = IDLUnresolvedIdentifier(BuiltinLocation("<auto-generated-identifier>"),
-                                             "__jsonifier", allowDoubleUnderscore=True)
-        method = IDLMethod(self.getLocation(p, 1),
-                           identifier,
-                           returnType=BuiltinTypes[IDLBuiltinType.Types.object],
-                           arguments=[],
-                           jsonifier=True)
-        p[0] = method
-
     def p_QualifierStatic(self, p):
         """
             Qualifier : STATIC
@@ -6308,7 +6290,6 @@ class Parser(Tokenizer):
                          | SETTER
                          | STATIC
                          | STRINGIFIER
-                         | JSONIFIER
                          | TYPEDEF
                          | UNRESTRICTED
                          | NAMESPACE
@@ -6460,7 +6441,6 @@ class Parser(Tokenizer):
                   | SHORT
                   | STATIC
                   | STRINGIFIER
-                  | JSONIFIER
                   | TRUE
                   | TYPEDEF
                   | UNSIGNED

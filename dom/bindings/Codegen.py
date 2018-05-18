@@ -1075,15 +1075,15 @@ class CGHeaders(CGWrapper):
                         ancestors.append(parent)
         interfaceDeps.extend(ancestors)
 
-        # Include parent interface headers needed for jsonifier code.
+        # Include parent interface headers needed for default toJSON code.
         jsonInterfaceParents = []
         for desc in descriptors:
-            if not desc.operations['Jsonifier']:
+            if not desc.hasDefaultToJSON:
                 continue
             parent = desc.interface.parent
             while parent:
                 parentDesc = desc.getDescriptor(parent.identifier.name)
-                if parentDesc.operations['Jsonifier']:
+                if parentDesc.hasDefaultToJSON:
                     jsonInterfaceParents.append(parentDesc.interface)
                 parent = parent.parent
         interfaceDeps.extend(jsonInterfaceParents)
@@ -2411,20 +2411,6 @@ class MethodDefiner(PropertyDefiner):
                     self.chrome.append(toStringDesc)
                 else:
                     self.regular.append(toStringDesc)
-            jsonifier = descriptor.operations['Jsonifier']
-            if (jsonifier and
-                unforgeable == MemberIsUnforgeable(jsonifier, descriptor)):
-                toJSONDesc = {
-                    "name": "toJSON",
-                    "nativeName": jsonifier.identifier.name,
-                    "length": 0,
-                    "flags": "JSPROP_ENUMERATE",
-                    "condition": PropertyDefiner.getControllingCondition(jsonifier, descriptor)
-                }
-                if isChromeOnly(jsonifier):
-                    self.chrome.append(toJSONDesc)
-                else:
-                    self.regular.append(toJSONDesc)
             if (unforgeable and
                 descriptor.interface.getExtendedAttribute("Unforgeable")):
                 # Synthesize our valueOf method
@@ -2878,24 +2864,24 @@ class CGNativeProperties(CGList):
         return CGList.define(self)
 
 
-class CGJsonifyAttributesMethod(CGAbstractMethod):
+class CGCollectJSONAttributesMethod(CGAbstractMethod):
     """
-    Generate the JsonifyAttributes method for an interface descriptor
+    Generate the CollectJSONAttributes method for an interface descriptor
     """
-    def __init__(self, descriptor, jsonifierMethod):
+    def __init__(self, descriptor, toJSONMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
                 Argument('JS::Rooted<JSObject*>&', 'aResult')]
-        CGAbstractMethod.__init__(self, descriptor, 'JsonifyAttributes',
+        CGAbstractMethod.__init__(self, descriptor, 'CollectJSONAttributes',
                                   'bool', args, canRunScript=True)
-        self.jsonifierMethod = jsonifierMethod
+        self.toJSONMethod = toJSONMethod
 
     def definition_body(self):
         ret = ''
         interface = self.descriptor.interface
-        jsonifierCondition = PropertyDefiner.getControllingCondition(self.jsonifierMethod,
-                                                                     self.descriptor)
+        toJSONCondition = PropertyDefiner.getControllingCondition(self.toJSONMethod,
+                                                                  self.descriptor)
         for m in interface.members:
             if m.isAttr() and not m.isStatic() and m.type.isJSONType():
                 getAndDefine = fill(
@@ -2911,10 +2897,10 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
                     name=IDLToCIdentifier(m.identifier.name))
                 # Make sure we don't include things which are supposed to be
                 # disabled.  Things that either don't have disablers or whose
-                # disablers match the disablers for our jsonifier method can't
+                # disablers match the disablers for our toJSON method can't
                 # possibly be disabled, but other things might be.
                 condition = PropertyDefiner.getControllingCondition(m, self.descriptor)
-                if condition.hasDisablers() and condition != jsonifierCondition:
+                if condition.hasDisablers() and condition != toJSONCondition:
                     ret += fill(
                         """
                         // This is unfortunately a linear scan through sAttributes, but we
@@ -8641,9 +8627,9 @@ class CGMethodPromiseWrapper(CGAbstractStaticMethod):
         return methodName + "_promiseWrapper"
 
 
-class CGJsonifierMethod(CGSpecializedMethod):
+class CGDefaultToJSONMethod(CGSpecializedMethod):
     def __init__(self, descriptor, method):
-        assert method.isJsonifier()
+        assert method.isDefaultToJSON()
         CGSpecializedMethod.__init__(self, descriptor, method)
 
     def definition_body(self):
@@ -8658,7 +8644,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
         interface = self.descriptor.interface.parent
         while interface:
             descriptor = self.descriptor.getDescriptor(interface.identifier.name)
-            if descriptor.operations['Jsonifier']:
+            if descriptor.hasDefaultToJSON:
                 jsonDescriptors.append(descriptor)
             interface = interface.parent
 
@@ -8666,7 +8652,7 @@ class CGJsonifierMethod(CGSpecializedMethod):
         for descriptor in jsonDescriptors[::-1]:
             ret += fill(
                 """
-                if (!${parentclass}::JsonifyAttributes(cx, obj, self, result)) {
+                if (!${parentclass}::CollectJSONAttributes(cx, obj, self, result)) {
                   return false;
                 }
                 """,
@@ -12264,15 +12250,12 @@ class MemberProperties:
         self.isCrossOriginMethod = False
         self.isCrossOriginGetter = False
         self.isCrossOriginSetter = False
-        self.isJsonifier = False
 
 
 def memberProperties(m, descriptor):
     props = MemberProperties()
     if m.isMethod():
-        if m == descriptor.operations['Jsonifier']:
-            props.isJsonifier = True
-        elif (not m.isIdentifierLess() or m == descriptor.operations['Stringifier']):
+        if (not m.isIdentifierLess() or m == descriptor.operations['Stringifier']):
             if not m.isStatic() and descriptor.interface.hasInterfacePrototypeObject():
                 if m.getExtendedAttribute("CrossOriginCallable"):
                     props.isCrossOriginMethod = True
@@ -12312,7 +12295,7 @@ class CGDescriptor(CGThing):
                                       "              \"Can't inherit from an interface with a different ownership model.\");\n" %
                                       toBindingNamespace(descriptor.parentPrototypeName)))
 
-        jsonifierMethod = None
+        defaultToJSONMethod = None
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         unscopableNames = list()
         for n in descriptor.interface.namedConstructors:
@@ -12328,8 +12311,8 @@ class CGDescriptor(CGThing):
                 if m.getExtendedAttribute("Unscopable"):
                     assert not m.isStatic()
                     unscopableNames.append(m.identifier.name)
-                if props.isJsonifier:
-                    jsonifierMethod = m
+                if m.isDefaultToJSON():
+                    defaultToJSONMethod = m
                 elif not m.isIdentifierLess() or m == descriptor.operations['Stringifier']:
                     if m.isStatic():
                         assert descriptor.interface.hasInterfaceObject()
@@ -12390,9 +12373,9 @@ class CGDescriptor(CGThing):
             if m.isConst() and m.type.isPrimitive():
                 cgThings.append(CGConstDefinition(m))
 
-        if jsonifierMethod:
-            cgThings.append(CGJsonifierMethod(descriptor, jsonifierMethod))
-            cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
+        if defaultToJSONMethod:
+            cgThings.append(CGDefaultToJSONMethod(descriptor, defaultToJSONMethod))
+            cgThings.append(CGMemberJITInfo(descriptor, defaultToJSONMethod))
         if descriptor.interface.isNavigatorProperty():
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
@@ -12416,10 +12399,10 @@ class CGDescriptor(CGThing):
         cgThings.append(CGGeneric(define=str(properties)))
         cgThings.append(CGNativeProperties(descriptor, properties))
 
-        if jsonifierMethod:
+        if defaultToJSONMethod:
             # Now that we know about our property arrays, we can
-            # output our "jsonify attributes" method, which uses those.
-            cgThings.append(CGJsonifyAttributesMethod(descriptor, jsonifierMethod))
+            # output our "collect attribute values" method, which uses those.
+            cgThings.append(CGCollectJSONAttributesMethod(descriptor, defaultToJSONMethod))
 
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructor(descriptor,
@@ -14722,9 +14705,6 @@ class CGBindingImplClass(CGClass):
                 else:
                     # We already added this method
                     return
-            if name == "Jsonifier":
-                # We already added this method
-                return
             self.methodDecls.append(
                 CGNativeMember(descriptor, op,
                                name,
