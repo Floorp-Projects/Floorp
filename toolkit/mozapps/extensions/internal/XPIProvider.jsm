@@ -122,7 +122,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const XPI_SIGNATURE_CHECK_PERIOD      = 24 * 60 * 60;
 
-XPCOMUtils.defineConstant(this, "DB_SCHEMA", 25);
+XPCOMUtils.defineConstant(this, "DB_SCHEMA", 26);
 
 const NOTIFICATION_TOOLBOX_CONNECTION_CHANGE      = "toolbox-connection-change";
 
