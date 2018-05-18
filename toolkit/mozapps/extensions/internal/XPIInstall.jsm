@@ -78,7 +78,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 const hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
-const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
@@ -3441,13 +3440,6 @@ var XPIInstall = {
 
     // Install the add-on
     addon._sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
-    if (Services.prefs.getBoolPref(PREF_DISTRO_ADDONS_PERMS, false)) {
-      addon.userDisabled = true;
-      if (!XPIProvider.newDistroAddons) {
-        XPIProvider.newDistroAddons = new Set();
-      }
-      XPIProvider.newDistroAddons.add(id);
-    }
 
     XPIStates.addAddon(addon);
     logger.debug(`Installed distribution add-on ${id}`);
