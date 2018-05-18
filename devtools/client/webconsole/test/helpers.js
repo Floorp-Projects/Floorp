@@ -42,8 +42,13 @@ function setupStore(input = [], {
   if (!hud) {
     hud = {
       proxy: {
-        releaseActor: () => {}
-      }
+        releaseActor: () => {},
+        target: {
+          activeTab: {
+            ensureCSSErrorReportingEnabled: () => {}
+          }
+        },
+      },
     };
   }
   const store = configureStore(hud, storeOptions);

@@ -5,19 +5,19 @@
 "use strict";
 
 const {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
-const defer = require("devtools/shared/defer");
-const Debugger = require("Debugger");
 const Services = require("Services");
-const {KeyCodes} = require("devtools/client/shared/keycodes");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
+loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
+loader.lazyRequireGetter(this, "Debugger", "Debugger");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
+loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
