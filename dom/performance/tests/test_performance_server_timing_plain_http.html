@@ -33,6 +33,8 @@ promise_test(t => {
   return promise.then(list => {
     assert_equals(list.getEntries().length, 1);
     assert_equals(list.getEntries()[0].serverTiming, undefined);
+    assert_equals(list.getEntries()[0].toJSON().serverTiming, undefined,
+		  "toJSON should not pick up properties that aren't on the object");
   });
 }, "server-timing test");
 

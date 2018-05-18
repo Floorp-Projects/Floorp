@@ -267,22 +267,6 @@ BaselineCacheIRCompiler::emitGuardGroup()
 }
 
 bool
-BaselineCacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript()
-{
-    Address addr(stubAddress(reader.stubOffset()));
-    AutoScratchRegister scratch1(allocator, masm);
-    AutoScratchRegister scratch2(allocator, masm);
-
-    FailurePath* failure;
-    if (!addFailurePath(&failure))
-        return false;
-
-    masm.loadPtr(addr, scratch1);
-    masm.guardGroupHasUnanalyzedNewScript(scratch1, scratch2, failure->label());
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitGuardProto()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());

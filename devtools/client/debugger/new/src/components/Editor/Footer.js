@@ -28,9 +28,7 @@ var _sources = require("../../reducers/sources");
 
 var _editor = require("../../utils/editor/index");
 
-var _PaneToggle = require("../shared/Button/PaneToggle");
-
-var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
+var _Button = require("../shared/Button/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -129,7 +127,7 @@ class SourceFooter extends _react.PureComponent {
       return;
     }
 
-    return _react2.default.createElement(_PaneToggle2.default, {
+    return _react2.default.createElement(_Button.PaneToggleButton, {
       position: "end",
       collapsed: !this.props.endPanelCollapsed,
       horizontal: this.props.horizontal,
@@ -189,11 +187,10 @@ class SourceFooter extends _react.PureComponent {
 
 const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  const selectedId = selectedSource.get("id");
-  const source = selectedSource.toJS();
+  const selectedId = selectedSource.id;
   return {
     selectedSource,
-    mappedSource: (0, _sources.getGeneratedSource)(state, source),
+    mappedSource: (0, _sources.getGeneratedSource)(state, selectedSource),
     prettySource: (0, _selectors.getPrettySource)(state, selectedId),
     endPanelCollapsed: (0, _selectors.getPaneCollapse)(state, "end")
   };
