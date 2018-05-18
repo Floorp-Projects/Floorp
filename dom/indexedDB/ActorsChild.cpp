@@ -731,7 +731,7 @@ DispatchErrorEvent(IDBRequest* aRequest,
   MOZ_ASSERT(NS_FAILED(aErrorCode));
   MOZ_ASSERT(NS_ERROR_GET_MODULE(aErrorCode) == NS_ERROR_MODULE_DOM_INDEXEDDB);
 
-  AUTO_PROFILER_LABEL("IndexedDB:DispatchErrorEvent", STORAGE);
+  AUTO_PROFILER_LABEL("IndexedDB:DispatchErrorEvent", DOM);
 
   RefPtr<IDBRequest> request = aRequest;
   RefPtr<IDBTransaction> transaction = aTransaction;
@@ -804,7 +804,7 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
 {
   MOZ_ASSERT(aResultHelper);
 
-  AUTO_PROFILER_LABEL("IndexedDB:DispatchSuccessEvent", STORAGE);
+  AUTO_PROFILER_LABEL("IndexedDB:DispatchSuccessEvent", DOM);
 
   RefPtr<IDBRequest> request = aResultHelper->Request();
   MOZ_ASSERT(request);
