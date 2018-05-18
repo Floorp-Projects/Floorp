@@ -47,7 +47,7 @@ geckoview-junit:
                     - android/androidx86_7_0.py
                 android.*:
                     - android/android_common.py
-                    - android/androidarm_4_3.py
+                    - android/androidarm_4_3_junit.py
         extra-options:
             - --test-suite=geckoview-junit
 
