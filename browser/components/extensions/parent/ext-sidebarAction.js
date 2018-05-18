@@ -135,7 +135,8 @@ this.sidebarAction = class extends ExtensionAPI {
     for (let window of windowTracker.browserWindows()) {
       this.updateWindow(window);
       let {SidebarUI} = window;
-      if (install || SidebarUI.lastOpenedId == this.id) {
+      if ((install && this.extension.manifest.sidebar_action.open_at_install) ||
+          SidebarUI.lastOpenedId == this.id) {
         SidebarUI.show(this.id);
       }
     }
