@@ -7,6 +7,13 @@ async function addAddress() {
   await onChanged;
 }
 
+async function addBasicCard() {
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                          (subject, data) => data == "add");
+  formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  await onChanged;
+}
+
 add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved_cards() {
   await BrowserTestUtils.withNewTab({
     gBrowser,
@@ -28,14 +35,14 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      info("Checking if the address page has been rendered");
-      let addressSaveButton = content.document.querySelector("address-form .save-button");
-      ok(content.isVisible(addressSaveButton), "Address save button is rendered");
-
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "address-page" &&
                state["address-page"].selectedStateKey == "selectedShippingAddress";
       }, "Address page is shown first during on-boarding if there are no saved addresses");
+
+      info("Checking if the address page has been rendered");
+      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      ok(content.isVisible(addressSaveButton), "Address save button is rendered");
 
       info("Check if the total header is visible on the address page during on-boarding");
       let header = content.document.querySelector("header");
@@ -46,7 +53,8 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       info("Check if the page title is visible on the address page");
       let addressPageTitle = content.document.querySelector("address-form h1");
       ok(content.isVisible(addressPageTitle), "Address page title is visible");
-      ok(addressPageTitle.textContent, "Address page title contains text");
+      is(addressPageTitle.textContent, "Add Shipping Address",
+         "Address page title is correctly shown");
 
       let addressCancelButton = content.document.querySelector("address-form .cancel-button");
       ok(content.isVisible(addressCancelButton),
@@ -66,12 +74,12 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
         return state.page.id == "basic-card-page";
       }, "Basic card page is shown after the address page during on boarding");
 
-      let basicCardTitle = content.document.querySelector("basic-card-form h1");
-      ok(content.isVisible(basicCardTitle), "Basic card page title is visible");
-      ok(basicCardTitle.textContent, "Basic card page title contains text");
-
       let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
       ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
+
+      let basicCardTitle = content.document.querySelector("basic-card-form h1");
+      ok(content.isVisible(basicCardTitle), "Basic card page title is visible");
+      is(basicCardTitle.textContent, "Add Credit Card", "Basic card page title is correctly shown");
 
       for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
         let field = content.document.getElementById(key);
@@ -82,11 +90,11 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
-      }, "payment-summary is now visible");
+      }, "Payment summary page is shown after the basic card page during on boarding");
 
       let cancelButton = content.document.querySelector("#cancel");
       ok(content.isVisible(cancelButton),
-         "Payment summary page is shown after the basic card page during on boarding");
+         "Payment summary page is rendered");
     });
 
     info("Closing the payment dialog");
@@ -117,13 +125,13 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_saved_ca
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      info("Checking if the payment summary page is now visible");
-      let cancelButton = content.document.querySelector("#cancel");
-      ok(content.isVisible(cancelButton), "Payment summary page is rendered");
-
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
       }, "Payment summary page is shown first when there are saved addresses and saved cards");
+
+      info("Checking if the payment summary page is now visible");
+      let cancelButton = content.document.querySelector("#cancel");
+      ok(content.isVisible(cancelButton), "Payment summary page is rendered");
 
       info("Check if the total header is visible on payments summary page");
       let header = content.document.querySelector("header");
@@ -192,13 +200,13 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_no_saved
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      info("Checking if the basic card has been rendered");
-      let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
-      ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
-
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "basic-card-page";
       }, "Basic card page is shown first if there are saved addresses during on boarding");
+
+      info("Checking if the basic card page has been rendered");
+      let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
+      ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
 
       info("Check if the total header is visible on the basic card page during on-boarding");
       let header = content.document.querySelector("header");
@@ -216,6 +224,169 @@ add_task(async function test_onboarding_wizard_with_saved_addresses_and_no_saved
       content.document.querySelector("basic-card-form .cancel-button").click();
     });
 
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+
+    cleanupFormAutofillStorage();
+  });
+});
+
+add_task(async function test_onboarding_wizard_without_saved_address_with_saved_cards() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    cleanupFormAutofillStorage();
+    addBasicCard();
+
+    info("Opening the payment dialog");
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.total60USD,
+        options: PTU.Options.requestShippingOption,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      });
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page";
+      }, "Address page is shown first if there are saved addresses during on boarding");
+
+      info("Checking if the address page has been rendered");
+      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      ok(content.isVisible(addressSaveButton), "Address save button is rendered");
+
+      for (let [key, val] of Object.entries(PTU.Addresses.TimBL2)) {
+        let field = content.document.getElementById(key);
+        if (!field) {
+          ok(false, `${key} field not found`);
+        }
+        field.value = val;
+        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      }
+      content.document.querySelector("address-form .save-button").click();
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "payment-summary is now visible");
+
+      let cancelButton = content.document.querySelector("#cancel");
+      ok(content.isVisible(cancelButton), "Payment summary page is shown next");
+    });
+
+    info("Closing the payment dialog");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+    cleanupFormAutofillStorage();
+  });
+});
+
+add_task(async function test_onboarding_wizard_with_requestShipping_turned_off() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    cleanupFormAutofillStorage();
+
+    info("Opening the payment dialog");
+    let {win, frame} =
+      await setupPaymentDialog(browser, {
+        methodData: [PTU.MethodData.basicCard],
+        details: PTU.Details.total60USD,
+        merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+      });
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "address-page";
+      // eslint-disable-next-line max-len
+      }, "Billing address page is shown first during on-boarding if requestShipping is turned off");
+
+      info("Checking if the billing address page has been rendered");
+      let addressSaveButton = content.document.querySelector("address-form .save-button");
+      ok(content.isVisible(addressSaveButton),
+         "Address save button is rendered");
+
+      info("Check if the page title is visible on the address page");
+      let addressPageTitle = content.document.querySelector("address-form h1");
+      ok(content.isVisible(addressPageTitle), "Address page title is visible");
+      is(addressPageTitle.textContent, "Add Billing Address",
+         "Address page title is correctly shown");
+
+      for (let [key, val] of Object.entries(PTU.Addresses.TimBL2)) {
+        let field = content.document.getElementById(key);
+        if (!field) {
+          ok(false, `${key} field not found`);
+        }
+        field.value = val;
+        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      }
+      content.document.querySelector("address-form .save-button").click();
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "basic-card-page";
+      // eslint-disable-next-line max-len
+      }, "Basic card page is shown after the billing address page during onboarding if requestShipping is turned off");
+
+      let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
+      ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
+
+      for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
+        let field = content.document.getElementById(key);
+        field.value = val;
+        ok(!field.disabled, `Field #${key} shouldn't be disabled`);
+      }
+      content.document.querySelector("basic-card-form .save-button").click();
+
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.page.id == "payment-summary";
+      }, "payment-summary is shown after the basic card page during on boarding");
+
+      let cancelButton = content.document.querySelector("#cancel");
+      ok(content.isVisible(cancelButton), "Payment summary page is rendered");
+    });
+
+    info("Closing the payment dialog");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
+    await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
+
+    cleanupFormAutofillStorage();
+  });
+});
+
+add_task(async function test_on_boarding_wizard_with_requestShipping_turned_off_with_saved_cards() {
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: BLANK_PAGE_URL,
+  }, async browser => {
+    cleanupFormAutofillStorage();
+    addBasicCard();
+
+    info("Opening the payment dialog");
+    let {win, frame} =
+        await setupPaymentDialog(browser, {
+          methodData: [PTU.MethodData.basicCard],
+          details: PTU.Details.total60USD,
+          merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
+        });
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let cancelButton = content.document.querySelector("#cancel");
+      ok(content.isVisible(cancelButton),
+       // eslint-disable-next-line max-len
+         "Payment summary page is shown if requestShipping is turned off and there's a saved card but no saved address");
+    });
+
+    info("Closing the payment dialog");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
 
     cleanupFormAutofillStorage();
