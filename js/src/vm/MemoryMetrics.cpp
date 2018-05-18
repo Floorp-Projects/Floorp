@@ -332,6 +332,8 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
 static void
 StatsRealmCallback(JSContext* cx, void* data, JSCompartment* compartment)
 {
+    Realm* realm = JS::GetRealmForCompartment(compartment);
+
     // Append a new RealmStats to the vector.
     RuntimeStats* rtStats = static_cast<StatsClosure*>(data)->rtStats;
 
@@ -342,25 +344,25 @@ StatsRealmCallback(JSContext* cx, void* data, JSCompartment* compartment)
         MOZ_CRASH("oom");
     rtStats->initExtraRealmStats(compartment, &realmStats);
 
-    compartment->setRealmStats(&realmStats);
+    realm->setRealmStats(&realmStats);
 
-    // Measure the compartment object itself, and things hanging off it.
-    compartment->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
-                                        &realmStats.typeInferenceAllocationSiteTables,
-                                        &realmStats.typeInferenceArrayTypeTables,
-                                        &realmStats.typeInferenceObjectTypeTables,
-                                        &realmStats.realmObject,
-                                        &realmStats.realmTables,
-                                        &realmStats.innerViewsTable,
-                                        &realmStats.lazyArrayBuffersTable,
-                                        &realmStats.objectMetadataTable,
-                                        &realmStats.crossCompartmentWrappersTable,
-                                        &realmStats.savedStacksSet,
-                                        &realmStats.varNamesSet,
-                                        &realmStats.nonSyntacticLexicalScopesTable,
-                                        &realmStats.jitRealm,
-                                        &realmStats.privateData,
-                                        &realmStats.scriptCountsMap);
+    // Measure the realm object itself, and things hanging off it.
+    realm->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
+                                  &realmStats.typeInferenceAllocationSiteTables,
+                                  &realmStats.typeInferenceArrayTypeTables,
+                                  &realmStats.typeInferenceObjectTypeTables,
+                                  &realmStats.realmObject,
+                                  &realmStats.realmTables,
+                                  &realmStats.innerViewsTable,
+                                  &realmStats.lazyArrayBuffersTable,
+                                  &realmStats.objectMetadataTable,
+                                  &realmStats.crossCompartmentWrappersTable,
+                                  &realmStats.savedStacksSet,
+                                  &realmStats.varNamesSet,
+                                  &realmStats.nonSyntacticLexicalScopesTable,
+                                  &realmStats.jitRealm,
+                                  &realmStats.privateData,
+                                  &realmStats.scriptCountsMap);
 }
 
 static void

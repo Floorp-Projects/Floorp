@@ -1355,7 +1355,7 @@ JSContext::getPendingException(MutableHandleValue rval)
 {
     MOZ_ASSERT(throwing);
     rval.set(unwrappedException());
-    if (IsAtomsCompartment(compartment()))
+    if (realm()->isAtomsRealm())
         return true;
     bool wasOverRecursed = overRecursed_;
     clearPendingException();

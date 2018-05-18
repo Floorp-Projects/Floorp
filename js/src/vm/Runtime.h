@@ -700,14 +700,14 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // Set of all atoms added while the main atoms table is being swept.
     js::ExclusiveAccessLockData<js::AtomSet*> atomsAddedWhileSweeping_;
 
-    // Compartment and associated zone containing all atoms in the runtime, as
+    // Realm and associated zone containing all atoms in the runtime, as
     // well as runtime wide IonCode stubs. Modifying the contents of this
-    // compartment requires the calling thread to use AutoLockForExclusiveAccess.
-    js::WriteOnceData<JSCompartment*> atomsCompartment_;
+    // zone requires the calling thread to use AutoLockForExclusiveAccess.
+    js::WriteOnceData<JS::Realm*> atomsRealm_;
 
     // Set of all live symbols produced by Symbol.for(). All such symbols are
-    // allocated in the atomsCompartment. Reading or writing the symbol
-    // registry requires the calling thread to use AutoLockForExclusiveAccess.
+    // allocated in the atomsZone. Reading or writing the symbol registry
+    // requires the calling thread to use AutoLockForExclusiveAccess.
     js::ExclusiveAccessLockOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
 
   public:
@@ -735,22 +735,25 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
         return atomsAddedWhileSweeping_;
     }
 
-    JSCompartment* atomsCompartment(js::AutoLockForExclusiveAccess& lock) {
-        return atomsCompartment_;
+    JS::Realm* atomsRealm(js::AutoLockForExclusiveAccess& lock) {
+        return atomsRealm_;
     }
-    JSCompartment* unsafeAtomsCompartment() {
-        return atomsCompartment_;
+    JS::Realm* unsafeAtomsRealm() {
+        return atomsRealm_;
     }
 
+    // Note: once JS::Realm and JSCompartment are completely unrelated, the
+    // atoms realm probably won't have a compartment so we can remove this
+    // then.
     bool isAtomsCompartment(JSCompartment* comp) {
-        return comp == atomsCompartment_;
+        return JS::GetRealmForCompartment(comp) == atomsRealm_;
     }
 
     const JS::Zone* atomsZone(js::AutoLockForExclusiveAccess& lock) const {
         return gc.atomsZone;
     }
 
-    // The atoms compartment is the only one in its zone.
+    // The atoms realm is the only one in its zone.
     bool isAtomsZone(const JS::Zone* zone) const {
         return zone == gc.atomsZone;
     }

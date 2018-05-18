@@ -275,8 +275,8 @@ struct JSContext : public JS::RootingContext,
     js::AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
         return runtime_->atoms(lock);
     }
-    JSCompartment* atomsCompartment(js::AutoLockForExclusiveAccess& lock) {
-        return runtime_->atomsCompartment(lock);
+    JS::Realm* atomsRealm(js::AutoLockForExclusiveAccess& lock) {
+        return runtime_->atomsRealm(lock);
     }
     js::SymbolRegistry& symbolRegistry(js::AutoLockForExclusiveAccess& lock) {
         return runtime_->symbolRegistry(lock);
@@ -557,7 +557,7 @@ struct JSContext : public JS::RootingContext,
     // stacks of exclusive threads, so we need to avoid collecting their
     // objects in another way. The only GC thing pointers they have are to
     // their exclusive compartment (which is not collected) or to the atoms
-    // compartment. Therefore, we avoid collecting the atoms compartment when
+    // compartment. Therefore, we avoid collecting the atoms zone when
     // exclusive threads are running.
     js::ThreadData<unsigned> keepAtoms;
 

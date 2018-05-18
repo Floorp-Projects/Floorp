@@ -193,30 +193,26 @@ include css-grid/reftest.list
 # floats/
 include floats/reftest.list
 
-###################################
-# These tests have been moved to reftest_fonts.list
-#
 # font-face
-#include font-face/reftest.list
+include font-face/reftest.list
 
 # font features (opentype)
-#include font-features/reftest.list
+include font-features/reftest.list
 
 # mobile font size inflation
-#include font-inflation/reftest.list
+include font-inflation/reftest.list
 
 # CSS Font Loading API
-#include font-loading-api/reftest.list
+include font-loading-api/reftest.list
 
 # font matching
-#include font-matching/reftest.list
+include font-matching/reftest.list
 
 # font variations
-#include font-variations/reftest.list
+include font-variations/reftest.list
 
 # forms
-#include forms/reftest.list
-#######################################
+include forms/reftest.list
 
 # frameset
 include frameset/reftest.list
@@ -349,30 +345,26 @@ include table-width/reftest.list
 
 include ../tables/reftests/reftest.list
 
-##############################################
-# These tests have been moved to reftest_fonts.list
-#
 # text/
-#include text/reftest.list
+include text/reftest.list
 
 # text-stroke
-#include text-stroke/reftest.list
+include text-stroke/reftest.list
 
 # text-decoration/
-#include text-decoration/reftest.list
+include text-decoration/reftest.list
 
 # text-indent/
-#include text-indent/reftest.list
+include text-indent/reftest.list
 
 # text-shadow/
-#include text-shadow/reftest.list
+include text-shadow/reftest.list
 
 # text-svgglyphs/
-#include text-svgglyphs/reftest.list
+include text-svgglyphs/reftest.list
 
 # text-transform/
-#include text-transform/reftest.list
-##############################################
+include text-transform/reftest.list
 
 # theme (osx)
 include ../../toolkit/themes/osx/reftests/reftest.list

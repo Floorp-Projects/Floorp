@@ -112,12 +112,10 @@ function loadFrameScriptUtils(browser = gBrowser.selectedBrowser) {
 }
 
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);
-Services.prefs.setBoolPref("devtools.inspector.three-pane-toggle", true);
 Services.prefs.setBoolPref("devtools.inspector.show-three-pane-tooltip", false);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.inspector.three-pane-enabled");
-  Services.prefs.clearUserPref("devtools.inspector.three-pane-toggle");
   Services.prefs.clearUserPref("devtools.inspector.show-three-pane-tooltip");
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
