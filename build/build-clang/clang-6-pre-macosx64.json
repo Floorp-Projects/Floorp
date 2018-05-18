@@ -1,15 +1,15 @@
 {
-    "llvm_revision": "326563",
+    "llvm_revision": "317840",
     "stages": "1",
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
     "osx_cross_compile": true,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_600/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_600/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_600/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_600/final",
-    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_600/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/trunk",
     "python_path": "/usr/bin/python2.7",
     "gcc_dir": "/builds/worker/workspace/build/src/gcc",
     "cc": "/builds/worker/workspace/build/src/clang/bin/clang",
@@ -21,6 +21,7 @@
     "ld": "/builds/worker/workspace/build/src/clang/bin/clang",
     "patches": [
       "compiler-rt-cross-compile.patch",
-      "compiler-rt-no-codesign.patch"
+      "compiler-rt-no-codesign.patch",
+      "r321543.patch"
     ]
 }

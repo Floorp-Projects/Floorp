@@ -1,0 +1,12 @@
+diff --git a/compiler-rt/lib/profile/GCDAProfiling.c b/compiler-rt/lib/profile/GCDAProfiling.c
+index f0c05075a..11b1c4557 100644
+--- a/compiler-rt/lib/profile/GCDAProfiling.c
++++ b/compiler-rt/lib/profile/GCDAProfiling.c
+@@ -468,6 +468,7 @@ void llvm_gcda_end_file() {
+       unmap_file();
+     }
+ 
++    fflush(output_file);
+     flock(fd, LOCK_UN);
+     fclose(output_file);
+     output_file = NULL;
