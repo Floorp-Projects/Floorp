@@ -2965,10 +2965,10 @@ var AddonManagerPrivate = {
     };
   },
 
-  recordTiming(name, task) {
+  async recordTiming(name, task) {
     let timer = this.simpleTimer(name);
     try {
-      return task();
+      return await task();
     } finally {
       timer.done();
     }

@@ -75,9 +75,6 @@ var logger = Log.repository.getLogger(LOGGER_ID);
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_JSON_DB                    = "extensions.json";
 
-// The last version of DB_SCHEMA implemented in SQLITE
-const LAST_SQLITE_DB_SCHEMA           = 14;
-
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_EXTENSION_FORMAT        = "extensions.";
@@ -1425,13 +1422,19 @@ this.XPIDatabase = {
    *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   syncLoadDB(aRebuildOnError) {
-    logger.warn(new Error("Synchronously loading the add-ons database"));
+    let err = new Error("Synchronously loading the add-ons database");
+    logger.debug(err);
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_sync_stack", Log.stackTrace(err));
     try {
       this.syncLoadingDB = true;
       XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
     } finally {
       this.syncLoadingDB = false;
     }
+  },
+
+  _recordStartupError(reason) {
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", reason);
   },
 
   /**
@@ -1443,27 +1446,21 @@ this.XPIDatabase = {
    *        If true, synchronously reconstruct the database from installed add-ons
    */
   async parseDB(aData, aRebuildOnError) {
-    let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
+      let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
       let inputAddons = JSON.parse(aData);
 
       if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
-        parseTimer.done();
-
-        // Content of JSON file is bad, need to rebuild from scratch
-        logger.error("bad JSON file contents");
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "badJSON");
-
-        this.timeRebuildDatabase("XPIDB_rebuildBadJSON_MS", aRebuildOnError);
-        return;
+        let error = new Error("Bad JSON file contents");
+        error.rebuildReason = "XPIDB_rebuildBadJSON_MS";
+        throw error;
       }
 
       if (inputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError",
-                                                `schemaMismatch-${inputAddons.schemaVersion}`);
+        this._recordStartupError(`schemaMismatch-${inputAddons.schemaVersion}`);
         logger.debug(`JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`);
       }
 
@@ -1495,61 +1492,17 @@ this.XPIDatabase = {
       logger.debug("Successfully read XPI database");
       this.initialized = true;
     } catch (e) {
-      // If we catch and log a SyntaxError from the JSON
-      // parser, the xpcshell test harness fails the test for us: bug 870828
-      parseTimer.done();
-
       if (e.name == "SyntaxError") {
         logger.error("Syntax error parsing saved XPI JSON data");
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "syntax");
+        this._recordStartupError("syntax");
       } else {
         logger.error("Failed to load XPI JSON data from profile", e);
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "other");
+        this._recordStartupError("other");
       }
 
-      this.timeRebuildDatabase("XPIDB_rebuildReadFailed_MS", aRebuildOnError);
+      this.timeRebuildDatabase(e.rebuildReason || "XPIDB_rebuildReadFailed_MS",
+                               aRebuildOnError);
     }
-  },
-
-  timeRebuildDatabase(timerName, rebuildOnError) {
-    AddonManagerPrivate.recordTiming(timerName, () => {
-      this.rebuildDatabase(rebuildOnError);
-    });
-  },
-
-  /**
-   * Upgrade database from earlier (sqlite or RDF) version if available
-   *
-   * @param {boolean} aRebuildOnError
-   *        If true, synchronously reconstruct the database from installed add-ons
-   */
-  upgradeDB(aRebuildOnError) {
-    let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA, 0);
-    if (schemaVersion > LAST_SQLITE_DB_SCHEMA) {
-      // we've upgraded before but the JSON file is gone, fall through
-      // and rebuild from scratch
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "dbMissing");
-    }
-
-    this.timeRebuildDatabase("XPIDB_upgradeDB_MS", aRebuildOnError);
-  },
-
-  /**
-   * Reconstruct when the DB file exists but is unreadable
-   * (for example because read permission is denied)
-   *
-   * @param {Error} aError
-   *        The error that triggered the rebuild.
-   * @param {boolean} aRebuildOnError
-   *        If true, synchronously reconstruct the database from installed add-ons
-   */
-  rebuildUnreadableDB(aError, aRebuildOnError) {
-    logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`, aError);
-    // Remember the error message until we try and write at least once, so
-    // we know at shutdown time that there was a problem
-    this._loadError = aError;
-
-    this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
   },
 
   async maybeIdleDispatch() {
@@ -1577,43 +1530,43 @@ this.XPIDatabase = {
       return this._dbPromise;
     }
 
-    logger.debug("Starting async load of XPI database " + this.jsonFile.path);
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_async_load", XPIProvider.runPhase);
-    let readOptions = {
-      outExecutionDuration: 0
-    };
+    logger.debug(`Starting async load of XPI database ${this.jsonFile.path}`);
     this._dbPromise = (async () => {
       try {
-        let byteArray = await OS.File.read(this.jsonFile.path, null, readOptions);
-
-        logger.debug(`Async JSON file read took ${readOptions.outExecutionDuration} MS`);
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
-                                                readOptions.outExecutionDuration);
+        let byteArray = await OS.File.read(this.jsonFile.path, null);
 
         logger.debug("Finished async read of XPI database, parsing...");
         await this.maybeIdleDispatch();
-        let text = AddonManagerPrivate.recordTiming(
-          "XPIDB_decode_MS",
-          () => new TextDecoder().decode(byteArray));
+        let text = new TextDecoder().decode(byteArray);
 
         await this.maybeIdleDispatch();
         await this.parseDB(text, true);
       } catch (error) {
         if (error.becauseNoSuchFile) {
-          this.upgradeDB(aRebuildOnError);
+          if (Services.prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
+            this._recordStartupError("dbMissing");
+          }
         } else {
-          // it's there but unreadable
-          this.rebuildUnreadableDB(error, aRebuildOnError);
+          logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`,
+                      error);
+          this._loadError = error;
         }
+        this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
       }
       return this.addonDB;
     })();
 
     this._dbPromise.then(() => {
-      Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
+      Services.obs.notifyObservers(null, "xpi-database-loaded");
     });
 
     return this._dbPromise;
+  },
+
+  timeRebuildDatabase(timerName, rebuildOnError) {
+    AddonManagerPrivate.recordTiming(timerName, () => {
+      return this.rebuildDatabase(rebuildOnError);
+    });
   },
 
   /**
@@ -1896,7 +1849,6 @@ this.XPIDatabase = {
       logger.warn(`Synchronous load of XPI database due to ` +
                   `getAddonsByType([${aTypes.join(", ")}]) ` +
                   `Stack: ${Error().stack}`);
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
 
@@ -2109,12 +2061,6 @@ this.XPIDatabase = {
    *        the AddonInternal that was added to the database
    */
   addToDatabase(aAddon, aPath) {
-    if (!this.addonDB) {
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_addMetadata",
-          XPIProvider.runPhase);
-      this.syncLoadDB(false);
-    }
-
     aAddon.addedToDatabase();
     aAddon.path = aPath;
     this.addonDB.set(aAddon._key, aAddon);
@@ -2286,14 +2232,6 @@ this.XPIDatabase = {
    * Synchronously calculates and updates all the active flags in the database.
    */
   updateActiveAddons() {
-    if (!this.addonDB) {
-      logger.warn("updateActiveAddons called when DB isn't loaded");
-      // force the DB to load
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_updateActive",
-          XPIProvider.runPhase);
-      this.syncLoadDB(true);
-    }
-
     logger.debug("Updating add-on states");
     for (let [, addon] of this.addonDB) {
       let newActive = (addon.visible && !addon.disabled && !addon.pendingUninstall);
@@ -2450,22 +2388,15 @@ this.XPIDatabase = {
   },
 
   /**
-   * Record a bit of per-addon telemetry.
-   *
-   * Yes, this description is extremely helpful. How dare you question its
-   * utility?
+   * Adds the add-on's name and creator to the telemetry payload.
    *
    * @param {AddonInternal} aAddon
    *        The addon to record
    */
   recordAddonTelemetry(aAddon) {
     let locale = aAddon.defaultLocale;
-    if (locale) {
-      if (locale.name)
-        XPIProvider.setTelemetry(aAddon.id, "name", locale.name);
-      if (locale.creator)
-        XPIProvider.setTelemetry(aAddon.id, "creator", locale.creator);
-    }
+    XPIProvider.addTelemetry(aAddon.id, {name: locale.name,
+                                         creator: locale.creator});
   },
 };
 
@@ -2815,13 +2746,6 @@ this.XPIDatabaseReconcile = {
     XPIDatabase.recordAddonTelemetry(oldAddon);
 
     let installLocation = oldAddon.location;
-
-    if (xpiState.mtime < oldAddon.updateDate) {
-      XPIProvider.setTelemetry(oldAddon.id, "olderFile", {
-        mtime: xpiState.mtime,
-        oldtime: oldAddon.updateDate
-      });
-    }
 
     // Update the add-on's database metadata from on-disk metadata if:
     //
