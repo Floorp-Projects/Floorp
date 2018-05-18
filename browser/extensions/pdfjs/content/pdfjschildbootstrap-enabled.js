@@ -22,9 +22,9 @@
  */
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://pdf.js/PdfJs.jsm");
+ChromeUtils.import("resource://pdf.js/PdfJsRegistration.jsm");
 
 if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
   // register various pdfjs factories that hook us into content loading.
-  PdfJs.ensureRegistered();
+  PdfJsRegistration.ensureRegistered();
 }
