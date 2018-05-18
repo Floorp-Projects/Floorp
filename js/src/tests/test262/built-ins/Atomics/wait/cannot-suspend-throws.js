@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')||xulRuntime.shell) -- Atomics,SharedArrayBuffer,CannotSuspendMainAgent is not enabled unconditionally
+// |reftest| skip-if(xulRuntime.shell||!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')) -- shell can block main thread, Atomics,SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2018 Amal Hussein. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -15,12 +15,13 @@ info: |
   6. Let B be AgentCanSuspend().
   7. If B is false, throw a TypeError exception.
   ...
-features: [Atomics, SharedArrayBuffer, TypedArray, CannotSuspendMainAgent]
+features: [Atomics, SharedArrayBuffer, TypedArray]
+flags: [CanBlockIsFalse]
 ---*/
 
-var sab = new SharedArrayBuffer(4);
-var int32Array = new Int32Array(sab);
-  
+var buffer = new SharedArrayBuffer(4);
+var int32Array = new Int32Array(buffer);
+
 assert.throws(TypeError, function() {
   Atomics.wait(int32Array, 0, 0, 0);
 });

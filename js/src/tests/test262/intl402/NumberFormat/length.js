@@ -30,4 +30,11 @@ verifyNotEnumerable(Intl.NumberFormat, "length");
 verifyNotWritable(Intl.NumberFormat, "length");
 verifyConfigurable(Intl.NumberFormat, "length");
 
+verifyProperty(Intl.NumberFormat, 'length', {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
+
 reportCompare(0, 0);
