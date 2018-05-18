@@ -392,7 +392,8 @@ public:
 
   void PushIFrame(const wr::LayoutRect& aBounds,
                   bool aIsBackfaceVisible,
-                  wr::PipelineId aPipeline);
+                  wr::PipelineId aPipeline,
+                  bool aIgnoreMissingPipeline);
 
   // XXX WrBorderSides are passed with Range.
   // It is just to bypass compiler bug. See Bug 1357734.
