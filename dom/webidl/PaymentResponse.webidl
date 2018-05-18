@@ -16,9 +16,7 @@ enum PaymentComplete {
 [SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentResponse {
-  // TODO: Use serializer once available. (Bug 863402)
-  // serializer = {attribute};
-  jsonifier;
+  [Default] object toJSON();
 
   readonly attribute DOMString       requestId;
   readonly attribute DOMString       methodName;

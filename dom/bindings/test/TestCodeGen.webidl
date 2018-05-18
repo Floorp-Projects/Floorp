@@ -963,10 +963,10 @@ interface TestInterface {
                             optional Dict arg3, optional double arg4 = 5.0,
                             optional float arg5);
 
-  attribute any jsonifierShouldSkipThis;
-  attribute TestParentInterface jsonifierShouldSkipThis2;
-  attribute TestCallbackInterface jsonifierShouldSkipThis3;
-  jsonifier;
+  attribute any toJSONShouldSkipThis;
+  attribute TestParentInterface toJSONShouldSkipThis2;
+  attribute TestCallbackInterface toJSONShouldSkipThis3;
+  [Default] object toJSON();
 
   attribute byte dashed-attribute;
   void dashed-method();
