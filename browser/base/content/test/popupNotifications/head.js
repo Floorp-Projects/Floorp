@@ -4,26 +4,6 @@ ChromeUtils.defineModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 
 /**
- * Allows waiting for an observer notification once.
- *
- * @param topic
- *        Notification topic to observe.
- *
- * @return {Promise}
- * @resolves The array [subject, data] from the observed notification.
- * @rejects Never.
- */
-function promiseTopicObserved(topic) {
-  return new Promise(resolve => {
-    info("Waiting for observer topic " + topic);
-    Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
-      Services.obs.removeObserver(PTO_observe, obsTopic);
-      resolve([obsSubject, obsData]);
-    }, topic);
-  });
-}
-
-/**
  * Called after opening a new window or switching windows, this will wait until
  * we are sure that an attempt to display a notification will not fail.
  */
