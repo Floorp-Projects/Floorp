@@ -611,8 +611,9 @@ var gPermissionObject = {
       if (Services.prefs.getBoolPref("media.autoplay.enabled")) {
         return SitePermissions.ALLOW;
       }
-      return SitePermissions.BLOCK;
-    }
+      return SitePermissions.UNKNOWN;
+    },
+    labelID: "autoplay-media"
   },
 
   "image": {

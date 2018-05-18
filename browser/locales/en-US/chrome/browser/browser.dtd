@@ -213,6 +213,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY urlbar.defaultNotificationAnchor.tooltip         "Open message panel">
 <!ENTITY urlbar.geolocationNotificationAnchor.tooltip     "Open location request panel">
+<!ENTITY urlbar.autoplayNotificationAnchor.tooltip        "Open autoplay panel">
 <!ENTITY urlbar.addonsNotificationAnchor.tooltip          "Open add-on installation message panel">
 <!ENTITY urlbar.canvasNotificationAnchor.tooltip          "Manage canvas extraction permission">
 <!ENTITY urlbar.indexedDBNotificationAnchor.tooltip       "Open offline storage message panel">
@@ -240,6 +241,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY urlbar.webNotificationsBlocked.tooltip  "You have blocked notifications for this website.">
 <!ENTITY urlbar.persistentStorageBlocked.tooltip "You have blocked persistent storage for this website.">
 <!ENTITY urlbar.popupBlocked.tooltip             "You have blocked pop-ups for this website.">
+<!ENTITY urlbar.autoplayMediaBlocked.tooltip     "You have blocked autoplay media with sound for this website.">
 <!ENTITY urlbar.canvasBlocked.tooltip            "You have blocked canvas data extraction for this website.">
 <!ENTITY urlbar.flashPluginBlocked.tooltip       "You have blocked this website from using the Adobe Flash plugin.">
 <!ENTITY urlbar.midiBlocked.tooltip              "You have blocked MIDI access for this website.">

@@ -824,6 +824,8 @@
                          tooltiptext="&urlbar.persistentStorageBlocked.tooltip;"/>
                   <image data-permission-id="popup" class="blocked-permission-icon popup-icon" role="button"
                          tooltiptext="&urlbar.popupBlocked.tooltip;"/>
+                  <image data-permission-id="autoplay-media" class="blocked-permission-icon autoplay-media-icon" role="button"
+                         tooltiptext="&urlbar.autoplayMediaBlocked.tooltip;"/>
                   <image data-permission-id="canvas" class="blocked-permission-icon canvas-icon" role="button"
                          tooltiptext="&urlbar.canvasBlocked.tooltip;"/>
                   <image data-permission-id="plugin:flash" class="blocked-permission-icon plugin-icon" role="button"
@@ -840,6 +842,8 @@
                          tooltiptext="&urlbar.defaultNotificationAnchor.tooltip;"/>
                   <image id="geo-notification-icon" class="notification-anchor-icon geo-icon" role="button"
                          tooltiptext="&urlbar.geolocationNotificationAnchor.tooltip;"/>
+                  <image id="autoplay-media-notification-icon" class="notification-anchor-icon autoplay-media-icon" role="button"
+                         tooltiptext="&urlbar.autoplayNotificationAnchor.tooltip;"/>
                   <image id="addons-notification-icon" class="notification-anchor-icon install-icon" role="button"
                          tooltiptext="&urlbar.addonsNotificationAnchor.tooltip;"/>
                   <image id="canvas-notification-icon" class="notification-anchor-icon" role="button"
