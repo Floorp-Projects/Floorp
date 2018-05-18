@@ -55,6 +55,7 @@ struct IPCPaymentDetails
   IPCPaymentShippingOption[] shippingOptions;
   IPCPaymentDetailsModifier[] modifiers;
   nsString error;
+  nsString shippingAddressErrors;
   bool displayItemsPassed;
   bool shippingOptionsPassed;
   bool modifiersPassed;

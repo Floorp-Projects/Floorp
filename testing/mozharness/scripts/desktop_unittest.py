@@ -175,12 +175,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": "False",
             "help": "Run additional verification on modified tests using gpu instances."}
          ],
-        [["--run-slower"], {
-            "action": "store_true",
-            "dest": "run_slower",
-            "default": False,
-            "help": "Run additional verification on modified tests using gpu instances."}
-         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
@@ -424,13 +418,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
             if c['headless']:
                 base_cmd.append('--headless')
-
-            if c['run_slower']:
-                if suite_category == "reftest":
-                    base_cmd.append('--run-slower')
-                else:
-                    self.warning("--run-slow does not currently work with suites other than "
-                                 "reftest.")
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, 'plugins')

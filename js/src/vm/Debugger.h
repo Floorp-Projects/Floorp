@@ -353,9 +353,9 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         Observing = 1
     };
 
-    // Return true if the given compartment is a debuggee of this debugger,
+    // Return true if the given realm is a debuggee of this debugger,
     // false otherwise.
-    bool isDebuggeeUnbarriered(const JSCompartment* compartment) const;
+    bool isDebuggeeUnbarriered(const Realm* realm) const;
 
     // Return true if this Debugger observed a debuggee that participated in the
     // GC identified by the given GC number. Return false otherwise.

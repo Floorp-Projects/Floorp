@@ -1211,7 +1211,7 @@ public:
     extras->jsPathPrefix.Assign(mRtPath);
     extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
                                             (void *)js::GetCompartmentZone(aCompartment));
-    extras->jsPathPrefix += js::IsAtomsCompartment(aCompartment)
+    extras->jsPathPrefix += js::IsAtomsRealm(JS::GetRealmForCompartment(aCompartment))
                             ? NS_LITERAL_CSTRING("realm(web-worker-atoms)/")
                             : NS_LITERAL_CSTRING("realm(web-worker)/");
 

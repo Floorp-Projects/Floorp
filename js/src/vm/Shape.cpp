@@ -2160,8 +2160,8 @@ NewObjectCache::invalidateEntriesForShape(JSContext* cx, HandleShape shape, Hand
     }
 
     EntryIndex entry;
-    for (CompartmentsInZoneIter comp(shape->zone()); !comp.done(); comp.next()) {
-        if (GlobalObject* global = comp->unsafeUnbarrieredMaybeGlobal()) {
+    for (RealmsInZoneIter realm(shape->zone()); !realm.done(); realm.next()) {
+        if (GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal()) {
             if (lookupGlobal(clasp, global, kind, &entry))
                 PodZero(&entries[entry]);
         }

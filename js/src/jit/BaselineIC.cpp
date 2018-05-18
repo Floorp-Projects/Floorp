@@ -1863,21 +1863,6 @@ GetTemplateObjectForNative(JSContext* cx, HandleFunction target, const CallArgs&
         }
     }
 
-    if (native == js::intrinsic_StringSplitString && args.length() == 2 && args[0].isString() &&
-        args[1].isString())
-    {
-        ObjectGroup* group = ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array);
-        if (!group)
-            return false;
-        if (group->maybePreliminaryObjectsDontCheckGeneration()) {
-            *skipAttach = true;
-            return true;
-        }
-
-        res.set(NewFullyAllocatedArrayForCallingAllocationSite(cx, 0, TenuredObject));
-        return !!res;
-    }
-
     if (native == StringConstructor) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
         res.set(StringObject::create(cx, emptyString, /* proto = */ nullptr, TenuredObject));
@@ -2219,10 +2204,14 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 }
 
 static bool
-CopyArray(JSContext* cx, HandleArrayObject arr, MutableHandleValue result)
+CopyStringSplitArray(JSContext* cx, HandleArrayObject arr, MutableHandleValue result)
 {
-    uint32_t length = arr->length();
-    ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length, TenuredObject);
+    MOZ_ASSERT(arr->isTenured(), "ConstStringSplit needs a tenured template object");
+
+    uint32_t length = arr->getDenseInitializedLength();
+    MOZ_ASSERT(length == arr->length(), "template object is a fully initialized array");
+
+    ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length);
     if (!nobj)
         return false;
     nobj->initDenseElements(arr, 0, length);
@@ -2241,34 +2230,35 @@ TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub, HandleScript scr
 
     Value* args = vp + 2;
 
-    // String.prototype.split will not yield a constructable.
-    if (JSOp(*pc) == JSOP_NEW)
-        return true;
-
     if (!IsOptimizableConstStringSplit(callee, argc, args))
         return true;
 
-    MOZ_ASSERT(callee.isObject());
-    MOZ_ASSERT(callee.toObject().is<JSFunction>());
-
     RootedString str(cx, args[0].toString());
     RootedString sep(cx, args[1].toString());
-    RootedObject obj(cx, &res.toObject());
-    RootedValue arr(cx);
+    RootedArrayObject obj(cx, &res.toObject().as<ArrayObject>());
+    uint32_t initLength = obj->getDenseInitializedLength();
+    MOZ_ASSERT(initLength == obj->length(), "string-split result is a fully initialized array");
 
     // Copy the array before storing in stub.
-    if (!CopyArray(cx, obj.as<ArrayObject>(), &arr))
+    RootedArrayObject arrObj(cx);
+    arrObj = NewFullyAllocatedArrayTryReuseGroup(cx, obj, initLength, TenuredObject);
+    if (!arrObj)
         return false;
+    arrObj->ensureDenseInitializedLength(cx, 0, initLength);
 
     // Atomize all elements of the array.
-    RootedArrayObject arrObj(cx, &arr.toObject().as<ArrayObject>());
-    uint32_t initLength = arrObj->length();
-    for (uint32_t i = 0; i < initLength; i++) {
-        JSAtom* str = js::AtomizeString(cx, arrObj->getDenseElement(i).toString());
-        if (!str)
-            return false;
+    if (initLength > 0) {
+        // Mimic NewFullyAllocatedStringArray() and directly inform TI about
+        // the element type.
+        AddTypePropertyId(cx, arrObj, JSID_VOID, TypeSet::StringType());
 
-        arrObj->setDenseElementWithType(cx, i, StringValue(str));
+        for (uint32_t i = 0; i < initLength; i++) {
+            JSAtom* str = js::AtomizeString(cx, obj->getDenseElement(i).toString());
+            if (!str)
+                return false;
+
+            arrObj->initDenseElement(i, StringValue(str));
+        }
     }
 
     ICTypeMonitor_Fallback* typeMonitorFallback = stub->getFallbackMonitorStub(cx, script);
@@ -2401,7 +2391,7 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
         stub->discardStubs(cx);
     canAttachStub = stub->state().canAttachStub();
 
-    if (!handled && canAttachStub) {
+    if (!handled && canAttachStub && !constructing) {
         // If 'callee' is a potential Call_ConstStringSplit, try to attach an
         // optimized ConstStringSplit stub. Note that vp[0] now holds the return value
         // instead of the callee, so we pass the callee as well.
@@ -3156,8 +3146,9 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-typedef bool (*CopyArrayFn)(JSContext*, HandleArrayObject, MutableHandleValue);
-static const VMFunction CopyArrayInfo = FunctionInfo<CopyArrayFn>(CopyArray, "CopyArray");
+typedef bool (*CopyStringSplitArrayFn)(JSContext*, HandleArrayObject, MutableHandleValue);
+static const VMFunction CopyStringSplitArrayInfo =
+    FunctionInfo<CopyStringSplitArrayFn>(CopyStringSplitArray, "CopyStringSplitArray");
 
 bool
 ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
@@ -3243,7 +3234,7 @@ ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm)
         masm.loadPtr(Address(ICStubReg, offsetOfTemplateObject()), paramReg);
         masm.push(paramReg);
 
-        if (!callVM(CopyArrayInfo, masm))
+        if (!callVM(CopyStringSplitArrayInfo, masm))
             return false;
         leaveStubFrame(masm);
         regs.add(paramReg);

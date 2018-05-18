@@ -217,7 +217,7 @@
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
-    pc.setIdentityProvider('nonexistent-origin.web-platform.test', {
+    pc.setIdentityProvider('nonexistent.web-platform.test', {
       protocol: `non-existent`,
       usernameHint: `alice@example.org`,
     });

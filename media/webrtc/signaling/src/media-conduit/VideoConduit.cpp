@@ -1189,9 +1189,7 @@ WebrtcVideoConduit::InitMain()
     }
   }
 #ifdef MOZ_WIDGET_ANDROID
-  JavaVM* jvm = mozilla::jni::GetVM();
-
-  if (mozilla::camera::VideoEngine::SetAndroidObjects(jvm) != 0) {
+  if (mozilla::camera::VideoEngine::SetAndroidObjects() != 0) {
     CSFLogError(LOGTAG,  "%s: could not set Android objects", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }

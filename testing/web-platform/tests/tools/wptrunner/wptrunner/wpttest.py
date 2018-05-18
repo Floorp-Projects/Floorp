@@ -65,7 +65,7 @@ def get_run_info(metadata_root, product, **kwargs):
 
 
 class RunInfo(dict):
-    def __init__(self, metadata_root, product, debug, extras=None):
+    def __init__(self, metadata_root, product, debug, browser_version=None, extras=None):
         import mozinfo
 
         self._update_mozinfo(metadata_root)
@@ -82,6 +82,8 @@ class RunInfo(dict):
             self["stylo"] = True
         if "STYLO_FORCE_DISABLED" in os.environ:
             self["stylo"] = False
+        if browser_version:
+            self["browser_version"] = browser_version
         if extras is not None:
             self.update(extras)
 

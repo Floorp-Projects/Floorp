@@ -46,14 +46,12 @@ JSCompartment::JSCompartment(Zone* zone)
     runtime_(zone->runtimeFromAnyThread()),
     principals_(nullptr),
     isSystem_(false),
-    isAtomsCompartment_(false),
     isSelfHosting(false),
     marked(true),
     warnedAboutStringGenericsMethods(0),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
 #endif
-    global_(nullptr),
     enterCompartmentDepth(0),
     performanceMonitoring(runtime_),
     data(nullptr),
@@ -95,7 +93,8 @@ JSCompartment::JSCompartment(Zone* zone)
 JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
   : JSCompartment(zone),
     creationOptions_(options.creationOptions()),
-    behaviors_(options.behaviors())
+    behaviors_(options.behaviors()),
+    global_(nullptr)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
@@ -131,22 +130,33 @@ JSCompartment::~JSCompartment()
 bool
 JSCompartment::init(JSContext* maybecx)
 {
-    /*
-     * maybecx is null when called to create the atoms compartment from
-     * JSRuntime::init().
-     *
-     * As a hack, we clear our timezone cache every time we create a new
-     * compartment. This ensures that the cache is always relatively fresh, but
-     * shouldn't interfere with benchmarks that create tons of date objects
-     * (unless they also create tons of iframes, which seems unlikely).
-     */
-    JS::ResetTimeZone();
-
     if (!crossCompartmentWrappers.init(0)) {
         if (maybecx)
             ReportOutOfMemory(maybecx);
         return false;
     }
+
+    return true;
+}
+
+bool
+Realm::init(JSContext* maybecx)
+{
+    // Initialize JSCompartment. This is temporary until Realm and
+    // JSCompartment are completely separated.
+    if (!JSCompartment::init(maybecx))
+        return false;
+
+    /*
+     * maybecx is null when called to create the atoms realm from
+     * JSRuntime::init().
+     *
+     * As a hack, we clear our timezone cache every time we create a new realm.
+     * This ensures that the cache is always relatively fresh, but shouldn't
+     * interfere with benchmarks that create tons of date objects (unless they
+     * also create tons of iframes, which seems unlikely).
+     */
+    JS::ResetTimeZone();
 
     enumerators = NativeIterator::allocateSentinel(maybecx);
     if (!enumerators)
@@ -167,7 +177,7 @@ JSCompartment::init(JSContext* maybecx)
 jit::JitRuntime*
 JSRuntime::createJitRuntime(JSContext* cx)
 {
-    // The shared stubs are created in the atoms compartment, which may be
+    // The shared stubs are created in the atoms zone, which may be
     // accessed by other threads with an exclusive context.
     AutoLockForExclusiveAccess atomsLock(cx);
 
@@ -603,10 +613,10 @@ JSCompartment::getNonSyntacticLexicalEnvironment(JSObject* enclosing) const
 }
 
 bool
-JSCompartment::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
+Realm::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 {
     MOZ_ASSERT(name);
-    MOZ_ASSERT(!isAtomsCompartment());
+    MOZ_ASSERT(!isAtomsRealm());
 
     if (varNames_.put(name))
         return true;
@@ -648,11 +658,10 @@ JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 }
 
 void
-JSCompartment::traceGlobal(JSTracer* trc)
+Realm::traceGlobal(JSTracer* trc)
 {
-    // Trace things reachable from the compartment's global. Note that these
-    // edges must be swept too in case the compartment is live but the global is
-    // not.
+    // Trace things reachable from the realm's global. Note that these edges
+    // must be swept too in case the realm is live but the global is not.
 
     savedStacks_.trace(trc);
 
@@ -662,7 +671,7 @@ JSCompartment::traceGlobal(JSTracer* trc)
 }
 
 void
-JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
+Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
     if (objectMetadataState.is<PendingMetadata>()) {
         TraceRoot(trc,
@@ -725,7 +734,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 }
 
 void
-JSCompartment::finishRoots()
+Realm::finishRoots()
 {
     if (debugEnvs)
         debugEnvs->finish();
@@ -764,7 +773,7 @@ JSCompartment::sweepSavedStacks()
 }
 
 void
-JSCompartment::sweepGlobalObject()
+Realm::sweepGlobalObject()
 {
     if (global_ && IsAboutToBeFinalized(&global_))
         global_.set(nullptr);
@@ -831,7 +840,7 @@ JSCompartment::sweepCrossCompartmentWrappers()
 }
 
 void
-JSCompartment::sweepVarNames()
+Realm::sweepVarNames()
 {
     varNames_.sweep();
 }
@@ -909,8 +918,10 @@ JSCompartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
+    Realm* realm = JS::GetRealmForCompartment(this);
+
     purge();
-    fixupGlobal();
+    realm->fixupGlobal();
     objectGroups.fixupTablesAfterMovingGC();
     fixupScriptMapsAfterMovingGC();
 
@@ -920,7 +931,7 @@ JSCompartment::fixupAfterMovingGC()
 }
 
 void
-JSCompartment::fixupGlobal()
+Realm::fixupGlobal()
 {
     GlobalObject* global = *global_.unsafeGet();
     if (global)
@@ -1008,14 +1019,13 @@ JSCompartment::purge()
 }
 
 void
-JSCompartment::clearTables()
+Realm::clearTables()
 {
     global_.set(nullptr);
 
-    // No scripts should have run in this compartment. This is used when
-    // merging a compartment that has been used off thread into another
-    // compartment and zone.
-    MOZ_ASSERT(crossCompartmentWrappers.empty());
+    // No scripts should have run in this realm. This is used when merging
+    // a realm that has been used off thread into another realm and zone.
+    JS::GetCompartmentForRealm(this)->assertNoCrossCompartmentWrappers();
     MOZ_ASSERT(!jitCompartment_);
     MOZ_ASSERT(!debugEnvs);
     MOZ_ASSERT(enumerators->next() == enumerators);
@@ -1184,9 +1194,10 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                flag == DebuggerObservesAsmJS ||
                flag == DebuggerObservesBinarySource);
 
+    Realm* realm = JS::GetRealmForCompartment(this);
     GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
-                           ? unsafeUnbarrieredMaybeGlobal()
-                           : maybeGlobal();
+                           ? realm->unsafeUnbarrieredMaybeGlobal()
+                           : realm->maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();
     for (auto p = v->begin(); p != v->end(); p++) {
         Debugger* dbg = *p;
@@ -1301,35 +1312,47 @@ JSCompartment::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg, HandleObject h
 }
 
 void
-JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                      size_t* tiAllocationSiteTables,
-                                      size_t* tiArrayTypeTables,
-                                      size_t* tiObjectTypeTables,
-                                      size_t* compartmentObject,
-                                      size_t* compartmentTables,
-                                      size_t* innerViewsArg,
-                                      size_t* lazyArrayBuffersArg,
-                                      size_t* objectMetadataTablesArg,
-                                      size_t* crossCompartmentWrappersArg,
-                                      size_t* savedStacksSet,
-                                      size_t* varNamesSet,
-                                      size_t* nonSyntacticLexicalEnvironmentsArg,
-                                      size_t* jitCompartment,
-                                      size_t* privateData,
-                                      size_t* scriptCountsMapArg)
+JSCompartment::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                      size_t* crossCompartmentWrappersArg)
 {
-    *compartmentObject += mallocSizeOf(this);
+    // Note that Realm inherits from JSCompartment (for now) so sizeof(*this) is
+    // included in that.
+
+    *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
+}
+
+void
+Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                              size_t* tiAllocationSiteTables,
+                              size_t* tiArrayTypeTables,
+                              size_t* tiObjectTypeTables,
+                              size_t* realmObject,
+                              size_t* realmTables,
+                              size_t* innerViewsArg,
+                              size_t* lazyArrayBuffersArg,
+                              size_t* objectMetadataTablesArg,
+                              size_t* crossCompartmentWrappersArg,
+                              size_t* savedStacksSet,
+                              size_t* varNamesSet,
+                              size_t* nonSyntacticLexicalEnvironmentsArg,
+                              size_t* jitCompartment,
+                              size_t* privateData,
+                              size_t* scriptCountsMapArg)
+{
+    // This is temporary until Realm and JSCompartment are completely separated.
+    JSCompartment::addSizeOfExcludingThis(mallocSizeOf, crossCompartmentWrappersArg);
+
+    *realmObject += mallocSizeOf(this);
     objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
                                         tiArrayTypeTables, tiObjectTypeTables,
-                                        compartmentTables);
-    wasm.addSizeOfExcludingThis(mallocSizeOf, compartmentTables);
+                                        realmTables);
+    wasm.addSizeOfExcludingThis(mallocSizeOf, realmTables);
     *innerViewsArg += innerViews.sizeOfExcludingThis(mallocSizeOf);
 
     if (lazyArrayBuffers)
         *lazyArrayBuffersArg += lazyArrayBuffers->sizeOfIncludingThis(mallocSizeOf);
     if (objectMetadataTable)
         *objectMetadataTablesArg += objectMetadataTable->sizeOfIncludingThis(mallocSizeOf);
-    *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *savedStacksSet += savedStacks_.sizeOfExcludingThis(mallocSizeOf);
     *varNamesSet += varNames_.sizeOfExcludingThis(mallocSizeOf);
     if (nonSyntacticLexicalEnvironments_)

@@ -355,10 +355,10 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     // Trace the JSContext.
     rt->mainContextFromOwnThread()->trace(trc);
 
-    // Trace all compartment roots, but not the compartment itself; it is
-    // traced via the parent pointer if traceRoots actually traces anything.
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        c->traceRoots(trc, traceOrMark);
+    // Trace all realm roots, but not the realm itself; it is traced via the
+    // parent pointer if traceRoots actually traces anything.
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+        r->traceRoots(trc, traceOrMark);
 
     // Trace helper thread roots.
     HelperThreadState().trace(trc, session);
@@ -415,8 +415,8 @@ js::gc::GCRuntime::finishRoots()
 
     rt->finishSelfHosting();
 
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        c->finishRoots();
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+        r->finishRoots();
 
 #ifdef DEBUG
     // The nsWrapperCache may not be empty before our shutdown GC, so we have

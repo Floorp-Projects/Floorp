@@ -43,7 +43,9 @@ def get_loader(test_paths, product, ssl_env, debug=None, run_info_extras=None, *
     if run_info_extras is None:
         run_info_extras = {}
 
-    run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=debug,
+    run_info = wpttest.get_run_info(kwargs["run_info"], product,
+                                    browser_version=kwargs.get("browser_version"),
+                                    debug=debug,
                                     extras=run_info_extras)
 
     test_manifests = testloader.ManifestLoader(test_paths, force_manifest_update=kwargs["manifest_update"],
@@ -153,7 +155,9 @@ def run_tests(config, test_paths, product, **kwargs):
             ))
 
         if "test_loader" in kwargs:
-            run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=None,
+            run_info = wpttest.get_run_info(kwargs["run_info"], product,
+                                            browser_version=kwargs.get("browser_version"),
+                                            debug=None,
                                             extras=run_info_extras(**kwargs))
             test_loader = kwargs["test_loader"]
         else:
@@ -288,6 +292,10 @@ def run_tests(config, test_paths, product, **kwargs):
     if test_total == 0:
         logger.error("No tests ran")
         return False
+
+    if unexpected_total and not kwargs["fail_on_unexpected"]:
+        logger.info("Tolerating %s unexpected results" % unexpected_total)
+        return True
 
     return unexpected_total == 0
 

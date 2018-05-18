@@ -4293,6 +4293,10 @@ static JSObject*
 CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier)
 {
     ShellContext* sc = GetShellContext(cx);
+    if (!sc->moduleResolveHook) {
+        JS_ReportErrorASCII(cx, "Module resolve hook not set");
+        return nullptr;
+    }
 
     JS::AutoValueArray<2> args(cx);
     args[0].setObject(*module);
