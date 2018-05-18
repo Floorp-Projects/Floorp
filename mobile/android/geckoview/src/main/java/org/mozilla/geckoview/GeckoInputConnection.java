@@ -81,7 +81,6 @@ import java.lang.reflect.Proxy;
 
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
-    /* package */ boolean mShowSoftInputOnFocus = true;
 
     public static SessionTextInput.InputConnectionClient create(
             final GeckoSession session,
@@ -295,10 +294,6 @@ import java.lang.reflect.Proxy;
         v.post(new Runnable() {
             @Override
             public void run() {
-                if (!mShowSoftInputOnFocus) {
-                    return;
-                }
-
                 if (v.hasFocus() && !imm.isActive(v)) {
                     // Marshmallow workaround: The view has focus but it is not the active
                     // view for the input method. (Bug 1211848)
@@ -820,12 +815,6 @@ import java.lang.reflect.Proxy;
     public synchronized boolean isInputActive() {
         // Make sure this picks up PASSWORD state as well.
         return mIMEState != IME_STATE_DISABLED;
-    }
-
-    @Override // SessionTextInput.InputConnectionClient
-    public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
-        ThreadUtils.assertOnUiThread();
-        mShowSoftInputOnFocus = showSoftInputOnFocus;
     }
 
     @Override // SessionTextInput.EditableListener
