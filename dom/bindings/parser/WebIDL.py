@@ -4978,6 +4978,19 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               " methods on JS-implemented classes only.",
                               [self.location])
 
+        # Ensure that toJSON methods satisfy the spec constraints on them.
+        if self.identifier.name == "toJSON":
+            if len(self.signatures()) != 1:
+                raise WebIDLError("toJSON method has multiple overloads",
+                                  [self._overloads[0].location,
+                                   self._overloads[1].location])
+            if len(self.signatures()[0][1]) != 0:
+                raise WebIDLError("toJSON method has arguments",
+                                  [self.location])
+            if not self.signatures()[0][0].isJSONType():
+                raise WebIDLError("toJSON method has non-JSON return type",
+                                  [self.location])
+
     def overloadsForArgCount(self, argc):
         return [overload for overload in self._overloads if
                 len(overload.arguments) == argc or
