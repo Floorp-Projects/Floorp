@@ -1575,15 +1575,21 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
 
 class IDLInterface(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, parent, members,
-                 isKnownNonPartial):
+                 isKnownNonPartial, classNameOverride=None):
         IDLInterfaceOrNamespace.__init__(self, location, parentScope, name,
                                          parent, members, isKnownNonPartial)
+        self.classNameOverride = classNameOverride
 
     def __str__(self):
         return "Interface '%s'" % self.identifier.name
 
     def isInterface(self):
         return True
+
+    def getClassName(self):
+        if self.classNameOverride:
+            return self.classNameOverride
+        return self.identifier.name
 
     def addExtendedAttributes(self, attrs):
         for attr in attrs:
