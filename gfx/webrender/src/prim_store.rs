@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode, ColorF, ComplexClipRegion};
-use api::{DeviceIntRect, DeviceIntSize, DeviceUintSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
+use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
 use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, TileOffset};
 use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTransform, LayoutVector2D};
 use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets};
@@ -36,6 +36,7 @@ use util::{pack_as_float, recycle_vec};
 
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 256.0 * 256.0;
+pub const VECS_PER_SEGMENT: usize = 2;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ScrollNodeAndClipChain {
@@ -541,25 +542,6 @@ pub enum ImageSource {
         size: DeviceIntSize,
         handle: Option<RenderTaskCacheEntryHandle>,
     },
-}
-
-#[derive(Debug)]
-pub struct ImagePrimitiveCpu {
-    pub tile_spacing: LayoutSize,
-    pub alpha_type: AlphaType,
-    pub stretch_size: LayoutSize,
-    pub current_epoch: Epoch,
-    pub source: ImageSource,
-    pub key: ImageCacheKey,
-}
-
-impl ToGpuBlocks for ImagePrimitiveCpu {
-    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
-        request.push([
-            self.stretch_size.width, self.stretch_size.height,
-            self.tile_spacing.width, self.tile_spacing.height,
-        ]);
-    }
 }
 
 #[derive(Debug)]
@@ -1158,7 +1140,6 @@ pub struct PrimitiveStore {
     /// CPU side information only.
     pub cpu_brushes: Vec<BrushPrimitive>,
     pub cpu_text_runs: Vec<TextRunPrimitiveCpu>,
-    pub cpu_images: Vec<ImagePrimitiveCpu>,
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
 
@@ -1172,7 +1153,6 @@ impl PrimitiveStore {
             cpu_metadata: Vec::new(),
             cpu_brushes: Vec::new(),
             cpu_text_runs: Vec::new(),
-            cpu_images: Vec::new(),
             cpu_borders: Vec::new(),
 
             pictures: Vec::new(),
@@ -1185,7 +1165,6 @@ impl PrimitiveStore {
             cpu_metadata: recycle_vec(self.cpu_metadata),
             cpu_brushes: recycle_vec(self.cpu_brushes),
             cpu_text_runs: recycle_vec(self.cpu_text_runs),
-            cpu_images: recycle_vec(self.cpu_images),
             cpu_borders: recycle_vec(self.cpu_borders),
 
             pictures: recycle_vec(self.pictures),
@@ -1493,10 +1472,7 @@ impl PrimitiveStore {
                             if *tile_spacing != LayoutSize::zero() && !is_tiled {
                                 *source = ImageSource::Cache {
                                     // Size in device-pixels we need to allocate in render task cache.
-                                    size: DeviceIntSize::new(
-                                        image_properties.descriptor.width as i32,
-                                        image_properties.descriptor.height as i32
-                                    ),
+                                    size: image_properties.descriptor.size.to_i32(),
                                     handle: None,
                                 };
                             }
@@ -1594,10 +1570,7 @@ impl PrimitiveStore {
 
                             if let Some(tile_size) = image_properties.tiling {
 
-                                let device_image_size = DeviceUintSize::new(
-                                    image_properties.descriptor.width,
-                                    image_properties.descriptor.height,
-                                );
+                                let device_image_size = image_properties.descriptor.size;
 
                                 // Tighten the clip rect because decomposing the repeated image can
                                 // produce primitives that are partially covering the original image
@@ -2764,6 +2737,7 @@ impl<'a> GpuDataRequest<'a> {
         local_rect: LayoutRect,
         extra_data: [f32; 4],
     ) {
+        let _ = VECS_PER_SEGMENT;
         self.push(local_rect);
         self.push(extra_data);
     }
