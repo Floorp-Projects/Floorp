@@ -203,9 +203,6 @@ add_task(async function test_1() {
   addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   ok(addon);
 
-  let pendingAddons = await AddonManager.getAddonsWithOperationsByTypes(null);
-  equal(pendingAddons.length, 0);
-
   uri = NetUtil.newURI(addon.iconURL);
   if (uri instanceof Ci.nsIJARURI) {
     let {file} = uri.JARFile.QueryInterface(Ci.nsIFileURL);

@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   InstallRDF: "resource://gre/modules/addons/RDFManifestConverter.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
-  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
@@ -88,26 +87,28 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isWebExtension, iterDirectory */
+const TOOLKIT_ID                      = "toolkit@mozilla.org";
+
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, isWebExtension, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
   "KEY_APP_SYSTEM_DEFAULTS",
   "PREF_BRANCH_INSTALLED_ADDON",
   "PREF_SYSTEM_ADDON_SET",
-  "SIGNED_TYPES",
   "TEMPORARY_ADDON_SUFFIX",
-  "TOOLKIT_ID",
   "XPI_PERMISSION",
   "XPIStates",
-  "getExternalType",
-  "isTheme",
   "isWebExtension",
   "iterDirectory",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
   XPCOMUtils.defineLazyGetter(this, name, () => XPIInternal[name]);
+}
+
+function isTheme(type) {
+  return XPIDatabase.isTheme(type);
 }
 
 /**
@@ -960,7 +961,7 @@ function shouldVerifySignedState(aAddon) {
 
   // Otherwise only check signatures if signing is enabled and the add-on is one
   // of the signed types.
-  return AddonSettings.ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
+  return AddonSettings.ADDON_SIGNING && XPIDatabase.SIGNED_TYPES.has(aAddon.type);
 }
 
 /**
@@ -2447,7 +2448,7 @@ AddonInstallWrapper.prototype = {
   },
 
   get type() {
-    return getExternalType(installFor(this).type);
+    return XPIDatabase.getExternalType(installFor(this).type);
   },
 
   get iconURL() {
@@ -2522,7 +2523,7 @@ var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformV
 
   this.addon = aAddon;
   aAddon._updateCheck = this;
-  XPIProvider.doing(this);
+  XPIInstall.doing(this);
   this.listener = aListener;
   this.appVersion = aAppVersion;
   this.platformVersion = aPlatformVersion;
@@ -2583,7 +2584,7 @@ UpdateChecker.prototype = {
    *        The list of update details for the add-on
    */
   async onUpdateCheckComplete(aUpdates) {
-    XPIProvider.done(this.addon._updateCheck);
+    XPIInstall.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
 
@@ -2680,7 +2681,7 @@ UpdateChecker.prototype = {
    *        An error status
    */
   onUpdateCheckError(aError) {
-    XPIProvider.done(this.addon._updateCheck);
+    XPIInstall.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     this.callListener("onNoCompatibilityUpdateAvailable", this.addon.wrapper);
     this.callListener("onNoUpdateAvailable", this.addon.wrapper);
@@ -3376,6 +3377,34 @@ var XPIInstall = {
   recursiveRemove,
   syncLoadManifestFromFile,
 
+  // Keep track of in-progress operations that support cancel()
+  _inProgress: [],
+
+  doing(aCancellable) {
+    this._inProgress.push(aCancellable);
+  },
+
+  done(aCancellable) {
+    let i = this._inProgress.indexOf(aCancellable);
+    if (i != -1) {
+      this._inProgress.splice(i, 1);
+      return true;
+    }
+    return false;
+  },
+
+  cancelAll() {
+    // Cancelling one may alter _inProgress, so don't use a simple iterator
+    while (this._inProgress.length > 0) {
+      let c = this._inProgress.shift();
+      try {
+        c.cancel();
+      } catch (e) {
+        logger.warn("Cancel failed", e);
+      }
+    }
+  },
+
   /**
    * @param {string} id
    *        The expected ID of the add-on.
@@ -3677,7 +3706,7 @@ var XPIInstall = {
         (uri.schemeIs("chrome") || uri.schemeIs("file")))
       return true;
 
-    XPIProvider.importPermissions();
+    XPIDatabase.importPermissions();
 
     let permission = Services.perms.testPermissionFromPrincipal(aInstallingPrincipal, XPI_PERMISSION);
     if (permission == Ci.nsIPermissionManager.DENY_ACTION)
@@ -3758,7 +3787,7 @@ var XPIInstall = {
     let results = [...this.installs];
     if (aTypes) {
       results = results.filter(install => {
-        return aTypes.includes(getExternalType(install.type));
+        return aTypes.includes(XPIDatabase.getExternalType(install.type));
       });
     }
 

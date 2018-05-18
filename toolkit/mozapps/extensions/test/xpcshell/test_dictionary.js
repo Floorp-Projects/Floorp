@@ -183,9 +183,6 @@ add_task(async function test_1() {
   } catch (e) {
     // Expected the chrome url to not be registered
   }
-
-  let list = await AddonManager.getAddonsWithOperationsByTypes(null);
-  equal(list.length, 0);
 });
 
 // Tests that disabling doesn't require a restart
@@ -479,9 +476,6 @@ add_task(async function test_23() {
   ok(addon.hasResource("install.rdf"));
   ok(!addon.hasResource("bootstrap.js"));
   do_check_in_crash_annotation(ID_DICT, "1.0");
-
-  let list = await AddonManager.getAddonsWithOperationsByTypes(null);
-  equal(list.length, 0);
 
   await promiseRestartManager();
 

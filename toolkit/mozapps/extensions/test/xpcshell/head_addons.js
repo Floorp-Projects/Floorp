@@ -157,7 +157,6 @@ var { AddonManager, AddonManagerInternal, AddonManagerPrivate } = AMscope;
 
 const promiseAddonByID = AddonManager.getAddonByID;
 const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
-const promiseAddonsWithOperationsByTypes = AddonManager.getAddonsWithOperationsByTypes;
 
 var gPort = null;
 var gUrlToFileMap = {};
