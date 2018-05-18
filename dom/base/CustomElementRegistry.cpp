@@ -756,7 +756,7 @@ CustomElementRegistry::Define(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> constructorPrototype(aCx);
-  nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
+  auto callbacksHolder = MakeUnique<LifecycleCallbacks>();
   nsTArray<RefPtr<nsAtom>> observedAttributes;
   { // Set mIsCustomDefinitionRunning.
     /**
@@ -890,7 +890,6 @@ CustomElementRegistry::Define(JSContext* aCx,
    */
   // Associate the definition with the custom element.
   RefPtr<nsAtom> localNameAtom(NS_Atomize(localName));
-  LifecycleCallbacks* callbacks = callbacksHolder.forget();
 
   /**
    * 12. Add definition to this CustomElementRegistry.
@@ -905,7 +904,7 @@ CustomElementRegistry::Define(JSContext* aCx,
                                 localNameAtom,
                                 &aFunctionConstructor,
                                 Move(observedAttributes),
-                                callbacks);
+                                Move(callbacksHolder));
 
   CustomElementDefinition* def = definition.get();
   mCustomDefinitions.Put(nameAtom, definition.forget());
@@ -1322,12 +1321,12 @@ CustomElementDefinition::CustomElementDefinition(nsAtom* aType,
                                                  nsAtom* aLocalName,
                                                  Function* aConstructor,
                                                  nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                                                 LifecycleCallbacks* aCallbacks)
+                                                 UniquePtr<LifecycleCallbacks>&& aCallbacks)
   : mType(aType),
     mLocalName(aLocalName),
     mConstructor(new CustomElementConstructor(aConstructor)),
     mObservedAttributes(Move(aObservedAttributes)),
-    mCallbacks(aCallbacks)
+    mCallbacks(Move(aCallbacks))
 {
 }
 
