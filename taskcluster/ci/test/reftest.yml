@@ -132,75 +132,10 @@ reftest:
             windows10-64-asan.*: 3
             default: default
 
-reftest-fonts:
-    description: "Reftest font specifc run"
-    suite: reftest/reftest-fonts
-    treeherder-symbol: R(Rf)
-    run-on-projects: built-projects
-    instance-size:
-        by-test-platform:
-            android.*: xlarge
-            default: default
-    virtualization:
-        by-test-platform:
-            windows10.*: hardware
-            default: virtual-with-gpu
-    chunks:
-        by-test-platform:
-            android-4.3-arm7-api-16/debug: 28
-            android-7.0-x86/opt: 5
-            android.*: 7
-            macosx64.*/opt: 1
-            macosx64.*/debug: 2
-            windows.*/opt: 1
-            windows.*/debug: 2
-            windows10-64-ccov/debug: 3
-            default: 4
-    e10s:
-        by-test-platform:
-            linux32/debug: both
-            default: true
-    max-run-time:
-        by-test-platform:
-            android.*: 7200
-            windows10-64-ccov/debug: 5400
-            default: 3600
-    mozharness:
-        chunked:
-            by-test-platform:
-                android.*: false
-                macosx64/opt: false
-                windows10-64.*/opt: false
-                default: true
-    tier:
-        by-test-platform:
-            linux64-qr/.*: 1
-            windows10-64-asan.*: 3
-            default: default
-
 reftest-gpu:
     description: "Reftest GPU run"
     suite: reftest/reftest-gpu
     treeherder-symbol: R(Rg)
-    chunks:
-        by-test-platform:
-            windows.*/opt: 2
-            default: 4
-    run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            default: built-projects
-    instance-size: default
-    virtualization: virtual-with-gpu
-    max-run-time: 3600
-    mozharness:
-        chunked: true
-    tier: default
-
-reftest-gpu-fonts:
-    description: "Reftest GPU run"
-    suite: reftest/reftest-gpu-fonts
-    treeherder-symbol: R(Rgf)
     chunks:
         by-test-platform:
             windows.*/opt: 2
@@ -228,33 +163,8 @@ reftest-no-accel:
     chunks:
         by-test-platform:
             macosx.*: 1
-            windows.*/opt: 2
-            default: 4
-    mozharness:
-        chunked:
-            by-test-platform:
-                windows10-64.*/opt: false
-                macosx.*: false
-                default: true
-    tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
-
-reftest-no-accel-fonts:
-    description: "Reftest not accelerated run"
-    suite: reftest/reftest-no-accel-fonts
-    treeherder-symbol: R(Ruf)
-    virtualization: virtual-with-gpu
-    run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            default: built-projects
-    chunks:
-        by-test-platform:
-            macosx.*: 1
-            windows.*: 2
-            default: 4
+            windows.*: 4
+            default: 8
     mozharness:
         chunked:
             by-test-platform:

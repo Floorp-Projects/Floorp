@@ -35,9 +35,7 @@ common-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
     - reftest-no-accel
-    - reftest-no-accel-fonts
     - telemetry-tests-client
     - test-coverage
     - test-coverage-wpt
@@ -102,7 +100,6 @@ linux-qr-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
     - xpcshell
 
 linux-talos-profiling:
@@ -132,7 +129,6 @@ windows-qr-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
 
 jsdcov-code-coverage-tests:
     - mochitest
@@ -142,7 +138,6 @@ jsdcov-code-coverage-tests:
 
 windows-reftest-gpu:
     - reftest-gpu
-    - reftest-gpu-fonts
 
 windows-tests:
     - cppunit
@@ -164,9 +159,7 @@ windows-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
     - reftest-no-accel
-    - reftest-no-accel-fonts
     - test-coverage
     - test-coverage-wpt
     - test-verify
@@ -233,7 +226,6 @@ macosx64-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
@@ -280,7 +272,6 @@ macosx64-talos-profiling:
 
 macosx64-qr-tests:
     - reftest
-    - reftest-fonts
 
 macosx64-raptor:
     - raptor-firefox-tp6
@@ -303,9 +294,7 @@ linux32-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
-    - reftest-fonts
     - reftest-no-accel
-    - reftest-no-accel-fonts
     - web-platform-tests
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
@@ -334,7 +323,6 @@ android-common-tests:
     - mochitest-gpu
     - mochitest-media
     - reftest
-    - reftest-fonts
     - test-verify
     - xpcshell
 
@@ -361,7 +349,6 @@ android-x86-kvm-tests:
     - mochitest-gpu
     - mochitest-media
     - reftest
-    - reftest-fonts
 
 devtools-tests:
     - mochitest-devtools-chrome

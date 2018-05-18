@@ -505,8 +505,6 @@ function StartTests()
             g.suiteStarted = true
         }
 
-        g.runSlower = prefs.getBoolPref('reftest.runSlower', false);
-
         if (g.shuffle) {
             Shuffle(g.urls);
         }
@@ -1460,7 +1458,7 @@ function RecvContentReady(info)
 {
     g.contentGfxInfo = info.gfx;
     InitAndStartRefTests();
-    return { remote: g.browserIsRemote, runSlower: g.runSlower };
+    return { remote: g.browserIsRemote };
 }
 
 function RecvException(what)

@@ -13,9 +13,8 @@ include filters/reftest.list
 # smil / animation tests
 include smil/reftest.list
 
-# These tests have been moved to reftest_fonts.list
 # text tests
-# include text/reftest.list
+include text/reftest.list
 
 # load only tests
 include load-only/reftest.list

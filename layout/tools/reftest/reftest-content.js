@@ -45,7 +45,6 @@ var gVerbose = false;
 
 var gCurrentTestStartTime;
 var gClearingForAssertionCheck = false;
-var gRunSlower = false;
 
 const TYPE_LOAD = 'load';  // test without a reference (just test that it does
                            // not assert, crash, hang, or leak)
@@ -115,7 +114,6 @@ function OnInitialLoad()
 
     var initInfo = SendContentReady();
     gBrowserIsRemote = initInfo.remote;
-    gRunSlower = initInfo.runSlower;
 
     addEventListener("load", OnDocumentLoad, true);
 
@@ -1181,11 +1179,7 @@ function RegisterMessageListeners()
 function RecvClear()
 {
     gClearingForAssertionCheck = true;
-    if (gRunSlower) {
-        setTimeout(function () { LoadURI(BLANK_URL_FOR_CLEARING) }, 250);
-    } else {
-        LoadURI(BLANK_URL_FOR_CLEARING);
-    }
+    LoadURI(BLANK_URL_FOR_CLEARING);
 }
 
 function RecvLoadTest(type, uri, uriTargetType, timeout)
