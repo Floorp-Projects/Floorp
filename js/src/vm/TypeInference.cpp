@@ -3546,10 +3546,10 @@ PreliminaryObjectArray::sweep()
             // Object.prototype group. This is done to ensure JSObject::finalize
             // sees a NativeObject Class even if we change the current group's
             // Class to one of the unboxed object classes in the meantime. If
-            // the compartment's global is dead, we don't do anything as the
-            // group's Class is not going to change in that case.
+            // the realm's global is dead, we don't do anything as the group's
+            // Class is not going to change in that case.
             JSObject* obj = *ptr;
-            GlobalObject* global = obj->compartment()->unsafeUnbarrieredMaybeGlobal();
+            GlobalObject* global = obj->realm()->unsafeUnbarrieredMaybeGlobal();
             if (global && !obj->isSingleton()) {
                 JSObject* objectProto = global->maybeGetPrototype(JSProto_Object);
                 obj->setGroup(objectProto->groupRaw());

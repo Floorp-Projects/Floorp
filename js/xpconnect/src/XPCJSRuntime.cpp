@@ -1078,7 +1078,7 @@ static void
 GetCompartmentName(JSCompartment* c, nsCString& name, int* anonymizeID,
                    bool replaceSlashes)
 {
-    if (js::IsAtomsCompartment(c)) {
+    if (js::IsAtomsRealm(JS::GetRealmForCompartment(c))) {
         name.AssignLiteral("atoms");
     } else if (*anonymizeID && !js::IsSystemCompartment(c)) {
         name.AppendPrintf("<anonymized-%d>", *anonymizeID);

@@ -1054,7 +1054,7 @@ GetPropIRGenerator::tryAttachCrossCompartmentWrapper(HandleObject obj, ObjOperan
     // so we optimize for that case as well.
     bool isWindowProxy = IsWindowProxy(unwrapped);
     if (isWindowProxy) {
-        MOZ_ASSERT(ToWindowIfWindowProxy(unwrapped) == unwrapped->compartment()->maybeGlobal());
+        MOZ_ASSERT(ToWindowIfWindowProxy(unwrapped) == unwrapped->realm()->maybeGlobal());
         unwrapped = cx_->global();
         MOZ_ASSERT(unwrapped);
     }

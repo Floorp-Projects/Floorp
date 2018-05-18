@@ -2785,7 +2785,7 @@ GlobalObject*
 JSRuntime::createSelfHostingGlobal(JSContext* cx)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(!cx->realm());
 
     JS::RealmOptions options;
     options.creationOptions().setNewZone();

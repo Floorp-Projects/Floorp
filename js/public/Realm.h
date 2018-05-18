@@ -98,7 +98,7 @@ extern JS_PUBLIC_API(void)
 SetRealmNameCallback(JSContext* cx, RealmNameCallback callback);
 
 // Get the global object for the given realm. Returns null only if `realm` is
-// in the atoms compartment.
+// the atoms realm.
 extern JS_PUBLIC_API(JSObject*)
 GetRealmGlobalOrNull(Handle<Realm*> realm);
 

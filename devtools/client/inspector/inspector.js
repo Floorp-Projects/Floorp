@@ -55,7 +55,6 @@ const PORTRAIT_MODE_WIDTH_THRESHOLD = 700;
 const SIDE_PORTAIT_MODE_WIDTH_THRESHOLD = 1000;
 
 const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tooltip";
-const SHOW_THREE_PANE_TOGGLE_PREF = "devtools.inspector.three-pane-toggle";
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 
@@ -120,7 +119,6 @@ function Inspector(toolbox) {
   this.previousURL = this.target.url;
 
   this.is3PaneModeEnabled = Services.prefs.getBoolPref(THREE_PANE_ENABLED_PREF);
-  this.show3PaneToggle = Services.prefs.getBoolPref(SHOW_THREE_PANE_TOGGLE_PREF);
   this.show3PaneTooltip = Services.prefs.getBoolPref(SHOW_THREE_PANE_ONBOARDING_PREF);
 
   this.nodeMenuTriggerInfo = null;
@@ -776,16 +774,15 @@ Inspector.prototype = {
    */
   async setupSidebar() {
     let sidebar = this.panelDoc.getElementById("inspector-sidebar");
-    let options = { showAllTabsMenu: true };
-
-    if (this.show3PaneToggle) {
-      options.sidebarToggleButton = {
+    let options = {
+      showAllTabsMenu: true,
+      sidebarToggleButton: {
         collapsed: !this.is3PaneModeEnabled,
         collapsePaneTitle: INSPECTOR_L10N.getStr("inspector.hideThreePaneMode"),
         expandPaneTitle: INSPECTOR_L10N.getStr("inspector.showThreePaneMode"),
         onClick: this.onSidebarToggle,
-      };
-    }
+      }
+    };
 
     this.sidebar = new ToolSidebar(sidebar, this, "inspector", options);
 
@@ -805,15 +802,6 @@ Inspector.prototype = {
     // Append all side panels
 
     await this.addRuleView(defaultTab);
-
-    // If the 3 Pane Inspector feature is disabled, use the old order:
-    // Rules, Computed, Layout, etc.
-    if (!this.show3PaneToggle) {
-      this.sidebar.addExistingTab(
-        "computedview",
-        INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
-        defaultTab == "computedview");
-    }
 
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
@@ -839,14 +827,10 @@ Inspector.prototype = {
       },
       defaultTab == layoutId);
 
-    // If the 3 Pane Inspector feature is enabled, use the new order:
-    // Rules, Layout, Computed, etc.
-    if (this.show3PaneToggle) {
-      this.sidebar.addExistingTab(
-        "computedview",
-        INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
-        defaultTab == "computedview");
-    }
+    this.sidebar.addExistingTab(
+      "computedview",
+      INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
+      defaultTab == "computedview");
 
     const animationTitle =
       INSPECTOR_L10N.getStr("inspector.sidebar.animationInspectorTitle");
@@ -1355,7 +1339,6 @@ Inspector.prototype = {
     this.resultsLength = null;
     this.search = null;
     this.searchBox = null;
-    this.show3PaneToggle = null;
     this.show3PaneTooltip = null;
     this.sidebar = null;
     this.store = null;

@@ -4,7 +4,6 @@ import platform
 import re
 import shutil
 import stat
-import subprocess
 import sys
 import tempfile
 from abc import ABCMeta, abstractmethod
@@ -49,7 +48,7 @@ class Browser(object):
         return NotImplemented
 
     @abstractmethod
-    def version(self, root):
+    def version(self, binary=None):
         """Retrieve the release version of the installed browser."""
         return NotImplemented
 
@@ -151,7 +150,7 @@ class Firefox(Browser):
 
     def find_binary(self, venv_path=None):
         if venv_path is None:
-            venv_path = os.path.join(os.getcwd(), venv_path)
+            venv_path = os.path.join(os.getcwd(), "_venv")
 
         binary = self.find_binary_path(os.path.join(venv_path, "browsers"))
 
@@ -180,12 +179,9 @@ class Firefox(Browser):
     def find_webdriver(self):
         return find_executable("geckodriver")
 
-    def get_version_number(self, binary):
-        version_re = re.compile("Mozilla Firefox (\d+\.\d+(?:\.\d+)?)(a|b)?")
-        proc = subprocess.Popen([binary, "--version"], stdout=subprocess.PIPE)
-        stdout, _ = proc.communicate()
-        stdout.strip()
-        m = version_re.match(stdout)
+    def get_version_and_channel(self, binary):
+        version_string = call(binary, "--version").strip()
+        m = re.match(r"Mozilla Firefox (\d+\.\d+(?:\.\d+)?)(a|b)?", version_string)
         if not m:
             return None, "nightly"
         version, status = m.groups()
@@ -209,7 +205,7 @@ class Firefox(Browser):
         return "%s/archive/%s.zip/testing/profiles/" % (repo, tag)
 
     def install_prefs(self, binary, dest=None):
-        version, channel = self.get_version_number(binary)
+        version, channel = self.get_version_and_channel(binary)
 
         if dest is None:
             dest = os.pwd
@@ -280,15 +276,14 @@ class Firefox(Browser):
             untar(get(url).raw, dest=dest)
         return find_executable(os.path.join(dest, "geckodriver"))
 
-    def version(self, root):
+    def version(self, binary=None):
         """Retrieve the release version of the installed browser."""
-        platform_info = RawConfigParser()
-
-        with open(os.path.join(root, self.platform_ini), "r") as fp:
-            platform_info.readfp(BytesIO(fp.read()))
-            return "BuildID %s; SourceStamp %s" % (
-                platform_info.get("Build", "BuildID"),
-                platform_info.get("Build", "SourceStamp"))
+        binary = binary or self.find_binary()
+        version_string = call(binary, "--version").strip()
+        m = re.match(r"Mozilla Firefox (.*)", version_string)
+        if not m:
+            return None
+        return m.group(1)
 
 
 class Chrome(Browser):
@@ -342,9 +337,13 @@ class Chrome(Browser):
         os.chmod(path, st.st_mode | stat.S_IEXEC)
         return path
 
-    def version(self, root):
-        output = call(self.binary, "--version")
-        return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
+    def version(self, binary=None):
+        binary = binary or self.binary
+        version_string = call(binary, "--version").strip()
+        m = re.match(r"Google Chrome (.*)", version_string)
+        if not m:
+            return None
+        return m.group(1)
 
 
 class ChromeAndroid(Browser):
@@ -369,8 +368,8 @@ class ChromeAndroid(Browser):
         chrome = Chrome()
         return chrome.install_webdriver(dest)
 
-    def version(self, root):
-        raise NotImplementedError
+    def version(self, binary):
+        return None
 
 
 class Opera(Browser):
@@ -428,9 +427,10 @@ class Opera(Browser):
         os.chmod(path, st.st_mode | stat.S_IEXEC)
         return path
 
-    def version(self, root):
+    def version(self, binary):
         """Retrieve the release version of the installed browser."""
-        output = call(self.binary, "--version")
+        binary = binary or self.binary
+        output = call(binary, "--version")
         return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
 
 
@@ -452,8 +452,8 @@ class Edge(Browser):
     def install_webdriver(self, dest=None):
         raise NotImplementedError
 
-    def version(self, root):
-        raise NotImplementedError
+    def version(self, binary):
+        return None
 
 
 class InternetExplorer(Browser):
@@ -474,8 +474,8 @@ class InternetExplorer(Browser):
     def install_webdriver(self, dest=None):
         raise NotImplementedError
 
-    def version(self, root):
-        raise NotImplementedError
+    def version(self, binary):
+        return None
 
 
 class Safari(Browser):
@@ -499,8 +499,8 @@ class Safari(Browser):
     def install_webdriver(self):
         raise NotImplementedError
 
-    def version(self, root):
-        raise NotImplementedError
+    def version(self, binary):
+        return None
 
 
 class Servo(Browser):
@@ -550,9 +550,9 @@ class Servo(Browser):
     def install_webdriver(self, dest=None):
         raise NotImplementedError
 
-    def version(self, root):
+    def version(self, binary):
         """Retrieve the release version of the installed browser."""
-        output = call(self.binary, "--version")
+        output = call(binary, "--version")
         return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
 
 
@@ -574,8 +574,9 @@ class Sauce(Browser):
     def install_webdriver(self, dest=None):
         raise NotImplementedError
 
-    def version(self, root):
+    def version(self, binary):
         return None
+
 
 class WebKit(Browser):
     """WebKit-specific interface."""
@@ -595,5 +596,5 @@ class WebKit(Browser):
     def install_webdriver(self):
         raise NotImplementedError
 
-    def version(self, root):
+    def version(self, binary):
         return None

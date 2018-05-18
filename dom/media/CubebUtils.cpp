@@ -304,13 +304,13 @@ bool InitPreferredSampleRate()
   if (sPreferredSampleRate != 0) {
     return true;
   }
+#ifdef MOZ_WIDGET_ANDROID
+  sPreferredSampleRate = AndroidGetAudioOutputSampleRate();
+#else
   cubeb* context = GetCubebContextUnlocked();
   if (!context) {
     return false;
   }
-#ifdef MOZ_WIDGET_ANDROID
-  sPreferredSampleRate = AndroidGetAudioOutputSampleRate();
-#else
   if (cubeb_get_preferred_sample_rate(context,
                                       &sPreferredSampleRate) != CUBEB_OK) {
 

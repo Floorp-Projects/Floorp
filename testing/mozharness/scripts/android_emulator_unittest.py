@@ -574,7 +574,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                               'plain-clipboard': 'mochitest-plain-clipboard',
                               'plain-gpu': 'mochitest-plain-gpu'}),
                ('reftest', {'reftest': 'reftest',
-                            'reftest-fonts': 'reftest-fonts',
                             'crashtest': 'crashtest'}),
                ('xpcshell', {'xpcshell': 'xpcshell'})]
         suites = []

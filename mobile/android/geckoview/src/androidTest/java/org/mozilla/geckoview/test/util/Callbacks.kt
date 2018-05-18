@@ -63,7 +63,7 @@ class Callbacks private constructor() {
             callback.reject()
         }
 
-        override fun onContentPermissionRequest(session: GeckoSession, uri: String, type: Int, access: String, callback: GeckoSession.PermissionDelegate.Callback) {
+        override fun onContentPermissionRequest(session: GeckoSession, uri: String, type: Int, access: String?, callback: GeckoSession.PermissionDelegate.Callback) {
             callback.reject()
         }
 

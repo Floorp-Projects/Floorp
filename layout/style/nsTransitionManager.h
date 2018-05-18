@@ -339,7 +339,8 @@ protected:
                            const mozilla::ComputedStyle& aOldStyle,
                            const mozilla::ComputedStyle& aNewStyle);
 
-  void ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
+  // Returns whether the transition actually started.
+  bool ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
                                     const nsStyleDisplay& aStyleDisplay,
                                     uint32_t transitionIdx,
                                     mozilla::dom::Element* aElement,
@@ -347,9 +348,7 @@ protected:
                                     CSSTransitionCollection*& aElementTransitions,
                                     const mozilla::ComputedStyle& aOldStyle,
                                     const mozilla::ComputedStyle& aNewStyle,
-                                    bool* aStartedAny,
-                                    nsCSSPropertyIDSet* aWhichStarted);
-
+                                    nsCSSPropertyIDSet& aPropertiesChecked);
 };
 
 #endif /* !defined(nsTransitionManager_h_) */

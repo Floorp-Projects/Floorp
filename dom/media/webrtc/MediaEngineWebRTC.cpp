@@ -19,11 +19,6 @@
 #include "nsITabSource.h"
 #include "prenv.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#include "VideoEngine.h"
-#endif
-
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 #undef LOG
 #define LOG(args) MOZ_LOG(sGetUserMediaLog, mozilla::LogLevel::Debug, args)
@@ -136,17 +131,6 @@ MediaEngineWebRTC::EnumerateVideoDevices(uint64_t aWindowId,
 
   mozilla::camera::CaptureEngine capEngine = mozilla::camera::InvalidEngine;
 
-#ifdef MOZ_WIDGET_ANDROID
-  // get the JVM
-  JavaVM* jvm;
-  JNIEnv* const env = jni::GetEnvForThread();
-  MOZ_ALWAYS_TRUE(!env->GetJavaVM(&jvm));
-
-  if (!jvm || mozilla::camera::VideoEngine::SetAndroidObjects(jvm)) {
-    LOG(("VideoEngine::SetAndroidObjects Failed"));
-    return;
-  }
-#endif
   bool scaryKind = false; // flag sources with cross-origin exploit potential
 
   switch (aMediaSource) {

@@ -349,10 +349,10 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
     }
 #endif
 
-    // Given a JSContext entered into a debuggee compartment, find the lock
+    // Given a JSContext entered into a debuggee realm, find the lock
     // that locks it. Returns nullptr if not found.
     static EnterDebuggeeNoExecute* findInStack(JSContext* cx) {
-        JSCompartment* debuggee = cx->compartment();
+        Realm* debuggee = cx->realm();
         for (EnterDebuggeeNoExecute* it = cx->noExecuteDebuggerTop; it; it = it->prev_) {
             Debugger& dbg = it->debugger();
             if (!it->unlocked_ && dbg.isEnabled() && dbg.observesGlobal(debuggee->maybeGlobal()))
@@ -2255,10 +2255,10 @@ Debugger::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSav
 }
 
 bool
-Debugger::isDebuggeeUnbarriered(const JSCompartment* compartment) const
+Debugger::isDebuggeeUnbarriered(const Realm* realm) const
 {
-    MOZ_ASSERT(compartment);
-    return compartment->isDebuggee() && debuggees.has(compartment->unsafeUnbarrieredMaybeGlobal());
+    MOZ_ASSERT(realm);
+    return realm->isDebuggee() && debuggees.has(realm->unsafeUnbarrieredMaybeGlobal());
 }
 
 bool
@@ -3064,9 +3064,9 @@ Debugger::markIteratively(GCMarker* marker)
      * convoluted since the easiest way to find them is via their debuggees.
      */
     JSRuntime* rt = marker->runtime();
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        if (c->isDebuggee()) {
-            GlobalObject* global = c->unsafeUnbarrieredMaybeGlobal();
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
+        if (r->isDebuggee()) {
+            GlobalObject* global = r->unsafeUnbarrieredMaybeGlobal();
             if (!IsMarkedUnbarriered(rt, &global))
                 continue;
 
@@ -3741,14 +3741,11 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
     for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-            if (c == dbg->object->compartment() ||
-                JS::GetRealmForCompartment(c)->creationOptions().invisibleToDebugger())
-            {
+        for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+            if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            }
-            c->scheduledForDestruction = false;
-            GlobalObject* global = c->maybeGlobal();
+            r->scheduledForDestruction = false;
+            GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
                 if (!dbg->addDebuggeeGlobal(cx, rg))
@@ -3993,7 +3990,8 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
          * object. Add those compartments to visited.
          */
         if (c->isDebuggee()) {
-            GlobalObject::DebuggerVector* v = c->maybeGlobal()->getDebuggers();
+            Realm* realm = JS::GetRealmForCompartment(c);
+            GlobalObject::DebuggerVector* v = realm->maybeGlobal()->getDebuggers();
             for (auto p = v->begin(); p != v->end(); p++) {
                 JSCompartment* next = (*p)->object->compartment();
                 if (Find(visited, next) == visited.end() && !visited.append(next))
@@ -4856,7 +4854,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
          * node.
          */
         JSCompartment* comp = referent.compartment();
-        if (comp && !dbg->isDebuggeeUnbarriered(comp)) {
+        if (comp && !dbg->isDebuggeeUnbarriered(JS::GetRealmForCompartment(comp))) {
             traversal.abandonReferent();
             return true;
         }
@@ -4957,17 +4955,16 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
 
     {
         // Accumulate the list of globals before wrapping them, because
-        // wrapping can GC and collect compartments from under us, while
-        // iterating.
+        // wrapping can GC and collect realms from under us, while iterating.
         JS::AutoCheckCannotGC nogc;
 
-        for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-            if (JS::GetRealmForCompartment(c)->creationOptions().invisibleToDebugger())
+        for (RealmsIter r(cx->runtime(), SkipAtoms); !r.done(); r.next()) {
+            if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            c->scheduledForDestruction = false;
+            r->scheduledForDestruction = false;
 
-            GlobalObject* global = c->maybeGlobal();
+            GlobalObject* global = r->maybeGlobal();
 
             if (cx->runtime()->isSelfHostingGlobal(global))
                 continue;
