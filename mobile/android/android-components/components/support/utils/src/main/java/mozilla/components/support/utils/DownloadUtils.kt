@@ -130,7 +130,7 @@ object DownloadUtils {
             filename = filename.substring(0, dotIndex)
         }
 
-        return filename + extension!!
+        return filename + extension
     }
 
     private fun parseContentDisposition(contentDisposition: String): String? {
