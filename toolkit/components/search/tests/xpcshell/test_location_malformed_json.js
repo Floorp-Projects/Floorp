@@ -26,13 +26,11 @@ function run_test() {
   Services.search.init(() => {
     ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
-    ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never be an isUS pref");
     // fetch the engines - this should force the timezone check, but still
     // doesn't persist any prefs.
     Services.search.getEngines();
     ok(!Services.prefs.prefHasUserValue("browser.search.countryCode"), "should be no countryCode pref");
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
-    ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never be an isUS pref");
     // should have recorded SUCCESS_WITHOUT_DATA
     checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.SUCCESS_WITHOUT_DATA);
     // and false values for timeout and forced-sync-init.
