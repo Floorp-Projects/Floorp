@@ -95,6 +95,16 @@
           <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
         </vbox>
       </hbox>
+
+      <!-- Clear Site Data Button -->
+      <vbox hidden="true"
+            id="identity-popup-clear-sitedata-footer"
+            class="identity-popup-footer">
+        <button class="subviewkeynav"
+                id="identity-popup-clear-sitedata-button"
+                label="&identity.clearSiteData;"
+                oncommand="gIdentityHandler.clearSiteData(event);"/>
+      </vbox>
     </panelview>
 
     <!-- Security SubView -->
@@ -178,7 +188,7 @@
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
       </vbox>
 
-      <vbox id="identity-popup-securityView-footer">
+      <vbox id="identity-popup-more-info-footer" class="identity-popup-footer">
         <!-- More Security Information -->
         <button id="identity-popup-more-info"  class="subviewkeynav"
                 label="&identity.moreInfoLinkText2;"
