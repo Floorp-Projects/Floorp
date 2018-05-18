@@ -3390,16 +3390,6 @@ HTMLEditRules::InsertBRIfNeeded()
   return NS_OK;
 }
 
-/**
- * GetGoodSelPointForNode() finds where at a node you would want to set the
- * selection if you were trying to have a caret next to it.  Always returns a
- * valid value (unless mHTMLEditor has gone away).
- *
- * @param aNode         The node
- * @param aAction       Which edge to find:
- *                        eNext/eNextWord/eToEndOfLine indicates beginning,
- *                        ePrevious/PreviousWord/eToBeginningOfLine ending.
- */
 EditorDOMPoint
 HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
                                       nsIEditor::EDirection aAction)
@@ -6790,13 +6780,6 @@ HTMLEditRules::CheckForInvisibleBR(Element& aBlock,
   return nullptr;
 }
 
-/**
- * aLists and aTables allow the caller to specify what kind of content to
- * "look inside".  If aTables is Tables::yes, look inside any table content,
- * and insert the inner content into the supplied nsTArray at offset
- * aIndex.  Similarly with aLists and list content.  aIndex is updated to
- * point past inserted elements.
- */
 void
 HTMLEditRules::GetInnerContent(
                  nsINode& aNode,
@@ -7150,10 +7133,6 @@ HTMLEditRules::NormalizeSelection()
   return NS_OK;
 }
 
-/**
- * GetPromotedPoint() figures out where a start or end point for a block
- * operation really is.
- */
 EditorDOMPoint
 HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
                                 nsINode& aNode,
@@ -7348,10 +7327,6 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   return point;
 }
 
-/**
- * GetPromotedRanges() runs all the selection range endpoint through
- * GetPromotedPoint().
- */
 void
 HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
                                  EditAction inOperationType)
@@ -7376,10 +7351,6 @@ HTMLEditRules::GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
   }
 }
 
-/**
- * PromoteRange() expands a range to include any parents for which all editable
- * children are already in range.
- */
 void
 HTMLEditRules::PromoteRange(nsRange& aRange,
                             EditAction aOperationType)
@@ -7478,13 +7449,6 @@ private:
   nsTArray<OwningNonNull<nsINode>>& mArray;
 };
 
-/**
- * GetNodesForOperation() runs through the ranges in the array and construct a
- * new array of nodes to be acted on.
- *
- * XXX This name stats with "Get" but actually this modifies the DOM tree with
- *     transaction.  We should rename this to making clearer what this does.
- */
 nsresult
 HTMLEditRules::GetNodesForOperation(
                  nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
@@ -8002,10 +7966,6 @@ HTMLEditRules::GetHighestInlineParent(nsINode& aNode)
   return content;
 }
 
-/**
- * GetNodesFromPoint() constructs a list of nodes from a point that will be
- * operated on.
- */
 nsresult
 HTMLEditRules::GetNodesFromPoint(
                  const EditorDOMPoint& aPoint,
@@ -8043,10 +8003,6 @@ HTMLEditRules::GetNodesFromPoint(
   return NS_OK;
 }
 
-/**
- * GetNodesFromSelection() constructs a list of nodes from the selection that
- * will be operated on.
- */
 nsresult
 HTMLEditRules::GetNodesFromSelection(
                  EditAction aOperation,
@@ -8069,10 +8025,6 @@ HTMLEditRules::GetNodesFromSelection(
   return NS_OK;
 }
 
-/**
- * MakeTransitionList() detects all the transitions in the array, where a
- * transition means that adjacent nodes in the array don't have the same parent.
- */
 void
 HTMLEditRules::MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                                   nsTArray<bool>& aTransitionArray)
@@ -8092,11 +8044,6 @@ HTMLEditRules::MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
   }
 }
 
-/**
- * If aNode is the descendant of a listitem, return that li.  But table element
- * boundaries are stoppers on the search.  Also stops on the active editor host
- * (contenteditable).  Also test if aNode is an li itself.
- */
 Element*
 HTMLEditRules::IsInListItem(nsINode* aNode)
 {
@@ -10197,9 +10144,6 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
   return NS_OK;
 }
 
-/**
- * IsEmptyInline: Return true if aNode is an empty inline container
- */
 bool
 HTMLEditRules::IsEmptyInline(nsINode& aNode)
 {
@@ -10767,10 +10711,6 @@ HTMLEditRules::WillDeleteSelection(Selection& aSelection)
   UpdateDocChangeRange(mUtilRange);
 }
 
-// Let's remove all alignment hints in the children of aNode; it can
-// be an ALIGN attribute (in case we just remove it) or a CENTER
-// element (here we have to remove the container and keep its
-// children). We break on tables and don't look at their children.
 nsresult
 HTMLEditRules::RemoveAlignment(nsINode& aNode,
                                const nsAString& aAlignType,
@@ -10791,6 +10731,11 @@ HTMLEditRules::RemoveAlignment(nsINode& aNode,
 
   bool useCSS = HTMLEditorRef().IsCSSEnabled();
 
+
+  // Let's remove all alignment hints in the children of aNode; it can
+  // be an ALIGN attribute (in case we just remove it) or a CENTER
+  // element (here we have to remove the container and keep its
+  // children). We break on tables and don't look at their children.
   while (child) {
     if (aDescendantsOnly) {
       // get the next sibling right now because we could have to remove child
