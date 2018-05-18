@@ -7,7 +7,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 
@@ -249,7 +248,6 @@ class BrowserErrorReporter {
       addStacktrace,
       addModule,
       mangleExtensionUrls,
-      mangleFilePaths,
       tagExtensionErrors,
     ];
     for (const transform of transforms) {
@@ -273,10 +271,10 @@ class BrowserErrorReporter {
         body: JSON.stringify(requestBody)
       });
       Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED, 1);
-      this.logger.debug(`Sent error "${message.errorMessage}" successfully.`);
+      this.logger.debug("Sent error successfully.");
     } catch (error) {
       Services.telemetry.scalarAdd(TELEMETRY_ERROR_REPORTED_FAIL, 1);
-      this.logger.warn(`Failed to send error "${message.errorMessage}": ${error}`);
+      this.logger.warn(`Failed to send error: ${error}`);
     }
   }
 }
@@ -369,9 +367,10 @@ function mangleExtensionUrls(message, exceptionValue) {
       return string;
     }
 
-    const re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
+    let re = new RegExp(`${anchored ? "^" : ""}moz-extension://([^/]+)/`, "g");
+
     return string.replace(re, (m0, m1) => {
-      const id = extensions.has(m1) ? extensions.get(m1).id : m1;
+      let id = extensions.has(m1) ? extensions.get(m1).id : m1;
       return `moz-extension://${id}/`;
     });
   }
@@ -387,39 +386,4 @@ function tagExtensionErrors(message, exceptionValue, requestBody) {
   requestBody.tags.isExtensionError = !!(
       exceptionValue.module && exceptionValue.module.startsWith("moz-extension://")
   );
-}
-
-/**
- * Alters file: and jar: paths to remove leading file paths that may contain
- * user-identifying or platform-specific paths.
- */
-function mangleFilePaths(message, exceptionValue) {
-  function transformFilePath(path) {
-    try {
-      const uri = Services.io.newURI(path);
-      if (uri.schemeIs("jar")) {
-        return uri.filePath;
-      }
-      if (uri.schemeIs("file")) {
-        const prefixes = {
-          greDir: FileUtils.getDir("GreD", []).path,
-          profileDir: FileUtils.getDir("ProfD", []).path,
-        };
-        for (const [name, prefix] of Object.entries(prefixes)) {
-          if (uri.filePath.startsWith(prefix)) {
-            return uri.filePath.replace(prefix, `[${name}]`);
-          }
-        }
-
-        return "[UNKNOWN_LOCAL_FILEPATH]";
-      }
-    } catch (err) {}
-
-    return path;
-  }
-
-  exceptionValue.module = transformFilePath(exceptionValue.module);
-  for (const frame of exceptionValue.stacktrace.frames) {
-    frame.module = transformFilePath(frame.module);
-  }
 }
