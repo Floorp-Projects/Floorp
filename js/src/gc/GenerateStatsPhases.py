@@ -88,12 +88,14 @@ PhaseKindGraphRoots = [
         PhaseKind("PURGE", "Purge", 5),
         PhaseKind("PURGE_SHAPE_TABLES", "Purge ShapeTables", 60),
         JoinParallelTasksPhaseKind
-        ]),
+    ]),
     PhaseKind("MARK", "Mark", 6, [
         MarkRootsPhaseKind,
         UnmarkGrayPhaseKind,
-        PhaseKind("MARK_DELAYED", "Mark Delayed", 8)
+        PhaseKind("MARK_DELAYED", "Mark Delayed", 8, [
+            UnmarkGrayPhaseKind,
         ]),
+    ]),
     PhaseKind("SWEEP", "Sweep", 9, [
         PhaseKind("SWEEP_MARK", "Mark During Sweeping", 10, [
             UnmarkGrayPhaseKind,
