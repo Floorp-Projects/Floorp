@@ -4,12 +4,11 @@
 
 // Test the cancellable doing/done/cancelAll API in XPIProvider
 
-var scope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
-var XPIProvider = scope.XPIProvider;
+ChromeUtils.import("resource://gre/modules/addons/XPIInstall.jsm");
 
 function run_test() {
   // Check that cancelling with nothing in progress doesn't blow up
-  XPIProvider.cancelAll();
+  XPIInstall.cancelAll();
 
   // Check that a basic object gets cancelled
   let getsCancelled = {
@@ -20,17 +19,17 @@ function run_test() {
       this.isCancelled = true;
     }
   };
-  XPIProvider.doing(getsCancelled);
-  XPIProvider.cancelAll();
+  XPIInstall.doing(getsCancelled);
+  XPIInstall.cancelAll();
   Assert.ok(getsCancelled.isCancelled);
 
   // Check that if we complete a cancellable, it doesn't get cancelled
   let doesntGetCancelled = {
     cancel: () => do_throw("This should not have been cancelled")
   };
-  XPIProvider.doing(doesntGetCancelled);
-  Assert.ok(XPIProvider.done(doesntGetCancelled));
-  XPIProvider.cancelAll();
+  XPIInstall.doing(doesntGetCancelled);
+  Assert.ok(XPIInstall.done(doesntGetCancelled));
+  XPIInstall.cancelAll();
 
   // A cancellable that adds a cancellable
   getsCancelled.isCancelled = false;
@@ -40,11 +39,11 @@ function run_test() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;
-      XPIProvider.doing(getsCancelled);
+      XPIInstall.doing(getsCancelled);
     }
   };
-  XPIProvider.doing(addsAnother);
-  XPIProvider.cancelAll();
+  XPIInstall.doing(addsAnother);
+  XPIInstall.cancelAll();
   Assert.ok(addsAnother.isCancelled);
   Assert.ok(getsCancelled.isCancelled);
 
@@ -56,11 +55,11 @@ function run_test() {
       if (this.isCancelled)
         do_throw("Already cancelled");
       this.isCancelled = true;
-      XPIProvider.done(doesntGetCancelled);
+      XPIInstall.done(doesntGetCancelled);
     }
   };
-  XPIProvider.doing(removesAnother);
-  XPIProvider.doing(doesntGetCancelled);
-  XPIProvider.cancelAll();
+  XPIInstall.doing(removesAnother);
+  XPIInstall.doing(doesntGetCancelled);
+  XPIInstall.cancelAll();
   Assert.ok(removesAnother.isCancelled);
 }

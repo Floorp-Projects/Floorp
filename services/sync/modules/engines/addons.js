@@ -738,16 +738,7 @@ class AddonValidator extends CollectionValidator {
   }
 
   async getClientItems() {
-    const installed = await AddonManager.getAllAddons();
-    const addonsWithPendingOperation = await AddonManager.getAddonsWithOperationsByTypes(["extension", "theme"]);
-    // Addons pending install won't be in the first list, but addons pending
-    // uninstall/enable/disable will be in both lists.
-    let all = new Map(installed.map(addon => [addon.id, addon]));
-    for (let addon of addonsWithPendingOperation) {
-      all.set(addon.id, addon);
-    }
-    // Convert to an array since Map.prototype.values returns an iterable
-    return [...all.values()];
+    return AddonManager.getAllAddons();
   }
 
   normalizeClientItem(item) {

@@ -2332,37 +2332,6 @@ var AddonManagerInternal = {
   },
 
   /**
-   * Asynchronously gets add-ons that have operations waiting for an application
-   * restart to complete.
-   *
-   * @param  aTypes
-   *         An optional array of types to retrieve. Each type is a string name
-   */
-  getAddonsWithOperationsByTypes(aTypes) {
-    if (!gStarted)
-      throw Components.Exception("AddonManager is not initialized",
-                                 Cr.NS_ERROR_NOT_INITIALIZED);
-
-    if (aTypes && !Array.isArray(aTypes))
-      throw Components.Exception("aTypes must be an array or null",
-                                 Cr.NS_ERROR_INVALID_ARG);
-
-    return (async () => {
-      let addons = [];
-
-      for (let provider of this.providers) {
-        let providerAddons = await promiseCallProvider(
-          provider, "getAddonsWithOperationsByTypes", aTypes);
-
-        if (providerAddons)
-          addons.push(...providerAddons);
-      }
-
-      return addons;
-    })();
-  },
-
-  /**
    * Adds a new AddonManagerListener if the listener is not already registered.
    *
    * @param {AddonManagerListener} aListener
@@ -3387,10 +3356,6 @@ var AddonManager = {
 
   getAddonsByIDs(aIDs) {
     return AddonManagerInternal.getAddonsByIDs(aIDs);
-  },
-
-  getAddonsWithOperationsByTypes(aTypes) {
-    return AddonManagerInternal.getAddonsWithOperationsByTypes(aTypes);
   },
 
   getAddonsByTypes(aTypes) {
