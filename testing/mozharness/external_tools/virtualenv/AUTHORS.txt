@@ -1,0 +1,91 @@
+Author
+------
+
+Ian Bicking
+
+Maintainers
+-----------
+
+Brian Rosner
+Carl Meyer
+Jannis Leidel
+Paul Moore
+Paul Nasrat
+Marcus Smith
+
+Contributors
+------------
+
+Alex Grönholm
+Anatoly Techtonik
+Antonio Cuni
+Antonio Valentino
+Armin Ronacher
+Barry Warsaw
+Benjamin Root
+Bradley Ayers
+Branden Rolston
+Brandon Carl
+Brian Kearns
+Cap Petschulat
+CBWhiz
+Chris Adams
+Chris McDonough
+Christos Kontas
+Christian Hudon
+Christian Stefanescu
+Christopher Nilsson
+Cliff Xuan
+Curt Micol
+Damien Nozay
+Dan Sully
+Daniel Hahler
+Daniel Holth
+David Schoonover
+Denis Costa
+Doug Hellmann
+Doug Napoleone
+Douglas Creager
+Eduard-Cristian Stefan
+Erik M. Bray
+Ethan Jucovy
+Gabriel de Perthuis
+Gunnlaugur Thor Briem
+Graham Dennis
+Greg Haskins
+Jason Penney
+Jason R. Coombs
+Jeff Hammel
+Jeremy Orem
+Jason Penney
+Jason R. Coombs
+John Kleint
+Jonathan Griffin
+Jonathan Hitchcock
+Jorge Vargas
+Josh Bronson
+Kamil Kisiel
+Kyle Gibson
+Konstantin Zemlyak
+Kumar McMillan
+Lars Francke
+Marc Abramowitz
+Mika Laitio
+Mike Hommey
+Miki Tebeka
+Philip Jenvey
+Philippe Ombredanne
+Piotr Dobrogost
+Preston Holmes
+Ralf Schmitt
+Raul Leal
+Ronny Pfannschmidt
+Satrajit Ghosh
+Sergio de Carvalho
+Stefano Rivera
+Tarek Ziadé
+Thomas Aglassinger
+Vinay Sajip
+Vitaly Babiy
+Vladimir Rutsky
+Wang Xuerui

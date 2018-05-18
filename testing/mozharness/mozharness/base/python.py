@@ -342,28 +342,11 @@ class VirtualenvMixin(object):
         self.info("Creating virtualenv %s" % venv_path)
 
         # Always use the virtualenv that is vendored since that is deterministic.
-        # base_work_dir is for when we're running with mozharness.zip, e.g. on
-        # test jobs
-        # abs_src_dir is for when we're running out of a checked out copy of
-        # the source code
-        venv_search_dirs = [
-            os.path.join('{base_work_dir}', 'mozharness'),
-            '{abs_src_dir}',
-        ]
-        for d in venv_search_dirs:
-            d = os.path.join(d, 'third_party', 'python', 'virtualenv', 'virtualenv.py')
-            try:
-                venv_py_path = d.format(**dirs)
-            except KeyError:
-                continue
-            if os.path.exists(venv_py_path):
-                break
-        else:
-            self.fatal("Can't find the virtualenv module")
-
+        # TODO Bug 1408051 - Use the copy of virtualenv under
+        # third_party/python/virtualenv once everything is off buildbot
         virtualenv = [
             sys.executable,
-            venv_py_path,
+            os.path.join(external_tools_path, 'virtualenv', 'virtualenv.py'),
         ]
         virtualenv_options = c.get('virtualenv_options', [])
         # Don't create symlinks. If we don't do this, permissions issues may
