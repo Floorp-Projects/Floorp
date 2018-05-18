@@ -70,8 +70,8 @@ add_task(async function sidebar_initial_install() {
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
   let extension = ExtensionTestUtils.loadExtension(getExtData());
   await extension.startup();
+
   // Test sidebar is opened on install
-  await extension.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible");
 
   await extension.unload();
@@ -79,6 +79,20 @@ add_task(async function sidebar_initial_install() {
   ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
 });
 
+add_task(async function sidebar__install_closed() {
+  ok(document.getElementById("sidebar-box").hidden, "sidebar box is not visible");
+  let tempExtData = getExtData();
+  tempExtData.manifest.sidebar_action.open_at_install = false;
+  let extension = ExtensionTestUtils.loadExtension(tempExtData);
+  await extension.startup();
+
+  // Test sidebar is closed on install
+  ok(document.getElementById("sidebar-box").hidden, "sidebar box is hidden");
+
+  await extension.unload();
+  // This is the default value
+  tempExtData.manifest.sidebar_action.open_at_install = true;
+});
 
 add_task(async function sidebar_two_sidebar_addons() {
   let extension2 = ExtensionTestUtils.loadExtension(getExtData());
