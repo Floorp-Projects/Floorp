@@ -1605,8 +1605,8 @@ impl Device {
         let desc = self.gl_describe_format(img_desc.format);
         self.gl.read_pixels(
             0, 0,
-            img_desc.width as i32,
-            img_desc.height as i32,
+            img_desc.size.width as i32,
+            img_desc.size.height as i32,
             desc.external,
             desc.pixel_type,
         )

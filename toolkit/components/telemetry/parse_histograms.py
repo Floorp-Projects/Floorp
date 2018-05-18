@@ -140,7 +140,7 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._expiration = definition.get('expires_in_version')
         self._labels = definition.get('labels', [])
         self._record_in_processes = definition.get('record_in_processes')
-        self._products = definition.get('products', ["firefox", "fennec"])
+        self._products = definition.get('products', ["all"])
 
         self.compute_bucket_parameters(definition)
         self.set_nsITelemetry_kind()

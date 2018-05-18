@@ -559,25 +559,6 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
-.gcli-panel {
-  padding: 0;
-}
-
-.gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
-  color: hsl(210,11%,16%);
-}
-
-/* Error counter */
-
-#developer-toolbar-toolbox-button[error-count]:before {
-  color: #FDF3DE;
-  min-width: 16px;
-  text-shadow: none;
-  background-image: linear-gradient(#B4211B, #8A1915);
-  border-radius: 1px;
-  margin-inline-end: 2px;
-}
-
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css

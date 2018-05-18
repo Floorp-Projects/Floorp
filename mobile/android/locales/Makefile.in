@@ -36,7 +36,6 @@ clobber-stage:
 	$(RM) -rf $(STAGEDIST)
 	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
 	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
-	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/browsersearch.json
 
 # merge if we're not en-US, using conditional function as we need
 # the current value of AB_CD

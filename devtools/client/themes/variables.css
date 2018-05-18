@@ -10,9 +10,7 @@
 
 /*
  * IMPORTANT NOTE
- * 1. Changes should be kept in sync with commandline.css and commandline-browser.css.
- *
- * 2. This file is parsed in js (see client/shared/theme.js)
+ * This file is parsed in js (see client/shared/theme.js)
  * so the formatting should be consistent (i.e. no '}' inside a rule).
  */
 
@@ -39,8 +37,7 @@
   --theme-selection-background-hover: #F0F9FE;
   --theme-selection-color: #ffffff;
 
-  /* Border color that splits the toolbars/panels/headers.
-   * This needs to be sync with commandline.css and commandline-browser.css. */
+  /* Border color that splits the toolbars/panels/headers. */
   --theme-splitter-color: #e0e0e1;
 
   --theme-comment: var(--grey-50);
@@ -125,8 +122,7 @@
   --theme-selection-background-hover: #353B48;
   --theme-selection-color: #ffffff;
 
-  /* Border color that splits the toolbars/panels/headers.
-   * This needs to be sync with commandline.css and commandline-browser.css. */
+  /* Border color that splits the toolbars/panels/headers. */
   --theme-splitter-color: #3c3c3d;
 
   --theme-comment: #939393;

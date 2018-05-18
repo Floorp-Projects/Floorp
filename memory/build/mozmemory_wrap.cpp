@@ -160,7 +160,7 @@ wcsdup_impl(const wchar_t* src)
 }
 
 MOZ_MEMORY_API void*
-_aligned_malloc(size_t size, size_t alignment)
+_aligned_malloc_impl(size_t size, size_t alignment)
 {
   return memalign_impl(alignment, size);
 }

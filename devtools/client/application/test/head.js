@@ -37,7 +37,7 @@ async function enableApplicationPanel() {
 }
 
 function getWorkerContainers(doc) {
-  return doc.querySelectorAll(".service-worker-container");
+  return doc.querySelectorAll(".js-sw-container");
 }
 
 function navigate(target, url, waitForTargetEvent = "navigate") {

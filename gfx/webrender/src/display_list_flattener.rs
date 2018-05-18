@@ -556,8 +556,7 @@ impl<'a> DisplayListFlattener<'a> {
         let pipeline = match self.scene.pipelines.get(&iframe_pipeline_id) {
             Some(pipeline) => pipeline,
             None => {
-                //TODO: assert/debug_assert?
-                error!("Unknown pipeline used for iframe {:?}", info);
+                debug_assert!(info.ignore_missing_pipeline);
                 return
             },
         };

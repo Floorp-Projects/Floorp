@@ -24,7 +24,6 @@ loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "BrowserMenus", "devtools/client/framework/browser-menus");
 loader.lazyRequireGetter(this, "appendStyleSheet", "devtools/client/shared/stylesheet-utils", true);
-loader.lazyRequireGetter(this, "DeveloperToolbar", "devtools/client/shared/developer-toolbar", true);
 loader.lazyRequireGetter(this, "ResponsiveUIManager", "devtools/client/responsive.html/manager", true);
 loader.lazyImporter(this, "BrowserToolboxProcess", "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
@@ -52,11 +51,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    * tracked windows.
    */
   _browserStyleSheets: new WeakMap(),
-
-  /**
-   * WeakMap keeping track of DeveloperToolbar instances for each firefox window.
-   */
-  _toolbars: new WeakMap(),
 
   /**
    * This function is for the benefit of Tools:DevToolbox in
@@ -96,19 +90,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         cmd.setAttribute("disabled", "true");
         cmd.setAttribute("hidden", "true");
       }
-    }
-
-    // Enable developer toolbar?
-    let devToolbarEnabled = Services.prefs.getBoolPref("devtools.toolbar.enabled");
-    toggleMenuItem("menu_devToolbar", devToolbarEnabled);
-    let focusEl = doc.getElementById("menu_devToolbar");
-    if (devToolbarEnabled) {
-      focusEl.removeAttribute("disabled");
-    } else {
-      focusEl.setAttribute("disabled", "true");
-    }
-    if (devToolbarEnabled && Services.prefs.getBoolPref("devtools.toolbar.visible")) {
-      this.getDeveloperToolbar(win).show(false).catch(console.error);
     }
 
     // Enable WebIDE?
@@ -263,9 +244,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       case "toggleToolbox":
       case "toggleToolboxF12":
         gDevToolsBrowser.toggleToolboxCommand(window.gBrowser, startTime);
-        break;
-      case "toggleToolbar":
-        gDevToolsBrowser.getDeveloperToolbar(window).focusToggle();
         break;
       case "webide":
         gDevToolsBrowser.openWebIDE();
@@ -487,22 +465,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Create singleton instance of the developer toolbar for a given top level window.
-   *
-   * @param {Window} win
-   *        The window to which the toolbar should be created.
-   */
-  getDeveloperToolbar(win) {
-    let toolbar = this._toolbars.get(win);
-    if (toolbar) {
-      return toolbar;
-    }
-    toolbar = new DeveloperToolbar(win);
-    this._toolbars.set(win, toolbar);
-    return toolbar;
-  },
-
-  /**
    * Hook the JS debugger tool to the "Debug Script" button of the slow script
    * dialog.
    */
@@ -709,8 +671,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       styleSheet.remove();
       this._browserStyleSheets.delete(win);
     }
-
-    this._toolbars.delete(win);
 
     let tabContainer = win.gBrowser.tabContainer;
     tabContainer.removeEventListener("TabSelect", this);

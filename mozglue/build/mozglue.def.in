@@ -15,7 +15,7 @@ EXPORTS
   malloc_usable_size=je_malloc_usable_size
   malloc_good_size=je_malloc_good_size
   _aligned_free=je_free
-  _aligned_malloc
+  _aligned_malloc=wrap__aligned_malloc
   strndup=wrap_strndup
   strdup=wrap_strdup
   _strdup=wrap_strdup

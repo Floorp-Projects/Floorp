@@ -13,7 +13,7 @@
   font-size: 13px;
 }
 
-.worker-list-empty ul {
+.worker-list-empty__list {
   list-style: unset;
   padding: 0 40px;
 }

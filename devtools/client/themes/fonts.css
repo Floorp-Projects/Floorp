@@ -160,6 +160,22 @@
   min-width: 50px;
 }
 
+/*
+  The value of font-weight goes from 100 to 900 in increments of 100.
+  Decorate the slider for font-weight to have 9 vertical notches using a linear gradient.
+*/
+.font-value-slider[name=font-weight] {
+  --notch-size: 2px;
+  /* Draw a vertical line to get one notch per background-image instance */
+  background-image: linear-gradient(90deg, var(--grey-30) var(--notch-size), transparent 0);
+  /* Offset the background so the notch aligns with the center of the slider thumb */
+  background-position: 7px center;
+  /* Repeat the background-image horizontally */
+  background-repeat: repeat-x;
+  /* Size the background to get nine visible notch instances. */
+  background-size: calc(12.5% - var(--notch-size)) 90%;
+}
+
 .font-value-slider:-moz-focusring {
   outline: none;
 }
@@ -178,6 +194,54 @@
 
 .font-value-slider:focus::-moz-range-thumb {
   background: var(--blue-55);
+}
+
+/*
+  Restyle a native checkbox input to look like a toggle with a "thumb".
+  Build the decoration using solid shapes created with radial- and linear-gradient
+  background images. Animate the position of the "thumb" using background-position.
+ */
+.font-value-toggle {
+  /* Reset native checkbox styling. */
+  -moz-appearance: none;
+  --bg: var(--grey-30);
+  --thumb-color: var(--grey-50);
+  --thumb-position: 0% 50%;
+  cursor: pointer;
+  /* Change font-size to scale. */
+  font-size: 140%;
+  width: 2em;
+  height: 1em;
+
+  background-repeat: no-repeat;
+
+  background-image:
+    /* thumb */
+    radial-gradient(circle 0.35em, var(--thumb-color) 100%, transparent 0),
+    /* left circle */
+    radial-gradient(circle 0.5em, var(--bg) 100%, transparent 0),
+    /* middle bar */
+    linear-gradient(var(--bg) , var(--bg)),
+    /* right circle */
+    radial-gradient(circle 0.5em, var(--bg) 100%, transparent 0);
+
+  /* Every shape has a size of 1em x 1em and is positioned with background-position. */
+  background-size: 1em 1em;
+
+  background-position:
+    var(--thumb-position), /* thumb */
+    left center,  /* left circle */
+    0.5em center, /* middle bar */
+    right center; /* right circle */
+
+  /* Animate the thumb position between states of the checkbox. */
+  transition: background-position .1s ease-out;
+}
+
+.font-value-toggle:checked{
+  --bg: var(--blue-55);
+  --thumb-color: white;
+  --thumb-position: 100% 50%;
 }
 
 .font-origin {

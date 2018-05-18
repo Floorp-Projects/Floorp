@@ -66,10 +66,10 @@ add_task(async function test_initialState() {
 add_task(async function test_backButton() {
   let form = new BasicCardForm();
   form.dataset.backButtonLabel = "Back";
+  form.dataset.addBasicCardTitle = "Sample page title 2";
   await form.requestStore.setState({
     page: {
       id: "test-page",
-      title: "Sample page title 2",
     },
   });
   await form.promiseReady;

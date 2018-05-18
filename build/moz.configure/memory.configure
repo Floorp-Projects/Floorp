@@ -14,15 +14,12 @@ option('--enable-jemalloc', env='MOZ_MEMORY',
        help='Replace memory allocator with jemalloc')
 
 
-@depends('--enable-jemalloc', target, c_compiler)
-def jemalloc(value, target, c_compiler):
+@depends('--enable-jemalloc', target)
+def jemalloc(value, target):
     if value.origin != 'default':
         return bool(value) or None
 
-    if target.kernel in ('Darwin', 'Linux'):
-        return True
-
-    if target.kernel == 'WINNT' and c_compiler.type in ('msvc', 'clang-cl'):
+    if target.kernel in ('Darwin', 'Linux', 'WINNT'):
         return True
 
 

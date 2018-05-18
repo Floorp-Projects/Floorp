@@ -11,6 +11,7 @@ BROWSER_CHROME_MANIFESTS += [
     'browser/disable_developer_tools/browser.ini',
     'browser/disable_forget_button/browser.ini',
     'browser/disable_fxscreenshots/browser.ini',
+    'browser/hardware_acceleration/browser.ini',
 ]
 
 TESTING_JS_MODULES += [

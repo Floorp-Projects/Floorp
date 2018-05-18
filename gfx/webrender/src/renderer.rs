@@ -1898,7 +1898,7 @@ impl Renderer {
 
         let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, true, false);
         let data = self.device.read_pixels(&desc);
-        let screenshot = debug_server::Screenshot::new(desc.width, desc.height, data);
+        let screenshot = debug_server::Screenshot::new(desc.size.width, desc.size.height, data);
 
         serde_json::to_string(&screenshot).unwrap()
     }
@@ -4411,7 +4411,7 @@ impl Renderer {
                         let (layer_count, filter) = (1, TextureFilter::Linear);
                         let plain_tex = PlainTexture {
                             data: e.key().clone(),
-                            size: (descriptor.width, descriptor.height, layer_count),
+                            size: (descriptor.size.width, descriptor.size.height, layer_count),
                             format: descriptor.format,
                             filter,
                             render_target: None,

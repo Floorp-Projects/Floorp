@@ -211,7 +211,7 @@ Optional. This field is a list of products this histogram can be recorded on. Cu
 - ``geckoview``
 - ``all`` (record on all products)
 
-If this field is left out it defaults to ``firefox, fennec``.
+If this field is left out it defaults to ``all``.
 
 Changing a histogram
 ====================

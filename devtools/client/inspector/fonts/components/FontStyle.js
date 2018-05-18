@@ -20,11 +20,12 @@ class FontStyle extends PureComponent {
 
   constructor(props) {
     super(props);
+    this.name = "font-style";
     this.onToggle = this.onToggle.bind(this);
   }
 
   onToggle(e) {
-    this.props.onChange("font-style", e.target.checked ? "italic" : "normal", null);
+    this.props.onChange(this.name, e.target.checked ? "italic" : "normal", null);
   }
 
   render() {
@@ -45,6 +46,8 @@ class FontStyle extends PureComponent {
         dom.input(
           {
             checked: this.props.value === "italic" || this.props.value === "oblique",
+            className: "font-value-toggle",
+            name: this.name,
             onChange: this.onToggle,
             type: "checkbox",
           }

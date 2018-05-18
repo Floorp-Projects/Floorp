@@ -116,7 +116,7 @@ impl JsonFrameWriter {
             match *update {
                 ResourceUpdate::AddImage(ref img) => {
                     let stride = img.descriptor.stride.unwrap_or(
-                        img.descriptor.width * img.descriptor.format.bytes_per_pixel(),
+                        img.descriptor.size.width * img.descriptor.format.bytes_per_pixel(),
                     );
                     let bytes = match img.data {
                         ImageData::Raw(ref v) => (**v).clone(),
@@ -127,8 +127,8 @@ impl JsonFrameWriter {
                     self.images.insert(
                         img.key,
                         CachedImage {
-                            width: img.descriptor.width,
-                            height: img.descriptor.height,
+                            width: img.descriptor.size.width,
+                            height: img.descriptor.size.height,
                             stride,
                             format: img.descriptor.format,
                             bytes: Some(bytes),
@@ -138,8 +138,8 @@ impl JsonFrameWriter {
                 }
                 ResourceUpdate::UpdateImage(ref img) => {
                     if let Some(ref mut data) = self.images.get_mut(&img.key) {
-                        assert_eq!(data.width, img.descriptor.width);
-                        assert_eq!(data.height, img.descriptor.height);
+                        assert_eq!(data.width, img.descriptor.size.width);
+                        assert_eq!(data.height, img.descriptor.size.height);
                         assert_eq!(data.format, img.descriptor.format);
 
                         if let ImageData::Raw(ref bytes) = img.data {

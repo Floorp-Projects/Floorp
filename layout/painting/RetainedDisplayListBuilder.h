@@ -49,11 +49,13 @@ struct RetainedDisplayListBuilder {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
 
 private:
-  bool PreProcessDisplayList(RetainedDisplayList* aList, AnimatedGeometryRoot* aAGR);
+  bool PreProcessDisplayList(RetainedDisplayList* aList, AnimatedGeometryRoot* aAGR,
+                             uint32_t aCallerKey = 0, uint32_t aNestingDepth = 0);
   bool MergeDisplayLists(nsDisplayList* aNewList,
                          RetainedDisplayList* aOldList,
                          RetainedDisplayList* aOutList,
-                         mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR);
+                         mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR,
+                         uint32_t aOuterKey = 0);
 
   bool ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedFrames,
                             nsRect* aOutDirty,

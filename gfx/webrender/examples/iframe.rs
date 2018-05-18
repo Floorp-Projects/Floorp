@@ -74,7 +74,7 @@ impl Example for App {
         );
         // red rect under the iframe: if this is visible, things have gone wrong
         builder.push_rect(&info, ColorF::new(1.0, 0.0, 0.0, 1.0));
-        builder.push_iframe(&info, sub_pipeline_id);
+        builder.push_iframe(&info, sub_pipeline_id, false);
         builder.pop_stacking_context();
     }
 }
