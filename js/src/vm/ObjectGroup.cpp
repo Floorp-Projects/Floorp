@@ -36,17 +36,14 @@ using mozilla::PodZero;
 
 ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JS::Realm* realm,
                          ObjectGroupFlags initialFlags)
+  : clasp_(clasp),
+    proto_(proto),
+    realm_(realm),
+    flags_(initialFlags)
 {
-    PodZero(this);
-
     /* Windows may not appear on prototype chains. */
     MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
     MOZ_ASSERT(JS::StringIsASCII(clasp->name));
-
-    this->clasp_ = clasp;
-    this->proto_ = proto;
-    this->realm_ = realm;
-    this->flags_ = initialFlags;
 
     setGeneration(zone()->types.generation);
 }
