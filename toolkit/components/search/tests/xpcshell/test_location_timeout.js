@@ -63,7 +63,6 @@ function run_test() {
       // everything dependent should also be updated.
       equal(Services.prefs.getCharPref("browser.search.countryCode"), "AU");
       equal(Services.prefs.getCharPref("browser.search.region"), "AU");
-      ok(!Services.prefs.prefHasUserValue("browser.search.isUS"), "should never have an isUS pref");
 
       do_test_finished();
       server.stop(run_next_test);
