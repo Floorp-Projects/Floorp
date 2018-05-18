@@ -33,7 +33,7 @@ CountDeleter::operator()(CountBase* ptr)
 JS_PUBLIC_API(bool)
 Census::init() {
     AutoLockForExclusiveAccess lock(cx);
-    atomsZone = cx->runtime()->atomsCompartment(lock)->zone();
+    atomsZone = cx->runtime()->atomsRealm(lock)->zone();
     return targetZones.init();
 }
 

@@ -501,7 +501,7 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
                    const JS::RealmOptions& options)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT_IF(cx->realm(), !cx->realm()->isAtomsRealm());
 
     JSCompartment* compartment = NewCompartment(cx, principals, options);
     if (!compartment)

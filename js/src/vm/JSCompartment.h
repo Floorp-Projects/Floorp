@@ -596,13 +596,6 @@ struct JSCompartment
         isSystem_ = isSystem;
     }
 
-    bool isAtomsCompartment() const {
-        return isAtomsCompartment_;
-    }
-    void setIsAtomsCompartment() {
-        isAtomsCompartment_ = true;
-    }
-
     // Used to approximate non-content code when reporting telemetry.
     inline bool isProbablySystemCode() const {
         return isSystem_;
@@ -610,7 +603,6 @@ struct JSCompartment
   private:
     JSPrincipals*                principals_;
     bool                         isSystem_;
-    bool                         isAtomsCompartment_;
 
   public:
     bool                         isSelfHosting;
@@ -659,7 +651,7 @@ struct JSCompartment
 
     /* The global object for this compartment.
      *
-     * This returns nullptr if this is the atoms compartment.  (The global_
+     * This returns nullptr if this is the atoms realm.  (The global_
      * field is also null briefly during GC, after the global object is
      * collected; but when that happens the JSCompartment is destroyed during
      * the same GC.)
@@ -1214,6 +1206,16 @@ class JS::Realm : public JSCompartment
 
     /* Whether to preserve JIT code on non-shrinking GCs. */
     bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
+
+  private:
+    bool isAtomsRealm_ = false;
+  public:
+    bool isAtomsRealm() const {
+        return isAtomsRealm_;
+    }
+    void setIsAtomsRealm() {
+        isAtomsRealm_ = true;
+    }
 };
 
 namespace js {
@@ -1282,7 +1284,7 @@ class AutoRealm
   protected:
     inline AutoRealm(JSContext* cx, JS::Realm* target);
 
-    // Used only for entering the atoms compartment.
+    // Used only for entering the atoms realm.
     inline AutoRealm(JSContext* cx, JS::Realm* target,
                      AutoLockForExclusiveAccess& lock);
 
