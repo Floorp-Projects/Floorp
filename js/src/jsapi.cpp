@@ -1941,19 +1941,19 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
     MOZ_ASSERT(global->is<GlobalObject>());
 
     // Off thread parsing and compilation tasks create a dummy global which is
-    // then merged back into the host compartment. Since it used to be a
-    // global, it will still have this trace hook, but it does not have a
-    // meaning relative to its new compartment. We can safely skip it.
+    // then merged back into the host realm. Since it used to be a global, it
+    // will still have this trace hook, but it does not have a meaning relative
+    // to its new realm. We can safely skip it.
     //
     // Similarly, if we GC when creating the global, we may not have set that
-    // global's compartment's global pointer yet. In this case, the compartment
-    // will not yet contain anything that needs to be traced.
+    // global's realm's global pointer yet. In this case, the realm will not yet
+    // contain anything that needs to be traced.
     if (!global->isOwnGlobal(trc))
         return;
 
-    // Trace the compartment for any GC things that should only stick around if
-    // we know the global is live.
-    global->compartment()->traceGlobal(trc);
+    // Trace the realm for any GC things that should only stick around if we
+    // know the global is live.
+    global->realm()->traceGlobal(trc);
 
     if (JSTraceOp trace = global->realm()->creationOptions().getTrace())
         trace(trc, global);
@@ -7586,7 +7586,7 @@ GetScriptedCallerGlobal(JSContext* cx)
     if (activation->scriptedCallerIsHidden())
         return nullptr;
 
-    GlobalObject* global = activation->compartment()->maybeGlobal();
+    GlobalObject* global = JS::GetRealmForCompartment(activation->compartment())->maybeGlobal();
 
     // No one should be running code in the atoms realm or running code in
     // a compartment without any live objects, so there should definitely be a

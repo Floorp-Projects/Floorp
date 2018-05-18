@@ -16,28 +16,28 @@
 #include "vm/JSContext-inl.h"
 
 inline void
-JSCompartment::initGlobal(js::GlobalObject& global)
+JS::Realm::initGlobal(js::GlobalObject& global)
 {
-    MOZ_ASSERT(global.compartment() == this);
+    MOZ_ASSERT(global.realm() == this);
     MOZ_ASSERT(!global_);
     global_.set(&global);
 }
 
 js::GlobalObject*
-JSCompartment::maybeGlobal() const
+JS::Realm::maybeGlobal() const
 {
-    MOZ_ASSERT_IF(global_, global_->compartment() == this);
+    MOZ_ASSERT_IF(global_, global_->realm() == this);
     return global_;
 }
 
 js::GlobalObject*
-JSCompartment::unsafeUnbarrieredMaybeGlobal() const
+JS::Realm::unsafeUnbarrieredMaybeGlobal() const
 {
     return *global_.unsafeGet();
 }
 
 inline bool
-JSCompartment::globalIsAboutToBeFinalized()
+JS::Realm::globalIsAboutToBeFinalized()
 {
     MOZ_ASSERT(zone_->isGCSweeping());
     return global_ && js::gc::IsAboutToBeFinalizedUnbarriered(global_.unsafeGet());

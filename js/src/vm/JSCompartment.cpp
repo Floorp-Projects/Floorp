@@ -52,7 +52,6 @@ JSCompartment::JSCompartment(Zone* zone)
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
 #endif
-    global_(nullptr),
     enterCompartmentDepth(0),
     performanceMonitoring(runtime_),
     data(nullptr),
@@ -94,7 +93,8 @@ JSCompartment::JSCompartment(Zone* zone)
 JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
   : JSCompartment(zone),
     creationOptions_(options.creationOptions()),
-    behaviors_(options.behaviors())
+    behaviors_(options.behaviors()),
+    global_(nullptr)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
@@ -647,11 +647,10 @@ JSCompartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc)
 }
 
 void
-JSCompartment::traceGlobal(JSTracer* trc)
+Realm::traceGlobal(JSTracer* trc)
 {
-    // Trace things reachable from the compartment's global. Note that these
-    // edges must be swept too in case the compartment is live but the global is
-    // not.
+    // Trace things reachable from the realm's global. Note that these edges
+    // must be swept too in case the realm is live but the global is not.
 
     savedStacks_.trace(trc);
 
@@ -661,7 +660,7 @@ JSCompartment::traceGlobal(JSTracer* trc)
 }
 
 void
-JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
+Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
     if (objectMetadataState.is<PendingMetadata>()) {
         TraceRoot(trc,
@@ -724,7 +723,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 }
 
 void
-JSCompartment::finishRoots()
+Realm::finishRoots()
 {
     if (debugEnvs)
         debugEnvs->finish();
@@ -763,7 +762,7 @@ JSCompartment::sweepSavedStacks()
 }
 
 void
-JSCompartment::sweepGlobalObject()
+Realm::sweepGlobalObject()
 {
     if (global_ && IsAboutToBeFinalized(&global_))
         global_.set(nullptr);
@@ -908,8 +907,10 @@ JSCompartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
+    Realm* realm = JS::GetRealmForCompartment(this);
+
     purge();
-    fixupGlobal();
+    realm->fixupGlobal();
     objectGroups.fixupTablesAfterMovingGC();
     fixupScriptMapsAfterMovingGC();
 
@@ -919,7 +920,7 @@ JSCompartment::fixupAfterMovingGC()
 }
 
 void
-JSCompartment::fixupGlobal()
+Realm::fixupGlobal()
 {
     GlobalObject* global = *global_.unsafeGet();
     if (global)
@@ -1007,14 +1008,13 @@ JSCompartment::purge()
 }
 
 void
-JSCompartment::clearTables()
+Realm::clearTables()
 {
     global_.set(nullptr);
 
-    // No scripts should have run in this compartment. This is used when
-    // merging a compartment that has been used off thread into another
-    // compartment and zone.
-    MOZ_ASSERT(crossCompartmentWrappers.empty());
+    // No scripts should have run in this realm. This is used when merging
+    // a realm that has been used off thread into another realm and zone.
+    JS::GetCompartmentForRealm(this)->assertNoCrossCompartmentWrappers();
     MOZ_ASSERT(!jitCompartment_);
     MOZ_ASSERT(!debugEnvs);
     MOZ_ASSERT(enumerators->next() == enumerators);
@@ -1183,9 +1183,10 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                flag == DebuggerObservesAsmJS ||
                flag == DebuggerObservesBinarySource);
 
+    Realm* realm = JS::GetRealmForCompartment(this);
     GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
-                           ? unsafeUnbarrieredMaybeGlobal()
-                           : maybeGlobal();
+                           ? realm->unsafeUnbarrieredMaybeGlobal()
+                           : realm->maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();
     for (auto p = v->begin(); p != v->end(); p++) {
         Debugger* dbg = *p;

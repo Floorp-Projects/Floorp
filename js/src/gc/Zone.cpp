@@ -322,8 +322,8 @@ Zone::notifyObservingDebuggers()
     JSRuntime* rt = runtimeFromMainThread();
     JSContext* cx = rt->mainContextFromOwnThread();
 
-    for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
-        RootedGlobalObject global(cx, comps->unsafeUnbarrieredMaybeGlobal());
+    for (RealmsInZoneIter realms(this); !realms.done(); realms.next()) {
+        RootedGlobalObject global(cx, realms->unsafeUnbarrieredMaybeGlobal());
         if (!global)
             continue;
 
