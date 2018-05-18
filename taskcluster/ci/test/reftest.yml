@@ -104,7 +104,7 @@ reftest:
             android-4.3-arm7-api-16/debug: 56
             android-7.0-x86/opt: 5
             android.*: 28
-            macosx64.*/opt: 1
+            macosx64.*/opt: 2
             macosx64.*/debug: 3
             windows.*/opt: 2
             windows.*/debug: 4
