@@ -201,7 +201,7 @@ add_task(async function testSecureManifestURLsDenied() {
       });
 
       await Assert.rejects(extension.startup(),
-                           null,
+                           /startup failed/,
                            "Manifest rejected");
 
       SimpleTest.endMonitorConsole();

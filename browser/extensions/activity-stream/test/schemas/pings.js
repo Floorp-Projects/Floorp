@@ -89,7 +89,9 @@ export const UserEventAction = Joi.object().keys({
       "MENU_ADD_TOPSITE",
       "MENU_PRIVACY_NOTICE",
       "DELETE_FROM_POCKET",
-      "ARCHIVE_FROM_POCKET"
+      "ARCHIVE_FROM_POCKET",
+      "SKIPPED_SIGNIN",
+      "SUBMIT_EMAIL"
     ]).required(),
     source: Joi.valid(["TOP_SITES", "TOP_STORIES", "HIGHLIGHTS"]),
     action_position: Joi.number().integer(),
@@ -199,6 +201,17 @@ export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
     is_prerendered: Joi.bool().required()
   }).required()
 }));
+
+export const ASRouterEventPing = Joi.object().keys({
+  client_id: Joi.string().required(),
+  action: Joi.string().required(),
+  impression_id: Joi.string().required(),
+  source: Joi.string().required(),
+  addon_version: Joi.string().required(),
+  locale: Joi.string().required(),
+  message_id: Joi.string().required(),
+  event: Joi.string().required()
+});
 
 export const UTSessionPing = Joi.array().items(
   Joi.string().required().valid("activity_stream"),

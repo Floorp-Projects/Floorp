@@ -562,13 +562,6 @@ WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode)
 
   const char* errorMessage;
   switch (aErrorCode) {
-  case NoError:
-    MOZ_FALLTHROUGH_ASSERT("Who passed NoError to OnFailure?");
-    // Fall through to get some sort of a sane error message if this actually
-    // happens at runtime.
-  case UnknownError:
-    errorMessage = "MediaDecodeAudioDataUnknownError";
-    break;
   case UnknownContent:
     errorMessage = "MediaDecodeAudioDataUnknownContentType";
     break;
@@ -577,6 +570,15 @@ WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode)
     break;
   case NoAudio:
     errorMessage = "MediaDecodeAudioDataNoAudio";
+    break;
+  case NoError:
+    MOZ_FALLTHROUGH_ASSERT("Who passed NoError to OnFailure?");
+    // Fall through to get some sort of a sane error message if this actually
+    // happens at runtime.
+  case UnknownError:
+    MOZ_FALLTHROUGH;
+  default:
+    errorMessage = "MediaDecodeAudioDataUnknownError";
     break;
   }
 

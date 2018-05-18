@@ -12,7 +12,7 @@ add_task(async function test_add_link() {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let addLink = content.document.querySelector("payment-method-picker a");
+    let addLink = content.document.querySelector("payment-method-picker .add-link");
     is(addLink.textContent, "Add", "Add link text");
 
     addLink.click();
@@ -74,7 +74,7 @@ add_task(async function test_edit_link() {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let editLink = content.document.querySelector("payment-method-picker a:nth-of-type(2)");
+    let editLink = content.document.querySelector("payment-method-picker .edit-link");
     is(editLink.textContent, "Edit", "Edit link text");
 
     editLink.click();
@@ -134,7 +134,7 @@ add_task(async function test_private_persist_defaults() {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let addLink = content.document.querySelector("payment-method-picker a");
+    let addLink = content.document.querySelector("payment-method-picker .add-link");
     is(addLink.textContent, "Add", "Add link text");
 
     addLink.click();
@@ -157,7 +157,7 @@ add_task(async function test_private_persist_defaults() {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let addLink = content.document.querySelector("payment-method-picker a");
+    let addLink = content.document.querySelector("payment-method-picker .add-link");
     is(addLink.textContent, "Add", "Add link text");
 
     addLink.click();
@@ -189,7 +189,7 @@ add_task(async function test_private_card_adding() {
       PaymentTestUtils: PTU,
     } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-    let addLink = content.document.querySelector("payment-method-picker a");
+    let addLink = content.document.querySelector("payment-method-picker .add-link");
     is(addLink.textContent, "Add", "Add link text");
 
     addLink.click();

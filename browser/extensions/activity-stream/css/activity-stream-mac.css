@@ -810,6 +810,188 @@ main {
     .sections-list .section-empty-state {
       height: 370px; } }
 
+.activity-stream.welcome {
+  overflow: hidden; }
+
+.activity-stream:not(.welcome) .overlay-wrapper {
+  display: none; }
+
+.overlay-wrapper {
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  font-weight: 200;
+  transition: opacity 0.4s;
+  opacity: 0; }
+  .overlay-wrapper.show {
+    transition: none;
+    opacity: 1; }
+    .overlay-wrapper.show .firstrun-sign-in {
+      transition: opacity 1.5s, transform 1.5s;
+      transition-delay: 0.2s;
+      transform: translateY(-50%) scale(1);
+      opacity: 1; }
+    .overlay-wrapper.show .firstrun-firefox-logo {
+      transition: opacity 2.3s;
+      opacity: 1; }
+    .overlay-wrapper.show .firstrun-title,
+    .overlay-wrapper.show .firstrun-content,
+    .overlay-wrapper.show .firstrun-link {
+      transition: transform 0.5s, opacity 0.8s;
+      transform: translateY(0);
+      opacity: 1; }
+    .overlay-wrapper.show .firstrun-title {
+      transition-delay: 0.2s; }
+    .overlay-wrapper.show .firstrun-content {
+      transition-delay: 0.4s; }
+    .overlay-wrapper.show .firstrun-link {
+      transition-delay: 0.6s; }
+    .overlay-wrapper.show .fxaccounts-container {
+      transition: none;
+      opacity: 1; }
+
+.background {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: url("../data/content/assets/fox-tail.png") top -200px center no-repeat, linear-gradient(to bottom, #003EAA 40%, #004EC2 60%, #0060DF 80%, #0080FF 90%, #00C7FF 100%) top center no-repeat, #003EAA;
+  background-size: cover; }
+
+.firstrun-sign-in {
+  transform: translateY(-50%) scale(0.8);
+  position: relative;
+  top: 50%;
+  width: 358px;
+  opacity: 0;
+  background-color: #FFF;
+  float: inline-end;
+  color: #0C0C0D;
+  text-align: center;
+  padding: 10px; }
+  .firstrun-sign-in .extra-links {
+    font-size: 12px;
+    max-width: 340px;
+    margin: 14px 50px;
+    color: #676F7E;
+    cursor: default; }
+    .firstrun-sign-in .extra-links a {
+      color: #737373;
+      cursor: pointer;
+      text-decoration: underline; }
+    .firstrun-sign-in .extra-links a:hover,
+    .firstrun-sign-in .extra-links a:active,
+    .firstrun-sign-in .extra-links a:focus {
+      color: #0A84FF; }
+  .firstrun-sign-in .email-input {
+    box-shadow: none;
+    margin: auto;
+    width: 244px;
+    display: block;
+    height: 40px;
+    padding-inline-start: 20px;
+    border: 1px solid #737373;
+    border-radius: 2px;
+    font-size: 16px; }
+    .firstrun-sign-in .email-input:hover {
+      border-color: #0C0C0D; }
+  .firstrun-sign-in .form-header {
+    font-size: 18px;
+    margin: 15px auto; }
+  .firstrun-sign-in .form-header span {
+    font-size: 14px;
+    margin-top: 4px;
+    display: block; }
+  .firstrun-sign-in button {
+    border-radius: 2px;
+    display: block;
+    cursor: pointer;
+    margin: 10px auto 0; }
+  .firstrun-sign-in .continue-button {
+    font-size: 18px;
+    height: 43px;
+    width: 250px;
+    padding: 8px 0;
+    border: 1px solid #0060DF;
+    color: #FFF;
+    background-color: #0A84FF;
+    transition-duration: 150ms;
+    transition-property: background-color; }
+    .firstrun-sign-in .continue-button:not([disabled]):active {
+      background: #003EAA;
+      border-color: #002275; }
+  .firstrun-sign-in .skip-button {
+    font-size: 13px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    background-color: #FCFCFC;
+    color: #0A84FF;
+    border: 1px solid #0A84FF;
+    min-height: 24px;
+    padding: 5px 10px;
+    transition: background-color 150ms, color 150ms, border-color 150ms; }
+    .firstrun-sign-in .skip-button[disabled] {
+      background-color: #EBEBEB;
+      border-color: #B1B1B1;
+      color: #6A6A6A;
+      cursor: default;
+      opacity: 0.5; }
+    .firstrun-sign-in .skip-button:not([disabled]):hover {
+      background-color: #0A84FF;
+      border-color: #0060DF;
+      color: #FFF; }
+
+.firstrun-left-divider {
+  position: relative;
+  float: inline-start;
+  clear: both;
+  width: 435px; }
+
+.firstrun-content {
+  line-height: 1.5;
+  margin-bottom: 48px;
+  max-width: 352px;
+  background: url("../data/content/assets/sync-devices.svg") bottom center no-repeat;
+  padding-bottom: 210px; }
+
+.firstrun-link {
+  color: #FFF;
+  display: block;
+  text-decoration: underline; }
+  .firstrun-link:hover, .firstrun-link:active, .firstrun-link:focus {
+    color: #FFF; }
+
+.firstrun-title {
+  background: url("chrome://branding/content/about-logo.png") top left no-repeat;
+  background-size: 90px 90px;
+  margin: 40px 0 10px;
+  padding-top: 110px;
+  font-weight: 200; }
+
+[dir='rtl'] .firstrun-title {
+  background-position: top right; }
+
+.fxaccounts-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  left: 0;
+  color: #FFF;
+  height: 515px;
+  margin: auto;
+  width: 819px;
+  z-index: 10;
+  transition: opacity 0.3s;
+  opacity: 0; }
+
+.firstrun-title,
+.firstrun-content,
+.firstrun-link {
+  opacity: 0;
+  transform: translateY(-5px); }
+
 .topic {
   color: var(--newtab-section-navigation-text-color);
   font-size: 12px;
@@ -1465,6 +1647,77 @@ main {
   .SnippetBaseContainer:hover .blockButton {
     display: block; }
 
+.activity-stream.modal-open {
+  overflow: hidden; }
+
+.modalOverlayOuter {
+  background: #FFF;
+  opacity: 0.93;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: none;
+  z-index: 100000; }
+  .modalOverlayOuter.active {
+    display: block; }
+
+.modalOverlayInner {
+  width: 960px;
+  height: 510px;
+  position: fixed;
+  top: calc(50% - 255px);
+  left: calc(50% - 480px);
+  background: #FFF;
+  box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  display: none;
+  z-index: 100001; }
+  @media (max-width: 960px) {
+    .modalOverlayInner {
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      box-shadow: none;
+      border-radius: 0; } }
+  @media (max-width: 850px) and (max-height: 730px) {
+    .modalOverlayInner {
+      overflow-y: scroll; } }
+  .modalOverlayInner.active {
+    display: block; }
+  .modalOverlayInner h2 {
+    color: #4A4A4F;
+    text-align: center;
+    font-weight: 200;
+    margin-top: 30px;
+    font-size: 28px;
+    line-height: 37px;
+    letter-spacing: -0.13px; }
+    @media (max-width: 960px) {
+      .modalOverlayInner h2 {
+        margin-top: 100px; } }
+    @media (max-width: 850px) {
+      .modalOverlayInner h2 {
+        margin-top: 30px; } }
+  .modalOverlayInner .footer {
+    border-top: 1px solid #D7D7DB;
+    height: 70px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    background-color: #FFF; }
+    @media (max-width: 850px) and (max-height: 730px) {
+      .modalOverlayInner .footer {
+        position: sticky; } }
+    .modalOverlayInner .footer .modalButton {
+      margin-top: 20px;
+      width: 150px;
+      height: 30px;
+      padding: 4px 0 6px 0;
+      font-size: 15px; }
+
 .SimpleSnippet .title {
   display: inline;
   font-size: inherit;
@@ -1479,5 +1732,107 @@ main {
   width: 42px;
   margin-inline-end: 12px;
   flex-shrink: 0; }
+
+.SimpleSnippet .ASRouterAnchor {
+  color: inherit;
+  text-decoration: underline; }
+
+.onboardingMessageContainer {
+  display: grid;
+  grid-column-gap: 21px;
+  grid-template-columns: auto auto auto;
+  padding-left: 30px;
+  padding-right: 30px; }
+  @media (max-width: 850px) {
+    .onboardingMessageContainer {
+      grid-template-columns: none;
+      grid-template-rows: auto auto auto;
+      padding-left: 110px;
+      padding-right: 110px; } }
+
+.onboardingMessage {
+  height: 340px;
+  text-align: center;
+  padding: 13px;
+  font-weight: 200; }
+  @media (max-width: 850px) {
+    .onboardingMessage {
+      height: 170px;
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #D8D8D8;
+      display: flex;
+      margin-bottom: 11px; }
+      .onboardingMessage:last-child {
+        border: none; }
+      .onboardingMessage .onboardingContent {
+        padding-left: 10px;
+        height: 100%; }
+        .onboardingMessage .onboardingContent > span > h3 {
+          margin-top: 0;
+          margin-bottom: 4px;
+          font-weight: 400; }
+        .onboardingMessage .onboardingContent > span > p {
+          margin-top: 0;
+          line-height: 22px;
+          font-size: 15px; } }
+  .onboardingMessage .onboardingMessageImage {
+    height: 100px;
+    width: 120px;
+    background-size: 120px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    display: inline-block;
+    vertical-align: middle; }
+    @media (max-width: 850px) {
+      .onboardingMessage .onboardingMessageImage {
+        height: 75px;
+        width: 160px;
+        background-size: 80px; } }
+    .onboardingMessage .onboardingMessageImage.addons {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-addons@2x.png"); }
+    .onboardingMessage .onboardingMessageImage.privatebrowsing {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png"); }
+    .onboardingMessage .onboardingMessageImage.screenshots {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png"); }
+  .onboardingMessage .onboardingContent {
+    height: 175px; }
+    .onboardingMessage .onboardingContent > span > h3 {
+      color: #0C0C0D;
+      margin-bottom: 8px;
+      font-weight: 400; }
+    .onboardingMessage .onboardingContent > span > p {
+      color: #4A4A4F;
+      margin-top: 0;
+      height: 130px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 22px; }
+  .onboardingMessage .onboardingButton {
+    background-color: rgba(12, 12, 13, 0.1);
+    border: none;
+    width: 150px;
+    height: 30px;
+    margin-bottom: 23px;
+    padding: 4px 0 6px 0;
+    font-size: 15px; }
+    @media (max-width: 850px) {
+      .onboardingMessage .onboardingButton {
+        float: right;
+        margin-top: -60px;
+        margin-right: -10px; } }
+  .onboardingMessage::before {
+    content: '';
+    height: 220px;
+    width: 1px;
+    position: absolute;
+    background-color: #D8D8D8;
+    margin-top: 40px;
+    margin-left: 215px; }
+    @media (max-width: 850px) {
+      .onboardingMessage::before {
+        content: none; } }
+  .onboardingMessage:last-child::before {
+    content: none; }
 
 /*# sourceMappingURL=activity-stream-mac.css.map */

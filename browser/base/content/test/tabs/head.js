@@ -9,3 +9,22 @@ function updateTabContextMenu(tab) {
   menu.hidePopup();
 }
 
+function triggerClickOn(target, options) {
+  let promise = BrowserTestUtils.waitForEvent(target, "click");
+  if (AppConstants.platform == "macosx") {
+      options = {
+          metaKey: options.ctrlKey,
+          shiftKey: options.shiftKey
+      };
+  }
+  EventUtils.synthesizeMouseAtCenter(target, options);
+  return promise;
+}
+
+async function addTab() {
+  const tab = BrowserTestUtils.addTab(gBrowser,
+      "http://mochi.test:8888/", { skipAnimation: true });
+  const browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+  return tab;
+}

@@ -136,6 +136,8 @@ window._gBrowser = {
 
   _multiSelectedTabsMap: new WeakMap(),
 
+  _lastMultiSelectedTabRef: null,
+
   /**
    * Tab close requests are ignored if the window is closing anyway,
    * e.g. when holding Ctrl+W.
@@ -3615,6 +3617,32 @@ window._gBrowser = {
     this._multiSelectedTabsMap.set(aTab, null);
   },
 
+  /**
+   * Adds two given tabs and all tabs between them into the (multi) selected tabs collection
+   */
+  addRangeToMultiSelectedTabs(aTab1, aTab2) {
+    // Let's avoid going through all the heavy process below when the same
+    // tab is given as params.
+    if (aTab1 == aTab2) {
+      this.addToMultiSelectedTabs(aTab1);
+      return;
+    }
+
+    const tabs = [...this.tabs];
+    const indexOfTab1 = tabs.indexOf(aTab1);
+    const indexOfTab2 = tabs.indexOf(aTab2);
+
+    const [lowerIndex, higherIndex] = indexOfTab1 < indexOfTab2 ?
+      [indexOfTab1, indexOfTab2] : [indexOfTab2, indexOfTab1];
+
+    for (let i = lowerIndex; i <= higherIndex; i++) {
+      let tab = tabs[i];
+      if (!tab.hidden) {
+        this.addToMultiSelectedTabs(tab);
+      }
+    }
+  },
+
   removeFromMultiSelectedTabs(aTab) {
     if (!aTab.multiselected) {
       return;
@@ -3633,10 +3661,22 @@ window._gBrowser = {
     this._multiSelectedTabsMap = new WeakMap();
   },
 
-  multiSelectedTabsCount() {
+  get multiSelectedTabsCount() {
     return ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
       .filter(tab => tab.isConnected)
       .length;
+  },
+
+  get lastMultiSelectedTab() {
+    let tab = this._lastMultiSelectedTabRef ? this._lastMultiSelectedTabRef.get() : null;
+    if (tab && tab.isConnected && this._multiSelectedTabsMap.has(tab)) {
+      return tab;
+    }
+    return gBrowser.selectedTab;
+  },
+
+  set lastMultiSelectedTab(aTab) {
+    this._lastMultiSelectedTabRef = Cu.getWeakReference(aTab);
   },
 
   activateBrowserForPrintPreview(aBrowser) {

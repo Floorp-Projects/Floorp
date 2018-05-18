@@ -85,6 +85,10 @@ this.AboutPreferences = class AboutPreferences {
       case at.SETTINGS_OPEN:
         action._target.browser.ownerGlobal.openPreferences("paneHome", {origin: "aboutHome"});
         break;
+      // This is used to open the web extension settings page for an extension
+      case at.OPEN_WEBEXT_SETTINGS:
+        action._target.browser.ownerGlobal.BrowserOpenAddonsMgr(`addons://detail/${encodeURIComponent(action.data)}`);
+        break;
     }
   }
 

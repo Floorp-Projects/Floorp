@@ -11,6 +11,7 @@ import {_ASRouter} from "lib/ASRouter.jsm";
 
 const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER];
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
+const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 
 // Creates a message object that looks like messages returned by
 // RemotePageManager listeners
@@ -178,10 +179,22 @@ describe("ASRouter", () => {
       assert.include(ALL_MESSAGE_IDS, Router.state.currentId);
     });
     it("should send a message back to the to the target", async () => {
+      // force the only message to be a regular message so getRandomItemFromArray picks it
+      await Router.setState({messages: [{id: "foo", template: "simple_template", content: {title: "Foo", body: "Foo123"}}]});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
       const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.currentId);
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: currentMessage});
+    });
+    it("should send a message back to the to the target if there is a bundle, too", async () => {
+      // force the only message to be a bundled message so getRandomItemFromArray picks it
+      await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
+      const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
+      await Router.onMessage(msg);
+      const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.currentId);
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME);
+      assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].type, "SET_BUNDLED_MESSAGES");
+      assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content, currentMessage.content);
     });
     it("should send a CLEAR_MESSAGE message and set state.currentId to null if no messages are available", async () => {
       await Router.setState({messages: []});
@@ -207,6 +220,21 @@ describe("ASRouter", () => {
     });
   });
 
+  describe("#onMessage: BLOCK_BUNDLE", () => {
+    it("should add all the ids in the bundle to the blockList, state.currentId to null, and send a CLEAR_MESSAGE message", async () => {
+      await Router.setState({currentId: "foo"});
+      const msg = fakeAsyncMessage({type: "BLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}});
+      await Router.onMessage(msg);
+
+      assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[0].id));
+      assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[1].id));
+      assert.isNull(Router.state.currentId);
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
+      assert.calledOnce(Router._storage.set);
+      assert.calledWithExactly(Router._storage.set, "blockList", [FAKE_BUNDLE[0].id, FAKE_BUNDLE[1].id]);
+    });
+  });
+
   describe("#onMessage: UNBLOCK_MESSAGE_BY_ID", () => {
     it("should remove the id from the blockList", async () => {
       await Router.onMessage(fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "foo"}}));
@@ -217,6 +245,24 @@ describe("ASRouter", () => {
     });
     it("should save the blockList", async () => {
       await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_MESSAGE_BY_ID", data: {id: "foo"}}));
+
+      assert.calledOnce(Router._storage.set);
+      assert.calledWithExactly(Router._storage.set, "blockList", []);
+    });
+  });
+
+  describe("#onMessage: UNBLOCK_BUNDLE", () => {
+    it("should remove all the ids in the bundle from the blockList", async () => {
+      await Router.onMessage(fakeAsyncMessage({type: "BLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}}));
+      assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[0].id));
+      assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[1].id));
+      await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}}));
+
+      assert.isFalse(Router.state.blockList.includes(FAKE_BUNDLE[0].id));
+      assert.isFalse(Router.state.blockList.includes(FAKE_BUNDLE[1].id));
+    });
+    it("should save the blockList", async () => {
+      await Router.onMessage(fakeAsyncMessage({type: "UNBLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}}));
 
       assert.calledOnce(Router._storage.set);
       assert.calledWithExactly(Router._storage.set, "blockList", []);
@@ -251,6 +297,38 @@ describe("ASRouter", () => {
       assert.calledOnce(Router.sendNextMessage);
       assert.calledWithExactly(Router.sendNextMessage, sinon.match.instanceOf(FakeRemotePageManager));
     });
+    it("should call _getBundledMessages if we request a message that needs to be bundled", async () => {
+      sandbox.stub(Router, "_getBundledMessages");
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage] = Router.state.messages;
+      const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage.id}});
+      await Router.onMessage(msg);
+
+      assert.calledOnce(Router._getBundledMessages);
+    });
+    it("should properly pick another message of the same template if it is bundled", async () => {
+      Router.sendMessage = sinon.spy();
+      // forcefully pick a message which needs to be bundled (the second message in FAKE_LOCAL_MESSAGES)
+      const [, testMessage1, testMessage2] = Router.state.messages;
+      const msg = fakeAsyncMessage({type: "OVERRIDE_MESSAGE", data: {id: testMessage1.id}});
+      await Router.onMessage(msg);
+
+      // Expected object should have some properties of the original message it picked (testMessage1)
+      // plus the bundled content of the others that it picked of the same template (testMessage2)
+      const expectedObj = {
+        template: testMessage1.template,
+        provider: testMessage1.provider,
+        bundle: [{content: testMessage1.content, id: testMessage1.id}, {content: testMessage2.content, id: testMessage2.id}]
+      };
+      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_BUNDLED_MESSAGES", data: expectedObj});
+    });
+    it("should get the bundle and send the message if the message has a bundle", async () => {
+      sandbox.stub(Router, "sendNextMessage").resolves();
+      const msg = fakeAsyncMessage({type: "GET_NEXT_MESSAGE"});
+      msg.bundled = 2; // force this message to want to be bundled
+      await Router.onMessage(msg);
+      assert.calledOnce(Router.sendNextMessage);
+    });
   });
 
   describe("#onMessage: OVERRIDE_MESSAGE", () => {
@@ -260,6 +338,39 @@ describe("ASRouter", () => {
       await Router.onMessage(msg);
 
       assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: testMessage});
+    });
+  });
+
+  describe("#onMessage: Onboarding actions", () => {
+    it("should call openLinkIn with the correct params on OPEN_PRIVATE_BROWSER_WINDOW", async () => {
+      sinon.spy(Router, "openLinkIn");
+      let [testMessage] = Router.state.messages;
+      testMessage.button_action_params = "about:home";
+      const msg = fakeAsyncMessage({type: "OPEN_PRIVATE_BROWSER_WINDOW", data: testMessage});
+      await Router.onMessage(msg);
+
+      assert.calledWith(Router.openLinkIn, testMessage.button_action_params, msg.target, {isPrivate: true, where: "window"});
+      assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
+    });
+    it("should call openLinkIn with the correct params on OPEN_URL", async () => {
+      sinon.spy(Router, "openLinkIn");
+      let [testMessage] = Router.state.messages;
+      testMessage.button_action_params = "some/url.com";
+      const msg = fakeAsyncMessage({type: "OPEN_URL", data: testMessage});
+      await Router.onMessage(msg);
+
+      assert.calledWith(Router.openLinkIn, testMessage.button_action_params, msg.target, {isPrivate: false, where: "tabshifted"});
+      assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
+    });
+    it("should call openLinkIn with the correct params on OPEN_ABOUT_PAGE", async () => {
+      sinon.spy(Router, "openLinkIn");
+      let [testMessage] = Router.state.messages;
+      testMessage.button_action_params = "something";
+      const msg = fakeAsyncMessage({type: "OPEN_ABOUT_PAGE", data: testMessage});
+      await Router.onMessage(msg);
+
+      assert.calledWith(Router.openLinkIn, `about:${testMessage.button_action_params}`, msg.target, {isPrivate: false, trusted: true, where: "tab"});
+      assert.calledOnce(msg.target.browser.ownerGlobal.openTrustedLinkIn);
     });
   });
 });

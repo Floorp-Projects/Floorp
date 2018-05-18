@@ -298,6 +298,7 @@ function makeURI(aURL) {
 add_task(async function setup() {
   if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
     Assert.throws(() => getFirstResourceOfType(MigrationUtils.resourceTypes.PASSWORDS),
+                  /failed to find/,
                   "The migrator doesn't exist for win8+");
     return;
   }

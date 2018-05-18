@@ -277,6 +277,25 @@ add_task(async function test_address_edit() {
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
     info("initial addressOptions: " + JSON.stringify(addressOptions));
     let selectedIndex = addressOptions.selectedOptionIndex;
+
+    is(selectedIndex, -1, "No address should be selected initially");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.promisePaymentRequestEvent);
+
+    info("selecting the US address");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "US");
+
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+
+    addressOptions =
+      await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
+    info("initial addressOptions: " + JSON.stringify(addressOptions));
+    selectedIndex = addressOptions.selectedOptionIndex;
     let selectedAddressGuid = addressOptions.options[selectedIndex].guid;
     let selectedAddress = formAutofillStorage.addresses.get(selectedAddressGuid);
 
@@ -288,10 +307,6 @@ add_task(async function test_address_edit() {
     await formAutofillStorage.addresses.update(selectedAddress.guid, {
       country: "CA",
     }, true);
-
-    await ContentTask.spawn(browser, {
-      eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.promisePaymentRequestEvent);
 
     addressOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
@@ -327,6 +342,10 @@ add_task(async function test_address_removal() {
       }
     );
 
+    info("selecting the US address");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "US");
+
     let addressOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
     info("initial addressOptions: " + JSON.stringify(addressOptions));
@@ -348,7 +367,7 @@ add_task(async function test_address_removal() {
     info("updated addressOptions: " + JSON.stringify(addressOptions));
     selectedIndex = addressOptions.selectedOptionIndex;
 
-    is(selectedIndex, 0, "First address should be selected");
+    is(selectedIndex, -1, "No replacement address should be selected after deletion");
     is(addressOptions.options.length, 1, "Should now be 1 address option");
 
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.manuallyClickCancel);

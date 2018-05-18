@@ -8,10 +8,11 @@
   * Test preventive maintenance checkAndFixDatabase.
   */
 
-// Include PlacesDBUtils module.
-ChromeUtils.import("resource://gre/modules/PlacesDBUtils.jsm");
-
 add_task(async function() {
+  // We must initialize places first, or we won't have a db to check.
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_CREATE);
+
   let tasksStatusMap = await PlacesDBUtils.checkAndFixDatabase();
   let numberOfTasksRun = tasksStatusMap.size;
     let successfulTasks = [];

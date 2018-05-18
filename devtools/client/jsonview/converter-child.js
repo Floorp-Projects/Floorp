@@ -192,31 +192,37 @@ function getHttpHeaders(request) {
 
 // Exports variables that will be accessed by the non-privileged scripts.
 function exportData(win, headers) {
-  let data = Cu.createObjectIn(win, {
-    defineAs: "JSONView"
-  });
-
-  data.debugJsModules = debugJsModules;
-
-  data.json = new win.Text();
-
-  data.readyState = "uninitialized";
-
-  let Locale = {
-    $STR: key => {
-      try {
-        return jsonViewStrings.GetStringFromName(key);
-      } catch (err) {
-        console.error(err);
-        return undefined;
+  let json = new win.Text();
+  let JSONView = Cu.cloneInto({
+    debugJsModules,
+    headers,
+    json,
+    readyState: "uninitialized",
+    Locale: {
+      $STR: key => {
+        try {
+          return jsonViewStrings.GetStringFromName(key);
+        } catch (err) {
+          console.error(err);
+          return undefined;
+        }
       }
-    }
-  };
-  data.Locale = Cu.cloneInto(Locale, win, {cloneFunctions: true});
-
-  data.headers = Cu.cloneInto(headers, win);
-
-  return data;
+    },
+  }, win, {
+    cloneFunctions: true,
+    wrapReflectors: true,
+  });
+  try {
+    Object.defineProperty(Cu.waiveXrays(win), "JSONView", {
+      value: JSONView,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+  } catch (error) {
+    Cu.reportError(error);
+  }
+  return {json};
 }
 
 // Builds an HTML string that will be used to load stylesheets and scripts.
