@@ -390,7 +390,8 @@ nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
 
   aBuilder.PushIFrame(mozilla::wr::ToRoundedLayoutRect(rect),
       !BackfaceIsHidden(),
-      mozilla::wr::AsPipelineId(GetRemoteLayersId()));
+      mozilla::wr::AsPipelineId(GetRemoteLayersId()),
+      /*ignoreMissingPipelines*/ true);
 
   return true;
 }
