@@ -155,6 +155,12 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   if (!mDocument->DidFireDOMContentLoaded()) {
     mDocument->AddSystemEventListener(NS_LITERAL_STRING("DOMContentLoaded"),
                                       this, false, false);
+  } else {
+    // In some cases we can't rely on CheckLoadingFinished being called from
+    // the refresh driver.  For example, documents in display:none iframes.
+    // Or if the document has finished loading and painting at the time that
+    // script requests document.fonts and causes us to get here.
+    CheckLoadingFinished();
   }
 
   mDocument->CSSLoader()->AddObserver(this);
