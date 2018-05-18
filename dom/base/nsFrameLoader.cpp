@@ -921,7 +921,7 @@ bool
 nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
                                nsSubDocumentFrame *aFrame)
 {
-  AUTO_PROFILER_LABEL("nsFrameLoader::ShowRemoteFrame", GRAPHICS);
+  AUTO_PROFILER_LABEL("nsFrameLoader::ShowRemoteFrame", OTHER);
   NS_ASSERTION(IsRemoteFrame(), "ShowRemote only makes sense on remote frames.");
 
   if (!mRemoteBrowser && !TryRemoteBrowser()) {

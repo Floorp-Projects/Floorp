@@ -3766,7 +3766,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  AUTO_PROFILER_LABEL("ChildView::drawRect", GRAPHICS);
+  AUTO_PROFILER_LABEL("ChildView::drawRect", OTHER);
 
   // The CGContext that drawRect supplies us with comes with a transform that
   // scales one user space unit to one Cocoa point, which can consist of
@@ -3832,7 +3832,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawUsingOpenGL
 {
-  AUTO_PROFILER_LABEL("ChildView::drawUsingOpenGL", GRAPHICS);
+  AUTO_PROFILER_LABEL("ChildView::drawUsingOpenGL", OTHER);
 
   if (![self isUsingOpenGL] || !mGeckoChild->IsVisible())
     return;
