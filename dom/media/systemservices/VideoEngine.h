@@ -37,7 +37,7 @@ public:
 
   static already_AddRefed<VideoEngine> Create(UniquePtr<const webrtc::Config>&& aConfig);
 #if defined(ANDROID)
-  static int SetAndroidObjects(JavaVM* javaVM);
+  static int SetAndroidObjects();
 #endif
   void CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8);
 
