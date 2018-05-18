@@ -11,7 +11,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/PodOperations.h"
 
 #include <algorithm>
 #include <stddef.h>
@@ -54,7 +53,9 @@ class DenseBitmap
 
     void copyBitsFrom(size_t wordStart, size_t numWords, uintptr_t* source) {
         MOZ_ASSERT(wordStart + numWords <= data.length());
-        mozilla::PodCopy(&data[wordStart], source, numWords);
+        // Use std::copy and not std::copy_n because the former requires no
+        // overlap and so provides extra opportunity to optimize.
+        std::copy(source, source + numWords, &data[wordStart]);
     }
 
     void bitwiseOrRangeInto(size_t wordStart, size_t numWords, uintptr_t* target) const {
