@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
+import mozinfo
+
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
@@ -181,6 +183,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             self.fatal("Could not create blobber upload directory")
             # Exit
 
+        mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
+
         cmd += ["--log-raw=-",
                 "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
                                               "wpt_raw.log"),
@@ -192,7 +196,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                 "--symbols-path=%s" % self.query_symbols_url(),
                 "--stackwalk-binary=%s" % self.query_minidump_stackwalk(),
                 "--stackfix-dir=%s" % os.path.join(dirs["abs_test_install_dir"], "bin"),
-                "--run-by-dir=3",
+                "--run-by-dir=%i" % (3 if not mozinfo.info["asan"] else 0),
                 "--no-pause-after-test"]
 
         if not sys.platform.startswith("linux"):
