@@ -11,31 +11,32 @@ function addMSEPrefs(...prefs) {
   gMSETestPrefs = gMSETestPrefs.concat(prefs);
 }
 
-function runWithMSE(testFunction) {
-  function bootstrapTest() {
-    const ms = new MediaSource();
+async function runWithMSE(testFunction) {
+  await once(window, "load");
+  await SpecialPowers.pushPrefEnv({"set": gMSETestPrefs});
 
-    const el = document.createElement("video");
-    el.src = URL.createObjectURL(ms);
-    el.preload = "auto";
+  const ms = new MediaSource();
 
-    document.body.appendChild(el);
-    SimpleTest.registerCleanupFunction(function() {
-      el.remove();
-      el.removeAttribute("src");
-      el.load();
-    });
+  const el = document.createElement("video");
+  el.src = URL.createObjectURL(ms);
+  el.preload = "auto";
 
-    testFunction(ms, el);
-  }
-
-  addLoadEvent(function() {
-    SpecialPowers.pushPrefEnv({"set": gMSETestPrefs}, bootstrapTest);
+  document.body.appendChild(el);
+  SimpleTest.registerCleanupFunction(() => {
+    el.remove();
+    el.removeAttribute("src");
+    el.load();
   });
+  try {
+    await testFunction(ms, el);
+  } catch (e) {
+    ok(false, `${testFunction.name} failed with error ${e.name}`);
+    throw e;
+  }
 }
 
-function fetchWithXHR(uri, onLoadFunction) {
-  const p = new Promise(function(resolve, reject) {
+async function fetchWithXHR(uri, onLoadFunction) {
+  let result = await new Promise(resolve => {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.responseType = "arraybuffer";
@@ -47,10 +48,9 @@ function fetchWithXHR(uri, onLoadFunction) {
   });
 
   if (onLoadFunction) {
-    p.then(onLoadFunction);
+    result = await onLoadFunction(result);
   }
-
-  return p;
+  return result;
 }
 
 function range(start, end) {
@@ -61,16 +61,12 @@ function range(start, end) {
   return rv;
 }
 
-function once(target, name, cb) {
-  const p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function() {
-      resolve();
-    }, {once: true});
-  });
+async function once(target, name, cb) {
+  let result = await new Promise(r => target.addEventListener(name, r, {once: true}));
   if (cb) {
-    p.then(cb);
+    result = await cb();
   }
-  return p;
+  return result;
 }
 
 function timeRangeToString(r) {
@@ -81,38 +77,27 @@ function timeRangeToString(r) {
   return str;
 }
 
-function loadSegment(sb, typedArrayOrArrayBuffer) {
+async function loadSegment(sb, typedArrayOrArrayBuffer) {
   const typedArray = (typedArrayOrArrayBuffer instanceof ArrayBuffer) ? new Uint8Array(typedArrayOrArrayBuffer)
                                                                       : typedArrayOrArrayBuffer;
   info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
   const beforeBuffered = timeRangeToString(sb.buffered);
-  return new Promise(function(resolve, reject) {
-    once(sb, "update").then(function() {
-      const afterBuffered = timeRangeToString(sb.buffered);
-      info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
-      resolve();
-    });
-    sb.appendBuffer(typedArray);
-  });
+  const p = once(sb, 'update');
+  sb.appendBuffer(typedArray);
+  await p;
+  const afterBuffered = timeRangeToString(sb.buffered);
+  info(`SourceBuffer buffered ranges grew from ${beforeBuffered} to ${afterBuffered}`);
 }
 
-function fetchAndLoad(sb, prefix, chunks, suffix) {
+async function fetchAndLoad(sb, prefix, chunks, suffix) {
 
   // Fetch the buffers in parallel.
-  const buffers = {};
-  const fetches = [];
-  for (const chunk of chunks) {
-    fetches.push(fetchWithXHR(prefix + chunk + suffix).then(((c, x) => buffers[c] = x).bind(null, chunk)));
-  }
+  const buffers = await Promise.all(chunks.map(c => fetchWithXHR(prefix + c + suffix)));
 
   // Load them in series, as required per spec.
-  return Promise.all(fetches).then(function() {
-    let rv = Promise.resolve();
-    for (const chunk of chunks) {
-      rv = rv.then(loadSegment.bind(null, sb, buffers[chunk]));
-    }
-    return rv;
-  });
+  for (const buffer of buffers) {
+    await loadSegment(sb, buffer);
+  }
 }
 
 function loadSegmentAsync(sb, typedArrayOrArrayBuffer) {
@@ -155,15 +140,15 @@ SimpleTest.registerTimeoutFunction(function() {
   }
 });
 
-function waitUntilTime(target, targetTime) {
-  return new Promise(function(resolve, reject) {
+async function waitUntilTime(target, targetTime) {
+  await new Promise(resolve => {
     target.addEventListener("waiting", function onwaiting() {
       info("Got a waiting event at " + target.currentTime);
       if (target.currentTime >= targetTime) {
-        ok(true, "Reached target time of: " + targetTime);
         target.removeEventListener("waiting", onwaiting);
         resolve();
       }
     });
   });
+  ok(true, "Reached target time of: " + targetTime);
 }
