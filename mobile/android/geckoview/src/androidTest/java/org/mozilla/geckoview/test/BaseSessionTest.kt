@@ -104,6 +104,9 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.evaluateJS(js: String): Any? =
             sessionRule.evaluateJS(this, js)
 
+    fun GeckoSession.waitForJS(js: String): Any? =
+            sessionRule.waitForJS(this, js)
+
     infix fun Any?.dot(prop: Any): Any? =
             if (prop is Int) this.asJSList<Any>()[prop] else this.asJSMap<Any>()[prop]
 
