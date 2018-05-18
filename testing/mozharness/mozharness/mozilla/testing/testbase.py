@@ -301,8 +301,6 @@ You can set this by specifying --test-url URL
                            "requirements: `%s` - error: `%s`" % (source,
                                                                  package_requirements or 'None',
                                                                  err or 'No error'))
-        self.info("Using the following test package requirements:\n%s" %
-                  pprint.pformat(package_requirements))
         return package_requirements
 
     def _download_test_packages(self, suite_categories, extract_dirs):
