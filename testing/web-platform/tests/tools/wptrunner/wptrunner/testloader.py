@@ -661,7 +661,7 @@ class PathGroupedSource(GroupedSource):
     @classmethod
     def new_group(cls, state, test, **kwargs):
         depth = kwargs.get("depth")
-        if depth is True:
+        if depth is True or depth == 0:
             depth = None
         path = urlparse.urlsplit(test.url).path.split("/")[1:-1][:depth]
         rv = path != state.get("prev_path")
