@@ -167,7 +167,7 @@ var tests = [
         EventUtils.synthesizeKey("KEY_Backspace");
 
         // Trying to show a notification should display nothing.
-        let notShowing = promiseTopicObserved("PopupNotifications-updateNotShowing");
+        let notShowing = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
         this.notifyObj = new BasicNotification(this.id);
         this.notifyObj.anchorID = "geo-notification-icon";
         this.notifyObj.addOptions({ persistent });
