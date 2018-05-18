@@ -435,9 +435,9 @@ private: // data
   // Scaling.
   //////////////////////////////////////////////////////////////////////////////
 
-  // Determines whether we can downscale during decode with the given
-  // parameters.
-  bool CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags);
+  // Determines the decode size depending on whether we can downscale during
+  // decode with the given parameters.
+  gfx::IntSize GetDownscaleDecodeSize(const nsIntSize& aSize, uint32_t aFlags);
 
 
   // Error handling.

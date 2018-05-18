@@ -545,7 +545,7 @@ encodedBytes = streamToArray(istream);
 refName = "image2jpg32x16scaled.jpg";
 refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
-Assert.equal(istream.available(), 1227);
+Assert.equal(istream.available(), 1222);
 referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
