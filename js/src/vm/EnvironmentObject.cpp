@@ -3316,7 +3316,7 @@ js::CheckLexicalNameConflict(JSContext* cx, Handle<LexicalEnvironmentObject*> le
     const char* redeclKind = nullptr;
     RootedId id(cx, NameToId(name));
     RootedShape shape(cx);
-    if (varObj->is<GlobalObject>() && varObj->compartment()->isInVarNames(name)) {
+    if (varObj->is<GlobalObject>() && varObj->realm()->isInVarNames(name)) {
         // ES 15.1.11 step 5.a
         redeclKind = "var";
     } else if ((shape = lexicalEnv->lookup(cx, name))) {
