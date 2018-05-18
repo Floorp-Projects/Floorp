@@ -684,7 +684,7 @@ def globalNameSetToExposureSet(globalScope, nameSet, exposureSet):
 
 class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
     def __init__(self, location, parentScope, name, parent, members,
-                 isKnownNonPartial):
+                 isKnownNonPartial, toStringTag):
         assert isinstance(parentScope, IDLScope)
         assert isinstance(name, IDLUnresolvedIdentifier)
         assert isKnownNonPartial or not parent
@@ -721,6 +721,8 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
         # If this is an iterator interface, we need to know what iterable
         # interface we're iterating for in order to get its nativeType.
         self.iterableInterface = None
+
+        self.toStringTag = toStringTag
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
         IDLExposureMixins.__init__(self, location)
@@ -1575,9 +1577,11 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
 
 class IDLInterface(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, parent, members,
-                 isKnownNonPartial, classNameOverride=None):
+                 isKnownNonPartial, classNameOverride=None,
+                 toStringTag=None):
         IDLInterfaceOrNamespace.__init__(self, location, parentScope, name,
-                                         parent, members, isKnownNonPartial)
+                                         parent, members, isKnownNonPartial,
+                                         toStringTag)
         self.classNameOverride = classNameOverride
 
     def __str__(self):
@@ -1768,7 +1772,8 @@ class IDLInterface(IDLInterfaceOrNamespace):
 class IDLNamespace(IDLInterfaceOrNamespace):
     def __init__(self, location, parentScope, name, members, isKnownNonPartial):
         IDLInterfaceOrNamespace.__init__(self, location, parentScope, name,
-                                         None, members, isKnownNonPartial)
+                                         None, members, isKnownNonPartial,
+                                         toStringTag=None)
 
     def __str__(self):
         return "Namespace '%s'" % self.identifier.name

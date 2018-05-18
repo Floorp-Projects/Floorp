@@ -703,6 +703,8 @@ struct NamedConstructor
  * protoCache a pointer to a JSObject pointer where we should cache the
  *            interface prototype object. This must be null if protoClass is and
  *            vice versa.
+ * toStringTag if not null, a string to define as @@toStringTag on the prototype.
+ *             Must be null if protoClass is.
  * constructorClass is the JSClass to use for the interface object.
  *                  This is null if we should not create an interface object or
  *                  if it should be a function object.
@@ -741,6 +743,7 @@ void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const char* toStringTag,
                        JS::Handle<JSObject*> interfaceProto,
                        const js::Class* constructorClass,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
