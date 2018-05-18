@@ -105,6 +105,16 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Adds an action to be displayed on the right side of the toolbar in display mode.
+     *
+     * If there is not enough room to show all icons then some icons may be moved to an overflow
+     * menu.
+     */
+    override fun addDisplayAction(action: Toolbar.Action) {
+        displayToolbar.addAction(action)
+    }
+
+    /**
      * Switches to URL editing mode.
      */
     fun editMode() {

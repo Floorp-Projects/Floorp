@@ -4,11 +4,12 @@
 
 package mozilla.components.concept.toolbar
 
+import android.support.annotation.DrawableRes
+
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
  */
 interface Toolbar {
-
     /**
      * Displays the given URL string as part of this Toolbar.
      *
@@ -35,4 +36,18 @@ interface Toolbar {
      * @param listener the listener function
      */
     fun setOnUrlChangeListener(listener: (String) -> Unit)
+
+    /**
+     * Adds an action to be displayed on the right side of the toolbar in display mode.
+     */
+    fun addDisplayAction(action: Action)
+
+    /**
+     * An action button to be added to the toolbar.
+     */
+    data class Action(
+        @DrawableRes val imageResource: Int,
+        val contentDescription: String,
+        val listener: () -> Unit
+    )
 }

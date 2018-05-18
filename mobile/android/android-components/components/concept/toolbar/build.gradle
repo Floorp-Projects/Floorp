@@ -28,6 +28,8 @@ android {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
+
+    implementation "com.android.support:support-annotations:${rootProject.ext.dependencies['supportLibraries']}"
 }
 
 archivesBaseName = "abstract-toolbar"

@@ -8,6 +8,7 @@ import android.view.View
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
+import mozilla.components.concept.toolbar.Toolbar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -230,5 +231,21 @@ class BrowserToolbarTest {
 
         assertNotNull(toolbar.displayToolbar.menuBuilder)
         assertEquals(menuBuilder, toolbar.displayToolbar.menuBuilder)
+    }
+
+    @Test
+    fun `add action will be forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = mock(DisplayToolbar::class.java)
+
+        toolbar.displayToolbar = displayToolbar
+
+        val action = Toolbar.Action(0, "Hello") {
+            // Do nothing
+        }
+
+        toolbar.addDisplayAction(action)
+
+        verify(displayToolbar).addAction(action)
     }
 }

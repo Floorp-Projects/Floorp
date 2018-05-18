@@ -6,18 +6,20 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.R
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
 import mozilla.components.support.ktx.android.view.isVisible
 import mozilla.components.ui.progress.AnimatedProgressBar
-import android.util.TypedValue
-import mozilla.components.browser.menu.BrowserMenuBuilder
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -73,6 +75,7 @@ internal class DisplayToolbar(
         setPadding(padding, padding, padding, padding)
 
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
+        contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)
 
         val outValue = TypedValue()
         context.theme.resolveAttribute(
@@ -89,6 +92,8 @@ internal class DisplayToolbar(
     }
 
     private val progressView = AnimatedProgressBar(context)
+
+    private val actions: MutableList<DisplayAction> = mutableListOf()
 
     init {
         addView(iconView)
@@ -113,6 +118,26 @@ internal class DisplayToolbar(
         progressView.visibility = if (progress < progressView.max) View.VISIBLE else View.GONE
     }
 
+    /**
+     * Adds an action to be displayed on the right side of the toolbar.
+     *
+     * If there is not enough room to show all icons then some icons may be moved to an overflow
+     * menu.
+     */
+    fun addAction(action: Toolbar.Action) {
+        val displayAction = DisplayAction(action)
+
+        actions.add(displayAction)
+
+        if (actions.size < MAX_VISIBLE_ACTION_ITEMS) {
+            val view = createActionView(context, action)
+
+            displayAction.view = view
+
+            addView(view)
+        }
+    }
+
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // This toolbar is using the full size provided by the parent
@@ -126,8 +151,17 @@ internal class DisplayToolbar(
         iconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
 
+        // If there are actions with a view then use the same square shape for them
+        var actionWidth = 0
+        actions
+            .mapNotNull { it.view }
+            .forEach { view ->
+                view.measure(squareSpec, squareSpec)
+                actionWidth += height
+            }
+
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
-        val urlWidth = width - height - if (menuView.isVisible()) height else 0
+        val urlWidth = width - height - actionWidth - if (menuView.isVisible()) height else 0
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
 
@@ -139,7 +173,20 @@ internal class DisplayToolbar(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         iconView.layout(left, top, left + iconView.measuredWidth, bottom)
 
-        val urlRight = right - if (menuView.isVisible()) height else 0
+        var actionWidth = 0
+        actions
+            .mapNotNull { it.view }
+            .reversed()
+            .forEach { view ->
+                val viewRight = right - actionWidth - if (menuView.isVisible()) height else 0
+                val viewLeft = viewRight - view.measuredWidth
+
+                view.layout(viewLeft, top, viewRight, bottom)
+
+                actionWidth += view.measuredWidth
+            }
+
+        val urlRight = right - actionWidth - if (menuView.isVisible()) height else 0
         urlView.layout(left + iconView.measuredWidth, top, urlRight, bottom)
 
         progressView.layout(left, bottom - progressView.measuredHeight, right, bottom)
@@ -150,8 +197,33 @@ internal class DisplayToolbar(
     companion object {
         private const val ICON_PADDING_DP = 16
         private const val MENU_PADDING_DP = 16
+        private const val ACTION_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
         private const val URL_FADING_EDGE_SIZE_DP = 24
         private const val PROGRESS_BAR_HEIGHT_DP = 3
+        private const val MAX_VISIBLE_ACTION_ITEMS = 2
+
+        fun createActionView(context: Context, action: Toolbar.Action) = ImageButton(context).apply {
+            val padding = dp(ACTION_PADDING_DP)
+            setPadding(padding, padding, padding, padding)
+
+            setImageResource(action.imageResource)
+            contentDescription = action.contentDescription
+
+            val outValue = TypedValue()
+            context.theme.resolveAttribute(
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true)
+
+            setBackgroundResource(outValue.resourceId)
+
+            setOnClickListener { action.listener.invoke() }
+        }
     }
 }
+
+private class DisplayAction(
+    var actual: Toolbar.Action,
+    var view: View? = null
+)

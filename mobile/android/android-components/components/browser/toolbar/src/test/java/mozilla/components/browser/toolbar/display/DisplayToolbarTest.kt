@@ -11,9 +11,11 @@ import android.widget.TextView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.forEach
 import mozilla.components.ui.progress.AnimatedProgressBar
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -145,6 +147,64 @@ class DisplayToolbarTest {
         verify(menu).show(menuView)
     }
 
+    @Test
+    fun `action gets added as view to toolbar`() {
+        val contentDescription = "Mozilla"
+
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        assertNull(extractActionView(displayToolbar, contentDescription))
+
+        val action = Toolbar.Action(0, contentDescription) {}
+        displayToolbar.addAction(action)
+
+        val view = extractActionView(displayToolbar, contentDescription)
+        assertNotNull(view)
+        assertEquals(contentDescription, view?.contentDescription)
+    }
+
+    @Test
+    fun `clicking action view triggers listener of action`() {
+        var callbackExecuted = false
+
+        val action = Toolbar.Action(0, "Button") {
+            callbackExecuted = true
+        }
+
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        displayToolbar.addAction(action)
+
+        val view = extractActionView(displayToolbar, "Button")
+        assertNotNull(view)
+
+        assertFalse(callbackExecuted)
+
+        view?.performClick()
+
+        assertTrue(callbackExecuted)
+    }
+
+    @Test
+    fun `action view will use square size`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val action = Toolbar.Action(0, "action") {}
+        displayToolbar.addAction(action)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val view = extractActionView(displayToolbar, "action")!!
+
+        assertEquals(56, view.measuredWidth)
+        assertEquals(56, view.measuredHeight)
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView {
             var textView: TextView? = null
@@ -196,6 +256,22 @@ class DisplayToolbarTest {
             }
 
             return menuButton ?: throw AssertionError("Could not find menu view")
+        }
+
+        private fun extractActionView(
+            displayToolbar: DisplayToolbar,
+            contentDescription: String
+        ): ImageButton? {
+            var actionView: ImageButton? = null
+
+            displayToolbar.forEach {
+                if (it is ImageButton && it.contentDescription == contentDescription) {
+                    actionView = it
+                    return@forEach
+                }
+            }
+
+            return actionView
         }
     }
 }
