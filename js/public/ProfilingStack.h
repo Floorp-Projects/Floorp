@@ -191,7 +191,7 @@ class ProfilingStackFrame
     // Keep these in sync with devtools/client/performance/modules/categories.js
     enum class Category : uint32_t {
         OTHER,
-        CSS,
+        LAYOUT,
         JS,
         GCCC,
         NETWORK,
