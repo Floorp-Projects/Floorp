@@ -2149,7 +2149,7 @@ class IDLType(IDLObject):
         # Should only call this on float types
         assert self.isFloat()
 
-    def isSerializable(self):
+    def isJSONType(self):
         return False
 
     def tag(self):
@@ -2347,8 +2347,8 @@ class IDLNullableType(IDLParametrizedType):
     def isUnion(self):
         return self.inner.isUnion()
 
-    def isSerializable(self):
-        return self.inner.isSerializable()
+    def isJSONType(self):
+        return self.inner.isJSONType()
 
     def tag(self):
         return self.inner.tag()
@@ -2427,8 +2427,8 @@ class IDLSequenceType(IDLParametrizedType):
     def isEnum(self):
         return False
 
-    def isSerializable(self):
-        return self.inner.isSerializable()
+    def isJSONType(self):
+        return self.inner.isJSONType()
 
     def tag(self):
         return IDLType.Tags.sequence
@@ -2522,8 +2522,8 @@ class IDLUnionType(IDLType):
     def isUnion(self):
         return True
 
-    def isSerializable(self):
-        return all(m.isSerializable() for m in self.memberTypes)
+    def isJSONType(self):
+        return all(m.isJSONType() for m in self.memberTypes)
 
     def includesRestrictedFloat(self):
         return any(t.includesRestrictedFloat() for t in self.memberTypes)
@@ -2806,7 +2806,7 @@ class IDLWrapperType(IDLType):
     def isEnum(self):
         return isinstance(self.inner, IDLEnum)
 
-    def isSerializable(self):
+    def isJSONType(self):
         if self.isInterface():
             if self.inner.isExternal():
                 return False
@@ -2814,7 +2814,7 @@ class IDLWrapperType(IDLType):
         elif self.isEnum():
             return True
         elif self.isDictionary():
-            return all(m.type.isSerializable() for m in self.inner.members)
+            return all(m.type.isJSONType() for m in self.inner.members)
         else:
             raise WebIDLError("IDLWrapperType wraps type %s that we don't know if "
                               "is serializable" % type(self.inner), [self.location])
@@ -3100,7 +3100,7 @@ class IDLBuiltinType(IDLType):
         return (self._typeTag == IDLBuiltinType.Types.unrestricted_float or
                 self._typeTag == IDLBuiltinType.Types.unrestricted_double)
 
-    def isSerializable(self):
+    def isJSONType(self):
         return self.isPrimitive() or self.isString() or self.isDate()
 
     def includesRestrictedFloat(self):

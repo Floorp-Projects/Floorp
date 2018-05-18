@@ -2894,7 +2894,7 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
         ret = ''
         interface = self.descriptor.interface
         for m in interface.members:
-            if m.isAttr() and not m.isStatic() and m.type.isSerializable():
+            if m.isAttr() and not m.isStatic() and m.type.isJSONType():
                 ret += fill(
                     """
                     { // scope for "temp"
