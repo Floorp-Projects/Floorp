@@ -245,12 +245,39 @@ int main(void)
   BufferList bl3 = bl.Extract(iter, kExtractOverSize, &success);
   MOZ_RELEASE_ASSERT(!success);
 
-  MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl, kSmallWrite * 3 - kExtractSize - kExtractStart));
-  MOZ_RELEASE_ASSERT(iter.Done());
-
   iter = bl2.Iter();
   MOZ_RELEASE_ASSERT(iter.AdvanceAcrossSegments(bl2, kExtractSize));
   MOZ_RELEASE_ASSERT(iter.Done());
+
+  BufferList bl4(8, 8, 8);
+  bl4.WriteBytes("abcd1234", 8);
+  iter = bl4.Iter();
+  iter.Advance(bl4, 8);
+
+  BufferList bl5 = bl4.Extract(iter, kExtractSize, &success);
+  MOZ_RELEASE_ASSERT(!success);
+
+  BufferList bl6(0, 0, 16);
+  bl6.WriteBytes("abcdefgh12345678", 16);
+  bl6.WriteBytes("ijklmnop87654321", 16);
+  iter = bl6.Iter();
+  iter.Advance(bl6, 8);
+  BufferList bl7 = bl6.Extract(iter, 16, &success);
+  MOZ_RELEASE_ASSERT(success);
+  char data[16];
+  MOZ_RELEASE_ASSERT(bl6.ReadBytes(iter, data, 8));
+  MOZ_RELEASE_ASSERT(memcmp(data, "87654321", 8) == 0);
+  iter = bl7.Iter();
+  MOZ_RELEASE_ASSERT(bl7.ReadBytes(iter, data, 16));
+  MOZ_RELEASE_ASSERT(memcmp(data, "12345678ijklmnop", 16) == 0);
+
+  BufferList bl8(0, 0, 16);
+  bl8.WriteBytes("abcdefgh12345678", 16);
+  iter = bl8.Iter();
+  BufferList bl9 = bl8.Extract(iter, 8, &success);
+  MOZ_RELEASE_ASSERT(success);
+  MOZ_RELEASE_ASSERT(bl9.Size() == 8);
+  MOZ_RELEASE_ASSERT(!iter.Done());
 
   return 0;
 }
