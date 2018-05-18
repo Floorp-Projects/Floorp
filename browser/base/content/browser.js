@@ -55,6 +55,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SchedulePressure: "resource:///modules/SchedulePressure.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   SimpleServiceDiscovery: "resource://gre/modules/SimpleServiceDiscovery.jsm",
+  SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   SitePermissions: "resource:///modules/SitePermissions.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
