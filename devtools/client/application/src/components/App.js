@@ -7,7 +7,7 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { createFactory, Component } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { div } = require("devtools/client/shared/vendor/react-dom-factories");
+const { main } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const WorkerList = createFactory(require("./WorkerList"));
 const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
@@ -33,8 +33,8 @@ class App extends Component {
     const isEmpty = workers.length === 0;
 
     return (
-      div(
-        { className: `application ${isEmpty ? "empty" : ""}` },
+      main(
+        { className: `application ${isEmpty ? "application--empty" : ""}` },
         isEmpty
           ? WorkerListEmpty({ serviceContainer })
           : WorkerList({ workers, client, serviceContainer })

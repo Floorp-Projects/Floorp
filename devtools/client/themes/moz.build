@@ -9,7 +9,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'commandline-browser.css',
     'common.css',
     'splitters.css',
     'toolbars.css',

@@ -144,7 +144,7 @@ impl WrenchThing for CapturedDocument {
 
 pub struct Wrench {
     window_size: DeviceUintSize,
-    device_pixel_ratio: f32,
+    pub device_pixel_ratio: f32,
     page_zoom_factor: ZoomFactor,
 
     pub renderer: webrender::Renderer,

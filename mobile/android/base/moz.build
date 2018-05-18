@@ -146,23 +146,6 @@ z.inputs += ['AndroidManifest.xml.in']
 # multi-locale builds and single-locale repacks).  Make target magic ensures
 # that res/{values,raw}-AB-rCD is not written for regular en-US builds.
 
-for f in ['res/raw/browsersearch.json',
-          'res/raw{AB_rCD}/browsersearch.json']:
-    LOCALIZED_GENERATED_FILES += [f]
-    browsersearch = LOCALIZED_GENERATED_FILES[f]
-    browsersearch.script = '/python/mozbuild/mozbuild/action/generate_browsersearch.py'
-    browsersearch.inputs = [
-        # The `locales/en-US/` in this path will be rewritten to the
-        # locale-specific path.
-        '/mobile/locales/en-US/chrome/region.properties',
-    ]
-    browsersearch.flags += [
-        '--verbose',
-        '--fallback',
-        # The `locales/en-US` in this path will not be rewritten.
-        TOPSRCDIR + '/mobile/locales/en-US/chrome/region.properties',
-    ]
-
 for f in ['res/raw/suggestedsites.json',
           'res/raw{AB_rCD}/suggestedsites.json']:
     LOCALIZED_GENERATED_FILES += [f]
@@ -213,7 +196,6 @@ GENERATED_FILES[t].inputs += [
     # These all depend on AB_CD, which isn't captured in this definition.  Due
     # to subtle RecursiveMake details, everything works out.  In the future we
     # can try to express the APKs themselves as LOCALIZED_GENERATED_FILES.
-    '!res/raw/browsersearch.json',
     '!res/raw/suggestedsites.json',
     '!res/values/strings.xml',
 ]

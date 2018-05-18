@@ -1,0 +1,5 @@
+{
+  "policies": {
+    "HardwareAcceleration": false
+  }
+}

@@ -37,62 +37,6 @@ var { helpers, assert } = (function () {
 /**
  * See notes in helpers.checkOptions()
  */
-  var createDeveloperToolbarAutomator = function (toolbar) {
-    var automator = {
-      setInput: function (typed) {
-        return toolbar.inputter.setInput(typed);
-      },
-
-      setCursor: function (cursor) {
-        return toolbar.inputter.setCursor(cursor);
-      },
-
-      focus: function () {
-        return toolbar.inputter.focus();
-      },
-
-      fakeKey: function (keyCode) {
-        var fakeEvent = {
-          keyCode: keyCode,
-          preventDefault: function () { },
-          timeStamp: new Date().getTime()
-        };
-
-        toolbar.inputter.onKeyDown(fakeEvent);
-
-        if (keyCode === KeyEvent.DOM_VK_BACK_SPACE) {
-          var input = toolbar.inputter.element;
-          input.value = input.value.slice(0, -1);
-        }
-
-        return toolbar.inputter.handleKeyUp(fakeEvent);
-      },
-
-      getInputState: function () {
-        return toolbar.inputter.getInputState();
-      },
-
-      getCompleterTemplateData: function () {
-        return toolbar.completer._getCompleterTemplateData();
-      },
-
-      getErrorMessage: function () {
-        return toolbar.tooltip.errorEle.textContent;
-      }
-    };
-
-    Object.defineProperty(automator, "focusManager", {
-      get: function () { return toolbar.focusManager; },
-      enumerable: true
-    });
-
-    Object.defineProperty(automator, "field", {
-      get: function () { return toolbar.tooltip.field; },
-      enumerable: true
-    });
-
-    return automator;
-  };
 
 /**
  * Warning: For use with Firefox Mochitests only.
@@ -200,27 +144,6 @@ var { helpers, assert } = (function () {
   };
 
 /**
- * Open the developer toolbar in a tab
- * @param options Object to which we add properties describing the developer
- * toolbar. The following properties are added:
- * - automator
- * - requisition
- * @return A promise which resolves to the options object when the 'load' event
- * happens on the new tab
- */
-  helpers.openToolbar = function (options) {
-    options = options || {};
-    options.chromeWindow = options.chromeWindow || window;
-
-    var toolbar = gDevToolsBrowser.getDeveloperToolbar(options.chromeWindow);
-    return toolbar.show(true).then(function () {
-      options.automator = createDeveloperToolbarAutomator(toolbar);
-      options.requisition = toolbar.requisition;
-      return options;
-    });
-  };
-
-/**
  * Navigate the current tab to a URL
  */
   helpers.navigate = async function(url, options) {
@@ -236,19 +159,6 @@ var { helpers, assert } = (function () {
     await onLoaded;
 
     return options;
-  };
-
-/**
- * Undo the effects of |helpers.openToolbar|
- * @param options The options object passed to |helpers.openToolbar|
- * @return A promise resolved (with undefined) when the toolbar is closed
- */
-  helpers.closeToolbar = function (options) {
-    var toolbar = gDevToolsBrowser.getDeveloperToolbar(options.chromeWindow).hide();
-    return toolbar.then(function () {
-      delete options.automator;
-      delete options.requisition;
-    });
   };
 
 /**
@@ -317,36 +227,6 @@ var { helpers, assert } = (function () {
 /**
  * Warning: For use with Firefox Mochitests only.
  *
- * As addTab, but that also opens the developer toolbar. In addition a new
- * 'automator' property is added to the options object which uses the
- * developer toolbar
- */
-  helpers.addTabWithToolbar = function (url, callback, options) {
-    return helpers.addTab(url, function (innerOptions) {
-      var win = innerOptions.chromeWindow;
-
-      var toolbar = gDevToolsBrowser.getDeveloperToolbar(win);
-      return toolbar.show(true).then(function () {
-        innerOptions.automator = createDeveloperToolbarAutomator(toolbar);
-        innerOptions.requisition = toolbar.requisition;
-
-        var reply = callback.call(null, innerOptions);
-
-        return Promise.resolve(reply).catch(function (error) {
-          ok(false, error);
-          console.error(error);
-        }).then(function () {
-          toolbar.hide().then(function () {
-            delete innerOptions.automator;
-          });
-        });
-      });
-    }, options);
-  };
-
-/**
- * Warning: For use with Firefox Mochitests only.
- *
  * Run a set of test functions stored in the values of the 'exports' object
  * functions stored under setup/shutdown will be run at the start/end of the
  * sequence of tests.
@@ -406,76 +286,6 @@ var { helpers, assert } = (function () {
       deferred.reject = reject;
     });
     return deferred;
-  };
-
-/**
- * This does several actions associated with running a GCLI test in mochitest
- * 1. Create a new tab containing basic markup for GCLI tests
- * 2. Open the developer toolbar
- * 3. Register the mock commands with the server process
- * 4. Wait for the proxy commands to be auto-regitstered with the client
- * 5. Register the mock converters with the client process
- * 6. Run all the tests
- * 7. Tear down all the setup
- */
-  helpers.runTestModule = function (exports, name) {
-    return (async function() {
-      const uri = "data:text/html;charset=utf-8," +
-                "<style>div{color:red;}</style>" +
-                "<div id='gcli-root'>" + name + "</div>";
-
-      const options = await helpers.openTab(uri);
-      options.isRemote = true;
-
-      await helpers.openToolbar(options);
-
-      const system = options.requisition.system;
-
-    // Register a one time listener with the local set of commands
-      const addedDeferred = defer();
-      const removedDeferred = defer();
-      let state = "preAdd"; // Then 'postAdd' then 'postRemove'
-
-      system.commands.onCommandsChange.add(function (ev) {
-        if (system.commands.get("tsslow") != null) {
-          if (state === "preAdd") {
-            addedDeferred.resolve();
-            state = "postAdd";
-          }
-        }
-        else {
-          if (state === "postAdd") {
-            removedDeferred.resolve();
-            state = "postRemove";
-          }
-        }
-      });
-
-    // Send a message to add the commands to the content process
-      const front = await GcliFront.create(options.target);
-      await front._testOnlyAddItemsByModule(MOCK_COMMANDS_URI);
-
-    // This will cause the local set of commands to be updated with the
-    // command proxies, wait for that to complete.
-      await addedDeferred.promise;
-
-    // Now we need to add the converters to the local GCLI
-      const converters = mockCommands.items.filter(item => item.item === "converter");
-      system.addItems(converters);
-
-    // Next run the tests
-      await helpers.runTests(options, exports);
-
-    // Finally undo the mock commands and converters
-      system.removeItems(converters);
-      const removePromise = system.commands.onCommandsChange.once();
-      await front._testOnlyRemoveItemsByModule(MOCK_COMMANDS_URI);
-      await removedDeferred.promise;
-
-    // And close everything down
-      await helpers.closeToolbar(options);
-      await helpers.closeTab(options);
-    })().then(finish, helpers.handleError);
   };
 
 /**

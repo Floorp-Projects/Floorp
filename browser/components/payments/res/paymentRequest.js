@@ -130,6 +130,12 @@ var paymentRequest = {
         id: "address-page",
         onboardingWizard: true,
       };
+    } else if (Object.keys(detail.savedBasicCards).length == 0) {
+      state.page = {
+        id: "basic-card-page",
+        onboardingWizard: true,
+        guid: null,
+      };
     }
 
     document.querySelector("payment-dialog").setStateFromParent(state);

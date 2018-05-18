@@ -7,6 +7,7 @@
 
 use api::{GlyphKey, ImageData, ImageDescriptor, ImageFormat};
 use device::TextureFilter;
+use euclid::size2;
 use gpu_types::UvRectKind;
 use rayon::prelude::*;
 use std::sync::{Arc, MutexGuard};
@@ -172,8 +173,7 @@ impl GlyphRasterizer {
                         texture_cache.update(
                             &mut texture_cache_handle,
                             ImageDescriptor {
-                                width: glyph.width,
-                                height: glyph.height,
+                                size: size2(glyph.width, glyph.height),
                                 stride: None,
                                 format: ImageFormat::BGRA8,
                                 is_opaque: false,

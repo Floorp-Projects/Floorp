@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("resource://devtools/client/themes/splitters.css");
-@import url("resource://devtools/client/themes/commandline-browser.css");
 
 .devtools-toolbox-side-iframe {
   min-width: 250px;

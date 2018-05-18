@@ -100,8 +100,8 @@ impl RonFrameWriter {
                     self.images.insert(
                         img.key,
                         CachedImage {
-                            width: img.descriptor.width,
-                            height: img.descriptor.height,
+                            width: img.descriptor.size.width,
+                            height: img.descriptor.size.height,
                             format: img.descriptor.format,
                             bytes: Some(bytes),
                             path: None,
@@ -110,8 +110,8 @@ impl RonFrameWriter {
                 }
                 ResourceUpdate::UpdateImage(ref img) => {
                     if let Some(ref mut data) = self.images.get_mut(&img.key) {
-                        assert_eq!(data.width, img.descriptor.width);
-                        assert_eq!(data.height, img.descriptor.height);
+                        assert_eq!(data.width, img.descriptor.size.width);
+                        assert_eq!(data.height, img.descriptor.size.height);
                         assert_eq!(data.format, img.descriptor.format);
 
                         if let ImageData::Raw(ref bytes) = img.data {

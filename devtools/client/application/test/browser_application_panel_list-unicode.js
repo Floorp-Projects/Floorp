@@ -22,7 +22,7 @@ add_task(async function() {
 
   let workerContainer = getWorkerContainers(doc)[0];
 
-  let scopeEl = workerContainer.querySelector(".service-worker-scope");
+  let scopeEl = workerContainer.querySelector(".js-sw-scope");
   ok(
     scopeEl.textContent.startsWith(
       "\u03C0\u03B1\u03C1\u03AC\u03B4\u03B5\u03B9\u03B3\u03BC\u03B1." +

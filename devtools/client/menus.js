@@ -50,23 +50,6 @@ exports.menuitems = [
   },
   { id: "menu_devtools_separator",
     separator: true },
-  { id: "menu_devToolbar",
-    l10nKey: "devToolbarMenu",
-    disabled: true,
-    oncommand(event) {
-      let window = event.target.ownerDocument.defaultView;
-      // Distinguish events when selecting a menuitem, where we either open
-      // or close the toolbar and when hitting the key shortcut where we just
-      // focus the toolbar if it doesn't already has it.
-      if (event.target.tagName.toLowerCase() == "menuitem") {
-        gDevToolsBrowser.getDeveloperToolbar(window).toggle();
-      } else {
-        gDevToolsBrowser.getDeveloperToolbar(window).focusToggle();
-      }
-    },
-    keyId: "toggleToolbar",
-    checkbox: true
-  },
   { id: "menu_webide",
     l10nKey: "webide",
     disabled: true,

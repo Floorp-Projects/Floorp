@@ -42,17 +42,9 @@ window.DAMP_TESTS = [
     path: "styleeditor/simple.js",
     description: "Measure open/close toolbox on style editor panel against simple document"
   }, {
-    name: "simple.performance",
-    path: "performance/simple.js",
-    description: "Measure open/close toolbox on performance panel against simple document"
-  }, {
     name: "simple.netmonitor",
     path: "netmonitor/simple.js",
     description: "Measure open/close toolbox on network monitor panel against simple document"
-  }, {
-    name: "simple.memory",
-    path: "memory/simple.js",
-    description: "Measure open/close toolbox on memory panel and save/read heap snapshot against simple document"
   },
   // Run all tests against "complicated" document
   {
@@ -72,17 +64,9 @@ window.DAMP_TESTS = [
     path: "styleeditor/complicated.js",
     description: "Measure open/close toolbox on style editor panel against complicated document"
   }, {
-    name: "complicated.performance",
-    path: "performance/complicated.js",
-    description: "Measure open/close toolbox on performance panel against complicated document"
-  }, {
     name: "complicated.netmonitor",
     path: "netmonitor/complicated.js",
     description: "Measure open/close toolbox on network monitor panel against complicated document"
-  }, {
-    name: "complicated.memory",
-    path: "memory/complicated.js",
-    description: "Measure open/close toolbox on memory panel and save/read heap snapshot against complicated document"
   },
   // Run all tests against a document specific to each tool
   {

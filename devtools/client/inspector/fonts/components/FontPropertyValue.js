@@ -56,6 +56,7 @@ class FontPropertyValue extends PureComponent {
       {
         ...defaults,
         className: "font-value-slider",
+        name: this.props.name,
         title: this.props.label,
         type: "range",
       }
