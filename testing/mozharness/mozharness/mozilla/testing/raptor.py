@@ -178,10 +178,7 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
         if self.config.get('code_coverage', False):
             options.extend(['--code-coverage'])
         for key, value in kw_options.items():
-            if key == "test":
-                options.extend([value])
-            else:
-                options.extend(['--%s' % key, value])
+            options.extend(['--%s' % key, value])
         return options
 
     def populate_webroot(self):
