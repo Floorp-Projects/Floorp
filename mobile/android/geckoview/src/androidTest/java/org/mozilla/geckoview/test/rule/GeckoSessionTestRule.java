@@ -571,10 +571,17 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                     } catch (final NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
+                    final Pair<GeckoSession, Method> pair = new Pair<>(session, method);
                     final MethodCall call = new MethodCall(
                             session, callbackMethod,
                             getAssertCalled(callbackMethod, callback), callback);
-                    mDelegates.put(new Pair<>(session, method), call);
+                    // It's unclear if we should assert the call count if we replace an existing
+                    // delegate half way through. Until that is resolved, forbid replacing an
+                    // existing delegate during a test. If you are thinking about changing this
+                    // behavior, first see if #delegateDuringNextWait fits your needs.
+                    assertThat("Cannot replace an existing delegate",
+                               mDelegates, not(hasKey(pair)));
+                    mDelegates.put(pair, call);
                 }
             }
         }
@@ -1485,7 +1492,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         }
 
         boolean calledAny = false;
-        int index = mLastWaitStart = mLastWaitEnd;
+        int index = mLastWaitEnd;
+        beforeWait();
 
         while (!calledAny || !methodCalls.isEmpty()) {
             while (index >= mCallRecords.size()) {
@@ -1508,7 +1516,15 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             }
         }
 
-        mLastWaitEnd = index;
+        afterWait(index);
+    }
+
+    protected void beforeWait() {
+        mLastWaitStart = mLastWaitEnd;
+    }
+
+    protected void afterWait(final int endCallIndex) {
+        mLastWaitEnd = endCallIndex;
         mWaitScopeDelegates.clearAndAssert();
     }
 
@@ -1797,6 +1813,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @param js JavaScript expression.
      * @return Result of evaluating the expression.
      * @see #evaluateChromeJS
+     * @see #waitForJS
      */
     public Object evaluateJS(final @NonNull GeckoSession session, final @NonNull String js) {
         assertThat("Must enable RDP using @WithDevToolsAPI",
@@ -1815,6 +1832,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      * @param js JavaScript expression.
      * @return Result of evaluating the expression.
      * @see #evaluateJS
+     * @see #waitForChromeJS
      */
     public Object evaluateChromeJS(final @NonNull String js) {
         assertThat("Must enable RDP using @WithDevToolsAPI",
@@ -1849,6 +1867,54 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 }
             }
             throw new AssertionError("Cannot find Promise");
+        }
+        return result;
+    }
+
+    /**
+     * Evaluate a JavaScript expression and return the result, similar to {@link #evaluateJS}.
+     * In addition, treat the evaluation as a wait event, which will affect other calls such as
+     * {@link #forCallbacksDuringWait}. If the result is a Promise, wait on the Promise to settle
+     * and return or throw based on the outcome.
+     *
+     * @param session Session containing the target page.
+     * @param js JavaScript expression.
+     * @return Result of the expression or value of the resolved Promise.
+     * @see #evaluateJS
+     * @see #waitForChromeJS
+     */
+    public @Nullable Object waitForJS(final @NonNull GeckoSession session, final @NonNull String js) {
+        try {
+            beforeWait();
+            return resolvePromise(evaluateJS(session, js));
+        } finally {
+            afterWait(mCallRecords.size());
+        }
+    }
+
+    /**
+     * Evaluate a JavaScript expression in the context of a chrome window and return the result,
+     * similar to {@link #evaluateChromeJS}. In addition, treat the evaluation as a wait event,
+     * which will affect other calls such as {@link #forCallbacksDuringWait}. If the result is a
+     * Promise, wait on the Promise to settle and return or throw based on the outcome.
+     *
+     * @param js JavaScript expression.
+     * @return Result of the expression or value of the resolved Promise.
+     * @see #evaluateChromeJS
+     * @see #waitForJS
+     */
+    public @Nullable Object waitForChromeJS(final @NonNull String js) {
+        try {
+            beforeWait();
+            return resolvePromise(evaluateChromeJS(js));
+        } finally {
+            afterWait(mCallRecords.size());
+        }
+    }
+
+    private @Nullable Object resolvePromise(final @Nullable Object result) {
+        if (result instanceof PromiseWrapper) {
+            return ((PromiseWrapper) result).getValue();
         }
         return result;
     }
