@@ -26,6 +26,12 @@ const TEST_URI = `
     #id6 {
       font-family: georgia, arial;
     }
+    #id7 {
+      font-family: foo, serif !important;
+    }
+    #id8 {
+      font-family: important;
+    }
   </style>
   <div id="id1">Text</div>
   <div id="id2">Text</div>
@@ -33,6 +39,8 @@ const TEST_URI = `
   <div id="id4">Text</div>
   <div id="id5">Text</div>
   <div id="id6">A &#586;</div>
+  <div id="id7">Text</div>
+  <div id="id8">Text</div>
 `;
 
 // Tests that font-family properties in the rule-view correctly
@@ -42,7 +50,7 @@ const TEST_URI = `
 //   selector: the rule-view selector to look for font-family in
 //   nb: the number of fonts this property should have
 //   used: the indexes of all the fonts that should be highlighted, or null if none should
-//         be highlighter
+//         be highlighted
 // }
 const TESTS = [
   {selector: "#id1", nb: 3, used: [2]}, // sans-serif
@@ -50,6 +58,8 @@ const TESTS = [
   {selector: "#id3", nb: 4, used: [1]}, // monospace
   {selector: "#id4", nb: 2, used: null},
   {selector: "#id5", nb: 1, used: [0]}, // monospace
+  {selector: "#id7", nb: 2, used: [1]}, // serif
+  {selector: "#id8", nb: 1, used: null},
 ];
 
 if (Services.appinfo.OS !== "Linux") {
