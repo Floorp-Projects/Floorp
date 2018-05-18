@@ -776,6 +776,14 @@ var BookmarksEventHandler = {
                                                       : aEvent.ctrlKey;
     if (modifKey) {
       target.setAttribute("closemenu", "none");
+      var menupopup = target.parentNode;
+      menupopup.addEventListener("popuphidden", () => {
+        target.removeAttribute("closemenu");
+      }, {once: true});
+    } else {
+      // Handles edge case where same menuitem was opened previously
+      // while menu was kept open, but now menu should close.
+      target.removeAttribute("closemenu");
     }
   },
 
@@ -798,20 +806,10 @@ var BookmarksEventHandler = {
     if (PlacesUIUtils.openInTabClosesMenu && (tag == "menuitem" || tag == "menu")) {
       closeMenus(aEvent.target);
     }
-    // Command already processed so remove any closemenu attr set in onMouseUp.
-    if (aEvent.button == 0 &&
-        target.tagName == "menuitem" &&
-        target.getAttribute("closemenu") == "none") {
-      // On Mac we need to extend when we remove the flag, to avoid any pre-close
-      // animations.
-      setTimeout(() => {
-        target.removeAttribute("closemenu");
-      }, 500);
-    }
 
     if (target._placesNode && PlacesUtils.nodeIsContainer(target._placesNode)) {
       // Don't open the root folder in tabs when the empty area on the toolbar
-      // is middle-clicked or when a non-bookmark item except for Open in Tabs)
+      // is middle-clicked or when a non-bookmark item (except for Open in Tabs)
       // in a bookmarks menupopup is middle-clicked.
       if (target.localName == "menu" || target.localName == "toolbarbutton")
         PlacesUIUtils.openContainerNodeInTabs(target._placesNode, aEvent, aView);
