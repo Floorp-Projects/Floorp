@@ -6,5 +6,6 @@ Internals
    :maxdepth: 2
    :titlesonly:
 
+   geckoview
    preferences
    pingsender
