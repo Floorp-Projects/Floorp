@@ -20,5 +20,5 @@ interface MediaDeviceInfo {
   readonly attribute DOMString       label;
   readonly attribute DOMString       groupId;
 
-  jsonifier;
+  [Default] object toJSON();
 };

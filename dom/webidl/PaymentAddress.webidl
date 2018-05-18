@@ -10,9 +10,7 @@
 [SecureContext,
  Func="mozilla::dom::PaymentRequest::PrefEnabled"]
 interface PaymentAddress {
-  // TODO: Use serializer once available. (Bug 863402)
-  // serializer = {attribute};
-  jsonifier;
+  [Default] object toJSON();
 
   readonly attribute DOMString              country;
   // TODO: Use FrozenArray once available. (Bug 1236777)

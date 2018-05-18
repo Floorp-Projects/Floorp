@@ -47,7 +47,9 @@ add_task(async function() {
   let hostWindow = toolbox.win.parent;
   let originalWidth = hostWindow.outerWidth;
   let originalHeight = hostWindow.outerHeight;
+  let inspectorResized = inspector.once("inspector-resize");
   hostWindow.resizeTo(640, 300);
+  await inspectorResized;
 
   info("Testing transitions ltr");
   await pushPref("intl.uidirection", 0);

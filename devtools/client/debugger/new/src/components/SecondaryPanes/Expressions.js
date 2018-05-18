@@ -26,9 +26,7 @@ var _expressions = require("../../utils/expressions");
 
 var _firefox = require("../../client/firefox");
 
-var _Close = require("../shared/Button/Close");
-
-var _Close2 = _interopRequireDefault(_Close);
+var _Button = require("../shared/Button/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -149,7 +147,7 @@ class Expressions extends _react.Component {
         createObjectClient: grip => (0, _firefox.createObjectClient)(grip)
       }), _react2.default.createElement("div", {
         className: "expression-container__close-btn"
-      }, _react2.default.createElement(_Close2.default, {
+      }, _react2.default.createElement(_Button.CloseButton, {
         handleClick: e => this.deleteExpression(e, expression)
       }))));
     };
