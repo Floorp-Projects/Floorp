@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="300">
+<style>
+body {
+  height: 4000px;
+  margin: 0;
+  overflow: hidden;
+}
+#sticky {
+  position: sticky;
+  top: 0;
+  height: 60px;
+  background-color: blue;
+}
+#fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100px;
+}
+</style>
+<body>
+<div style="height: 200px;"></div>
+<div id="sticky">
+  <div id="fixed"></div>
+</div>
+</body></html>
