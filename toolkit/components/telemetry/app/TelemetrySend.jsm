@@ -55,8 +55,6 @@ const TOPIC_PROFILE_CHANGE_NET_TEARDOWN = "profile-change-net-teardown";
 // Changing this pref requires a restart.
 const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
 
-const PING_FORMAT_VERSION = 4;
-
 const MS_IN_A_MINUTE = 60 * 1000;
 
 const PING_TYPE_OPTOUT = "optout";
@@ -1046,7 +1044,7 @@ var TelemetrySendImpl = {
   },
 
   _buildSubmissionURL(ping) {
-    const version = isV4PingFormat(ping) ? PING_FORMAT_VERSION : 1;
+    const version = isV4PingFormat(ping) ? AppConstants.TELEMETRY_PING_FORMAT_VERSION : 1;
     return this._server + this._getSubmissionPath(ping) + "?v=" + version;
   },
 
