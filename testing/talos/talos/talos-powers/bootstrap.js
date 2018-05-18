@@ -307,6 +307,14 @@ TalosPowersService.prototype = {
       codeCoverage.resetCounters();
       callback();
     },
+
+    dumpAboutSupport(arg, callback, win) {
+      ChromeUtils.import("resource://gre/modules/Troubleshoot.jsm");
+      Troubleshoot.snapshot(function(snapshot) {
+        dump("about:support\t" + JSON.stringify(snapshot));
+      });
+      callback();
+    },
   },
 
   RecieveParentExecCommand(msg) {
