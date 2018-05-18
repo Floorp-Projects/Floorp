@@ -30,12 +30,13 @@ public:
   // performance.timing object for which timestamps are absolute and has a
   // zeroTime initialized to navigationStart
   PerformanceNavigationTiming(UniquePtr<PerformanceTimingData>&& aPerformanceTiming,
-                              Performance* aPerformance)
-    : PerformanceResourceTiming(Move(aPerformanceTiming), aPerformance,
-                                NS_LITERAL_STRING("document")) {
-      SetEntryType(NS_LITERAL_STRING("navigation"));
-      SetInitiatorType(NS_LITERAL_STRING("navigation"));
-    }
+                              Performance* aPerformance,
+                              const nsAString& aName)
+    : PerformanceResourceTiming(Move(aPerformanceTiming), aPerformance, aName)
+  {
+    SetEntryType(NS_LITERAL_STRING("navigation"));
+    SetInitiatorType(NS_LITERAL_STRING("navigation"));
+  }
 
   DOMHighResTimeStamp Duration() const override
   {
