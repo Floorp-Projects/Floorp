@@ -24,6 +24,14 @@ void brush_vs(
 #define BRUSH_FLAG_SEGMENT_REPEAT_X             4
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
 
+//Note: these have to match `gpu_types` constants
+#define INT_BITS    (31)
+#define CLIP_CHAIN_RECT_BITS    (22)
+#define SEGMENT_BITS (INT_BITS - CLIP_CHAIN_RECT_BITS)
+#define EDGE_FLAG_BITS (4)
+#define BRUSH_FLAG_BITS (4)
+#define CLIP_SCROLL_INDEX_BITS (INT_BITS - EDGE_FLAG_BITS - BRUSH_FLAG_BITS)
+
 struct BrushInstance {
     int picture_address;
     int prim_address;
@@ -43,12 +51,12 @@ BrushInstance load_brush() {
     bi.picture_address = aData0.x & 0xffff;
     bi.clip_address = aData0.x >> 16;
     bi.prim_address = aData0.y;
-    bi.clip_chain_rect_index = aData0.z >> 16;
-    bi.scroll_node_id = aData0.z & 0xffff;
+    bi.clip_chain_rect_index = aData0.z  & ((1 << CLIP_CHAIN_RECT_BITS) - 1);
+    bi.segment_index = aData0.z >> CLIP_CHAIN_RECT_BITS;
     bi.z = aData0.w;
-    bi.segment_index = aData1.x & 0xffff;
-    bi.edge_mask = (aData1.x >> 16) & 0xff;
-    bi.flags = (aData1.x >> 24);
+    bi.scroll_node_id = aData1.x & ((1 << CLIP_SCROLL_INDEX_BITS) - 1);
+    bi.edge_mask = (aData1.x >> CLIP_SCROLL_INDEX_BITS) & 0xf;
+    bi.flags = (aData1.x >> (CLIP_SCROLL_INDEX_BITS + EDGE_FLAG_BITS)) & 0xf;
     bi.user_data = aData1.yzw;
 
     return bi;
