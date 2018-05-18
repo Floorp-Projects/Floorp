@@ -479,9 +479,9 @@ TEST(GeckoProfiler, Markers)
   okstr1[kMax - 1] = '\0';
   okstr2[kMax - 1] = '\0';
   longstr[kMax] = '\0';
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", CSS, okstr1.get());
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("okstr2", CSS, okstr2.get());
-  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", CSS, longstr.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", LAYOUT, okstr1.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("okstr2", LAYOUT, okstr2.get());
+  AUTO_PROFILER_LABEL_DYNAMIC_CSTR("", LAYOUT, longstr.get());
 
   // Sleep briefly to ensure a sample is taken and the pending markers are
   // processed.
