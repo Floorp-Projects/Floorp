@@ -49,19 +49,18 @@ template <typename CharT>
 static uint32_t
 HashStringChars(JSString* s)
 {
-    ScopedJSFreePtr<CharT> ownedChars;
-    const CharT* chars;
-    JS::AutoCheckCannotGC nogc;
+    uint32_t hash = 0;
     if (s->isLinear()) {
-        chars = s->asLinear().chars<CharT>(nogc);
+        JS::AutoCheckCannotGC nogc;
+        const CharT* chars = s->asLinear().chars<CharT>(nogc);
+        hash = mozilla::HashString(chars, s->length());
     } else {
-        // Slowest hash function evar!
-        if (!s->asRope().copyChars<CharT>(/* tcx */ nullptr, ownedChars))
+        // Use rope's non-copying hash function.
+        if (!s->asRope().hash(&hash))
             MOZ_CRASH("oom");
-        chars = ownedChars;
     }
 
-    return mozilla::HashString(chars, s->length());
+    return hash;
 }
 
 /* static */ HashNumber
