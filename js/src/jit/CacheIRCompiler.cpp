@@ -2995,6 +2995,9 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val, Register de
       case StubField::Type::ObjectGroup:
         masm.movePtr(ImmGCPtr(groupStubField(val.getOffset())), dest);
         break;
+      case StubField::Type::JSObject:
+        masm.movePtr(ImmGCPtr(objectStubField(val.getOffset())), dest);
+        break;
       default:
         MOZ_CRASH("Unhandled stub field constant type");
     }
@@ -3130,5 +3133,14 @@ CacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript()
 
     emitLoadStubField(group, scratch1);
     masm.guardGroupHasUnanalyzedNewScript(scratch1, scratch2, failure->label());
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadObject()
+{
+    Register reg = allocator.defineRegister(masm, reader.objOperandId());
+    StubFieldOffset obj(reader.stubOffset(), StubField::Type::JSObject);
+    emitLoadStubField(obj, reg);
     return true;
 }
