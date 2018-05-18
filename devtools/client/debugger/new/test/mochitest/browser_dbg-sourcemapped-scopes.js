@@ -357,21 +357,16 @@ add_task(async function() {
     ]
   );
 
-  await breakpointScopes(
-    dbg,
-    "webpack-functions",
-    { line: 4, column: 0 },
-    [
-      "Block",
-      ["<this>", "{\u2026}"],
-      ["arguments", "Arguments"],
-      ["x", "4"],
-      "webpackFunctions",
-      ["__webpack_exports__", "(optimized away)"],
-      ["__webpack_require__", "(optimized away)"],
-      ["arguments", "(unavailable)"],
-      ["module", "{\u2026}"],
-      ["root", "(optimized away)"]
-    ]
-  );
+  await breakpointScopes(dbg, "webpack-functions", { line: 4, column: 0 }, [
+    "Block",
+    ["<this>", "{\u2026}"],
+    ["arguments", "Arguments"],
+    ["x", "4"],
+    "webpackFunctions",
+    ["__webpack_exports__", "(optimized away)"],
+    ["__webpack_require__", "(optimized away)"],
+    ["arguments", "(unavailable)"],
+    ["module", "{\u2026}"],
+    ["root", "(optimized away)"]
+  ]);
 });

@@ -882,6 +882,7 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
                                const NativeProperties* properties,
                                const NativeProperties* chromeOnlyProperties,
                                const char* const* unscopableNames,
+                               const char* toStringTag,
                                bool isGlobal)
 {
   JS::Rooted<JSObject*> ourProto(cx,
@@ -912,6 +913,21 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
       SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::unscopables)));
     // Readonly and non-enumerable to match Array.prototype.
     if (!JS_DefinePropertyById(cx, ourProto, unscopableId, unscopableObj,
+                               JSPROP_READONLY)) {
+      return nullptr;
+    }
+  }
+
+  if (toStringTag) {
+    JS::Rooted<JSString*> toStringTagStr(cx,
+                                         JS_NewStringCopyZ(cx, toStringTag));
+    if (!toStringTagStr) {
+      return nullptr;
+    }
+
+    JS::Rooted<jsid> toStringTagId(cx,
+      SYMBOL_TO_JSID(JS::GetWellKnownSymbol(cx, JS::SymbolCode::toStringTag)));
+    if (!JS_DefinePropertyById(cx, ourProto, toStringTagId, toStringTagStr,
                                JSPROP_READONLY)) {
       return nullptr;
     }
@@ -966,6 +982,7 @@ void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
                        const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const char* toStringTag,
                        JS::Handle<JSObject*> constructorProto,
                        const js::Class* constructorClass,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
@@ -1003,6 +1020,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
   MOZ_ASSERT(constructorProto || !constructorClass,
              "Must have a constructor proto if we plan to create a constructor "
              "object");
+  MOZ_ASSERT(protoClass || !toStringTag,
+             "Must have a prototype object if we have a @@toStringTag");
 
   bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(cx);
 
@@ -1012,7 +1031,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
       CreateInterfacePrototypeObject(cx, global, protoProto, protoClass,
                                      properties,
                                      isChrome ? chromeOnlyProperties : nullptr,
-                                     unscopableNames, isGlobal);
+                                     unscopableNames, toStringTag, isGlobal);
     if (!proto) {
       return;
     }
@@ -4095,6 +4114,41 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   MOZ_ASSERT(JS::ObjectIsNotGray(entrySlot));
   return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
 }
+
+namespace binding_detail {
+bool
+IsGetterEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                JSJitGetterOp aGetter,
+                const Prefable<const JSPropertySpec>* aAttributes)
+{
+  MOZ_ASSERT(aAttributes);
+  MOZ_ASSERT(aAttributes->specs);
+  do {
+    if (aAttributes->isEnabled(aCx, aObj)) {
+      const JSPropertySpec* specs = aAttributes->specs;
+      do {
+        MOZ_ASSERT(specs->isAccessor());
+        if (specs->isSelfHosted()) {
+          // It won't have a JSJitGetterOp.
+          continue;
+        }
+        const JSJitInfo* info = specs->accessors.getter.native.info;
+        if (!info) {
+          continue;
+        }
+        MOZ_ASSERT(info->type() == JSJitInfo::OpType::Getter);
+        if (info->getter == aGetter) {
+          return true;
+        }
+      } while ((++specs)->name);
+    }
+  } while ((++aAttributes)->specs);
+
+  // Didn't find it.
+  return false;
+}
+
+} // namespace binding_detail
 
 } // namespace dom
 } // namespace mozilla

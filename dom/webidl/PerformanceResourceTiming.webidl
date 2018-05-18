@@ -54,5 +54,5 @@ interface PerformanceResourceTiming : PerformanceEntry
   [SecureContext, Frozen, Cached, Pure, NeedsSubjectPrincipal]
   readonly attribute sequence<PerformanceServerTiming> serverTiming;
 
-  jsonifier;
+  [Default] object toJSON();
 };

@@ -422,7 +422,7 @@ def run_test_harness(parser, options):
     if retVal:
         return retVal
 
-    if options.printDeviceInfo:
+    if options.printDeviceInfo and not options.verify:
         reftest.printDeviceInfo()
 
     retVal = 0
@@ -438,7 +438,7 @@ def run_test_harness(parser, options):
 
     reftest.stopWebServer(options)
 
-    if options.printDeviceInfo:
+    if options.printDeviceInfo and not options.verify:
         reftest.printDeviceInfo(printLogcat=True)
 
     return retVal

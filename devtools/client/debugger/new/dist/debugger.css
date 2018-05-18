@@ -963,6 +963,89 @@ img.close::before {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.command-bar-button {
+  appearance: none;
+  background: transparent;
+  border: none;
+  display: inline-block;
+  text-align: center;
+  position: relative;
+  padding: 0px 5px;
+  fill: currentColor;
+}
+
+.command-bar-button:focus {
+  outline: none;
+}
+
+.command-bar-button:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.command-bar-button:not(.disabled):hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
+:root.theme-dark .command-bar-button {
+  color: var(--theme-body-color);
+}
+
+.command-bar-button > * {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.toggle-button {
+  transform: translate(0, 0px);
+  transition: transform 0.25s ease-in-out;
+  padding: 5px;
+}
+
+.toggle-button .togglePanes {
+  vertical-align: -2px;
+}
+
+.toggle-button svg {
+  fill: var(--theme-comment);
+  vertical-align: 0;
+}
+
+:root.theme-dark .toggle-button svg {
+  fill: var(--theme-comment-alt);
+}
+
+.toggle-button.end {
+  margin-inline-end: 0px;
+  margin-inline-start: auto;
+}
+
+.toggle-button.start {
+  margin-inline-start: 0px;
+}
+
+html:not([dir="rtl"]) .toggle-button.end svg,
+html[dir="rtl"] .toggle-button.start svg {
+  transform: rotate(180deg);
+}
+
+html .toggle-button.end.vertical svg {
+  transform: rotate(-90deg);
+}
+
+.toggle-button.start.collapsed,
+.toggle-button.end.collapsed {
+  transform: rotate(180deg);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .search-shadow {
   margin: 1px;
 }
@@ -1665,89 +1748,6 @@ menuseparator {
 
 .function-signature .comma {
   color: var(--object-color);
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.command-bar-button {
-  appearance: none;
-  background: transparent;
-  border: none;
-  display: inline-block;
-  text-align: center;
-  position: relative;
-  padding: 0px 5px;
-  fill: currentColor;
-}
-
-.command-bar-button:focus {
-  outline: none;
-}
-
-.command-bar-button:disabled {
-  opacity: 0.8;
-  cursor: default;
-}
-
-.command-bar-button:not(.disabled):hover {
-  background: var(--theme-toolbar-background-hover);
-}
-
-:root.theme-dark .command-bar-button {
-  color: var(--theme-body-color);
-}
-
-.command-bar-button > * {
-  width: 16px;
-  height: 16px;
-  display: inline-block;
-  vertical-align: middle;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.toggle-button {
-  transform: translate(0, 0px);
-  transition: transform 0.25s ease-in-out;
-  padding: 5px;
-}
-
-.toggle-button .togglePanes {
-  vertical-align: -2px;
-}
-
-.toggle-button svg {
-  fill: var(--theme-comment);
-  vertical-align: 0;
-}
-
-:root.theme-dark .toggle-button svg {
-  fill: var(--theme-comment-alt);
-}
-
-.toggle-button.end {
-  margin-inline-end: 0px;
-  margin-inline-start: auto;
-}
-
-.toggle-button.start {
-  margin-inline-start: 0px;
-}
-
-html:not([dir="rtl"]) .toggle-button.end svg,
-html[dir="rtl"] .toggle-button.start svg {
-  transform: rotate(180deg);
-}
-
-html .toggle-button.end.vertical svg {
-  transform: rotate(-90deg);
-}
-
-.toggle-button.start.collapsed,
-.toggle-button.end.collapsed {
-  transform: rotate(180deg);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3916,6 +3916,17 @@ img.skipPausing {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.welcomebox__searchSources,
+.welcomebox__searchProject {
+  transition: color 0.15s linear;
+}
+
+.welcomebox__searchSources:hover,
+.welcomebox__searchProject:hover {
+  color: var(--theme-body-color);
 }
 
 .shortcutKey {

@@ -45,5 +45,5 @@ interface PerformanceTiming {
   [Pref="dom.performance.time_to_dom_content_flushed.enabled"]
   readonly attribute unsigned long long timeToDOMContentFlushed;
 
-  jsonifier;
+  [Default] object toJSON();
 };
