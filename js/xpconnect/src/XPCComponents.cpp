@@ -2729,7 +2729,7 @@ nsXPCComponents_Utils::CrashIfNotInAutomation()
 NS_IMETHODIMP
 nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext* cx)
 {
-    AUTO_PROFILER_LABEL("nsXPCComponents_Utils::NukeSandbox", JS);
+    AUTO_PROFILER_LABEL("nsXPCComponents_Utils::NukeSandbox", OTHER);
     NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
     JSObject* wrapper = &obj.toObject();
     NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);
