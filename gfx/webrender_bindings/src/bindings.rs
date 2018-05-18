@@ -288,8 +288,7 @@ pub struct WrImageDescriptor {
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
     fn into(self) -> ImageDescriptor {
         ImageDescriptor {
-            width: self.width,
-            height: self.height,
+            size: DeviceUintSize::new(self.width, self.height),
             stride: if self.stride != 0 {
                 Some(self.stride)
             } else {
