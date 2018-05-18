@@ -237,13 +237,16 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, c_compiler):
                               % (version, minimum_ucrt_version))
 
     broken_ucrt_version = Version('10.0.16299.0')
-    if c_compiler.type == 'clang-cl' and version >= broken_ucrt_version:
+    working_ucrt_version = Version('10.0.17134.0')
+    if (c_compiler.type == 'clang-cl' and version >= broken_ucrt_version and
+            version < working_ucrt_version):
         raise FatalCheckError('Found SDK version %s but clang-cl builds'
-                              ' currently don\'t work with SDK version %s'
-                              ' and later. You should use version %s,'
-                              ' either by uninstalling the newer one or'
-                              ' setting a custom WINDOWSSDKDIR.'
-                              % (version, broken_ucrt_version, minimum_ucrt_version))
+                              ' currently don\'t work with the SDK version.'
+                              ' You should use a different version, either'
+                              ' by uninstalling version %s or setting a'
+                              ' custom WINDOWSSDKDIR.\n'
+                              'Note: Version %s now works with clang-cl.'
+                              % (version, version, working_ucrt_version))
 
     return namespace(
         path=sdk.path,
