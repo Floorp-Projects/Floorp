@@ -1243,7 +1243,8 @@ WR_INLINE
 void wr_dp_push_iframe(WrState *aState,
                        LayoutRect aRect,
                        bool aIsBackfaceVisible,
-                       WrPipelineId aPipelineId)
+                       WrPipelineId aPipelineId,
+                       bool aIgnoreMissingPipeline)
 WR_FUNC;
 
 WR_INLINE
