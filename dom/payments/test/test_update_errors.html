@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1435157
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1435157</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="DefaultData.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('UpdateErrorsChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  function testPassHandler(message) {
+    ok(true, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+  gScript.addMessageListener("test-pass", testPassHandler);
+
+  const addressErrors = {
+    addressLine: "addressLine error",
+    city: "city error",
+    country: "country error",
+    dependentLocality: "dependentLocality error",
+    languageCode: "languageCode error",
+    organization: "organization error",
+    phone: "phone error",
+    postalCode: "postalCode error",
+    recipient: "recipient error",
+    region: "region error",
+    regionCode: "regionCode error",
+    sortingCode: "sortingCode error",
+  };
+
+  const payErrors = {
+    email: "email error",
+    name: "name error",
+    phone: "phone error",
+  };
+
+  let updateDetails = {
+    total:{
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00",
+      },
+    },
+    erros: "shipping address error",
+    shippingAddressErrors: addressErrors,
+    payerErrors: payErrors,
+  }
+
+  // testing functions
+  function testUpdateErrors() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.addEventListener("shippingaddresschange", event => {
+        event.updateWith(updateDetails);
+      });
+      payRequest.addEventListener("shippingoptionchange", event => {
+        event.updateWith(updatedDetails);
+      });
+      const handler = SpecialPowers.getDOMWindowUtils(window).setHandlingUserInput(true);
+      payRequest.show().then(response => {
+        ok(false, "Expected AbortError, but got pass");
+        resolve();
+      }, error => {
+        is(error.name, "AbortError", "Expect AbortError, but got " + error.name);
+	resolve();
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      }).finally(handler.destruct);
+    });
+  }
+
+  // teardown function
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler);
+      gScript.removeMessageListener("test-pass", testPassHandler);
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  // test main body
+  function runTests() {
+    testUpdateErrors()
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1435157">Mozilla Bug 1435157</a>
+</body>
+</html>

@@ -68,6 +68,11 @@ var GeckoViewUtils = {
       observers.forEach(topic => Services.obs.addObserver(observer, topic));
     }
 
+    if (!this.IS_PARENT_PROCESS) {
+      // ppmm, mm, and ged are only available in the parent process.
+      return;
+    }
+
     let addMMListener = (target, names) => {
       let listener = msg => {
         target.removeMessageListener(msg.name, listener);

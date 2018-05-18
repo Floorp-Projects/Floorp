@@ -356,7 +356,6 @@ class RefTest(object):
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
-        prefs['reftest.runSlower'] = options.runSlower
 
         # Set tests to run or manifests to parse.
         if tests:

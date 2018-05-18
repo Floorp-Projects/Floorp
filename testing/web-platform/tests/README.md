@@ -373,7 +373,7 @@ web-platform-tests root directory to suppress the error reports.
 
 For more details, see the [lint-tool documentation][lint-tool].
 
-[lint-tool]: http://web-platform-tests.org/writing-tests/lint-tool.html
+[lint-tool]: https://web-platform-tests.org/writing-tests/lint-tool.html
 
 Adding command-line scripts ("tools" subdirs)
 ---------------------------------------------
@@ -449,5 +449,5 @@ is [archived][ircarchive].
 Documentation
 =============
 
-* [How to write and review tests](http://web-platform-tests.org/)
+* [How to write and review tests](https://web-platform-tests.org/)
 * [Documentation for the wptserve server](http://wptserve.readthedocs.org/en/latest/)

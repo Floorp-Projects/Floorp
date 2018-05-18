@@ -137,7 +137,8 @@ private:
                  nsIArray* aDisplayItems,
                  nsIArray* aShippingOptions,
                  nsIArray* aModifiers,
-                 const nsAString& aError);
+                 const nsAString& aError,
+                 const nsAString& aShippingAddressError);
 
   ~PaymentDetails() = default;
 
@@ -147,6 +148,7 @@ private:
   nsCOMPtr<nsIArray> mShippingOptions;
   nsCOMPtr<nsIArray> mModifiers;
   nsString mError;
+  nsString mShippingAddressErrors;
 };
 
 class PaymentOptions final : public nsIPaymentOptions
@@ -185,7 +187,7 @@ public:
                  nsIArray* aPaymentMethods,
                  nsIPaymentDetails* aPaymentDetails,
                  nsIPaymentOptions* aPaymentOptions,
-		 const nsAString& aShippingOption);
+                 const nsAString& aShippingOption);
 
 private:
   ~PaymentRequest() = default;

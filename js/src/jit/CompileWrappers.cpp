@@ -272,7 +272,7 @@ CompileCompartment::maybeGlobal()
     // This uses unsafeUnbarrieredMaybeGlobal() so as not to trigger the read
     // barrier on the global from off thread.  This is safe because we
     // abort Ion compilation when we GC.
-    return compartment()->unsafeUnbarrieredMaybeGlobal();
+    return JS::GetRealmForCompartment(compartment())->unsafeUnbarrieredMaybeGlobal();
 }
 
 bool

@@ -880,20 +880,6 @@ def allow_software_gl_layers(config, tests):
 
 
 @transforms.add
-def reftest_win7_slowmode(config, tests):
-    """
-    Win7 needs time to render fonts, so for the reftest-fonts, add --run-slow
-    """
-    for test in tests:
-        if test['build-platform'].startswith('win32') and \
-           'font' in test['suite']:
-            test['mozharness'].setdefault('extra-options', [])\
-                              .append("--run-slower")
-
-        yield test
-
-
-@transforms.add
 def enable_webrender(config, tests):
     """
     Handle the "webrender" property by passing a flag to mozharness if it is
