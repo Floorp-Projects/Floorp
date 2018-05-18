@@ -134,6 +134,18 @@ static const RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT |
     nsIAboutModule::URI_CAN_LOAD_IN_CHILD
+  },
+  {
+    "crashparent", "about:blank",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::HIDE_FROM_ABOUTABOUT
+  },
+  {
+    "crashcontent", "about:blank",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+    nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD
   }
 };
 static const int kRedirTotal = mozilla::ArrayLength(kRedirMap);
@@ -153,6 +165,14 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
 
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (XRE_IsParentProcess() && path.EqualsASCII("crashparent")) {
+    MOZ_CRASH("Crash via about:crashparent");
+  }
+
+  if (XRE_IsContentProcess() && path.EqualsASCII("crashcontent")) {
+    MOZ_CRASH("Crash via about:crashcontent");
+  }
 
   for (int i = 0; i < kRedirTotal; i++) {
     if (!strcmp(path.get(), kRedirMap[i].id)) {
