@@ -747,3 +747,64 @@ MIDIPermissionPrompt.prototype = {
 };
 
 PermissionUI.MIDIPermissionPrompt = MIDIPermissionPrompt;
+
+function AutoplayPermissionPrompt(request) {
+  this.request = request;
+}
+
+AutoplayPermissionPrompt.prototype = {
+  __proto__: PermissionPromptForRequestPrototype,
+
+  get permissionKey() {
+    return "autoplay-media";
+  },
+
+  get popupOptions() {
+    let checkbox = {
+      show: !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) &&
+        !this.principal.URI.schemeIs("file")
+    };
+    if (checkbox.show) {
+      checkbox.checked = true;
+      checkbox.label = gBrowserBundle.GetStringFromName("autoplay.remember");
+    }
+    return {
+      checkbox,
+      displayURI: false,
+      name: this.principal.URI.hostPort,
+    };
+  },
+
+  get notificationID() {
+    return "autoplay-media";
+  },
+
+  get anchorID() {
+    return "autoplay-media-icon";
+  },
+
+  get message() {
+    if (this.principal.URI.schemeIs("file")) {
+      return gBrowserBundle.GetStringFromName("autoplay.messageWithFile");
+    }
+    return gBrowserBundle.formatStringFromName("autoplay.message", ["<>"], 1);
+  },
+
+  get promptActions() {
+    return [{
+        label: gBrowserBundle.GetStringFromName("autoplay.Allow.label"),
+        accessKey: gBrowserBundle.GetStringFromName("autoplay.Allow.accesskey"),
+        action: Ci.nsIPermissionManager.ALLOW_ACTION,
+      },
+      {
+        label: gBrowserBundle.GetStringFromName("autoplay.DontAllow.label"),
+        accessKey: gBrowserBundle.GetStringFromName("autoplay.DontAllow.accesskey"),
+        action: Ci.nsIPermissionManager.DENY_ACTION,
+    }];
+  },
+
+  onBeforeShow() {
+  },
+};
+
+PermissionUI.AutoplayPermissionPrompt = AutoplayPermissionPrompt;
