@@ -179,11 +179,16 @@ function enableBreakpoint(location) {
 
     if (!breakpoint || breakpoint.loading) {
       return;
-    }
+    } // To instantly reflect in the UI, we optimistically enable the breakpoint
+
+
+    const enabledBreakpoint = _objectSpread({}, breakpoint, {
+      disabled: false
+    });
 
     return dispatch({
       type: "ENABLE_BREAKPOINT",
-      breakpoint,
+      breakpoint: enabledBreakpoint,
       [_promise.PROMISE]: (0, _addBreakpoint2.default)(getState, client, sourceMaps, breakpoint)
     });
   };

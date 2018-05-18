@@ -668,7 +668,7 @@ const Grip = __webpack_require__(3656);
 // List of all registered template.
 // XXX there should be a way for extensions to register a new
 // or modify an existing rep.
-const reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, DocumentType, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
+const reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, Func, PromiseRep, ArrayRep, Document, DocumentType, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, GripMapEntry, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor, Obj];
 
 /**
  * Generic rep that is used for rendering native JS types or an object.
@@ -698,7 +698,7 @@ const Rep = function (props) {
  * @param noGrip {Boolean} If true, will only check reps not made for remote
  *                         objects.
  */
-function getRep(object, defaultRep = Obj, noGrip = false) {
+function getRep(object, defaultRep = Grip, noGrip = false) {
   for (let i = 0; i < reps.length; i++) {
     const rep = reps[i];
     try {
@@ -1153,8 +1153,8 @@ function getLength(object) {
   return object.length;
 }
 
-function supportsObject(object) {
-  return Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]";
+function supportsObject(object, noGrip = false) {
+  return noGrip && (Array.isArray(object) || Object.prototype.toString.call(object) === "[object Arguments]");
 }
 
 const maxLengthMap = new Map();
@@ -4765,8 +4765,8 @@ function isInterestingProp(value) {
   return type == "boolean" || type == "number" || type == "string" && value;
 }
 
-function supportsObject(object) {
-  return true;
+function supportsObject(object, noGrip = false) {
+  return noGrip;
 }
 
 // Exports from this module

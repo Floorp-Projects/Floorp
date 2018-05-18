@@ -18,5 +18,5 @@ interface PerformanceEntry
   readonly attribute DOMHighResTimeStamp startTime;
   readonly attribute DOMHighResTimeStamp duration;
 
-  jsonifier;
+  [Default] object toJSON();
 };

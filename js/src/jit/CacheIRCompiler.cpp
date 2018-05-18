@@ -2992,8 +2992,11 @@ void CacheIRCompiler::emitLoadStubFieldConstant(StubFieldOffset val, Register de
       case StubField::Type::String:
         masm.movePtr(ImmGCPtr(stringStubField(val.getOffset())), dest);
         break;
+      case StubField::Type::ObjectGroup:
+        masm.movePtr(ImmGCPtr(groupStubField(val.getOffset())), dest);
+        break;
       default:
-            MOZ_CRASH("Unhandled stub field constant type");
+        MOZ_CRASH("Unhandled stub field constant type");
     }
 }
 
@@ -3111,5 +3114,21 @@ CacheIRCompiler::emitMegamorphicLoadSlotResult()
     if (JitOptions.spectreJitToCxxCalls)
         masm.speculationBarrier();
 
+    return true;
+}
+
+bool
+CacheIRCompiler::emitGuardGroupHasUnanalyzedNewScript()
+{
+    StubFieldOffset group(reader.stubOffset(), StubField::Type::ObjectGroup);
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    emitLoadStubField(group, scratch1);
+    masm.guardGroupHasUnanalyzedNewScript(scratch1, scratch2, failure->label());
     return true;
 }

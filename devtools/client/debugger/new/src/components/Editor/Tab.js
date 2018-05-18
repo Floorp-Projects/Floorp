@@ -12,9 +12,7 @@ var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
 var _devtoolsContextmenu = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-contextmenu"];
 
-var _Close = require("../shared/Button/Close");
-
-var _Close2 = _interopRequireDefault(_Close);
+var _Button = require("../shared/Button/index");
 
 var _actions = require("../../actions/index");
 
@@ -171,7 +169,7 @@ class Tab extends _react.PureComponent {
       title: (0, _source.getFileURL)(src)
     }, sourceAnnotation, _react2.default.createElement("div", {
       className: "filename"
-    }, filename), _react2.default.createElement(_Close2.default, {
+    }, filename), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
       tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
     }));

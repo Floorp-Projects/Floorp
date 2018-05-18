@@ -32,9 +32,7 @@ var _Tab = require("./Tab");
 
 var _Tab2 = _interopRequireDefault(_Tab);
 
-var _PaneToggle = require("../shared/Button/PaneToggle");
-
-var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
+var _Button = require("../shared/Button/index");
 
 var _Dropdown = require("../shared/Dropdown");
 
@@ -174,7 +172,7 @@ class Tabs extends _react.PureComponent {
   }
 
   renderStartPanelToggleButton() {
-    return _react2.default.createElement(_PaneToggle2.default, {
+    return _react2.default.createElement(_Button.PaneToggleButton, {
       position: "start",
       collapsed: !this.props.startPanelCollapsed,
       handleClick: this.props.togglePaneCollapse
@@ -192,7 +190,7 @@ class Tabs extends _react.PureComponent {
       return;
     }
 
-    return _react2.default.createElement(_PaneToggle2.default, {
+    return _react2.default.createElement(_Button.PaneToggleButton, {
       position: "end",
       collapsed: !endPanelCollapsed,
       handleClick: togglePaneCollapse,
