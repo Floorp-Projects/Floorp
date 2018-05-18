@@ -764,27 +764,24 @@ CustomElementRegistry::Define(JSContext* aCx,
      */
     AutoSetRunningFlag as(this);
 
-    { // Enter constructor's realm.
-      /**
-       * 10.1. Let prototype be Get(constructor, "prototype"). Rethrow any exceptions.
-       */
-      JSAutoRealm ar(aCx, constructor);
-      // The .prototype on the constructor passed could be an "expando" of a
-      // wrapper. So we should get it from wrapper instead of the underlying
-      // object.
-      if (!JS_GetProperty(aCx, constructor, "prototype", &constructorPrototype)) {
-        aRv.NoteJSContextException(aCx);
-        return;
-      }
+    /**
+     * 10.1. Let prototype be Get(constructor, "prototype"). Rethrow any exceptions.
+     */
+    // The .prototype on the constructor passed could be an "expando" of a
+    // wrapper. So we should get it from wrapper instead of the underlying
+    // object.
+    if (!JS_GetProperty(aCx, constructor, "prototype", &constructorPrototype)) {
+      aRv.NoteJSContextException(aCx);
+      return;
+    }
 
-      /**
-       * 10.2. If Type(prototype) is not Object, then throw a TypeError exception.
-       */
-      if (!constructorPrototype.isObject()) {
-        aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("constructor.prototype"));
-        return;
-      }
-    } // Leave constructor's realm.
+    /**
+     * 10.2. If Type(prototype) is not Object, then throw a TypeError exception.
+     */
+    if (!constructorPrototype.isObject()) {
+      aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("constructor.prototype"));
+      return;
+    }
 
     JS::Rooted<JSObject*> constructorProtoUnwrapped(
       aCx, js::CheckedUnwrap(&constructorPrototype.toObject()));
@@ -814,7 +811,7 @@ CustomElementRegistry::Define(JSContext* aCx,
       // Note: We call the init from the constructorProtoUnwrapped's compartment
       //       here.
       JS::RootedValue rootedv(aCx, JS::ObjectValue(*constructorProtoUnwrapped));
-      if (!JS_WrapValue(aCx, &rootedv) || !callbacksHolder->Init(aCx, rootedv)) {
+      if (!callbacksHolder->Init(aCx, rootedv)) {
         aRv.NoteJSContextException(aCx);
         return;
       }
