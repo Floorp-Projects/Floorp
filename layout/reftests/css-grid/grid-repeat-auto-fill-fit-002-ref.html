@@ -83,15 +83,18 @@ fill,fit {
 
 .zero-progress {
   grid-row-gap: calc(10px - 1%);
-  grid-template-rows: [a] 10px repeat(3, [b] 0 [c]) [d];
+  grid-template-rows: [a] 10px repeat(3, [b] calc(4px / 10) [c]) [d];
+  height:40px;
 }
 .w50.zero-progress {
   grid-row-gap: calc(10px - 1%);
   grid-template-rows: [a] 10px repeat(3, [b] 0 [c]) [d];
+  height:50px;
 }
 .mw50.zero-progress {
   grid-row-gap: calc(10px - 1%);
-  grid-template-rows: [a] 10px repeat(4, [b] 0 [c]) [d];
+  grid-template-rows: [a] 10px repeat(4, [b] calc(5px / 10) [c]) [d];
+  height:50px;
 }
 </style>
 </head>
