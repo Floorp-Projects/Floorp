@@ -143,9 +143,6 @@ with Files("browser-safebrowsing.js"):
 with Files("browser-sync.js"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
-with Files("browser-tabPreviews.xml"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
-
 with Files("contentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
