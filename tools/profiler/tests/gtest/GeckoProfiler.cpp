@@ -695,7 +695,7 @@ TEST(GeckoProfiler, ProfilingStack)
   }
 
   AutoProfilerLabel label1("A", nullptr, 888,
-                           js::ProfilingStackFrame::Category::STORAGE);
+                           js::ProfilingStackFrame::Category::DOM);
   AutoProfilerLabel label2("A", dynamic.get(), 888,
                            js::ProfilingStackFrame::Category::NETWORK);
   ASSERT_TRUE(profiler_get_backtrace());

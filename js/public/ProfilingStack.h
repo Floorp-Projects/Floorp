@@ -197,10 +197,9 @@ class ProfilingStackFrame
         NETWORK,
         GRAPHICS,
         DOM,
-        STORAGE,
 
         FIRST    = OTHER,
-        LAST     = STORAGE,
+        LAST     = DOM,
     };
 
     static_assert(uint32_t(Category::LAST) <= (UINT32_MAX >> uint32_t(Kind::KIND_BITCOUNT)),
