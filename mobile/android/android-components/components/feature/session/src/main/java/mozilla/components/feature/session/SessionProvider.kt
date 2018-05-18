@@ -12,6 +12,7 @@ import mozilla.components.concept.session.storage.SessionStorage
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 /**
@@ -31,6 +32,8 @@ class SessionProvider(
     val selectedSession
         get() = sessionManager.selectedSession
 
+    private var scheduledFuture: ScheduledFuture<*>? = null
+
     /**
      * Restores persisted session state and schedules periodic saves.
      */
@@ -43,7 +46,7 @@ class SessionProvider(
             sessions.putAll(restoredSessions)
 
             if (savePeriodically) {
-                scheduler.scheduleAtFixedRate(
+                scheduledFuture = scheduler.scheduleAtFixedRate(
                     { sessionStorage.persist(sessions, selectedSession.id) },
                     saveIntervalInSeconds,
                     saveIntervalInSeconds,
@@ -79,6 +82,6 @@ class SessionProvider(
      * Stops this provider and periodic saves.
      */
     fun stop() {
-        scheduler.shutdown()
+        scheduledFuture?.cancel(false)
     }
 }

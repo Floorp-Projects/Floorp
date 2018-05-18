@@ -17,9 +17,11 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
@@ -60,15 +62,27 @@ class SessionProviderTest {
     }
 
     @Test
-    fun testStopShutsDownScheduler() {
+    fun testStopCancelsScheduledTask() {
+        val engine = mock(Engine::class.java)
+
+        val storage = mock(SessionStorage::class.java)
+        `when`(storage. restore(engine)).thenReturn(Pair(emptyMap(), ""))
+
         val scheduler = mock(ScheduledExecutorService::class.java)
+        val scheduledFuture = mock(ScheduledFuture::class.java)
+        `when`(scheduler.scheduleAtFixedRate(any(Runnable::class.java), eq(300L), eq(300L), eq(TimeUnit.SECONDS))).thenReturn(scheduledFuture)
 
         val provider = SessionProvider(
+                sessionStorage = storage,
                 savePeriodically = true,
                 scheduler = scheduler)
-        provider.stop()
 
-        verify(scheduler).shutdown()
+        provider.stop()
+        verify(scheduledFuture, never()).cancel(eq(false))
+
+        provider.start(engine)
+        provider.stop()
+        verify(scheduledFuture).cancel(eq(false))
     }
 
     @Test
