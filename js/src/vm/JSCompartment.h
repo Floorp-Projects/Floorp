@@ -665,16 +665,6 @@ struct JSCompartment
         MOZ_ASSERT(crossCompartmentWrappers.empty());
     }
 
-  protected:
-    // The global environment record's [[VarNames]] list that contains all
-    // names declared using FunctionDeclaration, GeneratorDeclaration, and
-    // VariableDeclaration declarations in global code in this compartment.
-    // Names are only removed from this list by a |delete IdentifierReference|
-    // that successfully removes that global property.
-    JS::GCHashSet<JSAtom*,
-                  js::DefaultHasher<JSAtom*>,
-                  js::SystemAllocPolicy> varNames_;
-
   public:
     /* Last time at which an animation was played for a global in this compartment. */
     int64_t                      lastAnimationTime;
@@ -721,24 +711,11 @@ struct JSCompartment
         }
     }
 
-  public:
-    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                size_t* tiAllocationSiteTables,
-                                size_t* tiArrayTypeTables,
-                                size_t* tiObjectTypeTables,
-                                size_t* compartmentObject,
-                                size_t* compartmentTables,
-                                size_t* innerViews,
-                                size_t* lazyArrayBuffers,
-                                size_t* objectMetadataTables,
-                                size_t* crossCompartmentWrappers,
-                                size_t* savedStacksSet,
-                                size_t* varNamesSet,
-                                size_t* nonSyntacticLexicalScopes,
-                                size_t* jitCompartment,
-                                size_t* privateData,
-                                size_t* scriptCountsMapArg);
+  protected:
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* crossCompartmentWrappersArg);
 
+  public:
     // Object group tables and other state in the compartment.
     js::ObjectGroupCompartment   objectGroups;
 
@@ -825,9 +802,9 @@ struct JSCompartment
     explicit JSCompartment(JS::Zone* zone);
     ~JSCompartment();
 
-  public:
     MOZ_MUST_USE bool init(JSContext* maybecx);
 
+  public:
     MOZ_MUST_USE inline bool wrap(JSContext* cx, JS::MutableHandleValue vp);
 
     MOZ_MUST_USE bool wrap(JSContext* cx, js::MutableHandleString strp);
@@ -893,7 +870,6 @@ struct JSCompartment
     void sweepDebugEnvironments();
     void sweepNativeIterators();
     void sweepTemplateObjects();
-    void sweepVarNames();
 
     void purge();
 
@@ -914,18 +890,6 @@ struct JSCompartment
     }
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
-
-    // Add a name to [[VarNames]].  Reports OOM on failure.
-    MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
-
-    void removeFromVarNames(JS::Handle<JSAtom*> name) {
-        varNames_.remove(name);
-    }
-
-    // Whether the given name is in [[VarNames]].
-    bool isInVarNames(JS::Handle<JSAtom*> name) {
-        return varNames_.has(name);
-    }
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
@@ -1166,8 +1130,26 @@ class JS::Realm : public JSCompartment
   public:
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
 
+    MOZ_MUST_USE bool init(JSContext* maybecx);
     void destroy(js::FreeOp* fop);
     void clearTables();
+
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* tiAllocationSiteTables,
+                                size_t* tiArrayTypeTables,
+                                size_t* tiObjectTypeTables,
+                                size_t* realmObject,
+                                size_t* realmTables,
+                                size_t* innerViews,
+                                size_t* lazyArrayBuffers,
+                                size_t* objectMetadataTables,
+                                size_t* crossCompartmentWrappers,
+                                size_t* savedStacksSet,
+                                size_t* varNamesSet,
+                                size_t* nonSyntacticLexicalScopes,
+                                size_t* jitCompartment,
+                                size_t* privateData,
+                                size_t* scriptCountsMapArg);
 
     const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
     JS::RealmBehaviors& behaviors() { return behaviors_; }
@@ -1227,6 +1209,30 @@ class JS::Realm : public JSCompartment
      * This method clears out tables of roots in preparation for the final GC.
      */
     void finishRoots();
+
+  private:
+    // The global environment record's [[VarNames]] list that contains all
+    // names declared using FunctionDeclaration, GeneratorDeclaration, and
+    // VariableDeclaration declarations in global code in this realm.
+    // Names are only removed from this list by a |delete IdentifierReference|
+    // that successfully removes that global property.
+    using VarNamesSet = JS::GCHashSet<JSAtom*,
+                                      js::DefaultHasher<JSAtom*>,
+                                      js::SystemAllocPolicy>;
+    VarNamesSet varNames_;
+  public:
+    // Add a name to [[VarNames]].  Reports OOM on failure.
+    MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
+    void sweepVarNames();
+
+    void removeFromVarNames(JS::Handle<JSAtom*> name) {
+        varNames_.remove(name);
+    }
+
+    // Whether the given name is in [[VarNames]].
+    bool isInVarNames(JS::Handle<JSAtom*> name) {
+        return varNames_.has(name);
+    }
 };
 
 namespace js {
