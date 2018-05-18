@@ -34,6 +34,8 @@ using mozilla::Preferences;
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
+using mozilla::Some;
+using mozilla::Nothing;
 using mozilla::Telemetry::Common::AutoHashtable;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
@@ -47,6 +49,8 @@ using mozilla::Telemetry::Common::IsValidIdentifierString;
 using mozilla::Telemetry::Common::GetCurrentProduct;
 using mozilla::Telemetry::Common::SupportedProduct;
 using mozilla::Telemetry::ScalarActionType;
+using mozilla::Telemetry::ScalarAction;
+using mozilla::Telemetry::KeyedScalarAction;
 using mozilla::Telemetry::ScalarID;
 using mozilla::Telemetry::DynamicScalarDefinition;
 using mozilla::Telemetry::ScalarVariant;
@@ -104,6 +108,11 @@ const uint32_t kMaximumCategoryNameLength = 40;
 const uint32_t kMaximumScalarNameLength = 40;
 const uint32_t kScalarCount =
   static_cast<uint32_t>(mozilla::Telemetry::ScalarID::ScalarCount);
+
+// To stop growing unbounded in memory while waiting for scalar deserialization
+// to finish, we immediately apply pending operations if the array reaches
+// a certain high water mark of elements.
+const size_t kScalarActionsArrayHighWaterMark = 10000;
 
 enum class ScalarResult : uint8_t {
   // Nothing went wrong.
@@ -928,6 +937,20 @@ ProcessesKeyedScalarsMapType gKeyedScalarStorageMap;
 ProcessesScalarsMapType gDynamicBuiltinScalarStorageMap;
 ProcessesKeyedScalarsMapType gDynamicBuiltinKeyedScalarStorageMap;
 
+// Whether or not the deserialization of persisted scalars is still in progress.
+// This is never the case on Desktop or Fennec.
+// Only GeckoView restores persisted scalars.
+bool gIsDeserializing = false;
+// This batches scalar accumulations that should be applied once loading finished.
+StaticAutoPtr<nsTArray<ScalarAction>> gScalarsActions;
+StaticAutoPtr<nsTArray<KeyedScalarAction>> gKeyedScalarsActions;
+
+bool
+internal_IsScalarDeserializing(const StaticMutexAutoLock& lock)
+{
+  return gIsDeserializing;
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -1244,6 +1267,115 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
   return NS_OK;
 }
 
+void internal_ApplyPendingOperations(const StaticMutexAutoLock& lock);
+
+/**
+ * Record the given action on a scalar into the pending actions list.
+ *
+ * If the pending actions list overflows the high water mark length
+ * all operations are immediately applied, including the passed action.
+ *
+ * @param aScalarAction The action to record.
+ */
+void
+internal_RecordScalarAction(const StaticMutexAutoLock& lock,
+                            const ScalarAction& aScalarAction)
+{
+  // Make sure to have the storage.
+  if (!gScalarsActions) {
+    gScalarsActions = new nsTArray<ScalarAction>();
+  }
+
+  // Store the action.
+  gScalarsActions->AppendElement(aScalarAction);
+
+  // If this action overflows the pending actions array, we immediately apply pending operations
+  // and assume loading is over.
+  // If loading still happens afterwards, some scalar values might be
+  // overwritten and inconsistent, but we won't lose operations on otherwise untouched probes.
+  if (gScalarsActions->Length() > kScalarActionsArrayHighWaterMark) {
+    internal_ApplyPendingOperations(lock);
+    return;
+  }
+}
+
+/**
+ * Record the given action on a scalar on the main process into the pending actions list.
+ *
+ * If the pending actions list overflows the high water mark length
+ * all operations are immediately applied, including the passed action.
+ *
+ * @param aId The scalar's ID this action applies to
+ * @param aDynamic Determines if the scalar is dynamic
+ * @param aAction The action to record
+ * @param aValue The additional data for the recorded action
+ */
+void
+internal_RecordScalarAction(const StaticMutexAutoLock& lock,
+                            uint32_t aId, bool aDynamic,
+                            ScalarActionType aAction, const ScalarVariant& aValue)
+{
+  internal_RecordScalarAction(lock, ScalarAction{
+                                      aId, aDynamic, aAction,
+                                      Some(aValue), ProcessID::Parent
+                                    });
+}
+
+/**
+ * Record the given action on a keyed scalar into the pending actions list.
+ *
+ * If the pending actions list overflows the high water mark length
+ * all operations are immediately applied, including the passed action.
+ *
+ * @param aScalarAction The action to record.
+ */
+void
+internal_RecordKeyedScalarAction(const StaticMutexAutoLock& lock,
+                                 const KeyedScalarAction& aScalarAction)
+{
+  // Make sure to have the storage.
+  if (!gKeyedScalarsActions) {
+    gKeyedScalarsActions = new nsTArray<KeyedScalarAction>();
+  }
+
+  // Store the action.
+  gKeyedScalarsActions->AppendElement(aScalarAction);
+
+  // If this action overflows the pending actions array, we immediately apply pending operations
+  // and assume loading is over.
+  // If loading still happens afterwards, some scalar values might be
+  // overwritten and inconsistent, but we won't lose operations on otherwise untouched probes.
+  if (gKeyedScalarsActions->Length() > kScalarActionsArrayHighWaterMark) {
+    internal_ApplyPendingOperations(lock);
+    return;
+  }
+}
+
+/**
+ * Record the given action on a keyed scalar on the main process into the pending actions list.
+ *
+ * If the pending actions list overflows the high water mark length
+ * all operations are immediately applied, including the passed action.
+ *
+ * @param aId The scalar's ID this action applies to
+ * @param aDynamic Determines if the scalar is dynamic
+ * @param aKey The scalar's key
+ * @param aAction The action to record
+ * @param aValue The additional data for the recorded action
+ */
+void
+internal_RecordKeyedScalarAction(const StaticMutexAutoLock& lock,
+                                 uint32_t aId, bool aDynamic,
+                                 const nsAString& aKey,
+                                 ScalarActionType aAction,
+                                 const ScalarVariant& aValue)
+{
+  internal_RecordKeyedScalarAction(lock, KeyedScalarAction{
+                                           aId, aDynamic, aAction, NS_ConvertUTF16toUTF8(aKey),
+                                           Some(aValue), ProcessID::Parent
+                                         });
+}
+
 /**
  * Update the scalar with the provided value. This is used by the JS API.
  *
@@ -1254,12 +1386,14 @@ internal_GetScalarByEnum(const StaticMutexAutoLock& lock,
  * @param aProcessOverride The process for which the scalar must be updated.
  *        This must only be used for GeckoView persistence. It must be
  *        set to the ProcessID::Parent for all the other cases.
+ * @param aForce Whether to force updating even if load is in progress.
  * @return a ScalarResult error value.
  */
 ScalarResult
 internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
                       ScalarActionType aType, nsIVariant* aValue,
-                      ProcessID aProcessOverride = ProcessID::Parent)
+                      ProcessID aProcessOverride = ProcessID::Parent,
+                      bool aForce = false)
 {
   ScalarKey uniqueId;
   nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
@@ -1288,6 +1422,19 @@ internal_UpdateScalar(const StaticMutexAutoLock& lock, const nsACString& aName,
     }
     TelemetryIPCAccumulator::RecordChildScalarAction(
       uniqueId.id, uniqueId.dynamic, aType, variantValue.ref());
+    return ScalarResult::Ok;
+  }
+
+  if (!aForce && internal_IsScalarDeserializing(lock)) {
+    const BaseScalarInfo &info = internal_GetScalarInfo(lock, uniqueId);
+    // Convert the nsIVariant to a Variant.
+    mozilla::Maybe<ScalarVariant> variantValue;
+    sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
+    if (sr != ScalarResult::Ok) {
+      MOZ_ASSERT(false, "Unable to convert nsIVariant to mozilla::Variant.");
+      return sr;
+    }
+    internal_RecordScalarAction(lock, uniqueId.id, uniqueId.dynamic, aType, variantValue.ref());
     return ScalarResult::Ok;
   }
 
@@ -1423,7 +1570,8 @@ ScalarResult
 internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
                            const nsACString& aName, const nsAString& aKey,
                            ScalarActionType aType, nsIVariant* aValue,
-                           ProcessID aProcessOverride = ProcessID::Parent)
+                           ProcessID aProcessOverride = ProcessID::Parent,
+                           bool aForce = false)
 {
   ScalarKey uniqueId;
   nsresult rv = internal_GetEnumByScalarName(lock, aName, &uniqueId);
@@ -1452,6 +1600,21 @@ internal_UpdateKeyedScalar(const StaticMutexAutoLock& lock,
     }
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(
       uniqueId.id, uniqueId.dynamic, aKey, aType, variantValue.ref());
+    return ScalarResult::Ok;
+  }
+
+  if (!aForce && internal_IsScalarDeserializing(lock)) {
+    const BaseScalarInfo &info = internal_GetScalarInfo(lock, uniqueId);
+    // Convert the nsIVariant to a Variant.
+    mozilla::Maybe<ScalarVariant> variantValue;
+    sr = GetVariantFromIVariant(aValue, info.kind, variantValue);
+    if (sr != ScalarResult::Ok) {
+      MOZ_ASSERT(false, "Unable to convert nsIVariant to mozilla::Variant.");
+      return sr;
+    }
+    internal_RecordKeyedScalarAction(lock,
+                                     uniqueId.id, uniqueId.dynamic,
+                                     aKey, aType, variantValue.ref());
     return ScalarResult::Ok;
   }
 
@@ -1737,6 +1900,219 @@ internal_GetKeyedScalarSnapshot(const StaticMutexAutoLock& aLock,
 
 } // namespace
 
+// helpers for recording/applying scalar operations
+namespace {
+
+void
+internal_ApplyScalarActions(const StaticMutexAutoLock& lock,
+                            const nsTArray<mozilla::Telemetry::ScalarAction>& aScalarActions,
+                            const mozilla::Maybe<ProcessID>& aProcessType = Nothing())
+{
+  if (!internal_CanRecordBase(lock)) {
+    return;
+  }
+
+  for (auto& upd : aScalarActions) {
+    ScalarKey uniqueId{upd.mId, upd.mDynamic};
+    if (NS_WARN_IF(!internal_IsValidId(lock, uniqueId))) {
+      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+      continue;
+    }
+
+    if (internal_IsKeyedScalar(lock, uniqueId)) {
+      continue;
+    }
+
+    // Are we allowed to record this scalar? We don't need to check for
+    // allowed processes here, that's taken care of when recording
+    // in child processes.
+    if (!internal_CanRecordForScalarID(lock, uniqueId)) {
+      continue;
+    }
+
+    // Either we got passed a process type or it was explicitely set on the recorded action.
+    // It should never happen that it is set to an invalid value (such as ProcessID::Count)
+    ProcessID processType = aProcessType.valueOr(upd.mProcessType);
+    MOZ_ASSERT(processType != ProcessID::Count);
+
+    // Refresh the data in the parent process with the data coming from the child
+    // processes.
+    ScalarBase* scalar = nullptr;
+    nsresult rv = internal_GetScalarByEnum(lock, uniqueId, processType,
+                                           &scalar);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
+      continue;
+    }
+
+    if (upd.mData.isNothing()) {
+      MOZ_ASSERT(false, "There is no data in the ScalarActionType.");
+      continue;
+    }
+
+    // Get the type of this scalar from the scalar ID. We already checked
+    // for its validity a few lines above.
+    const uint32_t scalarType = internal_GetScalarInfo(lock, uniqueId).kind;
+
+    // Extract the data from the mozilla::Variant.
+    switch (upd.mActionType)
+    {
+      case ScalarActionType::eSet:
+        {
+          switch (scalarType)
+          {
+            case nsITelemetry::SCALAR_TYPE_COUNT:
+              scalar->SetValue(upd.mData->as<uint32_t>());
+              break;
+            case nsITelemetry::SCALAR_TYPE_BOOLEAN:
+              scalar->SetValue(upd.mData->as<bool>());
+              break;
+            case nsITelemetry::SCALAR_TYPE_STRING:
+              scalar->SetValue(upd.mData->as<nsString>());
+              break;
+          }
+          break;
+        }
+      case ScalarActionType::eAdd:
+        {
+          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support adding uint32_t.
+          scalar->AddValue(upd.mData->as<uint32_t>());
+          break;
+        }
+      case ScalarActionType::eSetMaximum:
+        {
+          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support SetMaximum on uint32_t.
+          scalar->SetMaximum(upd.mData->as<uint32_t>());
+          break;
+        }
+      default:
+        NS_WARNING("Unsupported action coming from scalar child updates.");
+    }
+  }
+}
+
+void
+internal_ApplyKeyedScalarActions(const StaticMutexAutoLock& lock,
+                                 const nsTArray<mozilla::Telemetry::KeyedScalarAction>& aScalarActions,
+                                 const mozilla::Maybe<ProcessID>& aProcessType = Nothing())
+{
+  if (!internal_CanRecordBase(lock)) {
+    return;
+  }
+
+  for (auto& upd : aScalarActions) {
+    ScalarKey uniqueId{upd.mId, upd.mDynamic};
+    if (NS_WARN_IF(!internal_IsValidId(lock, uniqueId))) {
+      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
+      continue;
+    }
+
+    if (!internal_IsKeyedScalar(lock, uniqueId)) {
+      continue;
+    }
+
+    // Are we allowed to record this scalar? We don't need to check for
+    // allowed processes here, that's taken care of when recording
+    // in child processes.
+    if (!internal_CanRecordForScalarID(lock, uniqueId)) {
+      continue;
+    }
+
+    // Either we got passed a process type or it was explicitely set on the recorded action.
+    // It should never happen that it is set to an invalid value (such as ProcessID::Count)
+    ProcessID processType = aProcessType.valueOr(upd.mProcessType);
+    MOZ_ASSERT(processType != ProcessID::Count);
+
+    // Refresh the data in the parent process with the data coming from the child
+    // processes.
+    KeyedScalar* scalar = nullptr;
+    nsresult rv = internal_GetKeyedScalarByEnum(lock, uniqueId, processType,
+                                                &scalar);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
+      continue;
+    }
+
+    if (upd.mData.isNothing()) {
+      MOZ_ASSERT(false, "There is no data in the KeyedScalarAction.");
+      continue;
+    }
+
+    // Get the type of this scalar from the scalar ID. We already checked
+    // for its validity a few lines above.
+    const uint32_t scalarType = internal_GetScalarInfo(lock, uniqueId).kind;
+
+    // Extract the data from the mozilla::Variant.
+    switch (upd.mActionType)
+    {
+      case ScalarActionType::eSet:
+        {
+          switch (scalarType)
+          {
+            case nsITelemetry::SCALAR_TYPE_COUNT:
+              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+              break;
+            case nsITelemetry::SCALAR_TYPE_BOOLEAN:
+              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<bool>());
+              break;
+            default:
+              NS_WARNING("Unsupported type coming from scalar child updates.");
+          }
+          break;
+        }
+      case ScalarActionType::eAdd:
+        {
+          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support adding on uint32_t.
+          scalar->AddValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+          break;
+        }
+      case ScalarActionType::eSetMaximum:
+        {
+          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
+            NS_WARNING("Attempting to add on a non count scalar.");
+            continue;
+          }
+          // We only support SetMaximum on uint32_t.
+          scalar->SetMaximum(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
+          break;
+        }
+      default:
+        NS_WARNING("Unsupported action coming from keyed scalar child updates.");
+    }
+  }
+}
+
+void
+internal_ApplyPendingOperations(const StaticMutexAutoLock& lock)
+{
+  if (gScalarsActions && gScalarsActions->Length() > 0) {
+    internal_ApplyScalarActions(lock, *gScalarsActions);
+    gScalarsActions->Clear();
+  }
+
+  if (gKeyedScalarsActions && gKeyedScalarsActions->Length() > 0) {
+    internal_ApplyKeyedScalarActions(lock, *gKeyedScalarsActions);
+    gKeyedScalarsActions->Clear();
+  }
+
+  // After all pending operations are applied deserialization is done
+  gIsDeserializing = false;
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 //
@@ -1801,6 +2177,20 @@ TelemetryScalar::DeInitializeGlobalState()
   gDynamicBuiltinKeyedScalarStorageMap.Clear();
   gDynamicScalarInfo = nullptr;
   gInitDone = false;
+}
+
+void
+TelemetryScalar::DeserializationStarted()
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+  gIsDeserializing = true;
+}
+
+void
+TelemetryScalar::ApplyPendingOperations()
+{
+  StaticMutexAutoLock locker(gTelemetryScalarsMutex);
+  internal_ApplyPendingOperations(locker);
 }
 
 void
@@ -1921,6 +2311,13 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                ScalarActionType::eAdd,
+                                ScalarVariant(aValue));
+    return;
+  }
+
   ScalarBase* scalar = nullptr;
   nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
                                          &scalar);
@@ -1959,6 +2356,14 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   if (!XRE_IsParentProcess()) {
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(uniqueId.id, uniqueId.dynamic,
       aKey, ScalarActionType::eAdd, ScalarVariant(aValue));
+    return;
+  }
+
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordKeyedScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                     aKey,
+                                     ScalarActionType::eAdd,
+                                     ScalarVariant(aValue));
     return;
   }
 
@@ -2078,6 +2483,13 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                ScalarActionType::eSet,
+                                ScalarVariant(aValue));
+    return;
+  }
+
   ScalarBase* scalar = nullptr;
   nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
                                          &scalar);
@@ -2118,6 +2530,13 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
     return;
   }
 
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                ScalarActionType::eSet,
+                                ScalarVariant(nsString(aValue)));
+    return;
+  }
+
   ScalarBase* scalar = nullptr;
   nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
                                          &scalar);
@@ -2155,6 +2574,13 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
     TelemetryIPCAccumulator::RecordChildScalarAction(uniqueId.id, uniqueId.dynamic,
                                                      ScalarActionType::eSet,
                                                      ScalarVariant(aValue));
+    return;
+  }
+
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                ScalarActionType::eSet,
+                                ScalarVariant(aValue));
     return;
   }
 
@@ -2199,6 +2625,14 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
     return;
   }
 
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordKeyedScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                     aKey,
+                                     ScalarActionType::eSet,
+                                     ScalarVariant(aValue));
+    return;
+  }
+
   KeyedScalar* scalar = nullptr;
   nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId,
                                               ProcessID::Parent,
@@ -2238,6 +2672,14 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
   if (!XRE_IsParentProcess()) {
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(uniqueId.id, uniqueId.dynamic,
       aKey, ScalarActionType::eSet, ScalarVariant(aValue));
+    return;
+  }
+
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordKeyedScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                     aKey,
+                                     ScalarActionType::eSet,
+                                     ScalarVariant(aValue));
     return;
   }
 
@@ -2357,6 +2799,13 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                ScalarActionType::eSetMaximum,
+                                ScalarVariant(aValue));
+    return;
+  }
+
   ScalarBase* scalar = nullptr;
   nsresult rv = internal_GetScalarByEnum(locker, uniqueId, ProcessID::Parent,
                                          &scalar);
@@ -2395,6 +2844,14 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
   if (!XRE_IsParentProcess()) {
     TelemetryIPCAccumulator::RecordChildKeyedScalarAction(uniqueId.id, uniqueId.dynamic,
       aKey, ScalarActionType::eSetMaximum, ScalarVariant(aValue));
+    return;
+  }
+
+  if (internal_IsScalarDeserializing(locker)) {
+    internal_RecordKeyedScalarAction(locker, uniqueId.id, uniqueId.dynamic,
+                                     aKey,
+                                     ScalarActionType::eSetMaximum,
+                                     ScalarVariant(aValue));
     return;
   }
 
@@ -2761,6 +3218,8 @@ TelemetryScalar::ClearScalars()
   gKeyedScalarStorageMap.Clear();
   gDynamicBuiltinScalarStorageMap.Clear();
   gDynamicBuiltinKeyedScalarStorageMap.Clear();
+  gScalarsActions = nullptr;
+  gKeyedScalarsActions = nullptr;
 }
 
 size_t
@@ -2805,90 +3264,22 @@ TelemetryScalar::UpdateChildData(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "The stored child processes scalar data must be updated from the parent process.");
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  if (!internal_CanRecordBase(locker)) {
+
+  // If scalars are still being deserialized, we need to record the incoming
+  // operations as well.
+  if (internal_IsScalarDeserializing(locker)) {
+    for (const ScalarAction& action : aScalarActions) {
+      // We're only getting immutable access, so let's copy it
+      ScalarAction copy = action;
+      // Fix up the process type
+      copy.mProcessType = aProcessType;
+      internal_RecordScalarAction(locker, copy);
+    }
+
     return;
   }
 
-  for (auto& upd : aScalarActions) {
-    ScalarKey uniqueId{upd.mId, upd.mDynamic};
-    if (NS_WARN_IF(!internal_IsValidId(locker, uniqueId))) {
-      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
-      continue;
-    }
-
-    if (internal_IsKeyedScalar(locker, uniqueId)) {
-      continue;
-    }
-
-    // Are we allowed to record this scalar? We don't need to check for
-    // allowed processes here, that's taken care of when recording
-    // in child processes.
-    if (!internal_CanRecordForScalarID(locker, uniqueId)) {
-      continue;
-    }
-
-    // Refresh the data in the parent process with the data coming from the child
-    // processes.
-    ScalarBase* scalar = nullptr;
-    nsresult rv = internal_GetScalarByEnum(locker, uniqueId, aProcessType,
-                                           &scalar);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
-      continue;
-    }
-
-    if (upd.mData.isNothing()) {
-      MOZ_ASSERT(false, "There is no data in the ScalarActionType.");
-      continue;
-    }
-
-    // Get the type of this scalar from the scalar ID. We already checked
-    // for its validity a few lines above.
-    const uint32_t scalarType = internal_GetScalarInfo(locker, uniqueId).kind;
-
-    // Extract the data from the mozilla::Variant.
-    switch (upd.mActionType)
-    {
-      case ScalarActionType::eSet:
-        {
-          switch (scalarType)
-          {
-            case nsITelemetry::SCALAR_TYPE_COUNT:
-              scalar->SetValue(upd.mData->as<uint32_t>());
-              break;
-            case nsITelemetry::SCALAR_TYPE_BOOLEAN:
-              scalar->SetValue(upd.mData->as<bool>());
-              break;
-            case nsITelemetry::SCALAR_TYPE_STRING:
-              scalar->SetValue(upd.mData->as<nsString>());
-              break;
-          }
-          break;
-        }
-      case ScalarActionType::eAdd:
-        {
-          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
-            continue;
-          }
-          // We only support adding uint32_t.
-          scalar->AddValue(upd.mData->as<uint32_t>());
-          break;
-        }
-      case ScalarActionType::eSetMaximum:
-        {
-          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
-            continue;
-          }
-          // We only support SetMaximum on uint32_t.
-          scalar->SetMaximum(upd.mData->as<uint32_t>());
-          break;
-        }
-      default:
-        NS_WARNING("Unsupported action coming from scalar child updates.");
-    }
-  }
+  internal_ApplyScalarActions(locker, aScalarActions, Some(aProcessType));
 }
 
 void
@@ -2898,89 +3289,22 @@ TelemetryScalar::UpdateChildKeyedData(ProcessID aProcessType,
   MOZ_ASSERT(XRE_IsParentProcess(),
              "The stored child processes keyed scalar data must be updated from the parent process.");
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
-  if (!internal_CanRecordBase(locker)) {
+
+  // If scalars are still being deserialized, we need to record the incoming
+  // operations as well.
+  if (internal_IsScalarDeserializing(locker)) {
+    for (const KeyedScalarAction& action : aScalarActions) {
+      // We're only getting immutable access, so let's copy it
+      KeyedScalarAction copy = action;
+      // Fix up the process type
+      copy.mProcessType = aProcessType;
+      internal_RecordKeyedScalarAction(locker, copy);
+    }
+
     return;
   }
 
-  for (auto& upd : aScalarActions) {
-    ScalarKey uniqueId{upd.mId, upd.mDynamic};
-    if (NS_WARN_IF(!internal_IsValidId(locker, uniqueId))) {
-      MOZ_ASSERT_UNREACHABLE("Scalar usage requires valid ids.");
-      continue;
-    }
-
-    if (!internal_IsKeyedScalar(locker, uniqueId)) {
-      continue;
-    }
-
-    // Are we allowed to record this scalar? We don't need to check for
-    // allowed processes here, that's taken care of when recording
-    // in child processes.
-    if (!internal_CanRecordForScalarID(locker, uniqueId)) {
-      continue;
-    }
-
-    // Refresh the data in the parent process with the data coming from the child
-    // processes.
-    KeyedScalar* scalar = nullptr;
-    nsresult rv = internal_GetKeyedScalarByEnum(locker, uniqueId, aProcessType,
-                                                &scalar);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
-      continue;
-    }
-
-    if (upd.mData.isNothing()) {
-      MOZ_ASSERT(false, "There is no data in the KeyedScalarAction.");
-      continue;
-    }
-
-    // Get the type of this scalar from the scalar ID. We already checked
-    // for its validity a few lines above.
-    const uint32_t scalarType = internal_GetScalarInfo(locker, uniqueId).kind;
-
-    // Extract the data from the mozilla::Variant.
-    switch (upd.mActionType)
-    {
-      case ScalarActionType::eSet:
-        {
-          switch (scalarType)
-          {
-            case nsITelemetry::SCALAR_TYPE_COUNT:
-              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
-              break;
-            case nsITelemetry::SCALAR_TYPE_BOOLEAN:
-              scalar->SetValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<bool>());
-              break;
-            default:
-              NS_WARNING("Unsupported type coming from scalar child updates.");
-          }
-          break;
-        }
-      case ScalarActionType::eAdd:
-        {
-          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
-            continue;
-          }
-          // We only support adding on uint32_t.
-          scalar->AddValue(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
-          break;
-        }
-      case ScalarActionType::eSetMaximum:
-        {
-          if (scalarType != nsITelemetry::SCALAR_TYPE_COUNT) {
-            NS_WARNING("Attempting to add on a non count scalar.");
-            continue;
-          }
-          // We only support SetMaximum on uint32_t.
-          scalar->SetMaximum(NS_ConvertUTF8toUTF16(upd.mKey), upd.mData->as<uint32_t>());
-          break;
-        }
-      default:
-        NS_WARNING("Unsupported action coming from keyed scalar child updates.");
-    }
-  }
+  internal_ApplyKeyedScalarActions(locker, aScalarActions, Some(aProcessType));
 }
 
 void
@@ -3325,7 +3649,8 @@ TelemetryScalar::DeserializePersistedScalars(JSContext* aCx, JS::HandleValue aDa
                                                  processScalars[i].first(),
                                                  ScalarActionType::eSet,
                                                  processScalars[i].second(),
-                                                 ProcessID(iter.Key()));
+                                                 ProcessID(iter.Key()),
+                                                 true /* aForce */);
       }
     }
   }
@@ -3497,7 +3822,8 @@ TelemetryScalar::DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValu
                                                       mozilla::Get<1>(processScalars[i]),
                                                       ScalarActionType::eSet,
                                                       mozilla::Get<2>(processScalars[i]),
-                                                      ProcessID(iter.Key()));
+                                                      ProcessID(iter.Key()),
+                                                      true /* aForce */);
       }
     }
   }
