@@ -4096,5 +4096,40 @@ GetPerInterfaceObjectHandle(JSContext* aCx,
   return JS::Handle<JSObject*>::fromMarkedLocation(entrySlot.address());
 }
 
+namespace binding_detail {
+bool
+IsGetterEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                JSJitGetterOp aGetter,
+                const Prefable<const JSPropertySpec>* aAttributes)
+{
+  MOZ_ASSERT(aAttributes);
+  MOZ_ASSERT(aAttributes->specs);
+  do {
+    if (aAttributes->isEnabled(aCx, aObj)) {
+      const JSPropertySpec* specs = aAttributes->specs;
+      do {
+        MOZ_ASSERT(specs->isAccessor());
+        if (specs->isSelfHosted()) {
+          // It won't have a JSJitGetterOp.
+          continue;
+        }
+        const JSJitInfo* info = specs->accessors.getter.native.info;
+        if (!info) {
+          continue;
+        }
+        MOZ_ASSERT(info->type() == JSJitInfo::OpType::Getter);
+        if (info->getter == aGetter) {
+          return true;
+        }
+      } while ((++specs)->name);
+    }
+  } while ((++aAttributes)->specs);
+
+  // Didn't find it.
+  return false;
+}
+
+} // namespace binding_detail
+
 } // namespace dom
 } // namespace mozilla
