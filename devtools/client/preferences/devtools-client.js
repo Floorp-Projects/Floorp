@@ -55,12 +55,9 @@ pref("devtools.inspector.remote", false);
 pref("devtools.inspector.show-three-pane-tooltip", true);
 // Enable the 3 pane mode in the inspector
 pref("devtools.inspector.three-pane-enabled", true);
-// Enable the 3 pane mode toggle in the inspector
-pref("devtools.inspector.three-pane-toggle", true);
 #else
 pref("devtools.inspector.show-three-pane-tooltip", false);
 pref("devtools.inspector.three-pane-enabled", false);
-pref("devtools.inspector.three-pane-toggle", false);
 #endif
 
 // Collapse pseudo-elements by default in the rule-view
