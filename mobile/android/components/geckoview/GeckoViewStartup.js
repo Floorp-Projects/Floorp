@@ -46,6 +46,9 @@ GeckoViewStartup.prototype = {
             "getUserMedia:request",
             "PeerConnection:request",
           ],
+          ppmm: [
+            "GeckoView:AddCameraPermission",
+          ],
         });
 
         if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
