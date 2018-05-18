@@ -70,6 +70,20 @@ struct StyleCache final : public PropItem
   }
 };
 
+/**
+ * Same as TextEditRules, any methods which may modify the DOM tree or
+ * Selection should be marked as MOZ_MUST_USE and return nsresult directly
+ * or with simple class like EditActionResult.  And every caller of them
+ * has to check whether the result is NS_ERROR_EDITOR_DESTROYED and if it is,
+ * its callers should stop handling edit action since after mutation event
+ * listener or selectionchange event listener disables the editor, we should
+ * not modify the DOM tree nor Selection anymore.  And also when methods of
+ * this class call methods of other classes like HTMLEditor and WSRunObject,
+ * they should check whether CanHandleEditAtion() returns false immediately
+ * after the calls.  If it returns false, they should return
+ * NS_ERROR_EDITOR_DESTROYED.
+ */
+
 #define SIZE_STYLE_TABLE 19
 
 class HTMLEditRules : public TextEditRules
@@ -284,6 +298,16 @@ protected:
   MOZ_MUST_USE nsresult
   InsertBRIfNeededInternal(nsINode& aNode, bool aInsertMozBR);
 
+  /**
+   * GetGoodSelPointForNode() finds where at a node you would want to set the
+   * selection if you were trying to have a caret next to it.  Always returns a
+   * valid value (unless mHTMLEditor has gone away).
+   *
+   * @param aNode         The node
+   * @param aAction       Which edge to find:
+   *                        eNext/eNextWord/eToEndOfLine indicates beginning,
+   *                        ePrevious/PreviousWord/eToBeginningOfLine ending.
+   */
   EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
                                         nsIEditor::EDirection aAction);
 
@@ -578,13 +602,28 @@ protected:
   nsresult AppendInnerFormatNodes(nsTArray<OwningNonNull<nsINode>>& aArray,
                                   nsINode* aNode);
   nsresult GetFormatString(nsINode* aNode, nsAString &outFormat);
+
+  /**
+   * aLists and aTables allow the caller to specify what kind of content to
+   * "look inside".  If aTables is Tables::yes, look inside any table content,
+   * and insert the inner content into the supplied nsTArray at offset
+   * aIndex.  Similarly with aLists and list content.  aIndex is updated to
+   * point past inserted elements.
+   */
   enum class Lists { no, yes };
   enum class Tables { no, yes };
   void GetInnerContent(nsINode& aNode,
                        nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
                        int32_t* aIndex, Lists aLists = Lists::yes,
                        Tables aTables = Tables::yes);
+
+  /**
+   * If aNode is the descendant of a listitem, return that li.  But table
+   * element boundaries are stoppers on the search.  Also stops on the active
+   * editor host (contenteditable).  Also test if aNode is an li itself.
+   */
   Element* IsInListItem(nsINode* aNode);
+
   nsAtom& DefaultParagraphSeparator();
 
   /**
@@ -845,27 +884,61 @@ protected:
    */
   MOZ_MUST_USE nsresult NormalizeSelection();
 
+  /**
+   * GetPromotedPoint() figures out where a start or end point for a block
+   * operation really is.
+   */
   EditorDOMPoint GetPromotedPoint(RulesEndpoint aWhere, nsINode& aNode,
                                   int32_t aOffset, EditAction actionID);
+
+  /**
+   * GetPromotedRanges() runs all the selection range endpoint through
+   * GetPromotedPoint().
+   */
   void GetPromotedRanges(nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
                          EditAction inOperationType);
+
+  /**
+   * PromoteRange() expands a range to include any parents for which all
+   * editable children are already in range.
+   */
   void PromoteRange(nsRange& aRange, EditAction inOperationType);
+
+  /**
+   * GetNodesForOperation() runs through the ranges in the array and construct a
+   * new array of nodes to be acted on.
+   *
+   * XXX This name stats with "Get" but actually this modifies the DOM tree with
+   *     transaction.  We should rename this to making clearer what this does.
+   */
   enum class TouchContent { no, yes };
   MOZ_MUST_USE nsresult
   GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
                        nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
                        EditAction aOperationType, TouchContent aTouchContent);
+
   void GetChildNodesForOperation(
          nsINode& aNode,
          nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
+
+  /**
+   * GetNodesFromPoint() constructs a list of nodes from a point that will be
+   * operated on.
+   */
   MOZ_MUST_USE nsresult
   GetNodesFromPoint(const EditorDOMPoint& aPoint, EditAction aOperation,
                     nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                     TouchContent aTouchContent);
+
+  /**
+   * GetNodesFromSelection() constructs a list of nodes from the selection that
+   * will be operated on.
+   */
   MOZ_MUST_USE nsresult
   GetNodesFromSelection(EditAction aOperation,
                         nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                         TouchContent aTouchContent);
+
   enum class EntireList { no, yes };
   MOZ_MUST_USE nsresult
   GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes,
@@ -908,6 +981,12 @@ protected:
    * element, this method never returns the editing host as the result.
    */
   nsIContent* GetHighestInlineParent(nsINode& aNode);
+
+  /**
+   * MakeTransitionList() detects all the transitions in the array, where a
+   * transition means that adjacent nodes in the array don't have the same
+   * parent.
+   */
   void MakeTransitionList(nsTArray<OwningNonNull<nsINode>>& aNodeArray,
                           nsTArray<bool>& aTransitionArray);
 
@@ -1132,7 +1211,11 @@ protected:
    */
   MOZ_MUST_USE nsresult ConfirmSelectionInBody();
 
+  /**
+   * IsEmptyInline: Return true if aNode is an empty inline container
+   */
   bool IsEmptyInline(nsINode& aNode);
+
   bool ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& arrayOfNodes);
 
   /**
