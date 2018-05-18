@@ -333,7 +333,7 @@ StorageDBThread::Shutdown()
 void
 StorageDBThread::SyncPreload(LocalStorageCacheBridge* aCache, bool aForceSync)
 {
-  AUTO_PROFILER_LABEL("StorageDBThread::SyncPreload", STORAGE);
+  AUTO_PROFILER_LABEL("StorageDBThread::SyncPreload", OTHER);
   if (!aForceSync && aCache->LoadedCount()) {
     // Preload already started for this cache, just wait for it to finish.
     // LoadWait will exit after LoadDone on the cache has been called.
