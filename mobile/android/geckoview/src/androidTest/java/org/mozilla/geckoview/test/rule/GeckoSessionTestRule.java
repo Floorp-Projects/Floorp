@@ -1837,13 +1837,16 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     public Object evaluateChromeJS(final @NonNull String js) {
         assertThat("Must enable RDP using @WithDevToolsAPI",
                    mWithDevTools, equalTo(true));
+        ensureChromeProcess();
+        return evaluateJS(mRDPChromeProcess, js);
+    }
 
+    private void ensureChromeProcess() {
         if (mRDPChromeProcess == null) {
             mRDPChromeProcess = sRDPConnection.getChromeProcess();
             assertThat("Should have chrome process object",
                        mRDPChromeProcess, notNullValue());
         }
-        return evaluateJS(mRDPChromeProcess, js);
     }
 
     private Object evaluateJS(final @NonNull Tab tab, final @NonNull String js) {
@@ -1968,5 +1971,17 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         assertThat("Must enable RDP using @WithDevToolsAPI",
                    mWithDevTools, equalTo(true));
         mWaitScopeDelegates.setPrefs(prefs);
+    }
+
+    /**
+     * Force cycle/garbage collection in the content to clean up previous resources. RDP must
+     * be enabled first using the {@link WithDevToolsAPI} annotation.
+     */
+    public void forceGarbageCollection() {
+        assertThat("Must enable RDP using @WithDevToolsAPI",
+                   mWithDevTools, equalTo(true));
+        ensureChromeProcess();
+        mRDPChromeProcess.getMemory().forceCycleCollection();
+        mRDPChromeProcess.getMemory().forceGarbageCollection();
     }
 }

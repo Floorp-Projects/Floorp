@@ -75,4 +75,15 @@ public final class Tab extends Actor {
         final Actor promises = connection.getActor(name);
         return (promises != null) ? (Promises) promises : new Promises(connection, name);
     }
+
+    /**
+     * Get the memory object for access to the memory API.
+     *
+     * @return Memory object.
+     */
+    public Memory getMemory() {
+        final String name = mTab.optString("memoryActor", null);
+        final Actor memory = connection.getActor(name);
+        return (memory != null) ? (Memory) memory : new Memory(connection, name);
+    }
 }

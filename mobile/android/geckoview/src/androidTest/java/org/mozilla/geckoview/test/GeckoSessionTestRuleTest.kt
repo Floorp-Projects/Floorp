@@ -1537,4 +1537,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
             }
         })
     }
+
+    @WithDevToolsAPI
+    @Test fun forceGarbageCollection() {
+        sessionRule.forceGarbageCollection()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
+    }
 }
