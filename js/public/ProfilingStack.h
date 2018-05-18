@@ -197,10 +197,9 @@ class ProfilingStackFrame
         NETWORK,
         GRAPHICS,
         STORAGE,
-        EVENTS,
 
         FIRST    = OTHER,
-        LAST     = EVENTS,
+        LAST     = STORAGE,
     };
 
     static_assert(uint32_t(Category::LAST) <= (UINT32_MAX >> uint32_t(Kind::KIND_BITCOUNT)),
