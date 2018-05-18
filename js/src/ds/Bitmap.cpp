@@ -6,6 +6,8 @@
 
 #include "ds/Bitmap.h"
 
+#include <algorithm>
+
 using namespace js;
 
 SparseBitmap::~SparseBitmap()
@@ -33,7 +35,7 @@ SparseBitmap::createBlock(Data::AddPtr p, size_t blockId)
     BitBlock* block = js_new<BitBlock>();
     if (!block || !data.add(p, blockId, block))
         oomUnsafe.crash("Bitmap OOM");
-    PodZero(block);
+    std::fill(block->begin(), block->end(), 0);
     return *block;
 }
 
