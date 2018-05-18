@@ -32,6 +32,8 @@ class nsStringBundleTextOverride : public nsIStringBundleOverride
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLEOVERRIDE
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
   private:
     nsCOMPtr<nsIPersistentProperties> mValues;
 
