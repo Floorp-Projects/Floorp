@@ -592,35 +592,8 @@ class ObjectGroup : public gc::TenuredCell
 // Structure used to manage the groups in a compartment.
 class ObjectGroupCompartment
 {
-    friend class ObjectGroup;
-
+  private:
     class NewTable;
-
-    // Set of default 'new' or lazy groups in the compartment.
-    NewTable* defaultNewTable;
-    NewTable* lazyTable;
-
-    // Cache for defaultNewGroup. Purged on GC.
-    class DefaultNewGroupCache
-    {
-        ObjectGroup* group_;
-        JSObject* associated_;
-
-      public:
-        DefaultNewGroupCache() { purge(); }
-
-        void purge() {
-            group_ = nullptr;
-        }
-        void put(ObjectGroup* group, JSObject* associated) {
-            group_ = group;
-            associated_ = associated;
-        }
-
-        MOZ_ALWAYS_INLINE ObjectGroup* lookup(const Class* clasp, TaggedProto proto,
-                                              JSObject* associated);
-    };
-    DefaultNewGroupCache defaultNewGroupCache;
 
     struct ArrayObjectKey;
     using ArrayObjectTable = js::GCRekeyableHashMap<ArrayObjectKey,
@@ -639,6 +612,34 @@ class ObjectGroupCompartment
                                            SystemAllocPolicy,
                                            PlainObjectTableSweepPolicy>;
 
+    class AllocationSiteTable;
+
+  private:
+    // Set of default 'new' or lazy groups in the compartment.
+    NewTable* defaultNewTable = nullptr;
+    NewTable* lazyTable = nullptr;
+
+    // This cache is purged on GC.
+    class DefaultNewGroupCache
+    {
+        ObjectGroup* group_;
+        JSObject* associated_;
+
+      public:
+        DefaultNewGroupCache() { purge(); }
+
+        void purge() {
+            group_ = nullptr;
+        }
+        void put(ObjectGroup* group, JSObject* associated) {
+            group_ = group;
+            associated_ = associated;
+        }
+
+        MOZ_ALWAYS_INLINE ObjectGroup* lookup(const Class* clasp, TaggedProto proto,
+                                              JSObject* associated);
+    } defaultNewGroupCache = {};
+
     // Tables for managing groups common to the contents of large script
     // singleton objects and JSON objects. These are vanilla ArrayObjects and
     // PlainObjects, so we distinguish the groups of different ones by looking
@@ -648,14 +649,11 @@ class ObjectGroupCompartment
     // and of the same element type will share a group. All singleton/JSON
     // objects which have the same shape and property types will also share a
     // group. We don't try to collate arrays or objects with type mismatches.
-    ArrayObjectTable* arrayObjectTable;
-    PlainObjectTable* plainObjectTable;
-
-    struct AllocationSiteKey;
-    class AllocationSiteTable;
+    ArrayObjectTable* arrayObjectTable = nullptr;
+    PlainObjectTable* plainObjectTable = nullptr;
 
     // Table for referencing types of objects keyed to an allocation site.
-    AllocationSiteTable* allocationSiteTable;
+    AllocationSiteTable* allocationSiteTable = nullptr;
 
     // A single per-compartment ObjectGroup for all calls to StringSplitString.
     // StringSplitString is always called from self-hosted code, and conceptually
@@ -663,12 +661,19 @@ class ObjectGroupCompartment
     // unified type.  Having a global group for this also allows us to remove
     // the hash-table lookup that would be required if we allocated this group
     // on the basis of call-site pc.
-    ReadBarrieredObjectGroup stringSplitStringGroup;
+    ReadBarrieredObjectGroup stringSplitStringGroup = {};
+
+    // END OF PROPERTIES
+
+  private:
+    friend class ObjectGroup;
+
+    struct AllocationSiteKey;
 
   public:
     struct NewEntry;
 
-    ObjectGroupCompartment();
+    ObjectGroupCompartment() = default;
     ~ObjectGroupCompartment();
 
     void replaceAllocationSiteGroup(JSScript* script, jsbytecode* pc,
