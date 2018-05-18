@@ -302,7 +302,16 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
   let declarations = [getEmptyDeclaration()];
   let lastProp = declarations[0];
 
-  let current = "", hasBang = false;
+  // This tracks the "!important" parsing state.  The states are:
+  // 0 - haven't seen anything
+  // 1 - have seen "!", looking for "important" next (possibly after
+  //     whitespace).
+  // 2 - have seen "!important"
+  let importantState = 0;
+  // This is true if we saw whitespace or comments between the "!" and
+  // the "important".
+  let importantWS = false;
+  let current = "";
   while (true) {
     let token = lexer.nextToken();
     if (!token) {
@@ -322,19 +331,23 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
         lastProp.offsets[0] = token.startOffset;
       }
       lastProp.offsets[1] = token.endOffset;
-    } else if (lastProp.name && !current && !hasBang &&
+    } else if (lastProp.name && !current && !importantState &&
                !lastProp.priority && lastProp.colonOffsets[1]) {
       // Whitespace appearing after the ":" is attributed to it.
       lastProp.colonOffsets[1] = token.endOffset;
+    } else if (importantState === 1) {
+      importantWS = true;
     }
 
     if (token.tokenType === "symbol" && token.text === ":") {
+      // Either way, a "!important" we've seen is no longer valid now.
+      importantState = 0;
+      importantWS = false;
       if (!lastProp.name) {
         // Set the current declaration name if there's no name yet
         lastProp.name = cssTrim(current);
         lastProp.colonOffsets = [token.startOffset, token.endOffset];
         current = "";
-        hasBang = false;
 
         // When parsing a comment body, if the left-hand-side is not a
         // valid property name, then drop it and stop parsing.
@@ -357,28 +370,44 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
         current = "";
         break;
       }
+      if (importantState === 2) {
+        lastProp.priority = "important";
+      } else if (importantState === 1) {
+        current += "!";
+        if (importantWS) {
+          current += " ";
+        }
+      }
       lastProp.value = cssTrim(current);
       current = "";
-      hasBang = false;
+      importantState = 0;
+      importantWS = false;
       declarations.push(getEmptyDeclaration());
       lastProp = declarations[declarations.length - 1];
     } else if (token.tokenType === "ident") {
-      if (token.text === "important" && hasBang) {
-        lastProp.priority = "important";
-        hasBang = false;
+      if (token.text === "important" && importantState === 1) {
+        importantState = 2;
       } else {
-        if (hasBang) {
+        if (importantState > 0) {
           current += "!";
+          if (importantWS) {
+            current += " ";
+          }
+          if (importantState === 2) {
+            current += "important ";
+          }
+          importantState = 0;
+          importantWS = false;
         }
         // Re-escape the token to avoid dequoting problems.
         // See bug 1287620.
         current += CSS.escape(token.text);
       }
     } else if (token.tokenType === "symbol" && token.text === "!") {
-      hasBang = true;
+      importantState = 1;
     } else if (token.tokenType === "whitespace") {
       if (current !== "") {
-        current += " ";
+        current = current.trimRight() + " ";
       }
     } else if (token.tokenType === "comment") {
       if (parseComments && !lastProp.name && !lastProp.value) {
@@ -392,9 +421,20 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
         let lastDecl = declarations.pop();
         declarations = [...declarations, ...newDecls, lastDecl];
       } else {
-        current += " ";
+        current = current.trimRight() + " ";
       }
     } else {
+      if (importantState > 0) {
+        current += "!";
+        if (importantWS) {
+          current += " ";
+        }
+        if (importantState === 2) {
+          current += "important ";
+        }
+        importantState = 0;
+        importantWS = false;
+      }
       current += inputString.substring(token.startOffset, token.endOffset);
     }
   }
@@ -409,6 +449,11 @@ function parseDeclarationsInternal(isCssPropertyKnown, inputString,
       }
     } else {
       // Trailing value found, i.e. value without an ending ;
+      if (importantState === 2) {
+        lastProp.priority = "important";
+      } else if (importantState === 1) {
+        current += "!";
+      }
       lastProp.value = cssTrim(current);
       let terminator = lexer.performEOFFixup("", true);
       lastProp.terminator = terminator + ";";
