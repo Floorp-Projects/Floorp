@@ -43,7 +43,7 @@ class AssetsSearchEngineProviderTest {
         val filter = object : SearchEngineFilter {
             private val exclude = listOf("yahoo", "bing", "ddg")
 
-            override fun filter(cotext: Context, searchEngine: SearchEngine): Boolean {
+            override fun filter(context: Context, searchEngine: SearchEngine): Boolean {
                 return !exclude.contains(searchEngine.identifier)
             }
         }
