@@ -3383,6 +3383,7 @@ private:
 
   static nsIStringBundleService* sStringBundleService;
   static nsIStringBundle* sStringBundles[PropertiesFile_COUNT];
+  class nsContentUtilsReporter;
 
   static nsIContentPolicy* sContentPolicyService;
   static bool sTriedToGetContentPolicy;
