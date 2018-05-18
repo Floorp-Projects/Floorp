@@ -5402,8 +5402,8 @@ UpdateAtomsBitmap(GCParallelTask* task)
     // For convenience sweep these tables non-incrementally as part of bitmap
     // sweeping; they are likely to be much smaller than the main atoms table.
     runtime->unsafeSymbolRegistry().sweep();
-    for (CompartmentsIter comp(runtime, SkipAtoms); !comp.done(); comp.next())
-        comp->sweepVarNames();
+    for (RealmsIter realm(runtime, SkipAtoms); !realm.done(); realm.next())
+        realm->sweepVarNames();
 }
 
 static void
