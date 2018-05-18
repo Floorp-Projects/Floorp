@@ -26,6 +26,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/recordreplay/ParentIPC.h"
+#include "mozilla/JSONWriter.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
@@ -76,6 +77,7 @@
 #include "nsIProcess.h"
 #include "nsIProfileUnlocker.h"
 #include "nsIPromptService.h"
+#include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
@@ -2234,12 +2236,190 @@ static nsresult SelectProfile(nsIProfileLock** aResult,
 }
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
+struct FileWriteFunc : public JSONWriteFunc {
+  FILE* mFile;
+  explicit FileWriteFunc(FILE* aFile) : mFile(aFile) {}
+
+  void Write(const char* aStr) override { fprintf(mFile, "%s", aStr); }
+};
+
+static void SubmitDowngradeTelemetry(const nsCString& aLastVersion,
+                                     bool aHasSync, int32_t aButton) {
+  nsCOMPtr<nsIPrefService> prefSvc =
+      do_GetService("@mozilla.org/preferences-service;1");
+  NS_ENSURE_TRUE_VOID(prefSvc);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefSvc);
+  NS_ENSURE_TRUE_VOID(prefBranch);
+
+  bool enabled;
+  nsresult rv = prefBranch->GetBoolPref(
+      "datareporting.healthreport.uploadEnabled", &enabled);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (!enabled) {
+    return;
+  }
+
+  nsCString server;
+  rv = prefBranch->GetCharPref("toolkit.telemetry.server", server);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCString clientId;
+  rv = prefBranch->GetCharPref("toolkit.telemetry.cachedClientID", clientId);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = prefSvc->GetDefaultBranch(nullptr, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCString channel("default");
+  rv = prefBranch->GetCharPref("app.update.channel", channel);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsID uuid;
+  nsCOMPtr<nsIUUIDGenerator> uuidGen =
+      do_GetService("@mozilla.org/uuid-generator;1");
+  NS_ENSURE_TRUE_VOID(uuidGen);
+  rv = uuidGen->GenerateUUIDInPlace(&uuid);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  char strid[NSID_LENGTH];
+  uuid.ToProvidedString(strid);
+
+  nsCString arch("null");
+  nsCOMPtr<nsIPropertyBag2> sysInfo =
+      do_GetService("@mozilla.org/system-info;1");
+  NS_ENSURE_TRUE_VOID(sysInfo);
+  sysInfo->GetPropertyAsACString(NS_LITERAL_STRING("arch"), arch);
+
+  time_t now;
+  time(&now);
+  char date[sizeof "YYYY-MM-DDThh:mm:ss.000Z"];
+  strftime(date, sizeof date, "%FT%T.000Z", gmtime(&now));
+
+  // NSID_LENGTH includes the trailing \0 and we also want to strip off the
+  // surrounding braces so the length becomes NSID_LENGTH - 3.
+  nsDependentCSubstring pingId(strid + 1, NSID_LENGTH - 3);
+  NS_NAMED_LITERAL_CSTRING(pingType, "downgrade");
+
+  int32_t pos = aLastVersion.Find("_");
+  if (pos == kNotFound) {
+    return;
+  }
+
+  const nsDependentCSubstring lastVersion = Substring(aLastVersion, 0, pos);
+  const nsDependentCSubstring lastBuildId =
+      Substring(aLastVersion, pos + 1, 14);
+
+  nsPrintfCString url("%s/submit/telemetry/%s/%s/%s/%s/%s/%s?v=%d",
+                      server.get(), PromiseFlatCString(pingId).get(),
+                      pingType.get(), (const char*)gAppData->name,
+                      (const char*)gAppData->version, channel.get(),
+                      (const char*)gAppData->buildID,
+                      TELEMETRY_PING_FORMAT_VERSION);
+
+  nsCOMPtr<nsIFile> pingFile;
+  rv = NS_GetSpecialDirectory(XRE_USER_APP_DATA_DIR, getter_AddRefs(pingFile));
+  NS_ENSURE_SUCCESS_VOID(rv);
+  rv = pingFile->Append(NS_LITERAL_STRING("Pending Pings"));
+  NS_ENSURE_SUCCESS_VOID(rv);
+  rv = pingFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+  if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
+    return;
+  }
+  rv = pingFile->Append(NS_ConvertUTF8toUTF16(pingId));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIFile> pingSender;
+  rv = NS_GetSpecialDirectory(NS_GRE_BIN_DIR, getter_AddRefs(pingSender));
+  NS_ENSURE_SUCCESS_VOID(rv);
+#  ifdef XP_WIN
+  pingSender->Append(NS_LITERAL_STRING("pingsender.exe"));
+#  else
+  pingSender->Append(NS_LITERAL_STRING("pingsender"));
+#  endif
+
+  bool exists;
+  rv = pingSender->Exists(&exists);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (!exists) {
+    return;
+  }
+
+  FILE* file;
+  rv = pingFile->OpenANSIFileDesc("w", &file);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  JSONWriter w(MakeUnique<FileWriteFunc>(file));
+  w.Start();
+  {
+    w.StringProperty("type", pingType.get());
+    w.StringProperty("id", PromiseFlatCString(pingId).get());
+    w.StringProperty("creationDate", date);
+    w.IntProperty("version", TELEMETRY_PING_FORMAT_VERSION);
+    w.StringProperty("clientId", clientId.get());
+    w.StartObjectProperty("application");
+    {
+      w.StringProperty("architecture", arch.get());
+      w.StringProperty("buildId", gAppData->buildID);
+      w.StringProperty("name", gAppData->name);
+      w.StringProperty("version", gAppData->version);
+      w.StringProperty("displayVersion", NS_STRINGIFY(MOZ_APP_VERSION_DISPLAY));
+      w.StringProperty("vendor", gAppData->vendor);
+      w.StringProperty("platformVersion", gToolkitVersion);
+#  ifdef TARGET_XPCOM_ABI
+      w.StringProperty("xpcomAbi", TARGET_XPCOM_ABI);
+#  else
+      w.StringProperty("xpcomAbi", "unknown");
+#  endif
+      w.StringProperty("channel", channel.get());
+    }
+    w.EndObject();
+    w.StartObjectProperty("payload");
+    {
+      w.StringProperty("lastVersion", PromiseFlatCString(lastVersion).get());
+      w.StringProperty("lastBuildId", PromiseFlatCString(lastBuildId).get());
+      w.BoolProperty("hasSync", aHasSync);
+      w.IntProperty("button", aButton);
+    }
+    w.EndObject();
+  }
+  w.End();
+
+  fclose(file);
+
+  PathString filePath = pingFile->NativePath();
+  const filesystem::Path::value_type* args[2];
+#  ifdef XP_WIN
+  nsString urlw = NS_ConvertUTF8toUTF16(url);
+  args[0] = urlw.get();
+#  else
+  args[0] = url.get();
+#  endif
+  args[1] = filePath.get();
+
+  nsCOMPtr<nsIProcess> process =
+      do_CreateInstance("@mozilla.org/process/util;1");
+  NS_ENSURE_TRUE_VOID(process);
+  process->Init(pingSender);
+  process->SetStartHidden(true);
+  process->SetNoShell(true);
+
+#  ifdef XP_WIN
+  process->Runw(false, args, 2);
+#  else
+  process->Run(false, args, 2);
+#  endif
+}
+
 static const char kProfileDowngradeURL[] =
     "chrome://mozapps/content/profile/profileDowngrade.xul";
 
-static ReturnAbortOnError CheckDowngrade(
-    nsIFile* aProfileDir, nsIFile* aProfileLocalDir, nsACString& aProfileName,
-    nsINativeAppSupport* aNative, nsIToolkitProfileService* aProfileSvc) {
+static ReturnAbortOnError CheckDowngrade(nsIFile* aProfileDir,
+                                         nsIFile* aProfileLocalDir,
+                                         nsACString& aProfileName,
+                                         nsINativeAppSupport* aNative,
+                                         nsIToolkitProfileService* aProfileSvc,
+                                         const nsCString& aLastVersion) {
   int32_t result = 0;
   nsresult rv;
 
@@ -2306,6 +2486,8 @@ static ReturnAbortOnError CheckDowngrade(
       NS_ENSURE_SUCCESS(rv, rv);
 
       paramBlock->GetInt(1, &result);
+
+      SubmitDowngradeTelemetry(aLastVersion, hasSync, result);
     }
   }
 
@@ -2411,7 +2593,8 @@ static Version GetComparableVersion(const nsCString& aVersionStr) {
 static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
                                const nsCString& aOSABI, nsIFile* aXULRunnerDir,
                                nsIFile* aAppDir, nsIFile* aFlagFile,
-                               bool* aCachesOK, bool* aIsDowngrade) {
+                               bool* aCachesOK, bool* aIsDowngrade,
+                               nsCString& aLastVersion) {
   *aCachesOK = false;
   *aIsDowngrade = false;
 
@@ -2424,19 +2607,19 @@ static bool CheckCompatibility(nsIFile* aProfileDir, const nsCString& aVersion,
   nsresult rv = parser.Init(file);
   if (NS_FAILED(rv)) return false;
 
-  nsAutoCString buf;
-  rv = parser.GetString("Compatibility", "LastVersion", buf);
+  rv = parser.GetString("Compatibility", "LastVersion", aLastVersion);
   if (NS_FAILED(rv)) {
     return false;
   }
 
-  if (!aVersion.Equals(buf)) {
+  if (!aVersion.Equals(aLastVersion)) {
     Version current = GetComparableVersion(aVersion);
-    Version last = GetComparableVersion(buf);
+    Version last = GetComparableVersion(aLastVersion);
     *aIsDowngrade = last > current;
     return false;
   }
 
+  nsAutoCString buf;
   rv = parser.GetString("Compatibility", "LastOSABI", buf);
   if (NS_FAILED(rv) || !aOSABI.Equals(buf)) return false;
 
@@ -4050,13 +4233,15 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
   bool cachesOK;
   bool isDowngrade;
+  nsCString lastVersion;
   bool versionOK = CheckCompatibility(
       mProfD, version, osABI, mDirProvider.GetGREDir(), mAppData->directory,
-      flagFile, &cachesOK, &isDowngrade);
+      flagFile, &cachesOK, &isDowngrade, lastVersion);
 
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
   if (isDowngrade && !CheckArg("allow-downgrade")) {
-    rv = CheckDowngrade(mProfD, mProfLD, mProfileName, mNativeApp, mProfileSvc);
+    rv = CheckDowngrade(mProfD, mProfLD, mProfileName, mNativeApp, mProfileSvc,
+                        lastVersion);
     if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
       *aExitFlag = true;
       return 0;
