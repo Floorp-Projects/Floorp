@@ -287,6 +287,7 @@ OutputParser.prototype = {
     let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
     let fontFamilyNameParts = [];
+    let previousWasBang = false;
 
     let colorOK = function() {
       return options.supportsColor ||
@@ -388,7 +389,10 @@ OutputParser.prototype = {
             this._appendColor(token.text, options);
           } else if (angleOK(token.text)) {
             this._appendAngle(token.text, options);
-          } else if (options.expectFont) {
+          } else if (options.expectFont && !previousWasBang) {
+            // We don't append the identifier if the previous token
+            // was equal to '!', since in that case we expect the
+            // identifier to be equal to 'important'.
             fontFamilyNameParts.push(token.text);
           } else {
             this._appendTextNode(text.substring(token.startOffset,
@@ -457,7 +461,7 @@ OutputParser.prototype = {
             if (parenDepth === 0) {
               outerMostFunctionTakesColor = false;
             }
-          } else if (token.text === "," &&
+          } else if ((token.text === "," || token.text === "!") &&
                      options.expectFont && fontFamilyNameParts.length !== 0) {
             this._appendFontFamily(fontFamilyNameParts.join(""), options);
             fontFamilyNameParts = [];
@@ -475,6 +479,7 @@ OutputParser.prototype = {
                      token.tokenType === "id" || token.tokenType === "hash" ||
                      token.tokenType === "number" || token.tokenType === "dimension" ||
                      token.tokenType === "percentage" || token.tokenType === "dimension");
+      previousWasBang = (token.tokenType === "symbol" && token.text === "!");
     }
 
     let result = this._toDOM();
