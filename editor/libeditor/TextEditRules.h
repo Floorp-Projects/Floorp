@@ -41,6 +41,18 @@ class Selection;
  *    fragments must <B>not</B> go through the editor.
  * 2. Selection must not be explicitly set by the rule method.
  *    Any manipulation of Selection must be done by the editor.
+ * 3. Stop handling edit action if method returns NS_ERROR_EDITOR_DESTROYED
+ *    since if mutation event lister or selectionchange event listener disables
+ *    the editor, we should not modify the DOM tree anymore.
+ * 4. Any method callers have to check nsresult return value (both directly or
+ *    with simple class like EditActionResult) whether the value is
+ *    NS_ERROR_EDITOR_DESTROYED at least.
+ * 5. Callers of methods of other classes such as TextEditor, have to check
+ *    CanHandleEditAction() before checking its result and if the result is
+ *    false, the method have to return NS_ERROR_EDITOR_DESTROYED.  In other
+ *    words, any methods which may change Selection or the DOM tree have to
+ *    return nsresult directly or with simple class like EditActionResult.
+ *    And such methods should be marked as MOZ_MUST_USE.
  */
 class TextEditRules : public nsITimerCallback
                     , public nsINamed
@@ -75,7 +87,14 @@ public:
   virtual nsresult DidDoAction(Selection* aSelection,
                                RulesInfo* aInfo,
                                nsresult aResult);
+
+  /**
+   * Return false if the editor has non-empty text nodes or non-text
+   * nodes.  Otherwise, i.e., there is no meaningful content,
+   * return true.
+   */
   virtual bool DocumentIsEmpty();
+
   virtual nsresult DocumentModified();
 
 protected:

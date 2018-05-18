@@ -393,11 +393,6 @@ TextEditRules::DidDoAction(Selection* aSelection,
   }
 }
 
-/**
- * Return false if the editor has non-empty text nodes or non-text
- * nodes.  Otherwise, i.e., there is no meaningful content,
- * return true.
- */
 bool
 TextEditRules::DocumentIsEmpty()
 {
@@ -1196,13 +1191,6 @@ TextEditRules::WillUndo(bool* aCancel,
   return NS_OK;
 }
 
-/**
- * The idea here is to see if the magic empty node has suddenly reappeared as
- * the result of the undo.  If it has, set our state so we remember it.
- * There is a tradeoff between doing here and at redo, or doing it everywhere
- * else that might care.  Since undo and redo are relatively rare, it makes
- * sense to take the (small) performance hit here.
- */
 nsresult
 TextEditRules::DidUndo(nsresult aResult)
 {
@@ -1217,6 +1205,12 @@ TextEditRules::DidUndo(nsresult aResult)
   if (NS_WARN_IF(!rootElement)) {
     return NS_ERROR_FAILURE;
   }
+
+  // The idea here is to see if the magic empty node has suddenly reappeared as
+  // the result of the undo.  If it has, set our state so we remember it.
+  // There is a tradeoff between doing here and at redo, or doing it everywhere
+  // else that might care.  Since undo and redo are relatively rare, it makes
+  // sense to take the (small) performance hit here.
   nsIContent* node = TextEditorRef().GetLeftmostChild(rootElement);
   if (node && TextEditorRef().IsMozEditorBogusNode(node)) {
     mBogusNode = node;
