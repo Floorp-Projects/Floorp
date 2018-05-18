@@ -87,17 +87,97 @@ enum NewObjectKind {
 /* Type information about an object accessed by a script. */
 class ObjectGroup : public gc::TenuredCell
 {
+  public:
+    class Property;
+
+  private:
+    /* Class shared by objects in this group. */
+    const Class* clasp_; // set by constructor
+
+    /* Prototype shared by objects in this group. */
+    GCPtr<TaggedProto> proto_; // set by constructor
+
+    /* Realm shared by objects in this group. */
+    JS::Realm* realm_;; // set by constructor
+
+    /* Flags for this group. */
+    ObjectGroupFlags flags_; // set by constructor
+
+    // If non-null, holds additional information about this object, whose
+    // format is indicated by the object's addendum kind.
+    void* addendum_ = nullptr;
+
+    /*
+     * Properties of this object.
+     *
+     * The type sets in the properties of a group describe the possible values
+     * that can be read out of that property in actual JS objects. In native
+     * objects, property types account for plain data properties (those with a
+     * slot and no getter or setter hook) and dense elements. In typed objects
+     * and unboxed objects, property types account for object and value
+     * properties and elements in the object, and expando properties in unboxed
+     * objects.
+     *
+     * For accesses on these properties, the correspondence is as follows:
+     *
+     * 1. If the group has unknownProperties(), the possible properties and
+     *    value types for associated JSObjects are unknown.
+     *
+     * 2. Otherwise, for any |obj| in |group|, and any |id| which is a property
+     *    in |obj|, before obj->getProperty(id) the property in |group| for
+     *    |id| must reflect the result of the getProperty.
+     *
+     * There are several exceptions to this:
+     *
+     * 1. For properties of global JS objects which are undefined at the point
+     *    where the property was (lazily) generated, the property type set will
+     *    remain empty, and the 'undefined' type will only be added after a
+     *    subsequent assignment or deletion. After these properties have been
+     *    assigned a defined value, the only way they can become undefined
+     *    again is after such an assign or deletion.
+     *
+     * 2. Array lengths are special cased by the compiler and VM and are not
+     *    reflected in property types.
+     *
+     * 3. In typed objects (but not unboxed objects), the initial values of
+     *    properties (null pointers and undefined values) are not reflected in
+     *    the property types. These values are always possible when reading the
+     *    property.
+     *
+     * We establish these by using write barriers on calls to setProperty and
+     * defineProperty which are on native properties, and on any jitcode which
+     * might update the property with a new type.
+     */
+    Property** propertySet = nullptr;
+
+    // END OF PROPERTIES
+
+  private:
+    static inline uint32_t offsetOfClasp() {
+        return offsetof(ObjectGroup, clasp_);
+    }
+
+    static inline uint32_t offsetOfProto() {
+        return offsetof(ObjectGroup, proto_);
+    }
+
+    static inline uint32_t offsetOfRealm() {
+        return offsetof(ObjectGroup, realm_);
+    }
+
+    static inline uint32_t offsetOfFlags() {
+        return offsetof(ObjectGroup, flags_);
+    }
+
+    static inline uint32_t offsetOfAddendum() {
+        return offsetof(ObjectGroup, addendum_);
+    }
+
     friend class gc::GCRuntime;
     friend class gc::GCTrace;
 
-    /* Class shared by objects in this group. */
-    const Class* clasp_;
-
-    /* Prototype shared by objects in this group. */
-    GCPtr<TaggedProto> proto_;
-
-    /* Realm shared by objects in this group. */
-    JS::Realm* realm_;
+    // See JSObject::offsetOfGroup() comment.
+    friend class js::jit::MacroAssembler;
 
   public:
     const Class* clasp() const {
@@ -156,10 +236,6 @@ class ObjectGroup : public gc::TenuredCell
     JSCompartment* maybeCompartment() const { return compartment(); }
     JS::Realm* realm() const { return realm_; }
 
-  private:
-    /* Flags for this group. */
-    ObjectGroupFlags flags_;
-
   public:
     // Kinds of addendums which can be attached to ObjectGroups.
     enum AddendumKind {
@@ -191,10 +267,6 @@ class ObjectGroup : public gc::TenuredCell
     };
 
   private:
-    // If non-null, holds additional information about this object, whose
-    // format is indicated by the object's addendum kind.
-    void* addendum_;
-
     void setAddendum(AddendumKind kind, void* addendum, bool writeBarrier = true);
 
     AddendumKind addendumKind() const {
@@ -333,49 +405,6 @@ class ObjectGroup : public gc::TenuredCell
         static jsid getKey(Property* p) { return p->id; }
     };
 
-  private:
-    /*
-     * Properties of this object.
-     *
-     * The type sets in the properties of a group describe the possible values
-     * that can be read out of that property in actual JS objects. In native
-     * objects, property types account for plain data properties (those with a
-     * slot and no getter or setter hook) and dense elements. In typed objects
-     * and unboxed objects, property types account for object and value
-     * properties and elements in the object, and expando properties in unboxed
-     * objects.
-     *
-     * For accesses on these properties, the correspondence is as follows:
-     *
-     * 1. If the group has unknownProperties(), the possible properties and
-     *    value types for associated JSObjects are unknown.
-     *
-     * 2. Otherwise, for any |obj| in |group|, and any |id| which is a property
-     *    in |obj|, before obj->getProperty(id) the property in |group| for
-     *    |id| must reflect the result of the getProperty.
-     *
-     * There are several exceptions to this:
-     *
-     * 1. For properties of global JS objects which are undefined at the point
-     *    where the property was (lazily) generated, the property type set will
-     *    remain empty, and the 'undefined' type will only be added after a
-     *    subsequent assignment or deletion. After these properties have been
-     *    assigned a defined value, the only way they can become undefined
-     *    again is after such an assign or deletion.
-     *
-     * 2. Array lengths are special cased by the compiler and VM and are not
-     *    reflected in property types.
-     *
-     * 3. In typed objects (but not unboxed objects), the initial values of
-     *    properties (null pointers and undefined values) are not reflected in
-     *    the property types. These values are always possible when reading the
-     *    property.
-     *
-     * We establish these by using write barriers on calls to setProperty and
-     * defineProperty which are on native properties, and on any jitcode which
-     * might update the property with a new type.
-     */
-    Property** propertySet;
   public:
 
     inline ObjectGroup(const Class* clasp, TaggedProto proto, JS::Realm* realm,
@@ -463,30 +492,6 @@ class ObjectGroup : public gc::TenuredCell
     void finalize(FreeOp* fop);
 
     static const JS::TraceKind TraceKind = JS::TraceKind::ObjectGroup;
-
-  private:
-    // See JSObject::offsetOfGroup() comment.
-    friend class js::jit::MacroAssembler;
-
-    static inline uint32_t offsetOfClasp() {
-        return offsetof(ObjectGroup, clasp_);
-    }
-
-    static inline uint32_t offsetOfProto() {
-        return offsetof(ObjectGroup, proto_);
-    }
-
-    static inline uint32_t offsetOfRealm() {
-        return offsetof(ObjectGroup, realm_);
-    }
-
-    static inline uint32_t offsetOfAddendum() {
-        return offsetof(ObjectGroup, addendum_);
-    }
-
-    static inline uint32_t offsetOfFlags() {
-        return offsetof(ObjectGroup, flags_);
-    }
 
   public:
     const ObjectGroupFlags* addressOfFlags() const {
