@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include "mozilla/AllocPolicy.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/ScopeExit.h"
@@ -538,61 +539,101 @@ BufferList<AllocPolicy>::Extract(IterImpl& aIter, size_t aSize, bool* aSuccess)
   MOZ_ASSERT(aSize % kSegmentAlignment == 0);
   MOZ_ASSERT(intptr_t(aIter.mData) % kSegmentAlignment == 0);
 
-  IterImpl iter = aIter;
-  size_t size = aSize;
-  size_t toCopy = std::min(size, aIter.RemainingInSegment());
-  MOZ_ASSERT(toCopy % kSegmentAlignment == 0);
-
-  BufferList result(0, toCopy, mStandardCapacity);
-  BufferList error(0, 0, mStandardCapacity);
-
-  // Copy the head
-  if (!result.WriteBytes(aIter.mData, toCopy)) {
+  auto failure = [this, aSuccess]() {
     *aSuccess = false;
-    return error;
-  }
-  iter.Advance(*this, toCopy);
-  size -= toCopy;
+    return BufferList(0, 0, mStandardCapacity);
+  };
 
-  // Move segments to result
-  auto resultGuard = MakeScopeExit([&] {
-    *aSuccess = false;
-    result.mSegments.erase(result.mSegments.begin()+1, result.mSegments.end());
-  });
-
-  size_t movedSize = 0;
-  uintptr_t toRemoveStart = iter.mSegment;
-  uintptr_t toRemoveEnd = iter.mSegment;
-  while (!iter.Done() &&
-         !iter.HasRoomFor(size)) {
-    if (!result.mSegments.append(Segment(mSegments[iter.mSegment].mData,
-                                         mSegments[iter.mSegment].mSize,
-                                         mSegments[iter.mSegment].mCapacity))) {
-      return error;
+  // Number of segments we'll need to copy data from to satisfy the request.
+  size_t segmentsNeeded = 0;
+  // If this is None then the last segment is a full segment, otherwise we need
+  // to copy this many bytes.
+  Maybe<size_t> lastSegmentSize;
+  {
+    // Copy of the iterator to walk the BufferList and see how many segments we
+    // need to copy.
+    IterImpl iter = aIter;
+    size_t remaining = aSize;
+    while (!iter.Done() && remaining &&
+           remaining >= iter.RemainingInSegment()) {
+      remaining -= iter.RemainingInSegment();
+      iter.Advance(*this, iter.RemainingInSegment());
+      segmentsNeeded++;
     }
-    movedSize += iter.RemainingInSegment();
-    size -= iter.RemainingInSegment();
-    toRemoveEnd++;
-    iter.Advance(*this, iter.RemainingInSegment());
-  }
 
-  if (size)  {
-    if (!iter.HasRoomFor(size) ||
-        !result.WriteBytes(iter.Data(), size)) {
-      return error;
+    if (remaining) {
+      if (iter.Done()) {
+        // We reached the end of the BufferList and there wasn't enough data to
+        // satisfy the request.
+        return failure();
+      }
+      lastSegmentSize.emplace(remaining);
+      // The last block also counts as a segment. This makes the conditionals
+      // on segmentsNeeded work in the rest of the function.
+      segmentsNeeded++;
     }
-    iter.Advance(*this, size);
   }
 
-  mSegments.erase(mSegments.begin() + toRemoveStart, mSegments.begin() + toRemoveEnd);
-  mSize -= movedSize;
-  aIter.mSegment = iter.mSegment - (toRemoveEnd - toRemoveStart);
-  aIter.mData = iter.mData;
-  aIter.mDataEnd = iter.mDataEnd;
-  MOZ_ASSERT(aIter.mDataEnd == mSegments[aIter.mSegment].End());
+  BufferList result(0, 0, mStandardCapacity);
+  if (!result.mSegments.reserve(segmentsNeeded + lastSegmentSize.isSome())) {
+    return failure();
+  }
+
+  // Copy the first segment, it's special because we can't just steal the
+  // entire Segment struct from this->mSegments.
+  size_t firstSegmentSize = std::min(aSize, aIter.RemainingInSegment());
+  if (!result.WriteBytes(aIter.Data(), firstSegmentSize)) {
+    return failure();
+  }
+  aIter.Advance(*this, firstSegmentSize);
+  segmentsNeeded--;
+
+  // The entirety of the request wasn't in the first segment, now copy the
+  // rest.
+  if (segmentsNeeded) {
+    char* finalSegment = nullptr;
+    // Pre-allocate the final segment so that if this fails, we return before
+    // we delete the elements from |this->mSegments|.
+    if (lastSegmentSize.isSome()) {
+      MOZ_RELEASE_ASSERT(mStandardCapacity >= *lastSegmentSize);
+      finalSegment = this->template pod_malloc<char>(mStandardCapacity);
+      if (!finalSegment) {
+        return failure();
+      }
+    }
+
+    size_t copyStart = aIter.mSegment;
+    // Copy segments from this over to the result and remove them from our
+    // storage. Not needed if the only segment we need to copy is the last
+    // partial one.
+    size_t segmentsToCopy = segmentsNeeded - lastSegmentSize.isSome();
+    for (size_t i = 0; i < segmentsToCopy; ++i) {
+      result.mSegments.infallibleAppend(
+        Segment(mSegments[aIter.mSegment].mData,
+                mSegments[aIter.mSegment].mSize,
+                mSegments[aIter.mSegment].mCapacity));
+      aIter.Advance(*this, aIter.RemainingInSegment());
+    }
+    MOZ_RELEASE_ASSERT(aIter.mSegment == copyStart + segmentsToCopy);
+    mSegments.erase(mSegments.begin() + copyStart,
+                    mSegments.begin() + copyStart + segmentsToCopy);
+
+    // Reset the iter's position for what we just deleted.
+    aIter.mSegment -= segmentsToCopy;
+
+    if (lastSegmentSize.isSome()) {
+      // We called reserve() on result.mSegments so infallibleAppend is safe.
+      result.mSegments.infallibleAppend(
+        Segment(finalSegment, 0, mStandardCapacity));
+      bool r = result.WriteBytes(aIter.Data(), *lastSegmentSize);
+      MOZ_RELEASE_ASSERT(r);
+      aIter.Advance(*this, *lastSegmentSize);
+    }
+  }
+
+  mSize -= aSize;
   result.mSize = aSize;
 
-  resultGuard.release();
   *aSuccess = true;
   return result;
 }
