@@ -433,8 +433,13 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
      * @return search engine name.
      */
     private String getDefaultEngineNameFromLocale() {
+        final InputStream in = getInputStreamFromSearchPluginsJar("list.json");
+        if (in == null) {
+            Log.e(LOG_TAG, "Error missing list.json");
+            return null;
+        }
         try {
-            final JSONObject browsersearch = new JSONObject(RawResource.getAsString(context, R.raw.browsersearch));
+            final JSONObject json = new JSONObject(FileUtils.readStringFromInputStreamAndCloseStream(in, MAX_LISTJSON_SIZE));
 
             // Get the region used to fence search engines.
             String region = fetchCountryCode();
@@ -447,25 +452,31 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                             .apply();
 
             if (region != null) {
-                if (browsersearch.has("regions")) {
-                    final JSONObject regions = browsersearch.getJSONObject("regions");
-                    if (regions.has(region)) {
-                        final JSONObject regionData = regions.getJSONObject(region);
+                if (json.has(region)) {
+                    final JSONObject regionData = json.getJSONObject(region);
+                    if (regionData.has("searchDefault")) {
                         Log.d(LOG_TAG, "Found region-specific default engine name in browsersearch.json.");
-                        return regionData.getString("default");
+                        return regionData.getString("searchDefault");
                     }
                 }
             }
 
             // Either we have no geoip region, or we didn't find the right region and we are falling back to the default.
-            if (browsersearch.has("default")) {
-                Log.d(LOG_TAG, "Found default engine name in browsersearch.json.");
-                return browsersearch.getString("default");
+            if (json.has("default")) {
+                final JSONObject defaultData = json.getJSONObject("default");
+                if (defaultData.has("searchDefault")) {
+                  Log.d(LOG_TAG, "Found default engine name in list.json.");
+                  return defaultData.getString("searchDefault");
+                }
             }
+            // We should never get here
+            Log.e(LOG_TAG, "Error missing defaultSearch in list.json");
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Error getting search engine name from browsersearch.json", e);
+            Log.e(LOG_TAG, "Error getting search engine name from list.json", e);
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error parsing browsersearch.json", e);
+            Log.e(LOG_TAG, "Error parsing list.json", e);
+        } finally {
+            IOUtils.safeStreamClose(in);
         }
         return null;
     }

@@ -3,6 +3,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
+ * General styles
+ */
+
+:root[platform="linux"],
+:root[platform="linux"] button {
+  font-size: 11px;
+}
+
+h1 {
+  font-size: 22px;
+  font-weight: normal;
+}
+
+a {
+  margin: 0 10px;
+}
+
+a,
+a:hover,
+a:visited {
+  color: var(--blue-60) !important;
+  cursor: pointer;
+}
+
+a.disabled,
+a.disabled:hover,
+a.disabled:visited {
+  color: var(--grey-30) !important;
+  cursor: default;
+}
+
+/*
  * The current layout of the application panel is
  *
  *  +---------------------------------------------+
@@ -17,32 +49,12 @@
  */
 .application {
   height: 100%;
-  padding: 0 0 0 20px;
+  padding: 0 20px;
   overflow: auto;
   display: flex;
   flex-direction: column;
 }
 
-.application.empty {
+.application--empty {
   background-color: var(--grey-30);
-}
-
-h1 {
-  font-size: 22px;
-  font-weight: normal;
-}
-
-a,
-a:hover,
-a:visited {
-  color: var(--blue-60) !important;
-  margin: 0 10px;
-  cursor: pointer;
-}
-
-a.disabled,
-a.disabled:hover,
-a.disabled:visited {
-  color: var(--grey-30) !important;
-  cursor: default;
 }

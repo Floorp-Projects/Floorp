@@ -543,6 +543,7 @@ pub enum FilterOp {
 pub struct IframeDisplayItem {
     pub clip_id: ClipId,
     pub pipeline_id: PipelineId,
+    pub ignore_missing_pipeline: bool,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]

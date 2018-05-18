@@ -216,9 +216,11 @@ impl ClipScrollNode {
             NodeType::ScrollFrame(ref mut scrolling) => {
                 let scroll_sensitivity = scrolling.scroll_sensitivity;
                 let scrollable_size = scrolling.scrollable_size;
+                let viewport_rect = scrolling.viewport_rect;
                 *scrolling = *old_scrolling_state;
                 scrolling.scroll_sensitivity = scroll_sensitivity;
                 scrolling.scrollable_size = scrollable_size;
+                scrolling.viewport_rect = viewport_rect;
             }
             _ if old_scrolling_state.offset != LayoutVector2D::zero() => {
                 warn!("Tried to scroll a non-scroll node.")

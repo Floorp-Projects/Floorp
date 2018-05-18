@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
-use api::{DeviceUintRect, DeviceUintPoint, DeviceUintSize, ExternalImageType, FilterOp, ImageRendering, LayoutRect};
+use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering, LayoutRect};
 use api::{DeviceIntPoint, SubpixelDirection, YuvColorSpace, YuvFormat};
 use api::{LayoutToWorldTransform, WorldPixel};
 use border::{BorderCornerInstance, BorderCornerSide, BorderEdgeKind};
@@ -1755,10 +1755,7 @@ pub fn resolve_image(
                         uv_rect_handle: cache_handle,
                         uv_rect: DeviceUintRect::new(
                             DeviceUintPoint::zero(),
-                            DeviceUintSize::new(
-                                image_properties.descriptor.width,
-                                image_properties.descriptor.height,
-                            )
+                            image_properties.descriptor.size,
                         ),
                         texture_layer: 0,
                     };

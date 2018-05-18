@@ -1035,20 +1035,6 @@ html|*.addon-webext-perm-list {
   margin-top: -7px;
 }
 
-.gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
-  color: hsl(210,11%,16%);
-}
-
-/* Error counter */
-
-#developer-toolbar-toolbox-button[error-count]:before {
-  color: #FDF3DE;
-  min-width: 16px;
-  text-shadow: none;
-  background-image: linear-gradient(#B4211B, #8A1915);
-  border-radius: 1px;
-}
-
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css

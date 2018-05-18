@@ -288,8 +288,7 @@ pub struct WrImageDescriptor {
 impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
     fn into(self) -> ImageDescriptor {
         ImageDescriptor {
-            width: self.width,
-            height: self.height,
+            size: DeviceUintSize::new(self.width, self.height),
             stride: if self.stride != 0 {
                 Some(self.stride)
             } else {
@@ -1869,7 +1868,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
     let mut prim_info = LayoutPrimitiveInfo::new(rect);
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id);
+    state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id, true);
 }
 
 #[no_mangle]

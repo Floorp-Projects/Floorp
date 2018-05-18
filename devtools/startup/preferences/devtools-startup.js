@@ -15,9 +15,6 @@ pref("devtools.theme", "dark", sticky);
 pref("devtools.theme", "light", sticky);
 #endif
 
-// Should the devtools toolbar be opened on startup
-pref("devtools.toolbar.visible", false);
-
 // Pref to drive the devtools onboarding flow experiment. States:
 // - off: forces devtools.enabled to true
 // - on: devtools.enabled is not forced to true.

@@ -844,10 +844,10 @@ async function test_geckoviewSpecificScalar() {
   Telemetry.scalarAdd(GECKOVIEW_ONLY_SCALAR, expectedValue);
   Telemetry.scalarAdd(MOBILE_ONLY_SCALAR, expectedValue);
   Telemetry.scalarAdd(MULTIPRODUCT_SCALAR, expectedValue);
+  Telemetry.scalarSet(DEFAULT_PRODUCT_SCALAR, expectedValue);
 
-  // Try to set the desktop-only and default scalar to some value. We will not be recording the value,
+  // Try to set the desktop-only scalar to some value. We will not be recording the value,
   // but we shouldn't throw.
-  Telemetry.scalarSet(DEFAULT_PRODUCT_SCALAR, 11715);
   Telemetry.scalarSet(DESKTOP_ONLY_SCALAR, 11715);
   Telemetry.scalarSetMaximum(DESKTOP_ONLY_SCALAR, 11715);
 
@@ -858,8 +858,8 @@ async function test_geckoviewSpecificScalar() {
   Assert.equal(scalars[GECKOVIEW_ONLY_SCALAR], expectedValue, "The geckoview-only scalar must contain the right value");
   Assert.equal(scalars[MOBILE_ONLY_SCALAR], expectedValue, "The mobile-only scalar must contain the right value");
   Assert.equal(scalars[MULTIPRODUCT_SCALAR], expectedValue, "The multiproduct scalar must contain the right value");
+  Assert.equal(scalars[DEFAULT_PRODUCT_SCALAR], expectedValue, "The default products scalar must contain the right value");
 
-  Assert.ok(!(DEFAULT_PRODUCT_SCALAR in scalars), "The default products scalar must contain the right value");
   Assert.ok(!(DESKTOP_ONLY_SCALAR in scalars), "The desktop-only scalar must not be persisted.");
 
   // Reset to original environment

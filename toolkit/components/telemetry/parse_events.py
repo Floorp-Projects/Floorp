@@ -261,7 +261,7 @@ class EventData:
     @property
     def products(self):
         """Get the non-empty list of products to record data on"""
-        return self._definition.get('products', ["firefox", "fennec"])
+        return self._definition.get('products', ["all"])
 
     @property
     def products_enum(self):

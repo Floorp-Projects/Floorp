@@ -4,10 +4,21 @@
 
 use api::{DevicePoint, LayoutToWorldTransform, WorldToLayoutTransform};
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
-use prim_store::EdgeAaSegmentMask;
+use prim_store::{VECS_PER_SEGMENT, EdgeAaSegmentMask};
 use render_task::RenderTaskAddress;
+use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 
 // Contains type that must exactly match the same structures declared in GLSL.
+
+const INT_BITS: usize = 31; //TODO: convert to unsigned
+const CLIP_CHAIN_RECT_BITS: usize = 22;
+const SEGMENT_BITS: usize = INT_BITS - CLIP_CHAIN_RECT_BITS;
+// The guard ensures (at compile time) that the designated number of bits cover
+// the maximum supported segment count for the texture width.
+const _SEGMENT_GUARD: usize = (1 << SEGMENT_BITS) * VECS_PER_SEGMENT - MAX_VERTEX_TEXTURE_WIDTH;
+const EDGE_FLAG_BITS: usize = 4;
+const BRUSH_FLAG_BITS: usize = 4;
+const CLIP_SCROLL_INDEX_BITS: usize = INT_BITS - EDGE_FLAG_BITS - BRUSH_FLAG_BITS;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
@@ -18,7 +29,7 @@ pub struct ZBufferIdGenerator {
 }
 
 impl ZBufferIdGenerator {
-    pub fn new() -> ZBufferIdGenerator {
+    pub fn new() -> Self {
         ZBufferIdGenerator {
             next: 0
         }
@@ -133,9 +144,9 @@ impl SimplePrimitiveInstance {
         PrimitiveInstance {
             data: [
                 self.specific_prim_address.as_int(),
-                self.task_address.0 as i32,
-                self.clip_task_address.0 as i32,
-                ((self.clip_chain_rect_index.0 as i32) << 16) | self.scroll_id.0 as i32,
+                self.task_address.0 as i32 | (self.clip_task_address.0 as i32) << 16,
+                self.clip_chain_rect_index.0 as i32,
+                self.scroll_id.0 as i32,
                 self.z.0,
                 data0,
                 data1,
@@ -236,15 +247,18 @@ pub struct BrushInstance {
 
 impl From<BrushInstance> for PrimitiveInstance {
     fn from(instance: BrushInstance) -> Self {
+        debug_assert_eq!(0, instance.clip_chain_rect_index.0 >> CLIP_CHAIN_RECT_BITS);
+        debug_assert_eq!(0, instance.scroll_id.0 >> CLIP_SCROLL_INDEX_BITS);
+        debug_assert_eq!(0, instance.segment_index >> SEGMENT_BITS);
         PrimitiveInstance {
             data: [
                 instance.picture_address.0 as i32 | (instance.clip_task_address.0 as i32) << 16,
                 instance.prim_address.as_int(),
-                ((instance.clip_chain_rect_index.0 as i32) << 16) | instance.scroll_id.0 as i32,
+                instance.clip_chain_rect_index.0 as i32 | (instance.segment_index << CLIP_CHAIN_RECT_BITS),
                 instance.z.0,
-                instance.segment_index |
-                    ((instance.edge_flags.bits() as i32) << 16) |
-                    ((instance.brush_flags.bits() as i32) << 24),
+                instance.scroll_id.0 as i32 |
+                    ((instance.edge_flags.bits() as i32) << CLIP_SCROLL_INDEX_BITS) |
+                    ((instance.brush_flags.bits() as i32) << (CLIP_SCROLL_INDEX_BITS + EDGE_FLAG_BITS)),
                 instance.user_data[0],
                 instance.user_data[1],
                 instance.user_data[2],

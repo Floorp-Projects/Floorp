@@ -514,7 +514,7 @@ impl YamlFrameWriter {
                     }
 
                     let stride = img.descriptor.stride.unwrap_or(
-                        img.descriptor.width * img.descriptor.format.bytes_per_pixel(),
+                        img.descriptor.size.width * img.descriptor.format.bytes_per_pixel(),
                     );
                     let bytes = match img.data {
                         ImageData::Raw(ref v) => (**v).clone(),
@@ -525,8 +525,8 @@ impl YamlFrameWriter {
                     self.images.insert(
                         img.key,
                         CachedImage {
-                            width: img.descriptor.width,
-                            height: img.descriptor.height,
+                            width: img.descriptor.size.width,
+                            height: img.descriptor.size.height,
                             stride,
                             format: img.descriptor.format,
                             bytes: Some(bytes),
@@ -537,8 +537,8 @@ impl YamlFrameWriter {
                 }
                 ResourceUpdate::UpdateImage(ref img) => {
                     if let Some(ref mut data) = self.images.get_mut(&img.key) {
-                        assert_eq!(data.width, img.descriptor.width);
-                        assert_eq!(data.height, img.descriptor.height);
+                        assert_eq!(data.width, img.descriptor.size.width);
+                        assert_eq!(data.height, img.descriptor.size.height);
                         assert_eq!(data.format, img.descriptor.format);
 
                         if let ImageData::Raw(ref bytes) = img.data {
@@ -1013,6 +1013,7 @@ impl YamlFrameWriter {
                 Iframe(item) => {
                     str_node(&mut v, "type", "iframe");
                     u32_vec_node(&mut v, "id", &[item.pipeline_id.0, item.pipeline_id.1]);
+                    bool_node(&mut v, "ignore_missing_pipeline", item.ignore_missing_pipeline);
                 }
                 PushStackingContext(item) => {
                     str_node(&mut v, "type", "stacking-context");

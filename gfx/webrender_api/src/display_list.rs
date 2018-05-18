@@ -1491,10 +1491,16 @@ impl DisplayListBuilder {
         assert!(!self.clip_stack.is_empty());
     }
 
-    pub fn push_iframe(&mut self, info: &LayoutPrimitiveInfo, pipeline_id: PipelineId) {
+    pub fn push_iframe(
+        &mut self,
+        info: &LayoutPrimitiveInfo,
+        pipeline_id: PipelineId,
+        ignore_missing_pipeline: bool
+    ) {
         let item = SpecificDisplayItem::Iframe(IframeDisplayItem {
             clip_id: self.generate_clip_id(),
             pipeline_id,
+            ignore_missing_pipeline,
         });
         self.push_item(item, info);
     }

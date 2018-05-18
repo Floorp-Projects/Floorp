@@ -42,20 +42,17 @@
 
 .flexbox-container li,
 .grid-container li {
-  display: flex;
-  align-items: center;
   padding: 3px 0;
 }
 
-.flexbox-container input
+.flexbox-container input,
 .grid-container input {
   margin-inline-end: 7px;
+  vertical-align: middle;
 }
 
 .flexbox-container label,
 .grid-container label {
-  display: flex;
-  align-items: center;
   margin-inline-start: -3px;
 }
 
@@ -143,6 +140,8 @@
   border: 1px solid var(--theme-highlight-gray);
   border-radius: 50%;
   cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .grid-color-value {
