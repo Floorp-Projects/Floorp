@@ -196,10 +196,10 @@ describe("SnippetsFeed", () => {
   });
   it("should call .getTotalBookmarksCount when TOTAL_BOOKMARKS_REQUEST is received", async () => {
     const feed = new SnippetsFeed();
-    const browser = {};
+    const portId = "1234";
     sandbox.spy(feed, "getTotalBookmarksCount");
-    feed.onAction({type: at.TOTAL_BOOKMARKS_REQUEST, _target: {browser}});
-    assert.calledWith(feed.getTotalBookmarksCount, browser);
+    feed.onAction({type: at.TOTAL_BOOKMARKS_REQUEST, meta: {fromTarget: portId}});
+    assert.calledWith(feed.getTotalBookmarksCount, portId);
   });
   it("should dispatch a TOTAL_BOOKMARKS_RESPONSE action when .getTotalBookmarksCount is called", async () => {
     const feed = new SnippetsFeed();
