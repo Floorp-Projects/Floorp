@@ -2854,18 +2854,20 @@ public:
   // Set the nsDisplayList that this item belongs to, and what
   // index it is within that list. Temporary state for merging
   // used by RetainedDisplayListBuilder.
-  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex)
+  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex, uint32_t aListKey, uint32_t aNestingDepth)
   {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mOldList = reinterpret_cast<uintptr_t>(aList);
+    mOldListKey = aListKey;
+    mOldNestingDepth = aNestingDepth;
 #endif
     mOldListIndex = aIndex;
   }
-  OldListIndex GetOldListIndex(nsDisplayList* aList)
+  OldListIndex GetOldListIndex(nsDisplayList* aList, uint32_t aListKey)
   {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
-      MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d", GetPerFrameKey());
+      MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d (outer type was %d at depth %d, now is %d)", GetPerFrameKey(), mOldListKey, mOldNestingDepth, aListKey);
     }
 #endif
     return mOldListIndex;
@@ -2909,6 +2911,8 @@ protected:
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 public:
   uintptr_t mOldList = 0;
+  uint32_t mOldListKey = 0;
+  uint32_t mOldNestingDepth = 0;
   bool mMergedItem = false;
   bool mPreProcessedItem = false;
 protected:
