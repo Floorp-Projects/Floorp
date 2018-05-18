@@ -254,12 +254,6 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           default=3600,
                           help="Maximum time, in seconds, to run in --verify mode..")
 
-        self.add_argument("--run-slower",
-                          action="store_true",
-                          dest="runSlower",
-                          default=False,
-                          help="Add a delay between each test to let the browser catch up.")
-
         mozlog.commandline.add_logging_group(self)
 
     def get_ip(self):
