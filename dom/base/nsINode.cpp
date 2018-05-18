@@ -449,6 +449,20 @@ nsINode::GetComposedDocInternal() const
     OwnerDoc() : nullptr;
 }
 
+DocumentOrShadowRoot*
+nsINode::GetUncomposedDocOrConnectedShadowRoot()
+{
+  if (IsInUncomposedDoc()) {
+    return OwnerDoc();
+  }
+
+  if (IsInComposedDoc() && HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    return AsContent()->GetContainingShadow();
+  }
+
+  return nullptr;
+}
+
 #ifdef DEBUG
 void
 nsINode::CheckNotNativeAnonymous() const
