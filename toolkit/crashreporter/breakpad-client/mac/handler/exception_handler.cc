@@ -561,37 +561,37 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
           self->SuspendThreads();
 
 #if USE_PROTECTED_ALLOCATIONS
-        if (gBreakpadAllocator)
-          gBreakpadAllocator->Unprotect();
+          if (gBreakpadAllocator)
+            gBreakpadAllocator->Unprotect();
 #endif
 
-        int subcode = 0;
-        if (receive.exception == EXC_BAD_ACCESS && receive.code_count > 1)
-          subcode = receive.code[1];
+          int subcode = 0;
+          if (receive.exception == EXC_BAD_ACCESS && receive.code_count > 1)
+            subcode = receive.code[1];
 
-        // Generate the minidump with the exception data.
-        self->WriteMinidumpWithException(receive.exception, receive.code[0],
-                                         subcode, NULL, receive.thread.name,
-                                         true, false);
+          // Generate the minidump with the exception data.
+          self->WriteMinidumpWithException(receive.exception, receive.code[0],
+                                           subcode, NULL, receive.thread.name,
+                                           true, false);
 
 #if USE_PROTECTED_ALLOCATIONS
-        // This may have become protected again within
-        // WriteMinidumpWithException, but it needs to be unprotected for
-        // UninstallHandler.
-        if (gBreakpadAllocator)
-          gBreakpadAllocator->Unprotect();
+          // This may have become protected again within
+          // WriteMinidumpWithException, but it needs to be unprotected for
+          // UninstallHandler.
+          if (gBreakpadAllocator)
+            gBreakpadAllocator->Unprotect();
 #endif
 
-        self->UninstallHandler(true);
+          self->UninstallHandler(true);
 
 #if USE_PROTECTED_ALLOCATIONS
-        if (gBreakpadAllocator)
-          gBreakpadAllocator->Protect();
+          if (gBreakpadAllocator)
+            gBreakpadAllocator->Protect();
 #endif
-        // It's not safe to call exc_server with threads suspended.
-        // exc_server can trigger dlsym(3) calls which deadlock if
-        // another thread is paused while in dlopen(3).
-        self->ResumeThreads();
+          // It's not safe to call exc_server with threads suspended.
+          // exc_server can trigger dlsym(3) calls which deadlock if
+          // another thread is paused while in dlopen(3).
+          self->ResumeThreads();
         }
 
         // Pass along the exception to the server, which will setup the
