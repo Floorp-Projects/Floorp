@@ -57,6 +57,15 @@
   list-style-image: url(chrome://browser/skin/notification-icons/geo-blocked.svg);
 }
 
+.popup-notification-icon[popupid="autoplay-media"],
+.autoplay-media-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media.svg);
+}
+
+.autoplay-media-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/autoplay-media-blocked.svg);
+}
+
 .popup-notification-icon[popupid="geolocation"] {
   list-style-image: url(chrome://browser/skin/notification-icons/geo-detailed.svg);
 }

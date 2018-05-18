@@ -1056,7 +1056,9 @@ var gIdentityHandler = {
 
       // Avoiding listening to the "select" event on purpose. See Bug 1404262.
       menulist.addEventListener("command", () => {
-        SitePermissions.set(gBrowser.currentURI, "popup", menulist.selectedItem.value);
+        SitePermissions.set(gBrowser.currentURI,
+                            aPermission.id,
+                            menulist.selectedItem.value);
       });
 
       container.appendChild(img);

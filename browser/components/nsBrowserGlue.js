@@ -2843,6 +2843,9 @@ const ContentPermissionIntegration = {
       case "midi": {
         return new PermissionUI.MIDIPermissionPrompt(request);
       }
+      case "autoplay-media": {
+        return new PermissionUI.AutoplayPermissionPrompt(request);
+      }
     }
     return undefined;
   },
