@@ -6967,9 +6967,12 @@ class Parser(Tokenizer):
                 nextMethod.addExtendedAttributes([simpleExtendedAttr("Throws")])
                 itr_ident = IDLUnresolvedIdentifier(iface.location,
                                                     iface.identifier.name + "Iterator")
+                toStringTag = iface.identifier.name + " Iterator"
                 itr_iface = IDLInterface(iface.location, self.globalScope(),
                                          itr_ident, None, [nextMethod],
-                                         isKnownNonPartial=True)
+                                         isKnownNonPartial=True,
+                                         classNameOverride=toStringTag,
+                                         toStringTag=toStringTag)
                 itr_iface.addExtendedAttributes([simpleExtendedAttr("NoInterfaceObject")])
                 # Make sure the exposure set for the iterator interface is the
                 # same as the exposure set for the iterable interface, because
