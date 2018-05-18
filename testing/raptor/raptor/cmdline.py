@@ -13,6 +13,8 @@ def create_parser(mach_interface=False):
     parser = argparse.ArgumentParser()
     add_arg = parser.add_argument
 
+    add_arg('-t', '--test', required=True, dest='test',
+            help="name of raptor test to run")
     if not mach_interface:
         add_arg('--app', default='firefox', dest='app',
                 help="name of the application we are testing (default: firefox)",
@@ -23,10 +25,6 @@ def create_parser(mach_interface=False):
                 help="Name of the branch we are testing on")
         add_arg('--symbolsPath', dest='symbols_path',
                 help="Path to the symbols for the build we are testing")
-    # remaining arg is test name
-    add_arg("test",
-            nargs="*",
-            help="name of raptor test to run")
 
     add_logging_group(parser)
     return parser
