@@ -1,0 +1,81 @@
+/* Copyright 2018 Mozilla Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+"use strict";
+
+var EXPORTED_SYMBOLS = ["PdfJsRegistration"];
+
+const Cm = Components.manager;
+
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+
+// Register/unregister a constructor as a factory.
+function Factory() {}
+Factory.prototype = {
+  register: function register(targetConstructor) {
+    var proto = targetConstructor.prototype;
+    this._classID = proto.classID;
+
+    var factory = XPCOMUtils._getFactory(targetConstructor);
+    this._factory = factory;
+
+    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+    registrar.registerFactory(proto.classID, proto.classDescription,
+                              proto.contractID, factory);
+
+    if (proto.classID2) {
+      this._classID2 = proto.classID2;
+      registrar.registerFactory(proto.classID2, proto.classDescription,
+                                proto.contractID2, factory);
+    }
+  },
+
+  unregister: function unregister() {
+    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
+    registrar.unregisterFactory(this._classID, this._factory);
+    if (this._classID2) {
+      registrar.unregisterFactory(this._classID2, this._factory);
+    }
+    this._factory = null;
+  },
+};
+
+var PdfJsRegistration = {
+  _registered: false,
+
+  ensureRegistered: function ensureRegistered() {
+    if (this._registered) {
+      return;
+    }
+    this._pdfStreamConverterFactory = new Factory();
+    ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
+    this._pdfStreamConverterFactory.register(PdfStreamConverter);
+
+    this._registered = true;
+  },
+
+  ensureUnregistered: function ensureUnregistered() {
+    if (!this._registered) {
+      return;
+    }
+    this._pdfStreamConverterFactory.unregister();
+    Cu.unload("resource://pdf.js/PdfStreamConverter.jsm");
+    delete this._pdfStreamConverterFactory;
+
+    this._registered = false;
+  },
+
+};
