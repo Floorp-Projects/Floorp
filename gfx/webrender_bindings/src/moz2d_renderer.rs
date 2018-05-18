@@ -341,15 +341,15 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d) -> Vec<u
 }
 
 impl BlobImageRenderer for Moz2dImageRenderer {
-    fn add(&mut self, key: ImageKey, data: BlobImageData, tiling: Option<TileSize>) {
+    fn add(&mut self, key: ImageKey, data: Arc<BlobImageData>, tiling: Option<TileSize>) {
         {
             let index = BlobReader::new(&data);
             assert!(index.reader.has_more());
         }
-        self.blob_commands.insert(key, (Arc::new(data), tiling));
+        self.blob_commands.insert(key, (Arc::clone(&data), tiling));
     }
 
-    fn update(&mut self, key: ImageKey, data: BlobImageData, dirty_rect: Option<DeviceUintRect>) {
+    fn update(&mut self, key: ImageKey, data: Arc<BlobImageData>, dirty_rect: Option<DeviceUintRect>) {
         match self.blob_commands.entry(key) {
             hash_map::Entry::Occupied(mut e) => {
                 let old_data = &mut e.get_mut().0;
@@ -428,16 +428,16 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         }
 
         self.workers.spawn(move || {
-            let buf_size = (descriptor.width
-                * descriptor.height
+            let buf_size = (descriptor.size.width
+                * descriptor.size.height
                 * descriptor.format.bytes_per_pixel()) as usize;
             let mut output = vec![0u8; buf_size];
 
             let result = unsafe {
                 if wr_moz2d_render_cb(
                     ByteSlice::new(&commands[..]),
-                    descriptor.width,
-                    descriptor.height,
+                    descriptor.size.width,
+                    descriptor.size.height,
                     descriptor.format,
                     option_to_nullable(&tile_size),
                     option_to_nullable(&request.tile),
@@ -446,8 +446,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
                 ) {
 
                     Ok(RasterizedBlobImage {
-                        width: descriptor.width,
-                        height: descriptor.height,
+                        size: descriptor.size,
                         data: output,
                     })
                 } else {
