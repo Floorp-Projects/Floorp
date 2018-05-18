@@ -648,39 +648,6 @@ CustomElementRegistry::GetDocGroup() const
   return mWindow ? mWindow->GetDocGroup() : nullptr;
 }
 
-static const char* kLifeCycleCallbackNames[] = {
-  "connectedCallback",
-  "disconnectedCallback",
-  "adoptedCallback",
-  "attributeChangedCallback"
-};
-
-static void
-CheckLifeCycleCallbacks(JSContext* aCx,
-                        JS::Handle<JSObject*> aConstructor,
-                        ErrorResult& aRv)
-{
-  for (size_t i = 0; i < ArrayLength(kLifeCycleCallbackNames); ++i) {
-    const char* callbackName = kLifeCycleCallbackNames[i];
-    JS::Rooted<JS::Value> callbackValue(aCx);
-    if (!JS_GetProperty(aCx, aConstructor, callbackName, &callbackValue)) {
-      aRv.StealExceptionFromJSContext(aCx);
-      return;
-    }
-    if (!callbackValue.isUndefined()) {
-      if (!callbackValue.isObject()) {
-        aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_ConvertASCIItoUTF16(callbackName));
-        return;
-      }
-      JS::Rooted<JSObject*> callback(aCx, &callbackValue.toObject());
-      if (!JS::IsCallable(callback)) {
-        aRv.ThrowTypeError<MSG_NOT_CALLABLE>(NS_ConvertASCIItoUTF16(callbackName));
-        return;
-      }
-    }
-  }
-}
-
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
 void
 CustomElementRegistry::Define(const nsAString& aName,
@@ -852,12 +819,6 @@ CustomElementRegistry::Define(const nsAString& aName,
        *          of converting callbackValue to the Web IDL Function callback type.
        *          Rethrow any exceptions from the conversion.
        */
-      // Will do the same checking for the life cycle callbacks from v0 spec.
-      CheckLifeCycleCallbacks(cx, constructorProtoUnwrapped, aRv);
-      if (aRv.Failed()) {
-        return;
-      }
-
       // Note: We call the init from the constructorProtoUnwrapped's compartment
       //       here.
       JS::RootedValue rootedv(cx, JS::ObjectValue(*constructorProtoUnwrapped));
