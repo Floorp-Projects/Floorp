@@ -2473,6 +2473,9 @@ class IDLRecordType(IDLParametrizedType):
     def isRecord(self):
         return True
 
+    def isJSONType(self):
+        return self.inner.isJSONType()
+
     def tag(self):
         return IDLType.Tags.record
 
@@ -2665,6 +2668,9 @@ class IDLTypedefType(IDLType):
     def isVoid(self):
         return self.inner.isVoid()
 
+    def isJSONType(self):
+        return self.inner.isJSONType()
+
     def isSequence(self):
         return self.inner.isSequence()
 
@@ -2810,7 +2816,12 @@ class IDLWrapperType(IDLType):
         if self.isInterface():
             if self.inner.isExternal():
                 return False
-            return any(m.isMethod() and m.isJsonifier() for m in self.inner.members)
+            iface = self.inner
+            while iface:
+                if any(m.isMethod() and m.isJsonifier() for m in self.inner.members):
+                    return True
+                iface = iface.parent
+            return False
         elif self.isEnum():
             return True
         elif self.isDictionary():
@@ -3101,7 +3112,7 @@ class IDLBuiltinType(IDLType):
                 self._typeTag == IDLBuiltinType.Types.unrestricted_double)
 
     def isJSONType(self):
-        return self.isPrimitive() or self.isString() or self.isDate()
+        return self.isPrimitive() or self.isString() or self.isObject()
 
     def includesRestrictedFloat(self):
         return self.isFloat() and not self.isUnrestricted()
