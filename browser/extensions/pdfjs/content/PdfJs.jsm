@@ -17,8 +17,6 @@
 
 var EXPORTED_SYMBOLS = ["PdfJs"];
 
-const Cm = Components.manager;
-
 const PREF_PREFIX = "pdfjs";
 const PREF_DISABLED = PREF_PREFIX + ".disabled";
 const PREF_MIGRATION_VERSION = PREF_PREFIX + ".migrationVersion";
@@ -51,6 +49,8 @@ ChromeUtils.defineModuleGetter(this, "PdfjsContentUtils",
                                "resource://pdf.js/PdfjsContentUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PdfJsDefaultPreferences",
   "resource://pdf.js/PdfJsDefaultPreferences.jsm");
+ChromeUtils.defineModuleGetter(this, "PdfJsRegistration",
+  "resource://pdf.js/PdfJsRegistration.jsm");
 
 function getBoolPref(aPref, aDefaultValue) {
   try {
@@ -95,40 +95,8 @@ function initializeDefaultPreferences() {
   }
 }
 
-// Register/unregister a constructor as a factory.
-function Factory() {}
-Factory.prototype = {
-  register: function register(targetConstructor) {
-    var proto = targetConstructor.prototype;
-    this._classID = proto.classID;
-
-    var factory = XPCOMUtils._getFactory(targetConstructor);
-    this._factory = factory;
-
-    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(proto.classID, proto.classDescription,
-                              proto.contractID, factory);
-
-    if (proto.classID2) {
-      this._classID2 = proto.classID2;
-      registrar.registerFactory(proto.classID2, proto.classDescription,
-                                proto.contractID2, factory);
-    }
-  },
-
-  unregister: function unregister() {
-    var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.unregisterFactory(this._classID, this._factory);
-    if (this._classID2) {
-      registrar.unregisterFactory(this._classID2, this._factory);
-    }
-    this._factory = null;
-  },
-};
-
 var PdfJs = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
-  _registered: false,
   _initialized: false,
 
   init: function init(remote) {
@@ -333,25 +301,11 @@ var PdfJs = {
   },
 
   ensureRegistered: function ensureRegistered() {
-    if (this._registered) {
-      return;
-    }
-    this._pdfStreamConverterFactory = new Factory();
-    ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
-    this._pdfStreamConverterFactory.register(PdfStreamConverter);
-
-    this._registered = true;
+    PdfJsRegistration.ensureRegistered();
   },
 
   ensureUnregistered: function ensureUnregistered() {
-    if (!this._registered) {
-      return;
-    }
-    this._pdfStreamConverterFactory.unregister();
-    Cu.unload("resource://pdf.js/PdfStreamConverter.jsm");
-    delete this._pdfStreamConverterFactory;
-
-    this._registered = false;
+    PdfJsRegistration.ensureUnregistered();
   },
 };
 
