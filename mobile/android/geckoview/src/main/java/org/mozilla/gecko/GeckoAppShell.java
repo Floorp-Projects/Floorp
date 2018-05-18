@@ -1851,34 +1851,38 @@ public class GeckoAppShell
 
     @WrapForJNI(calledFrom = "any")
     public static int getAudioOutputFramesPerBuffer() {
+        final int DEFAULT = 512;
+
         if (SysInfo.getVersion() < 17) {
-            return 0;
+            return DEFAULT;
         }
         final AudioManager am = (AudioManager)getApplicationContext()
                                 .getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            return 0;
+            return DEFAULT;
         }
         final String prop = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
         if (prop == null) {
-            return 0;
+            return DEFAULT;
         }
         return Integer.parseInt(prop);
     }
 
     @WrapForJNI(calledFrom = "any")
     public static int getAudioOutputSampleRate() {
+        final int DEFAULT = 44100;
+
         if (SysInfo.getVersion() < 17) {
-            return 0;
+            return DEFAULT;
         }
         final AudioManager am = (AudioManager)getApplicationContext()
                                 .getSystemService(Context.AUDIO_SERVICE);
         if (am == null) {
-            return 0;
+            return DEFAULT;
         }
         final String prop = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
         if (prop == null) {
-            return 0;
+            return DEFAULT;
         }
         return Integer.parseInt(prop);
     }
