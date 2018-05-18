@@ -266,8 +266,9 @@ Inspector.prototype = {
     await this.setupToolbar();
 
     // Show the 3 pane onboarding tooltip only if the inspector is visisble since the
-    // Accessibility panel initializes the Inspector.
-    if (this.show3PaneTooltip && this.toolbox.currentToolId === "inspector") {
+    // Accessibility panel initializes the Inspector and if it is not the browser toolbox.
+    if (this.show3PaneTooltip && !this.target.chrome &&
+        this.toolbox.currentToolId === "inspector") {
       this.threePaneTooltip = new ThreePaneOnboardingTooltip(this.toolbox, this.panelDoc);
     }
 
@@ -486,6 +487,10 @@ Inspector.prototype = {
    * @return {Boolean} true if the inspector should be in landscape mode.
    */
   useLandscapeMode: function() {
+    if (!this.panelDoc) {
+      return true;
+    }
+
     let { clientWidth } = this.panelDoc.getElementById("inspector-splitter-box");
     return this.is3PaneModeEnabled && this.toolbox.hostType == Toolbox.HostType.SIDE ?
       clientWidth > SIDE_PORTAIT_MODE_WIDTH_THRESHOLD :
@@ -552,8 +557,12 @@ Inspector.prototype = {
    * to `horizontal` to support portrait view.
    */
   onPanelWindowResize: function() {
-    this.splitBox.setState({
-      vert: this.useLandscapeMode(),
+    window.cancelIdleCallback(this._resizeTimerId);
+    this._resizeTimerId = window.requestIdleCallback(() => {
+      this.splitBox.setState({
+        vert: this.useLandscapeMode(),
+      });
+      this.emit("inspector-resize");
     });
   },
 

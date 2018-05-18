@@ -56,10 +56,10 @@ function paused(pauseInfo) {
       why,
       loadedObjects
     } = pauseInfo;
-    const rootFrame = frames.length > 0 ? frames[0] : null;
+    const topFrame = frames.length > 0 ? frames[0] : null;
 
-    if (rootFrame) {
-      const mappedFrame = await (0, _mapFrames.updateFrameLocation)(rootFrame, sourceMaps);
+    if (topFrame && why.type == "resumeLimit") {
+      const mappedFrame = await (0, _mapFrames.updateFrameLocation)(topFrame, sourceMaps);
       const source = await getOriginalSourceForFrame(getState(), mappedFrame); // Ensure that the original file has loaded if there is one.
 
       await dispatch((0, _loadSourceText.loadSourceText)(source));
@@ -74,7 +74,7 @@ function paused(pauseInfo) {
       type: "PAUSED",
       why,
       frames,
-      selectedFrameId: rootFrame ? rootFrame.id : undefined,
+      selectedFrameId: topFrame ? topFrame.id : undefined,
       loadedObjects: loadedObjects || []
     });
     const hiddenBreakpointLocation = (0, _selectors.getHiddenBreakpointLocation)(getState());

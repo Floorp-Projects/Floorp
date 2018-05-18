@@ -8,9 +8,7 @@ var _react = require("devtools/client/shared/vendor/react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _Close = require("./Button/Close");
-
-var _Close2 = _interopRequireDefault(_Close);
+var _Button = require("./Button/index");
 
 var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
 
@@ -173,7 +171,7 @@ class SearchInput extends _react.Component {
       "aria-expanded": expanded
     }, this.renderSvg(), _react2.default.createElement("input", inputProps), summaryMsg && _react2.default.createElement("div", {
       className: "summary"
-    }, summaryMsg), this.renderNav(), showClose && _react2.default.createElement(_Close2.default, {
+    }, summaryMsg), this.renderNav(), showClose && _react2.default.createElement(_Button.CloseButton, {
       handleClick: handleClose,
       buttonClass: size
     })));

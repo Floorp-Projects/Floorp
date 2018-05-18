@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.clearSelectedLocation = exports.setPendingSelectedLocation = exports.setSelectedLocation = undefined;
 exports.selectSourceURL = selectSourceURL;
 exports.selectSource = selectSource;
 exports.selectLocation = selectLocation;
@@ -37,6 +38,21 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+const setSelectedLocation = exports.setSelectedLocation = (source, location) => ({
+  type: "SET_SELECTED_LOCATION",
+  source,
+  location
+});
+
+const setPendingSelectedLocation = exports.setPendingSelectedLocation = (url, options) => ({
+  type: "SET_PENDING_SELECTED_LOCATION",
+  url: url,
+  line: options.location ? options.location.line : null
+});
+
+const clearSelectedLocation = exports.clearSelectedLocation = () => ({
+  type: "CLEAR_SELECTED_LOCATION"
+});
 /**
  * Deterministically select a source that has a given URL. This will
  * work regardless of the connection status or if the source exists
@@ -46,6 +62,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @memberof actions/sources
  * @static
  */
+
+
 function selectSourceURL(url, options = {}) {
   return async ({
     dispatch,
@@ -60,11 +78,7 @@ function selectSourceURL(url, options = {}) {
       }));
       await dispatch(selectLocation(location));
     } else {
-      dispatch({
-        type: "SELECT_SOURCE_URL",
-        url: url,
-        line: options.location ? options.location.line : null
-      });
+      dispatch(setPendingSelectedLocation(url, options));
     }
   };
 }
@@ -106,9 +120,7 @@ function selectLocation(location) {
 
     if (!sourceRecord) {
       // If there is no source we deselect the current selected source
-      return dispatch({
-        type: "CLEAR_SELECTED_SOURCE"
-      });
+      return dispatch(clearSelectedLocation());
     }
 
     const activeSearch = (0, _selectors.getActiveSearch)(getState());
@@ -119,11 +131,7 @@ function selectLocation(location) {
 
     const source = sourceRecord.toJS();
     dispatch((0, _tabs.addTab)(source.url, 0));
-    dispatch({
-      type: "SELECT_SOURCE",
-      source,
-      location
-    });
+    dispatch(setSelectedLocation(source, location));
     await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
 
@@ -164,9 +172,7 @@ function selectSpecificLocation(location) {
 
     if (!sourceRecord) {
       // If there is no source we deselect the current selected source
-      return dispatch({
-        type: "CLEAR_SELECTED_SOURCE"
-      });
+      return dispatch(clearSelectedLocation());
     }
 
     const activeSearch = (0, _selectors.getActiveSearch)(getState());
@@ -177,11 +183,7 @@ function selectSpecificLocation(location) {
 
     const source = sourceRecord.toJS();
     dispatch((0, _tabs.addTab)(source, 0));
-    dispatch({
-      type: "SELECT_SOURCE",
-      source,
-      location
-    });
+    dispatch(setSelectedLocation(source, location));
     await dispatch((0, _loadSourceText.loadSourceText)(sourceRecord));
     const selectedSource = (0, _selectors.getSelectedSource)(getState());
 

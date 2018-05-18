@@ -18,9 +18,7 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
 
-var _Close = require("../shared/Button/Close");
-
-var _Close2 = _interopRequireDefault(_Close);
+var _Button = require("../shared/Button/index");
 
 var _breakpoint = require("../../utils/breakpoint/index");
 
@@ -166,7 +164,7 @@ class Breakpoint extends _react.Component {
       className: "breakpoint-line-close"
     }, _react2.default.createElement("div", {
       className: "breakpoint-line"
-    }, getBreakpointLocation(breakpoint.source, line, column)), _react2.default.createElement(_Close2.default, {
+    }, getBreakpointLocation(breakpoint.source, line, column)), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onCloseClick,
       tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip")
     }));

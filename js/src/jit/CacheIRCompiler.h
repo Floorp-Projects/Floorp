@@ -27,6 +27,7 @@ namespace jit {
     _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardClass)                         \
+    _(GuardGroupHasUnanalyzedNewScript)   \
     _(GuardIsNativeFunction)              \
     _(GuardIsNativeObject)                \
     _(GuardIsProxy)                       \

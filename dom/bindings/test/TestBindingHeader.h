@@ -945,12 +945,12 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
-  void GetJsonifierShouldSkipThis(JSContext*, JS::MutableHandle<JS::Value>);
-  void SetJsonifierShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
-  TestParentInterface* JsonifierShouldSkipThis2();
-  void SetJsonifierShouldSkipThis2(TestParentInterface&);
-  TestCallbackInterface* JsonifierShouldSkipThis3();
-  void SetJsonifierShouldSkipThis3(TestCallbackInterface&);
+  void GetToJSONShouldSkipThis(JSContext*, JS::MutableHandle<JS::Value>);
+  void SetToJSONShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
+  TestParentInterface* ToJSONShouldSkipThis2();
+  void SetToJSONShouldSkipThis2(TestParentInterface&);
+  TestCallbackInterface* ToJSONShouldSkipThis3();
+  void SetToJSONShouldSkipThis3(TestCallbackInterface&);
   void ThrowingMethod(ErrorResult& aRv);
   bool GetThrowingAttr(ErrorResult& aRv) const;
   void SetThrowingAttr(bool arg, ErrorResult& aRv);

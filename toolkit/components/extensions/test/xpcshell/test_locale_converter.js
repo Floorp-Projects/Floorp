@@ -129,5 +129,5 @@ add_task(async function testInvalidUUID() {
 add_task(async function testEmptyStream() {
   let stream = StringStream("");
   let resultStream = convService.convert(stream, FROM_TYPE, TO_TYPE, URI);
-  equal(resultStream.data, "");
+  equal(resultStream.available(), 0, "Size of output stream should match size of input stream");
 });

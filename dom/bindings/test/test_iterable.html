@@ -171,7 +171,7 @@
        is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
        is(entry.done, true, "IterableDouble: Entry iterator done should be true");
        is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
-          "[object TestInterfaceIterableDoubleIteratorPrototype]",
+          "[object TestInterfaceIterableDouble Iterator]",
           "iterator prototype should have the right brand");
 
        // Simple dual type iterable creation and functionality test
@@ -231,7 +231,7 @@
        is(entry.value, undefined, "IterableDoubleUnion: Entry iterator value should be undefined");
        is(entry.done, true, "IterableDoubleUnion: Entry iterator done should be true");
        is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
-          "[object TestInterfaceIterableDoubleUnionIteratorPrototype]",
+          "[object TestInterfaceIterableDoubleUnion Iterator]",
           "iterator prototype should have the right brand");
 
        SimpleTest.finish();

@@ -29,5 +29,5 @@ interface PerformanceNavigationTiming : PerformanceResourceTiming {
   readonly        attribute NavigationType      type;
   readonly        attribute unsigned short      redirectCount;
 
-  jsonifier;
+  [Default] object toJSON();
 };

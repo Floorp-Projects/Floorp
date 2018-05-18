@@ -16,9 +16,7 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = require("../../selectors/index");
 
-var _Close = require("../shared/Button/Close");
-
-var _Close2 = _interopRequireDefault(_Close);
+var _Button = require("../shared/Button/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -58,7 +56,7 @@ class EventListeners extends _react.Component {
         className: "type"
       }, type), _react2.default.createElement("span", {
         className: "selector"
-      }, selector), breakpoint ? _react2.default.createElement(_Close2.default, {
+      }, selector), breakpoint ? _react2.default.createElement(_Button.CloseButton, {
         handleClick: ev => this.removeBreakpoint(ev, breakpoint)
       }) : "");
     };

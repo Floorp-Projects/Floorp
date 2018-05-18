@@ -19,9 +19,7 @@ var _selectors = require("../selectors/index");
 
 var _text = require("../utils/text");
 
-var _PaneToggle = require("./shared/Button/PaneToggle");
-
-var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
+var _Button = require("./shared/Button/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40,7 +38,7 @@ class WelcomeBox extends _react.Component {
       return;
     }
 
-    return _react2.default.createElement(_PaneToggle2.default, {
+    return _react2.default.createElement(_Button.PaneToggleButton, {
       position: "end",
       collapsed: !endPanelCollapsed,
       horizontal: horizontal,
@@ -65,6 +63,8 @@ class WelcomeBox extends _react.Component {
       className: "shortcutFunction"
     }, _react2.default.createElement("p", {
       className: "welcomebox__searchSources",
+      role: "button",
+      tabIndex: "0",
       onClick: () => openQuickOpen()
     }, _react2.default.createElement("span", {
       className: "shortcutKey"
@@ -72,6 +72,8 @@ class WelcomeBox extends _react.Component {
       className: "shortcutLabel"
     }, searchSourcesLabel)), _react2.default.createElement("p", {
       className: "welcomebox__searchProject",
+      role: "button",
+      tabIndex: "0",
       onClick: setActiveSearch.bind(null, "project")
     }, _react2.default.createElement("span", {
       className: "shortcutKey"

@@ -21,5 +21,5 @@ interface RTCIceCandidate {
   attribute DOMString?      sdpMid;
   attribute unsigned short? sdpMLineIndex;
 
-  jsonifier;
+  [Default] object toJSON();
 };
