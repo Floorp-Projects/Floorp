@@ -48,3 +48,23 @@ test_highlights(
     ok(found && !found.hidden, "Should find a visible context menu");
   }
 );
+
+test_highlights(
+  1, // Number of highlights cards
+  async function check_highlights_context_menu() {
+    let found = content.document.querySelectorAll(".card-context-icon.icon-bookmark-added").length;
+    is(found, 1, "there should be 1 bookmark icon");
+
+    const menuButton = content.document.querySelector(".card-outer .context-menu-button");
+    // Open the menu.
+    menuButton.click();
+    const contextMenu = content.document.querySelector(".card-outer .context-menu");
+    ok(contextMenu && !contextMenu.hidden, "Should find a visible context menu");
+
+    const removeBookmarkBtn = contextMenu.querySelector("a .icon-bookmark-added");
+    removeBookmarkBtn.click();
+
+    await ContentTaskUtils.waitForCondition(() => content.document.querySelectorAll(".card-context-icon.icon-bookmark-added").length === 0,
+      "no more bookmark cards should be visible");
+  }
+);

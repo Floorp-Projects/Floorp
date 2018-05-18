@@ -6,13 +6,15 @@ a11y:
   instantiators:
     bug_numbers:
       - 1323069
+      - 1462238
     description: >
       The leaf name and version number of the binary for the process responsible
       for remotely instantiating a11y.
-    expires: "61"
+    expires: never
     kind: string
     notification_emails:
-      - dbolter@mozilla.com
+      - accessibility@mozilla.com
+      - jteh@mozilla.com
     record_in_processes:
       - 'main'
     release_channel_collection: opt-out

@@ -23,7 +23,8 @@ define(function(require, exports, module) {
     jsonPretty: null,
     headers: JSONView.headers,
     tabActive: 0,
-    prettified: false
+    prettified: false,
+    expandedNodes: new Set()
   };
 
   /**
@@ -85,6 +86,16 @@ define(function(require, exports, module) {
 
       input.prettified = !input.prettified;
     },
+
+    onCollapse: function(data) {
+      input.expandedNodes.clear();
+      theApp.forceUpdate();
+    },
+
+    onExpand: function(data) {
+      input.expandedNodes = TreeViewClass.getExpandedNodes(input.json);
+      theApp.setState({expandedNodes: input.expandedNodes});
+    }
   };
 
   /**
@@ -128,7 +139,6 @@ define(function(require, exports, module) {
     if (document.readyState == "loading") {
       // If the JSON has not been loaded yet, render the Raw Data tab first.
       input.json = {};
-      input.expandedNodes = new Set();
       input.tabActive = 1;
       return new Promise(resolve => {
         document.addEventListener("DOMContentLoaded", resolve, {once: true});

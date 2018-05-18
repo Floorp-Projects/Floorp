@@ -40,6 +40,14 @@ describe("AboutPreferences Feed", () => {
       instance.onAction(action);
       assert.calledOnce(action._target.browser.ownerGlobal.openPreferences);
     });
+    it("should call .BrowserOpenAddonsMgr with the extension id on OPEN_WEBEXT_SETTINGS", () => {
+      const action = {type: at.OPEN_WEBEXT_SETTINGS, data: "foo", _target: {browser: {ownerGlobal: {BrowserOpenAddonsMgr: sinon.spy()}}}};
+      instance.onAction(action);
+      assert.calledWith(
+        action._target.browser.ownerGlobal.BrowserOpenAddonsMgr,
+        "addons://detail/foo"
+      );
+    });
   });
   describe("#observe", () => {
     it("should watch for about:preferences loading", () => {

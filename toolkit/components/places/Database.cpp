@@ -42,14 +42,12 @@
 
 // Filename of the database.
 #define DATABASE_FILENAME NS_LITERAL_STRING("places.sqlite")
-// Filename used to backup corrupt databases.
-#define DATABASE_CORRUPT_FILENAME NS_LITERAL_STRING("places.sqlite.corrupt")
-#define DATABASE_RECOVER_FILENAME NS_LITERAL_STRING("places.sqlite.recover")
 // Filename of the icons database.
 #define DATABASE_FAVICONS_FILENAME NS_LITERAL_STRING("favicons.sqlite")
 
-// Set when the database file was found corrupt by a previous maintenance.
-#define PREF_FORCE_DATABASE_REPLACEMENT "places.database.replaceOnStartup"
+// Set to the database file name when it was found corrupt by a previous
+// maintenance run.
+#define PREF_FORCE_DATABASE_REPLACEMENT "places.database.replaceDatabaseOnStartup"
 
 // Whether on corruption we should try to fix the database by cloning it.
 #define PREF_DATABASE_CLONEONCORRUPTION "places.database.cloneOnCorruption"
@@ -134,40 +132,39 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 //// Helpers
 
+
 /**
- * Checks whether exists a database backup created not longer than
+ * Get the filename for a corrupt database.
+ */
+nsString getCorruptFilename(const nsString& aDbFilename) {
+  return aDbFilename + NS_LITERAL_STRING(".corrupt");
+}
+/**
+ * Get the filename for a recover database.
+ */
+nsString getRecoverFilename(const nsString& aDbFilename) {
+  return aDbFilename + NS_LITERAL_STRING(".recover");
+}
+
+/**
+ * Checks whether exists a corrupt database file created not longer than
  * RECENT_BACKUP_TIME_MICROSEC ago.
  */
 bool
-hasRecentCorruptDB()
+isRecentCorruptFile(const nsCOMPtr<nsIFile>& aCorruptFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIFile> profDir;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profDir));
-  NS_ENSURE_TRUE(profDir, false);
-  nsCOMPtr<nsISimpleEnumerator> entries;
-  profDir->GetDirectoryEntries(getter_AddRefs(entries));
-  NS_ENSURE_TRUE(entries, false);
-  bool hasMore;
-  while (NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> next;
-    entries->GetNext(getter_AddRefs(next));
-    NS_ENSURE_TRUE(next, false);
-    nsCOMPtr<nsIFile> currFile = do_QueryInterface(next);
-    NS_ENSURE_TRUE(currFile, false);
-
-    nsAutoString leafName;
-    if (NS_SUCCEEDED(currFile->GetLeafName(leafName)) &&
-        leafName.Length() >= DATABASE_CORRUPT_FILENAME.Length() &&
-        leafName.Find(".corrupt", DATABASE_FILENAME.Length()) != -1) {
-      PRTime lastMod = 0;
-      currFile->GetLastModifiedTime(&lastMod);
-      NS_ENSURE_TRUE(lastMod > 0, false);
-      return (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC;
-    }
+  bool fileExists = false;
+  if (NS_FAILED(aCorruptFile->Exists(&fileExists)) || !fileExists) {
+    return false;
   }
-  return false;
+  PRTime lastMod = 0;
+  if (NS_FAILED(aCorruptFile->GetLastModifiedTime(&lastMod)) ||
+      lastMod <= 0 ||
+      (PR_Now() - lastMod) > RECENT_BACKUP_TIME_MICROSEC) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -579,22 +576,52 @@ Database::EnsureConnection()
       do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
     NS_ENSURE_STATE(storage);
 
-    // Init the database file and connect to it.
-    bool databaseCreated = false;
-    nsresult rv = InitDatabaseFile(storage, &databaseCreated);
-    if (NS_SUCCEEDED(rv) && databaseCreated) {
+    nsCOMPtr<nsIFile> profileDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                         getter_AddRefs(profileDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> databaseFile;
+    rv = profileDir->Clone(getter_AddRefs(databaseFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = databaseFile->Append(DATABASE_FILENAME);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool databaseExisted = false;
+    rv = databaseFile->Exists(&databaseExisted);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString corruptDbName;
+    if (NS_SUCCEEDED(Preferences::GetString(PREF_FORCE_DATABASE_REPLACEMENT,
+                                            corruptDbName)) &&
+        !corruptDbName.IsEmpty()) {
+      // If this pref is set, maintenance required a database replacement, due to
+      // integrity corruption.
+      // Be sure to clear the pref to avoid handling it more than once.
+      (void)Preferences::ClearUser(PREF_FORCE_DATABASE_REPLACEMENT);
+
+      // The database is corrupt, backup and replace it with a new one.
+      nsCOMPtr<nsIFile> fileToBeReplaced;
+      bool fileExists = false;
+      if (NS_SUCCEEDED(profileDir->Clone(getter_AddRefs(fileToBeReplaced))) &&
+          NS_SUCCEEDED(fileToBeReplaced->Exists(&fileExists)) &&
+         fileExists) {
+        rv = BackupAndReplaceDatabaseFile(storage, corruptDbName, true, false);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+
+    // Open the database file.  If it does not exist a new one will be created.
+    // Use an unshared connection, it will consume more memory but avoid shared
+    // cache contentions across threads.
+    rv = storage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
+    if (NS_SUCCEEDED(rv) && !databaseExisted) {
       mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CREATE;
     }
     else if (rv == NS_ERROR_FILE_CORRUPTED) {
       // The database is corrupt, backup and replace it with a new one.
-      mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CORRUPT;
-      rv = BackupAndReplaceDatabaseFile(storage, true);
+      rv = BackupAndReplaceDatabaseFile(storage, DATABASE_FILENAME, true, true);
       // Fallback to catch-all handler.
     }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Ensure the icons database exists.
-    rv = EnsureFaviconsDatabaseFile(storage);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Initialize the database schema.  In case of failure the existing schema is
@@ -634,7 +661,10 @@ Database::EnsureConnection()
       // Some errors may not indicate a database corruption, for those cases we
       // just bail out without throwing away a possibly valid places.sqlite.
       if (rv == NS_ERROR_FILE_CORRUPTED) {
-        rv = BackupAndReplaceDatabaseFile(storage, shouldTryToCloneDb);
+        // Since we don't know which database is corrupt, we must replace both.
+        rv = BackupAndReplaceDatabaseFile(storage, DATABASE_FAVICONS_FILENAME, false, false);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = BackupAndReplaceDatabaseFile(storage, DATABASE_FILENAME, shouldTryToCloneDb, true);
         NS_ENSURE_SUCCESS(rv, rv);
         // Try to initialize the new database again.
         rv = SetupDatabaseConnection(storage);
@@ -667,6 +697,7 @@ Database::EnsureConnection()
 nsresult
 Database::NotifyConnectionInitalized()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   // Notify about Places initialization.
   nsCOMArray<nsIObserver> entries;
   mCacheObservers.GetEntries(entries);
@@ -681,23 +712,23 @@ Database::NotifyConnectionInitalized()
 }
 
 nsresult
-Database::EnsureFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
+Database::EnsureFaviconsDatabaseAttached(const nsCOMPtr<mozIStorageService>& aStorage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIFile> databaseFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(databaseFile));
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(databaseFile));
+  NS_ENSURE_STATE(databaseFile);
+  nsresult rv = databaseFile->Append(DATABASE_FAVICONS_FILENAME);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = databaseFile->Append(DATABASE_FAVICONS_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool databaseFileExists = false;
-  rv = databaseFile->Exists(&databaseFileExists);
+  nsString iconsPath;
+  rv = databaseFile->GetPath(iconsPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (databaseFileExists) {
-    return NS_OK;
+  bool fileExists = false;
+  if (NS_SUCCEEDED(databaseFile->Exists(&fileExists)) && fileExists) {
+    return AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
+                          NS_LITERAL_CSTRING("favicons"));
   }
 
   // Open the database file, this will also create it.
@@ -747,52 +778,30 @@ Database::EnsureFaviconsDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage)
     // The scope exit will take care of closing the connection.
   }
 
+  rv = AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
+                      NS_LITERAL_CSTRING("favicons"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
-nsresult
-Database::InitDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
-                           bool* aNewDatabaseCreated)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  *aNewDatabaseCreated = false;
-
-  nsCOMPtr<nsIFile> databaseFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(databaseFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = databaseFile->Append(DATABASE_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool databaseFileExists = false;
-  rv = databaseFile->Exists(&databaseFileExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (databaseFileExists &&
-      Preferences::GetBool(PREF_FORCE_DATABASE_REPLACEMENT, false)) {
-    // If this pref is set, Maintenance required a database replacement, due to
-    // integrity corruption.
-    // Be sure to clear the pref to avoid handling it more than once.
-    (void)Preferences::ClearUser(PREF_FORCE_DATABASE_REPLACEMENT);
-
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  // Open the database file.  If it does not exist a new one will be created.
-  // Use an unshared connection, it will consume more memory but avoid shared
-  // cache contentions across threads.
-  rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aNewDatabaseCreated = !databaseFileExists;
-  return NS_OK;
-}
 
 nsresult
 Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
-                                       bool aTryToClone)
+                                       const nsString& aDbFilename,
+                                       bool aTryToClone,
+                                       bool aReopenConnection)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDbFilename.Equals(DATABASE_FILENAME)) {
+    mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_CORRUPT;
+  } else {
+    // Due to OS file lockings, attached databases can't be cloned properly,
+    // otherwise trying to reattach them later would fail.
+    aTryToClone = false;
+  }
+
   nsCOMPtr<nsIFile> profDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(profDir));
@@ -800,18 +809,36 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
   nsCOMPtr<nsIFile> databaseFile;
   rv = profDir->Clone(getter_AddRefs(databaseFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = databaseFile->Append(DATABASE_FILENAME);
+  rv = databaseFile->Append(aDbFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we have
-  // already failed in the last 24 hours avoid to create another corrupt file,
+  // If we already failed in the last 24 hours avoid to create another corrupt file,
   // since doing so, in some situation, could cause us to create a new corrupt
   // file at every try to access any Places service.  That is bad because it
   // would quickly fill the user's disk space without any notice.
-  if (!hasRecentCorruptDB()) {
+  nsCOMPtr<nsIFile> corruptFile;
+  rv = profDir->Clone(getter_AddRefs(corruptFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsString corruptFilename = getCorruptFilename(aDbFilename);
+  rv = corruptFile->Append(corruptFilename);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isRecentCorruptFile(corruptFile)) {
+    // Ensure we never create more than one corrupt file.
+    nsCOMPtr<nsIFile> corruptFile;
+    rv = profDir->Clone(getter_AddRefs(corruptFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsString corruptFilename = getCorruptFilename(aDbFilename);
+    rv = corruptFile->Append(corruptFilename);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = corruptFile->Remove(false);
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+                         rv != NS_ERROR_FILE_NOT_FOUND) {
+      return rv;
+    }
+
     nsCOMPtr<nsIFile> backup;
-    (void)aStorage->BackupDatabaseFile(databaseFile, DATABASE_CORRUPT_FILENAME,
-                                       profDir, getter_AddRefs(backup));
+    Unused << aStorage->BackupDatabaseFile(databaseFile, corruptFilename,
+                                           profDir, getter_AddRefs(backup));
   }
 
   // If anything fails from this point on, we have a stale connection or
@@ -835,7 +862,7 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
         // bookmarks and history will misbehave.  The frontend may show a
         // "locked" notification to the user though.
         // Set up a pref to try replacing the database at the next startup.
-        Preferences::SetBool(PREF_FORCE_DATABASE_REPLACEMENT, true);
+        Preferences::SetString(PREF_FORCE_DATABASE_REPLACEMENT, aDbFilename);
       }
       // Report the corruption through telemetry.
       Telemetry::Accumulate(Telemetry::PLACES_DATABASE_CORRUPTION_HANDLING_STAGE,
@@ -846,12 +873,14 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
     if (mMainConn) {
       rv = mMainConn->SpinningSynchronousClose();
       NS_ENSURE_SUCCESS(rv, rv);
+      mMainConn = nullptr;
     }
 
     // Remove the broken database.
     stage = stage_removing;
     rv = databaseFile->Remove(false);
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+                         rv != NS_ERROR_FILE_NOT_FOUND) {
       return rv;
     }
 
@@ -859,18 +888,22 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
     bool cloned = false;
     if (aTryToClone && Preferences::GetBool(PREF_DATABASE_CLONEONCORRUPTION, true)) {
       stage = stage_cloning;
-      rv = TryToCloneTablesFromCorruptDatabase(aStorage);
+      rv = TryToCloneTablesFromCorruptDatabase(aStorage, databaseFile);
       if (NS_SUCCEEDED(rv)) {
+        // If we cloned successfully, we should not consider the database
+        // corrupt anymore, otherwise we could reimport default bookmarks.
         mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_OK;
         cloned = true;
       }
     }
 
-    // Use an unshared connection, it will consume more memory but avoid shared
-    // cache contentions across threads.
-    stage = stage_reopening;
-    rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aReopenConnection) {
+      // Use an unshared connection, it will consume more memory but avoid shared
+      // cache contentions across threads.
+      stage = stage_reopening;
+      rv = aStorage->OpenUnsharedDatabase(databaseFile, getter_AddRefs(mMainConn));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     stage = cloned ? stage_cloned : stage_replaced;
   }
@@ -879,27 +912,27 @@ Database::BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
 }
 
 nsresult
-Database::TryToCloneTablesFromCorruptDatabase(nsCOMPtr<mozIStorageService>& aStorage)
+Database::TryToCloneTablesFromCorruptDatabase(const nsCOMPtr<mozIStorageService>& aStorage,
+                                              const nsCOMPtr<nsIFile>& aDatabaseFile)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIFile> profDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(profDir));
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString filename;
+  nsresult rv = aDatabaseFile->GetLeafName(filename);
 
   nsCOMPtr<nsIFile> corruptFile;
-  rv = profDir->Clone(getter_AddRefs(corruptFile));
+  rv = aDatabaseFile->Clone(getter_AddRefs(corruptFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = corruptFile->Append(DATABASE_CORRUPT_FILENAME);
+  rv = corruptFile->SetLeafName(getCorruptFilename(filename));
   NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString path;
   rv = corruptFile->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> recoverFile;
-  rv = profDir->Clone(getter_AddRefs(recoverFile));
+  rv = aDatabaseFile->Clone(getter_AddRefs(recoverFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = recoverFile->Append(DATABASE_RECOVER_FILENAME);
+  rv = recoverFile->SetLeafName(getRecoverFilename(filename));
   NS_ENSURE_SUCCESS(rv, rv);
   // Ensure there's no previous recover file.
   rv = recoverFile->Remove(false);
@@ -984,7 +1017,7 @@ Database::TryToCloneTablesFromCorruptDatabase(nsCOMPtr<mozIStorageService>& aSto
 
   Unused << conn->Close();
   conn = nullptr;
-  rv = recoverFile->RenameTo(profDir, DATABASE_FILENAME);
+  rv = recoverFile->RenameTo(nullptr, filename);
   NS_ENSURE_SUCCESS(rv, rv);
   Unused << corruptFile->Remove(false);
 
@@ -1059,25 +1092,21 @@ Database::SetupDatabaseConnection(nsCOMPtr<mozIStorageService>& aStorage)
 #endif
 
   // Attach the favicons database to the main connection.
-  nsCOMPtr<nsIFile> iconsFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(iconsFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = iconsFile->Append(DATABASE_FAVICONS_FILENAME);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsString iconsPath;
-  rv = iconsFile->GetPath(iconsPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
-                      NS_LITERAL_CSTRING("favicons"));
+  rv = EnsureFaviconsDatabaseAttached(aStorage);
   if (NS_FAILED(rv)) {
     // The favicons database may be corrupt. Try to replace and reattach it.
-    rv = iconsFile->Remove(true);
+    nsCOMPtr<nsIFile> iconsFile;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(iconsFile));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = EnsureFaviconsDatabaseFile(aStorage);
+    rv = iconsFile->Append(DATABASE_FAVICONS_FILENAME);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = AttachDatabase(mMainConn, NS_ConvertUTF16toUTF8(iconsPath),
-                        NS_LITERAL_CSTRING("favicons"));
+    rv = iconsFile->Remove(false);
+    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+                         rv != NS_ERROR_FILE_NOT_FOUND) {
+      return rv;
+    }
+    rv = EnsureFaviconsDatabaseAttached(aStorage);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

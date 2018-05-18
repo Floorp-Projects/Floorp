@@ -7,6 +7,7 @@ import React from "react";
 let [FAKE_MESSAGE] = FAKE_LOCAL_MESSAGES;
 
 FAKE_MESSAGE = Object.assign({}, FAKE_MESSAGE, {provider: "fakeprovider"});
+const FAKE_BUNDLED_MESSAGE = {bundle: [{id: "foo", template: "onboarding", content: {title: "Foo", body: "Foo123"}}], template: "onboarding"};
 
 describe("ASRouterUtils", () => {
   let global;
@@ -80,7 +81,11 @@ describe("ASRouterUISurface", () => {
 
   it("should render the component if a message id is defined", () => {
     wrapper.setState({message: FAKE_MESSAGE});
+    assert.isTrue(wrapper.exists());
+  });
 
+  it("should render the component if a bundle of messages is defined", () => {
+    wrapper.setState({bundle: FAKE_BUNDLED_MESSAGE});
     assert.isTrue(wrapper.exists());
   });
 

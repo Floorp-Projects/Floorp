@@ -176,6 +176,8 @@ module.exports = {
     "mozilla/no-import-into-var-and-global": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
+    "mozilla/rejects-requires-await": "error",
+    "mozilla/require-expected-throws-or-rejects": "error",
     "mozilla/use-cc-etc": "error",
     "mozilla/use-chromeutils-generateqi": "error",
     "mozilla/use-chromeutils-import": "error",

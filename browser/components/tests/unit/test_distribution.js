@@ -104,18 +104,24 @@ add_task(async function() {
   Assert.equal(defaultBranch.getBoolPref("distribution.test.bool.true"), true);
   Assert.equal(defaultBranch.getBoolPref("distribution.test.bool.false"), false);
 
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.empty"));
-  Assert.throws(() => defaultBranch.getIntPref("distribution.test.empty"));
-  Assert.throws(() => defaultBranch.getBoolPref("distribution.test.empty"));
+  Assert.throws(() => defaultBranch.getCharPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(() => defaultBranch.getIntPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/);
+  Assert.throws(() => defaultBranch.getBoolPref("distribution.test.empty"),
+    /NS_ERROR_UNEXPECTED/);
 
   Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale"), "en-US");
   Assert.equal(defaultBranch.getCharPref("distribution.test.pref.language.en"), "en");
   Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale.en-US"), "en-US");
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.de"));
+  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.de"),
+    /NS_ERROR_UNEXPECTED/);
   // This value was never set because of the empty language specific pref
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.reset"));
+  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.language.reset"),
+    /NS_ERROR_UNEXPECTED/);
   // This value was never set because of the empty locale specific pref
-  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.locale.reset"));
+  Assert.throws(() => defaultBranch.getCharPref("distribution.test.pref.locale.reset"),
+    /NS_ERROR_UNEXPECTED/);
   // This value was overridden by a locale specific setting
   Assert.equal(defaultBranch.getCharPref("distribution.test.pref.locale.set"), "Locale Set");
   // This value was overridden by a language specific setting
@@ -126,11 +132,14 @@ add_task(async function() {
   Assert.equal(defaultBranch.getComplexValue("distribution.test.locale", Ci.nsIPrefLocalizedString).data, "en-US");
   Assert.equal(defaultBranch.getComplexValue("distribution.test.language.en", Ci.nsIPrefLocalizedString).data, "en");
   Assert.equal(defaultBranch.getComplexValue("distribution.test.locale.en-US", Ci.nsIPrefLocalizedString).data, "en-US");
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.de", Ci.nsIPrefLocalizedString));
+  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.de", Ci.nsIPrefLocalizedString),
+    /NS_ERROR_UNEXPECTED/);
   // This value was never set because of the empty language specific pref
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.reset", Ci.nsIPrefLocalizedString));
+  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.language.reset", Ci.nsIPrefLocalizedString),
+    /NS_ERROR_UNEXPECTED/);
   // This value was never set because of the empty locale specific pref
-  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.locale.reset", Ci.nsIPrefLocalizedString));
+  Assert.throws(() => defaultBranch.getComplexValue("distribution.test.locale.reset", Ci.nsIPrefLocalizedString),
+    /NS_ERROR_UNEXPECTED/);
   // This value was overridden by a locale specific setting
   Assert.equal(defaultBranch.getComplexValue("distribution.test.locale.set", Ci.nsIPrefLocalizedString).data, "Locale Set");
   // This value was overridden by a language specific setting

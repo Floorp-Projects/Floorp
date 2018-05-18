@@ -14,8 +14,11 @@ user_pref("app.update.url.android", "");
 // and causing false-positive test failures. See bug 1176798, bug 1177018,
 // bug 1210465.
 user_pref("apz.content_response_timeout", 60000);
+user_pref("browser.EULA.override", true);
 // Make sure we don't try to load snippets from the network.
 user_pref("browser.aboutHomeSnippets.updateUrl", "nonexistent://test");
+// Disable Bookmark backups by default.
+user_pref("browser.bookmarks.max_backups", 0);
 user_pref("browser.console.showInPanel", true);
 // Don't connect to Yahoo! for RSS feed tests.
 // en-US only uses .types.0.uri, but set all of them just to be sure.
@@ -30,6 +33,8 @@ user_pref("browser.contentHandlers.types.5.uri", "http://test1.example.org/rss?u
 user_pref("browser.download.panel.shown", true);
 user_pref("browser.firstrun.show.localepicker", false);
 user_pref("browser.firstrun.show.uidiscovery", false);
+user_pref("browser.newtabpage.activity-stream.default.sites", "");
+user_pref("browser.newtabpage.activity-stream.telemetry", false);
 // Background thumbnails in particular cause grief, and disabling thumbnails
 // in general can't hurt - we re-enable them when tests need them.
 user_pref("browser.pagethumbnails.capturing_disabled", true);
@@ -47,6 +52,7 @@ user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://{server}/sa
 user_pref("browser.search.suggest.timeout", 10000); // use a 10s suggestion timeout in tests
 // Bug 1458697 - Temporarily enable session store debug logging on Android to track down a test failure
 user_pref("browser.sessionstore.debug_logging", true);
+user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.snippets.firstrunHomepage.enabled", false);
 user_pref("browser.startup.page", 0); // use about:blank, not browser.startup.homepage
 // Don't show a delay when hiding the audio indicator during tests
@@ -70,6 +76,10 @@ user_pref("browser.urlbar.speculativeConnect.enabled", false);
 // connections.
 user_pref("browser.urlbar.suggest.searches", false);
 user_pref("browser.urlbar.usepreloadedtopurls.enabled", false);
+// Turn off the location bar search suggestions opt-in.  It interferes with
+// tests that don't expect it to be there.
+user_pref("browser.urlbar.userMadeSearchSuggestionsChoice", true);
+user_pref("browser.warnOnQuit", false);
 // Enable webapps testing mode, which bypasses native installation.
 user_pref("browser.webapps.testing", true);
 user_pref("captivedetect.canonicalURL", "http://{server}/captive-detect/success.txt");
@@ -78,10 +88,14 @@ user_pref("captivedetect.canonicalURL", "http://{server}/captive-detect/success.
 user_pref("datareporting.healthreport.documentServerURI", "http://{server}/healthreport/");
 user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("devtools.browsertoolbox.panel", "jsdebugger");
+user_pref("devtools.chrome.enabled", false);
 user_pref("devtools.debugger.prompt-connection", true);
+user_pref("devtools.debugger.remote-enabled", false);
 user_pref("devtools.debugger.remote-port", 6023);
 user_pref("devtools.devedition.promo.enabled", false);
 user_pref("devtools.testing", true);
+user_pref("dom.allow_scripts_to_close_windows", true);
+user_pref("dom.disable_open_during_load", false);
 user_pref("dom.experimental_forms", true); // on for testing
 user_pref("dom.forms.color", true); // on for testing
 user_pref("dom.forms.datetime", true); // on for testing
@@ -172,6 +186,9 @@ user_pref("layout.css.report_errors", true);
 user_pref("layout.css.shape-outside.enabled", true);
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
+// Make tests run consistently on DevEdition (which has a lightweight theme
+// selected by default).
+user_pref("lightweightThemes.selectedThemeID", "");
 // Disable all recommended Marionette preferences for Gecko tests.
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
@@ -187,6 +204,9 @@ user_pref("media.eme.enabled", true);
 // Make sure GMPInstallManager won't hit the network.
 user_pref("media.gmp-manager.url.override", "http://{server}/dummy-gmp-manager.xml");
 user_pref("media.hls.server.url", "http://{server}/tests/dom/media/test/hls");
+// Don't block old libavcodec libraries when testing, because our test systems
+// cannot easily be upgraded.
+user_pref("media.libavcodec.allow-obsolete", true);
 // Enable Media Source Extensions for testing
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
@@ -201,6 +221,8 @@ user_pref("media.volume_scale", "0.01");
 // Enable speech synth test service, and disable built in platform services.
 user_pref("media.webspeech.synth.test", true);
 user_pref("network.http.prompt-temp-redirect", false);
+// Disable speculative connections so they aren't reported as leaking when they're hanging around.
+user_pref("network.http.speculative-parallel-limit", 0);
 user_pref("network.manage-offline-status", false);
 // We know the SNTP request will fail, since localhost isn't listening on
 // port 135. The default number of retries (10) is excessive, but retrying
@@ -208,6 +230,11 @@ user_pref("network.manage-offline-status", false);
 user_pref("network.sntp.maxRetryCount", 1);
 // Make sure SNTP requests don't hit the network
 user_pref("network.sntp.pools", "{server}");
+// Set places maintenance far in the future (the maximum time possible in an
+// int32_t) to avoid it kicking in during tests. The maintenance can take a
+// relatively long time which may cause unnecessary intermittents and slow down
+// tests. This, like many things, will stop working correctly in 2038.
+user_pref("places.database.lastMaintenance", 2147483647);
 // For Firefox 52 only, ESR will support non-Flash plugins while release will
 // not, so we keep testing the non-Flash pathways
 user_pref("plugin.load_flash_only", false);
