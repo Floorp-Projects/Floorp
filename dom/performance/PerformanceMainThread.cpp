@@ -12,6 +12,35 @@
 namespace mozilla {
 namespace dom {
 
+namespace {
+
+void
+GetURLSpecFromChannel(nsITimedChannel* aChannel, nsAString& aSpec)
+{
+  aSpec.AssignLiteral("document");
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aChannel);
+  if (!channel) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = channel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+    return;
+  }
+
+  nsAutoCString spec;
+  rv = uri->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  aSpec = NS_ConvertUTF8toUTF16(spec);
+}
+
+} // anonymous
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
@@ -293,7 +322,10 @@ PerformanceMainThread::EnsureDocEntry()
       timing->SetPropertiesFromHttpChannel(httpChannel);
     }
 
-    mDocEntry = new PerformanceNavigationTiming(Move(timing), this);
+    nsAutoString name;
+    GetURLSpecFromChannel(mChannel, name);
+
+    mDocEntry = new PerformanceNavigationTiming(Move(timing), this, name);
   }
 }
 
@@ -307,9 +339,12 @@ PerformanceMainThread::CreateDocumentEntry(nsITimedChannel* aChannel)
     return;
   }
 
+  nsAutoString name;
+  GetURLSpecFromChannel(aChannel, name);
+
   UniquePtr<PerformanceTimingData> timing(
       new PerformanceTimingData(aChannel, nullptr, 0));
-  mDocEntry = new PerformanceNavigationTiming(Move(timing), this);
+  mDocEntry = new PerformanceNavigationTiming(Move(timing), this, name);
 }
 
 void
