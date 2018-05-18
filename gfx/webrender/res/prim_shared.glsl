@@ -119,10 +119,10 @@ PrimitiveInstance fetch_prim_instance() {
 
     pi.prim_address = aData0.x;
     pi.specific_prim_address = pi.prim_address + VECS_PER_PRIM_HEADER;
-    pi.render_task_index = aData0.y;
-    pi.clip_task_index = aData0.z;
-    pi.clip_chain_rect_index = aData0.w / 65536;
-    pi.scroll_node_id = aData0.w % 65536;
+    pi.render_task_index = aData0.y % 0x10000;
+    pi.clip_task_index = aData0.y / 0x10000;
+    pi.clip_chain_rect_index = aData0.z;
+    pi.scroll_node_id = aData0.w;
     pi.z = aData1.x;
     pi.user_data0 = aData1.y;
     pi.user_data1 = aData1.z;
