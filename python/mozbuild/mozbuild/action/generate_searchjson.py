@@ -29,12 +29,18 @@ def validateDefault(key):
     sys.exit(1)
 
 validateDefault("searchDefault");
+validateDefault("searchOrder");
 validateDefault("visibleDefaultEngines");
 
 # If the selected locale doesn't have a searchDefault,
 # use the global one.
 if not "searchDefault" in localeSearchInfo["default"]:
   localeSearchInfo["default"]["searchDefault"] = searchinfo["default"]["searchDefault"]
+
+# If the selected locale doesn't have a searchOrder,
+# use the global one.
+if not "searchOrder" in localeSearchInfo["default"]:
+  localeSearchInfo["default"]["searchOrder"] = searchinfo["default"]["searchOrder"]
 
 # If we have region overrides, enumerate through them
 # and add the additional regions to the locale information.
