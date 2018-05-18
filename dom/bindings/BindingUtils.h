@@ -3490,6 +3490,14 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
                 constructors::id::ID aConstructorId,
                 prototypes::id::ID aProtoId,
                 CreateInterfaceObjectsMethod aCreator);
+
+// A method to test whether an attribute with the given JSJitGetterOp getter is
+// enabled in the given set of prefable proeprty specs.  For use for toJSON
+// conversions.  aObj is the object that would be used as the "this" value.
+bool
+IsGetterEnabled(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                JSJitGetterOp aGetter,
+                const Prefable<const JSPropertySpec>* aAttributes);
 } // namespace binding_detail
 
 } // namespace dom
