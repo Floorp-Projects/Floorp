@@ -540,6 +540,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
       // Block and wait for any posted application message
       mozilla::HangMonitor::Suspend();
       {
+        AUTO_PROFILER_LABEL("nsAppShell::ProcessNextNativeEvent::Wait", IDLE);
         AUTO_PROFILER_THREAD_SLEEP;
         WinUtils::WaitForMessage();
       }
