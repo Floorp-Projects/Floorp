@@ -755,7 +755,6 @@ CustomElementRegistry::Define(JSContext* aCx,
     return;
   }
 
-  JS::Rooted<JS::Value> constructorPrototype(aCx);
   auto callbacksHolder = MakeUnique<LifecycleCallbacks>();
   nsTArray<RefPtr<nsAtom>> observedAttributes;
   { // Set mIsCustomDefinitionRunning.
@@ -770,7 +769,8 @@ CustomElementRegistry::Define(JSContext* aCx,
     // The .prototype on the constructor passed could be an "expando" of a
     // wrapper. So we should get it from wrapper instead of the underlying
     // object.
-    if (!JS_GetProperty(aCx, constructor, "prototype", &constructorPrototype)) {
+    JS::Rooted<JS::Value> prototype(aCx);
+    if (!JS_GetProperty(aCx, constructor, "prototype", &prototype)) {
       aRv.NoteJSContextException(aCx);
       return;
     }
@@ -778,108 +778,90 @@ CustomElementRegistry::Define(JSContext* aCx,
     /**
      * 10.2. If Type(prototype) is not Object, then throw a TypeError exception.
      */
-    if (!constructorPrototype.isObject()) {
+    if (!prototype.isObject()) {
       aRv.ThrowTypeError<MSG_NOT_OBJECT>(NS_LITERAL_STRING("constructor.prototype"));
       return;
     }
 
-    JS::Rooted<JSObject*> constructorProtoUnwrapped(
-      aCx, js::CheckedUnwrap(&constructorPrototype.toObject()));
-    if (!constructorProtoUnwrapped) {
-      // If the caller's compartment does not have permission to access the
-      // unwrapped prototype then throw.
-      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    /**
+     * 10.3. Let lifecycleCallbacks be a map with the four keys
+     *       "connectedCallback", "disconnectedCallback", "adoptedCallback", and
+     *       "attributeChangedCallback", each of which belongs to an entry whose
+     *       value is null.
+     * 10.4. For each of the four keys callbackName in lifecycleCallbacks:
+     *       1. Let callbackValue be Get(prototype, callbackName). Rethrow any
+     *          exceptions.
+     *       2. If callbackValue is not undefined, then set the value of the
+     *          entry in lifecycleCallbacks with key callbackName to the result
+     *          of converting callbackValue to the Web IDL Function callback type.
+     *          Rethrow any exceptions from the conversion.
+     */
+    if (!callbacksHolder->Init(aCx, prototype)) {
+      aRv.NoteJSContextException(aCx);
       return;
     }
 
-    { // Enter constructorProtoUnwrapped's compartment
-      JSAutoRealm ar(aCx, constructorProtoUnwrapped);
+    /**
+     * 10.5. Let observedAttributes be an empty sequence<DOMString>.
+     * 10.6. If the value of the entry in lifecycleCallbacks with key
+     *       "attributeChangedCallback" is not null, then:
+     *       1. Let observedAttributesIterable be Get(constructor,
+     *          "observedAttributes"). Rethrow any exceptions.
+     *       2. If observedAttributesIterable is not undefined, then set
+     *          observedAttributes to the result of converting
+     *          observedAttributesIterable to a sequence<DOMString>. Rethrow
+     *          any exceptions from the conversion.
+     */
+    if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
+      JS::Rooted<JS::Value> observedAttributesIterable(aCx);
 
-      /**
-       * 10.3. Let lifecycleCallbacks be a map with the four keys
-       *       "connectedCallback", "disconnectedCallback", "adoptedCallback", and
-       *       "attributeChangedCallback", each of which belongs to an entry whose
-       *       value is null.
-       * 10.4. For each of the four keys callbackName in lifecycleCallbacks:
-       *       1. Let callbackValue be Get(prototype, callbackName). Rethrow any
-       *          exceptions.
-       *       2. If callbackValue is not undefined, then set the value of the
-       *          entry in lifecycleCallbacks with key callbackName to the result
-       *          of converting callbackValue to the Web IDL Function callback type.
-       *          Rethrow any exceptions from the conversion.
-       */
-      // Note: We call the init from the constructorProtoUnwrapped's compartment
-      //       here.
-      JS::RootedValue rootedv(aCx, JS::ObjectValue(*constructorProtoUnwrapped));
-      if (!callbacksHolder->Init(aCx, rootedv)) {
+      if (!JS_GetProperty(aCx, constructor, "observedAttributes",
+                          &observedAttributesIterable)) {
         aRv.NoteJSContextException(aCx);
         return;
       }
 
-      /**
-       * 10.5. Let observedAttributes be an empty sequence<DOMString>.
-       * 10.6. If the value of the entry in lifecycleCallbacks with key
-       *       "attributeChangedCallback" is not null, then:
-       *       1. Let observedAttributesIterable be Get(constructor,
-       *          "observedAttributes"). Rethrow any exceptions.
-       *       2. If observedAttributesIterable is not undefined, then set
-       *          observedAttributes to the result of converting
-       *          observedAttributesIterable to a sequence<DOMString>. Rethrow
-       *          any exceptions from the conversion.
-       */
-      if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
-        // Enter constructor's realm.
-        JSAutoRealm ar(aCx, constructor);
-        JS::Rooted<JS::Value> observedAttributesIterable(aCx);
+      if (!observedAttributesIterable.isUndefined()) {
+        if (!observedAttributesIterable.isObject()) {
+          aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
+          return;
+        }
 
-        if (!JS_GetProperty(aCx, constructor, "observedAttributes",
-                            &observedAttributesIterable)) {
+        JS::ForOfIterator iter(aCx);
+        if (!iter.init(observedAttributesIterable, JS::ForOfIterator::AllowNonIterable)) {
           aRv.NoteJSContextException(aCx);
           return;
         }
 
-        if (!observedAttributesIterable.isUndefined()) {
-          if (!observedAttributesIterable.isObject()) {
-            aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
+        if (!iter.valueIsIterable()) {
+          aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
+          return;
+        }
+
+        JS::Rooted<JS::Value> attribute(aCx);
+        while (true) {
+          bool done;
+          if (!iter.next(&attribute, &done)) {
+            aRv.NoteJSContextException(aCx);
             return;
           }
+          if (done) {
+            break;
+          }
 
-          JS::ForOfIterator iter(aCx);
-          if (!iter.init(observedAttributesIterable, JS::ForOfIterator::AllowNonIterable)) {
+          nsAutoString attrStr;
+          if (!ConvertJSValueToString(aCx, attribute, eStringify, eStringify, attrStr)) {
             aRv.NoteJSContextException(aCx);
             return;
           }
 
-          if (!iter.valueIsIterable()) {
-            aRv.ThrowTypeError<MSG_NOT_SEQUENCE>(NS_LITERAL_STRING("observedAttributes"));
+          if (!observedAttributes.AppendElement(NS_Atomize(attrStr))) {
+            aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
             return;
           }
-
-          JS::Rooted<JS::Value> attribute(aCx);
-          while (true) {
-            bool done;
-            if (!iter.next(&attribute, &done)) {
-              aRv.NoteJSContextException(aCx);
-              return;
-            }
-            if (done) {
-              break;
-            }
-
-            nsAutoString attrStr;
-            if (!ConvertJSValueToString(aCx, attribute, eStringify, eStringify, attrStr)) {
-              aRv.NoteJSContextException(aCx);
-              return;
-            }
-
-            if (!observedAttributes.AppendElement(NS_Atomize(attrStr))) {
-              aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-              return;
-            }
-          }
         }
-      } // Leave constructor's realm.
-    } // Leave constructorProtoUnwrapped's compartment.
+      }
+    }
   } // Unset mIsCustomDefinitionRunning
 
   /**
