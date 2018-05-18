@@ -3334,7 +3334,7 @@ const Button = props => external__React__default.a.createElement(
   "a",
   { href: safeURI(props.url),
     onClick: props.onClick,
-    className: "ASRouterButton" },
+    className: props.className || "ASRouterButton" },
   props.children
 );
 // CONCATENATED MODULE: ./system-addon/content-src/asrouter/components/SnippetBase/SnippetBase.jsx
@@ -3388,8 +3388,31 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
     this.props.sendUserActionTelemetry({ event: "CLICK_BUTTON" });
   }
 
+  renderTitle() {
+    const { title } = this.props.content;
+    return title ? external__React__default.a.createElement(
+      "h3",
+      { className: "title" },
+      title
+    ) : null;
+  }
+
+  renderButton(className) {
+    const { props } = this;
+    return external__React__default.a.createElement(
+      Button,
+      {
+        className: className,
+        onClick: this.onButtonClick,
+        url: props.content.button_url },
+      props.content.button_label
+    );
+  }
+
   render() {
     const { props } = this;
+    const hasLink = props.content.button_url && props.content.button_type === "anchor";
+    const hasButton = props.content.button_url && !props.content.button_type;
     return external__React__default.a.createElement(
       SnippetBase_SnippetBase,
       _extends({}, props, { className: "SimpleSnippet" }),
@@ -3397,26 +3420,20 @@ class SimpleSnippet_SimpleSnippet extends external__React__default.a.PureCompone
       external__React__default.a.createElement(
         "div",
         null,
-        props.content.title ? external__React__default.a.createElement(
-          "h3",
-          { className: "title" },
-          props.content.title
-        ) : null,
+        this.renderTitle(),
         " ",
         external__React__default.a.createElement(
           "p",
           { className: "body" },
           props.content.text
-        )
+        ),
+        " ",
+        hasLink ? this.renderButton("ASRouterAnchor") : null
       ),
-      props.content.button_url ? external__React__default.a.createElement(
+      hasButton ? external__React__default.a.createElement(
         "div",
         null,
-        external__React__default.a.createElement(
-          Button,
-          { onClick: this.onButtonClick, url: props.content.button_url },
-          props.content.button_label
-        )
+        this.renderButton()
       ) : null
     );
   }

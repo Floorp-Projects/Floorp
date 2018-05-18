@@ -4,20 +4,11 @@ Cu.importGlobalProperties(["fetch"]);
 const INCOMING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const OUTGOING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const ONE_HOUR_IN_MS = 60 * 60 * 1000;
-// This is a temporary endpoint until we have something for snippets
-const SNIPPETS_ENDPOINT = "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br";
-
-const LOCAL_TEST_MESSAGES = [
-  {
-    id: "LOCAL_TEST_THEMES",
-    template: "simple_snippet",
-    content: {
-      text: "Your browser is ready for a makeover. Don't worry, you've got tons of options.",
-      button_label: "Check them out here",
-      button_url: "https://addons.mozilla.org/en-US/firefox/themes"
-    }
-  }
-];
+const SNIPPETS_ENDPOINT_PREF = "browser.newtabpage.activity-stream.asrouter.snippetsUrl";
+// Note: currently a restart is required when this pref is changed, this will be fixed in Bug 1462114
+const SNIPPETS_ENDPOINT = Services.prefs.getStringPref(SNIPPETS_ENDPOINT_PREF,
+  "https://activity-stream-icons.services.mozilla.com/v1/messages.json.br");
+const LOCAL_TEST_MESSAGES = [];
 
 const MessageLoaderUtils = {
   /**
