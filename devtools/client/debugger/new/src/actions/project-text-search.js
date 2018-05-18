@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.addSearchQuery = addSearchQuery;
 exports.clearSearchQuery = clearSearchQuery;
+exports.addSearchResult = addSearchResult;
 exports.clearSearchResults = clearSearchResults;
 exports.clearSearch = clearSearch;
 exports.updateSearchStatus = updateSearchStatus;
@@ -40,6 +41,17 @@ function addSearchQuery(query) {
 function clearSearchQuery() {
   return {
     type: "CLEAR_QUERY"
+  };
+}
+
+function addSearchResult(sourceId, filepath, matches) {
+  return {
+    type: "ADD_SEARCH_RESULT",
+    result: {
+      sourceId,
+      filepath,
+      matches
+    }
   };
 }
 
@@ -105,13 +117,6 @@ function searchSource(sourceId, query) {
       return;
     }
 
-    dispatch({
-      type: "ADD_SEARCH_RESULT",
-      result: {
-        sourceId: sourceRecord.id,
-        filepath: sourceRecord.url,
-        matches
-      }
-    });
+    dispatch(addSearchResult(sourceRecord.id, sourceRecord.url, matches));
   };
 }

@@ -8,7 +8,8 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'Close.js',
+    'CloseButton.js',
     'CommandBarButton.js',
-    'PaneToggle.js',
+    'index.js',
+    'PaneToggleButton.js',
 )

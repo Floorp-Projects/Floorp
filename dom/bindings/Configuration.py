@@ -417,10 +417,11 @@ class Descriptor(DescriptorProvider):
             'NamedDeleter': None,
             'Stringifier': None,
             'LegacyCaller': None,
-            'Jsonifier': None
             }
 
-        # Stringifiers and jsonifiers need to be set up whether an interface is
+        self.hasDefaultToJSON = False
+
+        # Stringifiers need to be set up whether an interface is
         # concrete or not, because they're actually prototype methods and hence
         # can apply to instances of descendant interfaces.  Legacy callers and
         # named/indexed operations only need to be set up on concrete
@@ -436,8 +437,8 @@ class Descriptor(DescriptorProvider):
             for m in self.interface.members:
                 if m.isMethod() and m.isStringifier():
                     addOperation('Stringifier', m)
-                if m.isMethod() and m.isJsonifier():
-                    addOperation('Jsonifier', m)
+                if m.isMethod() and m.isDefaultToJSON():
+                    self.hasDefaultToJSON = True
 
         if self.concrete:
             self.proxy = False

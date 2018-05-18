@@ -68,7 +68,7 @@ class Popup extends _react.Component {
     return _temp = super(...args), this.onMouseLeave = e => {
       const relatedTarget = e.relatedTarget;
 
-      if (relatedTarget && (relatedTarget.classList.contains("popover") || relatedTarget.classList.contains("debug-expression") || relatedTarget.classList.contains("editor-mount"))) {
+      if (relatedTarget && relatedTarget.classList && (relatedTarget.classList.contains("popover") || relatedTarget.classList.contains("debug-expression") || relatedTarget.classList.contains("editor-mount"))) {
         return;
       }
 

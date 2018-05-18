@@ -16,5 +16,5 @@ interface PerformanceServerTiming {
   readonly attribute DOMHighResTimeStamp duration;
   readonly attribute DOMString           description;
 
-  jsonifier;
+  [Default] object toJSON();
 };

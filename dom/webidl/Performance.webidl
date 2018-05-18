@@ -29,7 +29,7 @@ partial interface Performance {
   [Constant]
   readonly attribute PerformanceNavigation navigation;
 
-  jsonifier;
+  [Default] object toJSON();
 };
 
 // http://www.w3.org/TR/performance-timeline/#sec-window.performance-attribute
