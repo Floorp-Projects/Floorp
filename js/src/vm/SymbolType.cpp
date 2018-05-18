@@ -22,7 +22,7 @@ Symbol*
 Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash, JSAtom* description,
                     AutoLockForExclusiveAccess& lock)
 {
-    MOZ_ASSERT(cx->compartment() == cx->atomsCompartment(lock));
+    MOZ_ASSERT(cx->realm() == cx->atomsRealm(lock));
 
     // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
     Symbol* p = Allocate<JS::Symbol, NoGC>(cx);

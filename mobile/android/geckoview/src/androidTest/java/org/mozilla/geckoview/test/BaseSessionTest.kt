@@ -13,6 +13,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
+import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.rules.ErrorCollector
 
@@ -37,7 +38,13 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     @get:Rule val sessionRule = GeckoSessionTestRule()
 
     @get:Rule val errors = ErrorCollector()
+
+    val mainSession get() = sessionRule.session
+
     fun <T> assertThat(reason: String, v: T, m: Matcher<in T>) = sessionRule.checkThat(reason, v, m)
+    fun <T> assertInAutomationThat(reason: String, v: T, m: Matcher<in T>) =
+            if (sessionRule.env.isAutomation) assertThat(reason, v, m)
+            else assumeThat(reason, v, m)
 
     init {
         if (!noErrorCollector) {
@@ -103,6 +110,9 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.evaluateJS(js: String): Any? =
             sessionRule.evaluateJS(this, js)
+
+    fun GeckoSession.waitForJS(js: String): Any? =
+            sessionRule.waitForJS(this, js)
 
     infix fun Any?.dot(prop: Any): Any? =
             if (prop is Int) this.asJSList<Any>()[prop] else this.asJSMap<Any>()[prop]
