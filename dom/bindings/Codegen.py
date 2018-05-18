@@ -517,7 +517,7 @@ class CGDOMJSClass(CGThing):
             static_assert(${reservedSlots} >= ${slotCount},
                           "Must have enough reserved slots.");
             """,
-            name=self.descriptor.interface.identifier.name,
+            name=self.descriptor.interface.getClassName(),
             flags=classFlags,
             addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'nullptr',
             newEnumerate=newEnumerateHook,
@@ -678,7 +678,7 @@ class CGPrototypeJSClass(CGThing):
               ${protoGetter}
             };
             """,
-            name=self.descriptor.interface.identifier.name,
+            name=self.descriptor.interface.getClassName(),
             slotCount=slotCount,
             type=type,
             hooks=NativePropertyHooks(self.descriptor),
