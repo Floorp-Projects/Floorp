@@ -1485,7 +1485,7 @@ js::ObjectGroup::traceChildren(JSTracer* trc)
     if (trc->isMarkingTracer())
         compartment()->mark();
 
-    if (JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal())
+    if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal())
         TraceManuallyBarrieredEdge(trc, &global, "group_global");
 
 
@@ -1528,7 +1528,7 @@ js::GCMarker::lazilyMarkChildren(ObjectGroup* group)
 
     group->compartment()->mark();
 
-    if (GlobalObject* global = group->compartment()->unsafeUnbarrieredMaybeGlobal())
+    if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal())
         traverseEdge(group, static_cast<JSObject*>(global));
 
     if (group->newScript(sweep))

@@ -572,8 +572,8 @@ js::AreGCGrayBitsValid(JSRuntime* rt)
 JS_FRIEND_API(bool)
 js::ZoneGlobalsAreAllGray(JS::Zone* zone)
 {
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-        JSObject* obj = comp->unsafeUnbarrieredMaybeGlobal();
+    for (RealmsInZoneIter realm(zone); !realm.done(); realm.next()) {
+        JSObject* obj = realm->unsafeUnbarrieredMaybeGlobal();
         if (!obj || !JS::ObjectIsMarkedGray(obj))
             return false;
     }

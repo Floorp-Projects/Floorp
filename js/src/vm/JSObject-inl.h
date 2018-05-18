@@ -394,17 +394,17 @@ JSObject::global() const
 {
     /*
      * The global is read-barriered so that it is kept live by access through
-     * the JSCompartment. When accessed through a JSObject, however, the global
-     * will be already be kept live by the black JSObject's parent pointer, so
-     * does not need to be read-barriered.
+     * the Realm. When accessed through a JSObject, however, the global will be
+     * already kept live by the black JSObject's group pointer, so does not
+     * need to be read-barriered.
      */
-    return *compartment()->unsafeUnbarrieredMaybeGlobal();
+    return *realm()->unsafeUnbarrieredMaybeGlobal();
 }
 
 inline js::GlobalObject*
 JSObject::globalForTracing(JSTracer*) const
 {
-    return compartment()->unsafeUnbarrieredMaybeGlobal();
+    return realm()->unsafeUnbarrieredMaybeGlobal();
 }
 
 inline bool

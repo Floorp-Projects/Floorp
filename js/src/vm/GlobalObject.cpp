@@ -485,7 +485,7 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
         return nullptr;
     global->setReservedSlot(EMPTY_GLOBAL_SCOPE, PrivateGCThingValue(emptyGlobalScope));
 
-    cx->compartment()->initGlobal(*global);
+    cx->realm()->initGlobal(*global);
 
     if (!JSObject::setQualifiedVarObj(cx, global))
         return nullptr;

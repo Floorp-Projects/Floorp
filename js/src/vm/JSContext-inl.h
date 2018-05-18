@@ -491,7 +491,7 @@ inline void
 JSContext::enterRealmOf(const T& target)
 {
     MOZ_ASSERT(JS::CellIsNotGray(target));
-    enterNonAtomsRealm(JS::GetRealmForCompartment(target->compartment()));
+    enterNonAtomsRealm(target->realm());
 }
 
 inline void
