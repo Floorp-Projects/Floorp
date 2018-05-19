@@ -135,6 +135,7 @@ class Expressions extends _react.Component {
       return _react2.default.createElement("li", {
         className: "expression-container",
         key: input,
+        title: expression.input,
         onDoubleClick: (items, options) => this.editExpression(expression, index)
       }, _react2.default.createElement("div", {
         className: "expression-content"

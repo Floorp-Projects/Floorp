@@ -7,7 +7,14 @@
 #ifndef ds_Bitmap_h
 #define ds_Bitmap_h
 
+#include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/MemoryChecking.h"
+
 #include <algorithm>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
@@ -26,7 +33,8 @@ namespace js {
 
 class DenseBitmap
 {
-    typedef Vector<uintptr_t, 0, SystemAllocPolicy> Data;
+    using Data = Vector<uintptr_t, 0, SystemAllocPolicy>;
+
     Data data;
 
   public:
@@ -45,7 +53,9 @@ class DenseBitmap
 
     void copyBitsFrom(size_t wordStart, size_t numWords, uintptr_t* source) {
         MOZ_ASSERT(wordStart + numWords <= data.length());
-        mozilla::PodCopy(&data[wordStart], source, numWords);
+        // Use std::copy and not std::copy_n because the former requires no
+        // overlap and so provides extra opportunity to optimize.
+        std::copy(source, source + numWords, &data[wordStart]);
     }
 
     void bitwiseOrRangeInto(size_t wordStart, size_t numWords, uintptr_t* target) const {
@@ -62,8 +72,9 @@ class SparseBitmap
     // which are expected to be very sparse should have a small block size.
     static const size_t WordsInBlock = 4096 / sizeof(uintptr_t);
 
-    typedef mozilla::Array<uintptr_t, WordsInBlock> BitBlock;
-    typedef HashMap<size_t, BitBlock*, DefaultHasher<size_t>, SystemAllocPolicy> Data;
+    using BitBlock = mozilla::Array<uintptr_t, WordsInBlock>;
+    using Data = HashMap<size_t, BitBlock*, DefaultHasher<size_t>, SystemAllocPolicy>;
+
     Data data;
 
     static size_t blockStartWord(size_t word) {

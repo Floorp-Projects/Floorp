@@ -28,15 +28,6 @@ config = {
     'arch': 'arm',
     # https://dxr.mozilla.org/mozilla-central/rev/5322c03f4c8587fe526172d3f87160031faa6d75/mobile/android/config/mozconfigs/android-api-15/nightly#6
     'min_sdk': 16,
-    'use_mock': True,
-    'mock_target': 'mozilla-centos6-x86_64',
-    'mock_packages': ['make', 'git', 'nasm', 'glibc-devel.i686',
-                      'libstdc++-devel.i686', 'zip', 'yasm',
-                      'mozilla-python27'],
-    'mock_files': [
-        ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
-        ('/builds/relengapi.tok', '/builds/relengapi.tok'),
-    ],
     'operating_system': 'android',
     'partial_env': {
         'PATH': '%(abs_work_dir)s/android-sdk-linux/tools:%(PATH)s',

@@ -10,7 +10,10 @@ add_task(async function() {
   // which is the slowest part of this and make it run faster, but to
   // fix a frequent failure allow a longer timeout.
   const dbg = await initDebugger("doc-scripts.html");
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
   const simple1 = findSource(dbg, "simple1.js");
   const simple2 = findSource(dbg, "simple2.js");
 

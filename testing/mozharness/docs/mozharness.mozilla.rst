@@ -37,14 +37,6 @@ mozharness.mozilla.mapper module
     :undoc-members:
     :show-inheritance:
 
-mozharness.mozilla.mock module
-------------------------------
-
-.. automodule:: mozharness.mozilla.mock
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mozharness.mozilla.mozbase module
 ---------------------------------
 

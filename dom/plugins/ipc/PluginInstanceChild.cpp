@@ -86,6 +86,8 @@ static decltype(ImmAssociateContextEx)* sImm32ImmAssociateContextExStub =
                                           nullptr;
 static PluginInstanceChild* sCurrentPluginInstance = nullptr;
 static const HIMC sHookIMC = (const HIMC)0xefefefef;
+static bool sPopupMenuHookSet;
+static bool sSetWindowLongHookSet;
 
 using mozilla::gfx::SharedDIB;
 
@@ -1897,8 +1899,15 @@ PluginInstanceChild::SetWindowLongWHook(HWND hWnd,
 void
 PluginInstanceChild::HookSetWindowLongPtr()
 {
-    if (!(GetQuirks() & QUIRK_FLASH_HOOK_SETLONGPTR))
+    if (!(GetQuirks() & QUIRK_FLASH_HOOK_SETLONGPTR)) {
         return;
+    }
+
+    // Only pass through here once
+    if (sSetWindowLongHookSet) {
+        return;
+    }
+    sSetWindowLongHookSet = true;
 
     sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
@@ -1978,19 +1987,23 @@ PluginInstanceChild::TrackPopupHookProc(HMENU hMenu,
 void
 PluginInstanceChild::InitPopupMenuHook()
 {
-    if (!(GetQuirks() & QUIRK_WINLESS_TRACKPOPUP_HOOK) ||
-        sUser32TrackPopupMenuStub)
+    if (!(GetQuirks() & QUIRK_WINLESS_TRACKPOPUP_HOOK)) {
         return;
+    }
+
+    // Only pass through here once
+    if (sPopupMenuHookSet) {
+        return;
+    }
+    sPopupMenuHookSet = true;
 
     // Note, once WindowsDllInterceptor is initialized for a module,
     // it remains initialized for that particular module for it's
     // lifetime. Additional instances are needed if other modules need
     // to be hooked.
-    if (!sUser32TrackPopupMenuStub) {
-        sUser32Intercept.Init("user32.dll");
-        sUser32Intercept.AddHook("TrackPopupMenu", reinterpret_cast<intptr_t>(TrackPopupHookProc),
-                                 (void**) &sUser32TrackPopupMenuStub);
-    }
+    sUser32Intercept.Init("user32.dll");
+    sUser32Intercept.AddHook("TrackPopupMenu", reinterpret_cast<intptr_t>(TrackPopupHookProc),
+                             (void**) &sUser32TrackPopupMenuStub);
 }
 
 void

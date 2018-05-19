@@ -100,7 +100,6 @@
 
 .folder,
 .domain,
-.source-icon,
 .file,
 .extension {
   background-color: var(--theme-comment);
@@ -109,7 +108,7 @@
 .worker,
 .file,
 .folder,
-.source-icon,
+.sources-list .source-icon,
 .extension {
   position: relative;
   top: 2px;
@@ -131,8 +130,7 @@
 }
 
 img.domain,
-img.folder,
-img.source-icon {
+img.folder {
   width: 15px;
   height: 15px;
 }
@@ -189,7 +187,7 @@ img.file {
 img.domain,
 img.folder,
 img.file,
-img.source-icon,
+.sources-list img.source-icon,
 img.extension {
   mask-size: 100%;
   margin-inline-end: 5px;
