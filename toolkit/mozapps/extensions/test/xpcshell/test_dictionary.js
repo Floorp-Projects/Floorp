@@ -132,8 +132,6 @@ add_task(async function test_1() {
   equal(install.version, "1.0");
   equal(install.name, "Test Dictionary");
   equal(install.state, AddonManager.STATE_DOWNLOADED);
-  ok(install.addon.hasResource("install.rdf"));
-  ok(!install.addon.hasResource("bootstrap.js"));
   equal(install.addon.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
   do_check_not_in_crash_annotation(ID_DICT, "1.0");
@@ -149,7 +147,6 @@ add_task(async function test_1() {
       "onInstallStarted",
       "onInstallEnded",
     ], function() {
-      ok(addon.hasResource("install.rdf"));
       HunspellEngine.listener = function(aEvent) {
         HunspellEngine.listener = null;
         equal(aEvent, "addDictionary");
@@ -171,8 +168,6 @@ add_task(async function test_1() {
   ok(!addon.userDisabled);
   ok(addon.isActive);
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  ok(addon.hasResource("install.rdf"));
-  ok(!addon.hasResource("bootstrap.js"));
   do_check_in_crash_annotation(ID_DICT, "1.0");
 
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
@@ -437,8 +432,6 @@ add_task(async function test_23() {
       equal(install.version, "1.0");
       equal(install.name, "Test Dictionary");
       equal(install.state, AddonManager.STATE_DOWNLOADED);
-      ok(install.addon.hasResource("install.rdf"));
-      ok(!install.addon.hasResource("bootstrap.js"));
       equal(install.addon.operationsRequiringRestart &
                    AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
       do_check_not_in_crash_annotation(ID_DICT, "1.0");
@@ -452,11 +445,7 @@ add_task(async function test_23() {
       }, [
         "onInstallStarted",
         "onInstallEnded",
-      ], function() {
-        ok(addon.hasResource("install.rdf"));
-        // spin to let the addon startup finish
-        resolve();
-      });
+      ], resolve);
     });
     install.install();
   });
@@ -473,8 +462,6 @@ add_task(async function test_23() {
   ok(!addon.userDisabled);
   ok(addon.isActive);
   ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
-  ok(addon.hasResource("install.rdf"));
-  ok(!addon.hasResource("bootstrap.js"));
   do_check_in_crash_annotation(ID_DICT, "1.0");
 
   await promiseRestartManager();
