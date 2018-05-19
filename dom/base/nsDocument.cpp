@@ -11263,7 +11263,7 @@ nsIDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
       break;
     }
     nsIDocument* parent = child->GetParentDocument();
-    Element* element = parent->FindContentForSubDocument(child)->AsElement();
+    Element* element = parent->FindContentForSubDocument(child);
     if (static_cast<nsDocument*>(parent)->FullScreenStackPush(element)) {
       changed.AppendElement(parent);
       child = parent;

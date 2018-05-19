@@ -5125,7 +5125,7 @@ HTMLEditRules::ConvertListType(Element* aList,
   }
 
   if (aList->IsHTMLElement(aListType)) {
-    RefPtr<dom::Element> list = aList->AsElement();
+    RefPtr<dom::Element> list = aList;
     return list.forget();
   }
 
@@ -7407,7 +7407,7 @@ HTMLEditRules::SplitParagraph(
   }
 
   // Remove ID attribute on the paragraph from the existing right node.
-  rv = htmlEditor->RemoveAttributeWithTransaction(*aParentDivOrP.AsElement(),
+  rv = htmlEditor->RemoveAttributeWithTransaction(aParentDivOrP,
                                                   *nsGkAtoms::id);
   NS_ENSURE_SUCCESS(rv, rv);
 

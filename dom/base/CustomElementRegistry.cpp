@@ -565,7 +565,7 @@ CandidateFinder::OrderedCandidates()
 
   nsTArray<nsCOMPtr<Element>> orderedElements(mCandidates.Count());
   for (Element* child = mDoc->GetFirstElementChild(); child; child = child->GetNextElementSibling()) {
-    if (!Traverse(child->AsElement(), orderedElements)) {
+    if (!Traverse(child, orderedElements)) {
       break;
     }
   }
