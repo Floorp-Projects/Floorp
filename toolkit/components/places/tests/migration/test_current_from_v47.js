@@ -7,20 +7,26 @@ add_task(async function setup() {
   await setupPlacesDatabase("places_v43.sqlite");
 });
 
+
+// Accessing the database for the first time should trigger migration, and the
+// schema version should be updated.
 add_task(async function database_is_valid() {
-  // Accessing the database for the first time triggers migration.
   Assert.equal(PlacesUtils.history.databaseStatus,
                PlacesUtils.history.DATABASE_STATUS_UPGRADED);
 
   let db = await PlacesUtils.promiseDBConnection();
   Assert.equal((await db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
-});
 
-add_task(async function test_origins() {
+  // Now wait for moz_origins.frecency to be populated before continuing with
+  // other test tasks.
   await TestUtils.waitForCondition(() => {
     return !Services.prefs.getBoolPref("places.database.migrateV48Frecencies", false);
   }, "Waiting for v48 origin frecencies to be migrated", 100, 3000);
+});
 
+
+// moz_origins should be populated.
+add_task(async function test_origins() {
   let db = await PlacesUtils.promiseDBConnection();
 
   // Collect origins.
@@ -82,4 +88,34 @@ add_task(async function test_origins() {
     FROM moz_hosts;
   `);
   Assert.equal(rows.length, 0);
+});
+
+
+// Frecency stats should have been collected.
+add_task(async function test_frecency_stats() {
+  let db = await PlacesUtils.promiseDBConnection();
+
+  // Collect positive frecencies from moz_places.
+  let rows = await db.execute(`
+    SELECT frecency
+    FROM moz_places
+    WHERE id >= 0 AND frecency > 0;
+  `);
+  Assert.notEqual(rows.length, 0);
+  let frecencies = rows.map(r => r.getResultByName("frecency"));
+
+  // Collect stats.
+  rows = await db.execute(`
+    SELECT
+      (SELECT value FROM moz_meta WHERE key = "frecency_count"),
+      (SELECT value FROM moz_meta WHERE key = "frecency_sum"),
+      (SELECT value FROM moz_meta WHERE key = "frecency_sum_of_squares")
+  `);
+  let count = rows[0].getResultByIndex(0);
+  let sum = rows[0].getResultByIndex(1);
+  let squares = rows[0].getResultByIndex(2);
+
+  Assert.equal(count, frecencies.length);
+  Assert.equal(sum, frecencies.reduce((memo, f) => memo + f, 0));
+  Assert.equal(squares, frecencies.reduce((memo, f) => memo + (f * f), 0));
 });

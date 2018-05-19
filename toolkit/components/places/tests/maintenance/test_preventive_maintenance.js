@@ -1689,6 +1689,74 @@ tests.push({
 // ------------------------------------------------------------------------------
 
 tests.push({
+  name: "T.1",
+  desc: "history.recalculateFrecencyStats() is called",
+
+  async setup() {
+    let urls = [
+      "http://example.com/1",
+      "http://example.com/2",
+      "http://example.com/3",
+    ];
+    await PlacesTestUtils.addVisits(urls.map(u => ({ uri: u })));
+
+    this._frecencies = urls.map(u => frecencyForUrl(u));
+
+    let stats = await this._promiseStats();
+    Assert.equal(stats.count, this._frecencies.length, "Sanity check");
+    Assert.equal(stats.sum, this._sum(this._frecencies), "Sanity check");
+    Assert.equal(stats.squares, this._squares(this._frecencies), "Sanity check");
+
+    await PlacesUtils.withConnectionWrapper(
+      "T.1",
+      db => db.execute(`
+        INSERT OR REPLACE INTO moz_meta VALUES
+        ('frecency_count', 99),
+        ('frecency_sum', 99999),
+        ('frecency_sum_of_squares', 99999 * 99999);
+      `)
+    );
+
+    stats = await this._promiseStats();
+    Assert.equal(stats.count, 99);
+    Assert.equal(stats.sum, 99999);
+    Assert.equal(stats.squares, 99999 * 99999);
+  },
+
+  async check() {
+    let stats = await this._promiseStats();
+    Assert.equal(stats.count, this._frecencies.length);
+    Assert.equal(stats.sum, this._sum(this._frecencies));
+    Assert.equal(stats.squares, this._squares(this._frecencies));
+  },
+
+  _sum(frecs) {
+    return frecs.reduce((memo, f) => memo + f, 0);
+  },
+
+  _squares(frecs) {
+    return frecs.reduce((memo, f) => memo + (f * f), 0);
+  },
+
+  async _promiseStats() {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`
+      SELECT
+        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_count"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_sum"), 0),
+        IFNULL((SELECT value FROM moz_meta WHERE key = "frecency_sum_of_squares"), 0)
+    `);
+    return {
+      count: rows[0].getResultByIndex(0),
+      sum: rows[0].getResultByIndex(1),
+      squares: rows[0].getResultByIndex(2),
+    };
+  },
+});
+
+// ------------------------------------------------------------------------------
+
+tests.push({
   name: "Z",
   desc: "Sanity: Preventive maintenance does not touch valid items",
 
