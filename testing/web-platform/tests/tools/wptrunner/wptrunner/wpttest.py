@@ -74,7 +74,7 @@ class RunInfo(dict):
         from update.tree import GitTree
         try:
             # GitTree.__init__ throws if we are not in a git tree.
-            rev = GitTree().rev
+            rev = GitTree(log_error=False).rev
         except subprocess.CalledProcessError:
             rev = None
         if rev:
