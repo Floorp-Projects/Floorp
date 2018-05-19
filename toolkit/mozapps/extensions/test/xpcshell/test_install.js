@@ -9,10 +9,6 @@ ChromeUtils.import("resource://testing-common/httpd.js");
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 var gInstallDate;
 
-// This verifies that add-ons can be installed from XPI files
-// install.rdf size, icon.png, icon64.png size
-const ADDON1_SIZE = 612;
-
 const ADDONS = {
   test_install1: {
     "install.rdf": {
@@ -168,7 +164,6 @@ add_task(async function test_1() {
   let {addon} = install;
   checkAddon("addon1@tests.mozilla.org", addon, {
     install,
-    size: ADDON1_SIZE,
     iconURL: `jar:${uri.spec}!/icon.png`,
     icon64URL: `jar:${uri.spec}!/icon64.png`,
     sourceURI: uri,
@@ -244,7 +239,6 @@ add_task(async function test_1() {
     version: "1.0",
     name: "Test 1",
     foreignInstall: false,
-    size: ADDON1_SIZE,
     iconURL: uri2 + "icon.png",
     icon64URL: uri2 + "icon64.png",
     sourceURI: Services.io.newFileURI(XPIS.test_install1),

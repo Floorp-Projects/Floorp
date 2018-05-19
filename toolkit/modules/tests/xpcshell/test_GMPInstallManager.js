@@ -255,7 +255,6 @@ add_task(async function test_checkForAddons_singleAddon() {
   Assert.equal(gmpAddon.hashFunction, "sha256");
   Assert.equal(gmpAddon.hashValue, "1118b90d6f645eefc2b99af17bae396636ace1e33d079c88de715177584e2aee");
   Assert.equal(gmpAddon.version, "1.1");
-  Assert.equal(gmpAddon.size, undefined);
   Assert.ok(gmpAddon.isValid);
   Assert.ok(!gmpAddon.isInstalled);
   installManager.uninit();

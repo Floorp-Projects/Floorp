@@ -85,7 +85,7 @@ const PREF_ADDON0_CACHE_ENABLED = "extensions." + ADDON_IDS[0] + ".getAddons.cac
 const PREF_ADDON1_CACHE_ENABLED = "extensions." + ADDON_IDS[1] + ".getAddons.cache.enabled";
 
 // Properties of an individual add-on that should be checked
-// Note: size and updateDate are checked separately
+// Note: updateDate is checked separately
 const ADDON_PROPERTIES = ["id", "type", "name", "version", "creator",
                           "developers", "translators", "contributors",
                           "description", "fullDescription",
@@ -95,11 +95,10 @@ const ADDON_PROPERTIES = ["id", "type", "name", "version", "creator",
                           "averageRating", "reviewCount",
                           "reviewURL", "weeklyDownloads", "sourceURI"];
 
-// The size and updateDate properties are annoying to test for XPI add-ons.
+// The updateDate property is annoying to test for XPI add-ons.
 // However, since we only care about whether the repository value vs. the
 // XPI value is used, we can just test if the property value matches
 // the repository value
-const REPOSITORY_SIZE       = 9;
 const REPOSITORY_UPDATEDATE = 9;
 
 // Get the URI of a subfile locating directly in the folder of
@@ -415,12 +414,9 @@ function check_results(aActualAddons, aExpectedAddons, aFromRepository) {
 
   do_check_addons(aActualAddons, aExpectedAddons, ADDON_PROPERTIES);
 
-  // Separately test size and updateDate (they should only be equal to the
-  // REPOSITORY values if they are from the repository)
+  // Separately test updateDate (it should only be equal to the
+  // REPOSITORY values if it is from the repository)
   aActualAddons.forEach(function(aActualAddon) {
-    if (aActualAddon.size)
-      Assert.equal(aActualAddon.size === REPOSITORY_SIZE, aFromRepository);
-
     if (aActualAddon.updateDate) {
       let time = aActualAddon.updateDate.getTime();
       Assert.equal(time === 1000 * REPOSITORY_UPDATEDATE, aFromRepository);
