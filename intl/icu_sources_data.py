@@ -123,6 +123,7 @@ def update_data_file(topsrcdir):
              '--disable-extras',
              '--disable-icuio',
              '--disable-layout',
+             '--disable-layoutex',
              '--disable-tests',
              '--disable-samples',
              '--disable-strict'],
