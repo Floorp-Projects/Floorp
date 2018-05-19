@@ -7996,6 +7996,10 @@ nsIDocument::CollectDescendantDocuments(
 bool
 nsIDocument::CanSavePresentation(nsIRequest *aNewRequest)
 {
+  if (!IsBFCachingAllowed()) {
+    return false;
+  }
+
   if (EventHandlingSuppressed()) {
     return false;
   }
