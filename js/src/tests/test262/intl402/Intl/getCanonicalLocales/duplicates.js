@@ -15,7 +15,7 @@ assert(compareArray(
   Intl.getCanonicalLocales(
     ['ab-cd', 'ff', 'de-rt', 'ab-Cd']), ['ab-CD', 'ff', 'de-RT']));
 
-var locales = Intl.getCanonicalLocales(["en-US", "en-US"]);
+var locales = Intl.getCanonicalLocales(['en-US', 'en-US']);
 assert(compareArray(locales, ['en-US']), 'en-US');
 
 reportCompare(0, 0);

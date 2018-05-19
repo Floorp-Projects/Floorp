@@ -12,7 +12,7 @@ info: |
     This property has the attributes { [[Writable]]: false, [[Enumerable]]:
     false, [[Configurable]]: true }.
 includes: [propertyHelper.js]
-features: [Atomics, Symbol.toStringTag]
+features: [Atomics, Symbol, Symbol.toStringTag]
 ---*/
 
 assert.sameValue(Atomics[Symbol.toStringTag], 'Atomics');

@@ -475,12 +475,6 @@ AddonWrapper.prototype = {
     return AddonManager.OP_NEEDS_RESTART_NONE;
   },
 
-  get size() {
-    // The size changes depending on whether the theme is in use or not, this is
-    // probably not worth exposing.
-    return null;
-  },
-
   get permissions() {
     let permissions = 0;
 

@@ -116,13 +116,15 @@ gfxHarfBuzzShaper::GetNominalGlyph(hb_codepoint_t unicode) const
         NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
                      "cmap data not correctly set up, expect disaster");
 
+        uint32_t length;
         const uint8_t* data =
-            (const uint8_t*)hb_blob_get_data(mCmapTable, nullptr);
+            (const uint8_t*)hb_blob_get_data(mCmapTable, &length);
 
         switch (mCmapFormat) {
         case 4:
             gid = unicode < UNICODE_BMP_LIMIT ?
                 gfxFontUtils::MapCharToGlyphFormat4(data + mSubtableOffset,
+                                                    length - mSubtableOffset,
                                                     unicode) : 0;
             break;
         case 10:
@@ -164,8 +166,9 @@ gfxHarfBuzzShaper::GetVariationGlyph(hb_codepoint_t unicode,
     NS_ASSERTION(mCmapTable && (mCmapFormat > 0) && (mSubtableOffset > 0),
                  "cmap data not correctly set up, expect disaster");
 
+    uint32_t length;
     const uint8_t* data =
-        (const uint8_t*)hb_blob_get_data(mCmapTable, nullptr);
+        (const uint8_t*)hb_blob_get_data(mCmapTable, &length);
 
     if (mUVSTableOffset) {
         hb_codepoint_t gid =
@@ -183,6 +186,7 @@ gfxHarfBuzzShaper::GetVariationGlyph(hb_codepoint_t unicode,
         case 4:
             if (compat < UNICODE_BMP_LIMIT) {
                 return gfxFontUtils::MapCharToGlyphFormat4(data + mSubtableOffset,
+                                                           length - mSubtableOffset,
                                                            compat);
             }
             break;
