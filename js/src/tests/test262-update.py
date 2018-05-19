@@ -27,12 +27,15 @@ UNSUPPORTED_FEATURES = set([
                             "regexp-named-groups",
                             "regexp-unicode-property-escapes",
                             "numeric-separator-literal",
+                            "json-superset",
+                            "Intl.Locale",
+                            "String.prototype.matchAll",
+                            "Symbol.matchAll",
                        ])
 FEATURE_CHECK_NEEDED = {
                          "Atomics": "!this.hasOwnProperty('Atomics')",
                          "BigInt": "!this.hasOwnProperty('BigInt')",
                          "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
-                         "CannotSuspendMainAgent": "xulRuntime.shell",
                        }
 RELEASE_OR_BETA = set()
 
@@ -239,10 +242,19 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     assert not isNegative or type(testRec["negative"]) == dict
     errorType = testRec["negative"]["type"] if isNegative else None
 
+    # CanBlockIsFalse is set when the test expects that the implementation
+    # cannot block on the main thread.
+    if "CanBlockIsFalse" in testRec:
+        refTestSkipIf.append(("xulRuntime.shell", "shell can block main thread"))
+
     # Skip non-test files.
     isSupportFile = fileNameEndsWith(testName, "FIXTURE")
     if isSupportFile:
         refTestSkip.append("not a test file")
+
+    # Temporary workaround for <https://github.com/tc39/test262/issues/1527>.
+    if testName.startswith("built-ins/Atomics") and "BigInt" in testRec["features"]:
+        testRec["features"].remove("BigInt")
 
     # Skip tests with unsupported features.
     if "features" in testRec:

@@ -127,7 +127,7 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "defaultLocale", "visible", "active", "userDisabled",
                           "appDisabled", "pendingUninstall", "installDate",
                           "updateDate", "applyBackgroundUpdates", "path",
-                          "skinnable", "size", "sourceURI", "releaseNotesURI",
+                          "skinnable", "sourceURI", "releaseNotesURI",
                           "softDisabled", "foreignInstall",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms", "signedState",
@@ -1121,7 +1121,7 @@ function defineAddonWrapperProperty(name, getter) {
 
 ["id", "syncGUID", "version", "isCompatible", "isPlatformCompatible",
  "providesUpdatesSecurely", "blocklistState", "appDisabled",
- "softDisabled", "skinnable", "size", "foreignInstall",
+ "softDisabled", "skinnable", "foreignInstall",
  "strictCompatibility", "updateURL", "dependencies",
  "signedState", "isCorrectlySigned"].forEach(function(aProp) {
    defineAddonWrapperProperty(aProp, function() {

@@ -224,12 +224,6 @@ AddonSearchResult.prototype = {
   sourceURI: null,
 
   /**
-   * The size of the add-on's files in bytes. For an add-on that have not yet
-   * been downloaded this may be an estimated value.
-   */
-  size: null,
-
-  /**
    * The Date that the add-on was most recently updated
    */
   updateDate: null,
@@ -592,7 +586,6 @@ var AddonRepository = {
             if (file.url) {
               addon.sourceURI = NetUtil.newURI(file.url);
             }
-            addon.size = Number(file.size);
             break;
           }
         }
