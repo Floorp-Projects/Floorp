@@ -169,7 +169,6 @@ add_task(async function test_1() {
     sourceURI: uri,
   });
   notEqual(addon.syncGUID, null);
-  ok(addon.hasResource("install.rdf"));
   equal(addon.getResourceURI("install.rdf").spec, `jar:${uri.spec}!/install.rdf`);
 
   let activeInstalls = await AddonManager.getAllInstalls();
@@ -255,9 +254,6 @@ add_task(async function test_1() {
   difference = a1.updateDate.getTime() - updateDate;
   if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
     do_throw("Add-on update time was out by " + difference + "ms");
-
-  ok(a1.hasResource("install.rdf"));
-  ok(!a1.hasResource("foo.bar"));
 
   equal(a1.getResourceURI("install.rdf").spec, uri2 + "install.rdf");
 

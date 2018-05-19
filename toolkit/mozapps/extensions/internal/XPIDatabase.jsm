@@ -65,9 +65,6 @@ const LOGGER_ID = "addons.xpi-utils";
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
-const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
-                                         "nsIZipReader", "open");
-
 // Create a new logger for use by the Addons XPI Provider Utils
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
@@ -118,7 +115,8 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "targetPlatforms", "signedState",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
-                          "blocklistState", "blocklistURL", "startupData"];
+                          "blocklistState", "blocklistURL", "startupData",
+                          "previewImage"];
 
 const LEGACY_TYPES = new Set([
   "extension",
@@ -275,8 +273,6 @@ let AddonWrapper;
  */
 class AddonInternal {
   constructor(addonData) {
-    this._hasResourceCache = new Map();
-
     this._wrapper = null;
     this._selectedLocale = null;
     this.active = false;
@@ -800,14 +796,6 @@ AddonWrapper = class {
       for (let size in addon.icons) {
         icons[size] = this.getResourceURI(addon.icons[size]).spec;
       }
-    } else {
-      // legacy add-on that did not update its icon data yet
-      if (this.hasResource("icon.png")) {
-        icons[32] = icons[48] = this.getResourceURI("icon.png").spec;
-      }
-      if (this.hasResource("icon64.png")) {
-        icons[64] = this.getResourceURI("icon64.png").spec;
-      }
     }
 
     let canUseIconURLs = this.isActive;
@@ -833,8 +821,8 @@ AddonWrapper = class {
         return repositoryScreenshots;
     }
 
-    if (isTheme(addon.type) && this.hasResource("preview.png")) {
-      let url = this.getResourceURI("preview.png").spec;
+    if (addon.previewImage) {
+      let url = this.getResourceURI(addon.previewImage).spec;
       return [new AddonManagerPrivate.AddonScreenshot(url)];
     }
 
@@ -1041,45 +1029,6 @@ AddonWrapper = class {
       return true;
     }
     return false;
-  }
-
-  hasResource(aPath) {
-    let addon = addonFor(this);
-    if (addon._hasResourceCache.has(aPath))
-      return addon._hasResourceCache.get(aPath);
-
-    let bundle = addon._sourceBundle.clone();
-
-    // Bundle may not exist any more if the addon has just been uninstalled,
-    // but explicitly first checking .exists() results in unneeded file I/O.
-    try {
-      var isDir = bundle.isDirectory();
-    } catch (e) {
-      addon._hasResourceCache.set(aPath, false);
-      return false;
-    }
-
-    if (isDir) {
-      if (aPath)
-        aPath.split("/").forEach(part => bundle.append(part));
-      let result = bundle.exists();
-      addon._hasResourceCache.set(aPath, result);
-      return result;
-    }
-
-    let zipReader;
-    try {
-      zipReader = new ZipReader(bundle);
-      let result = zipReader.hasEntry(aPath);
-      addon._hasResourceCache.set(aPath, result);
-      return result;
-    } catch (e) {
-      addon._hasResourceCache.set(aPath, false);
-      return false;
-    } finally {
-      if (zipReader)
-        zipReader.close();
-    }
   }
 
   /**

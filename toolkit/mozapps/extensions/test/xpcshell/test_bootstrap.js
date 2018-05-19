@@ -215,9 +215,6 @@ add_task(async function test_1() {
   equal(install.name, "Test Bootstrap 1");
   equal(install.state, AddonManager.STATE_DOWNLOADED);
   notEqual(install.addon.syncGUID, null);
-  ok(install.addon.hasResource("install.rdf"));
-  ok(install.addon.hasResource("bootstrap.js"));
-  ok(!install.addon.hasResource("foo.bar"));
   equal(install.addon.operationsRequiringRestart &
                AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
   do_check_not_in_crash_annotation(ID1, "1.0");
@@ -236,8 +233,6 @@ add_task(async function test_1() {
         "onInstallStarted",
         "onInstallEnded",
       ], function() {
-        ok(addon.hasResource("install.rdf"));
-
         // startup should not have been called yet.
         BootstrapMonitor.checkAddonNotStarted(ID1);
         resolve();
@@ -267,9 +262,6 @@ add_task(async function test_1() {
   BootstrapMonitor.checkAddonStarted(ID1, "1.0");
   equal(getStartupReason(), ADDON_INSTALL);
   equal(getStartupOldVersion(), undefined);
-  ok(b1.hasResource("install.rdf"));
-  ok(b1.hasResource("bootstrap.js"));
-  ok(!b1.hasResource("foo.bar"));
   do_check_in_crash_annotation(ID1, "1.0");
 
   let dir = do_get_addon_root_uri(profileDir, ID1);
@@ -551,9 +543,6 @@ add_task(async function test_10() {
   equal(install.version, "2.0");
   equal(install.name, "Test Bootstrap 1");
   equal(install.state, AddonManager.STATE_DOWNLOADED);
-  ok(install.addon.hasResource("install.rdf"));
-  ok(install.addon.hasResource("bootstrap.js"));
-  ok(!install.addon.hasResource("foo.bar"));
   do_check_not_in_crash_annotation(ID1, "2.0");
 
   await Promise.all([
@@ -584,9 +573,6 @@ add_task(async function test_10() {
   BootstrapMonitor.checkAddonStarted(ID1, "2.0");
   equal(getStartupReason(), ADDON_INSTALL);
   equal(getStartupOldVersion(), undefined);
-  ok(b1.hasResource("install.rdf"));
-  ok(b1.hasResource("bootstrap.js"));
-  ok(!b1.hasResource("foo.bar"));
   do_check_in_crash_annotation(ID1, "2.0");
 
   prepare_test({}, [
@@ -1140,9 +1126,6 @@ add_task(async function test_23() {
       equal(install.version, "1.0");
       equal(install.name, "Test Bootstrap 1");
       equal(install.state, AddonManager.STATE_DOWNLOADED);
-      ok(install.addon.hasResource("install.rdf"));
-      ok(install.addon.hasResource("bootstrap.js"));
-      ok(!install.addon.hasResource("foo.bar"));
       equal(install.addon.operationsRequiringRestart &
                    AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
       do_check_not_in_crash_annotation(ID1, "1.0");
@@ -1160,7 +1143,6 @@ add_task(async function test_23() {
     install.install();
   });
 
-  ok(install.addon.hasResource("install.rdf"));
   await checkBootstrappedPref();
 
   let installs = await AddonManager.getAllInstalls();
@@ -1181,9 +1163,6 @@ add_task(async function test_23() {
   BootstrapMonitor.checkAddonStarted(ID1, "1.0");
   equal(getStartupReason(), ADDON_INSTALL);
   equal(getStartupOldVersion(), undefined);
-  ok(b1.hasResource("install.rdf"));
-  ok(b1.hasResource("bootstrap.js"));
-  ok(!b1.hasResource("foo.bar"));
   do_check_in_crash_annotation(ID1, "1.0");
 
   let dir = do_get_addon_root_uri(profileDir, ID1);
