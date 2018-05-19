@@ -1664,6 +1664,17 @@ nsDocumentViewer::Destroy()
   mAutoBeforeAndAfterPrint = nullptr;
 #endif
 
+  if (mSHEntry && mDocument && !mDocument->IsBFCachingAllowed()) {
+    // Just drop the SHEntry now and pretend like we never even tried to bfcache
+    // this viewer.  This should only happen when someone calls
+    // DisallowBFCaching() after CanSavePresentation() already ran.  Ensure that
+    // the SHEntry has no viewer and its state is synced up.  We want to do this
+    // via a stack reference, in case those calls mess with our members.
+    nsCOMPtr<nsISHEntry> shEntry = mSHEntry.forget();
+    shEntry->SetContentViewer(nullptr);
+    shEntry->SyncPresentationState();
+  }
+
   // If we were told to put ourselves into session history instead of destroy
   // the presentation, do that now.
   if (mSHEntry) {
@@ -1673,8 +1684,6 @@ nsDocumentViewer::Destroy()
     // Make sure the presentation isn't torn down by Hide().
     mSHEntry->SetSticky(mIsSticky);
     mIsSticky = true;
-
-    bool savePresentation = mDocument ? mDocument->IsBFCachingAllowed() : true;
 
     // Remove our root view from the view hierarchy.
     if (mPresShell) {
@@ -1706,12 +1715,9 @@ nsDocumentViewer::Destroy()
 
     // Grab a reference to mSHEntry before calling into things like
     // SyncPresentationState that might mess with our members.
-    nsCOMPtr<nsISHEntry> shEntry = mSHEntry; // we'll need this below
-    mSHEntry = nullptr;
+    nsCOMPtr<nsISHEntry> shEntry = mSHEntry.forget(); // we'll need this below
 
-    if (savePresentation) {
-      shEntry->SetContentViewer(this);
-    }
+    shEntry->SetContentViewer(this);
 
     // Always sync the presentation state.  That way even if someone screws up
     // and shEntry has no window state at this point we'll be ok; we just won't
