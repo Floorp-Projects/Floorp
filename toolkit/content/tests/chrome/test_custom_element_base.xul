@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Custom Element Base Class Tests"
+  onload="runTests();"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function runTests() {
+    ok(MozXULElement, "MozXULElement defined on the window");
+    testParseXULToFragment();
+    SimpleTest.finish();
+  }
+
+  function testParseXULToFragment() {
+    ok(MozXULElement.parseXULToFragment, "parseXULToFragment helper exists");
+
+    let frag = MozXULElement.parseXULToFragment(`<deck id='foo' />`);
+    ok(frag instanceof DocumentFragment);
+
+    document.documentElement.appendChild(frag);
+
+    let deck = document.documentElement.lastChild;
+    ok(deck instanceof MozXULElement, "instance of MozXULElement");
+    ok(deck instanceof XULElement, "instance of XULElement");
+    is(deck.id, "foo", "attribute set");
+    is(deck.selectedIndex, "0", "Custom Element is property attached");
+    deck.remove();
+  }
+
+  ]]>
+  </script>
+</window>
+
