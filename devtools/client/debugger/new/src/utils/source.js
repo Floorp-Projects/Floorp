@@ -432,10 +432,25 @@ function getTextAtPosition(source, location) {
   return lineText.slice(column, column + 100).trim();
 }
 
-function getSourceClassnames(source) {
-  if (source && source.isBlackBoxed) {
+function getSourceClassnames(source, sourceMetaData) {
+  // Conditionals should be ordered by priority of icon!
+  const defaultClassName = "file";
+
+  if (!source || !source.url) {
+    return defaultClassName;
+  }
+
+  if (sourceMetaData && sourceMetaData.framework) {
+    return sourceMetaData.framework.toLowerCase();
+  }
+
+  if (isPretty(source)) {
+    return "prettyPrint";
+  }
+
+  if (source.isBlackBoxed) {
     return "blackBox";
   }
 
-  return sourceTypes[(0, _sourcesTree.getExtension)(source)] || "file";
+  return sourceTypes[(0, _sourcesTree.getExtension)(source)] || defaultClassName;
 }

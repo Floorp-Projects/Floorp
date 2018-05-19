@@ -534,7 +534,7 @@ HTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions)
   int32_t listIndex = -1;
   HTMLOptionElement* optElement = HTMLOptionElement::FromNode(aOptions);
   if (optElement) {
-    mOptions->GetOptionIndex(optElement->AsElement(), 0, true, &listIndex);
+    mOptions->GetOptionIndex(optElement, 0, true, &listIndex);
     return listIndex;
   }
 
