@@ -1084,7 +1084,13 @@ public:
                     const nscoord aBEnd) const override;
   nscoord BStart() const override { return mRect.y; }
   nscoord BEnd() const override { return mRect.YMost(); }
-  bool IsEmpty() const override { return mRect.IsEmpty(); }
+  bool IsEmpty() const override {
+    // A RoundedBoxShapeInfo is never empty, because if it is collapsed to
+    // zero area, it acts like a point. If it is collapsed further, to become
+    // inside-out, it acts like a rect in the same shape as the inside-out
+    // rect.
+    return false;
+  }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override
   {
