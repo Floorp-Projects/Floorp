@@ -443,6 +443,22 @@ skip script test262/built-ins/DataView/length.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1440468
 skip script test262/built-ins/Function/prototype/toString/proxy.js
+skip script test262/built-ins/Function/prototype/toString/proxy-async-generator-function.js
+skip script test262/built-ins/Function/prototype/toString/proxy-class.js
+skip script test262/built-ins/Function/prototype/toString/proxy-async-method-definition.js
+skip script test262/built-ins/Function/prototype/toString/proxy-arrow-function.js
+skip script test262/built-ins/Function/prototype/toString/proxy-async-generator-method-definition.js
+skip script test262/built-ins/Function/prototype/toString/proxy-async-function.js
+skip script test262/built-ins/Function/prototype/toString/proxy-bound-function.js
+skip script test262/built-ins/Function/prototype/toString/proxy-method-definition.js
+skip script test262/built-ins/Function/prototype/toString/proxy-function-expression.js
+skip script test262/built-ins/Function/prototype/toString/proxy-generator-function.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1462741
+skip script test262/built-ins/Function/prototype/toString/well-known-intrinsic-object-functions.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
+skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
 
 
 ###########################################################
@@ -457,10 +473,14 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# https://github.com/tc39/test262/pull/972
-skip script test262/language/expressions/tagged-template/cache-identical-source-new-function.js
-skip script test262/language/expressions/tagged-template/cache-differing-expressions-new-function.js
-skip script test262/language/expressions/tagged-template/cache-differing-expressions.js
-skip script test262/language/expressions/tagged-template/cache-identical-source.js
-skip script test262/language/expressions/tagged-template/cache-differing-expressions-eval.js
-skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js
+# https://github.com/tc39/test262/issues/1529
+skip script test262/built-ins/Atomics/wake/undefined-index-defaults-to-zero.js
+
+# https://github.com/tc39/test262/issues/1530
+skip script Atomics/wait/waiterlist-order-of-operations-is-fifo.js
+
+# Missing feature tag.
+skip script test262/built-ins/Symbol/matchAll/prop-desc.js
+
+# Test deletes "length" property and then expects the property is still present.
+skip script test262/intl402/NumberFormat/length.js

@@ -1,7 +1,7 @@
-commit ea6c18c5e21189acd2fd26961ea6dc6d2a1947ac
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Thu Mar 22 17:20:29 2018 -0700
+commit fbccd8eeffd21cfb6fee97493d347ae078f59d5c
+Author: Rick Waldron <waldron.rick@gmail.com>
+Date:   Fri May 18 12:35:06 2018 -0400
 
-    Don't compute NaN values in functions (#1503)
+    Intl: PluralRules, NumberFormat, Number & getCanonicalLocales to use verifyProperty
     
-    `function nan() { return /* expression to compute NaN */ }` may not return the same implementation-distinguishable NaN value before and after JIT compilation.
+    There's a lot of work like this to do, but not enough time in the day to reach it all.

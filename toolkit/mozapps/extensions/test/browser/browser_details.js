@@ -187,8 +187,6 @@ add_test(function() {
     is_element_hidden(get("detail-homepage-row"), "Homepage should not be visible");
     is_element_hidden(get("detail-repository-row"), "Repository profile should not be visible");
 
-    is_element_hidden(get("detail-size"), "Size should be hidden");
-
     is_element_hidden(get("detail-updates-row"), "Updates should be hidden");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
@@ -239,8 +237,6 @@ add_test(function() {
     is_element_visible(get("detail-reviews"), "Reviews should not be hidden");
     is(get("detail-reviews").href, "http://example.com/reviews", "Review URL should be correct");
     is(get("detail-reviews").value, "1 review", "Review text should be correct");
-
-    is_element_hidden(get("detail-size"), "Size should be hidden");
 
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
@@ -575,8 +571,6 @@ add_test(function() {
     is_element_hidden(get("detail-reviews"), "Reviews should be hidden");
 
     is_element_hidden(get("detail-homepage-row"), "Homepage should be hidden");
-
-    is_element_hidden(get("detail-size"), "Size should be hidden");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");

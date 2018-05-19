@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')||!this.hasOwnProperty('Atomics')) -- SharedArrayBuffer,Atomics is not enabled unconditionally
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')) -- Atomics,SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -6,26 +6,18 @@
 esid: sec-atomics.compareexchange
 description: Test Atomics.compareExchange on arrays that allow atomic operations.
 includes: [testAtomics.js, testTypedArray.js]
-features: [SharedArrayBuffer, ArrayBuffer, DataView, Atomics, arrow-function, let, TypedArray, for-of]
+features: [ArrayBuffer, arrow-function, Atomics, DataView, for-of, let, SharedArrayBuffer, TypedArray]
 ---*/
 
 var sab = new SharedArrayBuffer(1024);
 var ab = new ArrayBuffer(16);
+var views = intArrayConstructors.slice();
 
-var int_views = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array];
-
-var good_indices = [ (view) => 0/-1, // -0
-                     (view) => '-0',
-                     (view) => view.length - 1,
-                     (view) => ({ valueOf: () => 0 }),
-                     (view) => ({ toString: () => '0', valueOf: false }) // non-callable valueOf triggers invocation of toString
-                   ];
-
-testWithTypedArrayConstructors(function(View) {
+testWithTypedArrayConstructors(function(TA) {
   // Make it interesting - use non-zero byteOffsets and non-zero indexes.
 
-  var view = new View(sab, 32, 20);
-  var control = new View(ab, 0, 2);
+  var view = new TA(sab, 32, 20);
+  var control = new TA(ab, 0, 2);
 
   // Performs the exchange
   view[8] = 0;
@@ -72,6 +64,6 @@ testWithTypedArrayConstructors(function(View) {
     Atomics.store(view, Idx, 37);
     assert.sameValue(Atomics.compareExchange(view, Idx, 37, 0), 37);
   });
-}, int_views);
+}, views);
 
 reportCompare(0, 0);

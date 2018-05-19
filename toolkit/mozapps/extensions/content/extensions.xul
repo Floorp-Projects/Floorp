@@ -551,7 +551,6 @@
                             <label class="detail-row-label" value="&detail.repository;"/>
                             <label id="detail-repository" class="detail-row-value text-link"/>
                           </row>
-                          <row class="detail-row" id="detail-size" label="&detail.size;"/>
                           <row class="detail-row-complex" id="detail-rating-row">
                             <label class="detail-row-label" value="&rating2.label;"/>
                             <hbox>
