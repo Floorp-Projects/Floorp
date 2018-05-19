@@ -1985,7 +1985,9 @@ const {
 
 const { clearSourceMaps } = __webpack_require__(3704);
 
-const { workerUtils: { workerHandler } } = __webpack_require__(3651);
+const {
+  workerUtils: { workerHandler }
+} = __webpack_require__(3651);
 
 // The interface is implemented in source-map to be
 // easier to unit test.

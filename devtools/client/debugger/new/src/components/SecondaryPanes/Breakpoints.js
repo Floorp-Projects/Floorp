@@ -26,6 +26,10 @@ var _Breakpoint = require("./Breakpoint");
 
 var _Breakpoint2 = _interopRequireDefault(_Breakpoint);
 
+var _SourceIcon = require("../shared/SourceIcon");
+
+var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
+
 var _actions = require("../../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -136,7 +140,7 @@ class Breakpoints extends _react.Component {
       pauseOnExceptions
     } = this.props;
     const isEmpty = breakpoints.size == 0;
-    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem2"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
+    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
     const ignoreCaughtBox = createExceptionOption(L10N.getStr("pauseOnCaughtExceptionsItem"), shouldPauseOnCaughtExceptions, () => pauseOnExceptions(true, !shouldPauseOnCaughtExceptions), "breakpoints-exceptions-caught");
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("breakpoints-exceptions-options", {
@@ -170,7 +174,9 @@ class Breakpoints extends _react.Component {
         title: url,
         key: url,
         onClick: () => this.props.selectSource(source.id)
-      }, (0, _source.getFilename)(source)), ...groupBreakpoints.map(bp => this.renderBreakpoint(bp))];
+      }, _react2.default.createElement(_SourceIcon2.default, {
+        source: source
+      }), (0, _source.getFilename)(source)), ...groupBreakpoints.map(bp => this.renderBreakpoint(bp))];
     })];
   }
 

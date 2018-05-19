@@ -2273,15 +2273,6 @@ IonCacheIRCompiler::emitReturnFromIC()
 }
 
 bool
-IonCacheIRCompiler::emitLoadObject()
-{
-    Register reg = allocator.defineRegister(masm, reader.objOperandId());
-    JSObject* obj = objectStubField(reader.stubOffset());
-    masm.movePtr(ImmGCPtr(obj), reg);
-    return true;
-}
-
-bool
 IonCacheIRCompiler::emitLoadStackValue()
 {
     MOZ_ASSERT_UNREACHABLE("emitLoadStackValue not supported for IonCaches.");

@@ -20,8 +20,8 @@ callback LifecycleAttributeChangedCallback = void(DOMString attrName,
                                                   DOMString? namespaceURI);
 
 dictionary LifecycleCallbacks {
-  LifecycleConnectedCallback? connectedCallback;
-  LifecycleDisconnectedCallback? disconnectedCallback;
-  LifecycleAdoptedCallback? adoptedCallback;
-  LifecycleAttributeChangedCallback? attributeChangedCallback;
+  LifecycleConnectedCallback connectedCallback;
+  LifecycleDisconnectedCallback disconnectedCallback;
+  LifecycleAdoptedCallback adoptedCallback;
+  LifecycleAttributeChangedCallback attributeChangedCallback;
 };

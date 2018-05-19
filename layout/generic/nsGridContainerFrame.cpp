@@ -5990,6 +5990,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                           computedISize, bSize);
 
   if (!prevInFlow) {
+    if (computedBSize == NS_AUTOHEIGHT && stylePos->mRowGap.HasPercent()) {
+      // Re-resolve the row-gap now that we know our intrinsic block-size.
+      gridReflowInput.mRows.mGridGap =
+        nsLayoutUtils::ResolveGapToLength(stylePos->mRowGap, bSize);
+    }
     // Apply 'align/justify-content' to the grid.
     // CalculateTrackSizes did the columns.
     gridReflowInput.mRows.AlignJustifyContent(stylePos, wm, contentArea.Size(wm));

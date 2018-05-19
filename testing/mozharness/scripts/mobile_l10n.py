@@ -33,14 +33,13 @@ from mozharness.mozilla.release import ReleaseMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.l10n.locales import LocalesMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.base.python import VirtualenvMixin
 
 
 # MobileSingleLocale {{{1
-class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
+class MobileSingleLocale(LocalesMixin, ReleaseMixin,
                          TransferMixin, TooltoolMixin, BuildbotMixin,
                          PurgeMixin, MercurialScript, BalrogMixin,
                          VirtualenvMixin, SecretsMixin):
@@ -101,12 +100,6 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
          "dest": "total_locale_chunks",
          "type": "int",
          "help": "Specify the total number of chunks of locales"
-         }
-    ], [
-        ["--disable-mock"],
-        {"dest": "disable_mock",
-         "action": "store_true",
-         "help": "do not run under mock despite what gecko-config says",
          }
     ], [
         ['--revision', ],
@@ -505,16 +498,12 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             total_count += 1
             signed_path = os.path.join(base_package_dir,
                                        base_package_name % {'locale': locale})
-            # We need to wrap what this function does with mock, since
-            # MobileSigningMixin doesn't know about mock
-            self.enable_mock()
             status = self.verify_android_signature(
                 signed_path,
                 script=c['signature_verification_script'],
                 env=repack_env,
                 key_alias=c['key_alias'],
             )
-            self.disable_mock()
             if status:
                 self.add_failure(locale, message="Errors verifying %s binary!" % locale)
                 # No need to rm because upload is per-locale

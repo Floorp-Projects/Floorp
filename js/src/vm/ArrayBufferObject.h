@@ -507,8 +507,8 @@ ClampDoubleToUint8(const double x);
 struct uint8_clamped {
     uint8_t val;
 
-    uint8_clamped() { }
-    uint8_clamped(const uint8_clamped& other) : val(other.val) { }
+    uint8_clamped() = default;
+    uint8_clamped(const uint8_clamped& other) = default;
 
     // invoke our assignment helpers for constructor conversion
     explicit uint8_clamped(uint8_t x)    { *this = x; }
@@ -519,10 +519,7 @@ struct uint8_clamped {
     explicit uint8_clamped(int32_t x)    { *this = x; }
     explicit uint8_clamped(double x)     { *this = x; }
 
-    uint8_clamped& operator=(const uint8_clamped& x) {
-        val = x.val;
-        return *this;
-    }
+    uint8_clamped& operator=(const uint8_clamped& x) = default;
 
     uint8_clamped& operator=(uint8_t x) {
         val = x;
