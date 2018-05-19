@@ -306,11 +306,9 @@ DirPackage = class DirPackage extends Package {
         });
         await this.iterFiles(callback, entryPath);
       } else {
-        let stat = await OS.File.stat(OS.Path.join(this.filePath, ...entryPath));
         callback({
           path: entryPath.join("/"),
           isDir: false,
-          size: stat.size,
         });
       }
     });
@@ -348,7 +346,6 @@ XPIPackage = class XPIPackage extends Package {
       callback({
         path,
         isDir: entry.isDirectory,
-        size: entry.realSize,
       });
     }
   }
@@ -813,13 +810,6 @@ var loadManifest = async function(aPackage, aInstallLocation, aOldAddon) {
 
   addon._sourceBundle = aPackage.file;
   addon._installLocation = aInstallLocation;
-
-  addon.size = 0;
-  await aPackage.iterFiles(entry => {
-    if (!entry.isDir) {
-      addon.size += entry.size;
-    }
-  });
 
   let {signedState, cert} = await aPackage.verifySignedState(addon);
   addon.signedState = signedState;

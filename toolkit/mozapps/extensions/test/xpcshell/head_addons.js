@@ -1278,8 +1278,6 @@ function buildSystemAddonUpdates(addons, root) {
     xml += `  <addons>\n`;
     for (let addon of addons) {
       xml += `    <addon id="${addon.id}" URL="${root + addon.path}" version="${addon.version}"`;
-      if (addon.size)
-        xml += ` size="${addon.size}"`;
       if (addon.hashFunction)
         xml += ` hashFunction="${addon.hashFunction}"`;
       if (addon.hashValue)
