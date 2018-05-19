@@ -49,6 +49,7 @@ export let requestStore = new PaymentsStore({
   selectedShippingOption: null,
   savedAddresses: {},
   savedBasicCards: {},
+  tempAddresses: {},
   tempBasicCards: {},
 });
 

@@ -186,13 +186,13 @@ NS_NewElement(Element** aResult,
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
+  RefPtr<nsAtom> isAtom = aIs ? NS_Atomize(*aIs) : nullptr;
   if (ns == kNameSpaceID_XHTML) {
-    RefPtr<nsAtom> isAtom = aIs ? NS_Atomize(*aIs) : nullptr;
     return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, isAtom);
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
-    return NS_NewXULElement(aResult, ni.forget(), aFromParser);
+    return NS_NewXULElement(aResult, ni.forget(), aFromParser, isAtom);
   }
 #endif
   if (ns == kNameSpaceID_MathML) {

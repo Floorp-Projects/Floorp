@@ -248,8 +248,37 @@ const QUERYINDEX_ORIGIN_AUTOFILLED_VALUE = 1;
 const QUERYINDEX_ORIGIN_URL = 2;
 const QUERYINDEX_ORIGIN_FRECENCY = 3;
 
+// `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
+// the frecency mean plus one standard deviation.  This is inlined directly in
+// the SQL (as opposed to being a custom Sqlite function for example) in order
+// to be as efficient as possible.  The MAX() is to make sure that places with
+// <= 0 frecency are never autofilled.
+const SQL_AUTOFILL_WITH = `
+  WITH
+  frecency_stats(count, sum, squares) AS (
+    SELECT
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_count") AS REAL),
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_sum") AS REAL),
+      CAST((SELECT IFNULL(value, 0.0) FROM moz_meta WHERE key = "frecency_sum_of_squares") AS REAL)
+  ),
+  autofill_frecency_threshold(value) AS (
+    SELECT MAX(1,
+      CASE count
+      WHEN 0 THEN 0.0
+      WHEN 1 THEN sum
+      ELSE (sum / count) + sqrt((squares - ((sum * sum) / count)) / count)
+      END
+    ) FROM frecency_stats
+  )
+`;
+
+const SQL_AUTOFILL_FRECENCY_THRESHOLD = `(
+  SELECT value FROM autofill_frecency_threshold
+)`;
+
 function originQuery(conditions = "", bookmarkedFragment = "NULL") {
-  return `SELECT :query_type,
+  return `${SQL_AUTOFILL_WITH}
+          SELECT :query_type,
                  host || '/',
                  prefix || host || '/',
                  frecency,
@@ -257,7 +286,7 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
                  id
           FROM moz_origins
           WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
-                AND frecency >= :frecencyThreshold
+                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
                 ${conditions}
           UNION ALL
           SELECT :query_type,
@@ -268,7 +297,7 @@ function originQuery(conditions = "", bookmarkedFragment = "NULL") {
                  id
           FROM moz_origins
           WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
-                AND frecency >= :frecencyThreshold
+                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
                 ${conditions}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
@@ -300,6 +329,7 @@ const QUERYINDEX_URL_FRECENCY = 3;
 
 function urlQuery(conditions1, conditions2) {
   return `/* do not warn (bug no): cannot use an index to sort */
+          ${SQL_AUTOFILL_WITH}
           SELECT :query_type,
                  url,
                  :strippedURL,
@@ -308,7 +338,7 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost
-                AND frecency >= :frecencyThreshold
+                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
                 ${conditions1}
           UNION ALL
           SELECT :query_type,
@@ -319,7 +349,7 @@ function urlQuery(conditions1, conditions2) {
                  id
           FROM moz_places
           WHERE rev_host = :revHost || 'www.'
-                AND frecency >= :frecencyThreshold
+                AND frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
                 ${conditions2}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
@@ -2295,7 +2325,6 @@ Search.prototype = {
     let opts = {
       query_type: QUERYTYPE_AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
-      frecencyThreshold: this._autofillFrecencyThreshold,
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2350,7 +2379,6 @@ Search.prototype = {
       query_type: QUERYTYPE_AUTOFILL_URL,
       revHost,
       strippedURL,
-      frecencyThreshold: this._autofillFrecencyThreshold,
     };
 
     let bookmarked = this.hasBehavior("bookmark") &&
@@ -2367,16 +2395,6 @@ Search.prototype = {
       return [SQL_URL_BOOKMARKED_QUERY, opts];
     }
     return [SQL_URL_QUERY, opts];
-  },
-
-  get _autofillFrecencyThreshold() {
-    // Places with 0 frecency (and below) shouldn't be autofilled, so use 1 as a
-    // lower bound.
-    return Math.max(
-      1,
-      PlacesUtils.history.frecencyMean +
-        PlacesUtils.history.frecencyStandardDeviation
-    );
   },
 
   // The result is notified to the search listener on a timer, to chunk multiple

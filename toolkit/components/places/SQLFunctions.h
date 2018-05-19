@@ -567,20 +567,12 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Update frecency stats function
+//// sqrt function
 
 /**
- * Calls nsNavHistory::UpdateFrecencyStats with the old and new frecencies of a
- * particular moz_places row.
- *
- * @param placeID
- *        The moz_places row ID.
- * @param oldFrecency
- *        The old frecency of a moz_places row that changed frecencies.
- * @param newFrecency
- *        The new frecency of the same moz_places row.
+ * Gets the square root of a given value.
  */
-class UpdateFrecencyStatsFunction final : public mozIStorageFunction
+class SqrtFunction final : public mozIStorageFunction
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -594,9 +586,8 @@ public:
    */
   static nsresult create(mozIStorageConnection *aDBConn);
 private:
-  ~UpdateFrecencyStatsFunction() {}
+  ~SqrtFunction() {}
 };
-
 
 } // namespace places
 } // namespace mozilla

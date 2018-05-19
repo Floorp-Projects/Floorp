@@ -389,38 +389,6 @@ function geoSpecificDefaultsEnabled() {
 //   but we don't persist that value anywhere in the expectation we will
 //   eventually get a countryCode/region.
 
-// A method that "migrates" prefs if necessary.
-function migrateRegionPrefs() {
-  // If we already have a "region" pref there's nothing to do.
-  if (Services.prefs.prefHasUserValue("browser.search.region")) {
-    return;
-  }
-
-  // If we have 'isUS' but no 'countryCode' then we are almost certainly
-  // a profile from Fx 34/35 that set 'isUS' based purely on a timezone
-  // check. If this said they were US, we force region to be US.
-  // (But if isUS was false, we leave region alone - we will do a geoip request
-  // and set the region accordingly)
-  try {
-    if (Services.prefs.getBoolPref("browser.search.isUS") &&
-        !Services.prefs.prefHasUserValue("browser.search.countryCode")) {
-      Services.prefs.setCharPref("browser.search.region", "US");
-    }
-  } catch (ex) {
-    // no isUS pref, nothing to do.
-  }
-  // If we have a countryCode pref but no region pref, just force region
-  // to be the countryCode.
-  try {
-    let countryCode = Services.prefs.getCharPref("browser.search.countryCode");
-    if (!Services.prefs.prefHasUserValue("browser.search.region")) {
-      Services.prefs.setCharPref("browser.search.region", countryCode);
-    }
-  } catch (ex) {
-    // no countryCode pref, nothing to do.
-  }
-}
-
 // A method to determine if we are in the United States (US) for the search
 // service.
 // It uses a browser.search.region pref (which typically comes from a geoip
@@ -2677,7 +2645,6 @@ SearchService.prototype = {
   _syncInit: function SRCH_SVC__syncInit() {
     LOG("_syncInit start");
     this._initStarted = true;
-    migrateRegionPrefs();
 
     let cache = this._readCacheFile();
     if (cache.metaData)
@@ -2711,8 +2678,6 @@ SearchService.prototype = {
    */
   async _asyncInit() {
     LOG("_asyncInit start");
-
-    migrateRegionPrefs();
 
     // See if we have a cache file so we don't have to parse a bunch of XML.
     // Not using checkForSyncCompletion here because we want to ensure we

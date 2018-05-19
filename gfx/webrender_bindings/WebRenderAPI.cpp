@@ -1083,9 +1083,10 @@ DisplayListBuilder::PushYCbCrInterleavedImage(const wr::LayoutRect& aBounds,
 void
 DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
                                bool aIsBackfaceVisible,
-                               PipelineId aPipeline)
+                               PipelineId aPipeline,
+                               bool aIgnoreMissingPipeline)
 {
-  wr_dp_push_iframe(mWrState, aBounds, aIsBackfaceVisible, aPipeline);
+  wr_dp_push_iframe(mWrState, aBounds, aIsBackfaceVisible, aPipeline, aIgnoreMissingPipeline);
 }
 
 void

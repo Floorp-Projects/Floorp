@@ -49,8 +49,8 @@ class GentooBootstrapper(StyloInstall, BaseBootstrapper):
 
         # Fetch the Oracle JDK since portage can't fetch it on its own
         base_url = 'http://download.oracle.com/otn-pub/java/jdk'
-        jdk_dir = '8u162-b12/0da788060d494f5095bf8624735fa2f1'
-        jdk_file = 'jdk-8u162-linux-x64.tar.gz'
+        jdk_dir = '8u172-b11/a58eab1ec242421181065cdc37240b08'
+        jdk_file = 'jdk-8u172-linux-x64.tar.gz'
         cookie = 'Cookie: oraclelicense=accept-securebackup-cookie'
         self.run_as_root(['wget', '-c', '-O', distdir + '/' + jdk_file,
                           '--header', cookie,
@@ -61,7 +61,7 @@ class GentooBootstrapper(StyloInstall, BaseBootstrapper):
         # configuration files and doing so without user supervision is dangerous
         self.run_as_root(['emerge', '--noreplace', '--quiet',
                           '--autounmask-continue', '--ask',
-                          '=dev-java/oracle-jdk-bin-1.8.0.162-r1'])
+                          '=dev-java/oracle-jdk-bin-1.8.0.172'])
 
         from mozboot import android
         android.ensure_android('linux', artifact_mode=artifact_mode,

@@ -47,7 +47,11 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
 
     browser.menus.onShown.addListener((...args) => {
       shownEvents.push(args[0]);
-      browser.test.assertEq(tab.id, args[1].id, "expected tab");
+      if (menuCreateParams.title.includes("TEST_EXPECT_NO_TAB")) {
+        browser.test.assertEq(undefined, args[1], "expect no tab");
+      } else {
+        browser.test.assertEq(tab.id, args[1].id, "expected tab");
+      }
       browser.test.assertEq(2, args.length, "expected number of onShown args");
     });
     browser.menus.onHidden.addListener(event => hiddenEvents.push(event));
@@ -83,9 +87,14 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     background,
     manifest: {
       page_action: {},
-      browser_action: {},
+      browser_action: {
+        default_popup: "popup.html",
+      },
       permissions: ["menus"],
       optional_permissions: [PAGE_HOST_PATTERN],
+    },
+    files: {
+      "popup.html": `<!DOCTYPE html><meta charset="utf-8">Popup body`,
     },
   });
   await extension.startup();
@@ -100,7 +109,7 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
   expectedShownEvent.menuIds = [menuId];
   Assert.deepEqual(shownEvent, expectedShownEvent, "expected onShown info");
 
-  await doCloseMenu();
+  await doCloseMenu(extension);
   extension.sendMessage("assert-menu-hidden");
   let hiddenEvent = await extension.awaitMessage("onHidden-event-data");
   is(hiddenEvent, undefined, "expected no event data for onHidden event");
@@ -116,7 +125,7 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
     Assert.deepEqual(shownEvent2, expectedShownEventWithPermissions,
                      "expected onShown info when host permissions are enabled");
-    await doCloseMenu();
+    await doCloseMenu(extension);
   }
 
   await extension.unload();
@@ -254,6 +263,37 @@ add_task(async function test_show_hide_browserAction() {
     },
     async doCloseMenu() {
       await closeActionContextMenu();
+    },
+  });
+});
+
+add_task(async function test_show_hide_browserAction_popup() {
+  let popupUrl;
+  await testShowHideEvent({
+    menuCreateParams: {
+      title: "browserAction popup - TEST_EXPECT_NO_TAB",
+      contexts: ["all", "browser_action"],
+    },
+    expectedShownEvent: {
+      contexts: ["page", "all"],
+      frameId: 0,
+      editable: false,
+      get pageUrl() { return popupUrl; },
+    },
+    expectedShownEventWithPermissions: {
+      contexts: ["page", "all"],
+      frameId: 0,
+      editable: false,
+      get pageUrl() { return popupUrl; },
+    },
+    async doOpenMenu(extension) {
+      popupUrl = `moz-extension://${extension.uuid}/popup.html`;
+      await clickBrowserAction(extension);
+      await openContextMenuInPopup(extension);
+    },
+    async doCloseMenu(extension) {
+      await closeExtensionContextMenu();
+      await closeBrowserAction(extension);
     },
   });
 });

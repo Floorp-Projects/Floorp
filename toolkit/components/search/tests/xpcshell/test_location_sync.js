@@ -9,14 +9,6 @@ function getCountryCodePref() {
   }
 }
 
-function getIsUSPref() {
-  try {
-    return Services.prefs.getBoolPref("browser.search.isUS");
-  } catch (_) {
-    return undefined;
-  }
-}
-
 // A console listener so we can listen for a log message from nsSearchService.
 function promiseTimezoneMessage() {
   return new Promise(resolve => {
@@ -37,7 +29,6 @@ function promiseTimezoneMessage() {
 // request is made and we fall back to the timezone-only trick)
 add_task(async function test_simple() {
   deepEqual(getCountryCodePref(), undefined, "no countryCode pref");
-  deepEqual(getIsUSPref(), undefined, "no isUS pref");
 
   // Still set a geoip pref so we can (indirectly) check it wasn't used.
   Services.prefs.setCharPref("browser.search.geoip.url", 'data:application/json,{"country_code": "AU"}');

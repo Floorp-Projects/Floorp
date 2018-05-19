@@ -225,6 +225,11 @@ var paymentRequest = {
     window.removeEventListener("paymentChromeToContent", this);
   },
 
+  getAddresses(state) {
+    let addresses = Object.assign({}, state.savedAddresses, state.tempAddresses);
+    return addresses;
+  },
+
   getBasicCards(state) {
     let cards = Object.assign({}, state.savedBasicCards, state.tempBasicCards);
     return cards;

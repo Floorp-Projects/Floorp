@@ -129,22 +129,22 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
    * @param {object} state - See `PaymentsStore.setState`
    */
   setStateFromParent(state) {
-    let oldSavedAddresses = this.requestStore.getState().savedAddresses;
+    let oldAddresses = paymentRequest.getAddresses(this.requestStore.getState());
     this.requestStore.setState(state);
 
     // Check if any foreign-key constraints were invalidated.
     state = this.requestStore.getState();
     let {
-      savedAddresses,
       selectedPayerAddress,
       selectedPaymentCard,
       selectedShippingAddress,
       selectedShippingOption,
     } = state;
+    let addresses = paymentRequest.getAddresses(state);
     let shippingOptions = state.request.paymentDetails.shippingOptions;
-    let shippingAddress = selectedShippingAddress && savedAddresses[selectedShippingAddress];
+    let shippingAddress = selectedShippingAddress && addresses[selectedShippingAddress];
     let oldShippingAddress = selectedShippingAddress &&
-                             oldSavedAddresses[selectedShippingAddress];
+                             oldAddresses[selectedShippingAddress];
 
     // Ensure `selectedShippingAddress` never refers to a deleted address.
     // We also compare address timestamps to notify about changes
@@ -195,9 +195,9 @@ export default class PaymentDialog extends PaymentStateSubscriberMixin(HTMLEleme
 
     // Ensure `selectedPayerAddress` never refers to a deleted address and refers
     // to an address if one exists.
-    if (!savedAddresses[selectedPayerAddress]) {
+    if (!addresses[selectedPayerAddress]) {
       this.requestStore.setState({
-        selectedPayerAddress: Object.keys(savedAddresses)[0] || null,
+        selectedPayerAddress: Object.keys(addresses)[0] || null,
       });
     }
   }

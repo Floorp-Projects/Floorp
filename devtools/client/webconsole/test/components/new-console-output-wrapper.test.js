@@ -21,14 +21,17 @@ const { messagesAdd } =
   require("devtools/client/webconsole/actions/messages");
 
 function getNewConsoleOutputWrapper() {
-  const jsterm = {
-    hud: {
-      proxy: {
-        releaseActor: () => {}
-      }
-    }
+  const hud = {
+    proxy: {
+      releaseActor: () => {},
+      target: {
+        activeTab: {
+          ensureCSSErrorReportingEnabled: () => {}
+        }
+      },
+    },
   };
-  return new NewConsoleOutputWrapper(null, jsterm);
+  return new NewConsoleOutputWrapper(null, hud);
 }
 
 describe("NewConsoleOutputWrapper", () => {

@@ -69,6 +69,49 @@
   "END" \
 )
 
+// This fragment updates frecency stats after a moz_places row is deleted.
+#define UPDATE_FRECENCY_STATS_AFTER_DELETE \
+  "INSERT OR REPLACE INTO moz_meta(key, value) VALUES " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_COUNT "', " \
+    "CAST((SELECT IFNULL(value, 0) FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_COUNT "') AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE 1 END) " \
+  "), " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_SUM "', " \
+    "CAST((SELECT IFNULL(value, 0) FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_SUM "') AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE OLD.frecency END) " \
+  "), " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "', " \
+    "CAST((SELECT IFNULL(value, 0) FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "') AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE OLD.frecency * OLD.frecency END) " \
+  "); "
+
+// This fragment updates frecency stats after frecency changes in a moz_places
+// row.  It's the same as UPDATE_FRECENCY_STATS_AFTER_DELETE except it accounts
+// for NEW values.
+#define UPDATE_FRECENCY_STATS_AFTER_UPDATE \
+  "INSERT OR REPLACE INTO moz_meta(key, value) VALUES " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_COUNT "', " \
+    "CAST(IFNULL((SELECT value FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_COUNT "'), 0) AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE 1 END) " \
+      "+ (CASE WHEN NEW.frecency <= 0 OR NEW.id < 0 THEN 0 ELSE 1 END) " \
+  "), " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_SUM "', " \
+    "CAST(IFNULL((SELECT value FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_SUM "'), 0) AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE OLD.frecency END) " \
+      "+ (CASE WHEN NEW.frecency <= 0 OR NEW.id < 0 THEN 0 ELSE NEW.frecency END) " \
+  "), " \
+  "( " \
+    "'" MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "', " \
+    "CAST(IFNULL((SELECT value FROM moz_meta WHERE key = '" MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "'), 0) AS INTEGER) " \
+      "- (CASE WHEN OLD.frecency <= 0 OR OLD.id < 0 THEN 0 ELSE OLD.frecency * OLD.frecency END) " \
+      "+ (CASE WHEN NEW.frecency <= 0 OR NEW.id < 0 THEN 0 ELSE NEW.frecency * NEW.frecency END) " \
+  "); "
+
 // See CREATE_PLACES_AFTERINSERT_TRIGGER. For each delete in moz_places we
 // add the origin to moz_updateoriginsdelete_temp - we then delete everything
 // from moz_updateoriginsdelete_temp, allowing us to run a trigger only once
@@ -79,8 +122,7 @@
   "BEGIN " \
     "INSERT OR IGNORE INTO moz_updateoriginsdelete_temp (origin_id, host) " \
     "VALUES (OLD.origin_id, get_host_and_port(OLD.url)); " \
-    "SELECT update_frecency_stats(OLD.id, OLD.frecency, -1) " \
-    "WHERE OLD.id >= 0; " \
+    UPDATE_FRECENCY_STATS_AFTER_DELETE \
   "END" \
 )
 
@@ -123,9 +165,6 @@
   "END" \
 )
 
-#define FRECENCY_DECAY_RATE 0.975f
-#define FRECENCY_DECAY_RATE_STR "0.975"
-
 // This trigger keeps frecencies in the moz_origins table in sync with
 // frecencies in moz_places.  However, we skip this when frecency changes are
 // due to frecency decay since (1) decay updates all frecencies at once, so this
@@ -135,12 +174,7 @@
 #define CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER NS_LITERAL_CSTRING( \
   "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger " \
   "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW " \
-  "WHEN NEW.frecency >= 0 AND NOT ( " \
-    "OLD.frecency > 0 " \
-    "AND is_frecency_decaying() " \
-    "AND NEW.frecency < OLD.frecency " \
-    "AND (OLD.frecency - NEW.frecency) / OLD.frecency <= " FRECENCY_DECAY_RATE_STR \
-  ") " \
+  "WHEN NEW.frecency >= 0 AND NOT is_frecency_decaying() " \
   "BEGIN " \
     "UPDATE moz_origins " \
     "SET frecency = ( " \
@@ -149,8 +183,7 @@
       "WHERE moz_places.origin_id = moz_origins.id " \
     ") " \
     "WHERE id = NEW.origin_id; " \
-    "SELECT update_frecency_stats(NEW.id, OLD.frecency, NEW.frecency) " \
-    "WHERE NEW.id >= 0; " \
+    UPDATE_FRECENCY_STATS_AFTER_UPDATE \
   "END" \
 )
 

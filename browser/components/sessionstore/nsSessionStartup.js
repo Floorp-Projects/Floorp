@@ -102,6 +102,17 @@ SessionStartup.prototype = {
       return;
     }
 
+    if (Services.prefs.getBoolPref("browser.sessionstore.resuming_after_os_restart")) {
+      if (!Services.appinfo.restartedByOS) {
+        // We had set resume_session_once in order to resume after an OS restart,
+        // but we aren't automatically started by the OS (or else appinfo.restartedByOS
+        // would have been set). Therefore we should clear resume_session_once
+        // to avoid forcing a resume for a normal startup.
+        Services.prefs.setBoolPref("browser.sessionstore.resume_session_once", false);
+      }
+      Services.prefs.setBoolPref("browser.sessionstore.resuming_after_os_restart", false);
+    }
+
     this._resumeSessionEnabled =
       Services.prefs.getBoolPref("browser.sessionstore.resume_session_once") ||
       Services.prefs.getIntPref("browser.startup.page") == BROWSER_STARTUP_RESUME_SESSION;

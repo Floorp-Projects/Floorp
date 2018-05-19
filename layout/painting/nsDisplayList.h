@@ -5820,10 +5820,12 @@ class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                           nsDisplayList* aList,
-                          const ActiveScrolledRoot* aActiveScrolledRoot);
+                          const ActiveScrolledRoot* aActiveScrolledRoot,
+                          const ActiveScrolledRoot* aContainerASR);
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                           const nsDisplayStickyPosition& aOther)
     : nsDisplayOwnLayer(aBuilder, aOther)
+    , mContainerASR(aOther.mContainerASR)
   {}
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -5859,6 +5861,17 @@ public:
                                        const StackingContextHelper& aSc,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
+
+  const ActiveScrolledRoot* GetContainerASR() const
+  {
+    return mContainerASR;
+  }
+
+private:
+  // This stores the ASR that this sticky container item would have assuming it
+  // has no fixed descendants. This may be the same as the ASR returned by
+  // GetActiveScrolledRoot(), or it may be a descendant of that.
+  const ActiveScrolledRoot* mContainerASR;
 };
 
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
