@@ -36,7 +36,7 @@ async function addExpression(dbg, input) {
   info("Adding an expression");
 
   const plusIcon = findElementWithSelector(dbg, expressionSelectors.plusIcon);
-  if(plusIcon) {
+  if (plusIcon) {
     plusIcon.click();
   }
   findElementWithSelector(dbg, expressionSelectors.input).focus();

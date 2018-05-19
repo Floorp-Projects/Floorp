@@ -8,13 +8,13 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <type_traits>
 
 #include "jsutil.h"
 
@@ -32,7 +32,6 @@ using namespace js::gcstats;
 
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
-using mozilla::PodZero;
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
 
@@ -711,7 +710,26 @@ Statistics::Statistics(JSRuntime* rt)
 {
     for (auto& count : counts)
         count = 0;
-    PodZero(&totalTimes_);
+
+#ifdef DEBUG
+    for (const auto& duration : totalTimes_) {
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_UNIX) && !defined(__clang__))
+        // build-linux64-asan/debug and static-analysis-linux64-st-an/debug
+        // currently use an STL that lacks std::is_trivially_constructible.
+        // This #ifdef probably isn't as precise as it could be, but given
+        // |totalTimes_| contains |TimeDuration| defined platform-independently
+        // it's not worth the trouble to nail down a more exact condition.
+        using ElementType = typename mozilla::RemoveReference<decltype(duration)>::Type;
+        static_assert(!std::is_trivially_constructible<ElementType>::value,
+                      "Statistics::Statistics will only initialize "
+                      "totalTimes_'s elements if their default constructor is "
+                      "non-trivial");
+#endif // mess'o'tests
+        MOZ_ASSERT(duration.IsZero(),
+                   "totalTimes_ default-initialization should have "
+                   "default-initialized every element of totalTimes_ to zero");
+    }
+#endif
 
     MOZ_ALWAYS_TRUE(phaseStack.reserve(MAX_PHASE_NESTING));
     MOZ_ALWAYS_TRUE(suspendedPhases.reserve(MAX_SUSPENDED_PHASES));
@@ -1098,13 +1116,19 @@ Statistics::endSlice()
         // Clear the timers at the end of a GC, preserving the data for PhaseKind::MUTATOR.
         auto mutatorStartTime = phaseStartTimes[Phase::MUTATOR];
         auto mutatorTime = phaseTimes[Phase::MUTATOR];
+
         for (mozilla::TimeStamp& t : phaseStartTimes)
             t = TimeStamp();
 #ifdef DEBUG
         for (mozilla::TimeStamp& t : phaseEndTimes)
             t = TimeStamp();
 #endif
-        PodZero(&phaseTimes);
+
+        for (TimeDuration& duration : phaseTimes) {
+            duration = TimeDuration();
+            MOZ_ASSERT(duration.IsZero());
+        }
+
         phaseStartTimes[Phase::MUTATOR] = mutatorStartTime;
         phaseTimes[Phase::MUTATOR] = mutatorTime;
     }

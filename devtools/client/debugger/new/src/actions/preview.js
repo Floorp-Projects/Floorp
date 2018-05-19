@@ -94,7 +94,7 @@ function updatePreview(target, editor) {
       match = (0, _ast.findBestMatchExpression)(symbols, tokenPos);
     }
 
-    if (!match || !match.expression) {
+    if (!match) {
       return;
     }
 
