@@ -152,7 +152,7 @@ struct CustomElementDefinition
                           nsAtom* aLocalName,
                           Function* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
-                          mozilla::dom::LifecycleCallbacks* aCallbacks);
+                          UniquePtr<LifecycleCallbacks>&& aCallbacks);
 
   // The type (name) for this custom element, for <button is="x-foo"> or <x-foo>
   // this would be x-foo.
@@ -168,7 +168,7 @@ struct CustomElementDefinition
   nsTArray<RefPtr<nsAtom>> mObservedAttributes;
 
   // The lifecycle callbacks to call for this custom element.
-  UniquePtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
+  UniquePtr<LifecycleCallbacks> mCallbacks;
 
   // A construction stack. Use nullptr to represent an "already constructed marker".
   nsTArray<RefPtr<Element>> mConstructionStack;
@@ -510,7 +510,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void Define(const nsAString& aName, Function& aFunctionConstructor,
+  void Define(JSContext* aCx, const nsAString& aName,
+              Function& aFunctionConstructor,
               const ElementDefinitionOptions& aOptions, ErrorResult& aRv);
 
   void Get(JSContext* cx, const nsAString& name,

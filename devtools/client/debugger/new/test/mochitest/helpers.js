@@ -156,7 +156,10 @@ function waitForState(dbg, predicate, msg) {
  * @static
  */
 async function waitForSources(dbg, ...sources) {
-  const { selectors: { getSources }, store } = dbg;
+  const {
+    selectors: { getSources },
+    store
+  } = dbg;
   if (sources.length === 0) {
     return Promise.resolve();
   }
@@ -211,7 +214,6 @@ function waitForSelectedSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-
       const source = dbg.selectors.getSelectedSource(state);
       const isLoaded = source && sourceUtils.isLoaded(source);
       if (!isLoaded) {
@@ -259,7 +261,10 @@ function assertPaused(dbg) {
 }
 
 function getVisibleSelectedFrameLine(dbg) {
-  const { selectors: { getVisibleSelectedFrame }, getState } = dbg;
+  const {
+    selectors: { getVisibleSelectedFrame },
+    getState
+  } = dbg;
   const frame = getVisibleSelectedFrame(getState());
   return frame && frame.location.line;
 }
@@ -274,7 +279,10 @@ function getVisibleSelectedFrameLine(dbg) {
  * @static
  */
 function assertPausedLocation(dbg) {
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
 
   ok(
     isSelectedFrameSelected(dbg, getState()),
@@ -344,7 +352,10 @@ function assertDebugLine(dbg, line) {
  * @static
  */
 function assertHighlightLocation(dbg, source, line) {
-  const { selectors: { getSelectedSource }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource },
+    getState
+  } = dbg;
   source = findSource(dbg, source);
 
   // Check the selected source
@@ -381,7 +392,10 @@ function assertHighlightLocation(dbg, source, line) {
  * @static
  */
 function isPaused(dbg) {
-  const { selectors: { isPaused }, getState } = dbg;
+  const {
+    selectors: { isPaused },
+    getState
+  } = dbg;
   return !!isPaused(getState());
 }
 
@@ -687,8 +701,8 @@ async function reload(dbg, ...sources) {
  * @static
  */
 async function navigate(dbg, url, ...sources) {
-  info(`Navigating to ${url}`)
-  const navigated =  waitForDispatch(dbg, "NAVIGATE");
+  info(`Navigating to ${url}`);
+  const navigated = waitForDispatch(dbg, "NAVIGATE");
   await dbg.client.navigate(url);
   await navigated;
   return waitForSources(dbg, ...sources);
@@ -720,7 +734,10 @@ function disableBreakpoint(dbg, source, line, column) {
 }
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {
-  const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
+  const {
+    selectors: { getBreakpoint, getBreakpoints },
+    getState
+  } = dbg;
 
   await waitForSources(dbg, filename);
 
@@ -741,8 +758,17 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   return source;
 }
 
-async function invokeWithBreakpoint(dbg, fnName, filename, { line, column }, handler) {
-  const { selectors: { getBreakpoints }, getState } = dbg;
+async function invokeWithBreakpoint(
+  dbg,
+  fnName,
+  filename,
+  { line, column },
+  handler
+) {
+  const {
+    selectors: { getBreakpoints },
+    getState
+  } = dbg;
 
   const source = await loadAndAddBreakpoint(dbg, filename, line, column);
 
@@ -1003,7 +1029,7 @@ const selectors = {
     `.expressions-list .expression-container:nth-child(${i}) .object-delimiter + *`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
-  expressionInput: '.expressions-list  input.input-expression',
+  expressionInput: ".expressions-list  input.input-expression",
   expressionNodes: ".expressions-list .tree-node",
   scopesHeader: ".scopes-pane ._header",
   breakpointItem: i => `.breakpoints-list .breakpoint:nth-of-type(${i})`,
@@ -1047,7 +1073,7 @@ const selectors = {
     `.outline-list__element:nth-child(${i}) .function-signature`,
   outlineItems: ".outline-list__element",
   conditionalPanelInput: ".conditional-breakpoint-panel input",
-  searchField: ".search-field",
+  searchField: ".search-field"
 };
 
 function getSelector(elementName, ...args) {
@@ -1168,11 +1194,10 @@ function getScopeValue(dbg, index) {
 }
 
 function toggleObjectInspectorNode(node) {
-
   const objectInspector = node.closest(".object-inspector");
   const properties = objectInspector.querySelectorAll(".node").length;
 
-  log(`Toggling node ${node.innerText}`)
+  log(`Toggling node ${node.innerText}`);
   node.click();
   return waitUntil(
     () => objectInspector.querySelectorAll(".node").length !== properties
@@ -1264,7 +1289,7 @@ async function assertPreviewPopup(
   const properties =
     preview.result.preview.ownProperties || preview.result.preview.items;
   const property = properties[field];
-  const propertyValue = property.value || property
+  const propertyValue = property.value || property;
 
   is(`${propertyValue}`, value, "Preview.result");
   is(preview.updating, false, "Preview.updating");

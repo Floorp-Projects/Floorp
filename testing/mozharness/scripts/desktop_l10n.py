@@ -150,11 +150,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
          "type": "string",
          "help": "Specify the url of the en-us binary"}
     ], [
-        ["--disable-mock"], {
-         "dest": "disable_mock",
-         "action": "store_true",
-         "help": "(deprecated) no-op for CLI compatability with mobile_l10n.py"}
-    ], [
         ['--scm-level'], {  # Ignored on desktop for now: see Bug 1414678.
          "action": "store",
          "type": "int",

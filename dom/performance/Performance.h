@@ -156,7 +156,7 @@ protected:
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 protected:
-  static const uint64_t kDefaultResourceTimingBufferSize = 150;
+  static const uint64_t kDefaultResourceTimingBufferSize = 250;
 
   // When kDefaultResourceTimingBufferSize is increased or removed, these should
   // be changed to use SegmentedVector

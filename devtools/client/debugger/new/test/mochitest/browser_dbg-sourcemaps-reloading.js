@@ -12,7 +12,10 @@ async function waitForBreakpointCount(dbg, count) {
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps.html");
-  const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
+  const {
+    selectors: { getBreakpoint, getBreakpoints },
+    getState
+  } = dbg;
 
   await waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
   ok(true, "Original sources exist");
@@ -20,7 +23,9 @@ add_task(async function() {
 
   await selectSource(dbg, entrySrc);
   ok(
-    getCM(dbg).getValue().includes("window.keepMeAlive"),
+    getCM(dbg)
+      .getValue()
+      .includes("window.keepMeAlive"),
     "Original source text loaded correctly"
   );
 
