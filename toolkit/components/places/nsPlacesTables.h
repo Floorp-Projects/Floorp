@@ -234,5 +234,9 @@
   ") WITHOUT ROWID " \
 )
 
+// Keys in the moz_meta table.
+#define MOZ_META_KEY_FRECENCY_COUNT "frecency_count"
+#define MOZ_META_KEY_FRECENCY_SUM "frecency_sum"
+#define MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "frecency_sum_of_squares"
 
 #endif // __nsPlacesTables_h__

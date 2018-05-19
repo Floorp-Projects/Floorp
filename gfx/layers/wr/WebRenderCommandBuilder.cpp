@@ -315,6 +315,7 @@ struct DIGroup
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   FrameMetrics::ViewID mScrollId;
+  LayerPoint mResidualOffset;
   LayerIntRect mLayerBounds;
   Maybe<wr::ImageKey> mKey;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
@@ -569,9 +570,9 @@ struct DIGroup
 
     // Round the bounds out to leave space for unsnapped content
     LayoutDeviceToLayerScale2D scale(mScale.width, mScale.height);
-    LayerIntRect layerBounds = LayerIntRect::FromUnknownRect(mGroupBounds.ScaleToOutsidePixels(mScale.width, mScale.height, aGrouper->mAppUnitsPerDevPixel));
+    LayerIntRect layerBounds = mLayerBounds;
     IntSize dtSize = layerBounds.Size().ToUnknownSize();
-    LayoutDeviceRect bounds = layerBounds / scale;
+    LayoutDeviceRect bounds = (LayerRect(layerBounds) - mResidualOffset) / scale;
 
     if (mInvalidRect.IsEmpty()) {
       GP("Not repainting group because it's empty\n");
@@ -956,10 +957,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
         GP("Inner group size change\n");
         groupData->mFollowingGroup.ClearItems();
         if (groupData->mFollowingGroup.mKey) {
-          LayerIntRect layerBounds = LayerIntRect::FromUnknownRect(currentGroup->mGroupBounds.ScaleToOutsidePixels(currentGroup->mScale.width,
-                                                                                                                   currentGroup->mScale.height,
-                                                                                                                   mAppUnitsPerDevPixel));
-          groupData->mFollowingGroup.mInvalidRect = IntRect(IntPoint(0, 0), layerBounds.Size().ToUnknownSize());
+          MOZ_RELEASE_ASSERT(groupData->mFollowingGroup.mInvalidRect.IsEmpty());
           aCommandBuilder->mManager->AddImageKeyForDiscard(groupData->mFollowingGroup.mKey.value());
           groupData->mFollowingGroup.mKey = Nothing();
         }
@@ -968,6 +966,7 @@ Grouper::ConstructGroups(WebRenderCommandBuilder* aCommandBuilder,
       groupData->mFollowingGroup.mAppUnitsPerDevPixel = currentGroup->mAppUnitsPerDevPixel;
       groupData->mFollowingGroup.mLayerBounds = currentGroup->mLayerBounds;
       groupData->mFollowingGroup.mScale = currentGroup->mScale;
+      groupData->mFollowingGroup.mResidualOffset = currentGroup->mResidualOffset;
 
       currentGroup = &groupData->mFollowingGroup;
 
@@ -1049,6 +1048,24 @@ Grouper::ConstructGroupInsideInactive(WebRenderCommandBuilder* aCommandBuilder,
   }
 }
 
+/* This is just a copy of nsRect::ScaleToOutsidePixels with an offset added in.
+ * The offset is applied just before the rounding. It's in the scaled space. */
+static mozilla::gfx::IntRect
+ScaleToOutsidePixelsOffset(nsRect aRect, float aXScale, float aYScale,
+                           nscoord aAppUnitsPerPixel, LayerPoint aOffset)
+{
+  mozilla::gfx::IntRect rect;
+  rect.SetNonEmptyBox(NSToIntFloor(NSAppUnitsToFloatPixels(aRect.x,
+                                                           float(aAppUnitsPerPixel)) * aXScale + aOffset.x),
+                      NSToIntFloor(NSAppUnitsToFloatPixels(aRect.y,
+                                                           float(aAppUnitsPerPixel)) * aYScale + aOffset.y),
+                      NSToIntCeil(NSAppUnitsToFloatPixels(aRect.XMost(),
+                                                          float(aAppUnitsPerPixel)) * aXScale + aOffset.x),
+                      NSToIntCeil(NSAppUnitsToFloatPixels(aRect.YMost(),
+                                                          float(aAppUnitsPerPixel)) * aYScale + aOffset.y));
+  return rect;
+}
+
 void
 WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
                                                   nsDisplayItem* aWrappingItem,
@@ -1074,11 +1091,16 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   auto p = group.mGroupBounds;
   auto q = groupBounds;
   gfx::Size scale = aSc.GetInheritedScale();
+  auto trans = ViewAs<LayerPixel>(aSc.GetSnappingSurfaceTransform().GetTranslation());
+  auto snappedTrans = LayerIntPoint::Floor(trans);
+  LayerPoint residualOffset = trans - snappedTrans;
+
   GP("Inherrited scale %f %f\n", scale.width, scale.height);
   GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x, q.y, q.width, q.height);
   if (!group.mGroupBounds.IsEqualEdges(groupBounds) ||
       group.mAppUnitsPerDevPixel != appUnitsPerDevPixel ||
-      group.mScale != scale) {
+      group.mScale != scale ||
+      group.mResidualOffset != residualOffset) {
     if (group.mAppUnitsPerDevPixel != appUnitsPerDevPixel) {
       GP("app unit %d %d\n", group.mAppUnitsPerDevPixel, appUnitsPerDevPixel);
     }
@@ -1090,8 +1112,7 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
 
     group.ClearItems();
     if (group.mKey) {
-      IntSize size = groupBounds.Size().ScaleToNearestPixels(scale.width, scale.height, g.mAppUnitsPerDevPixel);
-      group.mInvalidRect = IntRect(IntPoint(0, 0), size);
+      MOZ_RELEASE_ASSERT(group.mInvalidRect.IsEmpty());
       mManager->AddImageKeyForDiscard(group.mKey.value());
       group.mKey = Nothing();
     }
@@ -1103,12 +1124,18 @@ WebRenderCommandBuilder::DoGroupingForDisplayList(nsDisplayList* aList,
   }
 
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
-  g.mTransform = Matrix::Scaling(scale.width, scale.height);
-  group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
+  group.mResidualOffset = residualOffset;
   group.mGroupBounds = groupBounds;
+  group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
+  group.mLayerBounds = LayerIntRect::FromUnknownRect(ScaleToOutsidePixelsOffset(group.mGroupBounds,
+                                                                                scale.width,
+                                                                                scale.height,
+                                                                                group.mAppUnitsPerDevPixel,
+                                                                                residualOffset));
+  g.mTransform = Matrix::Scaling(scale.width, scale.height)
+                                .PostTranslate(residualOffset.x, residualOffset.y);
   group.mScale = scale;
   group.mScrollId = scrollId;
-  group.mLayerBounds = LayerIntRect::FromUnknownRect(group.mGroupBounds.ScaleToOutsidePixels(scale.width, scale.height, group.mAppUnitsPerDevPixel));
   group.mAnimatedGeometryRootOrigin = group.mGroupBounds.TopLeft();
   g.ConstructGroups(this, aBuilder, aResources, &group, aList, aSc);
   mClipManager.EndList(aSc);

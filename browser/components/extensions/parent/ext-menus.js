@@ -823,16 +823,18 @@ this.menusInternal = class extends ExtensionAPI {
               contexts: Array.from(getMenuContexts(contextData)),
             };
 
+            let nativeTab = contextData.tab;
+
             // The menus.onShown event is fired before the user has consciously
             // interacted with an extension, so we require permissions before
             // exposing sensitive contextual data.
             let includeSensitiveData =
-            extension.tabManager.hasActiveTabPermission(contextData.tab) ||
-            extension.whiteListedHosts.matches(contextData.inFrame ? contextData.frameUrl : contextData.pageUrl);
+              (nativeTab && extension.tabManager.hasActiveTabPermission(nativeTab)) ||
+              extension.whiteListedHosts.matches(contextData.inFrame ? contextData.frameUrl : contextData.pageUrl);
 
             addMenuEventInfo(info, contextData, includeSensitiveData);
 
-            let tab = extension.tabManager.convert(contextData.tab);
+            let tab = nativeTab && extension.tabManager.convert(nativeTab);
             fire.sync(info, tab);
           };
           gOnShownSubscribers.add(extension);

@@ -1862,13 +1862,14 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     rect: LayoutRect,
                                     is_backface_visible: bool,
-                                    pipeline_id: WrPipelineId) {
+                                    pipeline_id: WrPipelineId,
+                                    ignore_missing_pipeline: bool) {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let mut prim_info = LayoutPrimitiveInfo::new(rect);
     prim_info.is_backface_visible = is_backface_visible;
     prim_info.tag = state.current_tag;
-    state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id, true);
+    state.frame_builder.dl_builder.push_iframe(&prim_info, pipeline_id, ignore_missing_pipeline);
 }
 
 #[no_mangle]

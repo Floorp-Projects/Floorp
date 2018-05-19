@@ -109,10 +109,7 @@ using namespace mozilla::places;
 
 // This is a 'hidden' pref for the purposes of unit tests.
 #define PREF_FREC_DECAY_RATE     "places.frecency.decayRate"
-
-#define PREF_FREC_STATS_COUNT   "places.frecency.stats.count"
-#define PREF_FREC_STATS_SUM     "places.frecency.stats.sum"
-#define PREF_FREC_STATS_SQUARES "places.frecency.stats.sumOfSquares"
+#define PREF_FREC_DECAY_RATE_DEF 0.975f
 
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
@@ -269,30 +266,6 @@ const int32_t nsNavHistory::kGetInfoIndex_VisitType = 17;
 // nsNavBookmarks::kGetChildrenIndex_Type = 20;
 // nsNavBookmarks::kGetChildrenIndex_PlaceID = 21;
 
-static uint64_t
-GetUInt64Pref(const char *prefName)
-{
-  // `Preferences` doesn't support uint64_t, so we store it as a string instead.
-  nsAutoCString strVal;
-  nsresult rv = Preferences::GetCString(prefName, strVal);
-  if (NS_SUCCEEDED(rv)) {
-    int64_t val = strVal.ToInteger64(&rv);
-    if (NS_SUCCEEDED(rv)) {
-      return static_cast<uint64_t>(val);
-    }
-  }
-  return 0U;
-}
-
-static void
-SetUInt64Pref(const char *prefName,
-              uint64_t val)
-{
-  nsAutoCString strVal;
-  strVal.AppendInt(val);
-  Unused << Preferences::SetCString(prefName, strVal);
-}
-
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavHistory, gHistoryService)
 
@@ -356,10 +329,6 @@ nsNavHistory::Init()
 
   mDB = Database::GetDatabase();
   NS_ENSURE_STATE(mDB);
-
-  mFrecencyStatsCount = GetUInt64Pref(PREF_FREC_STATS_COUNT);
-  mFrecencyStatsSum = GetUInt64Pref(PREF_FREC_STATS_SUM);
-  mFrecencyStatsSumOfSquares = GetUInt64Pref(PREF_FREC_STATS_SQUARES);
 
   /*****************************************************************************
    *** IMPORTANT NOTICE!
@@ -628,118 +597,65 @@ nsNavHistory::DispatchFrecencyChangedNotification(const nsACString& aSpec,
   );
 }
 
-
-void
-nsNavHistory::DispatchFrecencyStatsUpdate(int64_t aPlaceId,
-                                          int32_t aOldFrecency,
-                                          int32_t aNewFrecency) const
+NS_IMETHODIMP
+nsNavHistory::RecalculateFrecencyStats(nsIObserver *aCallback)
 {
-  MOZ_ASSERT(aPlaceId >= 0);
-  Unused << NS_DispatchToMainThread(
-    NewRunnableMethod<int64_t, int32_t, int32_t>(
-      "nsNavHistory::UpdateFrecencyStats",
-      const_cast<nsNavHistory*>(this),
-      &nsNavHistory::UpdateFrecencyStats,
-      aPlaceId, aOldFrecency, aNewFrecency
+  RefPtr<nsNavHistory> self(this);
+  nsMainThreadPtrHandle<nsIObserver> callback(
+    !aCallback ? nullptr :
+    new nsMainThreadPtrHolder<nsIObserver>(
+      "nsNavHistory::RecalculateFrecencyStats callback",
+      aCallback
     )
   );
-}
 
-void
-nsNavHistory::UpdateFrecencyStats(int64_t aPlaceId,
-                                  int32_t aOldFrecency,
-                                  int32_t aNewFrecency)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
-  MOZ_ASSERT(aPlaceId >= 0);
+  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
+  nsCOMPtr<nsIEventTarget> target = do_GetInterface(conn);
+  MOZ_ASSERT(target);
+  nsresult rv = target->Dispatch(NS_NewRunnableFunction(
+    "nsNavHistory::RecalculateFrecencyStats",
+    [self, callback] {
+      Unused << self->RecalculateFrecencyStatsInternal();
+      Unused << NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "nsNavHistory::RecalculateFrecencyStats callback",
+        [callback] {
+          if (callback) {
+            Unused << callback->Observe(nullptr, "", nullptr);
+          }
+        }
+      ));
+    }
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aOldFrecency > 0) {
-    MOZ_ASSERT(mFrecencyStatsCount > 0);
-    mFrecencyStatsCount--;
-    uint64_t uOld = static_cast<uint64_t>(aOldFrecency);
-    MOZ_ASSERT(mFrecencyStatsSum >= uOld);
-    mFrecencyStatsSum -= uOld;
-    uint64_t square = uOld * uOld;
-    MOZ_ASSERT(mFrecencyStatsSumOfSquares >= square);
-    mFrecencyStatsSumOfSquares -= square;
-  }
-  if (aNewFrecency > 0) {
-    mFrecencyStatsCount++;
-    uint64_t uNew = static_cast<uint64_t>(aNewFrecency);
-    mFrecencyStatsSum += uNew;
-    mFrecencyStatsSumOfSquares += uNew * uNew;
-  }
-
-  // This method can be called many times very quickly when many frecencies
-  // change at once.  (Note though that it is *not* called when frecencies
-  // decay.)  To avoid hammering preferences, update them only every so often.
-  // There's actually a browser mochitest that makes sure preferences aren't
-  // accessed too much, and it fails without throttling like this.
-  if (!mUpdateFrecencyStatsPrefsTimer) {
-    Unused << NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mUpdateFrecencyStatsPrefsTimer),
-      &UpdateFrecencyStatsPrefs,
-      this,
-      5000, // ms
-      nsITimer::TYPE_ONE_SHOT,
-      "nsNavHistory::UpdateFrecencyStatsPrefs",
-      nullptr
-    );
-  }
-}
-
-void // static
-nsNavHistory::UpdateFrecencyStatsPrefs(nsITimer *aTimer,
-                                       void *aClosure)
-{
-  nsNavHistory *history = static_cast<nsNavHistory *>(aClosure);
-  if (!history) {
-    return;
-  }
-  SetUInt64Pref(PREF_FREC_STATS_COUNT, history->mFrecencyStatsCount);
-  SetUInt64Pref(PREF_FREC_STATS_SUM, history->mFrecencyStatsSum);
-  SetUInt64Pref(PREF_FREC_STATS_SQUARES, history->mFrecencyStatsSumOfSquares);
-  history->mUpdateFrecencyStatsPrefsTimer = nullptr;
-
-  // This is only so that tests can know when the prefs are written.  Observing
-  // nsPref:changed isn't sufficient because that's not fired when a pref value
-  // is the same as the previous value.
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (obs) {
-    MOZ_ALWAYS_SUCCEEDS(obs->NotifyObservers(
-      nullptr,
-      "places-frecency-stats-prefs-updated",
-      nullptr
-    ));
-  }
-}
-
-NS_IMETHODIMP
-nsNavHistory::GetFrecencyMean(double *_retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-  if (mFrecencyStatsCount == 0) {
-    *_retval = 0.0;
-    return NS_OK;
-  }
-  *_retval =
-    static_cast<double>(mFrecencyStatsSum) /
-    static_cast<double>(mFrecencyStatsCount);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavHistory::GetFrecencyStandardDeviation(double *_retval)
+nsresult
+nsNavHistory::RecalculateFrecencyStatsInternal()
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  if (mFrecencyStatsCount <= 1) {
-    *_retval = 0.0;
-    return NS_OK;
-  }
-  double squares = static_cast<double>(mFrecencyStatsSumOfSquares);
-  double sum = static_cast<double>(mFrecencyStatsSum);
-  double count = static_cast<double>(mFrecencyStatsCount);
-  *_retval = sqrt((squares - ((sum * sum) / count)) / count);
+  nsCOMPtr<mozIStorageConnection> conn(mDB->MainConn());
+  NS_ENSURE_STATE(conn);
+
+  nsresult rv = conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO moz_meta (key, value) " \
+    "SELECT '" MOZ_META_KEY_FRECENCY_COUNT "' AS key, COUNT(*) AS value " \
+    "FROM moz_places " \
+    "WHERE id >= 0 AND frecency > 0 " \
+    "UNION "\
+    "SELECT '" MOZ_META_KEY_FRECENCY_SUM "' AS key, IFNULL(SUM(frecency), 0) AS value " \
+    "FROM moz_places " \
+    "WHERE id >= 0 AND frecency > 0 " \
+    "UNION " \
+    "SELECT '" MOZ_META_KEY_FRECENCY_SUM_OF_SQUARES "' AS key, IFNULL(SUM(frecency_squared), 0) AS value " \
+    "FROM ( " \
+      "SELECT frecency * frecency AS frecency_squared " \
+      "FROM moz_places " \
+      "WHERE id >= 0 AND frecency > 0 " \
+    "); "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -2605,7 +2521,7 @@ nsNavHistory::DecayFrecency()
   nsresult rv = FixInvalidFrecencies();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, FRECENCY_DECAY_RATE);
+  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
 
   // Globally decay places frecency rankings to estimate reduced frecency
   // values of pages that haven't been visited for a while, i.e., they do

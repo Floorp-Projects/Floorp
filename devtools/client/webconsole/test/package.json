@@ -17,7 +17,7 @@
     "test": "mocha \"./{,@(components|middleware|store|utils)/**/}*.test.js\" -r mock-local-storage -r jsdom-global/register -r ./mocha-test-setup.js"
   },
   "dependencies": {
-    "devtools-modules": "0.0.31",
+    "devtools-modules": "0.0.37",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "expect": "^1.16.0",

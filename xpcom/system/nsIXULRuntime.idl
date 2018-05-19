@@ -194,4 +194,10 @@ interface nsIXULRuntime : nsISupports
    * primarily for automated testing purposes.
    */
   readonly attribute boolean windowsDLLBlocklistStatus;
+
+  /**
+   * True if this application was started by the OS as part of an automatic
+   * restart mechanism (such as RegisterApplicationRestart on Windows).
+   */
+  readonly attribute boolean restartedByOS;
 };

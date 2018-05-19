@@ -48,6 +48,7 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/XULElementBinding.h"
+#include "mozilla/dom/XULPopupElementBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -3807,25 +3808,32 @@ HTMLConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp,
       return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
     }
   } else {
-    // Step 5.
-    // If the definition is for a customized built-in element, the localName
-    // should be one of the ones defined in the specification for this interface.
+    constructorGetterCallback cb;
+    if (ns == kNameSpaceID_XHTML) {
+      // Step 5.
+      // If the definition is for a customized built-in element, the localName
+      // should be one of the ones defined in the specification for this interface.
+      tag = nsHTMLTags::CaseSensitiveAtomTagToId(definition->mLocalName);
+      if (tag == eHTMLTag_userdefined) {
+        return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
+      }
 
-    // Customized built-in elements are not supported for XUL yet.
-    if (ns == kNameSpaceID_XUL) {
-      return Throw(aCx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      MOZ_ASSERT(tag <= NS_HTML_TAG_MAX, "tag is out of bounds");
+
+      // If the definition is for a customized built-in element, the active
+      // function should be the localname's element interface.
+      cb = sConstructorGetterCallback[tag];
+    } else { // kNameSpaceID_XUL
+      if (definition->mLocalName == nsGkAtoms::menupopup ||
+          definition->mLocalName == nsGkAtoms::popup ||
+          definition->mLocalName == nsGkAtoms::panel ||
+          definition->mLocalName == nsGkAtoms::tooltip) {
+        cb = XULPopupElementBinding::GetConstructorObject;
+      } else {
+        cb = XULElementBinding::GetConstructorObject;
+      }
     }
 
-    tag = nsHTMLTags::CaseSensitiveAtomTagToId(definition->mLocalName);
-    if (tag == eHTMLTag_userdefined) {
-      return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
-    }
-
-    MOZ_ASSERT(tag <= NS_HTML_TAG_MAX, "tag is out of bounds");
-
-    // If the definition is for a customized built-in element, the active
-    // function should be the localname's element interface.
-    constructorGetterCallback cb = sConstructorGetterCallback[tag];
     if (!cb) {
       return ThrowErrorMessage(aCx, MSG_ILLEGAL_CONSTRUCTOR);
     }

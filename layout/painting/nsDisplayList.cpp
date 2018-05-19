@@ -7482,8 +7482,10 @@ nsDisplayTableFixedPosition::CreateForFixedBackground(nsDisplayListBuilder* aBui
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame,
                                                  nsDisplayList* aList,
-                                                 const ActiveScrolledRoot* aActiveScrolledRoot)
+                                                 const ActiveScrolledRoot* aActiveScrolledRoot,
+                                                 const ActiveScrolledRoot* aContainerASR)
   : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot)
+  , mContainerASR(aContainerASR)
 {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
@@ -7719,14 +7721,14 @@ nsDisplayStickyPosition::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
         vBounds, hBounds, applied);
 
     aBuilder.PushClip(id);
-    aManager->CommandBuilder().PushOverrideForASR(GetActiveScrolledRoot(), Some(id));
+    aManager->CommandBuilder().PushOverrideForASR(mContainerASR, Some(id));
   }
 
   nsDisplayOwnLayer::CreateWebRenderCommands(aBuilder, aResources, aSc,
       aManager, aDisplayListBuilder);
 
   if (stickyScrollContainer) {
-    aManager->CommandBuilder().PopOverrideForASR(GetActiveScrolledRoot());
+    aManager->CommandBuilder().PopOverrideForASR(mContainerASR);
     aBuilder.PopClip();
   }
 

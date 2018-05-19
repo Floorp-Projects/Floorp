@@ -173,7 +173,7 @@ public:
         // That happens in WebRenderCompositableHolder.
 
         wr::LayoutRect r = wr::ToRoundedLayoutRect(bounds);
-        aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref());
+        aBuilder.PushIFrame(r, !BackfaceIsHidden(), data->GetPipelineId().ref(), /*ignoreMissingPipelines*/ false);
 
         gfx::Matrix4x4 scTransform;
         gfxRect destGFXRect = mFrame->PresContext()->AppUnitsToGfxUnits(dest);

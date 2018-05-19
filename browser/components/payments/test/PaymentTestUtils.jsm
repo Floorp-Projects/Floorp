@@ -364,6 +364,19 @@ var PaymentTestUtils = {
       tel: "+16172535702",
       email: "timbl@example.org",
     },
+    /* Used as a temporary (not persisted in autofill storage) address in tests */
+    Temp: {
+      "given-name": "Temp",
+      "family-name": "McTempFace",
+      "organization": "Temps Inc.",
+      "street-address": "1a Temporary Ave.",
+      "address-level2": "Temp Town",
+      "address-level1": "CA",
+      "postal-code": "31337",
+      "country": "US",
+      "tel": "+15032541000",
+      "email": "tempie@example.com",
+    },
   },
 
   BasicCards: {
