@@ -730,7 +730,10 @@ public:
     return mCenter.y + mRadii.height + mShapeMargin;
   }
   bool IsEmpty() const override {
-    return mRadii.IsEmpty();
+    // An EllipseShapeInfo is never empty, because an ellipse or circle with
+    // a zero radius acts like a point, and an ellipse with one zero radius
+    // acts like a line.
+    return false;
   }
 
   void Translate(nscoord aLineLeft, nscoord aBlockStart) override
@@ -866,10 +869,16 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
     // adjust it to compensate for the expansion of the inline dimension.
     // If we're in the expanded region, or if we're using a b that's more
     // than the bEnd of the ellipse, the intercept is nscoord_MIN.
-    const int32_t iIntercept = (bIsInExpandedRegion ||
-                                bIsMoreThanEllipseBEnd) ? nscoord_MIN :
+    // We have one other special case to consider: when the ellipse has no
+    // height. In that case we treat the bInAppUnits == 0 case as
+    // intercepting at the width of the ellipse. All other cases solve
+    // the intersection mathematically.
+    const int32_t iIntercept =
+      (bIsInExpandedRegion || bIsMoreThanEllipseBEnd) ? nscoord_MIN :
       iExpand + NSAppUnitsToIntPixels(
-        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height),
+        (!!mRadii.height || bInAppUnits) ?
+        XInterceptAtY(bInAppUnits, mRadii.width, mRadii.height) :
+        mRadii.width,
         aAppUnitsPerDevPixel);
 
     // Set iMax in preparation for this block row.
@@ -886,8 +895,10 @@ nsFloatManager::EllipseShapeInfo::EllipseShapeInfo(const nsPoint& aCenter,
         // Case 1: Expanded reqion pixel.
         df[index] = MAX_MARGIN_5X;
       } else if ((int32_t)i <= iIntercept) {
-        // Case 2: Pixel within the ellipse.
-        df[index] = 0;
+        // Case 2: Pixel within the ellipse, or just outside the edge of it.
+        // Having a positive height indicates that there's an area we can
+        // be inside of.
+        df[index] = (!!mRadii.height) ? 0 : 5;
       } else {
         // Case 3: Other pixel.
 
