@@ -55,7 +55,8 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     const settings = {
       entries: options.entries || 1000000,
       interval: options.interval || 1,
-      features: options.features || ["js", "stackwalk", "threads", "leaf"],
+      features: options.features ||
+        ["js", "stackwalk", "responsiveness", "threads", "leaf"],
       threads: options.threads || ["GeckoMain", "Compositor"]
     };
 
