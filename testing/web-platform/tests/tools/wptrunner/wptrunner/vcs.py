@@ -27,6 +27,10 @@ def vcs(bin_name):
         logger.debug(" ".join(command_line))
         try:
             return subprocess.check_output(command_line, stderr=subprocess.STDOUT, **proc_kwargs)
+        except OSError as e:
+            if log_error:
+                logger.error(e)
+            raise
         except subprocess.CalledProcessError as e:
             if log_error:
                 logger.error(e.output)
