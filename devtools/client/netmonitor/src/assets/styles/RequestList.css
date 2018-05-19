@@ -345,6 +345,7 @@
 /* Domain column */
 
 .requests-list-domain {
+  min-width: 100px;
   width: 30%;
 }
 
@@ -394,6 +395,10 @@
 
 .requests-list-cause {
   min-width: 75px;
+}
+
+.request-list-item .requests-list-cause.requests-list-column {
+  padding-left: 5px;
 }
 
 .requests-list-cause-stack {
