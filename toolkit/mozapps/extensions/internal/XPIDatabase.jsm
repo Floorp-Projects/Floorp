@@ -77,7 +77,6 @@ const FILE_JSON_DB                    = "extensions.json";
 
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
-const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
@@ -105,10 +104,6 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
   dictionary: true,
   "webextension-dictionary": true,
 };
-
-// Properties that exist in the extension manifest
-const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
-const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
@@ -1134,8 +1129,8 @@ function chooseValue(aAddon, aObj, aProp) {
   let repositoryAddon = aAddon._repositoryAddon;
   let objValue = aObj[aProp];
 
-  if (repositoryAddon && (aProp in repositoryAddon) &&
-      (objValue === undefined || objValue === null)) {
+  if (repositoryAddon && aProp in repositoryAddon &&
+      (aProp === "creator" || objValue == null)) {
     return [repositoryAddon[aProp], true];
   }
 
@@ -1200,64 +1195,24 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
-function getLocalizedPref(pref) {
-  if (Services.prefs.getPrefType(pref) != Ci.nsIPrefBranch.PREF_INVALID)
-    return Services.prefs.getComplexValue(pref, Ci.nsIPrefLocalizedString).data;
-  return null;
-}
-
-PROP_LOCALE_SINGLE.forEach(function(aProp) {
+["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    // Override XPI creator if repository creator is defined
-    if (aProp == "creator" &&
-        addon._repositoryAddon && addon._repositoryAddon.creator) {
-      return addon._repositoryAddon.creator;
-    }
 
-    let result = null;
+    let [result, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
 
-    if (addon.active) {
-      try {
-        let value = getLocalizedPref(`${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp}`);
-        if (value)
-          result = value;
-      } catch (e) {
-      }
-    }
-
-    if (result == null)
-      [result] = chooseValue(addon, addon.selectedLocale, aProp);
-
-    if (aProp == "creator")
-      return result ? new AddonManagerPrivate.AddonAuthor(result) : null;
+    if (result && !usedRepository && aProp == "creator")
+      return new AddonManagerPrivate.AddonAuthor(result);
 
     return result;
   });
 });
 
-PROP_LOCALE_MULTI.forEach(function(aProp) {
+["developers", "translators", "contributors"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    let results = null;
-    let usedRepository = false;
 
-    if (addon.active) {
-      let pref = `${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp.slice(0, -1)}`;
-      let list = Services.prefs.getChildList(pref, {});
-      if (list.length > 0) {
-        list.sort();
-        results = [];
-        for (let childPref of list) {
-          let value = getLocalizedPref(childPref);
-          if (value)
-            results.push(value);
-        }
-      }
-    }
-
-    if (results == null)
-      [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
+    let [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
 
     if (results && !usedRepository) {
       results = results.map(function(aResult) {
