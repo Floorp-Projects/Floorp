@@ -411,7 +411,7 @@
   }
 
   var SensorProvider = {
-    name: 'device::mojom::SensorProvider',
+    name: 'device.mojom.SensorProvider',
     kVersion: 0,
     ptrClass: SensorProviderPtr,
     proxyClass: SensorProviderProxy,
