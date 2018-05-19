@@ -1391,50 +1391,43 @@ namespace places {
   }
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Update frecency stats function
+//// sqrt function
 
   /* static */
   nsresult
-  UpdateFrecencyStatsFunction::create(mozIStorageConnection *aDBConn)
+  SqrtFunction::create(mozIStorageConnection *aDBConn)
   {
-    RefPtr<UpdateFrecencyStatsFunction> function =
-      new UpdateFrecencyStatsFunction();
+    RefPtr<SqrtFunction> function = new SqrtFunction();
     nsresult rv = aDBConn->CreateFunction(
-      NS_LITERAL_CSTRING("update_frecency_stats"), 3, function
+      NS_LITERAL_CSTRING("sqrt"), 1, function
     );
     NS_ENSURE_SUCCESS(rv, rv);
-
     return NS_OK;
   }
 
   NS_IMPL_ISUPPORTS(
-    UpdateFrecencyStatsFunction,
+    SqrtFunction,
     mozIStorageFunction
   )
 
   NS_IMETHODIMP
-  UpdateFrecencyStatsFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
-                                              nsIVariant **_result)
+  SqrtFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                               nsIVariant **_result)
   {
     MOZ_ASSERT(aArgs);
 
     uint32_t numArgs;
     nsresult rv = aArgs->GetNumEntries(&numArgs);
     NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(numArgs == 3);
+    MOZ_ASSERT(numArgs == 1);
 
-    int64_t placeId = aArgs->AsInt64(0);
-    int32_t oldFrecency = aArgs->AsInt32(1);
-    int32_t newFrecency = aArgs->AsInt32(2);
-
-    const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
-    NS_ENSURE_STATE(navHistory);
-    navHistory->DispatchFrecencyStatsUpdate(placeId, oldFrecency, newFrecency);
+    double value = aArgs->AsDouble(0);
 
     RefPtr<nsVariant> result = new nsVariant();
-    rv = result->SetAsVoid();
+    rv = result->SetAsDouble(sqrt(value));
     NS_ENSURE_SUCCESS(rv, rv);
     result.forget(_result);
+
     return NS_OK;
   }
 

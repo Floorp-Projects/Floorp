@@ -40,6 +40,7 @@ var PlacesDBUtils = {
       this.invalidateCaches,
       this.checkCoherence,
       this._refreshUI,
+      this.frecencyStats,
       this.incrementalVacuum
     ];
     let telemetryStartTime = Date.now();
@@ -71,6 +72,7 @@ var PlacesDBUtils = {
       this.invalidateCaches,
       this.checkCoherence,
       this.expire,
+      this.frecencyStats,
       this.vacuum,
       this.stats,
       this._refreshUI,
@@ -859,6 +861,17 @@ var PlacesDBUtils = {
     }
 
     return logs;
+  },
+
+  /**
+   * Recalculates statistical data on the frecencies in the database.
+   *
+   * @return {Promise} resolves when statistics are collected.
+   */
+  frecencyStats() {
+    return new Promise(resolve => {
+      PlacesUtils.history.recalculateFrecencyStats(() => resolve());
+    });
   },
 
   /**

@@ -12,9 +12,10 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
-interface nsIURI;
-interface nsIVariant;
 interface nsIFile;
+interface nsIObserver;
+interface nsIVariant;
+interface nsIURI;
 
 interface mozIStorageConnection;
 interface mozIStorageStatementCallback;
@@ -1390,13 +1391,14 @@ interface nsINavHistoryService : nsISupports
   unsigned long long hashURL(in ACString aSpec, [optional] in ACString aMode);
 
   /**
-   * The mean and standard deviation of all frecencies > 0 in the database.
-   * These are used to determine a frecency threshold for URLs that should be
-   * autofilled in the urlbar.  They are updated whenever a frecency changes,
-   * but not when frecencies decay.
+   * Resets and recalculates the frecency statistics that are kept in the
+   * moz_meta table.
+   *
+   * @param aCallback
+   *        Called when the recalculation is complete.  The arguments passed to
+   *        the observer are not defined.
    */
-  readonly attribute double frecencyMean;
-  readonly attribute double frecencyStandardDeviation;
+  void recalculateFrecencyStats([optional] in nsIObserver aCallback);
 
   /**
    * The database connection used by Places.
