@@ -31,6 +31,7 @@ LOCAL_INCLUDES += [
 USE_LIBS += [
     '/media/webrtc/trunk/third_party/gflags/gflags_gflags/gflags',
     '/testing/gtest/gtest',
+    'chromium_atomics',
     'media_libopus',
     'mozglue',
     'speex',
