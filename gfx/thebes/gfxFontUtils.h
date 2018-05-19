@@ -804,7 +804,7 @@ public:
              uint32_t& aUVSOffset);
 
     static uint32_t
-    MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh);
+    MapCharToGlyphFormat4(const uint8_t *aBuf, uint32_t aLength, char16_t aCh);
 
     static uint32_t
     MapCharToGlyphFormat10(const uint8_t *aBuf, uint32_t aCh);
