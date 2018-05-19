@@ -100,7 +100,6 @@ add_task(async function test_notInstalled() {
     Assert.ok(addon.userDisabled);
 
     Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    Assert.equal(addon.size, 0);
     Assert.equal(addon.scope, AddonManager.SCOPE_APPLICATION);
     Assert.equal(addon.pendingOperations, AddonManager.PENDING_NONE);
     Assert.equal(addon.operationsRequiringRestart, AddonManager.PENDING_NONE);
