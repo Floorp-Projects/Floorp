@@ -228,11 +228,11 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
             return self.make_ident_output
         env = self.query_repack_env()
         dirs = self.query_abs_dirs()
-        output = self.get_output_from_command_m(["make", "ident"],
-                                                cwd=dirs['abs_locales_dir'],
-                                                env=env,
-                                                silent=True,
-                                                halt_on_failure=True)
+        output = self.get_output_from_command(["make", "ident"],
+                                              cwd=dirs['abs_locales_dir'],
+                                              env=env,
+                                              silent=True,
+                                              halt_on_failure=True)
         parser = OutputParser(config=self.config, log_obj=self.log_obj,
                               error_list=MakefileErrorList)
         parser.add_lines(output)
@@ -290,7 +290,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         if make_args is None:
             make_args = []
         # TODO error checking
-        output = self.get_output_from_command_m(
+        output = self.get_output_from_command(
             [make, "echo-variable-%s" % variable] + make_args,
             cwd=dirs['abs_locales_dir'], silent=True,
             env=env
@@ -414,10 +414,10 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
 
         mach = os.path.join(dirs['abs_mozilla_dir'], 'mach')
 
-        if self.run_command_m([sys.executable, mach, 'configure'],
-                              cwd=dirs['abs_mozilla_dir'],
-                              env=env,
-                              error_list=MakefileErrorList):
+        if self.run_command([sys.executable, mach, 'configure'],
+                            cwd=dirs['abs_mozilla_dir'],
+                            env=env,
+                            error_list=MakefileErrorList):
             self.fatal("Configure failed!")
 
         # Invoke the build system to get nsinstall and buildid.h.
@@ -431,11 +431,11 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
             env = dict(env)
             env['MOZ_BUILD_DATE'] = str(buildid)
 
-        self.run_command_m([sys.executable, mach, 'build'] + targets,
-                           cwd=dirs['abs_mozilla_dir'],
-                           env=env,
-                           error_list=MakefileErrorList,
-                           halt_on_failure=True)
+        self.run_command([sys.executable, mach, 'build'] + targets,
+                         cwd=dirs['abs_mozilla_dir'],
+                         env=env,
+                         error_list=MakefileErrorList,
+                         halt_on_failure=True)
 
     def setup(self):
         c = self.config
@@ -446,7 +446,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         # TODO stop using cat
         cat = self.query_exe("cat")
         make = self.query_exe("make")
-        self.run_command_m([cat, mozconfig_path])
+        self.run_command([cat, mozconfig_path])
         env = self.query_repack_env()
         if self.config.get("tooltool_config"):
             self.tooltool_fetch(
@@ -454,16 +454,16 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
                 output_dir=self.config['tooltool_config']['output_dir'] % self.query_abs_dirs(),
             )
         self._setup_configure()
-        self.run_command_m([make, "wget-en-US"],
-                           cwd=dirs['abs_locales_dir'],
-                           env=env,
-                           error_list=MakefileErrorList,
-                           halt_on_failure=True)
-        self.run_command_m([make, "unpack"],
-                           cwd=dirs['abs_locales_dir'],
-                           env=env,
-                           error_list=MakefileErrorList,
-                           halt_on_failure=True)
+        self.run_command([make, "wget-en-US"],
+                         cwd=dirs['abs_locales_dir'],
+                         env=env,
+                         error_list=MakefileErrorList,
+                         halt_on_failure=True)
+        self.run_command([make, "unpack"],
+                         cwd=dirs['abs_locales_dir'],
+                         env=env,
+                         error_list=MakefileErrorList,
+                         halt_on_failure=True)
 
     def repack(self):
         # TODO per-locale logs and reporting.
@@ -474,11 +474,11 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         success_count = total_count = 0
         for locale in locales:
             total_count += 1
-            if self.run_command_m([make, "installers-%s" % locale],
-                                  cwd=dirs['abs_locales_dir'],
-                                  env=repack_env,
-                                  error_list=MakefileErrorList,
-                                  halt_on_failure=False):
+            if self.run_command([make, "installers-%s" % locale],
+                                cwd=dirs['abs_locales_dir'],
+                                env=repack_env,
+                                error_list=MakefileErrorList,
+                                halt_on_failure=False):
                 self.add_failure(locale, message="%s failed in make installers-%s!" %
                                  (locale, locale))
                 continue
@@ -525,7 +525,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
                 self.warning("Skipping previously failed locale %s." % locale)
                 continue
             total_count += 1
-            output = self.get_output_from_command_m(
+            output = self.get_output_from_command(
                 # Ugly hack to avoid |make upload| stderr from showing up
                 # as get_output_from_command errors
                 "%s upload AB_CD=%s 2>&1" % (make, locale),
