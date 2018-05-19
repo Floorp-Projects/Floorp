@@ -569,55 +569,64 @@ typedef struct {
 #pragma pack()
 
 uint32_t
-gfxFontUtils::MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh)
+gfxFontUtils::MapCharToGlyphFormat4(const uint8_t* aBuf, uint32_t aLength,
+                                    char16_t aCh)
 {
     const Format4Cmap *cmap4 = reinterpret_cast<const Format4Cmap*>(aBuf);
-    uint16_t segCount;
-    const AutoSwap_PRUint16 *endCodes;
-    const AutoSwap_PRUint16 *startCodes;
-    const AutoSwap_PRUint16 *idDelta;
-    const AutoSwap_PRUint16 *idRangeOffset;
-    uint16_t probe;
-    uint16_t rangeShiftOver2;
-    uint16_t index;
 
-    segCount = (uint16_t)(cmap4->segCountX2) / 2;
+    uint16_t segCount = (uint16_t)(cmap4->segCountX2) / 2;
 
-    endCodes = &cmap4->arrays[0];
-    startCodes = &cmap4->arrays[segCount + 1]; // +1 for reserved word between arrays
-    idDelta = &startCodes[segCount];
-    idRangeOffset = &idDelta[segCount];
+    const AutoSwap_PRUint16* endCodes = &cmap4->arrays[0];
+    const AutoSwap_PRUint16* startCodes = &cmap4->arrays[segCount + 1];
+    const AutoSwap_PRUint16* idDelta = &startCodes[segCount];
+    const AutoSwap_PRUint16* idRangeOffset = &idDelta[segCount];
 
-    probe = 1 << (uint16_t)(cmap4->entrySelector);
-    rangeShiftOver2 = (uint16_t)(cmap4->rangeShift) / 2;
-
-    if ((uint16_t)(startCodes[rangeShiftOver2]) <= aCh) {
-        index = rangeShiftOver2;
-    } else {
-        index = 0;
+    // Sanity-check that the fixed-size arrays don't exceed the buffer.
+    const uint8_t* const limit = aBuf + aLength;
+    if ((const uint8_t*)(&idRangeOffset[segCount]) > limit) {
+        return 0; // broken font, just bail out safely
     }
 
-    while (probe > 1) {
-        probe >>= 1;
-        if ((uint16_t)(startCodes[index + probe]) <= aCh) {
-            index += probe;
+    // For most efficient binary search, we want to work on a range of segment
+    // indexes that is a power of 2 so that we can always halve it by shifting.
+    // So we find the largest power of 2 that is <= segCount.
+    // We will offset this range by segOffset so as to reach the end
+    // of the table, provided that doesn't put us beyond the target
+    // value from the outset.
+    uint32_t powerOf2 = mozilla::FindHighestBit(segCount);
+    uint32_t segOffset = segCount - powerOf2;
+    uint32_t idx = 0;
+
+    if (uint16_t(startCodes[segOffset]) <= aCh) {
+        idx = segOffset;
+    }
+
+    // Repeatedly halve the size of the range until we find the target group
+    while (powerOf2 > 1) {
+        powerOf2 >>= 1;
+        if (uint16_t(startCodes[idx + powerOf2]) <= aCh) {
+            idx += powerOf2;
         }
     }
 
-    if (aCh >= (uint16_t)(startCodes[index]) && aCh <= (uint16_t)(endCodes[index])) {
+    if (aCh >= uint16_t(startCodes[idx]) && aCh <= uint16_t(endCodes[idx])) {
         uint16_t result;
-        if ((uint16_t)(idRangeOffset[index]) == 0) {
+        if (uint16_t(idRangeOffset[idx]) == 0) {
             result = aCh;
         } else {
-            uint16_t offset = aCh - (uint16_t)(startCodes[index]);
-            const AutoSwap_PRUint16 *glyphIndexTable =
-                (const AutoSwap_PRUint16*)((const char*)&idRangeOffset[index] +
-                                           (uint16_t)(idRangeOffset[index]));
+            uint16_t offset = aCh - uint16_t(startCodes[idx]);
+            const AutoSwap_PRUint16* glyphIndexTable =
+                (const AutoSwap_PRUint16*)((const char*)&idRangeOffset[idx] +
+                                           uint16_t(idRangeOffset[idx]));
+            if ((const uint8_t*)(glyphIndexTable + offset + 1) > limit) {
+                return 0; // broken font, just bail out safely
+            }
             result = glyphIndexTable[offset];
         }
 
-        // note that this is unsigned 16-bit arithmetic, and may wrap around
-        result += (uint16_t)(idDelta[index]);
+        // Note that this is unsigned 16-bit arithmetic, and may wrap around
+        // (which is required behavior per spec)
+        result += uint16_t(idDelta[idx]);
         return result;
     }
 
@@ -761,7 +770,8 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
     switch (format) {
     case 4:
         gid = aUnicode < UNICODE_BMP_LIMIT ?
-            MapCharToGlyphFormat4(aCmapBuf + offset, char16_t(aUnicode)) : 0;
+            MapCharToGlyphFormat4(aCmapBuf + offset, aBufLength - offset,
+                                  char16_t(aUnicode)) : 0;
         break;
     case 10:
         gid = MapCharToGlyphFormat10(aCmapBuf + offset, aUnicode);
@@ -786,6 +796,7 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
                 case 4:
                     if (aUnicode < UNICODE_BMP_LIMIT) {
                         varGID = MapCharToGlyphFormat4(aCmapBuf + offset,
+                                                       aBufLength - offset,
                                                        char16_t(aUnicode));
                     }
                     break;
