@@ -30,7 +30,7 @@ add_task(async function() {
   invokeInTab("arithmetic");
 
   info("Switch to console and check message");
-  await waitForConsoleLink(dbg,  "math.min.js:3:65");
+  await waitForConsoleLink(dbg, "math.min.js:3:65");
 
   info("Switch back to debugger and pretty-print");
   await dbg.toolbox.selectTool("jsdebugger");

@@ -20,7 +20,10 @@ const sources = [
  */
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
-  const { selectors: { getSelectedSource, isPaused }, getState } = dbg;
+  const {
+    selectors: { getSelectedSource, isPaused },
+    getState
+  } = dbg;
 
   invokeInTab("firstCall");
   await waitForPaused(dbg);

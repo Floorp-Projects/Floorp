@@ -17,7 +17,6 @@ import mozharness
 from mozharness.base.vcs.vcsbase import VCSScript
 from mozharness.base.log import ERROR
 from mozharness.base.transfer import TransferMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
 
 
@@ -27,7 +26,7 @@ external_tools_path = os.path.join(
 )
 
 
-class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
+class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
     all_actions = [
         'clobber',
         'get-tooltool',
@@ -73,12 +72,6 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
             "dest": "operating_system",
             "help": "Specify the operating system to build for",
         }],
-        [["--use-mock"], {
-            "dest": "use_mock",
-            "help": "use mock to set up build environment",
-            "action": "store_true",
-            "default": False,
-        }],
         [["--use-yasm"], {
             "dest": "use_yasm",
             "help": "use yasm instead of nasm",
@@ -116,10 +109,6 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
             all_actions=all_actions,
             default_actions=default_actions,
         )
-
-        if self.config['use_mock']:
-            self.setup_mock()
-            self.enable_mock()
 
     def get_tooltool(self):
         c = self.config
@@ -309,15 +298,9 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         cmd = [python, os.path.join(external_tools_path, 'packagesymbols.py'),
                '--symbol-zip', symbol_zip_path,
                dump_syms, os.path.join(srcdir, package_name)]
-        if self.config['use_mock']:
-            self.disable_mock()
         self.run_command(cmd, **kwargs)
-        if self.config['use_mock']:
-            self.enable_mock()
 
     def upload(self):
-        if self.config['use_mock']:
-            self.disable_mock()
         dirs = self.query_abs_dirs()
         self.scp_upload_directory(
             dirs['abs_upload_dir'],
@@ -326,8 +309,6 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
             self.query_upload_ssh_host(),
             self.query_upload_ssh_path(),
         )
-        if self.config['use_mock']:
-            self.enable_mock()
 
     def test(self):
         retval = self.run_make('test')

@@ -10,9 +10,15 @@ async function breakpointScopes(dbg, fixture, { line, column }, scopes) {
   const filename = `fixtures/${fixture}/input.`;
   const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
-  await invokeWithBreakpoint(dbg, fnName, filename, { line, column }, async () => {
-    await assertScopes(dbg, scopes);
-  });
+  await invokeWithBreakpoint(
+    dbg,
+    fnName,
+    filename,
+    { line, column },
+    async () => {
+      await assertScopes(dbg, scopes);
+    }
+  );
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
@@ -31,7 +37,7 @@ add_task(async function() {
     "ExportedOther()",
     "ExpressionClass:Foo()",
     "fn()",
-    ["ns", '{\u2026}'],
+    ["ns", "{\u2026}"],
     "SubDecl()",
     "SubVar:SubExpr()"
   ]);
@@ -81,7 +87,7 @@ add_task(async function() {
     { line: 19, column: 4 },
     [
       "Block",
-      ["<this>", '{\u2026}'],
+      ["<this>", "{\u2026}"],
       ["one", "1"],
       ["two", "2"],
       "root",
@@ -227,31 +233,37 @@ add_task(async function() {
     "thirdModuleScoped()"
   ]);
 
-  await breakpointScopes(dbg, "babel-out-of-order-declarations-cjs", { line: 8, column: 4 }, [
-    "callback",
-    "fn()",
-    ["val", "undefined"],
-    "root",
-    ["callback", "(optimized away)"],
-    ["fn", "(optimized away)"],
-    ["val", "(optimized away)"],
-    "Module",
+  await breakpointScopes(
+    dbg,
+    "babel-out-of-order-declarations-cjs",
+    { line: 8, column: 4 },
+    [
+      "callback",
+      "fn()",
+      ["val", "undefined"],
+      "root",
+      ["callback", "(optimized away)"],
+      ["fn", "(optimized away)"],
+      ["val", "(optimized away)"],
+      "Module",
 
-    // This value is currently optimized away, which isn't 100% accurate.
-    // Because import declarations is the last thing in the file, our current
-    // logic doesn't cover _both_ 'var' statements that it generates,
-    // making us use the first, optimized-out binding. Given that imports
-    // are almost never the last thing in a file though, this is probably not
-    // a huge deal for now.
-    ["aDefault", "(optimized away)"],
-    ["root", "(optimized away)"],
-    ["val", "(optimized away)"],
-  ]);
-  await breakpointScopes(dbg, "babel-flowtype-bindings", { line: 8, column: 2 }, [
-    "Module",
-    ["aConst", '"a-const"'],
-    "root()"
-  ]);
+      // This value is currently optimized away, which isn't 100% accurate.
+      // Because import declarations is the last thing in the file, our current
+      // logic doesn't cover _both_ 'var' statements that it generates,
+      // making us use the first, optimized-out binding. Given that imports
+      // are almost never the last thing in a file though, this is probably not
+      // a huge deal for now.
+      ["aDefault", "(optimized away)"],
+      ["root", "(optimized away)"],
+      ["val", "(optimized away)"]
+    ]
+  );
+  await breakpointScopes(
+    dbg,
+    "babel-flowtype-bindings",
+    { line: 8, column: 2 },
+    ["Module", ["aConst", '"a-const"'], "root()"]
+  );
 
   await breakpointScopes(dbg, "babel-switches", { line: 7, column: 6 }, [
     "Switch",
@@ -284,49 +296,59 @@ add_task(async function() {
     "root()"
   ]);
 
-  await breakpointScopes(dbg, "babel-modules-webpack", { line: 20, column: 2 }, [
-    "Module",
-    ["aDefault", '"a-default"'],
-    ["aDefault2", '"a-default2"'],
-    ["aDefault3", '"a-default3"'],
-    ["anAliased", "Getter"],
-    ["anAliased2", "Getter"],
-    ["anAliased3", "Getter"],
-    ["aNamed", "Getter"],
-    ["aNamed2", "Getter"],
-    ["aNamed3", "Getter"],
-    ["aNamespace", "{\u2026}"],
-    ["aNamespace2", "{\u2026}"],
-    ["aNamespace3", "{\u2026}"],
-    ["anotherNamed", "Getter"],
-    ["anotherNamed2", "Getter"],
-    ["anotherNamed3", "Getter"],
-    ["example", "(optimized away)"],
-    ["optimizedOut", "(optimized away)"],
-    "root()"
-  ]);
+  await breakpointScopes(
+    dbg,
+    "babel-modules-webpack",
+    { line: 20, column: 2 },
+    [
+      "Module",
+      ["aDefault", '"a-default"'],
+      ["aDefault2", '"a-default2"'],
+      ["aDefault3", '"a-default3"'],
+      ["anAliased", "Getter"],
+      ["anAliased2", "Getter"],
+      ["anAliased3", "Getter"],
+      ["aNamed", "Getter"],
+      ["aNamed2", "Getter"],
+      ["aNamed3", "Getter"],
+      ["aNamespace", "{\u2026}"],
+      ["aNamespace2", "{\u2026}"],
+      ["aNamespace3", "{\u2026}"],
+      ["anotherNamed", "Getter"],
+      ["anotherNamed2", "Getter"],
+      ["anotherNamed3", "Getter"],
+      ["example", "(optimized away)"],
+      ["optimizedOut", "(optimized away)"],
+      "root()"
+    ]
+  );
 
-  await breakpointScopes(dbg, "babel-modules-webpack-es6", { line: 20, column: 2 }, [
-    "Module",
-    ["aDefault", '"a-default"'],
-    ["aDefault2", '"a-default2"'],
-    ["aDefault3", '"a-default3"'],
-    ["anAliased", '"an-original"'],
-    ["anAliased2", '"an-original2"'],
-    ["anAliased3", '"an-original3"'],
-    ["aNamed", '"a-named"'],
-    ["aNamed2", '"a-named2"'],
-    ["aNamed3", '"a-named3"'],
-    ["aNamespace", "{\u2026}"],
-    ["aNamespace2", "{\u2026}"],
-    ["aNamespace3", "{\u2026}"],
-    ["anotherNamed", '"a-named"'],
-    ["anotherNamed2", '"a-named2"'],
-    ["anotherNamed3", '"a-named3"'],
-    ["example", "(optimized away)"],
-    ["optimizedOut", "(optimized away)"],
-    "root()"
-  ]);
+  await breakpointScopes(
+    dbg,
+    "babel-modules-webpack-es6",
+    { line: 20, column: 2 },
+    [
+      "Module",
+      ["aDefault", '"a-default"'],
+      ["aDefault2", '"a-default2"'],
+      ["aDefault3", '"a-default3"'],
+      ["anAliased", '"an-original"'],
+      ["anAliased2", '"an-original2"'],
+      ["anAliased3", '"an-original3"'],
+      ["aNamed", '"a-named"'],
+      ["aNamed2", '"a-named2"'],
+      ["aNamed3", '"a-named3"'],
+      ["aNamespace", "{\u2026}"],
+      ["aNamespace2", "{\u2026}"],
+      ["aNamespace3", "{\u2026}"],
+      ["anotherNamed", '"a-named"'],
+      ["anotherNamed2", '"a-named2"'],
+      ["anotherNamed3", '"a-named3"'],
+      ["example", "(optimized away)"],
+      ["optimizedOut", "(optimized away)"],
+      "root()"
+    ]
+  );
 
   await breakpointScopes(
     dbg,

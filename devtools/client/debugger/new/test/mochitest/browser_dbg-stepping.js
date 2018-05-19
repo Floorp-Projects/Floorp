@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
- // This test can be really slow on debug platforms
- requestLongerTimeout(5);
+// This test can be really slow on debug platforms
+requestLongerTimeout(5);
 
 add_task(async function test() {
   const dbg = await initDebugger("big-sourcemap.html", "big-sourcemap");

@@ -509,7 +509,6 @@ private:
 
   static nsCheapSetOperator SetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aDir)
   {
-    MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     aEntry->GetKey()->SetDirectionality(*reinterpret_cast<Directionality*>(aDir),
                                         true);
     return OpNext;
@@ -523,7 +522,6 @@ private:
 
   static nsCheapSetOperator ResetNodeDirection(nsPtrHashKey<Element>* aEntry, void* aData)
   {
-    MOZ_ASSERT(aEntry->GetKey()->IsElement(), "Must be an Element");
     // run the downward propagation algorithm
     // and remove the text node from the map
     nsTextNodeDirectionalityMapAndElement* data =

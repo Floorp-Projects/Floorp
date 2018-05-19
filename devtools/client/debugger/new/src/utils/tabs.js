@@ -4,16 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.getHiddenTabs = getHiddenTabs;
-exports.getSourceAnnotation = getSourceAnnotation;
 exports.getTabMenuItems = getTabMenuItems;
-
-var _react = require("devtools/client/shared/vendor/react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _source = require("./source");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,28 +38,6 @@ function getHiddenTabs(sourceTabs, sourceTabEls) {
     const element = sourceTabEls[index];
     return element && hasTopOffset(element);
   });
-}
-
-function getSourceAnnotation(source, sourceMetaData) {
-  const framework = sourceMetaData && sourceMetaData.framework ? sourceMetaData.framework : false;
-
-  if (framework) {
-    return _react2.default.createElement("img", {
-      className: framework.toLowerCase()
-    });
-  }
-
-  if ((0, _source.isPretty)(source)) {
-    return _react2.default.createElement("img", {
-      className: "prettyPrint"
-    });
-  }
-
-  if (source.isBlackBoxed) {
-    return _react2.default.createElement("img", {
-      className: "blackBox"
-    });
-  }
 }
 
 function getTabMenuItems() {

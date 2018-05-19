@@ -7,7 +7,6 @@
 #ifndef js_HashTable_h
 #define js_HashTable_h
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
@@ -30,7 +29,7 @@ class TempAllocPolicy;
 template <class> struct DefaultHasher;
 template <class, class> class HashMapEntry;
 namespace detail {
-    template <class T> class HashTableEntry;
+    template <typename T> class HashTableEntry;
     template <class T, class HashPolicy, class AllocPolicy> class HashTable;
 } // namespace detail
 
@@ -773,9 +772,6 @@ class HashMapEntry
 
 namespace mozilla {
 
-template <typename T>
-struct IsPod<js::detail::HashTableEntry<T> > : IsPod<T> {};
-
 template <typename K, typename V>
 struct IsPod<js::HashMapEntry<K, V> >
   : IntegralConstant<bool, IsPod<K>::value && IsPod<V>::value>
@@ -790,18 +786,27 @@ namespace detail {
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable;
 
-template <class T>
+template <typename T>
 class HashTableEntry
 {
-    template <class, class, class> friend class HashTable;
-    typedef typename mozilla::RemoveConst<T>::Type NonConstT;
-
-    HashNumber keyHash;
-    mozilla::AlignedStorage2<NonConstT> mem;
+  private:
+    using NonConstT = typename mozilla::RemoveConst<T>::Type;
 
     static const HashNumber sFreeKey = 0;
     static const HashNumber sRemovedKey = 1;
     static const HashNumber sCollisionBit = 1;
+
+    HashNumber keyHash = sFreeKey;
+    alignas(NonConstT) unsigned char valueData_[sizeof(NonConstT)];
+
+  private:
+    template <class, class, class> friend class HashTable;
+
+    // Some versions of GCC treat it as a -Wstrict-aliasing violation (ergo a
+    // -Werror compile error) to reinterpret_cast<> |valueData_| to |T*|, even
+    // through |void*|.  Placing the latter cast in these separate functions
+    // breaks the chain such that affected GCC versions no longer warn/error.
+    void* rawValuePtr() { return valueData_; }
 
     static bool isLiveHash(HashNumber hash)
     {
@@ -810,19 +815,23 @@ class HashTableEntry
 
     HashTableEntry(const HashTableEntry&) = delete;
     void operator=(const HashTableEntry&) = delete;
-    ~HashTableEntry() = delete;
+
+    NonConstT* valuePtr() { return reinterpret_cast<NonConstT*>(rawValuePtr()); }
 
     void destroyStoredT() {
-        mem.addr()->~T();
-        MOZ_MAKE_MEM_UNDEFINED(mem.addr(), sizeof(*mem.addr()));
+        NonConstT* ptr = valuePtr();
+        ptr->~T();
+        MOZ_MAKE_MEM_UNDEFINED(ptr, sizeof(*ptr));
     }
 
   public:
-    // NB: HashTableEntry is treated as a POD: no constructor or destructor calls.
+    HashTableEntry() = default;
 
-    void destroyIfLive() {
+    ~HashTableEntry() {
         if (isLive())
             destroyStoredT();
+
+        MOZ_MAKE_MEM_UNDEFINED(this, sizeof(*this));
     }
 
     void destroy() {
@@ -835,9 +844,9 @@ class HashTableEntry
             return;
         MOZ_ASSERT(isLive());
         if (other->isLive()) {
-            mozilla::Swap(*mem.addr(), *other->mem.addr());
+            mozilla::Swap(*valuePtr(), *other->valuePtr());
         } else {
-            *other->mem.addr() = mozilla::Move(*mem.addr());
+            *other->valuePtr() = mozilla::Move(*valuePtr());
             destroy();
         }
         mozilla::Swap(keyHash, other->keyHash);
@@ -845,12 +854,12 @@ class HashTableEntry
 
     T& get() {
         MOZ_ASSERT(isLive());
-        return *mem.addr();
+        return *valuePtr();
     }
 
     NonConstT& getMutable() {
         MOZ_ASSERT(isLive());
-        return *mem.addr();
+        return *valuePtr();
     }
 
     bool isFree() const {
@@ -911,7 +920,7 @@ class HashTableEntry
     {
         MOZ_ASSERT(!isLive());
         keyHash = hn;
-        new(mem.addr()) T(mozilla::Forward<Args>(args)...);
+        new (valuePtr()) T(mozilla::Forward<Args>(args)...);
         MOZ_ASSERT(isLive());
     }
 };
@@ -926,7 +935,7 @@ class HashTable : private AllocPolicy
     typedef typename HashPolicy::Lookup Lookup;
 
   public:
-    typedef HashTableEntry<T> Entry;
+    using Entry = HashTableEntry<T>;
 
     // A nullable pointer to a hash table element. A Ptr |p| can be tested
     // either explicitly |if (p.found()) p->...| or using boolean conversion
@@ -1285,26 +1294,31 @@ class HashTable : private AllocPolicy
     static Entry* createTable(AllocPolicy& alloc, uint32_t capacity,
                               FailureBehavior reportFailure = ReportFailure)
     {
-        static_assert(sFreeKey == 0,
-                      "newly-calloc'd tables have to be considered empty");
-        if (reportFailure)
-            return alloc.template pod_calloc<Entry>(capacity);
-
-        return alloc.template maybe_pod_calloc<Entry>(capacity);
+        Entry* table = reportFailure
+                       ? alloc.template pod_malloc<Entry>(capacity)
+                       : alloc.template maybe_pod_malloc<Entry>(capacity);
+        if (table) {
+            for (uint32_t i = 0; i < capacity; i++)
+                new (&table[i]) Entry();
+        }
+        return table;
     }
 
     static Entry* maybeCreateTable(AllocPolicy& alloc, uint32_t capacity)
     {
-        static_assert(sFreeKey == 0,
-                      "newly-calloc'd tables have to be considered empty");
-        return alloc.template maybe_pod_calloc<Entry>(capacity);
+        Entry* table = alloc.template maybe_pod_malloc<Entry>(capacity);
+        if (table) {
+            for (uint32_t i = 0; i < capacity; i++)
+                new (&table[i]) Entry();
+        }
+        return table;
     }
 
     static void destroyTable(AllocPolicy& alloc, Entry* oldTable, uint32_t capacity)
     {
         Entry* end = oldTable + capacity;
         for (Entry* e = oldTable; e < end; ++e)
-            e->destroyIfLive();
+            e->~Entry();
         alloc.free_(oldTable);
     }
 
@@ -1567,8 +1581,9 @@ class HashTable : private AllocPolicy
                 HashNumber hn = src->getKeyHash();
                 findFreeEntry(hn).setLive(
                     hn, mozilla::Move(const_cast<typename Entry::NonConstT&>(src->get())));
-                src->destroy();
             }
+
+            src->~Entry();
         }
 
         // All entries have been destroyed, no need to destroyTable.

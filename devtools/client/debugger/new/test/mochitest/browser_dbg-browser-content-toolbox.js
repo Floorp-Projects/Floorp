@@ -32,7 +32,10 @@ async function enableBreakpoint(dbg, index) {
 }
 
 function findBreakpoint(dbg, url, line) {
-  const { selectors: { getBreakpoint }, getState } = dbg;
+  const {
+    selectors: { getBreakpoint },
+    getState
+  } = dbg;
   const source = findSource(dbg, url);
   return getBreakpoint(getState(), { sourceId: source.id, line });
 }

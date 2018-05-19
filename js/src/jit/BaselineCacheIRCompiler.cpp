@@ -1942,14 +1942,6 @@ BaselineCacheIRCompiler::emitReturnFromIC()
 }
 
 bool
-BaselineCacheIRCompiler::emitLoadObject()
-{
-    Register reg = allocator.defineRegister(masm, reader.objOperandId());
-    masm.loadPtr(stubAddress(reader.stubOffset()), reg);
-    return true;
-}
-
-bool
 BaselineCacheIRCompiler::emitLoadStackValue()
 {
     ValueOperand val = allocator.defineValueRegister(masm, reader.valOperandId());

@@ -584,7 +584,7 @@ nsNumberControlFrame::IsFocused() const
   // Normally this depends on the state of our anonymous text control (which
   // takes focus for us), but in the case that it does not have a frame we will
   // have focus ourself.
-  return mTextField->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS) ||
+  return mTextField->State().HasState(NS_EVENT_STATE_FOCUS) ||
          mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS);
 }
 

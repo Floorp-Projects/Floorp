@@ -12,6 +12,10 @@ var _reactRedux = require("devtools/client/shared/vendor/react-redux");
 
 var _devtoolsContextmenu = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-contextmenu"];
 
+var _SourceIcon = require("../shared/SourceIcon");
+
+var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
+
 var _Button = require("../shared/Button/index");
 
 var _actions = require("../../actions/index");
@@ -131,15 +135,13 @@ class Tab extends _react.PureComponent {
       selectedSource,
       selectSpecificSource,
       closeTab,
-      source,
-      sourceMetaData
+      source
     } = this.props;
     const src = source.toJS();
     const filename = (0, _source.getFilename)(src);
     const sourceId = source.id;
     const active = selectedSource && sourceId == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
     const isPrettyCode = (0, _source.isPretty)(source);
-    const sourceAnnotation = (0, _tabs.getSourceAnnotation)(source, sourceMetaData);
 
     function onClickClose(e) {
       e.stopPropagation();
@@ -167,7 +169,10 @@ class Tab extends _react.PureComponent {
       onMouseUp: handleTabClick,
       onContextMenu: e => this.onTabContextMenu(e, sourceId),
       title: (0, _source.getFileURL)(src)
-    }, sourceAnnotation, _react2.default.createElement("div", {
+    }, _react2.default.createElement(_SourceIcon2.default, {
+      source: source,
+      shouldHide: icon => ["file", "javascript"].includes(icon)
+    }), _react2.default.createElement("div", {
       className: "filename"
     }, filename), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
@@ -184,7 +189,6 @@ const mapStateToProps = (state, {
   return {
     tabSources: (0, _selectors.getSourcesForTabs)(state),
     selectedSource: selectedSource,
-    sourceMetaData: (0, _selectors.getSourceMetaData)(state, source.id),
     activeSearch: (0, _selectors.getActiveSearch)(state)
   };
 };

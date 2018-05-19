@@ -14,7 +14,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/PodOperations.h"
+
+#include <algorithm>
 
 #include "jsnum.h"
 
@@ -216,12 +217,24 @@ class UnsharedOps
 
     template<typename T>
     static void podCopy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
-        mozilla::PodCopy(dest.unwrapUnshared(), src.unwrapUnshared(), nelem);
+        // std::copy_n better matches the argument values/types of this
+        // function, but as noted below it allows the input/output ranges to
+        // overlap.  std::copy does not, so use it so the compiler has extra
+        // ability to optimize.
+        const auto* first = src.unwrapUnshared();
+        const auto* last = first + nelem;
+        auto* result = dest.unwrapUnshared();
+        std::copy(first, last, result);
     }
 
     template<typename T>
-    static void podMove(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
-        mozilla::PodMove(dest.unwrapUnshared(), src.unwrapUnshared(), nelem);
+    static void podMove(SharedMem<T*> dest, SharedMem<T*> src, size_t n) {
+        // std::copy_n copies from |src| to |dest| starting from |src|, so
+        // input/output ranges *may* permissibly overlap, as this function
+        // allows.
+        const auto* start = src.unwrapUnshared();
+        auto* result = dest.unwrapUnshared();
+        std::copy_n(start, n, result);
     }
 
     static SharedMem<void*> extract(TypedArrayObject* obj) {

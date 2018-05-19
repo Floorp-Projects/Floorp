@@ -41,6 +41,7 @@ namespace jit {
     _(GuardAndGetIndexFromString)         \
     _(GuardIndexIsNonNegative)            \
     _(GuardTagNotEqual)                   \
+    _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadWrapperTarget)                  \

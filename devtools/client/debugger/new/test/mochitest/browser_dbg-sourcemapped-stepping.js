@@ -8,15 +8,24 @@ async function breakpointSteps(dbg, fixture, { line, column }, steps) {
   const filename = `fixtures/${fixture}/input.js`;
   const fnName = fixture.replace(/-([a-z])/g, (s, c) => c.toUpperCase());
 
-  await invokeWithBreakpoint(dbg, fnName, filename, { line, column }, async source => {
-    await runSteps(dbg, source, steps);
-  });
+  await invokeWithBreakpoint(
+    dbg,
+    fnName,
+    filename,
+    { line, column },
+    async source => {
+      await runSteps(dbg, source, steps);
+    }
+  );
 
   ok(true, `Ran tests for ${fixture} at line ${line} column ${column}`);
 }
 
 async function runSteps(dbg, source, steps) {
-  const { selectors: { getVisibleSelectedFrame }, getState } = dbg;
+  const {
+    selectors: { getVisibleSelectedFrame },
+    getState
+  } = dbg;
 
   for (const [i, [type, position]] of steps.entries()) {
     switch (type) {
@@ -41,29 +50,39 @@ async function runSteps(dbg, source, steps) {
 }
 
 function testStepOverForOf(dbg) {
-  return breakpointSteps(dbg, "babel-step-over-for-of", { line: 4, column: 2 }, [
-    ["stepOver", { line: 6, column: 2 }],
-    ["stepOver", { line: 7, column: 4 }],
-    ["stepOver", { line: 6, column: 2 }],
-    ["stepOver", { line: 7, column: 4 }],
-    ["stepOver", { line: 6, column: 2 }],
-    ["stepOver", { line: 10, column: 2 }]
-  ]);
+  return breakpointSteps(
+    dbg,
+    "babel-step-over-for-of",
+    { line: 4, column: 2 },
+    [
+      ["stepOver", { line: 6, column: 2 }],
+      ["stepOver", { line: 7, column: 4 }],
+      ["stepOver", { line: 6, column: 2 }],
+      ["stepOver", { line: 7, column: 4 }],
+      ["stepOver", { line: 6, column: 2 }],
+      ["stepOver", { line: 10, column: 2 }]
+    ]
+  );
 }
 
 // This codifies the current behavior, but stepping twice over the for
 // header isn't ideal.
 function testStepOverForOfArray(dbg) {
-  return breakpointSteps(dbg, "babel-step-over-for-of-array", { line: 3, column: 2 }, [
-    ["stepOver", { line: 5, column: 2 }],
-    ["stepOver", { line: 5, column: 7 }],
-    ["stepOver", { line: 6, column: 4 }],
-    ["stepOver", { line: 5, column: 2 }],
-    ["stepOver", { line: 5, column: 7 }],
-    ["stepOver", { line: 6, column: 4 }],
-    ["stepOver", { line: 5, column: 2 }],
-    ["stepOver", { line: 9, column: 2 }]
-  ]);
+  return breakpointSteps(
+    dbg,
+    "babel-step-over-for-of-array",
+    { line: 3, column: 2 },
+    [
+      ["stepOver", { line: 5, column: 2 }],
+      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 6, column: 4 }],
+      ["stepOver", { line: 5, column: 2 }],
+      ["stepOver", { line: 5, column: 7 }],
+      ["stepOver", { line: 6, column: 4 }],
+      ["stepOver", { line: 5, column: 2 }],
+      ["stepOver", { line: 9, column: 2 }]
+    ]
+  );
 }
 
 // The closure means it isn't actually possible to step into the for body,

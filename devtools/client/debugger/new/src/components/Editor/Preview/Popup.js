@@ -183,7 +183,7 @@ class Popup extends _react.Component {
     }));
   }
 
-  renderReact(react, roots) {
+  renderReact(react) {
     const reactHeader = react.displayName || "React Component";
     return _react2.default.createElement("div", {
       className: "header-container"
@@ -264,19 +264,19 @@ class Popup extends _react.Component {
   }
 
   renderPreview() {
+    // We don't have to check and
+    // return on `false`, `""`, `0`, `undefined` etc,
+    // these falsy simple typed value because we want to
+    // do `renderSimplePreview` on these values below.
     const {
       value
     } = this.props;
 
-    if (!value) {
-      return null;
-    }
-
-    if (value.class === "Function") {
+    if (value && value.class === "Function") {
       return this.renderFunctionPreview();
     }
 
-    if (value.type === "object") {
+    if (value && value.type === "object") {
       return _react2.default.createElement("div", null, this.renderObjectPreview());
     }
 
