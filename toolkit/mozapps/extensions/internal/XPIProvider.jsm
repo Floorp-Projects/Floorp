@@ -1897,18 +1897,6 @@ class BootstrapScope {
 
     logger.debug(`Loading bootstrap scope from ${this.file.path}`);
 
-    let principal = Services.scriptSecurityManager.getSystemPrincipal();
-
-    if (!this.file.exists()) {
-      this.scope =
-        new Cu.Sandbox(principal, { sandboxName: this.file.path,
-                                    addonId: this.addon.id,
-                                    wantGlobalProperties: ["ChromeUtils"],
-                                    metadata: { addonID: this.addon.id } });
-      logger.error(`Attempted to load bootstrap scope from missing directory ${this.file.path}`);
-      return;
-    }
-
     if (isWebExtension(this.addon.type)) {
       this.scope = Extension.getBootstrapScope(this.addon.id, this.file);
     } else if (this.addon.type === "webextension-langpack") {
@@ -1918,6 +1906,7 @@ class BootstrapScope {
     } else {
       let uri = getURIForResourceInFile(this.file, "bootstrap.js").spec;
 
+      let principal = Services.scriptSecurityManager.getSystemPrincipal();
       this.scope =
         new Cu.Sandbox(principal, { sandboxName: uri,
                                     addonId: this.addon.id,
@@ -1925,19 +1914,12 @@ class BootstrapScope {
                                     metadata: { addonID: this.addon.id, URI: uri } });
 
       try {
-        // Copy the reason values from the global object into the bootstrap scope.
-        for (let name in BOOTSTRAP_REASONS)
-          this.scope[name] = BOOTSTRAP_REASONS[name];
+        Object.assign(this.scope, BOOTSTRAP_REASONS);
 
-        // Add other stuff that extensions want.
-        Object.assign(this.scope, {Worker, ChromeWorker});
-
-        // Define a console for the add-on
         XPCOMUtils.defineLazyGetter(
           this.scope, "console",
           () => new ConsoleAPI({ consoleID: `addon/${this.addon.id}` }));
 
-        this.scope.__SCRIPT_URI_SPEC__ = uri;
         Services.scriptloader.loadSubScript(uri, this.scope);
       } catch (e) {
         logger.warn(`Error loading bootstrap.js for ${this.addon.id}`, e);

@@ -8,8 +8,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
 const EXPECTED_GLOBALS = [
-  ["Worker", "function"],
-  ["ChromeWorker", "function"],
   ["console", "object"]
 ];
 
