@@ -117,6 +117,15 @@ function withNewDialogFrame(requestId, taskFn) {
   return BrowserTestUtils.withNewTab(args, dialogTabTask);
 }
 
+async function withNewTabInPrivateWindow(args = {}, taskFn) {
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  let tabArgs = Object.assign(args, {
+    browser: privateWin.gBrowser,
+  });
+  await withMerchantTab(tabArgs, taskFn);
+  await BrowserTestUtils.closeWindow(privateWin);
+}
+
 /**
  * Spawn a content task inside the inner unprivileged frame of a privileged Payment Request dialog.
  *

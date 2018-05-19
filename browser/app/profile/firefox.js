@@ -856,6 +856,7 @@ pref("browser.rights.override", true);
 
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
+pref("browser.sessionstore.resuming_after_os_restart", false);
 
 // Minimal interval between two save operations in milliseconds (while the user is active).
 pref("browser.sessionstore.interval", 15000); // 15 seconds
@@ -1284,6 +1285,16 @@ pref("full-screen-api.enabled", true);
 // number of startup crashes that can occur before starting into safe mode automatically
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("toolkit.startup.max_resumed_crashes", 3);
+
+// Whether to use RegisterApplicationRestart to restart the browser and resume
+// the session on next Windows startup
+#if defined(XP_WIN)
+#if defined(NIGHTLY_BUILD)
+pref("toolkit.winRegisterApplicationRestart", true);
+#else
+pref("toolkit.winRegisterApplicationRestart", false);
+#endif
+#endif
 
 // Whether we use pdfium to view content with the pdf mime type.
 // Note: if the pref is set to false while Firefox is open, it won't

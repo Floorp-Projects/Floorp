@@ -1296,7 +1296,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 62 uses schema version 48.
+      if (currentSchemaVersion < 49) {
+        rv = MigrateV49Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 62 uses schema version 49.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -1582,7 +1587,7 @@ Database::InitFunctions()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = IsFrecencyDecayingFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = UpdateFrecencyStatsFunction::create(mMainConn);
+  rv = SqrtFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2470,6 +2475,25 @@ Database::MigrateV48Frecencies()
   nsCOMPtr<nsIEventTarget> target = do_GetInterface(mMainConn);
   MOZ_ASSERT(target);
   Unused << target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+}
+
+nsresult
+Database::MigrateV49Up() {
+  // Calculate initial frecency stats, which should have been done as part of
+  // the v48 migration but wasn't.
+  nsNavHistory *navHistory = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(navHistory);
+  nsresult rv = navHistory->RecalculateFrecencyStats(nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // These hidden preferences were added along with the v48 migration as part of
+  // the frecency stats implementation but are now replaced with entries in the
+  // moz_meta table.
+  Unused << Preferences::ClearUser("places.frecency.stats.count");
+  Unused << Preferences::ClearUser("places.frecency.stats.sum");
+  Unused << Preferences::ClearUser("places.frecency.stats.sumOfSquares");
+
+  return NS_OK;
 }
 
 nsresult

@@ -471,35 +471,6 @@ public:
   bool IsFrecencyDecaying() const;
 
   /**
-   * Updates frecencyMean and frecencyStandardDeviation given a change in
-   * frecency of a particular moz_places row.
-   *
-   * @param  aPlaceId
-   *         The moz_places row ID.
-   * @param  aOldFrecency
-   *         The old value of the frecency.
-   * @param  aNewFrecency
-   *         The new value of the frecency.
-   */
-  void UpdateFrecencyStats(int64_t aPlaceId,
-                           int32_t aOldFrecency,
-                           int32_t aNewFrecency);
-
-  /**
-   * Dispatches a runnable to the main thread that calls UpdateFrecencyStats.
-   *
-   * @param  aPlaceId
-   *         The moz_places row ID.
-   * @param  aOldFrecency
-   *         The old value of the frecency.
-   * @param  aNewFrecency
-   *         The new value of the frecency.
-   */
-  void DispatchFrecencyStatsUpdate(int64_t aPlaceId,
-                                   int32_t aOldFrecency,
-                                   int32_t aNewFrecency) const;
-
-  /**
    * Store last insterted id for a table.
    */
   static mozilla::Atomic<int64_t> sLastInsertedPlaceId;
@@ -660,12 +631,7 @@ protected:
   void DecayFrecencyCompleted(uint16_t reason);
   uint32_t mDecayFrecencyPendingCount;
 
-  uint64_t mFrecencyStatsCount;
-  uint64_t mFrecencyStatsSum;
-  uint64_t mFrecencyStatsSumOfSquares;
-  nsCOMPtr<nsITimer> mUpdateFrecencyStatsPrefsTimer;
-  static void UpdateFrecencyStatsPrefs(nsITimer *aTimer,
-                                       void *aClosure);
+  nsresult RecalculateFrecencyStatsInternal();
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,

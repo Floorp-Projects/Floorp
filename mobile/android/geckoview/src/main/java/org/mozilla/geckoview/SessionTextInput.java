@@ -5,21 +5,33 @@
 
 package org.mozilla.geckoview;
 
+import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.Editable;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * SessionTextInput handles text input for GeckoSession through key events or input
@@ -28,14 +40,90 @@ import android.view.inputmethod.InputConnection;
  * SessionTextInput.
  */
 public final class SessionTextInput {
+    /* package */ static final String LOGTAG = "GeckoSessionTextInput";
+
+    /**
+     * Interface that SessionTextInput uses for performing operations such as opening and closing
+     * the software keyboard. If the delegate is not set, these operations are forwarded to the
+     * system InputMethodManager automatically.
+     */
+    public interface Delegate {
+        @Retention(RetentionPolicy.SOURCE)
+        @IntDef({RESTART_REASON_FOCUS, RESTART_REASON_BLUR, RESTART_REASON_CONTENT_CHANGE})
+        @interface RestartReason {}
+        /** Restarting input due to an input field gaining focus. */
+        int RESTART_REASON_FOCUS = 0;
+        /** Restarting input due to an input field losing focus. */
+        int RESTART_REASON_BLUR = 1;
+        /**
+         * Restarting input due to the content of the input field changing. For example, the
+         * input field type may have changed, or the current composition may have been committed
+         * outside of the input method.
+         */
+        int RESTART_REASON_CONTENT_CHANGE = 2;
+
+        /**
+         * Reset the input method, and discard any existing states such as the current composition
+         * or current autocompletion. Because the current focused editor may have changed, as
+         * part of the reset, a custom input method would normally call {@link
+         * #onCreateInputConnection} to update its knowledge of the focused editor. Note that
+         * {@code restartInput} should be used to detect changes in focus, rather than {@link
+         * #showSoftInput} or {@link #hideSoftInput}, because focus changes are not always
+         * accompanied by requests to show or hide the soft input.
+         *
+         * @param reason Reason for the reset.
+         */
+        void restartInput(@RestartReason int reason);
+
+        /**
+         * Display the soft input.
+         *
+         * @see #hideSoftInput
+         * */
+        void showSoftInput();
+
+        /**
+         * Hide the soft input.
+         *
+         * @see #showSoftInput
+         * */
+        void hideSoftInput();
+
+        /**
+         * Update the soft input on the current selection.
+         *
+         * @param selStart Start offset of the selection.
+         * @param selEnd End offset of the selection.
+         * @param compositionStart Composition start offset, or -1 if there is no composition.
+         * @param compositionEnd Composition end offset, or -1 if there is no composition.
+         */
+        void updateSelection(int selStart, int selEnd, int compositionStart, int compositionEnd);
+
+        /**
+         * Update the soft input on the current extracted text as requested through
+         * InputConnection.getExtractText.
+         *
+         * @param request The extract text request.
+         * @param text The extracted text.
+         */
+        void updateExtractedText(@NonNull ExtractedTextRequest request,
+                                 @NonNull ExtractedText text);
+
+        /**
+         * Update the cursor-anchor information as requested through
+         * InputConnection.requestCursorUpdates.
+         *
+         * @param info Cursor-anchor information.
+         */
+        void updateCursorAnchorInfo(@NonNull CursorAnchorInfo info);
+    }
 
     // Interface to access GeckoInputConnection from SessionTextInput.
-    /* package */ interface Delegate {
+    /* package */ interface InputConnectionClient {
         View getView();
         Handler getHandler(Handler defHandler);
         InputConnection onCreateInputConnection(EditorInfo attrs);
         boolean isInputActive();
-        void setShowSoftInputOnFocus(boolean showSoftInputOnFocus);
     }
 
     // Interface to access GeckoEditable from GeckoInputConnection.
@@ -88,12 +176,113 @@ public final class SessionTextInput {
         void updateCompositionRects(final RectF[] aRects);
     }
 
+    private final class DefaultDelegate implements Delegate {
+        private InputMethodManager getInputMethodManager(@Nullable final View view) {
+            if (view == null) {
+                return null;
+            }
+            return (InputMethodManager) view.getContext()
+                                            .getSystemService(Context.INPUT_METHOD_SERVICE);
+        }
+
+        @Override
+        public void restartInput(int reason) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm == null) {
+                return;
+            }
+
+            // InputMethodManager has internal logic to detect if we are restarting input
+            // in an already focused View, which is the case here because all content text
+            // fields are inside one LayerView. When this happens, InputMethodManager will
+            // tell the input method to soft reset instead of hard reset. Stock latin IME
+            // on Android 4.2+ has a quirk that when it soft resets, it does not clear the
+            // composition. The following workaround tricks the IME into clearing the
+            // composition when soft resetting.
+            if (InputMethods.needsSoftResetWorkaround(
+                    InputMethods.getCurrentInputMethod(view.getContext()))) {
+                // Fake a selection change, because the IME clears the composition when
+                // the selection changes, even if soft-resetting. Offsets here must be
+                // different from the previous selection offsets, and -1 seems to be a
+                // reasonable, deterministic value
+                imm.updateSelection(view, -1, -1, -1, -1);
+            }
+
+            try {
+                imm.restartInput(view);
+            } catch (RuntimeException e) {
+                Log.e(LOGTAG, "Error restarting input", e);
+            }
+        }
+
+        @Override
+        public void showSoftInput() {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                if (view.hasFocus() && !imm.isActive(view)) {
+                    // Marshmallow workaround: The view has focus but it is not the active
+                    // view for the input method. (Bug 1211848)
+                    view.clearFocus();
+                    view.requestFocus();
+                }
+                imm.showSoftInput(view, 0);
+            }
+        }
+
+        @Override
+        public void hideSoftInput() {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+
+        @Override
+        public void updateSelection(final int selStart, final int selEnd,
+                                    final int compositionStart, final int compositionEnd) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateSelection(view, selStart, selEnd, compositionStart, compositionEnd);
+            }
+        }
+
+        @Override
+        public void updateExtractedText(@NonNull final ExtractedTextRequest request,
+                                        @NonNull final ExtractedText text) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateExtractedText(view, request.token, text);
+            }
+        }
+
+        @TargetApi(21)
+        @Override
+        public void updateCursorAnchorInfo(@NonNull final CursorAnchorInfo info) {
+            ThreadUtils.assertOnUiThread();
+            final View view = getView();
+            final InputMethodManager imm = getInputMethodManager(view);
+            if (imm != null) {
+                imm.updateCursorAnchorInfo(view, info);
+            }
+        }
+    }
+
     private final GeckoSession mSession;
     private final NativeQueue mQueue;
     private final GeckoEditable mEditable = new GeckoEditable();
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
-    private boolean mShowSoftInputOnFocus = true;
-    private Delegate mInputConnection;
+    private InputConnectionClient mInputConnection;
+    private Delegate mDelegate;
 
     /* package */ SessionTextInput(final @NonNull GeckoSession session,
                                    final @NonNull NativeQueue queue) {
@@ -162,7 +351,6 @@ public final class SessionTextInput {
             mInputConnection = null;
         } else if (mInputConnection == null || mInputConnection.getView() != view) {
             mInputConnection = GeckoInputConnection.create(mSession, view, mEditable);
-            mInputConnection.setShowSoftInputOnFocus(mShowSoftInputOnFocus);
         }
         mEditable.setListener((EditableListener) mInputConnection);
     }
@@ -257,26 +445,25 @@ public final class SessionTextInput {
     }
 
     /**
-     * Set whether to show the soft keyboard when an input field gains focus.
+     * Set the current text input delegate.
      *
-     * @param showSoftInputOnFocus True to show soft input on input focus.
+     * @param delegate Delegate instance or null to restore to default.
      */
-    public void setShowSoftInputOnFocus(final boolean showSoftInputOnFocus) {
+    public void setDelegate(@Nullable final Delegate delegate) {
         ThreadUtils.assertOnUiThread();
-
-        mShowSoftInputOnFocus = showSoftInputOnFocus;
-        if (mInputConnection != null) {
-            mInputConnection.setShowSoftInputOnFocus(showSoftInputOnFocus);
-        }
+        mDelegate = delegate;
     }
 
     /**
-     * Return whether to show the soft keyboard when an input field gains focus.
+     * Get the current text input delegate.
      *
-     * @return True if soft input is shown on input focus.
+     * @return Delegate instance or a default instance if no delegate has been set.
      */
-    public boolean getShowSoftInputOnFocus() {
+    public Delegate getDelegate() {
         ThreadUtils.assertOnUiThread();
-        return mShowSoftInputOnFocus;
+        if (mDelegate == null) {
+            mDelegate = new DefaultDelegate();
+        }
+        return mDelegate;
     }
 }

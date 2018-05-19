@@ -3402,10 +3402,16 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // a little tricky in the case where the sticky item has both fixed and
     // non-fixed descendants, because that means that the sticky container
     // item's ASR is the ASR of the fixed descendant.
+    // For WebRender display list building, though, we still want to know the
+    // the ASR that the sticky container item would normally have, so we stash
+    // that on the display item as the "container ASR" (i.e. the normal ASR of
+    // the container item, excluding the special behaviour induced by fixed
+    // descendants).
     const ActiveScrolledRoot* stickyASR =
       ActiveScrolledRoot::PickAncestor(containerItemASR, aBuilder->CurrentActiveScrolledRoot());
     resultList.AppendToTop(
-        MakeDisplayItem<nsDisplayStickyPosition>(aBuilder, this, &resultList, stickyASR));
+        MakeDisplayItem<nsDisplayStickyPosition>(aBuilder, this, &resultList,
+          stickyASR, aBuilder->CurrentActiveScrolledRoot()));
     if (aCreatedContainerItem) {
       *aCreatedContainerItem = true;
     }

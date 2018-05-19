@@ -62,7 +62,9 @@ NS_NewMathMLElement(mozilla::dom::Element** aResult,
 nsresult
 NS_NewXULElement(mozilla::dom::Element** aResult,
                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-                 mozilla::dom::FromParser aFromParser);
+                 mozilla::dom::FromParser aFromParser,
+                 nsAtom* aIsAtom = nullptr,
+                 mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
 void
 NS_TrustedNewXULElement(mozilla::dom::Element** aResult,
