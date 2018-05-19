@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Atomics')) -- Atomics is not enabled unconditionally
+// |reftest| skip-if(!this.hasOwnProperty('Atomics')||!this.hasOwnProperty('SharedArrayBuffer')) -- Atomics,SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2017 Mozilla Corporation.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -7,9 +7,23 @@ esid: sec-atomics.wait
 description: >
   Test that Atomics.wait returns the right result when it timed out and that
   the time to time out is reasonable.
+  info: |
+    17. Let awoken be Suspend(WL, W, t).
+    18. If awoken is true, then
+      a. Assert: W is not on the list of waiters in WL.
+    19. Else,
+      a.Perform RemoveWaiter(WL, W).
 includes: [atomicsHelper.js]
-features: [Atomics]
+features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
+
+function getReport() {
+  var r;
+  while ((r = $262.agent.getReport()) == null) {
+    $262.agent.sleep(100);
+  }
+  return r;
+}
 
 $262.agent.start(
 `
@@ -28,12 +42,5 @@ $262.agent.broadcast(ia.buffer);
 assert.sameValue(getReport(), "timed-out");
 assert.sameValue((getReport() | 0) >= 500 - $ATOMICS_MAX_TIME_EPSILON, true);
 
-
-function getReport() {
-  var r;
-  while ((r = $262.agent.getReport()) == null)
-    $262.agent.sleep(100);
-  return r;
-}
 
 reportCompare(0, 0);

@@ -11,15 +11,17 @@ info: |
 
   4.Let q be ? ToNumber(timeout).
     ...
-    Undefined	Return NaN.
+    Undefined    Return NaN.
   5.If q is NaN, let t be +∞, else let t be max(q, 0)
-features: [ Atomics, SharedArrayBuffer, TypedArray ]
+
+features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
 function getReport() {
   var r;
-  while ((r = $262.agent.getReport()) == null)
+  while ((r = $262.agent.getReport()) == null) {
     $262.agent.sleep(100);
+  }
   return r;
 }
 
@@ -35,13 +37,9 @@ $262.agent.receiveBroadcast(function (sab) {
 var int32Array = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
 
 $262.agent.broadcast(int32Array.buffer);
-
 $262.agent.sleep(500); // Ample time
 
-assert.sameValue($262.agent.getReport(), null);
-
 assert.sameValue(Atomics.wake(int32Array, 0), 1);
-
 assert.sameValue(getReport(), "ok");
 
 reportCompare(0, 0);

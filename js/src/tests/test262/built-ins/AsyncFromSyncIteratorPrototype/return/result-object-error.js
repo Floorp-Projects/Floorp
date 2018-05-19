@@ -28,10 +28,10 @@ var obj = {
   [Symbol.iterator]() {
     return {
       next() {
-	return { value: 1, done: false };
+        return { value: 1, done: false };
       },
       return() {
-	return 1;
+        return 1;
       }
     };
   }
@@ -54,8 +54,8 @@ iter.next().then(function(result) {
       assert(typeerror, "Expect TypeError, got: " + err);
 
       iter.next().then(({ done, value }) => {
-	assert.sameValue(done, true, 'the iterator is completed');
-	assert.sameValue(value, undefined, 'value is undefined');
+        assert.sameValue(done, true, 'the iterator is completed');
+        assert.sameValue(value, undefined, 'value is undefined');
       }).then($DONE, $DONE);
     }
   ).catch($DONE);

@@ -14,7 +14,7 @@ info: |
         ...
           3.If bufferData is null, return false.
 includes: [detachArrayBuffer.js]
-features: [ Atomics, ArrayBuffer, TypedArray ]
+features: [ArrayBuffer, Atomics, TypedArray]
 ---*/
 
 var int32Array = new Int32Array(new ArrayBuffer(1024));
@@ -26,6 +26,8 @@ var poisoned = {
 
 $DETACHBUFFER(int32Array.buffer); // Detaching a non-shared ArrayBuffer sets the [[ArrayBufferData]] value to null
 
-assert.throws(TypeError, () => Atomics.wait(int32Array, poisoned, poisoned, poisoned));
+assert.throws(TypeError, function() {
+  Atomics.wait(int32Array, poisoned, poisoned, poisoned);
+});
 
 reportCompare(0, 0);
