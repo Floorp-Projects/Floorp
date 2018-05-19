@@ -26,12 +26,12 @@ var obj = {
   [Symbol.iterator]() {
     return {
       next() {
-	return {
-	  get done() {
-	    throw thrownError;
-	  },
-	  value: 1
-	}
+        return {
+          get done() {
+            throw thrownError;
+          },
+          value: 1
+        }
       }
     };
   }

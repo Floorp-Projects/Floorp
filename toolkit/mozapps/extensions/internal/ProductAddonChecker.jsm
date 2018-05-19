@@ -381,7 +381,7 @@ var computeHash = async function(hashFunction, path) {
  * Verifies that a downloaded file matches what was expected.
  *
  * @param  properties
- *         The properties to check, `size` and `hashFunction` with `hashValue`
+ *         The properties to check, `hashFunction` with `hashValue`
  *         are supported. Any properties missing won't be checked.
  * @param  path
  *         The path of the file to check.

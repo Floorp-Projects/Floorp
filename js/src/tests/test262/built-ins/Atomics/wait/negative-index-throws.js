@@ -14,7 +14,7 @@ info: |
       2.Let accessIndex be ? ToIndex(requestIndex).
         ...
         2.b If integerIndex < 0, throw a RangeError exception
-features: [ Atomics , SharedArrayBuffer, TypedArray ]
+features: [Atomics, SharedArrayBuffer, TypedArray]
 ---*/
 
 var sab = new SharedArrayBuffer(1024);
@@ -25,9 +25,17 @@ var poisoned = {
   }
 };
 
-assert.throws(RangeError, () => Atomics.wait(int32Array, -Infinity, poisoned, poisoned));
-assert.throws(RangeError, () => Atomics.wait(int32Array, -7.999, poisoned, poisoned));
-assert.throws(RangeError, () => Atomics.wait(int32Array, -1, poisoned, poisoned));
-assert.throws(RangeError, () => Atomics.wait(int32Array, -300, poisoned, poisoned));
+assert.throws(RangeError, function() {
+  Atomics.wait(int32Array, -Infinity, poisoned, poisoned);
+});
+assert.throws(RangeError, function() {
+  Atomics.wait(int32Array, -7.999, poisoned, poisoned);
+});
+assert.throws(RangeError, function() {
+  Atomics.wait(int32Array, -1, poisoned, poisoned);
+});
+assert.throws(RangeError, function() {
+  Atomics.wait(int32Array, -300, poisoned, poisoned);
+});
 
 reportCompare(0, 0);
