@@ -11,9 +11,6 @@ const {
   NoSuchWindowError,
   UnsupportedOperationError,
 } = ChromeUtils.import("chrome://marionette/content/error.js", {});
-const {
-  MessageManagerDestroyedPromise,
-} = ChromeUtils.import("chrome://marionette/content/sync.js", {});
 
 this.EXPORTED_SYMBOLS = ["browser", "Context", "WindowState"];
 
@@ -171,11 +168,7 @@ browser.Context = class {
   }
 
   get messageManager() {
-    if (this.contentBrowser) {
-      return this.contentBrowser.messageManager;
-    }
-
-    return null;
+    return this.contentBrowser.messageManager;
   }
 
   /**
@@ -284,14 +277,7 @@ browser.Context = class {
    */
   closeWindow() {
     return new Promise(resolve => {
-      // Wait for the window message manager to be destroyed
-      let destroyed = new MessageManagerDestroyedPromise(
-          this.window.messageManager);
-
-      this.window.addEventListener("unload", async () => {
-        await destroyed;
-        resolve();
-      }, {once: true});
+      this.window.addEventListener("unload", resolve, {once: true});
       this.window.close();
     });
   }
@@ -316,22 +302,14 @@ browser.Context = class {
     }
 
     return new Promise((resolve, reject) => {
-      // Wait for the browser message manager to be destroyed
-      let browserDetached = async () => {
-        await new MessageManagerDestroyedPromise(this.messageManager);
-        resolve();
-      };
-
       if (this.tabBrowser.closeTab) {
         // Fennec
-        this.tabBrowser.deck.addEventListener(
-            "TabClose", browserDetached, {once: true});
+        this.tabBrowser.deck.addEventListener("TabClose", resolve, {once: true});
         this.tabBrowser.closeTab(this.tab);
 
       } else if (this.tabBrowser.removeTab) {
         // Firefox
-        this.tab.addEventListener(
-            "TabClose", browserDetached, {once: true});
+        this.tab.addEventListener("TabClose", resolve, {once: true});
         this.tabBrowser.removeTab(this.tab);
 
       } else {
