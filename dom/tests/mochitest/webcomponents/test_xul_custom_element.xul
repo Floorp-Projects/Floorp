@@ -14,6 +14,20 @@
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
 
+    var gXULDOMParser = new DOMParser();
+    gXULDOMParser.forceEnableXULXBL();
+
+    function parseXULToFragment(str) {
+      let doc = gXULDOMParser.parseFromString(`
+        <box xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">${str}</box>`,
+        "application/xml");
+      // We use a range here so that we don't access the inner DOM elements from
+      // JavaScript before they are imported and inserted into a document.
+      let range = doc.createRange();
+      range.selectNodeContents(doc.firstChild);
+      return range.extractContents();
+    }
+
     class TestCustomElement extends XULElement {
       constructor() {
         super();
@@ -85,18 +99,25 @@
       document.querySelector("#content").appendChild(element3);
       is(element3.textContent, "foo", "Should have set the textContent");
       ok(element3 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
-    }
 
-    function parserBasicElementUpgrade() {
-      let element4 = document.getElementById("element4");
-      is(element4.textContent, "foo",
-         "Parser should have instantiated the custom element.");
+      document.querySelector("#content").appendChild(parseXULToFragment(`<test-custom-element />`));
+      let element4 = document.querySelector("#content").lastChild;
+      is(element4.localName, "test-custom-element", "Should see the right tag");
+      is(element4.namespaceURI, XUL_NS, "Should have set the right namespace");
+      is(element4.textContent, "foo", "Should have set the textContent");
       ok(element4 instanceof TestCustomElement, "Should be an instance of TestCustomElement");
     }
 
+    function parserBasicElementUpgrade() {
+      let element = document.getElementById("element4");
+      is(element.textContent, "foo",
+         "Parser should have instantiated the custom element.");
+      ok(element instanceof TestCustomElement, "Should be an instance of TestCustomElement");
+    }
+
     function tagNameWithoutDash() {
-      let element5 = document.getElementById("element5");
-      ok(element5 instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
+      let element = document.getElementById("element5");
+      ok(element instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
     }
 
     function upgradeAfterDefine() {
@@ -141,6 +162,13 @@
       document.querySelector("#content").appendChild(element3);
       is(element3.textContent, "baz", "Should have set the textContent");
       ok(element3 instanceof TestCustomBuiltInElement, "Should be an instance of TestCustomBuiltInElement");
+
+      document.querySelector("#content").appendChild(parseXULToFragment(`<axulelement is="test-built-in-element" />`))
+      let element4 = document.querySelector("#content").lastChild;
+      is(element4.localName, "axulelement", "Should see the right tag");
+      is(element4.namespaceURI, XUL_NS, "Should have set the right namespace");
+      is(element4.textContent, "baz", "Should have set the textContent");
+      ok(element4 instanceof TestCustomBuiltInElement, "Should be an instance of TestCustomBuiltInElement");
     }
 
     function parserBasicElementUpgradeBuiltIn() {
@@ -172,6 +200,13 @@
       document.querySelector("#content").appendChild(element3);
       is(element3.textContent, "quuz", "Should have set the textContent");
       ok(element3 instanceof TestPopupExtendElement, "Should be an instance of TestPopupExtendElement");
+
+      document.querySelector("#content").appendChild(parseXULToFragment(`<popup is="test-popup-extend" />`))
+      let element4 = document.querySelector("#content").lastChild;
+      is(element4.localName, "popup", "Should see the right tag");
+      is(element4.namespaceURI, XUL_NS, "Should have set the right namespace");
+      is(element4.textContent, "quuz", "Should have set the textContent");
+      ok(element4 instanceof TestPopupExtendElement, "Should be an instance of TestPopupExtendElement");
     }
 
     function parserSubclassElementUpgradeBuiltIn() {
@@ -247,6 +282,14 @@
       is(element3.textContent, "quux", "Should have set the textContent");
       ok(element3 instanceof TestWithoutDashExtended, "Should be an instance of TestWithoutDashExtended");
       ok(element3 instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
+
+      document.querySelector("#content").appendChild(parseXULToFragment(`<testwithoutdash is="testwithoutdash-extended" />`))
+      let element4 = document.querySelector("#content").lastChild;
+      is(element4.localName, "testwithoutdash", "Should see the right tag");
+      is(element4.namespaceURI, XUL_NS, "Should have set the right namespace");
+      is(element4.textContent, "quux", "Should have set the textContent");
+      ok(element4 instanceof TestWithoutDashExtended, "Should be an instance of TestWithoutDashExtended");
+      ok(element4 instanceof TestWithoutDash, "Should be an instance of TestWithoutDash");
     }
 
     function nonCustomElementCreate() {
