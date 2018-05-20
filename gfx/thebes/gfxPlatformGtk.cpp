@@ -741,8 +741,10 @@ gfxPlatformGtk::CreateHardwareVsyncSource()
   // Only use GLX vsync when the OpenGL compositor is being used.
   // The extra cost of initializing a GLX context while blocking the main
   // thread is not worth it when using basic composition.
+  // Also don't use it on non-X11 displays.
   if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    if (gl::sGLXLibrary.SupportsVideoSync()) {
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+        gl::sGLXLibrary.SupportsVideoSync()) {
       RefPtr<VsyncSource> vsyncSource = new GLXVsyncSource();
       VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
       if (!static_cast<GLXVsyncSource::GLXDisplay&>(display).Setup()) {
