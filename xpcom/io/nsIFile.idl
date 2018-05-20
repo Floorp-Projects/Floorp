@@ -4,12 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIDirectoryEnumerator.idl"
 
 %{C++
 struct PRFileDesc;
 struct PRLibrary;
 #include <stdio.h>
 #include "mozilla/Path.h"
+#include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 namespace mozilla {
 using PathString = nsTString<filesystem::Path::value_type>;
@@ -21,8 +23,6 @@ using PathSubstring = nsTSubstring<filesystem::Path::value_type>;
 [ptr] native PRLibraryStar(PRLibrary);
 [ptr] native FILE(FILE);
 native PathString(mozilla::PathString);
-
-interface nsISimpleEnumerator;
 
 /**
  * An nsIFile is an abstract representation of a filename. It manages
@@ -346,7 +346,23 @@ interface nsIFile : nsISupports
      *   @throws NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
      *           not specify a directory.
      */
-    readonly attribute nsISimpleEnumerator directoryEntries;
+    [binaryname(DirectoryEntriesImpl)]
+    readonly attribute nsIDirectoryEnumerator directoryEntries;
+
+    %{C++
+    nsresult GetDirectoryEntries(nsISimpleEnumerator** aOut)
+    {
+      nsCOMPtr<nsIDirectoryEnumerator> dirEnum;
+      nsresult rv = GetDirectoryEntries(getter_AddRefs(dirEnum));
+      dirEnum.forget(aOut);
+      return rv;
+    };
+
+    nsresult GetDirectoryEntries(nsIDirectoryEnumerator** aOut)
+    {
+      return GetDirectoryEntriesImpl(aOut);
+    };
+    %}
 
     /**
      *  initWith[Native]Path

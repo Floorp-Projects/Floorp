@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsISimpleEnumerator.idl"
 
 interface nsIFile;
 
@@ -14,7 +15,7 @@ interface nsIFile;
  * enumeration is complete.
  */
 [scriptable, uuid(31f7f4ae-6916-4f2d-a81e-926a4e3022ee)]
-interface nsIDirectoryEnumerator : nsISupports
+interface nsIDirectoryEnumerator : nsISimpleEnumerator
 {
   /**
    * Retrieves the next file in the sequence. The "nextFile" element is the 
