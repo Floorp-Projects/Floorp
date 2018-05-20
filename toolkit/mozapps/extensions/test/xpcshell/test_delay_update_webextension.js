@@ -16,7 +16,7 @@ if (AppConstants.platform == "win" && AppConstants.DEBUG) {
   Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 }
 
-PromiseTestUtils.expectUncaughtRejection(/Message manager disconnected/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 
 /* globals browser*/
 

@@ -121,7 +121,7 @@ const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 
 // Properties to save in JSON file
-const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
+const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "updateURL", "optionsURL",
                           "optionsType", "optionsBrowserStyle", "aboutURL",
                           "defaultLocale", "visible", "active", "userDisabled",
@@ -269,12 +269,15 @@ class AddonInternal {
       }
 
       copyProperties(addonData, PROP_JSON_FIELDS, this);
+      this.location = addonData.location;
 
       if (!this.dependencies)
         this.dependencies = [];
       Object.freeze(this.dependencies);
 
-      this.addedToDatabase();
+      if (this.location) {
+        this.addedToDatabase();
+      }
 
       if (!addonData._sourceBundle) {
         throw new Error("Expected passed argument to contain a path");
@@ -292,14 +295,7 @@ class AddonInternal {
   }
 
   addedToDatabase() {
-    if (this._installLocation) {
-      this.location = this._installLocation.name;
-    } else if (this.location) {
-      this._installLocation = XPIProvider.installLocationsByName[this.location];
-    }
-
-    this._key = `${this.location}:${this.id}`;
-
+    this._key = `${this.location.name}:${this.id}`;
     this.inDatabase = true;
   }
 
@@ -357,7 +353,7 @@ class AddonInternal {
   }
 
   get isCorrectlySigned() {
-    switch (this._installLocation.name) {
+    switch (this.location.name) {
       case KEY_APP_SYSTEM_ADDONS:
         // System add-ons must be signed by the system key.
         return this.signedState == AddonManager.SIGNEDSTATE_SYSTEM;
@@ -384,6 +380,10 @@ class AddonInternal {
 
   get isCompatible() {
     return this.isCompatibleWith();
+  }
+
+  get hidden() {
+    return this.location.isSystem;
   }
 
   get disabled() {
@@ -466,17 +466,6 @@ class AddonInternal {
           return false;
         }
       }
-
-      // Extremely old extensions should not be compatible by default.
-      let minCompatVersion;
-      if (app.id == Services.appinfo.ID)
-        minCompatVersion = XPIProvider.minCompatibleAppVersion;
-      else if (app.id == TOOLKIT_ID)
-        minCompatVersion = XPIProvider.minCompatiblePlatformVersion;
-
-      if (minCompatVersion &&
-          Services.vc.compare(minCompatVersion, maxVersion) > 0)
-        return false;
 
       return Services.vc.compare(version, minVersion) >= 0;
     }
@@ -571,7 +560,9 @@ class AddonInternal {
   }
 
   toJSON() {
-    return copyProperties(this, PROP_JSON_FIELDS);
+    let obj = copyProperties(this, PROP_JSON_FIELDS);
+    obj.location = this.location.name;
+    return obj;
   }
 
   /**
@@ -611,11 +602,11 @@ class AddonInternal {
 
     // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
-    if (!this._installLocation.locked && !this.pendingUninstall) {
+    if (!this.location.locked && !this.pendingUninstall) {
       // System add-on upgrades are triggered through a different mechanism (see updateSystemAddons())
-      let isSystem = this._installLocation.isSystem;
+      let isSystem = this.location.isSystem;
       // Add-ons that are installed by a file link cannot be upgraded.
-      if (!this._installLocation.isLinkedAddon(this.id) && !isSystem) {
+      if (!this.location.isLinkedAddon(this.id) && !isSystem) {
         permissions |= AddonManager.PERM_CAN_UPGRADE;
       }
 
@@ -670,7 +661,7 @@ AddonWrapper = class {
   }
 
   get temporarilyInstalled() {
-    return addonFor(this)._installLocation == XPIInternal.TemporaryInstallLocation;
+    return addonFor(this).location.isTemporary;
   }
 
   get aboutURL() {
@@ -843,8 +834,8 @@ AddonWrapper = class {
 
   get scope() {
     let addon = addonFor(this);
-    if (addon._installLocation)
-      return addon._installLocation.scope;
+    if (addon.location)
+      return addon.location.scope;
 
     return AddonManager.SCOPE_PROFILE;
   }
@@ -963,22 +954,22 @@ AddonWrapper = class {
 
   get hidden() {
     let addon = addonFor(this);
-    if (addon._installLocation.name == KEY_APP_TEMPORARY)
+    if (addon.location.isTemporary)
       return false;
 
-    return addon._installLocation.isSystem;
+    return addon.location.isSystem;
   }
 
   get isSystem() {
     let addon = addonFor(this);
-    return addon._installLocation.isSystem;
+    return addon.location.isSystem;
   }
 
   // Returns true if Firefox Sync should sync this addon. Only addons
   // in the profile install location are considered syncable.
   get isSyncable() {
     let addon = addonFor(this);
-    return (addon._installLocation.name == KEY_APP_PROFILE);
+    return (addon.location.name == KEY_APP_PROFILE);
   }
 
   get userPermissions() {
@@ -991,12 +982,12 @@ AddonWrapper = class {
 
   uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
-    XPIProvider.uninstallAddon(addon, alwaysAllowUndo);
+    XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
   }
 
   cancelUninstall() {
     let addon = addonFor(this);
-    XPIProvider.cancelUninstallAddon(addon);
+    XPIInstall.cancelUninstallAddon(addon);
   }
 
   findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
@@ -1285,6 +1276,9 @@ this.XPIDatabase = {
   jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   rebuildingDatabase: false,
   syncLoadingDB: false,
+  // Add-ons from the database in locations which are no longer
+  // supported.
+  orphanedAddons: [],
 
   _saveTask: null,
 
@@ -1373,7 +1367,7 @@ this.XPIDatabase = {
     let toSave = {
       schemaVersion: DB_SCHEMA,
       addons: Array.from(this.addonDB.values())
-                   .filter(addon => addon.location != KEY_APP_TEMPORARY),
+                   .filter(addon => !addon.location.isTemporary),
     };
     return toSave;
   },
@@ -1447,9 +1441,14 @@ this.XPIDatabase = {
           // wrong OS
           logger.warn("Could not find source bundle for add-on " + loadedAddon.id, e);
         }
+        loadedAddon.location = XPIStates.getLocation(loadedAddon.location);
 
         let newAddon = new AddonInternal(loadedAddon);
-        addonDB.set(newAddon._key, newAddon);
+        if (loadedAddon.location) {
+          addonDB.set(newAddon._key, newAddon);
+        } else {
+          this.orphanedAddons.push(newAddon);
+        }
       });
 
       parseTimer.done();
@@ -1787,7 +1786,7 @@ this.XPIDatabase = {
    * @returns {Promise<Array<AddonInternal>>}
    */
   getAddonsInLocation(aLocation) {
-    return this.getAddonList(aAddon => aAddon._installLocation.name == aLocation);
+    return this.getAddonList(aAddon => aAddon.location.name == aLocation);
   },
 
   /**
@@ -1911,12 +1910,12 @@ this.XPIDatabase = {
             LEGACY_TYPES.has(addon.type) &&
 
             // Legacy add-ons are allowed in the system location.
-            !addon._installLocation.isSystem &&
+            !addon.location.isSystem &&
 
             // Legacy extensions may be installed temporarily in
             // non-release builds.
             !(AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-              addon._installLocation.name == KEY_APP_TEMPORARY) &&
+              addon.location.isTemporary) &&
 
             // Properly signed legacy extensions are allowed.
             addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED);
@@ -2056,9 +2055,9 @@ this.XPIDatabase = {
   },
 
   updateXPIStates(addon) {
-    let xpiState = XPIStates.getAddon(addon.location, addon.id);
-    if (xpiState) {
-      xpiState.syncWithDB(addon);
+    let state = addon.location && addon.location.get(addon.id);
+    if (state) {
+      state.syncWithDB(addon);
       XPIStates.save();
     }
   },
@@ -2092,7 +2091,7 @@ this.XPIDatabase = {
    *
    * @param {string} aId
    *        The ID of the add-on to make visible
-   * @param {InstallLocation} aLocation
+   * @param {XPIStateLocation} aLocation
    *        The location in which to make the add-on visible.
    * @returns {AddonInternal?}
    *        The add-on instance which was marked visible, if any.
@@ -2276,15 +2275,7 @@ this.XPIDatabase = {
     // Flag that active states in the database need to be updated on shutdown
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
-    // Sync with XPIStates.
-    let xpiState = XPIStates.getAddon(aAddon.location, aAddon.id);
-    if (xpiState) {
-      xpiState.syncWithDB(aAddon);
-      XPIStates.save();
-    } else {
-      // There should always be an xpiState
-      logger.warn("No XPIState for ${id} in ${location}", aAddon);
-    }
+    this.updateXPIStates(aAddon);
 
     // Have we just gone back to the current state?
     if (isDisabled != aAddon.active) {
@@ -2312,11 +2303,7 @@ this.XPIDatabase = {
     if (isTheme(aAddon.type)) {
       if (!isDisabled) {
         AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
-
-        if (xpiState) {
-          xpiState.syncWithDB(aAddon);
-          XPIStates.save();
-        }
+        this.updateXPIStates(aAddon);
       } else if (isDisabled && !aBecauseSelecting) {
         AddonManagerPrivate.notifyAddonChanged(null, "theme");
       }
@@ -2359,11 +2346,11 @@ this.XPIDatabaseReconcile = {
   flattenByID(addonMap, hideLocation) {
     let map = new Map();
 
-    for (let installLocation of XPIProvider.installLocations) {
-      if (installLocation.name == hideLocation)
+    for (let loc of XPIStates.locations()) {
+      if (loc.name == hideLocation)
         continue;
 
-      let locationMap = addonMap.get(installLocation.name);
+      let locationMap = addonMap.get(loc.name);
       if (!locationMap)
         continue;
 
@@ -2411,7 +2398,7 @@ this.XPIDatabaseReconcile = {
    * has been upgraded or become corrupt and add-on data has to be reloaded
    * into it.
    *
-   * @param {InstallLocation} aInstallLocation
+   * @param {XPIStateLocation} aLocation
    *        The install location containing the add-on
    * @param {string} aId
    *        The ID of the add-on
@@ -2429,9 +2416,9 @@ this.XPIDatabaseReconcile = {
    *        A boolean indicating if flushing caches is required to complete
    *        changing this add-on
    */
-  addMetadata(aInstallLocation, aId, aAddonState, aNewAddon, aOldAppVersion,
+  addMetadata(aLocation, aId, aAddonState, aNewAddon, aOldAppVersion,
               aOldPlatformVersion) {
-    logger.debug("New add-on " + aId + " installed in " + aInstallLocation.name);
+    logger.debug(`New add-on ${aId} installed in ${aLocation.name}`);
 
     // We treat this is a new install if,
     //
@@ -2452,12 +2439,11 @@ this.XPIDatabaseReconcile = {
       if (!aNewAddon) {
         // Load the manifest from the add-on.
         let file = new nsIFile(aAddonState.path);
-        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation);
+        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aLocation);
       }
       // The add-on in the manifest should match the add-on ID.
       if (aNewAddon.id != aId) {
-        throw new Error("Invalid addon ID: expected addon ID " + aId +
-                        ", found " + aNewAddon.id + " in manifest");
+        throw new Error(`Invalid addon ID: expected addon ID ${aId}, found ${aNewAddon.id} in manifest`);
       }
 
       unsigned = XPIDatabase.mustSign(aNewAddon.type) && !aNewAddon.isCorrectlySigned;
@@ -2465,18 +2451,18 @@ this.XPIDatabaseReconcile = {
           throw Error(`Extension ${aNewAddon.id} is not correctly signed`);
       }
     } catch (e) {
-      logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
+      logger.warn(`addMetadata: Add-on ${aId} is invalid`, e);
 
       // Remove the invalid add-on from the install location if the install
       // location isn't locked
-      if (aInstallLocation.isLinkedAddon(aId))
+      if (aLocation.isLinkedAddon(aId))
         logger.warn("Not uninstalling invalid item because it is a proxy file");
-      else if (aInstallLocation.locked)
+      else if (aLocation.locked)
         logger.warn("Could not uninstall invalid item from locked install location");
       else if (unsigned && !isNewInstall)
         logger.warn("Not uninstalling existing unsigned add-on");
       else
-        aInstallLocation.uninstallAddon(aId);
+        aLocation.installer.uninstallAddon(aId);
       return null;
     }
 
@@ -2486,9 +2472,7 @@ this.XPIDatabaseReconcile = {
 
     // Assume that add-ons in the system add-ons install location aren't
     // foreign and should default to enabled.
-    aNewAddon.foreignInstall = isDetectedInstall &&
-                               aInstallLocation.name != KEY_APP_SYSTEM_ADDONS &&
-                               aInstallLocation.name != KEY_APP_SYSTEM_DEFAULTS;
+    aNewAddon.foreignInstall = isDetectedInstall && !aLocation.isSystem;
 
     // appDisabled depends on whether the add-on is a foreignInstall so update
     aNewAddon.appDisabled = !XPIDatabase.isUsableAddon(aNewAddon);
@@ -2497,9 +2481,8 @@ this.XPIDatabaseReconcile = {
       // If the add-on is a foreign install and is in a scope where add-ons
       // that were dropped in should default to disabled then disable it
       let disablingScopes = Services.prefs.getIntPref(PREF_EM_AUTO_DISABLED_SCOPES, 0);
-      if (aInstallLocation.scope & disablingScopes) {
-        logger.warn("Disabling foreign installed add-on " + aNewAddon.id + " in "
-            + aInstallLocation.name);
+      if (aLocation.scope & disablingScopes) {
+        logger.warn(`Disabling foreign installed add-on ${aNewAddon.id} in ${aLocation.name}`);
         aNewAddon.userDisabled = true;
         aNewAddon.seen = false;
       }
@@ -2517,7 +2500,7 @@ this.XPIDatabaseReconcile = {
    */
   removeMetadata(aOldAddon) {
     // This add-on has disappeared
-    logger.debug("Add-on " + aOldAddon.id + " removed from " + aOldAddon.location);
+    logger.debug("Add-on " + aOldAddon.id + " removed from " + aOldAddon.location.name);
     XPIDatabase.removeAddonMetadata(aOldAddon);
   },
 
@@ -2525,7 +2508,7 @@ this.XPIDatabaseReconcile = {
    * Updates an add-on's metadata and determines. This is called when either the
    * add-on's install directory path or last modified time has changed.
    *
-   * @param {InstallLocation} aInstallLocation
+   * @param {XPIStateLocation} aLocation
    *        The install location containing the add-on
    * @param {AddonInternal} aOldAddon
    *        The AddonInternal as it appeared the last time the application
@@ -2538,26 +2521,28 @@ this.XPIDatabaseReconcile = {
    *        A boolean indicating if flushing caches is required to complete
    *        changing this add-on
    */
-  updateMetadata(aInstallLocation, aOldAddon, aAddonState, aNewAddon) {
-    logger.debug("Add-on " + aOldAddon.id + " modified in " + aInstallLocation.name);
+  updateMetadata(aLocation, aOldAddon, aAddonState, aNewAddon) {
+    logger.debug(`Add-on ${aOldAddon.id} modified in ${aLocation.name}`);
 
     try {
       // If there isn't an updated install manifest for this add-on then load it.
       if (!aNewAddon) {
         let file = new nsIFile(aAddonState.path);
-        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation, aOldAddon);
+        aNewAddon = XPIInstall.syncLoadManifestFromFile(file, aLocation, aOldAddon);
       }
 
       // The ID in the manifest that was loaded must match the ID of the old
       // add-on.
       if (aNewAddon.id != aOldAddon.id)
-        throw new Error("Incorrect id in install manifest for existing add-on " + aOldAddon.id);
+        throw new Error(`Incorrect id in install manifest for existing add-on ${aOldAddon.id}`);
     } catch (e) {
-      logger.warn("updateMetadata: Add-on " + aOldAddon.id + " is invalid", e);
+      logger.warn(`updateMetadata: Add-on ${aOldAddon.id} is invalid`, e);
+
       XPIDatabase.removeAddonMetadata(aOldAddon);
-      XPIStates.removeAddon(aOldAddon.location, aOldAddon.id);
-      if (!aInstallLocation.locked)
-        aInstallLocation.uninstallAddon(aOldAddon.id);
+      aOldAddon.location.removeAddon(aOldAddon.id);
+
+      if (!aLocation.locked)
+        aLocation.installer.uninstallAddon(aOldAddon.id);
       else
         logger.warn("Could not uninstall invalid item from locked install location");
 
@@ -2575,7 +2560,7 @@ this.XPIDatabaseReconcile = {
    * Updates an add-on's path for when the add-on has moved in the
    * filesystem but hasn't changed in any other way.
    *
-   * @param {InstallLocation} aInstallLocation
+   * @param {XPIStateLocation} aLocation
    *        The install location containing the add-on
    * @param {AddonInternal} aOldAddon
    *        The AddonInternal as it appeared the last time the application
@@ -2584,8 +2569,8 @@ this.XPIDatabaseReconcile = {
    *        The new state of the add-on
    * @returns {AddonInternal}
    */
-  updatePath(aInstallLocation, aOldAddon, aAddonState) {
-    logger.debug("Add-on " + aOldAddon.id + " moved to " + aAddonState.path);
+  updatePath(aLocation, aOldAddon, aAddonState) {
+    logger.debug(`Add-on ${aOldAddon.id} moved to ${aAddonState.path}`);
     aOldAddon.path = aAddonState.path;
     aOldAddon._sourceBundle = new nsIFile(aAddonState.path);
 
@@ -2596,7 +2581,7 @@ this.XPIDatabaseReconcile = {
    * Called when no change has been detected for an add-on's metadata but the
    * application has changed so compatibility may have changed.
    *
-   * @param {InstallLocation} aInstallLocation
+   * @param {XPIStateLocation} aLocation
    *        The install location containing the add-on
    * @param {AddonInternal} aOldAddon
    *        The AddonInternal as it appeared the last time the application
@@ -2609,8 +2594,8 @@ this.XPIDatabaseReconcile = {
    * @returns {AddonInternal}
    *        The new addon.
    */
-  updateCompatibility(aInstallLocation, aOldAddon, aAddonState, aReloadMetadata) {
-    logger.debug("Updating compatibility for add-on " + aOldAddon.id + " in " + aInstallLocation.name);
+  updateCompatibility(aLocation, aOldAddon, aAddonState, aReloadMetadata) {
+    logger.debug(`Updating compatibility for add-on ${aOldAddon.id} in ${aLocation.name}`);
 
     let checkSigning = (aOldAddon.signedState === undefined &&
                         AddonSettings.ADDON_SIGNING &&
@@ -2620,7 +2605,7 @@ this.XPIDatabaseReconcile = {
     if (checkSigning || aReloadMetadata) {
       try {
         let file = new nsIFile(aAddonState.path);
-        manifest = XPIInstall.syncLoadManifestFromFile(file, aInstallLocation);
+        manifest = XPIInstall.syncLoadManifestFromFile(file, aLocation);
       } catch (err) {
         // If we can no longer read the manifest, it is no longer compatible.
         aOldAddon.brokenManifest = true;
@@ -2659,7 +2644,7 @@ this.XPIDatabaseReconcile = {
    * bundle. Add-ons in these locations are expected to change whenever
    * the application updates.
    *
-   * @param {InstallLocation} location
+   * @param {XPIStateLocation} location
    *        The install location to check.
    * @returns {boolean}
    *        True if this location is part of the application bundle.
@@ -2692,7 +2677,7 @@ this.XPIDatabaseReconcile = {
   updateExistingAddon(oldAddon, xpiState, newAddon, aUpdateCompatibility, aSchemaChange) {
     XPIDatabase.recordAddonTelemetry(oldAddon);
 
-    let installLocation = oldAddon._installLocation;
+    let installLocation = oldAddon.location;
 
     if (xpiState.mtime < oldAddon.updateDate) {
       XPIProvider.setTelemetry(oldAddon.id, "olderFile", {
@@ -2750,9 +2735,9 @@ this.XPIDatabaseReconcile = {
    */
   processFileChanges(aManifests, aUpdateCompatibility, aOldAppVersion, aOldPlatformVersion,
                      aSchemaChange) {
-    let findManifest = (aInstallLocation, aId) => {
-      return (aManifests[aInstallLocation.name] &&
-              aManifests[aInstallLocation.name][aId]) || null;
+    let findManifest = (loc, id) => {
+      return (aManifests[loc.name] &&
+              aManifests[loc.name][id]) || null;
     };
 
     let addonExists = addon => addon._sourceBundle.exists();
@@ -2762,7 +2747,7 @@ this.XPIDatabaseReconcile = {
 
     // Get the previous add-ons from the database and put them into maps by location
     for (let addon of XPIDatabase.getAddons()) {
-      previousAddons.get(addon.location).set(addon.id, addon);
+      previousAddons.get(addon.location.name).set(addon.id, addon);
     }
 
     // Keep track of add-ons whose blocklist status may have changed. We'll check this
@@ -2773,19 +2758,18 @@ this.XPIDatabaseReconcile = {
     // present we re-use the add-on objects from the database and update their
     // details directly
     let addonStates = new Map();
-    for (let installLocation of XPIProvider.installLocations) {
-      let locationAddons = currentAddons.get(installLocation.name);
+    for (let location of XPIStates.locations()) {
+      let locationAddons = currentAddons.get(location.name);
 
       // Get all the on-disk XPI states for this location, and keep track of which
       // ones we see in the database.
-      let states = XPIStates.getLocation(installLocation.name) || new Map();
-      let dbAddons = previousAddons.get(installLocation.name) || new Map();
+      let dbAddons = previousAddons.get(location.name) || new Map();
       for (let [id, oldAddon] of dbAddons) {
         // Check if the add-on is still installed
-        let xpiState = states.get(id);
+        let xpiState = location.get(id);
         if (xpiState) {
           let newAddon = this.updateExistingAddon(oldAddon, xpiState,
-                                                  findManifest(installLocation, id),
+                                                  findManifest(location, id),
                                                   aUpdateCompatibility, aSchemaChange);
           if (newAddon) {
             locationAddons.set(newAddon.id, newAddon);
@@ -2800,11 +2784,11 @@ this.XPIDatabaseReconcile = {
         }
       }
 
-      for (let [id, xpiState] of states) {
+      for (let [id, xpiState] of location) {
         if (locationAddons.has(id))
           continue;
-        let newAddon = findManifest(installLocation, id);
-        let addon = this.addMetadata(installLocation, id, xpiState, newAddon,
+        let newAddon = findManifest(location, id);
+        let addon = this.addMetadata(location, id, xpiState, newAddon,
                                      aOldAppVersion, aOldPlatformVersion);
         if (addon) {
           locationAddons.set(addon.id, addon);
@@ -2813,22 +2797,13 @@ this.XPIDatabaseReconcile = {
       }
     }
 
-    // Remove metadata for any add-ons in install locations that are no
-    // longer supported.
-    for (let [locationName, addons] of previousAddons) {
-      if (!currentAddons.has(locationName)) {
-        for (let oldAddon of addons.values())
-          this.removeMetadata(oldAddon);
-      }
-    }
-
     // Validate the updated system add-ons
     let hideLocation;
     {
-      let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
+      let systemAddonLocation = XPIStates.getLocation(KEY_APP_SYSTEM_ADDONS);
       let addons = currentAddons.get(systemAddonLocation.name);
 
-      if (!systemAddonLocation.isValid(addons)) {
+      if (!systemAddonLocation.installer.isValid(addons)) {
         // Hide the system add-on updates if any are invalid.
         logger.info("One or more updated system add-ons invalid, falling back to defaults.");
         hideLocation = systemAddonLocation.name;
@@ -2840,10 +2815,16 @@ this.XPIDatabaseReconcile = {
     let previousVisible = this.getVisibleAddons(previousAddons);
     let currentVisible = this.flattenByID(currentAddons, hideLocation);
 
+    for (let addon of XPIDatabase.orphanedAddons.splice(0)) {
+      if (addon.visible) {
+        previousVisible.set(addon.id, addon);
+      }
+    }
+
     for (let [id, addon] of currentVisible) {
       // If we have a stored manifest for the add-on, it came from the
       // startup data cache, and supersedes any previous XPIStates entry.
-      let xpiState = (!findManifest(addon._installLocation, id) &&
+      let xpiState = (!findManifest(addon.location, id) &&
                       addonStates.get(addon));
 
       this.applyStartupChange(addon, previousVisible.get(id), xpiState);
@@ -2851,14 +2832,16 @@ this.XPIDatabaseReconcile = {
     }
 
     for (let [id, addon] of previousVisible) {
-      if (addonExists(addon)) {
-        XPIInternal.BootstrapScope.get(addon).uninstall();
+      if (addon.location) {
+        if (addonExists(addon)) {
+          XPIInternal.BootstrapScope.get(addon).uninstall();
+        }
+        addon.location.removeAddon(id);
+        addon.visible = false;
+        addon.active = false;
       }
-      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
-      XPIStates.removeAddon(addon.location, id);
 
-      addon.visible = false;
-      addon.active = false;
+      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
     }
     if (previousVisible.size) {
       XPIInstall.flushChromeCaches();
@@ -2918,7 +2901,7 @@ this.XPIDatabaseReconcile = {
       if (previousAddon !== currentAddon) {
         AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED, id);
 
-        if (previousAddon._installLocation &&
+        if (previousAddon.location &&
             previousAddon._sourceBundle.exists() &&
             !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)) {
           XPIInternal.BootstrapScope.get(previousAddon).update(
