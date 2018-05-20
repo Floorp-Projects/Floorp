@@ -21,7 +21,7 @@ extension is vendored at
 
 When upgrading Mercurial, the ``robustcheckout`` extension should also
 be updated to ensure it is compatible with the version of Mercurial
-being upgraded to. Typically, one implies copies the latest version
+being upgraded to. Typically, one simply copies the latest version
 from ``version-control-tools`` into the vendored location.
 
 Debian Packages for Debian Based Docker Images
