@@ -451,7 +451,7 @@ FileDescriptorFile::CreateUnique(uint32_t aType, uint32_t aAttributes)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetDirectoryEntries(nsISimpleEnumerator** aEntries)
+FileDescriptorFile::GetDirectoryEntriesImpl(nsIDirectoryEnumerator** aEntries)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
