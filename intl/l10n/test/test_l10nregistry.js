@@ -24,6 +24,43 @@ add_task(function test_methods_presence() {
 });
 
 /**
+ * Test that passing empty resourceIds list works.
+ */
+add_task(async function test_empty_resourceids() {
+  fs = {};
+
+  const source = new FileSource("test", ["en-US"], "/localization/{locale}");
+  L10nRegistry.registerSource(source);
+
+  const ctxs = L10nRegistry.generateContexts(["en-US"], []);
+
+  const done = (await ctxs.next()).done;
+
+  equal(done, true);
+
+  // cleanup
+  L10nRegistry.sources.clear();
+  L10nRegistry.ctxCache.clear();
+});
+
+/**
+ * Test that passing empty sources list works.
+ */
+add_task(async function test_empty_sources() {
+  fs = {};
+
+  const ctxs = L10nRegistry.generateContexts(["en-US"], []);
+
+  const done = (await ctxs.next()).done;
+
+  equal(done, true);
+
+  // cleanup
+  L10nRegistry.sources.clear();
+  L10nRegistry.ctxCache.clear();
+});
+
+/**
  * This test tests generation of a proper context for a single
  * source scenario
  */
