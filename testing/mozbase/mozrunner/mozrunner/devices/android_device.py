@@ -90,7 +90,7 @@ AVD_DICT = {
                        'testing/config/tooltool-manifests/androidx86_6_0/mach-emulator.manifest',
                        ['-skip-adb-auth', '-verbose', '-show-kernel',
                         '-ranchu',
-                        # does not boot if '-engine', 'qemu2',
+                        '-engine', 'qemu2',
                         '-memory', '3072', '-cores', '4',
                         '-qemu', '-enable-kvm'],
                        True),
@@ -99,8 +99,8 @@ AVD_DICT = {
                        'testing/config/tooltool-manifests/androidx86_7_0/mach-emulator.manifest',
                        ['-skip-adb-auth', '-verbose', '-show-kernel',
                         '-ranchu',
+                        '-engine', 'qemu2',
                         '-selinux', 'permissive',
-                        # does not boot if '-engine', 'qemu2',
                         '-memory', '3072', '-cores', '4',
                         '-qemu', '-enable-kvm'],
                        True)
@@ -530,7 +530,7 @@ class AndroidEmulator(object):
                    log_path)
         self.proc = ProcessHandler(
             command, storeOutput=False, processOutputLine=outputHandler,
-            env=env)
+            env=env, ignore_children=True)
         self.proc.run()
         _log_debug("Emulator started with pid %d" %
                    int(self.proc.proc.pid))
