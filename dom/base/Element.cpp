@@ -2039,7 +2039,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsDOMCSSAttributeDeclaration*
-Element::GetSMILOverrideStyle()
+Element::SMILOverrideStyle()
 {
   Element::nsExtendedDOMSlots* slots = ExtendedDOMSlots();
 
@@ -4489,7 +4489,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     // We can't check for a frame here, since <frame> elements inside <frameset>
     // still need to generate a frame, even if they're display: none. :(
     //
-    // The servo traversal doesn't keep style data under display: none subtrees, 
+    // The servo traversal doesn't keep style data under display: none subtrees,
     // so in order for it to not need to cleanup each time anything happens in a
     // display: none subtree, we keep it clean.
     //
