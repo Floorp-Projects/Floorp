@@ -2981,6 +2981,8 @@ ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep, JSContext* cx)
         }
     }
 
+    clearProperties(sweep);
+
     if (ObjectGroup* unboxedGroup = maybeOriginalUnboxedGroup())
         MarkObjectGroupUnknownProperties(cx, unboxedGroup);
     if (maybeUnboxedLayout(sweep) && maybeUnboxedLayout(sweep)->nativeGroup())
@@ -4359,6 +4361,11 @@ ConstraintTypeSet::sweep(const AutoSweepBase& sweep, Zone* zone,
 inline void
 ObjectGroup::clearProperties(const AutoSweepObjectGroup& sweep)
 {
+    // We're about to remove edges from the group to property ids. Incremental
+    // GC should know about these edges.
+    if (zone()->needsIncrementalBarrier())
+        traceChildren(zone()->barrierTracer());
+
     setBasePropertyCount(sweep, 0);
     propertySet = nullptr;
 }
