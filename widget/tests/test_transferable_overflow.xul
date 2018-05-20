@@ -60,7 +60,7 @@
     dir.initWithPath("/dev/fd");
     var count = 0;
     for (var de = dir.directoryEntries; de.hasMoreElements(); ) {
-      var fdFile = de.getNext().QueryInterface(Ci.nsIFile);
+      var fdFile = de.nextFile;
       var fileSize;
       try {
         fileSize = fdFile.fileSize;

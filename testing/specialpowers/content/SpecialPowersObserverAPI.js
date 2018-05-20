@@ -180,7 +180,7 @@ SpecialPowersObserverAPI.prototype = {
 
     var crashDumpFiles = [];
     while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Ci.nsIFile);
+      var file = entries.nextFile;
       var path = String(file.path);
       if (path.match(/\.(dmp|extra)$/) && !aToIgnore[path]) {
         crashDumpFiles.push(path);
@@ -195,7 +195,7 @@ SpecialPowersObserverAPI.prototype = {
     if (crashDumpDir.exists()) {
       let entries = crashDumpDir.directoryEntries;
       while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Ci.nsIFile);
+        let file = entries.nextFile;
         if (file.isFile()) {
           file.remove(false);
           removed = true;

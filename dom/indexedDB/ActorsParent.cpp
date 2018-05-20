@@ -17404,7 +17404,7 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
     return NS_OK;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -17412,17 +17412,8 @@ FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage)
 
   uint64_t usage = 0;
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    MOZ_ASSERT(file);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -17984,7 +17975,7 @@ QuotaClient::GetDatabaseFilenames(
   AssertIsOnIOThread();
   MOZ_ASSERT(aDirectory);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18000,19 +17991,10 @@ QuotaClient::GetDatabaseFilenames(
   const NS_ConvertASCIItoUTF16 walSuffix(kSQLiteWALSuffix,
                                          LiteralStringLength(kSQLiteWALSuffix));
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore &&
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+         file &&
          !aCanceled) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    MOZ_ASSERT(file);
-
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18087,7 +18069,7 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
   MOZ_ASSERT(aDirectory);
   MOZ_ASSERT(aUsageInfo);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -18103,19 +18085,10 @@ QuotaClient::GetUsageForDirectoryInternal(nsIFile* aDirectory,
   const NS_ConvertASCIItoUTF16 shmSuffix(kSQLiteSHMSuffix,
                                          LiteralStringLength(kSQLiteSHMSuffix));
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore &&
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+         file &&
          !aCanceled) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    MOZ_ASSERT(file);
-
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18438,7 +18411,7 @@ Maintenance::DirectoryWork()
       continue;
     }
 
-    nsCOMPtr<nsISimpleEnumerator> persistenceDirEntries;
+    nsCOMPtr<nsIDirectoryEnumerator> persistenceDirEntries;
     rv = persistenceDir->GetDirectoryEntries(
                                          getter_AddRefs(persistenceDirEntries));
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18455,25 +18428,15 @@ Maintenance::DirectoryWork()
         return NS_ERROR_ABORT;
       }
 
-      bool persistenceDirHasMoreEntries;
-      rv = persistenceDirEntries->HasMoreElements(
-                                                 &persistenceDirHasMoreEntries);
+      nsCOMPtr<nsIFile> originDir;
+      rv = persistenceDirEntries->GetNextFile(getter_AddRefs(originDir));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      if (!persistenceDirHasMoreEntries) {
+      if (!originDir) {
         break;
       }
-
-      nsCOMPtr<nsISupports> persistenceDirEntry;
-      rv = persistenceDirEntries->GetNext(getter_AddRefs(persistenceDirEntry));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      nsCOMPtr<nsIFile> originDir = do_QueryInterface(persistenceDirEntry);
-      MOZ_ASSERT(originDir);
 
       rv = originDir->Exists(&exists);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18520,7 +18483,7 @@ Maintenance::DirectoryWork()
         continue;
       }
 
-      nsCOMPtr<nsISimpleEnumerator> idbDirEntries;
+      nsCOMPtr<nsIDirectoryEnumerator> idbDirEntries;
       rv = idbDir->GetDirectoryEntries(getter_AddRefs(idbDirEntries));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -18541,24 +18504,15 @@ Maintenance::DirectoryWork()
           return NS_ERROR_ABORT;
         }
 
-        bool idbDirHasMoreEntries;
-        rv = idbDirEntries->HasMoreElements(&idbDirHasMoreEntries);
+        nsCOMPtr<nsIFile> idbDirFile;
+        rv = idbDirEntries->GetNextFile(getter_AddRefs(idbDirFile));
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
 
-        if (!idbDirHasMoreEntries) {
+        if (!idbDirFile) {
           break;
         }
-
-        nsCOMPtr<nsISupports> idbDirEntry;
-        rv = idbDirEntries->GetNext(getter_AddRefs(idbDirEntry));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        nsCOMPtr<nsIFile> idbDirFile = do_QueryInterface(idbDirEntry);
-        MOZ_ASSERT(idbDirFile);
 
         nsString idbFilePath;
         rv = idbDirFile->GetPath(idbFilePath);
