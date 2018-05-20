@@ -1671,14 +1671,6 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  // Propagate scoped style sheet tracking bit.
-  if (mParent->IsContent()) {
-    nsIContent* parent = mParent->AsContent();
-    if (ShadowRoot* shadowRootParent = ShadowRoot::FromNode(parent)) {
-      parent = shadowRootParent->GetHost();
-    }
-  }
-
   // This has to be here, rather than in nsGenericHTMLElement::BindToTree,
   //  because it has to happen after updating the parent pointer, but before
   //  recursively binding the kids.
