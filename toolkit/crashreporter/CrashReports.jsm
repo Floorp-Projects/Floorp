@@ -24,7 +24,7 @@ var CrashReports = {
     if (this.submittedDir.exists() && this.submittedDir.isDirectory()) {
       let entries = this.submittedDir.directoryEntries;
       while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Ci.nsIFile);
+        let file = entries.nextFile;
         let leaf = file.leafName;
         if (leaf.startsWith("bp-") &&
             leaf.endsWith(".txt")) {
@@ -42,7 +42,7 @@ var CrashReports = {
       let uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let entries = this.pendingDir.directoryEntries;
       while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Ci.nsIFile);
+        let file = entries.nextFile;
         let leaf = file.leafName;
         let id = leaf.slice(0, -4);
         if (leaf.endsWith(".dmp") && uuidRegex.test(id)) {

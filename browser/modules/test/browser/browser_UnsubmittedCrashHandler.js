@@ -42,7 +42,7 @@ function clearPendingCrashReports() {
   let entries = dir.directoryEntries;
 
   while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+    let entry = entries.nextFile;
     if (entry.isFile()) {
       entry.remove(false);
     }

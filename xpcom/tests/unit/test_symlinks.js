@@ -118,7 +118,7 @@ function testSymLinks(testDir, relative) {
   print(spaces + " dir   file  symlink");
   var dirEntries = testDir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
-    const file = dirEntries.getNext().QueryInterface(nsIFile);
+    const file = dirEntries.nextFile;
     const name = file.leafName;
     print(name + spaces.substring(name.length) + bools[file.isDirectory()] +
           bools[file.isFile()] + bools[file.isSymlink()]);

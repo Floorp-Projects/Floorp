@@ -248,7 +248,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
         let dest = createSubDir("datareporting");
         let enumerator = dataReportingDir.directoryEntries;
         while (enumerator.hasMoreElements()) {
-          let file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+          let file = enumerator.nextFile;
           if (file.isDirectory() || !toCopy.includes(file.leafName)) {
             continue;
           }

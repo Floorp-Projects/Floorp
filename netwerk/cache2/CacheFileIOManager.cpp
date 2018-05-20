@@ -3496,12 +3496,8 @@ CacheFileIOManager::RemoveTrashInternal()
       }
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsISimpleEnumerator> enumerator;
-      rv = mTrashDir->GetDirectoryEntries(getter_AddRefs(enumerator));
-      if (NS_SUCCEEDED(rv)) {
-        mTrashDirEnumerator = do_QueryInterface(enumerator, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      rv = mTrashDir->GetDirectoryEntries(getter_AddRefs(mTrashDirEnumerator));
+      NS_ENSURE_SUCCESS(rv, rv);
 
       continue; // check elapsed time
     }
@@ -3561,24 +3557,12 @@ CacheFileIOManager::FindTrashDirToRemove()
   // remove all cache files.
   MOZ_ASSERT(mIOThread->IsCurrentThread() || mShuttingDown);
 
-  nsCOMPtr<nsISimpleEnumerator> iter;
+  nsCOMPtr<nsIDirectoryEnumerator> iter;
   rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool more;
-  nsCOMPtr<nsISupports> elem;
-
-  while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
-    rv = iter->GetNext(getter_AddRefs(elem));
-    if (NS_FAILED(rv)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
-    if (!file) {
-      continue;
-    }
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file))) && file) {
     bool isDir = false;
     file->IsDirectory(&isDir);
     if (!isDir) {

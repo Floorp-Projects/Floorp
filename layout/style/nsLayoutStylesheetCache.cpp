@@ -511,32 +511,22 @@ ListInterestingFiles(nsString& aAnnotation, nsIFile* aFile,
     return;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   if (NS_FAILED(aFile->GetDirectoryEntries(getter_AddRefs(entries)))) {
     aAnnotation.AppendLiteral("  (failed to enumerated directory)\n");
     return;
   }
 
   for (;;) {
-    bool hasMore = false;
-    if (NS_FAILED(entries->HasMoreElements(&hasMore))) {
+    nsCOMPtr<nsIFile> file;
+    if (NS_FAILED(entries->GetNextFile(getter_AddRefs(file)))) {
       aAnnotation.AppendLiteral("  (failed during directory enumeration)\n");
       return;
     }
-    if (!hasMore) {
+    if (!file) {
       break;
     }
-
-    nsCOMPtr<nsISupports> entry;
-    if (NS_FAILED(entries->GetNext(getter_AddRefs(entry)))) {
-      aAnnotation.AppendLiteral("  (failed during directory enumeration)\n");
-      return;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    if (file) {
-      ListInterestingFiles(aAnnotation, file, aInterestingFilenames);
-    }
+    ListInterestingFiles(aAnnotation, file, aInterestingFilenames);
   }
 }
 

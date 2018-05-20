@@ -729,20 +729,13 @@ nsLocalFile::CopyDirectoryTo(nsIFile* aNewParent)
     }
   }
 
-  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+  nsCOMPtr<nsIDirectoryEnumerator> dirIterator;
   if (NS_FAILED(rv = GetDirectoryEntries(getter_AddRefs(dirIterator)))) {
     return rv;
   }
 
-  bool hasMore = false;
-  while (NS_SUCCEEDED(dirIterator->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    nsCOMPtr<nsIFile> entry;
-    rv = dirIterator->GetNext(getter_AddRefs(supports));
-    entry = do_QueryInterface(supports);
-    if (NS_FAILED(rv) || !entry) {
-      continue;
-    }
+  nsCOMPtr<nsIFile> entry;
+  while (NS_SUCCEEDED(dirIterator->GetNextFile(getter_AddRefs(entry))) && entry) {
     if (NS_FAILED(rv = entry->IsSymlink(&isSymlink))) {
       return rv;
     }

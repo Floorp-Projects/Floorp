@@ -55,7 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123480
     }
     var count = 0;
     for (var de = dir.directoryEntries; de.hasMoreElements(); ) {
-      var fdFile = de.getNext().QueryInterface(Ci.nsIFile);
+      var fdFile = de.nextFile;
       var fileSize;
       try {
         fileSize = fdFile.fileSize;

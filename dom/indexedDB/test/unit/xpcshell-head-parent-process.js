@@ -340,8 +340,7 @@ function getChromeFilesDir()
 
   let idbEntries = idbDir.directoryEntries;
   while (idbEntries.hasMoreElements()) {
-    let entry = idbEntries.getNext();
-    let file = entry.QueryInterface(Ci.nsIFile);
+    let file = idbEntries.nextFile;
     if (file.isDirectory()) {
       return file;
     }
