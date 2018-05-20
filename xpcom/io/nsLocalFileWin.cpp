@@ -2010,36 +2010,30 @@ nsLocalFile::CopyMove(nsIFile* aParentDir, const nsAString& aNewName,
       return rv;
     }
 
-    bool more = false;
-    while (NS_SUCCEEDED(dirEnum->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsISupports> item;
-      nsCOMPtr<nsIFile> file;
-      dirEnum->GetNext(getter_AddRefs(item));
-      file = do_QueryInterface(item);
-      if (file) {
-        bool isDir, isLink;
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED(dirEnum->GetNextFile(getter_AddRefs(file))) && file) {
+      bool isDir, isLink;
 
-        file->IsDirectory(&isDir);
-        file->IsSymlink(&isLink);
+      file->IsDirectory(&isDir);
+      file->IsSymlink(&isLink);
 
-        if (move) {
-          if (followSymlinks) {
-            return NS_ERROR_FAILURE;
-          }
+      if (move) {
+        if (followSymlinks) {
+          return NS_ERROR_FAILURE;
+        }
 
-          rv = file->MoveTo(target, EmptyString());
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
+        rv = file->MoveTo(target, EmptyString());
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      } else {
+        if (followSymlinks) {
+          rv = file->CopyToFollowingLinks(target, EmptyString());
         } else {
-          if (followSymlinks) {
-            rv = file->CopyToFollowingLinks(target, EmptyString());
-          } else {
-            rv = file->CopyTo(target, EmptyString());
-          }
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
+          rv = file->CopyTo(target, EmptyString());
+        }
+        if (NS_FAILED(rv)) {
+          return rv;
         }
       }
     }

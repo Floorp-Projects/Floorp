@@ -332,24 +332,15 @@ nsDeleteDir::RemoveOldTrashes(nsIFile *cacheDir)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsISimpleEnumerator> iter;
+  nsCOMPtr<nsIDirectoryEnumerator> iter;
   rv = parent->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv))
     return rv;
 
-  bool more;
-  nsCOMPtr<nsISupports> elem;
   nsAutoPtr<nsCOMArray<nsIFile> > dirList;
 
-  while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
-    rv = iter->GetNext(getter_AddRefs(elem));
-    if (NS_FAILED(rv))
-      continue;
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
-    if (!file)
-      continue;
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file))) && file) {
     nsAutoString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_FAILED(rv))
@@ -416,26 +407,13 @@ nsDeleteDir::RemoveDir(nsIFile *file, bool *stopDeleting)
     return rv;
 
   if (isDir) {
-    nsCOMPtr<nsISimpleEnumerator> iter;
+    nsCOMPtr<nsIDirectoryEnumerator> iter;
     rv = file->GetDirectoryEntries(getter_AddRefs(iter));
     if (NS_FAILED(rv))
       return rv;
 
-    bool more;
-    nsCOMPtr<nsISupports> elem;
-    while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
-      rv = iter->GetNext(getter_AddRefs(elem));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Unexpected failure in nsDeleteDir::RemoveDir");
-        continue;
-      }
-
-      nsCOMPtr<nsIFile> file2 = do_QueryInterface(elem);
-      if (!file2) {
-        NS_WARNING("Unexpected failure in nsDeleteDir::RemoveDir");
-        continue;
-      }
-
+    nsCOMPtr<nsIFile> file2;
+    while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(file2))) && file2) {
       RemoveDir(file2, stopDeleting);
       // No check for errors to remove as much as possible
 

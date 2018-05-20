@@ -26,8 +26,7 @@ function* dirIter(directory) {
 
   let en = testsDir.directoryEntries;
   while (en.hasMoreElements()) {
-    let file = en.getNext();
-    yield file.QueryInterface(Ci.nsIFile);
+    yield en.nextFile;
   }
 }
 

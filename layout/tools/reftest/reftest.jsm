@@ -1256,7 +1256,7 @@ function FindUnexpectedCrashDumpFiles()
 
     let foundCrashDumpFile = false;
     while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Ci.nsIFile);
+        let file = entries.nextFile;
         let path = String(file.path);
         if (path.match(/\.(dmp|extra)$/) && !g.unexpectedCrashDumpFiles[path]) {
             if (!foundCrashDumpFile) {
@@ -1282,7 +1282,7 @@ function RemovePendingCrashDumpFiles()
 
     let entries = g.pendingCrashDumpDir.directoryEntries;
     while (entries.hasMoreElements()) {
-        let file = entries.getNext().QueryInterface(Ci.nsIFile);
+        let file = entries.nextFile;
         if (file.isFile()) {
           file.remove(false);
           logger.info("This test left pending crash dumps; deleted "+file.path);
