@@ -484,7 +484,7 @@
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
-      <hbox id="adminDisabled" align="start">
+      <hbox id="policyDisabled" align="start">
         <label>&update.adminDisabled;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
