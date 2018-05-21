@@ -565,9 +565,33 @@ check_prog('7Z', ('7z', '7za'), allow_missing=True, when=target_is_windows)
 # Fallthrough to autoconf-based configure
 include('build/moz.configure/old.configure')
 
+@depends(check_build_environment, build_project)
 @imports('__sandbox__')
-def all_paths():
-    return __sandbox__._all_paths
+@imports('glob')
+def config_status_deps(build_env, build_project):
 
-set_config('ALL_CONFIGURE_PATHS', all_paths())
-# Please do not add anything after setting ALL_CONFIGURE_PATHS.
+    topsrcdir = build_env.topsrcdir
+    topobjdir = build_env.topobjdir
+
+    return list(__sandbox__._all_paths) + [
+        os.path.join(topsrcdir, build_project, 'confvars.sh'),
+        os.path.join(topsrcdir, 'configure'),
+        os.path.join(topsrcdir, 'js', 'src', 'configure'),
+        os.path.join(topsrcdir, 'configure.in'),
+        os.path.join(topsrcdir, 'js', 'src', 'configure.in'),
+        os.path.join(topsrcdir, 'nsprpub', 'configure'),
+        os.path.join(topsrcdir, 'config', 'milestone.txt'),
+        os.path.join(topsrcdir, 'browser', 'config', 'version.txt'),
+        os.path.join(topsrcdir, 'browser', 'config', 'version_display.txt'),
+        os.path.join(topsrcdir, 'build', 'virtualenv_packages.txt'),
+        os.path.join(topsrcdir, 'python', 'mozbuild', 'mozbuild', 'virtualenv.py'),
+        os.path.join(topsrcdir, 'testing', 'mozbase', 'packages.txt'),
+        os.path.join(topobjdir, '.mozconfig.json'),
+        os.path.join(topsrcdir, 'aclocal.m4'),
+        os.path.join(topsrcdir, 'old-configure.in'),
+        os.path.join(topsrcdir, 'js', 'src', 'aclocal.m4'),
+        os.path.join(topsrcdir, 'js', 'src', 'old-configure.in'),
+    ] + glob.glob(os.path.join(topsrcdir, 'build', 'autoconf', '*.m4'))
+
+set_config('CONFIG_STATUS_DEPS', config_status_deps)
+# Please do not add anything after setting config_dep_paths.
