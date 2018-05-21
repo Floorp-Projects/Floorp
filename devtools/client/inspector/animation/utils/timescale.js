@@ -23,15 +23,15 @@ class TimeScale {
       return this._initializeWithoutCreatedTime(animations);
     }
 
-    this.minStartTime = Infinity;
-    this.maxEndTime = 0;
-    this.documentCurrentTime = 0;
+    let animationsCurrentTime = -Number.MAX_VALUE;
+    let minStartTime = Infinity;
+    let maxEndTime = 0;
 
     for (const animation of animations) {
       const {
         createdTime,
+        currentTime,
         delay,
-        documentCurrentTime,
         duration,
         endDelay = 0,
         iterationCount,
@@ -44,10 +44,15 @@ class TimeScale {
                       toRate(delay +
                              duration * (iterationCount || 1) +
                              Math.max(endDelay, 0));
-      this.minStartTime = Math.min(this.minStartTime, startTime);
-      this.maxEndTime = Math.max(this.maxEndTime, endTime);
-      this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
+      minStartTime = Math.min(minStartTime, startTime);
+      maxEndTime = Math.max(maxEndTime, endTime);
+      animationsCurrentTime =
+        Math.max(animationsCurrentTime, createdTime + toRate(currentTime));
     }
+
+    this.minStartTime = minStartTime;
+    this.maxEndTime = maxEndTime;
+    this.currentTime = animationsCurrentTime;
   }
 
   /**
