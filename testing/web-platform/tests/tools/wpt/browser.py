@@ -4,6 +4,7 @@ import platform
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 from abc import ABCMeta, abstractmethod
@@ -206,7 +207,6 @@ class Firefox(Browser):
 
     def install_prefs(self, binary, dest=None):
         version, channel = self.get_version_and_channel(binary)
-
         if dest is None:
             dest = os.pwd
 
@@ -293,8 +293,17 @@ class Chrome(Browser):
     """
 
     product = "chrome"
-    binary = "/usr/bin/google-chrome"
     requirements = "requirements_chrome.txt"
+
+    @property
+    def binary(self):
+        if uname[0] == "Linux":
+            return "/usr/bin/google-chrome"
+        if uname[0] == "Darwin":
+            return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        # TODO Windows?
+        logger.warn("Unable to find the browser binary.")
+        return None
 
     def install(self, dest=None):
         raise NotImplementedError
@@ -339,9 +348,14 @@ class Chrome(Browser):
 
     def version(self, binary=None):
         binary = binary or self.binary
-        version_string = call(binary, "--version").strip()
+        try:
+            version_string = call(binary, "--version").strip()
+        except subprocess.CalledProcessError:
+            logger.warn("Failed to call %s", binary)
+            return None
         m = re.match(r"Google Chrome (.*)", version_string)
         if not m:
+            logger.warn("Failed to extract version from: s%", version_string)
             return None
         return m.group(1)
 
@@ -379,8 +393,15 @@ class Opera(Browser):
     """
 
     product = "opera"
-    binary = "/usr/bin/opera"
     requirements = "requirements_opera.txt"
+
+    @property
+    def binary(self):
+        if uname[0] == "Linux":
+            return "/usr/bin/opera"
+        # TODO Windows, Mac?
+        logger.warn("Unable to find the browser binary.")
+        return None
 
     def install(self, dest=None):
         raise NotImplementedError
@@ -430,7 +451,11 @@ class Opera(Browser):
     def version(self, binary):
         """Retrieve the release version of the installed browser."""
         binary = binary or self.binary
-        output = call(binary, "--version")
+        try:
+            output = call(binary, "--version")
+        except subprocess.CalledProcessError:
+            logger.warn("Failed to call %s", binary)
+            return None
         return re.search(r"[0-9\.]+( [a-z]+)?$", output.strip()).group(0)
 
 
