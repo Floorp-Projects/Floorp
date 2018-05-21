@@ -278,12 +278,7 @@ function isDiscoverEnabled() {
  * Obtain the main DOMWindow for the current context.
  */
 function getMainWindow() {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIWebNavigation)
-               .QueryInterface(Ci.nsIDocShellTreeItem)
-               .rootTreeItem
-               .QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindow);
+  return window.document.docShell.rootTreeItem.domWindow;
 }
 
 function getBrowserElement() {
@@ -1910,8 +1905,7 @@ var gHeader = {
     if (docshellItem.rootTreeItem == docshellItem)
       return true;
 
-    var outerWin = docshellItem.rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                                            .getInterface(Ci.nsIDOMWindow);
+    var outerWin = docshellItem.rootTreeItem.domWindow;
     var outerDoc = outerWin.document;
     var node = outerDoc.getElementById("back-button");
     // If the outer frame has no back-button then make the buttons visible

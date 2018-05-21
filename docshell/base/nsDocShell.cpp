@@ -3964,6 +3964,19 @@ nsDocShell::GetWindow()
 }
 
 NS_IMETHODIMP
+nsDocShell::GetDomWindow(mozIDOMWindowProxy** aWindow)
+{
+  NS_ENSURE_ARG_POINTER(aWindow);
+
+  nsresult rv = EnsureScriptEnvironment();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> window = mScriptGlobal->AsOuter();
+  window.forget(aWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
 {
   if (mDeviceSizeIsPageSize != aValue) {

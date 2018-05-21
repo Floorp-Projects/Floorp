@@ -12,7 +12,7 @@ add_task(async function() {
 
   docShell.createAboutBlankContentViewer(null);
 
-  let window = webnav.getInterface(Ci.nsIDOMWindow);
+  let window = webnav.document.defaultView;
   let unwrapped = Cu.waiveXrays(window);
 
   window.document.body.innerHTML = '<div id="foo"></div>';
