@@ -312,6 +312,15 @@
       }
     }
 
+    function setElementCreationCallbackCreate() {
+      class TestCustomElement4 extends XULElement {}
+      customElements.setElementCreationCallback(
+        "test-custom-element-4", () => customElements.define("test-custom-element-4", TestCustomElement4));
+
+      let element = document.createElementNS(XUL_NS, "test-custom-element-4");
+      ok(element instanceof TestCustomElement4, "Should be an instance of TestCustomElement4");
+    }
+
     function runTest() {
       basicCustomElementCreate();
       parserBasicElementUpgrade();
@@ -331,6 +340,8 @@
       extendingWithoutDashCustomElement();
 
       nonCustomElementCreate();
+
+      setElementCreationCallbackCreate();
 
       SimpleTest.finish();
     }
