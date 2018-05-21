@@ -11,9 +11,8 @@ add_task(async function test() {
   isnot(tab, gBrowser.selectedTab, "New tab shouldn't be selected");
 
   let listener = {
-    onOpenWindow(window) {
-      var domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                            .getInterface(Ci.nsIDOMWindow);
+    onOpenWindow(xulWin) {
+      var domwindow = xulWin.docShell.domWindow;
       waitForFocus(() => {
         is(domwindow.document.location.href, PROMPT_URL, "Should have seen a prompt window");
         is(domwindow.args.promptType, "promptUserAndPass", "Should be an authenticate prompt");

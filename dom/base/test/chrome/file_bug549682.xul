@@ -141,7 +141,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     var localmm = document.getElementById('ifr').messageManager;
 
     var wn = document.getElementById('ifr').contentWindow
-      .getInterface(Ci.nsIWebNavigation);
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIInterfaceRequestor);
     ok(wn, "Should have webnavigation");
     var cfmm = wn.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIContentFrameMessageManager);
     ok(cfmm, "Should have content messageManager");
