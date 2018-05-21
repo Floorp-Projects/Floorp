@@ -243,7 +243,7 @@ LookupCache::ClearAll()
 }
 
 void
-LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache)
+LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const
 {
   MOZ_ASSERT(aCache);
 
@@ -508,7 +508,7 @@ nsCString GetFormattedTimeString(int64_t aCurTimeSec)
 }
 
 void
-LookupCache::DumpCache()
+LookupCache::DumpCache() const
 {
   if (!LOG_ENABLED()) {
     return;
@@ -778,7 +778,7 @@ LookupCacheV2::ConstructPrefixSet(AddPrefixArray& aAddPrefixes)
 
 #if defined(DEBUG)
 void
-LookupCacheV2::DumpCompletions()
+LookupCacheV2::DumpCompletions() const
 {
   if (!LOG_ENABLED())
     return;
