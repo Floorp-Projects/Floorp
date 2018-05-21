@@ -11017,24 +11017,6 @@ nsIFrame::IsStackingContext()
   return IsStackingContext(disp, StylePosition(), isPositioned, isVisuallyAtomic);
 }
 
-Element*
-nsIFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (!mContent) {
-    return nullptr;
-  }
-
-  if (aType == CSSPseudoElementType::before) {
-    return nsLayoutUtils::GetBeforePseudo(mContent);
-  }
-
-  if (aType == CSSPseudoElementType::after) {
-    return nsLayoutUtils::GetAfterPseudo(mContent);
-  }
-
-  return nullptr;
-}
-
 static bool
 IsFrameScrolledOutOfView(nsIFrame* aTarget,
                          const nsRect& aTargetRect,

@@ -284,13 +284,3 @@ nsProgressFrame::ShouldUseNativeStyle() const
          !PresContext()->HasAuthorSpecifiedRules(barFrame,
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
-
-Element*
-nsProgressFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (aType == CSSPseudoElementType::mozProgressBar) {
-    return mBarDiv;
-  }
-
-  return nsContainerFrame::GetPseudoElement(aType);
-}
