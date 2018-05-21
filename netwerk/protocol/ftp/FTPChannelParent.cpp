@@ -101,7 +101,7 @@ FTPChannelParent::Init(const FTPChannelCreationArgs& aArgs)
   {
     const FTPChannelOpenArgs& a = aArgs.get_FTPChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.startPos(), a.entityID(), a.uploadStream(),
-                       a.loadInfo());
+                       a.loadInfo(), a.loadFlags());
   }
   case FTPChannelCreationArgs::TFTPChannelConnectArgs:
   {
@@ -119,7 +119,8 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                               const uint64_t& aStartPos,
                               const nsCString& aEntityID,
                               const OptionalIPCStream& aUploadStream,
-                              const OptionalLoadInfoArgs& aLoadInfoArgs)
+                              const OptionalLoadInfoArgs& aLoadInfoArgs,
+                              const uint32_t& aLoadFlags)
 {
   nsresult rv;
 
@@ -153,7 +154,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannelInternal(getter_AddRefs(chan), uri, loadInfo,
                              nullptr, nullptr, nullptr,
-                             nsIRequest::LOAD_NORMAL, ios);
+                             aLoadFlags, ios);
 
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);

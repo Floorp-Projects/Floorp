@@ -193,11 +193,15 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
   autoStream.Serialize(mUploadStream,
                        static_cast<ContentChild*>(gNeckoChild->Manager()));
 
+  uint32_t loadFlags = 0;
+  GetLoadFlags(&loadFlags);
+
   FTPChannelOpenArgs openArgs;
   SerializeURI(nsBaseChannel::URI(), openArgs.uri());
   openArgs.startPos() = mStartPos;
   openArgs.entityID() = mEntityID;
   openArgs.uploadStream() = autoStream.TakeOptionalValue();
+  openArgs.loadFlags() = loadFlags;
 
   nsCOMPtr<nsILoadInfo> loadInfo;
   GetLoadInfo(getter_AddRefs(loadInfo));
