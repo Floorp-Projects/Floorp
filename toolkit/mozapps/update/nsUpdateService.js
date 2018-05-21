@@ -32,7 +32,7 @@ const PREF_APP_UPDATE_ELEVATE_NEVER        = "app.update.elevate.never";
 const PREF_APP_UPDATE_ELEVATE_VERSION      = "app.update.elevate.version";
 const PREF_APP_UPDATE_ELEVATE_ATTEMPTS     = "app.update.elevate.attempts";
 const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS  = "app.update.elevate.maxAttempts";
-const PREF_APP_UPDATE_ENABLED              = "app.update.enabled";
+const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                  = "app.update.log";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
@@ -518,40 +518,6 @@ function getCanStageUpdates() {
 
   return gCanStageUpdatesSession;
 }
-
-XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
-  // If the administrator has disabled app update and locked the preference so
-  // users can't check for updates. This preference check is ok in this lazy
-  // getter since locked prefs don't change until the application is restarted.
-  var enabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true);
-  if (!enabled && Services.prefs.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
-    LOG("gCanCheckForUpdates - unable to automatically check for updates, " +
-        "the preference is disabled and admistratively locked.");
-    return false;
-  }
-
-  if (Services.policies && !Services.policies.isAllowed("appUpdate")) {
-    LOG("gCanCheckForUpdates - unable to automatically check for updates. " +
-        "Functionality disabled by enterprise policy.");
-    return false;
-  }
-
-  // If we don't know the binary platform we're updating, we can't update.
-  if (!UpdateUtils.ABI) {
-    LOG("gCanCheckForUpdates - unable to check for updates, unknown ABI");
-    return false;
-  }
-
-  // If we don't know the OS version we're updating, we can't update.
-  if (!UpdateUtils.OSVersion) {
-    LOG("gCanCheckForUpdates - unable to check for updates, unknown OS " +
-        "version");
-    return false;
-  }
-
-  LOG("gCanCheckForUpdates - able to check for updates");
-  return true;
-});
 
 /**
  * Logs a string to the error console.
@@ -2016,11 +1982,6 @@ UpdateService.prototype = {
     // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY
     AUSTLMY.pingLastUpdateTime(this._pingSuffix);
     // Histogram IDs:
-    // UPDATE_NOT_PREF_UPDATE_ENABLED_EXTERNAL
-    // UPDATE_NOT_PREF_UPDATE_ENABLED_NOTIFY
-    AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_ENABLED_" + this._pingSuffix,
-                         PREF_APP_UPDATE_ENABLED, true, true);
-    // Histogram IDs:
     // UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL
     // UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY
     AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_AUTO_" + this._pingSuffix,
@@ -2098,14 +2059,12 @@ UpdateService.prototype = {
       } else if (!validUpdateURL) {
         AUSTLMY.pingCheckCode(this._pingSuffix,
                               AUSTLMY.CHK_INVALID_DEFAULT_URL);
-      } else if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true)) {
+      } else if (this.disabledByPolicy) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
       } else if (!hasUpdateMutex()) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_MUTEX);
-      } else if (!gCanCheckForUpdates) {
+      } else if (!this.canCheckForUpdates) {
         AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNABLE_TO_CHECK);
-      } else if (!this.backgroundChecker._enabled) {
-        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_FOR_SESSION);
       }
 
       this.backgroundChecker.checkForUpdates(this, false);
@@ -2251,8 +2210,7 @@ UpdateService.prototype = {
       return;
     }
 
-    var updateEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true);
-    if (!updateEnabled) {
+    if (this.disabledByPolicy) {
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
       LOG("UpdateService:_selectAndInstallUpdate - not prompting because " +
           "update is disabled");
@@ -2344,11 +2302,48 @@ UpdateService.prototype = {
     return this._backgroundChecker;
   },
 
+  get disabledForTesting() {
+    return Cu.isInAutomation &&
+           Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
+  },
+
+  get disabledByPolicy() {
+    return (Services.policies && !Services.policies.isAllowed("appUpdate")) ||
+           this.disabledForTesting;
+  },
+
   /**
    * See nsIUpdateService.idl
    */
   get canCheckForUpdates() {
-    return gCanCheckForUpdates && hasUpdateMutex();
+    if (this.disabledByPolicy) {
+      LOG("UpdateService.canCheckForUpdates - unable to automatically check " +
+          "for updates, the option has been disabled by the administrator.");
+      return false;
+    }
+
+    // If we don't know the binary platform we're updating, we can't update.
+    if (!UpdateUtils.ABI) {
+      LOG("UpdateService.canCheckForUpdates - unable to check for updates, " +
+          "unknown ABI");
+      return false;
+    }
+
+    // If we don't know the OS version we're updating, we can't update.
+    if (!UpdateUtils.OSVersion) {
+      LOG("UpdateService.canCheckForUpdates - unable to check for updates, " +
+          "unknown OS version");
+      return false;
+    }
+
+    if (!hasUpdateMutex()) {
+      LOG("UpdateService.canCheckForUpdates - unable to check for updates, " +
+          "unable to acquire update mutex");
+      return false;
+    }
+
+    LOG("UpdateService.canCheckForUpdates - able to check for updates");
+    return true;
   },
 
   /**
@@ -2964,7 +2959,19 @@ Checker.prototype = {
       throw Cr.NS_ERROR_NULL_POINTER;
     }
 
-    if (!this.enabled && !force) {
+    let UpdateServiceInstance = UpdateServiceFactory.createInstance();
+    // |force| can override |canCheckForUpdates| since |force| indicates a
+    // manual update check. But nothing should override enterprise policies.
+    if (UpdateServiceInstance.disabledByPolicy) {
+      if (force) {
+        LOG("Checker: checkForUpdates - Blocked attempt to force an update " +
+            "when update is disabled by enterprise policy.");
+        throw Cr.NS_ERROR_BLOCKED_BY_POLICY;
+      } else {
+        return;
+      }
+    }
+    if (!UpdateServiceInstance.canCheckForUpdates && !force) {
       return;
     }
 
@@ -3144,32 +3151,12 @@ Checker.prototype = {
   },
 
   /**
-   * Whether or not we are allowed to do update checking.
-   */
-  _enabled: true,
-  get enabled() {
-    return Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true) &&
-           gCanCheckForUpdates && hasUpdateMutex() && this._enabled;
-  },
-
-  /**
    * See nsIUpdateService.idl
    */
-  stopChecking: function UC_stopChecking(duration) {
+  stopCurrentCheck: function UC_stopCurrentCheck() {
     // Always stop the current check
     if (this._request)
       this._request.abort();
-
-    switch (duration) {
-      case Ci.nsIUpdateChecker.CURRENT_SESSION:
-        this._enabled = false;
-        break;
-      case Ci.nsIUpdateChecker.ANY_CHECKS:
-        this._enabled = false;
-        Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, this._enabled);
-        break;
-    }
-
     this._callback = null;
   },
 
