@@ -35,6 +35,7 @@ const { updatePreviewText } = require("./actions/font-options");
 
 const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
 const FONT_PROPERTIES = [
+  "font-family",
   "font-optical-sizing",
   "font-size",
   "font-stretch",
@@ -563,6 +564,15 @@ class FontInspector {
       this.ruleView.rules.find(rule => rule.style.type === ELEMENT_STYLE);
     const fontEditor = this.store.getState().fontEditor;
     const properties = this.getFontProperties();
+    // Names of fonts declared in font-family property without quotes and space trimmed.
+    const declaredFontNames =
+      properties["font-family"].split(",").map(font => font.replace(/\"+/g, "").trim());
+
+    // Mark available fonts as used if their names appears in the font-family declaration.
+    // TODO: sort used fonts in order of font-family declaration.
+    for (let font of fonts) {
+      font.used = declaredFontNames.includes(font.CSSFamilyName);
+    }
 
     // Update the font editor state only if property values differ from the ones in store.
     // This can happen when a user makes manual changes in the Rule view.
