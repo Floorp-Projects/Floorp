@@ -13,6 +13,7 @@ const { createFactory, createElement } = require("devtools/client/shared/vendor/
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const { throttle } = require("devtools/shared/throttle");
 const { debounce } = require("devtools/shared/debounce");
+const { ELEMENT_STYLE } = require("devtools/shared/specs/styles");
 
 const FontsApp = createFactory(require("./components/FontsApp"));
 
@@ -157,27 +158,15 @@ class FontInspector {
   }
 
   /**
-   * Collect all the expected CSS font properties and their values for the selected node
-   * from the node's computed style and from all the rules that apply to it.
+   * Get all expected CSS font properties and values from the node's computed style.
    *
    * @return {Object}
    */
   getFontProperties() {
     let properties = {};
 
-    // First, get all expected font properties from computed styles.
     for (let prop of FONT_PROPERTIES) {
       properties[prop] = this.nodeComputedStyle[prop].value;
-    }
-
-    // Then, replace with enabled font properties found on any of the rules that apply.
-    for (let rule of this.ruleView.rules) {
-      for (let textProp of rule.textProps) {
-        if (FONT_PROPERTIES.includes(textProp.name) && textProp.enabled &&
-            !textProp.overridden) {
-          properties[textProp.name] = textProp.value;
-        }
-      }
     }
 
     return properties;
@@ -343,7 +332,9 @@ class FontInspector {
   }
 
   /**
-   * Returns true if the font inspector panel is visible, and false otherwise.
+   * Check if the font inspector panel is visible.
+   *
+   * @return {Boolean}
    */
   isPanelVisible() {
     return this.inspector.sidebar &&
@@ -532,12 +523,14 @@ class FontInspector {
   /**
    * Update the state of the font editor with:
    * - the fonts which apply to the current node;
-   * - the CSS font properties declared on the selected rule.
+   * - the computed style CSS font properties of the current node.
    *
-   * This method is called during initial setup and as a result of any property
-   * values change in the Rule view. For the latter case, we do a deep compare between the
-   * font properties on the selected rule and the ones already store to decide if to
-   * update the font edtior to reflect a new external state.
+   * This method is called:
+   * - during initial setup;
+   * - when a new node is selected;
+   * - when any property is changed in the Rule view.
+   * For the latter case, we compare between the latest computed style font properties
+   * and the ones already in the store to decide if to update the font editor state.
    */
   async refreshFontEditor() {
     // Early return if pref for font editor is not enabled.
@@ -557,15 +550,22 @@ class FontInspector {
 
     const node = this.inspector.selection.nodeFront;
     const fonts = await this.getFontsForNode(node, options);
-    // Get all computed styles for selected node; used for identifying inherited values.
+    // Get computed styles for the selected node, but filter by CSS font properties.
     this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
       filterProperties: FONT_PROPERTIES
     });
+    // Clear any references to writer methods and CSS declarations because the node's
+    // styles may have changed since the last font editor refresh.
+    this.writers.clear();
+    this.textProperties.clear();
+    // Select the node's inline style as the rule where to write property value changes.
+    this.selectedRule =
+      this.ruleView.rules.find(rule => rule.style.type === ELEMENT_STYLE);
     const fontEditor = this.store.getState().fontEditor;
     const properties = this.getFontProperties();
 
-    // Update the font editor state only if property values in rule differ from store.
-    // This can happen when a user makes manual edits to the values in the rule view.
+    // Update the font editor state only if property values differ from the ones in store.
+    // This can happen when a user makes manual changes in the Rule view.
     if (JSON.stringify(properties) !== JSON.stringify(fontEditor.properties)) {
       this.store.dispatch(updateFontEditor(fonts, properties));
     }
@@ -594,14 +594,7 @@ class FontInspector {
     let { fontOptions } = this.store.getState();
     let { previewText } = fontOptions;
 
-    // Clear the list of fonts if the currently selected node is not connected or a text
-    // or element node unless all fonts are supposed to be shown.
-    let isElementOrTextNode = this.inspector.selection.isElementNode() ||
-                              this.inspector.selection.isTextNode();
-    if (!node ||
-        !this.isPanelVisible() ||
-        !this.inspector.selection.isConnected() ||
-        !isElementOrTextNode) {
+    if (!this.isSelectedNodeValid() || !this.isPanelVisible()) {
       this.store.dispatch(updateFonts(fonts, otherFonts));
       return;
     }
