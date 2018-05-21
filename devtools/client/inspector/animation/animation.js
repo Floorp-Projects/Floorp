@@ -243,6 +243,10 @@ class AnimationInspector {
   }
 
   getNodeFromActor(actorID) {
+    if (!this.inspector) {
+      return Promise.reject("Animation inspector already destroyed");
+    }
+
     return this.inspector.walker.getNodeFromActor(actorID, ["node"]);
   }
 
