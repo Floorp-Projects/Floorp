@@ -1274,17 +1274,24 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               (*aDOMEvent)->GetType(typeStr);
               AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
                 "EventListenerManager::HandleEventInternal", EVENTS, typeStr);
-              TimeStamp startTime = TimeStamp::Now();
 
-              rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
-
-              TimeStamp endTime = TimeStamp::Now();
               uint16_t phase = (*aDOMEvent)->EventPhase();
               profiler_add_marker(
                 "DOMEvent",
                 MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
                                                   aEvent->mTimeStamp,
-                                                  startTime, endTime));
+                                                  "DOMEvent",
+                                                  TRACING_INTERVAL_START));
+
+              rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
+
+              phase = (*aDOMEvent)->EventPhase();
+              profiler_add_marker(
+                "DOMEvent",
+                MakeUnique<DOMEventMarkerPayload>(typeStr, phase,
+                                                  aEvent->mTimeStamp,
+                                                  "DOMEvent",
+                                                  TRACING_INTERVAL_END));
             } else
 #endif
             {

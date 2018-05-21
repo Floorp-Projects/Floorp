@@ -121,14 +121,13 @@ private:
   mozilla::UniqueFreePtr<char> mFilename;
 };
 
-class DOMEventMarkerPayload : public ProfilerMarkerPayload
+class DOMEventMarkerPayload : public TracingMarkerPayload
 {
 public:
   DOMEventMarkerPayload(const nsAString& aEventType, uint16_t aPhase,
                         const mozilla::TimeStamp& aTimeStamp,
-                        const mozilla::TimeStamp& aStartTime,
-                        const mozilla::TimeStamp& aEndTime)
-    : ProfilerMarkerPayload(aStartTime, aEndTime)
+                        const char* aCategory, TracingKind aKind)
+    : TracingMarkerPayload(aCategory, aKind)
     , mTimeStamp(aTimeStamp)
     , mEventType(aEventType)
     , mPhase(aPhase)
