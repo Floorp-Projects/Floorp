@@ -231,6 +231,7 @@ class AbstractFramePtr
     inline Value calleev() const;
     inline Value& thisArgument() const;
 
+    inline bool isConstructing() const;
     inline Value newTarget() const;
 
     inline bool debuggerNeedsCheckPrimitiveReturn() const;
@@ -906,8 +907,7 @@ class InterpreterStack
     void popInlineFrame(InterpreterRegs& regs);
 
     bool resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
-                                  HandleFunction callee, HandleValue newTarget,
-                                  HandleObject envChain);
+                                  HandleFunction callee, HandleObject envChain);
 
     inline void purge(JSRuntime* rt);
 
@@ -1552,8 +1552,7 @@ class InterpreterActivation : public Activation
                                 MaybeConstruct constructing);
     inline void popInlineFrame(InterpreterFrame* frame);
 
-    inline bool resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
-                                     HandleObject envChain);
+    inline bool resumeGeneratorFrame(HandleFunction callee, HandleObject envChain);
 
     InterpreterFrame* current() const {
         return regs_.fp();
