@@ -175,3 +175,6 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ASYNC_CONTENTPROC_LAUNCH'] = True

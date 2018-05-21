@@ -1492,7 +1492,6 @@ nsIDocument::nsIDocument()
     mUseCounters(0),
     mChildDocumentUseCounters(0),
     mNotifiedPageForUseCounter(0),
-    mIncCounters(),
     mUserHasInteracted(false),
     mUserHasActivatedInteraction(false),
     mStackRefCnt(0),
@@ -1509,9 +1508,6 @@ nsIDocument::nsIDocument()
     mIgnoreOpensDuringUnloadCounter(0)
 {
   SetIsInDocument();
-  for (auto& cnt : mIncCounters) {
-    cnt = 0;
-  }
 }
 
 nsDocument::nsDocument(const char* aContentType)
@@ -12158,11 +12154,6 @@ nsIDocument::ReportUseCounters(UseCounterReportKind aKind)
         }
       }
     }
-  }
-
-  if (IsContentDocument() || IsResourceDoc()) {
-    uint16_t num = mIncCounters[eIncCounter_ScriptTag];
-    Telemetry::Accumulate(Telemetry::DOM_SCRIPT_EVAL_PER_DOCUMENT, num);
   }
 }
 
