@@ -600,3 +600,34 @@
 .ruleview-overridden-rule-filter:hover {
   opacity: 1;
 }
+
+.ruleview-rule:not(:hover) .ruleview-font-editor-toggle:not(.active) {
+  visibility: hidden;
+}
+
+.ruleview-font-editor-toggle {
+  position: absolute;
+  right: 1.5em;
+  bottom: 0.5em;
+  font-size: 11px;
+  font-weight: normal;
+  line-height: 11px;
+  border: 1px solid var(--rule-badge-border-color);
+  border-radius: 3px;
+  padding: 0px 4px;
+  -moz-user-select: none;
+  cursor: pointer;
+  background-color: var(--rule-badge-background-color);
+  color: var(--rule-badge-color);
+}
+
+.ruleview-font-editor-toggle:focus,
+.ruleview-font-editor-toggle:hover {
+  background-color: var(--rule-badge-hover-background-color);
+}
+
+.ruleview-font-editor-toggle.active {
+  background-color: var(--rule-badge-active-background-color);
+  border-color: var(--rule-badge-active-background-color);
+  color: var(--theme-selection-color);
+}
