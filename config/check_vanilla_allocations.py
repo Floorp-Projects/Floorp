@@ -94,9 +94,9 @@ def main():
 
         r'memalign',
         # These three aren't available on all Linux configurations.
-        #r'posix_memalign',
-        #r'aligned_alloc',
-        #r'valloc',
+        # r'posix_memalign',
+        # r'aligned_alloc',
+        # r'valloc',
     ]
 
     if args.aggressive:
@@ -159,7 +159,6 @@ def main():
             # Try to give more precise information about the offending code.
             emit_line_info = True
 
-
     # Check that all functions we expect are used in jsutil.cpp.  (This will
     # fail if the function-detection code breaks at any point.)
     for fn in alloc_fns_unescaped:
@@ -199,7 +198,8 @@ def main():
         for line in lines:
             m = re.search(alloc_lines_re, line)
             if m:
-                print('check_vanilla_allocations.py:', m.group(1), 'called at', m.group(3))
+                print('check_vanilla_allocations.py:',
+                      m.group(1), 'called at', m.group(3))
 
     if has_failed:
         sys.exit(1)

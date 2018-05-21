@@ -47,10 +47,12 @@ def main(args):
 
     execfile(script, frozenglobals)
 
+
 # Freeze scope here ... why this makes things work I have no idea ...
 frozenglobals = globals()
 
-import sys, os
+import sys
+import os
 
 if __name__ == '__main__':
     main(sys.argv[1:])
