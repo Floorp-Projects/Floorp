@@ -212,10 +212,10 @@ public:
   bool IsInCache(uint32_t key) const { return mFullHashCache.Get(key); };
 
 #if DEBUG
-  void DumpCache();
+  void DumpCache() const;
 #endif
 
-  void GetCacheInfo(nsIUrlClassifierCacheInfo** aCache);
+  void GetCacheInfo(nsIUrlClassifierCacheInfo** aCache) const;
 
   virtual nsresult Open();
   virtual nsresult Init() = 0;
@@ -232,6 +232,10 @@ public:
   template<typename T>
   static T* Cast(LookupCache* aThat) {
     return ((aThat && T::VER == aThat->Ver()) ? reinterpret_cast<T*>(aThat) : nullptr);
+  }
+  template<typename T>
+  static const T* Cast(const LookupCache* aThat) {
+    return ((aThat && T::VER == aThat->Ver()) ? reinterpret_cast<const T*>(aThat) : nullptr);
   }
 
 private:
@@ -297,7 +301,7 @@ public:
                                int64_t aExpirySec = 0);
 
 #if DEBUG
-  void DumpCompletions();
+  void DumpCompletions() const;
 #endif
 
   static const int VER;

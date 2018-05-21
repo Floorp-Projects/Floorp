@@ -873,7 +873,7 @@ void
 Classifier::GetCacheInfo(const nsACString& aTable,
                          nsIUrlClassifierCacheInfo** aCache)
 {
-  RefPtr<LookupCache> lookupCache = GetLookupCache(aTable);
+  RefPtr<const LookupCache> lookupCache = GetLookupCache(aTable);
   if (!lookupCache) {
     return;
   }
@@ -898,7 +898,7 @@ Classifier::RegenActiveTables()
   for (uint32_t i = 0; i < foundTables.Length(); i++) {
     nsCString table(foundTables[i]);
 
-    RefPtr<LookupCache> lookupCache = GetLookupCache(table);
+    RefPtr<const LookupCache> lookupCache = GetLookupCache(table);
     if (!lookupCache) {
       LOG(("Inactive table (no cache): %s", table.get()));
       continue;
@@ -909,7 +909,7 @@ Classifier::RegenActiveTables()
       continue;
     }
 
-    if (LookupCache::Cast<LookupCacheV4>(lookupCache)) {
+    if (LookupCache::Cast<const LookupCacheV4>(lookupCache)) {
       LOG(("Active v4 table: %s", table.get()));
     } else {
       HashStore store(table, GetProvider(table), mRootStoreDirectory);
