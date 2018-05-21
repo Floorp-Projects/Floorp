@@ -306,11 +306,6 @@ private:
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
 
-  // Tell our channel what network interface ID we were told to use.
-  // If it's an HTTP channel and we were told to use a non-default
-  // interface ID.
-  void PopulateNetworkInterfaceId();
-
   void UnsuppressEventHandlingAndResume();
 
   // Check pref "dom.mapped_arraybuffer.enabled" to make sure ArrayBuffer is
@@ -440,18 +435,6 @@ public:
   GetChannel() const override
   {
     return mChannel;
-  }
-
-  virtual void
-  GetNetworkInterfaceId(nsACString& aId) const override
-  {
-    aId = mNetworkInterfaceId;
-  }
-
-  virtual void
-  SetNetworkInterfaceId(const nsACString& aId) override
-  {
-    mNetworkInterfaceId = aId;
   }
 
   // We need a GetInterface callable from JS for chrome JS
@@ -740,10 +723,6 @@ protected:
 
   bool mIsSystem;
   bool mIsAnon;
-
-  // A platform-specific identifer to represent the network interface
-  // that this request is associated with.
-  nsCString mNetworkInterfaceId;
 
   /**
    * Close the XMLHttpRequest's channels.

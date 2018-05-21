@@ -27,7 +27,6 @@ class TelemetryHelpers {
    * Clear all telemetry types.
    */
   stopTelemetry() {
-    this.clearToolsOpenedPref();
     Services.telemetry.canRecordExtended = this.oldCanRecord;
 
     // Clear histograms, scalars and Telemetry Events.
@@ -71,15 +70,6 @@ class TelemetryHelpers {
         }
       }
     }
-  }
-
-  /**
-   * Clears the pref that is used to log telemetry data once per browser version.
-   */
-  clearToolsOpenedPref() {
-    const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
-
-    Services.prefs.clearUserPref(TOOLS_OPENED_PREF);
   }
 
   /**

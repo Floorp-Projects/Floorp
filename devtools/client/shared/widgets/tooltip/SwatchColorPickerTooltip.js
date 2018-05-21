@@ -10,6 +10,8 @@ const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/inspector.properties");
 
+const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT = "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
+
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -163,7 +165,8 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
   _openEyeDropper() {
     let {inspector, toolbox, telemetry} = this.inspector;
-    telemetry.toolOpened("pickereyedropper");
+
+    telemetry.getHistogramById(TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT).add(true);
 
     // cancelling picker(if it is already selected) on opening eye-dropper
     toolbox.highlighterUtils.cancelPicker();

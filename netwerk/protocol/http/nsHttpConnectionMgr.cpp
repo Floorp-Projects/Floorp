@@ -4118,10 +4118,6 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
 
-    if (!ci->GetNetworkInterfaceId().IsEmpty()) {
-        socketTransport->SetNetworkInterfaceId(ci->GetNetworkInterfaceId());
-    }
-
     rv = socketTransport->SetEventSink(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 

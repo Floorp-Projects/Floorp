@@ -250,8 +250,7 @@ _GetTTLData_Windows(const char* aHost, uint32_t* aResult, uint16_t aAddressFamil
 
 static MOZ_ALWAYS_INLINE nsresult
 _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
-                      uint16_t aFlags, const char* aNetworkInterface,
-                      AddrInfo** aAddrInfo)
+                      uint16_t aFlags, AddrInfo** aAddrInfo)
 {
   MOZ_ASSERT(aCanonHost);
   MOZ_ASSERT(aAddrInfo);
@@ -322,7 +321,7 @@ GetAddrInfoShutdown() {
 
 nsresult
 GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
-            const char* aNetworkInterface, AddrInfo** aAddrInfo, bool aGetTtl)
+            AddrInfo** aAddrInfo, bool aGetTtl)
 {
   if (NS_WARN_IF(!aHost) || NS_WARN_IF(!aAddrInfo)) {
     return NS_ERROR_NULL_POINTER;
@@ -343,7 +342,7 @@ GetAddrInfo(const char* aHost, uint16_t aAddressFamily, uint16_t aFlags,
 
   *aAddrInfo = nullptr;
   nsresult rv = _GetAddrInfo_Portable(aHost, aAddressFamily, aFlags,
-                                      aNetworkInterface, aAddrInfo);
+                                      aAddrInfo);
 
 #ifdef DNSQUERY_AVAILABLE
   if (aGetTtl && NS_SUCCEEDED(rv)) {

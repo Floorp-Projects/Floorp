@@ -55,17 +55,14 @@ struct nsHostKey
     uint16_t flags;
     uint16_t af;
     bool     pb;
-    const nsCString netInterface;
     const nsCString originSuffix;
 
     nsHostKey(const nsACString& host, uint16_t flags,
-              uint16_t af, bool pb, const nsACString& netInterface,
-              const nsACString& originSuffix)
+              uint16_t af, bool pb, const nsACString& originSuffix)
         : host(host)
         , flags(flags)
         , af(af)
         , pb(pb)
-        , netInterface(netInterface)
         , originSuffix(originSuffix) {
     }
 
@@ -282,7 +279,6 @@ public:
     virtual LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) = 0;
     virtual nsresult GetHostRecord(const char *host,
                                    uint16_t flags, uint16_t af, bool pb,
-                                   const nsCString &netInterface,
                                    const nsCString &originSuffix,
                                    nsHostRecord **result)
     {
@@ -337,7 +333,6 @@ public:
                          const mozilla::OriginAttributes &aOriginAttributes,
                          uint16_t                         flags,
                          uint16_t                         af,
-                         const char                      *netInterface,
                          nsResolveHostCallback           *callback);
 
     /**
@@ -350,7 +345,6 @@ public:
                         const mozilla::OriginAttributes &aOriginAttributes,
                         uint16_t                         flags,
                         uint16_t                         af,
-                        const char                      *netInterface,
                         nsResolveHostCallback           *callback,
                         nsresult                         status);
 
@@ -365,7 +359,6 @@ public:
                             const mozilla::OriginAttributes &aOriginAttributes,
                             uint16_t                         flags,
                             uint16_t                         af,
-                            const char                      *netInterface,
                             nsIDNSListener                  *aListener,
                             nsresult                         status);
     /**
@@ -399,7 +392,6 @@ public:
     LookupStatus CompleteLookup(nsHostRecord *, nsresult, mozilla::net::AddrInfo *, bool pb) override;
     nsresult GetHostRecord(const char *host,
                            uint16_t flags, uint16_t af, bool pb,
-                           const nsCString &netInterface,
                            const nsCString &originSuffix,
                            nsHostRecord **result) override;
     nsresult TrrLookup_unlocked(nsHostRecord *, mozilla::net::TRR *pushedTRR = nullptr) override;

@@ -1539,20 +1539,6 @@ XMLHttpRequestMainThread::SetOriginAttributes(const OriginAttributesDictionary& 
   }
 }
 
-void
-XMLHttpRequestMainThread::PopulateNetworkInterfaceId()
-{
-  if (mNetworkInterfaceId.IsEmpty()) {
-    return;
-  }
-  nsCOMPtr<nsIHttpChannelInternal> channel(do_QueryInterface(mChannel));
-  if (!channel) {
-    return;
-  }
-  DebugOnly<nsresult> rv = channel->SetNetworkInterfaceId(mNetworkInterfaceId);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-}
-
 /*
  * "Copy" from a stream.
  */
@@ -2788,8 +2774,6 @@ XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
     mFlagSend = true; // so CloseRequestWithError sets us to DONE.
     return MaybeSilentSendFailure(NS_ERROR_DOM_NETWORK_ERR);
   }
-
-  PopulateNetworkInterfaceId();
 
   // XXX We should probably send a warning to the JS console
   //     if there are no event listeners set and we are doing

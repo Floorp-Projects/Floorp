@@ -10,7 +10,7 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class MozStringbundle extends XULElement {
+class MozStringbundle extends MozXULElement {
   get stringBundle() {
     if (!this._bundle) {
       try {

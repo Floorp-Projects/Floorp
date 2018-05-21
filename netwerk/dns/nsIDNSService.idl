@@ -129,51 +129,6 @@ interface nsIDNSService : nsISupports
                            out nsIDNSRecord     aResult);
 
     /**
-     * kicks off an asynchronous host lookup.
-     *
-     * This function is identical to asyncResolve except an additional
-     * parameter aNetwortInterface. If parameter aNetworkInterface is an empty
-     * string function will return the same result as asyncResolve.
-     * Setting aNetworkInterface is deprecated.
-     */
-    [implicit_jscontext, optional_argc]
-    nsICancelable asyncResolveExtended(in AUTF8String       aHostName,
-                                       in unsigned long     aFlags,
-                                       in AUTF8String       aNetworkInterface,
-                                       in nsIDNSListener    aListener,
-                                       in nsIEventTarget    aListenerTarget,
-                            [optional] in jsval             aOriginAttributes);
-
-    [notxpcom]
-    nsresult asyncResolveExtendedNative(in AUTF8String       aHostName,
-                                        in unsigned long     aFlags,
-                                        in AUTF8String       aNetworkInterface,
-                                        in nsIDNSListener    aListener,
-                                        in nsIEventTarget    aListenerTarget,
-                                        in OriginAttributes  aOriginAttributes,
-                                        out nsICancelable    aResult);
-
-    /**
-     * Attempts to cancel a previously requested async DNS lookup
-     * This is an extended versin with a additional parameter aNetworkInterface
-     */
-    [implicit_jscontext, optional_argc]
-    void cancelAsyncResolveExtended(in AUTF8String       aHostName,
-                                    in unsigned long     aFlags,
-                                    in AUTF8String       aNetworkInterface,
-                                    in nsIDNSListener    aListener,
-                                    in nsresult          aReason,
-                         [optional] in jsval             aOriginAttributes);
-
-    [notxpcom]
-    nsresult cancelAsyncResolveExtendedNative(in AUTF8String       aHostName,
-                                              in unsigned long     aFlags,
-                                              in AUTF8String       aNetworkInterface,
-                                              in nsIDNSListener    aListener,
-                                              in nsresult          aReason,
-                                              in OriginAttributes  aOriginAttributes);
-
-    /**
      * The method takes a pointer to an nsTArray
      * and fills it with cache entry data
      * Called by the networking dashboard
