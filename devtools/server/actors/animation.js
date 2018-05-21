@@ -106,31 +106,13 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   get node() {
-    if (this._node) {
-      return this._node;
+    if (!this.isPseudoElement) {
+      return this.player.effect.target;
     }
 
-    let node = this.player.effect.target;
-
-    if (this.isPseudoElement) {
-      // The target is a CSSPseudoElement object which just has a property that
-      // points to its parent element and a string type (::before or ::after).
-      let treeWalker = this.walker.getDocumentWalker(node.parentElement);
-      while (treeWalker.nextNode()) {
-        let currentNode = treeWalker.currentNode;
-        if ((currentNode.nodeName === "_moz_generated_content_before" &&
-             node.type === "::before") ||
-            (currentNode.nodeName === "_moz_generated_content_after" &&
-             node.type === "::after")) {
-          this._node = currentNode;
-        }
-      }
-    } else {
-      // The target is a DOM node.
-      this._node = node;
-    }
-
-    return this._node;
+    const pseudo = this.player.effect.target;
+    const treeWalker = this.walker.getDocumentWalker(pseudo.parentElement);
+    return pseudo.type === "::before" ? treeWalker.firstChild() : treeWalker.lastChild();
   },
 
   get window() {
