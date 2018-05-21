@@ -15,61 +15,86 @@ const TIME_FORMAT_MAX_DURATION_IN_MS = 4000;
  * TimeScale object holds the total duration, start time and end time information for all
  * animations which should be displayed, and is used to calculate the displayed area for
  * each animation.
- *
- * For the helper to know how to convert, it needs to know all the animations.
- * Whenever a new animation is added to the panel, addAnimation(state) should be
- * called.
  */
 class TimeScale {
   constructor(animations) {
+    if (!animations.every(animation => animation.state.createdTime)) {
+      // Backward compatibility for createdTime.
+      return this._initializeWithoutCreatedTime(animations);
+    }
+
     this.minStartTime = Infinity;
     this.maxEndTime = 0;
     this.documentCurrentTime = 0;
 
     for (const animation of animations) {
-      this.addAnimation(animation.state);
+      const {
+        createdTime,
+        delay,
+        documentCurrentTime,
+        duration,
+        endDelay = 0,
+        iterationCount,
+        playbackRate,
+      } = animation.state;
+
+      const toRate = v => v / playbackRate;
+      const startTime = createdTime + toRate(Math.min(delay, 0));
+      const endTime = createdTime +
+                      toRate(delay +
+                             duration * (iterationCount || 1) +
+                             Math.max(endDelay, 0));
+      this.minStartTime = Math.min(this.minStartTime, startTime);
+      this.maxEndTime = Math.max(this.maxEndTime, endTime);
+      this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
     }
   }
 
   /**
-   * Add a new animation to time scale.
+   * Same as the constructor but doesn't use the animation's createdTime property
+   * which has only been added in FF62, for backward compatbility reasons.
    *
-   * @param {Object} state
-   *                 A PlayerFront.state object.
+   * @param {Array} animations
    */
-  addAnimation(state) {
-    let {
-      delay,
-      documentCurrentTime,
-      duration,
-      endDelay = 0,
-      iterationCount,
-      playbackRate,
-      previousStartTime = 0,
-    } = state;
+  _initializeWithoutCreatedTime(animations) {
+    this.minStartTime = Infinity;
+    this.maxEndTime = 0;
+    this.documentCurrentTime = 0;
 
-    const toRate = v => v / playbackRate;
-    const minZero = v => Math.max(v, 0);
-    const rateRelativeDuration =
-      toRate(duration * (!iterationCount ? 1 : iterationCount));
-    // Negative-delayed animations have their startTimes set such that we would
-    // be displaying the delay outside the time window if we didn't take it into
-    // account here.
-    const relevantDelay = delay < 0 ? toRate(delay) : 0;
-    const startTime = toRate(minZero(delay)) +
-                      rateRelativeDuration +
-                      endDelay;
-    this.minStartTime = Math.min(
-      this.minStartTime,
-      previousStartTime +
-      relevantDelay +
-      Math.min(startTime, 0)
-    );
-    const length = toRate(delay) + rateRelativeDuration + toRate(minZero(endDelay));
-    const endTime = previousStartTime + length;
-    this.maxEndTime = Math.max(this.maxEndTime, endTime);
+    for (const animation of animations) {
+      const {
+        delay,
+        documentCurrentTime,
+        duration,
+        endDelay = 0,
+        iterationCount,
+        playbackRate,
+        previousStartTime = 0,
+      } = animation.state;
 
-    this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
+      const toRate = v => v / playbackRate;
+      const minZero = v => Math.max(v, 0);
+      const rateRelativeDuration =
+        toRate(duration * (!iterationCount ? 1 : iterationCount));
+      // Negative-delayed animations have their startTimes set such that we would
+      // be displaying the delay outside the time window if we didn't take it into
+      // account here.
+      const relevantDelay = delay < 0 ? toRate(delay) : 0;
+      const startTime = toRate(minZero(delay)) +
+                        rateRelativeDuration +
+                        endDelay;
+      this.minStartTime = Math.min(
+        this.minStartTime,
+        previousStartTime +
+        relevantDelay +
+        Math.min(startTime, 0)
+      );
+      const length = toRate(delay) + rateRelativeDuration + toRate(minZero(endDelay));
+      const endTime = previousStartTime + length;
+      this.maxEndTime = Math.max(this.maxEndTime, endTime);
+
+      this.documentCurrentTime = Math.max(this.documentCurrentTime, documentCurrentTime);
+    }
   }
 
   /**

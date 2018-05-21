@@ -121,10 +121,6 @@ class SummaryGraphPath extends Component {
     });
   }
 
-  getTotalDuration(animation, timeScale) {
-    return animation.state.playbackRate * timeScale.getDuration();
-  }
-
   /**
    * Return true if given keyframes have same length, offset and easing.
    *
@@ -172,7 +168,7 @@ class SummaryGraphPath extends Component {
     const keyframesList = this.getOffsetAndEasingOnlyKeyframes(animatedPropertyMap);
 
     const thisEl = ReactDOM.findDOMNode(this);
-    const totalDuration = this.getTotalDuration(animation, timeScale);
+    const totalDuration = timeScale.getDuration() * animation.state.playbackRate;
     const durationPerPixel = totalDuration / thisEl.parentNode.clientWidth;
 
     this.setState(
@@ -199,10 +195,19 @@ class SummaryGraphPath extends Component {
       timeScale,
     } = this.props;
 
-    const totalDuration = this.getTotalDuration(animation, timeScale);
-    const { playbackRate, previousStartTime = 0 } = animation.state;
+    const { createdTime, playbackRate } = animation.state;
+
+    // If createdTime is not defined (which happens when connected to server older
+    // than FF62), use previousStartTime instead. See bug 1454392
+    const baseTime = typeof createdTime === "undefined"
+                       ? (animation.state.previousStartTime || 0)
+                       : createdTime;
+    // Absorb the playbackRate in viewBox of SVG and offset of child path elements
+    // in order to each graph path components can draw without considering to the
+    // playbackRate.
+    const offset = baseTime * playbackRate;
     const startTime = timeScale.minStartTime * playbackRate;
-    const offset = previousStartTime * playbackRate;
+    const totalDuration = timeScale.getDuration() * playbackRate;
     const opacity = Math.max(1 / keyframesList.length, MIN_KEYFRAMES_EASING_OPACITY);
 
     return dom.svg(
