@@ -242,6 +242,24 @@ if test "$CPU_ARCH" = "arm"; then
       fi
   fi
 
+  dnl Building with -mfpu=neon requires either the "softfp" or the
+  dnl "hardfp" ABI. Depending on the compiler's default target, and the
+  dnl CFLAGS, the default ABI might be neither, in which case it is the
+  dnl "softfloat" ABI.
+  dnl The "softfloat" ABI is binary-compatible with the "softfp" ABI, so
+  dnl we can safely mix code built with both ABIs. So, if we detect
+  dnl that compiling uses the "softfloat" ABI, force the use of the
+  dnl "softfp" ABI instead.
+  dnl Confusingly, the __SOFTFP__ preprocessor variable indicates the
+  dnl "softfloat" ABI, not the "softfp" ABI.
+  dnl Note: VPX_ASFLAGS is also used in CFLAGS.
+  AC_TRY_COMPILE([],
+    [#ifndef __SOFTFP__
+     #error "compiler target supports -mfpu=neon, so we don't have to add extra flags"
+     #endif],
+     NEON_FLAGS="$NEON_FLAGS -mfloat-abi=softfp"
+  )
+
 fi # CPU_ARCH = arm
 
 AC_SUBST(HAVE_ARM_SIMD)
