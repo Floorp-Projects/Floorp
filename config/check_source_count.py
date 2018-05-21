@@ -47,11 +47,10 @@ else:
         print("There are more occurrences of /{0}/ than expected. We're trying "
               "to prevent an increase in the number of {1}'s, using {2} if "
               "possible. If it is unavoidable, you should update the expected "
-              "count {3}.".format(search_string, search_string, replacement, 
-                                 error_location))
+              "count {3}.".format(search_string, search_string, replacement,
+                                  error_location))
 
     print("Expected: {0}; found: {1}".format(expected_count, count))
     for k in sorted(details):
-        print("Found {0} occurences in {1}".format(details[k],k))
+        print("Found {0} occurences in {1}".format(details[k], k))
     sys.exit(-1)
-

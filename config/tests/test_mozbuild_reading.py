@@ -68,7 +68,6 @@ class TestMozbuildReading(unittest.TestCase):
         self.assertEqual(set(paths.keys()), all_paths)
         self.assertGreaterEqual(len(contexts), len(paths))
 
-
     def test_orphan_file_patterns(self):
         if sys.platform == 'win32':
             raise unittest.SkipTest('failing on windows builds')
@@ -110,6 +109,7 @@ class TestMozbuildReading(unittest.TestCase):
                               "in '%s' corresponds to no files in the tree.\n"
                               "Please update this entry." %
                               (p, ctx.main_path))
+
 
 if __name__ == '__main__':
     main()

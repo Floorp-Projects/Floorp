@@ -17,7 +17,7 @@ import sys
 from mozversioncontrol import get_repository_from_env
 
 
-scriptname = os.path.basename(__file__);
+scriptname = os.path.basename(__file__)
 expected_encoding = 'ascii'
 
 # The following files don't define JSErrorFormatString.
@@ -26,12 +26,15 @@ ignore_files = [
     'js/xpconnect/src/xpc.msg',
 ]
 
+
 def log_pass(filename, text):
     print('TEST-PASS | {} | {} | {}'.format(scriptname, filename, text))
+
 
 def log_fail(filename, text):
     print('TEST-UNEXPECTED-FAIL | {} | {} | {}'.format(scriptname, filename,
                                                        text))
+
 
 def check_single_file(filename):
     with open(filename, 'rb') as f:
@@ -43,6 +46,7 @@ def check_single_file(filename):
 
     log_pass(filename, 'ok')
     return True
+
 
 def check_files():
     result = True
@@ -58,11 +62,13 @@ def check_files():
 
     return result
 
+
 def main():
     if not check_files():
         sys.exit(1)
 
     sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
