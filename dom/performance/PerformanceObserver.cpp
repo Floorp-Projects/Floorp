@@ -134,11 +134,10 @@ PerformanceObserver::QueueEntry(PerformanceEntry* aEntry)
   mQueuedEntries.AppendElement(aEntry);
 }
 
-static const char16_t *const sValidTypeNames[4] = {
+static const char16_t *const sValidTypeNames[3] = {
   u"mark",
   u"measure",
   u"resource",
-  u"server"
 };
 
 void
