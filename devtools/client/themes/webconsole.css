@@ -348,6 +348,40 @@ textarea.jsterm-input-node:focus {
   border-bottom-right-radius: 0;
 }
 
+/* CodeMirror-powered JsTerm */
+.jsterm-cm .jsterm-input-container {
+  /* Always allow scrolling on input - it auto expands in js by setting height,
+     but don't want it to get bigger than the window. 24px = toolbar height. */
+  max-height: calc(90vh - 24px);
+}
+
+.jsterm-cm .jsterm-input-container > .CodeMirror {
+  border: 1px solid transparent;
+  font-size: inherit;
+  line-height: 16px;
+  padding-inline-start: 20px;
+  /* input icon */
+  background-image: var(--theme-command-line-image);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: 4px 4px;
+}
+
+.jsterm-cm .jsterm-input-container > .CodeMirror-focused {
+  background-image: var(--theme-command-line-image-focus);
+  border: 1px solid var(--blue-50);
+  transition: border-color 0.2s ease-in-out;
+}
+
+:root[platform="mac"] .jsterm-cm .jsterm-input-container > .CodeMirror {
+  border-radius: 0 0 4px 4px;
+}
+
+/* Unset the bottom right radius on the jsterm inputs when the sidebar is visible */
+:root[platform="mac"]  .jsterm-cm .sidebar ~ .jsterm-input-container > .CodeMirror {
+  border-bottom-right-radius: 0;
+}
+
 /* Security styles */
 
 .message.security > .indent {
@@ -630,7 +664,6 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .webconsole-output {
-  flex: 1;
   overflow: auto;
 }
 
@@ -955,6 +988,7 @@ body #output-container {
   grid-template-columns: minmax(200px, 1fr) auto;
   grid-template-rows: auto 1fr auto auto;
   height: 100%;
+  max-height: 100%;
   width: 100vw;
 }
 
@@ -1035,6 +1069,13 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
   grid-row: 1 / -1;
   grid-column: -1 / -2;
   background-color: var(--theme-sidebar-background);
+  border-inline-start: 1px solid var(--theme-splitter-color);
+}
+
+.sidebar .splitter {
+  /* Let the parent component handle the border. This is needed otherwise there is a visual
+     glitch between the input and the sidebar borders */
+  background-color: transparent;
 }
 
 .split-box.vert.sidebar {

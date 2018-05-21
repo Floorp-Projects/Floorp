@@ -18,6 +18,7 @@ loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
 loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react-prop-types");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
+loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -53,6 +54,7 @@ class JSTerm extends Component {
       hud: PropTypes.object.isRequired,
       // Handler for clipboard 'paste' event (also used for 'drop' event).
       onPaste: PropTypes.func,
+      codeMirrorEnabled: PropTypes.bool,
     };
   }
 
@@ -146,10 +148,6 @@ class JSTerm extends Component {
   }
 
   componentDidMount() {
-    if (!this.inputNode) {
-      return;
-    }
-
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -166,21 +164,54 @@ class JSTerm extends Component {
     // such as the browser console which doesn't have a toolbox.
     this.autocompletePopup = new AutocompletePopup(tooltipDoc, autocompleteOptions);
 
-    this.inputBorderSize = this.inputNode.getBoundingClientRect().height -
-                           this.inputNode.clientHeight;
+    this.inputBorderSize = this.inputNode
+      ? this.inputNode.getBoundingClientRect().height - this.inputNode.clientHeight
+      : 0;
 
     // Update the character width and height needed for the popup offset
     // calculations.
     this._updateCharSize();
 
-    this.inputNode.addEventListener("keypress", this._keyPress);
-    this.inputNode.addEventListener("input", this._inputEventHandler);
-    this.inputNode.addEventListener("keyup", this._inputEventHandler);
-    this.inputNode.addEventListener("focus", this._focusEventHandler);
+    if (this.props.codeMirrorEnabled) {
+      if (this.node) {
+        this.editor = new Editor({
+          autofocus: true,
+          enableCodeFolding: false,
+          gutters: [],
+          lineWrapping: true,
+          mode: Editor.modes.js,
+          styleActiveLine: false,
+          tabIndex: "0",
+          viewportMargin: Infinity,
+          extraKeys: {
+            "Enter": (e, cm) => {
+              let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
+              if (e.shiftKey
+                || (
+                  !Debugger.isCompilableUnit(this.getInputValue())
+                  && autoMultiline
+                )
+              ) {
+                // shift return or incomplete statement
+                return "CodeMirror.Pass";
+              }
+              this.execute();
+              return null;
+            },
+          },
+        });
+        this.editor.appendToLocalElement(this.node);
+      }
+    } else if (this.inputNode) {
+      this.inputNode.addEventListener("keypress", this._keyPress);
+      this.inputNode.addEventListener("input", this._inputEventHandler);
+      this.inputNode.addEventListener("keyup", this._inputEventHandler);
+      this.inputNode.addEventListener("focus", this._focusEventHandler);
+      this.focus();
+    }
+
     this.hud.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
-
-    this.focus();
   }
 
   shouldComponentUpdate() {
@@ -256,7 +287,9 @@ class JSTerm extends Component {
   }
 
   focus() {
-    if (this.inputNode && !this.inputNode.getAttribute("focused")) {
+    if (this.editor) {
+      this.editor.focus();
+    } else if (this.inputNode && !this.inputNode.getAttribute("focused")) {
       this.inputNode.focus();
     }
   }
@@ -531,6 +564,10 @@ class JSTerm extends Component {
    * @returns void
    */
   resizeInput() {
+    if (this.props.codeMirrorEnabled) {
+      return;
+    }
+
     if (!this.inputNode) {
       return;
     }
@@ -542,10 +579,7 @@ class JSTerm extends Component {
     inputNode.style.height = "auto";
 
     // Now resize the input field to fit its contents.
-    // TODO: remove `inputNode.inputField.scrollHeight` when the old
-    // console UI is removed. See bug 1381834
-    let scrollHeight = inputNode.inputField ?
-      inputNode.inputField.scrollHeight : inputNode.scrollHeight;
+    let scrollHeight = inputNode.scrollHeight;
 
     if (scrollHeight > 0) {
       inputNode.style.height = (scrollHeight + this.inputBorderSize) + "px";
@@ -562,13 +596,20 @@ class JSTerm extends Component {
    * @returns void
    */
   setInputValue(newValue) {
-    if (!this.inputNode) {
-      return;
+    if (this.props.codeMirrorEnabled) {
+      if (this.editor) {
+        this.editor.setText(newValue);
+      }
+    } else {
+      if (!this.inputNode) {
+        return;
+      }
+
+      this.inputNode.value = newValue;
+      this.completeNode.value = "";
     }
 
-    this.inputNode.value = newValue;
     this.lastInputValue = newValue;
-    this.completeNode.value = "";
     this.resizeInput();
     this._inputChanged = true;
     this.emit("set-input-value");
@@ -579,6 +620,10 @@ class JSTerm extends Component {
    * @returns string
    */
   getInputValue() {
+    if (this.props.codeMirrorEnabled) {
+      return this.editor.getText() || "";
+    }
+
     return this.inputNode ? this.inputNode.value || "" : "";
   }
 
@@ -1256,6 +1301,10 @@ class JSTerm extends Component {
    * @private
    */
   _updateCharSize() {
+    if (this.props.codeMirrorEnabled || !this.inputNode) {
+      return;
+    }
+
     let doc = this.hud.document;
     let tempLabel = doc.createElement("span");
     let style = tempLabel.style;
@@ -1305,6 +1354,18 @@ class JSTerm extends Component {
     if (this.props.hud.isBrowserConsole &&
         !Services.prefs.getBoolPref("devtools.chrome.enabled")) {
       return null;
+    }
+
+    if (this.props.codeMirrorEnabled) {
+      return dom.div({
+        className: "jsterm-input-container devtools-monospace",
+        key: "jsterm-container",
+        style: {direction: "ltr"},
+        "aria-live": "off",
+        ref: node => {
+          this.node = node;
+        },
+      });
     }
 
     let {
