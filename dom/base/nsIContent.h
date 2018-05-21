@@ -451,7 +451,7 @@ public:
   virtual nsIContent* GetBindingParent() const
   {
     const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
-    return slots ? slots->mBindingParent : nullptr;
+    return slots ? slots->mBindingParent.get() : nullptr;
   }
 
   /**
@@ -808,7 +808,7 @@ protected:
      *
      * @see nsIContent::GetBindingParent
      */
-    nsIContent* mBindingParent;  // [Weak]
+    nsCOMPtr<nsIContent> mBindingParent;
 
     /**
      * @see nsIContent::GetXBLInsertionPoint
