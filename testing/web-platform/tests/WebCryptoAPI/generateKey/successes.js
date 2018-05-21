@@ -70,21 +70,6 @@ function run_test(algorithmNames, slowTest) {
         }, testTag + ": generateKey" + parameterString(algorithm, extractable, usages));
     }
 
-    // Only test a subset of tests with, e.g., ?1-10 in the URL
-    var subTestStart = 0;
-    var subTestEnd = Infinity;
-    var match;
-    if (location.search) {
-        match = /^\?(\d+)-(\d+|last)$/.exec(location.search);
-        if (match) {
-          subTestStart = match[1];
-          if (match[2] !== "last") {
-              subTestEnd = match[2];
-          }
-        }
-    }
-    var currentSubTest = 0;
-
     // Test all valid sets of parameters for successful
     // key generation.
     testVectors.forEach(function(vector) {
@@ -92,10 +77,7 @@ function run_test(algorithmNames, slowTest) {
             allAlgorithmSpecifiersFor(name).forEach(function(algorithm) {
                 allValidUsages(vector.usages, false, vector.mandatoryUsages).forEach(function(usages) {
                     [false, true].forEach(function(extractable) {
-                        currentSubTest++;
-                        if (currentSubTest >= subTestStart && currentSubTest <= subTestEnd) {
-                            testSuccess(algorithm, extractable, usages, vector.resultType, "Success");
-                        }
+                        subsetTest(testSuccess, algorithm, extractable, usages, vector.resultType, "Success");
                     });
                 });
             });
