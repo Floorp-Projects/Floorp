@@ -64,12 +64,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeColumn)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsITreeColumn)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  if (aIID.Equals(NS_GET_IID(nsTreeColumn))) {
-    AddRef();
-    *aInstancePtr = this;
-    return NS_OK;
-  }
-  else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsTreeColumn)
 NS_INTERFACE_MAP_END
 
 nsIFrame*

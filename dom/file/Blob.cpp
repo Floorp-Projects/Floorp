@@ -35,11 +35,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Blob)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutable)
-  // Alas, there is no helper macro for this.
-  if (aIID.Equals(NS_GET_IID(Blob))) {
-    *aInstancePtr = do_AddRef(this).take();
-    return NS_OK;
-  } else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(Blob)
   NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
