@@ -492,7 +492,6 @@ pref("app.update.url.android", "https://aus5.mozilla.org/update/4/%PRODUCT%/%VER
 
 #ifdef MOZ_UPDATER
 /* prefs used specifically for updating the app */
-pref("app.update.enabled", false);
 pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 
 #endif
