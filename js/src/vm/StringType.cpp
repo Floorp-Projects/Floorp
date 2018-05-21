@@ -307,10 +307,9 @@ bool
 JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
                           bool nullTerminate) const
 {
-    /*
-     * Perform non-destructive post-order traversal of the rope, splatting
-     * each node's characters into a contiguous buffer.
-     */
+    // Left-leaning ropes are far more common than right-leaning ropes, so
+    // perform a non-destructive traversal of the rope, right node first,
+    // splatting each node's characters into a contiguous buffer.
 
     size_t n = length();
     if (cx)
@@ -323,22 +322,22 @@ JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
 
     Vector<const JSString*, 8, SystemAllocPolicy> nodeStack;
     const JSString* str = this;
-    CharT* pos = out;
+    CharT* end = out + str->length();
     while (true) {
         if (str->isRope()) {
-            if (!nodeStack.append(str->asRope().rightChild()))
+            if (!nodeStack.append(str->asRope().leftChild()))
                 return false;
-            str = str->asRope().leftChild();
+            str = str->asRope().rightChild();
         } else {
-            CopyChars(pos, str->asLinear());
-            pos += str->length();
+            end -= str->length();
+            CopyChars(end, str->asLinear());
             if (nodeStack.empty())
                 break;
             str = nodeStack.popCopy();
         }
     }
 
-    MOZ_ASSERT(pos == out + n);
+    MOZ_ASSERT(end == out);
 
     if (nullTerminate)
         out[n] = 0;

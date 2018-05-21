@@ -342,18 +342,6 @@ class JS_FRIEND_API(GCCellPtr)
     uintptr_t ptr;
 };
 
-inline bool
-operator==(const GCCellPtr& ptr1, const GCCellPtr& ptr2)
-{
-    return ptr1.asCell() == ptr2.asCell();
-}
-
-inline bool
-operator!=(const GCCellPtr& ptr1, const GCCellPtr& ptr2)
-{
-    return !(ptr1 == ptr2);
-}
-
 // Unwraps the given GCCellPtr and calls the given functor with a template
 // argument of the actual type of the pointer.
 template <typename F, typename... Args>
@@ -373,6 +361,21 @@ DispatchTyped(F f, GCCellPtr thing, Args&&... args)
 }
 
 } /* namespace JS */
+
+// These are defined in the toplevel namespace instead of within JS so that
+// they won't shadow other operator== overloads (see bug 1456512.)
+
+inline bool
+operator==(const JS::GCCellPtr& ptr1, const JS::GCCellPtr& ptr2)
+{
+    return ptr1.asCell() == ptr2.asCell();
+}
+
+inline bool
+operator!=(const JS::GCCellPtr& ptr1, const JS::GCCellPtr& ptr2)
+{
+    return !(ptr1 == ptr2);
+}
 
 namespace js {
 namespace gc {

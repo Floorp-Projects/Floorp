@@ -312,7 +312,7 @@ RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
                                              ServiceWorkerRegistrationInfo* aRegistrationInfo)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
+  MOZ_RELEASE_ASSERT(aRegistrationInfo->GetActive());
 
   RefPtr<GenericPromise> ref;
 
@@ -1882,6 +1882,7 @@ ServiceWorkerManager::StartControlling(const ClientInfo& aClientInfo,
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(principal, scope);
   NS_ENSURE_TRUE(registration, false);
+  NS_ENSURE_TRUE(registration->GetActive(), false);
 
   StartControllingClient(aClientInfo, registration);
 
@@ -2557,9 +2558,14 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
                                        ServiceWorkerRegistrationInfo* aWorkerRegistration)
 {
   MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration);
-  MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration->GetActive());
 
   RefPtr<GenericPromise> ref;
+
+  if (!aWorkerRegistration->GetActive()) {
+    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                          __func__);
+    return ref.forget();
+  }
 
   // Same origin check
   if (!aWorkerRegistration->Principal()->Equals(aDocument->NodePrincipal())) {

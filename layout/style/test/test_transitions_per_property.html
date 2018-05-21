@@ -87,10 +87,7 @@ var supported_properties = {
     "background-color": [ test_color_transition,
                           test_true_currentcolor_transition ],
     "background-position": [ test_background_position_transition,
-                             // FIXME: We don't currently test clamping,
-                             // since background-position uses calc() as
-                             // an intermediate form.
-                             /* test_length_percent_pair_unclamped */ ],
+                             test_length_percent_pair_unclamped ],
     "background-position-x": [ test_background_position_coord_transition,
                                test_length_transition,
                                test_percent_transition,
@@ -106,10 +103,7 @@ var supported_properties = {
                              // an intermediate form.
                              /* test_length_percent_pair_unclamped */ ],
     "background-size": [ test_background_size_transition,
-                         // FIXME: We don't currently test clamping,
-                         // since background-size uses calc() as an
-                         // intermediate form.
-                         /* test_length_percent_pair_clamped */ ],
+                         test_length_percent_pair_clamped ],
     "border-bottom-color": [ test_color_transition,
                              test_true_currentcolor_transition ],
     "border-bottom-width": [ test_length_transition,
@@ -195,10 +189,7 @@ var supported_properties = {
                     test_length_percent_calc_transition,
                     test_length_unclamped, test_percent_unclamped ],
     "mask-position": [ test_background_position_transition,
-                       // FIXME: We don't currently test clamping,
-                       // since mask-position uses calc() as
-                       // an intermediate form.
-                       /* test_length_percent_pair_unclamped */ ],
+                       test_length_percent_pair_unclamped ],
     "mask-position-x": [ test_background_position_coord_transition,
                          test_length_transition,
                          test_percent_transition,
@@ -214,10 +205,7 @@ var supported_properties = {
                          // an intermediate form.
                          /* test_length_percent_pair_unclamped */ ],
     "mask-size": [ test_background_size_transition,
-                   // FIXME: We don't currently test clamping,
-                   // since mask-size uses calc() as an
-                   // intermediate form.
-                   /* test_length_percent_pair_clamped */ ],
+                   test_length_percent_pair_clamped ],
     "max-height": [ test_length_transition, test_percent_transition,
                     test_length_clamped, test_percent_clamped ],
     "max-width": [ test_length_transition, test_percent_transition,
@@ -2119,11 +2107,18 @@ function test_length_percent_pair_clamped_or_unclamped(prop, is_clamped) {
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "0px 0%", "");
-  is(cs.getPropertyValue(prop), "0px 0px",
+  var is_zero = function(val) {
+    if (prop == "transform-origin" || prop == "perspective-origin") {
+      // These two properties resolve percentages to pixels.
+      return val == "0px 0px";
+    }
+    return val == "0px 0%";
+  }
+  ok(is_zero(cs.getPropertyValue(prop)),
      "length+percent-valued property " + prop + ": flush before clamping test");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "30px 25%", "");
-  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px 0px",
+  is(is_zero(cs.getPropertyValue(prop)), is_clamped,
      "length+percent-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
 }
