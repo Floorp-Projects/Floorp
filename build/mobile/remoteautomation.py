@@ -18,19 +18,20 @@ from mozscreenshot import dump_screen
 import mozcrash
 
 # signatures for logcat messages that we don't care about much
-fennecLogcatFilters = [ "The character encoding of the HTML document was not declared",
-                        "Use of Mutation Events is deprecated. Use MutationObserver instead.",
-                        "Unexpected value from nativeGetEnabledTags: 0" ]
+fennecLogcatFilters = ["The character encoding of the HTML document was not declared",
+                       "Use of Mutation Events is deprecated. Use MutationObserver instead.",
+                       "Unexpected value from nativeGetEnabledTags: 0"]
+
 
 class RemoteAutomation(Automation):
 
-    def __init__(self, device, appName = '', remoteProfile = None, remoteLog = None,
+    def __init__(self, device, appName='', remoteProfile=None, remoteLog=None,
                  processArgs=None):
         self._device = device
         self._appName = appName
         self._remoteProfile = remoteProfile
         self._remoteLog = remoteLog
-        self._processArgs = processArgs or {};
+        self._processArgs = processArgs or {}
 
         self.lastTestSeen = "remoteautomation.py"
         Automation.__init__(self)
@@ -79,7 +80,7 @@ class RemoteAutomation(Automation):
         """
         proc.utilityPath = utilityPath
         # maxTime is used to override the default timeout, we should honor that
-        status = proc.wait(timeout = maxTime, noOutputTimeout = timeout)
+        status = proc.wait(timeout=maxTime, noOutputTimeout=timeout)
         self.lastTestSeen = proc.getLastTestSeen
 
         topActivity = self._device.get_top_activity(timeout=60)
@@ -89,7 +90,8 @@ class RemoteAutomation(Automation):
         if status == 1:
             if maxTime:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
-                      "allowed maximum time of %s seconds" % (self.lastTestSeen, maxTime)
+                      "allowed maximum time of %s seconds" % (
+                          self.lastTestSeen, maxTime)
             else:
                 print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
                       "allowed maximum time" % (self.lastTestSeen)
@@ -128,7 +130,8 @@ class RemoteAutomation(Automation):
 
     def deleteTombstones(self):
         # delete any tombstone files from device
-        self._device.rm("/data/tombstones", force=True, recursive=True, root=True)
+        self._device.rm("/data/tombstones", force=True,
+                        recursive=True, root=True)
 
     def checkForTombstones(self):
         # pull any tombstones from device and move to MOZ_UPLOAD_DIR
@@ -160,9 +163,11 @@ class RemoteAutomation(Automation):
         self.checkForANRs()
         self.checkForTombstones()
 
-        logcat = self._device.get_logcat(filter_out_regexps=fennecLogcatFilters)
+        logcat = self._device.get_logcat(
+            filter_out_regexps=fennecLogcatFilters)
 
-        javaException = mozcrash.check_for_java_exception(logcat, test_name=self.lastTestSeen)
+        javaException = mozcrash.check_for_java_exception(
+            logcat, test_name=self.lastTestSeen)
         if javaException:
             return True
 
@@ -184,13 +189,15 @@ class RemoteAutomation(Automation):
             self._device.pull(remoteCrashDir, dumpDir)
 
             logger = get_default_logger()
-            crashed = mozcrash.log_crashes(logger, dumpDir, symbolsPath, test=self.lastTestSeen)
+            crashed = mozcrash.log_crashes(
+                logger, dumpDir, symbolsPath, test=self.lastTestSeen)
 
         finally:
             try:
                 shutil.rmtree(dumpDir)
             except Exception as e:
-                print "WARNING: unable to remove directory %s: %s" % (dumpDir, str(e))
+                print "WARNING: unable to remove directory %s: %s" % (
+                    dumpDir, str(e))
         return crashed
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
@@ -203,14 +210,15 @@ class RemoteAutomation(Automation):
         if app == "am" and extraArgs[0] in ('instrument', 'start'):
             return app, extraArgs
 
-        cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
+        cmd, args = Automation.buildCommandLine(
+            self, app, debuggerInfo, profileDir, testURL, extraArgs)
         try:
             args.remove('-foreground')
         except:
             pass
         return app, args
 
-    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
+    def Process(self, cmd, stdout=None, stderr=None, env=None, cwd=None):
         return self.RProcess(self._device, cmd, self._remoteLog, env, cwd, self._appName,
                              **self._processArgs)
 
@@ -220,7 +228,7 @@ class RemoteAutomation(Automation):
             self.device = device
             self.lastTestSeen = "remoteautomation.py"
             self.messageLogger = messageLogger
-            self.proc =  stdout
+            self.proc = stdout
             self.procName = cmd[0].split(posixpath.sep)[-1]
             self.stdoutlen = 0
             self.utilityPath = None
@@ -251,7 +259,8 @@ class RemoteAutomation(Automation):
                     self.device.launch_activity(app, activity, e10s=True, moz_env=env,
                                                 extra_args=args, url=url)
                 else:
-                    self.device.launch_fennec(app, moz_env=env, extra_args=args, url=url)
+                    self.device.launch_fennec(
+                        app, moz_env=env, extra_args=args, url=url)
 
             # Setting timeout at 1 hour since on a remote device this takes much longer.
             # Temporarily increased to 90 minutes because no more chunks can be created.
@@ -279,7 +288,8 @@ class RemoteAutomation(Automation):
             if not self.device.is_file(self.proc):
                 return False
             try:
-                newLogContent = self.device.get_file(self.proc, offset=self.stdoutlen)
+                newLogContent = self.device.get_file(
+                    self.proc, offset=self.stdoutlen)
             except Exception:
                 return False
             if not newLogContent:
@@ -288,7 +298,8 @@ class RemoteAutomation(Automation):
             self.stdoutlen += len(newLogContent)
 
             if self.messageLogger is None:
-                testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", newLogContent)
+                testStartFilenames = re.findall(
+                    r"TEST-START \| ([^\s]*)", newLogContent)
                 if testStartFilenames:
                     self.lastTestSeen = testStartFilenames[-1]
                 print newLogContent
@@ -344,7 +355,7 @@ class RemoteAutomation(Automation):
         # If the process is still running but no output is received in *noOutputTimeout*
         # seconds, return 2;
         # Else, once the process exits/goes to background, return 0.
-        def wait(self, timeout = None, noOutputTimeout = None):
+        def wait(self, timeout=None, noOutputTimeout=None):
             timer = 0
             noOutputTimer = 0
             interval = 10
@@ -353,7 +364,7 @@ class RemoteAutomation(Automation):
             status = 0
             top = self.procName
             slowLog = False
-            endTime = datetime.datetime.now() + datetime.timedelta(seconds = timeout)
+            endTime = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
             while top == self.procName:
                 # Get log updates on each interval, but if it is taking
                 # too long, only do it every 60 seconds
@@ -385,7 +396,7 @@ class RemoteAutomation(Automation):
             self.read_stdout()
             return status
 
-        def kill(self, stagedShutdown = False):
+        def kill(self, stagedShutdown=False):
             if self.utilityPath:
                 # Take a screenshot to capture the screen state just before
                 # the application is killed. There are on-device screenshot
