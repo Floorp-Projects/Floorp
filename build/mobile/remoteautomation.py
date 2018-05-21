@@ -37,7 +37,8 @@ class RemoteAutomation(Automation):
         Automation.__init__(self)
 
     # Set up what we need for the remote environment
-    def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, lsanPath=None, ubsanPath=None):
+    def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False,
+                    lsanPath=None, ubsanPath=None):
         # Because we are running remote, we don't want to mimic the local env
         # so no copying of os.environ
         if env is None:
@@ -66,14 +67,15 @@ class RemoteAutomation(Automation):
         # Set WebRTC logging in case it is not set yet.
         # On Android, environment variables cannot contain ',' so the
         # standard WebRTC setting for NSPR_LOG_MODULES is not available.
-        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')
+        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')  # NOQA: E501
         env.setdefault('R_LOG_LEVEL', '6')
         env.setdefault('R_LOG_DESTINATION', 'stderr')
         env.setdefault('R_LOG_VERBOSE', '1')
 
         return env
 
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, outputHandler=None):
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo,
+                      symbolsPath, outputHandler=None):
         """ Wait for tests to finish.
             If maxTime seconds elapse or no output is detected for timeout
             seconds, kill the process and fail the test.
@@ -85,19 +87,20 @@ class RemoteAutomation(Automation):
 
         topActivity = self._device.get_top_activity(timeout=60)
         if topActivity == proc.procName:
-            print "Browser unexpectedly found running. Killing..."
+            print("Browser unexpectedly found running. Killing...")
             proc.kill(True)
         if status == 1:
             if maxTime:
-                print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
+                print("TEST-UNEXPECTED-FAIL | %s | application ran for longer than "
                       "allowed maximum time of %s seconds" % (
-                          self.lastTestSeen, maxTime)
+                          self.lastTestSeen, maxTime))
             else:
-                print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
-                      "allowed maximum time" % (self.lastTestSeen)
+                print("TEST-UNEXPECTED-FAIL | %s | application ran for longer than "
+                      "allowed maximum time" % (self.lastTestSeen))
         if status == 2:
-            print "TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output" \
-                % (self.lastTestSeen, int(timeout))
+            print("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with"
+                  "no output"
+                  % (self.lastTestSeen, int(timeout)))
 
         return status
 
@@ -109,7 +112,7 @@ class RemoteAutomation(Automation):
             self._device.shell_output('echo > %s' % traces, root=True)
             self._device.shell_output('chmod 666 %s' % traces, root=True)
         except Exception as e:
-            print "Error deleting %s: %s" % (traces, str(e))
+            print("Error deleting %s: %s" % (traces, str(e)))
 
     def checkForANRs(self):
         traces = "/data/anr/traces.txt"
@@ -119,14 +122,14 @@ class RemoteAutomation(Automation):
                 if t:
                     stripped = t.strip()
                     if len(stripped) > 0:
-                        print "Contents of %s:" % traces
-                        print t
+                        print("Contents of %s:" % traces)
+                        print(t)
                 # Once reported, delete traces
                 self.deleteANRs()
             except Exception as e:
-                print "Error pulling %s: %s" % (traces, str(e))
+                print("Error pulling %s: %s" % (traces, str(e)))
         else:
-            print "%s not found" % traces
+            print("%s not found" % traces)
 
     def deleteTombstones(self):
         # delete any tombstone files from device
@@ -155,9 +158,9 @@ class RemoteAutomation(Automation):
                             os.rename(f, newname)
                             break
             else:
-                print "%s does not exist; tombstone check skipped" % remoteDir
+                print("%s does not exist; tombstone check skipped" % remoteDir)
         else:
-            print "MOZ_UPLOAD_DIR not defined; tombstone check skipped"
+            print("MOZ_UPLOAD_DIR not defined; tombstone check skipped")
 
     def checkForCrashes(self, directory, symbolsPath):
         self.checkForANRs()
@@ -184,7 +187,8 @@ class RemoteAutomation(Automation):
                 # minidumps directory is automatically created when Fennec
                 # (first) starts, so its lack of presence is a hint that
                 # something went wrong.
-                print "Automation Error: No crash directory (%s) found on remote device" % remoteCrashDir
+                print("Automation Error: No crash directory (%s) found on remote device" %
+                      remoteCrashDir)
                 return True
             self._device.pull(remoteCrashDir, dumpDir)
 
@@ -196,8 +200,8 @@ class RemoteAutomation(Automation):
             try:
                 shutil.rmtree(dumpDir)
             except Exception as e:
-                print "WARNING: unable to remove directory %s: %s" % (
-                    dumpDir, str(e))
+                print("WARNING: unable to remove directory %s: %s" % (
+                    dumpDir, str(e)))
         return crashed
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
@@ -214,7 +218,7 @@ class RemoteAutomation(Automation):
             self, app, debuggerInfo, profileDir, testURL, extraArgs)
         try:
             args.remove('-foreground')
-        except:
+        except Exception:
             pass
         return app, args
 
@@ -243,7 +247,7 @@ class RemoteAutomation(Automation):
                 cmd = ' '.join(cmd)
                 self.procName = app
                 if not self.device.shell_bool(cmd):
-                    print "remote_automation.py failed to launch %s" % cmd
+                    print("remote_automation.py failed to launch %s" % cmd)
             else:
                 args = cmd
                 if args[0] == app:
@@ -302,7 +306,7 @@ class RemoteAutomation(Automation):
                     r"TEST-START \| ([^\s]*)", newLogContent)
                 if testStartFilenames:
                     self.lastTestSeen = testStartFilenames[-1]
-                print newLogContent
+                print(newLogContent)
                 return True
 
             self.logBuffer += newLogContent
@@ -340,7 +344,7 @@ class RemoteAutomation(Automation):
                                         self.counts['fail'] += val
                                     elif "Todo:" in line:
                                         self.counts['todo'] += val
-                                except:
+                                except Exception:
                                     pass
 
             return True
@@ -359,7 +363,7 @@ class RemoteAutomation(Automation):
             timer = 0
             noOutputTimer = 0
             interval = 10
-            if timeout == None:
+            if timeout is None:
                 timeout = self.timeout
             status = 0
             top = self.procName
@@ -390,7 +394,7 @@ class RemoteAutomation(Automation):
                 if not hasOutput:
                     top = self.device.get_top_activity(timeout=60)
                     if top is None:
-                        print "Failed to get top activity, retrying, once..."
+                        print("Failed to get top activity, retrying, once...")
                         top = self.device.get_top_activity(timeout=60)
             # Flush anything added to stdout during the sleep
             self.read_stdout()
@@ -408,27 +412,27 @@ class RemoteAutomation(Automation):
                 # Trigger an ANR report with "kill -3" (SIGQUIT)
                 try:
                     self.device.pkill(self.procName, sig=3, attempts=1)
-                except:
+                except:  # NOQA: E722
                     pass
                 time.sleep(3)
                 # Trigger a breakpad dump with "kill -6" (SIGABRT)
                 try:
                     self.device.pkill(self.procName, sig=6, attempts=1)
-                except:
+                except:  # NOQA: E722
                     pass
                 # Wait for process to end
                 retries = 0
                 while retries < 3:
                     if self.device.process_exist(self.procName):
-                        print "%s still alive after SIGABRT: waiting..." % self.procName
+                        print("%s still alive after SIGABRT: waiting..." % self.procName)
                         time.sleep(5)
                     else:
                         return
                     retries += 1
                 try:
                     self.device.pkill(self.procName, sig=9, attempts=1)
-                except:
-                    print "%s still alive after SIGKILL!" % self.procName
+                except:  # NOQA: E722
+                    print("%s still alive after SIGKILL!" % self.procName)
                 if self.device.process_exist(self.procName):
                     self.device.stop_application(self.procName)
             else:

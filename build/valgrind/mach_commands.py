@@ -8,7 +8,6 @@ import json
 import logging
 import mozinfo
 import os
-import subprocess
 
 from mach.decorators import (
     Command,
@@ -45,10 +44,7 @@ class MachCommands(MachCommandBase):
                      '--suppression multiple times to specify multiple suppression '
                      'files.')
     def valgrind_test(self, suppressions):
-        import sys
-        import tempfile
 
-        from mozbuild.base import MozbuildObject
         from mozfile import TemporaryDirectory
         from mozhttpd import MozHttpd
         from mozprofile import FirefoxProfile, Preferences
@@ -172,7 +168,8 @@ class MachCommands(MachCommandBase):
                     status = 1  # turns the TBPL job orange
                     self.log(logging.ERROR, 'valgrind-fail-parsing',
                              {'errs': errs, 'supps': supps},
-                             'TEST-UNEXPECTED-FAIL | valgrind-test | error parsing: {errs} errors seen, but {supps} generated suppressions seen')
+                             'TEST-UNEXPECTED-FAIL | valgrind-test | error parsing: {errs} errors '
+                             'seen, but {supps} generated suppressions seen')
 
                 elif errs == 0:
                     status = 0
@@ -182,15 +179,17 @@ class MachCommands(MachCommandBase):
                     status = 1  # turns the TBPL job orange
                     # We've already printed details of the errors.
 
-                if exitcode == None:
+                if exitcode is None:
                     status = 2  # turns the TBPL job red
                     self.log(logging.ERROR, 'valgrind-fail-timeout',
                              {'timeout': timeout},
-                             'TEST-UNEXPECTED-FAIL | valgrind-test | Valgrind timed out (reached {timeout} second limit)')
+                             'TEST-UNEXPECTED-FAIL | valgrind-test | Valgrind timed out '
+                             '(reached {timeout} second limit)')
                 elif exitcode != 0:
                     status = 2  # turns the TBPL job red
                     self.log(logging.ERROR, 'valgrind-fail-errors', {},
-                             'TEST-UNEXPECTED-FAIL | valgrind-test | non-zero exit code from Valgrind')
+                             'TEST-UNEXPECTED-FAIL | valgrind-test | non-zero exit code'
+                             'from Valgrind')
 
                 httpd.stop()
 
