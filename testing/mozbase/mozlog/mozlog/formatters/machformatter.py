@@ -224,6 +224,26 @@ class MachFormatter(base.BaseFormatter):
 
         return rv
 
+    def lsan_leak(self, data):
+        allowed = data.get("allowed_match")
+        if allowed:
+            prefix = self.term.yellow("FAIL")
+        else:
+            prefix = self.term.red("UNEXPECTED-FAIL")
+
+        return "%s LeakSanitizer: leak at %s" % (prefix, ", ".join(data["frames"]))
+
+    def lsan_summary(self, data):
+        allowed = data.get("allowed", False)
+        if allowed:
+            prefix = self.term.yellow("WARNING")
+        else:
+            prefix = self.term.red("ERROR")
+
+        return ("%s | LeakSanitizer | "
+                "SUMMARY: AddressSanitizer: %d byte(s) leaked in %d allocation(s)." %
+                (prefix, data["bytes"], data["allocations"]))
+
     def test_status(self, data):
         test = self._get_test_id(data)
         if test not in self.status_buffer:

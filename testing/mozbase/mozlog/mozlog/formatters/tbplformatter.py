@@ -277,6 +277,21 @@ class TbplFormatter(BaseFormatter):
         data['rule'] = data['rule'] or data['linter'] or ""
         return fmt.append(fmt.format(**data))
 
+    def lsan_leak(self, data):
+        frames = data.get("frames")
+        allowed_match = data.get("allowed_match")
+        frame_list = ", ".join(frames)
+        prefix = "TEST-UNEXPECTED-FAIL" if not allowed_match else "TEST-FAIL"
+        suffix = ("" if not allowed_match
+                  else "INFO | LeakSanitizer | Frame %s matched a expected leak\n" % allowed_match)
+        return "%s | LeakSanitizer | leak at %s\n%s" % (prefix, frame_list, suffix)
+
+    def lsan_summary(self, data):
+        level = "INFO" if data.get("allowed", False) else "ERROR"
+        return ("%s | LeakSanitizer | "
+                "SUMMARY: AddressSanitizer: %d byte(s) leaked in %d allocation(s)." %
+                (level, data["bytes"], data["allocations"]))
+
     def _format_suite_summary(self, suite, summary):
         counts = summary['counts']
         logs = summary['unexpected_logs']
