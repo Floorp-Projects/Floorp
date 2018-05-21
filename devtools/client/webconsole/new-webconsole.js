@@ -241,6 +241,10 @@ NewWebConsoleFrame.prototype = {
     shortcuts.on(clearShortcut, () => this.jsterm.clearOutput(true));
 
     if (this.isBrowserConsole) {
+      // Make sure keyboard shortcuts work immediately after opening
+      // the Browser Console (Bug 1461366).
+      this.window.focus();
+
       shortcuts.on(l10n.getStr("webconsole.close.key"),
                    this.window.top.close.bind(this.window.top));
 
