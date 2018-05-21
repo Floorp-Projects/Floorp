@@ -330,10 +330,11 @@ CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
     RefPtr<CustomElementCreationCallback> callback;
     mElementCreationCallbacks.Get(aTypeAtom, getter_AddRefs(callback));
     if (callback) {
+      mElementCreationCallbacks.Remove(aTypeAtom);
       RefPtr<Runnable> runnable =
         new RunCustomElementCreationCallback(this, aTypeAtom, callback);
       nsContentUtils::AddScriptRunner(runnable);
-      mElementCreationCallbacks.Remove(aTypeAtom);
+      data = mCustomDefinitions.GetWeak(aTypeAtom);
     }
   }
 

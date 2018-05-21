@@ -10093,7 +10093,7 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  CustomElementRegistry* registry = window->CustomElements();
+  RefPtr<CustomElementRegistry> registry(window->CustomElements());
   if (!registry) {
     return nullptr;
   }
