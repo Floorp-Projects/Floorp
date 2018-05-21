@@ -3884,11 +3884,12 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 HTMLMediaElement::HTMLMediaElement(
   already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
+  , mWatchManager(this, OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))
   , mMainThreadEventTarget(OwnerDoc()->EventTargetFor(TaskCategory::Other))
   , mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other))
   , mShutdownObserver(new ShutdownObserver)
   , mPlayed(new TimeRanges(ToSupports(OwnerDoc())))
-  , mPaused(true, *this)
+  , mPaused(true, "HTMLMediaElement::mPaused")
   , mErrorSink(new ErrorSink(this))
   , mAudioChannelWrapper(new AudioChannelAgentCallback(this))
 {
@@ -3896,6 +3897,8 @@ HTMLMediaElement::HTMLMediaElement(
   MOZ_ASSERT(mAbstractMainThread);
 
   DecoderDoctorLogger::LogConstruction(this);
+
+  mWatchManager.Watch(mPaused, &HTMLMediaElement::UpdateWakeLock);
 
   ErrorResult rv;
 
@@ -4180,31 +4183,20 @@ HTMLMediaElement::MaybeDoLoad()
   }
 }
 
-HTMLMediaElement::WakeLockBoolWrapper&
-HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val)
-{
-  if (mValue == val) {
-    return *this;
-  }
-
-  mValue = val;
-  UpdateWakeLock();
-  return *this;
-}
-
 void
-HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
+HTMLMediaElement::UpdateWakeLock()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  bool playing = !mValue;
+  // Ensure we have a wake lock if we're playing audibly. This ensures the
+  // device doesn't sleep while playing.
+  bool playing = !mPaused;
   bool isAudible =
-    mOuter.Volume() > 0.0 && !mOuter.mMuted && mOuter.mIsAudioTrackAudible;
-  // when playing audible media.
+    Volume() > 0.0 && !mMuted && mIsAudioTrackAudible;
+  // WakeLock when playing audible media.
   if (playing && isAudible) {
-    mOuter.WakeLockCreate();
+    WakeLockCreate();
   } else {
-    mOuter.WakeLockRelease();
+    WakeLockRelease();
   }
 }
 
@@ -7549,7 +7541,7 @@ HTMLMediaElement::NotifyAudioPlaybackChanged(AudibleChangedReasons aReason)
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
   // only request wake lock for audible media.
-  mPaused.UpdateWakeLock();
+  UpdateWakeLock();
 }
 
 bool
