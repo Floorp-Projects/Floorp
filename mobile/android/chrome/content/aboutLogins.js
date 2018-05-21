@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/TelemetryStopwatch.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
-  window.document.docShell.rootTreeItem.domWindow
+  window.docShell.rootTreeItem.domWindow
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
 ChromeUtils.defineModuleGetter(this, "EventDispatcher",

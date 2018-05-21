@@ -86,7 +86,7 @@ ContentDispatchChooser.prototype =
         let dwu = window.windowUtils;
         let millis = dwu.millisSinceLastUserInput;
         if (millis < 0 || millis >= 1000) {
-          window.document.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);
+          window.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, aURI, null);
         } else {
           this._closeBlankWindow(window);
         }

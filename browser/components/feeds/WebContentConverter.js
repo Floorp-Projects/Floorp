@@ -287,7 +287,7 @@ WebContentConverterRegistrar.prototype = {
    * Returns the browser chrome window in which the content window is in
    */
   _getBrowserWindowForContentWindow(aContentWindow) {
-    return aContentWindow.document.docShell.rootTreeItem.domWindow
+    return aContentWindow.docShell.rootTreeItem.domWindow
                          .wrappedJSObject;
   },
 

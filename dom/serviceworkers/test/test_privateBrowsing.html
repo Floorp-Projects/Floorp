@@ -34,7 +34,7 @@ function testOnWindow(aIsPrivate, aCallback) {
 }
 
 function setupWindow() {
-  mainWindow = window.document.docShell.rootTreeItem.domWindow;
+  mainWindow = window.docShell.rootTreeItem.domWindow;
   runTest();
 }
 

@@ -527,7 +527,7 @@ sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
     sandbox.browserIsRemote = g.browserIsRemote;
 
     try {
-        sandbox.asyncPan = g.containingWindow.document.docShell.asyncPanZoomEnabled;
+        sandbox.asyncPan = g.containingWindow.docShell.asyncPanZoomEnabled;
     } catch (e) {
         sandbox.asyncPan = false;
     }
