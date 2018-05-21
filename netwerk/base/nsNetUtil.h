@@ -39,7 +39,6 @@ class nsIInputStream;
 class nsIInputStreamPump;
 class nsIInterfaceRequestor;
 class nsINestedURI;
-class nsINetworkInterface;
 class nsIOutputStream;
 class nsIParentChannel;
 class nsIPersistentProperties;

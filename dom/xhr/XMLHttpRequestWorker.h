@@ -148,18 +148,6 @@ public:
     MOZ_CRASH("This method cannot be called on workers.");
   }
 
-  virtual void
-  GetNetworkInterfaceId(nsACString& aId) const override
-  {
-    MOZ_CRASH("This method cannot be called on workers.");
-  }
-
-  virtual void
-  SetNetworkInterfaceId(const nsACString& aId) override
-  {
-    MOZ_CRASH("This method cannot be called on workers.");
-  }
-
   virtual XMLHttpRequestUpload*
   GetUpload(ErrorResult& aRv) override;
 

@@ -300,7 +300,7 @@ CustomElementRegistry::IsCustomElementEnabled(nsIDocument* aDoc)
     return true;
   }
 
-  return XRE_IsParentProcess() && nsContentUtils::AllowXULXBLForPrincipal(aDoc->NodePrincipal());
+  return XRE_IsParentProcess() && aDoc->AllowXULXBL();
 }
 
 NS_IMETHODIMP

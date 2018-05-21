@@ -8,6 +8,8 @@
 
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
+#include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditor.h"
@@ -20,9 +22,9 @@
 namespace mozilla {
 
 class AutoLockRulesSniffing;
+class HTMLEditor;
 class HTMLEditRules;
 class RulesInfo;
-class TextEditor;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -128,66 +130,50 @@ protected:
 
   // TextEditRules implementation methods
   nsresult WillInsertText(EditAction aAction,
-                          Selection* aSelection,
                           bool* aCancel,
                           bool* aHandled,
                           const nsAString* inString,
                           nsAString* outString,
                           int32_t aMaxLength);
-  nsresult DidInsertText(Selection* aSelection, nsresult aResult);
 
-  nsresult WillInsertBreak(Selection* aSelection, bool* aCancel,
-                           bool* aHandled, int32_t aMaxLength);
-  nsresult DidInsertBreak(Selection* aSelection, nsresult aResult);
+  nsresult WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
 
-  nsresult WillSetText(Selection& aSelection,
-                       bool* aCancel,
+  nsresult WillSetText(bool* aCancel,
                        bool* aHandled,
                        const nsAString* inString,
                        int32_t aMaxLength);
-  nsresult DidSetText(Selection& aSelection, nsresult aResult);
 
-  void WillInsert(Selection& aSelection, bool* aCancel);
-  nsresult DidInsert(Selection* aSelection, nsresult aResult);
+  void WillInsert(bool* aCancel);
 
-  nsresult WillDeleteSelection(Selection* aSelection,
-                               nsIEditor::EDirection aCollapsedAction,
+  nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                bool* aCancel,
                                bool* aHandled);
-  nsresult DidDeleteSelection(Selection* aSelection,
-                              nsIEditor::EDirection aCollapsedAction,
+  nsresult DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(Selection* aSelection, bool* aCancel,
-                               bool* aHandled);
-  nsresult DidSetTextProperty(Selection* aSelection, nsresult aResult);
+  nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 
-  nsresult WillRemoveTextProperty(Selection* aSelection, bool* aCancel,
-                                  bool* aHandled);
-  nsresult DidRemoveTextProperty(Selection* aSelection, nsresult aResult);
+  nsresult WillRemoveTextProperty(bool* aCancel, bool* aHandled);
 
-  nsresult WillUndo(Selection* aSelection, bool* aCancel, bool* aHandled);
-  nsresult DidUndo(Selection* aSelection, nsresult aResult);
+  nsresult WillUndo(bool* aCancel, bool* aHandled);
+  nsresult DidUndo(nsresult aResult);
 
-  nsresult WillRedo(Selection* aSelection, bool* aCancel, bool* aHandled);
-  nsresult DidRedo(Selection* aSelection, nsresult aResult);
+  nsresult WillRedo(bool* aCancel, bool* aHandled);
+  nsresult DidRedo(nsresult aResult);
 
   /**
    * Called prior to nsIEditor::OutputToString.
-   * @param aSelection
+   *
    * @param aInFormat  The format requested for the output, a MIME type.
    * @param aOutText   The string to use for output, if aCancel is set to true.
    * @param aOutCancel If set to true, the caller should cancel the operation
    *                   and use aOutText as the result.
    */
-  nsresult WillOutputText(Selection* aSelection,
-                          const nsAString* aInFormat,
+  nsresult WillOutputText(const nsAString* aInFormat,
                           nsAString* aOutText,
                           uint32_t aFlags,
                           bool* aOutCancel,
                           bool* aHandled);
-
-  nsresult DidOutputText(Selection* aSelection, nsresult aResult);
 
   /**
    * Check for and replace a redundant trailing break.
@@ -202,14 +188,13 @@ protected:
   /**
    * Creates a bogus text node if the document has no editable content.
    */
-  nsresult CreateBogusNodeIfNeeded(Selection* aSelection);
+  nsresult CreateBogusNodeIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
    * aMaxLength
    */
-  nsresult TruncateInsertionIfNeeded(Selection* aSelection,
-                                     const nsAString* aInString,
+  nsresult TruncateInsertionIfNeeded(const nsAString* aInString,
                                      nsAString* aOutString,
                                      int32_t aMaxLength,
                                      bool* aTruncated);
@@ -261,16 +246,15 @@ protected:
   CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
                    bool aCreateMozBR);
 
-  void UndefineCaretBidiLevel(Selection* aSelection);
+  void UndefineCaretBidiLevel();
 
-  nsresult CheckBidiLevelForDeletion(Selection* aSelection,
-                                     const EditorRawDOMPoint& aSelectionPoint,
+  nsresult CheckBidiLevelForDeletion(const EditorRawDOMPoint& aSelectionPoint,
                                      nsIEditor::EDirection aAction,
                                      bool* aCancel);
 
   nsresult HideLastPWInput();
 
-  nsresult CollapseSelectionToTrailingBRIfNeeded(Selection* aSelection);
+  nsresult CollapseSelectionToTrailingBRIfNeeded();
 
   bool IsPasswordEditor() const;
   bool IsSingleLineEditor() const;
@@ -281,10 +265,80 @@ protected:
   bool DontEchoPassword() const;
 
 private:
-  // Note that we do not refcount the editor.
-  TextEditor* mTextEditor;
+  TextEditor* MOZ_NON_OWNING_REF mTextEditor;
 
 protected:
+  /**
+   * AutoSafeEditorData grabs editor instance and related instances during
+   * handling an edit action.  When this is created, its pointer is set to
+   * the mSafeData, and this guarantees the lifetime of grabbing objects
+   * until it's destroyed.
+   */
+  class MOZ_STACK_CLASS AutoSafeEditorData
+  {
+  public:
+    AutoSafeEditorData(TextEditRules& aTextEditRules,
+                       TextEditor& aTextEditor,
+                       Selection& aSelection)
+      : mTextEditRules(aTextEditRules)
+      , mHTMLEditor(nullptr)
+    {
+      // mTextEditRules may have AutoSafeEditorData instance since in some
+      // cases. E.g., while public methods of *EditRules are called, it
+      // calls attaching editor's method, then, editor will call public
+      // methods of *EditRules again.
+      if (mTextEditRules.mData) {
+        return;
+      }
+      mTextEditor = &aTextEditor;
+      mHTMLEditor = aTextEditor.AsHTMLEditor();
+      mSelection = &aSelection;
+      mTextEditRules.mData = this;
+    }
+
+    ~AutoSafeEditorData()
+    {
+      if (mTextEditRules.mData != this) {
+        return;
+      }
+      mTextEditRules.mData = nullptr;
+    }
+
+    TextEditor& TextEditorRef() const { return *mTextEditor; }
+    HTMLEditor& HTMLEditorRef() const
+    {
+      MOZ_ASSERT(mHTMLEditor);
+      return *mHTMLEditor;
+    }
+    Selection& SelectionRef() const { return *mSelection; }
+
+  private:
+    // This class should be created by public methods TextEditRules and
+    // HTMLEditRules and in the stack.  So, the lifetime of this should
+    // be guaranteed the callers of the public methods.
+    TextEditRules& MOZ_NON_OWNING_REF mTextEditRules;
+    RefPtr<TextEditor> mTextEditor;
+    // Shortcut for HTMLEditorRef().  So, not necessary to use RefPtr.
+    HTMLEditor* MOZ_NON_OWNING_REF mHTMLEditor;
+    RefPtr<Selection> mSelection;
+  };
+  AutoSafeEditorData* mData;
+
+  TextEditor& TextEditorRef() const
+  {
+    MOZ_ASSERT(mData);
+    return mData->TextEditorRef();
+  }
+  Selection& SelectionRef() const
+  {
+    MOZ_ASSERT(mData);
+    return mData->SelectionRef();
+  }
+
+#ifdef DEBUG
+  bool IsEditorDataAvailable() const { return !!mData; }
+#endif // #ifdef DEBUG
+
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.

@@ -22,7 +22,10 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
 const {showDoorhanger} = require("devtools/client/shared/doorhanger");
 
-const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+const Strings =
+  Services.strings.createBundle("chrome://devtools/locale/webide.properties");
+
+const TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT = "DEVTOOLS_WEBIDE_IMPORT_PROJECT_COUNT";
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
@@ -606,7 +609,7 @@ var UI = {
     // Select project
     AppManager.selectedProject = project;
 
-    this._telemetry.toolOpened("webideImportProject");
+    this._telemetry.getHistogramById(TELEMETRY_WEBIDE_IMPORT_PROJECT_COUNT).add(true);
   },
 
   // Remember the last selected project on the runtime
