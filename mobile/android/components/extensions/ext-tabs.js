@@ -6,9 +6,7 @@ ChromeUtils.defineModuleGetter(this, "PromiseUtils",
                                "resource://gre/modules/PromiseUtils.jsm");
 
 const getBrowserWindow = window => {
-  return window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell)
-               .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
-               .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+  return window.document.docShell.rootTreeItem.domWindow;
 };
 
 let tabListener = {

@@ -424,9 +424,7 @@ var BrowserUtils = {
    * @return {nsIDOMWindow}
    */
   getRootWindow(docShell) {
-    return docShell.QueryInterface(Ci.nsIDocShellTreeItem)
-      .sameTypeRootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
+    return docShell.sameTypeRootTreeItem.domWindow;
   },
 
   /**
