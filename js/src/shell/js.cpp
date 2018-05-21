@@ -3576,6 +3576,7 @@ WorkerMain(void* arg)
 
     auto guard = mozilla::MakeScopeExit([&] {
         CancelOffThreadJobsForContext(cx);
+        sc->markObservers.reset();
         JS_DestroyContext(cx);
         js_delete(sc);
         js_delete(input);
@@ -8560,11 +8561,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
         }
     }
 
-    if (op.getStringOption("ion-aa")) {
-        // Removed in bug 1455280, the option is preserved
-        // to ease transition for fuzzers and other tools
-    }
-
     if (const char* str = op.getStringOption("ion-licm")) {
         if (strcmp(str, "on") == 0)
             jit::JitOptions.disableLicm = false;
@@ -9070,9 +9066,6 @@ main(int argc, char** argv, char** envp)
                                "  on:  enable GVN (default)\n")
         || !op.addStringOption('\0', "ion-licm", "on/off",
                                "Loop invariant code motion (default: on, off to disable)")
-        || !op.addStringOption('\0', "ion-aa", "flow-sensitive/flow-insensitive",
-                               "Specify wheter or not to use flow sensitive Alias Analysis"
-                               "(default: flow-insensitive)")
         || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
                                "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-pgo", "on/off",

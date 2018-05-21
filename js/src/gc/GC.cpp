@@ -5008,7 +5008,6 @@ GCRuntime::groupZonesForSweeping(JS::gcreason::Reason reason)
 
 #ifdef JS_GC_ZEAL
     // Use one component for two-slice zeal modes.
-    MOZ_ASSERT_IF(useZeal, isIncremental);
     if (useZeal && hasIncrementalTwoSliceZealMode())
         finder.useOneComponent();
 #endif
@@ -5761,8 +5760,7 @@ GCRuntime::beginSweepingSweepGroup(FreeOp* fop, SliceBudget& budget)
 bool
 GCRuntime::shouldYieldForZeal(ZealMode mode)
 {
-    MOZ_ASSERT_IF(useZeal, isIncremental);
-    return useZeal && hasZealMode(mode);
+    return useZeal && isIncremental && hasZealMode(mode);
 }
 
 IncrementalProgress

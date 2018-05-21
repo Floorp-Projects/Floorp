@@ -5,14 +5,15 @@
 
 "use strict";
 
-const HTML_NS = "http://www.w3.org/1999/xhtml";
 const Services = require("Services");
-const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
+const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 const {PrefObserver} = require("devtools/client/shared/prefs");
 const {colorUtils} = require("devtools/shared/css/color");
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 let itemIdCounter = 0;
+
 /**
  * Autocomplete popup UI implementation.
  *
