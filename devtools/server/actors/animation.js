@@ -851,16 +851,16 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * This method only returns when animations have left their pending states.
    */
   playAll: function() {
-    let readyPromises = [];
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
     for (let player of
-         this.getAllAnimations(this.tabActor.window.document, true)) {
-      player.play();
-      readyPromises.push(player.ready);
+      this.getAllAnimations(this.tabActor.window.document, true)) {
+      // Play animation using startTime. Because the Animation.Play() method recalculates
+      // startTime and currentTime on the procedure, but we need to keep the currentTime.
+      player.startTime =
+        player.timeline.currentTime - player.currentTime / player.playbackRate;
     }
     this.allAnimationsPaused = false;
-    return Promise.all(readyPromises);
   },
 
   toggleAll: function() {
@@ -887,12 +887,30 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * @param {Array} players A list of AnimationPlayerActor.
    * @param {Number} time The new currentTime.
    * @param {Boolean} shouldPause Should the players be paused too.
+   * @param {Object} options
+   *                 - relativeToCreatedTime: Set current path with createdTime.
    */
-  setCurrentTimes: function(players, time, shouldPause) {
-    return Promise.all(players.map(player => {
-      let pause = shouldPause ? player.pause() : Promise.resolve();
-      return pause.then(() => player.setCurrentTime(time));
-    }));
+  setCurrentTimes: function(players, time, shouldPause, options) {
+    // For backward compatibility for old animation inspector.
+    // We can drop following procedures after dropping old one.
+    if (!options.relativeToCreatedTime) {
+      return Promise.all(players.map(player => {
+        let pause = shouldPause ? player.pause() : Promise.resolve();
+        return pause.then(() => player.setCurrentTime(time));
+      }));
+    }
+
+    for (const actor of players) {
+      const player = actor.player;
+
+      if (shouldPause) {
+        player.startTime = null;
+      }
+
+      player.currentTime = (time - actor.createdTime) * player.playbackRate;
+    }
+
+    return Promise.resolve();
   },
 
   /**
