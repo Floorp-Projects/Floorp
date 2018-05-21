@@ -860,12 +860,12 @@ tls13_ServerHandleCookieXtn(const sslSocket *ss, TLSExtensionData *xtnData,
     }
 
     if (xtnData->cookie.len == 0) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
         return SECFailure;
     }
 
     if (data->len) {
-        PORT_SetError(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
         return SECFailure;
     }
 

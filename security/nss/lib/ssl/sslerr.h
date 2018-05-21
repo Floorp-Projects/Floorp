@@ -263,6 +263,7 @@ typedef enum {
     SSL_ERROR_HANDSHAKE_FAILED = (SSL_ERROR_BASE + 172),
     SSL_ERROR_BAD_RESUMPTION_TOKEN_ERROR = (SSL_ERROR_BASE + 173),
     SSL_ERROR_RX_MALFORMED_DTLS_ACK = (SSL_ERROR_BASE + 174),
+    SSL_ERROR_DH_KEY_TOO_LONG = (SSL_ERROR_BASE + 175),
     SSL_ERROR_END_OF_LIST   /* let the c compiler determine the value of this. */
 } SSLErrorCodes;
 #endif /* NO_SECURITY_ERROR_ENUM */

@@ -69,6 +69,7 @@ class TlsAgent : public PollTarget {
 
   static const std::string kClient;     // the client key is sign only
   static const std::string kRsa2048;    // bigger sign and encrypt for either
+  static const std::string kRsa8192;    // biggest sign and encrypt for either
   static const std::string kServerRsa;  // both sign and encrypt
   static const std::string kServerRsaSign;
   static const std::string kServerRsaPss;

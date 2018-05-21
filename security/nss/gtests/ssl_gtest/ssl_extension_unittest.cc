@@ -321,7 +321,15 @@ TEST_P(TlsExtensionTestGeneric, AlpnMissingValue) {
 
 TEST_P(TlsExtensionTestGeneric, AlpnZeroLength) {
   EnableAlpn();
-  const uint8_t val[] = {0x01, 0x61, 0x00};
+  const uint8_t val[] = {0x00, 0x03, 0x01, 0x61, 0x00};
+  DataBuffer extension(val, sizeof(val));
+  ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
+      client_, ssl_app_layer_protocol_xtn, extension));
+}
+
+TEST_P(TlsExtensionTestGeneric, AlpnLengthOverflow) {
+  EnableAlpn();
+  const uint8_t val[] = {0x00, 0x03, 0x01, 0x61, 0x01};
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(std::make_shared<TlsExtensionReplacer>(
       client_, ssl_app_layer_protocol_xtn, extension));

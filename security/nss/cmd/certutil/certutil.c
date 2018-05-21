@@ -38,7 +38,7 @@
 #include "certutil.h"
 
 #define MIN_KEY_BITS 512
-/* MAX_KEY_BITS should agree with MAX_RSA_MODULUS in freebl */
+/* MAX_KEY_BITS should agree with RSA_MAX_MODULUS_BITS in freebl */
 #define MAX_KEY_BITS 8192
 #define DEFAULT_KEY_BITS 2048
 
