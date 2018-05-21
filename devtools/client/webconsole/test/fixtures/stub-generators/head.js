@@ -26,7 +26,8 @@ const {
   pageError,
 } = require("devtools/client/webconsole/test/fixtures/stub-generators/stub-snippets.js");
 
-const BASE_PATH = "../../../devtools/client/webconsole/test/fixtures";
+const BASE_PATH = env.get("MOZ_DEVELOPER_REPO_DIR") +
+                  "/devtools/client/webconsole/test/fixtures";
 
 let cachedPackets = {};
 
@@ -74,7 +75,7 @@ function getCleanedPacket(key, packet) {
       res.message.timeStamp = existingPacket.message.timeStamp;
       if (res.message.timer) {
         // Clean timer properties on the message.
-        // Those properties are found on console.time and console.timeEnd calls,
+        // Those properties are found on console.time, timeLog and timeEnd calls,
         // and those time can vary, which is why we need to clean them.
         if ("duration" in res.message.timer) {
           res.message.timer.duration = existingPacket.message.timer.duration;
