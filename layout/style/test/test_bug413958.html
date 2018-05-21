@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=413958
    Style attr: <span id="setStyle">4</span>.
    Properties: <span id="setStyleProp" style="">5</span>.</p>
 <script>
-SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
+SpecialPowers.wrap(window).docShell.cssErrorReportingEnabled = true;
 
 var tests = [
   function() {

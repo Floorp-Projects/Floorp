@@ -46,7 +46,7 @@ function doSearch() {
 
   window.removeEventListener("unload", recordPageClosed);
 
-  let win = window.document.docShell.rootTreeItem.domWindow;
+  let win = window.docShell.rootTreeItem.domWindow;
   win.openTrustedLinkIn(submission.uri.spec, "current", {
     allowThirdPartyFixup: false,
     postData: submission.postData,

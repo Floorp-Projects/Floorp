@@ -383,8 +383,6 @@ partial interface Document {
   [ChromeOnly]
   attribute boolean styleSheetChangeEventsEnabled;
 
-  [ChromeOnly] readonly attribute nsIDocShell? docShell;
-
   [ChromeOnly] readonly attribute DOMString contentLanguage;
 
   [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;

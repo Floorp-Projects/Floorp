@@ -38,7 +38,7 @@ function frameScript() {
   doc.addEventListener("keypress", keyHandler, true);
 
   function waitUntilActive() {
-    if (doc.docShell.isActive && doc.hasFocus()) {
+    if (docShell.isActive && doc.hasFocus()) {
       sendAsyncMessage("Test:Activated");
     } else {
       setTimeout(waitUntilActive, 10);

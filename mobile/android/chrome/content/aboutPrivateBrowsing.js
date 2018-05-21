@@ -9,7 +9,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
-  window.document.docShell.rootTreeItem.domWindow
+  window.docShell.rootTreeItem.domWindow
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
 document.addEventListener("DOMContentLoaded", function() {

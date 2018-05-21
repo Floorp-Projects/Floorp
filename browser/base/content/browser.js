@@ -7080,8 +7080,7 @@ function BrowserOpenAddonsMgr(aView) {
     let browserWindow;
 
     var receivePong = function(aSubject, aTopic, aData) {
-      let browserWin = aSubject.document.docShell
-                               .rootTreeItem.domWindow;
+      let browserWin = aSubject.docShell.rootTreeItem.domWindow;
       if (!emWindow || browserWin == window /* favor the current window */) {
         emWindow = aSubject;
         browserWindow = browserWin;
