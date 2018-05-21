@@ -667,11 +667,7 @@ private:
 public:
   void ClearUserValue()
   {
-    if (Type() == PrefType::String) {
-      free(const_cast<char*>(mUserValue.mStringVal));
-      mUserValue.mStringVal = nullptr;
-    }
-
+    mUserValue.Clear(Type());
     mHasUserValue = false;
     mHasChangedSinceInit = true;
   }
