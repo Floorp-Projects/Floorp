@@ -1096,7 +1096,7 @@ PlacesController.prototype = {
 
     if (hasData) {
       this.clipboard.setData(xferable,
-                             this.cutNodes.length > 0 ? this : null,
+                             aAction == "cut" ? this : null,
                              Ci.nsIClipboard.kGlobalClipboard);
     }
   },
