@@ -6546,6 +6546,7 @@ class Tree extends Component {
           } else {
             this.props.onExpand(item, e.altKey);
           }
+          e.stopPropagation();
         }
       });
     });
