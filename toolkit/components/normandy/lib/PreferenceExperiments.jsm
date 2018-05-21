@@ -295,6 +295,7 @@ var PreferenceExperiments = {
 
     const store = await ensureStorage();
     if (name in store.data) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "name-conflict"});
       throw new Error(`A preference experiment named "${name}" already exists.`);
     }
 
@@ -303,6 +304,7 @@ var PreferenceExperiments = {
       e => e.preferenceName === preferenceName
     );
     if (hasConflictingExperiment) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "pref-conflict"});
       throw new Error(
         `Another preference experiment for the pref "${preferenceName}" is currently active.`
       );
@@ -310,13 +312,31 @@ var PreferenceExperiments = {
 
     const preferences = PreferenceBranchType[preferenceBranchType];
     if (!preferences) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-branch"});
       throw new Error(`Invalid value for preferenceBranchType: ${preferenceBranchType}`);
     }
 
     if (experimentType.length > MAX_EXPERIMENT_SUBTYPE_LENGTH) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "experiment-type-too-long"});
       throw new Error(
         `experimentType must be less than ${MAX_EXPERIMENT_SUBTYPE_LENGTH} characters. ` +
         `"${experimentType}" is ${experimentType.length} long.`
+      );
+    }
+
+    const prevPrefType = Services.prefs.getPrefType(preferenceName);
+    const givenPrefType = PREFERENCE_TYPE_MAP[preferenceType];
+
+    if (!preferenceType || !givenPrefType) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
+      throw new Error(`Invalid preferenceType provided (given "${preferenceType}")`);
+    }
+
+    if (prevPrefType !== Services.prefs.PREF_INVALID && prevPrefType !== givenPrefType) {
+      TelemetryEvents.sendEvent("enrollFailed", "preference_study", name, {reason: "invalid-type"});
+      throw new Error(
+        `Previous preference value is of type "${prevPrefType}", but was given ` +
+        `"${givenPrefType}" (${preferenceType})`
       );
     }
 
@@ -333,20 +353,6 @@ var PreferenceExperiments = {
       preferenceBranchType,
       experimentType,
     };
-
-    const prevPrefType = Services.prefs.getPrefType(preferenceName);
-    const givenPrefType = PREFERENCE_TYPE_MAP[preferenceType];
-
-    if (!preferenceType || !givenPrefType) {
-      throw new Error(`Invalid preferenceType provided (given "${preferenceType}")`);
-    }
-
-    if (prevPrefType !== Services.prefs.PREF_INVALID && prevPrefType !== givenPrefType) {
-      throw new Error(
-        `Previous preference value is of type "${prevPrefType}", but was given ` +
-        `"${givenPrefType}" (${preferenceType})`
-      );
-    }
 
     setPref(preferences, preferenceName, preferenceType, preferenceValue);
     PreferenceExperiments.startObserver(name, preferenceName, preferenceType, preferenceValue);
@@ -473,11 +479,13 @@ var PreferenceExperiments = {
 
     const store = await ensureStorage();
     if (!(experimentName in store.data)) {
+      TelemetryEvents.sendEvent("unenrollFailed", "preference_study", experimentName, {reason: "does-not-exist"});
       throw new Error(`Could not find a preference experiment named "${experimentName}"`);
     }
 
     const experiment = store.data[experimentName];
     if (experiment.expired) {
+      TelemetryEvents.sendEvent("unenrollFailed", "preference_study", experimentName, {reason: "already-unenrolled"});
       throw new Error(
         `Cannot stop preference experiment "${experimentName}" because it is already expired`
       );
