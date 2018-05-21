@@ -53,7 +53,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
         """, script_args=(self._bookmarkURL, self._bookmarkText))
         if error:
-            print error
+            print(error)
 
     def createBookmarksOnToolbar(self):
         error = self.runAsyncCode("""
@@ -67,7 +67,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }).then(() => marionetteScriptFinished(false), marionetteScriptFinished);
         """)
         if error:
-            print error
+            print(error)
 
     def createHistory(self):
         error = self.runAsyncCode("""
@@ -82,7 +82,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
                   ex => marionetteScriptFinished("Unexpected error in adding visit: " + ex));
         """, script_args=(self._historyURL, self._historyTitle))
         if error:
-            print error
+            print(error)
 
     def createFormHistory(self):
         error = self.runAsyncCode("""
@@ -106,7 +106,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           });
         """, script_args=(self._formHistoryFieldName, self._formHistoryValue))
         if error:
-          print error
+            print(error)
 
     def createFormAutofill(self):
         if not self._formAutofillAvailable:
@@ -173,7 +173,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
               gBrowser.removeTab(tab);
             }
           }
-        """, script_args=(self._expectedURLs,))
+        """, script_args=(self._expectedURLs,))  # NOQA: E501
 
     def createSync(self):
         # This script will write an entry to the login manager and create
@@ -184,7 +184,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let data = {email: "test@test.com", uid: "uid", keyFetchToken: "top-secret"};
           storage.initialize(data);
           storage.finalize().then(marionetteScriptFinished);
-        """);
+        """)
 
     def checkPassword(self):
         loginInfo = self.marionette.execute_script("""
@@ -260,9 +260,12 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return
 
         formFieldResultCount = len(formFieldResults)
-        self.assertEqual(formFieldResultCount, 1, "Should have exactly 1 entry for this field, got %d" % formFieldResultCount)
+        self.assertEqual(formFieldResultCount, 1,
+                         "Should have exactly 1 entry for this field, got %d" %
+                         formFieldResultCount)
         if formFieldResultCount == 1:
-            self.assertEqual(formFieldResults[0]['value'], self._formHistoryValue)
+            self.assertEqual(
+                formFieldResults[0]['value'], self._formHistoryValue)
 
         formHistoryCount = self.runAsyncCode("""
           let count;
@@ -274,7 +277,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
           };
           global.FormHistory.count({}, callbacks);
         """)
-        self.assertEqual(formHistoryCount, 1, "There should be only 1 entry in the form history")
+        self.assertEqual(formHistoryCount, 1,
+                         "There should be only 1 entry in the form history")
 
     def checkFormAutofill(self):
         if not self._formAutofillAvailable:
@@ -290,10 +294,11 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return
 
         formAutofillAddressCount = len(formAutofillResults)
-        self.assertEqual(formAutofillAddressCount, 1, "Should have exactly 1 saved address, got %d" % formAutofillAddressCount)
+        self.assertEqual(formAutofillAddressCount, 1,
+                         "Should have exactly 1 saved address, got %d" % formAutofillAddressCount)
         if formAutofillAddressCount == 1:
-            self.assertEqual(formAutofillResults[0]['guid'], self._formAutofillAddressGuid)
-
+            self.assertEqual(
+                formAutofillResults[0]['guid'], self._formAutofillAddressGuid)
 
     def checkCookie(self):
         cookieInfo = self.runCode("""
@@ -332,10 +337,10 @@ class TestFirefoxRefresh(MarionetteTestCase):
         # Dismiss modal dialog if any. This is mainly to dismiss the check for
         # default browser dialog if it shows up.
         try:
-          alert = self.marionette.switch_to_alert()
-          alert.dismiss()
+            alert = self.marionette.switch_to_alert()
+            alert.dismiss()
         except NoAlertPresentException:
-          pass
+            pass
 
         tabURIs = self.runAsyncCode("""
           let mm = gBrowser.selectedBrowser.messageManager;
@@ -359,7 +364,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           };
 
           mm.loadFrameScript("data:application/javascript,(" + fs.toString() + ")()", true);
-        """)
+        """)  # NOQA: E501
         self.assertSequenceEqual(tabURIs, self._expectedURLs)
 
     def checkSync(self, hasMigrated):
@@ -378,17 +383,17 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }).catch(err => {
             marionetteScriptFinished(err.toString());
           });
-        """);
+        """)
         if type(result) != dict:
             self.fail(result)
             return
-        self.assertEqual(result["accountData"]["email"], "test@test.com");
-        self.assertEqual(result["accountData"]["uid"], "uid");
-        self.assertEqual(result["accountData"]["keyFetchToken"], "top-secret");
+        self.assertEqual(result["accountData"]["email"], "test@test.com")
+        self.assertEqual(result["accountData"]["uid"], "uid")
+        self.assertEqual(result["accountData"]["keyFetchToken"], "top-secret")
         if hasMigrated:
-          # This test doesn't actually configure sync itself, so the username
-          # pref only exists after migration.
-          self.assertEqual(result["prefUsername"], "test@test.com");
+            # This test doesn't actually configure sync itself, so the username
+            # pref only exists after migration.
+            self.assertEqual(result["prefUsername"], "test@test.com")
 
     def checkProfile(self, hasMigrated=False):
         self.checkPassword()
@@ -397,7 +402,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.checkFormHistory()
         self.checkFormAutofill()
         self.checkCookie()
-        self.checkSync(hasMigrated);
+        self.checkSync(hasMigrated)
         if hasMigrated:
             self.checkBookmarkToolbarVisibility()
             self.checkSession()
@@ -421,7 +426,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
           global.Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
           global.FormHistory = Cu.import("resource://gre/modules/FormHistory.jsm", {}).FormHistory;
-        """)
+        """)  # NOQA: E501
         self._formAutofillAvailable = self.runCode("""
           try {
             global.formAutofillStorage = Cu.import("resource://formautofill/FormAutofillStorage.jsm", {}).formAutofillStorage;
@@ -429,7 +434,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
             return false;
           }
           return true;
-        """)
+        """)  # NOQA: E501
 
     def runCode(self, script, *args, **kwargs):
         return self.marionette.execute_script(script,
@@ -465,17 +470,21 @@ class TestFirefoxRefresh(MarionetteTestCase):
         MarionetteTestCase.tearDown(self)
 
         # Some helpers to deal with removing a load of files
-        import errno, stat
+        import errno
+        import stat
+
         def handleRemoveReadonly(func, path, exc):
             excvalue = exc[1]
             if func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
-                os.chmod(path, stat.S_IRWXU| stat.S_IRWXG| stat.S_IRWXO) # 0777
+                os.chmod(path, stat.S_IRWXU | stat.S_IRWXG |
+                         stat.S_IRWXO)  # 0777
                 func(path)
             else:
                 raise
 
         if self.desktop_backup_path:
-            shutil.rmtree(self.desktop_backup_path, ignore_errors=False, onerror=handleRemoveReadonly)
+            shutil.rmtree(self.desktop_backup_path,
+                          ignore_errors=False, onerror=handleRemoveReadonly)
 
         if self.reset_profile_path:
             # Remove ourselves from profiles.ini
@@ -486,7 +495,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
               global.profSvc.flush();
             """, script_args=(self.profileNameToRemove,))
             # And delete all the files.
-            shutil.rmtree(self.reset_profile_path, ignore_errors=False, onerror=handleRemoveReadonly)
+            shutil.rmtree(self.reset_profile_path,
+                          ignore_errors=False, onerror=handleRemoveReadonly)
 
     def doReset(self):
         profileName = "marionette-test-profile-" + str(int(time.time() * 1000))
@@ -512,7 +522,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
           env.set("XRE_PROFILE_NAME", profileName);
         """, script_args=(self.marionette.instance.profile.profile, profileName,))
 
-        profileLeafName = os.path.basename(os.path.normpath(self.marionette.instance.profile.profile))
+        profileLeafName = os.path.basename(os.path.normpath(
+            self.marionette.instance.profile.profile))
 
         # Now restart the browser to get it reset:
         self.marionette.restart(clean=False, in_app=True)
@@ -537,11 +548,14 @@ class TestFirefoxRefresh(MarionetteTestCase):
           container.append(dirName);
           container.append(arguments[0]);
           return container.path;
-        """, script_args=(profileLeafName,))
+        """, script_args=(profileLeafName,))  # NOQA: E501
 
-        self.assertTrue(os.path.isdir(self.reset_profile_path), "Reset profile path should be present")
-        self.assertTrue(os.path.isdir(self.desktop_backup_path), "Backup profile path should be present")
-        self.assertTrue(self.profileNameToRemove in self.reset_profile_path, "Reset profile path should contain profile name to remove")
+        self.assertTrue(os.path.isdir(self.reset_profile_path),
+                        "Reset profile path should be present")
+        self.assertTrue(os.path.isdir(self.desktop_backup_path),
+                        "Backup profile path should be present")
+        self.assertTrue(self.profileNameToRemove in self.reset_profile_path,
+                        "Reset profile path should contain profile name to remove")
 
     def testReset(self):
         self.checkProfile()
