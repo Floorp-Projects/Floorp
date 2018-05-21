@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# originally from https://hg.mozilla.org/build/tools/file/4ab9c1a4e05b/scripts/release/compare-mozconfigs.py
+# originally from https://hg.mozilla.org/build/tools/file/4ab9c1a4e05b/scripts/release/compare-mozconfigs.py  # NOQA: E501
 
 from __future__ import unicode_literals
 
@@ -28,13 +28,16 @@ PLATFORMS = (
 
 log = logging.getLogger(__name__)
 
+
 class ConfigError(Exception):
     pass
+
 
 def readConfig(configfile):
     c = {}
     execfile(configfile, c)
     return c['whitelist']
+
 
 def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
                       mozconfigWhitelist):
@@ -55,7 +58,8 @@ def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
     success = True
 
     diff_instance = difflib.Differ()
-    diff_result = diff_instance.compare(mozconfig_lines, nightly_mozconfig_lines)
+    diff_result = diff_instance.compare(
+        mozconfig_lines, nightly_mozconfig_lines)
     diff_list = list(diff_result)
 
     for line in diff_list:
@@ -98,6 +102,7 @@ def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
             success = False
     return success
 
+
 def get_mozconfig(path):
     """Consumes a path and returns a list of lines from the mozconfig file."""
     with open(path, 'rb') as fh:
@@ -113,7 +118,6 @@ def compare(topsrcdir):
 
     def normalize_lines(lines):
         return {l.strip() for l in lines}
-
 
     for platform in PLATFORMS:
         log.info('Comparing platform %s' % platform)
