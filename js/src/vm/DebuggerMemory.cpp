@@ -376,6 +376,13 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER_MEMORY(cx, argc, vp, "Debugger.Memory.prototype.census", args, memory);
 
+#ifdef ENABLE_WASM_GC
+    if (gc::GCRuntime::temporaryAbortIfWasmGc(cx)) {
+        JS_ReportErrorASCII(cx, "API temporarily unavailable under wasm gc");
+        return false;
+    }
+#endif
+
     Census census(cx);
     if (!census.init())
         return false;
