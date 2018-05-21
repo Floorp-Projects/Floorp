@@ -107,7 +107,7 @@ def delete(path):
     else:
         try:
             os.unlink(path)
-        except:
+        except Exception:
             pass
 
 

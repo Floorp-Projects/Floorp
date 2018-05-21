@@ -14,7 +14,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import distutils
 
 from mozbuild.base import MozbuildObject
@@ -81,7 +80,7 @@ def writeCertspecForServerLocations(fd):
         if not customCertOption:
             SAN.append(loc.host)
 
-    fd.write("issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization\n")
+    fd.write("issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization\n")  # NOQA: E501
     fd.write("subject:{}\n".format(SAN[0]))
     fd.write("extension:subjectAlternativeName:{}\n".format(",".join(SAN)))
 
@@ -95,9 +94,7 @@ def constructCertDatabase(build, srcDir):
     pykey = os.path.join(build.topsrcdir, "security", "manager", "ssl", "tests",
                          "unit", "pykey.py")
 
-    with NamedTemporaryFile() as pwfile, NamedTemporaryFile() as rndfile, TemporaryDirectory() as pemfolder:
-        pgoCAPath = os.path.join(srcDir, "pgoca.p12")
-
+    with NamedTemporaryFile() as pwfile, TemporaryDirectory() as pemfolder:
         pwfile.write("\n")
         pwfile.flush()
 
@@ -136,7 +133,9 @@ def constructCertDatabase(build, srcDir):
                             return status
 
                 status = runUtil(certutil, [
-                                 "-A", "-n", name, "-t", "P,,", "-i", pem, "-d", srcDir, "-f", pwfile.name])
+                                 "-A", "-n", name, "-t", "P,,", "-i", pem,
+                                 "-d", srcDir, "-f", pwfile.name
+                                 ])
                 if status:
                     return status
 
@@ -145,8 +144,9 @@ def constructCertDatabase(build, srcDir):
                 name = parts[0]
                 key_type = parts[1]
                 if key_type not in ["ca", "client", "server"]:
-                    raise Exception("{}: keyspec filenames must be of the form XXX.client.keyspec or XXX.ca.keyspec (key_type={})".format(
-                        keyspec, key_type))
+                    raise Exception("{}: keyspec filenames must be of the form XXX.client.keyspec "
+                                    "or XXX.ca.keyspec (key_type={})".format(
+                                        keyspec, key_type))
                 key_pem = os.path.join(pemfolder, "{}.key.pem".format(name))
 
                 print("Generating private key {} (pem={})".format(name, key_pem))
@@ -161,14 +161,16 @@ def constructCertDatabase(build, srcDir):
 
                 cert_pem = os.path.join(pemfolder, "{}.cert.pem".format(name))
                 if not os.path.exists(cert_pem):
-                    raise Exception("There has to be a corresponding certificate named {} for the keyspec {}".format(
-                        cert_pem, keyspec))
+                    raise Exception("There has to be a corresponding certificate named {} for "
+                                    "the keyspec {}".format(
+                                        cert_pem, keyspec))
 
                 p12 = os.path.join(pemfolder, "{}.key.p12".format(name))
                 print("Converting private key {} to PKCS12 (p12={})".format(
                     key_pem, p12))
                 status = runUtil(openssl, ["pkcs12", "-export", "-inkey", key_pem, "-in",
-                                           cert_pem, "-name", name, "-out", p12, "-passout", "file:"+pwfile.name])
+                                           cert_pem, "-name", name, "-out", p12, "-passout",
+                                           "file:"+pwfile.name])
                 if status:
                     return status
 
@@ -197,5 +199,5 @@ build = MozbuildObject.from_environment()
 certdir = os.path.join(build.topsrcdir, "build", "pgo", "certs")
 certificateStatus = constructCertDatabase(build, certdir)
 if certificateStatus:
-    print "TEST-UNEXPECTED-FAIL | SSL Server Certificate generation"
+    print("TEST-UNEXPECTED-FAIL | SSL Server Certificate generation")
 sys.exit(certificateStatus)

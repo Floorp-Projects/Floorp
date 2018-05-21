@@ -90,7 +90,9 @@ def scan_directory(path):
 
                             # Now rewrite the library itself
                             subprocess.check_call(
-                                [substs['INSTALL_NAME_TOOL'], '-id', '@executable_path/' + DYLIB_NAME, os.path.join(path, DYLIB_NAME)])
+                                [substs['INSTALL_NAME_TOOL'], '-id',
+                                 '@executable_path/' + DYLIB_NAME,
+                                 os.path.join(path, DYLIB_NAME)])
                             dylibCopied = True
                         else:
                             sys.stderr.write('dylib path in %s was not found at: %s\n' % (
@@ -100,7 +102,9 @@ def scan_directory(path):
                     relpath = '' if path == root else os.path.relpath(
                         path, root) + '/'
                     subprocess.check_call([substs['INSTALL_NAME_TOOL'], '-change',
-                                           absDylibPath, '@executable_path/' + relpath + DYLIB_NAME, filename])
+                                           absDylibPath,
+                                           '@executable_path/' + relpath + DYLIB_NAME,
+                                           filename])
                     break
 
     if not dylibCopied:

@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import re
 import sys
 import glob
 import shutil
@@ -129,20 +128,20 @@ static int LLVM_ATTRIBUTE_UNUSED MozillaModuleAnchorDestination =
 
 def main():
     if len(sys.argv) != 3:
-        print """\
+        print("""\
 Usage: import_mozilla_checks.py <mozilla-clang-plugin-path> <clang-tidy-path>
 Imports the Mozilla static analysis checks into a clang-tidy source tree.
-"""
+""")
 
         return
 
     mozilla_path = sys.argv[1]
     if not os.path.isdir(mozilla_path):
-        print "Invalid path to mozilla clang plugin"
+        print("Invalid path to mozilla clang plugin")
 
     clang_tidy_path = sys.argv[2]
     if not os.path.isdir(mozilla_path):
-        print "Invalid path to clang-tidy source directory"
+        print("Invalid path to clang-tidy source directory")
 
     do_import(mozilla_path, clang_tidy_path)
 

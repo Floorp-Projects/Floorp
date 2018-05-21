@@ -11,7 +11,7 @@ from buildconfig import substs
 from mozbuild.base import MozbuildObject
 from mozfile import TemporaryDirectory
 from mozhttpd import MozHttpd
-from mozprofile import FirefoxProfile, Profile, Preferences
+from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner, CLI
 from six import string_types
@@ -66,7 +66,8 @@ if __name__ == '__main__':
         profile = FirefoxProfile(profile=profilePath,
                                  preferences=prefs,
                                  addons=[os.path.join(
-                                     build.topsrcdir, 'tools', 'quitter', 'quitter@mozilla.org.xpi')],
+                                     build.topsrcdir, 'tools', 'quitter',
+                                     'quitter@mozilla.org.xpi')],
                                  locations=locations)
 
         env = os.environ.copy()
@@ -96,7 +97,7 @@ if __name__ == '__main__':
         jarlog = os.getenv("JARLOG_FILE")
         if jarlog:
             env["MOZ_JAR_LOG_FILE"] = os.path.abspath(jarlog)
-            print "jarlog: %s" % env["MOZ_JAR_LOG_FILE"]
+            print("jarlog: %s" % env["MOZ_JAR_LOG_FILE"])
 
         cmdargs = ["http://localhost:%d/index.html" % PORT]
         runner = FirefoxRunner(profile=profile,
