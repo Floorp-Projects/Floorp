@@ -63,8 +63,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
+   * @param {Number} Time which animation created
    */
-  initialize: function(animationsActor, player) {
+  initialize: function(animationsActor, player, createdTime) {
     Actor.prototype.initialize.call(this, animationsActor.conn);
 
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
@@ -85,6 +86,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     } else {
       this.observer.observe(this.node, {animations: true});
     }
+
+    this.createdTime = createdTime;
   },
 
   destroy: function() {
@@ -346,7 +349,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
-      documentCurrentTime: this.node.ownerDocument.timeline.currentTime
+      documentCurrentTime: this.node.ownerDocument.timeline.currentTime,
+      // The time which this animation created.
+      createdTime: this.createdTime,
     };
   },
 
@@ -665,14 +670,28 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   getAnimationPlayersForNode: function(nodeActor) {
     let animations = nodeActor.rawNode.getAnimations({subtree: true});
 
+    const createdTimeMap = new Map();
+
     // Destroy previously stored actors
     if (this.actors) {
-      this.actors.forEach(actor => actor.destroy());
+      for (const actor of this.actors) {
+        // Take the createdTime over new actors.
+        createdTimeMap.set(actor.player, actor.createdTime);
+        actor.destroy();
+      }
     }
+
     this.actors = [];
 
-    for (let i = 0; i < animations.length; i++) {
-      let actor = AnimationPlayerActor(this, animations[i]);
+    for (const animation of animations) {
+      let createdTime = createdTimeMap.get(animation);
+
+      if (typeof createdTime === "undefined") {
+        // If no previous actor, set startTime or currentTime of timeline as created time.
+        createdTime = animation.startTime || animation.timeline.currentTime;
+      }
+
+      const actor = AnimationPlayerActor(this, animation, createdTime);
       this.actors.push(actor);
     }
 
@@ -747,7 +766,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
           this.actors.splice(index, 1);
         }
 
-        let actor = AnimationPlayerActor(this, player);
+        const createdTime = player.startTime || player.timeline.currentTime;
+        const actor = AnimationPlayerActor(this, player, createdTime);
         this.actors.push(actor);
         eventData.push({
           type: "added",
