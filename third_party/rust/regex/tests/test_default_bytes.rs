@@ -43,7 +43,7 @@ include!("macros.rs");
 
 // A silly wrapper to make it possible to write and match raw bytes.
 struct R<'a>(&'a [u8]);
-impl<'a> R<'a> { fn as_bytes(&self) -> &'a [u8] { &self.0 } }
+impl<'a> R<'a> { fn as_bytes(&self) -> &'a [u8] { self.0 } }
 
 // See: https://github.com/rust-lang/regex/issues/321
 //

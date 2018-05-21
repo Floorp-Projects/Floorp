@@ -109,7 +109,7 @@ impl<'r, I: Input> Fsm<'r, I> {
         start: usize,
     ) -> bool {
         let mut cache = cache.borrow_mut();
-        let mut cache = &mut cache.pikevm;
+        let cache = &mut cache.pikevm;
         cache.clist.resize(prog.len(), prog.captures.len());
         cache.nlist.resize(prog.len(), prog.captures.len());
         let at = input.at(start);
@@ -341,7 +341,7 @@ impl<'r, I: Input> Fsm<'r, I> {
                     ip = inst.goto1;
                 }
                 Match(_) | Char(_) | Ranges(_) | Bytes(_) => {
-                    let mut t = &mut nlist.caps(ip);
+                    let t = &mut nlist.caps(ip);
                     for (slot, val) in t.iter_mut().zip(thread_caps.iter()) {
                         *slot = *val;
                     }
