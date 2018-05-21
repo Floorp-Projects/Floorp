@@ -696,6 +696,9 @@ Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   //    ApplyUpdatesForeground  |
   //          callback          |
 
+  MOZ_ASSERT(mNewLookupCaches.IsEmpty(),
+             "There should be no leftovers from a previous update.");
+
   mUpdateInterrupted = false;
   nsresult rv = mRootStoreDirectory->Clone(getter_AddRefs(mRootStoreDirectoryForUpdate));
   if (NS_FAILED(rv)) {
@@ -884,6 +887,7 @@ Classifier::GetCacheInfo(const nsACString& aTable,
 void
 Classifier::DropStores()
 {
+  // See the comment in Classifier::Close() before adding anything here.
   mLookupCaches.Clear();
 }
 
