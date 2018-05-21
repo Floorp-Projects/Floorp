@@ -21,7 +21,7 @@ add_task(async function test_principal_click() {
     await loadPromise;
 
     await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-      let channel = content.document.docShell.currentDocumentChannel;
+      let channel = content.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
          "sanity check - make sure we test the principal for the correct URI");
@@ -57,7 +57,7 @@ add_task(async function test_principal_ctrl_click() {
     gBrowser.selectTabAtIndex(2);
 
     await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-      let channel = content.document.docShell.currentDocumentChannel;
+      let channel = content.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
          "sanity check - make sure we test the principal for the correct URI");
@@ -102,7 +102,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
     gBrowser.selectTabAtIndex(2);
 
     await ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
-      let channel = content.document.docShell.currentDocumentChannel;
+      let channel = content.docShell.currentDocumentChannel;
       is(channel.originalURI.asciiSpec,
          "about:test-about-principal-child",
          "sanity check - make sure we test the principal for the correct URI");

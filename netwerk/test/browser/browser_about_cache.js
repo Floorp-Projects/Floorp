@@ -22,7 +22,7 @@ add_task(async function() {
     ok(!content.document.nodePrincipal.isSystemPrincipal,
        "about:cache should not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
-    let channel = content.document.docShell.currentDocumentChannel;
+    let channel = content.docShell.currentDocumentChannel;
     ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");
     is(principalURI && principalURI.spec, content.document.location.href, "Principal matches location");
     let links = [... content.document.querySelectorAll("a[href*=disk]")];
@@ -43,7 +43,7 @@ add_task(async function() {
        "about:cache with query params should still not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
     is(principalURI && principalURI.spec, content.document.location.href, "Principal matches location");
-    let channel = content.document.docShell.currentDocumentChannel;
+    let channel = content.docShell.currentDocumentChannel;
     principalURI = channel.loadInfo.triggeringPrincipal.URI;
     is(principalURI && principalURI.spec, "about:cache", "Triggering principal matches previous location");
     ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");
@@ -60,7 +60,7 @@ add_task(async function() {
        "about:cache-entry should also not have system principal");
     let principalURI = content.document.nodePrincipal.URI;
     is(principalURI && principalURI.spec, content.document.location.href, "Principal matches location");
-    let channel = content.document.docShell.currentDocumentChannel;
+    let channel = content.docShell.currentDocumentChannel;
     principalURI = channel.loadInfo.triggeringPrincipal.URI;
     is(principalURI && principalURI.spec, triggeringURISpec, "Triggering principal matches previous location");
     ok(!channel.loadInfo.loadingPrincipal, "Loading principal should be null.");

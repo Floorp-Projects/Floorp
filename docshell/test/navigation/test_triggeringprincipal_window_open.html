@@ -35,7 +35,7 @@ function checkFinish() {
 // Test 1: window.open(http:)
 var httpWin = window.open("file_triggeringprincipal_window_open.html", "_blank", "width=10,height=10");
 httpWin.onload = function() {
-  var httpChannel = SpecialPowers.wrap(httpWin.document).docShell.currentDocumentChannel;
+  var httpChannel = SpecialPowers.wrap(httpWin).docShell.currentDocumentChannel;
   var httpTriggeringPrincipal = httpChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var httpLoadingPrincipal = httpChannel.loadInfo.loadingPrincipal;
 
@@ -56,7 +56,7 @@ httpWin.onload = function() {
 // Test 2: window.open(javascript:)
 var jsWin = window.open("javascript:'<html><body>js</body></html>';", "_blank", "width=10,height=10");
 jsWin.onload = function() {
-  var jsChannel = SpecialPowers.wrap(jsWin.document).docShell.currentDocumentChannel;
+  var jsChannel = SpecialPowers.wrap(jsWin).docShell.currentDocumentChannel;
   var jsTriggeringPrincipal = jsChannel.loadInfo.triggeringPrincipal.URI.asciiSpec;
   var jsLoadingPrincipal = jsChannel.loadInfo.loadingPrincipal;
 

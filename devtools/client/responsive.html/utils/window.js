@@ -10,7 +10,7 @@ const Services = require("Services");
  * Returns the `nsIDOMWindow` toplevel window for any child/inner window
  */
 function getToplevelWindow(window) {
-  return window.document.docShell.rootTreeItem.domWindow;
+  return window.docShell.rootTreeItem.domWindow;
 }
 exports.getToplevelWindow = getToplevelWindow;
 
