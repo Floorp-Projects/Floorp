@@ -181,9 +181,10 @@ class FontEditor extends PureComponent {
 
   render() {
     const { fonts, axes, instance, properties } = this.props.fontEditor;
-    // For MVP use ony first font to show axes if available.
-    // Future implementations will allow switching between multiple fonts.
-    const font = fonts[0];
+    const usedFonts = fonts.filter(font => font.used);
+    // If no used fonts were found, pick the first available font.
+    // Else, pick the first used font regardless of how many there are.
+    const font = usedFonts.length === 0 ? fonts[0] : usedFonts[0];
     const hasFontAxes = font && font.variationAxes;
     const hasFontInstances = font && font.variationInstances.length > 0;
     const hasSlantOrItalicAxis = hasFontAxes && font.variationAxes.find(axis => {
