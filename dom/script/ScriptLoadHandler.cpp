@@ -163,11 +163,6 @@ ScriptLoadHandler::EnsureDecoder(nsIIncrementalStreamLoader* aLoader,
   if (!EnsureDecoder(aLoader, aData, aDataLength, aEndOfStream, charset)) {
     return false;
   }
-  if (charset.Length() == 0) {
-    charset = "?";
-  }
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::DOM_SCRIPT_SRC_ENCODING,
-    charset);
   return true;
 }
 
