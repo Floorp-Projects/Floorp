@@ -7,9 +7,9 @@ use std::slice;
 use std::sync::Arc;
 
 use input::Char;
-use literals::LiteralSearcher;
+use literal::LiteralSearcher;
 
-/// InstPtr represents the index of an instruction in a regex program.
+/// `InstPtr` represents the index of an instruction in a regex program.
 pub type InstPtr = usize;
 
 /// Program is a sequence of instructions and various facts about thos
@@ -187,25 +187,23 @@ impl fmt::Debug for Program {
         for (pc, inst) in self.iter().enumerate() {
             match *inst {
                 Match(slot) => {
-                    try!(write!(f, "{:04} Match({:?})", pc, slot))
+                    write!(f, "{:04} Match({:?})", pc, slot)?
                 }
                 Save(ref inst) => {
                     let s = format!("{:04} Save({})", pc, inst.slot);
-                    try!(write!(f, "{}", with_goto(pc, inst.goto, s)));
+                    write!(f, "{}", with_goto(pc, inst.goto, s))?;
                 }
                 Split(ref inst) => {
-                    try!(write!(f, "{:04} Split({}, {})",
-                                pc, inst.goto1, inst.goto2));
+                    write!(
+                        f, "{:04} Split({}, {})", pc, inst.goto1, inst.goto2)?;
                 }
                 EmptyLook(ref inst) => {
                     let s = format!("{:?}", inst.look);
-                    try!(write!(f, "{:04} {}",
-                                pc, with_goto(pc, inst.goto, s)));
+                    write!(f, "{:04} {}", pc, with_goto(pc, inst.goto, s))?;
                 }
                 Char(ref inst) => {
                     let s = format!("{:?}", inst.c);
-                    try!(write!(f, "{:04} {}",
-                                pc, with_goto(pc, inst.goto, s)));
+                    write!(f, "{:04} {}", pc, with_goto(pc, inst.goto, s))?;
                 }
                 Ranges(ref inst) => {
                     let ranges = inst.ranges
@@ -213,23 +211,21 @@ impl fmt::Debug for Program {
                         .map(|r| format!("{:?}-{:?}", r.0, r.1))
                         .collect::<Vec<String>>()
                         .join(", ");
-                    let s = format!("{}", ranges);
-                    try!(write!(f, "{:04} {}",
-                                pc, with_goto(pc, inst.goto, s)));
+                    write!(
+                        f, "{:04} {}", pc, with_goto(pc, inst.goto, ranges))?;
                 }
                 Bytes(ref inst) => {
                     let s = format!(
                         "Bytes({}, {})",
                         visible_byte(inst.start),
                         visible_byte(inst.end));
-                    try!(write!(f, "{:04} {}",
-                                pc, with_goto(pc, inst.goto, s)));
+                    write!(f, "{:04} {}", pc, with_goto(pc, inst.goto, s))?;
                 }
             }
             if pc == self.start {
-                try!(write!(f, " (start)"));
+                write!(f, " (start)")?;
             }
-            try!(write!(f, "\n"));
+            write!(f, "\n")?;
         }
         Ok(())
     }
@@ -320,7 +316,7 @@ pub struct InstSplit {
     pub goto2: InstPtr,
 }
 
-/// Representation of the EmptyLook instruction.
+/// Representation of the `EmptyLook` instruction.
 #[derive(Clone, Debug)]
 pub struct InstEmptyLook {
     /// The next location to execute in the program if this instruction

@@ -12,7 +12,7 @@
 
 [package]
 name = "memchr"
-version = "1.0.2"
+version = "2.0.1"
 authors = ["Andrew Gallant <jamslam@gmail.com>", "bluss"]
 description = "Safe interface to memchr."
 homepage = "https://github.com/BurntSushi/rust-memchr"
@@ -32,7 +32,8 @@ version = "0.2.18"
 optional = true
 default-features = false
 [dev-dependencies.quickcheck]
-version = "0.4.1"
+version = "0.5"
+default-features = false
 
 [features]
 default = ["use_std", "libc"]

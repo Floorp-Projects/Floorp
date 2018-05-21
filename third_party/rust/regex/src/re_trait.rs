@@ -37,7 +37,7 @@ impl Locations {
     /// appearance in the regular expression. Positions are byte indices
     /// in terms of the original string matched.
     pub fn iter(&self) -> SubCapturesPosIter {
-        SubCapturesPosIter { idx: 0, locs: &self }
+        SubCapturesPosIter { idx: 0, locs: self }
     }
 
     /// Returns the total number of capturing groups.
@@ -84,7 +84,7 @@ impl<'c> Iterator for SubCapturesPosIter<'c> {
     }
 }
 
-/// RegularExpression describes types that can implement regex searching.
+/// `RegularExpression` describes types that can implement regex searching.
 ///
 /// This trait is my attempt at reducing code duplication and to standardize
 /// the internal API. Specific duplication that is avoided are the `find`
@@ -148,10 +148,10 @@ pub trait RegularExpression: Sized {
 
     /// Returns an iterator over all non-overlapping successive leftmost-first
     /// matches.
-    fn find_iter<'t>(
+    fn find_iter (
         self,
-        text: &'t Self::Text,
-    ) -> Matches<'t, Self> {
+        text: &Self::Text,
+    ) -> Matches<Self> {
         Matches {
             re: self,
             text: text,
@@ -162,10 +162,10 @@ pub trait RegularExpression: Sized {
 
     /// Returns an iterator over all non-overlapping successive leftmost-first
     /// matches with captures.
-    fn captures_iter<'t>(
+    fn captures_iter(
         self,
-        text: &'t Self::Text,
-    ) -> CaptureMatches<'t, Self> {
+        text: &Self::Text,
+    ) -> CaptureMatches<Self> {
         CaptureMatches(self.find_iter(text))
     }
 }
@@ -206,7 +206,7 @@ impl<'t, R> Iterator for Matches<'t, R>
             // This is an empty match. To ensure we make progress, start
             // the next search at the smallest possible starting position
             // of the next match following this one.
-            self.last_end = self.re.next_after_empty(&self.text, e);
+            self.last_end = self.re.next_after_empty(self.text, e);
             // Don't accept empty matches immediately following a match.
             // Just move on to the next match.
             if Some(e) == self.last_match {
@@ -255,7 +255,7 @@ impl<'t, R> Iterator for CaptureMatches<'t, R>
             Some((s, e)) => (s, e),
         };
         if s == e {
-            self.0.last_end = self.0.re.next_after_empty(&self.0.text, e);
+            self.0.last_end = self.0.re.next_after_empty(self.0.text, e);
             if Some(e) == self.0.last_match {
                 return self.next();
             }

@@ -13,10 +13,8 @@ use std::iter;
 use std::result;
 use std::sync::Arc;
 
-use syntax::{
-    Expr, Repeater, CharClass, ClassRange, ByteClass, ByteRange,
-    is_word_byte,
-};
+use syntax::is_word_byte;
+use syntax::hir::{self, Hir};
 use utf8_ranges::{Utf8Range, Utf8Sequence, Utf8Sequences};
 
 use prog::{
@@ -123,7 +121,7 @@ impl Compiler {
     /// stops and returns an error.
     pub fn compile(
         mut self,
-        exprs: &[Expr],
+        exprs: &[Hir],
     ) -> result::Result<Program, Error> {
         debug_assert!(exprs.len() >= 1);
         self.num_exprs = exprs.len();
@@ -134,7 +132,7 @@ impl Compiler {
         }
     }
 
-    fn compile_one(mut self, expr: &Expr) -> result::Result<Program, Error> {
+    fn compile_one(mut self, expr: &Hir) -> result::Result<Program, Error> {
         // If we're compiling a forward DFA and we aren't anchored, then
         // add a `.*?` before the first capture group.
         // Other matching engines handle this by baking the logic into the
@@ -143,11 +141,11 @@ impl Compiler {
         self.compiled.is_anchored_start = expr.is_anchored_start();
         self.compiled.is_anchored_end = expr.is_anchored_end();
         if self.compiled.needs_dotstar() {
-            dotstar_patch = try!(self.c_dotstar());
+            dotstar_patch = self.c_dotstar()?;
             self.compiled.start = dotstar_patch.entry;
         }
         self.compiled.captures = vec![None];
-        let patch = try!(self.c_capture(0, expr));
+        let patch = self.c_capture(0, expr)?;
         if self.compiled.needs_dotstar() {
             self.fill(dotstar_patch.hole, patch.entry);
         } else {
@@ -161,7 +159,7 @@ impl Compiler {
 
     fn compile_many(
         mut self,
-        exprs: &[Expr],
+        exprs: &[Hir],
     ) -> result::Result<Program, Error> {
         debug_assert!(exprs.len() > 1);
 
@@ -171,7 +169,7 @@ impl Compiler {
             exprs.iter().all(|e| e.is_anchored_end());
         let mut dotstar_patch = Patch { hole: Hole::None, entry: 0 };
         if self.compiled.needs_dotstar() {
-            dotstar_patch = try!(self.c_dotstar());
+            dotstar_patch = self.c_dotstar()?;
             self.compiled.start = dotstar_patch.entry;
         } else {
             self.compiled.start = 0; // first instruction is always split
@@ -182,14 +180,14 @@ impl Compiler {
         for (i, expr) in exprs[0..exprs.len() - 1].iter().enumerate() {
             self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
-            let Patch { hole, entry } = try!(self.c_capture(0, expr));
+            let Patch { hole, entry } = self.c_capture(0, expr)?;
             self.fill_to_next(hole);
             self.compiled.matches.push(self.insts.len());
             self.push_compiled(Inst::Match(i));
             prev_hole = self.fill_split(split, Some(entry), None);
         }
         let i = exprs.len() - 1;
-        let Patch { hole, entry } = try!(self.c_capture(0, &exprs[i]));
+        let Patch { hole, entry } = self.c_capture(0, &exprs[i])?;
         self.fill(prev_hole, entry);
         self.fill_to_next(hole);
         self.compiled.matches.push(self.insts.len());
@@ -205,97 +203,152 @@ impl Compiler {
         Ok(self.compiled)
     }
 
-    fn c(&mut self, expr: &Expr) -> Result {
+    /// Compile expr into self.insts, returning a patch on success,
+    /// or an error if we run out of memory.
+    ///
+    /// All of the c_* methods of the compiler share the contract outlined
+    /// here.
+    ///
+    /// The main thing that a c_* method does is mutate `self.insts`
+    /// to add a list of mostly compiled instructions required to execute
+    /// the given expression. `self.insts` contains MaybeInsts rather than
+    /// Insts because there is some backpatching required.
+    ///
+    /// The `Patch` value returned by each c_* method provides metadata
+    /// about the compiled instructions emitted to `self.insts`. The
+    /// `entry` member of the patch refers to the first instruction
+    /// (the entry point), while the `hole` member contains zero or
+    /// more offsets to partial instructions that need to be backpatched.
+    /// The c_* routine can't know where its list of instructions are going to
+    /// jump to after execution, so it is up to the caller to patch
+    /// these jumps to point to the right place. So compiling some
+    /// expression, e, we would end up with a situation that looked like:
+    ///
+    /// ```text
+    /// self.insts = [ ..., i1, i2, ..., iexit1, ..., iexitn, ...]
+    ///                     ^              ^             ^
+    ///                     |                \         /
+    ///                   entry                \     /
+    ///                                         hole
+    /// ```
+    ///
+    /// To compile two expressions, e1 and e2, concatinated together we
+    /// would do:
+    ///
+    /// ```ignore
+    /// let patch1 = self.c(e1);
+    /// let patch2 = self.c(e2);
+    /// ```
+    ///
+    /// while leaves us with a situation that looks like
+    ///
+    /// ```text
+    /// self.insts = [ ..., i1, ..., iexit1, ..., i2, ..., iexit2 ]
+    ///                     ^        ^            ^        ^
+    ///                     |        |            |        |
+    ///                entry1        hole1   entry2        hole2
+    /// ```
+    ///
+    /// Then to merge the two patches together into one we would backpatch
+    /// hole1 with entry2 and return a new patch that enters at entry1
+    /// and has hole2 for a hole. In fact, if you look at the c_concat
+    /// method you will see that it does exactly this, though it handles
+    /// a list of expressions rather than just the two that we use for
+    /// an example.
+    fn c(&mut self, expr: &Hir) -> Result {
         use prog;
-        use syntax::Expr::*;
+        use syntax::hir::HirKind::*;
 
-        try!(self.check_size());
-        match *expr {
+        self.check_size()?;
+        match *expr.kind() {
             Empty => Ok(Patch { hole: Hole::None, entry: self.insts.len() }),
-            Literal { ref chars, casei } => self.c_literal(chars, casei),
-            LiteralBytes { ref bytes, casei } => self.c_bytes(bytes, casei),
-            AnyChar => self.c_class(&[ClassRange {
-                start: '\x00',
-                end: '\u{10ffff}',
-            }]),
-            AnyCharNoNL => {
-                self.c_class(&[
-                    ClassRange { start: '\x00', end: '\x09' },
-                    ClassRange { start: '\x0b', end: '\u{10ffff}' },
-                ])
+            Literal(hir::Literal::Unicode(c)) => {
+                self.c_literal(&[c])
             }
-            AnyByte => {
-                self.c_class_bytes(&[ByteRange { start: 0, end: 0xFF }])
+            Literal(hir::Literal::Byte(b)) => {
+                assert!(self.compiled.uses_bytes());
+                self.c_bytes(&[b])
             }
-            AnyByteNoNL => {
-                self.c_class_bytes(&[
-                    ByteRange { start: 0, end: 0x9 },
-                    ByteRange { start: 0xB, end: 0xFF },
-                ])
+            Class(hir::Class::Unicode(ref cls)) => {
+                self.c_class(cls.ranges())
             }
-            Class(ref cls) => {
-                self.c_class(cls)
+            Class(hir::Class::Bytes(ref cls)) => {
+                if self.compiled.uses_bytes() {
+                    self.c_class_bytes(cls.ranges())
+                } else {
+                    assert!(cls.is_all_ascii());
+                    let mut char_ranges = vec![];
+                    for r in cls.iter() {
+                        let (s, e) = (r.start() as char, r.end() as char);
+                        char_ranges.push(hir::ClassUnicodeRange::new(s, e));
+                    }
+                    self.c_class(&char_ranges)
+                }
             }
-            ClassBytes(ref cls) => {
-                self.c_class_bytes(cls)
-            }
-            StartLine if self.compiled.is_reverse => {
+            Anchor(hir::Anchor::StartLine) if self.compiled.is_reverse => {
                 self.byte_classes.set_range(b'\n', b'\n');
                 self.c_empty_look(prog::EmptyLook::EndLine)
             }
-            StartLine => {
+            Anchor(hir::Anchor::StartLine) => {
                 self.byte_classes.set_range(b'\n', b'\n');
                 self.c_empty_look(prog::EmptyLook::StartLine)
             }
-            EndLine if self.compiled.is_reverse => {
+            Anchor(hir::Anchor::EndLine) if self.compiled.is_reverse => {
                 self.byte_classes.set_range(b'\n', b'\n');
                 self.c_empty_look(prog::EmptyLook::StartLine)
             }
-            EndLine => {
+            Anchor(hir::Anchor::EndLine) => {
                 self.byte_classes.set_range(b'\n', b'\n');
                 self.c_empty_look(prog::EmptyLook::EndLine)
             }
-            StartText if self.compiled.is_reverse => {
+            Anchor(hir::Anchor::StartText) if self.compiled.is_reverse => {
                 self.c_empty_look(prog::EmptyLook::EndText)
             }
-            StartText => {
+            Anchor(hir::Anchor::StartText) => {
                 self.c_empty_look(prog::EmptyLook::StartText)
             }
-            EndText if self.compiled.is_reverse => {
+            Anchor(hir::Anchor::EndText) if self.compiled.is_reverse => {
                 self.c_empty_look(prog::EmptyLook::StartText)
             }
-            EndText => {
+            Anchor(hir::Anchor::EndText) => {
                 self.c_empty_look(prog::EmptyLook::EndText)
             }
-            WordBoundary => {
+            WordBoundary(hir::WordBoundary::Unicode) => {
                 self.compiled.has_unicode_word_boundary = true;
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::WordBoundary)
             }
-            NotWordBoundary => {
+            WordBoundary(hir::WordBoundary::UnicodeNegate) => {
                 self.compiled.has_unicode_word_boundary = true;
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::NotWordBoundary)
             }
-            WordBoundaryAscii => {
+            WordBoundary(hir::WordBoundary::Ascii) => {
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::WordBoundaryAscii)
             }
-            NotWordBoundaryAscii => {
+            WordBoundary(hir::WordBoundary::AsciiNegate) => {
                 self.byte_classes.set_word_boundary();
                 self.c_empty_look(prog::EmptyLook::NotWordBoundaryAscii)
             }
-            Group { ref e, i: None, name: None } => self.c(e),
-            Group { ref e, i, ref name } => {
-                // it's impossible to have a named capture without an index
-                let i = i.expect("capture index");
-                if i >= self.compiled.captures.len() {
-                    self.compiled.captures.push(name.clone());
-                    if let Some(ref name) = *name {
-                        self.capture_name_idx.insert(name.to_owned(), i);
+            Group(ref g) => {
+                match g.kind {
+                    hir::GroupKind::NonCapturing => self.c(&g.hir),
+                    hir::GroupKind::CaptureIndex(index) => {
+                        if index as usize >= self.compiled.captures.len() {
+                            self.compiled.captures.push(None);
+                        }
+                        self.c_capture(2 * index as usize, &g.hir)
+                    }
+                    hir::GroupKind::CaptureName { index, ref name } => {
+                        if index as usize >= self.compiled.captures.len() {
+                            let n = name.to_string();
+                            self.compiled.captures.push(Some(n.clone()));
+                            self.capture_name_idx.insert(n, index as usize);
+                        }
+                        self.c_capture(2 * index as usize, &g.hir)
                     }
                 }
-                self.c_capture(2 * i, e)
             }
             Concat(ref es) => {
                 if self.compiled.is_reverse {
@@ -304,12 +357,12 @@ impl Compiler {
                     self.c_concat(es)
                 }
             }
-            Alternate(ref es) => self.c_alternate(&**es),
-            Repeat { ref e, r, greedy } => self.c_repeat(e, r, greedy),
+            Alternation(ref es) => self.c_alternate(&**es),
+            Repetition(ref rep) => self.c_repeat(rep),
         }
     }
 
-    fn c_capture(&mut self, first_slot: usize, expr: &Expr) -> Result {
+    fn c_capture(&mut self, first_slot: usize, expr: &Hir) -> Result {
         if self.num_exprs > 1 || self.compiled.is_dfa {
             // Don't ever compile Save instructions for regex sets because
             // they are never used. They are also never used in DFA programs
@@ -318,7 +371,7 @@ impl Compiler {
         } else {
             let entry = self.insts.len();
             let hole = self.push_hole(InstHole::Save { slot: first_slot });
-            let patch = try!(self.c(expr));
+            let patch = self.c(expr)?;
             self.fill(hole, patch.entry);
             self.fill_to_next(patch.hole);
             let hole = self.push_hole(InstHole::Save { slot: first_slot + 1 });
@@ -328,21 +381,21 @@ impl Compiler {
 
     fn c_dotstar(&mut self) -> Result {
         Ok(if !self.compiled.only_utf8() {
-            try!(self.c(&Expr::Repeat {
-                e: Box::new(Expr::AnyByte),
-                r: Repeater::ZeroOrMore,
+            self.c(&Hir::repetition(hir::Repetition {
+                kind: hir::RepetitionKind::ZeroOrMore,
                 greedy: false,
-            }))
+                hir: Box::new(Hir::any(true)),
+            }))?
         } else {
-            try!(self.c(&Expr::Repeat {
-                e: Box::new(Expr::AnyChar),
-                r: Repeater::ZeroOrMore,
+            self.c(&Hir::repetition(hir::Repetition {
+                kind: hir::RepetitionKind::ZeroOrMore,
                 greedy: false,
-            }))
+                hir: Box::new(Hir::any(false)),
+            }))?
         })
     }
 
-    fn c_literal(&mut self, chars: &[char], casei: bool) -> Result {
+    fn c_literal(&mut self, chars: &[char]) -> Result {
         debug_assert!(!chars.is_empty());
         let mut chars: Box<Iterator<Item=&char>> =
             if self.compiled.is_reverse {
@@ -351,26 +404,20 @@ impl Compiler {
                 Box::new(chars.iter())
             };
         let first = *chars.next().expect("non-empty literal");
-        let Patch { mut hole, entry } = try!(self.c_char(first, casei));
+        let Patch { mut hole, entry } = self.c_char(first)?;
         for &c in chars {
-            let p = try!(self.c_char(c, casei));
+            let p = self.c_char(c)?;
             self.fill(hole, p.entry);
             hole = p.hole;
         }
         Ok(Patch { hole: hole, entry: entry })
     }
 
-    fn c_char(&mut self, c: char, casei: bool) -> Result {
-        if casei {
-            self.c_class(&CharClass::new(vec![
-                ClassRange { start: c, end: c },
-            ]).case_fold())
-        } else {
-            self.c_class(&[ClassRange { start: c, end: c }])
-        }
+    fn c_char(&mut self, c: char) -> Result {
+        self.c_class(&[hir::ClassUnicodeRange::new(c, c)])
     }
 
-    fn c_class(&mut self, ranges: &[ClassRange]) -> Result {
+    fn c_class(&mut self, ranges: &[hir::ClassUnicodeRange]) -> Result {
         assert!(!ranges.is_empty());
         if self.compiled.uses_bytes() {
             CompileClass {
@@ -379,7 +426,7 @@ impl Compiler {
             }.compile()
         } else {
             let ranges: Vec<(char, char)> =
-                ranges.iter().map(|r| (r.start, r.end)).collect();
+                ranges.iter().map(|r| (r.start(), r.end())).collect();
             let hole = if ranges.len() == 1 && ranges[0].0 == ranges[0].1 {
                 self.push_hole(InstHole::Char { c: ranges[0].0 })
             } else {
@@ -389,7 +436,7 @@ impl Compiler {
         }
     }
 
-    fn c_bytes(&mut self, bytes: &[u8], casei: bool) -> Result {
+    fn c_bytes(&mut self, bytes: &[u8]) -> Result {
         debug_assert!(!bytes.is_empty());
         let mut bytes: Box<Iterator<Item=&u8>> =
             if self.compiled.is_reverse {
@@ -398,26 +445,20 @@ impl Compiler {
                 Box::new(bytes.iter())
             };
         let first = *bytes.next().expect("non-empty literal");
-        let Patch { mut hole, entry } = try!(self.c_byte(first, casei));
+        let Patch { mut hole, entry } = self.c_byte(first)?;
         for &b in bytes {
-            let p = try!(self.c_byte(b, casei));
+            let p = self.c_byte(b)?;
             self.fill(hole, p.entry);
             hole = p.hole;
         }
         Ok(Patch { hole: hole, entry: entry })
     }
 
-    fn c_byte(&mut self, b: u8, casei: bool) -> Result {
-        if casei {
-            self.c_class_bytes(&ByteClass::new(vec![
-                ByteRange { start: b, end: b },
-            ]).case_fold())
-        } else {
-            self.c_class_bytes(&[ByteRange { start: b, end: b }])
-        }
+    fn c_byte(&mut self, b: u8) -> Result {
+        self.c_class_bytes(&[hir::ClassBytesRange::new(b, b)])
     }
 
-    fn c_class_bytes(&mut self, ranges: &[ByteRange]) -> Result {
+    fn c_class_bytes(&mut self, ranges: &[hir::ClassBytesRange]) -> Result {
         debug_assert!(!ranges.is_empty());
 
         let first_split_entry = self.insts.len();
@@ -427,17 +468,17 @@ impl Compiler {
             self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
             let next = self.insts.len();
-            self.byte_classes.set_range(r.start, r.end);
+            self.byte_classes.set_range(r.start(), r.end());
             holes.push(self.push_hole(InstHole::Bytes {
-                start: r.start, end: r.end,
+                start: r.start(), end: r.end(),
             }));
             prev_hole = self.fill_split(split, Some(next), None);
         }
         let next = self.insts.len();
         let r = &ranges[ranges.len() - 1];
-        self.byte_classes.set_range(r.start, r.end);
+        self.byte_classes.set_range(r.start(), r.end());
         holes.push(self.push_hole(InstHole::Bytes {
-            start: r.start, end: r.end,
+            start: r.start(), end: r.end(),
         }));
         self.fill(prev_hole, next);
         Ok(Patch { hole: Hole::Many(holes), entry: first_split_entry })
@@ -449,7 +490,7 @@ impl Compiler {
     }
 
     fn c_concat<'a, I>(&mut self, exprs: I) -> Result
-            where I: IntoIterator<Item=&'a Expr> {
+            where I: IntoIterator<Item=&'a Hir> {
         let mut exprs = exprs.into_iter();
         let first = match exprs.next() {
             Some(expr) => expr,
@@ -457,16 +498,16 @@ impl Compiler {
                 return Ok(Patch { hole: Hole::None, entry: self.insts.len() })
             }
         };
-        let Patch { mut hole, entry } = try!(self.c(first));
+        let Patch { mut hole, entry } = self.c(first)?;
         for e in exprs {
-            let p = try!(self.c(e));
+            let p = self.c(e)?;
             self.fill(hole, p.entry);
             hole = p.hole;
         }
         Ok(Patch { hole: hole, entry: entry })
     }
 
-    fn c_alternate(&mut self, exprs: &[Expr]) -> Result {
+    fn c_alternate(&mut self, exprs: &[Hir]) -> Result {
         debug_assert!(
             exprs.len() >= 2, "alternates must have at least 2 exprs");
 
@@ -481,43 +522,56 @@ impl Compiler {
         for e in &exprs[0..exprs.len() - 1] {
             self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
-            let Patch { hole, entry } = try!(self.c(e));
+            let prev_entry = self.insts.len();
+            let Patch { hole, entry } = self.c(e)?;
+            if prev_entry == self.insts.len() {
+                // TODO(burntsushi): It is kind of silly that we don't support
+                // empty-subexpressions in alternates, but it is supremely
+                // awkward to support them in the existing compiler
+                // infrastructure. This entire compiler needs to be thrown out
+                // anyway, so don't feel too bad.
+                return Err(Error::Syntax(
+                    "alternations cannot currently contain \
+                     empty sub-expressions".to_string()));
+            }
             holes.push(hole);
             prev_hole = self.fill_split(split, Some(entry), None);
         }
-        let Patch { hole, entry } = try!(self.c(&exprs[exprs.len() - 1]));
+        let prev_entry = self.insts.len();
+        let Patch { hole, entry } = self.c(&exprs[exprs.len() - 1])?;
+        if prev_entry == self.insts.len() {
+            // TODO(burntsushi): See TODO above.
+            return Err(Error::Syntax(
+                "alternations cannot currently contain \
+                 empty sub-expressions".to_string()));
+        }
         holes.push(hole);
         self.fill(prev_hole, entry);
         Ok(Patch { hole: Hole::Many(holes), entry: first_split_entry })
     }
 
-    fn c_repeat(
-        &mut self,
-        expr: &Expr,
-        kind: Repeater,
-        greedy: bool,
-    ) -> Result {
-        match kind {
-            Repeater::ZeroOrOne => self.c_repeat_zero_or_one(expr, greedy),
-            Repeater::ZeroOrMore => self.c_repeat_zero_or_more(expr, greedy),
-            Repeater::OneOrMore => self.c_repeat_one_or_more(expr, greedy),
-            Repeater::Range { min, max: None } => {
-                self.c_repeat_range_min_or_more(expr, greedy, min)
+    fn c_repeat(&mut self, rep: &hir::Repetition) -> Result {
+        use syntax::hir::RepetitionKind::*;
+        match rep.kind {
+            ZeroOrOne => self.c_repeat_zero_or_one(&rep.hir, rep.greedy),
+            ZeroOrMore => self.c_repeat_zero_or_more(&rep.hir, rep.greedy),
+            OneOrMore => self.c_repeat_one_or_more(&rep.hir, rep.greedy),
+            Range(hir::RepetitionRange::Exactly(min_max)) => {
+                self.c_repeat_range(&rep.hir, rep.greedy, min_max, min_max)
             }
-            Repeater::Range { min, max: Some(max) } => {
-                self.c_repeat_range(expr, greedy, min, max)
+            Range(hir::RepetitionRange::AtLeast(min)) => {
+                self.c_repeat_range_min_or_more(&rep.hir, rep.greedy, min)
+            }
+            Range(hir::RepetitionRange::Bounded(min, max)) => {
+                self.c_repeat_range(&rep.hir, rep.greedy, min, max)
             }
         }
     }
 
-    fn c_repeat_zero_or_one(
-        &mut self,
-        expr: &Expr,
-        greedy: bool,
-    ) -> Result {
+    fn c_repeat_zero_or_one(&mut self, expr: &Hir, greedy: bool) -> Result {
         let split_entry = self.insts.len();
         let split = self.push_split_hole();
-        let Patch { hole: hole_rep, entry: entry_rep } = try!(self.c(expr));
+        let Patch { hole: hole_rep, entry: entry_rep } = self.c(expr)?;
 
         let split_hole = if greedy {
             self.fill_split(split, Some(entry_rep), None)
@@ -528,14 +582,10 @@ impl Compiler {
         Ok(Patch { hole: Hole::Many(holes), entry: split_entry })
     }
 
-    fn c_repeat_zero_or_more(
-        &mut self,
-        expr: &Expr,
-        greedy: bool,
-    ) -> Result {
+    fn c_repeat_zero_or_more(&mut self, expr: &Hir, greedy: bool) -> Result {
         let split_entry = self.insts.len();
         let split = self.push_split_hole();
-        let Patch { hole: hole_rep, entry: entry_rep } = try!(self.c(expr));
+        let Patch { hole: hole_rep, entry: entry_rep } = self.c(expr)?;
 
         self.fill(hole_rep, split_entry);
         let split_hole = if greedy {
@@ -546,12 +596,8 @@ impl Compiler {
         Ok(Patch { hole: split_hole, entry: split_entry })
     }
 
-    fn c_repeat_one_or_more(
-        &mut self,
-        expr: &Expr,
-        greedy: bool,
-    ) -> Result {
-        let Patch { hole: hole_rep, entry: entry_rep } = try!(self.c(expr));
+    fn c_repeat_one_or_more(&mut self, expr: &Hir, greedy: bool) -> Result {
+        let Patch { hole: hole_rep, entry: entry_rep } = self.c(expr)?;
         self.fill_to_next(hole_rep);
         let split = self.push_split_hole();
 
@@ -565,26 +611,26 @@ impl Compiler {
 
     fn c_repeat_range_min_or_more(
         &mut self,
-        expr: &Expr,
+        expr: &Hir,
         greedy: bool,
         min: u32,
     ) -> Result {
         let min = u32_to_usize(min);
-        let patch_concat = try!(self.c_concat(iter::repeat(expr).take(min)));
-        let patch_rep = try!(self.c_repeat_zero_or_more(expr, greedy));
+        let patch_concat = self.c_concat(iter::repeat(expr).take(min))?;
+        let patch_rep = self.c_repeat_zero_or_more(expr, greedy)?;
         self.fill(patch_concat.hole, patch_rep.entry);
         Ok(Patch { hole: patch_rep.hole, entry: patch_concat.entry })
     }
 
     fn c_repeat_range(
         &mut self,
-        expr: &Expr,
+        expr: &Hir,
         greedy: bool,
         min: u32,
         max: u32,
     ) -> Result {
         let (min, max) = (u32_to_usize(min), u32_to_usize(max));
-        let patch_concat = try!(self.c_concat(iter::repeat(expr).take(min)));
+        let patch_concat = self.c_concat(iter::repeat(expr).take(min))?;
         let initial_entry = patch_concat.entry;
         if min == max {
             return Ok(patch_concat);
@@ -613,7 +659,7 @@ impl Compiler {
         for _ in min..max {
             self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
-            let Patch { hole, entry } = try!(self.c(expr));
+            let Patch { hole, entry } = self.c(expr)?;
             prev_hole = hole;
             if greedy {
                 holes.push(self.fill_split(split, Some(entry), None));
@@ -822,7 +868,7 @@ impl InstHole {
 
 struct CompileClass<'a, 'b> {
     c: &'a mut Compiler,
-    ranges: &'b [ClassRange],
+    ranges: &'b [hir::ClassUnicodeRange],
 }
 
 impl<'a, 'b> CompileClass<'a, 'b> {
@@ -833,9 +879,9 @@ impl<'a, 'b> CompileClass<'a, 'b> {
         let mut utf8_seqs = self.c.utf8_seqs.take().unwrap();
         self.c.suffix_cache.clear();
 
-        for (i, ref range) in self.ranges.iter().enumerate() {
+        for (i, range) in self.ranges.iter().enumerate() {
             let is_last_range = i + 1 == self.ranges.len();
-            utf8_seqs.reset(range.start, range.end);
+            utf8_seqs.reset(range.start(), range.end());
             let mut it = (&mut utf8_seqs).peekable();
             loop {
                 let utf8_seq = match it.next() {
@@ -843,7 +889,7 @@ impl<'a, 'b> CompileClass<'a, 'b> {
                     Some(utf8_seq) => utf8_seq,
                 };
                 if is_last_range && it.peek().is_none() {
-                    let Patch { hole, entry } = try!(self.c_utf8_seq(&utf8_seq));
+                    let Patch { hole, entry } = self.c_utf8_seq(&utf8_seq)?;
                     holes.push(hole);
                     self.c.fill(last_split, entry);
                     last_split = Hole::None;
@@ -856,7 +902,7 @@ impl<'a, 'b> CompileClass<'a, 'b> {
                     }
                     self.c.fill_to_next(last_split);
                     last_split = self.c.push_split_hole();
-                    let Patch { hole, entry } = try!(self.c_utf8_seq(&utf8_seq));
+                    let Patch { hole, entry } = self.c_utf8_seq(&utf8_seq)?;
                     holes.push(hole);
                     last_split = self.c.fill_split(last_split, Some(entry), None);
                 }
@@ -916,7 +962,7 @@ impl<'a, 'b> CompileClass<'a, 'b> {
     }
 }
 
-/// SuffixCache is a simple bounded hash map for caching suffix entries in
+/// `SuffixCache` is a simple bounded hash map for caching suffix entries in
 /// UTF-8 automata. For example, consider the Unicode range \u{0}-\u{FFFF}.
 /// The set of byte ranges looks like this:
 ///
@@ -1050,6 +1096,9 @@ impl ByteClassSet {
 }
 
 fn u32_to_usize(n: u32) -> usize {
+    // In case usize is less than 32 bits, we need to guard against overflow.
+    // On most platforms this compiles to nothing.
+    // TODO Use `std::convert::TryFrom` once it's stable.
     if (n as u64) > (::std::usize::MAX as u64) {
         panic!("BUG: {} is too big to be pointer sized", n)
     }

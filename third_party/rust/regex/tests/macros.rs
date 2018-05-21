@@ -14,7 +14,7 @@ macro_rules! ismatch {
         #[test]
         fn $name() {
             let re = regex!($re);
-            assert!($ismatch == re.is_match(text!($text)));
+            assert_eq!($ismatch, re.is_match(text!($text)));
         }
     };
 }

@@ -75,3 +75,13 @@ fn disallow_non_utf8() {
     assert!(regex::Regex::new(r"(?-u)[\xFF]").is_err());
     assert!(regex::Regex::new(r"(?-u)☃").is_err());
 }
+
+#[test]
+fn disallow_octal() {
+    assert!(regex::Regex::new(r"\0").is_err());
+}
+
+#[test]
+fn allow_octal() {
+    assert!(regex::RegexBuilder::new(r"\0").octal(true).build().is_ok());
+}
