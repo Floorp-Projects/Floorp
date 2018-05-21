@@ -38,24 +38,24 @@ class FontsApp extends PureComponent {
       onToggleFontHighlight,
     } = this.props;
 
-    const hasFonts = fontEditor.fonts.length > 0;
-
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",
         id: "sidebar-panel-fontinspector"
       },
-      hasFonts && FontEditor({
-        fontEditor,
-        onInstanceChange,
-        onPropertyChange,
-      }),
-      FontOverview({
-        fontData,
-        fontOptions,
-        onPreviewFonts,
-        onToggleFontHighlight,
-      })
+      fontEditor.isVisible ?
+        FontEditor({
+          fontEditor,
+          onInstanceChange,
+          onPropertyChange,
+        })
+        :
+        FontOverview({
+          fontData,
+          fontOptions,
+          onPreviewFonts,
+          onToggleFontHighlight,
+        })
     );
   }
 }

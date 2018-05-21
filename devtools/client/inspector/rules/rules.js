@@ -41,6 +41,7 @@ loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clip
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
+const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 const FILTER_CHANGED_TIMEOUT = 150;
 
 // This is used to parse user input when filtering.
@@ -125,6 +126,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this._onCopy = this._onCopy.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
+  this._onRuleSelected = this._onRuleSelected.bind(this);
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
   this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
@@ -160,6 +162,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.hoverCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.activeCheckbox.addEventListener("click", this._onTogglePseudoClass);
   this.focusCheckbox.addEventListener("click", this._onTogglePseudoClass);
+  this.on("ruleview-rule-selected", this._onRuleSelected);
 
   this._handlePrefChange = this._handlePrefChange.bind(this);
   this._handleUAStylePrefChange = this._handleUAStylePrefChange.bind(this);
@@ -171,6 +174,7 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this._prefObserver.on(PREF_DEFAULT_COLOR_UNIT, this._handleDefaultColorUnitPrefChange);
 
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
+  this.showFontEditor = Services.prefs.getBoolPref(PREF_FONT_EDITOR);
 
   // The popup will be attached to the toolbox document.
   this.popup = new AutocompletePopup(inspector._toolbox.doc, {
@@ -755,6 +759,7 @@ CssRuleView.prototype = {
     this.hoverCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.activeCheckbox.removeEventListener("click", this._onTogglePseudoClass);
     this.focusCheckbox.removeEventListener("click", this._onTogglePseudoClass);
+    this.off("ruleview-rule-selected", this._onRuleSelected);
 
     this.searchField = null;
     this.searchClearButton = null;
@@ -1307,6 +1312,24 @@ CssRuleView.prototype = {
   getSelectedRules(editorId) {
     const rules = this.selectedRules.get(editorId);
     return Array.isArray(rules) ? rules : [];
+  },
+
+  /**
+   * Called when a rule from the Rule view was marked as selected for an editor.
+   * Handle the event and show panels relevant for the given editor id.
+   *
+   * @param {Object} eventData
+   *        Data payload for the event. Contains:
+   *        - {String} editorId - id of the editor for which the rule was selected
+   *        - {Rule} rule - reference to rule that was selected
+   */
+  _onRuleSelected(eventData) {
+    const { editorId } = eventData;
+    switch (editorId) {
+      case "fonteditor":
+        this.inspector.sidebar.show("fontinspector");
+        break;
+    }
   },
 
   /**
