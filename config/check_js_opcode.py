@@ -12,14 +12,17 @@ from __future__ import print_function
 import os
 import sys
 
-scriptname = os.path.basename(__file__);
+scriptname = os.path.basename(__file__)
 topsrcdir = os.path.dirname(os.path.dirname(__file__))
+
 
 def log_pass(text):
     print('TEST-PASS | {} | {}'.format(scriptname, text))
 
+
 def log_fail(text):
     print('TEST-UNEXPECTED-FAIL | {} | {}'.format(scriptname, text))
+
 
 def check_opcode():
     sys.path.insert(0, os.path.join(topsrcdir, 'js', 'src', 'vm'))
@@ -33,11 +36,13 @@ def check_opcode():
     log_pass('ok')
     return True
 
+
 def main():
     if not check_opcode():
         sys.exit(1)
 
     sys.exit(0)
+
 
 if __name__ == '__main__':
     main()
