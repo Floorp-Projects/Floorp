@@ -157,6 +157,8 @@ consoleApi.set("console.count", {
     "console.count | clear",
     "console.count | default: 4",
     "console.count | test counter: 3",
+    "console.countReset | test counter: 0",
+    "console.countReset | counterDoesntExist",
   ],
   code: `
     console.count();
@@ -167,6 +169,8 @@ consoleApi.set("console.count", {
     console.clear();
     console.count();
     console.count("test counter");
+    console.countReset("test counter");
+    console.countReset("test counter");
 `});
 
 // CSS messages

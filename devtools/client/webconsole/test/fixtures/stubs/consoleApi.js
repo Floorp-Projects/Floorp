@@ -1621,6 +1621,58 @@ stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
   "private": false
 }));
 
+stubPreparedMessages.set(`console.countReset | test counter: 0`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1526920412190,
+  "type": "log",
+  "helperType": null,
+  "level": "log",
+  "messageText": "test counter: 0",
+  "parameters": null,
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":10,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":\"test counter: 0\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"log\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 10,
+    "column": 5
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
+stubPreparedMessages.set(`console.countReset | counterDoesntExist`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1526920412191,
+  "type": "log",
+  "helperType": null,
+  "level": "warn",
+  "messageText": "Counter “test counter” doesn't exist.",
+  "parameters": null,
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":11,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"warn\",\"messageText\":\"Counter “test counter” doesn't exist.\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"log\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 11,
+    "column": 5
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
 stubPackets.set(`console.log('foobar', 'test')`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "consoleAPICall",
@@ -3131,6 +3183,62 @@ stubPackets.set(`console.count | test counter: 3`, {
     "prefix": "",
     "private": false,
     "timeStamp": 1511365913335,
+    "timer": null,
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`console.countReset | test counter: 0`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "test counter"
+    ],
+    "columnNumber": 5,
+    "counter": {
+      "count": 0,
+      "label": "test counter"
+    },
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "countReset",
+    "lineNumber": 10,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1526920412190,
+    "timer": null,
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`console.countReset | counterDoesntExist`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "test counter"
+    ],
+    "columnNumber": 5,
+    "counter": {
+      "error": "counterDoesntExist",
+      "label": "test counter"
+    },
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "countReset",
+    "lineNumber": 11,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1526920412191,
     "timer": null,
     "workerType": "none",
     "styles": [],
