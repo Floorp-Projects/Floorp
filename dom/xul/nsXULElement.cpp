@@ -304,12 +304,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULElement)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
                                                   nsStyledElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBindingParent);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULElement,
                                                 nsStyledElement)
     // Why aren't we unlinking the prototype?
     tmp->ClearHasID();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mBindingParent);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
