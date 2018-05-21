@@ -11,7 +11,8 @@ import sys
 import time
 import traceback
 
-from .logtypes import Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple
+from .logtypes import (Unicode, TestId, TestList, Status, SubStatus, Dict, List, Int, Any, Tuple,
+                       Boolean)
 from .logtypes import log_action, convertor_registry
 import six
 
@@ -52,6 +53,18 @@ Allowed actions, and subfields:
       count - Number of assertions produced
       min_expected - Minimum expected number of assertions
       max_expected - Maximum expected number of assertions
+
+  lsan_leak
+      frames - List of stack frames from the leak report
+      scope - An identifier for the set of tests run during the browser session
+              (e.g. a directory name)
+      allowed_match - A stack frame in the list that matched a rule meaning the
+                      leak is expected
+
+  lsan_summary
+      bytes - Number of bytes leaked
+      allocations - Number of allocations
+      allowed - Boolean indicating whether all detected leaks matched allow rules
 
   log
       level [CRITICAL | ERROR | WARNING |
@@ -463,6 +476,18 @@ class StructuredLogger(object):
         :param max_expected: - Maximum expected number of assertions
         """
         self._log_data("assertion_count", data)
+
+    @log_action(List(Unicode, "frames"),
+                Unicode("scope", optional=True, default=None),
+                Unicode("allowed_match", optional=True, default=None))
+    def lsan_leak(self, data):
+        self._log_data("lsan_leak", data)
+
+    @log_action(Int("bytes"),
+                Int("allocations"),
+                Boolean("allowed", optional=True, default=False))
+    def lsan_summary(self, data):
+        self._log_data("lsan_summary", data)
 
     @log_action()
     def shutdown(self, data):

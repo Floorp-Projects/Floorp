@@ -245,6 +245,12 @@ class Any(DataType):
         return data
 
 
+class Boolean(DataType):
+
+    def convert(self, data):
+        return bool(data)
+
+
 class Tuple(ContainerType):
 
     def _format_item_type(self, item_type):
