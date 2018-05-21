@@ -318,8 +318,7 @@ InterpreterStack::pushInlineFrame(JSContext* cx, InterpreterRegs& regs, const Ca
 
 MOZ_ALWAYS_INLINE bool
 InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
-                                           HandleFunction callee, HandleValue newTarget,
-                                           HandleObject envChain)
+                                           HandleFunction callee, HandleObject envChain)
 {
     MOZ_ASSERT(callee->isGenerator() || callee->isAsync());
     RootedScript script(cx, JSFunction::getOrCreateScript(cx, callee));
@@ -332,11 +331,12 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
 
     LifoAlloc::Mark mark = allocator_.mark();
 
-    MaybeConstruct constructing = MaybeConstruct(newTarget.isObject());
+    // (Async) generators and async functions are not constructors.
+    MOZ_ASSERT(!callee->isConstructor());
 
     // Include callee, |this|, and maybe |new.target|
     unsigned nformal = callee->nargs();
-    unsigned nvals = 2 + constructing + nformal + script->nslots();
+    unsigned nvals = 2 + nformal + script->nslots();
 
     uint8_t* buffer = allocateFrame(cx, sizeof(InterpreterFrame) + nvals * sizeof(Value));
     if (!buffer)
@@ -346,12 +346,10 @@ InterpreterStack::resumeGeneratorCallFrame(JSContext* cx, InterpreterRegs& regs,
     argv[-2] = ObjectValue(*callee);
     argv[-1] = UndefinedValue();
     SetValueRangeToUndefined(argv, nformal);
-    if (constructing)
-        argv[nformal] = newTarget;
 
-    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(argv + nformal + constructing);
+    InterpreterFrame* fp = reinterpret_cast<InterpreterFrame*>(argv + nformal);
     fp->mark_ = mark;
-    fp->initCallFrame(prev, prevpc, prevsp, *callee, script, argv, 0, constructing);
+    fp->initCallFrame(prev, prevpc, prevsp, *callee, script, argv, 0, NO_CONSTRUCT);
     fp->resumeGeneratorFrame(envChain);
 
     regs.prepareToRun(*fp, script);
@@ -645,6 +643,18 @@ AbstractFramePtr::unsetIsDebuggee()
         asWasmDebugFrame()->unsetIsDebuggee();
     else
         asRematerializedFrame()->unsetIsDebuggee();
+}
+
+inline bool
+AbstractFramePtr::isConstructing() const
+{
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isConstructing();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isConstructing();
+    if (isRematerializedFrame())
+        return asRematerializedFrame()->isConstructing();
+    MOZ_CRASH("Unexpected frame");
 }
 
 inline bool
@@ -963,11 +973,10 @@ InterpreterActivation::popInlineFrame(InterpreterFrame* frame)
 }
 
 inline bool
-InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue newTarget,
-                                            HandleObject envChain)
+InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleObject envChain)
 {
     InterpreterStack& stack = cx_->interpreterStack();
-    if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, newTarget, envChain))
+    if (!stack.resumeGeneratorCallFrame(cx_, regs_, callee, envChain))
         return false;
 
     MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment_);

@@ -1962,9 +1962,6 @@ class MOZ_STACK_CLASS IfThenElseEmitter
     JumpList jumpAroundThen_;
     JumpList jumpsAroundElse_;
 
-    // The source note index for SRC_IF, SRC_IF_ELSE, or SRC_COND.
-    unsigned noteIndex_;
-
     // The stack depth before emitting the then block.
     // Used for restoring stack depth before emitting the else block.
     // Also used for assertion to make sure then and else blocks pushed the
@@ -2014,7 +2011,6 @@ class MOZ_STACK_CLASS IfThenElseEmitter
   public:
     explicit IfThenElseEmitter(BytecodeEmitter* bce)
       : bce_(bce),
-        noteIndex_(-1),
         thenDepth_(0),
 #ifdef DEBUG
         pushed_(0),
@@ -2037,7 +2033,7 @@ class MOZ_STACK_CLASS IfThenElseEmitter
 
         // Emit an annotated branch-if-false around the then part.
         SrcNoteType type = nextState == If ? SRC_IF : nextState == IfElse ? SRC_IF_ELSE : SRC_COND;
-        if (!bce_->newSrcNote(type, &noteIndex_))
+        if (!bce_->newSrcNote(type))
             return false;
         if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_))
             return false;
@@ -2092,17 +2088,6 @@ class MOZ_STACK_CLASS IfThenElseEmitter
         // Ensure the branch-if-false comes here, then emit the else.
         if (!bce_->emitJumpTargetAndPatch(jumpAroundThen_))
             return false;
-
-        // Annotate SRC_IF_ELSE or SRC_COND with the offset from branch to
-        // jump, for IonMonkey's benefit.  We can't just "back up" from the pc
-        // of the else clause, because we don't know whether an extended
-        // jump was required to leap from the end of the then clause over
-        // the else clause.
-        if (!bce_->setSrcNoteOffset(noteIndex_, 0,
-                                    jumpsAroundElse_.offset - jumpAroundThen_.offset))
-        {
-            return false;
-        }
 
         // Restore stack depth of the then part.
         bce_->stackDepth = thenDepth_;
