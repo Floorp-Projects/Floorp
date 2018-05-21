@@ -1,6 +1,7 @@
 {
   "default": {
     "searchDefault": "Google",
+    "searchOrder": ["Google", "Bing"],
     "visibleDefaultEngines": [
       "google", "amazondotcom", "bing", "ddg", "ebay", "twitter", "wikipedia"
     ]
@@ -180,6 +181,7 @@
     },
     "cs": {
       "default": {
+        "searchOrder": ["Google", "Seznam"],
         "visibleDefaultEngines": [
           "google", "seznam-cz", "ddg", "heureka-cz", "mapy-cz", "wikipedia-cz"
         ]
@@ -447,6 +449,7 @@
     },
     "ja-JP-mac": {
       "default": {
+        "searchOrder": ["Google", "Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]
@@ -454,6 +457,7 @@
     },
     "ja": {
       "default": {
+        "searchOrder": ["Google", "Yahoo! JAPAN", "Bing", "Amazon.co.jp", "楽天市場", "ヤフオク!", "教えて！goo", "Twitter", "Wikipedia (ja)"],
         "visibleDefaultEngines": [
           "google", "yahoo-jp", "bing", "amazon-jp", "rakuten", "yahoo-jp-auctions", "oshiete-goo", "twitter-ja", "wikipedia-ja", "ddg"
         ]

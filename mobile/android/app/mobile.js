@@ -257,19 +257,9 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 pref("browser.ssl_override_behavior", 2);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
-// ordering of search engines in the engine list.
-pref("browser.search.order.1", "chrome://browser/locale/region.properties");
-pref("browser.search.order.2", "chrome://browser/locale/region.properties");
-pref("browser.search.order.3", "chrome://browser/locale/region.properties");
-
 // Market-specific search defaults
 pref("browser.search.geoSpecificDefaults", true);
 pref("browser.search.geoSpecificDefaults.url", "https://search.services.mozilla.com/1/%APP%/%VERSION%/%CHANNEL%/%LOCALE%/%REGION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%");
-
-// Allow for unique order in the US.
-pref("browser.search.order.US.1", "chrome://browser/locale/region.properties");
-pref("browser.search.order.US.2", "chrome://browser/locale/region.properties");
-pref("browser.search.order.US.3", "chrome://browser/locale/region.properties");
 
 // disable updating
 pref("browser.search.update", false);
