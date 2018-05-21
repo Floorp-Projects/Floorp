@@ -125,13 +125,6 @@ pref("app.update.log", false);
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
 
-// Whether or not app updates are enabled
-#ifdef MOZ_UPDATER
-pref("app.update.enabled", true);
-#else
-pref("app.update.enabled", false);
-#endif
-
 // Whether or not to use the doorhanger application update UI.
 pref("app.update.doorhanger", true);
 
@@ -147,9 +140,8 @@ pref("app.update.download.promptMaxAttempts", 2);
 // download a fresh installer.
 pref("app.update.elevation.promptMaxAttempts", 2);
 
-// If set to true, the Update Service will automatically download updates when
-// app updates are enabled per the app.update.enabled preference and if the user
-// can apply updates.
+// If set to true, the Update Service will automatically download updates if the
+// user can apply updates.
 pref("app.update.auto", true);
 
 // If set to true, the Update Service will present no UI for any event.
