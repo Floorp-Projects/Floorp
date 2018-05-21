@@ -11,40 +11,34 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    el.addEventListener("ended", function() {
-      ok(false, "ended should never fire");
-      SimpleTest.finish();
-    });
-    const videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4")
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 5), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(6, 8), ".m4s"))
-    .then(function() {
-      is(el.buffered.length, 2, "discontinuous buffered range");
-      ms.endOfStream();
-      return Promise.all([ once(el, "durationchange"), once(ms, "sourceended") ]);
-    }).then(function() {
-      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
-      // has notified it of available data. Make sure that we get 'playing' before
-      // we starting waiting for 'waiting'.
-      info("Invoking play()");
-      el.play();
-      return once(el, "playing");
-    }).then(function() {
-      ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-      return once(el, "waiting");
-    }).then(function() {
-      // waiting is fired when we start to play the last frame.
-      // 0.033334 is the duration of the last frame, + 0.000001 of fuzz.
-      // the next video frame, currentTime can be up to 1 frame's worth earlier than end of video.
-      isfuzzy(el.currentTime, videosb.buffered.end(0), 0.033334, "waiting was fired on gap");
-      SimpleTest.finish();
-    });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  el.addEventListener("ended", function() {
+    ok(false, "ended should never fire");
+    SimpleTest.finish();
   });
+  const videosb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 8), ".m4s");
+  is(el.buffered.length, 2, "discontinuous buffered range");
+  ms.endOfStream();
+  await Promise.all([ once(el, "durationchange"), once(ms, "sourceended") ]);
+  // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
+  // has notified it of available data. Make sure that we get "playing" before
+  // we starting waiting for "waiting".
+  info("Invoking play()");
+  el.play();
+  await once(el, "playing");
+  ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+  await once(el, "waiting");
+  // waiting is fired when we start to play the last frame.
+  // 0.033334 is the duration of the last frame, + 0.000001 of fuzz.
+  // the next video frame, currentTime can be up to 1 frame's worth earlier than end of video.
+  isfuzzy(el.currentTime, videosb.buffered.end(0), 0.033334, "waiting was fired on gap");
+  SimpleTest.finish();
 });
 
 </script>

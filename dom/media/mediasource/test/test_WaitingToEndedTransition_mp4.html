@@ -11,43 +11,35 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    // ensure tracks end at approximately the same time to ensure ended event is
-    // always fired (bug 1233639).
-    audiosb.appendWindowEnd = 3.9;
-    videosb.appendWindowEnd = 3.9;
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4")
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"))
-    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 6), ".m4s"))
-    .then(function() {
-      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
-      // has notified it of available data. Make sure that we get 'playing' before
-      // we starting waiting for 'waiting'.
-      info("Invoking play()");
-      const p = once(el, "playing");
-      el.play();
-      return p;
-    }).then(function() {
-      ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-      const p = once(el, "waiting");
-      el.play();
-      return p;
-    }).then(function() {
-      const p = once(el, "ended");
-      ms.endOfStream();
-      return p;
-    }).then(function() {
-      is(el.duration, 3.854512, "Video has correct duration: " + el.duration);
-      is(el.currentTime, el.duration, "Video has correct currentTime.");
-      SimpleTest.finish();
-    });
-  });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  // ensure tracks end at approximately the same time to ensure ended event is
+  // always fired (bug 1233639).
+  audiosb.appendWindowEnd = 3.9;
+  videosb.appendWindowEnd = 3.9;
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
+  // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
+  // has notified it of available data. Make sure that we get "playing" before
+  // we starting waiting for "waiting".
+  info("Invoking play()");
+  let p = once(el, "playing");
+  el.play();
+  await p;
+  ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+  await once(el, "waiting");
+  p = once(el, "ended");
+  ms.endOfStream();
+  await p;
+  is(el.duration, 3.854512, "Video has correct duration: " + el.duration);
+  is(el.currentTime, el.duration, "Video has correct currentTime.");
+  SimpleTest.finish();
 });
 
 </script>

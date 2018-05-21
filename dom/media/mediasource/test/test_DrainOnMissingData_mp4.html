@@ -11,47 +11,36 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4")
-    .then(function() {
-      // Set appendWindowEnd to ensure we only have about 6 frames worth.
-      // We must feed at least 6 frames to pass the MDSM pre-roll.
-      videosb.appendWindowEnd = .4;
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
-    })
-    .then(function() {
-      info("Invoking play()");
-      const promises = [];
-      promises.push(once(el, "playing"));
-      el.play();
-      return Promise.all(promises);
-    })
-    .then(function() {
-      info("got playing");
-      return once(el, "waiting");
-    }).then(function() {
-      info("got waiting");
-      info("Loading more data");
-      // Waiting will be fired on the last frame +- 40ms.
-      isfuzzy(el.currentTime, videosb.buffered.end(0) - 1 / 30,
-              0.04, "Got a waiting event at " + el.currentTime);
-      videosb.appendWindowEnd = 1;
-      const p = once(el, "ended");
-      const loads = fetchAndLoad(videosb, "bipbop/bipbop_video", [ 1 ], ".m4s");
-      loads.then(() => ms.endOfStream());
-      return p;
-    }).then(function() {
-      // These fuzz factors are bigger than they should be. We should investigate
-      // and fix them in bug 1137574.
-      is(el.duration, 0.801666, "Video has correct duration: " + el.duration);
-      is(el.currentTime, el.duration, "Video has correct currentTime.");
-      SimpleTest.finish();
-    });
-  });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  // Set appendWindowEnd to ensure we only have about 6 frames worth.
+  // We must feed at least 6 frames to pass the MDSM pre-roll.
+  videosb.appendWindowEnd = .4;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
+  info("Invoking play()");
+  const p = once(el, "playing");
+  await el.play();
+  await p;
+  info("got playing");
+  await once(el, "waiting");
+  info("got waiting");
+  info("Loading more data");
+  // Waiting will be fired on the last frame +- 40ms.
+  isfuzzy(el.currentTime, videosb.buffered.end(0) - 1 / 30,
+          0.04, `Got a waiting event at ${el.currentTime}`);
+  videosb.appendWindowEnd = 1;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ 1 ], ".m4s");
+  ms.endOfStream();
+  await once(el, "ended");
+  // These fuzz factors are bigger than they should be. We should investigate
+  // and fix them in bug 1137574.
+  is(el.duration, 0.801666, "Video has correct duration: " + el.duration);
+  is(el.currentTime, el.duration, "Video has correct currentTime.");
+  SimpleTest.finish();
 });
 
 </script>

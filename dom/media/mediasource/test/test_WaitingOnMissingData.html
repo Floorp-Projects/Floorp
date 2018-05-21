@@ -11,51 +11,48 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const sb = ms.addSourceBuffer("video/webm");
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-      loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 0, 318))()
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 318, 25223 - 318)))
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 25223, 46712 - 25223)))
-      /* Note - Missing |46712, 67833 - 46712| segment here */
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 67833, 88966 - 67833)))
-      .then(loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966)))
-      .then(function() {
-        // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
-        // has notified it of available data. Make sure that we get 'playing' before
-        // we starting waiting for 'waiting'.
-        info("Invoking play()");
-        const p = once(el, "playing");
-        el.play();
-        return p;
-      }).then(function() {
-        ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
-        const p = once(el, "waiting");
-        el.play();
-        return p;
-      }).then(function() {
-        // currentTime is based on the current video frame, so if the audio ends just before
-        // the next video frame, currentTime can be up to 1 frame's worth earlier than
-        // min(audioEnd, videoEnd).
-        // 0.0465 is the length of the last audio frame.
-        ok(el.currentTime >= (sb.buffered.end(0) - 0.0465),
-           "Got a waiting event at " + el.currentTime);
-        info("Loading more data");
-        const p = once(el, "ended");
-        loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712)).then(() => ms.endOfStream());
-        return p;
-      }).then(function() {
-        // These fuzz factors are bigger than they should be. We should investigate
-        // and fix them in bug 1137574.
-        isfuzzy(el.duration, 4.001, 0.1, "Video has correct duration: " + el.duration);
-        isfuzzy(el.currentTime, el.duration, 0.1, "Video has correct currentTime.");
-        SimpleTest.finish();
-      });
-    });
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const sb = ms.addSourceBuffer("video/webm");
+  sb.addEventListener("error", e => {
+    ok(false, "Got Error: " + e);
+    SimpleTest.finish();
   });
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 0, 318));
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 318, 25223 - 318));
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 25223, 46712 - 25223));
+  /* Note - Missing |46712, 67833 - 46712| segment here */
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 67833, 88966 - 67833));
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 88966));
+  // HTMLMediaElement fires "waiting" if somebody invokes |play()| before the MDSM
+  // has notified it of available data. Make sure that we get "playing" before
+  // we starting waiting for "waiting".
+  info("Invoking play()");
+  let p = once(el, "playing");
+  el.play();
+  await p;
+  ok(true, "Video playing. It should play for a bit, then fire 'waiting'");
+  p = once(el, "waiting");
+  el.play();
+  await p;
+  // currentTime is based on the current video frame, so if the audio ends just before
+  // the next video frame, currentTime can be up to 1 frame's worth earlier than
+  // min(audioEnd, videoEnd).
+  // 0.0465 is the length of the last audio frame.
+  ok(el.currentTime >= (sb.buffered.end(0) - 0.0465),
+     `Got a waiting event at ${el.currentTime}`);
+  info("Loading more data");
+  p = once(el, "ended");
+  await loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
+  ms.endOfStream();
+  await p;
+  // These fuzz factors are bigger than they should be. We should investigate
+  // and fix them in bug 1137574.
+  isfuzzy(el.duration, 4.001, 0.1, "Video has correct duration: " + el.duration);
+  isfuzzy(el.currentTime, el.duration, 0.1, "Video has correct currentTime.");
+  SimpleTest.finish();
 });
 </script>
 </pre>

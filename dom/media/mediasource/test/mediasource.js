@@ -61,6 +61,37 @@ function range(start, end) {
   return rv;
 }
 
+function must_throw(f, msg, error = true) {
+  try {
+    f();
+    ok(!error, msg);
+  } catch (e) {
+    ok(error, msg);
+    if (error === true) {
+      ok(false, `Please provide name of expected error! Got ${e.name}: ${e.message}.`);
+    } else if (e.name != error) {
+      throw e;
+    }
+  }
+}
+
+async function must_reject(f, msg, error = true) {
+  try {
+    await f();
+    ok(!error, msg);
+  } catch (e) {
+    ok(error, msg);
+    if (error === true) {
+      ok(false, `Please provide name of expected error! Got ${e.name}: ${e.message}.`);
+    } else if (e.name != error) {
+      throw e;
+    }
+  }
+}
+
+const must_not_throw = (f, msg) => must_throw(f, msg, false);
+const must_not_reject = (f, msg) => must_reject(f, msg, false);
+
 async function once(target, name, cb) {
   let result = await new Promise(r => target.addEventListener(name, r, {once: true}));
   if (cb) {
@@ -82,7 +113,7 @@ async function loadSegment(sb, typedArrayOrArrayBuffer) {
                                                                       : typedArrayOrArrayBuffer;
   info(`Loading buffer: [${typedArray.byteOffset}, ${typedArray.byteOffset + typedArray.byteLength})`);
   const beforeBuffered = timeRangeToString(sb.buffered);
-  const p = once(sb, 'update');
+  const p = once(sb, "update");
   sb.appendBuffer(typedArray);
   await p;
   const afterBuffered = timeRangeToString(sb.buffered);
@@ -151,4 +182,13 @@ async function waitUntilTime(target, targetTime) {
     });
   });
   ok(true, "Reached target time of: " + targetTime);
+}
+
+// Log events for debugging.
+
+function logEvents(el) {
+  [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+   "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+   "waiting", "pause", "durationchange", "seeking",
+   "seeked" ].forEach(type => el.addEventListener(type, e => info(`got ${e.type} event`)));
 }

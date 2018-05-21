@@ -12,57 +12,43 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// Avoid making trouble for people who fix rounding bugs.
-function fuzzyEquals(a, b) {
-  return Math.abs(a - b) < 0.01;
-}
-
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    el.addEventListener("error", function(e) {
-      ok(false, "should not fire '" + e + "' event");
-    });
-    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    try {
-      el.currentTime = 3;
-    } catch (e) {
-      ok(false, "should not throw '" + e + "' exception");
-    }
-    is(el.currentTime, 3, "currentTime is default playback start position");
-    is(el.seeking, false, "seek not started with HAVE_NOTHING");
-    const metadataPromises = [];
-    metadataPromises.push(fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4"));
-    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
-    metadataPromises.push(once(el, "loadedmetadata"));
-    Promise.all(metadataPromises)
-    .then(function() {
-      const p = once(el, "seeking");
-      el.play();
-      el.currentTime = 5;
-      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
-      is(el.seeking, true, "seek not started with HAVE_METADATA");
-      is(el.currentTime, 5, "currentTime is seek position");
-      return p;
-    })
-    .then(function() {
-      ok(true, "Got seeking event");
-      const seekedPromises = [];
-      seekedPromises.push(once(el, "seeked"));
-      seekedPromises.push(fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(5, 9), ".m4s"));
-      seekedPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 10), ".m4s"));
-      return Promise.all(seekedPromises);
-    })
-    .then(function() {
-      ok(true, "Got seeked event");
-      ok(el.currentTime >= 5, "Time >= 5");
-      once(el, "ended").then(SimpleTest.finish.bind(SimpleTest));
-      ms.endOfStream();
-    });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
   });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  must_not_throw(() => el.currentTime = 3, "setting currentTime is valid");
+  is(el.currentTime, 3, "currentTime is default playback start position");
+  is(el.seeking, false, "seek not started with HAVE_NOTHING");
+  await Promise.all([
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4"),
+    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"),
+    once(el, "loadedmetadata")
+  ]);
+  const p = once(el, "seeking");
+  el.play();
+  el.currentTime = 5;
+  is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+  is(el.seeking, true, "seek not started with HAVE_METADATA");
+  is(el.currentTime, 5, "currentTime is seek position");
+  await p;
+  ok(true, "Got seeking event");
+  await Promise.all([
+    once(el, "seeked"),
+    fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(5, 9), ".m4s"),
+    fetchAndLoad(videosb, "bipbop/bipbop_video", range(6, 10), ".m4s")
+  ]);
+  ok(true, "Got seeked event");
+  ok(el.currentTime >= 5, "Time >= 5");
+  ms.endOfStream();
+  await once(el, "ended");
+  SimpleTest.finish();
 });
 
 </script>
