@@ -12,7 +12,6 @@ const {
   UPDATE_AXIS_VALUE,
   UPDATE_CUSTOM_INSTANCE,
   UPDATE_EDITOR_STATE,
-  UPDATE_EDITOR_VISIBILITY,
   UPDATE_PROPERTY_VALUE,
 } = require("../actions/index");
 
@@ -28,12 +27,8 @@ const INITIAL_STATE = {
     name: getStr("fontinspector.customInstanceName"),
     values: [],
   },
-  // Whether or not the font editor is visible.
-  isVisible: false,
   // CSS font properties defined on the selected rule.
   properties: {},
-  // Selector text of the selected rule where updated font properties will be written.
-  selector: "",
 };
 
 let reducers = {
@@ -110,10 +105,6 @@ let reducers = {
     }
 
     return { ...state, axes, fonts, properties };
-  },
-
-  [UPDATE_EDITOR_VISIBILITY](state, { isVisible, selector }) {
-    return { ...state, isVisible, selector };
   },
 
   [UPDATE_PROPERTY_VALUE](state, { property, value }) {
