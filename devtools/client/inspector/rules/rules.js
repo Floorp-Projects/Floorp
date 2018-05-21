@@ -31,10 +31,10 @@ const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overl
 const {createChild, promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {debounce} = require("devtools/shared/debounce");
 const EventEmitter = require("devtools/shared/event-emitter");
-const AutocompletePopup = require("devtools/client/shared/autocomplete-popup");
 
 loader.lazyRequireGetter(this, "ClassListPreviewer", "devtools/client/inspector/rules/views/class-list-previewer");
 loader.lazyRequireGetter(this, "StyleInspectorMenu", "devtools/client/inspector/shared/style-inspector-menu");
+loader.lazyRequireGetter(this, "AutocompletePopup", "devtools/client/shared/autocomplete-popup");
 loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
 loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
@@ -172,12 +172,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
 
-  // The popup will be attached to the toolbox document.
-  this.popup = new AutocompletePopup(inspector._toolbox.doc, {
-    autoSelect: true,
-    theme: "auto"
-  });
-
   this._showEmpty();
 
   // Add the tooltips and highlighters to the view
@@ -196,6 +190,18 @@ CssRuleView.prototype = {
   // Empty, unconnected element of the same type as this node, used
   // to figure out how shorthand properties will be parsed.
   _dummyElement: null,
+
+  get popup() {
+    if (!this._popup) {
+      // The popup will be attached to the toolbox document.
+      this._popup = new AutocompletePopup(this.inspector.toolbox.doc, {
+        autoSelect: true,
+        theme: "auto",
+      });
+    }
+
+    return this._popup;
+  },
 
   get classListPreviewer() {
     if (!this._classListPreviewer) {
@@ -779,7 +785,10 @@ CssRuleView.prototype = {
       this._elementStyle.destroy();
     }
 
-    this.popup.destroy();
+    if (this._popup) {
+      this._popup.destroy();
+      this._popup = null;
+    }
   },
 
   /**

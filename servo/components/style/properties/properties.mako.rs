@@ -2216,12 +2216,13 @@ pub mod style_structs {
                         #[allow(non_snake_case)]
                         #[inline]
                         pub fn set_${longhand.ident}<I>(&mut self, v: I)
-                            where I: IntoIterator<Item = longhands::${longhand.ident}
-                                                                  ::computed_value::single_value::T>,
-                                  I::IntoIter: ExactSizeIterator
+                        where
+                            I: IntoIterator<Item = longhands::${longhand.ident}
+                                                              ::computed_value::single_value::T>,
+                            I::IntoIter: ExactSizeIterator
                         {
                             self.${longhand.ident} = longhands::${longhand.ident}::computed_value
-                                                              ::T(v.into_iter().collect());
+                                                              ::List(v.into_iter().collect());
                         }
                     % elif longhand.ident == "display":
                         /// Set `display`.
@@ -2305,13 +2306,10 @@ pub mod style_structs {
                 pub fn compute_font_hash(&mut self) {
                     // Corresponds to the fields in
                     // `gfx::font_template::FontTemplateDescriptor`.
-                    //
-                    // FIXME(emilio): Where's font-style?
                     let mut hasher: FnvHasher = Default::default();
-                    // We hash the floating point number with four decimal
-                    // places.
-                    hasher.write_u64((self.font_weight.0 * 10000.).trunc() as u64);
-                    hasher.write_u64(((self.font_stretch.0).0 * 10000.).trunc() as u64);
+                    self.font_weight.hash(&mut hasher);
+                    self.font_stretch.hash(&mut hasher);
+                    self.font_style.hash(&mut hasher);
                     self.font_family.hash(&mut hasher);
                     self.hash = hasher.finish()
                 }
@@ -2407,7 +2405,7 @@ pub mod style_structs {
                 pub fn clone_${longhand.ident}(
                     &self,
                 ) -> longhands::${longhand.ident}::computed_value::T {
-                    longhands::${longhand.ident}::computed_value::T(
+                    longhands::${longhand.ident}::computed_value::List(
                         self.${longhand.ident}_iter().collect()
                     )
                 }
