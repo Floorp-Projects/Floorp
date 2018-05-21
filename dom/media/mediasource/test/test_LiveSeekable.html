@@ -12,66 +12,62 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
-    // Load data with a +2 offset so that we can distinguish buffered range start
-    // and seekable range start.
-    sb.timestampOffset = 2;
-    const promises = [];
-    promises.push(fetchAndLoad(sb, "seek", [ "" ], ".webm"));
-    promises.push(once(v, "loadedmetadata"));
-    Promise.all(promises)
-    .then(function() {
-      ms.duration = Infinity;
-      sb.abort();
-      is(sb.buffered.length, 1, "continuous buffered range");
-      is(sb.buffered.start(0), 2, "buffered range start at timestamp offset");
-      is(sb.buffered.end(0), 6.001, "buffered range end at original duration + timestamp offset");
-      is(v.seekable.length, 1, "continuous seekable range");
-      is(v.seekable.start(0), 0, "seekable range start at 0");
-      is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-      // LiveSeekableRange.start < buffered.start
-      ms.setLiveSeekableRange(1, 5);
-      is(v.seekable.length, 1, "continuous seekable range");
-      is(v.seekable.start(0), 1, "seekable range start at live range start");
-      is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
+  // Load data with a +2 offset so that we can distinguish buffered range start
+  // and seekable range start.
+  sb.timestampOffset = 2;
+  const p = once(v, "loadedmetadata");
+  await fetchAndLoad(sb, "seek", [ "" ], ".webm");
+  await p;
+  ms.duration = Infinity;
+  sb.abort();
+  is(sb.buffered.length, 1, "continuous buffered range");
+  is(sb.buffered.start(0), 2, "buffered range start at timestamp offset");
+  is(sb.buffered.end(0), 6.001, "buffered range end at original duration + timestamp offset");
+  is(v.seekable.length, 1, "continuous seekable range");
+  is(v.seekable.start(0), 0, "seekable range start at 0");
+  is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 
-      ms.clearLiveSeekableRange();
-      ok(v.seekable.length, 1, "continuous seekable range");
-      is(v.seekable.start(0), 0, "seekable range start at 0");
-      is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
+  // LiveSeekableRange.start < buffered.start
+  ms.setLiveSeekableRange(1, 5);
+  is(v.seekable.length, 1, "continuous seekable range");
+  is(v.seekable.start(0), 1, "seekable range start at live range start");
+  is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 
-      // LiveSeekableRange.end > buffered.end
-      ms.setLiveSeekableRange(1, 8);
-      is(v.seekable.start(0), 1, "seekable range start at live range start");
-      is(v.seekable.end(0), 8, "seekable range end at live range end");
+  ms.clearLiveSeekableRange();
+  ok(v.seekable.length, 1, "continuous seekable range");
+  is(v.seekable.start(0), 0, "seekable range start at 0");
+  is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 
-      // LiveSeekableRange.start > buffered.start
-      // LiveSeekableRange.end < buffered.end
-      ms.setLiveSeekableRange(3, 5);
-      is(v.seekable.start(0), sb.buffered.start(0), "seekable range start at buffered start");
-      is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at live range end");
+  // LiveSeekableRange.end > buffered.end
+  ms.setLiveSeekableRange(1, 8);
+  is(v.seekable.start(0), 1, "seekable range start at live range start");
+  is(v.seekable.end(0), 8, "seekable range end at live range end");
 
-      // LiveSeekableRange.start > buffered.end
-      ms.setLiveSeekableRange(8, 10);
-      is(v.seekable.start(0), sb.buffered.start(0), "seekable range start at buffered start");
-      is(v.seekable.end(0), 10, "seekable range end at live range end");
+  // LiveSeekableRange.start > buffered.start
+  // LiveSeekableRange.end < buffered.end
+  ms.setLiveSeekableRange(3, 5);
+  is(v.seekable.start(0), sb.buffered.start(0), "seekable range start at buffered start");
+  is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at live range end");
 
-      // LiveSeekableRange.end < buffered.start
-      ms.setLiveSeekableRange(0, 2);
-      is(v.seekable.start(0), 0, "seekable range start at live range start");
-      is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
+  // LiveSeekableRange.start > buffered.end
+  ms.setLiveSeekableRange(8, 10);
+  is(v.seekable.start(0), sb.buffered.start(0), "seekable range start at buffered start");
+  is(v.seekable.end(0), 10, "seekable range end at live range end");
 
-      try {
-        ms.setLiveSeekableRange(2, 0);
-        ok(false, "start > end");
-      } catch (e) { ok(true, "must thow if start > end"); }
+  // LiveSeekableRange.end < buffered.start
+  ms.setLiveSeekableRange(0, 2);
+  is(v.seekable.start(0), 0, "seekable range start at live range start");
+  is(v.seekable.end(0), sb.buffered.end(0), "seekable range end at buffered end");
 
-      SimpleTest.finish();
-    });
-  });
+  must_throw(() => ms.setLiveSeekableRange(2, 0),
+             "must thow if start > end",
+             "TypeError");
+
+  SimpleTest.finish();
 });
 
 </script>

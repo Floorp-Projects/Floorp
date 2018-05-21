@@ -16,58 +16,40 @@ SimpleTest.waitForExplicitFinish();
 // 1. Ensure that play/playing aren't fired before any media data been added.
 // 2. Load more than 10s of data and ensure that canplay, play and playing events are fired.
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
   el.autoplay = true;
-  const eventCounts = { play: 0, playing: 0};
-  function ForbiddenEvents(e) {
-    const v = e.target;
-    ok(v.readyState >= v.HAVE_FUTURE_DATA, "Must not have received event too early");
+  const eventCounts = { play: 0, playing: 0 };
+  await once(ms, "sourceopen");
+  logEvents(el);
+  ok(true, "Receive a sourceopen event");
+
+  const forbiddenEvents = e => {
+    ok(el.readyState >= el.HAVE_FUTURE_DATA, "Must not have received event too early");
     is(eventCounts[e.type], 0, "event should have only be fired once");
     eventCounts[e.type]++;
-  }
-  once(ms, "sourceopen").then(function() {
-    // Log events for debugging.
-    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
-    function logEvent(e) {
-      info("got " + e.type + " event");
-    }
-    events.forEach(function(e) {
-      el.addEventListener(e, logEvent);
-    });
-    el.addEventListener("play", ForbiddenEvents);
-    el.addEventListener("playing", ForbiddenEvents);
+  };
+  el.addEventListener("play", forbiddenEvents);
+  el.addEventListener("playing", forbiddenEvents);
 
-    ok(true, "Receive a sourceopen event");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    el.addEventListener("error", function(e) {
-      ok(false, "should not fire '" + e + "' event");
-    });
-    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    const metadataPromises = [];
-    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
-    metadataPromises.push(once(el, "loadedmetadata"));
-    Promise.all(metadataPromises)
-    .then(function() {
-      ok(true, "got loadedmetadata event");
-      const playingPromises = [];
-      // We shift the timestamps slightly to create a small gaps at the start.
-      // one that should normally be ignored.
-      videosb.timestampOffset = 0.1;
-      playingPromises.push(once(el, "loadeddata"));
-      playingPromises.push(once(el, "canplay"));
-      playingPromises.push(once(el, "play"));
-      playingPromises.push(once(el, "playing"));
-      playingPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 14), ".m4s"));
-      return Promise.all(playingPromises);
-    })
-    .then(function() {
-      ok(true, "got all required event");
-      SimpleTest.finish();
-    });
+  const videosb = ms.addSourceBuffer("video/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
   });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await p;
+  ok(true, "got loadedmetadata event");
+  // We shift the timestamps slightly to create a small gaps at the start.
+  // one that should normally be ignored.
+  videosb.timestampOffset = 0.1;
+  p = Promise.all([ "loadeddata", "canplay", "play", "playing" ].map(e => once(el, e)));
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 14), ".m4s");
+  await p;
+  ok(true, "got all required event");
+  SimpleTest.finish();
 });
 
 </script>

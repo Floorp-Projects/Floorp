@@ -12,19 +12,17 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
-  once(ms, "sourceopen").then(function() {
-    const sb = ms.addSourceBuffer("video/webm");
-    fetchWithXHR("seek.webm", (buf) => sb.appendBuffer(new Uint8Array(buf)));
-    sb.addEventListener("updateend", () => ms.endOfStream());
+runWithMSE(async (ms, el) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("seek.webm")));
+  sb.addEventListener("updateend", () => ms.endOfStream());
 
-    // Test 'ended' is fired when seeking to the end of the media
-    // once the duration is known.
-    ms.onsourceended = () => {
-      el.currentTime = el.duration;
-    };
-    el.addEventListener("ended", SimpleTest.finish.bind(null));
-  });
+  // Test "ended" is fired when seeking to the end of the media
+  // once the duration is known.
+  ms.onsourceended = () => el.currentTime = el.duration;
+  await once(el, "ended");
+  SimpleTest.finish();
 });
 
 </script>

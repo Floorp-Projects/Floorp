@@ -12,40 +12,31 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// Avoid making trouble for people who fix rounding bugs.
-function fuzzyEquals(a, b) {
-  return Math.abs(a - b) < 0.01;
-}
-
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4")
-    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s"))
-    .then(fetchAndLoad.bind(null, audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 6), ".m4s"))
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(7, 14), ".m4s"))
-    .then(function() {
-      const p = once(el, "seeking");
-      el.play();
-      el.currentTime = 4.5; // Seek to a gap in the video
-      return p;
-    }).then(function() {
-      ok(true, "Got seeking event");
-      const p = once(el, "seeked");
-      el.currentTime = 6; // Seek past the gap.
-      return p;
-    }).then(function() {
-      ok(true, "Got seeked event");
-      ok(el.currentTime >= 6, "Time >= 6");
-      once(el, "ended").then(SimpleTest.finish.bind(SimpleTest));
-      ms.endOfStream();
-    });
-  });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 5), ".m4s");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(6, 12), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(7, 14), ".m4s");
+  let p = once(el, "seeking");
+  el.play();
+  el.currentTime = 4.5; // Seek to a gap in the video
+  await p;
+  ok(true, "Got seeking event");
+  p = once(el, "seeked");
+  el.currentTime = 6; // Seek past the gap.
+  await p;
+  ok(true, "Got seeked event");
+  ok(el.currentTime >= 6, "Time >= 6");
+  ms.endOfStream();
+  await once(el, "ended");
+  SimpleTest.finish();
 });
 
 </script>

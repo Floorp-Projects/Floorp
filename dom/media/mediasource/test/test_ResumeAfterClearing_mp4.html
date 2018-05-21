@@ -11,43 +11,32 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let receivedSourceOpen = false;
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    ok(true, "Receive a sourceopen event");
-    ok(!receivedSourceOpen, "Should only receive one sourceopen for this test");
-    receivedSourceOpen = true;
-    const sb = ms.addSourceBuffer("video/mp4");
-    ok(sb, "Create a SourceBuffer");
-
-    sb.addEventListener("error", (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });
-    fetchAndLoad(sb, "bipbop/bipbop", [ "init" ], ".mp4")
-    .then(function() {
-      const promises = [];
-      promises.push(fetchAndLoad(sb, "bipbop/bipbop", range(1, 3), ".m4s"));
-      promises.push(once(v, "loadeddata"));
-      return Promise.all(promises);
-    }).then(function() {
-      // clear the entire sourcebuffer.
-      sb.remove(0, 5);
-      return once(sb, "updateend");
-    }).then(function() {
-      v.play();
-      // We have nothing to play, waiting will be fired.
-      return once(v, "waiting");
-    }).then(function() {
-      const promises = [];
-      promises.push(once(v, "playing"));
-      promises.push(fetchAndLoad(sb, "bipbop/bipbop", range(1, 4), ".m4s"));
-      return Promise.all(promises);
-    }).then(function() {
-      ms.endOfStream();
-      const promises = [];
-      promises.push(once(ms, "sourceended"));
-      promises.push(once(v, "ended"));
-      return Promise.all(promises);
-    }).then(SimpleTest.finish.bind(SimpleTest));
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  ms.addEventListener("sourceopen", () => ok(false, "No more sourceopen"));
+  const sb = ms.addSourceBuffer("video/mp4");
+  ok(sb, "Create a SourceBuffer");
+  sb.addEventListener("error", e => {
+    ok(false, "Got Error: " + e);
+    SimpleTest.finish();
   });
+  await fetchAndLoad(sb, "bipbop/bipbop", [ "init" ], ".mp4");
+  let p = once(v, "loadeddata");
+  await fetchAndLoad(sb, "bipbop/bipbop", range(1, 3), ".m4s");
+  await p;
+  // clear the entire sourcebuffer.
+  sb.remove(0, 5);
+  await once(sb, "updateend");
+  v.play();
+  // We have nothing to play, waiting will be fired.
+  await once(v, "waiting");
+  p = once(v, "playing");
+  await fetchAndLoad(sb, "bipbop/bipbop", range(1, 4), ".m4s");
+  await p;
+  ms.endOfStream();
+  await Promise.all([ once(ms, "sourceended"), once(v, "ended") ]);
+  SimpleTest.finish(SimpleTest);
 });
 </script>
 </pre>

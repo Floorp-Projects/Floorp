@@ -15,65 +15,46 @@ SimpleTest.waitForExplicitFinish();
 // We then seek to half the content. By that time, another appendBuffer must succeed
 // as the auto-eviction would succeed (removing all data prior currentTime)
 
-// Fill up the SourceBuffer by appending data repeatedly via doAppendDataFunc until
-// an exception is thrown.
-function fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCallback) {
-  // We are appending data repeatedly in sequence mode, there should be no gaps.
-  ok(sourceBuffer.buffered.length <= 1, "there should be no gap in buffered ranges.");
-  try {
-    doAppendDataFunc();
-  } catch (ex) {
-    onCaughtExceptionCallback(ex);
-    return;
-  }
-  once(sourceBuffer, "updateend", () => {
-    fillUpSourceBuffer(sourceBuffer, doAppendDataFunc, onCaughtExceptionCallback);
-  });
-}
-
 addMSEPrefs(
   [ "media.mediasource.eviction_threshold.audio", 524288 ],
   [ "media.dormant-on-pause-timeout-ms", -1 ] // FIXME: bug 1319292
 );
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const audiosb = ms.addSourceBuffer("audio/mp4");
-    audiosb.mode = "sequence";
-    fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4")
-    .then(function() {
-      fetchWithXHR("bipbop/bipbop_audio1.m4s", function(audioBuffer) {
-        fillUpSourceBuffer(audiosb,
-          function() { // doAppendDataFunc
-            audiosb.appendBuffer(audioBuffer);
-          },
-          function(ex1) { // onCaughtExceptionCallback
-            is(ex1.name, "QuotaExceededError", "QuotaExceededError thrown");
-            is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
-            const seekTime = audiosb.buffered.end(0) / 2;
-            el.currentTime = seekTime;
-            once(el, "seeked", () => {
-              dump("dump: seeked to " + seekTime);
-              is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
-              try {
-                audiosb.appendBuffer(audioBuffer);
-              } catch (ex2) {
-                ok(false, "Shouldn't throw another time when data can be evicted");
-                el.mozDumpDebugInfo();
-                SimpleTest.finish();
-                return;
-              }
-              once(audiosb, "update", () => {
-                ok(true, "appendBuffer succeeded");
-                SimpleTest.finish();
-              });
-            });
-          });
-      });
-    });
-  });
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const audiosb = ms.addSourceBuffer("audio/mp4");
+  audiosb.mode = "sequence";
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  const audioBuffer = await fetchWithXHR("bipbop/bipbop_audio1.m4s");
+
+  await must_reject(async () => {
+    // We are appending data repeatedly in sequence mode, there should be no gaps.
+    while (true) {
+      ok(audiosb.buffered.length <= 1, "there should be no gap in buffered ranges.");
+      audiosb.appendBuffer(audioBuffer);
+      await once(audiosb, "updateend");
+    }
+  },
+  "Fill up SourceBuffer by appending data until an exception is thrown.",
+  "QuotaExceededError");
+
+  is(audiosb.buffered.end(0), el.duration, "Duration is end of buffered range");
+  const seekTime = audiosb.buffered.end(0) / 2;
+  el.currentTime = seekTime;
+  await once(el, "seeked");
+  dump("dump: seeked to " + seekTime);
+  is(el.currentTime, seekTime, "correctly seeked to " + seekTime);
+  try {
+    audiosb.appendBuffer(audioBuffer);
+    await once(audiosb, "update");
+    ok(true, "appendBuffer succeeded");
+  } catch (ex) {
+    ok(false, "Shouldn't throw another time when data can be evicted");
+    el.mozDumpDebugInfo();
+  }
+  SimpleTest.finish();
 });
 
 </script>
