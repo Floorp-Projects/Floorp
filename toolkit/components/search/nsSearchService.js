@@ -49,7 +49,7 @@ const PERMS_FILE    = 0o644;
 const NS_APP_DISTRIBUTION_SEARCH_DIR_LIST = "SrchPluginsDistDL";
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 
-// We load plugins from APP_SEARCH_PREFIX, where a list.txt
+// We load plugins from APP_SEARCH_PREFIX, where a list.json
 // file needs to exist to list available engines.
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
 
@@ -3359,9 +3359,7 @@ SearchService.prototype = {
       // should only go into this catch if list.json
       // doesn't exist
     } catch (e) {
-      chan = makeChannel(APP_SEARCH_PREFIX + "list.txt");
-      sis.init(chan.open2());
-      this._parseListTxt(sis.read(sis.available()), uris);
+      Cu.reportError(e);
     }
     return uris;
   },
@@ -3393,23 +3391,12 @@ SearchService.prototype = {
       };
       request.onerror = function(aEvent) {
         LOG("_asyncFindJAREngines: failed to read " + listURL);
-        // Couldn't find list.json, try list.txt
-        request.onerror = function(aEvent) {
-          LOG("_asyncFindJAREngines: failed to read " + APP_SEARCH_PREFIX + "list.txt");
-          resolve("");
-        };
-        request.open("GET", Services.io.newURI(APP_SEARCH_PREFIX + "list.txt").spec, true);
-        request.send();
       };
       request.open("GET", Services.io.newURI(listURL).spec, true);
       request.send();
     });
 
-    if (request.responseURL.endsWith(".txt")) {
-      this._parseListTxt(list, uris);
-    } else {
-      this._parseListJSON(list, uris);
-    }
+    this._parseListJSON(list, uris);
     return uris;
   },
 
@@ -3507,60 +3494,6 @@ SearchService.prototype = {
       this._searchOrder = searchSettings.default.searchOrder;
     }
   },
-
-  _parseListTxt: function SRCH_SVC_parseListTxt(list, uris) {
-    let names = list.split("\n").filter(n => !!n);
-    // This maps the names of our built-in engines to a boolean
-    // indicating whether it should be hidden by default.
-    let jarNames = new Map();
-    for (let name of names) {
-      if (name.endsWith(":hidden")) {
-        name = name.split(":")[0];
-        jarNames.set(name, true);
-      } else {
-        jarNames.set(name, false);
-      }
-    }
-
-    // Check if we have a useable country specific list of visible default engines.
-    let engineNames;
-    let visibleDefaultEngines = this.getVerifiedGlobalAttr("visibleDefaultEngines");
-    if (visibleDefaultEngines) {
-      engineNames = visibleDefaultEngines.split(",");
-
-      for (let engineName of engineNames) {
-        // If all engineName values are part of jarNames,
-        // then we can use the country specific list, otherwise ignore it.
-        // The visibleDefaultEngines string containing the name of an engine we
-        // don't ship indicates the server is misconfigured to answer requests
-        // from the specific Firefox version we are running, so ignoring the
-        // value altogether is safer.
-        if (!jarNames.has(engineName)) {
-          LOG("_parseListTxt: ignoring visibleDefaultEngines value because " +
-              engineName + " is not in the jar engines we have found");
-          engineNames = null;
-          break;
-        }
-      }
-    }
-
-    // Fallback to building a list based on the :hidden suffixes found in list.txt.
-    if (!engineNames) {
-      engineNames = [];
-      for (let [name, hidden] of jarNames) {
-        if (!hidden)
-          engineNames.push(name);
-      }
-    }
-
-    for (let name of engineNames) {
-      uris.push(APP_SEARCH_PREFIX + name + ".xml");
-    }
-
-    // Store this so that it can be used while writing the cache file.
-    this._visibleDefaultEngines = engineNames;
-  },
-
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
     LOG("SRCH_SVC_saveSortedEngineList: starting");
