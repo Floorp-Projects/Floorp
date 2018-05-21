@@ -1857,6 +1857,26 @@ HttpChannelParent::StartRedirect(uint32_t registrarId,
       MOZ_ASSERT(!oldIntercepted);
 #endif
 
+      // We need to move across the reserved and initial client information
+      // to the new channel.  Normally this would be handled by the child
+      // ClientChannelHelper, but that is not notified of this redirect since
+      // we're not propagating it back to the child process.
+      nsCOMPtr<nsILoadInfo> oldLoadInfo;
+      Unused << mChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
+      nsCOMPtr<nsILoadInfo> newLoadInfo;
+      Unused << newChannel->GetLoadInfo(getter_AddRefs(newLoadInfo));
+      if (oldLoadInfo && newLoadInfo) {
+        Maybe<ClientInfo> reservedClientInfo(oldLoadInfo->GetReservedClientInfo());
+        if (reservedClientInfo.isSome()) {
+          newLoadInfo->SetReservedClientInfo(reservedClientInfo.ref());
+        }
+
+        Maybe<ClientInfo> initialClientInfo(oldLoadInfo->GetInitialClientInfo());
+        if (initialClientInfo.isSome()) {
+          newLoadInfo->SetInitialClientInfo(initialClientInfo.ref());
+        }
+      }
+
       // Re-link the HttpChannelParent to the new InterceptedHttpChannel.
       nsCOMPtr<nsIChannel> linkedChannel;
       rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(linkedChannel));
