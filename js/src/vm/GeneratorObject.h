@@ -29,7 +29,6 @@ class GeneratorObject : public NativeObject
         ARGS_OBJ_SLOT,
         EXPRESSION_STACK_SLOT,
         YIELD_AND_AWAIT_INDEX_SLOT,
-        NEWTARGET_SLOT,
         RESERVED_SLOTS
     };
 
@@ -114,17 +113,6 @@ class GeneratorObject : public NativeObject
         setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
     }
 
-    bool isConstructing() const {
-        return getFixedSlot(NEWTARGET_SLOT).isObject();
-    }
-    const Value& newTarget() const {
-        return getFixedSlot(NEWTARGET_SLOT);
-    }
-    void setNewTarget(const Value& newTarget) {
-        setFixedSlot(NEWTARGET_SLOT, newTarget);
-    }
-
-
     // The yield index slot is abused for a few purposes.  It's undefined if
     // it hasn't been set yet (before the initial yield), and null if the
     // generator is closed. If the generator is running, the yield index is
@@ -180,7 +168,6 @@ class GeneratorObject : public NativeObject
         setFixedSlot(ARGS_OBJ_SLOT, NullValue());
         setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
         setFixedSlot(YIELD_AND_AWAIT_INDEX_SLOT, NullValue());
-        setFixedSlot(NEWTARGET_SLOT, NullValue());
     }
 
     bool isAfterYield();
@@ -204,9 +191,6 @@ class GeneratorObject : public NativeObject
     }
     static size_t offsetOfExpressionStackSlot() {
         return getFixedSlotOffset(EXPRESSION_STACK_SLOT);
-    }
-    static size_t offsetOfNewTargetSlot() {
-        return getFixedSlotOffset(NEWTARGET_SLOT);
     }
 };
 

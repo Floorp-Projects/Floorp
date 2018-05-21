@@ -37,5 +37,7 @@ var PdfJsDefaultPreferences = Object.freeze({
  "renderInteractiveForms": false,
  "enablePrintAutoRotate": false,
  "disablePageMode": false,
- "disablePageLabels": false
+ "disablePageLabels": false,
+ "scrollModeOnLoad": 0,
+ "spreadModeOnLoad": 0
 });
