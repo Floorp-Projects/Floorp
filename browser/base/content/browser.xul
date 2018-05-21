@@ -140,6 +140,9 @@
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                 oncommand="gBrowser.removeTab(TabContextMenu.contextTab, { animate: true });"/>
+      <menuitem id="context_closeSelectedTabs" label="&closeSelectedTabs.label;"
+                hidden="true" accesskey="&closeSelectedTabs.accesskey;"
+                oncommand="gBrowser.removeMultiSelectedTabs();"/>
     </menupopup>
 
     <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
