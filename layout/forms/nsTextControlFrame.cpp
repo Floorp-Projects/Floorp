@@ -1417,16 +1417,6 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-mozilla::dom::Element*
-nsTextControlFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (aType == CSSPseudoElementType::placeholder) {
-    return mPlaceholderDiv;
-  }
-
-  return nsContainerFrame::GetPseudoElement(aType);
-}
-
 NS_IMETHODIMP
 nsTextControlFrame::EditorInitializer::Run()
 {

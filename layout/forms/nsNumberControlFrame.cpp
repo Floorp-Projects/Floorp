@@ -743,35 +743,6 @@ nsNumberControlFrame::AnonTextControlIsEmpty()
   return value.IsEmpty();
 }
 
-Element*
-nsNumberControlFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (aType == CSSPseudoElementType::mozNumberWrapper) {
-    return mOuterWrapper;
-  }
-
-  if (aType == CSSPseudoElementType::mozNumberText) {
-    return mTextField;
-  }
-
-  if (aType == CSSPseudoElementType::mozNumberSpinBox) {
-    // Might be null.
-    return mSpinBox;
-  }
-
-  if (aType == CSSPseudoElementType::mozNumberSpinUp) {
-    // Might be null.
-    return mSpinUp;
-  }
-
-  if (aType == CSSPseudoElementType::mozNumberSpinDown) {
-    // Might be null.
-    return mSpinDown;
-  }
-
-  return nsContainerFrame::GetPseudoElement(aType);
-}
-
 #ifdef ACCESSIBILITY
 a11y::AccType
 nsNumberControlFrame::AccessibleType()
