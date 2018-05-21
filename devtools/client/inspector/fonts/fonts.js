@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { getColor } = require("devtools/client/shared/theme");
 const { createFactory, createElement } = require("devtools/client/shared/vendor/react");
@@ -24,7 +25,6 @@ const { updateFonts } = require("./actions/fonts");
 const {
   applyInstance,
   resetFontEditor,
-  toggleFontEditor,
   updateAxis,
   updateCustomInstance,
   updateFontEditor,
@@ -33,7 +33,6 @@ const {
 const { updatePreviewText } = require("./actions/font-options");
 
 const CUSTOM_INSTANCE_NAME = getStr("fontinspector.customInstanceName");
-const FONT_EDITOR_ID = "fonteditor";
 const FONT_PROPERTIES = [
   "font-optical-sizing",
   "font-size",
@@ -42,6 +41,7 @@ const FONT_PROPERTIES = [
   "font-variation-settings",
   "font-weight",
 ];
+const PREF_FONT_EDITOR = "devtools.inspector.fonteditor.enabled";
 const REGISTERED_AXES_TO_FONT_PROPERTIES = {
   "ital": "font-style",
   "opsz": "font-optical-sizing",
@@ -74,9 +74,7 @@ class FontInspector {
     this.onNewNode = this.onNewNode.bind(this);
     this.onPreviewFonts = this.onPreviewFonts.bind(this);
     this.onPropertyChange = this.onPropertyChange.bind(this);
-    this.onRuleSelected = this.onRuleSelected.bind(this);
     this.onToggleFontHighlight = this.onToggleFontHighlight.bind(this);
-    this.onRuleUnselected = this.onRuleUnselected.bind(this);
     this.onRuleUpdated = this.onRuleUpdated.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
     this.update = this.update.bind(this);
@@ -108,23 +106,14 @@ class FontInspector {
     this.provider = provider;
 
     this.inspector.selection.on("new-node-front", this.onNewNode);
-    this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
-    this.ruleView.on("ruleview-rule-selected", this.onRuleSelected);
-    this.ruleView.on("ruleview-rule-unselected", this.onRuleUnselected);
+    this.ruleView.on("property-value-updated", this.onRuleUpdated);
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
 
-    // The FontInspector is lazy-loaded. If it's not yet loaded, the event handler for
-    // "ruleview-rule-selected" won't be attached to catch the first font editor toggle.
-    // Here, we check if the rule was already marked as selected for the font editor
-    // before the FontInspector was instantiated and call the event handler manually.
-    const selectedRule = this.ruleView.getSelectedRules(FONT_EDITOR_ID)[0];
-    if (selectedRule) {
-      this.onRuleSelected({ editorId: FONT_EDITOR_ID, rule: selectedRule });
-    } else {
-      this.store.dispatch(updatePreviewText(""));
-      this.update();
+    // If a node is already selected, call the handler for node change.
+    if (this.isSelectedNodeValid()) {
+      this.onNewNode();
     }
   }
 
@@ -151,10 +140,7 @@ class FontInspector {
    */
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewNode);
-    this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.ruleView.off("property-value-updated", this.onRuleUpdated);
-    this.ruleView.off("ruleview-rule-selected", this.onRuleSelected);
-    this.ruleView.off("ruleview-rule-unselected", this.onRuleUnselected);
     gDevTools.off("theme-switched", this.onThemeChanged);
 
     this.document = null;
@@ -363,6 +349,16 @@ class FontInspector {
     return this.inspector.sidebar &&
            this.inspector.sidebar.getCurrentTabID() === "fontinspector";
   }
+  /**
+   * Check if a selected node exists and fonts can apply to it.
+   *
+   * @return {Boolean}
+   */
+  isSelectedNodeValid() {
+    return this.inspector.selection.nodeFront &&
+           this.inspector.selection.isConnected() &&
+           this.inspector.selection.isElementNode();
+  }
 
     /**
    * Sync the Rule view with the styles from the page. Called in a throttled way
@@ -438,6 +434,7 @@ class FontInspector {
   onNewNode() {
     if (this.isPanelVisible()) {
       this.update();
+      this.refreshFontEditor();
     }
   }
 
@@ -473,29 +470,6 @@ class FontInspector {
   }
 
   /**
-   * Handler for "ruleview-rule-selected" event emitted from the rule view when a rule is
-   * marked as selected for an editor.
-   * If selected for the font editor, hold a reference to the rule so we know where to
-   * put property changes coming from the font editor and show the font editor panel.
-   *
-   * @param  {Object} eventData
-   *         Data payload for the event. Contains:
-   *         - {String} editorId - id of the editor for which the rule was selected
-   *         - {Rule} rule - reference to rule that was selected
-   */
-  async onRuleSelected(eventData) {
-    const { editorId, rule } = eventData;
-    if (editorId === FONT_EDITOR_ID) {
-      const selector = rule.matchedSelectors[0];
-      this.selectedRule = rule;
-
-      await this.refreshFontEditor();
-      this.store.dispatch(toggleFontEditor(true, selector));
-      this.ruleView.on("property-value-updated", this.onRuleUpdated);
-    }
-  }
-
-  /**
    * Handler for "property-value-updated" event emitted from the rule view whenever a
    * property value changes.
    */
@@ -504,32 +478,6 @@ class FontInspector {
   }
 
   /**
-   * Handler for "ruleview-rule-unselected" event emitted from the rule view when a rule
-   * was released from being selected for an editor.
-   * If previously selected for the font editor, release the reference to the rule and
-   * hide the font editor panel.
-   *
-   * @param {Object} eventData
-   *        Data payload for the event. Contains:
-   *        - {String} editorId - id of the editor for which the rule was released
-   *        - {Rule} rule - reference to rule that was released
-   */
-  onRuleUnselected(eventData) {
-    const { editorId, rule } = eventData;
-    if (editorId === FONT_EDITOR_ID && rule == this.selectedRule) {
-      this.nodeComputedStyle = {};
-      this.selectedRule = null;
-      this.textProperties.clear();
-      this.writers.clear();
-
-      this.store.dispatch(toggleFontEditor(false));
-      this.store.dispatch(resetFontEditor());
-
-      this.ruleView.off("property-value-updated", this.onRuleUpdated);
-    }
-  }
-
-    /**
    * Reveal a font's usage in the page.
    *
    * @param  {String} font
@@ -592,7 +540,13 @@ class FontInspector {
    * update the font edtior to reflect a new external state.
    */
   async refreshFontEditor() {
-    if (!this.selectedRule || !this.inspector || !this.store) {
+    // Early return if pref for font editor is not enabled.
+    if (!Services.prefs.getBoolPref(PREF_FONT_EDITOR)) {
+      return;
+    }
+
+    if (!this.inspector || !this.store || !this.isSelectedNodeValid()) {
+      this.store.dispatch(resetFontEditor());
       return;
     }
 

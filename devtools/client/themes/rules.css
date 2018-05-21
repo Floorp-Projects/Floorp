@@ -4,11 +4,6 @@
 
 /* CSS Variables specific to this panel that aren't defined by the themes */
 :root {
-  --rule-badge-active-background-color: var(--blue-50);
-  --rule-badge-background-color: var(--grey-20);
-  --rule-badge-border-color: #CACAD1;
-  --rule-badge-color: var(--grey-90);
-  --rule-badge-hover-background-color: #DFDFE8;
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-overridden-item-border-color: var(--theme-content-color3);
   --rule-header-background-color: var(--theme-toolbar-background);
@@ -17,11 +12,6 @@
 }
 
 :root.theme-dark {
-  --rule-badge-active-background-color: var(--blue-60);
-  --rule-badge-background-color: var(--grey-70);
-  --rule-badge-border-color: var(--grey-50);
-  --rule-badge-color: var(--grey-30);
-  --rule-badge-hover-background-color: var(--grey-80);
   --rule-highlight-background-color: #521C76;
   --rule-overridden-item-border-color: var(--theme-content-color1);
   --rule-header-background-color: #222225;
@@ -599,35 +589,4 @@
 }
 .ruleview-overridden-rule-filter:hover {
   opacity: 1;
-}
-
-.ruleview-rule:not(:hover) .ruleview-font-editor-toggle:not(.active) {
-  visibility: hidden;
-}
-
-.ruleview-font-editor-toggle {
-  position: absolute;
-  right: 1.5em;
-  bottom: 0.5em;
-  font-size: 11px;
-  font-weight: normal;
-  line-height: 11px;
-  border: 1px solid var(--rule-badge-border-color);
-  border-radius: 3px;
-  padding: 0px 4px;
-  -moz-user-select: none;
-  cursor: pointer;
-  background-color: var(--rule-badge-background-color);
-  color: var(--rule-badge-color);
-}
-
-.ruleview-font-editor-toggle:focus,
-.ruleview-font-editor-toggle:hover {
-  background-color: var(--rule-badge-hover-background-color);
-}
-
-.ruleview-font-editor-toggle.active {
-  background-color: var(--rule-badge-active-background-color);
-  border-color: var(--rule-badge-active-background-color);
-  color: var(--theme-selection-color);
 }
