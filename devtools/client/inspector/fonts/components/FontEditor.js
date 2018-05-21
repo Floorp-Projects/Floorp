@@ -194,10 +194,7 @@ class FontEditor extends PureComponent {
     });
 
     return dom.div(
-      {
-        className: "theme-sidebar inspector-tabpanel",
-        id: "sidebar-panel-fontinspector"
-      },
+      {},
       // Always render UI for font family, format and font file URL.
       this.renderFontFamily(font),
       // Render UI for font variation instances if they are defined.
