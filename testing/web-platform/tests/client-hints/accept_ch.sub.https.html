@@ -23,9 +23,20 @@ promise_test(t => {
     assert_true(r.headers.has("device-memory-received"), "device-memory-received");
     assert_true(r.headers.has("dpr-received"), "dpr-received");
     assert_true(r.headers.has("viewport-width-received"), "viewport-width-received");
+
     assert_true(r.headers.has("rtt-received"), "rtt-received");
+    var rtt = parseInt(r.headers.get("rtt-received"));
+    assert_greater_than_equal(rtt, 0);
+    assert_less_than_equal(rtt, 3000);
+    assert_equals(rtt % 50, 0, 'rtt must be a multiple of 50 msec');
+
     assert_true(r.headers.has("downlink-received"), "downlink-received");
-    assert_true(r.headers.has("ect-received"), "ect-received");
+    var downlinkKbps  = r.headers.get("downlink-received") * 1000;
+    assert_greater_than_equal(downlinkKbps, 0);
+    assert_less_than_equal(downlinkKbps, 10000);
+
+    assert_in_array(r.headers.get("ect-received"), ["slow-2g", "2g",
+          "3g", "4g"], 'ect-received is unexpected');
   });
 }, "Accept-CH header test");
 
