@@ -30,8 +30,7 @@ function loadContentWindow(webNavigation, uri) {
         if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
           return;
         }
-        let contentWindow = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                    .getInterface(Ci.nsIDOMWindow);
+        let contentWindow = docShell.domWindow;
         progressListeners.delete(progressListener);
         webProgress.removeProgressListener(progressListener);
         contentWindow.addEventListener("load", (event) => {
