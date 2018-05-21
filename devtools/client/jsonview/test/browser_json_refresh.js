@@ -18,7 +18,7 @@ add_task(async function() {
 
   // perform sanity checks for URI and pricnipals in loadInfo
   await ContentTask.spawn(tab.linkedBrowser, {TEST_JSON_FILE}, async function ({TEST_JSON_FILE}) { // eslint-disable-line
-    const channel = content.document.docShell.currentDocumentChannel;
+    const channel = content.docShell.currentDocumentChannel;
     const channelURI = channel.URI.spec;
     ok(channelURI.startsWith("file://") && channelURI.includes(TEST_JSON_FILE),
        "sanity: correct channel uri");
@@ -44,7 +44,7 @@ add_task(async function() {
 
   // check principals in loadInfo are still correct
   await ContentTask.spawn(tab.linkedBrowser, {TEST_JSON_FILE}, async function ({TEST_JSON_FILE}) { // eslint-disable-line
-    const channel = content.document.docShell.currentDocumentChannel;
+    const channel = content.docShell.currentDocumentChannel;
     const channelURI = channel.URI.spec;
     ok(channelURI.startsWith("file://") && channelURI.includes(TEST_JSON_FILE),
        "reloaded: correct channel uri");

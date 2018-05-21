@@ -373,7 +373,7 @@ async function generateCssMessageStubs() {
       gBrowser.selectedBrowser,
       [key, code],
       function([subKey, subCode]) {
-        content.document.docShell.cssErrorReportingEnabled = true;
+        content.docShell.cssErrorReportingEnabled = true;
         const style = content.document.createElement("style");
         // eslint-disable-next-line no-unsanitized/property
         style.innerHTML = subCode;

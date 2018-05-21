@@ -89,7 +89,7 @@ var contentScripts = new DefaultWeakMap(matcher => {
 });
 
 function getMessageManager(window) {
-  let docShell = window.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
+  let docShell = window.docShell.QueryInterface(Ci.nsIInterfaceRequestor);
   try {
     return docShell.getInterface(Ci.nsIContentFrameMessageManager);
   } catch (e) {

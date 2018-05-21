@@ -18,7 +18,7 @@
 // That's not the point of the test, though; the point is only that
 // *that text* is properly escaped.
 
-SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
+SpecialPowers.wrap(window).docShell.cssErrorReportingEnabled = true;
 
 // There is one "pattern" for each code path through the error reporter
 // that might need to escape some kind of user-supplied text.

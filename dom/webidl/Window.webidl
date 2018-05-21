@@ -255,6 +255,8 @@ partial interface Window {
 
   [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
 
+  [ChromeOnly] readonly attribute nsIDocShell? docShell;
+
   [Throws, NeedsCallerType]
   readonly attribute float mozInnerScreenX;
   [Throws, NeedsCallerType]
