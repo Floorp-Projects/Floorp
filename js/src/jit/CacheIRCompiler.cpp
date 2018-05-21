@@ -703,7 +703,6 @@ CacheRegisterAllocator::assertValidState() const
             const auto& loc2 = operandLocations_[j];
             if (loc2.isUninitialized())
                 continue;
-            MOZ_ASSERT(loc1 != loc2);
             MOZ_ASSERT(!loc1.aliasesReg(loc2));
         }
     }

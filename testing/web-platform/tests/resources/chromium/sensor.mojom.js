@@ -932,7 +932,7 @@
   }
 
   var Sensor = {
-    name: 'device::mojom::Sensor',
+    name: 'device.mojom.Sensor',
     kVersion: 0,
     ptrClass: SensorPtr,
     proxyClass: SensorProxy,
@@ -1050,7 +1050,7 @@
   }
 
   var SensorClient = {
-    name: 'device::mojom::SensorClient',
+    name: 'device.mojom.SensorClient',
     kVersion: 0,
     ptrClass: SensorClientPtr,
     proxyClass: SensorClientProxy,

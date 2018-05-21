@@ -1,4 +1,5 @@
 import os
+import subprocess
 from collections import defaultdict
 
 from wptmanifest.parser import atoms
@@ -67,9 +68,18 @@ def get_run_info(metadata_root, product, **kwargs):
 class RunInfo(dict):
     def __init__(self, metadata_root, product, debug, browser_version=None, extras=None):
         import mozinfo
-
         self._update_mozinfo(metadata_root)
         self.update(mozinfo.info)
+
+        from update.tree import GitTree
+        try:
+            # GitTree.__init__ throws if we are not in a git tree.
+            rev = GitTree(log_error=False).rev
+        except (OSError, subprocess.CalledProcessError):
+            rev = None
+        if rev:
+            self["revision"] = rev
+
         self["product"] = product
         if debug is not None:
             self["debug"] = debug
