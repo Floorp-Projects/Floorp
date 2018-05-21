@@ -7,6 +7,7 @@ from __future__ import print_function, unicode_literals
 import logging
 import re
 
+
 class OutputHandler(object):
     '''
     A class for handling Valgrind output.
@@ -104,7 +105,7 @@ class OutputHandler(object):
                 self.logger(logging.ERROR, 'valgrind-error-msg',
                             {'error': self.curr_error,
                              'location': self.curr_location},
-                             'TEST-UNEXPECTED-FAIL | valgrind-test | {error} at {location}')
+                            'TEST-UNEXPECTED-FAIL | valgrind-test | {error} at {location}')
                 for b in self.buffered_lines:
                     self.log(b)
                 self.curr_error = None
@@ -113,4 +114,3 @@ class OutputHandler(object):
 
         if re.match(self.re_suppression, line):
             self.suppression_count += 1
-
