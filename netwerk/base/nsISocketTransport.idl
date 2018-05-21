@@ -66,13 +66,6 @@ interface nsISocketTransport : nsITransport
     void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
 
     /**
-     * The platform-specific network interface id that this socket
-     * associated with. Note that this attribute can be only accessed
-     * in the socket thread.
-     */
-    attribute ACString networkInterfaceId;
-
-    /**
      * Returns the IP address of the socket connection peer. This
      * attribute is defined only once a connection has been established.
      */

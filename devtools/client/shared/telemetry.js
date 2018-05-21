@@ -13,7 +13,6 @@
 const Services = require("Services");
 const { TelemetryStopwatch } = require("resource://gre/modules/TelemetryStopwatch.jsm");
 const { getNthPathExcluding } = require("devtools/shared/platform/stack");
-const TOOLS_OPENED_PREF = "devtools.telemetry.tools.opened.version";
 
 // Object to be shared among all instances.
 const PENDING_EVENTS = new Map();
@@ -22,210 +21,26 @@ const PENDING_EVENT_PROPERTIES = new Map();
 class Telemetry {
   constructor() {
     // Bind pretty much all functions so that callers do not need to.
-    this.toolOpened = this.toolOpened.bind(this);
-    this.toolClosed = this.toolClosed.bind(this);
+    this.msSystemNow = this.msSystemNow.bind(this);
     this.getHistogramById = this.getHistogramById.bind(this);
     this.getKeyedHistogramById = this.getKeyedHistogramById.bind(this);
     this.scalarSet = this.scalarSet.bind(this);
     this.scalarAdd = this.scalarAdd.bind(this);
     this.keyedScalarAdd = this.keyedScalarAdd.bind(this);
-    this.logOncePerBrowserVersion = this.logOncePerBrowserVersion.bind(this);
     this.recordEvent = this.recordEvent.bind(this);
     this.setEventRecordingEnabled = this.setEventRecordingEnabled.bind(this);
     this.preparePendingEvent = this.preparePendingEvent.bind(this);
     this.addEventProperty = this.addEventProperty.bind(this);
-  }
-
-  get histograms() {
-    return {
-      toolbox: {
-        histogram: "DEVTOOLS_TOOLBOX_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS"
-      },
-      options: {
-        histogram: "DEVTOOLS_OPTIONS_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_OPTIONS_TIME_ACTIVE_SECONDS"
-      },
-      webconsole: {
-        histogram: "DEVTOOLS_WEBCONSOLE_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_WEBCONSOLE_TIME_ACTIVE_SECONDS"
-      },
-      browserconsole: {
-        histogram: "DEVTOOLS_BROWSERCONSOLE_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_BROWSERCONSOLE_TIME_ACTIVE_SECONDS"
-      },
-      inspector: {
-        histogram: "DEVTOOLS_INSPECTOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS"
-      },
-      ruleview: {
-        histogram: "DEVTOOLS_RULEVIEW_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS"
-      },
-      computedview: {
-        histogram: "DEVTOOLS_COMPUTEDVIEW_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_COMPUTEDVIEW_TIME_ACTIVE_SECONDS"
-      },
-      layoutview: {
-        histogram: "DEVTOOLS_LAYOUTVIEW_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_LAYOUTVIEW_TIME_ACTIVE_SECONDS"
-      },
-      fontinspector: {
-        histogram: "DEVTOOLS_FONTINSPECTOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_FONTINSPECTOR_TIME_ACTIVE_SECONDS"
-      },
-      animationinspector: {
-        histogram: "DEVTOOLS_ANIMATIONINSPECTOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_ANIMATIONINSPECTOR_TIME_ACTIVE_SECONDS"
-      },
-      jsdebugger: {
-        histogram: "DEVTOOLS_JSDEBUGGER_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_JSDEBUGGER_TIME_ACTIVE_SECONDS"
-      },
-      jsbrowserdebugger: {
-        histogram: "DEVTOOLS_JSBROWSERDEBUGGER_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_JSBROWSERDEBUGGER_TIME_ACTIVE_SECONDS"
-      },
-      styleeditor: {
-        histogram: "DEVTOOLS_STYLEEDITOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_STYLEEDITOR_TIME_ACTIVE_SECONDS"
-      },
-      shadereditor: {
-        histogram: "DEVTOOLS_SHADEREDITOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS"
-      },
-      webaudioeditor: {
-        histogram: "DEVTOOLS_WEBAUDIOEDITOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS"
-      },
-      canvasdebugger: {
-        histogram: "DEVTOOLS_CANVASDEBUGGER_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS"
-      },
-      performance: {
-        histogram: "DEVTOOLS_JSPROFILER_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS"
-      },
-      memory: {
-        histogram: "DEVTOOLS_MEMORY_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_MEMORY_TIME_ACTIVE_SECONDS"
-      },
-      netmonitor: {
-        histogram: "DEVTOOLS_NETMONITOR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_NETMONITOR_TIME_ACTIVE_SECONDS"
-      },
-      storage: {
-        histogram: "DEVTOOLS_STORAGE_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_STORAGE_TIME_ACTIVE_SECONDS"
-      },
-      dom: {
-        histogram: "DEVTOOLS_DOM_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_DOM_TIME_ACTIVE_SECONDS"
-      },
-      paintflashing: {
-        histogram: "DEVTOOLS_PAINTFLASHING_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS"
-      },
-      scratchpad: {
-        histogram: "DEVTOOLS_SCRATCHPAD_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_SCRATCHPAD_TIME_ACTIVE_SECONDS"
-      },
-      "scratchpad-window": {
-        histogram: "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT",
-      },
-      responsive: {
-        histogram: "DEVTOOLS_RESPONSIVE_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS"
-      },
-      eyedropper: {
-        histogram: "DEVTOOLS_EYEDROPPER_OPENED_COUNT",
-      },
-      menueyedropper: {
-        histogram: "DEVTOOLS_MENU_EYEDROPPER_OPENED_COUNT",
-      },
-      pickereyedropper: {
-        histogram: "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT",
-      },
-      toolbareyedropper: {
-        scalar: "devtools.toolbar.eyedropper.opened",
-      },
-      developertoolbar: {
-        histogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS"
-      },
-      aboutdebugging: {
-        histogram: "DEVTOOLS_ABOUTDEBUGGING_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_ABOUTDEBUGGING_TIME_ACTIVE_SECONDS"
-      },
-      webide: {
-        histogram: "DEVTOOLS_WEBIDE_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_WEBIDE_TIME_ACTIVE_SECONDS"
-      },
-      webideNewProject: {
-        histogram: "DEVTOOLS_WEBIDE_NEW_PROJECT_COUNT",
-      },
-      webideImportProject: {
-        histogram: "DEVTOOLS_WEBIDE_IMPORT_PROJECT_COUNT",
-      },
-      custom: {
-        histogram: "DEVTOOLS_CUSTOM_OPENED_COUNT",
-        timerHistogram: "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS"
-      },
-      gridInspectorShowGridAreasOverlayChecked: {
-        scalar: "devtools.grid.showGridAreasOverlay.checked",
-      },
-      gridInspectorShowGridLineNumbersChecked: {
-        scalar: "devtools.grid.showGridLineNumbers.checked",
-      },
-      gridInspectorShowInfiniteLinesChecked: {
-        scalar: "devtools.grid.showInfiniteLines.checked",
-      },
-      accessibility: {
-        countScalar: "devtools.accessibility.opened_count",
-        timerHistogram: "DEVTOOLS_ACCESSIBILITY_TIME_ACTIVE_SECONDS"
-      },
-      accessibilityNodeInspected: {
-        countScalar: "devtools.accessibility.node_inspected_count"
-      },
-      accessibilityPickerUsed: {
-        countScalar: "devtools.accessibility.picker_used_count",
-        timerHistogram: "DEVTOOLS_ACCESSIBILITY_PICKER_TIME_ACTIVE_SECONDS"
-      }
-    };
+    this.toolOpened = this.toolOpened.bind(this);
+    this.toolClosed = this.toolClosed.bind(this);
   }
 
   /**
-   * Add an entry to a histogram.
-   *
-   * @param  {String} id
-   *         Used to look up the relevant histogram ID and log true to that
-   *         histogram.
+   * Time since the system wide epoch. This is not a monotonic timer but
+   * can be used across process boundaries.
    */
-  toolOpened(id) {
-    let charts = this.histograms[id] || this.histograms.custom;
-
-    if (charts.histogram) {
-      this.getHistogramById(charts.histogram).add(true);
-    }
-    if (charts.timerHistogram) {
-      this.start(charts.timerHistogram);
-    }
-    if (charts.scalar) {
-      this.scalarSet(charts.scalar, 1);
-    }
-    if (charts.countScalar) {
-      this.scalarAdd(charts.countScalar, 1);
-    }
-  }
-
-  toolClosed(id) {
-    let charts = this.histograms[id];
-
-    if (!charts || !charts.timerHistogram) {
-      return;
-    }
-
-    this.finish(charts.timerHistogram);
+  msSystemNow() {
+    return Services.telemetry.msSystemNow();
   }
 
   /**
@@ -339,7 +154,7 @@ class Telemetry {
       } catch (e) {
         dump(`Warning: An attempt was made to write to the ${histogramId} ` +
             `histogram, which is not defined in Histograms.json\n` +
-            `CALLER: ${this.getCaller()}`);
+            `CALLER: ${getCaller()}`);
       }
     }
 
@@ -363,7 +178,7 @@ class Telemetry {
       } catch (e) {
         dump(`Warning: An attempt was made to write to the ${histogramId} ` +
              `histogram, which is not defined in Histograms.json\n` +
-             `CALLER: ${this.getCaller()}`);
+             `CALLER: ${getCaller()}`);
       }
     }
     return histogram || {
@@ -389,7 +204,7 @@ class Telemetry {
         dump(`Warning: An attempt was made to write a non-numeric and ` +
              `non-boolean value ${value} to the ${scalarId} scalar. Only ` +
              `numeric and boolean values are allowed.\n` +
-             `CALLER: ${this.getCaller()}`);
+             `CALLER: ${getCaller()}`);
 
         return;
       }
@@ -397,7 +212,7 @@ class Telemetry {
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
            `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${this.getCaller()}`);
+           `CALLER: ${getCaller()}`);
     }
   }
 
@@ -419,7 +234,7 @@ class Telemetry {
         dump(`Warning: An attempt was made to write a non-numeric value ` +
              `${value} to the ${scalarId} scalar. Only numeric values are ` +
              `allowed.\n` +
-             `CALLER: ${this.getCaller()}`);
+             `CALLER: ${getCaller()}`);
 
         return;
       }
@@ -427,7 +242,7 @@ class Telemetry {
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
            `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${this.getCaller()}`);
+           `CALLER: ${getCaller()}`);
     }
   }
 
@@ -451,7 +266,7 @@ class Telemetry {
         dump(`Warning: An attempt was made to write a non-numeric value ` +
              `${value} to the ${scalarId} scalar. Only numeric values are ` +
              `allowed.\n` +
-             `CALLER: ${this.getCaller()}`);
+             `CALLER: ${getCaller()}`);
 
         return;
       }
@@ -459,30 +274,7 @@ class Telemetry {
     } catch (e) {
       dump(`Warning: An attempt was made to write to the ${scalarId} ` +
            `scalar, which is not defined in Scalars.yaml\n` +
-           `CALLER: ${this.getCaller()}`);
-    }
-  }
-
-  /**
-   * Log info about usage once per browser version. This allows us to discover
-   * how many individual users are using our tools for each browser version.
-   *
-   * @param  {String} perUserHistogram
-   *         Histogram in which the data is to be stored.
-   */
-  logOncePerBrowserVersion(perUserHistogram, value) {
-    let currentVersion = Services.appinfo.version;
-    let latest = Services.prefs.getCharPref(TOOLS_OPENED_PREF);
-    let latestObj = JSON.parse(latest);
-
-    let lastVersionHistogramUpdated = latestObj[perUserHistogram];
-
-    if (typeof lastVersionHistogramUpdated == "undefined" ||
-        lastVersionHistogramUpdated !== currentVersion) {
-      latestObj[perUserHistogram] = currentVersion;
-      latest = JSON.stringify(latestObj);
-      Services.prefs.setCharPref(TOOLS_OPENED_PREF, latest);
-      this.getHistogramById(perUserHistogram).add(value);
+           `CALLER: ${getCaller()}`);
     }
   }
 
@@ -535,7 +327,7 @@ class Telemetry {
     if (expected.length === 0) {
       throw new Error(`preparePendingEvent() was called without any expected ` +
                       `properties.\n` +
-                      `CALLER: ${this.getCaller()}`);
+                      `CALLER: ${getCaller()}`);
     }
 
     PENDING_EVENTS.set(sig, {
@@ -605,7 +397,7 @@ class Telemetry {
       throw new Error(`An attempt was made to add the unexpected property ` +
                       `"${pendingPropName}" to a telemetry event with the ` +
                       `signature "${sig}"\n` +
-                      `CALLER: ${this.getCaller()}`);
+                      `CALLER: ${getCaller()}`);
     }
   }
 
@@ -699,20 +491,145 @@ class Telemetry {
                         `event with the signature ${sig} but it's value ` +
                         `"${val}" is longer than the maximum allowed length ` +
                         `of 80 characters\n` +
-                        `CALLER: ${this.getCaller()}`);
+                        `CALLER: ${getCaller()}`);
       }
     }
     Services.telemetry.recordEvent(category, method, object, value, extra);
   }
 
   /**
-   * Displays the first caller and calling line outside of this file in the
-   * event of an error. This is the line that made the call that produced the
-   * error.
+   * Sends telemetry pings to indicate that a tool has been opened.
+   *
+   * @param {String} id
+   *        The ID of the tool opened.
+   *
+   * NOTE: This method is designed for tools that send multiple probes on open,
+   *       one of those probes being a counter and the other a timer. If you
+   *       only have one probe you should be using another method.
    */
-  getCaller() {
-    return getNthPathExcluding(0, "/telemetry.js");
+  toolOpened(id) {
+    const charts = getChartsFromToolId(id);
+
+    if (charts.timerHist) {
+      this.start(charts.timerHist, this);
+    }
+    if (charts.countHist) {
+      this.getHistogramById(charts.countHist).add(true);
+    }
+    if (charts.countScalar) {
+      this.scalarAdd(charts.countScalar, 1);
+    }
   }
+
+  /**
+   * Sends telemetry pings to indicate that a tool has been closed.
+   *
+   * @param {String} id
+   *        The ID of the tool opened.
+   *
+   * NOTE: This method is designed for tools that send multiple probes on open,
+   *       one of those probes being a counter and the other a timer. If you
+   *       only have one probe you should be using another method.
+   */
+  toolClosed(id) {
+    const charts = getChartsFromToolId(id);
+
+    if (charts.timerHist) {
+      this.finish(charts.timerHist, this);
+    }
+  }
+}
+
+/**
+ * Returns the telemetry charts for a specific tool.
+ *
+ * @param {String} id
+ *        The ID of the tool that has been opened.
+ *
+ */
+function getChartsFromToolId(id) {
+  if (!id) {
+    return null;
+  }
+
+  const lowerCaseId = id.toLowerCase();
+
+  let timerHist = null;
+  let countHist = null;
+  let countScalar = null;
+
+  id = id.toUpperCase();
+
+  if (id === "PERFORMANCE") {
+    id = "JSPROFILER";
+  }
+  if (id === "NEWANIMATIONINSPECTOR") {
+    id = "ANIMATIONINSPECTOR";
+  }
+
+  switch (id) {
+    case "ABOUTDEBUGGING":
+    case "ANIMATIONINSPECTOR":
+    case "BROWSERCONSOLE":
+    case "CANVASDEBUGGER":
+    case "COMPUTEDVIEW":
+    case "DEVELOPERTOOLBAR":
+    case "DOM":
+    case "FONTINSPECTOR":
+    case "INSPECTOR":
+    case "JSBROWSERDEBUGGER":
+    case "JSDEBUGGER":
+    case "JSPROFILER":
+    case "LAYOUTVIEW":
+    case "MEMORY":
+    case "NETMONITOR":
+    case "OPTIONS":
+    case "PAINTFLASHING":
+    case "RESPONSIVE":
+    case "RULEVIEW":
+    case "SCRATCHPAD":
+    case "SHADEREDITOR":
+    case "STORAGE":
+    case "STYLEEDITOR":
+    case "TOOLBOX":
+    case "WEBAUDIOEDITOR":
+    case "WEBCONSOLE":
+    case "WEBIDE":
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      countHist = `DEVTOOLS_${id}_OPENED_COUNT`;
+      break;
+    case "ACCESSIBILITY":
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      countScalar = `devtools.${lowerCaseId}.opened_count`;
+      break;
+    case "ACCESSIBILITY_PICKER":
+      timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
+      countScalar = `devtools.accessibility.picker_used_count`;
+      break;
+    default:
+      timerHist = `DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS`;
+      countHist = `DEVTOOLS_CUSTOM_OPENED_COUNT`;
+  }
+
+  if (!timerHist || (!countHist && !countScalar)) {
+    throw new Error(`getChartsFromToolId cannot be called without a timer ` +
+                    `histogram and either a count histogram or count scalar.`);
+  }
+
+  return {
+    timerHist: timerHist,
+    countHist: countHist,
+    countScalar: countScalar
+  };
+}
+
+/**
+ * Displays the first caller and calling line outside of this file in the
+ * event of an error. This is the line that made the call that produced the
+ * error.
+ */
+function getCaller() {
+  return getNthPathExcluding(0, "/telemetry.js");
 }
 
 module.exports = Telemetry;

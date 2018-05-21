@@ -45,7 +45,9 @@ let bootstrap = {
       window,
       "resource://devtools/client/responsive.html/responsive-ua.css"
     );
+
     this.telemetry.toolOpened("responsive");
+
     let store = this.store = Store();
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));

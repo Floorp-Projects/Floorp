@@ -14,6 +14,8 @@ const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {}
 const Services = require("Services");
 const Telemetry = require("devtools/client/shared/telemetry");
 
+const TELEMETRY_SCRATCHPAD_WIN_OPEN_COUNT = "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT";
+
 /**
  * The ScratchpadManager object opens new Scratchpad windows and manages the state
  * of open scratchpads for session restore. There's only one ScratchpadManager in
@@ -122,11 +124,7 @@ this.ScratchpadManager = {
     let win = Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
                                      SCRATCHPAD_WINDOW_FEATURES, params);
 
-    this._telemetry.toolOpened("scratchpad-window");
-    let onClose = () => {
-      this._telemetry.toolClosed("scratchpad-window");
-    };
-    win.addEventListener("unload", onClose);
+    this._telemetry.getHistogramById(TELEMETRY_SCRATCHPAD_WIN_OPEN_COUNT).add(true);
 
     // Only add the shutdown observer if we've opened a scratchpad window.
     ShutdownObserver.init();

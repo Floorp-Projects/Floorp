@@ -26,7 +26,5 @@ function checkResults() {
   checkTelemetry("DEVTOOLS_TOOLBOX_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_INSPECTOR_TIME_ACTIVE_SECONDS", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_RULEVIEW_TIME_ACTIVE_SECONDS", "", null, "hasentries");
-  checkTelemetry(
-    "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER", "", null, "hasentries");
   checkTelemetry("DEVTOOLS_TOOLBOX_HOST", "", null, "hasentries");
 }

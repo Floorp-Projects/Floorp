@@ -30,7 +30,7 @@
   buttonlabelcancel="&exit.label;">
 
   <script type="application/javascript"
-          src="chrome://global/content/elements/stringbundle.js"/>
+          src="chrome://global/content/customElements.js"/>
 
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>

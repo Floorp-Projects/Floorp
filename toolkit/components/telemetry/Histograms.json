@@ -10009,13 +10009,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "What runtime version did WebIDE connect to?"
   },
-  "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 13,
-    "description": "Screen resolution of DevTools user (0:lower, 1:800x600, 2:1024x768, 3:1280x800, 4:1280x1024, 5:1366x768, 6:1440x900, 7:1920x1080, 8:2560×1440, 9:2560×1600, 10:2880x1800, 11:other, 12:higher)"
-  },
   "DEVTOOLS_SAVE_HEAP_SNAPSHOT_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",

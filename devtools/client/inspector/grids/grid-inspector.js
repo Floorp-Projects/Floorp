@@ -29,6 +29,10 @@ const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
 const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";
 const SHOW_INFINITE_LINES_PREF = "devtools.gridinspector.showInfiniteLines";
 
+const TELEMETRY_GRID_AREAS_OVERLAY_CHECKED = "devtools.grid.showGridAreasOverlay.checked";
+const TELEMETRY_GRID_LINE_NUMBERS_CHECKED = "devtools.grid.showGridLineNumbers.checked";
+const TELEMETRY_INFINITE_LINES_CHECKED = "devtools.grid.showInfiniteLines.checked";
+
 // Default grid colors.
 const GRID_COLORS = [
   "#9400FF",
@@ -538,7 +542,7 @@ class GridInspector {
     Services.prefs.setBoolPref(SHOW_GRID_AREAS, enabled);
 
     if (enabled) {
-      this.telemetry.toolOpened("gridInspectorShowGridAreasOverlayChecked");
+      this.telemetry.scalarSet(TELEMETRY_GRID_AREAS_OVERLAY_CHECKED, 1);
     }
 
     let { grids } = this.store.getState();
@@ -564,7 +568,7 @@ class GridInspector {
     Services.prefs.setBoolPref(SHOW_GRID_LINE_NUMBERS, enabled);
 
     if (enabled) {
-      this.telemetry.toolOpened("gridInspectorShowGridLineNumbersChecked");
+      this.telemetry.scalarSet(TELEMETRY_GRID_LINE_NUMBERS_CHECKED, 1);
     }
 
     let { grids } = this.store.getState();
@@ -590,7 +594,7 @@ class GridInspector {
     Services.prefs.setBoolPref(SHOW_INFINITE_LINES_PREF, enabled);
 
     if (enabled) {
-      this.telemetry.toolOpened("gridInspectorShowInfiniteLinesChecked");
+      this.telemetry.scalarSet(TELEMETRY_INFINITE_LINES_CHECKED, 1);
     }
 
     let { grids } = this.store.getState();

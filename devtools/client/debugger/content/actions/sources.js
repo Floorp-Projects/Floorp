@@ -10,9 +10,12 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { PROMISE, HISTOGRAM_ID } = require("devtools/client/shared/redux/middleware/promise");
 const { getSource, getSourceText } = require("../queries");
 const { Task } = require("devtools/shared/task");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms
+
+const telemetry = new Telemetry();
 
 function getSourceClient(source) {
   return gThreadClient.source(source);
@@ -180,12 +183,12 @@ function loadSourceText(source) {
       [PROMISE]: Task.spawn(function* () {
         let transportType = gClient.localTransport ? "_LOCAL" : "_REMOTE";
         let histogramId = "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE" + transportType + "_MS";
-        let histogram = Services.telemetry.getHistogramById(histogramId);
-        let startTime = Date.now();
+
+        telemetry.start(histogramId, this);
 
         const response = yield sourceClient.source();
 
-        histogram.add(Date.now() - startTime);
+        telemetry.finish(histogramId, this);
 
         // Automatically pretty print if enabled and the test is
         // detected to be "minified"

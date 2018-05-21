@@ -58,6 +58,8 @@ const SHOW_THREE_PANE_ONBOARDING_PREF = "devtools.inspector.show-three-pane-tool
 const THREE_PANE_ENABLED_PREF = "devtools.inspector.three-pane-enabled";
 const THREE_PANE_ENABLED_SCALAR = "devtools.inspector.three_pane_enabled";
 
+const TELEMETRY_EYEDROPPER_OPENED = "devtools.toolbar.eyedropper.opened";
+
 /**
  * Represents an open instance of the Inspector for a tab.
  * The inspector controls the breadcrumbs, the markup view, and the sidebar
@@ -1109,7 +1111,7 @@ Inspector.prototype = {
       if (this.toolbox && this.toolbox.currentToolId == "inspector") {
         let delay = this.panelWin.performance.now() - this._newRootStart;
         let telemetryKey = "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS";
-        let histogram = Services.telemetry.getHistogramById(telemetryKey);
+        let histogram = this.telemetry.getHistogramById(telemetryKey);
         histogram.add(delay);
       }
       delete this._newRootStart;
@@ -1875,7 +1877,7 @@ Inspector.prototype = {
       return null;
     }
 
-    this.telemetry.toolOpened("toolbareyedropper");
+    this.telemetry.scalarSet(TELEMETRY_EYEDROPPER_OPENED, 1);
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
     return this.inspector.pickColorFromPage(this.toolbox, {copyOnSelect: true})

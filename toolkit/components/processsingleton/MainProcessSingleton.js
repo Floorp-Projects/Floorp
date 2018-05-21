@@ -84,12 +84,8 @@ MainProcessSingleton.prototype = {
       const doc = subject;
       if (doc.nodePrincipal.isSystemPrincipal &&
           doc.contentType == "application/vnd.mozilla.xul+xml") {
-        for (let script of [
-          "chrome://global/content/elements/stringbundle.js",
-          "chrome://global/content/elements/general.js",
-        ]) {
-          Services.scriptloader.loadSubScript(script, doc.ownerGlobal);
-        }
+        Services.scriptloader.loadSubScript(
+          "chrome://global/content/customElements.js", doc.ownerGlobal);
       }
       break;
 

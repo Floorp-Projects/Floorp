@@ -153,13 +153,11 @@ protected:
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) override;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
                                                     const OriginAttributes& aOriginAttributes,
-                                                    const uint32_t& aFlags,
-                                                    const nsCString& aNetworkInterface) override;
+                                                    const uint32_t& aFlags) override;
   virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(PDNSRequestParent* actor,
                                                              const nsCString& hostName,
                                                              const OriginAttributes& aOriginAttributes,
-                                                             const uint32_t& flags,
-                                                             const nsCString& aNetworkInterface) override;
+                                                             const uint32_t& flags) override;
   virtual bool DeallocPDNSRequestParent(PDNSRequestParent*) override;
   virtual mozilla::ipc::IPCResult RecvSpeculativeConnect(const URIParams& aURI,
                                                          const Principal& aPrincipal,

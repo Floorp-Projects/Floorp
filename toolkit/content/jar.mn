@@ -46,6 +46,7 @@ toolkit.jar:
    content/global/editMenuOverlay.js
 #endif
    content/global/filepicker.properties
+   content/global/customElements.js
    content/global/globalOverlay.js
    content/global/mozilla.xhtml
    content/global/aboutMozilla.css
