@@ -21,143 +21,92 @@ SimpleTest.waitForExplicitFinish();
 // 6. Add 1.6s of data once video element fired waiting, that canplay is fired once readyState is HAVE_FUTURE_DATA.
 // 7. Finally load data to the end and ensure that canplaythrough is fired and that readyState is now HAVE_ENOUGH_DATA
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  once(ms, "sourceopen").then(function() {
-    // Log events for debugging.
-    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
-                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
-                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
-    function logEvent(e) {
-      info("got " + e.type + " event");
-    }
-    events.forEach(function(e) {
-      el.addEventListener(e, logEvent);
-    });
-
-    ok(true, "Receive a sourceopen event");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    el.addEventListener("error", function(e) {
-      ok(false, "should not fire '" + e + "' event");
-    });
-    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    const metadataPromises = [];
-    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
-    metadataPromises.push(once(el, "loadedmetadata"));
-    Promise.all(metadataPromises)
-    .then(function() {
-      ok(true, "got loadedmetadata event");
-      const canplayPromises = [];
-      canplayPromises.push(once(el, "loadeddata"));
-      canplayPromises.push(once(el, "canplay"));
-      canplayPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s"));
-      return Promise.all(canplayPromises);
-    })
-    .then(function() {
-      ok(true, "got canplay event");
-      // set element duration to 3.203333s. We do so in order to guarantee that
-      // the end of the buffered range will be equal to duration, causing
-      // canplaythrough to be fired later.
-      ms.duration = 3.203333;
-      return once(el, "durationchange");
-    })
-    .then(function() {
-      ok(true, "got durationchange event");
-      const promises = [];
-      promises.push(once(el, "canplaythrough"));
-      // Load [0.801666, 3.203333]
-      promises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s"));
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got canplaythrough event");
-      // set element duration to 9.203333s, this value is set to coincide with
-      // data added later (we now have an empty range from 6s to 9.203333s).
-      ms.duration = 9.203333;
-      return once(el, "durationchange");
-    })
-    .then(function() {
-      ok(true, "got durationchange event");
-      // An arbitrary value, so we are guaranteed to be in a range with no data.
-      el.currentTime = 6;
-      videosb.timestampOffset = 6;
-      ok(el.seeking, "seeking started");
-      return once(el, "seeking");
-    })
-    .then(function() {
-      ok(true, "got seeking event");
-      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
-      const promises = [];
-      promises.push(once(el, "seeked"));
-      promises.push(once(el, "canplay"));
-      // Load [6+0, 6+1.601666)
-      promises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s"));
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got seeked and canplay event");
-      is(el.currentTime, 6, "seeked to 6s");
-      is(el.readyState, el.HAVE_FUTURE_DATA, "readyState is HAVE_FUTURE_DATA");
-      const promises = [];
-      promises.push(once(el, "canplaythrough"));
-      // Load [6+1.60166, 6+3.203333]
-      promises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s"));
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got canplaythrough event");
-      // set element duration to 19.805s, this value is set to coincide with
-      // data added later (we now have an empty range from 15 to 19.805).
-      ms.duration = 19.805;
-      return once(el, "durationchange");
-    })
-    .then(function() {
-      ok(true, "got durationchange event");
-      el.currentTime = 15;
-      videosb.timestampOffset = 15;
-      ok(el.seeking, "seeking started");
-      return once(el, "seeking");
-    })
-    .then(function() {
-      ok(true, "got seeking event");
-      const promises = [];
-      promises.push(once(el, "seeked"));
-      // Load [15+0, 15+1.601666)
-      promises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s"));
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got seeked event");
-      // Load [15+1.60166, 15+3.203333]
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s");
-    })
-    .then(function() {
-      ok(true, "data loaded");
-      // Playback we play for a little while then stall.
-      const promises = [];
-      promises.push(once(el, "playing"));
-      promises.push(once(el, "waiting"));
-      el.play();
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got playing and waiting event");
-      // Playback has stalled, readyState is back to HAVE_CURRENT_DATA.
-      is(el.readyState, el.HAVE_CURRENT_DATA, "readyState is HAVE_CURRENT_DATA");
-      const promises = [];
-      promises.push(once(el, "playing"));
-      promises.push(once(el, "canplay"));
-      promises.push(once(el, "canplaythrough"));
-      // Load [15+3.203333, 15+4.805)
-      // Our final buffered range will now be [0, 3.203333)[6, 9.203333)[15, 19.805)
-      promises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 7), ".m4s"));
-      return Promise.all(promises);
-    })
-    .then(function() {
-      ok(true, "got playing, canplay and canplaythrough event");
-      SimpleTest.finish();
-    });
+  await once(ms, "sourceopen");
+  logEvents(el);
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  el.addEventListener("error", e => {
+    ok(false, `should not fire ${e.type} event`);
+    SimpleTest.finish();
   });
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await p;
+  ok(true, "got loadedmetadata event");
+  p = Promise.all([ once(el, "loadeddata"), once(el, "canplay") ]);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
+  await p;
+  ok(true, "got canplay event");
+  // set element duration to 3.203333s. We do so in order to guarantee that
+  // the end of the buffered range will be equal to duration, causing
+  // canplaythrough to be fired later.
+  ms.duration = 3.203333;
+  await once(el, "durationchange");
+  ok(true, "got durationchange event");
+  // Load [0.801666, 3.203333]
+  p = once(el, "canplaythrough");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s");
+  await p;
+  ok(true, "got canplaythrough event");
+  // set element duration to 9.203333s, this value is set to coincide with
+  // data added later (we now have an empty range from 6s to 9.203333s).
+  ms.duration = 9.203333;
+  await once(el, "durationchange");
+  ok(true, "got durationchange event");
+  // An arbitrary value, so we are guaranteed to be in a range with no data.
+  el.currentTime = 6;
+  videosb.timestampOffset = 6;
+  ok(el.seeking, "seeking started");
+  await once(el, "seeking");
+  ok(true, "got seeking event");
+  is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+  // Load [6+0, 6+1.601666)
+  p = Promise.all([ once(el, "seeked"), once(el, "canplay") ]);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
+  await p;
+  ok(true, "got seeked and canplay event");
+  is(el.currentTime, 6, "seeked to 6s");
+  is(el.readyState, el.HAVE_FUTURE_DATA, "readyState is HAVE_FUTURE_DATA");
+  // Load [6+1.60166, 6+3.203333]
+  p = once(el, "canplaythrough");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s");
+  await p;
+  ok(true, "got canplaythrough event");
+  // set element duration to 19.805s, this value is set to coincide with
+  // data added later (we now have an empty range from 15 to 19.805).
+  ms.duration = 19.805;
+  await once(el, "durationchange");
+  ok(true, "got durationchange event");
+  el.currentTime = 15;
+  videosb.timestampOffset = 15;
+  ok(el.seeking, "seeking started");
+  await once(el, "seeking");
+  ok(true, "got seeking event");
+  // Load [15+0, 15+1.601666)
+  p = once(el, "seeked");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 3), ".m4s");
+  await p;
+  ok(true, "got seeked event");
+  // Load [15+1.60166, 15+3.203333]
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(3, 5), ".m4s");
+  ok(true, "data loaded");
+  // Playback we play for a little while then stall.
+  p = Promise.all([ once(el, "playing"), once(el, "waiting") ]);
+  el.play();
+  await p;
+  ok(true, "got playing and waiting event");
+  // Playback has stalled, readyState is back to HAVE_CURRENT_DATA.
+  is(el.readyState, el.HAVE_CURRENT_DATA, "readyState is HAVE_CURRENT_DATA");
+  // Load [15+3.203333, 15+4.805)
+  // Our final buffered range will now be [0, 3.203333)[6, 9.203333)[15, 19.805)
+  p = Promise.all([ once(el, "playing"), once(el, "canplay"), once(el, "canplaythrough") ]);
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 7), ".m4s");
+  await p;
+  ok(true, "got playing, canplay and canplaythrough event");
+  SimpleTest.finish();
 });
 
 </script>

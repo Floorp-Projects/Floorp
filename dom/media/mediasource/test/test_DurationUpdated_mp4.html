@@ -12,45 +12,33 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let durationChangeCount = 0;
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/mp4");
+  let durationChangeCount = 0;
+  v.addEventListener("durationchange", () => durationChangeCount++);
 
-    v.addEventListener("durationchange", function() {
-      durationChangeCount++;
-    });
+  const arrayBuffer = await fetchWithXHR("bipbop/bipbop2s.mp4");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 1395));
-      // Adding the first init segment will fire a durationchange.
-      const promises = [];
-      promises.push(once(sb, "updateend"));
-      promises.push(once(v, "loadedmetadata"));
-      Promise.all(promises)
-      .then(function() {
-        ok(true, "got loadedmetadata");
-        // Set mediasource duration to 0, so future appendBuffer
-        // will update the mediasource duration.
-        // Changing the duration will fire a durationchange.
-        ms.duration = 0;
-        sb.appendBuffer(new Uint8Array(arrayBuffer, 1395));
-        // Adding more data will fire durationchange.
-        once(sb, "updateend")
-        .then(function() {
-          ok(true, "got updateend");
-          // this will not fire durationchange as new duration == old duration
-          ms.endOfStream();
-        });
-      });
-    });
-  });
-  ms.addEventListener("sourceended", function() {
-    is(durationChangeCount, 3, "durationchange not fired as many times as expected");
-    is(v.duration, 1.696666, "Video has correct duration");
-    SimpleTest.finish();
-  });
+  // Adding the first init segment will fire a durationchange.
+  await Promise.all([ once(sb, "updateend"), once(v, "loadedmetadata") ]);
+  ok(true, "got loadedmetadata");
+  // Set mediasource duration to 0, so future appendBuffer
+  // will update the mediasource duration.
+  // Changing the duration will fire a durationchange.
+  ms.duration = 0;
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 1395));
+  // Adding more data will fire durationchange.
+  await once(sb, "updateend");
+  ok(true, "got updateend");
+  // this will not fire durationchange as new duration == old duration
+  ms.endOfStream();
+  await once(ms, "sourceended");
+  is(durationChangeCount, 3, "durationchange not fired as many times as expected");
+  is(v.duration, 1.696666, "Video has correct duration");
+  SimpleTest.finish();
 });
 
 </script>
