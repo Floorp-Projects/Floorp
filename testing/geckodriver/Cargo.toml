@@ -17,7 +17,7 @@ log = { version = "0.4", features = ["std"] }
 mozprofile = { path = "../mozbase/rust/mozprofile" }
 mozrunner = { path = "../mozbase/rust/mozrunner" }
 mozversion = { path = "../mozbase/rust/mozversion" }
-regex = "0.2"
+regex = "1.0"
 rustc-serialize = "0.3"
 uuid = "0.1.18"
 webdriver = { path = "../webdriver" }
