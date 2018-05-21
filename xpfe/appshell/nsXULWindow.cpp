@@ -129,9 +129,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULWindow)
   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  if (aIID.Equals(NS_GET_IID(nsXULWindow)))
-    foundInterface = reinterpret_cast<nsISupports*>(this);
-  else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsXULWindow)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************

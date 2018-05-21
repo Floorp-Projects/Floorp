@@ -1088,15 +1088,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowOuter)
   NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
-  if (aIID.Equals(NS_GET_IID(nsPIDOMWindowOuter))) {
-    foundInterface = static_cast<nsPIDOMWindowOuter*>(this);
-  } else
-  if (aIID.Equals(NS_GET_IID(mozIDOMWindowProxy))) {
-    foundInterface = static_cast<mozIDOMWindowProxy*>(this);
-  } else
-  if (aIID.Equals(NS_GET_IID(nsIDOMChromeWindow)) && IsChromeWindow()) {
-    foundInterface = static_cast<nsIDOMChromeWindow*>(this);
-  } else
+  NS_INTERFACE_MAP_ENTRY(nsPIDOMWindowOuter)
+  NS_INTERFACE_MAP_ENTRY(mozIDOMWindowProxy)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMChromeWindow, IsChromeWindow())
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
