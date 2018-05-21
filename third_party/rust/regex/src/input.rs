@@ -16,7 +16,7 @@ use std::u32;
 
 use syntax;
 
-use literals::LiteralSearcher;
+use literal::LiteralSearcher;
 use prog::InstEmptyLook;
 use utf8::{decode_utf8, decode_last_utf8};
 
@@ -58,6 +58,12 @@ impl InputAt {
         self.len
     }
 
+    /// Returns whether the UTF-8 width of the character at this position
+    /// is zero.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
     /// Returns the byte offset of this position.
     pub fn pos(&self) -> usize {
         self.pos
@@ -97,6 +103,9 @@ pub trait Input {
 
     /// The number of bytes in the input.
     fn len(&self) -> usize;
+
+    /// Whether the input is empty.
+    fn is_empty(&self) -> bool { self.len() == 0 }
 
     /// Return the given input as a sequence of bytes.
     fn as_bytes(&self) -> &[u8];
@@ -214,10 +223,6 @@ impl<'t> Input for CharInput<'t> {
 }
 
 /// An input reader over bytes.
-///
-/// N.B. We represent the reader with a string for now, since that gives us
-/// easy access to necessary Unicode decoding (used for word boundary look
-/// ahead/look behind).
 #[derive(Clone, Copy, Debug)]
 pub struct ByteInput<'t> {
     text: &'t [u8],
@@ -247,7 +252,7 @@ impl<'t> Input for ByteInput<'t> {
         InputAt {
             pos: i,
             c: None.into(),
-            byte: self.get(i).map(|&b| b),
+            byte: self.get(i).cloned(),
             len: 1,
         }
     }
@@ -325,7 +330,7 @@ impl<'t> Input for ByteInput<'t> {
     }
 
     fn as_bytes(&self) -> &[u8] {
-        &self.text
+        self.text
     }
 }
 
@@ -366,7 +371,7 @@ impl Char {
     ///
     /// If the character is absent, then false is returned.
     pub fn is_word_char(self) -> bool {
-        char::from_u32(self.0).map_or(false, syntax::is_word_char)
+        char::from_u32(self.0).map_or(false, syntax::is_word_character)
     }
 
     /// Returns true iff the byte is a word byte.
@@ -374,19 +379,9 @@ impl Char {
     /// If the byte is absent, then false is returned.
     pub fn is_word_byte(self) -> bool {
         match char::from_u32(self.0) {
-            None => false,
             Some(c) if c <= '\u{7F}' => syntax::is_word_byte(c as u8),
-            Some(_) => false,
+            None | Some(_) => false,
         }
-    }
-
-    /// Converts the character to a real primitive `char`.
-    ///
-    /// If the character is absent, then `None` is returned.
-    pub fn as_char(self) -> Option<char> {
-        // This is only used in the `regex!` macro because it expands char
-        // classes into `match` expressions (instead of binary search).
-        char::from_u32(self.0)
     }
 }
 

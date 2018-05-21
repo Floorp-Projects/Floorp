@@ -2,7 +2,7 @@ Your friendly guide to understanding the performance characteristics of this
 crate.
 
 This guide assumes some familiarity with the public API of this crate, which
-can be found here: http://doc.rust-lang.org/regex/regex/index.html
+can be found here: https://docs.rs/regex
 
 ## Theory vs. Practice
 

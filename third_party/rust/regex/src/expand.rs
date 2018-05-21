@@ -89,8 +89,8 @@ pub fn expand_bytes(
     dst.extend(replacement);
 }
 
-/// CaptureRef represents a reference to a capture group inside some text. The
-/// reference is either a capture group name or a number.
+/// `CaptureRef` represents a reference to a capture group inside some text.
+/// The reference is either a capture group name or a number.
 ///
 /// It is also tagged with the position in the text immediately proceding the
 /// capture reference.
@@ -150,7 +150,7 @@ fn find_cap_ref<T: ?Sized + AsRef<[u8]>>(
     // therefore be valid UTF-8. If we really cared, we could avoid this UTF-8
     // check with either unsafe or by parsing the number straight from &[u8].
     let cap = str::from_utf8(&rep[i..cap_end])
-                  .ok().expect("valid UTF-8 capture name");
+                  .expect("valid UTF-8 capture name");
     if brace {
         if !rep.get(cap_end).map_or(false, |&b| b == b'}') {
             return None;

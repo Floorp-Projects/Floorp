@@ -14,14 +14,16 @@ use std::cmp;
 use std::sync::Arc;
 
 use thread_local::CachedThreadLocal;
-use syntax::{Expr, ExprBuilder, Literals};
+use syntax::ParserBuilder;
+use syntax::hir::Hir;
+use syntax::hir::literal::Literals;
 
 use backtrack;
 use compile::Compiler;
 use dfa;
 use error::Error;
 use input::{ByteInput, CharInput};
-use literals::LiteralSearcher;
+use literal::LiteralSearcher;
 use pikevm;
 use prog::Program;
 use re_builder::RegexOptions;
@@ -31,7 +33,7 @@ use re_trait::{RegularExpression, Slot, Locations, as_slots};
 use re_unicode;
 use utf8::next_utf8;
 
-/// Exec manages the execution of a regular expression.
+/// `Exec` manages the execution of a regular expression.
 ///
 /// In particular, this manages the various compiled forms of a single regular
 /// expression and the choice of which matching engine to use to execute a
@@ -43,7 +45,7 @@ pub struct Exec {
     cache: CachedThreadLocal<ProgramCache>,
 }
 
-/// ExecNoSync is like Exec, except it embeds a reference to a cache. This
+/// `ExecNoSync` is like `Exec`, except it embeds a reference to a cache. This
 /// means it is no longer Sync, but we can now avoid the overhead of
 /// synchronization to fetch the cache.
 #[derive(Debug)]
@@ -54,10 +56,10 @@ pub struct ExecNoSync<'c> {
     cache: &'c ProgramCache,
 }
 
-/// ExecNoSyncStr is like ExecNoSync, but matches on &str instead of &[u8].
+/// `ExecNoSyncStr` is like `ExecNoSync`, but matches on &str instead of &[u8].
 pub struct ExecNoSyncStr<'c>(ExecNoSync<'c>);
 
-/// ExecReadOnly comprises all read only state for a regex. Namely, all such
+/// `ExecReadOnly` comprises all read only state for a regex. Namely, all such
 /// state is determined at compile time and never changes during search.
 #[derive(Debug)]
 struct ExecReadOnly {
@@ -102,7 +104,7 @@ pub struct ExecBuilder {
 /// Parsed represents a set of parsed regular expressions and their detected
 /// literals.
 struct Parsed {
-    exprs: Vec<Expr>,
+    exprs: Vec<Hir>,
     prefixes: Literals,
     suffixes: Literals,
     bytes: bool,
@@ -214,19 +216,24 @@ impl ExecBuilder {
         // If we're compiling a regex set and that set has any anchored
         // expressions, then disable all literal optimizations.
         for pat in &self.options.pats {
-            let parser =
-                ExprBuilder::new()
+            let mut parser =
+                ParserBuilder::new()
+                    .octal(self.options.octal)
                     .case_insensitive(self.options.case_insensitive)
                     .multi_line(self.options.multi_line)
                     .dot_matches_new_line(self.options.dot_matches_new_line)
                     .swap_greed(self.options.swap_greed)
                     .ignore_whitespace(self.options.ignore_whitespace)
                     .unicode(self.options.unicode)
-                    .allow_bytes(!self.only_utf8);
-            let expr = try!(parser.parse(pat));
-            bytes = bytes || expr.has_bytes();
+                    .allow_invalid_utf8(!self.only_utf8)
+                    .nest_limit(self.options.nest_limit)
+                    .build();
+            let expr = parser
+                .parse(pat)
+                .map_err(|e| Error::Syntax(e.to_string()))?;
+            bytes = bytes || !expr.is_always_utf8();
 
-            if !expr.is_anchored_start() && expr.has_anchored_start() {
+            if !expr.is_anchored_start() && expr.is_any_anchored_start() {
                 // Partial anchors unfortunately make it hard to use prefixes,
                 // so disable them.
                 prefixes = None;
@@ -243,14 +250,14 @@ impl ExecBuilder {
                 }
             });
 
-            if !expr.is_anchored_end() && expr.has_anchored_end() {
+            if !expr.is_anchored_end() && expr.is_any_anchored_end() {
                 // Partial anchors unfortunately make it hard to use suffixes,
                 // so disable them.
                 suffixes = None;
             } else if is_set && expr.is_anchored_end() {
                 // Regex sets with anchors do not go well with literal
                 // optimizations.
-                prefixes = None;
+                suffixes = None;
             }
             suffixes = suffixes.and_then(|mut suffixes| {
                 if !suffixes.union_suffixes(&expr) {
@@ -263,8 +270,8 @@ impl ExecBuilder {
         }
         Ok(Parsed {
             exprs: exprs,
-            prefixes: prefixes.unwrap_or(Literals::empty()),
-            suffixes: suffixes.unwrap_or(Literals::empty()),
+            prefixes: prefixes.unwrap_or_else(Literals::empty),
+            suffixes: suffixes.unwrap_or_else(Literals::empty),
             bytes: bytes,
         })
     }
@@ -284,26 +291,26 @@ impl ExecBuilder {
             });
             return Ok(Exec { ro: ro, cache: CachedThreadLocal::new() });
         }
-        let parsed = try!(self.parse());
-        let mut nfa = try!(
+        let parsed = self.parse()?;
+        let mut nfa =
             Compiler::new()
                      .size_limit(self.options.size_limit)
                      .bytes(self.bytes || parsed.bytes)
                      .only_utf8(self.only_utf8)
-                     .compile(&parsed.exprs));
-        let mut dfa = try!(
+                     .compile(&parsed.exprs)?;
+        let mut dfa =
             Compiler::new()
                      .size_limit(self.options.size_limit)
                      .dfa(true)
                      .only_utf8(self.only_utf8)
-                     .compile(&parsed.exprs));
-        let mut dfa_reverse = try!(
+                     .compile(&parsed.exprs)?;
+        let mut dfa_reverse =
             Compiler::new()
                      .size_limit(self.options.size_limit)
                      .dfa(true)
                      .only_utf8(self.only_utf8)
                      .reverse(true)
-                     .compile(&parsed.exprs));
+                     .compile(&parsed.exprs)?;
 
         let prefixes = parsed.prefixes.unambiguous_prefixes();
         let suffixes = parsed.suffixes.unambiguous_suffixes();
@@ -397,7 +404,7 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
             MatchType::DfaAnchoredReverse => {
                 match dfa::Fsm::reverse(
                     &self.ro.dfa_reverse,
-                    &self.cache,
+                    self.cache,
                     true,
                     &text[start..],
                     text.len(),
@@ -445,7 +452,7 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
             MatchType::DfaAnchoredReverse => {
                 match dfa::Fsm::reverse(
                     &self.ro.dfa_reverse,
-                    &self.cache,
+                    self.cache,
                     true,
                     &text[start..],
                     text.len(),
@@ -554,12 +561,16 @@ impl<'c> RegularExpression for ExecNoSync<'c> {
                 })
             }
             MatchType::Dfa => {
-                match self.find_dfa_forward(text, start) {
-                    dfa::Result::Match((s, e)) => {
-                        self.captures_nfa_with_match(slots, text, s, e)
+                if self.ro.nfa.is_anchored_start {
+                    self.captures_nfa(slots, text, start)
+                } else {
+                    match self.find_dfa_forward(text, start) {
+                        dfa::Result::Match((s, e)) => {
+                            self.captures_nfa_with_match(slots, text, s, e)
+                        }
+                        dfa::Result::NoMatch(_) => None,
+                        dfa::Result::Quit => self.captures_nfa(slots, text, start),
                     }
-                    dfa::Result::NoMatch(_) => None,
-                    dfa::Result::Quit => self.captures_nfa(slots, text, start),
                 }
             }
             MatchType::DfaAnchoredReverse => {
@@ -609,8 +620,13 @@ impl<'c> ExecNoSync<'c> {
             }
             AnchoredStart => {
                 let lits = &self.ro.nfa.prefixes;
-                lits.find_start(&text[start..])
-                    .map(|(s, e)| (start + s, start + e))
+                if !self.ro.nfa.is_anchored_start
+                    || (self.ro.nfa.is_anchored_start && start == 0) {
+                    lits.find_start(&text[start..])
+                        .map(|(s, e)| (start + s, start + e))
+                } else {
+                    None
+                }
             }
             AnchoredEnd => {
                 let lits = &self.ro.suffixes;
@@ -633,7 +649,7 @@ impl<'c> ExecNoSync<'c> {
         use dfa::Result::*;
         let end = match dfa::Fsm::forward(
             &self.ro.dfa,
-            &self.cache,
+            self.cache,
             false,
             text,
             start,
@@ -646,7 +662,7 @@ impl<'c> ExecNoSync<'c> {
         // Now run the DFA in reverse to find the start of the match.
         match dfa::Fsm::reverse(
             &self.ro.dfa_reverse,
-            &self.cache,
+            self.cache,
             false,
             &text[start..],
             end - start,
@@ -672,7 +688,7 @@ impl<'c> ExecNoSync<'c> {
         use dfa::Result::*;
         match dfa::Fsm::reverse(
             &self.ro.dfa_reverse,
-            &self.cache,
+            self.cache,
             false,
             &text[start..],
             text.len() - start,
@@ -686,7 +702,7 @@ impl<'c> ExecNoSync<'c> {
     /// Finds the end of the shortest match using only the DFA.
     #[inline(always)] // reduces constant overhead
     fn shortest_dfa(&self, text: &[u8], start: usize) -> dfa::Result<usize> {
-        dfa::Fsm::forward(&self.ro.dfa, &self.cache, true, text, start)
+        dfa::Fsm::forward(&self.ro.dfa, self.cache, true, text, start)
     }
 
     /// Finds the end of the shortest match using only the DFA by scanning for
@@ -731,13 +747,13 @@ impl<'c> ExecNoSync<'c> {
         let mut end = start;
         while end <= text.len() {
             start = end;
-            end = end + match lcs.find(&text[end..]) {
+            end += match lcs.find(&text[end..]) {
                 None => return Some(NoMatch(text.len())),
                 Some(start) => start + lcs.len(),
             };
             match dfa::Fsm::reverse(
                 &self.ro.dfa_reverse,
-                &self.cache,
+                self.cache,
                 false,
                 &text[start..end],
                 end - start,
@@ -778,7 +794,7 @@ impl<'c> ExecNoSync<'c> {
         // leftmost-first match.)
         match dfa::Fsm::forward(
             &self.ro.dfa,
-            &self.cache,
+            self.cache,
             false,
             text,
             match_start,
@@ -939,7 +955,7 @@ impl<'c> ExecNoSync<'c> {
         if self.ro.nfa.uses_bytes() {
             pikevm::Fsm::exec(
                 &self.ro.nfa,
-                &self.cache,
+                self.cache,
                 matches,
                 slots,
                 quit_after_match,
@@ -948,7 +964,7 @@ impl<'c> ExecNoSync<'c> {
         } else {
             pikevm::Fsm::exec(
                 &self.ro.nfa,
-                &self.cache,
+                self.cache,
                 matches,
                 slots,
                 quit_after_match,
@@ -968,7 +984,7 @@ impl<'c> ExecNoSync<'c> {
         if self.ro.nfa.uses_bytes() {
             backtrack::Bounded::exec(
                 &self.ro.nfa,
-                &self.cache,
+                self.cache,
                 matches,
                 slots,
                 ByteInput::new(text, self.ro.nfa.only_utf8),
@@ -976,7 +992,7 @@ impl<'c> ExecNoSync<'c> {
         } else {
             backtrack::Bounded::exec(
                 &self.ro.nfa,
-                &self.cache,
+                self.cache,
                 matches,
                 slots,
                 CharInput::new(text),
@@ -1003,14 +1019,14 @@ impl<'c> ExecNoSync<'c> {
         }
         match self.ro.match_type {
             Literal(ty) => {
-                debug_assert!(matches.len() == 1);
+                debug_assert_eq!(matches.len(), 1);
                 matches[0] = self.find_literals(ty, text, start).is_some();
                 matches[0]
             }
             Dfa | DfaAnchoredReverse | DfaSuffix | DfaMany => {
                 match dfa::Fsm::forward_many(
                     &self.ro.dfa,
-                    &self.cache,
+                    self.cache,
                     matches,
                     text,
                     start,
@@ -1251,7 +1267,7 @@ enum MatchNfaType {
     PikeVM,
 }
 
-/// ProgramCache maintains reusable allocations for each matching engine
+/// `ProgramCache` maintains reusable allocations for each matching engine
 /// available to a particular program.
 pub type ProgramCache = RefCell<ProgramCacheInner>;
 
@@ -1270,6 +1286,65 @@ impl ProgramCacheInner {
             backtrack: backtrack::Cache::new(&ro.nfa),
             dfa: dfa::Cache::new(&ro.dfa),
             dfa_reverse: dfa::Cache::new(&ro.dfa_reverse),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn uppercut_s_backtracking_bytes_default_bytes_mismatch() {
+        use internal::ExecBuilder;
+
+        let backtrack_bytes_re = ExecBuilder::new("^S")
+            .bounded_backtracking()
+            .only_utf8(false)
+            .build()
+            .map(|exec| exec.into_byte_regex())
+            .map_err(|err| format!("{}", err))
+            .unwrap();
+
+        let default_bytes_re = ExecBuilder::new("^S")
+            .only_utf8(false)
+            .build()
+            .map(|exec| exec.into_byte_regex())
+            .map_err(|err| format!("{}", err))
+            .unwrap();
+
+        let input = vec![83, 83];
+
+        let s1 = backtrack_bytes_re.split(&input);
+        let s2 = default_bytes_re.split(&input);
+        for (chunk1, chunk2) in s1.zip(s2) {
+            assert_eq!(chunk1, chunk2);
+        }
+    }
+
+    #[test]
+    fn unicode_lit_star_backtracking_utf8bytes_default_utf8bytes_mismatch() {
+        use internal::ExecBuilder;
+
+        let backtrack_bytes_re = ExecBuilder::new(r"^(?u:\*)")
+            .bounded_backtracking()
+            .bytes(true)
+            .build()
+            .map(|exec| exec.into_regex())
+            .map_err(|err| format!("{}", err))
+            .unwrap();
+
+        let default_bytes_re = ExecBuilder::new(r"^(?u:\*)")
+            .bytes(true)
+            .build()
+            .map(|exec| exec.into_regex())
+            .map_err(|err| format!("{}", err))
+            .unwrap();
+
+        let input = "**";
+
+        let s1 = backtrack_bytes_re.split(input);
+        let s2 = default_bytes_re.split(input);
+        for (chunk1, chunk2) in s1.zip(s2) {
+            assert_eq!(chunk1, chunk2);
         }
     }
 }
