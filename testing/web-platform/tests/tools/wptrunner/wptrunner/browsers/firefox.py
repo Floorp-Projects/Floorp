@@ -189,6 +189,8 @@ class FirefoxBrowser(Browser):
         self.chaos_mode_flags = chaos_mode_flags
 
     def settings(self, test):
+        if self.asan:
+            self.lsan_handler.set_allowed(test.lsan_allowed)
         return {"check_leaks": self.leak_check and not test.leaks}
 
     def start(self, **kwargs):
