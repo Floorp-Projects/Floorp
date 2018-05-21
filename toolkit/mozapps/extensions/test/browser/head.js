@@ -454,11 +454,10 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 function wait_for_window_open(aCallback) {
   let p = new Promise(resolve => {
     Services.wm.addListener({
-      onOpenWindow(aWindow) {
+      onOpenWindow(aXulWin) {
         Services.wm.removeListener(this);
 
-        let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIDOMWindow);
+        let domwindow = aXulWin.docShell.domWindow;
         domwindow.addEventListener("load", function() {
           executeSoon(function() {
             resolve(domwindow);

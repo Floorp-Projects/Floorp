@@ -59,8 +59,7 @@ HiddenFrame.prototype = {
    */
   getWindow() {
     this.get();
-    this._browser.QueryInterface(Ci.nsIInterfaceRequestor);
-    return this._browser.getInterface(Ci.nsIDOMWindow);
+    return this._browser.document.ownerGlobal;
   },
 
 
