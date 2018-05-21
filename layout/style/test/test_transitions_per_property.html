@@ -91,11 +91,17 @@ var supported_properties = {
     "background-position-x": [ test_background_position_coord_transition,
                                test_length_transition,
                                test_percent_transition,
-                               test_length_percent_pair_unclamped ],
+                             // FIXME: We don't currently test clamping,
+                             // since background-position-x uses calc() as
+                             // an intermediate form.
+                             /* test_length_percent_pair_unclamped */ ],
     "background-position-y": [ test_background_position_coord_transition,
                                test_length_transition,
                                test_percent_transition,
-                               test_length_percent_pair_unclamped ],
+                             // FIXME: We don't currently test clamping,
+                             // since background-position-y uses calc() as
+                             // an intermediate form.
+                             /* test_length_percent_pair_unclamped */ ],
     "background-size": [ test_background_size_transition,
                          test_length_percent_pair_clamped ],
     "border-bottom-color": [ test_color_transition,
@@ -187,11 +193,17 @@ var supported_properties = {
     "mask-position-x": [ test_background_position_coord_transition,
                          test_length_transition,
                          test_percent_transition,
-                         test_length_percent_pair_unclamped ],
+                         // FIXME: We don't currently test clamping,
+                         // since background-position-x uses calc() as
+                         // an intermediate form.
+                         /* test_length_percent_pair_unclamped */ ],
     "mask-position-y": [ test_background_position_coord_transition,
                          test_length_transition,
                          test_percent_transition,
-                         test_length_percent_pair_unclamped ],
+                         // FIXME: We don't currently test clamping,
+                         // since background-position-y uses calc() as
+                         // an intermediate form.
+                         /* test_length_percent_pair_unclamped */ ],
     "mask-size": [ test_background_size_transition,
                    test_length_percent_pair_clamped ],
     "max-height": [ test_length_transition, test_percent_transition,
