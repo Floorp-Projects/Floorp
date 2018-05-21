@@ -3820,6 +3820,8 @@ WorkerPrivate::DisableMemoryReporter()
 void
 WorkerPrivate::WaitForWorkerEvents()
 {
+  AUTO_PROFILER_LABEL("WorkerPrivate::WaitForWorkerEvents", IDLE);
+
   AssertIsOnWorkerThread();
   mMutex.AssertCurrentThreadOwns();
 
