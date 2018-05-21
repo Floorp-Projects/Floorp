@@ -21,7 +21,7 @@ add_task(async function test_principal_right_click_open_link_in_new_private_win(
 
     await ContentTask.spawn(privateWin.gBrowser.selectedBrowser, {DUMMY_PAGE, TEST_PAGE}, async function({DUMMY_PAGE, TEST_PAGE}) { // eslint-disable-line
 
-      let channel = content.document.docShell.currentDocumentChannel;
+      let channel = content.docShell.currentDocumentChannel;
       is(channel.URI.spec, DUMMY_PAGE,
          "sanity check to ensure we check principal for right URI");
 

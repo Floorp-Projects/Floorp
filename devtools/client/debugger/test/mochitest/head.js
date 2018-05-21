@@ -75,7 +75,7 @@ function addWindow(aUrl) {
 }
 
 function getChromeWindow(aWindow) {
-  return aWindow.document.docShell.rootTreeItem.domWindow;
+  return aWindow.docShell.rootTreeItem.domWindow;
 }
 
 // Override addTab/removeTab as defined by shared-head, since these have

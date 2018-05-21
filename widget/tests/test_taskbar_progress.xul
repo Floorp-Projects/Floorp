@@ -40,7 +40,7 @@
       // HACK from mconnor:
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       let win = wm.getMostRecentWindow("navigator:browser");
-      let docShell = win.document.docShell;
+      let docShell = win.docShell;
 
       let progress = taskbar.getTaskbarProgress(docShell);
       isnot(progress, null, "Progress is not null");

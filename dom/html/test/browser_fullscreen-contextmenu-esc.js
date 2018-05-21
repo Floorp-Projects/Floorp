@@ -13,8 +13,7 @@ function frameScript() {
                      !!content.document.fullscreenElement);
   });
   function waitUntilActive() {
-    let doc = content.document;
-    if (doc.docShell.isActive && doc.hasFocus()) {
+    if (docShell.isActive && content.document.hasFocus()) {
       sendAsyncMessage("Test:Activated");
     } else {
       setTimeout(waitUntilActive, 10);

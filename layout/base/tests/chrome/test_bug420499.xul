@@ -60,7 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
     SimpleTest.waitForExplicitFinish();
 
     function getSelectionController() {
-      return document.docShell
+      return window.docShell
         .QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsISelectionDisplay)
         .QueryInterface(Ci.nsISelectionController);

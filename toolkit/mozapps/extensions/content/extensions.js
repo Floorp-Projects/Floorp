@@ -278,7 +278,7 @@ function isDiscoverEnabled() {
  * Obtain the main DOMWindow for the current context.
  */
 function getMainWindow() {
-  return window.document.docShell.rootTreeItem.domWindow;
+  return window.docShell.rootTreeItem.domWindow;
 }
 
 function getBrowserElement() {
@@ -3450,7 +3450,7 @@ var gDragDrop = {
 // (See Bug 1385548 for rationale).
 var gBrowser = {
   getTabModalPromptBox(browser) {
-    const parentWindow = document.docShell.chromeEventHandler.ownerGlobal;
+    const parentWindow = window.docShell.chromeEventHandler.ownerGlobal;
 
     if (parentWindow.gBrowser) {
       return parentWindow.gBrowser.getTabModalPromptBox(browser);
