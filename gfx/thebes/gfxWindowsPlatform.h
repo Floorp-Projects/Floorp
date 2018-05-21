@@ -265,8 +265,6 @@ private:
     DWRITE_MEASURING_MODE mMeasuringMode;
 
     RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
-
-    nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */
