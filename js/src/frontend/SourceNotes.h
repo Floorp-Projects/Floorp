@@ -37,8 +37,8 @@ namespace js {
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
-    M(SRC_IF_ELSE,      "if-else",     1)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
-    M(SRC_COND,         "cond",        1)  /* JSOP_IFEQ is from conditional ?: operator. */        \
+    M(SRC_IF_ELSE,      "if-else",     0)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
+    M(SRC_COND,         "cond",        0)  /* JSOP_IFEQ is from conditional ?: operator. */        \
     M(SRC_FOR,          "for",         3)  /* JSOP_NOP or JSOP_POP in for(;;) loop head. */        \
     M(SRC_WHILE,        "while",       1)  /* JSOP_GOTO to for or while loop condition from before \
                                               loop, else JSOP_NOP at top of do-while loop. */      \

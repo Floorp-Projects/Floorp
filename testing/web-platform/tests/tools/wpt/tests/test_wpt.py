@@ -13,6 +13,9 @@ import pytest
 from tools.wpt import wpt
 
 
+here = os.path.abspath(os.path.dirname(__file__))
+
+
 def is_port_8000_in_use():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -60,6 +63,68 @@ def test_help():
     # should try to work around that
     with pytest.raises(SystemExit) as excinfo:
         wpt.main(argv=["--help"])
+    assert excinfo.value.code == 0
+
+
+@pytest.mark.slow
+def test_list_tests(manifest_dir):
+    """The `--list-tests` option should not produce an error under normal
+    conditions."""
+
+    with pytest.raises(SystemExit) as excinfo:
+        wpt.main(argv=["run", "--metadata", manifest_dir, "--list-tests",
+                       "--yes", "chrome", "/dom/nodes/Element-tagName.html"])
+    assert excinfo.value.code == 0
+
+
+@pytest.mark.slow
+def test_list_tests_missing_manifest(manifest_dir):
+    """The `--list-tests` option should not produce an error in the absence of
+    a test manifest file."""
+
+    os.remove(os.path.join(manifest_dir, "MANIFEST.json"))
+
+    with pytest.raises(SystemExit) as excinfo:
+        wpt.main(argv=["run",
+                       # This test triggers the creation of a new manifest
+                       # file which is not necessary to ensure successful
+                       # process completion. Specifying the current directory
+                       # as the tests source via the --tests` option
+                       # drastically reduces the time to execute the test.
+                       "--tests", here,
+                       "--metadata", manifest_dir,
+                       "--list-tests",
+                       "--yes",
+                       "firefox", "/dom/nodes/Element-tagName.html"])
+
+    assert excinfo.value.code == 0
+
+
+@pytest.mark.slow
+def test_list_tests_invalid_manifest(manifest_dir):
+    """The `--list-tests` option should not produce an error in the presence of
+    a malformed test manifest file."""
+
+    manifest_filename = os.path.join(manifest_dir, "MANIFEST.json")
+
+    assert os.path.isfile(manifest_filename)
+
+    with open(manifest_filename, "a+") as handle:
+        handle.write("extra text which invalidates the file")
+
+    with pytest.raises(SystemExit) as excinfo:
+        wpt.main(argv=["run",
+                       # This test triggers the creation of a new manifest
+                       # file which is not necessary to ensure successful
+                       # process completion. Specifying the current directory
+                       # as the tests source via the --tests` option
+                       # drastically reduces the time to execute the test.
+                       "--tests", here,
+                       "--metadata", manifest_dir,
+                       "--list-tests",
+                       "--yes",
+                       "firefox", "/dom/nodes/Element-tagName.html"])
+
     assert excinfo.value.code == 0
 
 

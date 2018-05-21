@@ -2695,6 +2695,8 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
         switch (type) {
           case SRC_NULL:
           case SRC_IF:
+          case SRC_IF_ELSE:
+          case SRC_COND:
           case SRC_CONTINUE:
           case SRC_BREAK:
           case SRC_BREAK2LABEL:
@@ -2729,18 +2731,12 @@ SrcNotes(JSContext* cx, HandleScript script, Sprinter* sp)
             }
             break;
 
-          case SRC_IF_ELSE:
-            if (!sp->jsprintf(" else %u", unsigned(GetSrcNoteOffset(sn, 0))))
-                return false;
-            break;
-
           case SRC_FOR_IN:
           case SRC_FOR_OF:
             if (!sp->jsprintf(" closingjump %u", unsigned(GetSrcNoteOffset(sn, 0))))
                 return false;
             break;
 
-          case SRC_COND:
           case SRC_WHILE:
           case SRC_NEXTCASE:
             if (!sp->jsprintf(" offset %u", unsigned(GetSrcNoteOffset(sn, 0))))
