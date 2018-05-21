@@ -49,10 +49,15 @@ function configureStore(hud, options = {}) {
 
   const logLimit = options.logLimit
     || Math.max(getIntPref("devtools.hud.loglimit"), 1);
-  const sidebarToggle = getBoolPref(PREFS.UI.SIDEBAR_TOGGLE);
+  const sidebarToggle = getBoolPref(PREFS.FEATURES.SIDEBAR_TOGGLE);
+  const jstermCodeMirror = getBoolPref(PREFS.FEATURES.JSTERM_CODE_MIRROR);
 
   const initialState = {
-    prefs: PrefState({ logLimit, sidebarToggle }),
+    prefs: PrefState({
+      logLimit,
+      sidebarToggle,
+      jstermCodeMirror,
+    }),
     filters: FilterState({
       error: getBoolPref(PREFS.FILTER.ERROR),
       warn: getBoolPref(PREFS.FILTER.WARN),

@@ -7,7 +7,8 @@
 
 const PrefState = (overrides) => Object.freeze(Object.assign({
   logLimit: 1000,
-  sidebarToggle: false
+  sidebarToggle: false,
+  jstermCodeMirror: false,
 }, overrides));
 
 function prefs(state = PrefState(), action) {

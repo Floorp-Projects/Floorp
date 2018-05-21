@@ -214,6 +214,7 @@ WebConsoleOutputWrapper.prototype = {
         hud,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
+        jstermCodeMirror: store.getState().prefs.jstermCodeMirror,
       });
 
       // Render the root Application component.
