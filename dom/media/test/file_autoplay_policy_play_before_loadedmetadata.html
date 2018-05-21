@@ -29,14 +29,29 @@
           element.preload = "auto";
           element.src = testCase.resource;
           document.body.appendChild(element);
+
           is(element.paused, true, testCase.resource + " - should start out paused.");
+
           let playEventFired = false;
           once(element, "play").then(() => { playEventFired = true; });
+          let playingEventFired = false;
+          once(element, "playing").then(() => { playingEventFired = true;});
           let pauseEventFired = false;
           once(element, "pause").then(() => { pauseEventFired = true; });
+
           let played = await element.play().then(() => true, () => false);
-          let msg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + "play";
-          is(played, testCase.shouldPlay, msg);
+
+          // Wait for one round through the event loop. This gives any tasks
+          // inside Gecko enqueued to dispatch events a chance to run.
+          // Specifically the "playing" event, if it's erronously fired.
+          await new Promise((resolve, reject) => {
+            setTimeout(resolve, 0);
+          });
+
+          let playingEventMsg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + " fire playing";
+          is(playingEventFired, testCase.shouldPlay, playingEventMsg);
+          let playMsg = testCase.resource + " should " + (!testCase.shouldPlay ? "not " : "") + "play";
+          is(played, testCase.shouldPlay, playMsg);
           is(playEventFired, true, testCase.resource + " - we should always get a play event");
           is(pauseEventFired, !testCase.shouldPlay, testCase.resource + " - if we shouldn't play, we should get a pause event");
           removeNodeAndSource(element);
