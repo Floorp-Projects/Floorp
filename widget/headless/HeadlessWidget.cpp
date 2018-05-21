@@ -417,12 +417,25 @@ HeadlessWidget::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
     mSizeMode = mLastSizeMode;
   }
 
-  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen, aTargetScreen);
-
+  // Notify the listener first so size mode change events are triggered before
+  // resize events.
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(mSizeMode);
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
+
+  // Real widget backends don't seem to follow a common approach for
+  // when and how many resize events are triggered during fullscreen
+  // transitions. InfallibleMakeFullScreen will trigger a resize, but it
+  // will be ignored if still transitioning to fullscreen, so it must be
+  // triggered on the next tick.
+  RefPtr<HeadlessWidget> self(this);
+  nsCOMPtr<nsIScreen> targetScreen(aTargetScreen);
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+    "HeadlessWidget::MakeFullScreen",
+    [self, targetScreen, aFullScreen]() -> void {
+      self->InfallibleMakeFullScreen(aFullScreen, targetScreen);
+    }));
 
   return NS_OK;
 }
