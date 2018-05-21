@@ -42,6 +42,7 @@ class App extends Component {
       notifications: PropTypes.object,
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
       serviceContainer: PropTypes.object.isRequired,
+      closeSplitConsole: PropTypes.func.isRequired,
     };
   }
 
@@ -120,6 +121,7 @@ class App extends Component {
       notifications,
       onFirstMeaningfulPaint,
       serviceContainer,
+      closeSplitConsole,
     } = this.props;
 
     // Render the entire Console panel. The panel consists
@@ -139,7 +141,8 @@ class App extends Component {
           hidePersistLogsCheckbox: hud.isBrowserConsole,
           serviceContainer: {
             attachRefToHud
-          }
+          },
+          closeSplitConsole
         }),
         ConsoleOutput({
           serviceContainer,

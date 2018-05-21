@@ -506,30 +506,32 @@ a.learn-more-link.webconsole-learn-more-link {
       It can expand as much as it need.
     - filtered messages, containing the "X items hidden by filters" and the reset filters button.
       It should be on the same row than the primary bar if it fits there, or on its own 100% row if it is wrapped.
+    - close button, close the split console panel. This button will be displayed on righ-top of tool bar always.
     - secondary, containing the filter buttons (Error, Warning, …).
       It should be on its own 100% row.
 
   Basically here's what we can have :
 
-  -----------------------------------------------------------------------------------------------------------
-  | Clear button - Open filter bar button - Filter Input | X items hidden by filters - Reset Filters button |
-  -----------------------------------------------------------------------------------------------------------
-  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                                              |
-  -----------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------------------
+  | Clear button - Open filter bar button - Filter Input | X items hidden by filters - Reset Filters button | Close button |
+  --------------------------------------------------------------------------------------------------------------------------
+  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                                                             |
+  --------------------------------------------------------------------------------------------------------------------------
 
   or
 
-  ------------------------------------------------------------------------------------
-  | Clear button - Open filter bar button - Filter Input                             |
-  ------------------------------------------------------------------------------------
-  |                                X items hidden by filters  - Reset Filters button |
-  ------------------------------------------------------------------------------------
-  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                       |
-  ------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------------------------
+  | Clear button - Open filter bar button - Filter Input                             | Close button |
+  ---------------------------------------------------------------------------------------------------
+  |                                               X items hidden by filters  - Reset Filters button |
+  ---------------------------------------------------------------------------------------------------
+  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                                      |
+  ---------------------------------------------------------------------------------------------------
 */
 .webconsole-filteringbar-wrapper {
-  display: flex;
+  display: grid;
   grid-row: 1 / 2;
+  grid-template-columns: 1fr auto auto;
   /* Wrap so the "Hidden messages" bar can go to its own row if needed */
   flex-wrap: wrap;
   --primary-toolbar-height: 29px;
@@ -549,6 +551,14 @@ a.learn-more-link.webconsole-learn-more-link {
   width: 100%;
   align-items: center;
   -moz-user-select: none;
+  grid-column: 1 / -1;
+}
+
+.split-console-close-button-wrapper {
+  min-height: var(--primary-toolbar-height);
+  /* We will need to display the close button in the right-top always. */
+  grid-column: -1 / -2;
+  grid-row: 1 / 2;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
@@ -586,6 +596,17 @@ a.learn-more-link.webconsole-learn-more-link {
   align-items: center;
   min-height: var(--primary-toolbar-height);
   line-height: var(--primary-toolbar-height);
+}
+
+@media (max-width: 965px) {
+  /* This media query will make filtered message element to be displayed in new
+    line. This width is based on greek localized size since it will longer than
+    other localized strings. */
+  .webconsole-filterbar-filtered-messages {
+    grid-row: 2 / 3;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
 }
 
 .webconsole-filterbar-filtered-messages .filter-message-text {
@@ -1043,4 +1064,8 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 
 .theme-twisty {
   cursor: default;
+}
+
+#split-console-close-button::before {
+  background-image: var(--close-button-image);
 }
