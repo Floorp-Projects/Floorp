@@ -1822,6 +1822,7 @@ void HTMLMediaElement::AbortExistingLoads()
     // indirectly which depends on mPaused. So we need to update mPaused first.
     if (!mPaused) {
       mPaused = true;
+      DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
       RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
     }
     ChangeNetworkState(NETWORK_EMPTY);
@@ -4078,7 +4079,6 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   // reached HAVE_METADATA.
   mIsBlessed |= EventStateManager::IsHandlingUserInput();
 
-
   // TODO: If the playback has ended, then the user agent must set
   // seek to the effective start.
 
@@ -4114,10 +4114,12 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
     case HAVE_FUTURE_DATA:
     case HAVE_ENOUGH_DATA:
       FireTimeUpdate(false);
-      NotifyAboutPlaying();
+      if (!mAttemptPlayUponLoadedMetadata) {
+        NotifyAboutPlaying();
+      }
       break;
     }
-  } else if (mReadyState >= HAVE_FUTURE_DATA) {
+  } else if (mReadyState >= HAVE_FUTURE_DATA && !mAttemptPlayUponLoadedMetadata) {
     // 7. Otherwise, if the media element's readyState attribute has the value
     //    HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, take pending play promises and
     //    queue a task to resolve pending play promises with the result.
@@ -5892,6 +5894,17 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   UpdateAudioChannelPlayingState();
 
+  if (oldState < HAVE_METADATA &&
+      mReadyState >= HAVE_METADATA &&
+      mAttemptPlayUponLoadedMetadata) {
+    mAttemptPlayUponLoadedMetadata = false;
+    if (!mPaused && !IsAllowedToPlay()) {
+      mPaused = true;
+      DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
+      AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
+    }
+  }
+
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
   // or
   // 4.8.12.7 Ready states:
@@ -5924,15 +5937,8 @@ HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
       mReadyState >= HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("canplay"));
     if (!mPaused) {
-      if (mAttemptPlayUponLoadedMetadata && mDecoder) {
-        mAttemptPlayUponLoadedMetadata = false;
-        if (IsAllowedToPlay()) {
-          mDecoder->Play();
-        } else {
-          mPaused = true;
-          DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
-          AsyncRejectPendingPlayPromises(NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR);
-        }
+      if (mDecoder) {
+        mDecoder->Play();
       }
       NotifyAboutPlaying();
     }
