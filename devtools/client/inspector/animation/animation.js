@@ -22,7 +22,6 @@ const {
   updateSidebarSize
 } = require("./actions/animations");
 const {
-  isAllAnimationEqual,
   hasAnimationIterationCountInfinite,
   hasRunningAnimation,
 } = require("./utils/utils");
@@ -101,6 +100,7 @@ class AnimationInspector {
 
     const target = this.inspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
+    this.animationsFront.setWalkerActor(this.inspector.walker);
 
     this.animationsCurrentTimeListeners = [];
     this.isCurrentTimeSet = false;
@@ -572,16 +572,12 @@ class AnimationInspector {
     const done = this.inspector.updating("newanimationinspector");
 
     const selection = this.inspector.selection;
-    const nextAnimations =
+    const animations =
       selection.isConnected() && selection.isElementNode()
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
-    const currentAnimations = this.state.animations;
-
-    if (!currentAnimations || !isAllAnimationEqual(currentAnimations, nextAnimations)) {
-      this.updateState(nextAnimations);
-      this.setAnimationStateChangedListenerEnabled(true);
-    }
+    this.updateState(animations);
+    this.setAnimationStateChangedListenerEnabled(true);
 
     done();
   }

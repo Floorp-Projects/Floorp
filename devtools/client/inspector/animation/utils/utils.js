@@ -45,31 +45,6 @@ function findOptimalTimeInterval(minTimeInterval) {
 }
 
 /**
- * Check the equality of the given animations.
- *
- * @param {Array} animations.
- * @param {Array} same to above.
- * @return {Boolean} true: same animations
- */
-function isAllAnimationEqual(animationsA, animationsB) {
-  if (animationsA.length !== animationsB.length) {
-    return false;
-  }
-
-  for (let i = 0; i < animationsA.length; i++) {
-    const animationA = animationsA[i];
-    const animationB = animationsB[i];
-
-    if (animationA.actorID !== animationB.actorID ||
-        !isTimingEffectEqual(animationsA[i].state, animationsB[i].state)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-/**
  * Check whether or not the given list of animations has an iteration count of infinite.
  *
  * @param {Array} animations.
@@ -90,26 +65,6 @@ function hasRunningAnimation(animations) {
   return animations.some(({state}) => state.playState === "running");
 }
 
-/**
- * Check the equality given states as effect timing.
- *
- * @param {Object} state of animation.
- * @param {Object} same to avobe.
- * @return {Boolean} true: same effect timing
- */
-function isTimingEffectEqual(stateA, stateB) {
-  return stateA.delay === stateB.delay &&
-         stateA.direction === stateB.direction &&
-         stateA.duration === stateB.duration &&
-         stateA.easing === stateB.easing &&
-         stateA.endDelay === stateB.endDelay &&
-         stateA.fill === stateB.fill &&
-         stateA.iterationCount === stateB.iterationCount &&
-         stateA.iterationStart === stateB.iterationStart;
-}
-
 exports.findOptimalTimeInterval = findOptimalTimeInterval;
 exports.hasAnimationIterationCountInfinite = hasAnimationIterationCountInfinite;
 exports.hasRunningAnimation = hasRunningAnimation;
-exports.isAllAnimationEqual = isAllAnimationEqual;
-exports.isTimingEffectEqual = isTimingEffectEqual;
