@@ -1564,7 +1564,7 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 9);
+  aWriter.IntProperty("version", 10);
 
 #if defined(MOZ_SOURCE_URL)
   aWriter.StringProperty("sourceURL", "@MOZ_SOURCE_URL@");
