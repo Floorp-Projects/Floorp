@@ -2014,7 +2014,7 @@ intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(id < STRING_GENERICS_METHODS_LIMIT);
 
     uint32_t mask = (1 << id);
-    if (!(cx->compartment()->warnedAboutStringGenericsMethods & mask)) {
+    if (!(cx->realm()->warnedAboutStringGenericsMethods & mask)) {
         JSFlatString* name = args[1].toString()->ensureFlat(cx);
         if (!name)
             return false;
@@ -2029,7 +2029,7 @@ intrinsic_WarnDeprecatedStringMethod(JSContext* cx, unsigned argc, Value* vp)
         {
             return false;
         }
-        cx->compartment()->warnedAboutStringGenericsMethods |= mask;
+        cx->realm()->warnedAboutStringGenericsMethods |= mask;
     }
 
     args.rval().setUndefined();

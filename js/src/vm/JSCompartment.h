@@ -607,11 +607,6 @@ struct JSCompartment
   public:
     bool                         isSelfHosting;
     bool                         marked;
-    uint32_t                     warnedAboutStringGenericsMethods;
-
-#ifdef DEBUG
-    bool                         firedOnNewGlobalObject;
-#endif
 
     void mark() { marked = true; }
 
@@ -1068,6 +1063,11 @@ class JS::Realm : public JSCompartment
     js::ScriptCountsMap* scriptCountsMap = nullptr;
     js::ScriptNameMap* scriptNameMap = nullptr;
     js::DebugScriptMap* debugScriptMap = nullptr;
+
+    uint32_t warnedAboutStringGenericsMethods = 0;
+#ifdef DEBUG
+    bool firedOnNewGlobalObject = false;
+#endif
 
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
     ~Realm();
