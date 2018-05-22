@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    body::before {
+      animation: body 10s infinite;
+      background-color: lime;
+      content: "body-before";
+      width: 100px;
+    }
+
+    .div-before::before {
+      animation: div-before 10s infinite;
+      background-color: lime;
+      content: "div-before";
+      width: 100px;
+    }
+
+    .div-after::after {
+      animation: div-after 10s infinite;
+      background-color: lime;
+      content: "div-after";
+      width: 100px;
+    }
+
+    @keyframes body {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes div-before {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    @keyframes div-after {
+      from {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.9;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <div class="div-before"></div>
+    <div class="div-after"></div>
+  </body>
+</html>

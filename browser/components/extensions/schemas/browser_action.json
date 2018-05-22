@@ -58,6 +58,25 @@
     "permissions": ["manifest:browser_action"],
     "types": [
       {
+        "id": "Details",
+        "type": "object",
+        "description": "Specifies to which tab or window the value should be set, or from which one it should be retrieved. If no tab nor window is specified, the global value is set or retrieved.",
+        "properties": {
+          "tabId": {
+            "type": "integer",
+            "optional": true,
+            "minimum": 0,
+            "description": "When setting a value, it will be specific to the specified tab, and will automatically reset when the tab navigates. When getting, specifies the tab to get the value from; if there is no tab-specific value, the window one will be inherited."
+          },
+          "windowId": {
+            "type": "integer",
+            "optional": true,
+            "minimum": -2,
+            "description": "When setting a value, it will be specific to the specified window. When getting, specifies the window to get the value from; if there is no window-specific value, the global one will be inherited."
+          }
+        }
+      },
+      {
         "id": "ColorArray",
         "type": "array",
         "items": {
@@ -87,6 +106,7 @@
           {
             "name": "details",
             "type": "object",
+            "$import": "Details",
             "properties": {
               "title": {
                 "choices": [
@@ -94,11 +114,6 @@
                   {"type": "null"}
                 ],
                 "description": "The string the browser action should display when moused over."
-              },
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Limits the change to when a particular tab is selected. Automatically resets when the tab is closed."
               }
             }
           },
@@ -118,14 +133,7 @@
         "parameters": [
           {
             "name": "details",
-            "type": "object",
-            "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Specify the tab to get the title from. If no tab is specified, the non-tab-specific title is returned."
-              }
-            }
+            "$ref": "Details"
           },
           {
             "type": "function",
@@ -148,6 +156,7 @@
           {
             "name": "details",
             "type": "object",
+            "$import": "Details",
             "properties": {
               "imageData": {
                 "choices": [
@@ -174,11 +183,6 @@
                 ],
                 "optional": true,
                 "description": "Either a relative image path or a dictionary {size -> relative image path} pointing to icon to be set. If the icon is specified as a dictionary, the actual image to be used is chosen depending on screen's pixel density. If the number of image pixels that fit into one screen space unit equals <code>scale</code>, then image with size <code>scale</code> * 19 will be selected. Initially only scales 1 and 2 will be supported. At least one image must be specified. Note that 'details.path = foo' is equivalent to 'details.imageData = {'19': foo}'"
-              },
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Limits the change to when a particular tab is selected. Automatically resets when the tab is closed."
               }
             }
           },
@@ -199,13 +203,8 @@
           {
             "name": "details",
             "type": "object",
+            "$import": "Details",
             "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "minimum": 0,
-                "description": "Limits the change to when a particular tab is selected. Automatically resets when the tab is closed."
-              },
               "popup": {
                 "choices": [
                   {"type": "string"},
@@ -231,14 +230,7 @@
         "parameters": [
           {
             "name": "details",
-            "type": "object",
-            "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Specify the tab to get the popup from. If no tab is specified, the non-tab-specific popup is returned."
-              }
-            }
+            "$ref": "Details"
           },
           {
             "type": "function",
@@ -261,6 +253,7 @@
           {
             "name": "details",
             "type": "object",
+            "$import": "Details",
             "properties": {
               "text": {
                 "choices": [
@@ -268,11 +261,6 @@
                   {"type": "null"}
                 ],
                 "description": "Any number of characters can be passed, but only about four can fit in the space."
-              },
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Limits the change to when a particular tab is selected. Automatically resets when the tab is closed."
               }
             }
           },
@@ -287,19 +275,12 @@
       {
         "name": "getBadgeText",
         "type": "function",
-        "description": "Gets the badge text of the browser action. If no tab is specified, the non-tab-specific badge text is returned.",
+        "description": "Gets the badge text of the browser action. If no tab nor window is specified is specified, the global badge text is returned.",
         "async": "callback",
         "parameters": [
           {
             "name": "details",
-            "type": "object",
-            "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Specify the tab to get the badge text from. If no tab is specified, the non-tab-specific badge text is returned."
-              }
-            }
+            "$ref": "Details"
           },
           {
             "type": "function",
@@ -322,6 +303,7 @@
           {
             "name": "details",
             "type": "object",
+            "$import": "Details",
             "properties": {
               "color": {
                 "description": "An array of four integers in the range [0,255] that make up the RGBA color of the badge. For example, opaque red is <code>[255, 0, 0, 255]</code>. Can also be a string with a CSS value, with opaque red being <code>#FF0000</code> or <code>#F00</code>.",
@@ -330,11 +312,6 @@
                   {"$ref": "ColorArray"},
                   {"type": "null"}
                 ]
-              },
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Limits the change to when a particular tab is selected. Automatically resets when the tab is closed."
               }
             }
           },
@@ -354,14 +331,7 @@
         "parameters": [
           {
             "name": "details",
-            "type": "object",
-            "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Specify the tab to get the badge background color from. If no tab is specified, the non-tab-specific badge background color is returned."
-              }
-            }
+            "$ref": "Details"
           },
           {
             "type": "function",
@@ -425,14 +395,7 @@
         "parameters": [
           {
             "name": "details",
-            "type": "object",
-            "properties": {
-              "tabId": {
-                "type": "integer",
-                "optional": true,
-                "description": "Specify the tab to get the enabledness from. If no tab is specified, the non-tab-specific enabledness is returned."
-              }
-            }
+            "$ref": "Details"
           }
         ]
       },

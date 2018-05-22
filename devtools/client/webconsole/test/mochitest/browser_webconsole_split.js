@@ -24,10 +24,10 @@ add_task(async function() {
 
   info("Testing host types");
   checkHostType(Toolbox.HostType.BOTTOM);
-  checkToolboxUI();
+  await checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.SIDE);
   checkHostType(Toolbox.HostType.SIDE);
-  checkToolboxUI();
+  await checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.WINDOW);
 
   // checkHostType, below,  will open the meatball menu to read the "Split
@@ -38,7 +38,7 @@ add_task(async function() {
   await new Promise(resolve => requestIdleCallback(resolve));
 
   checkHostType(Toolbox.HostType.WINDOW);
-  checkToolboxUI();
+  await checkToolboxUI();
   await toolbox.switchHost(Toolbox.HostType.BOTTOM);
 
   async function testConsoleLoadOnDifferentPanel() {
@@ -116,7 +116,7 @@ add_task(async function() {
         toolbox.doc.addEventListener("popuphidden", () => {
           resolve(label);
         }, { once: true });
-        EventUtils.synthesizeKey("KEY_Escape");
+        EventUtils.sendKey("ESCAPE", toolbox.win);
       }, { once: true });
     });
   }

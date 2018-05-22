@@ -1592,8 +1592,8 @@ ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 {
   WritingMode wm = GetWritingMode();
   WritingMode cbwm = aReflowInput->GetWritingMode();
-  MOZ_ASSERT(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
-             "containing block bsize must be constrained");
+  NS_WARNING_ASSERTION(aCBSize.BSize(cbwm) != NS_AUTOHEIGHT,
+                       "containing block bsize must be constrained");
 
   NS_ASSERTION(aFrameType != LayoutFrameType::Table,
                "InitAbsoluteConstraints should not be called on table frames");

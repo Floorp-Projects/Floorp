@@ -63,8 +63,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
+   * @param {Number} Time which animation created
    */
-  initialize: function(animationsActor, player) {
+  initialize: function(animationsActor, player, createdTime) {
     Actor.prototype.initialize.call(this, animationsActor.conn);
 
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
@@ -85,6 +86,8 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
     } else {
       this.observer.observe(this.node, {animations: true});
     }
+
+    this.createdTime = createdTime;
   },
 
   destroy: function() {
@@ -103,31 +106,13 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
   },
 
   get node() {
-    if (this._node) {
-      return this._node;
+    if (!this.isPseudoElement) {
+      return this.player.effect.target;
     }
 
-    let node = this.player.effect.target;
-
-    if (this.isPseudoElement) {
-      // The target is a CSSPseudoElement object which just has a property that
-      // points to its parent element and a string type (::before or ::after).
-      let treeWalker = this.walker.getDocumentWalker(node.parentElement);
-      while (treeWalker.nextNode()) {
-        let currentNode = treeWalker.currentNode;
-        if ((currentNode.nodeName === "_moz_generated_content_before" &&
-             node.type === "::before") ||
-            (currentNode.nodeName === "_moz_generated_content_after" &&
-             node.type === "::after")) {
-          this._node = currentNode;
-        }
-      }
-    } else {
-      // The target is a DOM node.
-      this._node = node;
-    }
-
-    return this._node;
+    const pseudo = this.player.effect.target;
+    const treeWalker = this.walker.getDocumentWalker(pseudo.parentElement);
+    return pseudo.type === "::before" ? treeWalker.firstChild() : treeWalker.lastChild();
   },
 
   get window() {
@@ -346,7 +331,9 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
-      documentCurrentTime: this.node.ownerDocument.timeline.currentTime
+      documentCurrentTime: this.node.ownerDocument.timeline.currentTime,
+      // The time which this animation created.
+      createdTime: this.createdTime,
     };
   },
 
@@ -665,14 +652,28 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
   getAnimationPlayersForNode: function(nodeActor) {
     let animations = nodeActor.rawNode.getAnimations({subtree: true});
 
+    const createdTimeMap = new Map();
+
     // Destroy previously stored actors
     if (this.actors) {
-      this.actors.forEach(actor => actor.destroy());
+      for (const actor of this.actors) {
+        // Take the createdTime over new actors.
+        createdTimeMap.set(actor.player, actor.createdTime);
+        actor.destroy();
+      }
     }
+
     this.actors = [];
 
-    for (let i = 0; i < animations.length; i++) {
-      let actor = AnimationPlayerActor(this, animations[i]);
+    for (const animation of animations) {
+      let createdTime = createdTimeMap.get(animation);
+
+      if (typeof createdTime === "undefined") {
+        // If no previous actor, set startTime or currentTime of timeline as created time.
+        createdTime = animation.startTime || animation.timeline.currentTime;
+      }
+
+      const actor = AnimationPlayerActor(this, animation, createdTime);
       this.actors.push(actor);
     }
 
@@ -747,7 +748,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
           this.actors.splice(index, 1);
         }
 
-        let actor = AnimationPlayerActor(this, player);
+        const createdTime = player.startTime || player.timeline.currentTime;
+        const actor = AnimationPlayerActor(this, player, createdTime);
         this.actors.push(actor);
         eventData.push({
           type: "added",
@@ -831,16 +833,16 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * This method only returns when animations have left their pending states.
    */
   playAll: function() {
-    let readyPromises = [];
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
     for (let player of
-         this.getAllAnimations(this.tabActor.window.document, true)) {
-      player.play();
-      readyPromises.push(player.ready);
+      this.getAllAnimations(this.tabActor.window.document, true)) {
+      // Play animation using startTime. Because the Animation.Play() method recalculates
+      // startTime and currentTime on the procedure, but we need to keep the currentTime.
+      player.startTime =
+        player.timeline.currentTime - player.currentTime / player.playbackRate;
     }
     this.allAnimationsPaused = false;
-    return Promise.all(readyPromises);
   },
 
   toggleAll: function() {
@@ -867,12 +869,30 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * @param {Array} players A list of AnimationPlayerActor.
    * @param {Number} time The new currentTime.
    * @param {Boolean} shouldPause Should the players be paused too.
+   * @param {Object} options
+   *                 - relativeToCreatedTime: Set current path with createdTime.
    */
-  setCurrentTimes: function(players, time, shouldPause) {
-    return Promise.all(players.map(player => {
-      let pause = shouldPause ? player.pause() : Promise.resolve();
-      return pause.then(() => player.setCurrentTime(time));
-    }));
+  setCurrentTimes: function(players, time, shouldPause, options) {
+    // For backward compatibility for old animation inspector.
+    // We can drop following procedures after dropping old one.
+    if (!options.relativeToCreatedTime) {
+      return Promise.all(players.map(player => {
+        let pause = shouldPause ? player.pause() : Promise.resolve();
+        return pause.then(() => player.setCurrentTime(time));
+      }));
+    }
+
+    for (const actor of players) {
+      const player = actor.player;
+
+      if (shouldPause) {
+        player.startTime = null;
+      }
+
+      player.currentTime = (time - actor.createdTime) * player.playbackRate;
+    }
+
+    return Promise.resolve();
   },
 
   /**

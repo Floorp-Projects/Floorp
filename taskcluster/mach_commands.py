@@ -103,6 +103,20 @@ class MachCommands(MachCommandBase):
     def taskgraph_morphed(self, **options):
         return self.show_taskgraph('morphed_task_graph', options)
 
+    @SubCommand('taskgraph', 'actions',
+                description="Write actions.json to stdout")
+    @CommandArgument('--root', '-r',
+                     help="root of the taskgraph definition relative to topsrcdir")
+    @CommandArgument('--quiet', '-q', action="store_true",
+                     help="suppress all logging output")
+    @CommandArgument('--verbose', '-v', action="store_true",
+                     help="include debug-level logging output")
+    @CommandArgument('--parameters', '-p', default="project=mozilla-central",
+                     help="parameters file (.yml or .json; see "
+                          "`taskcluster/docs/parameters.rst`)`")
+    def taskgraph_actions(self, **options):
+        return self.show_actions(options)
+
     @SubCommand('taskgraph', 'decision',
                 description="Run the decision task")
     @CommandArgument('--root', '-r',
@@ -221,7 +235,6 @@ class MachCommands(MachCommandBase):
 
             task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
             task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
-            task = json.loads(os.environ.get('ACTION_TASK', 'null'))
             input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
             callback = os.environ.get('ACTION_CALLBACK', None)
             parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
@@ -230,7 +243,6 @@ class MachCommands(MachCommandBase):
             return taskgraph.actions.trigger_action_callback(
                     task_group_id=task_group_id,
                     task_id=task_id,
-                    task=task,
                     input=input,
                     callback=callback,
                     parameters=parameters,
@@ -384,6 +396,28 @@ class MachCommands(MachCommandBase):
                         filterededges.add((key, dep, depname))
         filtered_taskgraph = TaskGraph(filteredtasks, Graph(set(filteredtasks), filterededges))
         return filtered_taskgraph
+
+    def show_actions(self, options):
+        import taskgraph.parameters
+        import taskgraph.target_tasks
+        import taskgraph.generator
+        import taskgraph
+        import taskgraph.actions
+
+        try:
+            self.setup_logging(quiet=options['quiet'], verbose=options['verbose'])
+            parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
+            parameters.check()
+
+            tgg = taskgraph.generator.TaskGraphGenerator(
+                root_dir=options.get('root'),
+                parameters=parameters)
+
+            actions = taskgraph.actions.render_actions_json(parameters, tgg.graph_config)
+            print(json.dumps(actions, sort_keys=True, indent=2, separators=(',', ': ')))
+        except Exception:
+            traceback.print_exc()
+            sys.exit(1)
 
 
 @CommandProvider

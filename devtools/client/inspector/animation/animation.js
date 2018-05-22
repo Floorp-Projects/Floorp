@@ -22,7 +22,6 @@ const {
   updateSidebarSize
 } = require("./actions/animations");
 const {
-  isAllAnimationEqual,
   hasAnimationIterationCountInfinite,
   hasRunningAnimation,
 } = require("./utils/utils");
@@ -101,6 +100,7 @@ class AnimationInspector {
 
     const target = this.inspector.target;
     this.animationsFront = new AnimationsFront(target.client, target.form);
+    this.animationsFront.setWalkerActor(this.inspector.walker);
 
     this.animationsCurrentTimeListeners = [];
     this.isCurrentTimeSet = false;
@@ -243,6 +243,10 @@ class AnimationInspector {
   }
 
   getNodeFromActor(actorID) {
+    if (!this.inspector) {
+      return Promise.reject("Animation inspector already destroyed");
+    }
+
     return this.inspector.walker.getNodeFromActor(actorID, ["node"]);
   }
 
@@ -286,8 +290,12 @@ class AnimationInspector {
     }
   }
 
-  onAnimationsMutation(changes) {
+  async onAnimationsMutation(changes) {
     const animations = [...this.state.animations];
+
+    // Update other animations as well since the currentTime would be proceeded.
+    // Because the scrubber position is related the currentTime.
+    await this.updateAnimations(animations);
 
     for (const {type, player: animation} of changes) {
       if (type === "added") {
@@ -372,11 +380,17 @@ class AnimationInspector {
       return;
     }
 
-    const animations = this.state.animations;
+    const { animations, timeScale } = this.state;
     this.isCurrentTimeSet = true;
+    // If currentTime is not defined in timeScale (which happens when connected
+    // to server older than FF62), set currentTime as it is. See bug 1454392.
+    currentTime =
+      typeof timeScale.currentTime === "undefined"
+        ? currentTime : currentTime + timeScale.minStartTime;
 
     try {
-      await this.animationsFront.setCurrentTimes(animations, currentTime, true);
+      await this.animationsFront.setCurrentTimes(animations, currentTime, true,
+                                                 { relativeToCreatedTime: true });
       await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
@@ -562,21 +576,21 @@ class AnimationInspector {
     const done = this.inspector.updating("newanimationinspector");
 
     const selection = this.inspector.selection;
-    const nextAnimations =
+    const animations =
       selection.isConnected() && selection.isElementNode()
       ? await this.animationsFront.getAnimationPlayersForNode(selection.nodeFront)
       : [];
-    const currentAnimations = this.state.animations;
-
-    if (!currentAnimations || !isAllAnimationEqual(currentAnimations, nextAnimations)) {
-      this.updateState(nextAnimations);
-      this.setAnimationStateChangedListenerEnabled(true);
-    }
+    this.updateState(animations);
+    this.setAnimationStateChangedListenerEnabled(true);
 
     done();
   }
 
   updateAnimations(animations) {
+    if (!animations.length) {
+      return Promise.resolve();
+    }
+
     return new Promise((resolve, reject) => {
       let count = 0;
       let error = null;

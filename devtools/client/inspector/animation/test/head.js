@@ -544,7 +544,15 @@ const waitForAnimationDetail = async function(animationInspector) {
  * @param {AnimationInspector} animationInspector
  */
 const waitForAllAnimationTargets = async function(animationInspector) {
-  for (let i = 0; i < animationInspector.state.animations.length; i++) {
+  const panel =
+    animationInspector.inspector.panelWin.document.getElementById("animation-container");
+  const objectBoxCount = panel.querySelectorAll(".animation-target .objectBox").length;
+
+  if (objectBoxCount === animationInspector.state.animations.length) {
+    return;
+  }
+
+  for (let i = 0; i < animationInspector.state.animations.length - objectBoxCount; i++) {
     await animationInspector.once("animation-target-rendered");
   }
 };
