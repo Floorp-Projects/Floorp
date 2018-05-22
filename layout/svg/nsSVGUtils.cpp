@@ -1295,7 +1295,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
     return false;
   }
 
-  if (nsLayoutUtils::HasAnimationOfProperty(aFrame, eCSSProperty_opacity)) {
+  if (nsLayoutUtils::MayHaveAnimationOfProperty(aFrame, eCSSProperty_opacity)) {
     return false;
   }
 
