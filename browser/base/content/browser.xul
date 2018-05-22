@@ -219,15 +219,9 @@
            tabspecific="true"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
-      <row id="editBookmarkPanelHeader" align="center" hidden="true">
-        <vbox align="center">
-          <image id="editBookmarkPanelStarIcon"/>
-        </vbox>
-        <vbox>
-          <label id="editBookmarkPanelTitle"/>
-          <description id="editBookmarkPanelDescription"/>
-        </vbox>
-      </row>
+      <box class="panel-header">
+        <label id="editBookmarkPanelTitle"/>
+      </box>
 #include ../../components/places/content/editBookmarkPanel.inc.xul
       <hbox id="editBookmarkPanelBottomButtons" pack="end">
 #ifndef XP_UNIX
