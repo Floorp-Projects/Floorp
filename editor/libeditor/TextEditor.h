@@ -24,7 +24,6 @@ class nsITransferable;
 namespace mozilla {
 
 class AutoEditInitRulesTrigger;
-class HTMLEditRules;
 enum class EditAction : int32_t;
 
 namespace dom {
