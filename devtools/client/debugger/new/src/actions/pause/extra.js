@@ -60,7 +60,7 @@ async function getExtraProps(getState, expression, result, evaluate) {
     props.react = await getReactProps(evaluate, component);
   }
 
-  if ((0, _preview.isImmutable)(result)) {
+  if ((0, _preview.isImmutablePreview)(result)) {
     props.immutable = await getImmutableProps(expression, evaluate);
   }
 
