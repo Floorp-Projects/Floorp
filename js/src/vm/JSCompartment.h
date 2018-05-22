@@ -1015,28 +1015,6 @@ struct JSCompartment
      */
     js::NativeIterator* enumerators;
 
-  private:
-    /* Used by memory reporters and invalid otherwise. */
-    JS::RealmStats* realmStats_;
-
-  public:
-    // This should only be called when it is non-null, i.e. during memory
-    // reporting.
-    JS::RealmStats& realmStats() {
-        // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
-        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
-        MOZ_RELEASE_ASSERT(realmStats_);
-        return *realmStats_;
-    }
-    void nullRealmStats() {
-        MOZ_ASSERT(realmStats_);
-        realmStats_ = nullptr;
-    }
-    void setRealmStats(JS::RealmStats* newStats) {
-        MOZ_ASSERT(!realmStats_ && newStats);
-        realmStats_ = newStats;
-    }
-
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
 
     // These flags help us to discover if a compartment that shouldn't be alive
@@ -1087,6 +1065,9 @@ class JS::Realm : public JSCompartment
                                       js::DefaultHasher<JSAtom*>,
                                       js::SystemAllocPolicy>;
     VarNamesSet varNames_;
+
+    // Used by memory reporters and invalid otherwise.
+    JS::RealmStats* realmStats_ = nullptr;
 
     const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
     void* realmPrivate_ = nullptr;
@@ -1219,6 +1200,23 @@ class JS::Realm : public JSCompartment
     }
     void setRealmPrivate(void* p) {
         realmPrivate_ = p;
+    }
+
+    // This should only be called when it is non-null, i.e. during memory
+    // reporting.
+    JS::RealmStats& realmStats() {
+        // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
+        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
+        MOZ_RELEASE_ASSERT(realmStats_);
+        return *realmStats_;
+    }
+    void nullRealmStats() {
+        MOZ_ASSERT(realmStats_);
+        realmStats_ = nullptr;
+    }
+    void setRealmStats(JS::RealmStats* newStats) {
+        MOZ_ASSERT(!realmStats_ && newStats);
+        realmStats_ = newStats;
     }
 };
 
