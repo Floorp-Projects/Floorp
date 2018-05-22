@@ -203,8 +203,8 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     mMetrics->xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
     mMetrics->capHeight = fontMetrics.capHeight * mFUnitsConvFactor;
 
-    mMetrics->maxAscent = ceil(fontMetrics.ascent * mFUnitsConvFactor);
-    mMetrics->maxDescent = ceil(fontMetrics.descent * mFUnitsConvFactor);
+    mMetrics->maxAscent = round(fontMetrics.ascent * mFUnitsConvFactor);
+    mMetrics->maxDescent = round(fontMetrics.descent * mFUnitsConvFactor);
     mMetrics->maxHeight = mMetrics->maxAscent + mMetrics->maxDescent;
 
     mMetrics->emHeight = mAdjustedSize;
