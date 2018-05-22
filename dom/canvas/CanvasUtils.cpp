@@ -55,9 +55,6 @@ bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx, nsIPrincip
         return false;
     }
 
-    nsPIDOMWindowOuter *win = aDocument->GetWindow();
-    nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
-
     // The system principal can always extract canvas data.
     if (nsContentUtils::IsSystemPrincipal(&aPrincipal)) {
         return true;
@@ -167,6 +164,7 @@ bool IsImageExtractionAllowed(nsIDocument *aDocument, JSContext *aCx, nsIPrincip
     nsContentUtils::LogMessageToConsole(message.get());
 
     // Prompt the user (asynchronous).
+    nsPIDOMWindowOuter *win = aDocument->GetWindow();
     if (XRE_IsContentProcess()) {
         TabChild* tabChild = TabChild::GetFrom(win);
         if (tabChild) {
