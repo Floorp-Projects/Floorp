@@ -2100,27 +2100,7 @@ private:
 };
 
 nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
-                                         imgRequestProxy* aRequestProxy,
-                                         css::ImageValue* aImageValue,
-                                         ImageTracker* aImageTracker)
-  : mRequestProxy(aRequestProxy)
-  , mImageValue(aImageValue)
-  , mImageTracker(aImageTracker)
-  , mModeFlags(aModeFlags)
-  , mResolved(true)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImageValue);
-  MOZ_ASSERT(!!(aModeFlags & Mode::Track) == !!aImageTracker);
-
-  if (mRequestProxy) {
-    MaybeTrackAndLock();
-  }
-}
-
-nsStyleImageRequest::nsStyleImageRequest(
-    Mode aModeFlags,
-    mozilla::css::ImageValue* aImageValue)
+                                         css::ImageValue* aImageValue)
   : mImageValue(aImageValue)
   , mModeFlags(aModeFlags)
   , mResolved(false)
