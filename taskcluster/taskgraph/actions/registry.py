@@ -9,14 +9,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import os
 import re
-import yaml
 from slugid import nice as slugid
 from types import FunctionType
 from collections import namedtuple
 from taskgraph import create
 from taskgraph.config import load_graph_config
-from taskgraph.util import taskcluster
+from taskgraph.util import taskcluster, yaml
 from taskgraph.parameters import Parameters
+from mozbuild.util import memoize
 
 
 actions = []
@@ -32,6 +32,12 @@ def is_json(data):
     except ValueError:
         return False
     return True
+
+
+@memoize
+def read_taskcluster_yml(filename):
+    '''Load and parse .taskcluster.yml, memoized to save some time'''
+    return yaml.load_yaml(*os.path.split(filename))
 
 
 def register_callback_action(name, title, symbol, description, order=10000,
@@ -167,22 +173,19 @@ def register_callback_action(name, title, symbol, description, order=10000,
             # for kind=task, we embed the task from .taskcluster.yml in the action, with
             # suitable context
             if kind == 'task':
-                template = graph_config.taskcluster_yml
-
                 # tasks get all of the scopes the original push did, yuck; this is not
                 # done with kind = hook.
                 repo_scope = 'assume:repo:{}/{}:branch:default'.format(
                     match.group(1), match.group(2))
                 action['repo_scope'] = repo_scope
 
-                with open(template, 'r') as f:
-                    taskcluster_yml = yaml.safe_load(f)
-                    if taskcluster_yml['version'] != 1:
-                        raise Exception(
-                            'actions.json must be updated to work with .taskcluster.yml')
-                    if not isinstance(taskcluster_yml['tasks'], list):
-                        raise Exception(
-                            '.taskcluster.yml "tasks" must be a list for action tasks')
+                taskcluster_yml = read_taskcluster_yml(graph_config.taskcluster_yml)
+                if taskcluster_yml['version'] != 1:
+                    raise Exception(
+                        'actions.json must be updated to work with .taskcluster.yml')
+                if not isinstance(taskcluster_yml['tasks'], list):
+                    raise Exception(
+                        '.taskcluster.yml "tasks" must be a list for action tasks')
 
                 rv.update({
                     'kind': 'task',
