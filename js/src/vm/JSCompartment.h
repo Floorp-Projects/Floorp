@@ -25,7 +25,7 @@
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "vm/Time.h"
-#include "wasm/WasmCompartment.h"
+#include "wasm/WasmRealm.h"
 
 namespace js {
 
@@ -730,9 +730,6 @@ struct JSCompartment
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-    // WebAssembly state for the compartment.
-    js::wasm::Compartment wasm;
-
   protected:
     // All non-syntactic lexical environments in the compartment. These are kept in
     // a map because when loading scripts into a non-syntactic environment, we need
@@ -1121,6 +1118,9 @@ class JS::Realm : public JSCompartment
     bool isAtomsRealm_ = false;
 
   public:
+    // WebAssembly state for the realm.
+    js::wasm::Realm wasm;
+
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
 
     MOZ_MUST_USE bool init(JSContext* maybecx);
