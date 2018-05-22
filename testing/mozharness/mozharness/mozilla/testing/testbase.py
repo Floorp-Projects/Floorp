@@ -463,7 +463,7 @@ You can set this by specifying --test-url URL
             if not self.test_packages_url:
                 # The caller intends to download harness specific packages, but doesn't know
                 # where the packages manifest is located. This is the case when the
-                # test package manifest isn't set as a buildbot property, which is true
+                # test package manifest isn't set as a property, which is true
                 # for some self-serve jobs and platforms using parse_make_upload.
                 self.test_packages_url = self.query_prefixed_build_dir_url('.test_packages.json')
 
@@ -722,12 +722,6 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
             name = suite['name']
             self.info("Running pre test command %(name)s with '%(cmd)s'"
                       % {'name': name, 'cmd': ' '.join(cmd)})
-            if self.buildbot_config:  # this cmd is for buildbot
-                # TODO rather then checking for formatting on every string
-                # in every preflight enabled cmd: find a better solution!
-                # maybe I can implement WithProperties in mozharness?
-                cmd = [x % (self.buildbot_config.get('properties'))
-                       for x in cmd]
             self.run_command(cmd,
                              cwd=dirs['abs_work_dir'],
                              error_list=BaseErrorList,

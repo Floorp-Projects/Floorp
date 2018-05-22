@@ -28,9 +28,6 @@ from mozharness.mozilla.testing.errors import HarnessErrorList
 
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 
-# TODO: we could remove emulator specific code after B2G ICS emulator buildbot
-#       builds is turned off, Bug 1209180.
-
 
 class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
                      CodeCoverageMixin):

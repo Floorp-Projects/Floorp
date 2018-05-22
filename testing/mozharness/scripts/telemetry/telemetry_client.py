@@ -89,7 +89,7 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             default_actions=default_actions or actions,
             *args, **kwargs)
 
-        # Code which doesn't run on buildbot has to include the following properties
+        # Code which runs in automation has to include the following properties
         self.binary_path = self.config.get('binary_path')
         self.installer_path = self.config.get('installer_path')
         self.installer_url = self.config.get('installer_url')

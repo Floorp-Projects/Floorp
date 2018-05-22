@@ -71,9 +71,6 @@ class CodeCoverageMixin(SingleTestMixin):
         try:
             if self.config.get('code_coverage'):
                 return True
-
-            # XXX workaround because bug 1110465 is hard
-            return 'ccov' in self.buildbot_config['properties']['stage_platform']
         except (AttributeError, KeyError, TypeError):
             return False
 
@@ -98,9 +95,6 @@ class CodeCoverageMixin(SingleTestMixin):
         try:
             if self.config.get('jsd_code_coverage'):
                 return True
-
-            # XXX workaround because bug 1110465 is hard
-            return 'jsdcov' in self.buildbot_config['properties']['stage_platform']
         except (AttributeError, KeyError, TypeError):
             return False
 
