@@ -193,6 +193,13 @@ struct AutoSignalHandler
 #  define FP_sig(p) ((p)->uc_mcontext.mc_fp)
 #  define SP_sig(p) ((p)->uc_mcontext.mc_i7)
 # endif
+# if defined(__linux__) && \
+     (defined(__ppc64__) ||  defined (__PPC64__) || defined(__ppc64le__) || defined (__PPC64LE__))
+// powerpc stack frame pointer (SFP or SP or FP)
+#  define R01_sig(p) ((p)->uc_mcontext.gp_regs[1])
+// powerpc next instruction pointer (NIP or PC)
+#  define R32_sig(p) ((p)->uc_mcontext.gp_regs[32])
+# endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
@@ -412,6 +419,10 @@ struct macos_arm_context {
 # define FP_sig(p) RFP_sig(p)
 # define SP_sig(p) RSP_sig(p)
 # define LR_sig(p) R31_sig(p)
+#elif defined(__ppc64__) ||  defined (__PPC64__) || defined(__ppc64le__) || defined (__PPC64LE__)
+# define PC_sig(p) R32_sig(p)
+# define SP_sig(p) R01_sig(p)
+# define FP_sig(p) R01_sig(p)
 #endif
 
 static uint8_t**
