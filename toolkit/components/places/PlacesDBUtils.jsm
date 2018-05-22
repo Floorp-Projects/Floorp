@@ -870,7 +870,9 @@ var PlacesDBUtils = {
    */
   frecencyStats() {
     return new Promise(resolve => {
-      PlacesUtils.history.recalculateFrecencyStats(() => resolve());
+      PlacesUtils.history.recalculateFrecencyStats(() => resolve([
+        "Recalculated frecency stats"
+      ]));
     });
   },
 
@@ -1072,9 +1074,9 @@ var PlacesDBUtils = {
         continue;
       }
 
-      let result =
-          await task().then(logs => { return { succeeded: true, logs }; })
-                      .catch(err => { return { succeeded: false, logs: [err.message] }; });
+      let result = await task()
+        .then((logs = [`${task.name} complete`]) => ({ succeeded: true, logs }))
+        .catch(err => ({ succeeded: false, logs: [err.message] }));
       tasksMap.set(task.name, result);
     }
     return tasksMap;

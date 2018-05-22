@@ -241,9 +241,6 @@
              preprocessed_resources res/raw folder. Lint reports it as unused. We should get
              rid of the file eventually. See bug 1268948. -->
         <ignore path="**/raw/.mkdir.done" />
-        <!-- Needed to ignore currently unused resources added as per bug 1445798
-             Suppression to be removed when the along with the ptch for bug 1454686 -->
-        <ignore path="**/res/values/strings.xml" />
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />

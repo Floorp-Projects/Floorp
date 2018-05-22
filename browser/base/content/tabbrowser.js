@@ -97,6 +97,8 @@ window._gBrowser = {
 
   _contentWaitingCount: 0,
 
+  _tabLayerCache: [],
+
   tabAnimationsInProgress: 0,
 
   _XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -2751,6 +2753,13 @@ window._gBrowser = {
       }
     }
 
+    // this._switcher would normally cover removing a tab from this
+    // cache, but we may not have one at this time.
+    let tabCacheIndex = this._tabLayerCache.indexOf(aTab);
+    if (tabCacheIndex != -1) {
+      this._tabLayerCache.splice(tabCacheIndex, 1);
+    }
+
     this._blurTab(aTab);
 
     var closeWindow = false;
@@ -4663,6 +4672,14 @@ class TabProgressListener {
             PrivateBrowsingUtils.permanentPrivateBrowsing)) {
         gBrowser._unifiedComplete.registerOpenPage(aLocation, userContextId);
         this.mBrowser.registeredOpenURI = aLocation;
+      }
+
+      if (this.mTab != gBrowser.selectedTab) {
+        let tabCacheIndex = gBrowser._tabLayerCache.indexOf(this.mTab);
+        if (tabCacheIndex != -1) {
+          gBrowser._tabLayerCache.splice(tabCacheIndex, 1);
+          gBrowser._getSwitcher().cleanUpTabAfterEviction(this.mTab);
+        }
       }
     }
 

@@ -36,6 +36,12 @@ validateDefault("visibleDefaultEngines");
 if not "searchDefault" in localeSearchInfo["default"]:
   localeSearchInfo["default"]["searchDefault"] = searchinfo["default"]["searchDefault"]
 
+# If the selected locale doesn't have a searchOrder,
+# use the global one if present.
+# searchOrder is NOT required.
+if not "searchOrder" in localeSearchInfo["default"] and "searchOrder" in searchinfo["default"]:
+    localeSearchInfo["default"]["searchOrder"] = searchinfo["default"]["searchOrder"]
+
 # If we have region overrides, enumerate through them
 # and add the additional regions to the locale information.
 if "regionOverrides" in searchinfo:

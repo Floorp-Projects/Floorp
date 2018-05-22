@@ -1031,7 +1031,11 @@ PlacesToolbar.prototype = {
   _openedMenuButton: null,
   _allowPopupShowing: true,
 
-  _rebuild: function PT__rebuild() {
+  get _isAlive() {
+    return this._resultNode && this._rootElt;
+  },
+
+  async _rebuild() {
     // Clear out references to existing nodes, since they will be removed
     // and re-added.
     if (this._overFolder.elt)
@@ -1042,31 +1046,51 @@ PlacesToolbar.prototype = {
       this._rootElt.firstChild.remove();
     }
 
-    let fragment = document.createDocumentFragment();
     let cc = this._resultNode.childCount;
     if (cc > 0) {
       // There could be a lot of nodes, but we only want to build the ones that
-      // are likely to be shown, not all of them. Then we'll lazily create the
-      // missing nodes when needed.
-      // We don't want to cause reflows at every node insertion to calculate
-      // a precise size, thus we guess a size from the first node.
-      let button = this._insertNewItem(this._resultNode.getChild(0),
-                                       this._rootElt);
-      requestAnimationFrame(() => {
-        // May have been destroyed in the meanwhile.
-        if (!this._resultNode || !this._rootElt)
-          return;
-        // We assume a button with just the icon will be more or less a square,
-        // then compensate the measurement error by considering a larger screen
-        // width. Moreover the window could be bigger than the screen.
-        let size = button.clientHeight;
-        let limit = Math.min(cc, parseInt((window.screen.width * 1.5) / size));
-        for (let i = 1; i < limit; ++i) {
-          this._insertNewItem(this._resultNode.getChild(i), fragment);
-        }
-        this._rootElt.appendChild(fragment);
+      // are more likely to be shown, not all of them.
+      // We also don't want to wait for reflows at every node insertion, to
+      // calculate a precise number of visible items, thus we guess a size from
+      // the first non-separator node (because separators have flexible size).
+      let startIndex = 0;
+      let limit = await new Promise(resolve => window.requestAnimationFrame(() => {
+        if (!this._isAlive)
+          return resolve(cc);
 
-        this.updateNodesVisibility();
+        // Look for the first non-separator node.
+        let elt;
+        while (startIndex < cc) {
+          elt = this._insertNewItem(this._resultNode.getChild(startIndex),
+                                    this._rootElt);
+          ++startIndex;
+          if (elt.localName != "toolbarseparator")
+            break;
+        }
+        if (!elt)
+          return resolve(cc);
+
+        return window.promiseDocumentFlushed(() => {
+          // We assume a button with just the icon will be more or less a square,
+          // then compensate the measurement error by considering a larger screen
+          // width. Moreover the window could be bigger than the screen.
+          let size = elt.clientHeight || 1; // Sanity fallback.
+          resolve(Math.min(cc, parseInt((window.screen.width * 1.5) / size)));
+        });
+      }));
+
+      if (!this._isAlive)
+        return;
+
+      let fragment = document.createDocumentFragment();
+      for (let i = startIndex; i < limit; ++i) {
+        this._insertNewItem(this._resultNode.getChild(i), fragment);
+      }
+      window.requestAnimationFrame(() => {
+        if (this._isAlive) {
+          this._rootElt.appendChild(fragment);
+          this.updateNodesVisibility();
+        }
       });
     }
 
@@ -1477,7 +1501,7 @@ PlacesToolbar.prototype = {
 
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
-      this._rebuild();
+      this._rebuild().catch(Cu.reportError);
       return;
     }
 

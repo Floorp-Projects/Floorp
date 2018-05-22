@@ -22,9 +22,7 @@ from taskgraph.parameters import Parameters
 actions = []
 callbacks = {}
 
-Action = namedtuple('Action', [
-    'name', 'title', 'description', 'order', 'context', 'schema', 'task_template_builder',
-])
+Action = namedtuple('Action', ['order', 'action_builder'])
 
 
 def is_json(data):
@@ -36,73 +34,9 @@ def is_json(data):
     return True
 
 
-def register_task_action(name, title, description, order, context, schema=None):
-    """
-    Register an action task that can be triggered from supporting
-    user interfaces, such as Treeherder.
-
-    Most actions will create intermediate action tasks that call back into
-    in-tree python code. To write such an action please use
-    :func:`register_callback_action`.
-
-    This function is to be used a decorator for a function that returns a task
-    template, see :doc:`specification <action-spec>` for details on the
-    templating features. The decorated function will be given decision task
-    parameters, which can be embedded in the task template that is returned.
-
-    Parameters
-    ----------
-    name : str
-        An identifier for this action, used by UIs to find the action.
-    title : str
-        A human readable title for the action to be used as label on a button
-        or text on a link for triggering the action.
-    description : str
-        A human readable description of the action in **markdown**.
-        This will be display as tooltip and in dialog window when the action
-        is triggered. This is a good place to describe how to use the action.
-    order : int
-        Order of the action in menus, this is relative to the ``order`` of
-        other actions declared.
-    context : list of dict
-        List of tag-sets specifying which tasks the action is can take as input.
-        If no tag-sets is specified as input the action is related to the
-        entire task-group, and won't be triggered with a given task.
-
-        Otherwise, if ``context = [{'k': 'b', 'p': 'l'}, {'k': 't'}]`` will only
-        be displayed in the context menu for tasks that has
-        ``task.tags.k == 'b' && task.tags.p = 'l'`` or ``task.tags.k = 't'``.
-        Esentially, this allows filtering on ``task.tags``.
-    schema : dict
-        JSON schema specifying input accepted by the action.
-        This is optional and can be left ``null`` if no input is taken.
-
-    Returns
-    -------
-    function
-        To be used as decorator for the function that builds the task template.
-        The decorated function will be given decision parameters and may return
-        ``None`` instead of a task template, if the action is disabled.
-    """
-    assert isinstance(name, basestring), 'name must be a string'
-    assert isinstance(title, basestring), 'title must be a string'
-    assert isinstance(description, basestring), 'description must be a string'
-    assert isinstance(order, int), 'order must be an integer'
-    assert callable(schema) or is_json(schema), 'schema must be a JSON compatible  object'
-    mem = {"registered": False}  # workaround nonlocal missing in 2.x
-
-    def register_task_template_builder(task_template_builder):
-        assert not mem['registered'], 'register_task_action must be used as decorator'
-        actions.append(Action(
-            name.strip(), title.strip(), description.strip(), order, context,
-            schema, task_template_builder,
-        ))
-        mem['registered'] = True
-    return register_task_template_builder
-
-
 def register_callback_action(name, title, symbol, description, order=10000,
-                             context=[], available=lambda parameters: True, schema=None):
+                             context=[], available=lambda parameters: True,
+                             schema=None, kind='task', generic=True):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -155,6 +89,11 @@ def register_callback_action(name, title, symbol, description, order=10000,
     schema : dict
         JSON schema specifying input accepted by the action.
         This is optional and can be left ``null`` if no input is taken.
+    kind : string
+        The action kind to define - must be one of `task` or `hook`.  Only for
+        transitional purposes.
+    generic : boolean
+        For kind=hook, whether this is a generic action or has its own permissions.
 
     Returns
     -------
@@ -163,64 +102,131 @@ def register_callback_action(name, title, symbol, description, order=10000,
     """
     mem = {"registered": False}  # workaround nonlocal missing in 2.x
 
+    assert isinstance(title, basestring), 'title must be a string'
+    assert isinstance(description, basestring), 'description must be a string'
+    title = title.strip()
+    description = description.strip()
+
     def register_callback(cb):
+        assert isinstance(name, basestring), 'name must be a string'
+        assert isinstance(order, int), 'order must be an integer'
+        assert kind in ('task', 'hook'), 'kind must be task or hook'
+        assert callable(schema) or is_json(schema), 'schema must be a JSON compatible object'
         assert isinstance(cb, FunctionType), 'callback must be a function'
-        assert isinstance(symbol, basestring), 'symbol must be a string'
         # Allow for json-e > 25 chars in the symbol.
         if '$' not in symbol:
             assert 1 <= len(symbol) <= 25, 'symbol must be between 1 and 25 characters'
+        assert isinstance(symbol, basestring), 'symbol must be a string'
+
         assert not mem['registered'], 'register_callback_action must be used as decorator'
         assert cb.__name__ not in callbacks, 'callback name {} is not unique'.format(cb.__name__)
 
-        @register_task_action(name, title, description, order, context, schema)
-        def build_callback_action_task(parameters, graph_config):
+        def action_builder(parameters, graph_config):
             if not available(parameters):
                 return None
 
+            actionPerm = 'generic' if generic else name
+
+            # gather up the common decision-task-supplied data for this action
             repo_param = '{}head_repository'.format(graph_config['project-repo-param-prefix'])
+            repository = {
+                'url': parameters[repo_param],
+                'project': parameters['project'],
+                'level': parameters['level'],
+            }
+
             revision = parameters['{}head_rev'.format(graph_config['project-repo-param-prefix'])]
+            push = {
+                'owner': 'mozilla-taskcluster-maintenance@mozilla.com',
+                'pushlog_id': parameters['pushlog_id'],
+                'revision': revision,
+            }
+
+            task_group_id = os.environ.get('TASK_ID', slugid())
             match = re.match(r'https://(hg.mozilla.org)/(.*?)/?$', parameters[repo_param])
             if not match:
                 raise Exception('Unrecognized {}'.format(repo_param))
-            repo_scope = 'assume:repo:{}/{}:branch:default'.format(
-                match.group(1), match.group(2))
+            action = {
+                'name': name,
+                'title': title,
+                'description': description,
+                'taskGroupId': task_group_id,
+                'cb_name': cb.__name__,
+                'symbol': symbol,
+            }
 
-            task_group_id = os.environ.get('TASK_ID', slugid())
+            rv = {
+                'name': name,
+                'title': title,
+                'description': description,
+                'context': context,
+            }
+            if schema:
+                rv['schema'] = schema(graph_config=graph_config) if callable(schema) else schema
 
-            template = graph_config.taskcluster_yml
+            # for kind=task, we embed the task from .taskcluster.yml in the action, with
+            # suitable context
+            if kind == 'task':
+                template = graph_config.taskcluster_yml
 
-            with open(template, 'r') as f:
-                taskcluster_yml = yaml.safe_load(f)
-                if taskcluster_yml['version'] != 1:
-                    raise Exception('actions.json must be updated to work with .taskcluster.yml')
-                if not isinstance(taskcluster_yml['tasks'], list):
-                    raise Exception('.taskcluster.yml "tasks" must be a list for action tasks')
+                # tasks get all of the scopes the original push did, yuck; this is not
+                # done with kind = hook.
+                repo_scope = 'assume:repo:{}/{}:branch:default'.format(
+                    match.group(1), match.group(2))
+                action['repo_scope'] = repo_scope
 
-                return {
-                    '$let': {
-                        'tasks_for': 'action',
-                        'repository': {
-                            'url': parameters[repo_param],
-                            'project': parameters['project'],
-                            'level': parameters['level'],
+                with open(template, 'r') as f:
+                    taskcluster_yml = yaml.safe_load(f)
+                    if taskcluster_yml['version'] != 1:
+                        raise Exception(
+                            'actions.json must be updated to work with .taskcluster.yml')
+                    if not isinstance(taskcluster_yml['tasks'], list):
+                        raise Exception(
+                            '.taskcluster.yml "tasks" must be a list for action tasks')
+
+                rv.update({
+                    'kind': 'task',
+                    'task': {
+                        '$let': {
+                            'tasks_for': 'action',
+                            'repository': repository,
+                            'push': push,
+                            'action': action,
                         },
-                        'push': {
-                            'owner': 'mozilla-taskcluster-maintenance@mozilla.com',
-                            'pushlog_id': parameters['pushlog_id'],
-                            'revision': revision,
-                        },
-                        'action': {
-                            'name': name,
-                            'title': title,
-                            'description': description,
-                            'taskGroupId': task_group_id,
-                            'repo_scope': repo_scope,
-                            'cb_name': cb.__name__,
-                            'symbol': symbol,
-                        },
+                        'in': taskcluster_yml['tasks'][0],
                     },
-                    'in': taskcluster_yml['tasks'][0]
-                }
+                })
+
+            # for kind=hook
+            elif kind == 'hook':
+                trustDomain = graph_config['trust-domain']
+                level = parameters['level']
+                rv.update({
+                    'kind': 'hook',
+                    'hookGroupId': 'project-{}'.format(trustDomain),
+                    'hookId': 'in-tree-action-{}-{}'.format(level, actionPerm),
+                    'hookPayload': {
+                        # provide the decision-task parameters as context for triggerHook
+                        "decision": {
+                            'action': action,
+                            'repository': repository,
+                            'push': push,
+                            # parameters is long, so fetch it from the actions.json variables
+                            'parameters': {'$eval': 'parameters'},
+                        },
+
+                        # and pass everything else through from our own context
+                        "user": {
+                            'input': {'$eval': 'input'},
+                            'taskId': {'$eval': 'taskId'},
+                            'taskGroupId': {'$eval': 'taskGroupId'},
+                        }
+                    },
+                })
+
+            return rv
+
+        actions.append(Action(order, action_builder))
 
         mem['registered'] = True
         callbacks[cb.__name__] = cb
@@ -242,36 +248,22 @@ def render_actions_json(parameters, graph_config):
         JSON object representation of the ``public/actions.json`` artifact.
     """
     assert isinstance(parameters, Parameters), 'requires instance of Parameters'
-    result = []
+    actions = []
     for action in sorted(_get_actions(graph_config), key=lambda action: action.order):
-        task = action.task_template_builder(parameters, graph_config)
-        if task:
-            assert is_json(task), 'task must be a JSON compatible object'
-            res = {
-                'kind': 'task',
-                'name': action.name,
-                'title': action.title,
-                'description': action.description,
-                'context': action.context,
-                'schema': (
-                    action.schema(graph_config=graph_config) if callable(action.schema)
-                    else action.schema
-                ),
-                'task': task,
-            }
-            if res['schema'] is None:
-                res.pop('schema')
-            result.append(res)
+        action = action.action_builder(parameters, graph_config)
+        if action:
+            assert is_json(action), 'action must be a JSON compatible object'
+            actions.append(action)
     return {
         'version': 1,
         'variables': {
             'parameters': dict(**parameters),
         },
-        'actions': result,
+        'actions': actions,
     }
 
 
-def trigger_action_callback(task_group_id, task_id, task, input, callback, parameters, root,
+def trigger_action_callback(task_group_id, task_id, input, callback, parameters, root,
                             test=False):
     """
     Trigger action callback with the given inputs. If `test` is true, then run
@@ -288,6 +280,12 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
         create.testing = True
         taskcluster.testing = True
 
+    # fetch the task, if taskId was given
+    # FIXME: many actions don't need this, so move this fetch into the callbacks
+    # that do need it
+    if task_id:
+        task = taskcluster.get_task_definition(task_id)
+
     cb(Parameters(**parameters), graph_config, input, task_group_id, task_id, task)
 
 
@@ -298,10 +296,6 @@ def _load(graph_config):
     for f in os.listdir(actions_dir):
         if f.endswith('.py') and f not in ('__init__.py', 'registry.py', 'util.py'):
             __import__('taskgraph.actions.' + f[:-3])
-        if f.endswith('.yml'):
-            with open(os.path.join(actions_dir, f), 'r') as d:
-                frontmatter, template = yaml.safe_load_all(d)
-                register_task_action(**frontmatter)(lambda _p, _g: template)
     return callbacks, actions
 
 
