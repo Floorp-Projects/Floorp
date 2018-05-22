@@ -4353,30 +4353,30 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     // Only allow either LayerEventRegions or CompositorHitTestInfo items.
     MOZ_ASSERT(!(hadLayerEventRegions && hadCompositorHitTestInfo));
 
-    // Peek ahead to the next item and see if it can be merged with the current
-    // item. We create a list of consecutive items that can be merged together.
-    AutoTArray<nsDisplayItem*, 1> mergedItems;
-
     if (marker == DisplayItemEntryType::ITEM) {
-      mergedItems.AppendElement(item);
+      // Peek ahead to the next item and see if it can be merged with the
+      // current item.
+      nsDisplayItem* peek = iter.PeekNext();
+      if (peek && item->CanMerge(peek)) {
+        // Create a list of consecutive items that can be merged together.
+        AutoTArray<nsDisplayItem*, 2> mergedItems { item };
+        while ((peek = iter.PeekNext())) {
+          if (!item->CanMerge(peek)) {
+            break;
+          }
 
-      while (nsDisplayItem* peek = iter.PeekNext()) {
-        if (!item->CanMerge(peek)) {
-          break;
+          mergedItems.AppendElement(peek);
+
+          // Move the iterator forward since we will merge this item.
+          i = iter.GetNext();
         }
 
-        mergedItems.AppendElement(peek);
-
-        // Move the iterator forward since we will merge this item.
-        i = iter.GetNext();
+        // We have items that can be merged together.
+        // Merge them into a temporary item and process that item immediately.
+        MOZ_ASSERT(mergedItems.Length() > 1);
+        item = mBuilder->MergeItems(mergedItems);
+        MOZ_ASSERT(item && itemType == item->GetType());
       }
-    }
-
-    if (mergedItems.Length() > 1) {
-      // We have items that can be merged together. Merge them into a temporary
-      // item and process that item immediately.
-      item = mBuilder->MergeItems(mergedItems);
-      MOZ_ASSERT(item && itemType == item->GetType());
     }
 
     MOZ_ASSERT(item->GetType() != DisplayItemType::TYPE_WRAP_LIST);
