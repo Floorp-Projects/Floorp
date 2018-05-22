@@ -12,8 +12,8 @@ config = {
     # mar
     "mar_tools_url": os.environ.get(
         "MAR_TOOLS_URL",
-        # Buildbot l10n fetches from ftp rather than setting an environ var
-        "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s"
+        # Default to fetching from ftp rather than setting an environ var
+        "https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s"
     ),
 
     # repositories

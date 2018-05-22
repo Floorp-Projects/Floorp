@@ -25,10 +25,6 @@ config = {
         "branch": "default",
         "dest": MOZILLA_DIR,
     }, {
-        "repo": "https://hg.mozilla.org/build/buildbot-configs",
-        "branch": "default",
-        "dest": "buildbot-configs"
-    }, {
         "repo": "https://hg.mozilla.org/build/tools",
         "branch": "default",
         "dest": "tools"

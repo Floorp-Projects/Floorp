@@ -84,7 +84,7 @@ class TalosOutputParser(OutputParser):
         if m:
             self.found_perf_data.append(m.group(1))
 
-        # now let's check if buildbot should retry
+        # now let's check if we should retry
         harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
         if harness_retry_re.search(line):
             self.critical(' %s' % line)
@@ -96,8 +96,7 @@ class TalosOutputParser(OutputParser):
 class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             Python3Virtualenv, CodeCoverageMixin):
     """
-    install and run Talos tests:
-    https://wiki.mozilla.org/Buildbot/Talos
+    install and run Talos tests
     """
     config_options = [
         [["--use-talos-json"],
