@@ -352,10 +352,7 @@ talos-svgr:
     description: "Talos svgr"
     try-name: svgr
     treeherder-symbol: T(s)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-qr/.*: []  # bug 1451305
-            default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
