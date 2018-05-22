@@ -46,7 +46,6 @@ def define_upstream_artifacts(config, jobs):
             dep_job,
             keep_locale_template=False,
             kind=config.kind,
-            project=config.params["project"],
         )
 
         if 'android' in build_platform:
