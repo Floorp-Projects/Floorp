@@ -2640,8 +2640,8 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
     }
 
     // Iterate through all wasm instances to find ones that need to be updated.
-    for (JSCompartment* c : zone->compartments()) {
-        for (wasm::Instance* instance : c->wasm.instances()) {
+    for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+        for (wasm::Instance* instance : r->wasm.instances()) {
             if (!instance->debugEnabled())
                 continue;
 
@@ -4446,7 +4446,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
         // TODOshu: Until such time that wasm modules are real ES6 modules,
         // unconditionally consider all wasm toplevel instance scripts.
         for (WeakGlobalObjectSet::Range r = debugger->allDebuggees(); !r.empty(); r.popFront()) {
-            for (wasm::Instance* instance : r.front()->compartment()->wasm.instances()) {
+            for (wasm::Instance* instance : r.front()->realm()->wasm.instances()) {
                 consider(instance->object());
                 if (oom) {
                     ReportOutOfMemory(cx);
