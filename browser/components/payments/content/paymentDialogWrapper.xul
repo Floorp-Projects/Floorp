@@ -38,7 +38,7 @@
            nodefaultsrc="true"
            remote="true"
            selectmenulist="ContentSelectDropdown"
-           style="height:400px;width:700px"
+           style="height:450px;width:700px"
            transparent="true"></browser>
   <script type="application/javascript" src="chrome://payments/content/paymentDialogWrapper.js"></script>
 </window>
