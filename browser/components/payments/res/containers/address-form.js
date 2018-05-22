@@ -174,13 +174,13 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
 
   saveRecord() {
     let record = this.formHandler.buildFormObject();
+    let currentState = this.requestStore.getState();
     let {
       page,
       tempAddresses,
       savedBasicCards,
       "address-page": addressPage,
-      "basic-card-page": basicCardPage,
-    } = this.requestStore.getState();
+    } = currentState;
     let editing = !!addressPage.guid;
 
     if (editing ? (addressPage.guid in tempAddresses) : !this.persistCheckbox.checked) {
@@ -200,6 +200,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
       selectedStateKey: page.selectedStateKey,
     };
 
+    const previousId = page.previousId;
     if (page.onboardingWizard && !Object.keys(savedBasicCards).length) {
       state.successStateChange = {
         page: {
@@ -211,19 +212,15 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
     } else {
       state.successStateChange = {
         page: {
-          id: page.previousId || "payment-summary",
+          id: previousId || "payment-summary",
           onboardingWizard: page.onboardingWizard,
         },
       };
     }
 
-    state.successStateChange["address-page"] = addressPage;
-    state.successStateChange["basic-card-page"] = basicCardPage;
-
-    const previousId = page.previousId;
     if (previousId) {
+      state.successStateChange[previousId] = Object.assign({}, currentState[previousId]);
       state.successStateChange[previousId].preserveFieldValues = true;
-      state.successStateChange[previousId].addressesModified = true;
     }
 
     paymentRequest.updateAutofillRecord("addresses", record, addressPage.guid, state);
