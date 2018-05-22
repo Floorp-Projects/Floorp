@@ -22,13 +22,13 @@ add_task(async function setup() {
 
 add_task(async function test_contentscript() {
   function contentScript() {
-    var canvas = document.createElement("canvas");
+    let canvas = document.createElement("canvas");
     canvas.width = canvas.height = "100";
 
-    var ctx = canvas.getContext("2d");
-    ctx.fillStyle = 'green';
+    let ctx = canvas.getContext("2d");
+    ctx.fillStyle = "green";
     ctx.fillRect(0, 0, 100, 100);
-    var data = ctx.getImageData(0, 0, 100, 100);
+    let data = ctx.getImageData(0, 0, 100, 100);
 
     browser.test.sendMessage("data-color", data.data[1]);
   }
