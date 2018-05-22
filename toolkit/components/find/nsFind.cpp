@@ -524,7 +524,7 @@ IsBlockNode(nsIContent* aContent)
 }
 
 static bool
-IsVisibleNode(nsINode* aNode)
+IsDisplayedNode(nsINode* aNode)
 {
   if (!aNode->IsContent()) {
     return false;
@@ -536,6 +536,22 @@ IsVisibleNode(nsINode* aNode)
     return aNode->IsElement() && aNode->AsElement()->IsDisplayContents();
   }
 
+  return true;
+}
+
+static bool
+IsVisibleNode(nsINode* aNode)
+{
+  if (!IsDisplayedNode(aNode)) {
+    return false;
+  }
+
+  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
+  if (!frame) {
+    // display: contents
+    return true;
+  }
+
   return frame->StyleVisibility()->IsVisible();
 }
 
@@ -544,7 +560,7 @@ SkipNode(nsIContent* aContent)
 {
   nsIContent* content = aContent;
   while (content) {
-    if (!IsVisibleNode(content) ||
+    if (!IsDisplayedNode(content) ||
         content->IsComment() ||
         content->IsAnyOfHTMLElements(nsGkAtoms::script,
                                      nsGkAtoms::noframes,
