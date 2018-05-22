@@ -48,10 +48,6 @@ JSCompartment::JSCompartment(Zone* zone)
     isSystem_(false),
     isSelfHosting(false),
     marked(true),
-    warnedAboutStringGenericsMethods(0),
-#ifdef DEBUG
-    firedOnNewGlobalObject(false),
-#endif
     performanceMonitoring(runtime_),
     data(nullptr),
     lastAnimationTime(0),
