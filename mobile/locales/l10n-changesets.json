@@ -158,6 +158,13 @@
         ], 
         "revision": "default"
     }, 
+    "en-CA": {
+        "platforms": [
+            "android", 
+            "android-api-16"
+        ], 
+        "revision": "default"
+    }, 
     "en-GB": {
         "platforms": [
             "android", 
