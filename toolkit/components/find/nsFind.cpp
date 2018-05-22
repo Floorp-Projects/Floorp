@@ -504,6 +504,67 @@ DumpNode(nsINode* aNode)
 #endif
 }
 
+static bool
+IsBlockNode(nsIContent* aContent)
+{
+  if (aContent->IsElement() && aContent->AsElement()->IsDisplayContents()) {
+    return false;
+  }
+
+  // FIXME(emilio): This is dubious...
+  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::img,
+                                    nsGkAtoms::hr,
+                                    nsGkAtoms::th,
+                                    nsGkAtoms::td)) {
+    return true;
+  }
+
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  return frame && frame->StyleDisplay()->IsBlockOutsideStyle();
+}
+
+static bool
+IsVisibleNode(nsINode* aNode)
+{
+  if (!aNode->IsContent()) {
+    return false;
+  }
+
+  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
+  if (!frame) {
+    // No frame! Not visible then, unless it's display: contents.
+    return aNode->IsElement() && aNode->AsElement()->IsDisplayContents();
+  }
+
+  return frame->StyleVisibility()->IsVisible();
+}
+
+static bool
+SkipNode(nsIContent* aContent)
+{
+  nsIContent* content = aContent;
+  while (content) {
+    if (!IsVisibleNode(content) ||
+        content->IsComment() ||
+        content->IsAnyOfHTMLElements(nsGkAtoms::script,
+                                     nsGkAtoms::noframes,
+                                     nsGkAtoms::select)) {
+      DEBUG_FIND_PRINTF("Skipping node: ");
+      DumpNode(content);
+      return true;
+    }
+
+    // Only climb to the nearest block node
+    if (IsBlockNode(content)) {
+      return false;
+    }
+
+    content = content->GetParent();
+  }
+
+  return false;
+}
+
 nsresult
 nsFind::InitIterator(nsIDOMNode* aStartNode, int32_t aStartOffset,
                      nsIDOMNode* aEndNode, int32_t aEndOffset)
@@ -806,67 +867,6 @@ nsFind::PeekNextChar(nsRange* aSearchRange,
   int32_t index = mFindBackward ? fragLen - 1 : 0;
 
   return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
-}
-
-bool
-nsFind::IsBlockNode(nsIContent* aContent)
-{
-  if (aContent->IsElement() && aContent->AsElement()->IsDisplayContents()) {
-    return false;
-  }
-
-  // FIXME(emilio): This is dubious...
-  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::img,
-                                    nsGkAtoms::hr,
-                                    nsGkAtoms::th,
-                                    nsGkAtoms::td)) {
-    return true;
-  }
-
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  return frame && frame->StyleDisplay()->IsBlockOutsideStyle();
-}
-
-bool
-nsFind::IsVisibleNode(nsINode* aNode)
-{
-  if (!aNode->IsContent()) {
-    return false;
-  }
-
-  nsIFrame* frame = aNode->AsContent()->GetPrimaryFrame();
-  if (!frame) {
-    // No frame! Not visible then, unless it's display: contents.
-    return aNode->IsElement() && aNode->AsElement()->IsDisplayContents();
-  }
-
-  return frame->StyleVisibility()->IsVisible();
-}
-
-bool
-nsFind::SkipNode(nsIContent* aContent)
-{
-  nsIContent* content = aContent;
-  while (content) {
-    if (!IsVisibleNode(content) ||
-        content->IsComment() ||
-        content->IsAnyOfHTMLElements(nsGkAtoms::script,
-                                     nsGkAtoms::noframes,
-                                     nsGkAtoms::select)) {
-      DEBUG_FIND_PRINTF("Skipping node: ");
-      DumpNode(content);
-      return true;
-    }
-
-    // Only climb to the nearest block node
-    if (IsBlockNode(content)) {
-      return false;
-    }
-
-    content = content->GetParent();
-  }
-
-  return false;
 }
 
 nsresult
