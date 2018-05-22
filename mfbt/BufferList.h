@@ -614,7 +614,14 @@ BufferList<AllocPolicy>::Extract(IterImpl& aIter, size_t aSize, bool* aSuccess)
                 mSegments[aIter.mSegment].mCapacity));
       aIter.Advance(*this, aIter.RemainingInSegment());
     }
-    MOZ_RELEASE_ASSERT(aIter.mSegment == copyStart + segmentsToCopy);
+    // Due to the way IterImpl works, there are two cases here: (1) if we've
+    // consumed the entirety of the BufferList, then the iterator is pointed at
+    // the end of the final segment, (2) otherwise it is pointed at the start
+    // of the next segment. We want to verify that we really consumed all
+    // |segmentsToCopy| segments.
+    MOZ_RELEASE_ASSERT(
+      (aIter.mSegment == copyStart + segmentsToCopy) ||
+      (aIter.Done() && aIter.mSegment == copyStart + segmentsToCopy - 1));
     mSegments.erase(mSegments.begin() + copyStart,
                     mSegments.begin() + copyStart + segmentsToCopy);
 

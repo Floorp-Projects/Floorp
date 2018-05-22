@@ -137,6 +137,18 @@ const animationsSpec = generateActorSpec({
       },
       response: {}
     },
+    pauseSome: {
+      request: {
+        players: Arg(0, "array:animationplayer"),
+      },
+      response: {}
+    },
+    playSome: {
+      request: {
+        players: Arg(0, "array:animationplayer"),
+      },
+      response: {}
+    },
     setCurrentTimes: {
       request: {
         players: Arg(0, "array:animationplayer"),

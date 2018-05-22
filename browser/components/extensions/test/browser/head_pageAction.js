@@ -23,17 +23,11 @@
 
 async function runTests(options) {
   function background(getTests) {
-    let tabs;
     let tests;
 
     // Gets the current details of the page action, and returns a
     // promise that resolves to an object containing them.
-    async function getDetails() {
-      let [tab] = await browser.tabs.query({active: true, currentWindow: true});
-      let tabId = tab.id;
-
-      browser.test.log(`Get details: tab={id: ${tabId}, url: ${JSON.stringify(tab.url)}}`);
-
+    async function getDetails(tabId) {
       return {
         title: await browser.pageAction.getTitle({tabId}),
         popup: await browser.pageAction.getPopup({tabId}),
@@ -48,15 +42,14 @@ async function runTests(options) {
       let test = tests.shift();
 
       test(async expecting => {
-        function finish() {
-          // Check that the actual icon has the expected values, then
-          // run the next test.
-          browser.test.sendMessage("nextTest", expecting, tests.length);
-        }
+        let [tab] = await browser.tabs.query({active: true, currentWindow: true});
+        let {id: tabId, windowId, url} = tab;
+
+        browser.test.log(`Get details: tab={id: ${tabId}, url: ${url}}`);
 
         // Check that the API returns the expected values, and then
         // run the next test.
-        let details = await getDetails();
+        let details = await getDetails(tabId);
         if (expecting) {
           browser.test.assertEq(expecting.title, details.title,
                                 "expected value from getTitle");
@@ -68,17 +61,21 @@ async function runTests(options) {
         browser.test.assertEq(!!expecting, details.isShown,
                               "expected value from isShown");
 
-        finish();
+        // Check that the actual icon has the expected values, then
+        // run the next test.
+        browser.test.sendMessage("nextTest", expecting, windowId, tests.length);
       });
     }
 
     async function runTests() {
-      tabs = [];
-      tests = getTests(tabs);
+      let tabs = [];
+      let windows = [];
+      tests = getTests(tabs, windows);
 
       let resultTabs = await browser.tabs.query({active: true, currentWindow: true});
 
       tabs[0] = resultTabs[0].id;
+      windows[0] = resultTabs[0].windowId;
 
       nextTest();
     }
@@ -108,8 +105,9 @@ async function runTests(options) {
   let currentWindow = window;
   let windows = [];
 
-  function checkDetails(details) {
-    let image = currentWindow.document.getElementById(pageActionId);
+  function checkDetails(details, windowId) {
+    let {document} = Services.wm.getOuterWindowWithId(windowId);
+    let image = document.getElementById(pageActionId);
     if (details == null) {
       ok(image == null || image.getAttribute("disabled") == "true", "image is disabled");
     } else {
@@ -127,14 +125,14 @@ async function runTests(options) {
   let testNewWindows = 1;
 
   let awaitFinish = new Promise(resolve => {
-    extension.onMessage("nextTest", async (expecting, testsRemaining) => {
+    extension.onMessage("nextTest", async (expecting, windowId, testsRemaining) => {
       if (!pageActionId) {
         pageActionId = BrowserPageActions.urlbarButtonNodeIDForActionID(makeWidgetId(extension.id));
       }
 
       await promiseAnimationFrame(currentWindow);
 
-      checkDetails(expecting);
+      checkDetails(expecting, windowId);
 
       if (testsRemaining) {
         extension.sendMessage("runNextTest");

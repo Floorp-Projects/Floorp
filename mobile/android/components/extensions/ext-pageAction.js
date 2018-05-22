@@ -38,7 +38,7 @@ class PageAction extends EventEmitter {
     this.tabManager = extension.tabManager;
     this.context = null;
 
-    this.tabContext = new TabContext(() => Object.create(this.defaults), extension);
+    this.tabContext = new TabContext(tabId => this.defaults);
 
     this.options = {
       title: manifest.default_title || extension.name,

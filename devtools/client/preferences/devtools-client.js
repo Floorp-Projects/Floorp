@@ -293,6 +293,9 @@ pref("devtools.webconsole.sidebarToggle", true);
 pref("devtools.webconsole.sidebarToggle", false);
 #endif
 
+// Enable CodeMirror in the JsTerm: |false|
+pref("devtools.webconsole.jsterm.codeMirror", false);
+
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
 

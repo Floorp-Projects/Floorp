@@ -21,7 +21,6 @@ class FontMeta extends PureComponent {
   static get propTypes() {
     return {
       font: PropTypes.shape(Types.font).isRequired,
-      isForCurrentElement: PropTypes.bool.isRequired,
       onToggleFontHighlight: PropTypes.func.isRequired,
     };
   }
@@ -40,21 +39,19 @@ class FontMeta extends PureComponent {
   onNameMouseOver() {
     let {
       font,
-      isForCurrentElement,
       onToggleFontHighlight,
     } = this.props;
 
-    onToggleFontHighlight(font, true, isForCurrentElement);
+    onToggleFontHighlight(font, true);
   }
 
   onNameMouseOut() {
     let {
       font,
-      isForCurrentElement,
       onToggleFontHighlight,
     } = this.props;
 
-    onToggleFontHighlight(font, false, isForCurrentElement);
+    onToggleFontHighlight(font, false);
   }
 
   renderFontOrigin(url) {

@@ -1008,11 +1008,13 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 }
 
 /* Apply the same color to both message arrows and ObjectInspector ones. */
-.webconsole-output-wrapper .message img.arrow {
+.webconsole-output-wrapper .message img.arrow,
+.webconsole-output-wrapper .sidebar img.arrow {
   background-color: #AFA8AB;
 }
 
-.theme-dark .webconsole-output-wrapper .message img.arrow {
+.theme-dark .webconsole-output-wrapper .message img.arrow,
+.theme-dark .webconsole-output-wrapper .sidebar img.arrow {
   background-color: #7F7E81;
 }
 

@@ -816,16 +816,13 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * Pause all animations in the current tabActor's frames.
    */
   pauseAll: function() {
-    let readyPromises = [];
     // Until the WebAnimations API provides a way to play/pause via the document
     // timeline, we have to iterate through the whole DOM to find all players.
     for (let player of
          this.getAllAnimations(this.tabActor.window.document, true)) {
-      player.pause();
-      readyPromises.push(player.ready);
+      this.pauseSync(player);
     }
     this.allAnimationsPaused = true;
-    return Promise.all(readyPromises);
   },
 
   /**
@@ -837,19 +834,17 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     // timeline, we have to iterate through the whole DOM to find all players.
     for (let player of
       this.getAllAnimations(this.tabActor.window.document, true)) {
-      // Play animation using startTime. Because the Animation.Play() method recalculates
-      // startTime and currentTime on the procedure, but we need to keep the currentTime.
-      player.startTime =
-        player.timeline.currentTime - player.currentTime / player.playbackRate;
+      this.playSync(player);
     }
     this.allAnimationsPaused = false;
   },
 
   toggleAll: function() {
     if (this.allAnimationsPaused) {
-      return this.playAll();
+      this.playAll();
+    } else {
+      this.pauseAll();
     }
-    return this.pauseAll();
   },
 
   /**
@@ -862,6 +857,28 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     return Promise.all(players.map(player => {
       return shouldPause ? player.pause() : player.play();
     }));
+  },
+
+  /**
+   * Pause given animations.
+   *
+   * @param {Array} actors A list of AnimationPlayerActor.
+   */
+  pauseSome: function(actors) {
+    for (const { player } of actors) {
+      this.pauseSync(player);
+    }
+  },
+
+  /**
+   * Play given animations.
+   *
+   * @param {Array} actors A list of AnimationPlayerActor.
+   */
+  playSome: function(actors) {
+    for (const { player } of actors) {
+      this.playSync(player);
+    }
   },
 
   /**
@@ -904,5 +921,37 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     return Promise.all(
       players.map(player => player.setPlaybackRate(rate))
     );
-  }
+  },
+
+  /**
+   * Pause given player synchronously.
+   *
+   * @param {Object} player
+   */
+  pauseSync(player) {
+    // Gecko includes an optimization that means that if the animation is play-pending
+    // and we set the startTime to null, the change will be ignored and the animation
+    // will continue to be play-pending. This violates the spec but until the spec is
+    // clarified[1] on this point we work around this by ensuring the animation's
+    // startTime is set to something non-null before setting it to null.
+    // [1] https://github.com/w3c/csswg-drafts/issues/2691
+    this.playSync(player);
+    player.startTime = null;
+  },
+
+  /**
+   * Play given player synchronously.
+   *
+   * @param {Object} player
+   */
+  playSync(player) {
+    if (!player.playbackRate) {
+      // We can not play with playbackRate zero.
+      return;
+    }
+
+    // Play animation in a synchronous fashion by setting the start time directly.
+    const currentTime = player.currentTime || 0;
+    player.startTime = player.timeline.currentTime - currentTime / player.playbackRate;
+  },
 });

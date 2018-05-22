@@ -20,6 +20,8 @@ add_task(async function() {
 
   hud = HUDService.getBrowserConsole();
 
+  ok(hud.ui.document.hasFocus(), "Focus in the document");
+
   console.log(TEST_MESSAGE);
 
   await waitFor(() => findMessage(hud, TEST_MESSAGE));

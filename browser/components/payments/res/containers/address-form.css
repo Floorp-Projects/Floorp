@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Hide the message about autofill availability since it's not relevant */
+#country-warning-message {
+  display: none;
+}
+
 /* Hide all form fields that are not explicitly requested
  * by the paymentOptions object.
  */
@@ -12,7 +17,6 @@ address-form[address-fields] #address-level2-container,
 address-form[address-fields] #address-level1-container,
 address-form[address-fields] #postal-code-container,
 address-form[address-fields] #country-container,
-address-form[address-fields] #country-warning-message,
 address-form[address-fields]:not([address-fields~='email']) #email-container,
 address-form[address-fields]:not([address-fields~='tel']) #tel-container {
   /* !important is needed because autofillEditForms.js sets

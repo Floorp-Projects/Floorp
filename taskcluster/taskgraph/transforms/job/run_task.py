@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
-from taskgraph.transforms.job.common import support_vcs_checkout
+from taskgraph.transforms.job.common import support_vcs_checkout, docker_worker_use_artifacts
 from voluptuous import Required, Any
 
 run_task_schema = Schema({
@@ -29,6 +29,14 @@ run_task_schema = Schema({
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
     Required('comm-checkout'): bool,
+
+    # maps a dependency to a list of artifact names to use from that dependency.
+    # E.g: {"build": ["target.tar.bz2"]}
+    # In the above example, the artifact would be downloaded to:
+    # $USE_ARTIFACT_PATH/build/target.tar.bz2
+    Required('use-artifacts'): Any(None, {
+        basestring: [basestring],
+    }),
 
     # The command arguments to pass to the `run-task` script, after the
     # checkout arguments.  If a list, it will be passed directly; otherwise
@@ -62,6 +70,7 @@ docker_defaults = {
     'checkout': True,
     'comm-checkout': False,
     'sparse-profile': None,
+    'use-artifacts': None,
 }
 
 
@@ -70,6 +79,9 @@ def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
     common_setup(config, job, taskdesc)
+
+    if run['use-artifacts']:
+        docker_worker_use_artifacts(config, job, taskdesc, run['use-artifacts'])
 
     if run.get('cache-dotcache'):
         worker['caches'].append({

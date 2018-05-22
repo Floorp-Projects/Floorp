@@ -74,11 +74,19 @@ BLOCKLIST_LOCAL_AMO="blocklist_amo.xml"
 BLOCKLIST_LOCAL_HG="blocklist_hg.xml"
 BLOCKLIST_UPDATED=false
 
-ARTIFACTS_DIR="${ARTIFACTS_DIR:-'.'}"
+DO_REMOTE_SETTINGS=false
+REMOTE_SETTINGS_SERVER=''
+REMOTE_SETTINGS_INPUT="${DATADIR}/remote-settings.in"
+REMOTE_SETTINGS_OUTPUT="${DATADIR}/remote-settings.out"
+REMOTE_SETTINGS_DIR="/services/settings/dumps"
+REMOTE_SETTINGS_UPDATED=false
+
+ARTIFACTS_DIR="${ARTIFACTS_DIR:-.}"
 # Defaults
 HSTS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HSTS_DIFF_ARTIFACT:-"nsSTSPreloadList.diff"}"
 HPKP_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${HPKP_DIFF_ARTIFACT:-"StaticHPKPins.h.diff"}"
 BLOCKLIST_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${BLOCKLIST_DIFF_ARTIFACT:-"blocklist.diff"}"
+REMOTE_SETTINGS_DIFF_ARTIFACT="${ARTIFACTS_DIR}/${REMOTE_SETTINGS_DIFF_ARTIFACT:-"remote-settings.diff"}"
 
 
 # Get the current in-tree version for a code branch.
@@ -299,6 +307,44 @@ function compare_blocklist_files {
   return 1
 }
 
+function compare_remote_settings_files {
+  REMOTE_SETTINGS_SERVER="https://firefox.settings.services.mozilla.com/v1"
+
+  # 1. List remote settings collections from server.
+  echo "INFO: fetch remote settings list from server"
+  ${WGET} -qO- "${REMOTE_SETTINGS_SERVER}/buckets/monitor/collections/changes/records" |\
+      ${JQ} -r '.data[] | .bucket+"/"+.collection' |\
+      # 2. For each entry ${bucket, collection}
+      while IFS="/" read -r bucket collection; do
+
+        # 3. Download the dump from HG into REMOTE_SETTINGS_INPUT folder
+        hg_dump_url="${HGREPO}/raw-file/default${REMOTE_SETTINGS_DIR}/${bucket}/${collection}.json"
+        local_location_input="$REMOTE_SETTINGS_INPUT/${bucket}/${collection}.json"
+        mkdir -p "$REMOTE_SETTINGS_INPUT/${bucket}"
+        ${WGET} -qO "$local_location_input" "$hg_dump_url"
+        if [ $? -eq 8 ]; then
+          # We don't keep any dump for this collection, skip it.
+          # Try to clean up in case no collection in this bucket has dump.
+          rmdir "$REMOTE_SETTINGS_INPUT/${bucket}" --ignore-fail-on-non-empty
+          continue
+        fi
+
+        # 4. Download server version into REMOTE_SETTINGS_OUTPUT folder
+        remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/records"
+        local_location_output="$REMOTE_SETTINGS_OUTPUT/${bucket}/${collection}.json"
+        mkdir -p "$REMOTE_SETTINGS_OUTPUT/${bucket}"
+        ${WGET} -qO "$local_location_output" "$remote_records_url"
+      done
+
+  echo "INFO: diffing old/new remote settings dumps..."
+  ${DIFF} -r "${REMOTE_SETTINGS_INPUT}" "${REMOTE_SETTINGS_OUTPUT}" > "${REMOTE_SETTINGS_DIFF_ARTIFACT}"
+  if [ -s "${REMOTE_SETTINGS_DIFF_ARTIFACT}" ]
+  then
+    return 0
+  fi
+  return 1
+}
+
 function clone_build_tools {
     rm -fr "${TOOLSDIR}"
     CLONE_CMD="${HG} clone https://hg.mozilla.org/build/tools ${TOOLSDIR}"
@@ -393,6 +439,28 @@ function commit_blocklist_files {
   ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
 }
 
+# Copies new remote settings dump files in place, and commits them.
+function commit_remote_settings_files {
+  cd "${BASEDIR}"
+  cp -a "${REMOTE_SETTINGS_OUTPUT}/*" "${REPODIR}${REMOTE_SETTINGS_DIR}"
+
+  COMMIT_MESSAGE="No bug, Automated remote settings update"
+  if [ -n "${TASK_ID}" ]; then
+    COMMIT_MESSAGE="${COMMIT_MESSAGE} from task ${TASK_ID}"
+  fi
+  if [ ${DONTBUILD} == true ]; then
+    COMMIT_MESSAGE="${COMMIT_MESSAGE} - (DONTBUILD)"
+  fi
+  if [ ${CLOSED_TREE} == true ]; then
+    COMMIT_MESSAGE="${COMMIT_MESSAGE} - CLOSED TREE"
+  fi
+  if [ ${APPROVAL} == true ]; then
+    COMMIT_MESSAGE="${COMMIT_MESSAGE} - a=remote-settings-update"
+  fi
+  echo "INFO: committing remote settings changes"
+  ${HG} -R ${REPODIR} commit -u "${HG_SSH_USER}" -m "${COMMIT_MESSAGE}"
+}
+
 # Push all pending commits to Phabricator
 function push_repo {
   cd "${REPODIR}"
@@ -440,6 +508,7 @@ while [ $# -gt 0 ]; do
     --hsts) DO_HSTS=true ;;
     --hpkp) DO_HPKP=true ;;
     --blocklist) DO_BLOCKLIST=true ;;
+    --remote-settings) DO_REMOTE_SETTINGS=true ;;
     -r) REPODIR="$2"; shift ;;
     --use-mozilla-central) USE_MC=true ;;
     --use-ftp-builds) USE_TC=false ;;
@@ -458,9 +527,9 @@ if [ "${BRANCH}" == "" ]; then
 fi
 
 # Must choose at least one update action.
-if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_BLOCKLIST" == "false" ]
+if [ "$DO_HSTS" == "false" ] && [ "$DO_HPKP" == "false" ] && [ "$DO_BLOCKLIST" == "false" ] && [ "$DO_REMOTE_SETTINGS" == "false" ]
 then
-  echo "Error: you must specify at least one action from: --hsts, --hpkp, --blocklist" >&2
+  echo "Error: you must specify at least one action from: --hsts, --hpkp, --blocklist, --remote-settings" >&2
   usage
   exit 13
 fi
@@ -543,8 +612,14 @@ if [ "${DO_BLOCKLIST}" == "true" ]; then
     BLOCKLIST_UPDATED=true
   fi
 fi
+if [ "${DO_REMOTE_SETTINGS}" == "true" ]; then
+  if compare_remote_settings_files
+  then
+    REMOTE_SETTINGS_UPDATED=true
+  fi
+fi
 
-if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${BLOCKLIST_UPDATED}" == "false" ]; then
+if [ "${HSTS_UPDATED}" == "false" ] && [ "${HPKP_UPDATED}" == "false" ] && [ "${BLOCKLIST_UPDATED}" == "false" ] && [ "${REMOTE_SETTINGS_UPDATED}" == "false" ]; then
   echo "INFO: no updates required. Exiting."
   exit 0
 else
@@ -575,6 +650,12 @@ fi
 if [ "${BLOCKLIST_UPDATED}" == "true" ]
 then
   commit_blocklist_files
+  MUST_PUSH=true
+fi
+
+if [ "${REMOTE_SETTINGS_UPDATED}" == "true" ]
+then
+  commit_remote_settings_files
   MUST_PUSH=true
 fi
 
