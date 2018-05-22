@@ -1267,14 +1267,8 @@ CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull* lir)
     masm.bind(ool->rejoin());
 }
 
-enum class FieldToBarrier {
-    REGEXP_PENDING_INPUT,
-    REGEXP_MATCHES_INPUT,
-    DEPENDENT_STRING_BASE
-};
-
 static void
-EmitStoreBufferMutation(MacroAssembler& masm, Register holder, FieldToBarrier field,
+EmitStoreBufferMutation(MacroAssembler& masm, Register holder, size_t offset,
                         Register buffer,
                         LiveGeneralRegisterSet& liveVolatiles,
                         void (*fun)(js::gc::StoreBuffer*, js::gc::Cell**))
@@ -1293,19 +1287,7 @@ EmitStoreBufferMutation(MacroAssembler& masm, Register holder, FieldToBarrier fi
     regs.takeUnchecked(holder);
     Register addrReg = regs.takeAny();
 
-    switch (field) {
-      case FieldToBarrier::REGEXP_PENDING_INPUT:
-        masm.computeEffectiveAddress(Address(holder, RegExpStatics::offsetOfPendingInput()), addrReg);
-        break;
-
-      case FieldToBarrier::REGEXP_MATCHES_INPUT:
-        masm.computeEffectiveAddress(Address(holder, RegExpStatics::offsetOfMatchesInput()), addrReg);
-        break;
-
-      case FieldToBarrier::DEPENDENT_STRING_BASE:
-        masm.leaNewDependentStringBase(holder, addrReg);
-        break;
-    }
+    masm.computeEffectiveAddress(Address(holder, offset), addrReg);
 
     bool needExtraReg = !regs.hasAny<GeneralRegisterSet::DefaultType>();
     if (needExtraReg) {
@@ -1328,7 +1310,7 @@ EmitStoreBufferMutation(MacroAssembler& masm, Register holder, FieldToBarrier fi
 // Warning: this function modifies prev and next.
 static void
 EmitPostWriteBarrierS(MacroAssembler& masm,
-                      Register string, FieldToBarrier field,
+                      Register holder, size_t offset,
                       Register prev, Register next,
                       LiveGeneralRegisterSet& liveVolatiles)
 {
@@ -1348,7 +1330,7 @@ EmitPostWriteBarrierS(MacroAssembler& masm,
 
     // buffer->putCell(cellp)
     masm.bind(&putCell);
-    EmitStoreBufferMutation(masm, string, field, storebuffer, liveVolatiles,
+    EmitStoreBufferMutation(masm, holder, offset, storebuffer, liveVolatiles,
                             JSString::addCellAddressToStoreBuffer);
     masm.jump(&exit);
 
@@ -1357,7 +1339,7 @@ EmitPostWriteBarrierS(MacroAssembler& masm,
     masm.branchPtr(Assembler::Equal, prev, ImmWord(0), &exit);
     masm.loadStoreBuffer(prev, storebuffer);
     masm.branchPtr(Assembler::Equal, storebuffer, ImmWord(0), &exit);
-    EmitStoreBufferMutation(masm, string, field, storebuffer, liveVolatiles,
+    EmitStoreBufferMutation(masm, holder, offset, storebuffer, liveVolatiles,
                             JSString::removeCellAddressFromStoreBuffer);
 
     masm.bind(&exit);
@@ -1414,6 +1396,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
                         Register temp1, Register temp2, Register temp3,
                         size_t inputOutputDataStartOffset,
                         RegExpShared::CompilationMode mode,
+                        bool stringsCanBeInNursery,
                         Label* notFound, Label* failure)
 {
     size_t matchPairsStartOffset = inputOutputDataStartOffset + sizeof(irregexp::InputOutputData);
@@ -1609,21 +1592,26 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);
     masm.guardedCallPreBarrier(lazySourceAddress, MIRType::String);
 
-    if (temp1.volatile_())
-        volatileRegs.add(temp1);
+    if (stringsCanBeInNursery) {
+        // Writing into RegExpStatics tenured memory; must post-barrier.
+        if (temp1.volatile_())
+            volatileRegs.add(temp1);
 
-    // Writing into RegExpStatics tenured memory; must post-barrier.
-    masm.loadPtr(pendingInputAddress, temp2);
-    masm.storePtr(input, pendingInputAddress);
-    masm.movePtr(input, temp3);
-    EmitPostWriteBarrierS(masm, temp1, FieldToBarrier::REGEXP_PENDING_INPUT,
-                          temp2 /* prev */, temp3 /* next */, volatileRegs);
+        masm.loadPtr(pendingInputAddress, temp2);
+        masm.storePtr(input, pendingInputAddress);
+        masm.movePtr(input, temp3);
+        EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfPendingInput(),
+                              temp2 /* prev */, temp3 /* next */, volatileRegs);
 
-    masm.loadPtr(matchesInputAddress, temp2);
-    masm.storePtr(input, matchesInputAddress);
-    masm.movePtr(input, temp3);
-    EmitPostWriteBarrierS(masm, temp1, FieldToBarrier::REGEXP_MATCHES_INPUT,
-                          temp2 /* prev */, temp3 /* next */, volatileRegs);
+        masm.loadPtr(matchesInputAddress, temp2);
+        masm.storePtr(input, matchesInputAddress);
+        masm.movePtr(input, temp3);
+        EmitPostWriteBarrierS(masm, temp1, RegExpStatics::offsetOfMatchesInput(),
+                              temp2 /* prev */, temp3 /* next */, volatileRegs);
+    } else {
+        masm.storePtr(input, pendingInputAddress);
+        masm.storePtr(input, matchesInputAddress);
+    }
 
     masm.storePtr(lastIndex, Address(temp1, RegExpStatics::offsetOfLazyIndex()));
     masm.store32(Imm32(1), Address(temp1, RegExpStatics::offsetOfPendingLazyEvaluation()));
@@ -1664,6 +1652,7 @@ public:
     // Caller should call generateFallback after masm.ret(), to generate
     // fallback path.
     void generate(MacroAssembler& masm, const JSAtomState& names,
+                  CompileRuntime* runtime,
                   bool latin1, Register string,
                   Register base, Register temp1, Register temp2,
                   BaseIndex startIndexAddress, BaseIndex limitIndexAddress,
@@ -1676,6 +1665,7 @@ public:
 
 void
 CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
+                                CompileRuntime* runtime,
                                 bool latin1, Register string,
                                 Register base, Register temp1, Register temp2,
                                 BaseIndex startIndexAddress, BaseIndex limitIndexAddress,
@@ -1802,14 +1792,23 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
 
         // Post-barrier the base store, whether it was the direct or indirect
         // base (both will end up in temp1 here).
-        masm.movePtr(ImmWord(0), temp2);
-        LiveGeneralRegisterSet saveRegs(GeneralRegisterSet::Volatile());
-        if (temp1.volatile_())
-            saveRegs.takeUnchecked(temp1);
-        if (temp2.volatile_())
-            saveRegs.takeUnchecked(temp2);
-        EmitPostWriteBarrierS(masm, string, FieldToBarrier::DEPENDENT_STRING_BASE,
-                              temp2 /* prev */, temp1 /* next */, saveRegs);
+        masm.branchPtrInNurseryChunk(Assembler::NotEqual, temp1, temp2, &done);
+
+        LiveRegisterSet regsToSave(RegisterSet::Volatile());
+        regsToSave.takeUnchecked(temp1);
+        regsToSave.takeUnchecked(temp2);
+        regsToSave.addUnchecked(string);
+
+        masm.PushRegsInMask(regsToSave);
+
+        masm.mov(ImmPtr(runtime), temp1);
+
+        masm.setupUnalignedABICall(temp2);
+        masm.passABIArg(temp1);
+        masm.passABIArg(string);
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
+
+        masm.PopRegsInMask(regsToSave);
     }
 
     masm.bind(&done);
@@ -1947,7 +1946,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp5, inputOutputDataStartOffset,
-                                 RegExpShared::Normal, &notFound, &oolEntry))
+                                 RegExpShared::Normal, stringsCanBeInNursery, &notFound, &oolEntry))
     {
         return nullptr;
     }
@@ -2033,7 +2032,9 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
             Label isUndefined, storeDone;
             masm.branch32(Assembler::LessThan, stringIndexAddress, Imm32(0), &isUndefined);
 
-            depStr[isLatin].generate(masm, cx->names(), isLatin, temp3, input, temp4, temp5,
+            depStr[isLatin].generate(masm, cx->names(),
+                                     CompileRuntime::get(cx->runtime()),
+                                     isLatin, temp3, input, temp4, temp5,
                                      stringIndexAddress, stringLimitAddress,
                                      stringsCanBeInNursery,
                                      failure);
@@ -2254,7 +2255,8 @@ JitCompartment::generateRegExpSearcherStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, inputOutputDataStartOffset,
-                                 RegExpShared::Normal, &notFound, &oolEntry))
+                                 RegExpShared::Normal, stringsCanBeInNursery,
+                                 &notFound, &oolEntry))
     {
         return nullptr;
     }
@@ -2406,7 +2408,8 @@ JitCompartment::generateRegExpTesterStub(JSContext* cx)
     Label notFound, oolEntry;
     if (!PrepareAndExecuteRegExp(cx, masm, regexp, input, lastIndex,
                                  temp1, temp2, temp3, 0,
-                                 RegExpShared::MatchOnly, &notFound, &oolEntry))
+                                 RegExpShared::MatchOnly, stringsCanBeInNursery,
+                                 &notFound, &oolEntry))
     {
         return nullptr;
     }
@@ -3977,11 +3980,13 @@ EmitPostWriteBarrier(MacroAssembler& masm, CompileRuntime* runtime, Register obj
     Register runtimereg = regs.takeAny();
     masm.mov(ImmPtr(runtime), runtimereg);
 
-    void (*fun)(JSRuntime*, JSObject*) = isGlobal ? PostGlobalWriteBarrier : PostWriteBarrier;
     masm.setupUnalignedABICall(regs.takeAny());
     masm.passABIArg(runtimereg);
     masm.passABIArg(objreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+    if (isGlobal)
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostGlobalWriteBarrier));
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
 
     masm.bind(&exit);
 }

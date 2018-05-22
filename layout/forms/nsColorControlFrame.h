@@ -47,8 +47,6 @@ public:
                                     int32_t  aModType) override;
   virtual nsContainerFrame* GetContentInsertionFrame() override;
 
-  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
-
   // Refresh the color swatch, using associated input's value
   nsresult UpdateColor();
 
