@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import mozilla.components.browser.search.SearchEngine;
+import org.mozilla.focus.browser.LocalizedContent;
 
 public class UrlUtils {
     public static String normalize(@NonNull String input) {
@@ -188,5 +189,10 @@ public class UrlUtils {
 
     public static String stripSchemeAndSubDomain(String url) {
         return normalize(stripCommonSubdomains(stripScheme(url)));
+    }
+
+    public static boolean isLocalizedContent(@Nullable String url) {
+        return url != null &&
+            (url.equals(LocalizedContent.URL_ABOUT) || url.equals(LocalizedContent.URL_RIGHTS) || url.equals("about:blank"));
     }
 }

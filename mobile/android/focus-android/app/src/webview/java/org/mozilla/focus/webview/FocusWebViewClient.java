@@ -194,8 +194,11 @@ import org.mozilla.focus.web.IWebView;
         }
 
         if (callback != null) {
-            callback.onPageFinished(certificate != null);
-            callback.onSecurityChanged(certificate != null, null, (certificate != null) ? certificate.getIssuedBy().getOName() : null);
+            // The page is secure when the url is a localized content or when the certificate isn't null
+            final boolean isSecure = certificate != null || UrlUtils.isLocalizedContent(view.getUrl());
+
+            callback.onPageFinished(isSecure);
+            callback.onSecurityChanged(isSecure, null, (certificate != null) ? certificate.getIssuedBy().getOName() : null);
             // The URL which is supplied in onPageFinished() could be fake (see #301), but webview's
             // URL is always correct _except_ for error pages
             final String viewURL = view.getUrl();
