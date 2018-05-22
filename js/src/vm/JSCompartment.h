@@ -851,17 +851,12 @@ struct JSCompartment
     void sweepNativeIterators();
     void sweepTemplateObjects();
 
-    void purge();
-
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
-
-    js::DtoaCache dtoaCache;
-    js::NewProxyCache newProxyCache;
 
     // Random number generator for Math.random().
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
@@ -881,10 +876,6 @@ struct JSCompartment
         return offsetof(JSCompartment, regExps);
     }
 
-  private:
-    JSCompartment* thisForCtor() { return this; }
-
-  public:
     //
     // The Debugger observes execution on a frame-by-frame basis. The
     // invariants of JSCompartment's debug mode bits, JSScript::isDebuggee,
@@ -1071,6 +1062,9 @@ class JS::Realm : public JSCompartment
     // WebAssembly state for the realm.
     js::wasm::Realm wasm;
 
+    js::DtoaCache dtoaCache;
+    js::NewProxyCache newProxyCache;
+
     js::ScriptCountsMap* scriptCountsMap = nullptr;
     js::ScriptNameMap* scriptNameMap = nullptr;
     js::DebugScriptMap* debugScriptMap = nullptr;
@@ -1153,6 +1147,8 @@ class JS::Realm : public JSCompartment
 
     void clearScriptCounts();
     void clearScriptNames();
+
+    void purge();
 
     void fixupScriptMapsAfterMovingGC();
 

@@ -759,7 +759,9 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
         table.sweepAfterMinorGC();
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
-    dtoaCache.purge();
+
+    Realm* realm = JS::GetRealmForCompartment(this);
+    realm->dtoaCache.purge();
 }
 
 void
@@ -902,7 +904,7 @@ JSCompartment::fixupAfterMovingGC()
 
     Realm* realm = JS::GetRealmForCompartment(this);
 
-    purge();
+    realm->purge();
     realm->fixupGlobal();
     objectGroups.fixupTablesAfterMovingGC();
     realm->fixupScriptMapsAfterMovingGC();
@@ -994,7 +996,7 @@ Realm::checkScriptMapsAfterMovingGC()
 #endif
 
 void
-JSCompartment::purge()
+Realm::purge()
 {
     dtoaCache.purge();
     newProxyCache.purge();
