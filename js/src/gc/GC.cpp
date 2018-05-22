@@ -4037,7 +4037,7 @@ GCRuntime::purgeRuntime()
 }
 
 bool
-GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
+GCRuntime::shouldPreserveJITCode(Realm* realm, int64_t currentTime,
                                  JS::gcreason::Reason reason, bool canAllocateMoreCode)
 {
     if (cleanUpEverything)
@@ -4047,9 +4047,9 @@ GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
 
     if (alwaysPreserveCode)
         return true;
-    if (JS::GetRealmForCompartment(comp)->preserveJitCode())
+    if (realm->preserveJitCode())
         return true;
-    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
+    if (realm->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
     if (reason == JS::gcreason::DEBUG_GC)
         return true;
