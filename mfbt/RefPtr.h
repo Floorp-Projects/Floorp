@@ -17,6 +17,7 @@
 
 class nsQueryReferent;
 class nsCOMPtr_helper;
+class nsISupports;
 
 namespace mozilla {
 template<class T> class OwningNonNull;
@@ -274,6 +275,14 @@ public:
   {
     MOZ_ASSERT(aRhs, "Null pointer passed to forget!");
     *aRhs = mRawPtr;
+    mRawPtr = nullptr;
+  }
+
+  void
+  forget(nsISupports** aRhs)
+  {
+    MOZ_ASSERT(aRhs, "Null pointer passed to forget!");
+    *aRhs = ToSupports(mRawPtr);
     mRawPtr = nullptr;
   }
 
