@@ -279,5 +279,17 @@ int main(void)
   MOZ_RELEASE_ASSERT(bl9.Size() == 8);
   MOZ_RELEASE_ASSERT(!iter.Done());
 
+  BufferList bl10(0, 0, 8);
+  bl10.WriteBytes("abcdefgh", 8);
+  bl10.WriteBytes("12345678", 8);
+  iter = bl10.Iter();
+  BufferList bl11 = bl10.Extract(iter, 16, &success);
+  MOZ_RELEASE_ASSERT(success);
+  MOZ_RELEASE_ASSERT(bl11.Size() == 16);
+  MOZ_RELEASE_ASSERT(iter.Done());
+  iter = bl11.Iter();
+  MOZ_RELEASE_ASSERT(bl11.ReadBytes(iter, data, 16));
+  MOZ_RELEASE_ASSERT(memcmp(data, "abcdefgh12345678", 16) == 0);
+
   return 0;
 }
