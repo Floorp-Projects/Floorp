@@ -109,7 +109,7 @@ class BytecodeEmitter::NestableControl : public Nestable<BytecodeEmitter::Nestab
     NestableControl(BytecodeEmitter* bce, StatementKind kind)
       : Nestable<NestableControl>(&bce->innermostNestableControl),
         kind_(kind),
-        emitterScope_(bce->innermostEmitterScope)
+        emitterScope_(bce->innermostEmitterScopeNoCheck())
     { }
 
   public:
@@ -448,7 +448,7 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
         // enclosing BCE.
         if ((*bce)->parent) {
             *bce = (*bce)->parent;
-            return (*bce)->innermostEmitterScope;
+            return (*bce)->innermostEmitterScopeNoCheck();
         }
 
         return nullptr;
@@ -482,7 +482,7 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
 
   public:
     explicit EmitterScope(BytecodeEmitter* bce)
-      : Nestable<EmitterScope>(&bce->innermostEmitterScope),
+      : Nestable<EmitterScope>(&bce->innermostEmitterScope_),
         nameCache_(bce->cx->frontendCollectionPool()),
         hasEnvironment_(false),
         environmentChainLength_(0),
@@ -888,7 +888,7 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
                                             Handle<LexicalScope::Data*> bindings)
 {
     MOZ_ASSERT(kind != ScopeKind::NamedLambda && kind != ScopeKind::StrictNamedLambda);
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     if (!ensureCache(bce))
         return false;
@@ -957,7 +957,7 @@ BytecodeEmitter::EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind
 bool
 BytecodeEmitter::EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
     MOZ_ASSERT(funbox->namedLambdaBindings());
 
     if (!ensureCache(bce))
@@ -994,7 +994,7 @@ BytecodeEmitter::EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBo
 bool
 BytecodeEmitter::EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     if (!ensureCache(bce))
         return false;
@@ -1027,7 +1027,7 @@ BytecodeEmitter::EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce)
 bool
 BytecodeEmitter::EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     // If there are parameter expressions, there is an extra var scope.
     if (!funbox->hasExtraBodyVarScope())
@@ -1118,7 +1118,7 @@ BytecodeEmitter::EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce, F
     MOZ_ASSERT(funbox->hasParameterExprs);
     MOZ_ASSERT(funbox->extraVarScopeBindings() ||
                funbox->needsExtraBodyVarEnvironmentRegardlessOfBindings());
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     // The extra var scope is never popped once it's entered. It replaces the
     // function scope as the var emitter scope.
@@ -1204,7 +1204,7 @@ class DynamicBindingIter : public BindingIter
 bool
 BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedContext* globalsc)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     bce->setVarEmitterScope(this);
 
@@ -1264,7 +1264,7 @@ BytecodeEmitter::EmitterScope::enterGlobal(BytecodeEmitter* bce, GlobalSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     bce->setVarEmitterScope(this);
 
@@ -1319,7 +1319,7 @@ BytecodeEmitter::EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext
 bool
 BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedContext* modulesc)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     bce->setVarEmitterScope(this);
 
@@ -1376,7 +1376,7 @@ BytecodeEmitter::EmitterScope::enterModule(BytecodeEmitter* bce, ModuleSharedCon
 bool
 BytecodeEmitter::EmitterScope::enterWith(BytecodeEmitter* bce)
 {
-    MOZ_ASSERT(this == bce->innermostEmitterScope);
+    MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
 
     if (!ensureCache(bce))
         return false;
@@ -1404,7 +1404,7 @@ BytecodeEmitter::EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal)
 {
     // If we aren't leaving the scope due to a non-local jump (e.g., break),
     // we must be the innermost scope.
-    MOZ_ASSERT_IF(!nonLocal, this == bce->innermostEmitterScope);
+    MOZ_ASSERT_IF(!nonLocal, this == bce->innermostEmitterScopeNoCheck());
 
     ScopeKind kind = scope(bce)->kind();
     switch (kind) {
@@ -2268,7 +2268,7 @@ class ForOfLoopControl : public LoopControl
 
     bool emitIteratorCloseInInnermostScope(BytecodeEmitter* bce,
                                            CompletionKind completionKind = CompletionKind::Normal) {
-        return emitIteratorCloseInScope(bce,  *bce->innermostEmitterScope, completionKind);
+        return emitIteratorCloseInScope(bce,  *bce->innermostEmitterScope(), completionKind);
     }
 
     bool emitIteratorCloseInScope(BytecodeEmitter* bce,
@@ -2349,8 +2349,11 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     bodyScopeIndex(UINT32_MAX),
     varEmitterScope(nullptr),
     innermostNestableControl(nullptr),
-    innermostEmitterScope(nullptr),
+    innermostEmitterScope_(nullptr),
     innermostTDZCheckCache(nullptr),
+#ifdef DEBUG
+    unstableEmitterScope(false),
+#endif
     constList(cx),
     scopeList(cx),
     tryNoteList(cx),
@@ -2423,13 +2426,13 @@ BytecodeEmitter::findInnermostNestableControl(Predicate predicate) const
 NameLocation
 BytecodeEmitter::lookupName(JSAtom* name)
 {
-    return innermostEmitterScope->lookup(this, name);
+    return innermostEmitterScope()->lookup(this, name);
 }
 
 Maybe<NameLocation>
 BytecodeEmitter::locationOfNameBoundInScope(JSAtom* name, EmitterScope* target)
 {
-    return innermostEmitterScope->locationBoundInScope(name, target);
+    return innermostEmitterScope()->locationBoundInScope(name, target);
 }
 
 Maybe<NameLocation>
@@ -2904,7 +2907,7 @@ class NonLocalExitControl
       : bce_(bce),
         savedScopeNoteIndex_(bce->scopeNoteList.length()),
         savedDepth_(bce->stackDepth),
-        openScopeNoteIndex_(bce->innermostEmitterScope->noteIndex()),
+        openScopeNoteIndex_(bce->innermostEmitterScope()->noteIndex()),
         kind_(kind)
     { }
 
@@ -2950,8 +2953,10 @@ NonLocalExitControl::prepareForNonLocalJump(BytecodeEmitter::NestableControl* ta
     using NestableControl = BytecodeEmitter::NestableControl;
     using EmitterScope = BytecodeEmitter::EmitterScope;
 
-    EmitterScope* es = bce_->innermostEmitterScope;
+    EmitterScope* es = bce_->innermostEmitterScope();
     int npops = 0;
+
+    AutoCheckUnstableEmitterScope cues(bce_);
 
     // For 'continue', 'break', and 'return' statements, emit IteratorClose
     // bytecode inline. 'continue' statements do not call IteratorClose for
@@ -3075,7 +3080,7 @@ BytecodeEmitter::emitGoto(NestableControl* target, JumpList* jumplist, SrcNoteTy
 Scope*
 BytecodeEmitter::innermostScope() const
 {
-    return innermostEmitterScope->scope(this);
+    return innermostEmitterScope()->scope(this);
 }
 
 bool
@@ -3724,7 +3729,7 @@ BytecodeEmitter::needsImplicitThis()
         return true;
 
     // Otherwise see if the current point is under a 'with'.
-    for (EmitterScope* es = innermostEmitterScope; es; es = es->enclosingInFrame()) {
+    for (EmitterScope* es = innermostEmitterScope(); es; es = es->enclosingInFrame()) {
         if (es->scope(this)->kind() == ScopeKind::With)
             return true;
     }
@@ -5324,7 +5329,7 @@ BytecodeEmitter::emitSetOrInitializeDestructuring(ParseNode* target, Destructuri
                 // destructuring declaration needs to initialize the name in
                 // the function scope. The innermost scope is the var scope,
                 // and its enclosing scope is the function scope.
-                EmitterScope* funScope = innermostEmitterScope->enclosingInFrame();
+                EmitterScope* funScope = innermostEmitterScope()->enclosingInFrame();
                 NameLocation paramLoc = *locationOfNameBoundInScope(name, funScope);
                 if (!emitSetOrInitializeNameAtLocation(name, paramLoc, emitSwapScopeAndRhs, true))
                     return false;
@@ -7399,7 +7404,7 @@ BytecodeEmitter::emitForOf(ParseNode* forOfLoop, EmitterScope* headLexicalEmitte
         DebugOnly<ParseNode*> forOfTarget = forOfHead->pn_kid1;
         MOZ_ASSERT(forOfTarget->isKind(ParseNodeKind::Let) ||
                    forOfTarget->isKind(ParseNodeKind::Const));
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope);
+        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
         MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
 
         if (headLexicalEmitterScope->hasEnvironment()) {
@@ -7596,7 +7601,7 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
         // bindings inducing an environment, recreate the current environment.
         MOZ_ASSERT(forInTarget->isKind(ParseNodeKind::Let) ||
                    forInTarget->isKind(ParseNodeKind::Const));
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope);
+        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
         MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
 
         if (headLexicalEmitterScope->hasEnvironment()) {
@@ -7732,7 +7737,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
             // exists for the head, it must be the innermost one. If that scope
             // has closed-over bindings inducing an environment, recreate the
             // current environment.
-            MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope);
+            MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
             MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
 
             if (headLexicalEmitterScope->hasEnvironment()) {
@@ -7780,7 +7785,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, EmitterScope* headLexicalEmitterSc
 
     // ES 13.7.4.8 step 3.e. The per-iteration freshening.
     if (forLoopRequiresFreshening) {
-        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope);
+        MOZ_ASSERT(headLexicalEmitterScope == innermostEmitterScope());
         MOZ_ASSERT(headLexicalEmitterScope->scope(this)->kind() == ScopeKind::Lexical);
 
         if (headLexicalEmitterScope->hasEnvironment()) {
@@ -10287,7 +10292,7 @@ BytecodeEmitter::emitFunctionFormalParameters(ParseNode* pn)
 {
     ParseNode* funBody = pn->last();
     FunctionBox* funbox = sc->asFunctionBox();
-    EmitterScope* funScope = innermostEmitterScope;
+    EmitterScope* funScope = innermostEmitterScope();
 
     bool hasParameterExprs = funbox->hasParameterExprs;
     bool hasRest = funbox->hasRest();
