@@ -141,6 +141,7 @@ void GraphDriver::SetPreviousDriver(GraphDriver* aPreviousDriver)
 
 ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
   : GraphDriver(aGraphImpl)
+  , mThreadRunning(false)
 { }
 
 class MediaStreamGraphShutdownThreadRunnable : public Runnable {
@@ -289,6 +290,7 @@ SystemClockDriver::IsFallback()
 void
 ThreadedDriver::RunThread()
 {
+  mThreadRunning = true;
   while (true) {
     mIterationStart = IterationEnd();
     mIterationEnd += GetIntervalForIteration();
@@ -334,15 +336,16 @@ ThreadedDriver::RunThread()
       // Enter shutdown mode. The stable-state handler will detect this
       // and complete shutdown if the graph does not get restarted.
       mGraphImpl->SignalMainThreadCleanup();
-      return;
+      break;
     }
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
     if (NextDriver()) {
       LOG(LogLevel::Debug, ("Switching to AudioCallbackDriver"));
       SwitchToNextDriver();
-      return;
+      break;
     }
   }
+  mThreadRunning = false;
 }
 
 MediaTime
@@ -548,6 +551,7 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mAudioInput(nullptr)
   , mAddedMixer(false)
   , mAudioThreadId(std::thread::id())
+  , mAudioThreadRunning(false)
   , mMicrophoneActive(false)
   , mShouldFallbackIfError(false)
   , mFromFallback(false)
@@ -1005,6 +1009,8 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Enter shutdown mode. The stable-state handler will detect this
     // and complete shutdown if the graph does not get restarted.
     mGraphImpl->SignalMainThreadCleanup();
+    // Update the flag before go to drain
+    mAudioThreadRunning = false;
     return aFrames - 1;
   }
 
@@ -1025,6 +1031,7 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     LOG(LogLevel::Debug, ("Switching to system driver."));
     RemoveCallback();
     SwitchToNextDriver();
+    mAudioThreadRunning = false;
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
     return aFrames - 1;
@@ -1044,6 +1051,10 @@ AudioCallbackDriver::StateCallback(cubeb_state aState)
     RemoveCallback();
     FallbackToSystemClockDriver();
   }
+
+  // Clear the flag for the not running
+  // states: stopped, drained, error.
+  mAudioThreadRunning = (aState == CUBEB_STATE_STARTED);
 }
 
 void
