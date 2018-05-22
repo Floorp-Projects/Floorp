@@ -420,7 +420,9 @@ add_task(async function test_evictedOnServerErrors() {
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0);
 
   // The ping should not be persisted.
-  await Assert.rejects(TelemetryStorage.loadPendingPing(pingId), "The ping must not be persisted.");
+  await Assert.rejects(TelemetryStorage.loadPendingPing(pingId),
+                       /TelemetryStorage.loadPendingPing - no ping with id/,
+                       "The ping must not be persisted.");
 
   // Reset the ping handler and submit a new ping.
   PingServer.resetPingHandler();

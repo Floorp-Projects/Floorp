@@ -216,6 +216,7 @@ add_task(async function test_archiveCleanup() {
     // Check that the pruned pings are not on disk anymore.
     for (let prunedInfo of expectedPrunedInfo) {
       await Assert.rejects(TelemetryArchive.promiseArchivedPingById(prunedInfo.id),
+                           /TelemetryStorage.loadArchivedPing - no ping with id/,
                            "Ping " + prunedInfo.id + " should have been pruned.");
       const pingPath =
         TelemetryStorage._testGetArchivedPingPath(prunedInfo.id, prunedInfo.creationDate, PING_TYPE);
