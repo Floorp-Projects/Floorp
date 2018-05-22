@@ -18,10 +18,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-// This is only used on GeckoView.
 #include "mozilla/JSONWriter.h"
-#endif
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -2521,7 +2518,11 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
   return 0;
 }
 
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE: GeckoView specific helpers
+
 namespace base {
 class PersistedSampleSet : public Histogram::SampleSet
 {
@@ -2674,6 +2675,11 @@ internal_ParseHistogramData(JSContext* aCx, JS::HandleId aEntryId,
 }
 
 } // Anonymous namespace
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PUBLIC: GeckoView serialization/deserialization functions.
 
 nsresult
 TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
@@ -3128,4 +3134,3 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
 
   return NS_OK;
 }
-#endif // MOZ_TELEMETRY_GECKOVIEW
