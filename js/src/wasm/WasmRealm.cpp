@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmCompartment.h"
+#include "wasm/WasmRealm.h"
 
 #include "vm/JSCompartment.h"
 #include "wasm/WasmInstance.h"
@@ -26,11 +26,11 @@
 using namespace js;
 using namespace wasm;
 
-Compartment::Compartment(JSRuntime* rt)
+wasm::Realm::Realm(JSRuntime* rt)
   : runtime_(rt)
 {}
 
-Compartment::~Compartment()
+wasm::Realm::~Realm()
 {
     MOZ_ASSERT(instances_.empty());
 }
@@ -61,16 +61,16 @@ struct InstanceComparator
 };
 
 bool
-Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
+wasm::Realm::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceObj)
 {
     MOZ_ASSERT(runtime_ == cx->runtime());
 
     Instance& instance = instanceObj->instance();
-    MOZ_ASSERT(this == &instance.compartment()->wasm);
+    MOZ_ASSERT(this == &instance.realm()->wasm);
 
     instance.ensureProfilingLabels(cx->runtime()->geckoProfiler().enabled());
 
-    if (instance.debugEnabled() && instance.compartment()->debuggerObservesAllExecution())
+    if (instance.debugEnabled() && instance.realm()->debuggerObservesAllExecution())
         instance.ensureEnterFrameTrapsState(cx, true);
 
     {
@@ -99,7 +99,7 @@ Compartment::registerInstance(JSContext* cx, HandleWasmInstanceObject instanceOb
 }
 
 void
-Compartment::unregisterInstance(Instance& instance)
+wasm::Realm::unregisterInstance(Instance& instance)
 {
     InstanceComparator cmp(instance);
     size_t index;
@@ -113,16 +113,16 @@ Compartment::unregisterInstance(Instance& instance)
 }
 
 void
-Compartment::ensureProfilingLabels(bool profilingEnabled)
+wasm::Realm::ensureProfilingLabels(bool profilingEnabled)
 {
     for (Instance* instance : instances_)
         instance->ensureProfilingLabels(profilingEnabled);
 }
 
 void
-Compartment::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* compartmentTables)
+wasm::Realm::addSizeOfExcludingThis(MallocSizeOf mallocSizeOf, size_t* realmTables)
 {
-    *compartmentTables += instances_.sizeOfExcludingThis(mallocSizeOf);
+    *realmTables += instances_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void

@@ -64,7 +64,6 @@ JSCompartment::JSCompartment(Zone* zone)
     objectMetadataTable(nullptr),
     innerViews(zone),
     lazyArrayBuffers(nullptr),
-    wasm(zone->runtimeFromMainThread()),
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
@@ -91,7 +90,8 @@ JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
   : JSCompartment(zone),
     creationOptions_(options.creationOptions()),
     behaviors_(options.behaviors()),
-    global_(nullptr)
+    global_(nullptr),
+    wasm(zone->runtimeFromMainThread())
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
