@@ -92,6 +92,9 @@ with Files("test/tabs/**"):
 with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("test/trackingUI/**"):
+    BUG_COMPONENT = ("Firefox", "Tracking Protection")
+
 with Files("test/urlbar/**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
