@@ -285,6 +285,8 @@ def trigger_action_callback(task_group_id, task_id, input, callback, parameters,
     # that do need it
     if task_id:
         task = taskcluster.get_task_definition(task_id)
+    else:
+        task = None
 
     cb(Parameters(**parameters), graph_config, input, task_group_id, task_id, task)
 
