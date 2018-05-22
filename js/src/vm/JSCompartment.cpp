@@ -69,9 +69,6 @@ JSCompartment::JSCompartment(Zone* zone)
     debugModeBits(0),
     validAccessPtr(nullptr),
     randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
-    scriptCountsMap(nullptr),
-    scriptNameMap(nullptr),
-    debugScriptMap(nullptr),
     debugEnvs(nullptr),
     enumerators(nullptr),
     scheduledForDestruction(false),
@@ -104,9 +101,6 @@ JSCompartment::~JSCompartment()
         rt->lcovOutput().writeLCovResult(lcovOutput);
 
     js_delete(jitCompartment_);
-    js_delete(scriptCountsMap);
-    js_delete(scriptNameMap);
-    js_delete(debugScriptMap);
     js_delete(debugEnvs);
     js_delete(objectMetadataTable);
     js_delete(lazyArrayBuffers);
@@ -121,6 +115,13 @@ JSCompartment::~JSCompartment()
 #endif
 
     runtime_->numCompartments--;
+}
+
+Realm::~Realm()
+{
+    js_delete(scriptCountsMap);
+    js_delete(scriptNameMap);
+    js_delete(debugScriptMap);
 }
 
 bool
@@ -904,7 +905,7 @@ JSCompartment::fixupAfterMovingGC()
     purge();
     realm->fixupGlobal();
     objectGroups.fixupTablesAfterMovingGC();
-    fixupScriptMapsAfterMovingGC();
+    realm->fixupScriptMapsAfterMovingGC();
 
     // Sweep the wrapper map to update values (wrapper objects) in this
     // compartment that may have been moved.
@@ -920,7 +921,7 @@ Realm::fixupGlobal()
 }
 
 void
-JSCompartment::fixupScriptMapsAfterMovingGC()
+Realm::fixupScriptMapsAfterMovingGC()
 {
     // Map entries are removed by JSScript::finalize, but we need to update the
     // script pointers here in case they are moved by the GC.
@@ -952,11 +953,12 @@ JSCompartment::fixupScriptMapsAfterMovingGC()
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void
-JSCompartment::checkScriptMapsAfterMovingGC()
+Realm::checkScriptMapsAfterMovingGC()
 {
     if (scriptCountsMap) {
         for (auto r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
             JSScript* script = r.front().key();
+            MOZ_ASSERT(script->realm() == this);
             CheckGCThingAfterMovingGC(script);
             auto ptr = scriptCountsMap->lookup(script);
             MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
@@ -966,6 +968,7 @@ JSCompartment::checkScriptMapsAfterMovingGC()
     if (scriptNameMap) {
         for (auto r = scriptNameMap->all(); !r.empty(); r.popFront()) {
             JSScript* script = r.front().key();
+            MOZ_ASSERT(script->realm() == this);
             CheckGCThingAfterMovingGC(script);
             auto ptr = scriptNameMap->lookup(script);
             MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
@@ -975,6 +978,7 @@ JSCompartment::checkScriptMapsAfterMovingGC()
     if (debugScriptMap) {
         for (auto r = debugScriptMap->all(); !r.empty(); r.popFront()) {
             JSScript* script = r.front().key();
+            MOZ_ASSERT(script->realm() == this);
             CheckGCThingAfterMovingGC(script);
             DebugScript* ds = r.front().value();
             for (uint32_t i = 0; i < ds->numSites; i++) {
@@ -1227,8 +1231,9 @@ JSCompartment::updateDebuggerObservesCoverage()
     if (collectCoverage())
         return;
 
-    clearScriptCounts();
-    clearScriptNames();
+    Realm* realm = JS::GetRealmForCompartment(this);
+    realm->clearScriptCounts();
+    realm->clearScriptNames();
 }
 
 bool
@@ -1253,13 +1258,13 @@ JSCompartment::collectCoverageForDebug() const
 }
 
 void
-JSCompartment::clearScriptCounts()
+Realm::clearScriptCounts()
 {
     if (!scriptCountsMap)
         return;
 
     // Clear all hasScriptCounts_ flags of JSScript, in order to release all
-    // ScriptCounts entry of the current compartment.
+    // ScriptCounts entries of the current realm.
     for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
         ScriptCounts* value = r.front().value();
         r.front().key()->takeOverScriptCountsMapEntry(value);
@@ -1271,7 +1276,7 @@ JSCompartment::clearScriptCounts()
 }
 
 void
-JSCompartment::clearScriptNames()
+Realm::clearScriptNames()
 {
     if (!scriptNameMap)
         return;

@@ -8102,27 +8102,27 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
     atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
 
     // Merge script name maps in the target compartment's map.
-    if (rt->lcovOutput().isEnabled() && source->scriptNameMap) {
+    if (rt->lcovOutput().isEnabled() && sourceRealm->scriptNameMap) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
 
-        if (!target->scriptNameMap) {
-            target->scriptNameMap = cx->new_<ScriptNameMap>();
+        if (!targetRealm->scriptNameMap) {
+            targetRealm->scriptNameMap = cx->new_<ScriptNameMap>();
 
-            if (!target->scriptNameMap)
+            if (!targetRealm->scriptNameMap)
                 oomUnsafe.crash("Failed to create a script name map.");
 
-            if (!target->scriptNameMap->init())
+            if (!targetRealm->scriptNameMap->init())
                 oomUnsafe.crash("Failed to initialize a script name map.");
         }
 
-        for (ScriptNameMap::Range r = source->scriptNameMap->all(); !r.empty(); r.popFront()) {
+        for (ScriptNameMap::Range r = sourceRealm->scriptNameMap->all(); !r.empty(); r.popFront()) {
             JSScript* key = r.front().key();
             const char* value = r.front().value();
-            if (!target->scriptNameMap->putNew(key, value))
+            if (!targetRealm->scriptNameMap->putNew(key, value))
                 oomUnsafe.crash("Failed to add an entry in the script name map.");
         }
 
-        source->scriptNameMap->clear();
+        sourceRealm->scriptNameMap->clear();
     }
 
     // The source compartment is now completely empty, and is the only
@@ -8469,13 +8469,14 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
                 table->checkAfterMovingGC();
         }
     }
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->objectGroups.checkTablesAfterMovingGC();
-        c->dtoaCache.checkCacheAfterMovingGC();
-        c->checkWrapperMapAfterMovingGC();
-        c->checkScriptMapsAfterMovingGC();
-        if (c->debugEnvs)
-            c->debugEnvs->checkHashTablesAfterMovingGC();
+
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
+        r->objectGroups.checkTablesAfterMovingGC();
+        r->dtoaCache.checkCacheAfterMovingGC();
+        JS::GetCompartmentForRealm(r)->checkWrapperMapAfterMovingGC();
+        r->checkScriptMapsAfterMovingGC();
+        if (r->debugEnvs)
+            r->debugEnvs->checkHashTablesAfterMovingGC();
     }
 }
 #endif

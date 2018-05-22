@@ -706,7 +706,6 @@ struct JSCompartment
 
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
-    void checkScriptMapsAfterMovingGC();
 #endif
 
     /*
@@ -856,7 +855,6 @@ struct JSCompartment
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
-    void fixupScriptMapsAfterMovingGC();
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
 
@@ -976,8 +974,6 @@ struct JSCompartment
     bool collectCoverage() const;
     bool collectCoverageForDebug() const;
     bool collectCoverageForPGO() const;
-    void clearScriptCounts();
-    void clearScriptNames();
 
     bool needsDelazificationForDebugger() const {
         return debugModeBits & DebuggerNeedsDelazification;
@@ -1001,11 +997,6 @@ struct JSCompartment
     void sweepBreakpoints(js::FreeOp* fop);
 
   public:
-    js::ScriptCountsMap* scriptCountsMap;
-    js::ScriptNameMap* scriptNameMap;
-
-    js::DebugScriptMap* debugScriptMap;
-
     /* Bookkeeping information for debug scope objects. */
     js::DebugEnvironments* debugEnvs;
 
@@ -1080,7 +1071,12 @@ class JS::Realm : public JSCompartment
     // WebAssembly state for the realm.
     js::wasm::Realm wasm;
 
+    js::ScriptCountsMap* scriptCountsMap = nullptr;
+    js::ScriptNameMap* scriptNameMap = nullptr;
+    js::DebugScriptMap* debugScriptMap = nullptr;
+
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
+    ~Realm();
 
     MOZ_MUST_USE bool init(JSContext* maybecx);
     void destroy(js::FreeOp* fop);
@@ -1154,6 +1150,15 @@ class JS::Realm : public JSCompartment
      * This method clears out tables of roots in preparation for the final GC.
      */
     void finishRoots();
+
+    void clearScriptCounts();
+    void clearScriptNames();
+
+    void fixupScriptMapsAfterMovingGC();
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkScriptMapsAfterMovingGC();
+#endif
 
     // Add a name to [[VarNames]].  Reports OOM on failure.
     MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
