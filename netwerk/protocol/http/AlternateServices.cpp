@@ -46,6 +46,12 @@ SchemeIsHTTPS(const nsACString &originScheme, bool &outIsHTTPS)
   return NS_OK;
 }
 
+bool
+AltSvcMapping::AcceptableProxy(nsProxyInfo *proxyInfo)
+{
+  return !proxyInfo || proxyInfo->IsDirect() || proxyInfo->IsSOCKS();
+}
+
 void
 AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                              const nsCString &originHost, int32_t originPort,
@@ -59,7 +65,7 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
     return;
   }
 
-  if (proxyInfo && !proxyInfo->IsDirect()) {
+  if (!AcceptableProxy(proxyInfo)) {
     LOG(("AltSvcMapping::ProcessHeader ignoring due to proxy\n"));
     return;
   }
