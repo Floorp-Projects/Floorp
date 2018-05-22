@@ -209,6 +209,20 @@
           </toolbarbutton>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
+        <toolbaritem>
+          <toolbarbutton id="appMenu-tp-label"
+                         tooltiptext="&trackingProtection.tooltip;"
+                         class="subviewbutton subviewbutton-iconic"
+                         oncommand="TrackingProtection.openPreferences();"
+                         label="&trackingProtection.title;"/>
+          <toolbarseparator orient="vertical"/>
+          <toolbarbutton id="appMenu-tp-toggle"
+                         closemenu="none"
+                         class="subviewkeynav"
+                         observes="trackingProtectionBroadcaster"
+                         oncommand="TrackingProtection.onGlobalToggleCommand();" />
+        </toolbaritem>
+        <toolbarseparator />
         <toolbarbutton id="appMenu-new-window-button"
                        class="subviewbutton subviewbutton-iconic"
                        label="&newNavigatorCmd.label;"
