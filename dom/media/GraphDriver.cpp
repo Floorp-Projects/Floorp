@@ -64,20 +64,15 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
 
 void GraphDriver::SwitchAtNextIteration(GraphDriver* aNextDriver)
 {
+  MOZ_ASSERT(aNextDriver);
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
+
   LOG(LogLevel::Debug,
       ("Switching to new driver: %p (%s)",
        aNextDriver,
        aNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
                                             : "SystemClockDriver"));
-  if (mNextDriver &&
-      mNextDriver != GraphImpl()->CurrentDriver()) {
-    LOG(LogLevel::Debug,
-        ("Discarding previous next driver: %p (%s)",
-         mNextDriver.get(),
-         mNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
-                                              : "SystemClockDriver"));
-  }
+
   SetNextDriver(aNextDriver);
 }
 
@@ -123,6 +118,18 @@ GraphDriver* GraphDriver::PreviousDriver()
 void GraphDriver::SetNextDriver(GraphDriver* aNextDriver)
 {
   GraphImpl()->GetMonitor().AssertCurrentThreadOwns();
+  MOZ_ASSERT(aNextDriver != this);
+  MOZ_ASSERT(aNextDriver != mNextDriver);
+
+  if (mNextDriver &&
+      mNextDriver != GraphImpl()->CurrentDriver()) {
+    LOG(LogLevel::Debug,
+        ("Discarding previous next driver: %p (%s)",
+         mNextDriver.get(),
+         mNextDriver->AsAudioCallbackDriver() ? "AudioCallbackDriver"
+                                              : "SystemClockDriver"));
+  }
+
   mNextDriver = aNextDriver;
 }
 
