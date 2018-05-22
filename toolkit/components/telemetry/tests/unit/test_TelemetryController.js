@@ -542,6 +542,7 @@ add_task(async function test_sendNewProfile() {
 
   // Check that is not sent with the pingsender during startup.
   Assert.throws(() => req.getHeader("X-PingSender-Version"),
+                /NS_ERROR_NOT_AVAILABLE/,
                 "Should not have used the pingsender.");
 
   // Make sure that the new-profile ping is sent at shutdown if it wasn't sent before.
