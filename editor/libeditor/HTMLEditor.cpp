@@ -75,6 +75,8 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+const char16_t kNBSP = 160;
+
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool
 IsLinkTag(const nsString& s)
