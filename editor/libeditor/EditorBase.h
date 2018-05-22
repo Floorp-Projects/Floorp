@@ -198,6 +198,16 @@ class EditorBase : public nsIEditor
                  , public nsSupportsWeakReference
 {
 public:
+  /****************************************************************************
+   * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
+   *       classes under libeditor except EditorEventListener and
+   *       HTMLEditorEventListener because each public method which may fire
+   *       eEditorInput event will need to instantiate new stack class for
+   *       managing input type value of eEditorInput and cache some objects
+   *       for smarter handling.  In other words, when you add new root
+   *       method to edit the DOM tree, you can make your new method public.
+   ****************************************************************************/
+
   typedef dom::Element Element;
   typedef dom::Selection Selection;
   typedef dom::Text Text;
@@ -660,6 +670,15 @@ public:
   void SyncRealTimeSpell();
 
 protected: // May be called by friends.
+  /****************************************************************************
+   * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
+   * part of handling edit actions are allowed to call the following protected
+   * methods.  However, those methods won't prepare caches of some objects
+   * which are necessary for them.  So, if you want some following methods
+   * to do that for you, you need to create a wrapper method in public scope
+   * and call it.
+   ****************************************************************************/
+
   /**
    * InsertTextWithTransaction() inserts aStringToInsert to aPointToInsert or
    * better insertion point around it.  If aPointToInsert isn't in a text node,
