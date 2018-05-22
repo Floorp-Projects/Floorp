@@ -68,10 +68,6 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         # assert len(self.ping_list) == 1
         return self.ping_list.pop()
 
-    def toggle_update_pref(self):
-        value = self.marionette.get_pref('app.update.enabled')
-        self.marionette.enforce_gecko_prefs({'app.update.enabled': not value})
-
     def restart_browser(self):
         """Restarts browser while maintaining the same profile and session."""
         self.restart(clean=False, in_app=True)
