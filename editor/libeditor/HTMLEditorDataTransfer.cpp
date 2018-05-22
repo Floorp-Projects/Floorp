@@ -743,7 +743,7 @@ HTMLEditor::StripFormattingNodes(nsIContent& aNode,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::PrepareTransferable(nsITransferable** aTransferable)
 {
   return NS_OK;

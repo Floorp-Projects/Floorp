@@ -534,7 +534,7 @@ HTMLEditor::SetFlags(uint32_t aFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InitRules()
 {
   if (!mRules) {

@@ -328,7 +328,7 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditor::InitRules()
 {
   if (!mRules) {
