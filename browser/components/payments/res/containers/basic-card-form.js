@@ -155,8 +155,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
     this.form.querySelector(".billingAddressRow").hidden = false;
 
-    if (basicCardPage.addressesModified) {
-      let addressGuid = state["address-page"].guid;
+    if (basicCardPage.billingAddressGUID) {
+      let addressGuid = basicCardPage.billingAddressGUID;
       let billingAddressSelect = this.form.querySelector("#billingAddressGUID");
       billingAddressSelect.value = addressGuid;
     }
@@ -186,6 +186,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
           page: {
             id: "address-page",
             previousId: "basic-card-page",
+            selectedStateKey: ["basic-card-page", "billingAddressGUID"],
           },
           "address-page": {
             guid: null,
@@ -256,7 +257,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
         },
       },
       preserveOldProperties: true,
-      selectedStateKey: "selectedPaymentCard",
+      selectedStateKey: ["selectedPaymentCard"],
       successStateChange: {
         page: {
           id: "payment-summary",

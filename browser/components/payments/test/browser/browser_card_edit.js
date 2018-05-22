@@ -107,6 +107,12 @@ add_task(async function test_add_link() {
              Object.keys(state.savedAddresses).length == 1;
     }, "Check address was added and we're back on basic-card page (add)");
 
+    ok(state["basic-card-page"].preserveFieldValues,
+       "preserveFieldValues should be set when coming back from address-page");
+
+    ok(state["basic-card-page"].billingAddressGUID,
+       "billingAddressGUID should be set when coming back from address-page");
+
     is(billingAddressSelect.childElementCount, 2,
        "Two options should exist in the billingAddressSelect");
     let selectedOption =
@@ -114,6 +120,11 @@ add_task(async function test_add_link() {
     let selectedAddressGuid = selectedOption.value;
     is(selectedAddressGuid, Object.values(state.savedAddresses)[0].guid,
        "The select should have the new address selected");
+
+    for (let [key, val] of Object.entries(card)) {
+      let field = content.document.getElementById(key);
+      is(field.value, val, `Field #${key} should have value`);
+    }
 
     content.document.querySelector("basic-card-form button:last-of-type").click();
 
