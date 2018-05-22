@@ -46,6 +46,7 @@ enum FunctionHookId
   , ID_QueryCredentialsAttributesA
   , ID_FreeCredentialsHandle
   , ID_PrintDlgW
+  , ID_CreateMutexW
   , ID_FunctionHookCount
 #else // defined(XP_WIN)
     ID_FunctionHookCount

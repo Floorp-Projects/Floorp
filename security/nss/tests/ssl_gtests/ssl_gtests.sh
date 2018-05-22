@@ -47,6 +47,7 @@ make_cert() {
     dsa) type_args='-g 1024' ;;
     rsa) type_args='-g 1024' ;;
     rsa2048) type_args='-g 2048';type=rsa ;;
+    rsa8192) type_args='-g 8192';type=rsa ;;
     rsapss) type_args='-g 1024 --pss';type=rsa ;;
     p256) type_args='-q nistp256';type=ec ;;
     p384) type_args='-q secp384r1';type=ec ;;
@@ -83,6 +84,7 @@ ssl_gtest_certs() {
   make_cert client rsa sign
   make_cert rsa rsa sign kex
   make_cert rsa2048 rsa2048 sign kex
+  make_cert rsa8192 rsa8192 sign kex
   make_cert rsa_sign rsa sign
   make_cert rsa_pss rsapss sign
   make_cert rsa_decrypt rsa kex

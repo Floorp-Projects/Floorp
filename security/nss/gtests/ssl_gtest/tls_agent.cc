@@ -33,6 +33,7 @@ const char* TlsAgent::states[] = {"INIT", "CONNECTING", "CONNECTED", "ERROR"};
 
 const std::string TlsAgent::kClient = "client";    // both sign and encrypt
 const std::string TlsAgent::kRsa2048 = "rsa2048";  // bigger
+const std::string TlsAgent::kRsa8192 = "rsa8192";  // biggest allowed
 const std::string TlsAgent::kServerRsa = "rsa";    // both sign and encrypt
 const std::string TlsAgent::kServerRsaSign = "rsa_sign";
 const std::string TlsAgent::kServerRsaPss = "rsa_pss";

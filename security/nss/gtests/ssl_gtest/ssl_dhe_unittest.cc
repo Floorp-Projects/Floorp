@@ -475,6 +475,45 @@ TEST_P(TlsConnectTls13, NamedGroupMismatch13) {
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 }
 
+// Replace the key share in the server key exchange message with one that's
+// larger than 8192 bits.
+class TooLongDHEServerKEXFilter : public TlsHandshakeFilter {
+ public:
+  TooLongDHEServerKEXFilter(const std::shared_ptr<TlsAgent>& server)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    // Replace the server key exchange message very large DH shares that are
+    // not supported by NSS.
+    const uint32_t share_len = 0x401;
+    const uint8_t zero_share[share_len] = {0x80};
+    size_t offset = 0;
+    // Write dh_p.
+    offset = output->Write(offset, share_len, 2);
+    offset = output->Write(offset, zero_share, share_len);
+    // Write dh_g.
+    offset = output->Write(offset, share_len, 2);
+    offset = output->Write(offset, zero_share, share_len);
+    // Write dh_Y.
+    offset = output->Write(offset, share_len, 2);
+    offset = output->Write(offset, zero_share, share_len);
+
+    return CHANGE;
+  }
+};
+
+TEST_P(TlsConnectGenericPre13, TooBigDHGroup) {
+  EnableOnlyDheCiphers();
+  MakeTlsFilter<TooLongDHEServerKEXFilter>(server_);
+  client_->SetOption(SSL_REQUIRE_DH_NAMED_GROUPS, PR_FALSE);
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  client_->CheckErrorCode(SSL_ERROR_DH_KEY_TOO_LONG);
+}
+
 // Even though the client doesn't have DHE groups enabled the server assumes it
 // does. The client requires named groups and thus does not accept FF3072 as
 // custom group in contrast to the previous test.
