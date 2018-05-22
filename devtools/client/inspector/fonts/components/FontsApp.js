@@ -49,6 +49,7 @@ class FontsApp extends PureComponent {
         fontEditor,
         onInstanceChange,
         onPropertyChange,
+        onToggleFontHighlight,
       }),
       FontOverview({
         fontData,

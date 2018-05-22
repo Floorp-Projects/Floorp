@@ -1798,19 +1798,18 @@ impl Renderer {
         // Pull any pending results and return the most recent.
         while let Ok(msg) = self.result_rx.try_recv() {
             match msg {
+                ResultMsg::PublishPipelineInfo(mut pipeline_info) => {
+                    for (pipeline_id, epoch) in pipeline_info.epochs {
+                        self.pipeline_info.epochs.insert(pipeline_id, epoch);
+                    }
+                    self.pipeline_info.removed_pipelines.extend(pipeline_info.removed_pipelines.drain(..));
+                }
                 ResultMsg::PublishDocument(
                     document_id,
                     mut doc,
                     texture_update_list,
                     profile_counters,
                 ) => {
-                    // Update the list of available epochs for use during reftests.
-                    // This is a workaround for https://github.com/servo/servo/issues/13149.
-                    for (pipeline_id, epoch) in &doc.pipeline_info.epochs {
-                        self.pipeline_info.epochs.insert(*pipeline_id, *epoch);
-                    }
-                    self.pipeline_info.removed_pipelines.extend(doc.pipeline_info.removed_pipelines.drain(..));
-
                     // Add a new document to the active set, expressed as a `Vec` in order
                     // to re-order based on `DocumentLayer` during rendering.
                     match self.active_documents.iter().position(|&(id, _)| id == document_id) {

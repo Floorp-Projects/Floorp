@@ -76,8 +76,7 @@ this.pageAction = class extends ExtensionAPI {
                                  "or not in your page_action options.");
     }
 
-    this.tabContext = new TabContext(tab => Object.create(this.defaults),
-                                     extension);
+    this.tabContext = new TabContext(tab => this.defaults);
 
     this.tabContext.on("location-change", this.handleLocationChange.bind(this)); // eslint-disable-line mozilla/balanced-listeners
 

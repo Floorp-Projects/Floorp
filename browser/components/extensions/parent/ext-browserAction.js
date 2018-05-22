@@ -103,10 +103,10 @@ this.browserAction = class extends ExtensionAPI {
     this.tabContext = new TabContext(target => {
       let window = target.ownerGlobal;
       if (target === window) {
-        return Object.create(this.globals);
+        return this.globals;
       }
-      return Object.create(this.tabContext.get(window));
-    }, extension);
+      return this.tabContext.get(window);
+    });
 
     // eslint-disable-next-line mozilla/balanced-listeners
     this.tabContext.on("location-change", this.handleLocationChange.bind(this));

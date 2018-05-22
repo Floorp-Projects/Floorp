@@ -24,6 +24,13 @@ class FontOverview extends PureComponent {
     };
   }
 
+  constructor(props) {
+    super(props);
+    this.onToggleFontHighlightGlobal = (font, show) => {
+      this.props.onToggleFontHighlight(font, show, false);
+    };
+  }
+
   renderElementFonts() {
     let {
       fontData,
@@ -37,7 +44,6 @@ class FontOverview extends PureComponent {
       FontList({
         fonts,
         fontOptions,
-        isCurrentElementFonts: true,
         onPreviewFonts,
         onToggleFontHighlight,
       })
@@ -55,7 +61,6 @@ class FontOverview extends PureComponent {
       fontData,
       fontOptions,
       onPreviewFonts,
-      onToggleFontHighlight,
     } = this.props;
     let { otherFonts } = fontData;
 
@@ -71,9 +76,8 @@ class FontOverview extends PureComponent {
           componentProps: {
             fontOptions,
             fonts: otherFonts,
-            isCurrentElementFonts: false,
             onPreviewFonts,
-            onToggleFontHighlight,
+            onToggleFontHighlight: this.onToggleFontHighlightGlobal
           },
           opened: false
         }

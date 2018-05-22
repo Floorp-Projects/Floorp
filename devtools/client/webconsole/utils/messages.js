@@ -106,16 +106,26 @@ function transformConsoleAPICallPacket(packet) {
         type = MESSAGE_TYPE.NULL_MESSAGE;
       }
       break;
+    case "timeLog":
     case "timeEnd":
-      parameters = null;
       if (timer && timer.error) {
+        parameters = null;
         messageText = l10n.getFormatStr(timer.error, [timer.name]);
         level = MESSAGE_LEVEL.WARN;
       } else if (timer) {
-        // We show the duration to users when calls console.timeEnd() is called,
+        // We show the duration to users when calls console.timeLog/timeEnd is called,
         // if corresponding console.time() was called before.
         let duration = Math.round(timer.duration * 100) / 100;
-        messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
+        if (type === "timeEnd") {
+          messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
+          parameters = null;
+        } else if (type === "timeLog") {
+          const [, ...rest] = parameters;
+          parameters = [
+            l10n.getFormatStr("timeLog", [timer.name, duration]),
+            ...rest,
+          ];
+        }
       } else {
         // If the `timer` property does not exists, we don't output anything.
         type = MESSAGE_TYPE.NULL_MESSAGE;

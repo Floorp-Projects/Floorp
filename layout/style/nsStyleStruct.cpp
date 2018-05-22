@@ -4619,6 +4619,8 @@ nsStyleUserInterface::nsStyleUserInterface(const nsPresContext* aContext)
   , mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO)
   , mCursor(NS_STYLE_CURSOR_AUTO)
   , mCaretColor(StyleComplexColor::Auto())
+  , mScrollbarFaceColor(StyleComplexColor::Auto())
+  , mScrollbarTrackColor(StyleComplexColor::Auto())
 {
   MOZ_COUNT_CTOR(nsStyleUserInterface);
 }
@@ -4631,6 +4633,8 @@ nsStyleUserInterface::nsStyleUserInterface(const nsStyleUserInterface& aSource)
   , mCursor(aSource.mCursor)
   , mCursorImages(aSource.mCursorImages)
   , mCaretColor(aSource.mCaretColor)
+  , mScrollbarFaceColor(aSource.mScrollbarFaceColor)
+  , mScrollbarTrackColor(aSource.mScrollbarTrackColor)
 {
   MOZ_COUNT_CTOR(nsStyleUserInterface);
 }
@@ -4699,7 +4703,9 @@ nsStyleUserInterface::CalcDifference(const nsStyleUserInterface& aNewData) const
     hint |= nsChangeHint_NeutralChange;
   }
 
-  if (mCaretColor != aNewData.mCaretColor) {
+  if (mCaretColor != aNewData.mCaretColor ||
+      mScrollbarFaceColor != aNewData.mScrollbarFaceColor ||
+      mScrollbarTrackColor != aNewData.mScrollbarTrackColor) {
     hint |= nsChangeHint_RepaintFrame;
   }
 

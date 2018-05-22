@@ -66,6 +66,21 @@ extern mozilla::LazyLogModule gWidgetDrawLog;
 
 #endif /* MOZ_LOGGING */
 
+#ifdef MOZ_WAYLAND
+class nsWaylandDragContext;
+
+gboolean
+WindowDragMotionHandler(GtkWidget *aWidget, GdkDragContext *aDragContext,
+                        nsWaylandDragContext *aWaylandDragContext,
+                        gint aX, gint aY, guint aTime);
+gboolean
+WindowDragDropHandler(GtkWidget *aWidget, GdkDragContext *aDragContext,
+                      nsWaylandDragContext *aWaylandDragContext, gint aX, gint aY,
+                      guint aTime);
+void
+WindowDragLeaveHandler(GtkWidget *aWidget);
+#endif
+
 class gfxPattern;
 
 namespace mozilla {

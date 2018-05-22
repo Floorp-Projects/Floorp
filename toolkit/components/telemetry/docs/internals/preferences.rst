@@ -181,6 +181,17 @@ Data-choices notification
 
   This is the only channel-specific version that we currently use for the minimum policy version.
 
+GeckoView
+---------
+
+``toolkit.telemetry.isGeckoViewMode``
+
+   Whether or not Telemetry needs to run in :doc:`GeckoView <../internals/geckoview>` mode. If true, measurements persistence is enabled. Defaults to false on all products except GeckoView.
+
+``toolkit.telemetry.geckoPersistenceTimeout``
+
+   The interval that governs how frequently measurements are saved to disk, in milliseconds. Defaults to 60000 (60 seconds).
+
 Testing
 -------
 

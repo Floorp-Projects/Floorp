@@ -873,17 +873,19 @@ stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
   "private": false
 }));
 
-stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
+stubPreparedMessages.set(`console.timeLog('bar') - 1`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "console-api",
-  "timeStamp": 1502884924759,
-  "type": "timeEnd",
+  "timeStamp": 1526920999996,
+  "type": "timeLog",
   "helperType": null,
   "level": "log",
-  "messageText": "bar: 1.21ms",
-  "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":4,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":\"bar: 1.21ms\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false}",
+  "messageText": null,
+  "parameters": [
+    "bar: 1ms"
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":4,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":null,\"parameters\":[\"bar: 1ms\"],\"source\":\"console-api\",\"type\":\"timeLog\",\"userProvidedStyles\":[],\"private\":false}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -899,21 +901,126 @@ stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
   "private": false
 }));
 
-stubPreparedMessages.set(`timerDoesntExist`, new ConsoleMessage({
+stubPreparedMessages.set(`console.timeLog('bar') - 2`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1526920999996,
+  "type": "timeLog",
+  "helperType": null,
+  "level": "log",
+  "messageText": null,
+  "parameters": [
+    "bar: 1ms",
+    "second call",
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj34",
+      "class": "Object",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 1,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "state": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": 1
+          }
+        },
+        "ownSymbols": [],
+        "ownPropertiesLength": 1,
+        "ownSymbolsLength": 0,
+        "safeGetterValues": {}
+      }
+    }
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":5,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":null,\"parameters\":[\"bar: 1ms\",\"second call\",{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj34\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"state\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}}],\"source\":\"console-api\",\"type\":\"timeLog\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 5,
+    "column": 1
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
+stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
   "id": "1",
   "allowRepeating": true,
   "source": "console-api",
   "timeStamp": 1502884924759,
   "type": "timeEnd",
   "helperType": null,
-  "level": "warn",
-  "messageText": "Timer “bar” doesn’t exist.",
+  "level": "log",
+  "messageText": "bar: 1.21ms",
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":5,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"warn\",\"messageText\":\"Timer “bar” doesn’t exist.\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":6,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":\"bar: 1.21ms\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
-    "line": 5,
+    "line": 6,
+    "column": 1
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
+stubPreparedMessages.set(`timeEnd.timerDoesntExist`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1526920999998,
+  "type": "timeEnd",
+  "helperType": null,
+  "level": "warn",
+  "messageText": "Timer “bar” doesn’t exist.",
+  "parameters": null,
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":7,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"warn\",\"messageText\":\"Timer “bar” doesn’t exist.\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 7,
+    "column": 1
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0,
+  "prefix": "",
+  "private": false
+}));
+
+stubPreparedMessages.set(`timeLog.timerDoesntExist`, new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1526920999999,
+  "type": "timeLog",
+  "helperType": null,
+  "level": "warn",
+  "messageText": "Timer “bar” doesn’t exist.",
+  "parameters": null,
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"line\":8,\"column\":1},\"groupId\":null,\"indent\":0,\"level\":\"warn\",\"messageText\":\"Timer “bar” doesn’t exist.\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeLog\",\"userProvidedStyles\":[],\"private\":false}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "line": 8,
     "column": 1
   },
   "groupId": null,
@@ -2424,6 +2531,87 @@ stubPackets.set(`timerAlreadyExists`, {
   }
 });
 
+stubPackets.set(`console.timeLog('bar') - 1`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar"
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "timeLog",
+    "lineNumber": 4,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1526920999996,
+    "timer": {
+      "duration": 1,
+      "name": "bar"
+    },
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`console.timeLog('bar') - 2`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar",
+      "second call",
+      {
+        "type": "object",
+        "actor": "server1.conn0.child1/obj34",
+        "class": "Object",
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "ownPropertyLength": 1,
+        "preview": {
+          "kind": "Object",
+          "ownProperties": {
+            "state": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": 1
+            }
+          },
+          "ownSymbols": [],
+          "ownPropertiesLength": 1,
+          "ownSymbolsLength": 0,
+          "safeGetterValues": {}
+        }
+      }
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "timeLog",
+    "lineNumber": 5,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1526920999996,
+    "timer": {
+      "duration": 1,
+      "name": "bar"
+    },
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
 stubPackets.set(`console.timeEnd('bar')`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "consoleAPICall",
@@ -2438,7 +2626,7 @@ stubPackets.set(`console.timeEnd('bar')`, {
     "functionName": "triggerPacket",
     "groupName": "",
     "level": "timeEnd",
-    "lineNumber": 4,
+    "lineNumber": 6,
     "prefix": "",
     "private": false,
     "timeStamp": 1502884924759,
@@ -2452,7 +2640,7 @@ stubPackets.set(`console.timeEnd('bar')`, {
   }
 });
 
-stubPackets.set(`timerDoesntExist`, {
+stubPackets.set(`timeEnd.timerDoesntExist`, {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "consoleAPICall",
   "message": {
@@ -2466,10 +2654,38 @@ stubPackets.set(`timerDoesntExist`, {
     "functionName": "triggerPacket",
     "groupName": "",
     "level": "timeEnd",
-    "lineNumber": 5,
+    "lineNumber": 7,
     "prefix": "",
     "private": false,
-    "timeStamp": 1502884924759,
+    "timeStamp": 1526920999998,
+    "timer": {
+      "error": "timerDoesntExist",
+      "name": "bar"
+    },
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set(`timeLog.timerDoesntExist`, {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      "bar"
+    ],
+    "columnNumber": 1,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "timeLog",
+    "lineNumber": 8,
+    "prefix": "",
+    "private": false,
+    "timeStamp": 1526920999999,
     "timer": {
       "error": "timerDoesntExist",
       "name": "bar"

@@ -288,6 +288,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       NSString* type =
         [cocoaPasteboard availableTypeFromArray:
           [NSArray arrayWithObjects:
+            [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL],
             [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF],
             [UTIHelper stringFromPboardType:NSPasteboardTypePNG],
             nil]];
@@ -314,17 +315,22 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       // Use ImageIO to interpret the data on the clipboard and transcode.
       // Note that ImageIO, like all CF APIs, allows NULLs to propagate freely
       // and safely in most cases (like ObjC). A notable exception is CFRelease.
-      NSDictionary *options =
-        [NSDictionary dictionaryWithObjectsAndKeys:
-          (NSNumber*)kCFBooleanTrue,
-          kCGImageSourceShouldAllowFloat,
-          (type == [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF] ?
-                     [UTIHelper stringFromPboardType:NSPasteboardTypeTIFF] :
-                     [UTIHelper stringFromPboardType:NSPasteboardTypePNG]),
-          kCGImageSourceTypeIdentifierHint, nil];
+      NSDictionary* options = [NSDictionary dictionaryWithObjectsAndKeys:
+                                (NSNumber*)kCFBooleanTrue,
+                                kCGImageSourceShouldAllowFloat,
+                                type,
+                                kCGImageSourceTypeIdentifierHint, nil];
+      CGImageSourceRef source = nullptr;
+      if (type == [UTIHelper stringFromPboardType:(NSString*)kUTTypeFileURL]) {
+        NSString* urlStr = [cocoaPasteboard stringForType:type];
+        NSURL* url = [NSURL URLWithString:urlStr];
+        source = CGImageSourceCreateWithURL((CFURLRef)url,
+                                            (CFDictionaryRef)options);
+      } else {
+        source = CGImageSourceCreateWithData((CFDataRef)pasteboardData,
+                                             (CFDictionaryRef)options);
+      }
 
-      CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)pasteboardData, 
-                                                            (CFDictionaryRef)options);
       NSMutableData *encodedData = [NSMutableData data];
       CGImageDestinationRef dest = CGImageDestinationCreateWithData((CFMutableDataRef)encodedData,
                                                                     outputType,

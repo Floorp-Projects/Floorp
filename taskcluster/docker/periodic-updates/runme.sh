@@ -37,6 +37,11 @@ then
   PARAMS="${PARAMS} --blocklist"
 fi
 
+if [ ! -z "${DO_REMOTE_SETTINGS}" ]
+then
+  PARAMS="${PARAMS} --remote-settings"
+fi
+
 export ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
 

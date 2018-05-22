@@ -324,6 +324,19 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled") &&
   supported_properties["translate"] = [ test_translate_transition ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.scrollbar-colors.enabled")) {
+  supported_properties["scrollbar-face-color"] = [
+    test_color_transition,
+    test_true_currentcolor_transition,
+    test_auto_color_transition,
+  ];
+  supported_properties["scrollbar-track-color"] = [
+    test_color_transition,
+    test_true_currentcolor_transition,
+    test_auto_color_transition,
+  ];
+}
+
 var div = document.getElementById("display");
 var OMTAdiv = document.getElementById("transformTest");
 var cs = getComputedStyle(div, "");

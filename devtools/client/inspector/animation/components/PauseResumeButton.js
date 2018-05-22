@@ -68,8 +68,8 @@ class PauseResumeButton extends PureComponent {
     }
   }
 
-  updateState() {
-    const { animations } = this.props;
+  updateState(props) {
+    const { animations } = props;
     const isRunning = hasRunningAnimation(animations);
     this.setState({ isRunning });
   }

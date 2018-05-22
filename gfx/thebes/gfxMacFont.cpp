@@ -97,7 +97,7 @@ gfxMacFont::gfxMacFont(const RefPtr<UnscaledFontMac>& aUnscaledFont,
                 auto& value = vars[index].mValue;
                 auto& axis = aFontEntry->mOpszAxis;
                 value = fmin(fmax(value, axis.mMinValue), axis.mMaxValue);
-                if (abs(value - axis.mDefaultValue) < 0.001f) {
+                if (std::abs(value - axis.mDefaultValue) < 0.001f) {
                     value = aFontEntry->mAdjustedDefaultOpsz;
                 }
             }

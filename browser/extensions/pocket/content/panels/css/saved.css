@@ -22,7 +22,7 @@
     border-radius: 4px;
     display: block;
     font-size: 16px;
-    font-family: "FiraSans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     padding: 0;
     position: relative;
     text-align: center;
@@ -348,7 +348,7 @@
     clear: both;
     margin: 1.25em 1em;
     padding: 0;
-    display: flex;    
+    display: flex;
 }
 .pkt_ext_containersaved .pkt_ext_tag_error {
     border: none;
@@ -479,11 +479,10 @@
     opacity: 0;
     visibility: hidden;
 }
-.pkt_ext_containersaved 
+
 .pkt_ext_containersaved .pkt_ext_recenttag_detail h4,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail h4 {
     color: #333;
-    font-size: 0.8125em;
     font-size: 13px;
     font-weight: normal;
     font-style: normal;
@@ -507,7 +506,7 @@
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail ul {
     display: block;
     margin: 0;
-    height: 2em; 
+    height: 2em;
     overflow: hidden;
     padding: 2px 0 0 0;
 }
@@ -522,7 +521,7 @@
     background: none;
     float: left;
     height: inherit;
-    line-height: 1.5; 
+    line-height: 1.5;
     list-style: none;
     margin-bottom: 0.5em;
     width: inherit;
@@ -669,7 +668,7 @@
     background: none;
     border-radius: 4px;
     border: 1px solid #c3c3c3;
-    overflow: hidden;  
+    overflow: hidden;
     margin: 0;
     padding: 0 8px;
     background-color: #f7f7f7;
@@ -823,3 +822,94 @@
 .pkt_ext_saved_ru .pkt_ext_btn {
     min-width: 6em;
 }
+
+/*=Coral Button
+--------------------------------------------------------------------------------------- */
+button {
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    color: inherit;
+    font: inherit;
+    overflow: visible;
+}
+
+.pkt_ext_button {
+    padding: 3px;
+    background-color: #EF4056;
+    color: #FFF;
+    text-align: center;
+    cursor: pointer;
+    height: 32px;
+    box-sizing: border-box;
+    width: 320px;
+    margin: 0 auto;
+    border-radius: 2px;
+    font-size: 14px;
+}
+
+.pkt_ext_button:hover,
+.pkt_ext_button:active {
+    background-color: #d5374b;
+}
+
+/* alt button */
+.pkt_ext_blue_button {
+    background-color: #0060df;
+    color: #FFF;
+}
+
+.pkt_ext_blue_button:hover {
+    background-color: #003eaa;
+}
+
+.pkt_ext_blue_button:active {
+    background-color: #002275;
+}
+
+.pkt_ext_ffx_icon:after {
+    position: absolute;
+    height: 22px;
+    width: 22px;
+    top: -3px;
+    left: -28px;
+    content: "";
+    background-image: url(../img/signup_firefoxlogo@2x.png);
+    background-size: 22px 22px;
+    background-repeat: no-repeat;
+}
+
+
+/*=Tmp Account Login
+--------------------------------------------------------------------------------------- */
+.pkt_shaded_background {
+    background-color: #EBEBEB;
+    border-top: 1px solid #C3C3C3;
+    padding: 0 15px;
+}
+
+.pkt_ext_saved_tmplogin {
+    height: 146px;
+}
+
+.pkt_ext_indent_bordered {
+    margin: 15px 0;
+    padding: 0 7px;
+    border-left: 4px solid rgba(68, 68, 68, .15);
+    text-align: left;
+    font-size: 13px;
+    color: #313131;
+}
+
+[dir='rtl'] .pkt_ext_indent_bordered {
+  border-left: none;
+  border-right: 4px solid rgba(68, 68, 68, .15);
+  text-align: right;
+}
+
+.pkt_ext_indent_bordered > p {
+    margin-bottom: 3px;
+}
+
