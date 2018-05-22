@@ -9,7 +9,13 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="scrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
+  <binding id="scrollbox-base" extends="chrome://global/content/bindings/general.xml#basecontrol">
+    <resources>
+      <stylesheet src="chrome://global/skin/scrollbox.css"/>
+    </resources>
+  </binding>
+
+  <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir" flex="1">
         <children/>
@@ -26,7 +32,7 @@
     </implementation>
   </binding>
 
-  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/general.xml#basecontrol">
+  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up"
                             anonid="scrollbutton-up"
@@ -573,7 +579,7 @@
     </handlers>
   </binding>
 
-  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/general.xml#basecontrol">
+  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content repeat="hover">
       <xul:image class="autorepeatbutton-icon"/>
     </content>
