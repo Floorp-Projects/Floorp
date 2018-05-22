@@ -4244,12 +4244,12 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     // executable code limit.
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
-        c->marked = false;
-        c->scheduledForDestruction = false;
-        c->maybeAlive = c->shouldTraceGlobal() || !c->zone()->isGCScheduled();
-        if (shouldPreserveJITCode(c, currentTime, reason, canAllocateMoreCode))
-            c->zone()->setPreservingCode(true);
+    for (RealmsIter r(rt, WithAtoms); !r.done(); r.next()) {
+        r->marked = false;
+        r->scheduledForDestruction = false;
+        r->maybeAlive = r->shouldTraceGlobal() || !r->zone()->isGCScheduled();
+        if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
+            r->zone()->setPreservingCode(true);
     }
 
     if (!cleanUpEverything && canAllocateMoreCode) {
@@ -7998,7 +7998,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
     MOZ_ASSERT(sourceRealm->creationOptions().mergeable());
     MOZ_ASSERT(sourceRealm->creationOptions().invisibleToDebugger());
 
-    MOZ_ASSERT(!source->hasBeenEntered());
+    MOZ_ASSERT(!sourceRealm->hasBeenEntered());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
 
     JSContext* cx = rt->mainContextFromOwnThread();

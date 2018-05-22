@@ -619,20 +619,8 @@ struct JSCompartment
     friend struct JSRuntime;
     friend struct JSContext;
 
-    unsigned                     enterCompartmentDepth;
-
   public:
     js::PerformanceGroupHolder performanceMonitoring;
-
-    void enter() {
-        enterCompartmentDepth++;
-    }
-    void leave() {
-        enterCompartmentDepth--;
-    }
-    bool hasBeenEntered() const { return !!enterCompartmentDepth; }
-
-    bool shouldTraceGlobal() const { return hasBeenEntered(); }
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
@@ -650,11 +638,8 @@ struct JSCompartment
 
   public:
     void*                        data;
-    void*                        realmData;
 
   protected:
-    const js::AllocationMetadataBuilder *allocationMetadataBuilder;
-
     js::SavedStacks              savedStacks_;
 
   private:
@@ -876,18 +861,6 @@ struct JSCompartment
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
     void fixupScriptMapsAfterMovingGC();
-
-    bool hasAllocationMetadataBuilder() const { return allocationMetadataBuilder; }
-    const js::AllocationMetadataBuilder* getAllocationMetadataBuilder() const {
-        return allocationMetadataBuilder;
-    }
-    void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
-    void forgetAllocationMetadataBuilder();
-    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
-    void clearObjectMetadata();
-    const void* addressOfMetadataBuilder() const {
-        return &allocationMetadataBuilder;
-    }
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
 
@@ -1127,6 +1100,26 @@ class JS::Realm : public JSCompartment
     const JS::RealmCreationOptions creationOptions_;
     JS::RealmBehaviors behaviors_;
 
+    friend struct ::JSContext;
+    js::ReadBarrieredGlobalObject global_;
+
+    // The global environment record's [[VarNames]] list that contains all
+    // names declared using FunctionDeclaration, GeneratorDeclaration, and
+    // VariableDeclaration declarations in global code in this realm.
+    // Names are only removed from this list by a |delete IdentifierReference|
+    // that successfully removes that global property.
+    using VarNamesSet = JS::GCHashSet<JSAtom*,
+                                      js::DefaultHasher<JSAtom*>,
+                                      js::SystemAllocPolicy>;
+    VarNamesSet varNames_;
+
+    const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
+    void* realmPrivate_ = nullptr;
+
+    unsigned enterRealmDepth_ = 0;
+
+    bool isAtomsRealm_ = false;
+
   public:
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
 
@@ -1158,9 +1151,6 @@ class JS::Realm : public JSCompartment
     /* Whether to preserve JIT code on non-shrinking GCs. */
     bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
-  private:
-    bool isAtomsRealm_ = false;
-  public:
     bool isAtomsRealm() const {
         return isAtomsRealm_;
     }
@@ -1168,10 +1158,6 @@ class JS::Realm : public JSCompartment
         isAtomsRealm_ = true;
     }
 
-  private:
-    friend struct ::JSContext;
-    js::ReadBarrieredGlobalObject global_;
-  public:
     /* The global object for this realm.
      *
      * This returns nullptr if this is the atoms realm.  (The global_ field is
@@ -1210,17 +1196,6 @@ class JS::Realm : public JSCompartment
      */
     void finishRoots();
 
-  private:
-    // The global environment record's [[VarNames]] list that contains all
-    // names declared using FunctionDeclaration, GeneratorDeclaration, and
-    // VariableDeclaration declarations in global code in this realm.
-    // Names are only removed from this list by a |delete IdentifierReference|
-    // that successfully removes that global property.
-    using VarNamesSet = JS::GCHashSet<JSAtom*,
-                                      js::DefaultHasher<JSAtom*>,
-                                      js::SystemAllocPolicy>;
-    VarNamesSet varNames_;
-  public:
     // Add a name to [[VarNames]].  Reports OOM on failure.
     MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
     void sweepVarNames();
@@ -1232,6 +1207,40 @@ class JS::Realm : public JSCompartment
     // Whether the given name is in [[VarNames]].
     bool isInVarNames(JS::Handle<JSAtom*> name) {
         return varNames_.has(name);
+    }
+
+    void enter() {
+        enterRealmDepth_++;
+    }
+    void leave() {
+        enterRealmDepth_--;
+    }
+    bool hasBeenEntered() const {
+        return enterRealmDepth_ > 0;
+    }
+    bool shouldTraceGlobal() const {
+        return hasBeenEntered();
+    }
+
+    bool hasAllocationMetadataBuilder() const {
+        return allocationMetadataBuilder_;
+    }
+    const js::AllocationMetadataBuilder* getAllocationMetadataBuilder() const {
+        return allocationMetadataBuilder_;
+    }
+    const void* addressOfMetadataBuilder() const {
+        return &allocationMetadataBuilder_;
+    }
+    void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
+    void forgetAllocationMetadataBuilder();
+    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
+    void clearObjectMetadata();
+
+    void* realmPrivate() const {
+        return realmPrivate_;
+    }
+    void setRealmPrivate(void* p) {
+        realmPrivate_ = p;
     }
 };
 
