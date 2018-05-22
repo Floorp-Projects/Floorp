@@ -199,7 +199,12 @@ public:
     return mGraphImpl;
   }
 
+  // True if the current thread is the GraphDriver's thread.
+  // This is the thread that drives the MSG.
   virtual bool OnThread() = 0;
+  // GraphDriver's thread has started and the thread is running.
+  // This is the thread that drives the MSG.
+  virtual bool ThreadRunning() = 0;
 
 protected:
   GraphTime StateComputedTime() const;
@@ -258,11 +263,20 @@ public:
    */
   void RunThread();
   friend class MediaStreamGraphInitThreadRunnable;
-  uint32_t IterationDuration() override {
+  uint32_t IterationDuration() override
+  {
     return MEDIA_GRAPH_TARGET_PERIOD_MS;
   }
 
-  bool OnThread() override { return !mThread || mThread->EventTarget()->IsOnCurrentThread(); }
+  bool OnThread() override
+  {
+    return mThread && mThread->EventTarget()->IsOnCurrentThread();
+  }
+
+  bool ThreadRunning() override
+  {
+    return mThreadRunning;
+  }
 
   /* When the graph wakes up to do an iteration, implementations return the
    * range of time that will be processed.  This is called only once per
@@ -271,6 +285,10 @@ public:
   virtual MediaTime GetIntervalForIteration() = 0;
 protected:
   nsCOMPtr<nsIThread> mThread;
+private:
+  // This is true if the thread is running. It is false
+  // before starting the thread and after stopping it.
+  Atomic<bool> mThreadRunning;
 };
 
 /**
@@ -456,6 +474,11 @@ public:
     return mAudioThreadId.load() == std::this_thread::get_id();
   }
 
+  bool ThreadRunning() override
+  {
+    return mAudioThreadRunning;
+  }
+
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */
   bool IsStarted();
@@ -552,6 +575,9 @@ private:
   /* Contains the id of the audio thread for as long as the callback
    * is taking place, after that it is reseted to an invalid value. */
   std::atomic<std::thread::id> mAudioThreadId;
+  /* True when audio thread is running. False before
+   * starting and after stopping it the audio thread. */
+  Atomic<bool> mAudioThreadRunning;
   /**
    * True if microphone is being used by this process. This is synchronized by
    * the graph's monitor. */
