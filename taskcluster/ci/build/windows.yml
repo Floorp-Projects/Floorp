@@ -266,6 +266,13 @@ win32-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    stub-installer:
+        by-project:
+            default: false
+            mozilla-central: true
+            try: true
+            mozilla-beta: true
+            mozilla-release: true
     shipping-phase: build
     shipping-product: firefox
     treeherder:
@@ -629,6 +636,13 @@ win32-devedition-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    stub-installer:
+        by-project:
+            default: false
+            mozilla-central: true
+            try: true
+            mozilla-beta: true
+            mozilla-release: true
     shipping-phase: build
     shipping-product: devedition
     treeherder:
