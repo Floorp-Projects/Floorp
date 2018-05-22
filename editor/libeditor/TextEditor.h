@@ -73,12 +73,17 @@ public:
   NS_IMETHOD Paste(int32_t aSelectionType) override;
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
-  NS_IMETHOD CanPasteTransferable(nsITransferable* aTransferable,
-                                  bool* aCanPaste) override;
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType,
                             uint32_t aFlags,
                             nsAString& aOutputString) override;
+
+  /** Can we paste |aTransferable| or, if |aTransferable| is null, will a call
+    * to pasteTransferable later possibly succeed if given an instance of
+    * nsITransferable then? True if the doc is modifiable, and, if
+    * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
+    */
+  virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
   virtual nsresult RemoveAttributeOrEquivalent(
