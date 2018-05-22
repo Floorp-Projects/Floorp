@@ -283,7 +283,7 @@
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
   <caption><label data-l10n-id="tracking-header"/></caption>
-  <vbox>
+  <vbox data-subcategory="trackingprotection">
     <hbox align="start">
       <vbox flex="1">
         <description data-l10n-id="tracking-desc">
