@@ -23,13 +23,14 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
 // Register/unregister a constructor as a factory.
-function Factory() {}
-Factory.prototype = {
-  register: function register(targetConstructor) {
-    var proto = targetConstructor.prototype;
+function StreamConverterFactory() {}
+StreamConverterFactory.prototype = {
+  register: function register() {
+    ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
+    var proto = PdfStreamConverter.prototype;
     this._classID = proto.classID;
 
-    var factory = XPCOMUtils._getFactory(targetConstructor);
+    var factory = XPCOMUtils._getFactory(PdfStreamConverter);
     this._factory = factory;
 
     var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
@@ -60,9 +61,8 @@ var PdfJsRegistration = {
     if (this._registered) {
       return;
     }
-    this._pdfStreamConverterFactory = new Factory();
-    ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
-    this._pdfStreamConverterFactory.register(PdfStreamConverter);
+    this._pdfStreamConverterFactory = new StreamConverterFactory();
+    this._pdfStreamConverterFactory.register();
 
     this._registered = true;
   },
