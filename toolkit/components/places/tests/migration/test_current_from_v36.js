@@ -40,6 +40,7 @@ add_task(async function database_is_valid() {
 add_task(async function test_icons() {
   let db = await PlacesUtils.promiseDBConnection();
   await Assert.rejects(db.execute(`SELECT url FROM moz_favicons`),
+                       /no such table: moz_favicons/,
                        "The moz_favicons table should not exist");
   for (let entry of gTestcases) {
     info("");
