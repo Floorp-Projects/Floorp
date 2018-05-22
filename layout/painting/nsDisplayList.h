@@ -5386,6 +5386,7 @@ public:
   bool OpacityAppliedToChildren() const { return mOpacityAppliedToChildren; }
 
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  static bool MayNeedActiveLayer(nsIFrame* aFrame);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
