@@ -424,7 +424,7 @@ PresentationTCPSessionTransport::SendBinaryMsg(const nsACString& aData)
 }
 
 NS_IMETHODIMP
-PresentationTCPSessionTransport::SendBlob(nsIDOMBlob* aBlob)
+PresentationTCPSessionTransport::SendBlob(Blob* aBlob)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

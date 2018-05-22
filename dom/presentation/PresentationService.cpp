@@ -808,7 +808,7 @@ PresentationService::SendSessionBinaryMsg(const nsAString& aSessionId,
 NS_IMETHODIMP
 PresentationService::SendSessionBlob(const nsAString& aSessionId,
                                      uint8_t aRole,
-                                     nsIDOMBlob* aBlob)
+                                     Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
