@@ -7973,11 +7973,11 @@ HTMLEditRules::GetNodesFromPoint(
     return NS_ERROR_INVALID_ARG;
   }
   RefPtr<nsRange> range = new nsRange(aPoint.GetContainer());
-  ErrorResult error;
-  range->SetStart(aPoint, error);
+  IgnoredErrorResult ignoredError;
+  range->SetStart(aPoint, ignoredError);
   // error will assert on failure, because we are not cleaning it up,
   // but we're asserting in that case anyway.
-  MOZ_ASSERT(!error.Failed());
+  MOZ_ASSERT(!ignoredError.Failed());
 
   // Expand the range to include adjacent inlines
   PromoteRange(*range, aOperation);
