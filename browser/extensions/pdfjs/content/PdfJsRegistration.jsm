@@ -21,6 +21,8 @@ const Cm = Components.manager;
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+ChromeUtils.defineModuleGetter(this, "PdfStreamConverter",
+  "resource://pdf.js/PdfStreamConverter.jsm");
 
 // Register/unregister a constructor as a factory.
 function StreamConverterFactory() {}
@@ -35,8 +37,15 @@ StreamConverterFactory.prototype = {
   _contractID2: "@mozilla.org/streamconv;1?from=application/pdf&to=text/html",
 
   register: function register() {
-    ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
-    var factory = XPCOMUtils._getFactory(PdfStreamConverter);
+    var factory = {
+      createInstance(outer, iid) {
+        if (outer)
+          throw Cr.NS_ERROR_NO_AGGREGATION;
+        return (new PdfStreamConverter()).QueryInterface(iid);
+      },
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory])
+    };
+
     this._factory = factory;
 
     var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
