@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for count/countReset in console</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function ConsoleListener() {
+  SpecialPowers.addObserver(this, "console-api-log-event");
+}
+
+ConsoleListener.prototype = {
+  observe(aSubject, aTopic, aData) {
+    let obj = aSubject.wrappedJSObject;
+    if (obj.arguments[0] != 'test') {
+      return;
+    }
+
+    if (!this._cb) {
+      ok(false, "Callback not set!");
+      return;
+    }
+
+    if (!this._cb(obj)) {
+      return;
+    }
+
+    this._cb = null;
+    this._resolve();
+  },
+
+  shutdown() {
+    SpecialPowers.removeObserver(this, "console-api-log-event");
+  },
+
+  waitFor(cb) {
+    return new Promise(resolve => {
+      this._cb = cb;
+      this._resolve = resolve;
+    });
+  },
+};
+
+let listener = new ConsoleListener();
+
+async function runTest() {
+  // First count.
+  let cl = listener.waitFor(obj => {
+    return ("counter" in obj) &&
+           ("label" in obj.counter) &&
+           obj.counter.label == "test" &&
+           obj.counter.count == 1;
+  });
+  console.count("test");
+  await cl;
+  ok(true, "Console.count == 1 received!");
+
+  // Second count.
+  cl = listener.waitFor(obj => {
+    return ("counter" in obj) &&
+           ("label" in obj.counter) &&
+           obj.counter.label == "test" &&
+           obj.counter.count == 2;
+  });
+  console.count("test");
+  await cl;
+  ok(true, "Console.count == 2 received!");
+
+  // Counter reset.
+  cl = listener.waitFor(obj => {
+    return ("counter" in obj) &&
+           ("label" in obj.counter) &&
+           obj.counter.label == "test" &&
+           obj.counter.count == 0;
+  });
+  console.countReset("test");
+  await cl;
+  ok(true, "Console.countReset == 0 received!");
+
+  // Counter reset with error.
+  cl = listener.waitFor(obj => {
+    return ("counter" in obj) &&
+           ("label" in obj.counter) &&
+           obj.counter.label == "test" &&
+           obj.counter.error == "counterDoesntExist";
+  });
+  console.countReset("test");
+  await cl;
+  ok(true, "Console.countReset with error received!");
+
+  // First again!
+  cl = listener.waitFor(obj => {
+    return ("counter" in obj) &&
+           ("label" in obj.counter) &&
+           obj.counter.label == "test" &&
+           obj.counter.count == 1;
+  });
+  console.count("test");
+  await cl;
+  ok(true, "Console.count == 1 received!");
+}
+
+runTest().then(SimpleTest.finish);
+
+  </script>
+</body>
+</html>

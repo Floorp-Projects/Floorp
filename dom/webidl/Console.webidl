@@ -24,6 +24,8 @@ namespace console {
   [UseCounter]
   void count(optional DOMString label = "default");
   [UseCounter]
+  void countReset(optional DOMString label = "default");
+  [UseCounter]
   void debug(any... data);
   [UseCounter]
   void error(any... data);
@@ -139,7 +141,8 @@ dictionary ConsoleCounter {
 };
 
 dictionary ConsoleCounterError {
-  DOMString error = "maxCountersExceeded";
+  DOMString label = "";
+  DOMString error = "";
 };
 
 [ChromeOnly,
@@ -150,6 +153,7 @@ interface ConsoleInstance {
   void assert(optional boolean condition = false, any... data);
   void clear();
   void count(optional DOMString label = "default");
+  void countReset(optional DOMString label = "default");
   void debug(any... data);
   void error(any... data);
   void info(any... data);
