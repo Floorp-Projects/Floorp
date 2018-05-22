@@ -6,7 +6,6 @@ import unittest
 
 import shutil
 import os
-import re
 import sys
 import random
 import copy
@@ -16,7 +15,7 @@ from string import letters
 Test case infrastructure for MozZipFile.
 
 This isn't really a unit test, but a test case generator and runner.
-For a given set of files, lengths, and number of writes, we create 
+For a given set of files, lengths, and number of writes, we create
 a testcase for every combination of the three. There are some
 symmetries used to reduce the number of test cases, the first file
 written is always the first file, the second is either the first or

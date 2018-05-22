@@ -11,7 +11,6 @@
 #   check_source_count.py.
 from __future__ import print_function
 import sys
-import os
 import re
 
 search_string = sys.argv[1]

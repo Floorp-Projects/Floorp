@@ -59,7 +59,7 @@ class ZipFile(zipfile.ZipFile):
         # as the old, reuse the existing entry.
 
         doSeek = False  # store if we need to seek to the eof after overwriting
-        if self.NameToInfo.has_key(zinfo.filename):
+        if zinfo.filename in self.NameToInfo:
             # Find the last ZipInfo with our name.
             # Last, because that's catching multiple overwrites
             i = len(self.filelist)

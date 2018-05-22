@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # All heap allocations in SpiderMonkey must go through js_malloc, js_calloc,
 # js_realloc, and js_free.  This is so that any embedder who uses a custom
 # allocator (by defining JS_USE_CUSTOM_ALLOCATOR) will see all heap allocation
@@ -34,7 +34,7 @@
 # because vanilla delete/delete[] calls don't make sense without corresponding
 # vanilla new/new[] calls, and any explicit calls will be caught by Valgrind's
 # mismatched alloc/free checking.
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import print_function
 
