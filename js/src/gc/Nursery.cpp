@@ -1033,6 +1033,7 @@ js::Nursery::sweep(JSTracer* trc)
         c->sweepAfterMinorGC(trc);
 
     sweepDictionaryModeObjects();
+    sweepMapAndSetObjects();
 }
 
 void
@@ -1246,6 +1247,19 @@ js::Nursery::sweepDictionaryModeObjects()
     dictionaryModeObjects_.clear();
 }
 
+void
+js::Nursery::sweepMapAndSetObjects()
+{
+    auto fop = runtime_->defaultFreeOp();
+
+    for (auto mapobj : mapsWithNurseryMemory_)
+        MapObject::sweepAfterMinorGC(fop, mapobj);
+    mapsWithNurseryMemory_.clearAndFree();
+
+    for (auto setobj : setsWithNurseryMemory_)
+        SetObject::sweepAfterMinorGC(fop, setobj);
+    setsWithNurseryMemory_.clearAndFree();
+}
 
 JS_PUBLIC_API(void)
 JS::EnableNurseryStrings(JSContext* cx)
