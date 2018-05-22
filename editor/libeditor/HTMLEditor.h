@@ -635,7 +635,7 @@ protected:
     bool mDoDeleteSelection;
   };
 
-  NS_IMETHOD InitRules() override;
+  virtual nsresult InitRules() override;
 
   virtual void CreateEventListeners() override;
   virtual nsresult InstallEventListeners() override;
@@ -817,7 +817,7 @@ protected:
 
   // factored methods for handling insertion of data from transferables
   // (drag&drop or clipboard)
-  NS_IMETHOD PrepareTransferable(nsITransferable** transferable) override;
+  virtual nsresult PrepareTransferable(nsITransferable** transferable) override;
   nsresult PrepareHTMLTransferable(nsITransferable** transferable);
   nsresult InsertFromTransferable(nsITransferable* transferable,
                                     nsIDocument* aSourceDoc,

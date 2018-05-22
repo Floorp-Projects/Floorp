@@ -46,7 +46,7 @@ namespace mozilla {
 
 using namespace dom;
 
-NS_IMETHODIMP
+nsresult
 TextEditor::PrepareTransferable(nsITransferable** transferable)
 {
   // Create generic Transferable for getting the data
