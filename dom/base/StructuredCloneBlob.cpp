@@ -142,7 +142,7 @@ StructuredCloneBlob::ReadStructuredCloneInternal(JSContext* aCx, JSStructuredClo
     BlobImpls().AppendElements(&aHolder->BlobImpls()[blobOffset], blobCount);
   }
 
-  JSStructuredCloneData data;
+  JSStructuredCloneData data(mStructuredCloneScope);
   while (length) {
     size_t size;
     char* buffer = data.AllocateBytes(length, &size);

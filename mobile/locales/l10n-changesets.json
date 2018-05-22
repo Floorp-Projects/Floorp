@@ -444,6 +444,13 @@
         ], 
         "revision": "default"
     }, 
+    "lij": {
+        "platforms": [
+            "android", 
+            "android-api-16"
+        ], 
+        "revision": "default"
+    }, 
     "lo": {
         "platforms": [
             "android", 
@@ -484,6 +491,13 @@
         "revision": "default"
     }, 
     "meh": {
+        "platforms": [
+            "android", 
+            "android-api-16"
+        ], 
+        "revision": "default"
+    }, 
+    "mix": {
         "platforms": [
             "android", 
             "android-api-16"
