@@ -677,14 +677,20 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitFinishIteratorResult(bool done);
     MOZ_MUST_USE bool iteratorResultShape(unsigned* shape);
 
-    MOZ_MUST_USE bool emitGetDotGenerator();
+    MOZ_MUST_USE bool emitGetDotGeneratorInInnermostScope() {
+        return emitGetDotGeneratorInScope(*innermostEmitterScope);
+    }
+    MOZ_MUST_USE bool emitGetDotGeneratorInScope(EmitterScope& currentScope);
 
     MOZ_MUST_USE bool emitInitialYield(ParseNode* pn);
     MOZ_MUST_USE bool emitYield(ParseNode* pn);
     MOZ_MUST_USE bool emitYieldOp(JSOp op);
     MOZ_MUST_USE bool emitYieldStar(ParseNode* iter);
-    MOZ_MUST_USE bool emitAwait();
-    MOZ_MUST_USE bool emitAwait(ParseNode* pn);
+    MOZ_MUST_USE bool emitAwaitInInnermostScope() {
+        return emitAwaitInScope(*innermostEmitterScope);
+    }
+    MOZ_MUST_USE bool emitAwaitInInnermostScope(ParseNode* pn);
+    MOZ_MUST_USE bool emitAwaitInScope(EmitterScope& currentScope);
 
     MOZ_MUST_USE bool emitPropLHS(ParseNode* pn);
     MOZ_MUST_USE bool emitPropOp(ParseNode* pn, JSOp op);
@@ -781,9 +787,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // onto the stack.
     MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, IteratorKind kind = IteratorKind::Sync,
                                        bool allowSelfHosted = false);
-    MOZ_MUST_USE bool emitIteratorClose(IteratorKind iterKind = IteratorKind::Sync,
-                                        CompletionKind completionKind = CompletionKind::Normal,
-                                        bool allowSelfHosted = false);
+    MOZ_MUST_USE bool emitIteratorCloseInScope(EmitterScope& currentScope,
+                                               IteratorKind iterKind = IteratorKind::Sync,
+                                               CompletionKind completionKind = CompletionKind::Normal,
+                                               bool allowSelfHosted = false);
+    MOZ_MUST_USE bool emitIteratorCloseInInnermostScope(IteratorKind iterKind = IteratorKind::Sync,
+                                                        CompletionKind completionKind = CompletionKind::Normal,
+                                                        bool allowSelfHosted = false) {
+        return emitIteratorCloseInScope(*innermostEmitterScope, iterKind, completionKind,
+                                        allowSelfHosted);
+    }
 
     template <typename InnerEmitter>
     MOZ_MUST_USE bool wrapWithDestructuringIteratorCloseTryNote(int32_t iterDepth,
