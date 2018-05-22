@@ -144,7 +144,7 @@ case "$target" in
         _WIN32_MSVC=1
 
         # Make sure compilers are valid
-        CFLAGS="$CFLAGS -TC -nologo"
+        CFLAGS="$CFLAGS -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         if test -z "$CLANG_CL"; then
             CPPFLAGS="$CPPFLAGS -utf-8"
@@ -503,7 +503,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:$@'
-        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
+        HOST_CFLAGS="$HOST_CFLAGS -nologo"
         HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
@@ -653,6 +653,8 @@ case "$target" in
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32"
         MOZ_FIX_LINK_PATHS=
+
+        MOZ_OPTIMIZE_FLAGS="-O2"
 
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows

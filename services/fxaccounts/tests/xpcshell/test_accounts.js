@@ -150,7 +150,8 @@ function MockFxAccounts() {
     _registerOrUpdateDevice() {
       return Promise.resolve();
     },
-    fxAccountsClient: new MockFxAccountsClient()
+    fxAccountsClient: new MockFxAccountsClient(),
+    observerPreloads: [],
   });
 }
 
@@ -172,6 +173,9 @@ function MakeFxAccounts(internal = {}) {
   }
   if (!internal._registerOrUpdateDevice) {
     internal._registerOrUpdateDevice = () => Promise.resolve();
+  }
+  if (!internal.observerPreloads) {
+    internal.observerPreloads = [];
   }
   return new FxAccounts(internal);
 }
@@ -732,8 +736,8 @@ add_task(async function test_getKeys_invalid_token() {
   let user = await fxa.internal.getUserAccountData();
   Assert.equal(user.email, yusuf.email);
   Assert.equal(user.keyFetchToken, null);
+  await fxa.internal.abortExistingFlow();
 });
-
 //  fetchAndUnwrapKeys with no keyFetchToken should trigger signOut
 add_test(function test_fetchAndUnwrapKeys_no_token() {
   let fxa = new MockFxAccounts();
@@ -743,7 +747,7 @@ add_test(function test_fetchAndUnwrapKeys_no_token() {
   makeObserver(ONLOGOUT_NOTIFICATION, function() {
     log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
     fxa.internal.getUserAccountData().then(user2 => {
-      run_next_test();
+      fxa.internal.abortExistingFlow().then(run_next_test);
     });
   });
 
@@ -838,10 +842,6 @@ add_task(async function test_getAssertion_invalid_token() {
 
 add_task(async function test_getAssertion() {
   let fxa = new MockFxAccounts();
-
-  do_check_throws(async function() {
-    await fxa.getAssertion("nonaudience");
-  });
 
   let creds = {
     sessionToken: "sessionToken",
@@ -1035,6 +1035,7 @@ add_task(async function test_resend_email_invalid_token() {
   user = await fxa.internal.getUserAccountData();
   Assert.equal(user.email, sophia.email);
   Assert.equal(user.sessionToken, null);
+  await fxa.internal.abortExistingFlow();
 });
 
 add_test(function test_resend_email() {
@@ -1508,22 +1509,4 @@ function makeObserver(aObserveTopic, aObserveFunc) {
 
   Services.obs.addObserver(observer, aObserveTopic);
   return removeMe;
-}
-
-function do_check_throws(func, result, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  try {
-    func();
-  } catch (ex) {
-    if (ex.name == result) {
-      return;
-    }
-    do_throw("Expected result " + result + ", caught " + ex.name, stack);
-  }
-
-  if (result) {
-    do_throw("Expected result " + result + ", none thrown", stack);
-  }
 }

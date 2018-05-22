@@ -104,3 +104,146 @@ add_task(async function browseraction_popup_image_contextmenu() {
 
   await extension.unload();
 });
+
+add_task(async function browseraction_contextmenu_manage_extension() {
+  let id = "addon_id@example.com";
+  let buttonId = `${makeWidgetId(id)}-browser-action`;
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "applications": {
+        "gecko": {id},
+      },
+      "browser_action": {},
+      "options_ui": {
+        "page": "options.html",
+      },
+    },
+    useAddonManager: "temporary",
+    files: {
+      "options.html": `<script src="options.js"></script>`,
+      "options.js": `browser.test.sendMessage("options-loaded");`,
+    },
+  });
+
+  function openContextMenu(menuId, targetId) {
+    return openChromeContextMenu(menuId, "#" + CSS.escape(targetId));
+  }
+
+  function checkVisibility(menu, visible) {
+    let manageExtension = menu.querySelector(".customize-context-manageExtension");
+    let separator = manageExtension.nextElementSibling;
+
+    info(`Check visibility`);
+    is(manageExtension.hidden, !visible, `Manage Extension should be ${visible ? "visible" : "hidden"}`);
+    is(separator.hidden, !visible, `Separator after Manage Extension should be ${visible ? "visible" : "hidden"}`);
+  }
+
+  async function testContextMenu(menuId, customizing) {
+    info(`Open browserAction context menu in ${menuId}`);
+    let menu = await openContextMenu(menuId, buttonId);
+    await checkVisibility(menu, true);
+
+    info(`Choosing 'Manage Extension' in ${menuId} should load options`);
+    let optionsLoaded = extension.awaitMessage("options-loaded");
+    let manageExtension = menu.querySelector(".customize-context-manageExtension");
+    await closeChromeContextMenu(menuId, manageExtension);
+    await optionsLoaded;
+
+    info(`Remove the opened tab, and await customize mode to be restored if necessary`);
+    let tab = gBrowser.selectedTab;
+    is(tab.linkedBrowser.currentURI.spec, "about:addons");
+    if (customizing) {
+      let customizationReady = BrowserTestUtils.waitForEvent(gNavToolbox, "customizationready");
+      gBrowser.removeTab(tab);
+      await customizationReady;
+    } else {
+      gBrowser.removeTab(tab);
+    }
+
+    return menu;
+  }
+
+  function waitForElementShown(element) {
+    let win = element.ownerGlobal;
+    let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    return BrowserTestUtils.waitForCondition(() => {
+      info("Waiting for overflow button to have non-0 size");
+      let bounds = dwu.getBoundsWithoutFlushing(element);
+      return bounds.width > 0 && bounds.height > 0;
+    });
+  }
+
+  async function main(customizing) {
+    if (customizing) {
+      info("Enter customize mode");
+      let customizationReady = BrowserTestUtils.waitForEvent(gNavToolbox, "customizationready");
+      gCustomizeMode.enter();
+      await customizationReady;
+    }
+
+    info("Test toolbar context menu in browserAction");
+    let toolbarCtxMenu = await testContextMenu("toolbar-context-menu", customizing);
+
+    info("Check toolbar context menu in another button");
+    let otherButtonId = "home-button";
+    await openContextMenu(toolbarCtxMenu.id, otherButtonId);
+    checkVisibility(toolbarCtxMenu, false);
+    toolbarCtxMenu.hidePopup();
+
+    info("Check toolbar context menu without triggerNode");
+    toolbarCtxMenu.openPopup();
+    checkVisibility(toolbarCtxMenu, false);
+    toolbarCtxMenu.hidePopup();
+
+    info("Pin the browserAction and another button to the overflow menu");
+    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+    CustomizableUI.addWidgetToArea(otherButtonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+    info("Wait until the overflow menu is ready");
+    let overflowButton = document.getElementById("nav-bar-overflow-button");
+    let icon = document.getAnonymousElementByAttribute(overflowButton, "class", "toolbarbutton-icon");
+    await waitForElementShown(icon);
+
+    if (!customizing) {
+      info("Open overflow menu");
+      let menu = document.getElementById("widget-overflow");
+      let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+      overflowButton.click();
+      await shown;
+    }
+
+    info("Check overflow menu context menu in another button");
+    let overflowMenuCtxMenu = await openContextMenu("customizationPanelItemContextMenu", otherButtonId);
+    checkVisibility(overflowMenuCtxMenu, false);
+    overflowMenuCtxMenu.hidePopup();
+
+    info("Test overflow menu context menu in browserAction");
+    await testContextMenu(overflowMenuCtxMenu.id, customizing);
+
+    info("Restore initial state");
+    CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_NAVBAR);
+    CustomizableUI.addWidgetToArea(otherButtonId, CustomizableUI.AREA_NAVBAR);
+
+    if (customizing) {
+      info("Exit customize mode");
+      let afterCustomization = BrowserTestUtils.waitForEvent(gNavToolbox, "aftercustomization");
+      gCustomizeMode.exit();
+      await afterCustomization;
+    }
+  }
+
+  await extension.startup();
+
+  info("Add a dummy tab to prevent about:addons from being loaded in the initial about:blank tab");
+  let dummyTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com", true, true);
+
+  info("Run tests in normal mode");
+  await main(false);
+
+  info("Run tests in customize mode");
+  await main(true);
+
+  info("Close the dummy tab and finish");
+  gBrowser.removeTab(dummyTab);
+  await extension.unload();
+});

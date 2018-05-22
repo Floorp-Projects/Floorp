@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingMax",
   "browser.tabs.remote.warmup.maxTabs");
 XPCOMUtils.defineLazyPreferenceGetter(this, "gTabWarmingUnloadDelayMs",
   "browser.tabs.remote.warmup.unloadDelayMs");
+XPCOMUtils.defineLazyPreferenceGetter(this, "gTabCacheSize",
+  "browser.tabs.remote.tabCacheSize");
 
 /**
  * The tab switcher is responsible for asynchronously switching
@@ -291,6 +293,10 @@ class AsyncTabSwitcher {
            this.window.isFullyOccluded;
   }
 
+  get tabLayerCache() {
+    return this.tabbrowser._tabLayerCache;
+  }
+
   finish() {
     this.log("FINISH");
 
@@ -508,6 +514,15 @@ class AsyncTabSwitcher {
     this.assert(this.tabbrowser._switcher);
     this.assert(this.tabbrowser._switcher === this);
 
+    for (let i = 0; i < this.tabLayerCache.length; i++) {
+      let tab = this.tabLayerCache[i];
+      if (!tab.linkedBrowser) {
+        this.tabState.delete(tab);
+        this.tabLayerCache.splice(i, 1);
+        i--;
+      }
+    }
+
     for (let [tab, ] of this.tabState) {
       if (!tab.linkedBrowser) {
         this.tabState.delete(tab);
@@ -566,6 +581,13 @@ class AsyncTabSwitcher {
       this.loadRequestedTab();
     }
 
+    let numBackgroundCached = 0;
+    for (let tab of this.tabLayerCache) {
+      if (tab !== this.requestedTab) {
+        numBackgroundCached++;
+      }
+    }
+
     // See how many tabs still have work to do.
     let numPending = 0;
     let numWarming = 0;
@@ -575,7 +597,9 @@ class AsyncTabSwitcher {
         continue;
       }
 
-      if (state == this.STATE_LOADED && tab !== this.requestedTab) {
+      if (state == this.STATE_LOADED &&
+          tab !== this.requestedTab &&
+          !this.tabLayerCache.includes(tab)) {
         numPending++;
 
         if (tab !== this.visibleTab) {
@@ -597,6 +621,10 @@ class AsyncTabSwitcher {
     }
 
     this.maybeFinishTabSwitch();
+
+    if (numBackgroundCached > 0) {
+      this.deactivateCachedBackgroundTabs();
+    }
 
     if (numWarming > gTabWarmingMax) {
       this.logState("Hit tabWarmingMax");
@@ -624,6 +652,16 @@ class AsyncTabSwitcher {
     this.postActions();
   }
 
+  deactivateCachedBackgroundTabs() {
+    for (let tab of this.tabLayerCache) {
+      if (tab !== this.requestedTab) {
+        let browser = tab.linkedBrowser;
+        browser.preserveLayers(true);
+        browser.docShellIsActive = false;
+      }
+    }
+  }
+
   // If there are any non-visible and non-requested tabs in
   // STATE_LOADED, sets them to STATE_UNLOADING. Also queues
   // up the unloadTimer to run onUnloadTimeout if there are still
@@ -638,15 +676,20 @@ class AsyncTabSwitcher {
         continue;
       }
 
+      let isInLayerCache = this.tabLayerCache.includes(tab);
+
       if (state == this.STATE_LOADED &&
           !this.maybeVisibleTabs.has(tab) &&
           tab !== this.lastVisibleTab &&
           tab !== this.loadingTab &&
-          tab !== this.requestedTab) {
+          tab !== this.requestedTab &&
+          !isInLayerCache) {
         this.setTabState(tab, this.STATE_UNLOADING);
       }
 
-      if (state != this.STATE_UNLOADED && tab !== this.requestedTab) {
+      if (state != this.STATE_UNLOADED &&
+          tab !== this.requestedTab &&
+          !isInLayerCache) {
         numPending++;
       }
     }
@@ -870,17 +913,49 @@ class AsyncTabSwitcher {
     this.queueUnload(gTabWarmingUnloadDelayMs);
   }
 
+  cleanUpTabAfterEviction(tab) {
+    this.assert(tab !== this.requestedTab);
+    let browser = tab.linkedBrowser;
+    if (browser) {
+      browser.preserveLayers(false);
+    }
+    this.setTabState(tab, this.STATE_UNLOADING);
+  }
+
+  evictOldestTabFromCache() {
+    let tab = this.tabLayerCache.shift();
+    this.cleanUpTabAfterEviction(tab);
+  }
+
+  maybePromoteTabInLayerCache(tab) {
+    if (gTabCacheSize > 1 &&
+        tab.linkedBrowser.isRemoteBrowser &&
+        tab.linkedBrowser.currentURI.spec != "about:blank") {
+      let tabIndex = this.tabLayerCache.indexOf(tab);
+
+      if (tabIndex != -1) {
+        this.tabLayerCache.splice(tabIndex, 1);
+      }
+
+      this.tabLayerCache.push(tab);
+
+      if (this.tabLayerCache.length > gTabCacheSize) {
+        this.evictOldestTabFromCache();
+      }
+    }
+  }
+
   // Called when the user asks to switch to a given tab.
   requestTab(tab) {
     if (tab === this.requestedTab) {
       return;
     }
 
+    let tabState = this.getTabState(tab);
     if (gTabWarmingEnabled) {
       let warmingState = "disqualified";
 
       if (this.canWarmTab(tab)) {
-        let tabState = this.getTabState(tab);
         if (tabState == this.STATE_LOADING) {
           warmingState = "stillLoading";
         } else if (tabState == this.STATE_LOADED) {
@@ -906,6 +981,12 @@ class AsyncTabSwitcher {
     this.startTabSwitch();
 
     this.requestedTab = tab;
+    if (tabState == this.STATE_LOADED) {
+      this.maybeVisibleTabs.clear();
+      if (tab.linkedBrowser.isRemoteBrowser) {
+        tab.linkedBrowser.forceRepaint();
+      }
+    }
 
     tab.linkedBrowser.setAttribute("primary", "true");
     if (this.lastPrimaryTab && this.lastPrimaryTab != tab) {
@@ -992,6 +1073,10 @@ class AsyncTabSwitcher {
     if (this.switchInProgress && this.requestedTab &&
         (this.getTabState(this.requestedTab) == this.STATE_LOADED ||
           this.requestedTab === this.blankTab)) {
+      if (this.requestedTab !== this.blankTab) {
+        this.maybePromoteTabInLayerCache(this.requestedTab);
+      }
+
       // After this point the tab has switched from the content thread's point of view.
       // The changes will be visible after the next refresh driver tick + composite.
       let time = TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_TOTAL_E10S_MS", this.window);
@@ -1078,19 +1163,37 @@ class AsyncTabSwitcher {
       let tab = this.tabbrowser.tabs[i];
       let state = this.getTabState(tab);
       let isWarming = this.warmingTabs.has(tab);
+      let isCached = this.tabLayerCache.includes(tab);
+      let isClosing = tab.closing;
+      let linkedBrowser = tab.linkedBrowser;
+      let isActive = linkedBrowser && linkedBrowser.docShellIsActive;
+      let isRendered = linkedBrowser && linkedBrowser.renderLayers;
 
       accum += i + ":";
       if (tab === this.lastVisibleTab) accum += "V";
       if (tab === this.loadingTab) accum += "L";
       if (tab === this.requestedTab) accum += "R";
       if (tab === this.blankTab) accum += "B";
-      if (isWarming) accum += "(W)";
+
+      let extraStates = "";
+      if (isWarming) extraStates += "W";
+      if (isCached) extraStates += "C";
+      if (isClosing) extraStates += "X";
+      if (isActive) extraStates += "A";
+      if (isRendered) extraStates += "R";
+      if (extraStates != "") {
+        accum += `(${extraStates})`;
+      }
+
       if (state == this.STATE_LOADED) accum += "(+)";
       if (state == this.STATE_LOADING) accum += "(+?)";
       if (state == this.STATE_UNLOADED) accum += "(-)";
       if (state == this.STATE_UNLOADING) accum += "(-?)";
       accum += " ";
     }
+
+    accum += "cached: " + this.tabLayerCache.length;
+
     if (this._useDumpForLogging) {
       dump(accum + "\n");
     } else {

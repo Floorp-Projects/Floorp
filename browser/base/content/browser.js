@@ -6390,6 +6390,29 @@ function onDownloadsAutoHideChange(event) {
   Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
 }
 
+function getUnwrappedTriggerNode(popup) {
+  // Toolbar buttons are wrapped in customize mode. Unwrap if necessary.
+  let {triggerNode} = popup;
+  if (triggerNode && gCustomizeMode.isWrappedToolbarItem(triggerNode)) {
+    return triggerNode.firstChild;
+  }
+  return triggerNode;
+}
+
+function UpdateManageExtension(popup) {
+  let checkbox = popup.querySelector(".customize-context-manageExtension");
+  let separator = checkbox.nextElementSibling;
+  let node = getUnwrappedTriggerNode(popup);
+  let isWebExt = node && node.hasAttribute("data-extensionid");
+  checkbox.hidden = separator.hidden = !isWebExt;
+}
+
+function openAboutAddonsForContextAction(popup) {
+  let id = getUnwrappedTriggerNode(popup).getAttribute("data-extensionid");
+  let viewID = "addons://detail/" + encodeURIComponent(id);
+  BrowserOpenAddonsMgr(viewID);
+}
+
 var gPageStyleMenu = {
   // This maps from a <browser> element (or, more specifically, a
   // browser's permanentKey) to an Object that contains the most recent
