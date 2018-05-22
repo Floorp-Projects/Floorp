@@ -228,8 +228,8 @@ function runTest() {
     // document.fonts FontFaceSet.
     var p = Promise.resolve();
     sourceDocuments.forEach(function({ doc, what }) {
-      p = p.then(doc.fonts.ready).then(function() {
-        return is_resolved_with(doc.fonts.ready, doc.fonts, "document.fonts.ready resolves with document.fonts", "(TEST 3) (" + what + ")");
+      p = p.then(_ => { return doc.fonts.ready }).then(function() {
+        return is_resolved_with(doc.fonts.ready, doc.fonts, "document.fonts.ready resolves with document.fonts.", "(TEST 3) (" + what + ")");
       });
     });
     return p;
