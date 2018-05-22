@@ -4700,8 +4700,10 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
                 i += JS_BIT(16);
             if (i >= intmapBitLength) {
                 size_t newLength = NumWordsForBitArrayOfLength(i + 1);
-                if (!intmap.resize(newLength))
+                if (!intmap.resize(newLength)) {
+                    ReportOutOfMemory(cx);
                     return false;
+                }
                 intmapBitLength = newLength * BitArrayElementBits;
             }
             if (IsBitArrayElementSet(intmap.begin(), intmap.length(), i)) {
@@ -4830,8 +4832,10 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         pc += JUMP_OFFSET_LEN;
 
         if (tableLength != 0) {
-            if (!table.growBy(tableLength))
+            if (!table.growBy(tableLength)) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
 
             for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
                 if (ParseNode* caseValue = caseNode->caseExpression()) {
