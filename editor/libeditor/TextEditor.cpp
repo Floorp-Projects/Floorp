@@ -1737,13 +1737,10 @@ TextEditor::OutputToString(const nsAString& aFormatType,
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  nsString resultString;
   RulesInfo ruleInfo(EditAction::outputText);
-  ruleInfo.outString = &resultString;
+  ruleInfo.outString = &aOutputString;
   ruleInfo.flags = aFlags;
-  // XXX Struct should store a nsAReadable*
-  nsAutoString str(aFormatType);
-  ruleInfo.outputFormat = &str;
+  ruleInfo.outputFormat = &aFormatType;
   Selection* selection = GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
@@ -1754,8 +1751,7 @@ TextEditor::OutputToString(const nsAString& aFormatType,
     return rv;
   }
   if (handled) {
-    // This case will get triggered by password fields.
-    aOutputString.Assign(*(ruleInfo.outString));
+    // This case will get triggered by password fields or single text node only.
     return rv;
   }
 
