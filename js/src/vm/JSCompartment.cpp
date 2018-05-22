@@ -74,7 +74,6 @@ JSCompartment::JSCompartment(Zone* zone)
     debugScriptMap(nullptr),
     debugEnvs(nullptr),
     enumerators(nullptr),
-    realmStats_(nullptr),
     scheduledForDestruction(false),
     maybeAlive(true),
     jitCompartment_(nullptr),
