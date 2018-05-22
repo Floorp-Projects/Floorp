@@ -218,12 +218,6 @@ var StarUI = {
       return;
     }
     this._bookmarkPopupInitialized = true;
-    // Move the header (star, title, button) into the grid,
-    // so that it aligns nicely with the other items (bug 484022).
-    let header = this._element("editBookmarkPanelHeader");
-    let rows = this._element("editBookmarkPanelGrid").lastChild;
-    rows.insertBefore(header, rows.firstChild);
-    header.hidden = false;
 
     await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition, aUrl);
   },
@@ -240,7 +234,6 @@ var StarUI = {
         gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle");
 
     // No description; show the Done, Remove;
-    this._element("editBookmarkPanelDescription").textContent = "";
     this._element("editBookmarkPanelBottomButtons").hidden = false;
     this._element("editBookmarkPanelContent").hidden = false;
 
