@@ -419,12 +419,12 @@ class BlobURLsReporter final : public nsIMemoryReporter
 
 NS_IMPL_ISUPPORTS(BlobURLsReporter, nsIMemoryReporter)
 
-class ReleasingTimerHolder final : public nsITimerCallback
-                                 , public nsINamed
+class ReleasingTimerHolder final : public Runnable
+                                 , public nsITimerCallback
                                  , public nsIAsyncShutdownBlocker
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   static void
   Create(const nsACString& aURI, bool aBroadcastToOtherProcesses)
@@ -438,20 +438,38 @@ public:
       holder->CancelTimerAndRevokeURI();
     });
 
-    nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(holder->mTimer),
-                                          holder, RELEASING_TIMER,
+    nsresult rv =
+      SystemGroup::EventTargetFor(TaskCategory::Other)->Dispatch(holder.forget());
+    NS_ENSURE_SUCCESS_VOID(rv);
+ 
+    raii.release();
+  }
+
+  // Runnable interface
+
+  NS_IMETHOD
+  Run() override
+  {
+    RefPtr<ReleasingTimerHolder> self = this;
+    auto raii = mozilla::MakeScopeExit([self] {
+      self->CancelTimerAndRevokeURI();
+    });
+
+    nsresult rv = NS_NewTimerWithCallback(getter_AddRefs(mTimer),
+                                          this, RELEASING_TIMER,
                                           nsITimer::TYPE_ONE_SHOT,
                                           SystemGroup::EventTargetFor(TaskCategory::Other));
-    NS_ENSURE_SUCCESS_VOID(rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     nsCOMPtr<nsIAsyncShutdownClient> phase = GetShutdownPhase();
-    NS_ENSURE_TRUE_VOID(!!phase);
+    NS_ENSURE_TRUE(!!phase, NS_OK);
 
-    rv = phase->AddBlocker(holder, NS_LITERAL_STRING(__FILE__), __LINE__,
+    rv = phase->AddBlocker(this, NS_LITERAL_STRING(__FILE__), __LINE__,
                            NS_LITERAL_STRING("ReleasingTimerHolder shutdown"));
-    NS_ENSURE_SUCCESS_VOID(rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
 
     raii.release();
+    return NS_OK;
   }
 
   // nsITimerCallback interface
@@ -463,14 +481,7 @@ public:
     return NS_OK;
   }
 
-  // nsINamed interface
-
-  NS_IMETHOD
-  GetName(nsACString& aName) override
-  {
-    aName.AssignLiteral("ReleasingTimerHolder");
-    return NS_OK;
-  }
+  using nsINamed::GetName;
 
   // nsIAsyncShutdownBlocker interface
 
@@ -497,7 +508,8 @@ public:
 
 private:
   ReleasingTimerHolder(const nsACString& aURI, bool aBroadcastToOtherProcesses)
-    : mURI(aURI)
+    : Runnable("ReleasingTimerHolder")
+    , mURI(aURI)
     , mBroadcastToOtherProcesses(aBroadcastToOtherProcesses)
   {}
 
@@ -563,8 +575,8 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(ReleasingTimerHolder, nsITimerCallback, nsINamed,
-                  nsIAsyncShutdownBlocker)
+NS_IMPL_ISUPPORTS_INHERITED(ReleasingTimerHolder, Runnable, nsITimerCallback,
+                            nsIAsyncShutdownBlocker)
 
 } // namespace mozilla
 
