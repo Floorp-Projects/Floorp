@@ -106,7 +106,8 @@ RELEASE_LOCALES = [
 # verify their work in progress.
 ADDITIONAL_SCREENSHOT_LOCALES = [
 	"ixl",
-	"lt"
+	"lt",
+	"en-CA"
 ]
 
 # Those are locales that we take automated screenshots of.
