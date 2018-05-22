@@ -14,73 +14,75 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 # Components
 
+* 🔴 **In Development** - Not ready to be used in shipping products.
+* ⚪ **Preview** - This component is almost ready and can be (partially) tested in products.
+* 🔵 **Production ready** - Used by shipping products.
+
 ## Browser
 
 High-level components for building browser(-like) apps.
 
-* **Domains** - Localized and customizable domain lists for auto-completion in browsers.
+* 🔵 **Domains** Localized and customizable domain lists for auto-completion in browsers.
 
-* **Engine** - An abstract layer hiding the actual browser engine implementation.
+* 🔴 **Engine-Gecko** - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
 
-* **Engine-Gecko** - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
+* 🔴 **Engine-System** - *Engine* implementation based on the system's WebView.
 
-* **Engine-System** - *Engine* implementation based on the system's WebView.
+* ⚪ **Erropages** - Responsive browser error pages for Android apps.
 
-* **Erropages** - Responsive browser error pages for Android apps.
+* 🔴 **Menu** - A generic menu with customizable items primarily for browser toolbars.
 
-* **Menu** - A generic menu with customizable items primarily for browser toolbars.
+* 🔵 **Search** - Search plugins and companion code to load, parse and use them.
 
-* **Search** - Search plugins and companion code to load, parse and use them.
+* 🔴 **Session** - A generic representation of a browser session.
 
-* **Session** - A generic representation of a browser session.
-
-* **Toolbar** - A customizable toolbar for browsers.
+* 🔴 **Toolbar** - A customizable toolbar for browsers.
 
 ## Concept
 
 _API contracts and abstraction layers for browser components._
 
-* **Engine** - Abstraction layer that allows hiding the actual browser engine implementation.
+* 🔴 **Engine** - Abstraction layer that allows hiding the actual browser engine implementation.
 
-* **Session-Storage** - Abstraction layer and contracts for hiding the actual session storage implementation.
+* 🔴 **Session-Storage** - Abstraction layer and contracts for hiding the actual session storage implementation.
 
-* **Toolbar** - Abstract definition of a browser toolbar component.
+* 🔴 **Toolbar** - Abstract definition of a browser toolbar component.
 
 ## Feature
 
 _Combined components to implement feature-specific use cases._
 
-* **Session** - A component thats connects an (concept) engine implementation with the browser session module.
+* 🔴 **Session** - A component thats connects an (concept) engine implementation with the browser session module.
 
-* **Toolbar** - A component thats connects a (concept) toolbar implementation with the browser session module.
+* 🔴 **Toolbar** - A component thats connects a (concept) toolbar implementation with the browser session module.
 
 ## UI
 
 _Generic low-level UI components for building apps._
 
-* **Autocomplete** - A set of components to provide autocomplete functionality.
+* 🔵 **Autocomplete** - A set of components to provide autocomplete functionality.
 
-* **Colors** - The standard set of [Photon](https://design.firefox.com/photon/) colors.
+* 🔵 **Colors** - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
-* **Fonts** - The standard set of fonts used by Mozilla Android products.
+* 🔵 **Fonts** - The standard set of fonts used by Mozilla Android products.
 
-* **Icons** - A collection of often used browser icons.
+* 🔵 **Icons** - A collection of often used browser icons.
 
-* **Progress** - An animated progress bar following the Photon Design System. 
+* 🔵 **Progress** - An animated progress bar following the Photon Design System. 
 
 ## Service
 
 _Components and libraries to interact with backend services._
 
-* **Telemetry** - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
+* 🔵 **Telemetry** - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
 ## Support
 
 _Supporting components with generic helper code._
 
-* **Ktx** - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
+* 🔵 **Ktx** - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
-* **Utils** - Generic utility classes to be shared between projects.
+* 🔵 **Utils** - Generic utility classes to be shared between projects.
 
 # License
 
