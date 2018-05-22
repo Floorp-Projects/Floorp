@@ -21,6 +21,7 @@ extern "C" {
 #include "tls_connect.h"
 #include "tls_filter.h"
 #include "tls_parser.h"
+#include "rsa8193.h"
 
 namespace nss_test {
 
@@ -98,6 +99,41 @@ TEST_P(TlsConnectStreamPre13,
   MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
   server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
+}
+
+// Replace the server certificate with one that uses 8193-bit RSA.
+class TooLargeRSACertFilter : public TlsHandshakeFilter {
+ public:
+  TooLargeRSACertFilter(const std::shared_ptr<TlsAgent> &server)
+      : TlsHandshakeFilter(server, {kTlsHandshakeCertificate}) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
+                                               const DataBuffer &input,
+                                               DataBuffer *output) {
+    const uint32_t cert_len = sizeof(rsa8193);
+    const uint32_t outer_len = cert_len + 3;
+    size_t offset = 0;
+    offset = output->Write(offset, outer_len, 3);
+    offset = output->Write(offset, cert_len, 3);
+    offset = output->Write(offset, rsa8193, cert_len);
+
+    return CHANGE;
+  }
+};
+
+TEST_P(TlsConnectGenericPre13, TooLargeRSAKeyInCert) {
+  EnableOnlyStaticRsaCiphers();
+  MakeTlsFilter<TooLargeRSACertFilter>(server_);
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  client_->CheckErrorCode(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+}
+
+TEST_P(TlsConnectGeneric, ServerAuthBiggestRsa) {
+  Reset(TlsAgent::kRsa8192);
+  Connect();
+  CheckKeys();
 }
 
 }  // namespace nss_test

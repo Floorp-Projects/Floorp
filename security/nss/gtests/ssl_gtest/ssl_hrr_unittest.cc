@@ -617,6 +617,68 @@ TEST_P(TlsConnectTls13, RetryStatefulDropCookie) {
   server_->CheckErrorCode(SSL_ERROR_MISSING_COOKIE_EXTENSION);
 }
 
+class TruncateHrrCookie : public TlsExtensionFilter {
+ public:
+  TruncateHrrCookie(const std::shared_ptr<TlsAgent>& a)
+      : TlsExtensionFilter(a) {}
+  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    if (extension_type != ssl_tls13_cookie_xtn) {
+      return KEEP;
+    }
+
+    // Claim a zero-length cookie.
+    output->Allocate(2);
+    output->Write(0, static_cast<uint32_t>(0), 2);
+    return CHANGE;
+  }
+};
+
+TEST_P(TlsConnectTls13, RetryCookieEmpty) {
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+
+  TriggerHelloRetryRequest(client_, server_);
+  MakeTlsFilter<TruncateHrrCookie>(client_);
+
+  ExpectAlert(server_, kTlsAlertHandshakeFailure);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
+class AddJunkToCookie : public TlsExtensionFilter {
+ public:
+  AddJunkToCookie(const std::shared_ptr<TlsAgent>& a) : TlsExtensionFilter(a) {}
+  virtual PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    if (extension_type != ssl_tls13_cookie_xtn) {
+      return KEEP;
+    }
+
+    *output = input;
+    // Add junk after the cookie.
+    static const uint8_t junk[2] = {1, 2};
+    output->Append(DataBuffer(junk, sizeof(junk)));
+    return CHANGE;
+  }
+};
+
+TEST_P(TlsConnectTls13, RetryCookieWithExtras) {
+  ConfigureSelfEncrypt();
+  EnsureTlsSetup();
+
+  TriggerHelloRetryRequest(client_, server_);
+  MakeTlsFilter<AddJunkToCookie>(client_);
+
+  ExpectAlert(server_, kTlsAlertHandshakeFailure);
+  Handshake();
+  client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
+  server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+}
+
 // Stream only because DTLS drops bad packets.
 TEST_F(TlsConnectStreamTls13, RetryStatelessDamageFirstClientHello) {
   ConfigureSelfEncrypt();

@@ -79,8 +79,6 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
-
 protected:
   // Helper function to reflow a child frame.
   void ReflowChildFrame(nsIFrame*          aChild,

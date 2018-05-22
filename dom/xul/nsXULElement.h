@@ -670,9 +670,9 @@ protected:
 
     /**
      * The nearest enclosing content node with a binding
-     * that created us. [Weak]
+     * that created us.
      */
-    nsIContent*                         mBindingParent;
+    nsCOMPtr<nsIContent> mBindingParent;
 
     /**
      * Abandon our prototype linkage, and copy all attributes locally

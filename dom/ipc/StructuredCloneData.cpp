@@ -39,6 +39,7 @@ StructuredCloneData::StructuredCloneData(TransferringSupport aSupportsTransferri
   : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
                           aSupportsTransferring,
                           StructuredCloneHolder::StructuredCloneScope::DifferentProcess)
+  , mExternalData(JS::StructuredCloneScope::DifferentProcess)
   , mInitialized(false)
 {}
 
@@ -124,7 +125,7 @@ StructuredCloneData::Write(JSContext* aCx,
     return;
   }
 
-  JSStructuredCloneData data;
+  JSStructuredCloneData data(mBuffer->scope());
   mBuffer->abandon();
   mBuffer->steal(&data);
   mBuffer = nullptr;
@@ -151,7 +152,7 @@ BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
   auto iter = aData.Data().Start();
   size_t size = aData.Data().Size();
   bool success;
-  buffer.data = aData.Data().Borrow<js::SystemAllocPolicy>(iter, size, &success);
+  buffer.data = aData.Data().Borrow(iter, size, &success);
   if (NS_WARN_IF(!success)) {
     return false;
   }
@@ -422,7 +423,7 @@ StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
                                    PickleIterator* aIter)
 {
   MOZ_ASSERT(!mInitialized);
-  JSStructuredCloneData data;
+  JSStructuredCloneData data(JS::StructuredCloneScope::DifferentProcess);
   if (!ReadParam(aMsg, aIter, &data)) {
     return false;
   }

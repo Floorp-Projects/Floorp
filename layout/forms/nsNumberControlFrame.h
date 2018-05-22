@@ -157,8 +157,6 @@ public:
    */
   void HandleSelectCall();
 
-  virtual Element* GetPseudoElement(CSSPseudoElementType aType) override;
-
   bool ShouldUseNativeStyleForSpinner() const;
 
 private:

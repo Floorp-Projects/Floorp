@@ -45,11 +45,18 @@ StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
 }
 
 inline
-StructuredCloneReadInfo::StructuredCloneReadInfo()
-  : mDatabase(nullptr)
+StructuredCloneReadInfo::StructuredCloneReadInfo(JS::StructuredCloneScope aScope)
+  : mData(aScope)
+  , mDatabase(nullptr)
   , mHasPreprocessInfo(false)
 {
   MOZ_COUNT_CTOR(StructuredCloneReadInfo);
+}
+
+inline
+StructuredCloneReadInfo::StructuredCloneReadInfo()
+ : StructuredCloneReadInfo(JS::StructuredCloneScope::DifferentProcessForIndexedDB)
+{
 }
 
 inline

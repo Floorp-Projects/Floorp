@@ -175,7 +175,7 @@ static int /* bool */
             }
         }
     } else {
-        sprintf(buf, " [%d]", k);
+        sprintf(buf, " [%lu]", k);
     }
     buf += strlen(buf);
 
@@ -982,7 +982,7 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
 
 #ifdef DEBUG_ASN1D_STATES
     {
-        printf("Found Length %d %s\n", state->contents_length,
+        printf("Found Length %lu %s\n", state->contents_length,
                state->indefinite ? "indefinite" : "");
     }
 #endif
@@ -2717,16 +2717,15 @@ dump_states(SEC_ASN1DecoderContext *cx)
         }
 
         i = formatKind(state->theTemplate->kind, kindBuf);
-        printf("%s: tmpl %08x, kind%s",
+        printf("%s: tmpl kind %s",
                (state == cx->current) ? "STATE" : "State",
-               state->theTemplate,
                kindBuf);
         printf(" %s", (state->place >= 0 && state->place <= notInUse) ? place_names[state->place] : "(undefined)");
         if (!i)
-            printf(", expect 0x%02x",
+            printf(", expect 0x%02lx",
                    state->expect_tag_number | state->expect_tag_modifiers);
 
-        printf("%s%s%s %d\n",
+        printf("%s%s%s %lu\n",
                state->indefinite ? ", indef" : "",
                state->missing ? ", miss" : "",
                state->endofcontents ? ", EOC" : "",
@@ -2754,7 +2753,7 @@ SEC_ASN1DecoderUpdate(SEC_ASN1DecoderContext *cx,
         what = SEC_ASN1_Contents;
         consumed = 0;
 #ifdef DEBUG_ASN1D_STATES
-        printf("\nPLACE = %s, next byte = 0x%02x, %08x[%d]\n",
+        printf("\nPLACE = %s, next byte = 0x%02x, %p[%lu]\n",
                (state->place >= 0 && state->place <= notInUse) ? place_names[state->place] : "(undefined)",
                len ? (unsigned int)((unsigned char *)buf)[consumed] : 0,
                buf, consumed);
@@ -2977,7 +2976,7 @@ SEC_ASN1DecoderFinish(SEC_ASN1DecoderContext *cx)
 {
     SECStatus rv;
 
-    if (cx->status == needBytes) {
+    if (!cx || cx->status == needBytes) {
         PORT_SetError(SEC_ERROR_BAD_DER);
         rv = SECFailure;
     } else {

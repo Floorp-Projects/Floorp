@@ -888,24 +888,6 @@ nsRangeFrame::ShouldUseNativeStyle() const
                                                  STYLES_DISABLING_NATIVE_THEMING);
 }
 
-Element*
-nsRangeFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (aType == CSSPseudoElementType::mozRangeTrack) {
-    return mTrackDiv;
-  }
-
-  if (aType == CSSPseudoElementType::mozRangeThumb) {
-    return mThumbDiv;
-  }
-
-  if (aType == CSSPseudoElementType::mozRangeProgress) {
-    return mProgressDiv;
-  }
-
-  return nsContainerFrame::GetPseudoElement(aType);
-}
-
 ComputedStyle*
 nsRangeFrame::GetAdditionalComputedStyle(int32_t aIndex) const
 {

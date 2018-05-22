@@ -813,6 +813,7 @@ sec_pkcs12_decoder_asafes_notify(void *arg, PRBool before, void *dest,
             unsigned int cnt = p12dcx->safeContentsCnt - 1;
             safeContentsCtx = p12dcx->safeContentsList[cnt];
             if (safeContentsCtx->safeContentsA1Dcx) {
+                SEC_ASN1DecoderClearFilterProc(p12dcx->aSafeA1Dcx);
                 SEC_ASN1DecoderFinish(safeContentsCtx->safeContentsA1Dcx);
                 safeContentsCtx->safeContentsA1Dcx = NULL;
             }

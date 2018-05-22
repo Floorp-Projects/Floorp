@@ -51,6 +51,8 @@ enum PluginQuirks {
   QUIRK_FLASH_HOOK_PRINTDLGW                      = 1 << 14,
   // Win: Broker Win32 SSL operations
   QUIRK_FLASH_HOOK_SSL                            = 1 << 15,
+  // Win: Hook CreateMutexW for brokering when using the camera
+  QUIRK_FLASH_HOOK_CREATEMUTEXW                   = 1 << 16,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
