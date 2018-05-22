@@ -40,6 +40,8 @@ var _path = require("./path");
 
 var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
 
+var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
 var _sourcesTree = require("./sources-tree/index");
 
 const sourceTypes = exports.sourceTypes = {
@@ -151,9 +153,16 @@ function resolveFileURL(url, transformUrl = initialUrl => initialUrl) {
   const name = transformUrl(url);
   return (0, _utils.endTruncateStr)(name, 50);
 }
+/**
+ * Gets a readable filename from a URL for display purposes.
+ *
+ * @memberof utils/source
+ * @static
+ */
+
 
 function getFilenameFromURL(url) {
-  return resolveFileURL(url, initialUrl => (0, _path.basename)(initialUrl) || "(index)");
+  return resolveFileURL(url, initialUrl => (0, _devtoolsModules.getUnicodeUrlPath)((0, _path.basename)(initialUrl)) || "(index)");
 }
 
 function getFormattedSourceId(id) {
@@ -161,8 +170,8 @@ function getFormattedSourceId(id) {
   return `SOURCE${sourceId}`;
 }
 /**
- * Show a source url's filename.
- * If the source does not have a url, use the source id.
+ * Gets a readable filename from a source URL for display purposes.
+ * If the source does not have a URL, the source ID will be returned instead.
  *
  * @memberof utils/source
  * @static
@@ -189,8 +198,8 @@ function getFilename(source) {
   return filename;
 }
 /**
- * Show a source url.
- * If the source does not have a url, use the source id.
+ * Gets a readable source URL for display purposes.
+ * If the source does not have a URL, the source ID will be returned instead.
  *
  * @memberof utils/source
  * @static
@@ -207,7 +216,7 @@ function getFileURL(source) {
     return getFormattedSourceId(id);
   }
 
-  return resolveFileURL(url);
+  return resolveFileURL(url, _devtoolsModules.getUnicodeUrl);
 }
 
 const contentTypeModeMap = {
