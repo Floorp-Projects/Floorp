@@ -332,11 +332,11 @@ HTMLEditor::Init(nsIDocument& aDoc,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLEditor::PreDestroy(bool aDestroyingFrames)
 {
   if (mDidPreDestroy) {
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIDocument> document = GetDocument();
@@ -352,7 +352,7 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
   // stay around (which they would, since the frames have an owning reference).
   HideAnonymousEditingUIs();
 
-  return TextEditor::PreDestroy(aDestroyingFrames);
+  EditorBase::PreDestroy(aDestroyingFrames);
 }
 
 NS_IMETHODIMP
