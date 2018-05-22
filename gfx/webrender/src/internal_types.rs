@@ -129,25 +129,16 @@ impl TextureUpdateList {
     }
 }
 
-/// Mostly wraps a tiling::Frame, adding a bit of extra information.
+/// Wraps a tiling::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
-    /// The pipeline info contains:
-    /// - The last rendered epoch for each pipeline present in the frame.
-    /// This information is used to know if a certain transformation on the layout has
-    /// been rendered, which is necessary for reftests.
-    /// - Pipelines that were removed from the scene.
-    pub pipeline_info: PipelineInfo,
-
     pub frame: tiling::Frame,
 }
 
 impl RenderedDocument {
     pub fn new(
-        pipeline_info: PipelineInfo,
         frame: tiling::Frame,
     ) -> Self {
         RenderedDocument {
-            pipeline_info,
             frame,
         }
     }
@@ -171,6 +162,7 @@ pub enum ResultMsg {
         updates: TextureUpdateList,
         cancel_rendering: bool,
     },
+    PublishPipelineInfo(PipelineInfo),
     PublishDocument(
         DocumentId,
         RenderedDocument,

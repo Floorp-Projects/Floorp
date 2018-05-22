@@ -47,6 +47,7 @@ impl<'a> RawtestHarness<'a> {
         self.test_very_large_blob();
         self.test_save_restore();
         self.test_capture();
+        self.test_zero_height_window();
     }
 
     fn render_and_get_pixels(&mut self, window_rect: DeviceUintRect) -> Vec<u8> {
@@ -657,6 +658,34 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.api.send_transaction(captured.document_id, txn);
         let pixels2 = self.render_and_get_pixels(window_rect);
         assert!(pixels0 == pixels2);
+    }
+
+    fn test_zero_height_window(&mut self) {
+        println!("\tzero height test...");
+
+        let layout_size = LayoutSize::new(120.0, 0.0);
+        let window_size = DeviceUintSize::new(layout_size.width as u32, layout_size.height as u32);
+        let doc_id = self.wrench.api.add_document(window_size, 1);
+
+        let mut builder = DisplayListBuilder::new(self.wrench.root_pipeline_id, layout_size);
+        let info = LayoutPrimitiveInfo::new(LayoutRect::new(LayoutPoint::zero(), LayoutSize::new(100.0, 100.0)));
+        builder.push_rect(&info, ColorF::new(0.0, 1.0, 0.0, 1.0));
+
+        let mut txn = Transaction::new();
+        txn.set_root_pipeline(self.wrench.root_pipeline_id);
+        txn.set_display_list(
+            Epoch(1),
+            Some(ColorF::new(1.0, 0.0, 0.0, 1.0)),
+            layout_size,
+            builder.finalize(),
+            false,
+        );
+        txn.generate_frame();
+        self.wrench.api.send_transaction(doc_id, txn);
+
+        // Ensure we get a notification from rendering the above, even though
+        // there are zero visible pixels
+        assert!(self.rx.recv().unwrap() == NotifierEvent::WakeUp);
     }
 
 

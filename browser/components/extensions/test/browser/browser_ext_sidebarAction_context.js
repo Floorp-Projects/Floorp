@@ -559,10 +559,10 @@ add_task(async function testMultipleWindows() {
         },
         async expect => {
           browser.test.log("Move tab from old window to the new one. Tab-specific data"
-            + " is cleared (bug 1451176) and inheritance is from the new window");
+            + " is preserved but inheritance is from the new window");
           await browser.tabs.move(tabs[1], {windowId: windows[1], index: -1});
           await browser.tabs.update(tabs[1], {active: true});
-          expect(null, details[2], null, details[0]);
+          expect(details[3], details[2], null, details[0]);
         },
         async expect => {
           browser.test.log("Close the tab, expect window values.");

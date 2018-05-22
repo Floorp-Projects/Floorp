@@ -168,6 +168,8 @@ PreallocatedProcessManagerImpl::Take()
 
   if (mPreallocatedProcess) {
     // The preallocated process is taken. Let's try to start up a new one soon.
+    ProcessPriorityManager::SetProcessPriority(mPreallocatedProcess,
+                                               PROCESS_PRIORITY_FOREGROUND);
     AllocateOnIdle();
   }
 

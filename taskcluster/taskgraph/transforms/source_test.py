@@ -117,16 +117,9 @@ def add_build_dependency(config, job):
     if len(matches) > 1:
         raise Exception("More than one build platform found for '{}'.".format(key))
 
-    label = matches[0]['label']
-    target = matches[0]['target-name']
+    label = matches[0]
     deps = job.setdefault('dependencies', {})
     deps.update({'build': label})
-
-    build_artifact = 'public/build/{}'.format(target)
-    installer_url = ARTIFACT_URL.format('<build>', build_artifact)
-
-    env = job['worker'].setdefault('env', {})
-    env.update({'GECKO_INSTALLER_URL': {'task-reference': installer_url}})
 
 
 @transforms.add

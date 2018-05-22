@@ -429,8 +429,22 @@ class AnimationInspector {
   }
 
   async setAnimationsPlayState(doPlay) {
+    if (typeof this.hasPausePlaySome === "undefined") {
+      this.hasPausePlaySome =
+        await this.inspector.target.actorHasMethod("animations", "pauseSome");
+    }
+
     try {
-      if (doPlay) {
+      // If the server does not support pauseSome/playSome function, (which happens
+      // when connected to server older than FF62), use pauseAll/playAll instead.
+      // See bug 1456857.
+      if (this.hasPausePlaySome) {
+        if (doPlay) {
+          await this.animationsFront.playSome(this.state.animations);
+        } else {
+          await this.animationsFront.pauseSome(this.state.animations);
+        }
+      } else if (doPlay) {
         await this.animationsFront.playAll();
       } else {
         await this.animationsFront.pauseAll();

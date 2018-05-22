@@ -59,13 +59,23 @@ foo()
 `});
 
 consoleApi.set("console.time('bar')", {
-  keys: ["console.time('bar')", "timerAlreadyExists",
-         "console.timeEnd('bar')", "timerDoesntExist"],
+  keys: [
+    "console.time('bar')",
+    "timerAlreadyExists",
+    "console.timeLog('bar') - 1",
+    "console.timeLog('bar') - 2",
+    "console.timeEnd('bar')",
+    "timeEnd.timerDoesntExist",
+    "timeLog.timerDoesntExist",
+  ],
   code: `
 console.time("bar");
 console.time("bar");
+console.timeLog("bar");
+console.timeLog("bar", "second call", {state: 1});
 console.timeEnd("bar");
 console.timeEnd("bar");
+console.timeLog("bar");
 `});
 
 consoleApi.set("console.table('bar')", {

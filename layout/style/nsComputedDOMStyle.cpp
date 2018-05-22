@@ -1180,6 +1180,32 @@ nsComputedDOMStyle::SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
   SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
 }
 
+void
+nsComputedDOMStyle::SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
+                                           const StyleComplexColor& aColor,
+                                           uint8_t aWidgetType)
+{
+  if (!aColor.mIsAuto) {
+    SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
+    return;
+  }
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  MOZ_ASSERT(presContext);
+  if (nsContentUtils::ShouldResistFingerprinting(presContext->GetDocShell())) {
+    // Return transparent when resisting fingerprinting.
+    SetToRGBAColor(aValue, NS_RGBA(0, 0, 0, 0));
+    return;
+  }
+  if (nsITheme* theme = presContext->GetTheme()) {
+    nscolor color = theme->GetWidgetAutoColor(mComputedStyle, aWidgetType);
+    SetToRGBAColor(aValue, color);
+  } else {
+    // If we don't have theme, we don't know what value it should be,
+    // just give it a transparent fallback.
+    SetToRGBAColor(aValue, NS_RGBA(0, 0, 0, 0));
+  }
+}
+
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetColor()
 {
@@ -3768,6 +3794,24 @@ nsComputedDOMStyle::DoGetScrollSnapCoordinate()
     }
     return valueList.forget();
   }
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetScrollbarFaceColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarFaceColor,
+                         NS_THEME_SCROLLBARTHUMB_VERTICAL);
+  return val.forget();
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::DoGetScrollbarTrackColor()
+{
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  SetValueForWidgetColor(val, StyleUserInterface()->mScrollbarTrackColor,
+                         NS_THEME_SCROLLBAR_VERTICAL);
+  return val.forget();
 }
 
 already_AddRefed<CSSValue>

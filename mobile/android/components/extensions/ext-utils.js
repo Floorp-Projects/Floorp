@@ -568,11 +568,10 @@ class Tab extends TabBase {
 
 // Manages tab-specific context data and dispatches tab select and close events.
 class TabContext extends EventEmitter {
-  constructor(getDefaults, extension) {
+  constructor(getDefaultPrototype) {
     super();
 
-    this.extension = extension;
-    this.getDefaults = getDefaults;
+    this.getDefaultPrototype = getDefaultPrototype;
     this.tabData = new Map();
 
     GlobalEventDispatcher.registerListener(this, [
@@ -583,7 +582,8 @@ class TabContext extends EventEmitter {
 
   get(tabId) {
     if (!this.tabData.has(tabId)) {
-      this.tabData.set(tabId, this.getDefaults());
+      let data = Object.create(this.getDefaultPrototype(tabId));
+      this.tabData.set(tabId, data);
     }
 
     return this.tabData.get(tabId);

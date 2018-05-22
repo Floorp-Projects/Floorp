@@ -222,73 +222,86 @@ var pktUI = (function() {
             startheight = overflowMenuHeight;
         }
 
-        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0") + "&inoverflowmenu=" + inOverflowMenu + "&locale=" + getUILocale(), {
-            onShow() {
-                var saveLinkMessageId = "saveLink";
-                _lastAddSucceeded = false;
-                getPanelFrame().setAttribute("itemAdded", "false");
+        getFirefoxAccountSignedInUser(function(userdata) {
+            var panelId = showPanel("about:pocket-saved?pockethost="
+                + Services.prefs.getCharPref("extensions.pocket.site")
+                + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0")
+                + "&fxasignedin=" + ((typeof userdata == "object" && userdata !== null) ? "1" : "0")
+                + "&inoverflowmenu=" + inOverflowMenu
+                + "&locale=" + getUILocale(), {
+                onShow() {
+                    var saveLinkMessageId = "saveLink";
+                    _lastAddSucceeded = false;
+                    getPanelFrame().setAttribute("itemAdded", "false");
 
-                // Send error message for invalid url
-                if (!isValidURL) {
-                    // TODO: Pass key for localized error in error object
-                    let error = {
-                        message: "Only links can be saved",
-                        localizedKey: "onlylinkssaved"
-                    };
-                    pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
-                    return;
-                }
-
-                // Check online state
-                if (!navigator.onLine) {
-                    // TODO: Pass key for localized error in error object
-                    let error = {
-                        message: "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again."
-                    };
-                    pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
-                    return;
-                }
-
-                // Add url
-                var options = {
-                    success(data, request) {
-                        var item = data.item;
-                        var successResponse = {
-                            status: "success",
-                            item
+                    // Send error message for invalid url
+                    if (!isValidURL) {
+                        // TODO: Pass key for localized error in error object
+                        let error = {
+                            message: "Only links can be saved",
+                            localizedKey: "onlylinkssaved"
                         };
-                        pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
-                        _lastAddSucceeded = true;
-                        getPanelFrame().setAttribute("itemAdded", "true");
-                    },
-                    error(error, request) {
-                        // If user is not authorized show singup page
-                        if (request.status === 401) {
-                            showSignUp();
-                            return;
-                        }
-
-                        // If there is no error message in the error use a
-                        // complete catch-all
-                        var errorMessage = error.message || "There was an error when trying to save to Pocket.";
-                        var panelError = { message: errorMessage};
-
-                        // Send error message to panel
-                        pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, panelError);
+                        pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
+                        return;
                     }
-                };
 
-                // Add title if given
-                if (typeof title !== "undefined") {
-                    options.title = title;
-                }
+                    // Check online state
+                    if (!navigator.onLine) {
+                        // TODO: Pass key for localized error in error object
+                        let error = {
+                            message: "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again."
+                        };
+                        pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
+                        return;
+                    }
 
-                // Send the link
-                pktApi.addLink(url, options);
-            },
-            onHide: panelDidHide,
-            width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
-            height: startheight
+                    // Add url
+                    var options = {
+                        success(data, request) {
+                            var item = data.item;
+                            var ho2 = data.ho2;
+                            var accountState = data.account_state;
+                            var displayName = data.display_name;
+                            var successResponse = {
+                                status: "success",
+                                accountState,
+                                displayName,
+                                item,
+                                ho2
+                            };
+                            pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
+                            _lastAddSucceeded = true;
+                            getPanelFrame().setAttribute("itemAdded", "true");
+                        },
+                        error(error, request) {
+                            // If user is not authorized show singup page
+                            if (request.status === 401) {
+                                showSignUp();
+                                return;
+                            }
+
+                            // If there is no error message in the error use a
+                            // complete catch-all
+                            var errorMessage = error.message || "There was an error when trying to save to Pocket.";
+                            var panelError = { message: errorMessage};
+
+                            // Send error message to panel
+                            pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, panelError);
+                        }
+                    };
+
+                    // Add title if given
+                    if (typeof title !== "undefined") {
+                        options.title = title;
+                    }
+
+                    // Send the link
+                    pktApi.addLink(url, options);
+                },
+                onHide: panelDidHide,
+                width: inOverflowMenu ? overflowMenuWidth : savePanelWidth,
+                height: startheight
+            });
         });
     }
 
@@ -396,6 +409,34 @@ var pktUI = (function() {
         var _getCurrentURLMessageId = "getCurrentURL";
         pktUIMessaging.addMessageListener(iframe, _getCurrentURLMessageId, function(panelId, data) {
             pktUIMessaging.sendResponseMessageToPanel(panelId, _getCurrentURLMessageId, getCurrentUrl());
+        });
+
+        // Get article info
+        var _getArticleInfoMessageId = "getArticleInfo";
+        pktUIMessaging.addMessageListener(iframe, _getArticleInfoMessageId, function(panelId, data) {
+            pktApi.getArticleInfo(getCurrentUrl(), {
+                success(res, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getArticleInfoMessageId, res);
+                },
+                error(err, req) {
+                    err.fallback_title = getCurrentTitle();
+                    err.fallback_domain = new URL(getCurrentUrl()).hostname;
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getArticleInfoMessageId, err);
+                }
+            });
+        });
+
+        // getMobileDownload
+        var _getMobileDownloadMessageId = "getMobileDownload";
+        pktUIMessaging.addMessageListener(iframe, _getMobileDownloadMessageId, function(panelId, data) {
+            pktApi.getMobileDownload({
+                success(res, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getMobileDownloadMessageId, res);
+                },
+                error(err, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getMobileDownloadMessageId, err);
+                }
+            });
         });
 
         var _resizePanelMessageId = "resizePanel";

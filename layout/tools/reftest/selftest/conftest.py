@@ -48,6 +48,9 @@ def runtests(setup_test_harness, binary, parser):
             'sandboxReadWhitelist': [here, os.environ['PYTHON_TEST_TMP']],
             'utilityPath': os.path.join(package_root, 'bin'),
         })
+
+        if 'USE_ARTIFACT_PATH' in os.environ:
+            options['sandboxReadWhitelist'].append(os.environ['USE_ARTIFACT_PATH'])
     else:
         options.update({
             'extraProfileFiles': [os.path.join(build.topobjdir, 'dist', 'plugins')],

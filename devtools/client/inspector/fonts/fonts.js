@@ -477,9 +477,10 @@ class FontInspector {
    * @param  {Boolean} show
    *         Whether or not to reveal the font.
    * @param  {Boolean} isForCurrentElement
-   *         Whether or not to reveal the font for the current element selection.
+   *         Optional. Default `true`. Whether or not to restrict revealing the font
+   *         just to the current element selection.
    */
-  async onToggleFontHighlight(font, show, isForCurrentElement) {
+  async onToggleFontHighlight(font, show, isForCurrentElement = true) {
     if (!this.fontsHighlighter) {
       try {
         this.fontsHighlighter = await this.inspector.toolbox.highlighterUtils
