@@ -224,7 +224,7 @@ class DesktopUnittestOutputParser(OutputParser):
         # parse parse_single_line but at little cost since we are not parsing
         # the log more then once.  I figured this method should stay isolated as
         # it is only here for tbpl highlighted summaries and is not part of
-        # buildbot evaluation or result status IIUC.
+        # result status IIUC.
         summary = tbox_print_summary(self.pass_count,
                                      self.fail_count,
                                      self.known_fail_count,

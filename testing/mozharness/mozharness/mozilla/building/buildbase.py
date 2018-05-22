@@ -584,7 +584,7 @@ class BuildOptionParser(object):
 # this global depends on BuildOptionParser and therefore can not go at the
 # top of the file
 BUILD_BASE_CONFIG_OPTIONS = [
-    [['--developer-run', '--skip-buildbot-actions'], {
+    [['--developer-run'], {
         "action": "store_false",
         "dest": "is_automation",
         "default": True,
@@ -874,12 +874,6 @@ or run without that action (ie: --no-{action})"
             repo_path = c['repo_path']
         self.repo_path = '%s/%s' % (c['repo_base'], repo_path,)
         return self.repo_path
-
-    def _skip_buildbot_specific_action(self):
-        """ ignore actions from buildbot's infra."""
-        self.info("This action is specific to buildbot's infrastructure")
-        self.info("Skipping......")
-        return
 
     def query_is_nightly_promotion(self):
         platform_enabled = self.config.get('enable_nightly_promotion')

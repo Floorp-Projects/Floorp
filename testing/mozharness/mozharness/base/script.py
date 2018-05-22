@@ -1271,7 +1271,7 @@ class ScriptMixin(PlatformMixin):
             repl_dict.update(dirs)
         if isinstance(exe, dict):
             found = False
-            # allow for searchable paths of the buildbot exe
+            # allow for searchable paths of the exe
             for name, path in exe.iteritems():
                 if isinstance(path, list) or isinstance(path, tuple):
                     path = [x % repl_dict for x in path]
@@ -1865,7 +1865,7 @@ class BaseScript(ScriptMixin, LogMixin, object):
         # easy-to-write-hard-to-debug writable config.
         #
         # To allow for other, script-specific configurations
-        # (e.g., buildbot props json parsing), before locking,
+        # (e.g., props json parsing), before locking,
         # call self._pre_config_lock().  If needed, this method can
         # alter self.config.
         self._pre_config_lock(rw_config)
