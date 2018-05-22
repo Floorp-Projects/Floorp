@@ -89,7 +89,8 @@ class GCZonesIter
     JS::Zone* operator->() const { return get(); }
 };
 
-typedef CompartmentsIterT<GCZonesIter> GCCompartmentsIter;
+using GCCompartmentsIter = CompartmentsIterT<GCZonesIter>;
+using GCRealmsIter = RealmsIterT<GCZonesIter>;
 
 /* Iterates over all zones in the current sweep group. */
 class SweepGroupZonesIter {

@@ -4013,8 +4013,8 @@ GCRuntime::purgeRuntime()
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
 
-    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
-        comp->purge();
+    for (GCRealmsIter realm(rt); !realm.done(); realm.next())
+        realm->purge();
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->atomCache().clearAndShrink();
