@@ -50,6 +50,14 @@ interface ChannelWrapper : EventTarget {
   static ChannelWrapper get(MozChannel channel);
 
   /**
+   * Returns the wrapper instance for the given channel. The same wrapper is
+   * always returned for a given channel.
+   */
+  static ChannelWrapper getRegisteredChannel(unsigned long long aChannelId,
+                                             WebExtensionPolicy extension,
+                                             TabParent? tabParent);
+
+  /**
    * A unique ID for for the requests which remains constant throughout the
    * redirect chain.
    */
