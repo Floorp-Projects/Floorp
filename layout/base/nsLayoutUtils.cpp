@@ -258,8 +258,9 @@ MayHaveAnimationOfProperty(EffectSet* effects, nsCSSPropertyID aProperty)
   return true;
 }
 
-static bool
-MayHaveAnimationOfProperty(const nsIFrame* aFrame, nsCSSPropertyID aProperty)
+bool
+nsLayoutUtils::MayHaveAnimationOfProperty(const nsIFrame* aFrame,
+                                          nsCSSPropertyID aProperty)
 {
   switch (aProperty) {
     case eCSSProperty_transform:
@@ -276,7 +277,7 @@ bool
 nsLayoutUtils::HasAnimationOfProperty(EffectSet* aEffectSet,
                                       nsCSSPropertyID aProperty)
 {
-  if (!aEffectSet || !MayHaveAnimationOfProperty(aEffectSet, aProperty)) {
+  if (!aEffectSet || !::MayHaveAnimationOfProperty(aEffectSet, aProperty)) {
     return false;
   }
 
@@ -312,7 +313,7 @@ nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
                                      nsCSSPropertyID aProperty)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (!effects || !MayHaveAnimationOfProperty(effects, aProperty)) {
+  if (!effects || !::MayHaveAnimationOfProperty(effects, aProperty)) {
     return false;
   }
 
@@ -324,6 +325,17 @@ nsLayoutUtils::HasEffectiveAnimation(const nsIFrame* aFrame,
              aEffect.HasEffectiveAnimationOfProperty(aProperty);
     }
   );
+}
+
+bool
+nsLayoutUtils::MayHaveEffectiveAnimation(const nsIFrame* aFrame,
+                                         nsCSSPropertyID aProperty)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects || !::MayHaveAnimationOfProperty(effects, aProperty)) {
+    return false;
+  }
+  return true;
 }
 
 static float
