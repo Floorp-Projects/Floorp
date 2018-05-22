@@ -700,6 +700,13 @@ class JSRope : public JSString
     template <typename CharT>
     bool copyChars(JSContext* cx, js::ScopedJSFreePtr<CharT>& out) const;
 
+    // Hash function specific for ropes that avoids allocating a temporary
+    // string. There are still allocations internally so it's technically
+    // fallible.
+    //
+    // Returns the same value as if this were a linear string being hashed.
+    MOZ_MUST_USE bool hash(uint32_t* outhHash) const;
+
     JSString* leftChild() const {
         MOZ_ASSERT(isRope());
         return d.s.u2.left;
