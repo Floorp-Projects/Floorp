@@ -68,6 +68,7 @@ class AnimationTarget extends Component {
         // attributed to the panel having been destroyed in the meantime, this
         // error needs to be logged and render needs to stop.
         console.error(e);
+        this.setState({ nodeFront: null });
         return;
       }
     }
@@ -75,14 +76,36 @@ class AnimationTarget extends Component {
     this.setState({ nodeFront });
   }
 
+  async ensureNodeFront() {
+    if (!this.state.nodeFront.actorID) {
+      // In case of no actorID, the node front had been destroyed.
+      // This will occur when the pseudo element was re-generated.
+      await this.updateNodeFront(this.props.animation);
+    }
+  }
+
+  async highlight() {
+    await this.ensureNodeFront();
+
+    if (this.state.nodeFront) {
+      this.props.onShowBoxModelHighlighterForNode(this.state.nodeFront);
+    }
+  }
+
+  async select() {
+    await this.ensureNodeFront();
+
+    if (this.state.nodeFront) {
+      this.props.setSelectedNode(this.state.nodeFront);
+    }
+  }
+
   render() {
     const {
       emitEventForTest,
       onHideBoxModelHighlighter,
-      onShowBoxModelHighlighterForNode,
       highlightedNode,
       setHighlightedNode,
-      setSelectedNode,
     } = this.props;
 
     const { nodeFront } = this.state;
@@ -110,9 +133,9 @@ class AnimationTarget extends Component {
           mode: MODE.TINY,
           inspectIconTitle: getInspectorStr("inspector.nodePreview.highlightNodeLabel"),
           object: translateNodeFrontToGrip(nodeFront),
-          onDOMNodeClick: () => setSelectedNode(nodeFront),
+          onDOMNodeClick: () => this.select(),
           onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
-          onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
+          onDOMNodeMouseOver: () => this.highlight(),
           onInspectIconClick: (_, e) => {
             e.stopPropagation();
             setHighlightedNode(isHighlighted ? null : nodeFront);

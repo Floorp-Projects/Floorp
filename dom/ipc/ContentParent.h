@@ -639,7 +639,7 @@ public:
                     nsTArray<nsCString>* aResults) override;
 
   // Use the PHangMonitor channel to ask the child to repaint a tab.
-  void ForceTabPaint(TabParent* aTabParent, uint64_t aLayerObserverEpoch);
+  void PaintTabWhileInterruptingJS(TabParent* aTabParent, bool aForceRepaint, uint64_t aLayerObserverEpoch);
 
   // This function is called when we are about to load a document from an
   // HTTP(S), FTP or wyciwyg channel for a content process.  It is a useful

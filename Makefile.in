@@ -70,15 +70,6 @@ CLOBBER: $(topsrcdir)/CLOBBER
 	@exit 1
 endif
 
-$(topsrcdir)/configure: $(topsrcdir)/configure.in $(topsrcdir)/old-configure.in
-$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in $(topsrcdir)/js/src/old-configure.in
-$(topsrcdir)/configure $(topsrcdir)/js/src/configure:
-	@echo 'STOP!  $? has changed, and your configure is out of date.'
-	@echo 'Please rerun autoconf and re-configure your build directory.'
-	@echo 'To ignore this message, touch "$@",'
-	@echo 'but your build might not succeed.'
-	@exit 1
-
 config.status: $(configure_dir)/configure $(configure_dir)/old-configure
 js/src/config.status: $(topsrcdir)/js/src/configure $(topsrcdir)/js/src/old-configure
 config.status js/src/config.status:

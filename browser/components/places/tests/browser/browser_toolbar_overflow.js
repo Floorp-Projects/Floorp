@@ -39,7 +39,7 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function() {
+add_task(async function test_overflow() {
   // Check that the overflow chevron is visible.
   Assert.ok(!gChevron.collapsed, "The overflow chevron should be visible");
   Assert.ok(gToolbarContent.childNodes.length < BOOKMARKS_COUNT,
@@ -50,7 +50,7 @@ add_task(async function() {
       visibleNodes.push(node);
   }
   Assert.ok(visibleNodes.length < gToolbarContent.childNodes.length,
-            "The number of visible nodes should be smaller than the number of built nodes");
+            `The number of visible nodes (${visibleNodes.length}) should be smaller than the number of built nodes (${gToolbarContent.childNodes.length})`);
 
   await test_index("Node at the last visible index", visibleNodes.length - 1, "visible");
   await test_index("Node at the first invisible index", visibleNodes.length, "hidden");
@@ -66,6 +66,30 @@ add_task(async function() {
   await test_move_index("Move node from fist visible to first non built",
                         0, gToolbarContent.childNodes.length,
                         "visible", undefined);
+});
+
+add_task(async function test_separator_first() {
+  // Check that if a separator is the first node, we still calculate overflow
+  // properly.
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    index: 0
+  });
+  // Hide and show the toolbar to cause a rebuild.
+  let promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
+  await promiseSetToolbarVisibility(gToolbar, false);
+  await promiseReady;
+  promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
+  await promiseSetToolbarVisibility(gToolbar, true);
+  await promiseReady;
+
+  let children = gToolbarContent.childNodes;
+  Assert.ok(children.length > 2, "Multiple elements are visible");
+  Assert.equal(children[1]._placesNode.uri, "http://test.places.0/", "Found the first bookmark");
+  Assert.equal(children[1].style.visibility, "visible", "The first bookmark is visible");
+
+  await PlacesUtils.bookmarks.remove(bm);
 });
 
 add_task(async function test_newWindow_noOverflow() {
@@ -211,3 +235,33 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   Assert.equal(children.length, originalLen,
                "Number of built nodes should stay the same");
 }
+
+add_task(async function test_separator_first() {
+  // Check that if there are only separators, we still show nodes properly.
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    index: 0
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    index: 0
+  });
+  // Hide and show the toolbar to cause a rebuild.
+  let promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
+  await promiseSetToolbarVisibility(gToolbar, false);
+  await promiseReady;
+  promiseReady = BrowserTestUtils.waitForEvent(gToolbar, "BookmarksToolbarVisibilityUpdated");
+  await promiseSetToolbarVisibility(gToolbar, true);
+  await promiseReady;
+
+  let children = gToolbarContent.childNodes;
+  Assert.equal(children.length, 2, "The expected elements are visible");
+  Assert.equal(children[0].style.visibility, "visible", "The first bookmark is visible");
+  Assert.equal(children[1].style.visibility, "visible", "The second bookmark is visible");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+});
