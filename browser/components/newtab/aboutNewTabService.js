@@ -13,9 +13,6 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.defineModuleGetter(this, "AboutNewTab",
                                "resource:///modules/AboutNewTab.jsm");
 
-// Dummy references to the files that this service no longer allows loading.
-// Bug 1409054 to remove "chrome://browser/content/abouthome/aboutHome.xhtml"
-
 const TOPIC_APP_QUIT = "quit-application-granted";
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 
