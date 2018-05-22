@@ -52,7 +52,7 @@ function childFrameScript() {
 
     let blob = message.data;
 
-    ok(blob instanceof Ci.nsIDOMBlob, "Received a Blob");
+    ok(Blob.isInstance(blob), "Received a Blob");
     is(blob.size, blobText.length, "Blob has correct length");
     is(blob.type, blobType, "Blob has correct type");
 
@@ -71,7 +71,7 @@ function childFrameScript() {
 
     let slice = blob.slice(firstSliceStart, firstSliceEnd, blobType);
 
-    ok(slice instanceof Ci.nsIDOMBlob, "Slice returned a Blob");
+    ok(Blob.isInstance(slice), "Slice returned a Blob");
     is(slice.size, blobData[2].length, "Slice has correct length");
     is(slice.type, blobType, "Slice has correct type");
 
@@ -90,7 +90,7 @@ function childFrameScript() {
 
     slice = slice.slice(secondSliceStart, secondSliceEnd, blobType);
 
-    ok(slice instanceof Ci.nsIDOMBlob, "Second slice returned a Blob");
+    ok(Blob.isInstance(slice), "Second slice returned a Blob");
     is(slice.size, sliceText.length, "Second slice has correct length");
     is(slice.type, blobType, "Second slice has correct type");
 

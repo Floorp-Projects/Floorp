@@ -11,8 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/Transport.h"
 
-class nsIDOMBlob;
-
 namespace mozilla {
 namespace dom {
 

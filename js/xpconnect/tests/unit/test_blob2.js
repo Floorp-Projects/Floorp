@@ -11,7 +11,7 @@ function run_test() {
   var f1 = new Blob([testContent], {"type" : "text/xml"});
 
   // do some tests
-  Assert.ok(f1 instanceof Ci.nsIDOMBlob, "Should be a DOM Blob");
+  Assert.ok(f1 instanceof Blob, "Should be a DOM Blob");
 
   Assert.ok(!(f1 instanceof File), "Should not be a DOM File");
 

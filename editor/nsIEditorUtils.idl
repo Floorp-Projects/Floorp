@@ -7,8 +7,9 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIDOMBlob;
 interface mozIDOMWindowProxy;
+
+webidl Blob;
 
 [scriptable, builtinclass, uuid(eb8b8ad9-5d8f-43bd-8ce5-5b943c180d56)]
 interface nsIEditorBlobListener : nsISupports
@@ -27,6 +28,6 @@ interface nsIEditorUtils : nsISupports
   /**
    * Given a blob, returns the data from that blob, asynchronously.
    */
-  void slurpBlob(in nsIDOMBlob aBlob, in mozIDOMWindowProxy aScope,
+  void slurpBlob(in Blob aBlob, in mozIDOMWindowProxy aScope,
                  in nsIEditorBlobListener aListener);
 };
