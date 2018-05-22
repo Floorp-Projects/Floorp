@@ -42,9 +42,9 @@ function runTest() {
 
   closeUpdateWindow();
 
-  // Always leave the app.update.enabled and app.update.staging.enabled
-  // preferences set to false when cleaning up.
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, false);
+  // Always disable updates and update staging when cleaning up.
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, true);
+  Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);  // Needed to disable updates
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
 
   resetFiles();
