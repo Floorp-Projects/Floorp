@@ -116,9 +116,6 @@ public:
       nsTimingFunction::Type aType,
       nsAString& aResult);
 
-  static void AppendSerializedFontSrc(const nsCSSValue& aValue,
-                                      nsAString& aResult);
-
   // convert bitmask value to keyword name for a functional alternate
   static void GetFunctionalAlternatesName(int32_t aFeature,
                                           nsAString& aFeatureName);
