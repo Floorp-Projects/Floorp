@@ -705,8 +705,11 @@ class WasmTokenStream
             *ref = AstRef(token.name());
             break;
           case WasmToken::Index:
-            *ref = AstRef(token.index());
-            break;
+            if (token.index() != AstNoIndex) {
+                *ref = AstRef(token.index());
+                break;
+            }
+            MOZ_FALLTHROUGH;
           default:
             generateError(token, error);
             return false;
@@ -3656,9 +3659,15 @@ ParseExport(WasmParseContext& c)
     WasmToken exportee = c.ts.get();
     switch (exportee.kind()) {
       case WasmToken::Index:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function, AstRef(exportee.index()));
+        if (exportee.index() == AstNoIndex) {
+            c.ts.generateError(exportee, c.error);
+            return nullptr;
+        }
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
+                                     AstRef(exportee.index()));
       case WasmToken::Name:
-        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function, AstRef(exportee.name()));
+        return new(c.lifo) AstExport(name.text(), DefinitionKind::Function,
+                                     AstRef(exportee.name()));
       case WasmToken::Table: {
         AstRef ref;
         if (!c.ts.getIfRef(&ref))
