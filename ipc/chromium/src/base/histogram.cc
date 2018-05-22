@@ -703,7 +703,7 @@ CountHistogram::AddSampleSet(const SampleSet& sample) {
   }
 
   if (sample.counts(indices[0]) != 0) {
-    Accumulate(1, sample.counts(indices[0]), indices[0]);
+    Histogram::AddSampleSet(sample);
   }
 }
 
