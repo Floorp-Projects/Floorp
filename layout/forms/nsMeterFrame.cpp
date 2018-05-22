@@ -271,13 +271,3 @@ nsMeterFrame::ShouldUseNativeStyle() const
          !PresContext()->HasAuthorSpecifiedRules(barFrame,
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
-
-Element*
-nsMeterFrame::GetPseudoElement(CSSPseudoElementType aType)
-{
-  if (aType == CSSPseudoElementType::mozMeterBar) {
-    return mBarDiv;
-  }
-
-  return nsContainerFrame::GetPseudoElement(aType);
-}
