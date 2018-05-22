@@ -63,12 +63,52 @@
 #include "ScopedGLHelpers.h"
 #include "TextureImageEGL.h"
 
+#if defined(MOZ_WAYLAND)
+#include "nsAutoPtr.h"
+#include "nsDataHashtable.h"
+
+#include <gtk/gtk.h>
+#include <gdk/gdkx.h>
+#include <gdk/gdkwayland.h>
+#include <wayland-egl.h>
+#include <dlfcn.h>
+#endif
+
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace gl {
 
 using namespace mozilla::widget;
+
+#if defined(MOZ_WAYLAND)
+class WaylandGLSurface {
+public:
+    WaylandGLSurface(struct wl_surface *aWaylandSurface,
+                         struct wl_egl_window *aEGLWindow);
+    ~WaylandGLSurface();
+private:
+    struct wl_surface     *mWaylandSurface;
+    struct wl_egl_window  *mEGLWindow;
+};
+
+static nsDataHashtable<nsPtrHashKey<void>, WaylandGLSurface*>
+        sWaylandGLSurface;
+
+void
+DeleteWaylandGLSurface(EGLSurface surface)
+{
+    // We're running on Wayland which means our EGLSurface may
+    // have attached Wayland backend data which must be released.
+    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+        auto entry = sWaylandGLSurface.Lookup(surface);
+        if (entry) {
+            delete entry.Data();
+            entry.Remove();
+        }
+    }
+}
+#endif
 
 #define ADD_ATTR_2(_array, _k, _v) do {         \
     (_array).AppendElement(_k);                 \
@@ -125,6 +165,9 @@ DestroySurface(EGLSurface oldSurface) {
                                  EGL_NO_SURFACE, EGL_NO_SURFACE,
                                  EGL_NO_CONTEXT);
         sEGLLibrary.fDestroySurface(EGL_DISPLAY(), oldSurface);
+#if defined(MOZ_WAYLAND)
+        DeleteWaylandGLSurface(oldSurface);
+#endif
     }
 }
 
@@ -622,6 +665,52 @@ TRY_AGAIN_POWER_OF_TWO:
     return surface;
 }
 
+#if defined(MOZ_WAYLAND)
+WaylandGLSurface::WaylandGLSurface(struct wl_surface *aWaylandSurface,
+                                           struct wl_egl_window *aEGLWindow)
+    : mWaylandSurface(aWaylandSurface)
+    , mEGLWindow(aEGLWindow)
+{
+}
+
+WaylandGLSurface::~WaylandGLSurface()
+{
+    wl_egl_window_destroy(mEGLWindow);
+    wl_surface_destroy(mWaylandSurface);
+}
+
+EGLSurface
+GLContextEGL::CreateWaylandBufferSurface(EGLConfig config,
+                                         mozilla::gfx::IntSize& pbsize)
+{
+    // Available as of GTK 3.8+
+    static auto sGdkWaylandDisplayGetWlCompositor =
+        (wl_compositor *(*)(GdkDisplay *))
+        dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_compositor");
+
+    if (!sGdkWaylandDisplayGetWlCompositor)
+        return nullptr;
+
+    struct wl_compositor *compositor =
+        sGdkWaylandDisplayGetWlCompositor(gdk_display_get_default());
+    struct wl_surface *wlsurface = wl_compositor_create_surface(compositor);
+    struct wl_egl_window *eglwindow =
+        wl_egl_window_create(wlsurface, pbsize.width, pbsize.height);
+
+    EGLSurface surface =
+        sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, eglwindow, 0);
+
+    if (surface) {
+        WaylandGLSurface* waylandData =
+            new WaylandGLSurface(wlsurface, eglwindow);
+        auto entry = sWaylandGLSurface.LookupForAdd(surface);
+        entry.OrInsert([&waylandData](){ return waylandData; });
+    }
+
+    return surface;
+}
+#endif
+
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
     LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_PBUFFER_BIT,
     LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
@@ -841,7 +930,17 @@ FillContextAttribs(bool alpha, bool depth, bool stencil, bool bpp16,
                    bool es3, nsTArray<EGLint>* out)
 {
     out->AppendElement(LOCAL_EGL_SURFACE_TYPE);
+#if defined(MOZ_WAYLAND)
+    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+        // Wayland on desktop does not support PBuffer or FBO.
+        // We create a dummy wl_egl_window instead.
+        out->AppendElement(LOCAL_EGL_WINDOW_BIT);
+    } else {
+        out->AppendElement(LOCAL_EGL_PBUFFER_BIT);
+    }
+#else
     out->AppendElement(LOCAL_EGL_PBUFFER_BIT);
+#endif
 
     out->AppendElement(LOCAL_EGL_RENDERABLE_TYPE);
     if (es3) {
@@ -960,9 +1059,17 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
     }
 
     mozilla::gfx::IntSize pbSize(size);
-    EGLSurface surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
-                                                                            LOCAL_EGL_NONE,
-                                                                            pbSize);
+    EGLSurface surface = nullptr;
+#if defined(MOZ_WAYLAND)
+    if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default())) {
+        surface = GLContextEGL::CreateWaylandBufferSurface(config, pbSize);
+    } else
+#endif
+    {
+        surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(config,
+                                                                     LOCAL_EGL_NONE,
+                                                                     pbSize);
+    }
     if (!surface) {
         *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_POT");
         NS_WARNING("Failed to create PBuffer for context!");
@@ -975,6 +1082,9 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
         sEGLLibrary.fDestroySurface(sEGLLibrary.Display(), surface);
+#if defined(MOZ_WAYLAND)
+        DeleteWaylandGLSurface(surface);
+#endif
         return nullptr;
     }
 
