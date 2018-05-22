@@ -140,7 +140,7 @@ class Breakpoints extends _react.Component {
       pauseOnExceptions
     } = this.props;
     const isEmpty = breakpoints.size == 0;
-    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
+    const exceptionsBox = createExceptionOption(L10N.getStr("pauseOnExceptionsItem2"), shouldPauseOnExceptions, () => pauseOnExceptions(!shouldPauseOnExceptions, false), "breakpoints-exceptions");
     const ignoreCaughtBox = createExceptionOption(L10N.getStr("pauseOnCaughtExceptionsItem"), shouldPauseOnCaughtExceptions, () => pauseOnExceptions(true, !shouldPauseOnCaughtExceptions), "breakpoints-exceptions-caught");
     return _react2.default.createElement("div", {
       className: (0, _classnames2.default)("breakpoints-exceptions-options", {
