@@ -1619,6 +1619,88 @@ or run without that action (ie: --no-{action})"
                 "subtests": size_measurements
             })
 
+    def _get_sections(self, file, filter=None):
+        """
+        Returns a dictionary of sections and their sizes.
+        """
+        from StringIO import StringIO
+
+        # Check for binutils' `size` program
+        size_names = ('size', 'gsize')
+        size_prog = None
+        for name in size_names:
+            size_prog = self.which(name)
+            if size_prog:
+                break
+
+        if not size_prog:
+            self.info("Couldn't find `size` program")
+            return {}
+
+        # Call `size` and output with SysV format in decimal radix
+        cmd = [size_prog, '-A', '-d', file]
+        output = self.get_output_from_command(cmd)
+
+        # Format is:
+        # <section-name> <size> <address>, ie:
+        # .data                  302160   101053344
+        size_section_re = re.compile(r"([\w\.]+)\s+(\d+)\s+(\d+)")
+        sections = {}
+        for line in output.splitlines():
+            m = size_section_re.match(line)
+            if m:
+                name = m.group(1)
+                if not filter or name in filter:
+                    sections[name] = int(m.group(2))
+
+        return sections
+
+    def _get_binary_metrics(self):
+        """
+        Provides metrics on interesting compenents of the built binaries.
+        Currently just the sizes of interesting sections.
+        """
+        lib_interests = {
+            'XUL': ('libxul.so', 'xul.dll', 'XUL'),
+            'NSS': ('libnss3.so', 'nss3.dll', 'libnss3.dylib'),
+            'NSPR': ('libnspr4.so', 'nspr4.dll', 'libnspr4.dylib'),
+            'avcodec': ('libmozavcodec.so', 'mozavcodec.dll', 'libmozavcodec.dylib'),
+            'avutil': ('libmozavutil.so', 'mozavutil.dll', 'libmozavutil.dylib')
+        }
+        # TODO(erahm): update for windows and osx. As-is we only have support
+        # for `size` on debian which gives us linux and android.
+        section_interests = ('.text', '.data', '.rodata', '.data.rel.ro', '.bss')
+        lib_details = []
+
+        dirs = self.query_abs_dirs()
+        dist_dir = os.path.join(dirs['abs_obj_dir'], 'dist')
+        bin_dir = os.path.join(dist_dir, 'bin')
+
+        for lib_type, lib_names in lib_interests.iteritems():
+            for lib_name in lib_names:
+                lib = os.path.join(bin_dir, lib_name)
+                if os.path.exists(lib):
+                    lib_size = 0
+                    section_details = self._get_sections(lib, section_interests)
+                    section_measurements = []
+                    # Build up the subtests
+                    for k, v in section_details.iteritems():
+                        section_measurements.append({'name': k, 'value': v})
+                        lib_size += v
+                    lib_details.append({
+                        'name': lib_type,
+                        'size': lib_size,
+                        'sections': section_measurements
+                    })
+
+        for lib_detail in lib_details:
+            yield {
+                "name": "%s section sizes" % lib_detail['name'],
+                "value": lib_detail['size'],
+                "shouldAlert": False,
+                "subtests": lib_detail['sections']
+            }
+
     def _generate_build_stats(self):
         """grab build stats following a compile.
 
@@ -1651,6 +1733,7 @@ or run without that action (ie: --no-{action})"
 
         if not c.get('debug_build') and not c.get('disable_package_metrics'):
             perfherder_data['suites'].extend(self._get_package_metrics())
+            perfherder_data['suites'].extend(self._get_binary_metrics())
 
         # Extract compiler warnings count.
         warnings = self.get_output_from_command(
