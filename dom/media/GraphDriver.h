@@ -144,7 +144,6 @@ public:
   // lock is held.
   GraphDriver* NextDriver();
   GraphDriver* PreviousDriver();
-  void SetNextDriver(GraphDriver* aNextDriver);
   void SetPreviousDriver(GraphDriver* aPreviousDriver);
 
   /**
@@ -204,6 +203,8 @@ public:
 
 protected:
   GraphTime StateComputedTime() const;
+  // Sets the associated pointer, asserting that the lock is held
+  void SetNextDriver(GraphDriver* aNextDriver);
 
   // Time of the start of this graph iteration. This must be accessed while
   // having the monitor.
