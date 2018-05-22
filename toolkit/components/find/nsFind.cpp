@@ -856,17 +856,6 @@ nsFind::IsVisibleNode(nsINode* aNode)
 bool
 nsFind::SkipNode(nsIContent* aContent)
 {
-#ifdef HAVE_BIDI_ITERATOR
-  // We may not need to skip comment nodes, now that IsTextNode distinguishes
-  // them from real text nodes.
-  return aContent->IsComment() ||
-         aContent->IsAnyOfHTMLElements(sScriptAtom, sNoframesAtom, sSelectAtom);
-
-#else /* HAVE_BIDI_ITERATOR */
-  // Temporary: eventually we will have an iterator to do this, but for now, we
-  // have to climb up the tree for each node and see whether any parent is a
-  // skipped node, and take the performance hit.
-
   nsIContent* content = aContent;
   while (content) {
     if (!IsVisibleNode(content) ||
@@ -892,7 +881,6 @@ nsFind::SkipNode(nsIContent* aContent)
   }
 
   return false;
-#endif /* HAVE_BIDI_ITERATOR */
 }
 
 nsresult
