@@ -21,6 +21,7 @@ add_task(async function test_ignoreAbsent() {
 
   // Removing absent files should throw if "ignoreAbsent" is true.
   await Assert.rejects(OS.File.remove(absent_file_name, {ignoreAbsent: false}),
+                       err => err.operation == "remove",
                        "OS.File.remove throws if there is no such file.");
 
   // Removing absent files should not throw if "ignoreAbsent" is true or not
@@ -40,6 +41,7 @@ add_task(async function test_ignoreAbsent_directory_missing() {
 
   // Removing absent files should throw if "ignoreAbsent" is true.
   await Assert.rejects(OS.File.remove(absent_file_name, {ignoreAbsent: false}),
+                       err => err.operation == "remove",
                        "OS.File.remove throws if there is no such file.");
 
   // Removing files from absent directories should not throw if "ignoreAbsent"

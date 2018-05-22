@@ -102,20 +102,20 @@ add_task(async function test_setIntervalWithTarget() {
 
 add_task(async function test_setTimeoutNonFunction() {
   Assert.throws(() => { imported.setTimeout({}, 0); },
-                "callback is not a function in setTimeout");
+                /callback is not a function in setTimeout/);
 });
 
 add_task(async function test_setIntervalNonFunction() {
   Assert.throws(() => { imported.setInterval({}, 0); },
-                "callback is not a function in setInterval");
+                /callback is not a function in setInterval/);
 });
 
 add_task(async function test_setTimeoutWithTargetNonFunction() {
   Assert.throws(() => { imported.setTimeoutWithTarget({}, 0); },
-                "callback is not a function in setTimeout");
+                /callback is not a function in setTimeout/);
 });
 
 add_task(async function test_setIntervalWithTargetNonFunction() {
   Assert.throws(() => { imported.setIntervalWithTarget({}, 0); },
-                "callback is not a function in setInterval");
+                /callback is not a function in setInterval/);
 });
