@@ -14,7 +14,7 @@ from types import FunctionType
 from collections import namedtuple
 from taskgraph import create
 from taskgraph.config import load_graph_config
-from taskgraph.util import taskcluster, yaml
+from taskgraph.util import taskcluster, yaml, hash
 from taskgraph.parameters import Parameters
 from mozbuild.util import memoize
 
@@ -38,6 +38,16 @@ def is_json(data):
 def read_taskcluster_yml(filename):
     '''Load and parse .taskcluster.yml, memoized to save some time'''
     return yaml.load_yaml(*os.path.split(filename))
+
+
+@memoize
+def hash_taskcluster_yml(filename):
+    '''
+    Generate a hash of the given .taskcluster.yml.  This is the first 10 digits
+    of the sha256 of the file's content, and is used by administrative scripts
+    to create a hook based on this content.
+    '''
+    return hash.hash_path(filename)[:10]
 
 
 def register_callback_action(name, title, symbol, description, order=10000,
@@ -204,10 +214,20 @@ def register_callback_action(name, title, symbol, description, order=10000,
             elif kind == 'hook':
                 trustDomain = graph_config['trust-domain']
                 level = parameters['level']
+                tcyml_hash = hash_taskcluster_yml(graph_config.taskcluster_yml)
+
+                # the tcyml_hash is prefixed with `/` in the hookId, so users will be granted
+                # hooks:trigger-hook:project-gecko/in-tree-action-3-myaction/*; if another
+                # action was named `myaction/release`, then the `*` in the scope would also
+                # match that action.  To prevent such an accident, we prohibit `/` in hook
+                # names.
+                if '/' in actionPerm:
+                    raise Exception('`/` is not allowed in action names; use `-`')
+
                 rv.update({
                     'kind': 'hook',
                     'hookGroupId': 'project-{}'.format(trustDomain),
-                    'hookId': 'in-tree-action-{}-{}'.format(level, actionPerm),
+                    'hookId': 'in-tree-action-{}-{}/{}'.format(level, actionPerm, tcyml_hash),
                     'hookPayload': {
                         # provide the decision-task parameters as context for triggerHook
                         "decision": {
