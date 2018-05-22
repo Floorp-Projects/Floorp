@@ -44,6 +44,13 @@ uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
                                 int32_t aYStride,
                                 const gfx::IntSize& aCbCrSize,
                                 int32_t aCbCrStride);
+uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
+                                int32_t aYStride,
+                                const gfx::IntSize& aCbCrSize,
+                                int32_t aCbCrStride,
+                                uint32_t aYOffset,
+                                uint32_t aCbOffset,
+                                uint32_t aCrOffset);
 uint32_t ComputeYCbCrBufferSize(uint32_t aBufferSize);
 
 void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight,
