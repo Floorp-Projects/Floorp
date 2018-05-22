@@ -2903,7 +2903,7 @@ Debugger::updateObservesBinarySourceDebuggees(IsObserving observing)
 /* static */ bool
 Debugger::cannotTrackAllocations(const GlobalObject& global)
 {
-    auto existingCallback = global.compartment()->getAllocationMetadataBuilder();
+    auto existingCallback = global.realm()->getAllocationMetadataBuilder();
     return existingCallback && existingCallback != &SavedStacks::metadataBuilder;
 }
 
@@ -2934,8 +2934,8 @@ Debugger::addAllocationsTracking(JSContext* cx, Handle<GlobalObject*> debuggee)
         return false;
     }
 
-    debuggee->compartment()->setAllocationMetadataBuilder(&SavedStacks::metadataBuilder);
-    debuggee->compartment()->chooseAllocationSamplingProbability();
+    debuggee->realm()->setAllocationMetadataBuilder(&SavedStacks::metadataBuilder);
+    debuggee->realm()->chooseAllocationSamplingProbability();
     return true;
 }
 
@@ -2946,11 +2946,11 @@ Debugger::removeAllocationsTracking(GlobalObject& global)
     // remove the metadata callback yet. Recompute the sampling probability
     // based on the remaining debuggers' needs.
     if (isObservedByDebuggerTrackingAllocations(global)) {
-        global.compartment()->chooseAllocationSamplingProbability();
+        global.realm()->chooseAllocationSamplingProbability();
         return;
     }
 
-    global.compartment()->forgetAllocationMetadataBuilder();
+    global.realm()->forgetAllocationMetadataBuilder();
 }
 
 bool

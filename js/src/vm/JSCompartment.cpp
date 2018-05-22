@@ -52,11 +52,8 @@ JSCompartment::JSCompartment(Zone* zone)
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
 #endif
-    enterCompartmentDepth(0),
     performanceMonitoring(runtime_),
     data(nullptr),
-    realmData(nullptr),
-    allocationMetadataBuilder(nullptr),
     lastAnimationTime(0),
     regExps(),
     arraySpeciesLookup(),
@@ -1038,17 +1035,17 @@ Realm::clearTables()
 }
 
 void
-JSCompartment::setAllocationMetadataBuilder(const js::AllocationMetadataBuilder *builder)
+Realm::setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder)
 {
     // Clear any jitcode in the runtime, which behaves differently depending on
     // whether there is a creation callback.
     ReleaseAllJITCode(runtime_->defaultFreeOp());
 
-    allocationMetadataBuilder = builder;
+    allocationMetadataBuilder_ = builder;
 }
 
 void
-JSCompartment::forgetAllocationMetadataBuilder()
+Realm::forgetAllocationMetadataBuilder()
 {
     // Unlike setAllocationMetadataBuilder, we don't have to discard all JIT
     // code here (code is still valid, just a bit slower because it doesn't do
@@ -1057,23 +1054,23 @@ JSCompartment::forgetAllocationMetadataBuilder()
     // hasAllocationMetadataBuilder off-thread.
     CancelOffThreadIonCompile(this);
 
-    allocationMetadataBuilder = nullptr;
+    allocationMetadataBuilder_ = nullptr;
 }
 
 void
-JSCompartment::clearObjectMetadata()
+Realm::clearObjectMetadata()
 {
     js_delete(objectMetadataTable);
     objectMetadataTable = nullptr;
 }
 
 void
-JSCompartment::setNewObjectMetadata(JSContext* cx, HandleObject obj)
+Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    if (JSObject* metadata = allocationMetadataBuilder->build(cx, obj, oomUnsafe)) {
+    if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
