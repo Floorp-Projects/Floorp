@@ -71,9 +71,14 @@ const GRID_GAP_PATTERN_HEIGHT = 14; // px
 const GRID_GAP_PATTERN_LINE_DASH = [5, 3]; // px
 const GRID_GAP_ALPHA = 0.5;
 
-// 25 is a good margin distance between the document grid container edge without cutting
-// off parts of the arrow box container.
-const OFFSET_FROM_EDGE = 25;
+// This is the minimum distance a line can be to the edge of the document under which we
+// push the line number arrow to be inside the grid. This offset is enough to fit the
+// entire arrow + a stacked arrow behind it.
+const OFFSET_FROM_EDGE = 32;
+// This is how much inside the grid we push the arrow. This a factor of the arrow size.
+// The goal here is for a row and a column arrow that have both been pushed inside the
+// grid, in a corner, not to overlap.
+const FLIP_ARROW_INSIDE_FACTOR = 2.5;
 
 /**
  * Given an `edge` of a box, return the name of the edge one move to the right.
@@ -1187,39 +1192,13 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     if (dimensionType === COLUMNS) {
       x = linePos + breadth / 2;
-      y = startPos;
-
-      if (lineNumber > 0) {
-        y -= offsetFromEdge;
-      } else {
-        y += offsetFromEdge;
-      }
+      y = lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
     } else if (dimensionType === ROWS) {
-      x = startPos;
       y = linePos + breadth / 2;
-
-      if (lineNumber > 0) {
-        x -= offsetFromEdge;
-      } else {
-        x += offsetFromEdge;
-      }
+      x = lineNumber > 0 ? startPos - offsetFromEdge : startPos + offsetFromEdge;
     }
 
     [x, y] = apply(this.currentMatrix, [x, y]);
-
-    if (isStackedLine) {
-      // Offset the stacked line number by half of the box's width/height.
-      const xOffset = boxWidth / 4;
-      const yOffset = boxHeight / 4;
-
-      if (lineNumber > 0) {
-        x -= xOffset;
-        y -= yOffset;
-      } else {
-        x += xOffset;
-        y += yOffset;
-      }
-    }
 
     // Draw a bubble rectangular arrow with a border width of 2 pixels, a border color
     // matching the grid color and a white background (the line number will be written in
@@ -1237,21 +1216,143 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     boxWidth = Math.max(boxWidth, minBoxSize);
     boxHeight = Math.max(boxHeight, minBoxSize);
 
-    // Determine default box edge to aim the line number arrow at.
-    let boxEdge;
-    if (dimensionType === COLUMNS) {
+    // Determine which edge of the box to aim the line number arrow at.
+    const boxEdge = this.getBoxEdge(dimensionType, lineNumber);
+
+    let { width, height } = this._winDimensions;
+    width *= displayPixelRatio;
+    height *= displayPixelRatio;
+
+    // Don't draw if the line is out of the viewport.
+    if ((dimensionType === ROWS && (y < 0 || y > height)) ||
+        (dimensionType === COLUMNS && (x < 0 || x > width))) {
+      this.ctx.restore();
+      return;
+    }
+
+    // If the arrow's edge (the one perpendicular to the line direction) is too close to
+    // the edge of the viewport. Push the arrow inside the grid.
+    const minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
+    switch (boxEdge) {
+      case "left":
+        if (x < minOffsetFromEdge) {
+          x += FLIP_ARROW_INSIDE_FACTOR * boxWidth;
+        }
+        break;
+      case "right":
+        if ((width - x) < minOffsetFromEdge) {
+          x -= FLIP_ARROW_INSIDE_FACTOR * boxWidth;
+        }
+        break;
+      case "top":
+        if (y < minOffsetFromEdge) {
+          y += FLIP_ARROW_INSIDE_FACTOR * boxHeight;
+        }
+        break;
+      case "bottom":
+        if ((height - y) < minOffsetFromEdge) {
+          y -= FLIP_ARROW_INSIDE_FACTOR * boxHeight;
+        }
+        break;
+    }
+
+    // Offset stacked line numbers by a quarter of the box's width/height, so a part of
+    // them remains visible behind the number that sits at the top of the stack.
+    if (isStackedLine) {
+      const xOffset = boxWidth / 4;
+      const yOffset = boxHeight / 4;
+
       if (lineNumber > 0) {
-        boxEdge = "top";
+        x -= xOffset;
+        y -= yOffset;
       } else {
-        boxEdge = "bottom";
+        x += xOffset;
+        y += yOffset;
       }
     }
-    if (dimensionType === ROWS) {
-      if (lineNumber > 0) {
-        boxEdge = "left";
-      } else {
-        boxEdge = "right";
+
+    // If one the edges of the arrow that's parallel to the line is too close to the edge
+    // of the viewport (and therefore partly hidden), grow the arrow's size in the
+    // opposite direction.
+    // The goal is for the part that's not hidden to be exactly the size of a normal
+    // arrow and for the arrow to keep pointing at the line (keep being centered on it).
+    let grewBox = false;
+    const boxWidthBeforeGrowth = boxWidth;
+    const boxHeightBeforeGrowth = boxHeight;
+
+    if (dimensionType === ROWS && y <= boxHeight / 2) {
+      grewBox = true;
+      boxHeight = 2 * (boxHeight - y);
+    } else if (dimensionType === ROWS && y >= height - boxHeight / 2) {
+      grewBox = true;
+      boxHeight = 2 * (y - height + boxHeight);
+    } else if (dimensionType === COLUMNS && x <= boxWidth / 2) {
+      grewBox = true;
+      boxWidth = 2 * (boxWidth - x);
+    } else if (dimensionType === COLUMNS && x >= width - boxWidth / 2) {
+      grewBox = true;
+      boxWidth = 2 * (x - width + boxWidth);
+    }
+
+    // Draw the arrow box itself
+    drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+                   boxEdge);
+
+    // Determine the text position for it to be centered nicely inside the arrow box.
+    switch (boxEdge) {
+      case "left":
+        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
+        break;
+      case "right":
+        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
+        break;
+      case "top":
+        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
+        break;
+      case "bottom":
+        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
+        break;
+    }
+
+    // Do a second pass to adjust the position, along the other axis, if the box grew
+    // during the previous step, so the text is also centered on that axis.
+    if (grewBox) {
+      if (dimensionType === ROWS && y <= boxHeightBeforeGrowth / 2) {
+        y = boxHeightBeforeGrowth / 2;
+      } else if (dimensionType === ROWS && y >= height - boxHeightBeforeGrowth / 2) {
+        y = height - boxHeightBeforeGrowth / 2;
+      } else if (dimensionType === COLUMNS && x <= boxWidthBeforeGrowth / 2) {
+        x = boxWidthBeforeGrowth / 2;
+      } else if (dimensionType === COLUMNS && x >= width - boxWidthBeforeGrowth / 2) {
+        x = width - boxWidthBeforeGrowth / 2;
       }
+    }
+
+    // Write the line number inside of the rectangle.
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
+    this.ctx.fillStyle = "black";
+    const numberText = isStackedLine ? "" : lineNumber;
+    this.ctx.fillText(numberText, x, y);
+    this.ctx.restore();
+  }
+
+  /**
+   * Determine which edge of a line number box to aim the line number arrow at.
+   *
+   * @param  {String} dimensionType
+   *         The grid line dimension type which is either the constant COLUMNS or ROWS.
+   * @param  {Number} lineNumber
+   *         The grid line number.
+   * @return {String} The edge of the box: top, right, bottom or left.
+   */
+  getBoxEdge(dimensionType, lineNumber) {
+    let boxEdge;
+
+    if (dimensionType === COLUMNS) {
+      boxEdge = lineNumber > 0 ? "top" : "bottom";
+    } else if (dimensionType === ROWS) {
+      boxEdge = lineNumber > 0 ? "left" : "right";
     }
 
     // Rotate box edge as needed for writing mode and text direction.
@@ -1294,65 +1395,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
         console.error(`Unexpected direction: ${direction}`);
     }
 
-    // Default to drawing outside the edge, but move inside when close to viewport.
-    const minOffsetFromEdge = OFFSET_FROM_EDGE * displayPixelRatio;
-    let { width, height } = this._winDimensions;
-    width *= displayPixelRatio;
-    height *= displayPixelRatio;
-
-    // Check if the x or y position of the line number's arrow is too close to the edge
-    // of the window.  If it is too close, adjust the position by 2 x boxWidth or
-    // boxHeight since we're now going the opposite direction.
-    switch (boxEdge) {
-      case "left":
-        if (x < minOffsetFromEdge) {
-          x += 2 * boxWidth;
-        }
-        break;
-      case "right":
-        if ((width - x) < minOffsetFromEdge) {
-          x -= 2 * boxWidth;
-        }
-        break;
-      case "top":
-        if (y < minOffsetFromEdge) {
-          y += 2 * boxHeight;
-        }
-        break;
-      case "bottom":
-        if ((height - y) < minOffsetFromEdge) {
-          y -= 2 * boxHeight;
-        }
-        break;
-    }
-
-    // Draw the bubble rect to show the arrow.
-    drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
-                   boxEdge);
-
-    // Adjust position based on the edge.
-    switch (boxEdge) {
-      case "left":
-        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
-        break;
-      case "right":
-        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
-        break;
-      case "top":
-        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
-        break;
-      case "bottom":
-        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
-        break;
-    }
-
-    // Write the line number inside of the rectangle.
-    this.ctx.textAlign = "center";
-    this.ctx.textBaseline = "middle";
-    this.ctx.fillStyle = "black";
-    const numberText = isStackedLine ? "" : lineNumber;
-    this.ctx.fillText(numberText, x, y);
-    this.ctx.restore();
+    return boxEdge;
   }
 
   /**
