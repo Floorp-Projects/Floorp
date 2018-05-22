@@ -25,23 +25,25 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 // Register/unregister a constructor as a factory.
 function StreamConverterFactory() {}
 StreamConverterFactory.prototype = {
+
+  // properties required for XPCOM registration:
+  _classID: Components.ID("{d0c5195d-e798-49d4-b1d3-9324328b2291}"),
+  _classDescription: "pdf.js Component",
+  _contractID: "@mozilla.org/streamconv;1?from=application/pdf&to=*/*",
+
+  _classID2: Components.ID("{d0c5195d-e798-49d4-b1d3-9324328b2292}"),
+  _contractID2: "@mozilla.org/streamconv;1?from=application/pdf&to=text/html",
+
   register: function register() {
     ChromeUtils.import("resource://pdf.js/PdfStreamConverter.jsm");
-    var proto = PdfStreamConverter.prototype;
-    this._classID = proto.classID;
-
     var factory = XPCOMUtils._getFactory(PdfStreamConverter);
     this._factory = factory;
 
     var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(proto.classID, proto.classDescription,
-                              proto.contractID, factory);
-
-    if (proto.classID2) {
-      this._classID2 = proto.classID2;
-      registrar.registerFactory(proto.classID2, proto.classDescription,
-                                proto.contractID2, factory);
-    }
+    registrar.registerFactory(this._classID, this._classDescription,
+                              this._contractID, factory);
+    registrar.registerFactory(this._classID2, this._classDescription,
+                              this._contractID2, factory);
   },
 
   unregister: function unregister() {
