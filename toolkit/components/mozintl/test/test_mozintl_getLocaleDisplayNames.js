@@ -44,9 +44,9 @@ add_test(function test_other_subtags_ignored() {
 add_test(function test_invalid_locales() {
   deepEqual(gLocDN(["2"]), ["2"]);
   deepEqual(gLocDN([""]), [""]);
-  Assert.throws(() => gLocDN([2]));
-  Assert.throws(() => gLocDN([{}]));
-  Assert.throws(() => gLocDN([true]));
+  Assert.throws(() => gLocDN([2]), /All locale codes must be strings/);
+  Assert.throws(() => gLocDN([{}]), /All locale codes must be strings/);
+  Assert.throws(() => gLocDN([true]), /All locale codes must be strings/);
   run_next_test();
 });
 
@@ -60,9 +60,9 @@ add_test(function test_language_only() {
 add_test(function test_invalid_languages() {
   deepEqual(gLangDN(["2"]), ["2"]);
   deepEqual(gLangDN([""]), [""]);
-  Assert.throws(() => gLangDN([2]));
-  Assert.throws(() => gLangDN([{}]));
-  Assert.throws(() => gLangDN([true]));
+  Assert.throws(() => gLangDN([2]), /All language codes must be strings/);
+  Assert.throws(() => gLangDN([{}]), /All language codes must be strings/);
+  Assert.throws(() => gLangDN([true]), /All language codes must be strings/);
   run_next_test();
 });
 
@@ -76,8 +76,8 @@ add_test(function test_region_only() {
 add_test(function test_invalid_regions() {
   deepEqual(gRegDN(["2"]), ["2"]);
   deepEqual(gRegDN([""]), [""]);
-  Assert.throws(() => gRegDN([2]));
-  Assert.throws(() => gRegDN([{}]));
-  Assert.throws(() => gRegDN([true]));
+  Assert.throws(() => gRegDN([2]), /All region codes must be strings/);
+  Assert.throws(() => gRegDN([{}]), /All region codes must be strings/);
+  Assert.throws(() => gRegDN([true]), /All region codes must be strings/);
   run_next_test();
 });
