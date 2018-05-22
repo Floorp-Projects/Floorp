@@ -52,10 +52,11 @@ namespace net {
 #define kSmartSizeUpdateInterval 60000 // in milliseconds
 
 #ifdef ANDROID
-const uint32_t kMaxCacheSizeKB = 200*1024; // 200 MB
+const uint32_t kMaxCacheSizeKB = 512*1024; // 512 MB
 #else
-const uint32_t kMaxCacheSizeKB = 350*1024; // 350 MB
+const uint32_t kMaxCacheSizeKB = 1024*1024; // 1 GB
 #endif
+const uint32_t kMaxClearOnShutdownCacheSizeKB = 150*1024; // 150 MB
 
 bool
 CacheFileHandle::DispatchRelease()
@@ -4168,10 +4169,16 @@ CacheFileIOManager::SyncRemoveAllCacheFiles()
 static uint32_t
 SmartCacheSize(const uint32_t availKB)
 {
-  uint32_t maxSize = kMaxCacheSizeKB;
+  uint32_t maxSize;
 
-  if (availKB > 100 * 1024 * 1024) {
-    return maxSize;  // skip computing if we're over 100 GB
+  if (CacheObserver::ClearCacheOnShutdown()) {
+    maxSize = kMaxClearOnShutdownCacheSizeKB;
+  } else {
+    maxSize = kMaxCacheSizeKB;
+  }
+
+  if (availKB > 25 * 1024 * 1024) {
+    return maxSize;  // skip computing if we're over 25 GB
   }
 
   // Grow/shrink in 10 MB units, deliberately, so that in the common case we
@@ -4180,19 +4187,14 @@ SmartCacheSize(const uint32_t availKB)
   uint32_t sz10MBs = 0;
   uint32_t avail10MBs = availKB / (1024*10);
 
-  // .5% of space above 25 GB
-  if (avail10MBs > 2500) {
-    sz10MBs += static_cast<uint32_t>((avail10MBs - 2500)*.005);
-    avail10MBs = 2500;
-  }
-  // 1% of space between 7GB -> 25 GB
+  // 2.5% of space above 7GB
   if (avail10MBs > 700) {
-    sz10MBs += static_cast<uint32_t>((avail10MBs - 700)*.01);
+    sz10MBs += static_cast<uint32_t>((avail10MBs - 700)*.025);
     avail10MBs = 700;
   }
-  // 5% of space between 500 MB -> 7 GB
+  // 7.5% of space between 500 MB -> 7 GB
   if (avail10MBs > 50) {
-    sz10MBs += static_cast<uint32_t>((avail10MBs - 50)*.05);
+    sz10MBs += static_cast<uint32_t>((avail10MBs - 50)*.075);
     avail10MBs = 50;
   }
 
@@ -4201,11 +4203,11 @@ SmartCacheSize(const uint32_t availKB)
   // device owners may be sensitive to storage footprint: Use a smaller
   // percentage of available space and a smaller minimum.
 
-  // 20% of space up to 500 MB (10 MB min)
-  sz10MBs += std::max<uint32_t>(1, static_cast<uint32_t>(avail10MBs * .2));
+  // 16% of space up to 500 MB (10 MB min)
+  sz10MBs += std::max<uint32_t>(1, static_cast<uint32_t>(avail10MBs * .16));
 #else
-  // 40% of space up to 500 MB (50 MB min)
-  sz10MBs += std::max<uint32_t>(5, static_cast<uint32_t>(avail10MBs * .4));
+  // 30% of space up to 500 MB (50 MB min)
+  sz10MBs += std::max<uint32_t>(5, static_cast<uint32_t>(avail10MBs * .3));
 #endif
 
   return std::min<uint32_t>(maxSize, sz10MBs * 10 * 1024);
