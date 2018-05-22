@@ -202,12 +202,6 @@ describe("ConsoleAPICall component:", () => {
       }, {
         key: "console.count | test counter: 3",
         expectedBodyText: "test counter: 3",
-      }, {
-        key: "console.countReset | test counter: 0",
-        expectedBodyText: "test counter: 0",
-      }, {
-        key: "console.countReset | counterDoesntExist",
-        expectedBodyText: "Counter “test counter” doesn't exist.",
       }];
 
       for (const {key, expectedBodyText} of messages) {
