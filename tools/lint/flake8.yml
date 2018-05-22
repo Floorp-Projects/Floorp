@@ -2,10 +2,9 @@
 flake8:
     description: Python linter
     include:
-        - build/*.py
-        - build/moz.configure/*.configure
-        - config/check_macroassembler_style.py
-        - config/mozunit
+        - browser/
+        - build/
+        - config/
         - configure.py
         - layout/tools/reftest
         - python/mach
