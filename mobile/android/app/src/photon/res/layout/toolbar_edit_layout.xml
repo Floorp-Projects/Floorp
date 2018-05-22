@@ -5,13 +5,13 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto"
-       xmlns:tools="http://schemas.android.com/tools"
-       tools:background="@android:color/holo_green_light"
-       tools:layout_height="@dimen/browser_toolbar_height"
-       tools:layout_width="match_parent"
-       tools:orientation="horizontal"
-       tools:parentTag="LinearLayout">
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="@android:color/holo_green_light"
+    tools:layout_height="@dimen/browser_toolbar_height"
+    tools:layout_width="match_parent"
+    tools:orientation="horizontal"
+    tools:parentTag="LinearLayout">
 
     <org.mozilla.gecko.widget.themed.ThemedLinearLayout
         android:id="@+id/url_bar_title_bg"
@@ -50,6 +50,7 @@
         style="@style/UrlBar.QRCode"
         android:background="@drawable/url_bar_action_button"
         android:src="@drawable/ic_qrcode"
+        android:contentDescription="@string/url_bar_qrcode_text"
         gecko:showLWTBackground="true"/>
 
     <org.mozilla.gecko.toolbar.ToolbarRoundButton
@@ -57,6 +58,7 @@
         style="@style/UrlBar.ImageButton"
         android:background="@drawable/url_bar_action_button"
         android:src="@drawable/ic_mic"
+        android:contentDescription="@string/url_bar_mic_text"
         gecko:showLWTBackground="true"/>
 
 </merge>

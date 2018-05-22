@@ -71,6 +71,8 @@
   <string name="crash_restart_label">&crash_restart_label;</string>
 
   <string name="url_bar_default_text">&url_bar_default_text2;</string>
+  <string name="url_bar_qrcode_text">&url_bar_qrcode_text2;</string>
+  <string name="url_bar_mic_text">&url_bar_mic_text2;</string>
 
   <!-- https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/mobile-help -->
   <string name="help_link">https://support.mozilla.org/1/mobile/&formatS1;/&formatS2;/&formatS3;/mobile-help</string>

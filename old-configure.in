@@ -159,7 +159,7 @@ case "$target" in
         AC_CHECK_PROGS(MIDL, midl)
 
         # Make sure compilers are valid
-        CFLAGS="$CFLAGS -TC -nologo"
+        CFLAGS="$CFLAGS -nologo"
         CXXFLAGS="$CXXFLAGS -TP -nologo"
         AC_LANG_SAVE
         AC_LANG_C
@@ -688,7 +688,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:$@'
-        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
+        HOST_CFLAGS="$HOST_CFLAGS -nologo"
         HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
@@ -861,6 +861,8 @@ case "$target" in
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32 -luserenv -lsecur32"
         MOZ_FIX_LINK_PATHS=
+
+        MOZ_OPTIMIZE_FLAGS="-O1"
 
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
@@ -4528,16 +4530,9 @@ if test -n "$MOZ_DEV_EDITION"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
 
-if test "$MOZ_DEBUG"; then
+if test "$MOZ_DEBUG" -o "$DEVELOPER_OPTIONS"; then
     A11Y_LOG=1
 fi
-case "$MOZ_UPDATE_CHANNEL" in
-aurora|beta|release|esr)
-    ;;
-*)
-    A11Y_LOG=1
-    ;;
-esac
 AC_SUBST(A11Y_LOG)
 if test -n "$A11Y_LOG"; then
     AC_DEFINE(A11Y_LOG)

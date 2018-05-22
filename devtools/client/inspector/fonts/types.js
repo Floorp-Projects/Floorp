@@ -93,14 +93,8 @@ exports.fontEditor = {
   // Font variation instance currently selected
   instance: PropTypes.shape(fontVariationInstance),
 
-  // Whether or not the font editor is visible
-  isVisible: PropTypes.bool,
-
   // CSS font properties defined on the element
   properties: PropTypes.object,
-
-  // Selector text of the rule where font properties will be written
-  selector: PropTypes.string,
 };
 
 /**

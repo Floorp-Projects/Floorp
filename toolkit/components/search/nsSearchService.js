@@ -2740,6 +2740,7 @@ SearchService.prototype = {
   __sortedEngines: null,
   _visibleDefaultEngines: [],
   _searchDefault: null,
+  _searchOrder: [],
   get _sortedEngines() {
     if (!this.__sortedEngines)
       return this._buildSortedEngineList();
@@ -2983,6 +2984,7 @@ SearchService.prototype = {
         this._currentEngine = null;
         this._visibleDefaultEngines = [];
         this._searchDefault = null;
+        this._searchOrder = [];
         this._metaData = {};
         this._cacheFileJSON = null;
 
@@ -3499,6 +3501,13 @@ SearchService.prototype = {
     } else {
       this._searchDefault = searchSettings.default.searchDefault;
     }
+
+    if (searchRegion && searchRegion in searchSettings &&
+        "searchOrder" in searchSettings[searchRegion]) {
+      this._searchOrder = searchSettings[searchRegion].searchOrder;
+    } else if ("searchOrder" in searchSettings.default) {
+      this._searchOrder = searchSettings.default.searchOrder;
+    }
   },
 
   _parseListTxt: function SRCH_SVC_parseListTxt(list, uris) {
@@ -3616,6 +3625,12 @@ SearchService.prototype = {
       var engineName;
       var prefName;
 
+      // The original default engine should always be first in the list
+      if (this.originalDefaultEngine) {
+        this.__sortedEngines.push(this.originalDefaultEngine);
+        addedEngines[this.originalDefaultEngine.name] = this.originalDefaultEngine;
+      }
+
       try {
         var extras =
           Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
@@ -3639,6 +3654,15 @@ SearchService.prototype = {
         if (!engineName)
           break;
 
+        engine = this._engines[engineName];
+        if (!engine || engine.name in addedEngines)
+          continue;
+
+        this.__sortedEngines.push(engine);
+        addedEngines[engine.name] = engine;
+      }
+
+      for (let engineName of this._searchOrder) {
         engine = this._engines[engineName];
         if (!engine || engine.name in addedEngines)
           continue;
@@ -3779,6 +3803,11 @@ SearchService.prototype = {
 
       if (!(engineName in engineOrder))
         engineOrder[engineName] = i++;
+    }
+
+    // Now look at list.json
+    for (let engineName of this._searchOrder) {
+      engineOrder[engineName] = i++;
     }
 
     LOG("getDefaultEngines: engineOrder: " + engineOrder.toSource());
@@ -4176,6 +4205,13 @@ SearchService.prototype = {
           let engineName = getLocalizedPref(prefName);
           if (!engineName)
             break;
+          if (result.name == engineName) {
+            sendSubmissionURL = true;
+            break;
+          }
+        }
+
+        for (let engineName of this._searchOrder) {
           if (result.name == engineName) {
             sendSubmissionURL = true;
             break;

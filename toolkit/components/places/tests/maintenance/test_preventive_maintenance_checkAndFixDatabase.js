@@ -18,7 +18,7 @@ add_task(async function() {
     let successfulTasks = [];
     let failedTasks = [];
     tasksStatusMap.forEach(val => {
-      if (val.succeeded) {
+      if (val.succeeded && val.logs) {
         successfulTasks.push(val);
       } else {
         failedTasks.push(val);

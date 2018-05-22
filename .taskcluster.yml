@@ -77,9 +77,11 @@ tasks:
         then:
           - 'assume:repo:${repoUrl[8:]}:branch:default'
           - 'queue:route:notify.email.${ownerEmail}.*'
+          - 'in-tree:hook-action:project-gecko/in-tree-action-${repository.level}-*'
         else:
           $if: 'tasks_for == "action"'
           then:
+            # when all actions are hooks, we can calculate this directly rather than using a variable
             - '${action.repo_scope}'
           else:
             - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
@@ -104,9 +106,8 @@ tasks:
               TASKCLUSTER_CACHES: /builds/worker/checkouts
             - $if: 'tasks_for == "action"'
               then:
-                ACTION_TASK_GROUP_ID: '${ownTaskId}'
-                ACTION_TASK_ID: {$json: {$eval: 'taskId'}}
-                ACTION_TASK: {$json: {$eval: 'task'}}
+                ACTION_TASK_GROUP_ID: '${taskGroupId}'     # taskGroupId of the target task
+                ACTION_TASK_ID: {$json: {$eval: 'taskId'}} # taskId of the target task (JSON-encoded)
                 ACTION_INPUT: {$json: {$eval: 'input'}}
                 ACTION_CALLBACK: '${action.cb_name}'
                 ACTION_PARAMETERS: {$json: {$eval: 'parameters'}}

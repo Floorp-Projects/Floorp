@@ -27,8 +27,12 @@ class CurrentTimeTimer {
    *                        the current time is over the end time, true is given.
    */
   constructor(timeScale, shouldStopAfterEndTime, win, onUpdated) {
-    this.baseCurrentTime = timeScale.documentCurrentTime - timeScale.minStartTime;
-    this.endTime = timeScale.maxEndTime - timeScale.minStartTime;
+    // If currentTime is not defined (which happens when connected to server older
+    // than FF62), use documentCurrentTime instead. See bug 1454392.
+    const baseTime = typeof timeScale.currentTime === "undefined"
+                       ? timeScale.documentCurrentTime : timeScale.currentTime;
+    this.baseCurrentTime = baseTime - timeScale.minStartTime;
+    this.endTime = timeScale.getDuration();
     this.timerStartTime = win.performance.now();
 
     this.shouldStopAfterEndTime = shouldStopAfterEndTime;

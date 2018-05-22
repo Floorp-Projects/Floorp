@@ -45,11 +45,12 @@ class ProcessHangMonitor final
 
   static void ClearHang();
 
-  static void ForcePaint(PProcessHangMonitorParent* aParent,
-                         dom::TabParent* aTab,
-                         uint64_t aLayerObserverEpoch);
-  static void ClearForcePaint(uint64_t aLayerObserverEpoch);
-  static void MaybeStartForcePaint();
+  static void PaintWhileInterruptingJS(PProcessHangMonitorParent* aParent,
+                                       dom::TabParent* aTab,
+                                       bool aForceRepaint,
+                                       uint64_t aLayerObserverEpoch);
+  static void ClearPaintWhileInterruptingJS(uint64_t aLayerObserverEpoch);
+  static void MaybeStartPaintWhileInterruptingJS();
 
   enum SlowScriptAction {
     Continue,

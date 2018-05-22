@@ -30,6 +30,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.SwitchPreference;
 import android.preference.TwoStatePreference;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.content.LocalBroadcastManager;
@@ -56,6 +57,7 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -72,6 +74,7 @@ import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
@@ -145,6 +148,7 @@ public class GeckoPreferences
     private static final String PREFS_FAQ_LINK = NON_PREF_PREFIX + "faq.link";
     private static final String PREFS_FEEDBACK_LINK = NON_PREF_PREFIX + "feedback.link";
     public static final String PREFS_NOTIFICATIONS_WHATS_NEW = NON_PREF_PREFIX + "notifications.whats_new";
+    public static final String PREFS_NOTIFICATIONS_FEATURES_TIPS = NON_PREF_PREFIX + "notifications.features.tips";
     public static final String PREFS_APP_UPDATE_LAST_BUILD_ID = "app.update.last_build_id";
     public static final String PREFS_READ_PARTNER_CUSTOMIZATIONS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_customizations_provider";
     public static final String PREFS_READ_PARTNER_BOOKMARKS_PROVIDER = NON_PREF_PREFIX + "distribution.read_partner_bookmarks_provider";
@@ -813,6 +817,21 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
+                } else if (PREFS_NOTIFICATIONS_FEATURES_TIPS.equals(key)) {
+                    final boolean isLeanplumAvailable = MmaDelegate.isMmaExperimentEnabled(this);
+
+                    if (!isLeanplumAvailable) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+
+                    // Mma can only work if Health Report is enabled
+                    boolean isHealthReportEnabled = isHealthReportEnabled(this);
+                    if (!isHealthReportEnabled) {
+                        ((SwitchPreference) pref).setChecked(isHealthReportEnabled);
+                        pref.setEnabled(isHealthReportEnabled);
+                    }
                 }
 
                 // Some Preference UI elements are not actually preferences,
@@ -1105,9 +1124,10 @@ public class GeckoPreferences
         } else if (PREFS_HEALTHREPORT_UPLOAD_ENABLED.equals(prefName)) {
             final Boolean newBooleanValue = (Boolean) newValue;
             AdjustConstants.getAdjustHelper().setEnabled(newBooleanValue);
-            if (!newBooleanValue) {
-                MmaDelegate.stop();
-            }
+            // If Health Report has been disabled Mma should also be stopped.
+            // If it was just enabled, we should also try to start Mma immediately
+            // provided that all the other requirements to start Mma are met.
+            informMmaStatusChanged(newBooleanValue);
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             if ((Boolean) newValue) {
                 enableStumbler((CheckBoxPreference) preference);
@@ -1122,6 +1142,10 @@ public class GeckoPreferences
                 startActivityForResult(promptIntent, REQUEST_CODE_TAB_QUEUE);
                 return false;
             }
+        } else if (PREFS_NOTIFICATIONS_FEATURES_TIPS.equals(prefName)) {
+            // isChecked() returns the old value that hasn't yet been updated
+            final boolean isMmaEnabled = !((SwitchPreference) preference).isChecked();
+            informMmaStatusChanged(isMmaEnabled);
         } else if (HANDLERS.containsKey(prefName)) {
             PrefHandler handler = HANDLERS.get(prefName);
             handler.onChange(this, preference, newValue);
@@ -1167,6 +1191,12 @@ public class GeckoPreferences
                         broadcastStumblerPref(GeckoPreferences.this, true);
                     }
                 });
+    }
+
+    private void informMmaStatusChanged(boolean newStatus) {
+        final GeckoBundle newStatusBundle = new GeckoBundle(1);
+        newStatusBundle.putBoolean("isMmaEnabled", newStatus);
+        EventDispatcher.getInstance().dispatch("NotificationSettings:FeatureTipsStatusUpdated", newStatusBundle);
     }
 
     private TextInputLayout getTextBox(int aHintText) {
@@ -1419,5 +1449,22 @@ public class GeckoPreferences
         Bundle fragmentArgs = new Bundle();
         fragmentArgs.putString("resource", resource);
         intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_ARGUMENTS, fragmentArgs);
+    }
+
+    /**
+     * Get if Mma is available for the device and enabled by the user.
+     */
+    public static boolean isMmaAvailableAndEnabled(@NonNull Context context) {
+        final boolean isInMmaExperiment = MmaDelegate.isMmaExperimentEnabled(context);
+        final boolean isHealthReportEnabled = isHealthReportEnabled(context);
+        final boolean areMmaMessagesAllowed = GeckoPreferences.getBooleanPref(context,
+                GeckoPreferences.PREFS_NOTIFICATIONS_FEATURES_TIPS, true);
+
+        return isHealthReportEnabled && isInMmaExperiment && areMmaMessagesAllowed;
+    }
+
+    public static boolean isHealthReportEnabled(Context context) {
+        // Health Report is enabled by default so we'll return true if the preference is not found
+        return GeckoPreferences.getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
     }
 }

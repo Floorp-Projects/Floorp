@@ -4,4 +4,8 @@
         android:title="@string/pref_whats_new_notification"
         android:summary="@string/pref_whats_new_notification_summary"
         android:defaultValue="true" />
+    <SwitchPreference android:key="android.not_a_preference.notifications.features.tips"
+        android:title="@string/pref_feature_tips_notification"
+        android:summary="@string/pref_feature_tips_notification_summary"
+        android:defaultValue="true" />
 </PreferenceScreen>
