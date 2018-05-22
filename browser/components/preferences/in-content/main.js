@@ -1548,7 +1548,7 @@ var gMainPane = {
 
     for (let visibleType of visibleTypes) {
       let item = new HandlerListItem(visibleType);
-      this._list.appendChild(item.node);
+      item.connectAndAppendToList(this._list);
 
       if (visibleType.type === lastSelectedType) {
         this._list.selectedItem = item.node;
@@ -1613,8 +1613,7 @@ var gMainPane = {
   rebuildActionsMenu() {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
-    var menu =
-      document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+    var menu = typeItem.querySelector(".actionsMenu");
     var menuPopup = menu.menupopup;
 
     // Clear out existing items.
@@ -2007,8 +2006,7 @@ var gMainPane = {
       // If the user picked a new app from the menu, select it.
       if (aHandlerApp) {
         let typeItem = this._list.selectedItem;
-        let actionsMenu =
-          document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+        let actionsMenu = typeItem.querySelector(".actionsMenu");
         let menuItems = actionsMenu.menupopup.childNodes;
         for (let i = 0; i < menuItems.length; i++) {
           let menuItem = menuItems[i];
@@ -2452,6 +2450,28 @@ function isFeedType(t) {
   return t == TYPE_MAYBE_FEED || t == TYPE_MAYBE_VIDEO_FEED || t == TYPE_MAYBE_AUDIO_FEED;
 }
 
+// eslint-disable-next-line no-undef
+let gHandlerListItemFragment = MozXULElement.parseXULToFragment(`
+  <richlistitem>
+    <hbox flex="1" equalsize="always">
+      <hbox class="typeContainer" flex="1" align="center">
+        <image class="typeIcon" width="16" height="16"
+               src="moz-icon://goat?size=16"/>
+        <label class="typeDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionContainer" flex="1" align="center">
+        <image class="actionIcon" width="16" height="16"/>
+        <label class="actionDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionsMenuContainer" flex="1">
+        <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
+          <menupopup/>
+        </menulist>
+      </hbox>
+    </hbox>
+  </richlistitem>
+`);
+
 /**
  * This is associated to <richlistitem> elements in the handlers view.
  */
@@ -2462,39 +2482,54 @@ class HandlerListItem {
 
   constructor(handlerInfoWrapper) {
     this.handlerInfoWrapper = handlerInfoWrapper;
-    this.node = document.createElement("richlistitem");
+  }
+
+  setOrRemoveAttributes(iterable) {
+    for (let [selector, name, value] of iterable) {
+      let node = selector ? this.node.querySelector(selector) : this.node;
+      if (value) {
+        node.setAttribute(name, value);
+      } else {
+        node.removeAttribute(name);
+      }
+    }
+  }
+
+  connectAndAppendToList(list) {
+    list.appendChild(document.importNode(gHandlerListItemFragment, true));
+    this.node = list.lastChild;
     gNodeToObjectMap.set(this.node, this);
 
-    this.node.setAttribute("type", this.handlerInfoWrapper.type);
-    this.node.setAttribute("typeDescription",
-                           this.handlerInfoWrapper.typeDescription);
-    if (this.handlerInfoWrapper.smallIcon) {
-      this.node.setAttribute("typeIcon", this.handlerInfoWrapper.smallIcon);
-    } else {
-      this.node.removeAttribute("typeIcon");
-    }
+    this.node.querySelector(".actionsMenu").addEventListener("command",
+      event => gMainPane.onSelectAction(event.originalTarget));
 
+    let typeDescription = this.handlerInfoWrapper.typeDescription;
+    this.setOrRemoveAttributes([
+      [null, "type", this.handlerInfoWrapper.type],
+      [".typeContainer", "tooltiptext", typeDescription],
+      [".typeDescription", "value", typeDescription],
+      [".typeIcon", "src", this.handlerInfoWrapper.smallIcon],
+    ]);
     this.refreshAction();
+    this.showActionsMenu = false;
   }
 
   refreshAction() {
-    this.node.setAttribute("actionDescription",
-                           this.handlerInfoWrapper.actionDescription);
-    if (this.handlerInfoWrapper.actionIconClass) {
-      this.node.setAttribute(APP_ICON_ATTR_NAME,
-                             this.handlerInfoWrapper.actionIconClass);
-      this.node.removeAttribute("actionIcon");
-    } else {
-      this.node.removeAttribute(APP_ICON_ATTR_NAME);
-      this.node.setAttribute("actionIcon", this.handlerInfoWrapper.actionIcon);
-    }
+    let { actionIconClass, actionDescription } = this.handlerInfoWrapper;
+    this.setOrRemoveAttributes([
+      [null, APP_ICON_ATTR_NAME, actionIconClass],
+      [".actionContainer", "tooltiptext", actionDescription],
+      [".actionDescription", "value", actionDescription],
+      [".actionIcon", "src", actionIconClass ? null :
+                             this.handlerInfoWrapper.actionIcon],
+    ]);
   }
 
   set showActionsMenu(value) {
-    document.getAnonymousElementByAttribute(this.node, "anonid", "selected")
-            .setAttribute("hidden", !value);
-    document.getAnonymousElementByAttribute(this.node, "anonid", "not-selected")
-            .setAttribute("hidden", !!value);
+    this.setOrRemoveAttributes([
+      [".actionContainer", "hidden", value],
+      [".actionsMenuContainer", "hidden", !value],
+    ]);
   }
 }
 
