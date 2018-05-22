@@ -8,6 +8,7 @@ import sys
 import buildconfig
 from mozbuild.preprocessor import Preprocessor
 
+
 def main(output, input_file):
     pp = Preprocessor()
     pp.context.update({
@@ -20,6 +21,7 @@ def main(output, input_file):
     pp.setMarker(None)
     pp.out = output
     pp.do_include(input_file)
+
 
 if __name__ == '__main__':
     main(*sys.agv[1:])

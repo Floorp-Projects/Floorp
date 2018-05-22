@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # This script checks various aspects of SpiderMonkey code style.  The current checks are as
 # follows.
 #
@@ -33,7 +33,7 @@
 #   statement should go, even to a human.  Therefore, we check the #include
 #   statements within each #if/#endif block (including nested ones) in
 #   isolation, but don't try to do any order checking between such blocks.
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import print_function
 
@@ -340,7 +340,7 @@ def check_style(enable_fixup):
 def module_name(name):
     '''Strip the trailing .cpp, .h, inlines.h or -inl.h from a filename.'''
 
-    return name.replace('inlines.h', '').replace('-inl.h', '').replace('.h', '').replace('.cpp', '')
+    return name.replace('inlines.h', '').replace('-inl.h', '').replace('.h', '').replace('.cpp', '')  # NOQA: E501
 
 
 def is_module_header(enclosing_inclname, header_inclname):
@@ -773,8 +773,8 @@ def main():
     elif sys.argv[1:] == []:
         fixup = False
     else:
-        print("TEST-UNEXPECTED-FAIL | check_spidermonkey_style.py | unexpected command line options: " +
-              repr(sys.argv[1:]))
+        print("TEST-UNEXPECTED-FAIL | check_spidermonkey_style.py | unexpected command "
+              "line options: " + repr(sys.argv[1:]))
         sys.exit(1)
 
     ok = check_style(fixup)

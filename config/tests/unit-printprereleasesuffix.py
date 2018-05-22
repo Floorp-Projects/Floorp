@@ -1,7 +1,5 @@
 import unittest
 
-import sys
-import os.path
 import mozunit
 
 from printprereleasesuffix import get_prerelease_suffix

@@ -16,7 +16,6 @@ import os
 import os.path
 import sys
 import shutil
-import stat
 
 
 def _nsinstall_internal(argv):
@@ -57,7 +56,7 @@ def _nsinstall_internal(argv):
         # mode is specified
         try:
             options.m = int(options.m, 8)
-        except:
+        except Exception:
             sys.stderr.write('nsinstall: {0} is not a valid mode\n'
                              .format(options.m))
             return 1
@@ -89,7 +88,7 @@ def _nsinstall_internal(argv):
             return 0
 
     if options.X:
-        options.X = [os.path.abspath(p) for p in options.X]
+        options.X = [os.path.abspath(path) for path in options.X]
 
     if options.D:
         return maybe_create_dir(args[0], options.m, True)
