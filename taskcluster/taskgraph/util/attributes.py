@@ -27,6 +27,7 @@ RELEASE_PROMOTION_PROJECTS = {
     'jamun',
     'maple',
     'try',
+    'try-comm-central',
 } | RELEASE_PROJECTS
 
 _OPTIONAL_ATTRIBUTES = (
