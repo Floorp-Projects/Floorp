@@ -79,6 +79,24 @@ ChannelWrapper::Get(const GlobalObject& global, nsIChannel* channel)
   return wrapper.forget();
 }
 
+already_AddRefed<ChannelWrapper>
+ChannelWrapper::GetRegisteredChannel(const GlobalObject& global, uint64_t aChannelId, const WebExtensionPolicy& aAddon, nsITabParent* aTabParent)
+{
+  nsIContentParent* contentParent = nullptr;
+  if (TabParent* parent = static_cast<TabParent*>(aTabParent)) {
+    contentParent = static_cast<nsIContentParent*>(parent->Manager());
+  }
+
+  auto& webreq = WebRequestService::GetSingleton();
+
+  nsCOMPtr<nsITraceableChannel> channel = webreq.GetTraceableChannel(aChannelId, aAddon.Id(), contentParent);
+  if (!channel) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIChannel> chan(do_QueryInterface(channel));
+  return ChannelWrapper::Get(global, chan);
+}
+
 void
 ChannelWrapper::SetChannel(nsIChannel* aChannel)
 {
