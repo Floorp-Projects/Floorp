@@ -760,7 +760,6 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
     dtoaCache.purge();
-    sweepMapAndSetObjectsAfterMinorGC();
 }
 
 void
@@ -840,20 +839,6 @@ void
 Realm::sweepVarNames()
 {
     varNames_.sweep();
-}
-
-void
-JSCompartment::sweepMapAndSetObjectsAfterMinorGC()
-{
-    auto fop = runtime_->defaultFreeOp();
-
-    for (auto mapobj : mapsWithNurseryMemory)
-        MapObject::sweepAfterMinorGC(fop, mapobj);
-    mapsWithNurseryMemory.clearAndFree();
-
-    for (auto setobj : setsWithNurseryMemory)
-        SetObject::sweepAfterMinorGC(fop, setobj);
-    setsWithNurseryMemory.clearAndFree();
 }
 
 namespace {
