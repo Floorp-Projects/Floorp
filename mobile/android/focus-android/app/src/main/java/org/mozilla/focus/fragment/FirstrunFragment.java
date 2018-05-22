@@ -107,6 +107,12 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
         final TabLayout tabLayout = (TabLayout) view.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager, true);
 
+        final FragmentManager fragmentManager = getFragmentManager();
+        final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
+        if (urlInputFragment != null) {
+            fragmentManager.beginTransaction().detach(urlInputFragment).commit();
+        }
+
         return view;
     }
 
@@ -147,6 +153,7 @@ public class FirstrunFragment extends Fragment implements View.OnClickListener {
 
         final UrlInputFragment inputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
         if (inputFragment != null) {
+            fragmentManager.beginTransaction().attach(inputFragment).commit();
             inputFragment.showKeyboard();
         }
     }
