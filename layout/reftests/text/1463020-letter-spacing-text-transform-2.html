@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset=utf-8>
+<style>
+span {
+  font-size: 36px;
+  font-kerning: none;
+}
+#test, #ref {
+  text-transform: lowercase;
+}
+</style>
+<body>
+  <p>The two lines should match:
+  <p><span id="test">𐐔𐐯𐑅𐐨𐑉𐐯𐐻</span><span id="nbsp">&nbsp;</span>
+  <p><span id="ref">𐐔&nbsp;𐐯&nbsp;𐑅&nbsp;𐐨&nbsp;𐑉&nbsp;𐐯&nbsp;𐐻</span>
+</body>
+<script>
+var nbspWidth = document.getElementById("nbsp").offsetWidth;
+var test = document.getElementById("test");
+test.style.letterSpacing = nbspWidth + "px";
+document.documentElement.classList.remove("reftest-wait");
+</script>
