@@ -246,7 +246,7 @@ MapIteratorObject::create(JSContext* cx, HandleObject obj, ValueMap* data,
     bool insideNursery = IsInsideNursery(iterobj);
     MOZ_ASSERT(insideNursery == nursery.isInside(buffer));
     if (insideNursery && !HasNurseryMemory(mapobj.get())) {
-        if (!cx->compartment()->addMapWithNurseryMemory(mapobj)) {
+        if (!cx->nursery().addMapWithNurseryMemory(mapobj)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -644,7 +644,7 @@ MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
         return nullptr;
 
     bool insideNursery = IsInsideNursery(mapObj);
-    if (insideNursery && !cx->compartment()->addMapWithNurseryMemory(mapObj)) {
+    if (insideNursery && !cx->nursery().addMapWithNurseryMemory(mapObj)) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -1097,7 +1097,7 @@ SetIteratorObject::create(JSContext* cx, HandleObject obj, ValueSet* data,
     bool insideNursery = IsInsideNursery(iterobj);
     MOZ_ASSERT(insideNursery == nursery.isInside(buffer));
     if (insideNursery && !HasNurseryMemory(setobj.get())) {
-        if (!cx->compartment()->addSetWithNurseryMemory(setobj)) {
+        if (!cx->nursery().addSetWithNurseryMemory(setobj)) {
             ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -1327,7 +1327,7 @@ SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
         return nullptr;
 
     bool insideNursery = IsInsideNursery(obj);
-    if (insideNursery && !cx->compartment()->addSetWithNurseryMemory(obj)) {
+    if (insideNursery && !cx->nursery().addSetWithNurseryMemory(obj)) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
