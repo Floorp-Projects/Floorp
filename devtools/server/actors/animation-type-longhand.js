@@ -237,6 +237,8 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
     "-moz-font-smoothing-background-color",
     "lighting-color",
     "outline-color",
+    "scrollbar-face-color",
+    "scrollbar-track-color",
     "stop-color",
     "text-decoration-color",
     "text-emphasis-color",
