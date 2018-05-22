@@ -16,13 +16,11 @@ result if more or less errors are found. See js/src/Makefile.in for invocation.
 """
 
 
-import hashlib
 import re
 import shlex
 import subprocess
 import sys
 import threading
-import time
 
 from optparse import OptionParser
 
@@ -69,7 +67,7 @@ def run(args, stdin=None):
         stdout_worker.join()
         stderr_worker.join()
 
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         sys.exit(-1)
 
     stdout, stderr = stdout_worker.all, stderr_worker.all
@@ -135,7 +133,7 @@ def clean_voutput(err):
                  r"\1x", err, flags=re.MULTILINE)
     err = re.sub(r"(^\s+Invalid read of size )\d+",
                  r"\1x", err, flags=re.MULTILINE)
-    err = re.sub(r"(^\s+Address 0x)[0-9A-Fa-f]+( is )\d+( bytes inside a block of size )[0-9,]+( free'd)",
+    err = re.sub(r"(^\s+Address 0x)[0-9A-Fa-f]+( is )\d+( bytes inside a block of size )[0-9,]+( free'd)",  # NOQA: E501
                  r"\1\2\3\4", err, flags=re.MULTILINE)
 
     # Skip the repeating bit due to the segfault
@@ -170,7 +168,7 @@ def remove_failed_allocation_backtraces(err):
 
 
 def clean_output(err):
-    err = re.sub(r"^js\(\d+,0x[0-9a-f]+\) malloc: \*\*\* error for object 0x[0-9a-f]+: pointer being freed was not allocated\n\*\*\* set a breakppoint in malloc_error_break to debug\n$",
+    err = re.sub(r"^js\(\d+,0x[0-9a-f]+\) malloc: \*\*\* error for object 0x[0-9a-f]+: pointer being freed was not allocated\n\*\*\* set a breakpoint in malloc_error_break to debug\n$",  # NOQA: E501
                  "pointer being freed was not allocated", err, flags=re.MULTILINE)
 
     return err
@@ -213,7 +211,7 @@ parser.add_option("-r", "--regression", action="store", metavar="REGRESSION_COUN
 (OPTIONS, args) = parser.parse_args()
 
 
-if OPTIONS.regression != None:
+if OPTIONS.regression is not None:
     # TODO: This should be expanded as we get a better hang of the OOM problems.
     # For now, we'll just check that the number of OOMs in one short file does not
     # increase.
@@ -226,7 +224,7 @@ else:
         files = [f for f in files if f.find(args[0]) != -1]
 
 
-if OPTIONS.regression == None:
+if OPTIONS.regression is None:
     # Don't use a logfile, this is automated for tinderbox.
     log = file("../OOM_log", "w")
 
@@ -245,7 +243,7 @@ for f in files:
     # TODO: revisit this.
     for i in range(20, max):
 
-        if OPTIONS.regression == None:
+        if OPTIONS.regression is None:
             print("Testing allocation {0}/{1} in {2}".format(i, max, f))
         else:
             # something short for tinderbox, no space or \n
@@ -261,7 +259,7 @@ for f in files:
         # Failure
         else:
 
-            if OPTIONS.regression != None:
+            if OPTIONS.regression is not None:
                 # Just count them
                 num_failures += 1
                 continue
@@ -340,13 +338,13 @@ for f in files:
             log.write("\n")
             log.flush()
 
-    if OPTIONS.regression == None:
+    if OPTIONS.regression is None:
         count_lines()
 
 print()
 
 # Do the actual regression check
-if OPTIONS.regression != None:
+if OPTIONS.regression is not None:
     expected_num_failures = OPTIONS.regression
 
     if num_failures != expected_num_failures:

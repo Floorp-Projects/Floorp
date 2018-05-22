@@ -3,11 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # This script checks encoding of the files that define JSErrorFormatStrings.
 #
 # JSErrorFormatString.format member should be in ASCII encoding.
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import print_function
 
@@ -41,7 +41,7 @@ def check_single_file(filename):
         data = f.read()
         try:
             data.decode(expected_encoding)
-        except:
+        except Exception:
             log_fail(filename, 'not in {} encoding'.format(expected_encoding))
 
     log_pass(filename, 'ok')
