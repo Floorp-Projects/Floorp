@@ -75,6 +75,7 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
+import org.mozilla.focus.web.HttpAuthenticationDialogBuilder;
 import org.mozilla.focus.widget.AnimatedProgressBar;
 import org.mozilla.focus.widget.FloatingEraseButton;
 import org.mozilla.focus.widget.FloatingSessionsButton;
@@ -496,6 +497,27 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void onBlockingStateChanged(boolean isBlockingEnabled) {}
+
+            @Override
+            public void onHttpAuthRequest(@NonNull final IWebView.HttpAuthCallback callback, String host, String realm) {
+                HttpAuthenticationDialogBuilder builder = new HttpAuthenticationDialogBuilder.Builder(getActivity(), host, realm)
+                                .setOkListener(new HttpAuthenticationDialogBuilder.OkListener() {
+                                    @Override
+                                    public void onOk(String host, String realm, String username, String password) {
+                                        callback.proceed(username, password);
+                                    }
+                                })
+                                .setCancelListener(new HttpAuthenticationDialogBuilder.CancelListener() {
+                                    @Override
+                                    public void onCancel() {
+                                        callback.cancel();
+                                    }
+                                })
+                                .build();
+
+                builder.createDialog();
+                builder.show();
+            }
 
             @Override
             public void onLongPress(final IWebView.HitTarget hitTarget) {

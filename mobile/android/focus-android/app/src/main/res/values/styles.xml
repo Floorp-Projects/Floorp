@@ -111,4 +111,13 @@
     <style name="DoorHanger.Medium.Light">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
+
+    <style name="HintTextAppearance">
+        <item name="android:textColor">@color/colorTextInactive</item>
+        <item name="android:textSize">9sp</item>
+    </style>
+
+    <style name="ColorHandleTheme">
+        <item name="android:colorControlActivated">@color/photonBlue50</item>
+    </style>
 </resources>

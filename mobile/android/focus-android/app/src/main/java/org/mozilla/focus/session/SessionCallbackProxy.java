@@ -91,6 +91,11 @@ public class SessionCallbackProxy implements IWebView.Callback {
     }
 
     @Override
+    public void onHttpAuthRequest(@NonNull IWebView.HttpAuthCallback callback, String host, String realm) {
+        delegate.onHttpAuthRequest(callback, host, realm);
+    }
+
+    @Override
     public void onDownloadStart(Download download) {
         // TODO: Replace with session property
         delegate.onDownloadStart(download);

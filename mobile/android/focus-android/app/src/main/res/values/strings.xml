@@ -578,4 +578,11 @@ be temporary, and you can try again later.</li>
 
     <!-- Find in page -->
     <string name="find_in_page">Find in Page</string>
+
+    <!-- Http Authentication Popup: Title -->
+    <string name="http_auth_dialog_title">Authentication required</string>
+    <!-- Http Authentication Popup: Username -->
+    <string name="http_auth_dialog_username">Username</string>
+    <!-- Http Authentication Popup: Password -->
+    <string name="http_auth_dialog_password">Password</string>
 </resources>
