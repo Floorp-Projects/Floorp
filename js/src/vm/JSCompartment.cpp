@@ -50,7 +50,6 @@ JSCompartment::JSCompartment(Zone* zone)
     marked(true),
     performanceMonitoring(runtime_),
     data(nullptr),
-    lastAnimationTime(0),
     regExps(),
     arraySpeciesLookup(),
     globalWriteBarriered(0),
