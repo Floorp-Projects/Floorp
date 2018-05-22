@@ -1885,6 +1885,7 @@ nsHostResolver::Create(uint32_t maxCacheEntries,
 void
 nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries> *args)
 {
+    MutexAutoLock lock(mLock);
     for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
         // We don't pay attention to address literals, only resolved domains.
         // Also require a host.
