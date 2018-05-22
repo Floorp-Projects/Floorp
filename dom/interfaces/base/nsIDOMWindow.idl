@@ -6,7 +6,6 @@
 #include "domstubs.idl"
 
 interface nsIControllers;
-interface nsIDOMBlob;
 interface nsIDOMOfflineResourceList;
 interface nsIPrompt;
 interface nsIVariant;

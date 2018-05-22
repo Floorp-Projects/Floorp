@@ -1045,7 +1045,7 @@ HTMLEditor::InsertObject(const nsACString& aType,
     nsCOMPtr<nsINode> node = do_QueryInterface(aDestinationNode);
     MOZ_ASSERT(node);
 
-    nsCOMPtr<nsIDOMBlob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);
+    RefPtr<Blob> domBlob = Blob::Create(node->GetOwnerGlobal(), blob);
     NS_ENSURE_TRUE(domBlob, NS_ERROR_FAILURE);
 
     return utils->SlurpBlob(domBlob, node->OwnerDoc()->GetWindow(), br);

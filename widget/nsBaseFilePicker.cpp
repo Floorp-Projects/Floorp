@@ -53,8 +53,7 @@ LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMBlob> blob = File::CreateFromFile(aWindow, aFile);
-  blob.forget(aResult);
+  *aResult = ToSupports(File::CreateFromFile(aWindow, aFile).take());
   return NS_OK;
 }
 

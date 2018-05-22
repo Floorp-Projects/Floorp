@@ -10,6 +10,8 @@ var { "classes": Cc, "interfaces": Ci, "utils": Cu } = Components;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+Cu.importGlobalProperties(["Blob"]);
+
 if (!("self" in this)) {
   this.self = this;
 }
@@ -426,7 +428,7 @@ function verifyBuffers(buffer1, buffer2)
 
 function verifyBlob(blob1, blob2)
 {
-  is(blob1 instanceof Ci.nsIDOMBlob, true,
+  is(Blob.isInstance(blob1), true,
      "Instance of nsIDOMBlob");
   is(blob1 instanceof File, blob2 instanceof File,
      "Instance of DOM File");
