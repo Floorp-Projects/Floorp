@@ -560,7 +560,7 @@ parent:
     /**
      * Child informs the parent that the layer tree is already available.
      */
-    async ForcePaintNoOp(uint64_t aLayerObserverEpoch);
+    async PaintWhileInterruptingJSNoOp(uint64_t aLayerObserverEpoch);
 
     /**
      * Sent by the child to the parent to inform it that an update to the
@@ -767,11 +767,15 @@ child:
      * @param aEnabled
      *        True if the child should render and upload layers, false if the
      *        child should clear layers.
+     * @param aForceRepaint
+     *        True if the child should force a paint even if it's already
+     *        visible.
      * @param aLayerObserverEpoch
      *        The layer observer epoch for this activation. This message should be
-     *        ignored if this epoch has already been observed (via ForcePaint).
+     *        ignored if this epoch has already been observed (via
+     *        PaintWhileInterruptingJS).
      */
-    async RenderLayers(bool aEnabled, uint64_t aLayerObserverEpoch);
+    async RenderLayers(bool aEnabled, bool aForceRepaint, uint64_t aLayerObserverEpoch);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.

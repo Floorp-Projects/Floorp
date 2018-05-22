@@ -91,35 +91,13 @@ endif
 MAKEFILE      = $(wildcard $(OBJDIR)/Makefile)
 CONFIG_STATUS = $(wildcard $(OBJDIR)/config.status)
 
-EXTRA_CONFIG_DEPS := \
-  $(TOPSRCDIR)/aclocal.m4 \
-  $(TOPSRCDIR)/old-configure.in \
-  $(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
-  $(TOPSRCDIR)/js/src/aclocal.m4 \
-  $(TOPSRCDIR)/js/src/old-configure.in \
-  $(NULL)
+# Include deps for configure written by configure itself.
+CONFIG_STATUS_DEPS := $(if $(wildcard $(OBJDIR)/config_status_deps.in),$(shell cat $(OBJDIR)/config_status_deps.in),)
 
-$(CONFIGURES): %: %.in $(EXTRA_CONFIG_DEPS)
+$(CONFIGURES): %: %.in
 	@echo Generating $@
 	cp -f $< $@
 	chmod +x $@
-
-CONFIG_STATUS_DEPS := \
-  $(wildcard $(TOPSRCDIR)/*/confvars.sh) \
-  $(CONFIGURES) \
-  $(TOPSRCDIR)/nsprpub/configure \
-  $(TOPSRCDIR)/config/milestone.txt \
-  $(TOPSRCDIR)/browser/config/version.txt \
-  $(TOPSRCDIR)/browser/config/version_display.txt \
-  $(TOPSRCDIR)/build/virtualenv_packages.txt \
-  $(TOPSRCDIR)/python/mozbuild/mozbuild/virtualenv.py \
-  $(TOPSRCDIR)/testing/mozbase/packages.txt \
-  $(OBJDIR)/.mozconfig.json \
-  $(NULL)
-
-# Include a dep file emitted by configure to track Python files that
-# may influence the result of configure.
--include $(OBJDIR)/configure.d
 
 CONFIGURE_ENV_ARGS += \
   MAKE='$(MAKE)' \

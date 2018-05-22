@@ -69,6 +69,14 @@
 <!ENTITY  crash_restart_label "Restart &brandShortName;">
 
 <!ENTITY url_bar_default_text2 "Search or enter address">
+<!-- Localization note (url_bar_qrcode_text2) : This text will be
+     heard by non-visual users when the focus is on the QR Code
+     icon in the url bar. -->
+<!ENTITY url_bar_qrcode_text2 "Use your QR Reader to search or enter address">
+<!-- Localization note (url_bar_mic_text2) : This text will be
+     heard by non-visual users when the focus is on the Microphone
+     icon in the url bar. -->
+<!ENTITY url_bar_mic_text2 "Use your microphone to search or enter address">
 
 <!ENTITY bookmark "Bookmark">
 <!ENTITY bookmark_remove "Remove bookmark">
