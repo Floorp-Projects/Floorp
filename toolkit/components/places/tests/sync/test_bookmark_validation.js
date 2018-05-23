@@ -48,7 +48,7 @@ add_task(async function test_inconsistencies() {
   await PlacesUtils.bookmarks.remove("bookmarkCCCC");
   await PlacesUtils.bookmarks.remove("bookmarkDDDD");
 
-  deepEqual(await buf.fetchInconsistencies(), {
+  deepEqual(await buf.fetchSyncStatusMismatches(), {
     missingLocal: [],
     missingRemote: [],
     wrongSyncStatus: [],
@@ -96,7 +96,7 @@ add_task(async function test_inconsistencies() {
   }]);
 
   let { missingLocal, missingRemote, wrongSyncStatus } =
-    await buf.fetchInconsistencies();
+    await buf.fetchSyncStatusMismatches();
   deepEqual(missingLocal, ["bookmarkGGGG"],
     "Should report merged remote items that don't exist locally");
   deepEqual(missingRemote.sort(), ["bookmarkBBBB", "bookmarkCCCC"],

@@ -239,12 +239,15 @@
   padding-inline-end: 1em;
 }
 
-#identity-popup-securityView-footer {
+#identity-popup-more-info-footer {
   margin-top: 1em;
+}
+
+.identity-popup-footer {
   background-color: var(--arrowpanel-dimmed);
 }
 
-#identity-popup-securityView-footer > button {
+.identity-popup-footer > button {
   -moz-appearance: none;
   margin: 0;
   border: none;
@@ -254,12 +257,12 @@
   background-color: transparent;
 }
 
-#identity-popup-securityView-footer > button:hover,
-#identity-popup-securityView-footer > button:focus {
+.identity-popup-footer > button:hover,
+.identity-popup-footer > button:focus {
   background-color: var(--arrowpanel-dimmed);
 }
 
-#identity-popup-securityView-footer > button:hover:active {
+.identity-popup-footer > button:hover:active {
   background-color: var(--arrowpanel-dimmed-further);
 }
 

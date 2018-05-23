@@ -133,17 +133,18 @@ export default class PaymentMethodPicker extends PaymentStateSubscriberMixin(HTM
       page: {
         id: "basic-card-page",
       },
+      "basic-card-page": {},
     };
 
     switch (target) {
       case this.addLink: {
-        nextState.page.guid = null;
+        nextState["basic-card-page"].guid = null;
         break;
       }
       case this.editLink: {
         let state = this.requestStore.getState();
         let selectedPaymentCardGUID = state[this.selectedStateKey];
-        nextState.page.guid = selectedPaymentCardGUID;
+        nextState["basic-card-page"].guid = selectedPaymentCardGUID;
         break;
       }
       default: {

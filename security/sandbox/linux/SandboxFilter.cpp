@@ -1053,6 +1053,14 @@ public:
     case __NR_mremap:
       return Allow();
 
+      // Bug 1462640: Mesa libEGL uses mincore to test whether values
+      // are pointers, for reasons.
+    case __NR_mincore: {
+      Arg<size_t> length(1);
+      return If(length == getpagesize(), Allow())
+             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
+    }
+
     case __NR_sigaltstack:
       return Allow();
 

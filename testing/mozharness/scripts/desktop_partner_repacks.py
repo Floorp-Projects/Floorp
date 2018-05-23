@@ -170,8 +170,9 @@ class DesktopPartnerRepacks(ReleaseMixin, BuildbotMixin, PurgeMixin,
             for locale in self.config["limitLocales"]:
                 repack_cmd.extend(["--limit-locale", locale])
 
-        return self.run_command(repack_cmd,
-                                cwd=self.query_abs_dirs()['abs_scripts_dir'])
+        self.run_command(repack_cmd,
+                         cwd=self.query_abs_dirs()['abs_scripts_dir'],
+                         halt_on_failure=True)
 
 
 # main {{{

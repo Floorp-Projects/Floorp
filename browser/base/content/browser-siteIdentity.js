@@ -201,6 +201,10 @@ var gIdentityHandler = {
     delete this._popupExpander;
     return this._popupExpander = document.getElementById("identity-popup-security-expander");
   },
+  get _clearSiteDataFooter() {
+    delete this._clearSiteDataFooter;
+    return this._clearSiteDataFooter = document.getElementById("identity-popup-clear-sitedata-footer");
+  },
   get _permissionAnchors() {
     delete this._permissionAnchors;
     let permissionAnchors = {};
@@ -208,6 +212,39 @@ var gIdentityHandler = {
       permissionAnchors[anchor.getAttribute("data-permission-id")] = anchor;
     }
     return this._permissionAnchors = permissionAnchors;
+  },
+
+  /**
+   * Handles clicks on the "Clear Cookies and Site Data" button.
+   */
+  async clearSiteData(event) {
+    if (!this._uriHasHost) {
+      return;
+    }
+
+    let host = this._uri.host;
+
+    // Site data could have changed while the identity popup was open,
+    // reload again to be sure.
+    await SiteDataManager.updateSites();
+
+    let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
+    let siteData = await SiteDataManager.getSites(baseDomain);
+
+    // Hide the popup before showing the removal prompt, to
+    // avoid a pretty ugly transition. Also hide it even
+    // if the update resulted in no site data, to keep the
+    // illusion that clicking the button had an effect.
+    PanelMultiView.hidePopup(this._identityPopup);
+
+    if (siteData && siteData.length) {
+      let hosts = siteData.map(site => site.host);
+      if (SiteDataManager.promptSiteDataRemoval(window, hosts)) {
+        SiteDataManager.remove(hosts);
+      }
+    }
+
+    event.stopPropagation();
   },
 
   /**
@@ -578,6 +615,21 @@ var gIdentityHandler = {
    * applicable
    */
   refreshIdentityPopup() {
+    // Update cookies and site data information and show the
+    // "Clear Site Data" button if the site is storing local data.
+    this._clearSiteDataFooter.hidden = true;
+    if (this._uriHasHost) {
+      let host = this._uri.host;
+      SiteDataManager.updateSites().then(async () => {
+        let baseDomain = SiteDataManager.getBaseDomainFromHost(host);
+        let siteData = await SiteDataManager.getSites(baseDomain);
+
+        if (siteData && siteData.length) {
+          this._clearSiteDataFooter.hidden = false;
+        }
+      });
+    }
+
     // Update "Learn More" for Mixed Content Blocking and Insecure Login Forms.
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     this._identityPopupMixedContentLearnMore

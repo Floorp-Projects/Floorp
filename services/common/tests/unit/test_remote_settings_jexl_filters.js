@@ -1,0 +1,171 @@
+const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
+
+let client;
+
+async function createRecords(records) {
+  const collection = await client.openCollection();
+  await collection.clear();
+  for (const record of records) {
+    await collection.create(record);
+  }
+  await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
+}
+
+
+function run_test() {
+  client = RemoteSettings("some-key");
+
+  run_next_test();
+}
+
+add_task(async function test_returns_all_without_target() {
+  await createRecords([{
+    passwordSelector: "#pass-signin"
+  }, {
+    filters: null,
+  }, {
+    filters: "",
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 3);
+});
+
+add_task(async function test_filters_can_be_disabled() {
+  const c = RemoteSettings("no-jexl", { filterFunc: null });
+  const collection = await c.openCollection();
+  await collection.create({
+    filters: "1 == 2"
+  });
+  await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
+
+  const list = await c.get();
+  equal(list.length, 1);
+});
+
+add_task(async function test_returns_entries_where_jexl_is_true() {
+  await createRecords([{
+    willMatch: true,
+    filters: "1"
+  }, {
+    willMatch: true,
+    filters: "[42]"
+  }, {
+    willMatch: true,
+    filters: "1 == 2 || 1 == 1"
+  }, {
+    willMatch: true,
+    filters: 'environment.appID == "xpcshell@tests.mozilla.org"'
+  }, {
+    willMatch: false,
+    filters: "environment.version == undefined"
+  }, {
+    willMatch: true,
+    filters: "environment.unknown == undefined"
+  }, {
+    willMatch: false,
+    filters: "1 == 2"
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 5);
+  ok(list.every(e => e.willMatch));
+});
+
+add_task(async function test_ignores_entries_where_jexl_is_invalid() {
+  await createRecords([{
+    filters: "true === true"  // JavaScript Error: "Invalid expression token: ="
+  }, {
+    filters: "Objects.keys({}) == []" // Token ( (openParen) unexpected in expression
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 0);
+});
+
+add_task(async function test_support_of_date_filters() {
+  await createRecords([{
+    willMatch: true,
+    filters: '"1982-05-08"|date < "2016-03-22"|date'
+  }, {
+    willMatch: false,
+    filters: '"2000-01-01"|date < "1970-01-01"|date'
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 1);
+  ok(list.every(e => e.willMatch));
+});
+
+add_task(async function test_support_of_preferences_filters() {
+  await createRecords([{
+    willMatch: true,
+    filters: '"services.settings.last_etag"|preferenceValue == 42'
+  }, {
+    willMatch: true,
+    filters: '"services.settings.changes.path"|preferenceExists == true'
+  }, {
+    willMatch: true,
+    filters: '"services.settings.changes.path"|preferenceIsUserSet == false'
+  }, {
+    willMatch: true,
+    filters: '"services.settings.last_etag"|preferenceIsUserSet == true'
+  }]);
+
+  // Set a pref for the user.
+  Services.prefs.setIntPref("services.settings.last_etag", 42);
+
+  const list = await client.get();
+  equal(list.length, 4);
+  ok(list.every(e => e.willMatch));
+});
+
+add_task(async function test_support_of_intersect_operator() {
+  await createRecords([{
+    willMatch: true,
+    filters: '{foo: 1, bar: 2}|keys intersect ["foo"]'
+  }, {
+    willMatch: true,
+    filters: '(["a", "b"] intersect ["a", 1, 4]) == "a"'
+  }, {
+    willMatch: false,
+    filters: '(["a", "b"] intersect [3, 1, 4]) == "c"'
+  }, {
+    willMatch: true,
+    filters: `
+      [1, 2, 3]
+        intersect
+      [3, 4, 5]
+    `
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 3);
+  ok(list.every(e => e.willMatch));
+});
+
+add_task(async function test_support_of_samples() {
+  await createRecords([{
+    willMatch: true,
+    filters: '"always-true"|stableSample(1)'
+  }, {
+    willMatch: false,
+    filters: '"always-false"|stableSample(0)'
+  }, {
+    willMatch: true,
+    filters: '"turns-to-true-0"|stableSample(0.5)'
+  }, {
+    willMatch: false,
+    filters: '"turns-to-false-1"|stableSample(0.5)'
+  }, {
+    willMatch: true,
+    filters: '"turns-to-true-0"|bucketSample(0, 50, 100)'
+  }, {
+    willMatch: false,
+    filters: '"turns-to-false-1"|bucketSample(0, 50, 100)'
+  }]);
+
+  const list = await client.get();
+  equal(list.length, 3);
+  ok(list.every(e => e.willMatch));
+});

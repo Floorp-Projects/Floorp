@@ -245,6 +245,57 @@ add_task(async function test_sync_event_data_is_filtered_for_target() {
 });
 add_task(clear_state);
 
+add_task(async function test_entries_are_filtered_when_jexl_filters_is_present() {
+  if (IS_ANDROID) {
+    // JEXL filters are not supported on Android.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463502
+    return;
+  }
+
+  const records = [{
+      willMatch: true,
+    }, {
+      willMatch: true,
+      filters: null
+    }, {
+      willMatch: true,
+      filters: "1 == 1"
+    }, {
+      willMatch: false,
+      filters: "1 == 2"
+    }, {
+      willMatch: true,
+      filters: "1 == 1",
+      versionRange: [{
+        targetApplication: [{
+          guid: "some-guid"
+        }],
+      }]
+    }, {
+      willMatch: false,  // jexl prevails over versionRange.
+      filters: "1 == 2",
+      versionRange: [{
+        targetApplication: [{
+          guid: "xpcshell@tests.mozilla.org",
+          minVersion: "0",
+          maxVersion: "*",
+        }],
+      }]
+    }
+  ];
+  for (let {client} of gBlocklistClients) {
+    const collection = await client.openCollection();
+    for (const record of records) {
+      await collection.create(record);
+    }
+    await collection.db.saveLastModified(42); // Prevent from loading JSON dump.
+    const list = await client.get();
+    equal(list.length, 4);
+    ok(list.every(e => e.willMatch));
+  }
+});
+add_task(clear_state);
+
 
 // get a response for a given request from sample data
 function getSampleResponse(req, port) {

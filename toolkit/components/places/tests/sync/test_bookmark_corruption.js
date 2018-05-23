@@ -8,16 +8,7 @@ async function getCountOfBookmarkRows(db) {
 }
 
 add_task(async function test_corrupt_roots() {
-  let telemetryEvents = [];
-  let buf = await openMirror("corrupt_roots", {
-    recordTelemetryEvent(object, method, value, extra) {
-      if (object == "mirror" && ["open", "apply"].includes(method)) {
-        // Ignore timings, mirror database file, and tree sizes.
-        return;
-      }
-      telemetryEvents.push({ object, method, value, extra });
-    },
-  });
+  let buf = await openMirror("corrupt_roots");
 
   info("Set up empty mirror");
   await PlacesTestUtils.markBookmarksAsSynced();
@@ -48,17 +39,6 @@ add_task(async function test_corrupt_roots() {
 
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
-  deepEqual(telemetryEvents, [{
-    object: "mirror",
-    method: "ignore",
-    value: "child",
-    extra: { root: "1" },
-  }, {
-    object: "mirror",
-    method: "ignore",
-    value: "tombstone",
-    extra: { root: "1" },
-  }], "Should record telemetry for ignored invalid roots");
 
   deepEqual(changesToUpload, {}, "Should not reupload invalid roots");
 
