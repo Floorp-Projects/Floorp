@@ -387,7 +387,7 @@ js::RunScript(JSContext* cx, RunState& state)
                           cx->runtime()->allowContentJS());
 
     MOZ_ASSERT(!cx->enableAccessValidation ||
-               cx->compartment()->isAccessValid());
+               cx->realm()->isAccessValid());
 
     if (!Debugger::checkNoExecute(cx, state.script()))
         return false;
