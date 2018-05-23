@@ -4,10 +4,12 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 #include "nsIURL.h"
+#include "nsIStandardURL.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIURIMutator.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "mozilla/Unused.h"
 
 // In nsStandardURL.cpp
@@ -273,4 +275,17 @@ TEST(TestStandardURL, Mutator)
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(url->GetSpec(out), NS_OK);
   ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path?query#ref"));
+}
+
+TEST(TestStandardURL, Deserialize_Bug1392739)
+{
+  mozilla::ipc::StandardURLParams standard_params;
+  standard_params.urlType() = nsIStandardURL::URLTYPE_STANDARD;
+  standard_params.spec() = NS_LITERAL_CSTRING("");
+  standard_params.host() = mozilla::ipc::StandardURLSegment(4294967295, 1);
+
+  mozilla::ipc::URIParams params(standard_params);
+
+  nsCOMPtr<nsIURIMutator> mutator = do_CreateInstance(NS_STANDARDURLMUTATOR_CID);
+  ASSERT_EQ(mutator->Deserialize(params), NS_ERROR_FAILURE);
 }
