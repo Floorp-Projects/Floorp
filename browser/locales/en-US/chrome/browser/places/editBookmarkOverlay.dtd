@@ -16,8 +16,6 @@
 <!ENTITY editBookmarkOverlay.tags.label                      "Tags:">
 <!ENTITY editBookmarkOverlay.tags.accesskey                  "T">
 <!ENTITY editBookmarkOverlay.tagsEmptyDesc.label             "Separate tags with commas">
-<!ENTITY editBookmarkOverlay.description.label               "Description:">
-<!ENTITY editBookmarkOverlay.description.accesskey           "D">
 <!ENTITY editBookmarkOverlay.keyword.label                   "Keyword:">
 <!ENTITY editBookmarkOverlay.keyword.accesskey               "K">
 <!ENTITY editBookmarkOverlay.tagsExpanderDown.tooltip        "Show all tags">
