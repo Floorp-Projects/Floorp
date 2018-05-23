@@ -302,7 +302,7 @@ public:
   // the stream ended normally we return the length we actually got.
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
-  int64_t GetLength();
+  int64_t GetLength() const;
   // Returns the unique resource ID. Call only on the main thread or while
   // holding the media cache lock.
   int64_t GetResourceID() { return mResourceID; }
