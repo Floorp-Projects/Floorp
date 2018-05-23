@@ -5,7 +5,7 @@
 dialog {
   -moz-appearance: none;
   background-image: linear-gradient(rgb(255, 255, 255), rgb(237, 237, 237) 100px);
-  font-family: "Clear Sans", sans-serif;
+  font-family: sans-serif;
   color: #424E5A;
   overflow-y: scroll;
 }

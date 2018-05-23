@@ -5,7 +5,7 @@
 @import "defines.css";
 
 html {
-  font-family: "Clear Sans",sans-serif;
+  font-family: sans-serif;
   font-size: 14px;
   background-color: var(--color_about_background);
   -moz-text-size-adjust: none;
