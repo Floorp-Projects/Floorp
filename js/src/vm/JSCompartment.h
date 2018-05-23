@@ -663,25 +663,11 @@ struct JSCompartment
     // might be detached.
     int32_t                      detachedTypedObjects;
 
-  protected:
-    friend class js::AutoSetNewObjectMetadata;
-    js::NewObjectMetadataState objectMetadataState;
-
-  public:
     // Recompute the probability with which this compartment should record
     // profiling data (stack traces, allocations log, etc.) about each
     // allocation. We consult the probabilities requested by the Debugger
     // instances observing us, if any.
     void chooseAllocationSamplingProbability() { savedStacks_.chooseSamplingProbability(this); }
-
-    bool hasObjectPendingMetadata() const { return objectMetadataState.is<js::PendingMetadata>(); }
-
-    void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
-        if (!cx->helperThread()) {
-            MOZ_ASSERT(objectMetadataState.is<js::DelayMetadata>());
-            objectMetadataState = js::NewObjectMetadataState(js::PendingMetadata(obj));
-        }
-    }
 
   protected:
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -1037,6 +1023,9 @@ class JS::Realm : public JSCompartment
                                       js::SystemAllocPolicy>;
     VarNamesSet varNames_;
 
+    friend class js::AutoSetNewObjectMetadata;
+    js::NewObjectMetadataState objectMetadataState_ { js::ImmediateMetadata() };
+
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
 
@@ -1194,6 +1183,16 @@ class JS::Realm : public JSCompartment
     void forgetAllocationMetadataBuilder();
     void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
     void clearObjectMetadata();
+
+    bool hasObjectPendingMetadata() const {
+        return objectMetadataState_.is<js::PendingMetadata>();
+    }
+    void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
+        if (!cx->helperThread()) {
+            MOZ_ASSERT(objectMetadataState_.is<js::DelayMetadata>());
+            objectMetadataState_ = js::NewObjectMetadataState(js::PendingMetadata(obj));
+        }
+    }
 
     void* realmPrivate() const {
         return realmPrivate_;
