@@ -6164,28 +6164,38 @@ ssl_ClientSetCipherSuite(sslSocket *ss, SSL3ProtocolVersion version,
 static PRBool
 ssl_CheckServerSessionIdCorrectness(sslSocket *ss, SECItem *sidBytes)
 {
-    PRBool sid_match = PR_FALSE;
-    PRBool sent_fake_sid = ss->opt.enableTls13CompatMode && !IS_DTLS(ss);
+    sslSessionID *sid = ss->sec.ci.sid;
+    PRBool sidMatch = PR_FALSE;
+    PRBool sentFakeSid = PR_FALSE;
+    PRBool sentRealSid = sid && sid->version < SSL_LIBRARY_VERSION_TLS_1_3;
 
-    /* If in compat mode and we received a session ID with the right length
-     * then compare it to the fake one we sent in the ClientHello. */
-    if (sent_fake_sid && sidBytes->len == SSL3_SESSIONID_BYTES) {
-        PRUint8 buf[SSL3_SESSIONID_BYTES];
-        ssl_MakeFakeSid(ss, buf);
-        sid_match = PORT_Memcmp(buf, sidBytes->data, sidBytes->len) == 0;
+    /* If attempting to resume a TLS 1.2 connection, the session ID won't be a
+     * fake. Check for the real value. */
+    if (sentRealSid) {
+        sidMatch = (sidBytes->len == sid->u.ssl3.sessionIDLength) &&
+                   PORT_Memcmp(sid->u.ssl3.sessionID, sidBytes->data, sidBytes->len) == 0;
+    } else {
+        /* Otherwise, the session ID was a fake if TLS 1.3 compat mode is
+         * enabled.  If so, check for the fake value. */
+        sentFakeSid = ss->opt.enableTls13CompatMode && !IS_DTLS(ss);
+        if (sentFakeSid && sidBytes->len == SSL3_SESSIONID_BYTES) {
+            PRUint8 buf[SSL3_SESSIONID_BYTES];
+            ssl_MakeFakeSid(ss, buf);
+            sidMatch = PORT_Memcmp(buf, sidBytes->data, sidBytes->len) == 0;
+        }
     }
 
-    /* TLS 1.2: SessionID shouldn't match the fake one. */
+    /* TLS 1.2: Session ID shouldn't match if we sent a fake. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        return !sid_match;
+        return !sentFakeSid || !sidMatch;
     }
 
-    /* TLS 1.3: [Compat Mode] Session ID should match the fake one. */
-    if (sent_fake_sid) {
-        return sid_match;
+    /* TLS 1.3: We sent a session ID.  The server's should match. */
+    if (sentRealSid || sentFakeSid) {
+        return sidMatch;
     }
 
-    /* TLS 1.3: [Non-Compat Mode] Server shouldn't send a session ID. */
+    /* TLS 1.3: The server shouldn't send a session ID. */
     return sidBytes->len == 0;
 }
 
