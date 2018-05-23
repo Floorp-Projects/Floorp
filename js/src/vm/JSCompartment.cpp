@@ -52,7 +52,6 @@ JSCompartment::JSCompartment(Zone* zone)
     regExps(),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
-    objectMetadataState(ImmediateMetadata()),
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
     innerViews(zone),
@@ -661,9 +660,9 @@ Realm::traceGlobal(JSTracer* trc)
 void
 Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
-    if (objectMetadataState.is<PendingMetadata>()) {
+    if (objectMetadataState_.is<PendingMetadata>()) {
         TraceRoot(trc,
-                  &objectMetadataState.as<PendingMetadata>(),
+                  &objectMetadataState_.as<PendingMetadata>(),
                   "on-stack object pending metadata");
     }
 
@@ -1370,11 +1369,11 @@ AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(JSContext* cx
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : CustomAutoRooter(cx)
     , cx_(cx->helperThread() ? nullptr : cx)
-    , prevState_(cx->compartment()->objectMetadataState)
+    , prevState_(cx->realm()->objectMetadataState_)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (cx_)
-        cx_->compartment()->objectMetadataState = NewObjectMetadataState(DelayMetadata());
+        cx_->realm()->objectMetadataState_ = NewObjectMetadataState(DelayMetadata());
 }
 
 AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
@@ -1384,7 +1383,7 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
     if (!cx_)
         return;
 
-    if (!cx_->isExceptionPending() && cx_->compartment()->hasObjectPendingMetadata()) {
+    if (!cx_->isExceptionPending() && cx_->realm()->hasObjectPendingMetadata()) {
         // This destructor often runs upon exit from a function that is
         // returning an unrooted pointer to a Cell. The allocation metadata
         // callback often allocates; if it causes a GC, then the Cell pointer
@@ -1396,16 +1395,16 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
         // code, it's adequate to simply suppress GC while we run the callback.
         AutoSuppressGC autoSuppressGC(cx_);
 
-        JSObject* obj = cx_->compartment()->objectMetadataState.as<PendingMetadata>();
+        JSObject* obj = cx_->realm()->objectMetadataState_.as<PendingMetadata>();
 
         // Make sure to restore the previous state before setting the object's
         // metadata. SetNewObjectMetadata asserts that the state is not
         // PendingMetadata in order to ensure that metadata callbacks are called
         // in order.
-        cx_->compartment()->objectMetadataState = prevState_;
+        cx_->realm()->objectMetadataState_ = prevState_;
 
         obj = SetNewObjectMetadata(cx_, obj);
     } else {
-        cx_->compartment()->objectMetadataState = prevState_;
+        cx_->realm()->objectMetadataState_ = prevState_;
     }
 }
