@@ -16,7 +16,8 @@ add_task(async function test_findCluster() {
     Service.identity._ensureValidToken = () => Promise.reject(new Error("Connection refused"));
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
-    await Assert.rejects(Service.identity._findCluster());
+    await Assert.rejects(Service.identity._findCluster(),
+      /Connection refused/);
 
     Service.identity._ensureValidToken = () => Promise.resolve({ endpoint: "http://weave.user.node" });
 

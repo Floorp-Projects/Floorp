@@ -15,10 +15,21 @@ export let requestStore = new PaymentsStore({
   changesPrevented: false,
   completionState: "initial",
   orderDetailsShowing: false,
+  "basic-card-page": {
+    guid: null,
+    // preserveFieldValues: true,
+  },
+  "address-page": {
+    guid: null,
+    title: "",
+  },
+  "payment-summary": {
+  },
   page: {
     id: "payment-summary",
+    previousId: null,
     // onboardingWizard: true,
-    // error: "My error",
+    // error: "",
   },
   request: {
     tabId: null,

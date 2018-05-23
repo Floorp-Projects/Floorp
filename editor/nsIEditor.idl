@@ -59,15 +59,6 @@ interface nsIEditor  : nsISupports
                                    in DOMString sourceAttrName,
                                    in boolean aSuppressTransaction);
 
-  /**
-   * preDestroy is called before the editor goes away, and gives the editor a
-   * chance to tell its documentStateObservers that the document is going away.
-   * @param aDestroyingFrames set to true when the frames being edited
-   * are being destroyed (so there is no need to modify any nsISelections,
-   * nor is it safe to do so)
-   */
-  void preDestroy(in boolean aDestroyingFrames);
-
   /** edit flags for this editor.  May be set at any time. */
   attribute unsigned long flags;
 
@@ -298,13 +289,6 @@ interface nsIEditor  : nsISupports
     * pasteable data in the clipboard.
     */
   boolean canPaste(in long aSelectionType);
-
-  /** Can we paste |aTransferable| or, if |aTransferable| is null, will a call
-    * to pasteTransferable later possibly succeed if given an instance of
-    * nsITransferable then? True if the doc is modifiable, and, if
-    * |aTransfeable| is non-null, we have pasteable data in |aTransfeable|.
-    */
-  boolean canPasteTransferable([optional] in nsITransferable aTransferable);
 
   /* ------------ Selection methods -------------- */
 

@@ -133,6 +133,7 @@ public:
                                             bool aSuppressTransaction) override;
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
+  virtual bool CanPasteTransferable(nsITransferable* aTransferable) override;
 
   // nsStubMutationObserver overrides
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -212,7 +213,7 @@ public:
   // Overrides of EditorBase interface methods
   virtual nsresult EndUpdateViewBatch() override;
 
-  NS_IMETHOD PreDestroy(bool aDestroyingFrames) override;
+  virtual void PreDestroy(bool aDestroyingFrames) override;
 
   virtual nsresult GetPreferredIMEState(widget::IMEState* aState) override;
 
@@ -329,8 +330,6 @@ public:
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
 
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
-  NS_IMETHOD CanPasteTransferable(nsITransferable* aTransferable,
-                                  bool* aCanPaste) override;
 
   NS_IMETHOD DebugUnitTests(int32_t* outNumTests,
                             int32_t* outNumTestsFailed) override;

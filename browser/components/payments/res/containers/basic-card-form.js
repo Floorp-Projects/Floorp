@@ -27,6 +27,15 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     this.cancelButton.className = "cancel-button";
     this.cancelButton.addEventListener("click", this);
 
+    this.addressAddLink = document.createElement("a");
+    this.addressAddLink.className = "add-link";
+    this.addressAddLink.href = "javascript:void(0)";
+    this.addressAddLink.addEventListener("click", this);
+    this.addressEditLink = document.createElement("a");
+    this.addressEditLink.className = "edit-link";
+    this.addressEditLink.href = "javascript:void(0)";
+    this.addressEditLink.addEventListener("click", this);
+
     this.backButton = document.createElement("button");
     this.backButton.className = "back-button";
     this.backButton.addEventListener("click", this);
@@ -72,6 +81,13 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
         getAddressLabel: PaymentDialogUtils.getAddressLabel,
       });
 
+      let fragment = document.createDocumentFragment();
+      fragment.append(this.addressAddLink);
+      fragment.append(" ");
+      fragment.append(this.addressEditLink);
+      let billingAddressRow = this.form.querySelector(".billingAddressRow");
+      billingAddressRow.appendChild(fragment);
+
       this.appendChild(this.persistCheckbox);
       this.appendChild(this.genericErrorText);
       this.appendChild(this.cancelButton);
@@ -87,6 +103,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     let {
       page,
       selectedShippingAddress,
+      "basic-card-page": basicCardPage,
     } = state;
 
     if (this.id && page && page.id !== this.id) {
@@ -98,6 +115,8 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     this.backButton.textContent = this.dataset.backButtonLabel;
     this.saveButton.textContent = this.dataset.saveButtonLabel;
     this.persistCheckbox.label = this.dataset.persistCheckboxLabel;
+    this.addressAddLink.textContent = this.dataset.addressAddLinkLabel;
+    this.addressEditLink.textContent = this.dataset.addressEditLinkLabel;
 
     // The back button is temporarily hidden(See Bug 1462461).
     this.backButton.hidden = !!page.onboardingWizard;
@@ -109,22 +128,22 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
     this.genericErrorText.textContent = page.error;
 
-    let editing = !!page.guid;
+    let editing = !!basicCardPage.guid;
     this.form.querySelector("#cc-number").disabled = editing;
 
     // If a card is selected we want to edit it.
     if (editing) {
       this.pageTitle.textContent = this.dataset.editBasicCardTitle;
-      record = basicCards[page.guid];
+      record = basicCards[basicCardPage.guid];
       if (!record) {
-        throw new Error("Trying to edit a non-existing card: " + page.guid);
+        throw new Error("Trying to edit a non-existing card: " + basicCardPage.guid);
       }
       // When editing an existing record, prevent changes to persistence
       this.persistCheckbox.hidden = true;
     } else {
       this.pageTitle.textContent = this.dataset.addBasicCardTitle;
       // Use a currently selected shipping address as the default billing address
-      if (selectedShippingAddress) {
+      if (!record.billingAddressGUID && selectedShippingAddress) {
         record.billingAddressGUID = selectedShippingAddress;
       }
       // Adding a new record: default persistence to checked when in a not-private session
@@ -132,7 +151,15 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       this.persistCheckbox.checked = !state.isPrivate;
     }
 
-    this.formHandler.loadRecord(record, addresses);
+    this.formHandler.loadRecord(record, addresses, basicCardPage.preserveFieldValues);
+
+    this.form.querySelector(".billingAddressRow").hidden = false;
+
+    if (basicCardPage.billingAddressGUID) {
+      let addressGuid = basicCardPage.billingAddressGUID;
+      let billingAddressSelect = this.form.querySelector("#billingAddressGUID");
+      billingAddressSelect.value = addressGuid;
+    }
   }
 
   handleEvent(event) {
@@ -148,6 +175,36 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     switch (evt.target) {
       case this.cancelButton: {
         paymentRequest.cancel();
+        break;
+      }
+      case this.addressAddLink:
+      case this.addressEditLink: {
+        let {
+          "basic-card-page": basicCardPage,
+        } = this.requestStore.getState();
+        let nextState = {
+          page: {
+            id: "address-page",
+            previousId: "basic-card-page",
+            selectedStateKey: ["basic-card-page", "billingAddressGUID"],
+          },
+          "address-page": {
+            guid: null,
+            title: this.dataset.billingAddressTitleAdd,
+          },
+          "basic-card-page": {
+            preserveFieldValues: true,
+            guid: basicCardPage.guid,
+          },
+        };
+        let billingAddressGUID = this.form.querySelector("#billingAddressGUID");
+        let selectedOption = billingAddressGUID.selectedOptions.length &&
+                             billingAddressGUID.selectedOptions[0];
+        if (evt.target == this.addressEditLink && selectedOption && selectedOption.value) {
+          nextState["address-page"].title = this.dataset.billingAddressTitleEdit;
+          nextState["address-page"].guid = selectedOption.value;
+        }
+        this.requestStore.setState(nextState);
         break;
       }
       case this.backButton: {
@@ -170,13 +227,15 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
   saveRecord() {
     let record = this.formHandler.buildFormObject();
+    let currentState = this.requestStore.getState();
     let {
       page,
       tempBasicCards,
-    } = this.requestStore.getState();
-    let editing = !!page.guid;
+      "basic-card-page": basicCardPage,
+    } = currentState;
+    let editing = !!basicCardPage.guid;
 
-    if (editing ? (page.guid in tempBasicCards) : !this.persistCheckbox.checked) {
+    if (editing ? (basicCardPage.guid in tempBasicCards) : !this.persistCheckbox.checked) {
       record.isTemporary = true;
     }
 
@@ -190,7 +249,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
       record["cc-number"] = record["cc-number"] || "";
     }
 
-    paymentRequest.updateAutofillRecord("creditCards", record, page.guid, {
+    let state = {
       errorStateChange: {
         page: {
           id: "basic-card-page",
@@ -198,13 +257,20 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
         },
       },
       preserveOldProperties: true,
-      selectedStateKey: "selectedPaymentCard",
+      selectedStateKey: ["selectedPaymentCard"],
       successStateChange: {
         page: {
           id: "payment-summary",
         },
       },
-    });
+    };
+
+    const previousId = page.previousId;
+    if (previousId) {
+      state.successStateChange[previousId] = Object.assign({}, currentState[previousId]);
+    }
+
+    paymentRequest.updateAutofillRecord("creditCards", record, basicCardPage.guid, state);
   }
 }
 

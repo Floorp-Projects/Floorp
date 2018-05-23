@@ -969,6 +969,15 @@ public:
    */
   nsresult PostCreate();
 
+ /**
+   * PreDestroy is called before the editor goes away, and gives the editor a
+   * chance to tell its documentStateObservers that the document is going away.
+   * @param aDestroyingFrames set to true when the frames being edited
+   * are being destroyed (so there is no need to modify any nsISelections,
+   * nor is it safe to do so)
+   */
+  virtual void PreDestroy(bool aDestroyingFrames);
+
   /**
    * All editor operations which alter the doc should be prefaced
    * with a call to StartOperation, naming the action and direction.

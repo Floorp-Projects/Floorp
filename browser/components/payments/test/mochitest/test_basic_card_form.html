@@ -69,7 +69,9 @@ add_task(async function test_backButton() {
   form.dataset.addBasicCardTitle = "Sample page title 2";
   await form.requestStore.setState({
     page: {
-      id: "test-page",
+      id: "basic-card-page",
+    },
+    "basic-card-page": {
     },
   });
   await form.promiseReady;
@@ -128,7 +130,7 @@ add_task(async function test_saveButton() {
       "cc-name": "J. Smith",
       "cc-number": "4111111111111111",
     },
-    selectedStateKey: "selectedPaymentCard",
+    selectedStateKey: ["selectedPaymentCard"],
     successStateChange: {
       page: {
         id: "payment-summary",
@@ -244,6 +246,8 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     page: {
       id: "basic-card-page",
+    },
+    "basic-card-page": {
       guid: card1.guid,
     },
     savedBasicCards: {
@@ -273,6 +277,8 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     page: {
       id: "basic-card-page",
+    },
+    "basic-card-page": {
       guid: minimalCard.guid,
     },
     savedBasicCards: {
@@ -286,6 +292,9 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     page: {
       id: "basic-card-page",
+    },
+    "basic-card-page": {
+      guid: null,
     },
   });
   await asyncElementRendered();
