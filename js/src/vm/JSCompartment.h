@@ -597,15 +597,6 @@ struct JSCompartment
                                       js::SystemAllocPolicy>;
     IteratorCache iteratorCache;
 
-    /*
-     * For generational GC, record whether a write barrier has added this
-     * compartment's global to the store buffer since the last minor GC.
-     *
-     * This is used to avoid calling into the VM every time a nursery object is
-     * written to a property of the global.
-     */
-    uint32_t                     globalWriteBarriered;
-
     // Non-zero if the storage underlying any typed object in this compartment
     // might be detached.
     int32_t                      detachedTypedObjects;
@@ -868,6 +859,15 @@ class JS::Realm : public JSCompartment
 
     // Last time at which an animation was played for this realm.
     int64_t lastAnimationTime = 0;
+
+    /*
+     * For generational GC, record whether a write barrier has added this
+     * realm's global to the store buffer since the last minor GC.
+     *
+     * This is used to avoid calling into the VM every time a nursery object is
+     * written to a property of the global.
+     */
+    uint32_t globalWriteBarriered = 0;
 
     uint32_t warnedAboutStringGenericsMethods = 0;
 #ifdef DEBUG
