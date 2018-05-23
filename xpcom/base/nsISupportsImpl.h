@@ -1001,6 +1001,14 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                                     static_cast<_implClass*>(this));          \
   else
 
+// Use this for querying to concrete class types which cannot be unambiguously
+// cast to nsISupports. See also nsQueryObject.h.
+#define NS_IMPL_QUERY_BODY_CONCRETE(_class)                                   \
+  if (aIID.Equals(NS_GET_IID(_class))) {                                      \
+    *aInstancePtr = do_AddRef(static_cast<_class*>(this)).take();             \
+    return NS_OK;                                                             \
+  } else
+
 #define NS_IMPL_QUERY_BODY_AGGREGATED(_interface, _aggregate)                 \
   if ( aIID.Equals(NS_GET_IID(_interface)) )                                  \
     foundInterface = static_cast<_interface*>(_aggregate);                    \
@@ -1074,6 +1082,8 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 #define NS_INTERFACE_MAP_END                    NS_IMPL_QUERY_TAIL_GUTS
 #define NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(_interface, _implClass)              \
   NS_IMPL_QUERY_BODY_AMBIGUOUS(_interface, _implClass)
+#define NS_INTERFACE_MAP_ENTRY_CONCRETE(_class)                               \
+  NS_IMPL_QUERY_BODY_CONCRETE(_class)
 #define NS_INTERFACE_MAP_END_INHERITING(_baseClass)                           \
   NS_IMPL_QUERY_TAIL_INHERITING(_baseClass)
 #define NS_INTERFACE_MAP_END_AGGREGATED(_aggregator)                          \

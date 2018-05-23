@@ -338,7 +338,7 @@ function hasUpdateMutex() {
 function areDirectoryEntriesWriteable(aDir) {
   let items = aDir.directoryEntries;
   while (items.hasMoreElements()) {
-    let item = items.getNext().QueryInterface(Ci.nsIFile);
+    let item = items.nextFile;
     if (!item.isWritable()) {
       LOG("areDirectoryEntriesWriteable - unable to write to " + item.path);
       return false;
@@ -815,7 +815,7 @@ function cleanUpUpdatesDir(aRemovePatchFiles = true) {
   if (aRemovePatchFiles) {
     let dirEntries = updateDir.directoryEntries;
     while (dirEntries.hasMoreElements()) {
-      let file = dirEntries.getNext().QueryInterface(Ci.nsIFile);
+      let file = dirEntries.nextFile;
       // Now, recursively remove this file.  The recursive removal is needed for
       // Mac OSX because this directory will contain a copy of updater.app,
       // which is itself a directory and the MozUpdater directory on platforms

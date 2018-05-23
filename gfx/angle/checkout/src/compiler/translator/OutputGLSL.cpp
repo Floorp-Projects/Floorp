@@ -94,8 +94,8 @@ ImmutableString TOutputGLSL::translateTextureFunction(const ImmutableString &nam
                                          nullptr};
     static const char *legacyToCoreRename[] = {
         "texture2D", "texture", "texture2DProj", "textureProj", "texture2DLod", "textureLod",
-        "texture2DProjLod", "textureProjLod", "texture2DRect", "texture", "textureCube", "texture",
-        "textureCubeLod", "textureLod",
+        "texture2DProjLod", "textureProjLod", "texture2DRect", "texture", "texture2DRectProj",
+        "textureProj", "textureCube", "texture", "textureCubeLod", "textureLod",
         // Extensions
         "texture2DLodEXT", "textureLod", "texture2DProjLodEXT", "textureProjLod",
         "textureCubeLodEXT", "textureLod", "texture2DGradEXT", "textureGrad",

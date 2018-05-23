@@ -27,7 +27,6 @@ class SamplerManager;
 class ShaderProgramManager;
 class SyncManager;
 class TextureManager;
-class ValidationContext;
 
 static constexpr Version ES_2_0 = Version(2, 0);
 static constexpr Version ES_3_0 = Version(3, 0);
@@ -61,14 +60,11 @@ class ContextState final : angle::NonCopyable
 
     const TextureCaps &getTextureCap(GLenum internalFormat) const;
 
-    bool usingDisplayTextureShareGroup() const;
-
     bool isWebGL() const;
     bool isWebGL1() const;
 
   private:
     friend class Context;
-    friend class ValidationContext;
 
     Version mClientVersion;
     ContextID mContext;
@@ -88,81 +84,6 @@ class ContextState final : angle::NonCopyable
     FramebufferManager *mFramebuffers;
     ProgramPipelineManager *mPipelines;
 };
-
-class ValidationContext : angle::NonCopyable
-{
-  public:
-    ValidationContext(const ValidationContext *shareContext,
-                      TextureManager *shareTextures,
-                      const Version &clientVersion,
-                      State *state,
-                      const Caps &caps,
-                      const TextureCapsMap &textureCaps,
-                      const Extensions &extensions,
-                      const Limitations &limitations,
-                      bool skipValidation);
-    virtual ~ValidationContext();
-
-    virtual void handleError(const Error &error) = 0;
-
-    const ContextState &getContextState() const { return mState; }
-    GLint getClientMajorVersion() const { return mState.getClientMajorVersion(); }
-    GLint getClientMinorVersion() const { return mState.getClientMinorVersion(); }
-    const Version &getClientVersion() const { return mState.getClientVersion(); }
-    const State &getGLState() const { return mState.getState(); }
-    const Caps &getCaps() const { return mState.getCaps(); }
-    const TextureCapsMap &getTextureCaps() const { return mState.getTextureCaps(); }
-    const Extensions &getExtensions() const { return mState.getExtensions(); }
-    const Limitations &getLimitations() const { return mState.getLimitations(); }
-    bool skipValidation() const { return mSkipValidation; }
-
-    // Specific methods needed for validation.
-    bool getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *numParams);
-    bool getIndexedQueryParameterInfo(GLenum target, GLenum *type, unsigned int *numParams);
-
-    Program *getProgram(GLuint handle) const;
-    Shader *getShader(GLuint handle) const;
-
-    bool isTextureGenerated(GLuint texture) const;
-    bool isBufferGenerated(GLuint buffer) const;
-    bool isRenderbufferGenerated(GLuint renderbuffer) const;
-    bool isFramebufferGenerated(GLuint framebuffer) const;
-    bool isProgramPipelineGenerated(GLuint pipeline) const;
-
-    bool usingDisplayTextureShareGroup() const;
-
-    // Hack for the special WebGL 1 "DEPTH_STENCIL" internal format.
-    GLenum getConvertedRenderbufferFormat(GLenum internalformat) const;
-
-    bool isWebGL() const { return mState.isWebGL(); }
-    bool isWebGL1() const { return mState.isWebGL1(); }
-
-    template <typename T>
-    const T &getParams() const;
-
-    bool isValidBufferBinding(BufferBinding binding) const { return mValidBufferBindings[binding]; }
-
-  protected:
-    ContextState mState;
-    bool mSkipValidation;
-    bool mDisplayTextureShareGroup;
-
-    // Stores for each buffer binding type whether is it allowed to be used in this context.
-    angle::PackedEnumBitSet<BufferBinding> mValidBufferBindings;
-
-    // Caches entry point parameters and values re-used between layers.
-    mutable const ParamTypeInfo *mSavedArgsType;
-    static constexpr size_t kParamsBufferSize = 64u;
-    mutable std::array<uint8_t, kParamsBufferSize> mParamsBuffer;
-};
-
-template <typename T>
-const T &ValidationContext::getParams() const
-{
-    const T *params = reinterpret_cast<T *>(mParamsBuffer.data());
-    ASSERT(mSavedArgsType->hasDynamicType(T::TypeInfo));
-    return *params;
-}
 
 }  // namespace gl
 

@@ -1162,22 +1162,14 @@ gfxGDIFontList::ActivateBundledFonts()
         return;
     }
 
-    nsCOMPtr<nsISimpleEnumerator> e;
+    nsCOMPtr<nsIDirectoryEnumerator> e;
     rv = localDir->GetDirectoryEntries(getter_AddRefs(e));
     if (NS_FAILED(rv)) {
         return;
     }
 
-    bool hasMore;
-    while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
-        nsCOMPtr<nsISupports> entry;
-        if (NS_FAILED(e->GetNext(getter_AddRefs(entry)))) {
-            break;
-        }
-        nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-        if (!file) {
-            continue;
-        }
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED(e->GetNextFile(getter_AddRefs(file))) && file) {
         nsAutoString path;
         if (NS_FAILED(file->GetPath(path))) {
             continue;

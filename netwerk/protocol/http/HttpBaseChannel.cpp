@@ -405,9 +405,7 @@ NS_INTERFACE_MAP_BEGIN(HttpBaseChannel)
   NS_INTERFACE_MAP_ENTRY(nsIConsoleReportCollector)
   NS_INTERFACE_MAP_ENTRY(nsIThrottledInputChannel)
   NS_INTERFACE_MAP_ENTRY(nsIClassifiedChannel)
-  if (aIID.Equals(NS_GET_IID(HttpBaseChannel))) {
-    foundInterface = static_cast<nsIWritablePropertyBag*>(this);
-  } else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpBaseChannel)
 NS_INTERFACE_MAP_END_INHERITING(nsHashPropertyBag)
 
 //-----------------------------------------------------------------------------

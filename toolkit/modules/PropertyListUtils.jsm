@@ -69,7 +69,7 @@ var PropertyListUtils = Object.freeze({
   /**
    * Asynchronously reads a file as a property list.
    *
-   * @param aFile (nsIDOMBlob/nsIFile)
+   * @param aFile (Blob/nsIFile)
    *        the file to be read as a property list.
    * @param aCallback
    *        If the property list is read successfully, aPropertyListRoot is set

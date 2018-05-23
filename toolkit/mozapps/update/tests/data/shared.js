@@ -452,7 +452,7 @@ function cleanUpdatesDir(aDir) {
 
   let dirEntries = aDir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
-    let entry = dirEntries.getNext().QueryInterface(Ci.nsIFile);
+    let entry = dirEntries.nextFile;
 
     if (entry.isDirectory()) {
       if (entry.leafName == DIR_PATCH && entry.parent.leafName == DIR_UPDATES) {
@@ -510,7 +510,7 @@ function removeDirRecursive(aDir) {
 
   let dirEntries = aDir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
-    let entry = dirEntries.getNext().QueryInterface(Ci.nsIFile);
+    let entry = dirEntries.nextFile;
 
     if (entry.isDirectory()) {
       removeDirRecursive(entry);

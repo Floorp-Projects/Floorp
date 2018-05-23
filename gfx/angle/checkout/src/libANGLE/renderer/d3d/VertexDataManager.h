@@ -105,14 +105,14 @@ class VertexDataManager : angle::NonCopyable
                                   std::vector<TranslatedAttribute> *translatedAttribs,
                                   const gl::AttributesMask &dynamicAttribsMask,
                                   GLint start,
-                                  GLsizei count,
+                                  size_t count,
                                   GLsizei instances);
 
     // Promote static usage of dynamic buffers.
     static void PromoteDynamicAttribs(const gl::Context *context,
                                       const std::vector<TranslatedAttribute> &translatedAttribs,
                                       const gl::AttributesMask &dynamicAttribsMask,
-                                      GLsizei count);
+                                      size_t count);
 
     gl::Error storeCurrentValue(const gl::VertexAttribCurrentValueData &currentValue,
                                 TranslatedAttribute *translated,
@@ -130,15 +130,15 @@ class VertexDataManager : angle::NonCopyable
     };
 
     gl::Error reserveSpaceForAttrib(const TranslatedAttribute &translatedAttrib,
-                                    GLsizei count,
                                     GLint start,
+                                    size_t count,
                                     GLsizei instances) const;
 
     gl::Error storeDynamicAttrib(const gl::Context *context,
                                  TranslatedAttribute *translated,
                                  GLint start,
-                                 GLsizei count,
-                                 GLsizei instances);
+                                 size_t count,
+                                 GLsizei instances) const;
 
     BufferFactoryD3D *const mFactory;
 

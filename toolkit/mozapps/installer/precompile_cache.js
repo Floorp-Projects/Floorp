@@ -33,7 +33,7 @@ function dir_entries(baseDir, subpath, ext) {
   }
   var entries = [];
   while (enumerator.hasMoreElements()) {
-    var file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+    var file = enumerator.nextFile;
     if (file.isDirectory()) {
       entries = entries.concat(dir_entries(dir, file.leafName, ext).map(p => subpath + "/" + p));
     } else if (endsWith(file.leafName, ext)) {

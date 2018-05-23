@@ -57,9 +57,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelParentListener)
   NS_INTERFACE_MAP_ENTRY(nsIRedirectResultListener)
   NS_INTERFACE_MAP_ENTRY(nsINetworkInterceptController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInterfaceRequestor)
-  if (aIID.Equals(NS_GET_IID(HttpChannelParentListener))) {
-    foundInterface = static_cast<nsIInterfaceRequestor*>(this);
-  } else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(HttpChannelParentListener)
 NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------

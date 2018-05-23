@@ -19,7 +19,7 @@ function enumerate_tree(entryList) {
     if (file.isDirectory()) {
       var dirList = file.directoryEntries;
       while (dirList.hasMoreElements()) {
-        var dirFile = dirList.getNext().QueryInterface(Ci.nsIFile);
+        var dirFile = dirList.nextFile;
         entryList.push({ path: path + '/' + dirFile.leafName, file: dirFile });
       }
     }

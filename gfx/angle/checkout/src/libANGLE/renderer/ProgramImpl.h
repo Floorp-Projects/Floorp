@@ -35,7 +35,7 @@ class ProgramImpl : angle::NonCopyable
   public:
     ProgramImpl(const gl::ProgramState &state) : mState(state) {}
     virtual ~ProgramImpl() {}
-    virtual void destroy(const gl::Context *context) {}
+    virtual gl::Error destroy(const gl::Context *context) { return gl::NoError(); }
 
     virtual gl::LinkResult load(const gl::Context *context,
                                 gl::InfoLog &infoLog,

@@ -229,6 +229,15 @@ class TType
 
     const TStructure *getStruct() const { return mStructure; }
 
+    static constexpr char GetSizeMangledName(unsigned char primarySize, unsigned char secondarySize)
+    {
+        unsigned int sizeKey = (secondarySize - 1u) * 4u + primarySize - 1u;
+        if (sizeKey < 10u)
+        {
+            return static_cast<char>('0' + sizeKey);
+        }
+        return static_cast<char>('A' + sizeKey - 10);
+    }
     const char *getMangledName() const;
 
     bool sameNonArrayType(const TType &right) const;
@@ -318,8 +327,6 @@ class TType
 
     // Initializes all lazily-initialized members.
     void realize();
-
-    bool isRealized() const;
 
   private:
     void invalidateMangledName();

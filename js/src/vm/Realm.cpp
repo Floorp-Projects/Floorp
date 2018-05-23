@@ -48,13 +48,13 @@ JS::GetObjectRealmOrNull(JSObject* obj)
 JS_PUBLIC_API(void*)
 JS::GetRealmPrivate(JS::Realm* realm)
 {
-    return GetCompartmentForRealm(realm)->realmData;
+    return realm->realmPrivate();
 }
 
 JS_PUBLIC_API(void)
 JS::SetRealmPrivate(JS::Realm* realm, void* data)
 {
-    GetCompartmentForRealm(realm)->realmData = data;
+    realm->setRealmPrivate(data);
 }
 
 JS_PUBLIC_API(void)

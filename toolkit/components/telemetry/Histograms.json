@@ -53,28 +53,6 @@
     "high": 60000,
     "n_buckets": 50
   },
-  "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "58",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "The amount of time the content process blocked processing shouldLoad shims for an add-on (keyed by add-on ID) prior to the load event, for each document load.",
-    "bug_numbers": [1331684],
-    "alert_emails": ["kmaglione@mozilla.com"]
-  },
-  "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADED_MS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "58",
-    "kind": "exponential",
-    "high": 60000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "The amount of time the content process blocked processing shouldLoad shims for an add-on (keyed by add-on ID) after the load event, for each document load.",
-    "bug_numbers": [1331684],
-    "alert_emails": ["kmaglione@mozilla.com"]
-  },
   "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "53",
@@ -13472,6 +13450,16 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "The amount of time it takes to perform a set via storage.local."
+  },
+  "EXTENSION_UPDATE_TYPE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1460336],
+    "expires_in_version": "66",
+    "kind": "categorical",
+    "labels": ["JSON", "RDF"],
+    "releaseChannelCollection": "opt-out",
+    "description": "The type of update manifest served for a given update request."
   },
   "NOTIFY_OBSERVERS_LATENCY_MS": {
     "record_in_processes": ["main", "content", "gpu"],

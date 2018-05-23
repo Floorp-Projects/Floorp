@@ -19,8 +19,10 @@
     function childFrameScript() {
       "use strict";
 
+      Cu.importGlobalProperties(["Blob"]);
+
       addMessageListener("test:ipcClonedMessage", function(message) {
-        if (!(message.json instanceof Ci.nsIDOMBlob)) {
+        if (!Blob.isInstance(message.json)) {
           sendAsyncMessage(message.name, message.json);
           return;
         }

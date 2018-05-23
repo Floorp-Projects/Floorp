@@ -2848,7 +2848,7 @@ dump(`callFromJSON: < ${JSON.stringify(call)}\n`);
       let entries = [];
       let enumerator = directory.directoryEntries;
       while (enumerator.hasMoreElements()) {
-        let file = enumerator.getNext().QueryInterface(Ci.nsIFile);
+        let file = enumerator.nextFile;
         entries.push({ name: file.leafName, is_dir: file.isDirectory() });
       }
       return [PP_OK, { contents: { count: entries.length, entries } }];

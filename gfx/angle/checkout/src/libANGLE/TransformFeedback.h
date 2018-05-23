@@ -33,7 +33,6 @@ class TransformFeedbackState final : angle::NonCopyable
     TransformFeedbackState(size_t maxIndexedBuffers);
     ~TransformFeedbackState();
 
-    const BindingPointer<Buffer> &getGenericBuffer() const;
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t idx) const;
     const std::vector<OffsetBindingPointer<Buffer>> &getIndexedBuffers() const;
 
@@ -45,10 +44,11 @@ class TransformFeedbackState final : angle::NonCopyable
     bool mActive;
     GLenum mPrimitiveMode;
     bool mPaused;
+    GLsizeiptr mVerticesDrawn;
+    GLsizeiptr mVertexCapacity;
 
     Program *mProgram;
 
-    BindingPointer<Buffer> mGenericBuffer;
     std::vector<OffsetBindingPointer<Buffer>> mIndexedBuffers;
 };
 
@@ -70,11 +70,16 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
     bool isActive() const;
     bool isPaused() const;
     GLenum getPrimitiveMode() const;
+    // Validates that the vertices produced by a draw call will fit in the bound transform feedback
+    // buffers.
+    bool checkBufferSpaceForDraw(GLsizei count, GLsizei primcount) const;
+    // This must be called after each draw call when transform feedback is enabled to keep track of
+    // how many vertices have been written to the buffers. This information is needed by
+    // checkBufferSpaceForDraw because each draw call appends vertices to the buffers starting just
+    // after the last vertex of the previous draw call.
+    void onVerticesDrawn(const Context *context, GLsizei count, GLsizei primcount);
 
     bool hasBoundProgram(GLuint program) const;
-
-    void bindGenericBuffer(const Context *context, Buffer *buffer);
-    const BindingPointer<Buffer> &getGenericBuffer() const;
 
     void bindIndexedBuffer(const Context *context,
                            size_t index,
@@ -84,10 +89,15 @@ class TransformFeedback final : public RefCountObject, public LabeledObject
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t index) const;
     size_t getIndexedBufferCount() const;
 
+    // Returns true if any buffer bound to this object is also bound to another target.
+    bool buffersBoundForOtherUse() const;
+
     void detachBuffer(const Context *context, GLuint bufferName);
 
     rx::TransformFeedbackImpl *getImplementation();
     const rx::TransformFeedbackImpl *getImplementation() const;
+
+    void onBindingChanged(bool bound);
 
   private:
     void bindProgram(const Context *context, Program *program);

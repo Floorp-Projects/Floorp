@@ -43,6 +43,6 @@ def record_cherry_picks(dir_in_gecko, merge_base_from):
         f.write(cherries)
         f.write(b'\nCherries picked')
         f.write(b'\n' + (b'=' * 80))
-        f.write(b'\nMerge base')
+        f.write(b'\nMerge base from: ' + merge_base_from.encode())
         f.write(b'\n\n')
         f.write(mb_info)

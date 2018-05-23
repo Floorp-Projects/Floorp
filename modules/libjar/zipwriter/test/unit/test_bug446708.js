@@ -20,7 +20,7 @@ function AddToZip(zipWriter, path, file)
   if (file.isDirectory()) {
     var entries = file.QueryInterface(Ci.nsIFile).directoryEntries;
     while (entries.hasMoreElements()) {
-      var entry = entries.getNext().QueryInterface(Ci.nsIFile);
+      var entry = entries.nextFile;
       AddToZip(zipWriter, currentPath, entry);
     }
   }

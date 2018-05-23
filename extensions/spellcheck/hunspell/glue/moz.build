@@ -13,12 +13,8 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
-if CONFIG['MOZ_SYSTEM_HUNSPELL']:
-    CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
-else:
-    LOCAL_INCLUDES += ['../src']
-
 LOCAL_INCLUDES += [
+    '../src',
     '/dom/base',
     '/extensions/spellcheck/src',
 ]
@@ -34,6 +30,6 @@ EXPORTS.mozilla += [
      'RemoteSpellCheckEngineParent.h',
 ]
 
-# This variable is referenced in configure.in.  Make sure to change that file
-# too if you need to change this variable.
+# This variable is referenced in mozilla-config.h.in.  Make sure to change
+# that file too if you need to change this variable.
 DEFINES['HUNSPELL_STATIC'] = True
