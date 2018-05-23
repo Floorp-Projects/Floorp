@@ -190,6 +190,15 @@ public class WebViewProvider {
         private void applyAppSettings() {
             geckoRuntime.getSettings().setJavaScriptEnabled(!Settings.getInstance(getContext()).shouldBlockJavaScript());
             geckoRuntime.getSettings().setWebFontsEnabled(!Settings.getInstance(getContext()).shouldBlockWebFonts());
+            final int cookiesValue;
+            if (Settings.getInstance(getContext()).shouldBlockCookies() && Settings.getInstance(getContext()).shouldBlockThirdPartyCookies()) {
+                cookiesValue = GeckoRuntimeSettings.COOKIE_ACCEPT_NONE;
+            } else if (Settings.getInstance(getContext()).shouldBlockThirdPartyCookies()) {
+                cookiesValue = GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY;
+            } else {
+                cookiesValue = GeckoRuntimeSettings.COOKIE_ACCEPT_ALL;
+            }
+            geckoRuntime.getSettings().setCookieBehavior(cookiesValue);
         }
 
         private void updateBlocking() {
