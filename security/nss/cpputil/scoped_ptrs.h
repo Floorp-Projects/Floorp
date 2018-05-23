@@ -13,6 +13,7 @@
 #include "pk11pub.h"
 #include "pkcs11uri.h"
 #include "sslexp.h"
+#include "p12.h"
 
 struct ScopedDelete {
   void operator()(CERTCertificate* cert) { CERT_DestroyCertificate(cert); }
@@ -40,6 +41,9 @@ struct ScopedDelete {
   void operator()(PK11GenericObject* obj) { PK11_DestroyGenericObject(obj); }
   void operator()(SSLResumptionTokenInfo* token) {
     SSL_DestroyResumptionTokenInfo(token);
+  }
+  void operator()(SEC_PKCS12DecoderContext* dcx) {
+    SEC_PKCS12DecoderFinish(dcx);
   }
 };
 
@@ -73,6 +77,7 @@ SCOPED(PLArenaPool);
 SCOPED(PK11Context);
 SCOPED(PK11GenericObject);
 SCOPED(SSLResumptionTokenInfo);
+SCOPED(SEC_PKCS12DecoderContext);
 
 #undef SCOPED
 
