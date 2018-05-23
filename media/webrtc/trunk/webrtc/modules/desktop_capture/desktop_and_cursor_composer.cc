@@ -184,8 +184,4 @@ void DesktopAndCursorComposer::OnMouseCursorPosition(
   cursor_position_ = position;
 }
 
-bool DesktopAndCursorComposer::FocusOnSelectedSource() {
-  return desktop_capturer_->FocusOnSelectedSource();
-}
-
 }  // namespace webrtc
