@@ -228,7 +228,7 @@
         <button id="clearSiteDataButton"
             class="accessory-button"
             icon="clear"
-            search-l10n-ids="clear-site-data-cookies, clear-site-data-cache"
+            search-l10n-ids="clear-site-data-cookies-empty.label, clear-site-data-cache-empty.label"
             data-l10n-id="sitedata-clear"/>
       </hbox>
       <hbox>

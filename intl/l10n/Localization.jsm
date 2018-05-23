@@ -148,9 +148,12 @@ class Localization {
         break;
       }
 
-      if (AppConstants.NIGHTLY_BUILD) {
+      if (AppConstants.NIGHTLY_BUILD || Cu.isInAutomation) {
         const locale = ctx.locales[0];
         const ids = Array.from(missingIds).join(", ");
+        if (Cu.isInAutomation) {
+          throw new Error(`Missing translations in ${locale}: ${ids}`);
+        }
         console.warn(`Missing translations in ${locale}: ${ids}`);
       }
     }
