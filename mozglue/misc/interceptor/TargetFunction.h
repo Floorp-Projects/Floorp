@@ -10,7 +10,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/Types.h"
+#include "mozilla/Vector.h"
 
 #include <memory>
 
@@ -20,6 +22,91 @@ namespace interceptor {
 template <typename MMPolicy>
 class MOZ_STACK_CLASS WritableTargetFunction final
 {
+  class AutoProtect final
+  {
+    using ProtectParams = Tuple<uintptr_t, uint32_t>;
+
+  public:
+    explicit AutoProtect(const MMPolicy& aMMPolicy)
+      : mMMPolicy(aMMPolicy)
+    {
+    }
+
+    AutoProtect(const MMPolicy& aMMPolicy, uintptr_t aAddr, size_t aNumBytes,
+                uint32_t aNewProt)
+      : mMMPolicy(aMMPolicy)
+    {
+      const uint32_t pageSize = MMPolicy::GetPageSize();
+      const uintptr_t limit = aAddr + aNumBytes - 1;
+      const uintptr_t limitPageNum = limit / pageSize;
+      const uintptr_t basePageNum = aAddr / pageSize;
+      const uintptr_t numPagesToChange = limitPageNum - basePageNum + 1;
+
+      // We'll use the base address of the page instead of aAddr
+      uintptr_t curAddr = basePageNum * pageSize;
+
+      // Now change the protection on each page
+      for (uintptr_t curPage = 0; curPage < numPagesToChange;
+           ++curPage, curAddr += pageSize) {
+        uint32_t prevProt;
+        if (!aMMPolicy.Protect(reinterpret_cast<void*>(curAddr), pageSize,
+                               aNewProt, &prevProt)) {
+          Clear();
+          return;
+        }
+
+        // Save the previous protection for curAddr so that we can revert this
+        // in the destructor.
+        if (!mProtects.append(MakeTuple(curAddr, prevProt))) {
+          Clear();
+          return;
+        }
+      }
+    }
+
+    AutoProtect(AutoProtect&& aOther)
+      : mMMPolicy(aOther.mMMPolicy)
+      , mProtects(std::move(aOther.mProtects))
+    {
+      aOther.mProtects.clear();
+    }
+
+    ~AutoProtect()
+    {
+      Clear();
+    }
+
+    explicit operator bool() const
+    {
+      return !mProtects.empty();
+    }
+
+    AutoProtect(const AutoProtect&) = delete;
+    AutoProtect& operator=(const AutoProtect&) = delete;
+    AutoProtect& operator=(AutoProtect&&) = delete;
+
+  private:
+    void Clear()
+    {
+      const uint32_t pageSize = MMPolicy::GetPageSize();
+      for (auto&& entry : mProtects) {
+        uint32_t prevProt;
+        DebugOnly<bool> ok =
+          mMMPolicy.Protect(reinterpret_cast<void*>(Get<0>(entry)), pageSize,
+                            Get<1>(entry), &prevProt);
+        MOZ_ASSERT(ok);
+      }
+
+      mProtects.clear();
+    }
+
+  private:
+    const MMPolicy&           mMMPolicy;
+    // We include two entries of inline storage as that is most common in the
+    // worst case.
+    Vector<ProtectParams, 2>  mProtects;
+  };
+
 public:
   /**
    * Used to initialize an invalid WritableTargetFunction, thus signalling an error.
@@ -30,8 +117,8 @@ public:
     , mNumBytes(0)
     , mOffset(0)
     , mStartWriteOffset(0)
-    , mPrevProt(0)
     , mAccumulatedStatus(false)
+    , mProtect(aMMPolicy)
   {
   }
 
@@ -42,11 +129,9 @@ public:
     , mNumBytes(aNumBytes)
     , mOffset(0)
     , mStartWriteOffset(0)
-    , mPrevProt(0)
     , mAccumulatedStatus(true)
+    , mProtect(aMMPolicy, aFunc, aNumBytes, PAGE_EXECUTE_READWRITE)
   {
-    aMMPolicy.Protect(reinterpret_cast<void*>(aFunc), aNumBytes,
-                      PAGE_EXECUTE_READWRITE, &mPrevProt);
   }
 
   WritableTargetFunction(WritableTargetFunction&& aOther)
@@ -55,25 +140,16 @@ public:
     , mNumBytes(aOther.mNumBytes)
     , mOffset(aOther.mOffset)
     , mStartWriteOffset(aOther.mStartWriteOffset)
-    , mPrevProt(aOther.mPrevProt)
     , mLocalBytes(std::move(aOther.mLocalBytes))
     , mAccumulatedStatus(aOther.mAccumulatedStatus)
+    , mProtect(std::move(aOther.mProtect))
   {
-    aOther.mPrevProt = 0;
     aOther.mAccumulatedStatus = false;
   }
 
   ~WritableTargetFunction()
   {
-    if (!mPrevProt) {
-      return;
-    }
-
     MOZ_ASSERT(mLocalBytes.empty(), "Did you forget to call Commit?");
-
-    DebugOnly<bool> ok = mMMPolicy.Protect(reinterpret_cast<void*>(mFunc),
-                                           mNumBytes, mPrevProt, &mPrevProt);
-    MOZ_ASSERT(ok);
   }
 
   WritableTargetFunction(const WritableTargetFunction&) = delete;
@@ -107,7 +183,7 @@ public:
 
   explicit operator bool() const
   {
-    return mPrevProt && mAccumulatedStatus;
+    return mProtect && mAccumulatedStatus;
   }
 
   void WriteByte(const uint8_t& aValue)
@@ -225,7 +301,6 @@ private:
   const size_t mNumBytes;
   uint32_t mOffset;
   uint32_t mStartWriteOffset;
-  uint32_t mPrevProt;
 
   // In an ideal world, we'd only read 5 bytes on 32-bit and 13 bytes on 64-bit,
   // to match the minimum bytes that we need to write in in order to patch the
@@ -240,6 +315,7 @@ private:
 #endif
   Vector<uint8_t, kInlineStorage> mLocalBytes;
   bool mAccumulatedStatus;
+  AutoProtect mProtect;
 };
 
 template <typename MMPolicy>
