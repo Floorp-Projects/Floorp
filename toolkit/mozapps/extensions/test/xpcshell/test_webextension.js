@@ -58,7 +58,6 @@ add_task(async function test_1() {
   equal(GlobalManager.extensionMap.size, 0);
 
   await promiseStartupManager();
-  await promiseWebExtensionStartup();
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -113,7 +112,6 @@ add_task(async function test_2() {
   }, profileDir);
 
   await promiseStartupManager();
-  await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(ID);
   Assert.notEqual(addon, null);
