@@ -561,8 +561,6 @@ struct JSCompartment
     friend struct JSContext;
 
   public:
-    js::PerformanceGroupHolder performanceMonitoring;
-
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
 
@@ -856,6 +854,8 @@ class JS::Realm : public JSCompartment
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
     js::ArraySpeciesLookup arraySpeciesLookup;
+
+    js::PerformanceGroupHolder performanceMonitoring;
 
     js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
     js::UniquePtr<js::ScriptNameMap> scriptNameMap;

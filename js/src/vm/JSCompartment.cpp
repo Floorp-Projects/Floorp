@@ -44,7 +44,6 @@ using mozilla::PodArrayZero;
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
-    performanceMonitoring(runtime_),
     data(nullptr),
     regExps(),
     globalWriteBarriered(0),
@@ -69,7 +68,8 @@ Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
     behaviors_(options.behaviors()),
     global_(nullptr),
     randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
-    wasm(zone->runtimeFromMainThread())
+    wasm(zone->runtimeFromMainThread()),
+    performanceMonitoring(runtime_)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
