@@ -386,3 +386,148 @@ TEST(TestMultiplexInputStream, Available) {
   ASSERT_EQ(NS_OK, rv);
   ASSERT_EQ(buffer.Length(), length);
 }
+
+TEST(TestMultiplexInputStream, QILengthInputStream) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
+    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+
+  // nsMultiplexInputStream doesn't expose nsIInputStreamLength if there are
+  // no nsIInputStreamLength sub streams.
+  {
+    nsCOMPtr<nsIInputStream> inputStream;
+    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), buf);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    rv = multiplexStream->AppendStream(inputStream);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!fsis);
+
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!afsis);
+  }
+
+  // nsMultiplexInputStream exposes nsIInputStreamLength if there is one or
+  // more nsIInputStreamLength sub streams.
+  {
+    RefPtr<testing::LengthInputStream> inputStream =
+      new testing::LengthInputStream(buf, true, false);
+
+    nsresult rv = multiplexStream->AppendStream(inputStream);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!!fsis);
+
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!afsis);
+  }
+
+  // nsMultiplexInputStream exposes nsIAsyncInputStreamLength if there is one
+  // or more nsIAsyncInputStreamLength sub streams.
+  {
+    RefPtr<testing::LengthInputStream> inputStream =
+      new testing::LengthInputStream(buf, true, true);
+
+    nsresult rv = multiplexStream->AppendStream(inputStream);
+    ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!!fsis);
+
+    nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+    ASSERT_TRUE(!!afsis);
+  }
+}
+
+TEST(TestMultiplexInputStream, LengthInputStream) {
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
+    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+
+  // First stream is a a simple one.
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream), buf);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  rv = multiplexStream->AppendStream(inputStream);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // A LengthInputStream, non-async.
+  RefPtr<testing::LengthInputStream> lengthStream =
+    new testing::LengthInputStream(buf, true, false);
+
+  rv = multiplexStream->AppendStream(lengthStream);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIInputStreamLength> fsis = do_QueryInterface(multiplexStream);
+  ASSERT_TRUE(!!fsis);
+
+  // Size is the sum of the 2 streams.
+  int64_t length;
+  rv = fsis->Length(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_EQ(buf.Length() * 2, length);
+
+  // An async LengthInputStream.
+  RefPtr<testing::LengthInputStream> asyncLengthStream =
+    new testing::LengthInputStream(buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
+
+  rv = multiplexStream->AppendStream(asyncLengthStream);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIAsyncInputStreamLength> afsis = do_QueryInterface(multiplexStream);
+  ASSERT_TRUE(!!afsis);
+
+  // Now it would block.
+  rv = fsis->Length(&length);
+  ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
+
+  // Let's read the size async.
+  RefPtr<testing::LengthCallback> callback = new testing::LengthCallback();
+  rv = afsis->AsyncLengthWait(callback, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  ASSERT_EQ(buf.Length() * 3, callback->Size());
+
+  // Now a negative stream
+  lengthStream =
+    new testing::LengthInputStream(buf, true, false, NS_OK, true);
+
+  rv = multiplexStream->AppendStream(lengthStream);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  rv = fsis->Length(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_EQ(-1, length);
+
+  // Another async LengthInputStream.
+  asyncLengthStream =
+    new testing::LengthInputStream(buf, true, true, NS_BASE_STREAM_WOULD_BLOCK);
+
+  rv = multiplexStream->AppendStream(asyncLengthStream);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  afsis = do_QueryInterface(multiplexStream);
+  ASSERT_TRUE(!!afsis);
+
+  // Let's read the size async.
+  RefPtr<testing::LengthCallback> callback1 = new testing::LengthCallback();
+  rv = afsis->AsyncLengthWait(callback1, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  RefPtr<testing::LengthCallback> callback2 = new testing::LengthCallback();
+  rv = afsis->AsyncLengthWait(callback2, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback2->Called(); }));
+  ASSERT_FALSE(callback1->Called());
+  ASSERT_TRUE(callback2->Called());
+}
