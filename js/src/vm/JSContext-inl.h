@@ -460,7 +460,7 @@ JSContext::setPendingException(const js::Value& v)
 inline bool
 JSContext::runningWithTrustedPrincipals()
 {
-    return !compartment() || compartment()->principals() == runtime()->trustedPrincipals();
+    return !realm() || realm()->principals() == runtime()->trustedPrincipals();
 }
 
 inline void

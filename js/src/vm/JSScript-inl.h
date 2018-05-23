@@ -179,7 +179,7 @@ JSScript::initialEnvironmentShape() const
 inline JSPrincipals*
 JSScript::principals()
 {
-    return compartment()->principals();
+    return realm()->principals();
 }
 
 inline void

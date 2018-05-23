@@ -383,7 +383,7 @@ js::RunScript(JSContext* cx, RunState& state)
     // Since any script can conceivably GC, make sure it's safe to do so.
     cx->verifyIsSafeToGC();
 
-    MOZ_DIAGNOSTIC_ASSERT(cx->compartment()->isSystem() ||
+    MOZ_DIAGNOSTIC_ASSERT(cx->realm()->isSystem() ||
                           cx->runtime()->allowContentJS());
 
     MOZ_ASSERT(!cx->enableAccessValidation ||

@@ -556,56 +556,6 @@ struct JSCompartment
     JSRuntime*                   runtime_;
 
   public:
-    /*
-     * The principals associated with this compartment. Note that the
-     * same several compartments may share the same principals and
-     * that a compartment may change principals during its lifetime
-     * (e.g. in case of lazy parsing).
-     */
-    inline JSPrincipals* principals() {
-        return principals_;
-    }
-    inline void setPrincipals(JSPrincipals* principals) {
-        if (principals_ == principals)
-            return;
-
-        // If we change principals, we need to unlink immediately this
-        // compartment from its PerformanceGroup. For one thing, the
-        // performance data we collect should not be improperly associated
-        // with a group to which we do not belong anymore. For another thing,
-        // we use `principals()` as part of the key to map compartments
-        // to a `PerformanceGroup`, so if we do not unlink now, this will
-        // be too late once we have updated `principals_`.
-        performanceMonitoring.unlink();
-        principals_ = principals;
-    }
-    inline bool isSystem() const {
-        return isSystem_;
-    }
-    inline void setIsSystem(bool isSystem) {
-        if (isSystem_ == isSystem)
-            return;
-
-        // If we change `isSystem*(`, we need to unlink immediately this
-        // compartment from its PerformanceGroup. For one thing, the
-        // performance data we collect should not be improperly associated
-        // to a group to which we do not belong anymore. For another thing,
-        // we use `isSystem()` as part of the key to map compartments
-        // to a `PerformanceGroup`, so if we do not unlink now, this will
-        // be too late once we have updated `isSystem_`.
-        performanceMonitoring.unlink();
-        isSystem_ = isSystem;
-    }
-
-    // Used to approximate non-content code when reporting telemetry.
-    inline bool isProbablySystemCode() const {
-        return isSystem_;
-    }
-  private:
-    JSPrincipals*                principals_;
-    bool                         isSystem_;
-
-  public:
     bool                         isSelfHosting;
 
   private:
@@ -1027,6 +977,8 @@ class JS::Realm : public JSCompartment
     friend class js::AutoSetNewObjectMetadata;
     js::NewObjectMetadataState objectMetadataState_ { js::ImmediateMetadata() };
 
+    JSPrincipals* principals_ = nullptr;
+
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
 
@@ -1037,6 +989,7 @@ class JS::Realm : public JSCompartment
 
     bool isAtomsRealm_ = false;
     bool marked_ = true;
+    bool isSystem_ = false;
 
   public:
     // WebAssembly state for the realm.
@@ -1227,6 +1180,51 @@ class JS::Realm : public JSCompartment
     }
     void unmark() {
         marked_ = false;
+    }
+
+    /*
+     * The principals associated with this realm. Note that the same several
+     * realms may share the same principals and that a realm may change
+     * principals during its lifetime (e.g. in case of lazy parsing).
+     */
+    JSPrincipals* principals() {
+        return principals_;
+    }
+    void setPrincipals(JSPrincipals* principals) {
+        if (principals_ == principals)
+            return;
+
+        // If we change principals, we need to unlink immediately this
+        // realm from its PerformanceGroup. For one thing, the performance data
+        // we collect should not be improperly associated with a group to which
+        // we do not belong anymore. For another thing, we use `principals()` as
+        // part of the key to map realms to a `PerformanceGroup`, so if we do
+        // not unlink now, this will be too late once we have updated
+        // `principals_`.
+        performanceMonitoring.unlink();
+        principals_ = principals;
+    }
+
+    bool isSystem() const {
+        return isSystem_;
+    }
+    void setIsSystem(bool isSystem) {
+        if (isSystem_ == isSystem)
+            return;
+
+        // If we change `isSystem*(`, we need to unlink immediately this realm
+        // from its PerformanceGroup. For one thing, the performance data we
+        // collect should not be improperly associated to a group to which we
+        // do not belong anymore. For another thing, we use `isSystem()` as part
+        // of the key to map realms to a `PerformanceGroup`, so if we do not
+        // unlink now, this will be too late once we have updated `isSystem_`.
+        performanceMonitoring.unlink();
+        isSystem_ = isSystem;
+    }
+
+    // Used to approximate non-content code when reporting telemetry.
+    bool isProbablySystemCode() const {
+        return isSystem_;
     }
 };
 
