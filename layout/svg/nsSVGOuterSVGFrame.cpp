@@ -783,11 +783,10 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
        NS_SVGDisplayListHitTestingEnabled()) ||
       (!aBuilder->IsForEventDelivery() &&
        NS_SVGDisplayListPaintingEnabled())) {
-    nsDisplayList newList;
-    nsDisplayListSet set(&newList, &newList, &newList,
-                         &newList, &newList, &newList);
+    nsDisplayList* contentList = aLists.Content();
+    nsDisplayListSet set(contentList, contentList, contentList,
+                         contentList, contentList, contentList);
     BuildDisplayListForNonBlockChildren(aBuilder, set);
-    aLists.Content()->AppendToTop(MakeDisplayItem<nsDisplaySVGWrapper>(aBuilder, this, &newList));
   } else if (IsVisibleForPainting(aBuilder) || !aBuilder->IsForPainting()) {
     aLists.Content()->AppendToTop(
       MakeDisplayItem<nsDisplayOuterSVG>(aBuilder, this));
@@ -1001,6 +1000,24 @@ nsSVGOuterSVGAnonChildFrame::Init(nsIContent*       aContent,
   nsSVGDisplayContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 #endif
+
+void
+nsSVGOuterSVGAnonChildFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                              const nsDisplayListSet& aLists)
+{
+  // Wrap our contents into an nsDisplaySVGWrapper.
+  // We wrap this frame instead of the nsSVGOuterSVGFrame so that the wrapper
+  // doesn't contain the <svg> element's CSS styles, like backgrounds or borders.
+  // Creating the nsDisplaySVGWrapper here also means that it'll be inside the
+  // nsDisplayTransform for our viewbox transform.
+  // The nsDisplaySVGWrapper's reference frame is this frame, because this frame
+  // always returns true from IsSVGTransformed.
+  nsDisplayList newList;
+  nsDisplayListSet set(&newList, &newList, &newList,
+                       &newList, &newList, &newList);
+  BuildDisplayListForNonBlockChildren(aBuilder, set);
+  aLists.Content()->AppendToTop(MakeDisplayItem<nsDisplaySVGWrapper>(aBuilder, this, &newList));
+}
 
 static Matrix
 ComputeOuterSVGAnonChildFrameTransform(const nsSVGOuterSVGAnonChildFrame* aFrame)
