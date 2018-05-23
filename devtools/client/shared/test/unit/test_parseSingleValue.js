@@ -22,7 +22,7 @@ const TEST_DATA = [
     input: "blue !  important",
     expected: {value: "blue", priority: "important"}
   },
-  {input: "blue !", expected: {value: "blue", priority: ""}},
+  {input: "blue !", expected: {value: "blue !", priority: ""}},
   {input: "blue !mportant", expected: {value: "blue !mportant", priority: ""}},
   {
     input: "  blue   !important ",

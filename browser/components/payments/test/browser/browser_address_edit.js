@@ -54,15 +54,15 @@ add_task(async function test_add_link() {
       addLink.click();
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !state.page.guid;
+        return state.page.id == "address-page" && !state["address-page"].guid;
       }, "Check add page state");
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Add Shipping Address", "Page title should be set");
 
-      let persistInput = content.document.querySelector("address-form labelled-checkbox");
-      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
-      ok(Cu.waiveXrays(persistInput).checked, "persist checkbox should be checked by default");
+      let persistCheckbox = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistCheckbox.hidden, "checkbox should be visible when adding a new address");
+      ok(Cu.waiveXrays(persistCheckbox).checked, "persist checkbox should be checked by default");
 
       info("filling fields");
       for (let [key, val] of Object.entries(address)) {
@@ -145,14 +145,14 @@ add_task(async function test_edit_link() {
       editLink.click();
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !!state.page.guid;
+        return state.page.id == "address-page" && !!state["address-page"].guid;
       }, "Check edit page state");
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Edit Shipping Address", "Page title should be set");
 
-      let persistInput = content.document.querySelector("address-form labelled-checkbox");
-      ok(persistInput.hidden, "checkbox should be hidden when editing an address");
+      let persistCheckbox = content.document.querySelector("address-form labelled-checkbox");
+      ok(persistCheckbox.hidden, "checkbox should be hidden when editing an address");
 
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
@@ -230,15 +230,15 @@ add_task(async function test_add_payer_contact_name_email_link() {
       addLink.click();
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page" && !state.page.guid;
+        return state.page.id == "address-page" && !state["address-page"].guid;
       }, "Check add page state");
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Add Payer Contact", "Page title should be set");
 
-      let persistInput = content.document.querySelector("address-form labelled-checkbox");
-      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
-      ok(Cu.waiveXrays(persistInput).checked, "persist checkbox should be checked by default");
+      let persistCheckbox = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistCheckbox.hidden, "checkbox should be visible when adding a new address");
+      ok(Cu.waiveXrays(persistCheckbox).checked, "persist checkbox should be checked by default");
 
       info("filling fields");
       for (let [key, val] of Object.entries(address)) {
@@ -317,15 +317,14 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       editLink.click();
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
-        info("state.page.id: " + state.page.id + "; state.page.guid: " + state.page.guid);
-        return state.page.id == "address-page" && !!state.page.guid;
+        return state.page.id == "address-page" && !!state["address-page"].guid;
       }, "Check edit page state");
 
       let title = content.document.querySelector("address-form h1");
       is(title.textContent, "Edit Payer Contact", "Page title should be set");
 
-      let persistInput = content.document.querySelector("address-form labelled-checkbox");
-      ok(persistInput.hidden, "checkbox should be hidden when editing an address");
+      let persistCheckbox = content.document.querySelector("address-form labelled-checkbox");
+      ok(persistCheckbox.hidden, "checkbox should be hidden when editing an address");
 
       info("overwriting field values");
       for (let [key, val] of Object.entries(address)) {
@@ -437,9 +436,10 @@ add_task(async function test_private_persist_addresses() {
         PaymentTestUtils: PTU,
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
-      let persistInput = content.document.querySelector("address-form labelled-checkbox");
-      ok(!persistInput.hidden, "checkbox should be visible when adding a new address");
-      ok(!Cu.waiveXrays(persistInput).checked, "persist checkbox should be unchecked by default");
+      let persistCheckbox = content.document.querySelector("address-form labelled-checkbox");
+      ok(!persistCheckbox.hidden, "checkbox should be visible when adding a new address");
+      ok(!Cu.waiveXrays(persistCheckbox).checked,
+         "persist checkbox should be unchecked by default");
 
       info("add the temp address");
       let addressToAdd = PTU.Addresses.Temp;

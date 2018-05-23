@@ -577,9 +577,20 @@ var paymentDialogWrapper = {
 
       // Select the new record
       if (selectedStateKey) {
-        Object.assign(successStateChange, {
-          [selectedStateKey]: guid,
-        });
+        if (selectedStateKey.length == 1) {
+          Object.assign(successStateChange, {
+            [selectedStateKey[0]]: guid,
+          });
+        } else if (selectedStateKey.length == 2) {
+          // Need to keep properties like preserveFieldValues from getting removed.
+          let subObj = Object.assign({}, successStateChange[selectedStateKey[0]]);
+          subObj[selectedStateKey[1]] = guid;
+          Object.assign(successStateChange, {
+            [selectedStateKey[0]]: subObj,
+          });
+        } else {
+          throw new Error(`selectedStateKey not supported: '${selectedStateKey}'`);
+        }
       }
 
       this.sendMessageToContent("updateState", successStateChange);
