@@ -19,11 +19,17 @@ class InputStreamLengthHelper final : public Runnable
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // This is the entry point of this class. The callback is executed
+  // This is one of the 2 entry points of this class. It returns false if the
+  // length cannot be taken synchronously.
+  static bool
+  GetSyncLength(nsIInputStream* aStream,
+                int64_t* aLength);
+
+  // This is one of the 2 entry points of this class. The callback is executed
   // asynchronously when the length is known.
   static void
-  GetLength(nsIInputStream* aStream,
-            const std::function<void(int64_t aLength)>& aCallback);
+  GetAsyncLength(nsIInputStream* aStream,
+                 const std::function<void(int64_t aLength)>& aCallback);
 
 private:
   NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK

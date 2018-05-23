@@ -387,6 +387,11 @@ public: /* Necko internal use only... */
       mUploadStream = uploadStream;
     }
 
+    void InternalSetUploadStreamLength(uint64_t aLength)
+    {
+      mReqContentLength = aLength;
+    }
+
     void SetUploadStreamHasHeaders(bool hasHeaders)
     {
       mUploadStreamHasHeaders = hasHeaders;
@@ -419,6 +424,10 @@ protected:
 
   // drop reference to listener, its callbacks, and the progress sink
   virtual void ReleaseListeners();
+
+  // Call AsyncAbort().
+  virtual void
+  DoAsyncAbort(nsresult aStatus) = 0;
 
   // This is fired only when a cookie is created due to the presence of
   // Set-Cookie header in the response header of any network request.
@@ -482,6 +491,10 @@ protected:
   nsresult
   CheckRedirectLimit(uint32_t aRedirectFlags) const;
 
+  bool
+  MaybeWaitForUploadStreamLength(nsIStreamListener *aListener,
+                                 nsISupports *aContext);
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
@@ -511,6 +524,13 @@ private:
   void ReleaseMainThreadOnlyReferences();
 
   bool IsCrossOriginWithReferrer();
+
+  nsresult
+  ExplicitSetUploadStreamLength(uint64_t aContentLength,
+                                bool aStreamHasHeaders);
+
+  void
+  MaybeResumeAsyncOpen();
 
 protected:
   // Use Release-Acquire ordering to ensure the OMT ODA is ignored while channel
@@ -597,6 +617,11 @@ protected:
   // True iff this request has been calculated in its request context as
   // a non tail request.  We must remove it again when this channel is done.
   uint32_t                          mAddedAsNonTailRequest : 1;
+
+  // True if AsyncOpen() is called when the stream length is still unknown.
+  // AsyncOpen() will be retriggered when InputStreamLengthHelper execs the
+  // callback, passing the stream length value.
+  uint32_t                          mAsyncOpenWaitingForStreamLength : 1;
 
   // An opaque flags for non-standard behavior of the TLS system.
   // It is unlikely this will need to be set outside of telemetry studies
@@ -716,7 +741,6 @@ protected:
   uint32_t mLastRedirectFlags;
 
   uint64_t mReqContentLength;
-  bool mReqContentLengthDetermined;
 
   nsString mIntegrityMetadata;
 
@@ -724,6 +748,10 @@ protected:
   nsCString mMatchedList;
   nsCString mMatchedProvider;
   nsCString mMatchedFullHash;
+
+  // This is set true if the channel is waiting for the
+  // InputStreamLengthHelper::GetAsyncLength callback.
+  bool mPendingInputStreamLengthOperation;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)

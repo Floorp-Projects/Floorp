@@ -114,7 +114,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength, nsCOMPtr<nsIURI>& aOutURI) override;
+                       nsCOMPtr<nsIURI>& aOutURI) override;
 
 protected:
 
@@ -269,14 +269,12 @@ HandleMailtoSubject(nsCString& aPath)
 nsresult
 FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
                                    nsIInputStream** aPostDataStream,
-                                   int64_t* aPostDataStreamLength,
                                    nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv = NS_OK;
   aOutURI = aURI;
 
   *aPostDataStream = nullptr;
-  *aPostDataStreamLength = -1;
 
   if (mMethod == NS_FORM_METHOD_POST) {
 
@@ -302,7 +300,6 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
                .SetPathQueryRef(path)
                .Finalize(aOutURI);
     } else {
-      uint32_t queryStringLength = mQueryString.Length();
       nsCOMPtr<nsIInputStream> dataStream;
       rv = NS_NewCStringInputStream(getter_AddRefs(dataStream), Move(mQueryString));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -317,8 +314,6 @@ FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       mimeStream->SetData(dataStream);
 
       mimeStream.forget(aPostDataStream);
-
-      *aPostDataStreamLength = queryStringLength;
     }
 
   } else {
@@ -626,7 +621,6 @@ FSMultipartFormData::AddDataChunk(const nsACString& aName,
 nsresult
 FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
                                           nsIInputStream** aPostDataStream,
-                                          int64_t* aPostDataStreamLength,
                                           nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv;
@@ -643,7 +637,6 @@ FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
 
   uint64_t bodySize;
   mimeStream->SetData(GetSubmissionBody(&bodySize));
-  *aPostDataStreamLength = bodySize;
 
   mimeStream.forget(aPostDataStream);
 
@@ -693,7 +686,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreaLength, nsCOMPtr<nsIURI>& aOutURI) override;
+                       nsCOMPtr<nsIURI>& aOutURI) override;
 
 private:
   nsString mBody;
@@ -733,14 +726,12 @@ FSTextPlain::AddNameDirectoryPair(const nsAString& aName,
 nsresult
 FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream,
-                                  int64_t* aPostDataStreamLength,
                                   nsCOMPtr<nsIURI>& aOutURI)
 {
   nsresult rv = NS_OK;
   aOutURI = aURI;
 
   *aPostDataStream = nullptr;
-  *aPostDataStreamLength = -1;
 
   // XXX HACK We are using the standard URL mechanism to give the body to the
   // mailer instead of passing the post data stream to it, since that sounds
@@ -779,7 +770,6 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
                 ConvertLineBreaks(cbody.get(),
                                   nsLinebreakConverter::eLinebreakAny,
                                   nsLinebreakConverter::eLinebreakNet));
-    uint32_t bodyLength = cbody.Length();
     nsCOMPtr<nsIInputStream> bodyStream;
     rv = NS_NewCStringInputStream(getter_AddRefs(bodyStream), Move(cbody));
     if (!bodyStream) {
@@ -794,8 +784,6 @@ FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
     mimeStream->AddHeader("Content-Type", "text/plain");
     mimeStream->SetData(bodyStream);
     CallQueryInterface(mimeStream, aPostDataStream);
-
-    *aPostDataStreamLength = bodyLength;
   }
 
   return rv;
