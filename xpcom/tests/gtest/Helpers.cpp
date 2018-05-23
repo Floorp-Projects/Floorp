@@ -215,4 +215,16 @@ AsyncStringStream::MaybeExecCallback(nsIInputStreamCallback* aCallback,
 
 NS_IMPL_ISUPPORTS(AsyncStringStream, nsIAsyncInputStream, nsIInputStream)
 
+NS_IMPL_ADDREF(LengthInputStream);
+NS_IMPL_RELEASE(LengthInputStream);
+
+NS_INTERFACE_MAP_BEGIN(LengthInputStream)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamLength, mIsInputStreamLength)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStreamLength, mIsAsyncInputStreamLength)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ISUPPORTS(LengthCallback, nsIInputStreamLengthCallback)
+
 } // namespace testing
