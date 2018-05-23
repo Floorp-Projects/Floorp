@@ -96,5 +96,5 @@ pref(layers.single-tile.enabled,false) != fast-scrolling.html about:blank
 == clip-path-invalidation-1d.html mask-invalidation-2-ref.html
 
 != fractional-transform-1.html about:blank
-!= fractional-transform-2.html about:blank
+skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != fractional-transform-2.html about:blank
 != fractional-transform-3.html about:blank
