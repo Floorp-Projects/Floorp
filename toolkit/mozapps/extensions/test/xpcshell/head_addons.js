@@ -425,11 +425,8 @@ var SlightlyLessDodgyBootstrapMonitor = {
         this.installed.delete(id);
         break;
       case "update":
-        // Close enough, for now.
-        this.onBootstrapMethod("uninstall",
-                               Object.assign({}, params, {version: params.oldVersion}),
-                               reason);
-        this.onBootstrapMethod("install", params, reason);
+        this.checkMatches("update", "install", params, this.installed.get(id));
+        this.installed.set(id, {reason, params});
         break;
     }
   },
@@ -445,14 +442,21 @@ var SlightlyLessDodgyBootstrapMonitor = {
     ok(lastParams,
        `Expecting matching ${lastMethod} call for add-on ${params.id} ${method} call`);
 
-    equal(params.version, lastParams.version,
-          "params.version should match last call");
+    if (method == "update") {
+      equal(params.oldVersion, lastParams.version,
+            "params.version should match last call");
+    } else {
+      equal(params.version, lastParams.version,
+            "params.version should match last call");
+    }
 
-    equal(params.installPath.path, lastParams.installPath.path,
-          `params.installPath should match last call`);
+    if (method !== "update" && method !== "uninstall") {
+      equal(params.installPath.path, lastParams.installPath.path,
+            `params.installPath should match last call`);
 
-    ok(params.resourceURI.equals(lastParams.resourceURI),
-       `params.resourceURI should match: "${params.resourceURI.spec}" == "${lastParams.resourceURI.spec}"`);
+      ok(params.resourceURI.equals(lastParams.resourceURI),
+         `params.resourceURI should match: "${params.resourceURI.spec}" == "${lastParams.resourceURI.spec}"`);
+    }
   },
 
   checkStarted(id, version = undefined) {
