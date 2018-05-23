@@ -279,6 +279,9 @@ WebRenderLayerManager::EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
   mWidget->AddWindowOverlayWebRenderCommands(WrBridge(), builder, resourceUpdates);
   mWindowOverlayChanged = false;
 
+#if DUMP_LISTS
+  if (XRE_IsContentProcess()) mScrollData.Dump();
+#endif
   if (AsyncPanZoomEnabled()) {
     mScrollData.SetFocusTarget(mFocusTarget);
     mFocusTarget = FocusTarget();
