@@ -34,7 +34,11 @@ function assertEmptyValue(dbg, index) {
 
 async function addExpression(dbg, input) {
   info("Adding an expression");
-  findElementWithSelector(dbg, expressionSelectors.plusIcon).click();
+
+  const plusIcon = findElementWithSelector(dbg, expressionSelectors.plusIcon);
+  if(plusIcon) {
+    plusIcon.click();
+  }
   findElementWithSelector(dbg, expressionSelectors.input).focus();
   type(dbg, input);
   pressKey(dbg, "Enter");

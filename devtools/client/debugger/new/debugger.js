@@ -5715,7 +5715,7 @@ function update(state = createPauseState(), action) {
       {
         return action.status === "start" ? _extends({}, state, emptyPauseState, {
           command: action.command,
-          previousLocation: buildPreviousLocation(state, action)
+          previousLocation: getPauseLocation(state, action)
         }) : _extends({}, state, { command: null });
       }
 
@@ -5742,14 +5742,16 @@ function update(state = createPauseState(), action) {
   return state;
 }
 
-function buildPreviousLocation(state, action) {
+function getPauseLocation(state, action) {
   const { frames, previousLocation } = state;
 
+  // NOTE: We store the previous location so that we ensure that we
+  // do not stop at the same location twice when we step over.
   if (action.command !== "stepOver") {
     return null;
   }
 
-  const frame = frames && frames.length > 0 ? frames[0] : null;
+  const frame = frames && frames[0];
   if (!frame) {
     return previousLocation;
   }
@@ -22835,6 +22837,8 @@ var _reactRedux = __webpack_require__(3592);
 
 var _redux = __webpack_require__(3593);
 
+var _immutable = __webpack_require__(3594);
+
 var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -22899,6 +22903,10 @@ __webpack_require__(1342);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
     "button",
@@ -22910,9 +22918,7 @@ function debugBtn(onClick, type, className, tooltip) {
     },
     _react2.default.createElement(_Svg2.default, { name: type, title: tooltip, "aria-label": tooltip })
   );
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+}
 
 class SecondaryPanes extends _react.Component {
   constructor(props) {
@@ -22964,6 +22970,12 @@ class SecondaryPanes extends _react.Component {
   }
 
   watchExpressionHeaderButtons() {
+    const { expressions } = this.props;
+
+    if (!expressions.size) {
+      return [];
+    }
+
     return [debugBtn(evt => {
       evt.stopPropagation();
       this.props.evaluateExpressions();
@@ -23189,6 +23201,7 @@ SecondaryPanes.contextTypes = {
 };
 
 exports.default = (0, _reactRedux.connect)(state => ({
+  expressions: (0, _selectors.getExpressions)(state),
   extra: (0, _selectors.getExtra)(state),
   hasFrames: !!(0, _selectors.getTopFrame)(state),
   breakpoints: (0, _selectors.getBreakpoints)(state),
@@ -23371,7 +23384,7 @@ class Breakpoints extends _react.Component {
       return;
     }
 
-    const groupedBreakpoints = (0, _lodash.groupBy)((0, _lodash.sortBy)([...breakpoints.valueSeq()], bp => bp.location.line), bp => bp.source.url);
+    const groupedBreakpoints = (0, _lodash.groupBy)((0, _lodash.sortBy)([...breakpoints.valueSeq()], bp => bp.location.line), bp => (0, _source.getRawSourceURL)(bp.source.url));
 
     return [...Object.keys(groupedBreakpoints).sort(sortFilenames).map(url => {
       const file = (0, _source.getFilenameFromURL)(url);
@@ -25933,7 +25946,7 @@ function batchScopeMappings(originalAstScopes, source, sourceMaps) {
     for (const name of Object.keys(item.bindings)) {
       for (const ref of item.bindings[name].refs) {
         const locs = [ref];
-        if (ref.type === "decl") {
+        if (ref.type !== "ref") {
           locs.push(ref.declaration);
         }
 
@@ -26107,14 +26120,35 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
 
   const { refs } = originalBinding;
 
-  const genContent = await refs.reduce(async (acc, pos) => {
-    const result = await acc;
-    if (result) {
-      return result;
+  let genContent = null;
+  for (const pos of refs) {
+    if (originalBinding.type === "import") {
+      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+    } else {
+      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForStandardBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
     }
 
-    return await (0, _findGeneratedBindingFromPosition.findGeneratedBindingFromPosition)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
-  }, null);
+    if ((pos.type === "class-decl" || pos.type === "class-inner") && source.contentType && source.contentType.match(/\/typescript/)) {
+      // Resolve to first binding in the range
+      const declContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForNormalDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+
+      if (declContent) {
+        // Prefer the declaration mapping in this case because TS sometimes
+        // maps class declaration names to "export.Foo = Foo;" or to
+        // the decorator logic itself
+        genContent = declContent;
+      }
+    }
+
+    if (!genContent && (pos.type === "import-decl" || pos.type === "import-ns-decl")) {
+      // match the import declaration location
+      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+    }
+
+    if (genContent) {
+      break;
+    }
+  }
 
   if (genContent && genContent.desc) {
     return {
@@ -27144,10 +27178,10 @@ async function getOriginalSourceForFrame(state, frame) {
 function paused(pauseInfo) {
   return async function ({ dispatch, getState, client, sourceMaps }) {
     const { frames, why, loadedObjects } = pauseInfo;
-    const rootFrame = frames.length > 0 ? frames[0] : null;
+    const topFrame = frames.length > 0 ? frames[0] : null;
 
-    if (rootFrame) {
-      const mappedFrame = await (0, _mapFrames.updateFrameLocation)(rootFrame, sourceMaps);
+    if (topFrame && why.type == "resumeLimit") {
+      const mappedFrame = await (0, _mapFrames.updateFrameLocation)(topFrame, sourceMaps);
       const source = await getOriginalSourceForFrame(getState(), mappedFrame);
 
       // Ensure that the original file has loaded if there is one.
@@ -27163,7 +27197,7 @@ function paused(pauseInfo) {
       type: "PAUSED",
       why,
       frames,
-      selectedFrameId: rootFrame ? rootFrame.id : undefined,
+      selectedFrameId: topFrame ? topFrame.id : undefined,
       loadedObjects: loadedObjects || []
     });
 
@@ -27338,7 +27372,7 @@ var _promise = __webpack_require__(1653);
  */
 function pauseOnExceptions(shouldPauseOnExceptions, shouldIgnoreCaughtExceptions) {
   return ({ dispatch, client }) => {
-    dispatch({
+    return dispatch({
       type: "PAUSE_ON_EXCEPTIONS",
       shouldPauseOnExceptions,
       shouldIgnoreCaughtExceptions,
@@ -34793,80 +34827,72 @@ function locColumn(loc) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.findGeneratedBindingFromPosition = findGeneratedBindingFromPosition;
+exports.findGeneratedBindingForStandardBinding = findGeneratedBindingForStandardBinding;
+exports.findGeneratedBindingForImportBinding = findGeneratedBindingForImportBinding;
+exports.findGeneratedBindingForNormalDeclaration = findGeneratedBindingForNormalDeclaration;
+exports.findGeneratedBindingForImportDeclaration = findGeneratedBindingForImportDeclaration;
 
 var _locColumn = __webpack_require__(2349);
+
+var _positionCmp = __webpack_require__(3642);
 
 var _filtering = __webpack_require__(3635);
 
 var _firefox = __webpack_require__(1500);
 
+/**
+ * Find a simple 1-1 match of a binding in the original code to a binding
+ * in the generated code.
+ */
+async function findGeneratedBindingForStandardBinding(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
+  return await findGeneratedReference((await getGeneratedLocationRanges(generatedAstBindings, source, pos, bindingType, pos.type, sourceMaps)));
+}
+
+/**
+ * Find a simple 1-1 match of a binding in the original code to an
+ * expression in the generated code.
+ */
+
+// eslint-disable-next-line max-len
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-async function findGeneratedBindingFromPosition(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
-  const locationType = pos.type;
-
-  const generatedRanges = await getGeneratedLocationRanges(source, pos, bindingType, locationType, sourceMaps);
-  let applicableBindings = filterApplicableBindings(generatedAstBindings, generatedRanges);
-
-  // We can adjust this number as we go, but these are a decent start as a
-  // general heuristic to assume the bindings were bad or just map a chunk of
-  // whole line or something.
-  if (applicableBindings.length > 4) {
-    // Babel's for..of generates at least 3 bindings inside one range for
-    // block-scoped loop variables, so we shouldn't go below that.
-    applicableBindings = [];
-  }
-
-  let result;
-  if (bindingType === "import") {
-    result = await findGeneratedImportReference(applicableBindings);
-
-    if (!result && pos.type === "decl") {
-      const importName = pos.importName;
-      if (typeof importName !== "string") {
-        // Should never happen, just keeping Flow happy.
-        return null;
-      }
-
-      let applicableImportBindings = applicableBindings;
-      if (generatedRanges.length === 0) {
-        // If the imported name itself does not map to a useful range, fall back
-        // to resolving the bindinding using the location of the overall
-        // import declaration.
-        const declarationRanges = await getGeneratedLocationRanges(source, pos.declaration, bindingType, locationType, sourceMaps);
-        applicableImportBindings = filterApplicableBindings(generatedAstBindings, declarationRanges);
-
-        if (applicableImportBindings.length > 10) {
-          // Import declarations tend to have a large number of bindings for
-          // for things like 'require' and 'interop', so this number is larger
-          // than other binding count checks.
-          applicableImportBindings = [];
-        }
-      }
-
-      result = await findGeneratedImportDeclaration(applicableImportBindings, importName);
-    }
-  } else {
-    result = await findGeneratedReference(applicableBindings);
-  }
-
-  return result;
+async function findGeneratedBindingForImportBinding(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
+  return await findGeneratedImportReference((await getGeneratedLocationRanges(generatedAstBindings, source, pos, bindingType, pos.type, sourceMaps)));
 }
-// eslint-disable-next-line max-len
 
+/**
+ * Find a simple 1-1 match of a binding's declaration in the original code to a
+ * binding in the generated code.
+ */
+async function findGeneratedBindingForNormalDeclaration(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
+  return await findGeneratedReference((await getGeneratedLocationRanges(generatedAstBindings, source, pos.declaration, bindingType, pos.type, sourceMaps)));
+}
+
+/**
+ * Find a simple 1-1 match of an import binding's declaration in the original
+ * code to an expression in the generated code.
+ */
+async function findGeneratedBindingForImportDeclaration(sourceMaps, client, source, pos, name, bindingType, generatedAstBindings) {
+  const importName = pos.importName;
+  if (typeof importName !== "string") {
+    // Should never happen, just keeping Flow happy.
+    return null;
+  }
+
+  return await findGeneratedImportDeclaration((await getGeneratedLocationRanges(generatedAstBindings, source, pos.declaration, bindingType, pos.type, sourceMaps)), importName);
+}
 
 function filterApplicableBindings(bindings, ranges) {
   const result = [];
   for (const range of ranges) {
     // Any binding overlapping a part of the mapping range.
     const filteredBindings = (0, _filtering.filterSortedArray)(bindings, binding => {
-      if (positionCmp(binding.loc.end, range.start) <= 0) {
+      if ((0, _positionCmp.positionCmp)(binding.loc.end, range.start) <= 0) {
         return -1;
       }
-      if (positionCmp(binding.loc.start, range.end) >= 0) {
+      if ((0, _positionCmp.positionCmp)(binding.loc.start, range.end) >= 0) {
         return 1;
       }
 
@@ -34904,6 +34930,15 @@ function filterApplicableBindings(bindings, ranges) {
  * binding descriptor that can be used to access the value.
  */
 async function findGeneratedReference(applicableBindings) {
+  // We can adjust this number as we go, but these are a decent start as a
+  // general heuristic to assume the bindings were bad or just map a chunk of
+  // whole line or something.
+  if (applicableBindings.length > 4) {
+    // Babel's for..of generates at least 3 bindings inside one range for
+    // block-scoped loop variables, so we shouldn't go below that.
+    applicableBindings = [];
+  }
+
   for (const applicable of applicableBindings) {
     const result = await mapBindingReferenceToDescriptor(applicable);
     if (result) {
@@ -34927,6 +34962,15 @@ async function findGeneratedImportReference(applicableBindings) {
     return !next || next.binding.loc.type !== "ref" || !next.binding.loc.meta;
   });
 
+  // We can adjust this number as we go, but these are a decent start as a
+  // general heuristic to assume the bindings were bad or just map a chunk of
+  // whole line or something.
+  if (applicableBindings.length > 2) {
+    // Babel's for..of generates at least 3 bindings inside one range for
+    // block-scoped loop variables, so we shouldn't go below that.
+    applicableBindings = [];
+  }
+
   for (const applicable of applicableBindings) {
     const result = await mapImportReferenceToDescriptor(applicable);
     if (result) {
@@ -34943,12 +34987,22 @@ async function findGeneratedImportReference(applicableBindings) {
  * the import's value.
  */
 async function findGeneratedImportDeclaration(applicableBindings, importName) {
+  // We can adjust this number as we go, but these are a decent start as a
+  // general heuristic to assume the bindings were bad or just map a chunk of
+  // whole line or something.
+  if (applicableBindings.length > 10) {
+    // Import declarations tend to have a large number of bindings for
+    // for things like 'require' and 'interop', so this number is larger
+    // than other binding count checks.
+    applicableBindings = [];
+  }
+
   let result = null;
 
   for (const _ref of applicableBindings) {
     const { binding } = _ref;
 
-    if (binding.loc.type !== "decl") {
+    if (binding.loc.type === "ref") {
       continue;
     }
 
@@ -35132,29 +35186,10 @@ async function readDescriptorProperty(desc, property) {
 }
 
 function mappingContains(mapped, item) {
-  return positionCmp(item.start, mapped.start) >= 0 && positionCmp(item.end, mapped.end) <= 0;
+  return (0, _positionCmp.positionCmp)(item.start, mapped.start) >= 0 && (0, _positionCmp.positionCmp)(item.end, mapped.end) <= 0;
 }
 
-/**
- * * === 0 - Positions are equal.
- * * < 0 - first position before second position
- * * > 0 - first position after second position
- */
-function positionCmp(p1, p2) {
-  if (p1.line === p2.line) {
-    const l1 = (0, _locColumn.locColumn)(p1);
-    const l2 = (0, _locColumn.locColumn)(p2);
-
-    if (l1 === l2) {
-      return 0;
-    }
-    return l1 < l2 ? -1 : 1;
-  }
-
-  return p1.line < p2.line ? -1 : 1;
-}
-
-async function getGeneratedLocationRanges(source, {
+async function getGeneratedLocationRanges(generatedAstBindings, source, {
   start,
   end
 }, bindingType, locationType, sourceMaps) {
@@ -35165,7 +35200,7 @@ async function getGeneratedLocationRanges(source, {
   // the range in the original content didn't _start_ at the start position.
   // Since this likely means that the range doesn't logically apply to this
   // binding location, we skip it.
-  if (positionCmp(startPosition, endPosition) === 0) {
+  if ((0, _positionCmp.positionCmp)(startPosition, endPosition) === 0) {
     return [];
   }
 
@@ -35212,9 +35247,9 @@ async function getGeneratedLocationRanges(source, {
   //
   // var _mod = require("mod"); // mapped from import statement
   // var _mod2 = interop(_mod); // entirely unmapped
-  if (bindingType === "import" && locationType === "decl") {
+  if (bindingType === "import" && locationType !== "ref") {
     for (const range of resultRanges) {
-      if (mappingContains(range, { start: startPosition, end: startPosition }) && positionCmp(range.end, endPosition) < 0) {
+      if (mappingContains(range, { start: startPosition, end: startPosition }) && (0, _positionCmp.positionCmp)(range.end, endPosition) < 0) {
         range.end.line = endPosition.line;
         range.end.column = endPosition.column;
         break;
@@ -35222,7 +35257,7 @@ async function getGeneratedLocationRanges(source, {
     }
   }
 
-  return resultRanges;
+  return filterApplicableBindings(generatedAstBindings, resultRanges);
 }
 
 /***/ }),
@@ -39384,7 +39419,7 @@ function findInsertionLocation(array, callback) {
   // Ensure the value is the start of any set of matches.
   let i = left;
   if (i < array.length) {
-    while (i > 0 && callback(array[i]) >= 0) {
+    while (i >= 0 && callback(array[i]) >= 0) {
       i--;
     }
     return i + 1;
@@ -40047,6 +40082,44 @@ function toggleSkipPausing() {
 
     dispatch({ type: "TOGGLE_SKIP_PAUSING", skipPausing });
   };
+}
+
+/***/ }),
+
+/***/ 3642:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.positionCmp = positionCmp;
+
+var _locColumn = __webpack_require__(2349);
+
+/**
+ * * === 0 - Positions are equal.
+ * * < 0 - first position before second position
+ * * > 0 - first position after second position
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function positionCmp(p1, p2) {
+  if (p1.line === p2.line) {
+    const l1 = (0, _locColumn.locColumn)(p1);
+    const l2 = (0, _locColumn.locColumn)(p2);
+
+    if (l1 === l2) {
+      return 0;
+    }
+    return l1 < l2 ? -1 : 1;
+  }
+
+  return p1.line < p2.line ? -1 : 1;
 }
 
 /***/ }),
