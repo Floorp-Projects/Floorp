@@ -1425,7 +1425,7 @@ js::SetAllocationMetadataBuilder(JSContext* cx, const AllocationMetadataBuilder*
 JS_FRIEND_API(JSObject*)
 js::GetAllocationMetadata(JSObject* obj)
 {
-    ObjectWeakMap* map = obj->compartment()->objectMetadataTable;
+    ObjectWeakMap* map = obj->compartment()->objectMetadataTable.get();
     if (map)
         return map->lookup(obj);
     return nullptr;
