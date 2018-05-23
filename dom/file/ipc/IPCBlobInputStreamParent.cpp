@@ -7,6 +7,7 @@
 #include "IPCBlobInputStreamParent.h"
 #include "IPCBlobInputStreamStorage.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/InputStreamLengthHelper.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
@@ -157,16 +158,12 @@ IPCBlobInputStreamParent::RecvLengthNeeded()
     return IPC_OK();
   }
 
-/* TODO
-  RefPtr<LengthInputStreamHelper> helper =
-    new LengthInputStreamHelper(stream);
-
-  helper->Run([self](length) {
-    if (self->mContentManager || mPBackgroundManager) {
-      Unused << self->SendLengthReady(length);
+  RefPtr<IPCBlobInputStreamParent> self = this;
+  InputStreamLengthHelper::GetLength(stream, [self](int64_t aLength) {
+    if (self->mContentManager || self->mPBackgroundManager) {
+      Unused << self->SendLengthReady(aLength);
     }
   });
-*/
 
   return IPC_OK();
 }
