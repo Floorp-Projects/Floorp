@@ -34,13 +34,7 @@ add_task(async function test_add_link() {
     let persistCheckbox = content.document.querySelector("basic-card-form labelled-checkbox");
     ok(Cu.waiveXrays(persistCheckbox).checked, "persist checkbox should be checked by default");
 
-    let year = (new Date()).getFullYear();
-    let card = {
-      "cc-number": "4111111111111111",
-      "cc-name": "J. Smith",
-      "cc-exp-month": 11,
-      "cc-exp-year": year,
-    };
+    let card = Object.assign({}, PTU.BasicCards.JohnDoe);
 
     info("filling fields");
     for (let [key, val] of Object.entries(card)) {
@@ -50,8 +44,8 @@ add_task(async function test_add_link() {
     }
 
     let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
-    isnot(billingAddressSelect.getBoundingClientRect().height, 0,
-          "The billing address selector should always be visible");
+    ok(content.isVisible(billingAddressSelect),
+       "The billing address selector should always be visible");
     is(billingAddressSelect.childElementCount, 1,
        "Only one child option should exist by default");
     is(billingAddressSelect.children[0].value, "",
@@ -175,13 +169,11 @@ add_task(async function test_edit_link() {
     let title = content.document.querySelector("basic-card-form h1");
     is(title.textContent, "Edit Credit Card", "Edit title should be set");
 
-    let nextYear = (new Date()).getFullYear() + 1;
-    let card = {
-      // cc-number cannot be modified
-      "cc-name": "A. Nonymous",
-      "cc-exp-month": 3,
-      "cc-exp-year": nextYear,
-    };
+    let card = Object.assign({}, PTU.BasicCards.JohnDoe);
+    // cc-number cannot be modified
+    delete card["cc-number"];
+    card["cc-exp-year"]++;
+    card["cc-exp-month"]++;
 
     info("overwriting field values");
     for (let [key, val] of Object.entries(card)) {
@@ -375,13 +367,7 @@ add_task(async function test_private_card_adding() {
     let savedCardCount = Object.keys(state.savedBasicCards).length;
     let tempCardCount = Object.keys(state.tempBasicCards).length;
 
-    let year = (new Date()).getFullYear();
-    let card = {
-      "cc-number": "4111111111111111",
-      "cc-name": "J. Smith",
-      "cc-exp-month": 11,
-      "cc-exp-year": year,
-    };
+    let card = Object.assign({}, PTU.BasicCards.JohnDoe);
 
     info("filling fields");
     for (let [key, val] of Object.entries(card)) {

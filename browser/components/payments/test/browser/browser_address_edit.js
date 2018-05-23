@@ -26,19 +26,6 @@ add_task(async function test_add_link() {
       eventName: "shippingaddresschange",
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
-    const EXPECTED_ADDRESS = {
-      "given-name": "Jared",
-      "family-name": "Wein",
-      "organization": "Mozilla",
-      "street-address": "404 Internet Lane",
-      "address-level2": "Firefoxity City",
-      "address-level1": "CA",
-      "postal-code": "31337",
-      "country": "US",
-      "tel": "+15555551212",
-      "email": "test@example.com",
-    };
-
     await spawnPaymentDialogTask(frame, async (address) => {
       let {
         PaymentTestUtils: PTU,
@@ -89,7 +76,7 @@ add_task(async function test_add_link() {
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
       }, "Switched back to payment-summary");
-    }, EXPECTED_ADDRESS);
+    }, PTU.Addresses.TimBL);
 
     await shippingAddressChangePromise;
     info("got shippingaddresschange event");
@@ -252,8 +239,8 @@ add_task(async function test_add_payer_contact_name_email_link() {
 
       info("check that non-payer requested fields are hidden");
       for (let selector of ["#organization", "#tel"]) {
-        ok(content.document.querySelector(selector).getBoundingClientRect().height == 0,
-           selector + " should be hidden");
+        let element = content.document.querySelector(selector);
+        ok(content.isHidden(element), selector + " should be hidden");
       }
 
       content.document.querySelector("address-form button:last-of-type").click();
@@ -340,9 +327,9 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       for (let element of formElements) {
         let shouldBeVisible = allowedFields.includes(element.id);
         if (shouldBeVisible) {
-          ok(element.getBoundingClientRect().height > 0, element.id + " should be visible");
+          ok(content.isVisible(element), element.id + " should be visible");
         } else {
-          ok(element.getBoundingClientRect().height == 0, element.id + " should be hidden");
+          ok(content.isHidden(element), element.id + " should be hidden");
         }
       }
 
@@ -422,7 +409,7 @@ add_task(async function test_private_persist_addresses() {
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
     is(initialAddresses.options.length, 2, "Got expected number of pre-filled shipping addresses");
 
-    // // listen for shippingaddresschange event in merchant (private) window
+    // listen for shippingaddresschange event in merchant (private) window
     info("listen for shippingaddresschange");
     let shippingAddressChangePromise = ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
