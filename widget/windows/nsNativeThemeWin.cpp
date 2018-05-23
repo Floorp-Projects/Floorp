@@ -4136,7 +4136,7 @@ GetScrollbarFaceColor(ComputedStyle* aStyle)
 {
   StyleComplexColor complexColor =
     aStyle->StyleUserInterface()->mScrollbarFaceColor;
-  if (complexColor.mIsAuto) {
+  if (complexColor.IsAuto()) {
     return GetScrollbarFaceColorForAuto();
   }
   nscolor color = complexColor.CalcColor(aStyle);
@@ -4153,7 +4153,7 @@ GetScrollbarTrackColor(ComputedStyle* aStyle)
   StyleComplexColor complexColor =
     aStyle->StyleUserInterface()->mScrollbarTrackColor;
   nscolor color;
-  if (complexColor.mIsAuto) {
+  if (complexColor.IsAuto()) {
     color = GetScrollbarTrackColorForAuto(aStyle);
   } else {
     color = complexColor.CalcColor(aStyle);
@@ -4263,8 +4263,8 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
                                           const nsRect& aRect,
                                           const nsRect& aClipRect)
 {
-  MOZ_ASSERT(!aStyle->StyleUserInterface()->mScrollbarFaceColor.mIsAuto ||
-             !aStyle->StyleUserInterface()->mScrollbarTrackColor.mIsAuto);
+  MOZ_ASSERT(!aStyle->StyleUserInterface()->mScrollbarFaceColor.IsAuto() ||
+             !aStyle->StyleUserInterface()->mScrollbarTrackColor.IsAuto());
 
   gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
           dr(aClipRect.X(), aClipRect.Y(),

@@ -1185,7 +1185,7 @@ nsComputedDOMStyle::SetValueForWidgetColor(nsROCSSPrimitiveValue* aValue,
                                            const StyleComplexColor& aColor,
                                            uint8_t aWidgetType)
 {
-  if (!aColor.mIsAuto) {
+  if (!aColor.IsAuto()) {
     SetToRGBAColor(aValue, aColor.CalcColor(mComputedStyle));
     return;
   }
