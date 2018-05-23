@@ -758,6 +758,11 @@ var AddonTestUtils = {
 
     // Load the add-ons list as it was after extension registration
     await this.loadAddonsList(true);
+
+    // Wait for all add-ons to finish starting up before resolving.
+    const {XPIProvider} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+    await Promise.all(Array.from(XPIProvider.activeAddons,
+                                 addon => addon.startupPromise));
   },
 
   async promiseShutdownManager() {
