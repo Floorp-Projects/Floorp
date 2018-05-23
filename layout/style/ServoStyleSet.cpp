@@ -37,6 +37,7 @@
 #include "gfxUserFontSet.h"
 #include "nsBindingManager.h"
 #include "nsWindowSizes.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1513,7 +1514,15 @@ bool
 ServoStyleSet::ShouldTraverseInParallel() const
 {
   MOZ_ASSERT(mDocument->GetShell(), "Styling a document without a shell?");
-  return mDocument->GetShell()->IsActive();
+  if (!mDocument->GetShell()->IsActive()) {
+    return false;
+  }
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_feature_active(ProfilerFeature::SequentialStyle)) {
+    return false;
+  }
+#endif
+  return true;
 }
 
 void

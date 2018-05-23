@@ -128,17 +128,20 @@ class TimeStamp;
   /* Take a snapshot of the window on every composition. */ \
   macro(7, "screenshots", Screenshots) \
   \
+  /* Disable parallel traversal in styling. */ \
+  macro(8, "seqstyle", SequentialStyle) \
+  \
   /* Walk the C++ stack. Not available on all platforms. */ \
-  macro(8, "stackwalk", StackWalk) \
+  macro(9, "stackwalk", StackWalk) \
   \
   /* Start profiling with feature TaskTracer. */ \
-  macro(9, "tasktracer", TaskTracer) \
+  macro(10, "tasktracer", TaskTracer) \
   \
   /* Profile the registered secondary threads. */ \
-  macro(10, "threads", Threads) \
+  macro(11, "threads", Threads) \
   \
   /* Have the JavaScript engine track JIT optimizations. */ \
-  macro(11, "trackopts", TrackOptimizations)
+  macro(12, "trackopts", TrackOptimizations)
 
 struct ProfilerFeature
 {
