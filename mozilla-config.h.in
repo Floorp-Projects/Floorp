@@ -41,8 +41,7 @@
  * Force-include hunspell_alloc_hooks.h and hunspell_fopen_hooks.h for hunspell,
  * so that we don't need to modify them directly.
  *
- * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/Makefile.in,
- * unless --enable-system-hunspell is defined.
+ * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/moz.build
  */
 #if defined(HUNSPELL_STATIC)
 #include "hunspell_alloc_hooks.h"

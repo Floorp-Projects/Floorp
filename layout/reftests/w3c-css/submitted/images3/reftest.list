@@ -181,11 +181,11 @@ fails-if(!webrender) == object-position-png-002c.html object-position-png-002-re
 == object-position-png-002i.html object-position-png-002-ref.html
 == object-position-png-002o.html object-position-png-002-ref.html
 == object-position-png-002p.html object-position-png-002-ref.html
-fails == object-position-svg-001e.html object-position-svg-001-ref.html # bug 1103286
+fails-if(!webrender) == object-position-svg-001e.html object-position-svg-001-ref.html # bug 1103286
 == object-position-svg-001i.html object-position-svg-001-ref.html
-fails == object-position-svg-001o.html object-position-svg-001-ref.html # bug 1103286
+fails-if(!webrender) == object-position-svg-001o.html object-position-svg-001-ref.html # bug 1103286
 == object-position-svg-001p.html object-position-svg-001-ref.html
-fails == object-position-svg-002e.html object-position-svg-002-ref.html # bug 1103286
+fails-if(!webrender) == object-position-svg-002e.html object-position-svg-002-ref.html # bug 1103286
 == object-position-svg-002i.html object-position-svg-002-ref.html
-fails == object-position-svg-002o.html object-position-svg-002-ref.html # bug 1103286
+fails-if(!webrender) == object-position-svg-002o.html object-position-svg-002-ref.html # bug 1103286
 == object-position-svg-002p.html object-position-svg-002-ref.html

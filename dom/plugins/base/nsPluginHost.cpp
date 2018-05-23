@@ -2094,23 +2094,15 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
 
   bool flashOnly = Preferences::GetBool("plugin.load_flash_only", true);
 
-  nsCOMPtr<nsISimpleEnumerator> iter;
+  nsCOMPtr<nsIDirectoryEnumerator> iter;
   rv = pluginsDir->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv))
     return rv;
 
   AutoTArray<nsCOMPtr<nsIFile>, 6> pluginFiles;
 
-  bool hasMore;
-  while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = iter->GetNext(getter_AddRefs(supports));
-    if (NS_FAILED(rv))
-      continue;
-    nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
-    if (NS_FAILED(rv))
-      continue;
-
+  nsCOMPtr<nsIFile> dirEntry;
+  while (NS_SUCCEEDED(iter->GetNextFile(getter_AddRefs(dirEntry))) && dirEntry) {
     // Sun's JRE 1.3.1 plugin must have symbolic links resolved or else it'll crash.
     // See bug 197855.
     dirEntry->Normalize();

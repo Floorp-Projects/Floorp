@@ -4665,7 +4665,9 @@ CanvasRenderingContext2D::LineDashOffset() const {
 }
 
 bool
-CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding)
+CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX, double aY,
+                                        const CanvasWindingRule& aWinding,
+                                        nsIPrincipal& aSubjectPrincipal)
 {
   if (!FloatValidate(aX, aY)) {
     return false;
@@ -4674,7 +4676,7 @@ CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX, double aY, co
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx)) {
+    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx, aSubjectPrincipal)) {
       return false;
     }
   }
@@ -4691,7 +4693,11 @@ CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX, double aY, co
   return mPath->ContainsPoint(Point(aX, aY), mTarget->GetTransform());
 }
 
-bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX, double aY, const CanvasWindingRule& aWinding)
+bool
+CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, const CanvasPath& aPath,
+                                        double aX, double aY,
+                                        const CanvasWindingRule& aWinding,
+                                        nsIPrincipal&)
 {
   if (!FloatValidate(aX, aY)) {
     return false;
@@ -4708,7 +4714,8 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, const CanvasPath& a
 }
 
 bool
-CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, double aX, double aY)
+CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, double aX, double aY,
+                                          nsIPrincipal& aSubjectPrincipal)
 {
   if (!FloatValidate(aX, aY)) {
     return false;
@@ -4717,7 +4724,7 @@ CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, double aX, double aY)
   // Check for site-specific permission and return false if no permission.
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx)) {
+    if (!CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx, aSubjectPrincipal)) {
       return false;
     }
   }
@@ -4743,7 +4750,9 @@ CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, double aX, double aY)
   return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY), mTarget->GetTransform());
 }
 
-bool CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX, double aY)
+bool
+CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx, const CanvasPath& aPath,
+                                          double aX, double aY, nsIPrincipal&)
 {
   if (!FloatValidate(aX, aY)) {
     return false;
@@ -5435,8 +5444,9 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow, double aX,
 
 already_AddRefed<ImageData>
 CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
-                                       double aSy, double aSw,
-                                       double aSh, ErrorResult& aError)
+                                       double aSy, double aSw, double aSh,
+                                       nsIPrincipal& aSubjectPrincipal,
+                                       ErrorResult& aError)
 {
   if (mDrawObserver) {
     mDrawObserver->DidDrawCall(CanvasDrawObserver::DrawCallType::GetImageData);
@@ -5502,7 +5512,7 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
   }
 
   JS::Rooted<JSObject*> array(aCx);
-  aError = GetImageDataArray(aCx, x, y, w, h, array.address());
+  aError = GetImageDataArray(aCx, x, y, w, h, aSubjectPrincipal, array.address());
   if (aError.Failed()) {
     return nullptr;
   }
@@ -5518,6 +5528,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
                                             int32_t aY,
                                             uint32_t aWidth,
                                             uint32_t aHeight,
+                                            nsIPrincipal& aSubjectPrincipal,
                                             JSObject** aRetval)
 {
   if (mDrawObserver) {
@@ -5590,7 +5601,7 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   bool usePlaceholder = false;
   if (mCanvasElement) {
     nsCOMPtr<nsIDocument> ownerDoc = mCanvasElement->OwnerDoc();
-    usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx);
+    usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx, aSubjectPrincipal);
   }
 
   do {

@@ -12,11 +12,11 @@
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/Format.h"
 
+#include <array>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <array>
 
 namespace gl
 {
@@ -155,12 +155,13 @@ struct Extensions
     bool textureFloatLinear;
 
     // GL_EXT_texture_rg
-    // Implies that TextureCaps for GL_R8, GL_RG8 (and floating point R/RG texture formats if floating point extensions
-    // are also present) exist
+    // Implies that TextureCaps for GL_R8, GL_RG8 (and floating point R/RG texture formats if
+    // floating point extensions are also present) exist
     bool textureRG;
 
-    // GL_EXT_texture_compression_dxt1, GL_ANGLE_texture_compression_dxt3 and GL_ANGLE_texture_compression_dxt5
-    // Implies that TextureCaps exist for GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
+    // GL_EXT_texture_compression_dxt1, GL_ANGLE_texture_compression_dxt3 and
+    // GL_ANGLE_texture_compression_dxt5 Implies that TextureCaps exist for
+    // GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GL_COMPRESSED_RGBA_S3TC_DXT1_EXT
     // GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE and GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE
     bool textureCompressionDXT1;
     bool textureCompressionDXT3;
@@ -583,6 +584,15 @@ struct Caps
     // limits
     GLuint maxGeometryImageUniforms;
     GLuint maxCombinedGeometryUniformComponents;
+
+    // GLES1 emulation: Caps for ES 1.1. Taken from Table 6.20 / 6.22 in the OpenGL ES 1.1 spec.
+    GLuint maxMultitextureUnits;
+    GLuint maxClipPlanes;
+    GLuint maxLights;
+    static constexpr int GlobalMatrixStackDepth = 16;
+    GLuint maxModelviewMatrixStackDepth;
+    GLuint maxProjectionMatrixStackDepth;
+    GLuint maxTextureMatrixStackDepth;
 };
 
 Caps GenerateMinimumCaps(const Version &clientVersion, const Extensions &extensions);
@@ -716,6 +726,9 @@ struct DisplayExtensions
 
     // EGL_ANGLE_iosurface_client_buffer
     bool iosurfaceClientBuffer;
+
+    // EGL_ANGLE_create_context_extensions_enabled
+    bool createContextExtensionsEnabled;
 };
 
 struct DeviceExtensions
@@ -779,4 +792,4 @@ struct ClientExtensions
 
 }  // namespace egl
 
-#endif // LIBANGLE_CAPS_H_
+#endif  // LIBANGLE_CAPS_H_

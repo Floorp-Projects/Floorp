@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMBlob;
 interface nsIInputStream;
 interface nsIPresentationAvailabilityListener;
 interface nsIPresentationRespondingListener;
@@ -12,6 +11,7 @@ interface nsIPresentationSessionListener;
 interface nsIPresentationTransportBuilderConstructor;
 interface nsIPrincipal;
 
+webidl Blob;
 webidl EventTarget;
 
 %{C++
@@ -120,7 +120,7 @@ interface nsIPresentationService : nsISupports
    */
   void sendSessionBlob(in DOMString sessionId,
                        in uint8_t role,
-                       in nsIDOMBlob blob);
+                       in Blob blob);
 
   /*
    * Close the session.

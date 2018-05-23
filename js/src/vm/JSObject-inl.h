@@ -367,19 +367,19 @@ template <typename T>
 static MOZ_ALWAYS_INLINE MOZ_MUST_USE T*
 SetNewObjectMetadata(JSContext* cx, T* obj)
 {
-    MOZ_ASSERT(!cx->compartment()->hasObjectPendingMetadata());
+    MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
 
     // The metadata builder is invoked for each object created on the active
     // thread, except when analysis/compilation is active, to avoid recursion.
     if (!cx->helperThread()) {
-        if (MOZ_UNLIKELY((size_t)cx->compartment()->hasAllocationMetadataBuilder()) &&
+        if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder()) &&
             !cx->zone()->suppressAllocationMetadataBuilder)
         {
             // Don't collect metadata on objects that represent metadata.
             AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
             Rooted<T*> rooted(cx, obj);
-            cx->compartment()->setNewObjectMetadata(cx, rooted);
+            cx->realm()->setNewObjectMetadata(cx, rooted);
             return rooted;
         }
     }

@@ -759,7 +759,7 @@ Tester.prototype = {
         if (gdir.exists()) {
           let entries = gdir.directoryEntries;
           while (entries.hasMoreElements()) {
-            let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+            let entry = entries.nextFile;
             if (entry.isFile()) {
               let msg = "this test left a pending crash report; ";
               try {

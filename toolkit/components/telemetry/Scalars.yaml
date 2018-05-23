@@ -381,6 +381,20 @@ browser.session.restore:
     record_in_processes:
       - 'main'
 
+extensions.updates:
+  rdf:
+    bug_numbers:
+      - 1460336
+    description: >
+      The number of RDF update requsts for a given extension ID.
+    expires: "66"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    record_in_processes:
+      - main
+
 # This section is for probes used to measure use of the Webextensions storage.sync API.
 storage.sync.api.usage:
   extensions_using:

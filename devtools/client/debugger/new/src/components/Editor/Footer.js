@@ -149,8 +149,7 @@ class SourceFooter extends _react.PureComponent {
     } = this.props;
 
     if (mappedSource) {
-      const bundleSource = mappedSource.toJS();
-      const filename = (0, _source.getFilename)(bundleSource);
+      const filename = (0, _source.getFilename)(mappedSource);
       const tooltip = L10N.getFormatStr("sourceFooter.mappedSourceTooltip", filename);
       const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
       const mappedSourceLocation = {

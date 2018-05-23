@@ -13,7 +13,6 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMBlob.h"
 #include "nsIMutable.h"
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
@@ -27,17 +26,21 @@ struct BlobPropertyBag;
 class File;
 class OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString;
 
-class Blob : public nsIDOMBlob
-           , public nsIMutable
+#define NS_DOM_BLOB_IID \
+{ 0x648c2a83, 0xbdb1, 0x4a7d, \
+  { 0xb5, 0x0a, 0xca, 0xcd, 0x92, 0x87, 0x45, 0xc2 } }
+
+
+class Blob : public nsIMutable
            , public nsSupportsWeakReference
            , public nsWrapperCache
 {
 public:
-  NS_DECL_NSIDOMBLOB
   NS_DECL_NSIMUTABLE
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIDOMBlob)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIMutable)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_BLOB_IID)
 
   typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
 
@@ -147,11 +150,19 @@ private:
   nsCOMPtr<nsISupports> mParent;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(Blob, NS_DOM_BLOB_IID)
+
 // Override BindingJSObjectMallocBytes for blobs to tell the JS GC how much
 // memory is held live by the binding object.
 size_t BindingJSObjectMallocBytes(Blob* aBlob);
 
 } // namespace dom
 } // namespace mozilla
+
+inline nsISupports*
+ToSupports(mozilla::dom::Blob* aBlob)
+{
+  return static_cast<nsIMutable*>(aBlob);
+}
 
 #endif // mozilla_dom_Blob_h

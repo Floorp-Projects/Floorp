@@ -53,13 +53,17 @@ struct InternalFormat
     InternalFormat();
     InternalFormat(const InternalFormat &other);
 
-    ErrorOrResult<GLuint> computeRowPitch(GLsizei width,
+    GLuint computePixelBytes(GLenum formatType) const;
+
+    ErrorOrResult<GLuint> computeRowPitch(GLenum formatType,
+                                          GLsizei width,
                                           GLint alignment,
                                           GLint rowLength) const;
-    static ErrorOrResult<GLuint> computeDepthPitch(GLsizei height,
-                                                   GLint imageHeight,
-                                                   GLuint rowPitch);
-    ErrorOrResult<GLuint> computeDepthPitch(GLsizei width,
+    ErrorOrResult<GLuint> computeDepthPitch(GLsizei height,
+                                            GLint imageHeight,
+                                            GLuint rowPitch) const;
+    ErrorOrResult<GLuint> computeDepthPitch(GLenum formatType,
+                                            GLsizei width,
                                             GLsizei height,
                                             GLint alignment,
                                             GLint rowLength,
@@ -67,14 +71,16 @@ struct InternalFormat
 
     ErrorOrResult<GLuint> computeCompressedImageSize(const Extents &size) const;
 
-    ErrorOrResult<GLuint> computeSkipBytes(GLuint rowPitch,
+    ErrorOrResult<GLuint> computeSkipBytes(GLenum formatType,
+                                           GLuint rowPitch,
                                            GLuint depthPitch,
                                            const PixelStoreStateBase &state,
                                            bool is3D) const;
 
-    ErrorOrResult<GLuint> computePackUnpackEndByte(const Extents &size,
-                                                   const PixelStoreStateBase &state,
-                                                   bool is3D) const;
+    ErrorOrResult<GLuint> computePackUnpackEndByte(GLenum formatType,
+                                                       const Extents &size,
+                                                       const PixelStoreStateBase &state,
+                                                       bool is3D) const;
 
     bool isLUMA() const;
     GLenum getReadPixelsFormat() const;
@@ -159,11 +165,6 @@ const InternalFormat &GetInternalFormatInfo(GLenum internalFormat, GLenum type);
 // Strip sizing information from an internal format.  Doesn't necessarily validate that the internal
 // format is valid.
 GLenum GetUnsizedFormat(GLenum internalFormat);
-
-inline const InternalFormat &GetPackFormatInfo(GLenum internalFormat, GLenum type)
-{
-    return GetInternalFormatInfo(GetUnsizedFormat(internalFormat), type);
-}
 
 typedef std::set<GLenum> FormatSet;
 const FormatSet &GetAllSizedInternalFormats();

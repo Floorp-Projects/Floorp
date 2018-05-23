@@ -10,8 +10,6 @@ config = {
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
-    "force_clobber": True,
-    "clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
     "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],

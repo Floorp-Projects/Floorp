@@ -25,7 +25,7 @@ function setup() {
 
     let entries = downloadDir.directoryEntries;
     while (entries.hasMoreElements()) {
-      let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+      let entry = entries.nextFile;
       ok(false, `Leftover file ${entry.path} in download directory`);
       entry.remove(false);
     }

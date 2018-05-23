@@ -568,8 +568,8 @@ MOZ_ALWAYS_INLINE
 static JSFlatString*
 LookupDtoaCache(JSContext* cx, double d)
 {
-    if (JSCompartment* comp = cx->compartment()) {
-        if (JSFlatString* str = comp->dtoaCache.lookup(10, d))
+    if (Realm* realm = cx->realm()) {
+        if (JSFlatString* str = realm->dtoaCache.lookup(10, d))
             return str;
     }
 
@@ -580,8 +580,8 @@ MOZ_ALWAYS_INLINE
 static void
 CacheNumber(JSContext* cx, double d, JSFlatString* str)
 {
-    if (JSCompartment* comp = cx->compartment())
-        comp->dtoaCache.cache(10, d, str);
+    if (Realm* realm = cx->realm())
+        realm->dtoaCache.cache(10, d, str);
 }
 
 MOZ_ALWAYS_INLINE
@@ -1327,7 +1327,7 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
     ToCStringBuf cbuf;
     char* numStr;
 
-    JSCompartment* comp = cx->compartment();
+    Realm* realm = cx->realm();
 
     int32_t i;
     bool isBase10Int = false;
@@ -1343,14 +1343,14 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
             return cx->staticStrings().getUnit(c);
         }
 
-        if (JSFlatString* str = comp->dtoaCache.lookup(base, d))
+        if (JSFlatString* str = realm->dtoaCache.lookup(base, d))
             return str;
 
         size_t len;
         numStr = Int32ToCString(&cbuf, i, &len, base);
         MOZ_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
     } else {
-        if (JSFlatString* str = comp->dtoaCache.lookup(base, d))
+        if (JSFlatString* str = realm->dtoaCache.lookup(base, d))
             return str;
 
         numStr = FracNumberToCString(cx, &cbuf, d, base);
@@ -1371,7 +1371,7 @@ NumberToStringWithBase(JSContext* cx, double d, int base)
     if (isBase10Int && i >= 0)
         s->maybeInitializeIndex(i);
 
-    comp->dtoaCache.cache(base, d, s);
+    realm->dtoaCache.cache(base, d, s);
     return s;
 }
 
@@ -1422,8 +1422,8 @@ js::IndexToString(JSContext* cx, uint32_t index)
     if (StaticStrings::hasUint(index))
         return cx->staticStrings().getUint(index);
 
-    JSCompartment* c = cx->compartment();
-    if (JSFlatString* str = c->dtoaCache.lookup(10, index))
+    Realm* realm = cx->realm();
+    if (JSFlatString* str = realm->dtoaCache.lookup(10, index))
         return str;
 
     Latin1Char buffer[JSFatInlineString::MAX_LENGTH_LATIN1 + 1];
@@ -1437,7 +1437,7 @@ js::IndexToString(JSContext* cx, uint32_t index)
     if (!str)
         return nullptr;
 
-    c->dtoaCache.cache(10, index, str);
+    realm->dtoaCache.cache(10, index, str);
     return str;
 }
 

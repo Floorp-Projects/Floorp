@@ -4,9 +4,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMBlob;
 interface nsIInputStream;
 interface nsINetAddr;
+
+webidl Blob;
 
 %{C++
 #define PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID \
@@ -59,7 +60,7 @@ interface nsIPresentationSessionTransport : nsISupports
    * Send the blob to the remote endpoint.
    * @param blob: The input blob to be sent.
    */
-  void sendBlob(in nsIDOMBlob blob);
+  void sendBlob(in Blob blob);
 
   /*
    * Close this session transport.
