@@ -749,6 +749,19 @@ var AddonTestUtils = {
     let XPIScope = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
     XPIScope.AsyncShutdown = MockAsyncShutdown;
 
+    XPIScope.XPIInternal.BootstrapScope.prototype
+      ._beforeCallBootstrapMethod = (method, params, reason) => {
+        try {
+          this.emit("bootstrap-method", {method, params, reason});
+        } catch (e) {
+          try {
+            this.testScope.do_throw(e);
+          } catch (e) {
+            // Le sigh.
+          }
+        }
+      };
+
     this.addonIntegrationService = Cc["@mozilla.org/addons/integration;1"]
           .getService(Ci.nsIObserver);
 
