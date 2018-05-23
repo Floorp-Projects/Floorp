@@ -55,7 +55,7 @@ add_task(async function() {
     if (i > 0) {
       let files = bookmarksBackupDir.directoryEntries;
       while (files.hasMoreElements()) {
-        let entry = files.getNext().QueryInterface(Ci.nsIFile);
+        let entry = files.nextFile;
         if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
           backupFilename = entry.leafName;
           backupFile = entry;
@@ -78,7 +78,7 @@ add_task(async function() {
   // on WIN XP.
   let files = bookmarksBackupDir.directoryEntries;
   while (files.hasMoreElements()) {
-    let entry = files.getNext().QueryInterface(Ci.nsIFile);
+    let entry = files.nextFile;
     entry.remove(false);
   }
   Assert.ok(!bookmarksBackupDir.directoryEntries.hasMoreElements());

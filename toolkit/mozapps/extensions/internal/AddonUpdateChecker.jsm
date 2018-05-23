@@ -41,6 +41,8 @@ const LOGGER_ID = "addons.update-checker";
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
+const updateTypeHistogram = Services.telemetry.getHistogramById("EXTENSION_UPDATE_TYPE");
+
 /**
  * Sanitizes the update URL in an update item, as returned by
  * parseRDFManifest and parseJSONManifest. Ensures that:
@@ -295,8 +297,11 @@ UpdateParser.prototype = {
                     "and support will soon be removed");
 
         json = UpdateRDFConverter.convertToJSON(request);
+        updateTypeHistogram.add("RDF");
+        Services.telemetry.keyedScalarAdd("extensions.updates.rdf", this.id, 1);
       } else {
         json = JSON.parse(data);
+        updateTypeHistogram.add("JSON");
       }
     } catch (e) {
       logger.warn("onUpdateCheckComplete failed to determine manifest type");

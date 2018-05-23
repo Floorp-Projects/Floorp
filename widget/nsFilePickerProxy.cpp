@@ -207,7 +207,7 @@ nsFilePickerProxy::GetDomFileOrDirectory(nsISupports** aValue)
   MOZ_ASSERT(mFilesOrDirectories.Length() == 1);
 
   if (mFilesOrDirectories[0].IsFile()) {
-    nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[0].GetAsFile().get();
+    nsCOMPtr<nsISupports> blob = ToSupports(mFilesOrDirectories[0].GetAsFile());
     blob.forget(aValue);
     return NS_OK;
   }
@@ -247,7 +247,7 @@ public:
     uint32_t index = mIndex++;
 
     if (mFilesOrDirectories[index].IsFile()) {
-      nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[index].GetAsFile().get();
+      nsCOMPtr<nsISupports> blob = ToSupports(mFilesOrDirectories[index].GetAsFile());
       blob.forget(aValue);
       return NS_OK;
     }

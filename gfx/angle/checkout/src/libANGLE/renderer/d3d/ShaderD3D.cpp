@@ -48,7 +48,7 @@ ShaderD3D::ShaderD3D(const gl::ShaderState &data,
     {
         mAdditionalOptions |= SH_EMULATE_ISNAN_FLOAT_FUNCTION;
     }
-    if (workarounds.skipVSConstantRegisterZero && mData.getShaderType() == GL_VERTEX_SHADER)
+    if (workarounds.skipVSConstantRegisterZero && mData.getShaderType() == gl::ShaderType::Vertex)
     {
         mAdditionalOptions |= SH_SKIP_D3D_CONSTANT_REGISTER_ZERO;
     }
@@ -204,7 +204,7 @@ bool ShaderD3D::postTranslateCompile(gl::Compiler *compiler, std::string *infoLo
 
     for (const sh::InterfaceBlock &interfaceBlock : mData.getUniformBlocks())
     {
-        if (interfaceBlock.staticUse)
+        if (interfaceBlock.active)
         {
             unsigned int index = static_cast<unsigned int>(-1);
             bool blockRegisterResult =

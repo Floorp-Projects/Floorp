@@ -71,19 +71,19 @@ class Tabs extends _react.PureComponent {
       });
     };
 
-    this.renderDropdownSource = source => {
+    this.renderDropdownSource = sourceRecord => {
       const {
         selectSpecificSource
       } = this.props;
-      const filename = (0, _source.getFilename)(source.toJS());
+      const filename = (0, _source.getFilename)(sourceRecord);
 
-      const onClick = () => selectSpecificSource(source.id);
+      const onClick = () => selectSpecificSource(sourceRecord.id);
 
       return _react2.default.createElement("li", {
-        key: source.id,
+        key: sourceRecord.id,
         onClick: onClick
       }, _react2.default.createElement("img", {
-        className: `dropdown-icon ${this.getIconClass(source)}`
+        className: `dropdown-icon ${this.getIconClass(sourceRecord)}`
       }), filename);
     };
 
@@ -122,12 +122,12 @@ class Tabs extends _react.PureComponent {
     }));
   }
 
-  getIconClass(source) {
-    if ((0, _source.isPretty)(source)) {
+  getIconClass(sourceRecord) {
+    if ((0, _source.isPretty)(sourceRecord)) {
       return "prettyPrint";
     }
 
-    if (source.isBlackBoxed) {
+    if (sourceRecord.isBlackBoxed) {
       return "blackBox";
     }
 

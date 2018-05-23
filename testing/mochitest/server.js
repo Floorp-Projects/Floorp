@@ -381,8 +381,7 @@ function serverDebug(metadata, response) {
 function* dirIter(dir) {
   var en = dir.directoryEntries;
   while (en.hasMoreElements()) {
-    var file = en.getNext();
-    yield file.QueryInterface(Ci.nsIFile);
+    yield en.nextFile;
   }
 }
 

@@ -143,6 +143,8 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   gfxTextRun::GlyphRunIterator iter(aSrc, gfxTextRun::Range(aSrc));
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
+  const gfxTextRun::CompressedGlyph continuationGlyph =
+    gfxTextRun::CompressedGlyph::MakeComplex(false, false, 0);
   while (iter.NextRun()) {
     const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType,
@@ -201,7 +203,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
         ++offset;
 
         while (offset < aDest->GetLength() && aDeletedChars[offset]) {
-          aDest->SetGlyphs(offset++, gfxTextRun::CompressedGlyph(), nullptr);
+          aDest->SetGlyphs(offset++, continuationGlyph, nullptr);
         }
       }
 

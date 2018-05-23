@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset=utf-8>
+<style>
+span {
+  font-size: 36px;
+  font-kerning: none;
+}
+#test, #ref {
+  text-transform: uppercase;
+}
+</style>
+<body>
+  <p>The two lines should match:
+  <p><span id="test">S🇸🇪ve</span><span id="nbsp">&nbsp;</span>
+  <p><span id="ref">S&nbsp;&nbsp;🇸🇪&nbsp;&nbsp;v&nbsp;&nbsp;e</span>
+</body>
+<script>
+var nbspWidth = document.getElementById("nbsp").offsetWidth;
+var test = document.getElementById("test");
+test.style.letterSpacing = (2 * nbspWidth) + "px";
+document.documentElement.classList.remove("reftest-wait");
+</script>

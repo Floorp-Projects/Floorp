@@ -46,7 +46,7 @@ PresentationContentSessionInfo::SendBinaryMsg(const nsACString& aData)
 }
 
 nsresult
-PresentationContentSessionInfo::SendBlob(nsIDOMBlob* aBlob)
+PresentationContentSessionInfo::SendBlob(Blob* aBlob)
 {
   if (NS_WARN_IF(!mTransport)) {
     return NS_ERROR_NOT_AVAILABLE;

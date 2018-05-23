@@ -20,6 +20,9 @@ assertErrorMessage(() => wasmEvalText('(module (type $a (func)) (func (call_indi
 assertErrorMessage(() => wasmEvalText('(module (func (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 assertErrorMessage(() => wasmEvalText('(module (func (block $a ) (br $a)))'), SyntaxError, /branch target label '\$a' not found/);
 
+assertErrorMessage(() => wasmEvalText(`(module (func (call ${0xffffffff})))`), SyntaxError, parsingError);
+assertErrorMessage(() => wasmEvalText(`(module (export "func" ${0xffffffff}))`), SyntaxError, parsingError);
+
 wasmEvalText('(module (func (param $a i32)))');
 wasmEvalText('(module (func (param i32)))');
 wasmEvalText('(module (func (param i32 i32 f32 f64 i32)))');

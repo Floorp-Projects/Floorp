@@ -90,7 +90,7 @@ function do_crash(setup, callback, canReturnZero) {
 function getMinidump() {
   let en = do_get_tempdir().directoryEntries;
   while (en.hasMoreElements()) {
-    let f = en.getNext().QueryInterface(Ci.nsIFile);
+    let f = en.nextFile;
     if (f.leafName.substr(-4) == ".dmp") {
       return f;
     }

@@ -308,7 +308,7 @@ GetDirectoryListingTaskParent::IOWork()
     return NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = mTargetPath->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -329,18 +329,10 @@ GetDirectoryListingTaskParent::IOWork()
   }
 
   for (;;) {
-    bool hasMore = false;
-    if (NS_WARN_IF(NS_FAILED(entries->HasMoreElements(&hasMore))) || !hasMore) {
+    nsCOMPtr<nsIFile> currFile;
+    if (NS_WARN_IF(NS_FAILED(entries->GetNextFile(getter_AddRefs(currFile)))) || !currFile) {
       break;
     }
-    nsCOMPtr<nsISupports> supp;
-    if (NS_WARN_IF(NS_FAILED(entries->GetNext(getter_AddRefs(supp))))) {
-      break;
-    }
-
-    nsCOMPtr<nsIFile> currFile = do_QueryInterface(supp);
-    MOZ_ASSERT(currFile);
-
     bool isSpecial, isFile;
     if (NS_WARN_IF(NS_FAILED(currFile->IsSpecial(&isSpecial))) ||
         isSpecial) {

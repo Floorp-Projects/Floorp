@@ -16,7 +16,6 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.codecoverage import (
     CodeCoverageMixin,
@@ -28,7 +27,7 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.base.log import INFO
 
 
-class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCoverageMixin):
+class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
     config_options = [
         [['--test-type'], {
             "action": "extend",
@@ -89,7 +88,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
     ] + copy.deepcopy(testing_config_options) + \
-        copy.deepcopy(blobupload_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, require_config_file=True):

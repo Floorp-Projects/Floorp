@@ -819,9 +819,7 @@ CustomizeMode.prototype = {
       aPlace = wrapper.getAttribute("place");
     } else {
       wrapper = this.document.createElement("toolbarpaletteitem");
-      // "place" is used by toolkit to add the toolbarpaletteitem-palette
-      // binding to a toolbarpaletteitem, which gives it a label node for when
-      // it's sitting in the palette.
+      // "place" is used to show the label when it's sitting in the palette.
       wrapper.setAttribute("place", aPlace);
     }
 

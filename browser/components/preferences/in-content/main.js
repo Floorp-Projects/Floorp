@@ -583,6 +583,7 @@ var gMainPane = {
       // of the preferences page.
       window.addEventListener("pageshow", async () => {
         try {
+          this._initListEventHandlers();
           this._loadData();
           await this._rebuildVisibleTypes();
           this._sortVisibleTypes();
@@ -1448,6 +1449,31 @@ var gMainPane = {
 
   // View Construction
 
+  selectedHandlerListItem: null,
+
+  _initListEventHandlers() {
+    this._list.addEventListener("select", event => {
+      if (event.target != this._list) {
+        return;
+      }
+
+      let handlerListItem = this._list.selectedItem &&
+                            HandlerListItem.forNode(this._list.selectedItem);
+      if (this.selectedHandlerListItem == handlerListItem) {
+        return;
+      }
+
+      if (this.selectedHandlerListItem) {
+        this.selectedHandlerListItem.showActionsMenu = false;
+      }
+      this.selectedHandlerListItem = handlerListItem;
+      if (handlerListItem) {
+        this.rebuildActionsMenu();
+        handlerListItem.showActionsMenu = true;
+      }
+    });
+  },
+
   async _rebuildVisibleTypes() {
     this._visibleTypes = [];
 
@@ -1506,8 +1532,9 @@ var gMainPane = {
   },
 
   _rebuildView() {
-    let lastSelectedType = this._list.selectedItem &&
-      HandlerListItem.forNode(this._list.selectedItem).handlerInfoWrapper.type;
+    let lastSelectedType = this.selectedHandlerListItem &&
+                           this.selectedHandlerListItem.handlerInfoWrapper.type;
+    this.selectedHandlerListItem = null;
 
     // Clear the list of entries.
     while (this._list.childNodes.length > 1)
@@ -1521,7 +1548,7 @@ var gMainPane = {
 
     for (let visibleType of visibleTypes) {
       let item = new HandlerListItem(visibleType);
-      this._list.appendChild(item.node);
+      item.connectAndAppendToList(this._list);
 
       if (visibleType.type === lastSelectedType) {
         this._list.selectedItem = item.node;
@@ -1585,9 +1612,8 @@ var gMainPane = {
    */
   rebuildActionsMenu() {
     var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
-    var menu =
-      document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
+    var menu = typeItem.querySelector(".actionsMenu");
     var menuPopup = menu.menupopup;
 
     // Clear out existing items.
@@ -1699,7 +1725,7 @@ var gMainPane = {
     if (Cc["@mozilla.org/gio-service;1"]) {
       let gIOSvc = Cc["@mozilla.org/gio-service;1"].
                    getService(Ci.nsIGIOService);
-      var gioApps = gIOSvc.getAppsForURIScheme(typeItem.type);
+      var gioApps = gIOSvc.getAppsForURIScheme(handlerInfo.type);
       let enumerator = gioApps.enumerate();
       let possibleHandlers = handlerInfo.possibleApplicationHandlers;
       while (enumerator.hasMoreElements()) {
@@ -1906,8 +1932,7 @@ var gMainPane = {
   },
 
   _storeAction(aActionItem) {
-    var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
     let action = parseInt(aActionItem.getAttribute("action"));
 
@@ -1942,7 +1967,7 @@ var gMainPane = {
     handlerInfo.handledOnlyByPlugin = false;
 
     // Update the action label and image to reflect the new preferred action.
-    HandlerListItem.forNode(typeItem).refreshAction();
+    this.selectedHandlerListItem.refreshAction();
   },
 
   manageApp(aEvent) {
@@ -1950,8 +1975,7 @@ var gMainPane = {
     // as we handle it specially ourselves.
     aEvent.stopPropagation();
 
-    var typeItem = this._list.selectedItem;
-    var handlerInfo = this._handledTypes[typeItem.type];
+    var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
     let onComplete = () => {
       // Rebuild the actions menu so that we revert to the previous selection,
@@ -1959,7 +1983,7 @@ var gMainPane = {
       this.rebuildActionsMenu();
 
       // update the richlistitem too. Will be visible when selecting another row
-      HandlerListItem.forNode(typeItem).refreshAction();
+      this.selectedHandlerListItem.refreshAction();
     };
 
     gSubDialog.open("chrome://browser/content/preferences/applicationManager.xul",
@@ -1982,8 +2006,7 @@ var gMainPane = {
       // If the user picked a new app from the menu, select it.
       if (aHandlerApp) {
         let typeItem = this._list.selectedItem;
-        let actionsMenu =
-          document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+        let actionsMenu = typeItem.querySelector(".actionsMenu");
         let menuItems = actionsMenu.menupopup.childNodes;
         for (let i = 0; i < menuItems.length; i++) {
           let menuItem = menuItems[i];
@@ -1998,7 +2021,7 @@ var gMainPane = {
 
     if (AppConstants.platform == "win") {
       var params = {};
-      var handlerInfo = this._handledTypes[this._list.selectedItem.type];
+      var handlerInfo = this.selectedHandlerListItem.handlerInfoWrapper;
 
       if (isFeedType(handlerInfo.type)) {
         // MIME info will be null, create a temp object.
@@ -2038,7 +2061,7 @@ var gMainPane = {
           handlerApp.executable = fp.file;
 
           // Add the app to the type's list of possible handlers.
-          let handler = this._handledTypes[this._list.selectedItem.type];
+          let handler = this.selectedHandlerListItem.handlerInfoWrapper;
           handler.addPossibleApplicationHandler(handlerApp);
 
           chooseAppCallback(handlerApp);
@@ -2427,6 +2450,28 @@ function isFeedType(t) {
   return t == TYPE_MAYBE_FEED || t == TYPE_MAYBE_VIDEO_FEED || t == TYPE_MAYBE_AUDIO_FEED;
 }
 
+// eslint-disable-next-line no-undef
+let gHandlerListItemFragment = MozXULElement.parseXULToFragment(`
+  <richlistitem>
+    <hbox flex="1" equalsize="always">
+      <hbox class="typeContainer" flex="1" align="center">
+        <image class="typeIcon" width="16" height="16"
+               src="moz-icon://goat?size=16"/>
+        <label class="typeDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionContainer" flex="1" align="center">
+        <image class="actionIcon" width="16" height="16"/>
+        <label class="actionDescription" flex="1" crop="end"/>
+      </hbox>
+      <hbox class="actionsMenuContainer" flex="1">
+        <menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1">
+          <menupopup/>
+        </menulist>
+      </hbox>
+    </hbox>
+  </richlistitem>
+`);
+
 /**
  * This is associated to <richlistitem> elements in the handlers view.
  */
@@ -2437,32 +2482,54 @@ class HandlerListItem {
 
   constructor(handlerInfoWrapper) {
     this.handlerInfoWrapper = handlerInfoWrapper;
-    this.node = document.createElement("richlistitem");
+  }
+
+  setOrRemoveAttributes(iterable) {
+    for (let [selector, name, value] of iterable) {
+      let node = selector ? this.node.querySelector(selector) : this.node;
+      if (value) {
+        node.setAttribute(name, value);
+      } else {
+        node.removeAttribute(name);
+      }
+    }
+  }
+
+  connectAndAppendToList(list) {
+    list.appendChild(document.importNode(gHandlerListItemFragment, true));
+    this.node = list.lastChild;
     gNodeToObjectMap.set(this.node, this);
 
-    this.node.setAttribute("type", this.handlerInfoWrapper.type);
-    this.node.setAttribute("typeDescription",
-                           this.handlerInfoWrapper.typeDescription);
-    if (this.handlerInfoWrapper.smallIcon) {
-      this.node.setAttribute("typeIcon", this.handlerInfoWrapper.smallIcon);
-    } else {
-      this.node.removeAttribute("typeIcon");
-    }
+    this.node.querySelector(".actionsMenu").addEventListener("command",
+      event => gMainPane.onSelectAction(event.originalTarget));
 
+    let typeDescription = this.handlerInfoWrapper.typeDescription;
+    this.setOrRemoveAttributes([
+      [null, "type", this.handlerInfoWrapper.type],
+      [".typeContainer", "tooltiptext", typeDescription],
+      [".typeDescription", "value", typeDescription],
+      [".typeIcon", "src", this.handlerInfoWrapper.smallIcon],
+    ]);
     this.refreshAction();
+    this.showActionsMenu = false;
   }
 
   refreshAction() {
-    this.node.setAttribute("actionDescription",
-                           this.handlerInfoWrapper.actionDescription);
-    if (this.handlerInfoWrapper.actionIconClass) {
-      this.node.setAttribute(APP_ICON_ATTR_NAME,
-                             this.handlerInfoWrapper.actionIconClass);
-      this.node.removeAttribute("actionIcon");
-    } else {
-      this.node.removeAttribute(APP_ICON_ATTR_NAME);
-      this.node.setAttribute("actionIcon", this.handlerInfoWrapper.actionIcon);
-    }
+    let { actionIconClass, actionDescription } = this.handlerInfoWrapper;
+    this.setOrRemoveAttributes([
+      [null, APP_ICON_ATTR_NAME, actionIconClass],
+      [".actionContainer", "tooltiptext", actionDescription],
+      [".actionDescription", "value", actionDescription],
+      [".actionIcon", "src", actionIconClass ? null :
+                             this.handlerInfoWrapper.actionIcon],
+    ]);
+  }
+
+  set showActionsMenu(value) {
+    this.setOrRemoveAttributes([
+      [".actionContainer", "hidden", value],
+      [".actionsMenuContainer", "hidden", !value],
+    ]);
   }
 }
 

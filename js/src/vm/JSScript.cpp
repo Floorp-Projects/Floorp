@@ -1051,8 +1051,8 @@ JSScript::initScriptCounts(JSContext* cx)
     for (size_t i = 0; i < jumpTargets.length(); i++)
         base.infallibleEmplaceBack(pcToOffset(jumpTargets[i]));
 
-    // Create compartment's scriptCountsMap if necessary.
-    ScriptCountsMap* map = compartment()->scriptCountsMap;
+    // Create realm's scriptCountsMap if necessary.
+    ScriptCountsMap* map = realm()->scriptCountsMap;
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
         if (!map) {
@@ -1066,7 +1066,7 @@ JSScript::initScriptCounts(JSContext* cx)
             return false;
         }
 
-        compartment()->scriptCountsMap = map;
+        realm()->scriptCountsMap = map;
     }
 
     // Allocate the ScriptCounts.
@@ -1099,10 +1099,11 @@ JSScript::initScriptCounts(JSContext* cx)
     return true;
 }
 
-static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
+static inline ScriptCountsMap::Ptr
+GetScriptCountsMapEntry(JSScript* script)
 {
     MOZ_ASSERT(script->hasScriptCounts());
-    ScriptCountsMap* map = script->compartment()->scriptCountsMap;
+    ScriptCountsMap* map = script->realm()->scriptCountsMap;
     ScriptCountsMap::Ptr p = map->lookup(script);
     MOZ_ASSERT(p);
     return p;
@@ -1111,7 +1112,7 @@ static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript* script)
 static inline ScriptNameMap::Ptr
 GetScriptNameMapEntry(JSScript* script)
 {
-    ScriptNameMap* map = script->compartment()->scriptNameMap;
+    ScriptNameMap* map = script->realm()->scriptNameMap;
     auto p = map->lookup(script);
     MOZ_ASSERT(p);
     return p;
@@ -1307,7 +1308,7 @@ JSScript::releaseScriptCounts(ScriptCounts* counts)
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
     *counts = Move(*p->value());
     js_delete(p->value());
-    compartment()->scriptCountsMap->remove(p);
+    realm()->scriptCountsMap->remove(p);
     bitFields_.hasScriptCounts_ = false;
 }
 
@@ -1325,16 +1326,16 @@ JSScript::destroyScriptName()
 {
     auto p = GetScriptNameMapEntry(this);
     js_delete(p->value());
-    compartment()->scriptNameMap->remove(p);
+    realm()->scriptNameMap->remove(p);
 }
 
 bool
 JSScript::hasScriptName()
 {
-    if (!compartment()->scriptNameMap)
+    if (!realm()->scriptNameMap)
         return false;
 
-    auto p = compartment()->scriptNameMap->lookup(this);
+    auto p = realm()->scriptNameMap->lookup(this);
     return p.found();
 }
 
@@ -2708,8 +2709,8 @@ JSScript::initScriptName(JSContext* cx)
     if (!filename())
         return true;
 
-    // Create compartment's scriptNameMap if necessary.
-    ScriptNameMap* map = compartment()->scriptNameMap;
+    // Create realm's scriptNameMap if necessary.
+    ScriptNameMap* map = realm()->scriptNameMap;
     if (!map) {
         map = cx->new_<ScriptNameMap>();
         if (!map) {
@@ -2723,7 +2724,7 @@ JSScript::initScriptName(JSContext* cx)
             return false;
         }
 
-        compartment()->scriptNameMap = map;
+        realm()->scriptNameMap = map;
     }
 
     char* name = js_strdup(filename());
@@ -3728,7 +3729,7 @@ DebugScript*
 JSScript::debugScript()
 {
     MOZ_ASSERT(bitFields_.hasDebugScript_);
-    DebugScriptMap* map = compartment()->debugScriptMap;
+    DebugScriptMap* map = realm()->debugScriptMap;
     MOZ_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     MOZ_ASSERT(p);
@@ -3739,7 +3740,7 @@ DebugScript*
 JSScript::releaseDebugScript()
 {
     MOZ_ASSERT(bitFields_.hasDebugScript_);
-    DebugScriptMap* map = compartment()->debugScriptMap;
+    DebugScriptMap* map = realm()->debugScriptMap;
     MOZ_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     MOZ_ASSERT(p);
@@ -3777,8 +3778,8 @@ JSScript::ensureHasDebugScript(JSContext* cx)
     if (!debug)
         return false;
 
-    /* Create compartment's debugScriptMap if necessary. */
-    DebugScriptMap* map = compartment()->debugScriptMap;
+    /* Create realm's debugScriptMap if necessary. */
+    DebugScriptMap* map = realm()->debugScriptMap;
     if (!map) {
         map = cx->new_<DebugScriptMap>();
         if (!map || !map->init()) {
@@ -3786,7 +3787,7 @@ JSScript::ensureHasDebugScript(JSContext* cx)
             js_delete(map);
             return false;
         }
-        compartment()->debugScriptMap = map;
+        realm()->debugScriptMap = map;
     }
 
     if (!map->putNew(this, debug)) {

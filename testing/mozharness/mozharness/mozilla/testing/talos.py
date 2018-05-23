@@ -23,7 +23,6 @@ from mozharness.base.errors import PythonErrorList
 from mozharness.base.log import OutputParser, DEBUG, ERROR, CRITICAL
 from mozharness.base.log import INFO, WARNING
 from mozharness.base.python import Python3Virtualenv
-from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.base.vcs.vcsbase import MercurialScript
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
@@ -94,7 +93,7 @@ class TalosOutputParser(OutputParser):
         super(TalosOutputParser, self).parse_single_line(line)
 
 
-class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
+class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             Python3Virtualenv, CodeCoverageMixin):
     """
     install and run Talos tests:
@@ -155,8 +154,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": False,
             "help": "Tries to enable the WebRender compositor.",
         }],
-    ] + testing_config_options + copy.deepcopy(blobupload_config_options) \
-                               + copy.deepcopy(code_coverage_config_options)
+    ] + testing_config_options + copy.deepcopy(code_coverage_config_options)
 
     def __init__(self, **kwargs):
         kwargs.setdefault('config_options', self.config_options)

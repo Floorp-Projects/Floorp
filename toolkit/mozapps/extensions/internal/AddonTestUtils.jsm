@@ -974,7 +974,7 @@ var AddonTestUtils = {
       let dirPath = dir;
       for (let subDir of path) {
         dirPath = OS.Path.join(dirPath, subDir);
-        await OS.Path.makeDir(dirPath, {ignoreExisting: true});
+        await OS.File.makeDir(dirPath, {ignoreExisting: true});
       }
 
       if (typeof data == "string")

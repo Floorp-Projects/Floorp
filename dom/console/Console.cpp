@@ -230,8 +230,9 @@ public:
   nsString mLogTimerLabel;
   Console::TimerStatus mLogTimerStatus;
 
-  // These 2 values are set by IncreaseCounter on the owning thread and they are
-  // used CreateCounterValue. These members are set when console.count() is
+  // These 2 values are set by IncreaseCounter or ResetCounter on the owning
+  // thread and they are used by CreateCounterOrResetCounterValue.
+  // These members are set when console.count() or console.countReset() are
   // called.
   nsString mCountLabel;
   uint32_t mCountValue;
@@ -1444,6 +1445,13 @@ Console::Count(const GlobalObject& aGlobal, const nsAString& aLabel)
                NS_LITERAL_STRING("count"));
 }
 
+/* static */ void
+Console::CountReset(const GlobalObject& aGlobal, const nsAString& aLabel)
+{
+  StringMethod(aGlobal, aLabel, Sequence<JS::Value>(), MethodCountReset,
+               NS_LITERAL_STRING("countReset"));
+}
+
 namespace {
 
 void
@@ -1627,6 +1635,13 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   else if (aMethodName == MethodCount) {
     callData->mCountValue = IncreaseCounter(aCx, aData, callData->mCountLabel);
     if (!callData->mCountValue) {
+      return;
+    }
+  }
+
+  else if (aMethodName == MethodCountReset) {
+    callData->mCountValue = ResetCounter(aCx, aData, callData->mCountLabel);
+    if (callData->mCountLabel.IsEmpty()) {
       return;
     }
   }
@@ -1899,9 +1914,10 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
                                             aData->mLogTimerStatus);
   }
 
-  else if (aData->mMethodName == MethodCount) {
-    event.mCounter = CreateCounterValue(aCx, aData->mCountLabel,
-                                        aData->mCountValue);
+  else if (aData->mMethodName == MethodCount ||
+           aData->mMethodName == MethodCountReset) {
+    event.mCounter = CreateCounterOrResetCounterValue(aCx, aData->mCountLabel,
+                                                      aData->mCountValue);
   }
 
   JSAutoRealm ar2(aCx, targetScope);
@@ -2504,14 +2520,48 @@ Console::IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
   return entry.Data();
 }
 
+uint32_t
+Console::ResetCounter(JSContext* aCx, const Sequence<JS::Value>& aArguments,
+                      nsAString& aCountLabel)
+{
+  AssertIsOnOwningThread();
+
+  ConsoleCommon::ClearException ce(aCx);
+
+  MOZ_ASSERT(!aArguments.IsEmpty());
+
+  JS::Rooted<JS::Value> labelValue(aCx, aArguments[0]);
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
+  if (!jsString) {
+    return 0; // We cannot continue.
+  }
+
+  nsAutoJSString string;
+  if (!string.init(aCx, jsString)) {
+    return 0; // We cannot continue.
+  }
+
+  aCountLabel = string;
+
+  if (mCounterRegistry.Remove(aCountLabel)) {
+    return 0;
+  }
+
+  // Let's return something different than 0 if the key doesn't exist.
+  return MAX_PAGE_COUNTERS;
+}
+
 JS::Value
-Console::CreateCounterValue(JSContext* aCx, const nsAString& aCountLabel,
-                            uint32_t aCountValue) const
+Console::CreateCounterOrResetCounterValue(JSContext* aCx,
+                                          const nsAString& aCountLabel,
+                                          uint32_t aCountValue) const
 {
   ConsoleCommon::ClearException ce(aCx);
 
   if (aCountValue == MAX_PAGE_COUNTERS) {
     RootedDictionary<ConsoleCounterError> error(aCx);
+    error.mLabel = aCountLabel;
+    error.mError.AssignLiteral("counterDoesntExist");
 
     JS::Rooted<JS::Value> value(aCx);
     if (!ToJSValue(aCx, error, &value)) {
@@ -3078,6 +3128,7 @@ Console::InternalLogLevelToInteger(MethodName aName) const
     case MethodTimeStamp: return 3;
     case MethodAssert: return 3;
     case MethodCount: return 3;
+    case MethodCountReset: return 3;
     case MethodClear: return 3;
     case MethodProfile: return 3;
     case MethodProfileEnd: return 3;

@@ -594,7 +594,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
         return nullptr;
 
     // The true answer to whether shared memory is enabled is provided by
-    // cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()
+    // cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
     // where cx is the context that originated the call that caused this
     // deserialization attempt to happen.  We don't have that context here, so
     // we assume that shared memory is enabled; we will catch a wrong assumption
@@ -1322,12 +1322,12 @@ Module::instantiate(JSContext* cx,
         return false;
     }
 
-    // Register the instance with the JSCompartment so that it can find out
-    // about global events like profiling being enabled in the compartment.
-    // Registration does not require a fully-initialized instance and must
-    // precede initSegments as the final pre-requisite for a live instance.
+    // Register the instance with the Realm so that it can find out about global
+    // events like profiling being enabled in the realm. Registration does not
+    // require a fully-initialized instance and must precede initSegments as the
+    // final pre-requisite for a live instance.
 
-    if (!cx->compartment()->wasm.registerInstance(cx, instance))
+    if (!cx->realm()->wasm.registerInstance(cx, instance))
         return false;
 
     // Perform initialization as the final step after the instance is fully

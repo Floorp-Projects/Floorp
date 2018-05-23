@@ -25,7 +25,7 @@
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "vm/Time.h"
-#include "wasm/WasmCompartment.h"
+#include "wasm/WasmRealm.h"
 
 namespace js {
 
@@ -607,11 +607,6 @@ struct JSCompartment
   public:
     bool                         isSelfHosting;
     bool                         marked;
-    uint32_t                     warnedAboutStringGenericsMethods;
-
-#ifdef DEBUG
-    bool                         firedOnNewGlobalObject;
-#endif
 
     void mark() { marked = true; }
 
@@ -619,20 +614,8 @@ struct JSCompartment
     friend struct JSRuntime;
     friend struct JSContext;
 
-    unsigned                     enterCompartmentDepth;
-
   public:
     js::PerformanceGroupHolder performanceMonitoring;
-
-    void enter() {
-        enterCompartmentDepth++;
-    }
-    void leave() {
-        enterCompartmentDepth--;
-    }
-    bool hasBeenEntered() const { return !!enterCompartmentDepth; }
-
-    bool shouldTraceGlobal() const { return hasBeenEntered(); }
 
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
@@ -650,11 +633,8 @@ struct JSCompartment
 
   public:
     void*                        data;
-    void*                        realmData;
 
   protected:
-    const js::AllocationMetadataBuilder *allocationMetadataBuilder;
-
     js::SavedStacks              savedStacks_;
 
   private:
@@ -666,9 +646,6 @@ struct JSCompartment
     }
 
   public:
-    /* Last time at which an animation was played for a global in this compartment. */
-    int64_t                      lastAnimationTime;
-
     js::RegExpCompartment        regExps;
 
     js::ArraySpeciesLookup       arraySpeciesLookup;
@@ -721,7 +698,6 @@ struct JSCompartment
 
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
-    void checkScriptMapsAfterMovingGC();
 #endif
 
     /*
@@ -744,9 +720,6 @@ struct JSCompartment
 
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
-
-    // WebAssembly state for the compartment.
-    js::wasm::Compartment wasm;
 
   protected:
     // All non-syntactic lexical environments in the compartment. These are kept in
@@ -860,7 +833,6 @@ struct JSCompartment
     static void traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc);
 
     void sweepAfterMinorGC(JSTracer* trc);
-    void sweepMapAndSetObjectsAfterMinorGC();
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
@@ -871,30 +843,12 @@ struct JSCompartment
     void sweepNativeIterators();
     void sweepTemplateObjects();
 
-    void purge();
-
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
-    void fixupScriptMapsAfterMovingGC();
-
-    bool hasAllocationMetadataBuilder() const { return allocationMetadataBuilder; }
-    const js::AllocationMetadataBuilder* getAllocationMetadataBuilder() const {
-        return allocationMetadataBuilder;
-    }
-    void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
-    void forgetAllocationMetadataBuilder();
-    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
-    void clearObjectMetadata();
-    const void* addressOfMetadataBuilder() const {
-        return &allocationMetadataBuilder;
-    }
 
     js::SavedStacks& savedStacks() { return savedStacks_; }
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
-
-    js::DtoaCache dtoaCache;
-    js::NewProxyCache newProxyCache;
 
     // Random number generator for Math.random().
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
@@ -914,10 +868,6 @@ struct JSCompartment
         return offsetof(JSCompartment, regExps);
     }
 
-  private:
-    JSCompartment* thisForCtor() { return this; }
-
-  public:
     //
     // The Debugger observes execution on a frame-by-frame basis. The
     // invariants of JSCompartment's debug mode bits, JSScript::isDebuggee,
@@ -1007,8 +957,6 @@ struct JSCompartment
     bool collectCoverage() const;
     bool collectCoverageForDebug() const;
     bool collectCoverageForPGO() const;
-    void clearScriptCounts();
-    void clearScriptNames();
 
     bool needsDelazificationForDebugger() const {
         return debugModeBits & DebuggerNeedsDelazification;
@@ -1032,11 +980,6 @@ struct JSCompartment
     void sweepBreakpoints(js::FreeOp* fop);
 
   public:
-    js::ScriptCountsMap* scriptCountsMap;
-    js::ScriptNameMap* scriptNameMap;
-
-    js::DebugScriptMap* debugScriptMap;
-
     /* Bookkeeping information for debug scope objects. */
     js::DebugEnvironments* debugEnvs;
 
@@ -1045,28 +988,6 @@ struct JSCompartment
      * suppression.
      */
     js::NativeIterator* enumerators;
-
-  private:
-    /* Used by memory reporters and invalid otherwise. */
-    JS::RealmStats* realmStats_;
-
-  public:
-    // This should only be called when it is non-null, i.e. during memory
-    // reporting.
-    JS::RealmStats& realmStats() {
-        // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
-        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
-        MOZ_RELEASE_ASSERT(realmStats_);
-        return *realmStats_;
-    }
-    void nullRealmStats() {
-        MOZ_ASSERT(realmStats_);
-        realmStats_ = nullptr;
-    }
-    void setRealmStats(JS::RealmStats* newStats) {
-        MOZ_ASSERT(!realmStats_ && newStats);
-        realmStats_ = newStats;
-    }
 
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
 
@@ -1099,27 +1020,6 @@ struct JSCompartment
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
     js::coverage::LCovCompartment lcovOutput;
-
-    bool addMapWithNurseryMemory(js::MapObject* obj) {
-        MOZ_ASSERT_IF(!mapsWithNurseryMemory.empty(),
-                      mapsWithNurseryMemory.back() != obj);
-        return mapsWithNurseryMemory.append(obj);
-    }
-
-    bool addSetWithNurseryMemory(js::SetObject* obj) {
-        MOZ_ASSERT_IF(!setsWithNurseryMemory.empty(),
-                      setsWithNurseryMemory.back() != obj);
-        return setsWithNurseryMemory.append(obj);
-    }
-
-  private:
-
-    /*
-     * Lists of map and set objects allocated in the nursery or with iterators
-     * allocated there. Such objects need to be swept after minor GC.
-     */
-    js::Vector<js::MapObject*, 0, js::SystemAllocPolicy> mapsWithNurseryMemory;
-    js::Vector<js::SetObject*, 0, js::SystemAllocPolicy> setsWithNurseryMemory;
 };
 
 class JS::Realm : public JSCompartment
@@ -1127,8 +1027,50 @@ class JS::Realm : public JSCompartment
     const JS::RealmCreationOptions creationOptions_;
     JS::RealmBehaviors behaviors_;
 
+    friend struct ::JSContext;
+    js::ReadBarrieredGlobalObject global_;
+
+    // The global environment record's [[VarNames]] list that contains all
+    // names declared using FunctionDeclaration, GeneratorDeclaration, and
+    // VariableDeclaration declarations in global code in this realm.
+    // Names are only removed from this list by a |delete IdentifierReference|
+    // that successfully removes that global property.
+    using VarNamesSet = JS::GCHashSet<JSAtom*,
+                                      js::DefaultHasher<JSAtom*>,
+                                      js::SystemAllocPolicy>;
+    VarNamesSet varNames_;
+
+    // Used by memory reporters and invalid otherwise.
+    JS::RealmStats* realmStats_ = nullptr;
+
+    const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
+    void* realmPrivate_ = nullptr;
+
+    unsigned enterRealmDepth_ = 0;
+
+    bool isAtomsRealm_ = false;
+
   public:
+    // WebAssembly state for the realm.
+    js::wasm::Realm wasm;
+
+    js::DtoaCache dtoaCache;
+    js::NewProxyCache newProxyCache;
+
+    js::ScriptCountsMap* scriptCountsMap = nullptr;
+    js::ScriptNameMap* scriptNameMap = nullptr;
+    js::DebugScriptMap* debugScriptMap = nullptr;
+
+    // Last time at which an animation was played for this realm.
+    int64_t lastAnimationTime = 0;
+
+    uint32_t warnedAboutStringGenericsMethods = 0;
+#ifdef DEBUG
+    bool firedOnNewGlobalObject = false;
+#endif
+
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
+    ~Realm();
 
     MOZ_MUST_USE bool init(JSContext* maybecx);
     void destroy(js::FreeOp* fop);
@@ -1158,9 +1100,6 @@ class JS::Realm : public JSCompartment
     /* Whether to preserve JIT code on non-shrinking GCs. */
     bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
 
-  private:
-    bool isAtomsRealm_ = false;
-  public:
     bool isAtomsRealm() const {
         return isAtomsRealm_;
     }
@@ -1168,10 +1107,6 @@ class JS::Realm : public JSCompartment
         isAtomsRealm_ = true;
     }
 
-  private:
-    friend struct ::JSContext;
-    js::ReadBarrieredGlobalObject global_;
-  public:
     /* The global object for this realm.
      *
      * This returns nullptr if this is the atoms realm.  (The global_ field is
@@ -1210,17 +1145,17 @@ class JS::Realm : public JSCompartment
      */
     void finishRoots();
 
-  private:
-    // The global environment record's [[VarNames]] list that contains all
-    // names declared using FunctionDeclaration, GeneratorDeclaration, and
-    // VariableDeclaration declarations in global code in this realm.
-    // Names are only removed from this list by a |delete IdentifierReference|
-    // that successfully removes that global property.
-    using VarNamesSet = JS::GCHashSet<JSAtom*,
-                                      js::DefaultHasher<JSAtom*>,
-                                      js::SystemAllocPolicy>;
-    VarNamesSet varNames_;
-  public:
+    void clearScriptCounts();
+    void clearScriptNames();
+
+    void purge();
+
+    void fixupScriptMapsAfterMovingGC();
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+    void checkScriptMapsAfterMovingGC();
+#endif
+
     // Add a name to [[VarNames]].  Reports OOM on failure.
     MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
     void sweepVarNames();
@@ -1232,6 +1167,57 @@ class JS::Realm : public JSCompartment
     // Whether the given name is in [[VarNames]].
     bool isInVarNames(JS::Handle<JSAtom*> name) {
         return varNames_.has(name);
+    }
+
+    void enter() {
+        enterRealmDepth_++;
+    }
+    void leave() {
+        enterRealmDepth_--;
+    }
+    bool hasBeenEntered() const {
+        return enterRealmDepth_ > 0;
+    }
+    bool shouldTraceGlobal() const {
+        return hasBeenEntered();
+    }
+
+    bool hasAllocationMetadataBuilder() const {
+        return allocationMetadataBuilder_;
+    }
+    const js::AllocationMetadataBuilder* getAllocationMetadataBuilder() const {
+        return allocationMetadataBuilder_;
+    }
+    const void* addressOfMetadataBuilder() const {
+        return &allocationMetadataBuilder_;
+    }
+    void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
+    void forgetAllocationMetadataBuilder();
+    void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
+    void clearObjectMetadata();
+
+    void* realmPrivate() const {
+        return realmPrivate_;
+    }
+    void setRealmPrivate(void* p) {
+        realmPrivate_ = p;
+    }
+
+    // This should only be called when it is non-null, i.e. during memory
+    // reporting.
+    JS::RealmStats& realmStats() {
+        // We use MOZ_RELEASE_ASSERT here because in bug 1132502 there was some
+        // (inconclusive) evidence that realmStats_ can be nullptr unexpectedly.
+        MOZ_RELEASE_ASSERT(realmStats_);
+        return *realmStats_;
+    }
+    void nullRealmStats() {
+        MOZ_ASSERT(realmStats_);
+        realmStats_ = nullptr;
+    }
+    void setRealmStats(JS::RealmStats* newStats) {
+        MOZ_ASSERT(!realmStats_ && newStats);
+        realmStats_ = newStats;
     }
 };
 

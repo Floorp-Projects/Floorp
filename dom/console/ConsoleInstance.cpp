@@ -217,6 +217,14 @@ ConsoleInstance::Count(JSContext* aCx, const nsAString& aLabel)
 }
 
 void
+ConsoleInstance::CountReset(JSContext* aCx, const nsAString& aLabel)
+{
+  mConsole->StringMethodInternal(aCx, aLabel, Sequence<JS::Value>(),
+                                 Console::MethodCountReset,
+                                 NS_LITERAL_STRING("countReset"));
+}
+
+void
 ConsoleInstance::Clear(JSContext* aCx)
 {
   const Sequence<JS::Value> data;

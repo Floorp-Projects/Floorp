@@ -4013,8 +4013,8 @@ GCRuntime::purgeRuntime()
 {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::PURGE);
 
-    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
-        comp->purge();
+    for (GCRealmsIter realm(rt); !realm.done(); realm.next())
+        realm->purge();
 
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->atomCache().clearAndShrink();
@@ -4037,7 +4037,7 @@ GCRuntime::purgeRuntime()
 }
 
 bool
-GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
+GCRuntime::shouldPreserveJITCode(Realm* realm, int64_t currentTime,
                                  JS::gcreason::Reason reason, bool canAllocateMoreCode)
 {
     if (cleanUpEverything)
@@ -4047,9 +4047,9 @@ GCRuntime::shouldPreserveJITCode(JSCompartment* comp, int64_t currentTime,
 
     if (alwaysPreserveCode)
         return true;
-    if (JS::GetRealmForCompartment(comp)->preserveJitCode())
+    if (realm->preserveJitCode())
         return true;
-    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
+    if (realm->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
     if (reason == JS::gcreason::DEBUG_GC)
         return true;
@@ -4244,12 +4244,12 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     // executable code limit.
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
-        c->marked = false;
-        c->scheduledForDestruction = false;
-        c->maybeAlive = c->shouldTraceGlobal() || !c->zone()->isGCScheduled();
-        if (shouldPreserveJITCode(c, currentTime, reason, canAllocateMoreCode))
-            c->zone()->setPreservingCode(true);
+    for (RealmsIter r(rt, WithAtoms); !r.done(); r.next()) {
+        r->marked = false;
+        r->scheduledForDestruction = false;
+        r->maybeAlive = r->shouldTraceGlobal() || !r->zone()->isGCScheduled();
+        if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
+            r->zone()->setPreservingCode(true);
     }
 
     if (!cleanUpEverything && canAllocateMoreCode) {
@@ -7998,7 +7998,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
     MOZ_ASSERT(sourceRealm->creationOptions().mergeable());
     MOZ_ASSERT(sourceRealm->creationOptions().invisibleToDebugger());
 
-    MOZ_ASSERT(!source->hasBeenEntered());
+    MOZ_ASSERT(!sourceRealm->hasBeenEntered());
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
 
     JSContext* cx = rt->mainContextFromOwnThread();
@@ -8102,27 +8102,27 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
     atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
 
     // Merge script name maps in the target compartment's map.
-    if (rt->lcovOutput().isEnabled() && source->scriptNameMap) {
+    if (rt->lcovOutput().isEnabled() && sourceRealm->scriptNameMap) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
 
-        if (!target->scriptNameMap) {
-            target->scriptNameMap = cx->new_<ScriptNameMap>();
+        if (!targetRealm->scriptNameMap) {
+            targetRealm->scriptNameMap = cx->new_<ScriptNameMap>();
 
-            if (!target->scriptNameMap)
+            if (!targetRealm->scriptNameMap)
                 oomUnsafe.crash("Failed to create a script name map.");
 
-            if (!target->scriptNameMap->init())
+            if (!targetRealm->scriptNameMap->init())
                 oomUnsafe.crash("Failed to initialize a script name map.");
         }
 
-        for (ScriptNameMap::Range r = source->scriptNameMap->all(); !r.empty(); r.popFront()) {
+        for (ScriptNameMap::Range r = sourceRealm->scriptNameMap->all(); !r.empty(); r.popFront()) {
             JSScript* key = r.front().key();
             const char* value = r.front().value();
-            if (!target->scriptNameMap->putNew(key, value))
+            if (!targetRealm->scriptNameMap->putNew(key, value))
                 oomUnsafe.crash("Failed to add an entry in the script name map.");
         }
 
-        source->scriptNameMap->clear();
+        sourceRealm->scriptNameMap->clear();
     }
 
     // The source compartment is now completely empty, and is the only
@@ -8469,13 +8469,14 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
                 table->checkAfterMovingGC();
         }
     }
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->objectGroups.checkTablesAfterMovingGC();
-        c->dtoaCache.checkCacheAfterMovingGC();
-        c->checkWrapperMapAfterMovingGC();
-        c->checkScriptMapsAfterMovingGC();
-        if (c->debugEnvs)
-            c->debugEnvs->checkHashTablesAfterMovingGC();
+
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
+        r->objectGroups.checkTablesAfterMovingGC();
+        r->dtoaCache.checkCacheAfterMovingGC();
+        JS::GetCompartmentForRealm(r)->checkWrapperMapAfterMovingGC();
+        r->checkScriptMapsAfterMovingGC();
+        if (r->debugEnvs)
+            r->debugEnvs->checkHashTablesAfterMovingGC();
     }
 }
 #endif

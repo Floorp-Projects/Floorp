@@ -97,6 +97,9 @@ public:
   Count(JSContext* aCx, const nsAString& aLabel);
 
   void
+  CountReset(JSContext* aCx, const nsAString& aLabel);
+
+  void
   Clear(JSContext* aCx);
 
   // For testing only.
