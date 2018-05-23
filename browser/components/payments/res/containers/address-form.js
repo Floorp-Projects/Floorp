@@ -152,6 +152,7 @@ export default class AddressForm extends PaymentStateSubscriberMixin(HTMLElement
         container.appendChild(span);
       }
       span.textContent = shippingAddressErrors[errorName];
+      container.classList.toggle("error", !!shippingAddressErrors[errorName]);
     }
   }
 
