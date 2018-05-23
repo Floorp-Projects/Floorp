@@ -162,8 +162,11 @@ private:
   nsresult InitializeNSS();
   void ShutdownNSS();
 
-  void UnloadLoadableRoots();
-  void setValidationOptions(bool isInitialSetting);
+  nsresult GetPIPNSSBundleStringLocked(const char* name, nsAString& outString,
+                                       const mozilla::MutexAutoLock& proofOfLock);
+  void UnloadLoadableRoots(const mozilla::MutexAutoLock& proofOfLock);
+  void setValidationOptions(bool isInitialSetting,
+                            const mozilla::MutexAutoLock& proofOfLock);
   nsresult setEnabledTLSVersions();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
