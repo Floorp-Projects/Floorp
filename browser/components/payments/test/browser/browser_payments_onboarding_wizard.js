@@ -37,7 +37,7 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "address-page" &&
-               state["address-page"].selectedStateKey == "selectedShippingAddress";
+               state.page.selectedStateKey[0] == "selectedShippingAddress";
       }, "Address page is shown first during on-boarding if there are no saved addresses");
 
       info("Checking if the address page has been rendered");
@@ -80,6 +80,12 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       let basicCardTitle = content.document.querySelector("basic-card-form h1");
       ok(content.isVisible(basicCardTitle), "Basic card page title is visible");
       is(basicCardTitle.textContent, "Add Credit Card", "Basic card page title is correctly shown");
+
+      info("Check if the correct billing address is selected in the basic card page");
+      PTU.DialogContentUtils.waitForState((state) => {
+        let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
+        return state.selectedShippingAddress == billingAddressSelect.value;
+      }, "Shipping address is selected as the billing address");
 
       for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
         let field = content.document.getElementById(key);
@@ -306,7 +312,9 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page";
+        return state.page.id == "address-page" &&
+               state.page.selectedStateKey[0] == "basic-card-page" &&
+               state.page.selectedStateKey[1] == "billingAddressGUID";
       // eslint-disable-next-line max-len
       }, "Billing address page is shown first during on-boarding if requestShipping is turned off");
 
@@ -338,6 +346,12 @@ add_task(async function test_onboarding_wizard_with_requestShipping_turned_off()
 
       let cardSaveButton = content.document.querySelector("basic-card-form .save-button");
       ok(content.isVisible(cardSaveButton), "Basic card page is rendered");
+
+      info("Check if the correct billing address is selected in the basic card page");
+      PTU.DialogContentUtils.waitForState((state) => {
+        let billingAddressSelect = content.document.querySelector("#billingAddressGUID");
+        return state["basic-card-page"].billingAddressGUID == billingAddressSelect.value;
+      }, "Billing Address is correctly shown");
 
       for (let [key, val] of Object.entries(PTU.BasicCards.JohnDoe)) {
         let field = content.document.getElementById(key);
