@@ -12,6 +12,10 @@ import urlparse
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
+from taskgraph.transforms.task import (
+    get_branch_repo,
+    get_branch_rev,
+)
 
 transforms = TransformSequence()
 
@@ -68,11 +72,11 @@ def add_command(config, tasks):
             "--to-app-version", release_config["appVersion"],
             "--to-build-number", str(release_config["build_number"]),
             "--to-buildid", config.params["moz_build_date"],
-            "--to-revision", config.params["head_rev"],
+            "--to-revision", get_branch_rev(config),
             "--output-file", "update-verify.cfg",
         ]
 
-        repo_path = urlparse.urlsplit(config.params["head_repository"]).path.lstrip("/")
+        repo_path = urlparse.urlsplit(get_branch_repo(config)).path.lstrip("/")
         command.extend(["--repo-path", repo_path])
 
         if release_config.get("partial_versions"):

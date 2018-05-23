@@ -597,7 +597,15 @@ TREEHERDER_ROUTE_ROOT = 'tc-treeherder'
 
 
 def get_branch_rev(config):
-    return config.params['{}head_rev'.format(config.graph_config['project-repo-param-prefix'])]
+    return config.params['{}head_rev'.format(
+        config.graph_config['project-repo-param-prefix']
+    )]
+
+
+def get_branch_repo(config):
+    return config.params['{}head_repository'.format(
+        config.graph_config['project-repo-param-prefix'],
+    )]
 
 
 COALESCE_KEY = '{project}.{job-identifier}'
