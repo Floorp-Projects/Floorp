@@ -194,9 +194,8 @@ void
 PerformanceMonitoring::dispose(JSRuntime* rt)
 {
     reset();
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        c->performanceMonitoring.unlink();
-    }
+    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next())
+        r->performanceMonitoring.unlink();
 }
 
 PerformanceGroupHolder::~PerformanceGroupHolder()
@@ -244,7 +243,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     JSRuntime* runtime = cx_->runtime();
     iteration_ = runtime->performanceMonitoring().iteration();
 
-    const PerformanceGroupVector* groups = compartment->performanceMonitoring.getGroups(cx);
+    const PerformanceGroupVector* groups = cx_->realm()->performanceMonitoring.getGroups(cx);
     if (!groups) {
       // Either the embedding has not provided any performance
       // monitoring logistics or there was an error that prevents
