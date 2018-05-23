@@ -95,9 +95,9 @@ private:
 };
 
 // This class implements a simple nsIInputStreamLength stream.
-class LengthInputStream final : public nsIInputStream
-                              , public nsIInputStreamLength
-                              , public nsIAsyncInputStreamLength
+class LengthInputStream : public nsIInputStream
+                        , public nsIInputStreamLength
+                        , public nsIAsyncInputStreamLength
 {
   nsCOMPtr<nsIInputStream> mStream;
   bool mIsInputStreamLength;
@@ -180,8 +180,8 @@ public:
     return aEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   }
 
-private:
-  ~LengthInputStream() {}
+protected:
+  virtual ~LengthInputStream() = default;
 };
 
 class LengthCallback final : public nsIInputStreamLengthCallback
