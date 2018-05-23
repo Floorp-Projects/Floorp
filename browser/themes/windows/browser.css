@@ -87,6 +87,26 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
+#main-menubar > menu {
+  -moz-appearance: none;
+}
+
+#main-menubar > menu:not([_moz-menuactive="true"]) {
+  color: inherit;
+}
+
+/* Use a different color only on Windows 8 and higher in inactive windows.
+ * On Win 7, the menubar fog disappears for inactive windows, and renders gray
+ * illegible.
+ */
+@media (-moz-windows-default-theme) {
+  @media not all and (-moz-os-version: windows-win7) {
+    #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
+      color: ThreeDShadow;
+    }
+  }
+}
+
 /* Hides the titlebar-placeholder underneath the window caption buttons when we
    are not autohiding the menubar. */
 #toolbar-menubar:not([autohide="true"]) + #TabsToolbar > .titlebar-placeholder[type="caption-buttons"] {
@@ -186,12 +206,6 @@
   #main-window[tabsintitlebar] #titlebar-content:-moz-lwtheme {
     visibility: visible;
     -moz-window-dragging: drag;
-  }
-
-  /* Top-level menu appearance has transparent background, so the text color
-     needs to be inherited from our custom menubar too. */
-  #main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
-    color: inherit;
   }
 }
 
