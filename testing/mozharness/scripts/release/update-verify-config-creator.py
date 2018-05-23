@@ -224,11 +224,11 @@ class UpdateVerifyConfigCreator(BaseScript):
             # at the time of writing.
             branch = None
             if release_info["category"] == "dev":
-                branch = "releases/{}-beta".format(self.config['branch-prefix'])
+                branch = "releases/{}-beta".format(self.config['branch_prefix'])
             elif release_info["category"] == "esr":
-                branch = "releases/{}-esr{}".format(self.config['branch-prefix'], version[:2])
+                branch = "releases/{}-esr{}".format(self.config['branch_prefix'], version[:2])
             elif release_info["category"] in ("major", "stability"):
-                branch = "releases/{}-release".format(self.config['branch-prefix'])
+                branch = "releases/{}-release".format(self.config['branch_prefix'])
             if not branch:
                 raise Exception("Cannot determine branch, cannot continue!")
 
