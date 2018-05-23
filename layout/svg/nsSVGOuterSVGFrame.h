@@ -240,6 +240,9 @@ public:
                     nsIFrame*         aPrevInFlow) override;
 #endif
 
+  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                const nsDisplayListSet& aLists) override;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVGAnonChild"), aResult);
