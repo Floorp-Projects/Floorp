@@ -459,9 +459,7 @@ var FullScreen = {
       gFindBar.close(true);
     }
 
-    // Exit DOM full-screen mode upon open, close, or change tab.
-    gBrowser.tabContainer.addEventListener("TabOpen", this.exitDomFullScreen);
-    gBrowser.tabContainer.addEventListener("TabClose", this.exitDomFullScreen);
+    // Exit DOM full-screen mode when switching to a different tab.
     gBrowser.tabContainer.addEventListener("TabSelect", this.exitDomFullScreen);
 
     // Add listener to detect when the fullscreen window is re-focused.
@@ -484,8 +482,6 @@ var FullScreen = {
           .broadcastAsyncMessage("DOMFullscreen:CleanUp");
 
     PointerlockFsWarning.close();
-    gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
-    gBrowser.tabContainer.removeEventListener("TabClose", this.exitDomFullScreen);
     gBrowser.tabContainer.removeEventListener("TabSelect", this.exitDomFullScreen);
     window.removeEventListener("activate", this);
 
