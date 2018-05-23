@@ -129,6 +129,11 @@ const featureCheckboxes = [
     title: "Remove some potentially user-identifiable information."
   },
   {
+    name: "Sequential Styling",
+    value: "seqstyle",
+    title: "Disable parallel traversal in styling."
+  },
+  {
     name: "JIT Optimizations",
     value: "trackopts",
     title: "Track JIT optimizations in the JS engine."
