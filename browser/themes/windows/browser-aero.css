@@ -174,7 +174,7 @@
 
       @media (-moz-windows-default-theme) {
         #main-menubar > menu {
-          -moz-appearance: none;
+          color: inherit;
         }
 
         #main-menubar > menu[_moz-menuactive="true"],
@@ -264,22 +264,6 @@
      * Borders for win7 are below, win10 doesn't need them. */
     #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
       border-top: 1px solid @glassShadowColor@;
-    }
-  }
-
-  @media (-moz-windows-default-theme) {
-    #main-menubar > menu:not(:-moz-lwtheme) {
-      color: inherit;
-    }
-
-    /* Use a different color only on Windows 8 and higher for inactive windows.
-     * On Win 7, the menubar fog disappears for inactive windows, and renders gray
-     * illegible.
-     */
-    @media not all and (-moz-os-version: windows-win7) {
-      #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
-        color: ThreeDShadow;
-      }
     }
   }
 
