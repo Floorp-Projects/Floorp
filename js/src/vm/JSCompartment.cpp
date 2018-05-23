@@ -44,8 +44,6 @@ using mozilla::PodArrayZero;
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
-    principals_(nullptr),
-    isSystem_(false),
     isSelfHosting(false),
     performanceMonitoring(runtime_),
     data(nullptr),

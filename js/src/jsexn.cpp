@@ -446,7 +446,7 @@ Error(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Find the scripted caller, but only ones we're allowed to know about. */
-    NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
+    NonBuiltinFrameIter iter(cx, cx->realm()->principals());
 
     /* Set the 'fileName' property. */
     RootedString fileName(cx);
@@ -967,7 +967,7 @@ ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx, va_list ap)
     // XXXbz this assumes the stack we have right now is still
     // related to our exception object.  It would be better if we
     // could accept a passed-in stack of some sort instead.
-    NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
+    NonBuiltinFrameIter iter(cx, cx->realm()->principals());
     if (!iter.done()) {
         ownedReport.filename = iter.filename();
         uint32_t column;

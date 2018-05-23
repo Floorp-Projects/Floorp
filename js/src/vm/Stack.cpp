@@ -673,12 +673,14 @@ FrameIter::settleOnActivation()
 
         Activation* activation = data_.activations_.activation();
 
-        // If the caller supplied principals, only show activations which are subsumed (of the same
-        // origin or of an origin accessible) by these principals.
+        // If the caller supplied principals, only show activations which are
+        // subsumed (of the same origin or of an origin accessible) by these
+        // principals.
         if (data_.principals_) {
             JSContext* cx = data_.cx_;
             if (JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes) {
-                if (!subsumes(data_.principals_, activation->compartment()->principals())) {
+                JS::Realm* realm = JS::GetRealmForCompartment(activation->compartment());
+                if (!subsumes(data_.principals_, realm->principals())) {
                     ++data_.activations_;
                     continue;
                 }
