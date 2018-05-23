@@ -2510,7 +2510,7 @@ DebugEnvironments::checkHashTablesAfterMovingGC()
 static bool
 CanUseDebugEnvironmentMaps(JSContext* cx)
 {
-    return cx->compartment()->isDebuggee();
+    return cx->realm()->isDebuggee();
 }
 
 DebugEnvironments*
@@ -2893,7 +2893,7 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
 
         if (frame.prevUpToDate())
             return true;
-        MOZ_ASSERT(frame.environmentChain()->compartment()->isDebuggee());
+        MOZ_ASSERT(frame.environmentChain()->realm()->isDebuggee());
         frame.setPrevUpToDate();
     }
 

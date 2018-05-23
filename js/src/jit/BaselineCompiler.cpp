@@ -104,7 +104,7 @@ BaselineCompiler::compile()
     // When code coverage is only enabled for optimizations, or when a Debugger
     // set the collectCoverageInfo flag, we have to create the ScriptCounts if
     // they do not exist.
-    if (!script->hasScriptCounts() && cx->compartment()->collectCoverage()) {
+    if (!script->hasScriptCounts() && cx->realm()->collectCoverage()) {
         if (!script->initScriptCounts(cx))
             return Method_Error;
     }

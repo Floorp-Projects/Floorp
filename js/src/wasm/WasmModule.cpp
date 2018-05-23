@@ -1281,13 +1281,13 @@ Module::instantiate(JSContext* cx,
     // To support viewing the source of an instance (Instance::createText), the
     // instance must hold onto a ref of the bytecode (keeping it alive). This
     // wastes memory for most users, so we try to only save the source when a
-    // developer actually cares: when the compartment is debuggable (which is
-    // true when the web console is open), has code compiled with debug flag
+    // developer actually cares: when the realm is debuggable (which is true
+    // when the web console is open), has code compiled with debug flag
     // enabled or a names section is present (since this going to be stripped
     // for non-developer builds).
 
     const ShareableBytes* maybeBytecode = nullptr;
-    if (cx->compartment()->isDebuggee() || metadata().debugEnabled ||
+    if (cx->realm()->isDebuggee() || metadata().debugEnabled ||
         !metadata().funcNames.empty())
     {
         maybeBytecode = bytecode_.get();
@@ -1297,7 +1297,7 @@ Module::instantiate(JSContext* cx,
     // provides the lazily created source text for the program, even if that
     // text is a placeholder message when debugging is not enabled.
 
-    bool binarySource = cx->compartment()->debuggerObservesBinarySource();
+    bool binarySource = cx->realm()->debuggerObservesBinarySource();
     auto debug = cx->make_unique<DebugState>(code, maybeBytecode, binarySource);
     if (!debug)
         return false;
