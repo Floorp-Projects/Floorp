@@ -24,8 +24,8 @@ fuzzy-if(webrender&&cocoaWidget,18-18,3-3) == fixed-table-layout-012-vlr.html fi
 == fixed-table-layout-014-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vlr.html fixed-table-layout-002-ref.html
 == fixed-table-layout-016-vlr.html fixed-table-layout-002-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-017-vlr.html fixed-table-layout-017-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-018-vlr.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(Android,1,63) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-017-vlr.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(Android,1,63) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-018-vlr.html fixed-table-layout-017-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,9-9) == fixed-table-layout-021-vlr.html fixed-table-layout-021-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,12-12) == fixed-table-layout-022-vlr.html fixed-table-layout-022-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,12-12) == fixed-table-layout-023-vlr.html fixed-table-layout-023-ref.html
@@ -50,8 +50,8 @@ fuzzy-if(webrender&&cocoaWidget,18-18,3-3) == fixed-table-layout-012-vrl.html fi
 == fixed-table-layout-014-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-015-vrl.html fixed-table-layout-002-ref.html
 == fixed-table-layout-016-vrl.html fixed-table-layout-002-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-017-vrl.html fixed-table-layout-017-ref.html
-fuzzy-if(skiaContent,1,50) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-018-vrl.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(Android,1,63) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-017-vrl.html fixed-table-layout-017-ref.html
+fuzzy-if(skiaContent,1,50) fuzzy-if(Android,1,63) fuzzy-if(webrender&&cocoaWidget,23-23,6-6) == fixed-table-layout-018-vrl.html fixed-table-layout-017-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,9-9) == fixed-table-layout-021-vrl.html fixed-table-layout-021-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,12-12) == fixed-table-layout-022-vrl.html fixed-table-layout-022-ref.html
 fuzzy-if(skiaContent,1,90) fuzzy-if(webrender&&cocoaWidget,28-28,12-12) == fixed-table-layout-023-vrl.html fixed-table-layout-023-ref.html

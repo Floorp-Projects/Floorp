@@ -81,9 +81,9 @@ fuzzy-if(webrender&&!gtkWidget,132-134,205-206) == simple-rtl.svg simple-rtl-ref
 == multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg
 == multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
 == multiple-chunks-different-anchor.svg multiple-chunks-different-anchor-ref.svg
-== multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
+fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
 == multiple-chunks-directions-and-anchor-dx.svg multiple-chunks-directions-and-anchor-dx-ref.svg
-== multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx-ref.svg
+fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor-multiple-dx.svg multiple-chunks-directions-and-anchor-multiple-dx-ref.svg
 == multiple-chunks-dx-bidi.svg multiple-chunks-dx-bidi-ref.svg
 == multiple-chunks-dx-different-anchor-bidi.svg multiple-chunks-dx-different-anchor-bidi-ref.svg
 == multiple-chunks-dx-different-anchor-rtl.svg multiple-chunks-dx-different-anchor-rtl-ref.svg
