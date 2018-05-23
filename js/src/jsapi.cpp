@@ -4065,11 +4065,11 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
 {
     strictOption = cx->options().strictMode();
     extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
-    isProbablySystemCode = cx->compartment()->isProbablySystemCode();
+    isProbablySystemCode = cx->realm()->isProbablySystemCode();
     werrorOption = cx->options().werror();
     if (!cx->options().asmJS())
         asmJSOption = AsmJSOption::Disabled;
-    else if (cx->compartment()->debuggerObservesAsmJS())
+    else if (cx->realm()->debuggerObservesAsmJS())
         asmJSOption = AsmJSOption::DisabledByDebugger;
     else
         asmJSOption = AsmJSOption::Enabled;
@@ -4479,7 +4479,8 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
                                                                   options, chars, length,
                                                                   /* foldConstants = */ true,
                                                                   usedNames, nullptr, nullptr,
-                                                                  sourceObject);
+                                                                  sourceObject,
+                                                                  frontend::ParseGoal::Script);
     JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
     if (!parser.checkOptions() || !parser.parse()) {
         // We ran into an error. If it was because we ran out of source, we
@@ -4958,6 +4959,20 @@ JS::SetModuleResolveHook(JSRuntime* rt, JS::ModuleResolveHook func)
 {
     AssertHeapIsIdle();
     rt->moduleResolveHook = func;
+}
+
+JS_PUBLIC_API(JS::ModuleMetadataHook)
+JS::GetModuleMetadataHook(JSRuntime* rt)
+{
+    AssertHeapIsIdle();
+    return rt->moduleMetadataHook;
+}
+
+JS_PUBLIC_API(void)
+JS::SetModuleMetadataHook(JSRuntime* rt, JS::ModuleMetadataHook func)
+{
+    AssertHeapIsIdle();
+    rt->moduleMetadataHook = func;
 }
 
 JS_PUBLIC_API(bool)
@@ -7498,7 +7513,7 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     if (!cx->compartment())
         return false;
 
-    NonBuiltinFrameIter i(cx, cx->compartment()->principals());
+    NonBuiltinFrameIter i(cx, cx->realm()->principals());
     if (i.done())
         return false;
 
@@ -7772,7 +7787,7 @@ JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
 
 JS::FirstSubsumedFrame::FirstSubsumedFrame(JSContext* cx,
                                            bool ignoreSelfHostedFrames /* = true */)
-  : JS::FirstSubsumedFrame(cx, cx->compartment()->principals(), ignoreSelfHostedFrames)
+  : JS::FirstSubsumedFrame(cx, cx->realm()->principals(), ignoreSelfHostedFrames)
 { }
 
 JS_PUBLIC_API(bool)

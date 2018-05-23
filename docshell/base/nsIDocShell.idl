@@ -188,8 +188,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param aFileName            - Non-null when the link should be downloaded as
                                    the given filename.
    * @param aPostDataStream      - Post data stream (if POSTing)
-   * @param aPostDataStreamLength - Post data stream length. Use -1 if the length
-                                    of the stream is unknown.
    * @param aHeadersStream       - Stream containing "extra" request headers...
    * @param aLoadFlags           - Flags to modify load behaviour. Flags are defined
    *                               in nsIWebNavigation.
@@ -215,7 +213,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in string aTypeHint,
                               in AString aFileName,
                               in nsIInputStream aPostDataStream,
-                              in long long aPostDataStreamLength,
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,
                               in nsISHEntry aSHEntry,

@@ -4166,7 +4166,7 @@ JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape, js::gc::AllocKin
                                         clasp->isProxy());
     MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(), heap == gc::TenuredHeap);
 
-    MOZ_ASSERT(!group->compartment()->hasObjectPendingMetadata());
+    MOZ_ASSERT(!group->realm()->hasObjectPendingMetadata());
 
     // Non-native classes manage their own data and slots, so numFixedSlots and
     // slotSpan are always 0. Note that proxy classes can have reserved slots
