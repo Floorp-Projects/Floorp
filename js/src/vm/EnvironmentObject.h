@@ -1165,6 +1165,8 @@ CreateObjectsForEnvironmentChain(JSContext* cx, AutoObjectVector& chain,
                                  HandleObject terminatingEnv,
                                  MutableHandleObject envObj);
 
+ModuleObject* GetModuleObjectForScript(JSScript* script);
+
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
 MOZ_MUST_USE bool

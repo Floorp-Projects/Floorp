@@ -11148,7 +11148,8 @@ BytecodeEmitter::emitTree(ParseNode* pn, ValueUsage valueUsage /* = ValueUsage::
         break;
 
       case ParseNodeKind::ImportMeta:
-        MOZ_CRASH("NYI");
+        if (!emit1(JSOP_IMPORTMETA))
+            return false;
         break;
 
       case ParseNodeKind::SetThis:
