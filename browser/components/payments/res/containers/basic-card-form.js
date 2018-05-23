@@ -143,6 +143,7 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
     } else {
       this.pageTitle.textContent = this.dataset.addBasicCardTitle;
       // Use a currently selected shipping address as the default billing address
+      record.billingAddressGUID = basicCardPage.billingAddressGUID;
       if (!record.billingAddressGUID && selectedShippingAddress) {
         record.billingAddressGUID = selectedShippingAddress;
       }
@@ -155,10 +156,11 @@ export default class BasicCardForm extends PaymentStateSubscriberMixin(HTMLEleme
 
     this.form.querySelector(".billingAddressRow").hidden = false;
 
+    let billingAddressSelect = this.form.querySelector("#billingAddressGUID");
     if (basicCardPage.billingAddressGUID) {
-      let addressGuid = basicCardPage.billingAddressGUID;
-      let billingAddressSelect = this.form.querySelector("#billingAddressGUID");
-      billingAddressSelect.value = addressGuid;
+      billingAddressSelect.value = basicCardPage.billingAddressGUID;
+    } else if (!editing) {
+      billingAddressSelect.value = Object.keys(addresses)[0];
     }
   }
 
