@@ -92,7 +92,6 @@ user_pref("devtools.chrome.enabled", false);
 user_pref("devtools.debugger.prompt-connection", true);
 user_pref("devtools.debugger.remote-enabled", false);
 user_pref("devtools.debugger.remote-port", 6023);
-user_pref("devtools.devedition.promo.enabled", false);
 user_pref("devtools.testing", true);
 user_pref("dom.allow_scripts_to_close_windows", true);
 user_pref("dom.disable_open_during_load", false);
