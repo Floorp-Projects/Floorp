@@ -1657,7 +1657,7 @@ jit::JitActivation::removeRematerializedFramesFromDebugger(JSContext* cx, uint8_
     // Ion bailout can fail due to overrecursion and OOM. In such cases we
     // cannot honor any further Debugger hooks on the frame, and need to
     // ensure that its Debugger.Frame entry is cleaned up.
-    if (!cx->compartment()->isDebuggee() || !rematerializedFrames_)
+    if (!cx->realm()->isDebuggee() || !rematerializedFrames_)
         return;
     if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
         for (uint32_t i = 0; i < p->value().length(); i++)

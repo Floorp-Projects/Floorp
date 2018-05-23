@@ -1136,7 +1136,7 @@ bool
 GlobalHasLiveOnDebuggerStatement(JSContext* cx)
 {
     AutoUnsafeCallWithABI unsafe;
-    return cx->compartment()->isDebuggee() &&
+    return cx->realm()->isDebuggee() &&
            Debugger::hasLiveHook(cx->global(), Debugger::OnDebuggerStatement);
 }
 
@@ -1191,7 +1191,7 @@ bool
 DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame, jsbytecode* pc)
 {
     MOZ_ASSERT(frame->script()->baselineScript()->hasDebugInstrumentation());
-    if (cx->compartment()->isDebuggee())
+    if (cx->realm()->isDebuggee())
         DebugEnvironments::onPopLexical(cx, frame, pc);
     return true;
 }

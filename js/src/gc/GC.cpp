@@ -8014,13 +8014,13 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
 
     sourceRealm->clearTables();
     source->zone()->clearTables();
-    source->unsetIsDebuggee();
+    sourceRealm->unsetIsDebuggee();
 
     // The delazification flag indicates the presence of LazyScripts in a
-    // compartment for the Debugger API, so if the source compartment created
-    // LazyScripts, the flag must be propagated to the target compartment.
-    if (source->needsDelazificationForDebugger())
-        target->scheduleDelazificationForDebugger();
+    // realm for the Debugger API, so if the source realm created LazyScripts,
+    // the flag must be propagated to the target realm.
+    if (sourceRealm->needsDelazificationForDebugger())
+        targetRealm->scheduleDelazificationForDebugger();
 
     // Release any relocated arenas which we may be holding on to as they might
     // be in the source zone

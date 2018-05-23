@@ -103,7 +103,7 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     // additional memory and permanently stay in baseline code, so we try to
     // only enable it when a developer actually cares: when the debugger tab
     // is open.
-    debugEnabled = cx->compartment()->debuggerObservesAsmJS();
+    debugEnabled = cx->realm()->debuggerObservesAsmJS();
 
     this->scriptedCaller = Move(scriptedCaller);
     return assumptions.initBuildIdFromContext(cx);
