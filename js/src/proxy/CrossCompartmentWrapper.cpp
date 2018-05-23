@@ -304,7 +304,7 @@ Reify(JSContext* cx, JSCompartment* origin, HandleObject objp)
             RootedId id(cx);
             RootedValue v(cx);
             for (size_t i = 0; i < length; ++i) {
-                v.setString(ni->begin()[i]);
+                v.setString(ni->propertiesBegin()[i]);
                 if (!ValueToId<CanGC>(cx, v, &id))
                     return nullptr;
                 cx->markId(id);
