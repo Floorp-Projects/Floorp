@@ -1585,6 +1585,8 @@ class BootstrapScope {
       } else {
         logger.debug(`Calling bootstrap method ${aMethod} on ${addon.id} version ${addon.version}`);
 
+        this._beforeCallBootstrapMethod(aMethod, params, aReason);
+
         try {
           result = method.call(scope, params, aReason);
         } catch (e) {
@@ -1607,6 +1609,9 @@ class BootstrapScope {
       }
     }
   }
+
+  // No-op method to be overridden by tests.
+  _beforeCallBootstrapMethod() {}
 
   /**
    * Loads a bootstrapped add-on's bootstrap.js into a sandbox and the reason

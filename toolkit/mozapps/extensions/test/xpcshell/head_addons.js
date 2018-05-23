@@ -103,6 +103,19 @@ ExtensionTestUtils.init(this);
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 
+XPCOMUtils.defineLazyGetter(this, "BOOTSTRAP_REASONS",
+                            () => AddonManagerPrivate.BOOTSTRAP_REASONS);
+
+function getReasonName(reason) {
+  for (let key of Object.keys(BOOTSTRAP_REASONS)) {
+    if (BOOTSTRAP_REASONS[key] == reason) {
+      return key;
+    }
+  }
+  throw new Error("This shouldn't happen.");
+}
+
+
 Object.defineProperty(this, "gAppInfo", {
   get() {
     return AddonTestUtils.appInfo;
@@ -350,6 +363,128 @@ this.BootstrapMonitor = {
 };
 
 AddonTestUtils.on("addon-manager-shutdown", () => BootstrapMonitor.shutdownCheck());
+
+var SlightlyLessDodgyBootstrapMonitor = {
+  started: new Map(),
+  stopped: new Map(),
+  installed: new Map(),
+  uninstalled: new Map(),
+
+  init() {
+    this.onEvent = this.onEvent.bind(this);
+
+    AddonTestUtils.on("addon-manager-shutdown", this.onEvent);
+    AddonTestUtils.on("bootstrap-method", this.onEvent);
+  },
+
+  shutdownCheck() {
+    equal(this.started.size, 0,
+          "Should have no add-ons that were started but not shutdown");
+  },
+
+  onEvent(msg, data) {
+    switch (msg) {
+      case "addon-manager-shutdown":
+        this.shutdownCheck();
+        break;
+      case "bootstrap-method":
+        this.onBootstrapMethod(data.method, data.params, data.reason);
+        break;
+    }
+  },
+
+  onBootstrapMethod(method, params, reason) {
+    let {id} = params;
+
+    info(`Bootstrap method ${method} for ${params.id} version ${params.version}`);
+
+    if (method !== "install") {
+      this.checkInstalled(id);
+    }
+
+    switch (method) {
+      case "install":
+        this.checkNotInstalled(id);
+        this.installed.set(id, {reason, params});
+        this.uninstalled.delete(id);
+        break;
+      case "startup":
+        this.checkNotStarted(id);
+        this.started.set(id, {reason, params});
+        this.stopped.delete(id);
+        break;
+      case "shutdown":
+        this.checkMatches("shutdown", "startup", params, this.started.get(id));
+        this.checkStarted(id);
+        this.stopped.set(id, {reason, params});
+        this.started.delete(id);
+        break;
+      case "uninstall":
+        this.checkMatches("uninstall", "install", params, this.installed.get(id));
+        this.uninstalled.set(id, {reason, params});
+        this.installed.delete(id);
+        break;
+      case "update":
+        // Close enough, for now.
+        this.onBootstrapMethod("uninstall",
+                               Object.assign({}, params, {version: params.oldVersion}),
+                               reason);
+        this.onBootstrapMethod("install", params, reason);
+        break;
+    }
+  },
+
+  clear(id) {
+    this.installed.delete(id);
+    this.started.delete(id);
+    this.stopped.delete(id);
+    this.uninstalled.delete(id);
+  },
+
+  checkMatches(method, lastMethod, params, {params: lastParams} = {}) {
+    ok(lastParams,
+       `Expecting matching ${lastMethod} call for add-on ${params.id} ${method} call`);
+
+    equal(params.version, lastParams.version,
+          "params.version should match last call");
+
+    equal(params.installPath.path, lastParams.installPath.path,
+          `params.installPath should match last call`);
+
+    ok(params.resourceURI.equals(lastParams.resourceURI),
+       `params.resourceURI should match: "${params.resourceURI.spec}" == "${lastParams.resourceURI.spec}"`);
+  },
+
+  checkStarted(id, version = undefined) {
+    let started = this.started.get(id);
+    ok(started, `Should have seen startup method call for ${id}`);
+
+    if (version !== undefined)
+      equal(started.params.version, version,
+            "Expected version number");
+  },
+
+  checkNotStarted(id) {
+    ok(!this.started.has(id),
+       `Should not have seen startup method call for ${id}`);
+  },
+
+  checkInstalled(id, version = undefined) {
+    const installed = this.installed.get(id);
+    ok(installed, `Should have seen install call for ${id}`);
+
+    if (version !== undefined)
+      equal(installed.params.version, version,
+            "Expected version number");
+
+    return installed;
+  },
+
+  checkNotInstalled(id) {
+    ok(!this.installed.has(id),
+       `Should not have seen install method call for ${id}`);
+  },
+};
 
 function isNightlyChannel() {
   var channel = Services.prefs.getCharPref("app.update.channel", "default");
