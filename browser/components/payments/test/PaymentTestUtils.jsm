@@ -83,17 +83,6 @@ var PaymentTestUtils = {
   },
 
   DialogContentTasks: {
-    isElementVisible: selector => {
-      let element = content.document.querySelector(selector);
-      return element.getBoundingClientRect().height > 0;
-    },
-
-    getElementTextContent: selector => {
-      let doc = content.document;
-      let element = doc.querySelector(selector);
-      return element.textContent;
-    },
-
     getShippingOptions: () => {
       let select = content.document.querySelector("shipping-option-picker > rich-select");
       let popupBox = Cu.waiveXrays(select).popupBox;
@@ -165,6 +154,10 @@ var PaymentTestUtils = {
 
     /**
      * Do the minimum possible to complete the payment succesfully.
+     *
+     * Don't await on this task since the cancel can close the dialog before
+     * ContentTask can resolve the promise.
+     *
      * @returns {undefined}
      */
     completePayment: () => {
@@ -322,6 +315,43 @@ var PaymentTestUtils = {
     },
   },
 
+  UpdateWith: {
+    twoShippingOptions: {
+      error: "",
+      shippingOptions: [
+        {
+          id: "1",
+          label: "Most Unperfect Shipping",
+          amount: { currency: "USD", value: "1" },
+        },
+        {
+          id: "2",
+          label: "Least Perfect Shipping",
+          amount: { currency: "USD", value: "2" },
+          selected: true,
+        },
+      ],
+      total: {
+        label: "Grand total is now: ",
+        amount: {
+          value: "24",
+          currency: "USD",
+        },
+      },
+    },
+    genericShippingError: {
+      error: "Cannot ship with option 1 on days that end with Y",
+      shippingOptions: [],
+      total: {
+        label: "Grand total is!!!!!: ",
+        amount: {
+          value: "12",
+          currency: "USD",
+        },
+      },
+    },
+  },
+
   Options: {
     requestShippingOption: {
       requestShipping: true,
@@ -353,7 +383,7 @@ var PaymentTestUtils = {
     },
     TimBL2: {
       "given-name": "Timothy",
-      "additional-name": "John",
+      "additional-name": "Johann",
       "family-name": "Berners-Lee",
       organization: "World Wide Web Consortium",
       "street-address": "1 Pommes Frittes Place",
@@ -382,9 +412,9 @@ var PaymentTestUtils = {
   BasicCards: {
     JohnDoe: {
       "cc-exp-month": 1,
-      "cc-exp-year": 9999,
+      "cc-exp-year": (new Date()).getFullYear() + 9,
       "cc-name": "John Doe",
-      "cc-number": "999999999999",
+      "cc-number": "4111111111111111",
     },
   },
 };
