@@ -18,8 +18,6 @@ LOG = get_proxy_logger(component='raptor_process')
 class OutputHandler(object):
     def __init__(self):
         self.proc = None
-        self.kill_thread = Thread(target=self.wait_for_quit)
-        self.kill_thread.daemon = True
 
     def __call__(self, line):
         if not line.strip():
@@ -30,7 +28,9 @@ class OutputHandler(object):
             data = json.loads(line)
         except ValueError:
             if line.find('__raptor_shutdownBrowser') != -1:
-                self.kill_thread.start()
+                    self.kill_thread = Thread(target=self.wait_for_quit)
+                    self.kill_thread.daemon = True
+                    self.kill_thread.start()
             self.process_output(line)
             return
 

@@ -55,7 +55,7 @@ class Output(object):
             # each measurement becomes a subtest inside the 'suite'
             for key, values in test.measurements.iteritems():
                 new_subtest = {}
-                new_subtest['name'] = key
+                new_subtest['name'] = test.name + "-" + key
                 new_subtest['replicates'] = values
                 new_subtest['lower_is_better'] = test.lower_is_better
                 new_subtest['alert_threshold'] = float(test.alert_threshold)

@@ -30,9 +30,9 @@ def MakeCustomHandlerClass(results_handler):
         def do_GET(self):
             # get handler, received request for test settings from web ext runner
             self.send_response(200)
-            validFiles = ['raptor-firefox-tp6.json']
             head, tail = os.path.split(self.path)
-            if tail in validFiles:
+
+            if tail.startswith('raptor') and tail.endswith('.json'):
                 LOG.info('reading test settings from ' + tail)
                 try:
                     with open(tail) as json_settings:
