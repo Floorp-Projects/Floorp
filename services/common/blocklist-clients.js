@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "RemoteSettings",
-                               "resource://services-common/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-common/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "jexlFilterFunc", "resource://services-common/remote-settings.js");
 
 const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
 const PREF_BLOCKLIST_ONECRL_COLLECTION       = "services.blocklist.onecrl.collection";
@@ -132,17 +132,22 @@ async function updateJSONBlocklist(client, { data: { current: records } }) {
  * This custom filter function is used to limit the entries returned
  * by `RemoteSettings("...").get()` depending on the target app information
  * defined on entries.
- *
- * When landing Bug 1451031, this function will have to check if the `entry`
- * has a JEXL attribute and rely on the JEXL filter function in priority.
- * The legacy target app mechanism will be kept in place for old entries.
  */
-async function targetAppFilter(entry, { appID, version: appVersion }) {
+async function targetAppFilter(entry, environment) {
+  // If the entry has JEXL filters, they should prevail.
+  // The legacy target app mechanism will be kept in place for old entries.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1463377
+  const { filters } = entry;
+  if (filters) {
+    return jexlFilterFunc(entry, environment);
+  }
+
   // Keep entries without target information.
   if (!("versionRange" in entry)) {
     return entry;
   }
 
+  const { appID, version: appVersion } = environment;
   const { versionRange } = entry;
 
   // Gfx blocklist has a specific versionRange object, which is not a list.

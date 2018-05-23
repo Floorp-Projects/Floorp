@@ -74,7 +74,9 @@ add_task(async function test_backButton() {
   form.dataset.backButtonLabel = "Back";
   await form.requestStore.setState({
     page: {
-      id: "test-page",
+      id: "address-page",
+    },
+    "address-page": {
       title: "Sample page title",
     },
   });
@@ -138,6 +140,9 @@ add_task(async function test_saveButton() {
         error: "Generic error",
         onboardingWizard: undefined,
       },
+      "address-page": {
+        title: "Sample page title",
+      },
     },
     guid: undefined,
     messageType: "updateAutofillRecord",
@@ -158,6 +163,7 @@ add_task(async function test_saveButton() {
     successStateChange: {
       page: {
         id: "payment-summary",
+        onboardingWizard: undefined,
       },
     },
   }, "Check event details for the message to chrome");
@@ -193,6 +199,8 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     page: {
       id: "address-page",
+    },
+    "address-page": {
       guid: address1.guid,
     },
     savedAddresses: {
@@ -210,6 +218,8 @@ add_task(async function test_edit() {
   await form.requestStore.setState({
     page: {
       id: "address-page",
+    },
+    "address-page": {
       guid: minimalAddress.guid,
     },
     savedAddresses: {
@@ -224,6 +234,7 @@ add_task(async function test_edit() {
     page: {
       id: "address-page",
     },
+    "address-page": {},
   });
   await asyncElementRendered();
   checkAddressForm(form, {});

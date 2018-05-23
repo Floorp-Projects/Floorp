@@ -792,6 +792,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY identity.moreInfoLinkText2 "More Information">
 
+<!ENTITY identity.clearSiteData "Clear Cookies and Site Data">
+
 <!ENTITY identity.permissions "Permissions">
 <!ENTITY identity.permissionsEmpty "You have not granted this site any special permissions.">
 <!ENTITY identity.permissionsReloadHint "You may need to reload the page for changes to apply.">
