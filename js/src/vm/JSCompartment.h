@@ -645,8 +645,6 @@ struct JSCompartment
   public:
     js::RegExpCompartment        regExps;
 
-    js::ArraySpeciesLookup       arraySpeciesLookup;
-
     using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
                                       js::IteratorHashPolicy,
                                       js::SystemAllocPolicy>;
@@ -1056,6 +1054,7 @@ class JS::Realm : public JSCompartment
 
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
+    js::ArraySpeciesLookup arraySpeciesLookup;
 
     js::ScriptCountsMap* scriptCountsMap = nullptr;
     js::ScriptNameMap* scriptNameMap = nullptr;
