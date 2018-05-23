@@ -60,11 +60,6 @@ const ADDON = {
   ],
 };
 
-function changeLocales(locales) {
-  Services.locale.setRequestedLocales(locales);
-  return promiseRestartManager();
-}
-
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");
   Services.locale.setRequestedLocales(["fr-FR"]);
@@ -89,7 +84,7 @@ add_task(async function test_1() {
 
 add_task(async function test_2() {
   // Change locale. The more specific de-DE is the best match
-  await changeLocales(["de"]);
+  await restartWithLocales(["de"]);
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);
@@ -99,7 +94,7 @@ add_task(async function test_2() {
 
 add_task(async function test_3() {
   // Change locale. Locale case should have no effect
-  await changeLocales(["DE-de"]);
+  await restartWithLocales(["DE-de"]);
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);
@@ -109,7 +104,7 @@ add_task(async function test_3() {
 
 add_task(async function test_4() {
   // Change locale. es-ES should closely match
-  await changeLocales(["es-AR"]);
+  await restartWithLocales(["es-AR"]);
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);
@@ -119,7 +114,7 @@ add_task(async function test_4() {
 
 add_task(async function test_5() {
   // Change locale. Either zh-CN or zh-TW could match
-  await changeLocales(["zh"]);
+  await restartWithLocales(["zh"]);
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);
@@ -130,7 +125,7 @@ add_task(async function test_5() {
 add_task(async function test_6() {
   // Unknown locale should try to match against en-US as well. Of en,en-GB
   // en should match as being less specific
-  await changeLocales(["nl-NL"]);
+  await restartWithLocales(["nl-NL"]);
 
   let addon = await AddonManager.getAddonByID(ID);
   Assert.notEqual(addon, null);

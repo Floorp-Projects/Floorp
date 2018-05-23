@@ -5,13 +5,13 @@
 add_task(async function setup() {
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  Services.locale.setRequestedLocales(["fr-FR"]);
-
   await promiseStartupManager();
 });
 
 // Tests that the localized properties are visible before installation
 add_task(async function test_1() {
+  await restartWithLocales(["fr-FR"]);
+
   let install = await AddonManager.getInstallForFile(do_get_addon("test_locale"));
   Assert.equal(install.addon.name, "fr-FR Name");
   Assert.equal(install.addon.description, "fr-FR Description");
@@ -67,8 +67,7 @@ add_task(async function test_4() {
 
 // Test that changing locale works
 add_task(async function test_5() {
-  Services.locale.setRequestedLocales(["de-DE"]);
-  await promiseRestartManager();
+  await restartWithLocales(["de-DE"]);
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
@@ -79,8 +78,7 @@ add_task(async function test_5() {
 
 // Test that missing locales use the fallbacks
 add_task(async function test_6() {
-  Services.locale.setRequestedLocales(["nl-NL"]);
-  await promiseRestartManager();
+  await restartWithLocales(["nl-NL"]);
 
   let addon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(addon, null);
