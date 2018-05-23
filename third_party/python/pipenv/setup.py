@@ -27,6 +27,7 @@ required = [
     'setuptools>=36.2.1',
     'virtualenv-clone>=0.2.5',
     'virtualenv',
+    'pathlib2==2.1.0;python_version<"3.4"',
     'requests[security];python_version<"2.7"',
     'ordereddict;python_version<"2.7"',
 ]
@@ -87,7 +88,7 @@ class UploadCommand(Command):
         except FileNotFoundError:
             pass
         self.status('Building Source distribution…')
-        os.system('{0} setup.py sdist bdist_wheel'.format(sys.executable))
+        os.system('{0} setup.py sdist'.format(sys.executable))
         self.status('Uploading the package to PyPi via Twine…')
         os.system('twine upload dist/*')
         self.status('Pushing git tags…')
@@ -113,7 +114,6 @@ setup(
         ]
     },
     package_data={
-        '': ['LICENSE', 'NOTICES'],
         "pipenv.vendor.requests": ["*.pem"],
         "pipenv.vendor.certifi": ["*.pem"],
         "pipenv.patched.notpip._vendor.certifi": ["*.pem"],
