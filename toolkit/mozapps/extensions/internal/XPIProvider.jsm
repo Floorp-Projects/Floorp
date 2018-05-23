@@ -1833,7 +1833,7 @@ class BootstrapScope {
     await this._uninstall(reason, callUpdate, extraArgs);
 
     if (updateCallback) {
-      updateCallback();
+      await updateCallback();
     }
 
     this.addon = newAddon;

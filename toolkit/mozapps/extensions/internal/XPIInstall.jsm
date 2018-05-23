@@ -1333,6 +1333,8 @@ class AddonInstall {
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
+    this._startupPromise = null;
+
     this._installPromise = new Promise(resolve => {
       this._resolveInstallPromise = resolve;
     });
@@ -1723,14 +1725,14 @@ class AddonInstall {
       // The install is completed so it should be removed from the active list
       XPIInstall.installs.delete(this);
 
-      let install = () => {
+      let install = async () => {
         if (this.existingAddon && this.existingAddon.active && !isUpgrade) {
           XPIDatabase.updateAddonActive(this.existingAddon, false);
         }
 
         // Install the new add-on into its final location
         let existingAddonID = this.existingAddon ? this.existingAddon.id : null;
-        let file = this.location.installer.installAddon({
+        let file = await this.location.installer.installAddon({
           id: this.addon.id,
           source: stagedAddon,
           existingAddonID
@@ -1764,21 +1766,25 @@ class AddonInstall {
         logger.debug(`Install of ${this.sourceURI.spec} completed.`);
         this.state = AddonManager.STATE_INSTALLED;
         this._callInstallListeners("onInstallEnded", this.addon.wrapper);
+
+        XPIDatabase.recordAddonTelemetry(this.addon);
+
+        // Notify providers that a new theme has been enabled.
+        if (isTheme(this.addon.type) && this.addon.active)
+          AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type);
       };
 
-      if (this.existingAddon) {
-        await XPIInternal.BootstrapScope.get(this.existingAddon).update(
-          this.addon, !this.addon.disabled, install);
-      } else {
-        install();
-        XPIInternal.BootstrapScope.get(this.addon).install(undefined, true);
-      }
+      this._startupPromise = (async () => {
+        if (this.existingAddon) {
+          await XPIInternal.BootstrapScope.get(this.existingAddon).update(
+            this.addon, !this.addon.disabled, install);
+        } else {
+          await install();
+          await XPIInternal.BootstrapScope.get(this.addon).install(undefined, true);
+        }
+      })();
 
-      XPIDatabase.recordAddonTelemetry(this.addon);
-
-      // Notify providers that a new theme has been enabled.
-      if (isTheme(this.addon.type) && this.addon.active)
-        AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type);
+      await this._startupPromise;
     })().catch((e) => {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
@@ -1900,7 +1906,9 @@ class AddonInstall {
         this._resolveInstallPromise(rej);
         break;
       case "onInstallEnded":
-        this._resolveInstallPromise(args[0]);
+        this._resolveInstallPromise(
+          Promise.resolve(this._startupPromise)
+            .then(() => args[0]));
         break;
     }
     return AddonManagerPrivate.callInstallListeners(event, this.listeners, this.wrapper,

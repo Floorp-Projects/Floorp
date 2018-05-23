@@ -27,11 +27,7 @@ add_task(async function test_implicit_id() {
   let addon = await promiseAddonByID(IMPLICIT_ID_ID);
   equal(addon, null, "Add-on is not installed");
 
-  let xpifile = do_get_file(IMPLICIT_ID_XPI);
-  await Promise.all([
-    promiseInstallAllFiles([xpifile]),
-    promiseWebExtensionStartup(),
-  ]);
+  await promiseInstallFile(do_get_file(IMPLICIT_ID_XPI));
 
   addon = await promiseAddonByID(IMPLICIT_ID_ID);
   notEqual(addon, null, "Add-on is installed");
@@ -502,10 +498,7 @@ add_task(async function test_permissions_prompt() {
     return Promise.resolve();
   };
 
-  await Promise.all([
-    promiseCompleteInstall(install),
-    promiseWebExtensionStartup(),
-  ]);
+  await install.install();
 
   notEqual(perminfo, undefined, "Permission handler was invoked");
   equal(perminfo.existingAddon, null, "Permission info does not include an existing addon");

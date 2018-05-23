@@ -18,10 +18,7 @@ add_task(async function test_1() {
 
   equal(GlobalManager.extensionMap.size, 0);
 
-  await Promise.all([
-    promiseInstallAllFiles([do_get_addon("webextension_1")], true),
-    promiseWebExtensionStartup()
-  ]);
+  await promiseInstallFile(do_get_addon("webextension_1"), true);
 
   equal(GlobalManager.extensionMap.size, 1);
   ok(GlobalManager.extensionMap.has(ID));
@@ -135,10 +132,8 @@ add_task(async function test_2() {
 add_task(async function test_manifest_localization() {
   const extensionId = "webextension3@tests.mozilla.org";
 
-  await promiseInstallAllFiles([do_get_addon("webextension_3")], true);
-  await promiseWebExtensionStartup();
+  let {addon} = await promiseInstallFile(do_get_addon("webextension_3"), true);
 
-  let addon = await promiseAddonByID(extensionId);
   await addon.disable();
 
   equal(addon.name, "Web Extensiøn foo ☹");
