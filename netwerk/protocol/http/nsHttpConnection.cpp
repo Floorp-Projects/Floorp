@@ -2304,12 +2304,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpConnection)
     NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-    // we have no macro that covers this case.
-    if (aIID.Equals(NS_GET_IID(nsHttpConnection)) ) {
-        AddRef();
-        *aInstancePtr = this;
-        return NS_OK;
-    } else
+    NS_INTERFACE_MAP_ENTRY_CONCRETE(nsHttpConnection)
 NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------

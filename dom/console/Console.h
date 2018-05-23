@@ -120,6 +120,9 @@ public:
   Count(const GlobalObject& aGlobal, const nsAString& aLabel);
 
   static void
+  CountReset(const GlobalObject& aGlobal, const nsAString& aLabel);
+
+  static void
   Clear(const GlobalObject& aGlobal);
 
   static already_AddRefed<ConsoleInstance>
@@ -168,6 +171,7 @@ private:
     MethodTimeStamp,
     MethodAssert,
     MethodCount,
+    MethodCountReset,
     MethodClear,
     MethodProfile,
     MethodProfileEnd,
@@ -360,8 +364,8 @@ private:
                        Sequence<JS::Value>& aSequence) const;
 
   // This method follows the same pattern as StartTimer: its runs on the owning
-  // thread and populate aCountLabel, used by CreateCounterValue. Returns
-  // 3 possible values:
+  // thread and populate aCountLabel, used by CreateCounterOrResetCounterValue.
+  // Returns 3 possible values:
   // * MAX_PAGE_COUNTERS in case of error that has to be reported;
   // * 0 in case of a CX exception. The operation cannot continue;
   // * the incremented counter value.
@@ -373,6 +377,20 @@ private:
   IncreaseCounter(JSContext* aCx, const Sequence<JS::Value>& aData,
                   nsAString& aCountLabel);
 
+  // This method follows the same pattern as StartTimer: its runs on the owning
+  // thread and populate aCountLabel, used by CreateCounterResetValue. Returns
+  // 3 possible values:
+  // * MAX_PAGE_COUNTERS in case of error that has to be reported;
+  // * 0 elsewhere. In case of a CX exception, aCountLabel will be an empty
+  // string.
+  // Params:
+  // * aCx - the JSContext rooting aData.
+  // * aData - the arguments received by the console.count() method.
+  // * aCountLabel - the label that will be populated by this method.
+  uint32_t
+  ResetCounter(JSContext* aCx, const Sequence<JS::Value>& aData,
+               nsAString& aCountLabel);
+
   // This method generates a ConsoleCounter dictionary as JS::Value. If
   // aCountValue is == MAX_PAGE_COUNTERS it generates a ConsoleCounterError
   // instead. See IncreaseCounter.
@@ -381,8 +399,8 @@ private:
   //                 aTimerLabel.
   // * aCountValue - the return value of IncreaseCounter.
   JS::Value
-  CreateCounterValue(JSContext* aCx, const nsAString& aCountLabel,
-                     uint32_t aCountValue) const;
+  CreateCounterOrResetCounterValue(JSContext* aCx, const nsAString& aCountLabel,
+                                   uint32_t aCountValue) const;
 
   bool
   ShouldIncludeStackTrace(MethodName aMethodName) const;

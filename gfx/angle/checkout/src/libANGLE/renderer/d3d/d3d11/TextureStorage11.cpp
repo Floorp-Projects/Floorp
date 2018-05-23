@@ -30,40 +30,6 @@
 
 namespace rx
 {
-
-namespace
-{
-
-void InvalidateRenderTarget(const gl::Context *context, RenderTarget11 *renderTarget)
-{
-    if (renderTarget)
-    {
-        renderTarget->signalDirty(context);
-    }
-}
-
-RenderTarget11 *GetRenderTarget(std::unique_ptr<RenderTarget11> *pointer)
-{
-    return pointer->get();
-}
-
-template <typename KeyT>
-RenderTarget11 *GetRenderTarget(std::pair<KeyT, std::unique_ptr<RenderTarget11>> *pair)
-{
-    return pair->second.get();
-}
-
-template <typename T>
-void InvalidateRenderTargetContainer(const gl::Context *context, T *renderTargetContainer)
-{
-    for (auto &rt : *renderTargetContainer)
-    {
-        InvalidateRenderTarget(context, GetRenderTarget(&rt));
-    }
-}
-
-}  // anonymous namespace
-
 TextureStorage11::SamplerKey::SamplerKey()
     : baseLevel(0), mipLevels(0), swizzle(false), dropStencil(false)
 {
@@ -752,9 +718,7 @@ gl::Error TextureStorage11::setData(const gl::Context *context,
     UINT destSubresource = getSubresourceIndex(index);
 
     const gl::InternalFormat &internalFormatInfo =
-        gl::GetSizedInternalFormatInfo(image->getInternalFormat());
-    const gl::InternalFormat &packInfo =
-        gl::GetPackFormatInfo(image->getInternalFormat(), type);
+        gl::GetInternalFormatInfo(image->getInternalFormat(), type);
 
     gl::Box levelBox(0, 0, 0, getLevelWidth(index.mipIndex), getLevelHeight(index.mipIndex),
                      getLevelDepth(index.mipIndex));
@@ -772,14 +736,14 @@ gl::Error TextureStorage11::setData(const gl::Context *context,
     const int depth    = destBox ? destBox->depth : static_cast<int>(image->getDepth());
     GLuint srcRowPitch = 0;
     ANGLE_TRY_RESULT(
-        packInfo.computeRowPitch(width, unpack.alignment, unpack.rowLength),
+        internalFormatInfo.computeRowPitch(type, width, unpack.alignment, unpack.rowLength),
         srcRowPitch);
     GLuint srcDepthPitch = 0;
-    ANGLE_TRY_RESULT(packInfo.computeDepthPitch(height, unpack.imageHeight, srcRowPitch),
+    ANGLE_TRY_RESULT(internalFormatInfo.computeDepthPitch(height, unpack.imageHeight, srcRowPitch),
                      srcDepthPitch);
     GLuint srcSkipBytes = 0;
     ANGLE_TRY_RESULT(
-        packInfo.computeSkipBytes(srcRowPitch, srcDepthPitch, unpack, index.is3D()),
+        internalFormatInfo.computeSkipBytes(type, srcRowPitch, srcDepthPitch, unpack, index.is3D()),
         srcSkipBytes);
 
     const d3d11::Format &d3d11Format =
@@ -930,10 +894,6 @@ gl::Error TextureStorage11_2D::onDestroy(const gl::Context *context)
         mRenderer->getStateManager()->invalidateBoundViews();
     }
 
-    // Invalidate RenderTargets.
-    InvalidateRenderTargetContainer(context, &mRenderTarget);
-    InvalidateRenderTarget(context, mLevelZeroRenderTarget.get());
-
     return gl::NoError();
 }
 
@@ -1026,18 +986,8 @@ gl::Error TextureStorage11_2D::useLevelZeroWorkaroundTexture(const gl::Context *
 
     if (lastSetting != mUseLevelZeroTexture)
     {
-        // Mark everything as dirty to be conservative.
-        if (mLevelZeroRenderTarget)
-        {
-            mLevelZeroRenderTarget->signalDirty(context);
-        }
-        for (auto &renderTarget : mRenderTarget)
-        {
-            if (renderTarget)
-            {
-                renderTarget->signalDirty(context);
-            }
-        }
+        ASSERT(mSubject);
+        mSubject->onStateChange(context, angle::SubjectMessage::DEPENDENT_DIRTY_BITS);
     }
 
     return gl::NoError();
@@ -1159,7 +1109,15 @@ gl::Error TextureStorage11_2D::ensureTextureExists(int mipLevels)
         desc.MiscFlags          = getMiscFlags();
 
         ANGLE_TRY(mRenderer->allocateTexture(desc, mFormatInfo, outputTexture));
-        outputTexture->setDebugName("TexStorage2D.Texture");
+
+        if (useLevelZeroTexture)
+        {
+            outputTexture->setDebugName("TexStorage2D.Level0Texture");
+        }
+        else
+        {
+            outputTexture->setDebugName("TexStorage2D.Texture");
+        }
     }
 
     return gl::NoError();
@@ -1216,6 +1174,7 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::Context *context,
 
             d3d11::RenderTargetView rtv;
             ANGLE_TRY(mRenderer->allocateResource(rtvDesc, mLevelZeroTexture.get(), &rtv));
+            rtv.setDebugName("TexStorage2D.Level0RTV");
 
             mLevelZeroRenderTarget.reset(new TextureRenderTarget11(
                 std::move(rtv), mLevelZeroTexture, d3d11::SharedSRV(), d3d11::SharedSRV(),
@@ -1236,6 +1195,7 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::Context *context,
 
         d3d11::RenderTargetView rtv;
         ANGLE_TRY(mRenderer->allocateResource(rtvDesc, texture->get(), &rtv));
+        rtv.setDebugName("TexStorage2D.RTV");
 
         mRenderTarget[level].reset(new TextureRenderTarget11(
             std::move(rtv), *texture, *srv, *blitSRV, mFormatInfo.internalFormat, getFormatSet(),
@@ -1255,6 +1215,7 @@ gl::Error TextureStorage11_2D::getRenderTarget(const gl::Context *context,
 
     d3d11::DepthStencilView dsv;
     ANGLE_TRY(mRenderer->allocateResource(dsvDesc, texture->get(), &dsv));
+    dsv.setDebugName("TexStorage2D.DSV");
 
     mRenderTarget[level].reset(new TextureRenderTarget11(
         std::move(dsv), *texture, *srv, mFormatInfo.internalFormat, getFormatSet(),
@@ -1893,12 +1854,6 @@ gl::Error TextureStorage11_Cube::onDestroy(const gl::Context *context)
             }
         }
     }
-
-    for (auto &faceRenderTargets : mRenderTarget)
-    {
-        InvalidateRenderTargetContainer(context, &faceRenderTargets);
-    }
-    InvalidateRenderTargetContainer(context, &mLevelZeroRenderTarget);
 
     return gl::NoError();
 }
@@ -2544,9 +2499,6 @@ gl::Error TextureStorage11_3D::onDestroy(const gl::Context *context)
         }
     }
 
-    InvalidateRenderTargetContainer(context, &mLevelRenderTargets);
-    InvalidateRenderTargetContainer(context, &mLevelLayerRenderTargets);
-
     return gl::NoError();
 }
 
@@ -2869,8 +2821,6 @@ gl::Error TextureStorage11_2DArray::onDestroy(const gl::Context *context)
         }
     }
     mAssociatedImages.clear();
-
-    InvalidateRenderTargetContainer(context, &mRenderTargets);
 
     return gl::NoError();
 }
@@ -3251,7 +3201,6 @@ TextureStorage11_2DMultisample::TextureStorage11_2DMultisample(Renderer11 *rende
 
 gl::Error TextureStorage11_2DMultisample::onDestroy(const gl::Context *context)
 {
-    InvalidateRenderTarget(context, mRenderTarget.get());
     mRenderTarget.reset();
     return gl::NoError();
 }

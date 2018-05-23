@@ -137,8 +137,7 @@ class Tab extends _react.PureComponent {
       closeTab,
       source
     } = this.props;
-    const src = source.toJS();
-    const filename = (0, _source.getFilename)(src);
+    const filename = (0, _source.getFilename)(source);
     const sourceId = source.id;
     const active = selectedSource && sourceId == selectedSource.get("id") && !this.isProjectSearchEnabled() && !this.isSourceSearchEnabled();
     const isPrettyCode = (0, _source.isPretty)(source);
@@ -168,7 +167,7 @@ class Tab extends _react.PureComponent {
       key: sourceId,
       onMouseUp: handleTabClick,
       onContextMenu: e => this.onTabContextMenu(e, sourceId),
-      title: (0, _source.getFileURL)(src)
+      title: (0, _source.getFileURL)(source)
     }, _react2.default.createElement(_SourceIcon2.default, {
       source: source,
       shouldHide: icon => ["file", "javascript"].includes(icon)

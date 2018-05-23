@@ -57,7 +57,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsReadableUtilsSSE2.cpp']
     SOURCES['nsReadableUtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
-if CONFIG['BUILD_ARM_NEON'] or CONFIG['CPU_ARCH'] == 'aarch64':
+if CONFIG['HAVE_ARM_NEON'] or CONFIG['CPU_ARCH'] == 'aarch64':
     SOURCES += ['nsUTF8UtilsNEON.cpp']
     SOURCES['nsUTF8UtilsNEON.cpp'].flags += CONFIG['NEON_FLAGS']
 

@@ -2632,7 +2632,7 @@ GenerateNewObjectWithTemplateCode(JSContext* cx, JSObject* templateObject)
     Register objReg = R0.scratchReg();
     Register tempReg = R1.scratchReg();
     masm.branchIfPretenuredGroup(templateObject->group(), tempReg, &failure);
-    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataBuilder()),
+    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->realm()->addressOfMetadataBuilder()),
                    ImmWord(0), &failure);
     TemplateObject templateObj(templateObject);
     masm.createGCObject(objReg, tempReg, templateObj, gc::DefaultHeap, &failure);

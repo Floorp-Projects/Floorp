@@ -484,7 +484,7 @@ Instance::Instance(JSContext* cx,
                    Handle<FunctionVector> funcImports,
                    const ValVector& globalImportValues,
                    const WasmGlobalObjectVector& globalObjs)
-  : compartment_(cx->compartment()),
+  : realm_(cx->realm()),
     object_(object),
     code_(code),
     debug_(Move(debug)),
@@ -632,7 +632,7 @@ Instance::init(JSContext* cx)
 
 Instance::~Instance()
 {
-    compartment_->wasm.unregisterInstance(*this);
+    realm_->wasm.unregisterInstance(*this);
 
     const FuncImportVector& funcImports = metadata(code().stableTier()).funcImports;
 

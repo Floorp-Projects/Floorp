@@ -291,7 +291,7 @@ PresentationSessionInfo::SendBinaryMsg(const nsACString& aData)
 }
 
 nsresult
-PresentationSessionInfo::SendBlob(nsIDOMBlob* aBlob)
+PresentationSessionInfo::SendBlob(Blob* aBlob)
 {
   if (NS_WARN_IF(!IsSessionReady())) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;

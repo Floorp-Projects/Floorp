@@ -146,6 +146,13 @@ nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const
   return HasTransformStyle() && aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
 }
 
+bool
+nsStyleDisplay::HasPerspective(const nsIFrame* aContextFrame) const
+{
+  MOZ_ASSERT(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
+  return HasPerspectiveStyle() && aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
+}
+
 template<class ComputedStyleLike>
 bool
 nsStyleDisplay::HasFixedPosContainingBlockStyleInternal(
@@ -156,7 +163,7 @@ nsStyleDisplay::HasFixedPosContainingBlockStyleInternal(
   NS_ASSERTION(aComputedStyle->ThreadsafeStyleDisplay() == this,
                "unexpected aComputedStyle");
 
-  if (IsContainPaint() || HasPerspectiveStyle()) {
+  if (IsContainPaint()) {
     return true;
   }
 
@@ -175,7 +182,7 @@ nsStyleDisplay::IsFixedPosContainingBlockForAppropriateFrame(
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
   return HasFixedPosContainingBlockStyleInternal(aComputedStyle) ||
-         HasTransformStyle();
+         HasTransformStyle() || HasPerspectiveStyle();
 }
 
 bool
@@ -184,7 +191,7 @@ nsStyleDisplay::IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const
   // NOTE: Any CSS properties that influence the output of this function
   // should have the FIXPOS_CB flag set on them.
   if (!HasFixedPosContainingBlockStyleInternal(aContextFrame->Style()) &&
-      !HasTransform(aContextFrame)) {
+      !HasTransform(aContextFrame) && !HasPerspective(aContextFrame)) {
     return false;
   }
   return !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);
@@ -222,7 +229,8 @@ nsStyleDisplay::IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const
   mozilla::ComputedStyle* sc = aContextFrame->Style();
   if (!HasAbsPosContainingBlockStyleInternal(sc) &&
       !HasFixedPosContainingBlockStyleInternal(sc) &&
-      !HasTransform(aContextFrame)) {
+      !HasTransform(aContextFrame) &&
+      !HasPerspective(aContextFrame)) {
     return false;
   }
   return !nsSVGUtils::IsInSVGTextSubtree(aContextFrame);

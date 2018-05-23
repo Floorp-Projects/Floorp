@@ -108,7 +108,7 @@ add_task(async function test() {
       for (let dir of dirs) {
         let entries = dir.directoryEntries;
         while (entries.hasMoreElements()) {
-          let file = entries.getNext().QueryInterface(Ci.nsIFile);
+          let file = entries.nextFile;
           let index = existing.indexOf(file.path);
           isnot(index, -1, file.leafName + " exists");
 

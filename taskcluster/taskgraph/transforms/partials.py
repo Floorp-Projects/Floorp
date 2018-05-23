@@ -122,6 +122,8 @@ def make_task_description(config, jobs):
         elif 'esr' in config.params['project']:
             mar_channel_id = 'firefox-mozilla-esr'
 
+        level = config.params['level']
+
         worker = {
             'artifacts': _generate_task_output_files(dep_job, builds.keys(), locale),
             'implementation': 'docker-worker',
@@ -133,13 +135,12 @@ def make_task_description(config, jobs):
             'env': {
                 'SHA1_SIGNING_CERT': 'nightly_sha1',
                 'SHA384_SIGNING_CERT': 'nightly_sha384',
-                'DATADOG_API_SECRET': 'project/releng/gecko/build/level-3/datadog-api-key'
+                'DATADOG_API_SECRET':
+                    'project/releng/gecko/build/level-{}/datadog-api-key'.format(level),
             }
         }
         if mar_channel_id:
             worker['env']['ACCEPTED_MAR_CHANNEL_IDS'] = mar_channel_id
-
-        level = config.params['level']
 
         task = {
             'label': label,
@@ -158,7 +159,7 @@ def make_task_description(config, jobs):
         }
 
         # We only want caching on linux/windows due to bug 1436977
-        if any([platform in dep_th_platform for platform in ['linux', 'windows']]):
+        if level == 3 and any([platform in dep_th_platform for platform in ['linux', 'windows']]):
             task['scopes'].append(
                 'auth:aws-s3:read-write:tc-gp-private-1d-us-east-1/releng/mbsdiff-cache/')
 

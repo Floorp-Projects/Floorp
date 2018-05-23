@@ -9,7 +9,9 @@
 #ifndef LIBANGLE_ANGLETYPES_H_
 #define LIBANGLE_ANGLETYPES_H_
 
+#include "common/Color.h"
 #include "common/bitset_utils.h"
+#include "common/vector_utils.h"
 #include "libANGLE/Constants.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/PackedGLEnums.h"
@@ -40,19 +42,10 @@ enum PrimitiveType
 
 PrimitiveType GetPrimitiveType(GLenum drawMode);
 
-enum ShaderType
-{
-    SHADER_VERTEX,
-    SHADER_FRAGMENT,
-    SHADER_GEOMETRY,
-    SHADER_COMPUTE,
-    SHADER_TYPE_MAX
-};
-
 struct Rectangle
 {
     Rectangle() : x(0), y(0), width(0), height(0) {}
-    Rectangle(int x_in, int y_in, int width_in, int height_in)
+    constexpr Rectangle(int x_in, int y_in, int width_in, int height_in)
         : x(x_in), y(y_in), width(width_in), height(height_in)
     {
     }
@@ -75,12 +68,12 @@ bool ClipRectangle(const Rectangle &source, const Rectangle &clip, Rectangle *in
 
 struct Offset
 {
+    Offset() : x(0), y(0), z(0) {}
+    Offset(int x_in, int y_in, int z_in) : x(x_in), y(y_in), z(z_in) {}
+
     int x;
     int y;
     int z;
-
-    Offset() : x(0), y(0), z(0) { }
-    Offset(int x_in, int y_in, int z_in) : x(x_in), y(y_in), z(z_in) { }
 };
 
 bool operator==(const Offset &a, const Offset &b);
@@ -88,17 +81,17 @@ bool operator!=(const Offset &a, const Offset &b);
 
 struct Extents
 {
-    int width;
-    int height;
-    int depth;
-
-    Extents() : width(0), height(0), depth(0) { }
-    Extents(int width_, int height_, int depth_) : width(width_), height(height_), depth(depth_) { }
+    Extents() : width(0), height(0), depth(0) {}
+    Extents(int width_, int height_, int depth_) : width(width_), height(height_), depth(depth_) {}
 
     Extents(const Extents &other) = default;
     Extents &operator=(const Extents &other) = default;
 
     bool empty() const { return (width * height * depth) == 0; }
+
+    int width;
+    int height;
+    int depth;
 };
 
 bool operator==(const Extents &lhs, const Extents &rhs);
@@ -106,18 +99,29 @@ bool operator!=(const Extents &lhs, const Extents &rhs);
 
 struct Box
 {
+    Box() : x(0), y(0), z(0), width(0), height(0), depth(0) {}
+    Box(int x_in, int y_in, int z_in, int width_in, int height_in, int depth_in)
+        : x(x_in), y(y_in), z(z_in), width(width_in), height(height_in), depth(depth_in)
+    {
+    }
+    Box(const Offset &offset, const Extents &size)
+        : x(offset.x),
+          y(offset.y),
+          z(offset.z),
+          width(size.width),
+          height(size.height),
+          depth(size.depth)
+    {
+    }
+    bool operator==(const Box &other) const;
+    bool operator!=(const Box &other) const;
+
     int x;
     int y;
     int z;
     int width;
     int height;
     int depth;
-
-    Box() : x(0), y(0), z(0), width(0), height(0), depth(0) { }
-    Box(int x_in, int y_in, int z_in, int width_in, int height_in, int depth_in) : x(x_in), y(y_in), z(z_in), width(width_in), height(height_in), depth(depth_in) { }
-    Box(const Offset &offset, const Extents &size) : x(offset.x), y(offset.y), z(offset.z), width(size.width), height(size.height), depth(size.depth) { }
-    bool operator==(const Box &other) const;
-    bool operator!=(const Box &other) const;
 };
 
 struct RasterizerState final
@@ -204,7 +208,7 @@ struct SamplerState final
     SamplerState();
     SamplerState(const SamplerState &other);
 
-    static SamplerState CreateDefaultForTarget(GLenum target);
+    static SamplerState CreateDefaultForTarget(TextureType type);
 
     GLenum minFilter;
     GLenum magFilter;
@@ -316,7 +320,7 @@ using ContextID = uintptr_t;
 
 constexpr size_t CUBE_FACE_COUNT = 6;
 
-using TextureMap = std::map<GLenum, BindingPointer<Texture>>;
+using TextureMap = angle::PackedEnumMap<TextureType, BindingPointer<Texture>>;
 
 template <typename T>
 using AttachmentArray = std::array<T, IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS>;
@@ -327,6 +331,11 @@ using DrawBuffersArray = std::array<T, IMPLEMENTATION_MAX_DRAW_BUFFERS>;
 template <typename T>
 using AttribArray = std::array<T, MAX_VERTEX_ATTRIBS>;
 
+// OffsetBindingPointer.getSize() returns the size specified by the user, which may be larger than
+// the size of the bound buffer. This function reduces the returned size to fit the bound buffer if
+// necessary. Returns 0 if no buffer is bound or if integer overflow occurs.
+GLsizeiptr GetBoundBufferAvailableSize(const OffsetBindingPointer<Buffer> &binding);
+
 }  // namespace gl
 
 namespace rx
@@ -336,12 +345,14 @@ namespace rx
 #if __has_feature(cxx_rtti)
 #define ANGLE_HAS_DYNAMIC_CAST 1
 #endif
-#elif !defined(NDEBUG) && (!defined(_MSC_VER) || defined(_CPPRTTI)) && (!defined(__GNUC__) || __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3) || defined(__GXX_RTTI))
+#elif !defined(NDEBUG) && (!defined(_MSC_VER) || defined(_CPPRTTI)) &&              \
+    (!defined(__GNUC__) || __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3) || \
+     defined(__GXX_RTTI))
 #define ANGLE_HAS_DYNAMIC_CAST 1
 #endif
 
 #ifdef ANGLE_HAS_DYNAMIC_CAST
-#define ANGLE_HAS_DYNAMIC_TYPE(type, obj) (dynamic_cast<type >(obj) != nullptr)
+#define ANGLE_HAS_DYNAMIC_TYPE(type, obj) (dynamic_cast<type>(obj) != nullptr)
 #undef ANGLE_HAS_DYNAMIC_CAST
 #else
 #define ANGLE_HAS_DYNAMIC_TYPE(type, obj) (obj != nullptr)
@@ -351,15 +362,15 @@ namespace rx
 template <typename DestT, typename SrcT>
 inline DestT *GetAs(SrcT *src)
 {
-    ASSERT(ANGLE_HAS_DYNAMIC_TYPE(DestT*, src));
-    return static_cast<DestT*>(src);
+    ASSERT(ANGLE_HAS_DYNAMIC_TYPE(DestT *, src));
+    return static_cast<DestT *>(src);
 }
 
 template <typename DestT, typename SrcT>
 inline const DestT *GetAs(const SrcT *src)
 {
-    ASSERT(ANGLE_HAS_DYNAMIC_TYPE(const DestT*, src));
-    return static_cast<const DestT*>(src);
+    ASSERT(ANGLE_HAS_DYNAMIC_TYPE(const DestT *, src));
+    return static_cast<const DestT *>(src);
 }
 
 #undef ANGLE_HAS_DYNAMIC_TYPE
@@ -501,4 +512,4 @@ class ContextState;
 
 }  // namespace gl
 
-#endif // LIBANGLE_ANGLETYPES_H_
+#endif  // LIBANGLE_ANGLETYPES_H_

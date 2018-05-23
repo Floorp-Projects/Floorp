@@ -9,12 +9,6 @@ with Files("**"):
 
 DIRS += ['ipc']
 
-XPIDL_SOURCES += [
-    'nsIDOMBlob.idl',
-]
-
-XPIDL_MODULE = 'dom_file'
-
 EXPORTS += [
     'nsHostObjectProtocolHandler.h',
     'nsHostObjectURI.h',

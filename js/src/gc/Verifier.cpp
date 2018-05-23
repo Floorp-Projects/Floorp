@@ -411,6 +411,8 @@ gc::GCRuntime::verifyPreBarriers()
 void
 gc::VerifyBarriers(JSRuntime* rt, VerifierType type)
 {
+    if (GCRuntime::temporaryAbortIfWasmGc(rt->mainContextFromOwnThread()))
+        return;
     if (type == PreBarrierVerifier)
         rt->gc.verifyPreBarriers();
 }

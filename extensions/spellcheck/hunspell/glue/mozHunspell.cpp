@@ -421,13 +421,9 @@ mozHunspell::LoadDictionariesFromDir(nsIFile* aDir)
   if (NS_FAILED(rv) || !check)
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsISimpleEnumerator> e;
-  rv = aDir->GetDirectoryEntries(getter_AddRefs(e));
+  nsCOMPtr<nsIDirectoryEnumerator> files;
+  rv = aDir->GetDirectoryEntries(getter_AddRefs(files));
   if (NS_FAILED(rv))
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
-  if (!files)
     return NS_ERROR_UNEXPECTED;
 
   nsCOMPtr<nsIFile> file;

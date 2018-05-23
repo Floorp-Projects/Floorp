@@ -160,10 +160,11 @@ void BufferD3D::invalidateStaticData(const gl::Context *context)
 }
 
 // Creates static buffers if sufficient used data has been left unmodified
-void BufferD3D::promoteStaticUsage(const gl::Context *context, int dataSize)
+void BufferD3D::promoteStaticUsage(const gl::Context *context, size_t dataSize)
 {
     if (mUsage == D3DBufferUsage::DYNAMIC)
     {
+        // Note: This is not a safe math operation. 'dataSize' can come from the app.
         mUnmodifiedDataUse += dataSize;
 
         if (mUnmodifiedDataUse > 3 * getSize())

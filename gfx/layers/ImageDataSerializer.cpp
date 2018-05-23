@@ -79,6 +79,41 @@ ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
 }
 
 uint32_t
+ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
+                       const gfx::IntSize& aCbCrSize, int32_t aCbCrStride,
+                       uint32_t aYOffset, uint32_t aCbOffset,
+                       uint32_t aCrOffset)
+{
+  MOZ_ASSERT(aYSize.height >= 0 && aYSize.width >= 0);
+
+  if (aYSize.height < 0 || aYSize.width < 0 || aCbCrSize.height < 0 || aCbCrSize.width < 0 ||
+      !gfx::Factory::AllowedSurfaceSize(IntSize(aYStride, aYSize.height)) ||
+      !gfx::Factory::AllowedSurfaceSize(IntSize(aCbCrStride, aCbCrSize.height))) {
+    return 0;
+  }
+
+  uint32_t yLength = GetAlignedStride<4>(aYStride, aYSize.height);
+  uint32_t cbCrLength = GetAlignedStride<4>(aCbCrStride, aCbCrSize.height);
+  if (yLength == 0 || cbCrLength == 0) {
+    return 0;
+  }
+
+  CheckedInt<uint32_t> yEnd = aYOffset;
+  yEnd += yLength;
+  CheckedInt<uint32_t> cbEnd = aCbOffset;
+  cbEnd += cbCrLength;
+  CheckedInt<uint32_t> crEnd = aCrOffset;
+  crEnd += cbCrLength;
+
+  if (!yEnd.isValid() || !cbEnd.isValid() || !crEnd.isValid() ||
+      yEnd.value() > aCbOffset || cbEnd.value() > aCrOffset) {
+    return 0;
+  }
+
+  return crEnd.value();
+}
+
+uint32_t
 ComputeYCbCrBufferSize(uint32_t aBufferSize)
 {
   return GetAlignedStride<4>(aBufferSize, 1);

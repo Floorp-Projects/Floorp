@@ -16,9 +16,10 @@
 BEGIN_TEST(testSavedStacks_withNoStack)
 {
     JSCompartment* compartment = js::GetContextCompartment(cx);
-    compartment->setAllocationMetadataBuilder(&js::SavedStacks::metadataBuilder);
+    JS::Realm* realm = JS::GetRealmForCompartment(compartment);
+    realm->setAllocationMetadataBuilder(&js::SavedStacks::metadataBuilder);
     JS::RootedObject obj(cx, js::NewDenseEmptyArray(cx));
-    compartment->setAllocationMetadataBuilder(nullptr);
+    realm->setAllocationMetadataBuilder(nullptr);
     return true;
 }
 END_TEST(testSavedStacks_withNoStack)

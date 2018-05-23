@@ -1886,43 +1886,31 @@ void nsWebBrowserPersist::CleanupLocalFiles()
                 // recursed through to ensure they are actually empty.
 
                 bool isEmptyDirectory = true;
-                nsCOMArray<nsISimpleEnumerator> dirStack;
+                nsCOMArray<nsIDirectoryEnumerator> dirStack;
                 int32_t stackSize = 0;
 
                 // Push the top level enum onto the stack
-                nsCOMPtr<nsISimpleEnumerator> pos;
+                nsCOMPtr<nsIDirectoryEnumerator> pos;
                 if (NS_SUCCEEDED(file->GetDirectoryEntries(getter_AddRefs(pos))))
                     dirStack.AppendObject(pos);
 
                 while (isEmptyDirectory && (stackSize = dirStack.Count()))
                 {
                     // Pop the last element
-                    nsCOMPtr<nsISimpleEnumerator> curPos;
+                    nsCOMPtr<nsIDirectoryEnumerator> curPos;
                     curPos = dirStack[stackSize-1];
                     dirStack.RemoveObjectAt(stackSize - 1);
 
-                    // Test if the enumerator has any more files in it
-                    bool hasMoreElements = false;
-                    curPos->HasMoreElements(&hasMoreElements);
-                    if (!hasMoreElements)
+                    nsCOMPtr<nsIFile> child;
+                    if (NS_FAILED(curPos->GetNextFile(getter_AddRefs(child))) || !child)
                     {
                         continue;
                     }
 
-                    // Child files automatically make this code drop out,
-                    // while child dirs keep the loop going.
-                    nsCOMPtr<nsISupports> child;
-                    curPos->GetNext(getter_AddRefs(child));
-                    NS_ASSERTION(child, "No child element, but hasMoreElements says otherwise");
-                    if (!child)
-                        continue;
-                    nsCOMPtr<nsIFile> childAsFile = do_QueryInterface(child);
-                    NS_ASSERTION(childAsFile, "This should be a file but isn't");
-
                     bool childIsSymlink = false;
-                    childAsFile->IsSymlink(&childIsSymlink);
+                    child->IsSymlink(&childIsSymlink);
                     bool childIsDir = false;
-                    childAsFile->IsDirectory(&childIsDir);
+                    child->IsDirectory(&childIsDir);
                     if (!childIsDir || childIsSymlink)
                     {
                         // Some kind of file or symlink which means dir
@@ -1931,8 +1919,8 @@ void nsWebBrowserPersist::CleanupLocalFiles()
                         break;
                     }
                     // Push parent enumerator followed by child enumerator
-                    nsCOMPtr<nsISimpleEnumerator> childPos;
-                    childAsFile->GetDirectoryEntries(getter_AddRefs(childPos));
+                    nsCOMPtr<nsIDirectoryEnumerator> childPos;
+                    child->GetDirectoryEntries(getter_AddRefs(childPos));
                     dirStack.AppendObject(curPos);
                     if (childPos)
                         dirStack.AppendObject(childPos);

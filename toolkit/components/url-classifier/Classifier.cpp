@@ -333,19 +333,12 @@ Classifier::ResetTables(ClearType aType, const nsTArray<nsCString>& aTables)
 void
 Classifier::DeleteTables(nsIFile* aDirectory, const nsTArray<nsCString>& aTables)
 {
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  bool hasMore;
-  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = entries->GetNext(getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-    NS_ENSURE_TRUE_VOID(file);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) && file) {
     // If |file| is a directory, recurse to find its entries as well.
     bool isDirectory;
     if (NS_FAILED(file->IsDirectory(&isDirectory))) {
@@ -970,18 +963,12 @@ Classifier::RegenActiveTables()
 nsresult
 Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
 {
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool hasMore;
-  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = entries->GetNext(getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) && file) {
     // If |file| is a directory, recurse to find its entries as well.
     bool isDirectory;
     if (NS_FAILED(file->IsDirectory(&isDirectory))) {
@@ -1564,19 +1551,13 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
 nsresult
 Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult)
 {
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_ARG_POINTER(entries);
 
-  bool hasMore;
-  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = entries->GetNext(getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) && file) {
     // If |file| is a directory, recurse to find its entries as well.
     bool isDirectory;
     if (NS_FAILED(file->IsDirectory(&isDirectory))) {

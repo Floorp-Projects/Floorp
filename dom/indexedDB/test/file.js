@@ -110,8 +110,8 @@ function verifyBuffers(buffer1, buffer2)
 function verifyBlob(blob1, blob2, fileId, blobReadHandler)
 {
   // eslint-disable-next-line mozilla/use-cc-etc
-  is(blob1 instanceof Components.interfaces.nsIDOMBlob, true,
-     "Instance of nsIDOMBlob");
+  is(SpecialPowers.wrap(Blob).isInstance(blob1), true,
+     "Instance of Blob");
   is(blob1 instanceof File, blob2 instanceof File,
      "Instance of DOM File");
   is(blob1.size, blob2.size, "Correct size");

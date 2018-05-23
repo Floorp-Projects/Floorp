@@ -116,7 +116,7 @@ var reference_dir_contents = function reference_dir_contents(path) {
   let result = [];
   let entries = new FileUtils.File(path).directoryEntries;
   while (entries.hasMoreElements()) {
-    let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+    let entry = entries.nextFile;
     result.push(entry.path);
   }
   return result;

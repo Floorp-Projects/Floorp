@@ -1100,12 +1100,8 @@ ReadStack(PathCharPtr aFileName, Telemetry::ProcessedStack &aStack)
 void
 TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir)
 {
-  nsCOMPtr<nsISimpleEnumerator> e;
-  if (NS_FAILED(aProfileDir->GetDirectoryEntries(getter_AddRefs(e)))) {
-    return;
-  }
-  nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
-  if (!files) {
+  nsCOMPtr<nsIDirectoryEnumerator> files;
+  if (NS_FAILED(aProfileDir->GetDirectoryEntries(getter_AddRefs(files)))) {
     return;
   }
 
