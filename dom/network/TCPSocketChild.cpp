@@ -26,7 +26,8 @@ DeserializeArrayBuffer(JSContext* cx,
                        const InfallibleTArray<uint8_t>& aBuffer,
                        JS::MutableHandle<JS::Value> aVal)
 {
-  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> data(js_pod_malloc<uint8_t>(aBuffer.Length()));
+  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> data(
+    js_pod_arena_malloc<uint8_t>(js::ArrayBufferContentsArena, aBuffer.Length()));
   if (!data)
       return false;
   memcpy(data.get(), aBuffer.Elements(), aBuffer.Length());
