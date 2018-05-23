@@ -2445,7 +2445,7 @@ MediaCacheStream::Unpin()
 }
 
 int64_t
-MediaCacheStream::GetLength()
+MediaCacheStream::GetLength() const
 {
   MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
