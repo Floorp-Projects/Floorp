@@ -39,9 +39,6 @@
  * reporting to hunspell without modifying its code, in order to ease future
  * upgrades.
  *
- * This file is force-included through mozilla-config.h which is generated
- * during the configure step.
- *
  * Currently, the memory allocated using operator new/new[] is not being
  * tracked, but that's OK, since almost all of the memory used by Hunspell is
  * allocated using C memory allocation functions.
