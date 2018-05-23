@@ -185,37 +185,36 @@ A regular expression program is essentially a sequence of opcodes produced by
 the compiler plus various facts about the regular expression (such as whether
 it is anchored, its capture names, etc.).
 
-### The regex! macro (or why `regex::internal` exists)
+### The regex! macro
 
-The `regex!` macro is defined in the `regex_macros` crate as a compiler plugin,
-which is maintained in this repository. The `regex!` macro compiles a regular
-expression at compile time into specialized Rust code.
+The `regex!` macro no longer exists. It was developed in a bygone era as a
+compiler plugin during the infancy of the regex crate. Back then, then only
+matching engine in the crate was the Pike VM. The `regex!` macro was, itself,
+also a Pike VM. The only advantages it offered over the dynamic Pike VM that
+was built at runtime were the following:
 
-The `regex!` macro was written when this library was first conceived and
-unfortunately hasn't changed much since then. In particular, it encodes the
-entire Pike VM into stack allocated space (no heap allocation is done). When
-`regex!` was first written, this provided a substantial speed boost over
-so-called "dynamic" regexes compiled at runtime, and in particular had much
-lower overhead per match. This was because the only matching engine at the
-time was the Pike VM. The addition of other matching engines has inverted
-the relationship; the `regex!` macro is almost never faster than the dynamic
-variant. (In fact, it is typically substantially slower.)
+  1. Syntax checking was done at compile time. Your Rust program wouldn't
+     compile if your regex didn't compile.
+  2. Reduction of overhead that was proportional to the size of the regex.
+     For the most part, this overhead consisted of heap allocation, which
+     was nearly eliminated in the compiler plugin.
 
-In order to build the `regex!` macro this way, it must have access to some
-internals of the regex library, which is in a distinct crate. (Compiler plugins
-must be part of a distinct crate.) Namely, it must be able to compile a regular
-expression and access its opcodes. The necessary internals are exported as part
-of the top-level `internal` module in the regex library, but is hidden from
-public documentation. In order to present a uniform API between programs build
-by the `regex!` macro and their dynamic analoges, the `Regex` type is an enum
-whose variants are hidden from public documentation.
+The main takeaway here is that the compiler plugin was a marginally faster
+version of a slow regex engine. As the regex crate evolved, it grew other regex
+engines (DFA, bounded backtracker) and sophisticated literal optimizations.
+The regex macro didn't keep pace, and it therefore became (dramatically) slower
+than the dynamic engines. The only reason left to use it was for the compile
+time guarantee that your regex is correct. Fortunately, Clippy (the Rust lint
+tool) has a lint that checks your regular expression validity, which mostly
+replaces that use case.
 
-In the future, the `regex!` macro should probably work more like Ragel, but
-it's not clear how hard this is. In particular, the `regex!` macro should be
-able to support all the features of dynamic regexes, which may be hard to do
-with a Ragel-style implementation approach. (Which somewhat suggests that the
-`regex!` macro may also need to grow conditional execution logic like the
-dynamic variants, which seems rather grotesque.)
+Additionally, the regex compiler plugin stopped receiving maintenance. Nobody
+complained. At that point, it seemed prudent to just remove it.
+
+Will a compiler plugin be brought back? The future is murky, but there is
+definitely an opportunity there to build something that is faster than the
+dynamic engines in some cases. But it will be challenging! As of now, there
+are no plans to work on this.
 
 
 ## Testing
@@ -236,7 +235,6 @@ the AT&T test suite) and code generate tests for each matching engine. The
 approach we use in this library is to create a Cargo.toml entry point for each
 matching engine we want to test. The entry points are:
 
-* `tests/test_plugin.rs` - tests the `regex!` macro
 * `tests/test_default.rs` - tests `Regex::new`
 * `tests/test_default_bytes.rs` - tests `bytes::Regex::new`
 * `tests/test_nfa.rs` - tests `Regex::new`, forced to use the NFA
@@ -261,18 +259,14 @@ entry points, it can take a while to compile everything. To reduce compile
 times slightly, try using `cargo test --test default`, which will only use the
 `tests/test_default.rs` entry point.
 
-N.B. To run tests for the `regex!` macro, use:
-
-    cargo test --manifest-path regex_macros/Cargo.toml
-
 
 ## Benchmarking
 
 The benchmarking in this crate is made up of many micro-benchmarks. Currently,
 there are two primary sets of benchmarks: the benchmarks that were adopted
-at this library's inception (in `benches/src/misc.rs`) and a newer set of
+at this library's inception (in `bench/src/misc.rs`) and a newer set of
 benchmarks meant to test various optimizations. Specifically, the latter set
-contain some analysis and are in `benches/src/sherlock.rs`. Also, the latter
+contain some analysis and are in `bench/src/sherlock.rs`. Also, the latter
 set are all executed on the same lengthy input whereas the former benchmarks
 are executed on strings of varying length.
 
@@ -284,7 +278,6 @@ separately from the main regex crate.
 Benchmarking follows a similarly wonky setup as tests. There are multiple entry
 points:
 
-* `bench_rust_plugin.rs` - benchmarks the `regex!` macro
 * `bench_rust.rs` - benchmarks `Regex::new`
 * `bench_rust_bytes.rs` benchmarks `bytes::Regex::new`
 * `bench_pcre.rs` - benchmarks PCRE
@@ -299,17 +292,39 @@ library benchmarks (especially RE2).
 If you're hacking on one of the matching engines and just want to see
 benchmarks, then all you need to run is:
 
-    $ ./run-bench rust
+    $ ./bench/run rust
 
 If you want to compare your results with older benchmarks, then try:
 
-    $ ./run-bench rust | tee old
+    $ ./bench/run rust | tee old
     $ ... make it faster
-    $ ./run-bench rust | tee new
-    $ cargo-benchcmp old new --improvements
+    $ ./bench/run rust | tee new
+    $ cargo benchcmp old new --improvements
 
 The `cargo-benchcmp` utility is available here:
 https://github.com/BurntSushi/cargo-benchcmp
 
-The `run-bench` utility can run benchmarks for PCRE and Oniguruma too. See
-`./run-bench --help`.
+The `./bench/run` utility can run benchmarks for PCRE and Oniguruma too. See
+`./bench/bench --help`.
+
+## Dev Docs
+
+When digging your teeth into the codebase for the first time, the
+crate documentation can be a great resource. By default `rustdoc`
+will strip out all documentation of private crate members in an
+effort to help consumers of the crate focus on the *interface*
+without having to concern themselves with the *implementation*.
+Normally this is a great thing, but if you want to start hacking
+on regex internals it is not what you want. Many of the private members
+of this crate are well documented with rustdoc style comments, and
+it would be a shame to miss out on the opportunity that presents.
+You can generate the private docs with:
+
+```
+$ rustdoc --crate-name docs src/lib.rs -o target/doc -L target/debug/deps --no-defaults --passes collapse-docs --passes unindent-comments
+```
+
+Then just point your browser at `target/doc/regex/index.html`.
+
+See https://github.com/rust-lang/rust/issues/15347 for more info
+about generating developer docs for internal use.

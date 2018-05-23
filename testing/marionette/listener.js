@@ -1150,10 +1150,6 @@ async function findElementContent(strategy, selector, opts = {}) {
   }
 
   opts.all = false;
-  if (opts.startNode) {
-    opts.startNode = opts.startNode;
-  }
-
   let el = await element.find(curContainer, strategy, selector, opts);
   return seenEls.add(el);
 }

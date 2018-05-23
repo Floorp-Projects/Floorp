@@ -36,3 +36,9 @@ replace!(no_expand2, replace,
 
 // See https://github.com/rust-lang/regex/issues/314
 replace!(match_at_start_replace_with_empty, replace_all, r"foo", "foobar", t!(""), "bar");
+
+// See https://github.com/rust-lang/regex/issues/393
+replace!(single_empty_match, replace, r"^", "bar", t!("foo"), "foobar");
+
+// See https://github.com/rust-lang/regex/issues/399
+replace!(capture_longest_possible_name, replace_all, r"(.)", "b", t!("${1}a $1a"), "ba ");

@@ -388,33 +388,12 @@ html|input.urlbar-input {
   margin-bottom: -26px;
 }
 
-/* BOOKMARKING PANEL */
-#editBookmarkPanelStarIcon {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill-attention);
-  width: 40px;
-  height: 40px;
-  margin: 4px;
-}
+/* Bookmarking panel */
 
-#editBookmarkPanelTitle {
-  font-size: 130%;
-  font-weight: bold;
-}
+%include ../shared/places/editBookmarkPanel.inc.css
 
-#editBMPanel_rows > row {
-  margin-bottom: 8px;
-}
-
-#editBMPanel_rows > row:last-of-type {
-  margin-bottom: 0;
-}
-
-/**** Input elements ****/
-
-#editBMPanel_rows > row > textbox,
-#editBMPanel_rows > row > hbox > textbox {
+#editBookmarkPanelRows > vbox > textbox,
+#editBookmarkPanelRows > vbox > hbox > textbox {
   -moz-appearance: none;
   background: linear-gradient(#fafafa, #fff);
   background-clip: padding-box;
@@ -426,15 +405,12 @@ html|input.urlbar-input {
   padding: 3px 6px;
 }
 
-#editBMPanel_rows > row > textbox[focused="true"],
-#editBMPanel_rows > row > hbox > textbox[focused="true"] {
+#editBookmarkPanelRows > vbox > textbox[focused="true"],
+#editBookmarkPanelRows > vbox > hbox > textbox[focused="true"] {
   border-color: -moz-mac-focusring !important;
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-/**** HUD style buttons ****/
-
-.editBookmarkPanelHeaderButton,
 .editBookmarkPanelBottomButton {
   @hudButton@
   margin: 0;
@@ -442,22 +418,16 @@ html|input.urlbar-input {
   min-height: 22px;
 }
 
-.editBookmarkPanelHeaderButton:hover:active,
 .editBookmarkPanelBottomButton:hover:active {
   @hudButtonPressed@
 }
 
-.editBookmarkPanelHeaderButton:-moz-focusring,
 .editBookmarkPanelBottomButton:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
 .editBookmarkPanelBottomButton[default="true"] {
   background-color: #666;
-}
-
-#editBookmarkPanelHeader {
-  margin-bottom: 6px;
 }
 
 .editBookmarkPanelBottomButton:last-child {
@@ -632,10 +602,6 @@ html|input.urlbar-input {
 #editBMPanel_tagsField > .textbox-input-box > html|*.textbox-input::placeholder {
   opacity: 1.0;
   color: #bbb;
-}
-
-.editBMPanel_rowLabel {
-  text-align: end;
 }
 
 /* ----- SIDEBAR ELEMENTS ----- */

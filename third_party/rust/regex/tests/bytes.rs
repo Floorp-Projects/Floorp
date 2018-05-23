@@ -3,7 +3,7 @@
 
 // A silly wrapper to make it possible to write and match raw bytes.
 struct R<'a>(&'a [u8]);
-impl<'a> R<'a> { fn as_bytes(&self) -> &'a [u8] { &self.0 } }
+impl<'a> R<'a> { fn as_bytes(&self) -> &'a [u8] { self.0 } }
 
 mat!(word_boundary, r"(?-u) \b", " δ", None);
 mat!(word_boundary_unicode, r" \b", " δ", Some((0, 1)));
@@ -60,3 +60,13 @@ matiter!(invalidutf8_anchor3,
 fn negated_full_byte_range() {
      assert!(::regex::bytes::Regex::new(r#"(?-u)[^\x00-\xff]"#).is_err());
 }
+
+matiter!(word_boundary_ascii1, r"(?-u:\B)x(?-u:\B)", "áxβ");
+matiter!(word_boundary_ascii2, r"(?-u:\B)", "0\u{7EF5E}", (2, 2), (3, 3), (4, 4), (5, 5));
+
+// See: https://github.com/rust-lang/regex/issues/264
+mat!(ascii_boundary_no_capture, r"(?-u)\B", "\u{28f3e}", Some((0, 0)));
+mat!(ascii_boundary_capture, r"(?-u)(\B)", "\u{28f3e}", Some((0, 0)));
+
+// See: https://github.com/rust-lang/regex/issues/271
+mat!(end_not_wb, r"$(?-u:\B)", "\u{5c124}\u{b576c}", Some((8, 8)));

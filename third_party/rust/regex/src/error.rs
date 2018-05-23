@@ -9,11 +9,10 @@
 // except according to those terms.
 
 use std::fmt;
-
-use syntax;
+use std::iter::repeat;
 
 /// An error that occurred during parsing or compiling a regular expression.
-#[derive(Debug)]
+#[derive(Clone, PartialEq)]
 pub enum Error {
     /// A syntax error.
     Syntax(String),
@@ -56,8 +55,30 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<syntax::Error> for Error {
-    fn from(err: syntax::Error) -> Error {
-        Error::Syntax(err.to_string())
+// We implement our own Debug implementation so that we show nicer syntax
+// errors when people use `Regex::new(...).unwrap()`. It's a little weird,
+// but the `Syntax` variant is already storing a `String` anyway, so we might
+// as well format it nicely.
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::Syntax(ref err) => {
+                let hr: String = repeat('~').take(79).collect();
+                writeln!(f, "Syntax(")?;
+                writeln!(f, "{}", hr)?;
+                writeln!(f, "{}", err)?;
+                writeln!(f, "{}", hr)?;
+                write!(f, ")")?;
+                Ok(())
+            }
+            Error::CompiledTooBig(limit) => {
+                f.debug_tuple("CompiledTooBig")
+                    .field(&limit)
+                    .finish()
+            }
+            Error::__Nonexhaustive => {
+                f.debug_tuple("__Nonexhaustive").finish()
+            }
+        }
     }
 }

@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
+#editBookmarkPanelRows > vbox {
+  margin-bottom: .5em;
+}
 
 /**** folder menulist ****/
 .folder-icon > .menulist-label-box > .menulist-icon,

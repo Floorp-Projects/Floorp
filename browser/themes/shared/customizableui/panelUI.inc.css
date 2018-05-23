@@ -1505,9 +1505,12 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   font-size: 13px;
   font-weight: 500;
   margin: 0;
+  text-align: center;
+}
+
+.panel-header > .subviewbutton-back + label {
   /* Add the size of the back button to center properly. */
   margin-inline-end: 32px;
-  text-align: center;
 }
 
 .panel-header > .subviewbutton-back {

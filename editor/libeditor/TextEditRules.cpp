@@ -44,6 +44,13 @@ namespace mozilla {
 
 using namespace dom;
 
+template CreateElementResult
+TextEditRules::CreateBRInternal(const EditorDOMPoint& aPointToInsert,
+                                bool aCreateMozBR);
+template CreateElementResult
+TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
+                                bool aCreateMozBR);
+
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (IsReadonly() || IsDisabled()) \
   {                     \
@@ -197,6 +204,10 @@ nsresult
 TextEditRules::BeforeEdit(EditAction aAction,
                           nsIEditor::EDirection aDirection)
 {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (mLockRulesSniffing) {
     return NS_OK;
   }
@@ -208,11 +219,6 @@ TextEditRules::BeforeEdit(EditAction aAction,
     mTheAction = aAction;
   }
   mActionNesting++;
-
-  // get the selection and cache the position before editing
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   if (aAction == EditAction::setText) {
     // setText replaces all text, so mCachedSelectionNode might be invalid on
@@ -237,6 +243,10 @@ nsresult
 TextEditRules::AfterEdit(EditAction aAction,
                          nsIEditor::EDirection aDirection)
 {
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+
   if (mLockRulesSniffing) {
     return NS_OK;
   }
@@ -245,9 +255,6 @@ TextEditRules::AfterEdit(EditAction aAction,
 
   MOZ_ASSERT(mActionNesting>0, "bad action nesting!");
   if (!--mActionNesting) {
-    if (NS_WARN_IF(!mTextEditor)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
     Selection* selection = mTextEditor->GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
@@ -285,8 +292,14 @@ TextEditRules::AfterEdit(EditAction aAction,
       return rv;
     }
 
-    // collapse the selection to the trailing BR if it's at the end of our text node
-    CollapseSelectionToTrailingBRIfNeeded();
+    // Collapse the selection to the trailing moz-<br> if it's at the end of
+    // our text node.
+    rv = CollapseSelectionToTrailingBRIfNeeded();
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      "Failed to selection to after the text node in TextEditor");
   }
   return NS_OK;
 }
@@ -300,8 +313,8 @@ TextEditRules::WillDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   MOZ_ASSERT(aCancel);
@@ -343,8 +356,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
-      WillInsert(aCancel);
-      return NS_OK;
+      return WillInsert(aCancel);
     default:
       return NS_ERROR_FAILURE;
   }
@@ -358,8 +370,8 @@ TextEditRules::DidDoAction(Selection* aSelection,
   if (NS_WARN_IF(!aSelection) || NS_WARN_IF(!aInfo)) {
     return NS_ERROR_INVALID_ARG;
   }
-  if (NS_WARN_IF(!mTextEditor)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
   }
 
   AutoSafeEditorData setData(*this, *mTextEditor, *aSelection);
@@ -370,7 +382,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
 
   switch (aInfo->action) {
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aInfo->collapsedAction, aResult);
+      return DidDeleteSelection();
     case EditAction::undo:
       return DidUndo(aResult);
     case EditAction::redo:
@@ -381,11 +393,6 @@ TextEditRules::DidDoAction(Selection* aSelection,
   }
 }
 
-/**
- * Return false if the editor has non-empty text nodes or non-text
- * nodes.  Otherwise, i.e., there is no meaningful content,
- * return true.
- */
 bool
 TextEditRules::DocumentIsEmpty()
 {
@@ -397,28 +404,37 @@ TextEditRules::DocumentIsEmpty()
   return retVal;
 }
 
-void
+nsresult
 TextEditRules::WillInsert(bool* aCancel)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
-  MOZ_ASSERT(aCancel);
 
   if (IsReadonly() || IsDisabled()) {
-    *aCancel = true;
-    return;
+    if (aCancel) {
+      *aCancel = true;
+    }
+    return NS_OK;
   }
 
   // initialize out param
-  *aCancel = false;
+  if (aCancel) {
+    *aCancel = false;
+  }
 
   // check for the magic content node and delete it if it exists
-  if (mBogusNode) {
-    DebugOnly<nsresult> rv =
-      TextEditorRef().DeleteNodeWithTransaction(*mBogusNode);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-      "Failed to remove the bogus node");
-    mBogusNode = nullptr;
+  if (!mBogusNode) {
+    return NS_OK;
   }
+
+  DebugOnly<nsresult> rv =
+    TextEditorRef().DeleteNodeWithTransaction(*mBogusNode);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+    "Failed to remove the bogus node");
+  mBogusNode = nullptr;
+  return NS_OK;
 }
 
 nsresult
@@ -457,15 +473,18 @@ TextEditRules::WillInsertBreak(bool* aCancel,
     if (!SelectionRef().IsCollapsed()) {
       rv = TextEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
                                                    nsIEditor::eStrip);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
     }
 
-    WillInsert(aCancel);
-    // initialize out param
-    // we want to ignore result of WillInsert()
-    *aCancel = false;
+    rv = WillInsert();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
   return NS_OK;
 }
@@ -487,9 +506,8 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded()
   // editor is reframed, this may be called by AfterEdit().
   if (!SelectionRef().RangeCount()) {
     TextEditorRef().CollapseSelectionToEnd(&SelectionRef());
-    if (TextEditorRef().Destroyed()) {
-      // The editor has been destroyed.
-      return NS_ERROR_FAILURE;
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
     }
   }
 
@@ -527,6 +545,10 @@ TextEditRules::CollapseSelectionToTrailingBRIfNeeded()
   }
   ErrorResult error;
   SelectionRef().Collapse(afterStartContainer, error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    error.SuppressException();
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -674,7 +696,9 @@ TextEditRules::WillInsertText(EditAction aAction,
   bool truncated = false;
   nsresult rv =
     TruncateInsertionIfNeeded(inString, outString, aMaxLength, &truncated);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   // If we're exceeding the maxlength when composing IME, we need to clean up
   // the composing text, so we shouldn't return early.
   if (truncated && outString->IsEmpty() &&
@@ -697,15 +721,18 @@ TextEditRules::WillInsertText(EditAction aAction,
   if (!SelectionRef().IsCollapsed()) {
     rv = TextEditorRef().DeleteSelectionAsAction(nsIEditor::eNone,
                                                  nsIEditor::eStrip);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
-  WillInsert(aCancel);
-  // initialize out param
-  // we want to ignore result of WillInsert()
-  *aCancel = false;
+  rv = WillInsert(aCancel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   // handle password field data
   // this has the side effect of changing all the characters in aOutString
@@ -736,14 +763,17 @@ TextEditRules::WillInsertText(EditAction aAction,
     mPasswordText.Insert(*outString, start);
 
     if (LookAndFeel::GetEchoPassword() && !DontEchoPassword()) {
-      HideLastPWInput();
+      nsresult rv = HideLastPWInput();
       mLastStart = start;
       mLastLength = outString->Length();
       if (mTimer) {
         mTimer->Cancel();
-      } else {
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      if (!mTimer) {
         mTimer = NS_NewTimer();
-        NS_ENSURE_TRUE(mTimer, NS_ERROR_OUT_OF_MEMORY);
       }
       mTimer->InitWithCallback(this, LookAndFeel::GetPasswordMaskDelay(),
                                nsITimer::TYPE_ONE_SHOT);
@@ -790,6 +820,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     }
     rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
                                                    betterInsertionPoint);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -803,6 +836,9 @@ TextEditRules::WillInsertText(EditAction aAction,
     rv = TextEditorRef().InsertTextWithTransaction(*doc, *outString,
                                                    atStartOfSelection,
                                                    &pointAfterStringInserted);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -822,6 +858,9 @@ TextEditRules::WillInsertText(EditAction aAction,
         "GetChild() should be nullptr");
       error = IgnoredErrorResult();
       SelectionRef().Collapse(pointAfterStringInserted, error);
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       NS_WARNING_ASSERTION(!error.Failed(),
         "Failed to collapse selection after inserting string");
     }
@@ -858,9 +897,10 @@ TextEditRules::WillSetText(bool* aCancel,
     return NS_OK;
   }
 
-  WillInsert(aCancel);
-  // we want to ignore result of WillInsert()
-  *aCancel = false;
+  nsresult rv = WillInsert(aCancel);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   RefPtr<Element> rootElement = TextEditorRef().GetRoot();
   uint32_t count = rootElement->GetChildCount();
@@ -896,6 +936,9 @@ TextEditRules::WillSetText(bool* aCancel,
     nsresult rv =
       TextEditorRef().InsertNodeWithTransaction(
                         *newNode, EditorRawDOMPoint(rootElement, 0));
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -913,8 +956,11 @@ TextEditRules::WillSetText(bool* aCancel,
 
   // Even if empty text, we don't remove text node and set empty text
   // for performance
-  nsresult rv = TextEditorRef().SetTextImpl(SelectionRef(), tString,
-                                            *curNode->GetAsText());
+  rv = TextEditorRef().SetTextImpl(SelectionRef(), tString,
+                                   *curNode->GetAsText());
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -977,6 +1023,28 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
     *aCancel = true;
     return NS_OK;
   }
+  nsresult rv =
+    DeleteSelectionWithTransaction(aCollapsedAction, aCancel, aHandled);
+  // DeleteSelectionWithTransaction() creates SelectionBatcher.  Therefore,
+  // quitting from it might cause having destroyed the editor.
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+TextEditRules::DeleteSelectionWithTransaction(
+                 nsIEditor::EDirection aCollapsedAction,
+                 bool* aCancel,
+                 bool* aHandled)
+{
+  MOZ_ASSERT(IsEditorDataAvailable());
+  MOZ_ASSERT(aCancel);
+  MOZ_ASSERT(aHandled);
 
   // If the current selection is empty (e.g the user presses backspace with
   // a collapsed selection), then we want to avoid sending the selectstart
@@ -1003,11 +1071,14 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
                                               start, end);
 
     if (LookAndFeel::GetEchoPassword()) {
-      HideLastPWInput();
+      rv = HideLastPWInput();
       mLastStart = start;
       mLastLength = 0;
       if (mTimer) {
         mTimer->Cancel();
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
       }
     }
 
@@ -1058,6 +1129,9 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
   nsresult rv =
     TextEditorRef().DeleteSelectionWithTransaction(aCollapsedAction,
                                                    nsIEditor::eStrip);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1068,8 +1142,7 @@ TextEditRules::WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
 }
 
 nsresult
-TextEditRules::DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                                  nsresult aResult)
+TextEditRules::DidDeleteSelection()
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
@@ -1085,6 +1158,9 @@ TextEditRules::DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
     nsresult rv =
       TextEditorRef().DeleteNodeWithTransaction(
                         *selectionStartPoint.GetContainer());
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1115,13 +1191,6 @@ TextEditRules::WillUndo(bool* aCancel,
   return NS_OK;
 }
 
-/**
- * The idea here is to see if the magic empty node has suddenly reappeared as
- * the result of the undo.  If it has, set our state so we remember it.
- * There is a tradeoff between doing here and at redo, or doing it everywhere
- * else that might care.  Since undo and redo are relatively rare, it makes
- * sense to take the (small) performance hit here.
- */
 nsresult
 TextEditRules::DidUndo(nsresult aResult)
 {
@@ -1136,6 +1205,12 @@ TextEditRules::DidUndo(nsresult aResult)
   if (NS_WARN_IF(!rootElement)) {
     return NS_ERROR_FAILURE;
   }
+
+  // The idea here is to see if the magic empty node has suddenly reappeared as
+  // the result of the undo.  If it has, set our state so we remember it.
+  // There is a tradeoff between doing here and at redo, or doing it everywhere
+  // else that might care.  Since undo and redo are relatively rare, it makes
+  // sense to take the (small) performance hit here.
   nsIContent* node = TextEditorRef().GetLeftmostChild(rootElement);
   if (node && TextEditorRef().IsMozEditorBogusNode(node)) {
     mBogusNode = node;
@@ -1344,6 +1419,9 @@ TextEditRules::RemoveRedundantTrailingBR()
   // Rather than deleting this node from the DOM tree we should instead
   // morph this br into the bogus node
   childElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
 
   // set mBogusNode to be this <br>
   mBogusNode = childElement;
@@ -1379,9 +1457,9 @@ TextEditRules::CreateTrailingBRIfNeeded()
     AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
     EditorRawDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
-    RefPtr<Element> brElement = CreateMozBR(endOfRoot);
-    if (NS_WARN_IF(!brElement)) {
-      return NS_ERROR_FAILURE;
+    CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
+    if (NS_WARN_IF(createMozBrResult.Failed())) {
+      return createMozBrResult.Rv();
     }
     return NS_OK;
   }
@@ -1399,6 +1477,9 @@ TextEditRules::CreateTrailingBRIfNeeded()
   lastChild->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                                   NS_LITERAL_STRING("_moz"),
                                   true);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   return NS_OK;
 }
 
@@ -1446,6 +1527,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   // Create a br.
   RefPtr<Element> newBrElement =
     TextEditorRef().CreateHTMLContent(nsGkAtoms::br);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(!newBrElement)) {
     return NS_ERROR_FAILURE;
   }
@@ -1461,6 +1545,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   nsresult rv =
     TextEditorRef().InsertNodeWithTransaction(
                       *mBogusNode, EditorRawDOMPoint(rootElement, 0));
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1468,6 +1555,9 @@ TextEditRules::CreateBogusNodeIfNeeded()
   // Set selection.
   IgnoredErrorResult error;
   SelectionRef().Collapse(EditorRawDOMPoint(rootElement, 0), error);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(!error.Failed(),
     "Failed to collapse selection at start of the root element");
   return NS_OK;
@@ -1599,6 +1689,7 @@ TextEditRules::Notify(nsITimer* aTimer)
   // Check whether our text editor's password flag was changed before this
   // "hide password character" timer actually fires.
   nsresult rv = IsPasswordEditor() ? HideLastPWInput() : NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to hide last password input");
   ASSERT_PASSWORD_LENGTHS_EQUAL();
   mLastLength = 0;
   return rv;
@@ -1636,12 +1727,21 @@ TextEditRules::HideLastPWInput()
 
   selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText,
                                     IgnoreErrors());
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   // XXXbz Selection::Collapse/Extend take int32_t, but there are tons of
   // callsites... Converting all that is a battle for another day.
   DebugOnly<nsresult> rv = SelectionRef().Collapse(selNode, start);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to collapse selection");
   if (start != end) {
     rv = SelectionRef().Extend(selNode, end);
+    if (NS_WARN_IF(!CanHandleEditAction())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to extend selection");
   }
   return NS_OK;
@@ -1663,37 +1763,46 @@ TextEditRules::FillBufWithPWChars(nsAString* aOutString,
   }
 }
 
-already_AddRefed<Element>
-TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
-                                bool aCreateMozBR)
+template<typename PT, typename CT>
+CreateElementResult
+TextEditRules::CreateBRInternal(
+                 const EditorDOMPointBase<PT, CT>& aPointToInsert,
+                 bool aCreateMozBR)
 {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return nullptr;
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   RefPtr<Element> brElement =
     TextEditorRef().InsertBrElementWithTransaction(SelectionRef(),
                                                    aPointToInsert);
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
   if (NS_WARN_IF(!brElement)) {
-    return nullptr;
+    return CreateElementResult(NS_ERROR_FAILURE);
   }
 
   // give it special moz attr
-  if (aCreateMozBR) {
-    // XXX Why do we need to set this attribute with transaction?
-    nsresult rv =
-      TextEditorRef().SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
-                                                  NS_LITERAL_STRING("_moz"));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // XXX Don't we need to remove the new <br> element from the DOM tree
-      //     in this case?
-      return nullptr;
-    }
+  if (!aCreateMozBR) {
+    return CreateElementResult(brElement.forget());
   }
 
-  return brElement.forget();
+  // XXX Why do we need to set this attribute with transaction?
+  nsresult rv =
+    TextEditorRef().SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
+                                                NS_LITERAL_STRING("_moz"));
+  // XXX Don't we need to remove the new <br> element from the DOM tree
+  //     in these case?
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+  return CreateElementResult(brElement.forget());
 }
 
 nsresult

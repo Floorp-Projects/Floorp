@@ -48,7 +48,7 @@ fn main() {
         (regex!("Y"), "(c|t)"),
     ];
     let mut seq = seq;
-    for (re, replacement) in substs.into_iter() {
+    for (re, replacement) in substs {
         seq = re.replace_all(&seq, replacement).into_owned();
     }
     println!("\n{}\n{}\n{}", ilen, clen, seq.len());

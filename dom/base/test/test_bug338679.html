@@ -35,9 +35,13 @@ function nextTest() {
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-testDiv.addEventListener("DOMAttrModified", attr_modified);
-nextTest();
+if (SpecialPowers.getBoolPref("dom.mutation-events.cssom.disabled")) {
+  ok(true, "DOMAttrModified event from CSSOM change is disabled");
+} else {
+  SimpleTest.waitForExplicitFinish();
+  testDiv.addEventListener("DOMAttrModified", attr_modified);
+  nextTest();
+}
 
 /* event handler */
 function attr_modified(ev) {
