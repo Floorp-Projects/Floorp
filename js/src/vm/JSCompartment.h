@@ -606,9 +606,6 @@ struct JSCompartment
 
   public:
     bool                         isSelfHosting;
-    bool                         marked;
-
-    void mark() { marked = true; }
 
   private:
     friend struct JSRuntime;
@@ -992,9 +989,11 @@ struct JSCompartment
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
 
     // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC.
-    bool scheduledForDestruction;
-    bool maybeAlive;
+    // manages to outlive a GC. Note that these flags have to be on the
+    // compartment, not the realm, because same-compartment realms can have
+    // cross-realm pointers without wrappers.
+    bool scheduledForDestruction = false;
+    bool maybeAlive = true;
 
   protected:
     js::jit::JitCompartment* jitCompartment_;
@@ -1049,6 +1048,7 @@ class JS::Realm : public JSCompartment
     unsigned enterRealmDepth_ = 0;
 
     bool isAtomsRealm_ = false;
+    bool marked_ = true;
 
   public:
     // WebAssembly state for the realm.
@@ -1218,6 +1218,16 @@ class JS::Realm : public JSCompartment
     void setRealmStats(JS::RealmStats* newStats) {
         MOZ_ASSERT(!realmStats_ && newStats);
         realmStats_ = newStats;
+    }
+
+    bool marked() const {
+        return marked_;
+    }
+    void mark() {
+        marked_ = true;
+    }
+    void unmark() {
+        marked_ = false;
     }
 };
 
