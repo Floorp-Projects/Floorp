@@ -22,8 +22,8 @@ class SessionFeature(
      * Start feature: App is in the foreground.
      */
     fun start() {
-        presenter.start()
         sessionProvider.start(engine)
+        presenter.start()
     }
 
     /**

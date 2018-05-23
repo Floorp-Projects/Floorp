@@ -15,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
@@ -27,11 +28,6 @@ import java.io.IOException
 
 @RunWith(RobolectricTestRunner::class)
 class DefaultSessionStorageTest {
-
-    private fun <T> anyJson(): T {
-        any<T>()
-        return null as T
-    }
 
     @Test
     fun testPersistAndRestore() {
@@ -78,7 +74,7 @@ class DefaultSessionStorageTest {
         val persisted = storage.persist(mapOf(session to engineSession), session.id)
         assertTrue(persisted)
 
-        doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyJson())
+        doThrow(JSONException::class.java).`when`(storage).deserializeSession(anyString(), anyJson())
 
         val (sessions, selectedSession) = storage.restore(engine)
         assertEquals(0, sessions.size)
@@ -111,5 +107,10 @@ class DefaultSessionStorageTest {
         doThrow(JSONException::class.java).`when`(storage).serializeSession(session)
 
         assertFalse(storage.persist(mapOf(session to engineSession), session.id))
+    }
+
+    private fun <T> anyJson(): T {
+        any<T>()
+        return null as T
     }
 }

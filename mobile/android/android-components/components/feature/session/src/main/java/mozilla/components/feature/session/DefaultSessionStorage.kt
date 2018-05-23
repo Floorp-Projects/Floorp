@@ -60,7 +60,7 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
                 jsonRoot.remove(VERSION_KEY)
                 jsonRoot.keys().forEach {
                     val jsonSession = jsonRoot.getJSONObject(it)
-                    val session = deserializeSession(jsonSession.getJSONObject(SESSION_KEY))
+                    val session = deserializeSession(it, jsonSession.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(engine, jsonSession.getJSONObject(ENGINE_SESSION_KEY))
                     sessions[session] = engineSession
                 }
@@ -116,8 +116,8 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
     }
 
     @Throws(JSONException::class)
-    internal fun deserializeSession(json: JSONObject): Session {
-        return Session(json.getString("url"))
+    internal fun deserializeSession(id: String, json: JSONObject): Session {
+        return Session(json.getString("url"), id)
     }
 
     private fun serializeEngineSession(engineSession: EngineSession): JSONObject {

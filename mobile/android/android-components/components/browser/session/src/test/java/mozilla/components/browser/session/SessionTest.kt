@@ -154,4 +154,22 @@ class SessionTest {
         verify(observer, times(1)).onSearch()
         verifyNoMoreInteractions(observer)
     }
+
+    @Test
+    fun `sessions with the same id are equal`() {
+        val session1 = Session("http://mozilla.org", "123ABC")
+        val session2 = Session("http://mozilla.org", "123ABC")
+
+        assertEquals(session1, session2)
+    }
+
+    @Test
+    fun `session ID is used for hashCode`() {
+        val session1 = Session("http://mozilla.org", "123ABC")
+        val session2 = Session("http://mozilla.org", "123ABC")
+
+        val map = mapOf(session1 to "test")
+        assertEquals("test", map[session2])
+        assertEquals(session1.hashCode(), session2.hashCode())
+    }
 }

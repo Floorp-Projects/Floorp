@@ -96,4 +96,17 @@ class Session(
     internal fun notifyObservers(block: Observer.() -> Unit) = synchronized(observers) {
         observers.forEach { it.block() }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Session
+        if (id != other.id) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 }

@@ -39,11 +39,14 @@ class SessionProvider(
      */
     fun start(engine: Engine) {
         sessionStorage?.let {
-            val (restoredSessions, restoredSelectedSession) = sessionStorage.restore(engine)
-            restoredSessions.keys.forEach {
-                sessionManager.add(it, it.id == restoredSelectedSession)
+            if (sessions.isEmpty()) {
+                val (restoredSessions, restoredSelectedSession) = sessionStorage.restore(engine)
+                restoredSessions.keys.forEach {
+                    initEngineSession(engine, it, restoredSessions.getValue(it))
+                    sessionManager.add(it, it.id == restoredSelectedSession)
+                }
+                sessions.putAll(restoredSessions)
             }
-            sessions.putAll(restoredSessions)
 
             if (savePeriodically) {
                 scheduledFuture = scheduler.scheduleAtFixedRate(
@@ -69,13 +72,18 @@ class SessionProvider(
      * given browser session.
      */
     fun getOrCreateEngineSession(engine: Engine, session: Session = selectedSession): EngineSession {
-        return sessions.getOrPut(session, {
-            val engineSession = engine.createSession()
-            SessionProxy(session, engineSession)
+        return sessions.getOrPut(session, { initEngineSession(engine, session) })
+    }
 
-            engineSession.loadUrl(session.url)
-            engineSession
-        })
+    private fun initEngineSession(
+        engine: Engine,
+        session: Session,
+        engineSession: EngineSession = engine.createSession()
+    ): EngineSession {
+        SessionProxy(session, engineSession)
+
+        engineSession.loadUrl(session.url)
+        return engineSession
     }
 
     /**
