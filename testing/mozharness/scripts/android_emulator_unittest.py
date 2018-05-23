@@ -166,7 +166,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             self.apk_path = os.path.join(apk_dir, self.installer_path)
             unzip = self.query_exe("unzip")
             package_path = os.path.join(apk_dir, 'package-name.txt')
-            unzip_cmd = [unzip, '-q', '-o',  self.apk_path]
+            unzip_cmd = [unzip, '-q', '-o', self.apk_path]
             self.run_command(unzip_cmd, cwd=apk_dir, halt_on_failure=True)
             self.app_name = str(self.read_from_file(package_path, verbose=True)).rstrip()
         return self.app_name
@@ -436,13 +436,14 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             else:
                 cmd.extend([option % str_format_values])
 
-        if user_paths:
-            cmd.extend(user_paths.split(':'))
-        elif not self.verify_enabled:
-            if self.this_chunk is not None:
-                cmd.extend(['--this-chunk', self.this_chunk])
-            if self.total_chunks is not None:
-                cmd.extend(['--total-chunks', self.total_chunks])
+        if not (self.verify_enabled or self.per_test_coverage):
+            if user_paths:
+                cmd.extend(user_paths.split(':'))
+            elif not (self.verify_enabled or self.per_test_coverage):
+                if self.this_chunk is not None:
+                    cmd.extend(['--this-chunk', self.this_chunk])
+                if self.total_chunks is not None:
+                    cmd.extend(['--total-chunks', self.total_chunks])
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
