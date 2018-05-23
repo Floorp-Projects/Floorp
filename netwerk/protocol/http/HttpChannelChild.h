@@ -181,6 +181,8 @@ protected:
   GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 
+  virtual void DoAsyncAbort(nsresult aStatus) override;
+
   NS_IMETHOD GetResponseSynthesized(bool* aSynthesized) override;
 
   nsresult

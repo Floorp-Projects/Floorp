@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
+#include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/ReceiverGuard.h"
@@ -37,6 +38,7 @@ namespace gc {
 template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
+class AutoRestoreRealmDebugMode;
 class GlobalObject;
 class LexicalEnvironmentObject;
 class MapObject;
@@ -554,69 +556,11 @@ struct JSCompartment
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 
-  public:
-    /*
-     * The principals associated with this compartment. Note that the
-     * same several compartments may share the same principals and
-     * that a compartment may change principals during its lifetime
-     * (e.g. in case of lazy parsing).
-     */
-    inline JSPrincipals* principals() {
-        return principals_;
-    }
-    inline void setPrincipals(JSPrincipals* principals) {
-        if (principals_ == principals)
-            return;
-
-        // If we change principals, we need to unlink immediately this
-        // compartment from its PerformanceGroup. For one thing, the
-        // performance data we collect should not be improperly associated
-        // with a group to which we do not belong anymore. For another thing,
-        // we use `principals()` as part of the key to map compartments
-        // to a `PerformanceGroup`, so if we do not unlink now, this will
-        // be too late once we have updated `principals_`.
-        performanceMonitoring.unlink();
-        principals_ = principals;
-    }
-    inline bool isSystem() const {
-        return isSystem_;
-    }
-    inline void setIsSystem(bool isSystem) {
-        if (isSystem_ == isSystem)
-            return;
-
-        // If we change `isSystem*(`, we need to unlink immediately this
-        // compartment from its PerformanceGroup. For one thing, the
-        // performance data we collect should not be improperly associated
-        // to a group to which we do not belong anymore. For another thing,
-        // we use `isSystem()` as part of the key to map compartments
-        // to a `PerformanceGroup`, so if we do not unlink now, this will
-        // be too late once we have updated `isSystem_`.
-        performanceMonitoring.unlink();
-        isSystem_ = isSystem;
-    }
-
-    // Used to approximate non-content code when reporting telemetry.
-    inline bool isProbablySystemCode() const {
-        return isSystem_;
-    }
-  private:
-    JSPrincipals*                principals_;
-    bool                         isSystem_;
-
-  public:
-    bool                         isSelfHosting;
-    bool                         marked;
-
-    void mark() { marked = true; }
-
   private:
     friend struct JSRuntime;
     friend struct JSContext;
 
   public:
-    js::PerformanceGroupHolder performanceMonitoring;
-
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
 
@@ -648,8 +592,6 @@ struct JSCompartment
   public:
     js::RegExpCompartment        regExps;
 
-    js::ArraySpeciesLookup       arraySpeciesLookup;
-
     using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
                                       js::IteratorHashPolicy,
                                       js::SystemAllocPolicy>;
@@ -668,25 +610,11 @@ struct JSCompartment
     // might be detached.
     int32_t                      detachedTypedObjects;
 
-  protected:
-    friend class js::AutoSetNewObjectMetadata;
-    js::NewObjectMetadataState objectMetadataState;
-
-  public:
     // Recompute the probability with which this compartment should record
     // profiling data (stack traces, allocations log, etc.) about each
     // allocation. We consult the probabilities requested by the Debugger
     // instances observing us, if any.
     void chooseAllocationSamplingProbability() { savedStacks_.chooseSamplingProbability(this); }
-
-    bool hasObjectPendingMetadata() const { return objectMetadataState.is<js::PendingMetadata>(); }
-
-    void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
-        if (!cx->helperThread()) {
-            MOZ_ASSERT(objectMetadataState.is<js::DelayMetadata>());
-            objectMetadataState = js::NewObjectMetadataState(js::PendingMetadata(obj));
-        }
-    }
 
   protected:
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -699,13 +627,6 @@ struct JSCompartment
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
-
-    /*
-     * Lazily initialized script source object to use for scripts cloned
-     * from the self-hosting global.
-     */
-    js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
-
     // Keep track of the metadata objects which can be associated with each JS
     // object. Both keys and values are in this compartment.
     js::ObjectWeakMap* objectMetadataTable;
@@ -738,26 +659,6 @@ struct JSCompartment
     JSObject*                    gcIncomingGrayPointers;
 
   private:
-    enum {
-        IsDebuggee = 1 << 0,
-        DebuggerObservesAllExecution = 1 << 1,
-        DebuggerObservesAsmJS = 1 << 2,
-        DebuggerObservesCoverage = 1 << 3,
-        DebuggerObservesBinarySource = 1 << 4,
-        DebuggerNeedsDelazification = 1 << 5
-    };
-
-    unsigned debugModeBits;
-    friend class AutoRestoreCompartmentDebugMode;
-
-    static const unsigned DebuggerObservesMask = IsDebuggee |
-                                                 DebuggerObservesAllExecution |
-                                                 DebuggerObservesCoverage |
-                                                 DebuggerObservesAsmJS |
-                                                 DebuggerObservesBinarySource;
-
-    void updateDebuggerObservesFlag(unsigned flag);
-
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
 
@@ -836,12 +737,10 @@ struct JSCompartment
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
-    void sweepSelfHostingScriptSource();
     void sweepJitCompartment();
     void sweepRegExps();
     void sweepDebugEnvironments();
     void sweepNativeIterators();
-    void sweepTemplateObjects();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
@@ -850,136 +749,10 @@ struct JSCompartment
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-    // Random number generator for Math.random().
-    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
-
-    // Initialize randomNumberGenerator if needed.
-    void ensureRandomNumberGenerator();
-
-  private:
-    mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
-
-  public:
-    js::HashNumber randomHashCode();
-
-    mozilla::HashCodeScrambler randomHashCodeScrambler();
-
     static size_t offsetOfRegExps() {
         return offsetof(JSCompartment, regExps);
     }
 
-    //
-    // The Debugger observes execution on a frame-by-frame basis. The
-    // invariants of JSCompartment's debug mode bits, JSScript::isDebuggee,
-    // InterpreterFrame::isDebuggee, and BaselineFrame::isDebuggee are
-    // enumerated below.
-    //
-    // 1. When a compartment's isDebuggee() == true, relazification and lazy
-    //    parsing are disabled.
-    //
-    //    Whether AOT wasm is disabled is togglable by the Debugger API. By
-    //    default it is disabled. See debuggerObservesAsmJS below.
-    //
-    // 2. When a compartment's debuggerObservesAllExecution() == true, all of
-    //    the compartment's scripts are considered debuggee scripts.
-    //
-    // 3. A script is considered a debuggee script either when, per above, its
-    //    compartment is observing all execution, or if it has breakpoints set.
-    //
-    // 4. A debuggee script always pushes a debuggee frame.
-    //
-    // 5. A debuggee frame calls all slow path Debugger hooks in the
-    //    Interpreter and Baseline. A debuggee frame implies that its script's
-    //    BaselineScript, if extant, has been compiled with debug hook calls.
-    //
-    // 6. A debuggee script or a debuggee frame (i.e., during OSR) ensures
-    //    that the compiled BaselineScript is compiled with debug hook calls
-    //    when attempting to enter Baseline.
-    //
-    // 7. A debuggee script or a debuggee frame (i.e., during OSR) does not
-    //    attempt to enter Ion.
-    //
-    // Note that a debuggee frame may exist without its script being a
-    // debuggee script. e.g., Debugger.Frame.prototype.eval only marks the
-    // frame in which it is evaluating as a debuggee frame.
-    //
-
-    // True if this compartment's global is a debuggee of some Debugger
-    // object.
-    bool isDebuggee() const { return !!(debugModeBits & IsDebuggee); }
-    void setIsDebuggee() { debugModeBits |= IsDebuggee; }
-    void unsetIsDebuggee();
-
-    // True if this compartment's global is a debuggee of some Debugger
-    // object with a live hook that observes all execution; e.g.,
-    // onEnterFrame.
-    bool debuggerObservesAllExecution() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesAllExecution;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesAllExecution() {
-        updateDebuggerObservesFlag(DebuggerObservesAllExecution);
-    }
-
-    // True if this compartment's global is a debuggee of some Debugger object
-    // whose allowUnobservedAsmJS flag is false.
-    //
-    // Note that since AOT wasm functions cannot bail out, this flag really
-    // means "observe wasm from this point forward". We cannot make
-    // already-compiled wasm code observable to Debugger.
-    bool debuggerObservesAsmJS() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesAsmJS() {
-        updateDebuggerObservesFlag(DebuggerObservesAsmJS);
-    }
-
-    bool debuggerObservesBinarySource() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesBinarySource;
-        return (debugModeBits & Mask) == Mask;
-    }
-
-    void updateDebuggerObservesBinarySource() {
-        updateDebuggerObservesFlag(DebuggerObservesBinarySource);
-    }
-
-    // True if this compartment's global is a debuggee of some Debugger object
-    // whose collectCoverageInfo flag is true.
-    bool debuggerObservesCoverage() const {
-        static const unsigned Mask = DebuggerObservesCoverage;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesCoverage();
-
-    // The code coverage can be enabled either for each compartment, with the
-    // Debugger API, or for the entire runtime.
-    bool collectCoverage() const;
-    bool collectCoverageForDebug() const;
-    bool collectCoverageForPGO() const;
-
-    bool needsDelazificationForDebugger() const {
-        return debugModeBits & DebuggerNeedsDelazification;
-    }
-
-    /*
-     * Schedule the compartment to be delazified. Called from
-     * LazyScript::Create.
-     */
-    void scheduleDelazificationForDebugger() { debugModeBits |= DebuggerNeedsDelazification; }
-
-    /*
-     * If we scheduled delazification for turning on debug mode, delazify all
-     * scripts.
-     */
-    bool ensureDelazifyScriptsForDebugger(JSContext* cx);
-
-    void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg, JS::HandleObject handler);
-
-  private:
-    void sweepBreakpoints(js::FreeOp* fop);
-
-  public:
     /* Bookkeeping information for debug scope objects. */
     js::DebugEnvironments* debugEnvs;
 
@@ -992,30 +765,20 @@ struct JSCompartment
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
 
     // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC.
-    bool scheduledForDestruction;
-    bool maybeAlive;
+    // manages to outlive a GC. Note that these flags have to be on the
+    // compartment, not the realm, because same-compartment realms can have
+    // cross-realm pointers without wrappers.
+    bool scheduledForDestruction = false;
+    bool maybeAlive = true;
 
   protected:
     js::jit::JitCompartment* jitCompartment_;
-
-    js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_;
-    js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_;
-    js::ReadBarriered<js::NativeObject*> iterResultTemplate_;
 
   public:
     bool ensureJitCompartmentExists(JSContext* cx);
     js::jit::JitCompartment* jitCompartment() {
         return jitCompartment_;
     }
-
-    js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
-
-    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
-
-    static const size_t IterResultObjectValueSlot = 0;
-    static const size_t IterResultObjectDoneSlot = 1;
-    js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
 
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
@@ -1040,15 +803,49 @@ class JS::Realm : public JSCompartment
                                       js::SystemAllocPolicy>;
     VarNamesSet varNames_;
 
+    friend class js::AutoSetNewObjectMetadata;
+    js::NewObjectMetadataState objectMetadataState_ { js::ImmediateMetadata() };
+
+    // Random number generator for Math.random().
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator_;
+
+    // Random number generator for randomHashCodeScrambler().
+    mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
+
+    JSPrincipals* principals_ = nullptr;
+
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
 
     const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
     void* realmPrivate_ = nullptr;
 
+    js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_ { nullptr };
+    js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
+    js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
+
     unsigned enterRealmDepth_ = 0;
 
+    enum {
+        IsDebuggee = 1 << 0,
+        DebuggerObservesAllExecution = 1 << 1,
+        DebuggerObservesAsmJS = 1 << 2,
+        DebuggerObservesCoverage = 1 << 3,
+        DebuggerObservesBinarySource = 1 << 4,
+        DebuggerNeedsDelazification = 1 << 5
+    };
+    static const unsigned DebuggerObservesMask = IsDebuggee |
+                                                 DebuggerObservesAllExecution |
+                                                 DebuggerObservesCoverage |
+                                                 DebuggerObservesAsmJS |
+                                                 DebuggerObservesBinarySource;
+    unsigned debugModeBits_ = 0;
+    friend class js::AutoRestoreRealmDebugMode;
+
     bool isAtomsRealm_ = false;
+    bool isSelfHostingRealm_ = false;
+    bool marked_ = true;
+    bool isSystem_ = false;
 
   public:
     // WebAssembly state for the realm.
@@ -1056,10 +853,19 @@ class JS::Realm : public JSCompartment
 
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
+    js::ArraySpeciesLookup arraySpeciesLookup;
 
-    js::ScriptCountsMap* scriptCountsMap = nullptr;
-    js::ScriptNameMap* scriptNameMap = nullptr;
-    js::DebugScriptMap* debugScriptMap = nullptr;
+    js::PerformanceGroupHolder performanceMonitoring;
+
+    js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
+    js::UniquePtr<js::ScriptNameMap> scriptNameMap;
+    js::UniquePtr<js::DebugScriptMap> debugScriptMap;
+
+    /*
+     * Lazily initialized script source object to use for scripts cloned
+     * from the self-hosting global.
+     */
+    js::ReadBarrieredScriptSourceObject selfHostingScriptSource { nullptr };
 
     // Last time at which an animation was played for this realm.
     int64_t lastAnimationTime = 0;
@@ -1069,6 +875,10 @@ class JS::Realm : public JSCompartment
     bool firedOnNewGlobalObject = false;
 #endif
 
+  private:
+    void updateDebuggerObservesFlag(unsigned flag);
+
+  public:
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
     ~Realm();
 
@@ -1105,6 +915,13 @@ class JS::Realm : public JSCompartment
     }
     void setIsAtomsRealm() {
         isAtomsRealm_ = true;
+    }
+
+    bool isSelfHostingRealm() const {
+        return isSelfHostingRealm_;
+    }
+    void setIsSelfHostingRealm() {
+        isSelfHostingRealm_ = true;
     }
 
     /* The global object for this realm.
@@ -1144,6 +961,9 @@ class JS::Realm : public JSCompartment
      * This method clears out tables of roots in preparation for the final GC.
      */
     void finishRoots();
+
+    void sweepSelfHostingScriptSource();
+    void sweepTemplateObjects();
 
     void clearScriptCounts();
     void clearScriptNames();
@@ -1196,6 +1016,16 @@ class JS::Realm : public JSCompartment
     void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
     void clearObjectMetadata();
 
+    bool hasObjectPendingMetadata() const {
+        return objectMetadataState_.is<js::PendingMetadata>();
+    }
+    void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
+        if (!cx->helperThread()) {
+            MOZ_ASSERT(objectMetadataState_.is<js::DelayMetadata>());
+            objectMetadataState_ = js::NewObjectMetadataState(js::PendingMetadata(obj));
+        }
+    }
+
     void* realmPrivate() const {
         return realmPrivate_;
     }
@@ -1219,6 +1049,184 @@ class JS::Realm : public JSCompartment
         MOZ_ASSERT(!realmStats_ && newStats);
         realmStats_ = newStats;
     }
+
+    bool marked() const {
+        return marked_;
+    }
+    void mark() {
+        marked_ = true;
+    }
+    void unmark() {
+        marked_ = false;
+    }
+
+    /*
+     * The principals associated with this realm. Note that the same several
+     * realms may share the same principals and that a realm may change
+     * principals during its lifetime (e.g. in case of lazy parsing).
+     */
+    JSPrincipals* principals() {
+        return principals_;
+    }
+    void setPrincipals(JSPrincipals* principals) {
+        if (principals_ == principals)
+            return;
+
+        // If we change principals, we need to unlink immediately this
+        // realm from its PerformanceGroup. For one thing, the performance data
+        // we collect should not be improperly associated with a group to which
+        // we do not belong anymore. For another thing, we use `principals()` as
+        // part of the key to map realms to a `PerformanceGroup`, so if we do
+        // not unlink now, this will be too late once we have updated
+        // `principals_`.
+        performanceMonitoring.unlink();
+        principals_ = principals;
+    }
+
+    bool isSystem() const {
+        return isSystem_;
+    }
+    void setIsSystem(bool isSystem) {
+        if (isSystem_ == isSystem)
+            return;
+
+        // If we change `isSystem*(`, we need to unlink immediately this realm
+        // from its PerformanceGroup. For one thing, the performance data we
+        // collect should not be improperly associated to a group to which we
+        // do not belong anymore. For another thing, we use `isSystem()` as part
+        // of the key to map realms to a `PerformanceGroup`, so if we do not
+        // unlink now, this will be too late once we have updated `isSystem_`.
+        performanceMonitoring.unlink();
+        isSystem_ = isSystem;
+    }
+
+    // Used to approximate non-content code when reporting telemetry.
+    bool isProbablySystemCode() const {
+        return isSystem_;
+    }
+
+    static const size_t IterResultObjectValueSlot = 0;
+    static const size_t IterResultObjectDoneSlot = 1;
+    js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+
+    js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
+    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
+
+    //
+    // The Debugger observes execution on a frame-by-frame basis. The
+    // invariants of Realm's debug mode bits, JSScript::isDebuggee,
+    // InterpreterFrame::isDebuggee, and BaselineFrame::isDebuggee are
+    // enumerated below.
+    //
+    // 1. When a realm's isDebuggee() == true, relazification and lazy
+    //    parsing are disabled.
+    //
+    //    Whether AOT wasm is disabled is togglable by the Debugger API. By
+    //    default it is disabled. See debuggerObservesAsmJS below.
+    //
+    // 2. When a realm's debuggerObservesAllExecution() == true, all of
+    //    the realm's scripts are considered debuggee scripts.
+    //
+    // 3. A script is considered a debuggee script either when, per above, its
+    //    realm is observing all execution, or if it has breakpoints set.
+    //
+    // 4. A debuggee script always pushes a debuggee frame.
+    //
+    // 5. A debuggee frame calls all slow path Debugger hooks in the
+    //    Interpreter and Baseline. A debuggee frame implies that its script's
+    //    BaselineScript, if extant, has been compiled with debug hook calls.
+    //
+    // 6. A debuggee script or a debuggee frame (i.e., during OSR) ensures
+    //    that the compiled BaselineScript is compiled with debug hook calls
+    //    when attempting to enter Baseline.
+    //
+    // 7. A debuggee script or a debuggee frame (i.e., during OSR) does not
+    //    attempt to enter Ion.
+    //
+    // Note that a debuggee frame may exist without its script being a
+    // debuggee script. e.g., Debugger.Frame.prototype.eval only marks the
+    // frame in which it is evaluating as a debuggee frame.
+    //
+
+    // True if this realm's global is a debuggee of some Debugger
+    // object.
+    bool isDebuggee() const { return !!(debugModeBits_ & IsDebuggee); }
+    void setIsDebuggee() { debugModeBits_ |= IsDebuggee; }
+    void unsetIsDebuggee();
+
+    // True if this compartment's global is a debuggee of some Debugger
+    // object with a live hook that observes all execution; e.g.,
+    // onEnterFrame.
+    bool debuggerObservesAllExecution() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesAllExecution;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesAllExecution() {
+        updateDebuggerObservesFlag(DebuggerObservesAllExecution);
+    }
+
+    // True if this realm's global is a debuggee of some Debugger object
+    // whose allowUnobservedAsmJS flag is false.
+    //
+    // Note that since AOT wasm functions cannot bail out, this flag really
+    // means "observe wasm from this point forward". We cannot make
+    // already-compiled wasm code observable to Debugger.
+    bool debuggerObservesAsmJS() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesAsmJS() {
+        updateDebuggerObservesFlag(DebuggerObservesAsmJS);
+    }
+
+    bool debuggerObservesBinarySource() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesBinarySource;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+
+    void updateDebuggerObservesBinarySource() {
+        updateDebuggerObservesFlag(DebuggerObservesBinarySource);
+    }
+
+    // True if this realm's global is a debuggee of some Debugger object
+    // whose collectCoverageInfo flag is true.
+    bool debuggerObservesCoverage() const {
+        static const unsigned Mask = DebuggerObservesCoverage;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesCoverage();
+
+    // The code coverage can be enabled either for each realm, with the
+    // Debugger API, or for the entire runtime.
+    bool collectCoverage() const;
+    bool collectCoverageForDebug() const;
+    bool collectCoverageForPGO() const;
+
+    bool needsDelazificationForDebugger() const {
+        return debugModeBits_ & DebuggerNeedsDelazification;
+    }
+
+    // Schedule the realm to be delazified. Called from LazyScript::Create.
+    void scheduleDelazificationForDebugger() {
+        debugModeBits_ |= DebuggerNeedsDelazification;
+    }
+
+    // If we scheduled delazification for turning on debug mode, delazify all
+    // scripts.
+    bool ensureDelazifyScriptsForDebugger(JSContext* cx);
+
+    void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg, JS::HandleObject handler);
+
+    // Initializes randomNumberGenerator if needed.
+    mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
+
+    const void* addressOfRandomNumberGenerator() const {
+        return randomNumberGenerator_.ptr();
+    }
+
+    js::HashNumber randomHashCode();
+
+    mozilla::HashCodeScrambler randomHashCodeScrambler();
 };
 
 namespace js {

@@ -553,7 +553,7 @@ NativeObject::create(JSContext* cx, js::gc::AllocKind kind, js::gc::InitialHeap 
         nobj->initializeSlotRange(0, span);
 
     if (clasp->shouldDelayMetadataBuilder())
-        cx->compartment()->setObjectPendingMetadata(cx, nobj);
+        cx->realm()->setObjectPendingMetadata(cx, nobj);
     else
         nobj = SetNewObjectMetadata(cx, nobj);
 

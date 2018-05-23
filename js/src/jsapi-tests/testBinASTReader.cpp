@@ -177,7 +177,7 @@ runTestFromPath(JSContext* cx, const char* path)
         js::frontend::Parser<js::frontend::FullParseHandler, char16_t> txtParser(
             cx, allocScope.alloc(), txtOptions, txtSource.begin(), txtSource.length(),
             /* foldConstants = */ false, txtUsedNames, nullptr,
-            nullptr, sourceObject);
+            nullptr, sourceObject, frontend::ParseGoal::Script);
         if (!txtParser.checkOptions())
             MOZ_CRASH("Bad options");
 

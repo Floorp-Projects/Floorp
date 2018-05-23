@@ -294,10 +294,10 @@ Zone::createJitZone(JSContext* cx)
 }
 
 bool
-Zone::hasMarkedCompartments()
+Zone::hasMarkedRealms()
 {
-    for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
-        if (comp->marked)
+    for (RealmsInZoneIter realm(this); !realm.done(); realm.next()) {
+        if (realm->marked())
             return true;
     }
     return false;
