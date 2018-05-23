@@ -2825,7 +2825,7 @@ class IDLWrapperType(IDLType):
                 return False
             iface = self.inner
             while iface:
-                if any(m.isMethod() and m.isToJSON() for m in self.inner.members):
+                if any(m.isMethod() and m.isToJSON() for m in iface.members):
                     return True
                 iface = iface.parent
             return False
