@@ -7,12 +7,128 @@
 #include "InputStreamLengthHelper.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "nsIInputStream.h"
+#include "nsIStreamTransportService.h"
+
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 namespace mozilla {
 
+namespace {
+
+class AvailableEvent final : public Runnable
+{
+public:
+  AvailableEvent(nsIInputStream* stream,
+                 const std::function<void(int64_t aLength)>& aCallback)
+    : Runnable("mozilla::AvailableEvent")
+    , mStream(stream)
+    , mCallback(aCallback)
+    , mSize(-1)
+  {
+    mCallbackTarget = GetCurrentThreadSerialEventTarget();
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    // ping
+    if (!NS_IsMainThread()) {
+      uint64_t size = 0;
+      if (NS_WARN_IF(NS_FAILED(mStream->Available(&size)))) {
+        mSize = -1;
+      } else {
+        mSize = (int64_t)size;
+      }
+
+      mStream = nullptr;
+
+      nsCOMPtr<nsIRunnable> self(this); // overly cute
+      mCallbackTarget->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
+      mCallbackTarget = nullptr;
+      return NS_OK;
+    }
+
+    // pong
+    mCallback(mSize);
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIInputStream> mStream;
+  std::function<void(int64_t aLength)> mCallback;
+  nsCOMPtr<nsIEventTarget> mCallbackTarget;
+
+  int64_t mSize;
+};
+
+} // anonymous
+
+/* static */ bool
+InputStreamLengthHelper::GetSyncLength(nsIInputStream* aStream,
+                                       int64_t* aLength)
+{
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(aLength);
+
+  *aLength = -1;
+
+  // Sync length access.
+  nsCOMPtr<nsIInputStreamLength> streamLength = do_QueryInterface(aStream);
+  if (streamLength) {
+    int64_t length = -1;
+    nsresult rv = streamLength->Length(&length);
+
+    // All good!
+    if (NS_SUCCEEDED(rv)) {
+      *aLength = length;
+      return true;
+    }
+
+    // Already closed stream or an error occurred.
+    if (rv == NS_BASE_STREAM_CLOSED ||
+        NS_WARN_IF(rv == NS_ERROR_NOT_AVAILABLE) ||
+        NS_WARN_IF(rv != NS_BASE_STREAM_WOULD_BLOCK)) {
+      return true;
+    }
+  }
+
+  nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
+    do_QueryInterface(aStream);
+  if (asyncStreamLength) {
+    // GetAsyncLength should be used.
+    return false;
+  }
+
+  // For main-thread only, we want to avoid calling ::Available() for blocking
+  // streams.
+  if (NS_IsMainThread()) {
+    bool nonBlocking = false;
+    if (NS_WARN_IF(NS_FAILED(aStream->IsNonBlocking(&nonBlocking)))) {
+      // Let's return -1. There is nothing else we can do here.
+      return true;
+    }
+
+    if (!nonBlocking) {
+      return false;
+    }
+  }
+
+  // Fallback using available().
+  uint64_t available = 0;
+  nsresult rv = aStream->Available(&available);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Let's return -1. There is nothing else we can do here.
+    return true;
+  }
+
+  *aLength = (int64_t)available;
+  return true;
+}
+
 /* static */ void
-InputStreamLengthHelper::GetLength(nsIInputStream* aStream,
-                                   const std::function<void(int64_t aLength)>& aCallback)
+InputStreamLengthHelper::GetAsyncLength(nsIInputStream* aStream,
+                                        const std::function<void(int64_t aLength)>& aCallback)
 {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aCallback);
@@ -23,6 +139,25 @@ InputStreamLengthHelper::GetLength(nsIInputStream* aStream,
 
   RefPtr<InputStreamLengthHelper> helper =
     new InputStreamLengthHelper(aStream, aCallback);
+
+  // Let's be sure that we don't call ::Available() on main-thread.
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIInputStreamLength> streamLength = do_QueryInterface(aStream);
+    nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
+      do_QueryInterface(aStream);
+    if (!streamLength && !asyncStreamLength) {
+      bool nonBlocking = false;
+      if (NS_SUCCEEDED(aStream->IsNonBlocking(&nonBlocking)) && !nonBlocking) {
+        nsCOMPtr<nsIEventTarget> target =
+          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+        MOZ_ASSERT(target);
+
+        RefPtr<AvailableEvent> event = new AvailableEvent(aStream, aCallback);
+        target->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+        return;
+      }
+    }
+  }
 
   // Let's go async in order to have similar behaviors for sync and async
   // nsIInputStreamLength implementations.

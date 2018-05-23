@@ -158,8 +158,14 @@ IPCBlobInputStreamParent::RecvLengthNeeded()
     return IPC_OK();
   }
 
+  int64_t length = -1;
+  if (InputStreamLengthHelper::GetSyncLength(stream, &length)) {
+    Unused << SendLengthReady(length);
+    return IPC_OK();
+  }
+
   RefPtr<IPCBlobInputStreamParent> self = this;
-  InputStreamLengthHelper::GetLength(stream, [self](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [self](int64_t aLength) {
     if (self->mContentManager || self->mPBackgroundManager) {
       Unused << self->SendLengthReady(aLength);
     }

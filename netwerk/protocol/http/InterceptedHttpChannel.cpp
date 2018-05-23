@@ -650,6 +650,12 @@ InterceptedHttpChannel::DoNotifyListenerCleanup()
   // more consistently in necko.
 }
 
+void
+InterceptedHttpChannel::DoAsyncAbort(nsresult aStatus)
+{
+  Unused << AsyncAbort(aStatus);
+}
+
 
 NS_IMETHODIMP
 InterceptedHttpChannel::ResetInterception(void)

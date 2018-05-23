@@ -193,6 +193,9 @@ public:
 
   void
   DoNotifyListenerCleanup() override;
+
+  void
+  DoAsyncAbort(nsresult aStatus) override;
 };
 
 } // namespace net
