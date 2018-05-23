@@ -46,11 +46,6 @@ toolbarpaletteitem {
   cursor: grab;
 }
 
-.toolbarpaletteitem-box {
-  /* Prevent children from getting events */
-  pointer-events: none;
-}
-
 /* ..... drag and drop feedback ..... */
 
 toolbarpaletteitem[place="toolbar"] {
