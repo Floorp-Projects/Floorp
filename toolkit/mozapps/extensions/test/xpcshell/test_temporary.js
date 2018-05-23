@@ -5,17 +5,6 @@
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const ID = "bootstrap1@tests.mozilla.org";
-const sampleRDFManifest = {
-  id: ID,
-  version: "1.0",
-  bootstrap: true,
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "1"
-  }],
-  name: "Test Bootstrap 1 (temporary)",
-};
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
@@ -387,35 +376,34 @@ add_task(async function test_samefile() {
   await addon.uninstall();
 });
 
+function promiseWriteWebExtensionToDir(dir, manifest) {
+  return AddonTestUtils.promiseWriteFilesToDir(dir.path, {
+    "manifest.json": ExtensionTestCommon.generateManifest(manifest),
+  });
+}
+
 // Install a temporary add-on over the top of an existing add-on.
 // Uninstall it and make sure the existing add-on comes back.
 add_task(async function() {
-  // We can't install unpacked add-ons on release builds. See above.
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    return;
-  }
-
-  await promiseInstallAllFiles([do_get_addon("test_bootstrap1_1")], true);
+  await promiseInstallWebExtension({
+    manifest: {
+      applications: {gecko: {id: ID}},
+      version: "1.0",
+      name: "Test Bootstrap 1",
+    },
+  });
 
   Monitor.checkInstalled(ID, "1.0");
   Monitor.checkStarted(ID, "1.0");
 
-  let tempdir = gTmpD.clone();
-  await promiseWriteInstallRDFToDir({
-    id: ID,
-    version: "2.0",
-    bootstrap: true,
-    unpack: true,
-    targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-        }],
-    name: "Test Bootstrap 1 (temporary)",
-  }, tempdir);
-
-  let unpacked_addon = tempdir.clone();
+  let unpacked_addon = gTmpD.clone();
   unpacked_addon.append(ID);
+
+  await promiseWriteWebExtensionToDir(unpacked_addon, {
+    applications: {gecko: {id: ID}},
+    version: "2.0",
+    name: "Test Bootstrap 1 (temporary)",
+  });
 
   let extInstallCalled = false;
   AddonManager.addInstallListener({
@@ -452,8 +440,8 @@ add_task(async function() {
   Assert.ok(installingCalled);
   Assert.ok(installedCalled);
 
-  Monitor.checkNotInstalled(ID);
-  Monitor.checkNotStarted(ID);
+  Monitor.checkInstalled(ID);
+  Monitor.checkStarted(ID);
 
   // temporary add-on is installed and started
   checkAddon(ID, addon, {
@@ -496,31 +484,25 @@ add_task(async function() {
 // Install a temporary add-on as a version upgrade over the top of an
 // existing temporary add-on.
 add_task(async function() {
-  // We can't install unpacked add-ons on release builds. See above.
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    return;
-  }
-
-  const tempdir = gTmpD.clone();
-
-  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
-
-  const unpackedAddon = tempdir.clone();
+  const unpackedAddon = gTmpD.clone();
   unpackedAddon.append(ID);
-  do_get_file("data/test_temporary/bootstrap.js")
-    .copyTo(unpackedAddon, "bootstrap.js");
+
+  await promiseWriteWebExtensionToDir(unpackedAddon, {
+    applications: {gecko: {id: ID}},
+    version: "1.0",
+  });
 
   await AddonManager.installTemporaryAddon(unpackedAddon);
 
   // Increment the version number, re-install it, and make sure it
   // gets marked as an upgrade.
-  await promiseWriteInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
-    version: "2.0"
-  }), tempdir, "bootstrap1@tests.mozilla.org");
+  await promiseWriteWebExtensionToDir(unpackedAddon, {
+    applications: {gecko: {id: ID}},
+    version: "2.0",
+  });
 
   const onShutdown = waitForBootstrapEvent("shutdown", ID);
-  const onUninstall = waitForBootstrapEvent("uninstall", ID);
-  const onInstall = waitForBootstrapEvent("install", ID);
+  const onUpdate = waitForBootstrapEvent("update", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   await AddonManager.installTemporaryAddon(unpackedAddon);
 
@@ -531,14 +513,7 @@ add_task(async function() {
     },
   });
 
-  await checkEvent(onUninstall, {
-    reason: BOOTSTRAP_REASONS.ADDON_UPGRADE,
-    params: {
-      version: "1.0",
-    },
-  });
-
-  await checkEvent(onInstall, {
+  await checkEvent(onUpdate, {
     reason: BOOTSTRAP_REASONS.ADDON_UPGRADE,
     params: {
       version: "2.0",
@@ -564,31 +539,25 @@ add_task(async function() {
 // Install a temporary add-on as a version downgrade over the top of an
 // existing temporary add-on.
 add_task(async function() {
-  // We can't install unpacked add-ons on release builds. See above.
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    return;
-  }
-
-  const tempdir = gTmpD.clone();
-
-  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
-
-  const unpackedAddon = tempdir.clone();
+  const unpackedAddon = gTmpD.clone();
   unpackedAddon.append(ID);
-  do_get_file("data/test_temporary/bootstrap.js")
-    .copyTo(unpackedAddon, "bootstrap.js");
+
+  await promiseWriteWebExtensionToDir(unpackedAddon, {
+    applications: {gecko: {id: ID}},
+    version: "1.0",
+  });
 
   await AddonManager.installTemporaryAddon(unpackedAddon);
 
   // Decrement the version number, re-install, and make sure
   // it gets marked as a downgrade.
-  await promiseWriteInstallRDFToDir(Object.assign({}, sampleRDFManifest, {
-    version: "0.8"
-  }), tempdir, "bootstrap1@tests.mozilla.org");
+  await promiseWriteWebExtensionToDir(unpackedAddon, {
+    applications: {gecko: {id: ID}},
+    version: "0.8",
+  });
 
   const onShutdown = waitForBootstrapEvent("shutdown", ID);
-  const onUninstall = waitForBootstrapEvent("uninstall", ID);
-  const onInstall = waitForBootstrapEvent("install", ID);
+  const onUpdate = waitForBootstrapEvent("update", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   await AddonManager.installTemporaryAddon(unpackedAddon);
 
@@ -599,16 +568,10 @@ add_task(async function() {
     },
   });
 
-  await checkEvent(onUninstall, {
+  await checkEvent(onUpdate, {
     reason: BOOTSTRAP_REASONS.ADDON_DOWNGRADE,
     params: {
-      version: "1.0",
-    },
-  });
-
-  await checkEvent(onInstall, {
-    reason: BOOTSTRAP_REASONS.ADDON_DOWNGRADE,
-    params: {
+      oldVersion: "1.0",
       version: "0.8",
     },
   });
@@ -630,19 +593,13 @@ add_task(async function() {
 // Installing a temporary add-on over an existing add-on with the same
 // version number should be installed as an upgrade.
 add_task(async function() {
-  // We can't install unpacked add-ons on release builds. See above.
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    return;
-  }
-
-  const tempdir = gTmpD.clone();
-
-  await promiseWriteInstallRDFToDir(sampleRDFManifest, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
-
-  const unpackedAddon = tempdir.clone();
+  const unpackedAddon = gTmpD.clone();
   unpackedAddon.append(ID);
-  do_get_file("data/test_temporary/bootstrap.js")
-    .copyTo(unpackedAddon, "bootstrap.js");
+
+  await promiseWriteWebExtensionToDir(unpackedAddon, {
+    applications: {gecko: {id: ID}},
+    version: "1.0",
+  });
 
   const onInitialInstall = waitForBootstrapEvent("install", ID);
   const onInitialStartup = waitForBootstrapEvent("startup", ID);
@@ -667,8 +624,7 @@ add_task(async function() {
 
   // Install it again.
   const onShutdown = waitForBootstrapEvent("shutdown", ID);
-  const onUninstall = waitForBootstrapEvent("uninstall", ID);
-  const onInstall = waitForBootstrapEvent("install", ID);
+  const onUpdate = waitForBootstrapEvent("update", ID);
   const onStartup = waitForBootstrapEvent("startup", ID);
   await AddonManager.installTemporaryAddon(unpackedAddon);
 
@@ -679,16 +635,10 @@ add_task(async function() {
     },
   });
 
-  await checkEvent(onUninstall, {
+  await checkEvent(onUpdate, {
     reason: BOOTSTRAP_REASONS.ADDON_UPGRADE,
     params: {
-      version: "1.0",
-    },
-  });
-
-  await checkEvent(onInstall, {
-    reason: BOOTSTRAP_REASONS.ADDON_UPGRADE,
-    params: {
+      oldVersion: "1.0",
       version: "1.0",
     },
   });
@@ -710,11 +660,6 @@ add_task(async function() {
 // Install a temporary add-on over the top of an existing disabled add-on.
 // After restart, the existing add-on should continue to be installed and disabled.
 add_task(async function() {
-  // We can't install unpacked add-ons on release builds. See above.
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    return;
-  }
-
   let {addon} = await promiseInstallFile(do_get_addon("test_bootstrap1_1"), true);
 
   Monitor.checkInstalled(ID, "1.0");
@@ -725,24 +670,14 @@ add_task(async function() {
   Monitor.checkInstalled(ID, "1.0");
   Monitor.checkNotStarted(ID);
 
-  let tempdir = gTmpD.clone();
-  await promiseWriteInstallRDFToDir({
-    id: ID,
-    version: "2.0",
-    bootstrap: true,
-    unpack: true,
-    targetApplications: [{
-          id: "xpcshell@tests.mozilla.org",
-      minVersion: "1",
-      maxVersion: "1"
-        }],
-    name: "Test Bootstrap 1 (temporary)",
-  }, tempdir, "bootstrap1@tests.mozilla.org", "bootstrap.js");
-
-  let unpacked_addon = tempdir.clone();
+  let unpacked_addon = gTmpD.clone();
   unpacked_addon.append(ID);
-  do_get_file("data/test_temporary/bootstrap.js")
-    .copyTo(unpacked_addon, "bootstrap.js");
+
+  await promiseWriteWebExtensionToDir(unpacked_addon, {
+    applications: {gecko: {id: ID}},
+    name: "Test Bootstrap 1 (temporary)",
+    version: "2.0",
+  });
 
   let extInstallCalled = false;
   AddonManager.addInstallListener({

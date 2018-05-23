@@ -1027,6 +1027,8 @@ var AddonTestUtils = {
         await OS.File.makeDir(dirPath, {ignoreExisting: true});
       }
 
+      if (typeof data == "object" && ChromeUtils.getClassName(data) == "Object")
+        data = JSON.stringify(data);
       if (typeof data == "string")
         data = new TextEncoder("utf-8").encode(data);
 
