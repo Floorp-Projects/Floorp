@@ -62,6 +62,7 @@ def add_command(config, tasks):
             "--product", task["extra"]["product"],
             "--stage-product", task["shipping-product"],
             "--app-name", task["extra"]["app-name"],
+            "--branch-prefix", task["extra"]["branch-prefix"],
             "--platform", task["extra"]["platform"],
             "--to-version", release_config["version"],
             "--to-app-version", release_config["appVersion"],
