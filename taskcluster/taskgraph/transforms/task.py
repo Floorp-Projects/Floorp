@@ -548,6 +548,7 @@ task_description_schema = Schema({
         Required('tag'): bool,
         Required('bump'): bool,
         Optional('bump-files'): [basestring],
+        Optional('repo-param-prefix'): basestring,
         Required('force-dry-run', default=True): bool,
         Required('push', default=False): bool
     }),
@@ -1138,7 +1139,7 @@ def build_treescript_payload(config, task, task_def):
         ]
         tag_info = {
             'tags': tag_names,
-            'revision': config.params['head_rev']
+            'revision': config.params['{}head_rev'.format(worker.get('repo-param-prefix', ''))],
         }
         task_def['payload']['tag_info'] = tag_info
         task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:tagging'))
