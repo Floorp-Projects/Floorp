@@ -5,13 +5,16 @@
 package mozilla.components.feature.session
 
 import android.content.Context
+import android.util.AtomicFile
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.session.storage.SessionStorage
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.FileNotFoundException
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 const val SELECTED_SESSION_KEY = "selectedSession"
 const val SESSION_KEY = "session"
@@ -42,29 +45,28 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
 
     @Synchronized
     override fun restore(engine: Engine): Pair<Map<Session, EngineSession>, String> {
-        val sessions = mutableMapOf<Session, EngineSession>()
         return try {
-            context.openFileInput(FILE_NAME).use {
+            val sessions = mutableMapOf<Session, EngineSession>()
+
+            getFile().openRead().use {
                 val json = it.bufferedReader().use {
                     it.readText()
                 }
 
                 val jsonRoot = JSONObject(json)
-
                 val selectedSessionId = jsonRoot.getString(SELECTED_SESSION_KEY)
                 jsonRoot.remove(SELECTED_SESSION_KEY)
                 // We don't need to consume the version for now
                 jsonRoot.remove(VERSION_KEY)
-
                 jsonRoot.keys().forEach {
                     val jsonSession = jsonRoot.getJSONObject(it)
                     val session = deserializeSession(jsonSession.getJSONObject(SESSION_KEY))
                     val engineSession = deserializeEngineSession(engine, jsonSession.getJSONObject(ENGINE_SESSION_KEY))
-                    sessions.put(session, engineSession)
+                    sessions[session] = engineSession
                 }
                 Pair(sessions, selectedSessionId)
             }
-        } catch (_: FileNotFoundException) {
+        } catch (_: IOException) {
             Pair(emptyMap(), "")
         } catch (_: JSONException) {
             Pair(emptyMap(), "")
@@ -73,6 +75,9 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
 
     @Synchronized
     override fun persist(sessions: Map<Session, EngineSession>, selectedSession: String): Boolean {
+        var file: AtomicFile? = null
+        var outputStream: FileOutputStream? = null
+
         return try {
             val json = JSONObject()
             json.put(VERSION_KEY, VERSION)
@@ -85,24 +90,33 @@ class DefaultSessionStorage(private val context: Context) : SessionStorage {
                 json.put(session.id, sessionJson)
             })
 
-            context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use {
-                it.write(json.toString().toByteArray())
-            }
+            file = getFile()
+            outputStream = file.startWrite()
+            outputStream.write(json.toString().toByteArray())
+            file.finishWrite(outputStream)
             true
-        } catch (_: FileNotFoundException) {
+        } catch (_: IOException) {
+            file?.failWrite(outputStream)
             false
         } catch (_: JSONException) {
+            file?.failWrite(outputStream)
             false
         }
     }
 
-    private fun serializeSession(session: Session): JSONObject {
+    internal fun getFile(): AtomicFile {
+        return AtomicFile(File(context.filesDir, FILE_NAME))
+    }
+
+    @Throws(JSONException::class)
+    internal fun serializeSession(session: Session): JSONObject {
         val json = JSONObject()
         json.put("url", session.url)
         return json
     }
 
-    private fun deserializeSession(json: JSONObject): Session {
+    @Throws(JSONException::class)
+    internal fun deserializeSession(json: JSONObject): Session {
         return Session(json.getString("url"))
     }
 
