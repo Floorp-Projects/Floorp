@@ -236,7 +236,8 @@ nsIContentParent::AllocPIPCBlobInputStreamParent(const nsID& aID,
 bool
 nsIContentParent::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent* aActor)
 {
-  delete aActor;
+  RefPtr<IPCBlobInputStreamParent> actor =
+    dont_AddRef(static_cast<IPCBlobInputStreamParent*>(aActor));
   return true;
 }
 

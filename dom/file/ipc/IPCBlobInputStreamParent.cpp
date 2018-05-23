@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 template<typename M>
-/* static */ IPCBlobInputStreamParent*
+/* static */ already_AddRefed<IPCBlobInputStreamParent>
 IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
                                  uint64_t aChildID, nsresult* aRv, M* aManager)
 {
@@ -28,19 +28,21 @@ IPCBlobInputStreamParent::Create(nsIInputStream* aInputStream, uint64_t aSize,
 
   IPCBlobInputStreamStorage::Get()->AddStream(aInputStream, id, aSize, aChildID);
 
-  return new IPCBlobInputStreamParent(id, aSize, aManager);
+  RefPtr<IPCBlobInputStreamParent> parent =
+    new IPCBlobInputStreamParent(id, aSize, aManager);
+  return parent.forget();
 }
 
-/* static */ IPCBlobInputStreamParent*
+/* static */ already_AddRefed<IPCBlobInputStreamParent>
 IPCBlobInputStreamParent::Create(const nsID& aID, uint64_t aSize,
                                  PBackgroundParent* aManager)
 {
-  IPCBlobInputStreamParent* actor =
+  RefPtr<IPCBlobInputStreamParent> actor =
     new IPCBlobInputStreamParent(aID, aSize, aManager);
 
   actor->mCallback = IPCBlobInputStreamStorage::Get()->TakeCallback(aID);
 
-  return actor;
+  return actor.forget();
 }
 
 IPCBlobInputStreamParent::IPCBlobInputStreamParent(const nsID& aID,
@@ -136,6 +138,35 @@ IPCBlobInputStreamParent::RecvStreamNeeded()
   if (!SendStreamReady(ipcStream.TakeValue())) {
     return IPC_FAIL(this, "SendStreamReady failed");
   }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+IPCBlobInputStreamParent::RecvLengthNeeded()
+{
+  MOZ_ASSERT(mContentManager || mPBackgroundManager);
+
+  nsCOMPtr<nsIInputStream> stream;
+  IPCBlobInputStreamStorage::Get()->GetStream(mID, 0, mSize, getter_AddRefs(stream));
+  if (!stream) {
+    if (!SendLengthReady(-1)) {
+      return IPC_FAIL(this, "SendLengthReady failed");
+    }
+
+    return IPC_OK();
+  }
+
+/* TODO
+  RefPtr<LengthInputStreamHelper> helper =
+    new LengthInputStreamHelper(stream);
+
+  helper->Run([self](length) {
+    if (self->mContentManager || mPBackgroundManager) {
+      Unused << self->SendLengthReady(length);
+    }
+  });
+*/
 
   return IPC_OK();
 }
