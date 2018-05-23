@@ -26,9 +26,7 @@ add_task(async function test_change_shipping() {
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
     is(shippingOptions.selectedOptionID, "2", "default selected should be '2'");
 
-    await spawnPaymentDialogTask(frame,
-                                 PTU.DialogContentTasks.selectShippingOptionById,
-                                 "1");
+    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingOptionById, "1");
 
     shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
@@ -41,9 +39,7 @@ add_task(async function test_change_shipping() {
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
-    await spawnPaymentDialogTask(frame,
-                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
-                                 "DE");
+    await selectPaymentDialogShippingAddressByCountry(frame, "DE");
     info("changed shipping address to DE country");
 
     await ContentTask.spawn(browser, {
@@ -67,27 +63,12 @@ add_task(async function test_change_shipping() {
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
     is(result.response.methodName, "basic-card", "Check methodName");
 
-    let addressLines = PTU.Addresses.TimBL2["street-address"].split("\n");
-    let actualShippingAddress = result.response.shippingAddress;
+    let {shippingAddress} = result.response;
     let expectedAddress = PTU.Addresses.TimBL2;
-    is(actualShippingAddress.addressLine[0], addressLines[0], "Address line 1 should match");
-    is(actualShippingAddress.addressLine[1], addressLines[1], "Address line 2 should match");
-    is(actualShippingAddress.country, expectedAddress.country, "Country should match");
-    is(actualShippingAddress.region, expectedAddress["address-level1"], "Region should match");
-    is(actualShippingAddress.city, expectedAddress["address-level2"], "City should match");
-    is(actualShippingAddress.postalCode, expectedAddress["postal-code"], "Zip code should match");
-    is(actualShippingAddress.organization, expectedAddress.organization, "Org should match");
-    is(actualShippingAddress.recipient,
-       `${expectedAddress["given-name"]} ${expectedAddress["additional-name"]} ` +
-       `${expectedAddress["family-name"]}`,
-       "Recipient should match");
-    is(actualShippingAddress.phone, expectedAddress.tel, "Phone should match");
+    checkPaymentAddressMatchesStorageAddress(shippingAddress, expectedAddress, "Shipping address");
 
-    let methodDetails = result.methodDetails;
-    is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
-    is(methodDetails.cardNumber, "999999999999", "Check cardNumber");
-    is(methodDetails.expiryMonth, "01", "Check expiryMonth");
-    is(methodDetails.expiryYear, "9999", "Check expiryYear");
+    let {methodDetails} = result;
+    checkPaymentMethodDetailsMatchesCard(methodDetails, PTU.BasicCards.JohnDoe, "Payment method");
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -132,9 +113,7 @@ add_task(async function test_default_shippingOptions_noneSelected() {
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
-    await spawnPaymentDialogTask(frame,
-                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
-                                 "DE");
+    await selectPaymentDialogShippingAddressByCountry(frame, "DE");
     info("changed shipping address to DE country");
 
     await ContentTask.spawn(browser, {
@@ -193,9 +172,7 @@ add_task(async function test_default_shippingOptions_allSelected() {
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
-    await spawnPaymentDialogTask(frame,
-                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
-                                 "DE");
+    await selectPaymentDialogShippingAddressByCountry(frame, "DE");
     info("changed shipping address to DE country");
 
     await ContentTask.spawn(browser, {
@@ -247,11 +224,8 @@ add_task(async function test_no_shippingchange_without_shipping() {
     ok(actualShippingAddress === null,
        "Check that shipping address is null with requestShipping:false");
 
-    let methodDetails = result.methodDetails;
-    is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
-    is(methodDetails.cardNumber, "999999999999", "Check cardNumber");
-    is(methodDetails.expiryMonth, "01", "Check expiryMonth");
-    is(methodDetails.expiryYear, "9999", "Check expiryYear");
+    let {methodDetails} = result;
+    checkPaymentMethodDetailsMatchesCard(methodDetails, PTU.BasicCards.JohnDoe, "Payment method");
 
     await BrowserTestUtils.waitForCondition(() => win.closed, "dialog should be closed");
   });
@@ -285,8 +259,7 @@ add_task(async function test_address_edit() {
     }, PTU.ContentTasks.promisePaymentRequestEvent);
 
     info("selecting the US address");
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingAddressByCountry,
-                                 "US");
+    await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
@@ -343,8 +316,7 @@ add_task(async function test_address_removal() {
     );
 
     info("selecting the US address");
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingAddressByCountry,
-                                 "US");
+    await selectPaymentDialogShippingAddressByCountry(frame, "US");
 
     let addressOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
