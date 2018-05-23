@@ -16,9 +16,8 @@ add_task(async function test_upgrade_incompatible() {
     },
   });
 
-  await Promise.all([promiseInstallFile(file), promiseWebExtensionStartup()]);
+  let {addon} = await promiseInstallFile(file);
 
-  let addon = await promiseAddonByID(ID);
   notEqual(addon, null);
   equal(addon.appDisabled, false);
 
