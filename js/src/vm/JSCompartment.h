@@ -38,6 +38,7 @@ namespace gc {
 template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
+class AutoRestoreRealmDebugMode;
 class GlobalObject;
 class LexicalEnvironmentObject;
 class MapObject;
@@ -660,26 +661,6 @@ struct JSCompartment
     JSObject*                    gcIncomingGrayPointers;
 
   private:
-    enum {
-        IsDebuggee = 1 << 0,
-        DebuggerObservesAllExecution = 1 << 1,
-        DebuggerObservesAsmJS = 1 << 2,
-        DebuggerObservesCoverage = 1 << 3,
-        DebuggerObservesBinarySource = 1 << 4,
-        DebuggerNeedsDelazification = 1 << 5
-    };
-
-    unsigned debugModeBits;
-    friend class AutoRestoreCompartmentDebugMode;
-
-    static const unsigned DebuggerObservesMask = IsDebuggee |
-                                                 DebuggerObservesAllExecution |
-                                                 DebuggerObservesCoverage |
-                                                 DebuggerObservesAsmJS |
-                                                 DebuggerObservesBinarySource;
-
-    void updateDebuggerObservesFlag(unsigned flag);
-
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
 
@@ -788,118 +769,6 @@ struct JSCompartment
         return offsetof(JSCompartment, regExps);
     }
 
-    //
-    // The Debugger observes execution on a frame-by-frame basis. The
-    // invariants of JSCompartment's debug mode bits, JSScript::isDebuggee,
-    // InterpreterFrame::isDebuggee, and BaselineFrame::isDebuggee are
-    // enumerated below.
-    //
-    // 1. When a compartment's isDebuggee() == true, relazification and lazy
-    //    parsing are disabled.
-    //
-    //    Whether AOT wasm is disabled is togglable by the Debugger API. By
-    //    default it is disabled. See debuggerObservesAsmJS below.
-    //
-    // 2. When a compartment's debuggerObservesAllExecution() == true, all of
-    //    the compartment's scripts are considered debuggee scripts.
-    //
-    // 3. A script is considered a debuggee script either when, per above, its
-    //    compartment is observing all execution, or if it has breakpoints set.
-    //
-    // 4. A debuggee script always pushes a debuggee frame.
-    //
-    // 5. A debuggee frame calls all slow path Debugger hooks in the
-    //    Interpreter and Baseline. A debuggee frame implies that its script's
-    //    BaselineScript, if extant, has been compiled with debug hook calls.
-    //
-    // 6. A debuggee script or a debuggee frame (i.e., during OSR) ensures
-    //    that the compiled BaselineScript is compiled with debug hook calls
-    //    when attempting to enter Baseline.
-    //
-    // 7. A debuggee script or a debuggee frame (i.e., during OSR) does not
-    //    attempt to enter Ion.
-    //
-    // Note that a debuggee frame may exist without its script being a
-    // debuggee script. e.g., Debugger.Frame.prototype.eval only marks the
-    // frame in which it is evaluating as a debuggee frame.
-    //
-
-    // True if this compartment's global is a debuggee of some Debugger
-    // object.
-    bool isDebuggee() const { return !!(debugModeBits & IsDebuggee); }
-    void setIsDebuggee() { debugModeBits |= IsDebuggee; }
-    void unsetIsDebuggee();
-
-    // True if this compartment's global is a debuggee of some Debugger
-    // object with a live hook that observes all execution; e.g.,
-    // onEnterFrame.
-    bool debuggerObservesAllExecution() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesAllExecution;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesAllExecution() {
-        updateDebuggerObservesFlag(DebuggerObservesAllExecution);
-    }
-
-    // True if this compartment's global is a debuggee of some Debugger object
-    // whose allowUnobservedAsmJS flag is false.
-    //
-    // Note that since AOT wasm functions cannot bail out, this flag really
-    // means "observe wasm from this point forward". We cannot make
-    // already-compiled wasm code observable to Debugger.
-    bool debuggerObservesAsmJS() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesAsmJS() {
-        updateDebuggerObservesFlag(DebuggerObservesAsmJS);
-    }
-
-    bool debuggerObservesBinarySource() const {
-        static const unsigned Mask = IsDebuggee | DebuggerObservesBinarySource;
-        return (debugModeBits & Mask) == Mask;
-    }
-
-    void updateDebuggerObservesBinarySource() {
-        updateDebuggerObservesFlag(DebuggerObservesBinarySource);
-    }
-
-    // True if this compartment's global is a debuggee of some Debugger object
-    // whose collectCoverageInfo flag is true.
-    bool debuggerObservesCoverage() const {
-        static const unsigned Mask = DebuggerObservesCoverage;
-        return (debugModeBits & Mask) == Mask;
-    }
-    void updateDebuggerObservesCoverage();
-
-    // The code coverage can be enabled either for each compartment, with the
-    // Debugger API, or for the entire runtime.
-    bool collectCoverage() const;
-    bool collectCoverageForDebug() const;
-    bool collectCoverageForPGO() const;
-
-    bool needsDelazificationForDebugger() const {
-        return debugModeBits & DebuggerNeedsDelazification;
-    }
-
-    /*
-     * Schedule the compartment to be delazified. Called from
-     * LazyScript::Create.
-     */
-    void scheduleDelazificationForDebugger() { debugModeBits |= DebuggerNeedsDelazification; }
-
-    /*
-     * If we scheduled delazification for turning on debug mode, delazify all
-     * scripts.
-     */
-    bool ensureDelazifyScriptsForDebugger(JSContext* cx);
-
-    void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg, JS::HandleObject handler);
-
-  private:
-    void sweepBreakpoints(js::FreeOp* fop);
-
-  public:
     /* Bookkeeping information for debug scope objects. */
     js::DebugEnvironments* debugEnvs;
 
@@ -967,6 +836,22 @@ class JS::Realm : public JSCompartment
 
     unsigned enterRealmDepth_ = 0;
 
+    enum {
+        IsDebuggee = 1 << 0,
+        DebuggerObservesAllExecution = 1 << 1,
+        DebuggerObservesAsmJS = 1 << 2,
+        DebuggerObservesCoverage = 1 << 3,
+        DebuggerObservesBinarySource = 1 << 4,
+        DebuggerNeedsDelazification = 1 << 5
+    };
+    static const unsigned DebuggerObservesMask = IsDebuggee |
+                                                 DebuggerObservesAllExecution |
+                                                 DebuggerObservesCoverage |
+                                                 DebuggerObservesAsmJS |
+                                                 DebuggerObservesBinarySource;
+    unsigned debugModeBits_ = 0;
+    friend class js::AutoRestoreRealmDebugMode;
+
     bool isAtomsRealm_ = false;
     bool isSelfHostingRealm_ = false;
     bool marked_ = true;
@@ -998,6 +883,10 @@ class JS::Realm : public JSCompartment
     bool firedOnNewGlobalObject = false;
 #endif
 
+  private:
+    void updateDebuggerObservesFlag(unsigned flag);
+
+  public:
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
     ~Realm();
 
@@ -1230,6 +1119,111 @@ class JS::Realm : public JSCompartment
 
     js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
     js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
+
+    //
+    // The Debugger observes execution on a frame-by-frame basis. The
+    // invariants of Realm's debug mode bits, JSScript::isDebuggee,
+    // InterpreterFrame::isDebuggee, and BaselineFrame::isDebuggee are
+    // enumerated below.
+    //
+    // 1. When a realm's isDebuggee() == true, relazification and lazy
+    //    parsing are disabled.
+    //
+    //    Whether AOT wasm is disabled is togglable by the Debugger API. By
+    //    default it is disabled. See debuggerObservesAsmJS below.
+    //
+    // 2. When a realm's debuggerObservesAllExecution() == true, all of
+    //    the realm's scripts are considered debuggee scripts.
+    //
+    // 3. A script is considered a debuggee script either when, per above, its
+    //    realm is observing all execution, or if it has breakpoints set.
+    //
+    // 4. A debuggee script always pushes a debuggee frame.
+    //
+    // 5. A debuggee frame calls all slow path Debugger hooks in the
+    //    Interpreter and Baseline. A debuggee frame implies that its script's
+    //    BaselineScript, if extant, has been compiled with debug hook calls.
+    //
+    // 6. A debuggee script or a debuggee frame (i.e., during OSR) ensures
+    //    that the compiled BaselineScript is compiled with debug hook calls
+    //    when attempting to enter Baseline.
+    //
+    // 7. A debuggee script or a debuggee frame (i.e., during OSR) does not
+    //    attempt to enter Ion.
+    //
+    // Note that a debuggee frame may exist without its script being a
+    // debuggee script. e.g., Debugger.Frame.prototype.eval only marks the
+    // frame in which it is evaluating as a debuggee frame.
+    //
+
+    // True if this realm's global is a debuggee of some Debugger
+    // object.
+    bool isDebuggee() const { return !!(debugModeBits_ & IsDebuggee); }
+    void setIsDebuggee() { debugModeBits_ |= IsDebuggee; }
+    void unsetIsDebuggee();
+
+    // True if this compartment's global is a debuggee of some Debugger
+    // object with a live hook that observes all execution; e.g.,
+    // onEnterFrame.
+    bool debuggerObservesAllExecution() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesAllExecution;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesAllExecution() {
+        updateDebuggerObservesFlag(DebuggerObservesAllExecution);
+    }
+
+    // True if this realm's global is a debuggee of some Debugger object
+    // whose allowUnobservedAsmJS flag is false.
+    //
+    // Note that since AOT wasm functions cannot bail out, this flag really
+    // means "observe wasm from this point forward". We cannot make
+    // already-compiled wasm code observable to Debugger.
+    bool debuggerObservesAsmJS() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesAsmJS;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesAsmJS() {
+        updateDebuggerObservesFlag(DebuggerObservesAsmJS);
+    }
+
+    bool debuggerObservesBinarySource() const {
+        static const unsigned Mask = IsDebuggee | DebuggerObservesBinarySource;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+
+    void updateDebuggerObservesBinarySource() {
+        updateDebuggerObservesFlag(DebuggerObservesBinarySource);
+    }
+
+    // True if this realm's global is a debuggee of some Debugger object
+    // whose collectCoverageInfo flag is true.
+    bool debuggerObservesCoverage() const {
+        static const unsigned Mask = DebuggerObservesCoverage;
+        return (debugModeBits_ & Mask) == Mask;
+    }
+    void updateDebuggerObservesCoverage();
+
+    // The code coverage can be enabled either for each realm, with the
+    // Debugger API, or for the entire runtime.
+    bool collectCoverage() const;
+    bool collectCoverageForDebug() const;
+    bool collectCoverageForPGO() const;
+
+    bool needsDelazificationForDebugger() const {
+        return debugModeBits_ & DebuggerNeedsDelazification;
+    }
+
+    // Schedule the realm to be delazified. Called from LazyScript::Create.
+    void scheduleDelazificationForDebugger() {
+        debugModeBits_ |= DebuggerNeedsDelazification;
+    }
+
+    // If we scheduled delazification for turning on debug mode, delazify all
+    // scripts.
+    bool ensureDelazifyScriptsForDebugger(JSContext* cx);
+
+    void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg, JS::HandleObject handler);
 };
 
 namespace js {

@@ -3798,7 +3798,7 @@ bool
 JSScript::incrementStepModeCount(JSContext* cx)
 {
     assertSameCompartment(cx, this);
-    MOZ_ASSERT(cx->compartment()->isDebuggee());
+    MOZ_ASSERT(cx->realm()->isDebuggee());
 
     if (!ensureHasDebugScript(cx))
         return false;
@@ -4259,7 +4259,7 @@ LazyScript::CreateRaw(JSContext* cx, HandleFunction fun,
     if (!res)
         return nullptr;
 
-    cx->compartment()->scheduleDelazificationForDebugger();
+    cx->realm()->scheduleDelazificationForDebugger();
 
     return new (res) LazyScript(fun, *sourceObject, table.forget(), packed, sourceStart, sourceEnd,
                                 toStringStart, lineno, column);
