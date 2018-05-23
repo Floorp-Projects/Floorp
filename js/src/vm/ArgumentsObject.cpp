@@ -239,13 +239,13 @@ ArgumentsObject::createTemplateObject(JSContext* cx, bool mapped)
 }
 
 ArgumentsObject*
-JSCompartment::maybeArgumentsTemplateObject(bool mapped) const
+Realm::maybeArgumentsTemplateObject(bool mapped) const
 {
     return mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
 }
 
 ArgumentsObject*
-JSCompartment::getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped)
+Realm::getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped)
 {
     ReadBarriered<ArgumentsObject*>& obj =
         mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
@@ -267,7 +267,7 @@ template <typename CopyArgs>
 ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActuals, CopyArgs& copy)
 {
     bool mapped = callee->nonLazyScript()->hasMappedArgsObj();
-    ArgumentsObject* templateObj = cx->compartment()->getOrCreateArgumentsTemplateObject(cx, mapped);
+    ArgumentsObject* templateObj = cx->realm()->getOrCreateArgumentsTemplateObject(cx, mapped);
     if (!templateObj)
         return nullptr;
 

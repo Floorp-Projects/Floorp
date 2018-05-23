@@ -60,9 +60,6 @@ JSCompartment::JSCompartment(Zone* zone)
     debugEnvs(nullptr),
     enumerators(nullptr),
     jitCompartment_(nullptr),
-    mappedArgumentsTemplate_(nullptr),
-    unmappedArgumentsTemplate_(nullptr),
-    iterResultTemplate_(nullptr),
     lcovOutput()
 {
     runtime_->numCompartments++;
@@ -855,7 +852,7 @@ CrossCompartmentKey::needsSweep()
 }
 
 void
-JSCompartment::sweepTemplateObjects()
+Realm::sweepTemplateObjects()
 {
     if (mappedArgumentsTemplate_ && IsAboutToBeFinalized(&mappedArgumentsTemplate_))
         mappedArgumentsTemplate_.set(nullptr);
