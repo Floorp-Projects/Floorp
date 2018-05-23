@@ -130,15 +130,15 @@ PluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
-    if (!mPluginContent) {
+    if (!InitialSetupHasBeenDone()) {
       // Create synthetic document
 #ifdef DEBUG
       nsresult rv =
 #endif
         CreateSyntheticPluginDocument();
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create synthetic document");
+      InitialSetupDone();
     }
-    BecomeInteractive();
   } else {
     mStreamListener = nullptr;
   }
