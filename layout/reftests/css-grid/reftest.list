@@ -108,7 +108,7 @@ skip-if(Android) == grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-p
 == grid-item-intrinsic-size-normal-001.html grid-item-intrinsic-size-normal-001-ref.html
 == grid-item-intrinsic-size-normal-002.html grid-item-intrinsic-size-normal-002-ref.html
 == grid-item-auto-min-size-clamp-001.html grid-item-auto-min-size-clamp-001-ref.html
-== grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == grid-item-auto-min-size-clamp-002.html grid-item-auto-min-size-clamp-002-ref.html
 == grid-item-auto-min-size-clamp-003.html grid-item-auto-min-size-clamp-003-ref.html
 # == grid-item-auto-min-size-clamp-004.html grid-item-auto-min-size-clamp-004-ref.html # bug 1421976
 == grid-item-auto-min-size-clamp-005.html grid-item-auto-min-size-clamp-005-ref.html

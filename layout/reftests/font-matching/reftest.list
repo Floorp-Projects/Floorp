@@ -19,7 +19,7 @@ pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref
 
 # Test for bug 1458158: Arabic text in Arial weight 900 should fall back to Bold rather than Regular.
 # Limited to Windows because this is specific to the fonts shipped on Windows by default.
-skip-if(!winWidget) == 1458158-1.html 1458158-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!winWidget) == 1458158-1.html 1458158-1-ref.html
 
 # basic tests for bug 538730
 != synthetic-bold-1.html synthetic-bold-1-ref.html
@@ -27,9 +27,9 @@ skip-if(!winWidget) == 1458158-1.html 1458158-1-ref.html
 
 # synthetic bold/italic tests
 != defaultfont-bold.html defaultfont.html
-!= defaultfont-italic.html defaultfont.html 
-!= defaultfont-oblique.html defaultfont.html 
-!= defaultfont-bolditalic.html defaultfont.html 
+!= defaultfont-italic.html defaultfont.html
+!= defaultfont-oblique.html defaultfont.html
+!= defaultfont-bolditalic.html defaultfont.html
 != defaultfont-bolditalic.html defaultfont-bold.html
 
 != defaultjapanese-bold.html defaultjapanese.html
@@ -57,18 +57,18 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 != lucidaconsole-bolditalic.html lucidaconsole-bold.html
 
 # checking that we don't match fullnames, psnames (see bug 538103)
-== arial-variations-1.html arial-variations-1-ref.html
-== arial-variations-2.html arial-variations-2-ref.html
-== arial-variations-3.html arial-variations-3-ref.html
-== arial-variations-4.html arial-variations-4-ref.html
-== arial-variations-5.html arial-variations-5-ref.html
-== arial-variations-6.html arial-variations-6-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-1.html arial-variations-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-2.html arial-variations-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-3.html arial-variations-3-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-4.html arial-variations-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-5.html arial-variations-5-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == arial-variations-6.html arial-variations-6-ref.html
 
 # localized font family names should always match just as English names do
-== localized-family-names-001.html localized-family-names-001-ref.html
-== localized-family-names-002.html localized-family-names-002-ref.html
-== localized-family-names-003.html localized-family-names-003-ref.html
-== localized-family-names-004.html localized-family-names-004-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-001.html localized-family-names-001-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-002.html localized-family-names-002-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-003.html localized-family-names-003-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
 fails-if(gtkWidget) == familyname-escapedidents.html familyname-escapedidents-ref.html # bug 1309425, bug 1328771
@@ -86,7 +86,7 @@ fuzzy-if(OSX==1010&&browserIsRemote,1,23) == weightmapping-12.html weightmapping
 == weightmapping-7.html weightmapping-7-ref.html
 fuzzy-if(OSX==1010,1,30) == weightmapping-12579.html weightmapping-12579-ref.html
 
-== stretchmapping-all.html stretchmapping-all-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == stretchmapping-all.html stretchmapping-all-ref.html
 == stretchmapping-reverse.html stretchmapping-reverse-ref.html
 fuzzy-if(OSX==1010&&browserIsRemote,1,17) fuzzy-if(Android,4,8) == stretchmapping-35.html stretchmapping-35-ref.html
 fuzzy-if(OSX==1010,3,5) == stretchmapping-137.html stretchmapping-137-ref.html

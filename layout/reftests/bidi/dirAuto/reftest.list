@@ -1,7 +1,7 @@
 == bdi-auto-dir-default.html bdi-auto-dir-default-ref.html
-== dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html
 == dir_auto-set-contained-dir-R.html dir_auto-contained-dir-R-ref.html
-== dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html
 == dir_auto-set-contained-invalid-dir-R.html dir_auto-contained-dir-R-ref.html
 == dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L-ref.html
 == dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R-ref.html
