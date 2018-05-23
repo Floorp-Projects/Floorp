@@ -46,7 +46,6 @@ JSCompartment::JSCompartment(Zone* zone)
     runtime_(zone->runtimeFromAnyThread()),
     data(nullptr),
     regExps(),
-    globalWriteBarriered(0),
     detachedTypedObjects(0),
     innerViews(zone),
     gcIncomingGrayPointers(nullptr),
@@ -719,8 +718,6 @@ Realm::finishRoots()
 void
 JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 {
-    globalWriteBarriered = 0;
-
     InnerViewTable& table = innerViews.get();
     if (table.needsSweepAfterMinorGC())
         table.sweepAfterMinorGC();
@@ -728,6 +725,7 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 
     Realm* realm = JS::GetRealmForCompartment(this);
+    realm->globalWriteBarriered = 0;
     realm->dtoaCache.purge();
 }
 

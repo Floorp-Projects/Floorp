@@ -275,6 +275,12 @@ CompileCompartment::maybeGlobal()
     return JS::GetRealmForCompartment(compartment())->unsafeUnbarrieredMaybeGlobal();
 }
 
+const uint32_t*
+CompileCompartment::addressOfGlobalWriteBarriered()
+{
+    return &JS::GetRealmForCompartment(compartment())->globalWriteBarriered;
+}
+
 bool
 CompileCompartment::hasAllocationMetadataBuilder()
 {
