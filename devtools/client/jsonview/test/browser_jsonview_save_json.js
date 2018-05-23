@@ -52,7 +52,11 @@ function awaitFileSave(name, ext) {
 
 function getFileContents(file) {
   return new Promise((resolve, reject) => {
-    NetUtil.asyncFetch(file, function(inputStream, status) {
+    let channel = NetUtil.newChannel({
+      uri: NetUtil.newURI(file),
+      loadUsingSystemPrincipal: true,
+    });
+    NetUtil.asyncFetch(channel, function(inputStream, status) {
       if (Components.isSuccessCode(status)) {
         info("Fetched downloaded contents.");
         resolve(NetUtil.readInputStreamToString(inputStream, inputStream.available()));

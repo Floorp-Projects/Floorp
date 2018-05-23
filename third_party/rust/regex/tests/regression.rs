@@ -61,10 +61,6 @@ matiter!(word_boundary_dfa, r"\b", "a b c",
 // See: https://github.com/rust-lang/regex/issues/268
 matiter!(partial_anchor, r"^a|b", "ba", (0, 1));
 
-// See: https://github.com/rust-lang/regex/issues/264
-mat!(ascii_boundary_no_capture, r"(?-u)\B", "\u{28f3e}", Some((0, 0)));
-mat!(ascii_boundary_capture, r"(?-u)(\B)", "\u{28f3e}", Some((0, 0)));
-
 // See: https://github.com/rust-lang/regex/issues/280
 ismatch!(partial_anchor_alternate_begin, r"^a|z", "yyyyya", false);
 ismatch!(partial_anchor_alternate_end, r"a$|z", "ayyyyy", false);
@@ -77,7 +73,6 @@ mat!(lits_unambiguous2, r"((IMG|CAM|MG|MB2)_|(DSCN|CIMG))(?P<n>[0-9]+)$",
      "CIMG2341", Some((0, 8)), Some((0, 4)), None, Some((0, 4)), Some((4, 8)));
 
 // See: https://github.com/rust-lang/regex/issues/271
-mat!(end_not_wb, r"$(?-u:\B)", "\u{5c124}\u{b576c}", Some((8, 8)));
 mat!(endl_or_wb, r"(?m:$)|(?-u:\b)", "\u{6084e}", Some((4, 4)));
 mat!(zero_or_end, r"(?i-u:\x00)|$", "\u{e682f}", Some((4, 4)));
 mat!(y_or_endl, r"(?i-u:y)|(?m:$)", "\u{b4331}", Some((4, 4)));
@@ -90,3 +85,10 @@ ismatch!(strange_anchor_non_complete_suffix, r"${2}a", "", false);
 // See: https://github.com/rust-lang/regex/issues/334
 mat!(captures_after_dfa_premature_end, r"a(b*(X|$))?", "abcbX",
      Some((0, 1)), None, None);
+
+// See: https://github.com/rust-lang/regex/issues/437
+ismatch!(
+    literal_panic,
+    r"typename type\-parameter\-\d+\-\d+::.+",
+    "test",
+    false);

@@ -1161,7 +1161,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         uint32_t    controlFlags = 0;
 
         uint32_t i;
-        for (i=0; i<mTypeCount; ++i) {
+        for (i = 0; i < mTypeCount; ++i) {
             nsCOMPtr<nsISocketProvider> provider;
 
             SOCKET_LOG(("  pushing io layer [%u:%s]\n", i, mTypes[i]));
@@ -1190,12 +1190,30 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 // if this is the first type, we'll want the
                 // service to allocate a new socket
 
+                // Most layers _ESPECIALLY_ PSM want the origin name here as they
+                // will use it for secure checks, etc.. and any connection management
+                // differences between the origin name and the routed name can be
+                // taken care of via DNS. However, SOCKS is a special case as there is
+                // no DNS. in the case of SOCKS and PSM the PSM is a separate layer
+                // and receives the origin name.
+                const char *socketProviderHost = host;
+                int32_t socketProviderPort = port;
+                if (mProxyTransparentResolvesHost &&
+                    (!strcmp(mTypes[0], "socks") || !strcmp(mTypes[0], "socks4"))) {
+                    SOCKET_LOG(("SOCKS %d Host/Route override: %s:%d -> %s:%d\n",
+                                mHttpsProxy,
+                                socketProviderHost, socketProviderPort,
+                                mHost.get(), mPort));
+                    socketProviderHost = mHost.get();
+                    socketProviderPort = mPort;
+                }
+
                 // when https proxying we want to just connect to the proxy as if
                 // it were the end host (i.e. expect the proxy's cert)
 
                 rv = provider->NewSocket(mNetAddr.raw.family,
-                                         mHttpsProxy ? mProxyHost.get() : host,
-                                         mHttpsProxy ? mProxyPort : port,
+                                         mHttpsProxy ? mProxyHost.get() : socketProviderHost,
+                                         mHttpsProxy ? mProxyPort : socketProviderPort,
                                          proxyInfo, mOriginAttributes,
                                          controlFlags, mTlsFlags, &fd,
                                          getter_AddRefs(secinfo));
@@ -1204,8 +1222,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                     NS_NOTREACHED("NewSocket succeeded but failed to create a PRFileDesc");
                     rv = NS_ERROR_UNEXPECTED;
                 }
-            }
-            else {
+            } else {
                 // the socket has already been allocated,
                 // so we just want the service to add itself
                 // to the stack (such as pushing an io layer)
@@ -1236,9 +1253,8 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                     secCtrl->SetNotificationCallbacks(callbacks);
                 // remember if socket type is SSL so we can ProxyStartSSL if need be.
                 usingSSL = isSSL;
-            }
-            else if ((strcmp(mTypes[i], "socks") == 0) ||
-                     (strcmp(mTypes[i], "socks4") == 0)) {
+            } else if ((strcmp(mTypes[i], "socks") == 0) ||
+                       (strcmp(mTypes[i], "socks4") == 0)) {
                 // since socks is transparent, any layers above
                 // it do not have to worry about proxy stuff
                 proxyInfo = nullptr;

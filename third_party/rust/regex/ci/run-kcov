@@ -14,15 +14,10 @@ tests=(
   regex
 )
 tmpdir=$(mktemp -d)
-with_plugin=
 coveralls_id=
 
 while true; do
   case "$1" in
-    --with-plugin)
-      with_plugin=yes
-      shift
-      ;;
     --coveralls-id)
       coveralls_id="$2"
       shift 2
@@ -33,16 +28,7 @@ while true; do
   esac
 done
 
-if [ -n "$with_plugin" ]; then
-  cargo test --manifest-path regex_macros/Cargo.toml --no-run --verbose
-  kcov \
-    --verify \
-    --include-pattern '/regex/src/' \
-    "$tmpdir/plugin" \
-    $(ls -t ./regex_macros/target/debug/plugin-* | head -n1)
-fi
-
-cargo test --no-run --verbose --jobs 4
+cargo test --no-run --verbose --jobs 4 --features unstable
 for t in ${tests[@]}; do
   kcov \
     --verify \

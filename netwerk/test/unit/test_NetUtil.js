@@ -636,66 +636,6 @@ function test_newChannel_with_wrong_options()
   run_next_test();
 }
 
-function test_deprecated_newChannel_API_with_string() {
-  const TEST_SPEC = "http://mozilla.org";
-  let uri = NetUtil.newURI(TEST_SPEC);
-  let oneArgChannel = NetUtil.newChannel(TEST_SPEC);
-  let threeArgChannel = NetUtil.newChannel(TEST_SPEC, null, null);
-  Assert.ok(uri.equals(oneArgChannel.URI));
-  Assert.ok(uri.equals(threeArgChannel.URI));
-
-  run_next_test();
-}
-
-function test_deprecated_newChannel_API_with_nsIFile()
-{
-  const TEST_DATA = "this is a test string";
-
-  // First we need a file to read from.
-  let file = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties).
-             get("ProfD", Ci.nsIFile);
-  file.append("NetUtil-deprecated-newchannel-api-test-file.tmp");
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
-
-  // Write the test data to the file.
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  ostream.init(file, -1, -1, 0);
-  ostream.write(TEST_DATA, TEST_DATA.length);
-
-  // Sanity check to make sure the data was written.
-  Assert.equal(TEST_DATA, getFileContents(file));
-
-  // create a channel using the file
-  let channel = NetUtil.newChannel(file);
-
-  // Create a pipe that will create our output stream that we can use once
-  // we have gotten all the data.
-  let pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-  pipe.init(true, true, 0, 0, null);
-
-  let listener = Cc["@mozilla.org/network/simple-stream-listener;1"].
-                   createInstance(Ci.nsISimpleStreamListener);
-  listener.init(pipe.outputStream, {
-    onStartRequest: function(aRequest, aContext) {},
-    onStopRequest: function(aRequest, aContext, aStatusCode) {
-      pipe.outputStream.close();
-      Assert.ok(Components.isSuccessCode(aContext));
-
-      // Check that we got the right data.
-      Assert.equal(pipe.inputStream.available(), TEST_DATA.length);
-      let is = Cc["@mozilla.org/scriptableinputstream;1"].
-               createInstance(Ci.nsIScriptableInputStream);
-      is.init(pipe.inputStream);
-      let result = is.read(TEST_DATA.length);
-      Assert.equal(TEST_DATA, result);
-      run_next_test();
-    }
-  });
-  channel.asyncOpen2(listener);
-}
-
 function test_readInputStreamToString()
 {
   const TEST_DATA = "this is a test string\0 with an embedded null";
@@ -852,8 +792,6 @@ function test_readInputStreamToString_invalid_sequence()
   test_newChannel_with_nsIURI,
   test_newChannel_with_options,
   test_newChannel_with_wrong_options,
-  test_deprecated_newChannel_API_with_string,
-  test_deprecated_newChannel_API_with_nsIFile,
   test_readInputStreamToString,
   test_readInputStreamToString_no_input_stream,
   test_readInputStreamToString_no_bytes_arg,

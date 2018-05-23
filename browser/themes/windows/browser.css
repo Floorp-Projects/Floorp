@@ -636,28 +636,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 /* bookmarking panel */
 
-#editBookmarkPanelStarIcon {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill-attention);
-  width: 40px;
-  height: 40px;
-  margin: 4px;
-}
-
-#editBookmarkPanelTitle {
-  font-size: 130%;
-}
-
-#editBookmarkPanelHeader,
-#editBookmarkPanelContent {
-  margin-bottom: .5em;
-}
-
-/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
-#editBMPanel_folderTree {
-  min-width: 27em;
-}
+%include ../shared/places/editBookmarkPanel.inc.css
 
 /* ::::: content area ::::: */
 

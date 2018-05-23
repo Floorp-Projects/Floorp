@@ -1,10 +1,11 @@
 /*!
-This crate defines two functions, `memchr` and `memrchr`, which expose a safe interface
-to the corresponding functions in `libc`.
+This crate defines two functions, `memchr` and `memrchr`, which expose a safe
+interface to the corresponding functions in `libc`.
 */
 
 #![deny(missing_docs)]
 #![allow(unused_imports)]
+#![doc(html_root_url = "https://docs.rs/memchr/2.0.0")]
 
 #![cfg_attr(not(feature = "use_std"), no_std)]
 
@@ -12,12 +13,16 @@ to the corresponding functions in `libc`.
 #[macro_use]
 extern crate std;
 
-#[cfg(feature = "libc")]
+#[cfg(all(feature = "libc", not(target_arch = "wasm32")))]
 extern crate libc;
 
-#[cfg(feature = "libc")]
+#[macro_use]
+#[cfg(test)]
+extern crate quickcheck;
+
+#[cfg(all(feature = "libc", not(target_arch = "wasm32")))]
 use libc::c_void;
-#[cfg(feature = "libc")]
+#[cfg(all(feature = "libc", not(target_arch = "wasm32")))]
 use libc::{c_int, size_t};
 
 #[cfg(feature = "use_std")]
@@ -66,6 +71,36 @@ fn repeat_byte(b: u8) -> usize {
     rep
 }
 
+macro_rules! iter_next {
+    // Common code for the memchr iterators:
+    // update haystack and position and produce the index
+    //
+    // self: &mut Self where Self is the iterator
+    // search_result: Option<usize> which is the result of the corresponding
+    // memchr function.
+    //
+    // Returns Option<usize> (the next iterator element)
+    ($self_:expr, $search_result:expr) => {
+        $search_result.map(move |index| {
+            // split and take the remaining back half
+            $self_.haystack = $self_.haystack.split_at(index + 1).1;
+            let found_position = $self_.position + index;
+            $self_.position = found_position + 1;
+            found_position
+        })
+    }
+}
+
+macro_rules! iter_next_back {
+    ($self_:expr, $search_result:expr) => {
+        $search_result.map(move |index| {
+            // split and take the remaining front half
+            $self_.haystack = $self_.haystack.split_at(index).0;
+            $self_.position + index
+        })
+    }
+}
+
 /// An iterator for memchr
 pub struct Memchr<'a> {
     needle: u8,
@@ -90,30 +125,17 @@ impl<'a> Iterator for Memchr<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<usize> {
-        let search_result = memchr(self.needle, &self.haystack);
-        match search_result {
-            Some(index) => {
-                // Move our internal position
-                self.haystack = self.haystack.split_at(index + 1).1;
-                self.position = self.position + index + 1;
-                Some(self.position)
-            }
-            None => None,
-        }
+        iter_next!(self, memchr(self.needle, &self.haystack))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.haystack.len()))
     }
 }
 
 impl<'a> DoubleEndedIterator for Memchr<'a> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let search_result = memrchr(self.needle, &self.haystack);
-        match search_result {
-            Some(index) => {
-                // Move our internal position
-                self.haystack = self.haystack.split_at(index).0;
-                Some(self.position + index + 1)
-            }
-            None => None,
-        }
+        iter_next_back!(self, memrchr(self.needle, &self.haystack))
     }
 }
 
@@ -140,6 +162,7 @@ impl<'a> DoubleEndedIterator for Memchr<'a> {
 pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
     // libc memchr
     #[cfg(all(feature = "libc",
+              not(target_arch = "wasm32"),
               any(not(target_os = "windows"),
                   not(any(target_pointer_width = "32",
                           target_pointer_width = "64")))))]
@@ -160,7 +183,8 @@ pub fn memchr(needle: u8, haystack: &[u8]) -> Option<usize> {
     }
 
     // use fallback on windows, since it's faster
-    #[cfg(all(any(not(feature = "libc"), target_os = "windows"),
+    // use fallback on wasm32, since it doesn't have libc
+    #[cfg(all(any(not(feature = "libc"), target_os = "windows", target_arch = "wasm32"),
               any(target_pointer_width = "32",
                   target_pointer_width = "64")))]
     fn memchr_specific(needle: u8, haystack: &[u8]) -> Option<usize> {
@@ -258,16 +282,11 @@ impl<'a> Iterator for Memchr2<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<usize> {
-        let search_result = memchr2(self.needle1, self.needle2, &self.haystack);
-        match search_result {
-            Some(index) => {
-                // Move our internal position
-                self.haystack = self.haystack.split_at(index + 1).1;
-                self.position = self.position + index + 1;
-                Some(self.position)
-            }
-            None => None,
-        }
+        iter_next!(self, memchr2(self.needle1, self.needle2, &self.haystack))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.haystack.len()))
     }
 }
 
@@ -319,7 +338,12 @@ pub struct Memchr3<'a> {
 
 impl<'a> Memchr3<'a> {
     /// Create a new Memchr2 that's initalized to zero with a haystack
-    pub fn new(needle1: u8, needle2: u8, needle3: u8, haystack: &[u8]) -> Memchr3 {
+    pub fn new(
+        needle1: u8,
+        needle2: u8,
+        needle3: u8,
+        haystack: &[u8],
+    ) -> Memchr3 {
         Memchr3 {
             needle1: needle1,
             needle2: needle2,
@@ -334,21 +358,24 @@ impl<'a> Iterator for Memchr3<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<usize> {
-        let search_result = memchr3(self.needle1, self.needle2, self.needle3, &self.haystack);
-        match search_result {
-            Some(index) => {
-                // Move our internal position
-                self.haystack = self.haystack.split_at(index + 1).1;
-                self.position = self.position + index + 1;
-                Some(self.position)
-            }
-            None => None,
-        }
+        iter_next!(
+            self,
+            memchr3(self.needle1, self.needle2, self.needle3, &self.haystack)
+        )
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (0, Some(self.haystack.len()))
     }
 }
 
 /// Like `memchr`, but searches for three bytes instead of one.
-pub fn memchr3(needle1: u8, needle2: u8, needle3: u8, haystack: &[u8]) -> Option<usize> {
+pub fn memchr3(
+    needle1: u8,
+    needle2: u8,
+    needle3: u8,
+    haystack: &[u8],
+) -> Option<usize> {
     fn slow(b1: u8, b2: u8, b3: u8, haystack: &[u8]) -> Option<usize> {
         haystack.iter().position(|&b| b == b1 || b == b2 || b == b3)
     }
@@ -392,14 +419,17 @@ mod fallback {
     #[cfg(not(feature = "use_std"))]
     use core::cmp;
 
-    use super::{LO_U64, HI_U64, LO_USIZE, HI_USIZE, USIZE_BYTES, contains_zero_byte, repeat_byte};
+    use super::{
+        LO_U64, HI_U64, LO_USIZE, HI_USIZE, USIZE_BYTES,
+        contains_zero_byte, repeat_byte,
+    };
 
     /// Return the first index matching the byte `a` in `text`.
     pub fn memchr(x: u8, text: &[u8]) -> Option<usize> {
         // Scan for a single byte value by reading two `usize` words at a time.
         //
         // Split `text` in three parts
-        // - unaligned inital part, before the first word aligned address in text
+        // - unaligned inital part, before first word aligned address in text
         // - body, scan by 2 words at a time
         // - the last remaining part, < 2 word size
         let len = text.len();
@@ -410,7 +440,8 @@ mod fallback {
         let mut offset;
         if align > 0 {
             offset = cmp::min(USIZE_BYTES - align, len);
-            if let Some(index) = text[..offset].iter().position(|elt| *elt == x) {
+            let pos = text[..offset].iter().position(|elt| *elt == x);
+            if let Some(index) = pos {
                 return Some(index);
             }
         } else {
@@ -458,7 +489,8 @@ mod fallback {
         let mut offset;
         if end_align > 0 {
             offset = if end_align >= len { 0 } else { len - end_align };
-            if let Some(index) = text[offset..].iter().rposition(|elt| *elt == x) {
+            let pos = text[offset..].iter().rposition(|elt| *elt == x);
+            if let Some(index) = pos {
                 return Some(offset + index);
             }
         } else {
@@ -491,8 +523,8 @@ mod fallback {
 
 #[cfg(test)]
 mod tests {
-    extern crate quickcheck;
     use std::prelude::v1::*;
+    use quickcheck;
 
     use super::{memchr, memrchr, memchr2, memchr3, Memchr, Memchr2, Memchr3};
     // Use a macro to test both native and fallback impls on all configurations
@@ -500,7 +532,7 @@ mod tests {
         ($mod_name:ident, $memchr:path, $memrchr:path) => {
             mod $mod_name {
             use std::prelude::v1::*;
-            use super::quickcheck;
+            use quickcheck;
             #[test]
             fn matches_one() {
                 assert_eq!(Some(0), $memchr(b'a', b"a"));
@@ -599,7 +631,8 @@ mod tests {
                     };
                     for byte in 0..256u32 {
                         let byte = byte as u8;
-                        if $memchr(byte, &data) != data.iter().position(|elt| *elt == byte) {
+                        let pos = data.iter().position(|elt| *elt == byte);
+                        if $memchr(byte, &data) != pos {
                             return false;
                         }
                     }
@@ -620,7 +653,8 @@ mod tests {
                     };
                     for byte in 0..256u32 {
                         let byte = byte as u8;
-                        if $memrchr(byte, &data) != data.iter().rposition(|elt| *elt == byte) {
+                        let pos = data.iter().rposition(|elt| *elt == byte);
+                        if $memrchr(byte, &data) != pos {
                             return false;
                         }
                     }
@@ -734,6 +768,42 @@ mod tests {
         assert_eq!(None, memchr3(b'a', b'b', b'c', b"xyz"));
     }
 
+    // return an iterator of the 0-based indices of haystack that match the
+    // needle
+    fn positions1<'a>(needle: u8, haystack: &'a [u8])
+        -> Box<DoubleEndedIterator<Item=usize> + 'a>
+    {
+        Box::new(haystack.iter()
+                         .enumerate()
+                         .filter(move |&(_, &elt)| elt == needle)
+                         .map(|t| t.0))
+    }
+
+    fn positions2<'a>(needle1: u8, needle2: u8, haystack: &'a [u8])
+        -> Box<DoubleEndedIterator<Item=usize> + 'a>
+    {
+        Box::new(haystack
+            .iter()
+            .enumerate()
+            .filter(move |&(_, &elt)| elt == needle1 || elt == needle2)
+            .map(|t| t.0))
+    }
+
+    fn positions3<'a>(
+        needle1: u8,
+        needle2: u8,
+        needle3: u8,
+        haystack: &'a [u8],
+    ) -> Box<DoubleEndedIterator<Item=usize> + 'a> {
+        Box::new(haystack
+            .iter()
+            .enumerate()
+            .filter(move |&(_, &elt)| {
+                elt == needle1 || elt == needle2 || elt == needle3
+            })
+            .map(|t| t.0))
+    }
+
     #[test]
     fn memchr_iter() {
         let haystack = b"aaaabaaaab";
@@ -741,35 +811,41 @@ mod tests {
         let first = memchr_iter.next();
         let second = memchr_iter.next();
         let third = memchr_iter.next();
-        assert_eq!(Some(5), first);
-        assert_eq!(Some(10), second);
-        assert_eq!(None, third);
+
+        let mut answer_iter = positions1(b'b', haystack);
+        assert_eq!(answer_iter.next(), first);
+        assert_eq!(answer_iter.next(), second);
+        assert_eq!(answer_iter.next(), third);
     }
 
     #[test]
     fn memchr2_iter() {
-        let haystack = b"ab";
+        let haystack = b"axxb";
         let mut memchr_iter = Memchr2::new(b'a', b'b', haystack);
         let first = memchr_iter.next();
         let second = memchr_iter.next();
         let third = memchr_iter.next();
-        assert_eq!(Some(1), first);
-        assert_eq!(Some(2), second);
-        assert_eq!(None, third);
+
+        let mut answer_iter = positions2(b'a', b'b', haystack);
+        assert_eq!(answer_iter.next(), first);
+        assert_eq!(answer_iter.next(), second);
+        assert_eq!(answer_iter.next(), third);
     }
 
     #[test]
     fn memchr3_iter() {
-        let haystack = b"abc";
+        let haystack = b"axxbc";
         let mut memchr_iter = Memchr3::new(b'a', b'b', b'c', haystack);
         let first = memchr_iter.next();
         let second = memchr_iter.next();
         let third = memchr_iter.next();
         let fourth = memchr_iter.next();
-        assert_eq!(Some(1), first);
-        assert_eq!(Some(2), second);
-        assert_eq!(Some(3), third);
-        assert_eq!(None, fourth);
+
+        let mut answer_iter = positions3(b'a', b'b', b'c', haystack);
+        assert_eq!(answer_iter.next(), first);
+        assert_eq!(answer_iter.next(), second);
+        assert_eq!(answer_iter.next(), third);
+        assert_eq!(answer_iter.next(), fourth);
     }
 
     #[test]
@@ -781,10 +857,11 @@ mod tests {
         let third = memchr_iter.next();
         let fourth = memchr_iter.next_back();
 
-        assert_eq!(Some(5), first);
-        assert_eq!(Some(15), second);
-        assert_eq!(Some(10), third);
-        assert_eq!(None, fourth);
+        let mut answer_iter = positions1(b'b', haystack);
+        assert_eq!(answer_iter.next(), first);
+        assert_eq!(answer_iter.next_back(), second);
+        assert_eq!(answer_iter.next(), third);
+        assert_eq!(answer_iter.next_back(), fourth);
     }
 
     #[test]
@@ -796,16 +873,22 @@ mod tests {
         let third = memchr_iter.next_back();
         let fourth = memchr_iter.next_back();
 
-        assert_eq!(Some(15), first);
-        assert_eq!(Some(10), second);
-        assert_eq!(Some(5), third);
-        assert_eq!(None, fourth);
+        let mut answer_iter = positions1(b'b', haystack);
+        assert_eq!(answer_iter.next_back(), first);
+        assert_eq!(answer_iter.next_back(), second);
+        assert_eq!(answer_iter.next_back(), third);
+        assert_eq!(answer_iter.next_back(), fourth);
 
     }
 
     #[test]
     fn qc_never_fail_memchr3() {
-        fn prop(needle1: u8, needle2: u8, needle3: u8, haystack: Vec<u8>) -> bool {
+        fn prop(
+            needle1: u8,
+            needle2: u8,
+            needle3: u8,
+            haystack: Vec<u8>,
+        ) -> bool {
             memchr3(needle1, needle2, needle3, &haystack);
             true
         }
@@ -824,7 +907,8 @@ mod tests {
             };
             for byte in 0..256u32 {
                 let byte = byte as u8;
-                if memchr(byte, &data) != data.iter().position(|elt| *elt == byte) {
+                let pos = data.iter().position(|elt| *elt == byte);
+                if memchr(byte, &data) != pos {
                     return false;
                 }
             }
@@ -845,7 +929,8 @@ mod tests {
             };
             for byte in 0..256u32 {
                 let byte = byte as u8;
-                if memrchr(byte, &data) != data.iter().rposition(|elt| *elt == byte) {
+                let pos = data.iter().rposition(|elt| *elt == byte);
+                if memrchr(byte, &data) != pos {
                     return false;
                 }
             }
@@ -867,7 +952,9 @@ mod tests {
             for b1 in 0..256u32 {
                 for b2 in 0..256u32 {
                     let (b1, b2) = (b1 as u8, b2 as u8);
-                    let expected = data.iter().position(|&b| b == b1 || b == b2);
+                    let expected = data
+                        .iter()
+                        .position(|&b| b == b1 || b == b2);
                     let got = memchr2(b1, b2, &data);
                     if expected != got {
                         return false;
@@ -877,5 +964,99 @@ mod tests {
             true
         }
         quickcheck::quickcheck(prop as fn(Vec<u8>, u8) -> bool);
+    }
+
+    // take items from a DEI, taking front for each true and back for each
+    // false. Return a vector with the concatenation of the fronts and the
+    // reverse of the backs.
+    fn double_ended_take<I, J>(mut iter: I, take_side: J) -> Vec<I::Item>
+        where I: DoubleEndedIterator,
+              J: Iterator<Item=bool>,
+    {
+        let mut found_front = Vec::new();
+        let mut found_back = Vec::new();
+
+        for take_front in take_side {
+            if take_front {
+                if let Some(pos) = iter.next() {
+                    found_front.push(pos);
+                } else {
+                    break;
+                }
+            } else {
+                if let Some(pos) = iter.next_back() {
+                    found_back.push(pos);
+                } else {
+                    break;
+                }
+            };
+        }
+
+        let mut all_found = found_front;
+        all_found.extend(found_back.into_iter().rev());
+        all_found
+    }
+
+
+    quickcheck! {
+        fn qc_memchr_double_ended_iter(needle: u8, data: Vec<u8>,
+                                       take_side: Vec<bool>) -> bool
+        {
+            // make nonempty
+            let mut take_side = take_side;
+            if take_side.is_empty() { take_side.push(true) };
+
+            let iter = Memchr::new(needle, &data);
+            let all_found = double_ended_take(
+                iter, take_side.iter().cycle().cloned());
+
+            all_found.iter().cloned().eq(positions1(needle, &data))
+        }
+
+        fn qc_memchr1_iter(data: Vec<u8>) -> bool {
+            let needle = 0;
+            let answer = positions1(needle, &data);
+            answer.eq(Memchr::new(needle, &data))
+        }
+
+        fn qc_memchr1_rev_iter(data: Vec<u8>) -> bool {
+            let needle = 0;
+            let answer = positions1(needle, &data);
+            answer.rev().eq(Memchr::new(needle, &data).rev())
+        }
+
+        fn qc_memchr2_iter(data: Vec<u8>) -> bool {
+            let needle1 = 0;
+            let needle2 = 1;
+            let answer = positions2(needle1, needle2, &data);
+            answer.eq(Memchr2::new(needle1, needle2, &data))
+        }
+
+        fn qc_memchr3_iter(data: Vec<u8>) -> bool {
+            let needle1 = 0;
+            let needle2 = 1;
+            let needle3 = 2;
+            let answer = positions3(needle1, needle2, needle3, &data);
+            answer.eq(Memchr3::new(needle1, needle2, needle3, &data))
+        }
+
+        fn qc_memchr1_iter_size_hint(data: Vec<u8>) -> bool {
+            // test that the size hint is within reasonable bounds
+            let needle = 0;
+            let mut iter = Memchr::new(needle, &data);
+            let mut real_count = data
+                .iter()
+                .filter(|&&elt| elt == needle)
+                .count();
+
+            while let Some(index) = iter.next() {
+                real_count -= 1;
+                let (lower, upper) = iter.size_hint();
+                assert!(lower <= real_count);
+                assert!(upper.unwrap() >= real_count);
+                assert!(upper.unwrap() <= data.len() - index);
+            }
+            true
+        }
     }
 }

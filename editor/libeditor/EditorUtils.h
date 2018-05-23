@@ -26,6 +26,11 @@ class nsRange;
 namespace mozilla {
 template <class T> class OwningNonNull;
 
+namespace dom {
+class Element;
+class Text;
+} // namespace dom
+
 /***************************************************************************
  * EditActionResult is useful to return multiple results of an editor
  * action handler without out params.
@@ -43,6 +48,7 @@ public:
   nsresult Rv() const { return mRv; }
   bool Canceled() const { return mCanceled; }
   bool Handled() const { return mHandled; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
 
   EditActionResult SetResult(nsresult aRv)
   {
@@ -75,8 +81,13 @@ public:
     if (mRv == aOther.mRv) {
       return *this;
     }
+    // If one of the result is NS_ERROR_EDITOR_DESTROYED, use it since it's
+    // the most important error code for editor.
+    if (EditorDestroyed() || aOther.EditorDestroyed()) {
+      mRv = NS_ERROR_EDITOR_DESTROYED;
+    }
     // If one of the results is error, use NS_ERROR_FAILURE.
-    if (Failed() || aOther.Failed()) {
+    else if (Failed() || aOther.Failed()) {
       mRv = NS_ERROR_FAILURE;
     } else {
       // Otherwise, use generic success code, NS_OK.
@@ -138,6 +149,61 @@ EditActionCanceled(nsresult aRv = NS_OK)
 {
   return EditActionResult(aRv, true, true);
 }
+
+/***************************************************************************
+ * CreateNodeResultBase is a simple class for CreateSomething() methods
+ * which want to return new node.
+ */
+template<typename NodeType>
+class CreateNodeResultBase;
+
+typedef CreateNodeResultBase<dom::Element> CreateElementResult;
+
+template<typename NodeType>
+class MOZ_STACK_CLASS CreateNodeResultBase final
+{
+  typedef CreateNodeResultBase<NodeType> SelfType;
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+  NodeType* GetNewNode() const { return mNode; }
+
+  CreateNodeResultBase() = delete;
+
+  explicit CreateNodeResultBase(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  explicit CreateNodeResultBase(NodeType* aNode)
+    : mNode(aNode)
+    , mRv(aNode ? NS_OK : NS_ERROR_FAILURE)
+  {
+  }
+
+  explicit CreateNodeResultBase(already_AddRefed<NodeType>&& aNode)
+    : mNode(aNode)
+    , mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE)
+  {
+  }
+
+  CreateNodeResultBase(const SelfType& aOther) = delete;
+  SelfType& operator=(const SelfType& aOther) = delete;
+  CreateNodeResultBase(SelfType&& aOther) = default;
+  SelfType& operator=(SelfType&& aOther) = default;
+
+  already_AddRefed<NodeType> forget()
+  {
+    mRv = NS_ERROR_NOT_INITIALIZED;
+    return mNode.forget();
+  }
+
+private:
+  RefPtr<NodeType> mNode;
+  nsresult mRv;
+};
 
 /***************************************************************************
  * SplitNodeResult is a simple class for
@@ -290,6 +356,102 @@ private:
   nsresult mRv;
 
   SplitNodeResult() = delete;
+};
+
+/***************************************************************************
+ * SplitRangeOffFromNodeResult class is a simple class for methods which split a
+ * node at 2 points for making part of the node split off from the node.
+ */
+class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final
+{
+public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+
+  /**
+   * GetLeftContent() returns new created node before the part of quarried out.
+   * This may return nullptr if the method didn't split at start edge of
+   * the node.
+   */
+  nsIContent* GetLeftContent() const { return mLeftContent; }
+  dom::Element* GetLeftContentAsElement() const
+  {
+    return mLeftContent && mLeftContent->IsElement() ?
+             mLeftContent->AsElement() : nullptr;
+  }
+
+  /**
+   * GetMiddleContent() returns new created node between left node and right
+   * node.  I.e., this is quarried out from the node.  This may return nullptr
+   * if the method unwrapped the middle node.
+   */
+  nsIContent* GetMiddleContent() const { return mMiddleContent; }
+  dom::Element* GetMiddleContentAsElement() const
+  {
+    return mMiddleContent && mMiddleContent->IsElement() ?
+             mMiddleContent->AsElement() : nullptr;
+  }
+
+  /**
+   * GetRightContent() returns the right node after the part of quarried out.
+   * This may return nullptr it the method didn't split at end edge of the
+   * node.
+   */
+  nsIContent* GetRightContent() const { return mRightContent; }
+  dom::Element* GetRightContentAsElement() const
+  {
+    return mRightContent && mRightContent->IsElement() ?
+             mRightContent->AsElement() : nullptr;
+  }
+
+  SplitRangeOffFromNodeResult(nsIContent* aLeftContent, nsIContent* aMiddleContent,
+                   nsIContent* aRightContent)
+    : mLeftContent(aLeftContent)
+    , mMiddleContent(aMiddleContent)
+    , mRightContent(aRightContent)
+    , mRv(NS_OK)
+  {
+  }
+
+  SplitRangeOffFromNodeResult(SplitNodeResult& aSplitResultAtLeftOfMiddleNode,
+                         SplitNodeResult& aSplitResultAtRightOfMiddleNode)
+    : mRv(NS_OK)
+  {
+    if (aSplitResultAtLeftOfMiddleNode.Succeeded()) {
+      mLeftContent = aSplitResultAtLeftOfMiddleNode.GetPreviousNode();
+    }
+    if (aSplitResultAtRightOfMiddleNode.Succeeded()) {
+      mRightContent = aSplitResultAtRightOfMiddleNode.GetNextNode();
+      mMiddleContent = aSplitResultAtRightOfMiddleNode.GetPreviousNode();
+    }
+    if (!mMiddleContent && aSplitResultAtLeftOfMiddleNode.Succeeded()) {
+      mMiddleContent = aSplitResultAtLeftOfMiddleNode.GetNextNode();
+    }
+  }
+
+  explicit SplitRangeOffFromNodeResult(nsresult aRv)
+    : mRv(aRv)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  SplitRangeOffFromNodeResult(
+    const SplitRangeOffFromNodeResult& aOther) = delete;
+  SplitRangeOffFromNodeResult&
+  operator=(const SplitRangeOffFromNodeResult& aOther) = delete;
+  SplitRangeOffFromNodeResult(SplitRangeOffFromNodeResult&& aOther) = default;
+  SplitRangeOffFromNodeResult&
+  operator=(SplitRangeOffFromNodeResult&& aOther) = default;
+
+private:
+  nsCOMPtr<nsIContent> mLeftContent;
+  nsCOMPtr<nsIContent> mMiddleContent;
+  nsCOMPtr<nsIContent> mRightContent;
+
+  nsresult mRv;
+
+  SplitRangeOffFromNodeResult() = delete;
 };
 
 /***************************************************************************

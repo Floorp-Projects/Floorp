@@ -8,6 +8,7 @@
 
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditor.h" // for nsIEditor::AsHTMLEditor()
 #include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
@@ -40,6 +41,18 @@ class Selection;
  *    fragments must <B>not</B> go through the editor.
  * 2. Selection must not be explicitly set by the rule method.
  *    Any manipulation of Selection must be done by the editor.
+ * 3. Stop handling edit action if method returns NS_ERROR_EDITOR_DESTROYED
+ *    since if mutation event lister or selectionchange event listener disables
+ *    the editor, we should not modify the DOM tree anymore.
+ * 4. Any method callers have to check nsresult return value (both directly or
+ *    with simple class like EditActionResult) whether the value is
+ *    NS_ERROR_EDITOR_DESTROYED at least.
+ * 5. Callers of methods of other classes such as TextEditor, have to check
+ *    CanHandleEditAction() before checking its result and if the result is
+ *    false, the method have to return NS_ERROR_EDITOR_DESTROYED.  In other
+ *    words, any methods which may change Selection or the DOM tree have to
+ *    return nsresult directly or with simple class like EditActionResult.
+ *    And such methods should be marked as MOZ_MUST_USE.
  */
 class TextEditRules : public nsITimerCallback
                     , public nsINamed
@@ -74,7 +87,14 @@ public:
   virtual nsresult DidDoAction(Selection* aSelection,
                                RulesInfo* aInfo,
                                nsresult aResult);
+
+  /**
+   * Return false if the editor has non-empty text nodes or non-text
+   * nodes.  Otherwise, i.e., there is no meaningful content,
+   * return true.
+   */
   virtual bool DocumentIsEmpty();
+
   virtual nsresult DocumentModified();
 
 protected:
@@ -129,27 +149,99 @@ protected:
   void InitFields();
 
   // TextEditRules implementation methods
-  nsresult WillInsertText(EditAction aAction,
-                          bool* aCancel,
-                          bool* aHandled,
-                          const nsAString* inString,
-                          nsAString* outString,
-                          int32_t aMaxLength);
 
-  nsresult WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
+  /**
+   * Called before inserting text.
+   * This method may actually inserts text into the editor.  Therefore, this
+   * might cause destroying the editor.
+   *
+   * @param aAction             Must be EditAction::insertIMEText or
+   *                            EditAction::insertText.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param inString            String to be inserted.
+   * @param outString           String actually inserted.
+   * @param aMaxLength          The maximum string length which the editor
+   *                            allows to set.
+   */
+  MOZ_MUST_USE nsresult
+  WillInsertText(EditAction aAction, bool* aCancel, bool* aHandled,
+                 const nsAString* inString, nsAString* outString,
+                 int32_t aMaxLength);
 
-  nsresult WillSetText(bool* aCancel,
-                       bool* aHandled,
-                       const nsAString* inString,
-                       int32_t aMaxLength);
+  /**
+   * Called before inserting a line break into the editor.
+   * This method removes selected text if selection isn't collapsed.
+   * Therefore, this might cause destroying the editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param aMaxLength          The maximum string length which the editor
+   *                            allows to set.
+   */
+  MOZ_MUST_USE nsresult
+  WillInsertBreak(bool* aCancel, bool* aHandled, int32_t aMaxLength);
 
-  void WillInsert(bool* aCancel);
+  /**
+   * Called before setting text to the text editor.
+   * This method may actually set text to it.  Therefore, this might cause
+   * destroying the text editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   * @param inString            String to be set.
+   * @param aMaxLength          The maximum string length which the text editor
+   *                            allows to set.
+   */
+  MOZ_MUST_USE nsresult
+  WillSetText(bool* aCancel, bool* aHandled,
+              const nsAString* inString, int32_t aMaxLength);
 
-  nsresult WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                               bool* aCancel,
-                               bool* aHandled);
-  nsresult DidDeleteSelection(nsIEditor::EDirection aCollapsedAction,
-                              nsresult aResult);
+  /**
+   * Called before inserting something into the editor.
+   * This method may removes mBougsNode if there is.  Therefore, this method
+   * might cause destroying the editor.
+   *
+   * @param aCancel             Returns true if the operation is canceled.
+   *                            This can be nullptr.
+   */
+  MOZ_MUST_USE nsresult WillInsert(bool* aCancel = nullptr);
+
+  /**
+   * Called before deleting selected content.
+   * This method may actually remove the selected content with
+   * DeleteSelectionWithTransaction().  So, this might cause destroying the
+   * editor.
+   *
+   * @param aCaollapsedAction   Direction to extend the selection.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  WillDeleteSelection(nsIEditor::EDirection aCollapsedAction,
+                      bool* aCancel, bool* aHandled);
+
+  /**
+   * DeleteSelectionWithTransaction() is internal method of
+   * WillDeleteSelection() since it needs to create SelectionBatcher in
+   * big scope and destroying it might causes destroying the editor.
+   * So, after calling this method, callers need to check CanHandleEditAction()
+   * manually.
+   *
+   * @param aCaollapsedAction   Direction to extend the selection.
+   * @param aCancel             Returns true if the operation is canceled.
+   * @param aHandled            Returns true if the edit action is handled.
+   */
+  MOZ_MUST_USE nsresult
+  DeleteSelectionWithTransaction(nsIEditor::EDirection aCollapsedAction,
+                                 bool* aCancel, bool* aHandled);
+
+  /**
+   * Called after deleted selected content.
+   * This method may remove empty text node and makes guarantee that caret
+   * is never at left of <br> element.
+   */
+  MOZ_MUST_USE nsresult DidDeleteSelection();
 
   nsresult WillSetTextProperty(bool* aCancel, bool* aHandled);
 
@@ -178,17 +270,17 @@ protected:
   /**
    * Check for and replace a redundant trailing break.
    */
-  nsresult RemoveRedundantTrailingBR();
+  MOZ_MUST_USE nsresult RemoveRedundantTrailingBR();
 
   /**
    * Creates a trailing break in the text doc if there is not one already.
    */
-  nsresult CreateTrailingBRIfNeeded();
+  MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
-   * Creates a bogus text node if the document has no editable content.
+   * Creates a bogus <br> node if the root element has no editable content.
    */
-  nsresult CreateBogusNodeIfNeeded();
+  MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
@@ -209,13 +301,21 @@ protected:
    *
    * @param aPointToInsert  The point where the new <br> element will be
    *                        inserted.
-   * @return                Returns created <br> element.
+   * @return                Returns created <br> element or an error code
+   *                        if couldn't create new <br> element.
    */
   template<typename PT, typename CT>
-  already_AddRefed<Element>
+  CreateElementResult
   CreateBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
   {
-    return CreateBRInternal(aPointToInsert, false);
+    CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
+#ifdef DEBUG
+    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
+    if (!CanHandleEditAction()) {
+      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
+    }
+#endif // #ifdef DEBUG
+    return ret;
   }
 
   /**
@@ -223,28 +323,22 @@ protected:
    *
    * @param aPointToInsert  The point where the new moz-<br> element will be
    *                        inserted.
-   * @return                Returns created moz-<br> element.
+   * @return                Returns created <br> element or an error code
+   *                        if couldn't create new <br> element.
    */
   template<typename PT, typename CT>
-  already_AddRefed<Element>
+  CreateElementResult
   CreateMozBR(const EditorDOMPointBase<PT, CT>& aPointToInsert)
   {
-    return CreateBRInternal(aPointToInsert, true);
+    CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
+#ifdef DEBUG
+    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
+    if (!CanHandleEditAction()) {
+      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
+    }
+#endif // #ifdef DEBUG
+    return ret;
   }
-
-  /**
-   * Create a normal <br> element or a moz-<br> element and insert it to
-   * aPointToInsert.
-   *
-   * @param aParentToInsert     The point where the new <br> element will be
-   *                            inserted.
-   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
-   *                            element.  Otherwise, false.
-   * @return                    Returns created <br> element.
-   */
-  already_AddRefed<Element>
-  CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
-                   bool aCreateMozBR);
 
   void UndefineCaretBidiLevel();
 
@@ -252,9 +346,21 @@ protected:
                                      nsIEditor::EDirection aAction,
                                      bool* aCancel);
 
-  nsresult HideLastPWInput();
+  /**
+   * HideLastPWInput() replaces last password characters which have not
+   * been replaced with mask character like '*' with with the mask character.
+   * This method may cause destroying the editor.
+   */
+  MOZ_MUST_USE nsresult HideLastPWInput();
 
-  nsresult CollapseSelectionToTrailingBRIfNeeded();
+  /**
+   * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
+   * text node if:
+   * - the editor is text editor
+   * - and Selection is collapsed at the end of the text node
+   * - and the text node is followed by moz-<br>.
+   */
+  MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
   bool IsPasswordEditor() const;
   bool IsSingleLineEditor() const;
@@ -266,6 +372,22 @@ protected:
 
 private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
+
+  /**
+   * Create a normal <br> element or a moz-<br> element and insert it to
+   * aPointToInsert.
+   *
+   * @param aParentToInsert     The point where the new <br> element will be
+   *                            inserted.
+   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
+   *                            element.  Otherwise, false.
+   * @return                    Returns created <br> element and error code.
+   *                            If it succeeded, never returns nullptr.
+   */
+  template<typename PT, typename CT>
+  CreateElementResult
+  CreateBRInternal(const EditorDOMPointBase<PT, CT>& aPointToInsert,
+                   bool aCreateMozBR);
 
 protected:
   /**
@@ -333,6 +455,17 @@ protected:
   {
     MOZ_ASSERT(mData);
     return mData->SelectionRef();
+  }
+  bool CanHandleEditAction() const
+  {
+    if (!mTextEditor) {
+      return false;
+    }
+    if (mTextEditor->Destroyed()) {
+      return false;
+    }
+    MOZ_ASSERT(mTextEditor->IsInitialized());
+    return true;
   }
 
 #ifdef DEBUG

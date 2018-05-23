@@ -1,0 +1,20 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+#editBookmarkPanel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#editBookmarkPanelBottomButtons,
+#editBookmarkPanelRows {
+  padding: var(--arrowpanel-padding);
+}
+
+/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
+#editBMPanel_folderTree {
+  min-width: 27em;
+}
+

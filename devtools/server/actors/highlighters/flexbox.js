@@ -24,6 +24,7 @@ const {
 const {
   getAdjustedQuads,
   getDisplayPixelRatio,
+  getWindowDimensions,
   setIgnoreLayoutChanges,
 } = require("devtools/shared/layout/utils");
 
@@ -710,8 +711,8 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     // dimensions without increasing them.
     root.setAttribute("style", "display: none");
     this.win.document.documentElement.offsetWidth;
-
-    let { width, height } = this._winDimensions;
+    this._winDimensions = getWindowDimensions(this.win);
+    const { width, height } = this._winDimensions;
 
     // Updates the <canvas> element's position and size.
     // It also clear the <canvas>'s drawing context.

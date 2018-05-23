@@ -559,6 +559,17 @@ a.learn-more-link.webconsole-learn-more-link {
   /* We will need to display the close button in the right-top always. */
   grid-column: -1 / -2;
   grid-row: 1 / 2;
+  padding-inline-end: 0;
+}
+
+/* On OSX the cursor turns into a window-resizing cursor at the edges of the
+ * window, so bring the end of the close button in. */
+:root[platform="mac"] .split-console-close-button-wrapper {
+  padding-inline-end: 3px;
+}
+
+#split-console-close-button {
+  margin-inline-end: 0;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {

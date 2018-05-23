@@ -20,3 +20,12 @@ fn empty_match_unicode_captures_iter() {
                        .collect();
     assert_eq!(vec![(0, 0), (3, 3), (4, 4), (7, 7), (8, 8)], ms);
 }
+
+#[test]
+fn match_as_str() {
+    let re = regex!(r"fo+");
+    let caps = re.captures("barfoobar").unwrap();
+    assert_eq!(caps.get(0).map(|m| m.as_str()), Some("foo"));
+    assert_eq!(caps.get(0).map(From::from), Some("foo"));
+    assert_eq!(caps.get(0).map(Into::into), Some("foo"));
+}

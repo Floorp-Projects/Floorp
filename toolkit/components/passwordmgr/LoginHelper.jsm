@@ -170,6 +170,21 @@ var LoginHelper = {
   },
 
   /**
+   * @param {string} aURL
+   * @returns {string} which is the hostPort of aURL if supported by the scheme
+   *                   otherwise, returns the original aURL.
+   */
+  maybeGetHostPortForURL(aURL) {
+    try {
+      let uri = Services.io.newURI(aURL);
+      return uri.hostPort;
+    } catch (ex) {
+      // No need to warn for javascript:/data:/about:/chrome:/etc.
+    }
+    return aURL;
+  },
+
+  /**
    * @param {String} aLoginOrigin - An origin value from a stored login's
    *                                hostname or formSubmitURL properties.
    * @param {String} aSearchOrigin - The origin that was are looking to match
@@ -220,15 +235,16 @@ var LoginHelper = {
       return false;
 
     if (ignoreSchemes) {
-      let hostname1URI = Services.io.newURI(aLogin1.hostname);
-      let hostname2URI = Services.io.newURI(aLogin2.hostname);
-      if (hostname1URI.hostPort != hostname2URI.hostPort)
+      let login1HostPort = this.maybeGetHostPortForURL(aLogin1.hostname);
+      let login2HostPort = this.maybeGetHostPortForURL(aLogin2.hostname);
+      if (login1HostPort != login2HostPort)
         return false;
 
       if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
-          Services.io.newURI(aLogin1.formSubmitURL).hostPort !=
-          Services.io.newURI(aLogin2.formSubmitURL).hostPort)
+          this.maybeGetHostPortForURL(aLogin1.formSubmitURL) !=
+          this.maybeGetHostPortForURL(aLogin2.formSubmitURL)) {
         return false;
+      }
     } else {
       if (aLogin1.hostname != aLogin2.hostname)
         return false;
