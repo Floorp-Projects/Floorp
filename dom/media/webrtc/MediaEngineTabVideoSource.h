@@ -46,7 +46,6 @@ public:
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
 
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
