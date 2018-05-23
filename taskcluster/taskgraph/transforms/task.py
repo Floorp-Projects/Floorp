@@ -31,6 +31,7 @@ from taskgraph.util.schema import (
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
     get_release_config,
+    add_scope_prefix,
 )
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO, MAX_DEPENDENCIES
@@ -1140,7 +1141,7 @@ def build_treescript_payload(config, task, task_def):
             'revision': config.params['head_rev']
         }
         task_def['payload']['tag_info'] = tag_info
-        task_def['scopes'].append('project:releng:treescript:action:tagging')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:tagging'))
 
     if worker['bump']:
         if not worker['bump-files']:
@@ -1150,10 +1151,10 @@ def build_treescript_payload(config, task, task_def):
         bump_info['next_version'] = release_config['next_version']
         bump_info['files'] = worker['bump-files']
         task_def['payload']['version_bump_info'] = bump_info
-        task_def['scopes'].append('project:releng:treescript:action:version_bump')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:version_bump'))
 
     if worker['push']:
-        task_def['scopes'].append('project:releng:treescript:action:push')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:push'))
 
     if worker.get('force-dry-run'):
         task_def['payload']['dry_run'] = True
