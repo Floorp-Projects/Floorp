@@ -1,13 +1,8 @@
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
-
 from prettytoml.elements.common import ContainerElement
 from prettytoml.elements import traversal
 
 
-class AbstractTable(ContainerElement, traversal.TraversalMixin, Mapping):
+class AbstractTable(ContainerElement, traversal.TraversalMixin):
     """
     Common code for handling tables as key-value pairs with metadata elements sprinkled all over.
 
@@ -41,9 +36,6 @@ class AbstractTable(ContainerElement, traversal.TraversalMixin, Mapping):
 
     def __len__(self):
         return len(tuple(self._enumerate_items()))
-
-    def __iter__(self):
-        return (key for key, _ in self.items())
 
     def __contains__(self, item):
         return item in self.keys()
