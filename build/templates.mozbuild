@@ -130,5 +130,15 @@ def NoVisibilityFlags():
 def AllowCompilerWarnings():
     COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
 
+@template
+def ForceInclude(*headers):
+    """Force includes a set of header files in C++ compilations"""
+    if CONFIG['CC_TYPE'] in ('msvc', 'clang-cl'):
+        include_flag = '-FI'
+    else:
+        include_flag = '-include'
+    for header in headers:
+        CXXFLAGS += [include_flag, header]
+
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')
