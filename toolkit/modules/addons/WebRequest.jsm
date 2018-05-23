@@ -15,12 +15,11 @@ const {nsIHttpActivityObserver, nsISocketTransport} = Ci;
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, "ExtensionUtils",
-                               "resource://gre/modules/ExtensionUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "WebRequestUpload",
-                               "resource://gre/modules/WebRequestUpload.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
+  WebRequestUpload: "resource://gre/modules/WebRequestUpload.jsm",
+  SecurityInfo: "resource://gre/modules/SecurityInfo.jsm",
+});
 
 function runLater(job) {
   Services.tm.dispatchToMainThread(job);
@@ -39,7 +38,7 @@ function parseExtra(extra, allowed = [], optionsObj = {}) {
   if (extra) {
     for (let ex of extra) {
       if (!allowed.includes(ex)) {
-        throw new ExtensionError(`Invalid option ${ex}`);
+        throw new ExtensionUtils.ExtensionError(`Invalid option ${ex}`);
       }
     }
   }
@@ -993,6 +992,11 @@ var WebRequest = {
 
   // nsIHttpActivityObserver.
   onErrorOccurred: onErrorOccurred,
+
+  getSecurityInfo: (details) => {
+    let channel = ChannelWrapper.getRegisteredChannel(details.id, details.extension, details.tabParent);
+    return SecurityInfo.getSecurityInfo(channel.channel, details.options);
+  },
 };
 
 Services.ppmm.loadProcessScript("resource://gre/modules/WebRequestContent.js", true);

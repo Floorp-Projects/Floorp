@@ -25,8 +25,34 @@ function getExtension() {
     browser.webRequest.onSendHeaders.addListener(details => {
       browser.test.assertEq(expect.shift(), "onSendHeaders");
     }, {urls}, ["requestHeaders"]);
-    browser.webRequest.onHeadersReceived.addListener(details => {
+
+    async function testSecurityInfo(details, options) {
+      let securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, options);
+      browser.test.assertTrue(securityInfo && securityInfo.state == "secure",
+                              "security info reflects https");
+
+      if (options.certificateChain) {
+        // Some of the tests here only produce a single cert in the chain.
+        browser.test.assertTrue(securityInfo.certificates.length >= 1, "have certificate chain");
+      } else {
+        browser.test.assertTrue(securityInfo.certificates.length == 1, "no certificate chain");
+      }
+      if (options.rawDER) {
+        for (let cert of securityInfo.certificates) {
+          browser.test.assertTrue(cert.rawDER.length > 0, "have rawDER");
+        }
+      }
+    }
+
+    browser.webRequest.onHeadersReceived.addListener(async (details) => {
       browser.test.assertEq(expect.shift(), "onHeadersReceived");
+
+      // We exepect all requests to have been upgraded at this point.
+      browser.test.assertTrue(details.url.startsWith("https"), "connection is https");
+      await testSecurityInfo(details, {});
+      await testSecurityInfo(details, {certificateChain: true});
+      await testSecurityInfo(details, {rawDER: true});
+      await testSecurityInfo(details, {certificateChain: true, rawDER: true});
 
       let headers = details.responseHeaders || [];
       for (let header of headers) {

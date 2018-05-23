@@ -121,6 +121,14 @@ this.webRequest = class extends ExtensionAPI {
         onResponseStarted: makeWebRequestEvent(context, "onResponseStarted"),
         onErrorOccurred: makeWebRequestEvent(context, "onErrorOccurred"),
         onCompleted: makeWebRequestEvent(context, "onCompleted"),
+        getSecurityInfo: function(requestId, options = {}) {
+          return WebRequest.getSecurityInfo({
+            id: requestId,
+            extension: context.extension.policy,
+            tabParent: context.xulBrowser.frameLoader.tabParent,
+            options,
+          });
+        },
         handlerBehaviorChanged: function() {
           // TODO: Flush all caches.
         },
