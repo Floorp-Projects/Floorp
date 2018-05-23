@@ -397,12 +397,6 @@ MediaEngineTabVideoSource::Draw() {
 }
 
 nsresult
-MediaEngineTabVideoSource::FocusOnSelectedSource(const RefPtr<const AllocationHandle>& aHandle)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
 MediaEngineTabVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
