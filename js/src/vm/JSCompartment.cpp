@@ -72,7 +72,7 @@ JSCompartment::JSCompartment(Zone* zone)
     runtime_->numCompartments++;
 }
 
-JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
+Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
   : JSCompartment(zone),
     creationOptions_(options.creationOptions()),
     behaviors_(options.behaviors()),
@@ -81,6 +81,12 @@ JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
+}
+
+Realm::~Realm()
+{
+    // Empty destructor: using the default destructor requires adding various
+    // #includes to other files where we destruct Realms.
 }
 
 JSCompartment::~JSCompartment()
@@ -105,13 +111,6 @@ JSCompartment::~JSCompartment()
 #endif
 
     runtime_->numCompartments--;
-}
-
-Realm::~Realm()
-{
-    js_delete(scriptCountsMap);
-    js_delete(scriptNameMap);
-    js_delete(debugScriptMap);
 }
 
 bool
@@ -972,7 +971,7 @@ Realm::checkScriptMapsAfterMovingGC()
             JSScript* script = r.front().key();
             MOZ_ASSERT(script->realm() == this);
             CheckGCThingAfterMovingGC(script);
-            DebugScript* ds = r.front().value();
+            DebugScript* ds = r.front().value().get();
             for (uint32_t i = 0; i < ds->numSites; i++) {
                 BreakpointSite* site = ds->breakpoints[i];
                 if (site && site->type() == BreakpointSite::Type::JS)
@@ -1257,27 +1256,16 @@ Realm::clearScriptCounts()
 
     // Clear all hasScriptCounts_ flags of JSScript, in order to release all
     // ScriptCounts entries of the current realm.
-    for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
-        ScriptCounts* value = r.front().value();
-        r.front().key()->takeOverScriptCountsMapEntry(value);
-        js_delete(value);
-    }
+    for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront())
+        r.front().key()->clearHasScriptCounts();
 
-    js_delete(scriptCountsMap);
-    scriptCountsMap = nullptr;
+    scriptCountsMap.reset();
 }
 
 void
 Realm::clearScriptNames()
 {
-    if (!scriptNameMap)
-        return;
-
-    for (ScriptNameMap::Range r = scriptNameMap->all(); !r.empty(); r.popFront())
-        js_delete(r.front().value());
-
-    js_delete(scriptNameMap);
-    scriptNameMap = nullptr;
+    scriptNameMap.reset();
 }
 
 void

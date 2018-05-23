@@ -235,17 +235,19 @@ class ScriptCounts
 
 // Note: The key of this hash map is a weak reference to a JSScript.  We do not
 // use the WeakMap implementation provided in gc/WeakMap.h because it would be
-// collected at the beginning of the sweeping of the compartment, thus before
-// the calls to the JSScript::finalize function which are used to aggregate
-// code coverage results on the compartment.
-typedef HashMap<JSScript*,
-                ScriptCounts*,
-                DefaultHasher<JSScript*>,
-                SystemAllocPolicy> ScriptCountsMap;
-typedef HashMap<JSScript*,
-                const char*,
-                DefaultHasher<JSScript*>,
-                SystemAllocPolicy> ScriptNameMap;
+// collected at the beginning of the sweeping of the realm, thus before the
+// calls to the JSScript::finalize function which are used to aggregate code
+// coverage results on the realm.
+using UniqueScriptCounts = js::UniquePtr<ScriptCounts>;
+using ScriptCountsMap = HashMap<JSScript*,
+                                UniqueScriptCounts,
+                                DefaultHasher<JSScript*>,
+                                SystemAllocPolicy>;
+
+using ScriptNameMap = HashMap<JSScript*,
+                              JS::UniqueChars,
+                              DefaultHasher<JSScript*>,
+                              SystemAllocPolicy>;
 
 class DebugScript
 {
@@ -276,10 +278,11 @@ class DebugScript
     BreakpointSite* breakpoints[1];
 };
 
-typedef HashMap<JSScript*,
-                DebugScript*,
-                DefaultHasher<JSScript*>,
-                SystemAllocPolicy> DebugScriptMap;
+using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
+using DebugScriptMap = HashMap<JSScript*,
+                               UniqueDebugScript,
+                               DefaultHasher<JSScript*>,
+                               SystemAllocPolicy>;
 
 class ScriptSource;
 
@@ -1848,8 +1851,7 @@ class JSScript : public js::gc::TenuredCell
     void releaseScriptCounts(js::ScriptCounts* counts);
     void destroyScriptCounts();
     void destroyScriptName();
-    // The entry should be removed after using this function.
-    void takeOverScriptCountsMapEntry(js::ScriptCounts* entryValue);
+    void clearHasScriptCounts();
 
     jsbytecode* main() const {
         return code() + mainOffset();

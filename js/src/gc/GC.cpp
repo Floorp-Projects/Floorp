@@ -8107,7 +8107,7 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
         AutoEnterOOMUnsafeRegion oomUnsafe;
 
         if (!targetRealm->scriptNameMap) {
-            targetRealm->scriptNameMap = cx->new_<ScriptNameMap>();
+            targetRealm->scriptNameMap = cx->make_unique<ScriptNameMap>();
 
             if (!targetRealm->scriptNameMap)
                 oomUnsafe.crash("Failed to create a script name map.");
@@ -8118,8 +8118,8 @@ GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
 
         for (ScriptNameMap::Range r = sourceRealm->scriptNameMap->all(); !r.empty(); r.popFront()) {
             JSScript* key = r.front().key();
-            const char* value = r.front().value();
-            if (!targetRealm->scriptNameMap->putNew(key, value))
+            auto value = Move(r.front().value());
+            if (!targetRealm->scriptNameMap->putNew(key, Move(value)))
                 oomUnsafe.crash("Failed to add an entry in the script name map.");
         }
 
