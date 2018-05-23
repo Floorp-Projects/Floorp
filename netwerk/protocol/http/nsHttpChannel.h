@@ -73,7 +73,6 @@ class nsHttpChannel final : public HttpBaseChannel
                           , public nsICacheEntryOpenCallback
                           , public nsITransportEventSink
                           , public nsIProtocolProxyCallback
-                          , public nsIInputAvailableCallback
                           , public nsIHttpAuthenticableChannel
                           , public nsIApplicationCacheChannel
                           , public nsIAsyncVerifyRedirectCallback
@@ -97,7 +96,6 @@ public:
     NS_DECL_NSICACHEENTRYOPENCALLBACK
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIPROTOCOLPROXYCALLBACK
-    NS_DECL_NSIINPUTAVAILABLECALLBACK
     NS_DECL_NSIPROXIEDCHANNEL
     NS_DECL_NSIAPPLICATIONCACHECONTAINER
     NS_DECL_NSIAPPLICATIONCACHECHANNEL
@@ -398,8 +396,6 @@ private:
     MOZ_MUST_USE nsresult StartRedirectChannelToHttps();
     MOZ_MUST_USE nsresult ContinueAsyncRedirectChannelToURI(nsresult rv);
     MOZ_MUST_USE nsresult OpenRedirectChannel(nsresult rv);
-
-    void DetermineContentLength();
 
     /**
      * A function that takes care of reading STS and PKP headers and enforcing
@@ -715,6 +711,8 @@ protected:
     // Override ReleaseListeners() because mChannelClassifier only exists
     // in nsHttpChannel and it will be released in ReleaseListeners().
     virtual void ReleaseListeners() override;
+
+    virtual void DoAsyncAbort(nsresult aStatus) override;
 
 private: // cache telemetry
     bool mDidReval;

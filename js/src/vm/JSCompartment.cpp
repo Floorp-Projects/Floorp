@@ -44,48 +44,41 @@ using mozilla::PodArrayZero;
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
-    principals_(nullptr),
-    isSystem_(false),
-    isSelfHosting(false),
-    marked(true),
-    performanceMonitoring(runtime_),
     data(nullptr),
     regExps(),
-    arraySpeciesLookup(),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
-    objectMetadataState(ImmediateMetadata()),
-    selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
     innerViews(zone),
     lazyArrayBuffers(nullptr),
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
-    debugModeBits(0),
     validAccessPtr(nullptr),
-    randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
     debugEnvs(nullptr),
     enumerators(nullptr),
-    scheduledForDestruction(false),
-    maybeAlive(true),
     jitCompartment_(nullptr),
-    mappedArgumentsTemplate_(nullptr),
-    unmappedArgumentsTemplate_(nullptr),
-    iterResultTemplate_(nullptr),
     lcovOutput()
 {
     runtime_->numCompartments++;
 }
 
-JS::Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
+Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
   : JSCompartment(zone),
     creationOptions_(options.creationOptions()),
     behaviors_(options.behaviors()),
     global_(nullptr),
-    wasm(zone->runtimeFromMainThread())
+    randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
+    wasm(zone->runtimeFromMainThread()),
+    performanceMonitoring(runtime_)
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
                   creationOptions_.invisibleToDebugger());
+}
+
+Realm::~Realm()
+{
+    // Empty destructor: using the default destructor requires adding various
+    // #includes to other files where we destruct Realms.
 }
 
 JSCompartment::~JSCompartment()
@@ -110,13 +103,6 @@ JSCompartment::~JSCompartment()
 #endif
 
     runtime_->numCompartments--;
-}
-
-Realm::~Realm()
-{
-    js_delete(scriptCountsMap);
-    js_delete(scriptNameMap);
-    js_delete(debugScriptMap);
 }
 
 bool
@@ -665,9 +651,9 @@ Realm::traceGlobal(JSTracer* trc)
 void
 Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMark)
 {
-    if (objectMetadataState.is<PendingMetadata>()) {
+    if (objectMetadataState_.is<PendingMetadata>()) {
         TraceRoot(trc,
-                  &objectMetadataState.as<PendingMetadata>(),
+                  &objectMetadataState_.as<PendingMetadata>(),
                   "on-stack object pending metadata");
     }
 
@@ -773,7 +759,7 @@ Realm::sweepGlobalObject()
 }
 
 void
-JSCompartment::sweepSelfHostingScriptSource()
+Realm::sweepSelfHostingScriptSource()
 {
     if (selfHostingScriptSource.unbarrieredGet() &&
         IsAboutToBeFinalized(&selfHostingScriptSource))
@@ -865,7 +851,7 @@ CrossCompartmentKey::needsSweep()
 }
 
 void
-JSCompartment::sweepTemplateObjects()
+Realm::sweepTemplateObjects()
 {
     if (mappedArgumentsTemplate_ && IsAboutToBeFinalized(&mappedArgumentsTemplate_))
         mappedArgumentsTemplate_.set(nullptr);
@@ -977,7 +963,7 @@ Realm::checkScriptMapsAfterMovingGC()
             JSScript* script = r.front().key();
             MOZ_ASSERT(script->realm() == this);
             CheckGCThingAfterMovingGC(script);
-            DebugScript* ds = r.front().value();
+            DebugScript* ds = r.front().value().get();
             for (uint32_t i = 0; i < ds->numSites; i++) {
                 BreakpointSite* site = ds->breakpoints[i];
                 if (site && site->type() == BreakpointSite::Type::JS)
@@ -1084,9 +1070,9 @@ AddInnerLazyFunctionsFromScript(JSScript* script, AutoObjectVector& lazyFunction
 }
 
 static bool
-AddLazyFunctionsForCompartment(JSContext* cx, AutoObjectVector& lazyFunctions, AllocKind kind)
+AddLazyFunctionsForRealm(JSContext* cx, AutoObjectVector& lazyFunctions, AllocKind kind)
 {
-    // Find all live root lazy functions in the compartment: those which have a
+    // Find all live root lazy functions in the realm: those which have a
     // non-lazy enclosing script, and which do not have an uncompiled enclosing
     // script. The last condition is so that we don't compile lazy scripts
     // whose enclosing scripts failed to compile, indicating that the lazy
@@ -1103,7 +1089,7 @@ AddLazyFunctionsForCompartment(JSContext* cx, AutoObjectVector& lazyFunctions, A
         // are about to be finalized. GC things referenced by objects that are
         // about to be finalized (e.g., in slots) may already be freed.
         if (gc::IsAboutToBeFinalizedUnbarriered(&fun) ||
-            fun->compartment() != cx->compartment())
+            fun->realm() != cx->realm())
         {
             continue;
         }
@@ -1121,16 +1107,16 @@ AddLazyFunctionsForCompartment(JSContext* cx, AutoObjectVector& lazyFunctions, A
 }
 
 static bool
-CreateLazyScriptsForCompartment(JSContext* cx)
+CreateLazyScriptsForRealm(JSContext* cx)
 {
     AutoObjectVector lazyFunctions(cx);
 
-    if (!AddLazyFunctionsForCompartment(cx, lazyFunctions, AllocKind::FUNCTION))
+    if (!AddLazyFunctionsForRealm(cx, lazyFunctions, AllocKind::FUNCTION))
         return false;
 
     // Methods, for instance {get method() {}}, are extended functions that can
     // be relazified, so we need to handle those as well.
-    if (!AddLazyFunctionsForCompartment(cx, lazyFunctions, AllocKind::FUNCTION_EXTENDED))
+    if (!AddLazyFunctionsForRealm(cx, lazyFunctions, AllocKind::FUNCTION_EXTENDED))
         return false;
 
     // Create scripts for each lazy function, updating the list of functions to
@@ -1158,17 +1144,17 @@ CreateLazyScriptsForCompartment(JSContext* cx)
 }
 
 bool
-JSCompartment::ensureDelazifyScriptsForDebugger(JSContext* cx)
+Realm::ensureDelazifyScriptsForDebugger(JSContext* cx)
 {
     AutoRealmUnchecked ar(cx, this);
-    if (needsDelazificationForDebugger() && !CreateLazyScriptsForCompartment(cx))
+    if (needsDelazificationForDebugger() && !CreateLazyScriptsForRealm(cx))
         return false;
-    debugModeBits &= ~DebuggerNeedsDelazification;
+    debugModeBits_ &= ~DebuggerNeedsDelazification;
     return true;
 }
 
 void
-JSCompartment::updateDebuggerObservesFlag(unsigned flag)
+Realm::updateDebuggerObservesFlag(unsigned flag)
 {
     MOZ_ASSERT(isDebuggee());
     MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
@@ -1176,10 +1162,9 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
                flag == DebuggerObservesAsmJS ||
                flag == DebuggerObservesBinarySource);
 
-    Realm* realm = JS::GetRealmForCompartment(this);
     GlobalObject* global = zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
-                           ? realm->unsafeUnbarrieredMaybeGlobal()
-                           : realm->maybeGlobal();
+                           ? unsafeUnbarrieredMaybeGlobal()
+                           : maybeGlobal();
     const GlobalObject::DebuggerVector* v = global->getDebuggers();
     for (auto p = v->begin(); p != v->end(); p++) {
         Debugger* dbg = *p;
@@ -1188,25 +1173,25 @@ JSCompartment::updateDebuggerObservesFlag(unsigned flag)
             flag == DebuggerObservesAsmJS ? dbg->observesAsmJS() :
             dbg->observesBinarySource())
         {
-            debugModeBits |= flag;
+            debugModeBits_ |= flag;
             return;
         }
     }
 
-    debugModeBits &= ~flag;
+    debugModeBits_ &= ~flag;
 }
 
 void
-JSCompartment::unsetIsDebuggee()
+Realm::unsetIsDebuggee()
 {
     if (isDebuggee()) {
-        debugModeBits &= ~DebuggerObservesMask;
+        debugModeBits_ &= ~DebuggerObservesMask;
         DebugEnvironments::onCompartmentUnsetIsDebuggee(this);
     }
 }
 
 void
-JSCompartment::updateDebuggerObservesCoverage()
+Realm::updateDebuggerObservesCoverage()
 {
     bool previousState = debuggerObservesCoverage();
     updateDebuggerObservesFlag(DebuggerObservesCoverage);
@@ -1228,26 +1213,25 @@ JSCompartment::updateDebuggerObservesCoverage()
     if (collectCoverage())
         return;
 
-    Realm* realm = JS::GetRealmForCompartment(this);
-    realm->clearScriptCounts();
-    realm->clearScriptNames();
+    clearScriptCounts();
+    clearScriptNames();
 }
 
 bool
-JSCompartment::collectCoverage() const
+Realm::collectCoverage() const
 {
     return collectCoverageForPGO() ||
            collectCoverageForDebug();
 }
 
 bool
-JSCompartment::collectCoverageForPGO() const
+Realm::collectCoverageForPGO() const
 {
     return !JitOptions.disablePgo;
 }
 
 bool
-JSCompartment::collectCoverageForDebug() const
+Realm::collectCoverageForDebug() const
 {
     return debuggerObservesCoverage() ||
            runtimeFromAnyThread()->profilingScripts ||
@@ -1262,34 +1246,23 @@ Realm::clearScriptCounts()
 
     // Clear all hasScriptCounts_ flags of JSScript, in order to release all
     // ScriptCounts entries of the current realm.
-    for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
-        ScriptCounts* value = r.front().value();
-        r.front().key()->takeOverScriptCountsMapEntry(value);
-        js_delete(value);
-    }
+    for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront())
+        r.front().key()->clearHasScriptCounts();
 
-    js_delete(scriptCountsMap);
-    scriptCountsMap = nullptr;
+    scriptCountsMap.reset();
 }
 
 void
 Realm::clearScriptNames()
 {
-    if (!scriptNameMap)
-        return;
-
-    for (ScriptNameMap::Range r = scriptNameMap->all(); !r.empty(); r.popFront())
-        js_delete(r.front().value());
-
-    js_delete(scriptNameMap);
-    scriptNameMap = nullptr;
+    scriptNameMap.reset();
 }
 
 void
-JSCompartment::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg, HandleObject handler)
+Realm::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg, HandleObject handler)
 {
     for (auto script = zone()->cellIter<JSScript>(); !script.done(); script.next()) {
-        if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())
+        if (script->realm() == this && script->hasAnyBreakpointsOrStepMode())
             script->clearBreakpointsIn(fop, dbg, handler);
     }
 }
@@ -1357,14 +1330,13 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 HashNumber
-JSCompartment::randomHashCode()
+Realm::randomHashCode()
 {
-    ensureRandomNumberGenerator();
-    return HashNumber(randomNumberGenerator.ref().next());
+    return HashNumber(getOrCreateRandomNumberGenerator().next());
 }
 
 mozilla::HashCodeScrambler
-JSCompartment::randomHashCodeScrambler()
+Realm::randomHashCodeScrambler()
 {
     return mozilla::HashCodeScrambler(randomKeyGenerator_.next(),
                                       randomKeyGenerator_.next());
@@ -1374,11 +1346,11 @@ AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(JSContext* cx
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : CustomAutoRooter(cx)
     , cx_(cx->helperThread() ? nullptr : cx)
-    , prevState_(cx->compartment()->objectMetadataState)
+    , prevState_(cx->realm()->objectMetadataState_)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (cx_)
-        cx_->compartment()->objectMetadataState = NewObjectMetadataState(DelayMetadata());
+        cx_->realm()->objectMetadataState_ = NewObjectMetadataState(DelayMetadata());
 }
 
 AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
@@ -1388,7 +1360,7 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
     if (!cx_)
         return;
 
-    if (!cx_->isExceptionPending() && cx_->compartment()->hasObjectPendingMetadata()) {
+    if (!cx_->isExceptionPending() && cx_->realm()->hasObjectPendingMetadata()) {
         // This destructor often runs upon exit from a function that is
         // returning an unrooted pointer to a Cell. The allocation metadata
         // callback often allocates; if it causes a GC, then the Cell pointer
@@ -1400,16 +1372,16 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata()
         // code, it's adequate to simply suppress GC while we run the callback.
         AutoSuppressGC autoSuppressGC(cx_);
 
-        JSObject* obj = cx_->compartment()->objectMetadataState.as<PendingMetadata>();
+        JSObject* obj = cx_->realm()->objectMetadataState_.as<PendingMetadata>();
 
         // Make sure to restore the previous state before setting the object's
         // metadata. SetNewObjectMetadata asserts that the state is not
         // PendingMetadata in order to ensure that metadata callbacks are called
         // in order.
-        cx_->compartment()->objectMetadataState = prevState_;
+        cx_->realm()->objectMetadataState_ = prevState_;
 
         obj = SetNewObjectMetadata(cx_, obj);
     } else {
-        cx_->compartment()->objectMetadataState = prevState_;
+        cx_->realm()->objectMetadataState_ = prevState_;
     }
 }

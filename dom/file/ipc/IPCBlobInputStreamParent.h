@@ -31,15 +31,17 @@ class IPCBlobInputStreamParent final
   : public mozilla::ipc::PIPCBlobInputStreamParent
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IPCBlobInputStreamParent)
+
   // The size of the inputStream must be passed as argument in order to avoid
   // the use of nsIInputStream::Available() which could open a fileDescriptor in
   // case the stream is a nsFileStream.
   template<typename M>
-  static IPCBlobInputStreamParent*
+  static already_AddRefed<IPCBlobInputStreamParent>
   Create(nsIInputStream* aInputStream, uint64_t aSize,
          uint64_t aChildID, nsresult* aRv, M* aManager);
 
-  static IPCBlobInputStreamParent*
+  static already_AddRefed<IPCBlobInputStreamParent>
   Create(const nsID& aID, uint64_t aSize,
          mozilla::ipc::PBackgroundParent* aManager);
 
@@ -65,6 +67,9 @@ public:
   RecvStreamNeeded() override;
 
   mozilla::ipc::IPCResult
+  RecvLengthNeeded() override;
+
+  mozilla::ipc::IPCResult
   RecvClose() override;
 
   mozilla::ipc::IPCResult
@@ -79,6 +84,8 @@ private:
 
   IPCBlobInputStreamParent(const nsID& aID, uint64_t aSize,
                            mozilla::ipc::PBackgroundParent* aManager);
+
+  ~IPCBlobInputStreamParent() = default;
 
   const nsID mID;
   const uint64_t mSize;

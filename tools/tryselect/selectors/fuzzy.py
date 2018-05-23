@@ -186,7 +186,7 @@ def filter_by_paths(tasks, paths):
                     flavor, " and subsuite '{}'".format(subsuite) if subsuite else ""))
             continue
 
-        task_regexes.add(suite['task_regex'])
+        task_regexes.update(suite['task_regex'])
 
     def match_task(task):
         return any(re.search(pattern, task) for pattern in task_regexes)

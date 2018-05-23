@@ -22,7 +22,13 @@ var zeroQuad;
 var notInDocument = document.createElement('div');
 
 function isEval(expr, b) {
-  is(eval(expr), b, expr);
+  // we ignore an insignificant discrepancy in floating-point values
+  var exprVal = eval(expr);
+  if (exprVal != b && Math.abs(exprVal - b) < 0.0001) {
+    ok(true, expr + " (" + exprVal + " within 0.0001 of " + b + ")");
+    return;
+  }
+  is(exprVal, b, expr);
 }
 
 function isApprox(a, b, msg, options) {
@@ -457,7 +463,7 @@ function runTest() {
   isEval("table.getBoxQuads()[1].bounds.height", 40);
 
   // Test that we skip anonymous boxes when finding the right box to be relative to.
-  checkQuadIsRect("d", {toStr:"ibSplit"},
+  checkQuadIsRect("d", {toStr:"ibSplit", tolerance:0.0001},
                   dX - ibSplitPart1X, dY - ibSplitY, dW, dH);
   var tableX = table.getClientRects()[0].left;
   var tableY = table.getClientRects()[0].top;

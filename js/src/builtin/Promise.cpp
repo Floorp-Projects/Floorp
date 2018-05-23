@@ -164,7 +164,7 @@ mozilla::Atomic<uint64_t> gIDGenerator(0);
 static MOZ_ALWAYS_INLINE bool
 ShouldCaptureDebugInfo(JSContext* cx)
 {
-    return cx->options().asyncStack() || cx->compartment()->isDebuggee();
+    return cx->options().asyncStack() || cx->realm()->isDebuggee();
 }
 
 class PromiseDebugInfo : public NativeObject
@@ -3067,8 +3067,8 @@ IsPromiseThenOrCatchRetValImplicitlyUsed(JSContext* cx)
     if (!cx->options().asyncStack())
         return false;
 
-    // If devtools is opened, the current compartment will become debuggee.
-    if (cx->compartment()->isDebuggee())
+    // If devtools is opened, the current realm will become debuggee.
+    if (cx->realm()->isDebuggee())
         return true;
 
     // There are 2 profilers, and they can be independently enabled.

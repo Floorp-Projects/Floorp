@@ -49,7 +49,7 @@ Symbol::new_(JSContext* cx, JS::SymbolCode code, JSString* description)
     Symbol* sym;
     {
         AutoAtomsRealm ar(cx, lock);
-        sym = newInternal(cx, code, cx->compartment()->randomHashCode(), atom, lock);
+        sym = newInternal(cx, code, cx->realm()->randomHashCode(), atom, lock);
     }
     if (sym)
         cx->markAtom(sym);
