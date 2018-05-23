@@ -1108,17 +1108,11 @@ const EXTENSIONS_DB = "extensions.json";
 var gExtensionsJSON = gProfD.clone();
 gExtensionsJSON.append(EXTENSIONS_DB);
 
-function promiseInstallWebExtension(aData) {
+async function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
-  let promise = promiseWebExtensionStartup();
-  return promiseInstallAllFiles([addonFile]).then(installs => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-    // Since themes are disabled by default, it won't start up.
-    if (aData.manifest.theme)
-      return installs[0].addon;
-    return promise.then(() => installs[0].addon);
-  });
+  let {addon} = await promiseInstallFile(addonFile);
+  return addon;
 }
 
 // By default use strict compatibility
