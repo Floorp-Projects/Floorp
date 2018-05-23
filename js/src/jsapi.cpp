@@ -4065,7 +4065,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
 {
     strictOption = cx->options().strictMode();
     extraWarningsOption = cx->realm()->behaviors().extraWarnings(cx);
-    isProbablySystemCode = cx->compartment()->isProbablySystemCode();
+    isProbablySystemCode = cx->realm()->isProbablySystemCode();
     werrorOption = cx->options().werror();
     if (!cx->options().asmJS())
         asmJSOption = AsmJSOption::Disabled;
@@ -7513,7 +7513,7 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     if (!cx->compartment())
         return false;
 
-    NonBuiltinFrameIter i(cx, cx->compartment()->principals());
+    NonBuiltinFrameIter i(cx, cx->realm()->principals());
     if (i.done())
         return false;
 
@@ -7787,7 +7787,7 @@ JS::SetOutOfMemoryCallback(JSContext* cx, OutOfMemoryCallback cb, void* data)
 
 JS::FirstSubsumedFrame::FirstSubsumedFrame(JSContext* cx,
                                            bool ignoreSelfHostedFrames /* = true */)
-  : JS::FirstSubsumedFrame(cx, cx->compartment()->principals(), ignoreSelfHostedFrames)
+  : JS::FirstSubsumedFrame(cx, cx->realm()->principals(), ignoreSelfHostedFrames)
 { }
 
 JS_PUBLIC_API(bool)

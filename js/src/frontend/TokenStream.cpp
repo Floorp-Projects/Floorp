@@ -752,7 +752,7 @@ TokenStreamAnyChars::fillExcludingContext(ErrorMetadata* err, uint32_t offset)
     if (!filename_ && !cx->helperThread()) {
         NonBuiltinFrameIter iter(cx,
                                  FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
-                                 cx->compartment()->principals());
+                                 cx->realm()->principals());
         if (!iter.done() && iter.filename()) {
             err->filename = iter.filename();
             err->lineNumber = iter.computeLine(&err->columnNumber);

@@ -1369,7 +1369,7 @@ CaptureFirstSubsumedFrame(JSContext* cx, unsigned argc, JS::Value* vp)
         return false;
     }
 
-    JS::StackCapture capture(JS::FirstSubsumedFrame(cx, obj->compartment()->principals()));
+    JS::StackCapture capture(JS::FirstSubsumedFrame(cx, obj->realm()->principals()));
     if (args.length() > 1)
         capture.as<JS::FirstSubsumedFrame>().ignoreSelfHosted = JS::ToBoolean(args[1]);
 
