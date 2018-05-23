@@ -70,6 +70,7 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.win = this._frame.contentWindow;
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
+  this.telemetry = this.inspector.telemetry;
 
   this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize",
                                                DEFAULT_MAX_CHILDREN);
@@ -1527,6 +1528,7 @@ MarkupView.prototype = {
         this.htmlEditor = new HTMLEditor(this.doc);
       }
       this.htmlEditor.show(container.tagLine, oldValue);
+      const start = this.telemetry.msSystemNow();
       this.htmlEditor.once("popuphidden", (commit, value) => {
         // Need to focus the <html> element instead of the frame / window
         // in order to give keyboard focus back to doc (from editor).
@@ -1535,6 +1537,12 @@ MarkupView.prototype = {
         if (commit) {
           this.updateNodeOuterHTML(node, value, oldValue);
         }
+
+        const end = this.telemetry.msSystemNow();
+        this.telemetry.recordEvent("devtools.main", "edit_html", "inspector", null, {
+          "made_changes": commit,
+          "time_open": end - start
+        });
       });
 
       this.emit("begin-editing");
