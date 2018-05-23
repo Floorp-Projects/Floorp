@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate the square.</title>
+
+<style>
+body {
+  margin: 0;
+  height: 5000px;
+}
+</style>
+
+<body>
+
+<svg width="768" height="1000">
+
+  <g transform="translate(0 112.152992)">
+    <rect x="100" y="650" height="50" width="50" fill="grey" class="reftest-no-paint"/>
+  </g>
+
+</svg>
+
+<script>
+
+document.documentElement.scrollTop = 709;
+
+window.addEventListener("MozReftestInvalidate", function (e) {
+  document.documentElement.scrollTop = 617;
+  document.documentElement.removeAttribute("class");
+});
+
+</script>
