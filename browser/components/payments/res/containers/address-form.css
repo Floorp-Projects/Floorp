@@ -23,3 +23,17 @@ address-form[address-fields]:not([address-fields~='tel']) #tel-container {
      inline styles on the form fields with display: flex; */
   display: none !important;
 }
+
+address-form .error input,
+address-form .error select,
+address-form .error textarea {
+  border: 1px solid #ce001a;
+}
+
+.error-text:not(:empty) {
+  border-radius: 2px;
+  background-color: #ce001a;
+  color: #f9e6e9;
+  padding: .1em .5em;
+  margin-inline-start: .1em;
+}
