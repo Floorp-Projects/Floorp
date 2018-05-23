@@ -30,6 +30,7 @@ const { apply } = require("devtools/shared/layout/dom-matrix-2d");
 const {
   getCurrentZoom,
   getDisplayPixelRatio,
+  getWindowDimensions,
   setIgnoreLayoutChanges,
 } = require("devtools/shared/layout/utils");
 const { stringifyGridFragments } = require("devtools/server/actors/utils/css-grid-utils");
@@ -1557,16 +1558,16 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let cells = this.getElement("cells");
     let areas = this.getElement("areas");
 
-    // Hide the root element and force the reflow in order to get the proper window's
-    // dimensions without increasing them.
-    root.setAttribute("style", "display: none");
-    this.win.document.documentElement.offsetWidth;
-
     // Set the grid cells and areas fill to the current grid colour.
     cells.setAttribute("style", `fill: ${this.color}`);
     areas.setAttribute("style", `fill: ${this.color}`);
 
-    let { width, height } = this._winDimensions;
+    // Hide the root element and force the reflow in order to get the proper window's
+    // dimensions without increasing them.
+    root.setAttribute("style", "display: none");
+    this.win.document.documentElement.offsetWidth;
+    this._winDimensions = getWindowDimensions(this.win);
+    const { width, height } = this._winDimensions;
 
     // Updates the <canvas> element's position and size.
     // It also clear the <canvas>'s drawing context.

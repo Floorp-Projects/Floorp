@@ -56,7 +56,7 @@ it to match anywhere in the text. Anchors can be used to ensure that the
 full text matches an expression.
 
 This example also demonstrates the utility of
-[raw strings](https://doc.rust-lang.org/stable/reference.html#raw-string-literals)
+[raw strings](https://doc.rust-lang.org/stable/reference/tokens.html#raw-string-literals)
 in Rust, which
 are just like regular strings except they are prefixed with an `r` and do
 not process any escape sequences. For example, `"\\d"` is the same
@@ -217,9 +217,8 @@ This implementation executes regular expressions **only** on valid UTF-8
 while exposing match locations as byte indices into the search string.
 
 Only simple case folding is supported. Namely, when matching
-case-insensitively, the characters are first mapped using the [simple case
-folding](ftp://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt) mapping
-before matching.
+case-insensitively, the characters are first mapped using the "simple" case
+folding rules defined by Unicode.
 
 Regular expressions themselves are **only** interpreted as a sequence of
 Unicode scalar values. This means you can use Unicode characters directly
@@ -248,9 +247,9 @@ are some examples:
   recognize `\n` and not any of the other forms of line terminators defined
   by Unicode.
 
-Finally, Unicode general categories and scripts are available as character
-classes. For example, you can match a sequence of numerals, Greek or
-Cherokee letters:
+Unicode general categories, scripts, script extensions, ages and a smattering
+of boolean properties are available as character classes. For example, you can
+match a sequence of numerals, Greek or Cherokee letters:
 
 ```rust
 # extern crate regex; use regex::Regex;
@@ -260,6 +259,12 @@ let mat = re.find("abcΔᎠβⅠᏴγδⅡxyz").unwrap();
 assert_eq!((mat.start(), mat.end()), (3, 23));
 # }
 ```
+
+For a more detailed breakdown of Unicode support with respect to
+[UTS#18](http://unicode.org/reports/tr18/),
+please see the
+[UNICODE](https://github.com/rust-lang/regex/blob/master/UNICODE.md)
+document in the root of the regex repository.
 
 # Opt out of Unicode support
 
@@ -307,6 +312,8 @@ a separate crate, [`regex-syntax`](../regex_syntax/index.html).
 [x[^xyz]]     Nested/grouping character class (matching any character except y and z)
 [a-y&&xyz]    Intersection (matching x or y)
 [0-9&&[^4]]   Subtraction using intersection and negation (matching 0-9 except 4)
+[0-9--4]      Direct subtraction (matching 0-9 except 4)
+[a-g~~b-h]    Symmetric difference (matching `a` and `h` only)
 [\[\]]        Escaping in character classes (matching [ or ])
 </pre>
 
@@ -374,7 +381,7 @@ the `x` flag and clears the `y` flag.
 All flags are by default disabled unless stated otherwise. They are:
 
 <pre class="rust">
-i     case-insensitive
+i     case-insensitive: letters match both upper and lower case
 m     multi-line mode: ^ and $ match begin/end of line
 s     allow . to match \n
 U     swap the meaning of x* and x*?
@@ -382,8 +389,8 @@ u     Unicode support (enabled by default)
 x     ignore whitespace and allow line comments (starting with `#`)
 </pre>
 
-Here's an example that matches case-insensitively for only part of the
-expression:
+Flags can be toggled within a pattern. Here's an example that matches
+case-insensitively for the first part but case-sensitively for the second part:
 
 ```rust
 # extern crate regex; use regex::Regex;
@@ -396,6 +403,25 @@ assert_eq!(&cap[0], "AaAaAbb");
 
 Notice that the `a+` matches either `a` or `A`, but the `b+` only matches
 `b`.
+
+Multi-line mode means `^` and `$` no longer match just at the beginning/end of
+the input, but at the beginning/end of lines:
+
+```
+# use regex::Regex;
+let re = Regex::new(r"(?m)^line \d+").unwrap();
+let m = re.find("line one\nline 2\n").unwrap();
+assert_eq!(m.as_str(), "line 2");
+```
+
+Note that `^` matches after new lines, even at the end of input:
+
+```
+# use regex::Regex;
+let re = Regex::new(r"(?m)^").unwrap();
+let m = re.find_iter("test\n").last().unwrap();
+assert_eq!((m.start(), m.end()), (5, 5));
+```
 
 Here is an example that uses an ASCII word boundary instead of a Unicode
 word boundary:
@@ -412,16 +438,20 @@ assert_eq!(&cap[0], "abc");
 ## Escape sequences
 
 <pre class="rust">
-\*         literal *, works for any punctuation character: \.+*?()|[]{}^$
-\a         bell (\x07)
-\f         form feed (\x0C)
-\t         horizontal tab
-\n         new line
-\r         carriage return
-\v         vertical tab (\x0B)
-\123       octal character code (up to three digits)
-\x7F       hex character code (exactly two digits)
-\x{10FFFF} any hex character code corresponding to a Unicode code point
+\*          literal *, works for any punctuation character: \.+*?()|[]{}^$
+\a          bell (\x07)
+\f          form feed (\x0C)
+\t          horizontal tab
+\n          new line
+\r          carriage return
+\v          vertical tab (\x0B)
+\123        octal character code (up to three digits) (when enabled)
+\x7F        hex character code (exactly two digits)
+\x{10FFFF}  any hex character code corresponding to a Unicode code point
+\u007F      hex character code (exactly four digits)
+\u{7F}      any hex character code corresponding to a Unicode code point
+\U0000007F  hex character code (exactly eight digits)
+\U{7F}      any hex character code corresponding to a Unicode code point
 </pre>
 
 ## Perl character classes (Unicode friendly)
@@ -490,25 +520,31 @@ another matching engine with fixed memory requirements.
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(feature = "pattern", feature(pattern))]
-#![cfg_attr(feature = "simd-accel", feature(cfg_target_feature))]
 
 extern crate aho_corasick;
 extern crate memchr;
 extern crate thread_local;
-#[cfg(test)] extern crate quickcheck;
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
 extern crate regex_syntax as syntax;
-#[cfg(feature = "simd-accel")] extern crate simd;
 extern crate utf8_ranges;
 
+#[cfg(feature = "use_std")]
 pub use error::Error;
+#[cfg(feature = "use_std")]
 pub use re_builder::unicode::*;
+#[cfg(feature = "use_std")]
 pub use re_builder::set_unicode::*;
+#[cfg(feature = "use_std")]
 pub use re_set::unicode::*;
+#[cfg(feature = "use_std")]
 pub use re_trait::Locations;
+#[cfg(feature = "use_std")]
 pub use re_unicode::{
     Regex, Match, Captures,
     CaptureNames, Matches, CaptureMatches, SubCaptureMatches,
-    Replacer, NoExpand, Split, SplitN,
+    Replacer, ReplacerRef, NoExpand, Split, SplitN,
     escape,
 };
 
@@ -589,7 +625,8 @@ determine whether a byte is a word byte or not.
 5. Hexadecimal notation can be used to specify arbitrary bytes instead of
 Unicode codepoints. For example, in ASCII compatible mode, `\xFF` matches the
 literal byte `\xFF`, while in Unicode mode, `\xFF` is a Unicode codepoint that
-matches its UTF-8 encoding of `\xC3\xBF`. Similarly for octal notation.
+matches its UTF-8 encoding of `\xC3\xBF`. Similarly for octal notation when
+enabled.
 6. `.` matches any *byte* except for `\n` instead of any Unicode scalar value.
 When the `s` flag is enabled, `.` matches any byte.
 
@@ -598,6 +635,7 @@ When the `s` flag is enabled, `.` matches any byte.
 In general, one should expect performance on `&[u8]` to be roughly similar to
 performance on `&str`.
 */
+#[cfg(feature = "use_std")]
 pub mod bytes {
     pub use re_builder::bytes::*;
     pub use re_builder::set_bytes::*;
@@ -615,34 +653,29 @@ mod exec;
 mod expand;
 mod freqs;
 mod input;
-mod literals;
+mod literal;
 #[cfg(feature = "pattern")]
 mod pattern;
 mod pikevm;
 mod prog;
 mod re_builder;
 mod re_bytes;
-mod re_plugin;
 mod re_set;
 mod re_trait;
 mod re_unicode;
-#[cfg(feature = "simd-accel")]
-mod simd_accel;
-#[cfg(not(feature = "simd-accel"))]
-#[path = "simd_fallback/mod.rs"]
-mod simd_accel;
 mod sparse;
+#[cfg(feature = "unstable")]
+mod vector;
 
-/// The `internal` module exists to support the `regex!` macro and other
-/// suspicious activity, such as testing different matching engines and
-/// supporting the `regex-debug` CLI utility.
+/// The `internal` module exists to support suspicious activity, such as
+/// testing different matching engines and supporting the `regex-debug` CLI
+/// utility.
 #[doc(hidden)]
+#[cfg(feature = "use_std")]
 pub mod internal {
     pub use compile::Compiler;
     pub use exec::{Exec, ExecBuilder};
     pub use input::{Char, Input, CharInput, InputAt};
-    pub use literals::LiteralSearcher;
+    pub use literal::LiteralSearcher;
     pub use prog::{Program, Inst, EmptyLook, InstRanges};
-    pub use re_plugin::Plugin;
-    pub use re_unicode::_Regex;
 }

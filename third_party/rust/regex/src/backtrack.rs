@@ -100,7 +100,7 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
         start: usize,
     ) -> bool {
         let mut cache = cache.borrow_mut();
-        let mut cache = &mut cache.backtrack;
+        let cache = &mut cache.backtrack;
         let start = input.at(start);
         let mut b = Bounded {
             prog: prog,
@@ -216,6 +216,9 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
             // from the stack. Namely, if we're pushing a job only to run it
             // next, avoid the push and just mutate `ip` (and possibly `at`)
             // in place.
+            if self.has_visited(ip, at) {
+                return false;
+            }
             match self.prog[ip] {
                 Match(slot) => {
                     if slot < self.matches.len() {
@@ -274,9 +277,6 @@ impl<'a, 'm, 'r, 's, I: Input> Bounded<'a, 'm, 'r, 's, I> {
                     }
                     return false;
                 }
-            }
-            if self.has_visited(ip, at) {
-                return false;
             }
         }
     }

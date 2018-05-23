@@ -21,6 +21,11 @@ expectation = { prevValue: 'color: red;', newValue: 'color: green;' };
 div.style.color = "green";
 expectation = { prevValue: 'color: green;', newValue: '' };
 div.style.color = '';
+if (SpecialPowers.getBoolPref("dom.mutation-events.cssom.disabled")) {
+  is(count, 0, "No DOMAttrModified event should be triggered");
+} else {
+  is(count, 2, "DOMAttrModified events should have been triggered");
+}
 </script>
 </body>
 </html>

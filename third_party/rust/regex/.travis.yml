@@ -2,27 +2,28 @@ dist: trusty
 sudo: false
 language: rust
 rust:
-  - 1.12.0
-  - stable
-  - beta
-  - nightly
+- 1.20.0
+- stable
+- beta
+- nightly
 script: ci/script.sh
 addons:
   apt:
     packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - binutils-dev
-      - wget
-      - clang-3.6
-      - cmake
-      - python
-      - python-virtualenv
+    - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+    - binutils-dev
+    - wget
+    - clang-3.6
+    - cmake
+    - python
+    - python-virtualenv
 after_success: ci/after_success.sh
-env:
-  global:
-    secure: "GdGE0kFYiJGccVZligur7JlWRCy49eH6uWPl71mrnaaW8jLHmkva0jVb0LB9e5ol3YMaMCgrwM2pcj3Uk2C08YcGIoEKOLlDVho351KaD6XfclZ29CQTAPMz4Xut2IcB4YeuZlDrOnM26guTIOtn2NAjeQgOhpM/ErzVBgkB+wQ="
 notifications:
   email:
     on_success: never
+branches:
+  only:
+  - master
+  - auto

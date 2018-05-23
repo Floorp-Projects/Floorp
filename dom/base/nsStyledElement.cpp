@@ -12,6 +12,7 @@
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/StaticPrefs.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsServiceManagerUtils.h"
@@ -77,6 +78,7 @@ nsStyledElement::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
   bool oldValueSet = false;
 
   bool hasListeners = aNotify &&
+    !StaticPrefs::dom_mutation_events_cssom_disabled() &&
     nsContentUtils::HasMutationListeners(this,
                                          NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
                                          this);

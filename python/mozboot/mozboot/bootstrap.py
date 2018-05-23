@@ -29,28 +29,12 @@ from mozboot.util import (
 APPLICATION_CHOICE = '''
 Note on Artifact Mode:
 
-Firefox for Desktop and Android supports a fast build mode called
-artifact mode. Artifact mode downloads pre-built C++ components rather
-than building them locally, trading bandwidth for time.
+Artifact builds download prebuilt C++ components rather than building
+them locally.
 
-Artifact builds will be useful to many developers who are not working
-with compiled code. If you want to work on look-and-feel of Firefox,
-you want "Firefox for Desktop Artifact Mode".
-
-Similarly, if you want to work on the look-and-feel of Firefox for Android,
-you want "Firefox for Android Artifact Mode".
-
-To work on the Gecko technology platform, you would need to opt to full,
-non-artifact mode. Gecko is Mozilla's web rendering engine, similar to Edge,
-Blink, and WebKit. Gecko is implemented in C++ and JavaScript. If you
-want to work on web rendering, you want "Firefox for Desktop", or
-"Firefox for Android".
-
-If you don't know what you want, start with just Artifact Mode of the desired
-platform. Your builds will be much shorter than if you build Gecko as well.
-But don't worry! You can always switch configurations later.
-
-You can learn more about Artifact mode builds at
+Artifact builds are recommended for people working on Firefox or
+Firefox for Android frontends. They are unsuitable for those working
+on C++ code. For more information see:
 https://developer.mozilla.org/en-US/docs/Artifact_builds.
 
 Please choose the version of Firefox you want to build:
