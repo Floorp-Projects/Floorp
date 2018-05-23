@@ -52,6 +52,10 @@ class UpdateVerifyConfigCreator(BaseScript):
             "dest": "app_name",
             "help": "App name being tested. Eg: browser",
         }],
+        [["--branch-prefix"], {
+            "dest": "branch_prefix",
+            "help": "Prefix of release branch names. Eg: mozilla, comm",
+        }],
         [["--channel"], {
             "dest": "channel",
             "help": "Channel to run update verify against",
@@ -220,11 +224,11 @@ class UpdateVerifyConfigCreator(BaseScript):
             # at the time of writing.
             branch = None
             if release_info["category"] == "dev":
-                branch = "releases/mozilla-beta"
+                branch = "releases/{}-beta".format(self.config['branch-prefix'])
             elif release_info["category"] == "esr":
-                branch = "releases/mozilla-esr{}".format(version[:2])
+                branch = "releases/{}-esr{}".format(self.config['branch-prefix'], version[:2])
             elif release_info["category"] in ("major", "stability"):
-                branch = "releases/mozilla-release"
+                branch = "releases/{}-release".format(self.config['branch-prefix'])
             if not branch:
                 raise Exception("Cannot determine branch, cannot continue!")
 
