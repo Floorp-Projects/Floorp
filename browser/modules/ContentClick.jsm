@@ -54,9 +54,8 @@ var ContentClick = {
                                          uri: Services.io.newURI(json.href),
                                          title: json.title,
                                          loadBookmarkInSidebar: true,
-                                         hiddenRows: [ "description",
-                                                        "location",
-                                                        "keyword" ]
+                                         hiddenRows: [ "location",
+                                                       "keyword" ]
                                        }, window);
       return;
     }

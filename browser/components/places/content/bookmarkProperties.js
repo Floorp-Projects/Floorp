@@ -19,8 +19,6 @@
  *       @ uri (nsIURI object) - optional, the default uri for the new item.
  *         The property is not used for the "folder with items" type.
  *       @ title (String) - optional, the default title for the new item.
- *       @ description (String) - optional, the default description for the new
- *         item.
  *       @ defaultInsertionPoint (InsertionPoint JS object) - optional, the
  *         default insertion point for the new item.
  *       @ keyword (String) - optional, the default keyword for the new item.
@@ -47,7 +45,6 @@
  *     Possible values:
  *     - "title"
  *     - "location"
- *     - "description"
  *     - "keyword"
  *     - "tags"
  *     - "loadInSidebar"
@@ -89,7 +86,6 @@ var BookmarkPropertiesPanel = {
   _uri: null,
   _loadInSidebar: false,
   _title: "",
-  _description: "",
   _URIs: [],
   _keyword: "",
   _postData: null,
@@ -226,9 +222,6 @@ var BookmarkPropertiesPanel = {
               this._title = this._strings.getString("newLivemarkDefault");
           }
       }
-
-      if ("description" in dialogInfo)
-        this._description = dialogInfo.description;
     } else { // edit
       this._node = dialogInfo.node;
       this._title = this._node.title;
@@ -461,10 +454,6 @@ var BookmarkPropertiesPanel = {
   async _promiseNewItem() {
     let [containerId, index, parentGuid] = await this._getInsertionPointDetails();
     let annotations = [];
-    if (this._description) {
-      annotations.push({ name: PlacesUIUtils.DESCRIPTION_ANNO,
-                         value: this._description });
-    }
     if (this._loadInSidebar) {
       annotations.push({ name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
                          value: true });
