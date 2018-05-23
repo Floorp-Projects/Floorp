@@ -336,23 +336,34 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
                 test_types = [suite]
 
             summary = None
+            executed_too_many_tests = False
             for per_test_args in self.query_args(suite):
-                if (datetime.now() - start_time) > max_per_test_time:
-                    # Running tests has run out of time. That is okay! Stop running
-                    # them so that a task timeout is not triggered, and so that
-                    # (partial) results are made available in a timely manner.
-                    self.info("TinderboxPrint: Running tests took too long: Not all tests "
-                              "were executed.<br/>")
-                    return
-                if executed_tests >= max_per_test_tests:
-                    # When changesets are merged between trees or many tests are
-                    # otherwise updated at once, there probably is not enough time
-                    # to run all tests, and attempting to do so may cause other
-                    # problems, such as generating too much log output.
-                    self.info("TinderboxPrint: Too many modified tests: Not all tests "
-                              "were executed.<br/>")
-                    return
-                executed_tests = executed_tests + 1
+                # Make sure baseline code coverage tests are never
+                # skipped and that having them run has no influence
+                # on the max number of actual tests that are to be run.
+                is_baseline_test = 'baselinecoverage' in per_test_args[-1] \
+                                   if self.per_test_coverage else False
+                if executed_too_many_tests and not is_baseline_test:
+                    continue
+
+                if not is_baseline_test:
+                    if (datetime.now() - start_time) > max_per_test_time:
+                        # Running tests has run out of time. That is okay! Stop running
+                        # them so that a task timeout is not triggered, and so that
+                        # (partial) results are made available in a timely manner.
+                        self.info("TinderboxPrint: Running tests took too long: Not all tests "
+                                  "were executed.<br/>")
+                        return
+                    if executed_tests >= max_per_test_tests:
+                        # When changesets are merged between trees or many tests are
+                        # otherwise updated at once, there probably is not enough time
+                        # to run all tests, and attempting to do so may cause other
+                        # problems, such as generating too much log output.
+                        self.info("TinderboxPrint: Too many modified tests: Not all tests "
+                                  "were executed.<br/>")
+                        executed_too_many_tests = True
+
+                    executed_tests = executed_tests + 1
 
                 cmd = self._query_cmd(test_types)
                 cmd.extend(per_test_args)
