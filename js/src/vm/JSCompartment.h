@@ -783,10 +783,6 @@ struct JSCompartment
     js::jit::JitCompartment* jitCompartment() {
         return jitCompartment_.get();
     }
-
-    // Aggregated output used to collect JSScript hit counts when code coverage
-    // is enabled.
-    js::coverage::LCovCompartment lcovOutput;
 };
 
 class JS::Realm : public JSCompartment
@@ -854,6 +850,10 @@ class JS::Realm : public JSCompartment
   public:
     // WebAssembly state for the realm.
     js::wasm::Realm wasm;
+
+    // Aggregated output used to collect JSScript hit counts when code coverage
+    // is enabled.
+    js::coverage::LCovRealm lcovOutput;
 
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;

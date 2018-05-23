@@ -51,8 +51,7 @@ JSCompartment::JSCompartment(Zone* zone)
     innerViews(zone),
     gcIncomingGrayPointers(nullptr),
     validAccessPtr(nullptr),
-    enumerators(nullptr),
-    lcovOutput()
+    enumerators(nullptr)
 {
     runtime_->numCompartments++;
 }
@@ -72,23 +71,20 @@ Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
 
 Realm::~Realm()
 {
-    // Empty destructor: using the default destructor requires adding various
-    // #includes to other files where we destruct Realms.
-}
-
-JSCompartment::~JSCompartment()
-{
     // Write the code coverage information in a file.
     JSRuntime* rt = runtimeFromMainThread();
     if (rt->lcovOutput().isEnabled())
         rt->lcovOutput().writeLCovResult(lcovOutput);
+}
 
+JSCompartment::~JSCompartment()
+{
     MOZ_ASSERT(enumerators == iteratorSentinel_.get());
 
 #ifdef DEBUG
     // Avoid assertion destroying the unboxed layouts list if the embedding
     // leaked GC things.
-    if (!rt->gc.shutdownCollectedEverything())
+    if (!runtime_->gc.shutdownCollectedEverything())
         unboxedLayouts.clear();
 #endif
 
