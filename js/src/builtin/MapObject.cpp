@@ -633,7 +633,7 @@ MapObject*
 MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
     auto map = cx->make_unique<ValueMap>(cx->zone(),
-                                         cx->compartment()->randomHashCodeScrambler());
+                                         cx->realm()->randomHashCodeScrambler());
     if (!map || !map->init()) {
         ReportOutOfMemory(cx);
         return nullptr;
@@ -1316,7 +1316,7 @@ SetObject*
 SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
     auto set = cx->make_unique<ValueSet>(cx->zone(),
-                                         cx->compartment()->randomHashCodeScrambler());
+                                         cx->realm()->randomHashCodeScrambler());
     if (!set || !set->init()) {
         ReportOutOfMemory(cx);
         return nullptr;

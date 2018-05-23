@@ -2510,7 +2510,7 @@ DebugEnvironments::checkHashTablesAfterMovingGC()
 static bool
 CanUseDebugEnvironmentMaps(JSContext* cx)
 {
-    return cx->compartment()->isDebuggee();
+    return cx->realm()->isDebuggee();
 }
 
 DebugEnvironments*
@@ -2893,7 +2893,7 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
 
         if (frame.prevUpToDate())
             return true;
-        MOZ_ASSERT(frame.environmentChain()->compartment()->isDebuggee());
+        MOZ_ASSERT(frame.environmentChain()->realm()->isDebuggee());
         frame.setPrevUpToDate();
     }
 
@@ -3215,9 +3215,19 @@ WithEnvironmentObject::scope() const
 ModuleEnvironmentObject*
 js::GetModuleEnvironmentForScript(JSScript* script)
 {
+    ModuleObject* module = GetModuleObjectForScript(script);
+    if (!module)
+        return nullptr;
+
+    return module->environment();
+}
+
+ModuleObject*
+js::GetModuleObjectForScript(JSScript* script)
+{
     for (ScopeIter si(script); si; si++) {
         if (si.kind() == ScopeKind::Module)
-            return si.scope()->as<ModuleScope>().module()->environment();
+            return si.scope()->as<ModuleScope>().module();
     }
     return nullptr;
 }

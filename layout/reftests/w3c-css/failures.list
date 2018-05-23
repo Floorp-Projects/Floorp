@@ -71,10 +71,6 @@ fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vlr-003.xht
 fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vlr-009.xht
 fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vlr-015.xht
 fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vlr-021.xht
-fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vrl-003.xht
-fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vrl-009.xht
-fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vrl-015.xht
-fails-if(Android) css-writing-modes/sizing-orthog-htb-in-vrl-021.xht
 fails-if(Android) css-writing-modes/sizing-orthog-vlr-in-htb-003.xht
 fails-if(Android) css-writing-modes/sizing-orthog-vlr-in-htb-009.xht
 fails-if(Android) css-writing-modes/sizing-orthog-vlr-in-htb-015.xht
@@ -206,9 +202,9 @@ fuzzy(135,530) fails-if(webrender&&cocoaWidget) css-multicol/multicol-containing
 fuzzy(215,241) css-multicol/multicol-containing-002.xht
 fuzzy(87,180) css-multicol/multicol-count-001.xht
 fails css-multicol/multicol-count-002.xht
-fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-003.xht
-fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-computed-004.xht
-fails-if(winWidget||OSX||Android) css-multicol/multicol-count-computed-005.xht
+fails-if(winWidget||OSX) css-multicol/multicol-count-computed-003.xht
+fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-computed-004.xht
+fails-if(winWidget||OSX) css-multicol/multicol-count-computed-005.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-negative-001.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-negative-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-count-non-integer-001.xht
@@ -222,7 +218,7 @@ fuzzy(255,329) css-multicol/multicol-gap-001.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-003.xht
 fuzzy(107,1823) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-fraction-001.xht
-fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) fails-if(Android) css-multicol/multicol-gap-large-001.xht
+fuzzy-if(winWidget||OSX||gtkWidget,204,1048) fuzzy-if(skiaContent,208,1048) css-multicol/multicol-gap-large-001.xht
 fuzzy(225,920) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-large-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) fails-if(webrender&&cocoaWidget) css-multicol/multicol-gap-negative-001.xht
 fails css-multicol/multicol-height-block-child-001.xht

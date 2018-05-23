@@ -1806,7 +1806,7 @@ Debugger::onNewScript(JSContext* cx, HandleScript script)
     if (script->hideScriptFromDebugger())
         return;
 
-    if (script->compartment()->isDebuggee())
+    if (script->realm()->isDebuggee())
         slowPathOnNewScript(cx, script);
 }
 

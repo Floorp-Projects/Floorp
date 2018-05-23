@@ -1511,6 +1511,12 @@ HttpChannelChild::DoNotifyListenerCleanup()
   MaybeCallSynthesizedCallback();
 }
 
+void
+HttpChannelChild::DoAsyncAbort(nsresult aStatus)
+{
+  Unused << AsyncAbort(aStatus);
+}
+
 class DeleteSelfEvent : public NeckoTargetChannelEvent<HttpChannelChild>
 {
  public:
@@ -2485,6 +2491,10 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   NS_ENSURE_ARG_POINTER(listener);
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+
+  if (MaybeWaitForUploadStreamLength(listener, aContext)) {
+    return NS_OK;
+  }
 
   mAsyncOpenTime = TimeStamp::Now();
 #ifdef MOZ_TASK_TRACER

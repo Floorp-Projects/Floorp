@@ -22,6 +22,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/Eval.h"
+#include "builtin/ModuleObject.h"
 #include "builtin/String.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
@@ -382,7 +383,7 @@ js::RunScript(JSContext* cx, RunState& state)
     // Since any script can conceivably GC, make sure it's safe to do so.
     cx->verifyIsSafeToGC();
 
-    MOZ_DIAGNOSTIC_ASSERT(cx->compartment()->isSystem() ||
+    MOZ_DIAGNOSTIC_ASSERT(cx->realm()->isSystem() ||
                           cx->runtime()->allowContentJS());
 
     MOZ_ASSERT(!cx->enableAccessValidation ||
@@ -1044,18 +1045,18 @@ PopEnvironment(JSContext* cx, EnvironmentIter& ei)
       case ScopeKind::Catch:
       case ScopeKind::NamedLambda:
       case ScopeKind::StrictNamedLambda:
-        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
             DebugEnvironments::onPopLexical(cx, ei);
         if (ei.scope().hasEnvironment())
             ei.initialFrame().popOffEnvironmentChain<LexicalEnvironmentObject>();
         break;
       case ScopeKind::With:
-        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
             DebugEnvironments::onPopWith(ei.initialFrame());
         ei.initialFrame().popOffEnvironmentChain<WithEnvironmentObject>();
         break;
       case ScopeKind::Function:
-        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
             DebugEnvironments::onPopCall(cx, ei.initialFrame());
         if (ei.scope().hasEnvironment())
             ei.initialFrame().popOffEnvironmentChain<CallObject>();
@@ -1063,7 +1064,7 @@ PopEnvironment(JSContext* cx, EnvironmentIter& ei)
       case ScopeKind::FunctionBodyVar:
       case ScopeKind::ParameterExpressionVar:
       case ScopeKind::StrictEval:
-        if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+        if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
             DebugEnvironments::onPopVar(cx, ei);
         if (ei.scope().hasEnvironment())
             ei.initialFrame().popOffEnvironmentChain<VarEnvironmentObject>();
@@ -1631,7 +1632,6 @@ GetSuperEnvFunction(JSContext* cx, InterpreterRegs& regs)
     MOZ_CRASH("unexpected env chain for GetSuperEnvFunction");
 }
 
-
 /*
  * As an optimization, the interpreter creates a handful of reserved Rooted<T>
  * variables at the beginning, thus inserting them into the Rooted list once
@@ -1815,7 +1815,7 @@ Interpret(JSContext* cx, RunState& state)
 #define INIT_COVERAGE()                                                       \
     JS_BEGIN_MACRO                                                            \
         if (!script->hasScriptCounts()) {                                     \
-            if (cx->compartment()->collectCoverageForDebug()) {               \
+            if (cx->realm()->collectCoverageForDebug()) {                     \
                 if (!script->initScriptCounts(cx))                            \
                     goto error;                                               \
             }                                                                 \
@@ -1935,7 +1935,7 @@ CASE(EnableInterruptsPseudoOpcode)
     bool moreInterrupts = false;
     jsbytecode op = *REGS.pc;
 
-    if (!script->hasScriptCounts() && cx->compartment()->collectCoverageForDebug()) {
+    if (!script->hasScriptCounts() && cx->realm()->collectCoverageForDebug()) {
         if (!script->initScriptCounts(cx))
             goto error;
     }
@@ -3980,7 +3980,7 @@ CASE(JSOP_POPLEXICALENV)
     MOZ_ASSERT(scope->as<LexicalScope>().hasEnvironment());
 #endif
 
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 
     // Pop block from scope chain.
@@ -3997,14 +3997,14 @@ CASE(JSOP_DEBUGLEAVELEXICALENV)
     // FIXME: This opcode should not be necessary.  The debugger shouldn't need
     // help from bytecode to do its job.  See bug 927782.
 
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 }
 END_CASE(JSOP_DEBUGLEAVELEXICALENV)
 
 CASE(JSOP_FRESHENLEXICALENV)
 {
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 
     if (!REGS.fp()->freshenLexicalEnvironment(cx))
@@ -4014,7 +4014,7 @@ END_CASE(JSOP_FRESHENLEXICALENV)
 
 CASE(JSOP_RECREATELEXICALENV)
 {
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         DebugEnvironments::onPopLexical(cx, REGS.fp(), REGS.pc);
 
     if (!REGS.fp()->recreateLexicalEnvironment(cx))
@@ -4040,7 +4040,7 @@ CASE(JSOP_POPVARENV)
     MOZ_ASSERT(scope->as<VarScope>().hasEnvironment());
 #endif
 
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         DebugEnvironments::onPopVar(cx, REGS.fp(), REGS.pc);
 
     REGS.fp()->popOffEnvironmentChain<VarEnvironmentObject>();
@@ -4210,6 +4210,19 @@ END_CASE(JSOP_SUPERBASE)
 CASE(JSOP_NEWTARGET)
     PUSH_COPY(REGS.fp()->newTarget());
     MOZ_ASSERT(REGS.sp[-1].isObject() || REGS.sp[-1].isUndefined());
+END_CASE(JSOP_NEWTARGET)
+
+CASE(JSOP_IMPORTMETA)
+{
+    ReservedRooted<JSObject*> module(&rootObject0, GetModuleObjectForScript(script));
+    MOZ_ASSERT(module);
+
+    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+    if (!metaObject)
+        goto error;
+
+    PUSH_OBJECT(*metaObject);
+}
 END_CASE(JSOP_NEWTARGET)
 
 CASE(JSOP_SUPERFUN)

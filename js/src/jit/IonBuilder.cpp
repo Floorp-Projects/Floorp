@@ -1219,7 +1219,7 @@ IonBuilder::initArgumentsObject()
     MOZ_ASSERT(info().needsArgsObj());
 
     bool mapped = script()->hasMappedArgsObj();
-    ArgumentsObject* templateObj = script()->compartment()->maybeArgumentsTemplateObject(mapped);
+    ArgumentsObject* templateObj = script()->realm()->maybeArgumentsTemplateObject(mapped);
 
     MCreateArgumentsObject* argsObj =
         MCreateArgumentsObject::New(alloc(), current->environmentChain(), templateObj);
@@ -2375,6 +2375,9 @@ IonBuilder::inspectOpcode(JSOp op)
         pushConstant(BooleanValue(false));
         return Ok();
       }
+
+      case JSOP_IMPORTMETA:
+          return jsop_importmeta();
 
       // ===== NOT Yet Implemented =====
       // Read below!
@@ -13140,6 +13143,21 @@ IonBuilder::jsop_implicitthis(PropertyName* name)
     current->push(implicitThis);
 
     return resumeAfter(implicitThis);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_importmeta()
+{
+    ModuleObject* module = GetModuleObjectForScript(script());
+    MOZ_ASSERT(module);
+
+    // The object must have been created already when we compiled for baseline.
+    JSObject* metaObject = module->metaObject();
+    MOZ_ASSERT(metaObject);
+
+    pushConstant(ObjectValue(*metaObject));
+
+    return Ok();
 }
 
 MInstruction*

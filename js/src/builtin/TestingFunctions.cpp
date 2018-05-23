@@ -1369,7 +1369,7 @@ CaptureFirstSubsumedFrame(JSContext* cx, unsigned argc, JS::Value* vp)
         return false;
     }
 
-    JS::StackCapture capture(JS::FirstSubsumedFrame(cx, obj->compartment()->principals()));
+    JS::StackCapture capture(JS::FirstSubsumedFrame(cx, obj->realm()->principals()));
     if (args.length() > 1)
         capture.as<JS::FirstSubsumedFrame>().ignoreSelfHosted = JS::ToBoolean(args[1]);
 
@@ -4428,8 +4428,7 @@ SetRNGState(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    cx->compartment()->ensureRandomNumberGenerator();
-    cx->compartment()->randomNumberGenerator.ref().setState(seed0, seed1);
+    cx->realm()->getOrCreateRandomNumberGenerator().setState(seed0, seed1);
 
     args.rval().setUndefined();
     return true;

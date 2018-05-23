@@ -16,6 +16,7 @@
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICloneableInputStream.h"
+#include "nsIInputStreamLength.h"
 #include "mozilla/Mutex.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +70,10 @@ class nsBufferedInputStream final
       public nsIIPCSerializableInputStream,
       public nsIAsyncInputStream,
       public nsIInputStreamCallback,
-      public nsICloneableInputStream
+      public nsICloneableInputStream,
+      public nsIInputStreamLength,
+      public nsIAsyncInputStreamLength,
+      public nsIInputStreamLengthCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -80,6 +84,9 @@ public:
     NS_DECL_NSIASYNCINPUTSTREAM
     NS_DECL_NSIINPUTSTREAMCALLBACK
     NS_DECL_NSICLONEABLEINPUTSTREAM
+    NS_DECL_NSIINPUTSTREAMLENGTH
+    NS_DECL_NSIASYNCINPUTSTREAMLENGTH
+    NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK
 
     nsBufferedInputStream();
 
@@ -101,9 +108,14 @@ protected:
     // This value is protected by mutex.
     nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
 
+    // This value is protected by mutex.
+    nsCOMPtr<nsIInputStreamLengthCallback> mAsyncInputStreamLengthCallback;
+
     bool mIsIPCSerializable;
     bool mIsAsyncInputStream;
     bool mIsCloneableInputStream;
+    bool mIsInputStreamLength;
+    bool mIsAsyncInputStreamLength;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

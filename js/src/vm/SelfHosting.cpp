@@ -1995,7 +1995,7 @@ intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(id < JS_TELEMETRY_END);
     MOZ_ASSERT(id >= 0);
 
-    if (!cx->compartment()->isProbablySystemCode())
+    if (!cx->realm()->isProbablySystemCode())
         cx->runtime()->addTelemetry(id, args[1].toInt32());
 
     args.rval().setUndefined();
@@ -2795,6 +2795,8 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     if (!compartment)
         return nullptr;
 
+    JS::Realm* realm = JS::GetRealmForCompartment(compartment);
+
     static const ClassOps shgClassOps = {
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
@@ -2807,14 +2809,14 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         &shgClassOps
     };
 
-    AutoRealmUnchecked ar(cx, compartment);
+    AutoRealmUnchecked ar(cx, realm);
     Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
     if (!shg)
         return nullptr;
 
     cx->runtime()->selfHostingGlobal_ = shg;
-    compartment->isSelfHosting = true;
-    compartment->setIsSystem(true);
+    realm->setIsSelfHostingRealm();
+    realm->setIsSystem(true);
 
     if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions))
         return nullptr;
@@ -2982,12 +2984,6 @@ JSRuntime::traceSelfHostingGlobal(JSTracer* trc)
 {
     if (selfHostingGlobal_ && !parentRuntime)
         TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()), "self-hosting global");
-}
-
-bool
-JSRuntime::isSelfHostingCompartment(JSCompartment* comp) const
-{
-    return selfHostingGlobal_->compartment() == comp;
 }
 
 bool

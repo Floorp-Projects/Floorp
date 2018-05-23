@@ -876,8 +876,8 @@ JS_PUBLIC_API(size_t)
 JS::SystemRealmCount(JSContext* cx)
 {
     size_t n = 0;
-    for (CompartmentsIter comp(cx->runtime(), WithAtoms); !comp.done(); comp.next()) {
-        if (comp->isSystem())
+    for (RealmsIter realm(cx->runtime(), WithAtoms); !realm.done(); realm.next()) {
+        if (realm->isSystem())
             ++n;
     }
     return n;
@@ -887,8 +887,8 @@ JS_PUBLIC_API(size_t)
 JS::UserRealmCount(JSContext* cx)
 {
     size_t n = 0;
-    for (CompartmentsIter comp(cx->runtime(), WithAtoms); !comp.done(); comp.next()) {
-        if (!comp->isSystem())
+    for (RealmsIter realm(cx->runtime(), WithAtoms); !realm.done(); realm.next()) {
+        if (!realm->isSystem())
             ++n;
     }
     return n;

@@ -84,12 +84,10 @@ public:
    *
    * @param aURI the URI being submitted to [IN]
    * @param aPostDataStream a data stream for POST data [OUT]
-   * @param aPostDataStreamLength a data stream for POST data length [OUT]
    * @param aOutURI the resulting URI. May be the same as aURI [OUT]
    */
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength,
                        nsCOMPtr<nsIURI>& aOutURI) = 0;
 
   /**
@@ -170,7 +168,7 @@ public:
 
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream,
-                       int64_t* aPostDataStreamLength, nsCOMPtr<nsIURI>& aOutURI) override;
+                       nsCOMPtr<nsIURI>& aOutURI) override;
 
   void GetContentType(nsACString& aContentType)
   {
