@@ -762,7 +762,6 @@ struct JSCompartment
     void sweepRegExps();
     void sweepDebugEnvironments();
     void sweepNativeIterators();
-    void sweepTemplateObjects();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
@@ -922,23 +921,11 @@ struct JSCompartment
   protected:
     js::jit::JitCompartment* jitCompartment_;
 
-    js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_;
-    js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_;
-    js::ReadBarriered<js::NativeObject*> iterResultTemplate_;
-
   public:
     bool ensureJitCompartmentExists(JSContext* cx);
     js::jit::JitCompartment* jitCompartment() {
         return jitCompartment_;
     }
-
-    js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
-
-    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
-
-    static const size_t IterResultObjectValueSlot = 0;
-    static const size_t IterResultObjectDoneSlot = 1;
-    js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
 
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
@@ -973,6 +960,10 @@ class JS::Realm : public JSCompartment
 
     const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
     void* realmPrivate_ = nullptr;
+
+    js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_ { nullptr };
+    js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
+    js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
 
     unsigned enterRealmDepth_ = 0;
 
@@ -1091,6 +1082,7 @@ class JS::Realm : public JSCompartment
     void finishRoots();
 
     void sweepSelfHostingScriptSource();
+    void sweepTemplateObjects();
 
     void clearScriptCounts();
     void clearScriptNames();
@@ -1231,6 +1223,13 @@ class JS::Realm : public JSCompartment
     bool isProbablySystemCode() const {
         return isSystem_;
     }
+
+    static const size_t IterResultObjectValueSlot = 0;
+    static const size_t IterResultObjectDoneSlot = 1;
+    js::NativeObject* getOrCreateIterResultTemplateObject(JSContext* cx);
+
+    js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
+    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
 };
 
 namespace js {
