@@ -1371,9 +1371,11 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
 
         int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
 
+        Maybe<nsDisplayTransform*> deferred = aSc.GetDeferredTransformItem();
         mLayerScrollData.emplace_back();
         mLayerScrollData.back().Initialize(mManager->GetScrollData(), item,
-            descendants, stopAtAsr, aSc.GetTransformForScrollData());
+            descendants, stopAtAsr,
+            deferred ? Some((*deferred)->GetTransform().GetMatrix()) : Nothing());
       } else if (mLayerScrollData.size() != layerCountBeforeRecursing &&
                  !eventRegions.IsEmpty()) {
         // We are not forcing a new layer for |item|, but we did create some

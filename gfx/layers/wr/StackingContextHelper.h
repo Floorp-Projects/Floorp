@@ -13,9 +13,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
-class nsDisplayListBuilder;
-class nsDisplayItem;
-class nsDisplayList;
+class nsDisplayTransform;
 
 namespace mozilla {
 namespace layers {
@@ -39,7 +37,7 @@ public:
                         const gfx::CompositionOp& aMixBlendMode = gfx::CompositionOp::OP_OVER,
                         bool aBackfaceVisible = true,
                         bool aIsPreserve3D = false,
-                        const Maybe<gfx::Matrix4x4>& aTransformForScrollData = Nothing(),
+                        const Maybe<nsDisplayTransform*>& aDeferredTransformItem = Nothing(),
                         const wr::WrClipId* aClipNodeId = nullptr,
                         bool aRasterizeLocally = false);
   // This version of the constructor should only be used at the root level
@@ -64,7 +62,7 @@ public:
     return mSnappingSurfaceTransform;
   }
 
-  const Maybe<gfx::Matrix4x4>& GetTransformForScrollData() const;
+  const Maybe<nsDisplayTransform*>& GetDeferredTransformItem() const;
 
   bool AffectsClipPositioning() const { return mAffectsClipPositioning; }
   Maybe<wr::WrClipId> ReferenceFrameId() const { return mReferenceFrameId; }
@@ -82,7 +80,7 @@ private:
   gfx::Matrix mSnappingSurfaceTransform;
   bool mAffectsClipPositioning;
   Maybe<wr::WrClipId> mReferenceFrameId;
-  Maybe<gfx::Matrix4x4> mTransformForScrollData;
+  Maybe<nsDisplayTransform*> mDeferredTransformItem;
   bool mIsPreserve3D;
   bool mRasterizeLocally;
 };
