@@ -10,6 +10,7 @@ import math
 from mozbuild.util import memoize
 from mozpack.path import match as mozpackmatch
 from mozversioncontrol import get_repository_object, InvalidRepoPath
+from subprocess import CalledProcessError
 from taskgraph import files_changed
 from .. import GECKO
 
@@ -51,6 +52,8 @@ def perfile_number_of_chunks(try_task_config, head_repository, head_rev, type):
         changed_files.update(vcs.get_outgoing_files('AM'))
     except InvalidRepoPath:
         vcs = None
+    except CalledProcessError:
+        return 0
 
     if not changed_files:
         changed_files.update(files_changed.get_changed_files(head_repository,
