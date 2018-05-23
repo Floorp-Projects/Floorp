@@ -1,0 +1,7 @@
+<!doctype html>
+<title>Image intrinsic size specified via sizes attribute reacts properly to media changes</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<link rel="match" href="sizes-dynamic-001-ref.html">
+<link rel="help" href="https://html.spec.whatwg.org/#sizes-attributes">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1149357">
+<iframe onload="this.width = '500'" width="200" height="500" srcdoc='<!doctype html><img srcset="/images/green-256x256.png 100w" style="max-width: 100%" sizes="(min-width: 400px) 10px, 20px">'></iframe>

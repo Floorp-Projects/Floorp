@@ -330,8 +330,8 @@ protected:
   // only mode after Bug 1076583
   bool InResponsiveMode();
 
-  // True if the given URL and density equal the last URL and density that was loaded by this element.
-  bool SelectedSourceMatchesLast(nsIURI* aSelectedSource, double aSelectedDensity);
+  // True if the given URL equals the last URL that was loaded by this element.
+  bool SelectedSourceMatchesLast(nsIURI* aSelectedSource);
 
   // Resolve and load the current mResponsiveSelector (responsive mode) or src
   // attr image.
