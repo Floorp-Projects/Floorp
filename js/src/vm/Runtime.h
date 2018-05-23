@@ -586,7 +586,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     bool isSelfHostingGlobal(JSObject* global) {
         return global == selfHostingGlobal_;
     }
-    bool isSelfHostingCompartment(JSCompartment* comp) const;
     bool isSelfHostingZone(const JS::Zone* zone) const;
     bool createLazySelfHostedFunctionClone(JSContext* cx, js::HandlePropertyName selfHostedName,
                                            js::HandleAtom name, unsigned nargs,

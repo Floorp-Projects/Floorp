@@ -638,10 +638,10 @@ js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
     MOZ_ASSERT(reportp);
     MOZ_ASSERT(!JSREPORT_IS_WARNING(reportp->flags));
 
-    // We cannot throw a proper object inside the self-hosting compartment, as
-    // we cannot construct the Error constructor without self-hosted code. Just
+    // We cannot throw a proper object inside the self-hosting realm, as we
+    // cannot construct the Error constructor without self-hosted code. Just
     // print the error to stderr to help debugging.
-    if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
+    if (cx->realm()->isSelfHostingRealm()) {
         PrintError(cx, stderr, JS::ConstUTF8CharsZ(), reportp, true);
         return;
     }
