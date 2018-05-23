@@ -614,12 +614,8 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
-      nsIPresShell *presShell = presContext->GetPresShell();
-      NS_ASSERTION(presShell, "No PresShell.");
-      if (presShell) {
-        presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+      PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                     NS_FRAME_IS_DIRTY);
-      }
     } else {
       // We've already gotten the initial reflow, and our size hasn't changed,
       // so we're ready to request a decode.
@@ -710,6 +706,25 @@ nsImageFrame::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 }
 
 void
+nsImageFrame::ResponsiveContentDensityChanged()
+{
+  if (!(mState & IMAGE_GOTINITIALREFLOW)) {
+    return;
+  }
+
+  if (!mImage) {
+    return;
+  }
+
+  if (!UpdateIntrinsicSize(mImage) && !UpdateIntrinsicRatio(mImage)) {
+    return;
+  }
+
+  PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                                NS_FRAME_IS_DIRTY);
+}
+
+void
 nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
                                       nsresult aStatus)
 {
@@ -738,11 +753,8 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
   if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
     if (intrinsicSizeChanged) {
       if (!(mState & IMAGE_SIZECONSTRAINED)) {
-        nsIPresShell *presShell = PresContext()->GetPresShell();
-        if (presShell) {
-          presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+        PresShell()->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
                                       NS_FRAME_IS_DIRTY);
-        }
       } else {
         // We've already gotten the initial reflow, and our size hasn't changed,
         // so we're ready to request a decode.
