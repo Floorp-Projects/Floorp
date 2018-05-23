@@ -10069,22 +10069,18 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
 
   if (customElementEnabled && isCustomElement) {
     (*aResult)->SetCustomElementData(new CustomElementData(typeAtom));
+    nsContentUtils::RegisterCallbackUpgradeElement(*aResult, typeAtom);
   }
 
   return NS_OK;
 }
 
-/* static */ CustomElementDefinition*
-nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
-                                              nsAtom* aNameAtom,
-                                              uint32_t aNameSpaceID,
-                                              nsAtom* aTypeAtom)
+CustomElementRegistry*
+GetCustomElementRegistry(nsIDocument* aDoc)
 {
   MOZ_ASSERT(aDoc);
 
-  if ((aNameSpaceID != kNameSpaceID_XUL &&
-       aNameSpaceID != kNameSpaceID_XHTML) ||
-      !aDoc->GetDocShell()) {
+  if (!aDoc->GetDocShell()) {
     return nullptr;
   }
 
@@ -10093,7 +10089,21 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
     return nullptr;
   }
 
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
+  return window->CustomElements();
+}
+
+/* static */ CustomElementDefinition*
+nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
+                                              nsAtom* aNameAtom,
+                                              uint32_t aNameSpaceID,
+                                              nsAtom* aTypeAtom)
+{
+  if (aNameSpaceID != kNameSpaceID_XUL &&
+      aNameSpaceID != kNameSpaceID_XHTML) {
+    return nullptr;
+  }
+
+  RefPtr<CustomElementRegistry> registry(GetCustomElementRegistry(aDoc));
   if (!registry) {
     return nullptr;
   }
@@ -10102,22 +10112,28 @@ nsContentUtils::LookupCustomElementDefinition(nsIDocument* aDoc,
 }
 
 /* static */ void
+nsContentUtils::RegisterCallbackUpgradeElement(Element* aElement,
+                                               nsAtom* aTypeName)
+{
+  MOZ_ASSERT(aElement);
+
+  nsIDocument* doc = aElement->OwnerDoc();
+  CustomElementRegistry* registry = GetCustomElementRegistry(doc);
+  if (registry) {
+    registry->RegisterCallbackUpgradeElement(aElement, aTypeName);
+  }
+}
+
+/* static */ void
 nsContentUtils::RegisterUnresolvedElement(Element* aElement, nsAtom* aTypeName)
 {
   MOZ_ASSERT(aElement);
 
   nsIDocument* doc = aElement->OwnerDoc();
-  nsPIDOMWindowInner* window(doc->GetInnerWindow());
-  if (!window) {
-    return;
+  CustomElementRegistry* registry = GetCustomElementRegistry(doc);
+  if (registry) {
+    registry->RegisterUnresolvedElement(aElement, aTypeName);
   }
-
-  RefPtr<CustomElementRegistry> registry(window->CustomElements());
-  if (!registry) {
-    return;
-  }
-
-  registry->RegisterUnresolvedElement(aElement, aTypeName);
 }
 
 /* static */ void
@@ -10128,17 +10144,10 @@ nsContentUtils::UnregisterUnresolvedElement(Element* aElement)
   nsAtom* typeAtom =
     aElement->GetCustomElementData()->GetCustomElementType();
   nsIDocument* doc = aElement->OwnerDoc();
-  nsPIDOMWindowInner* window(doc->GetInnerWindow());
-  if (!window) {
-    return;
+  CustomElementRegistry* registry = GetCustomElementRegistry(doc);
+  if (registry) {
+    registry->UnregisterUnresolvedElement(aElement, typeAtom);
   }
-
-  CustomElementRegistry* registry = window->CustomElements();
-  if (!registry) {
-    return;
-  }
-
-  registry->UnregisterUnresolvedElement(aElement, typeAtom);
 }
 
 /* static */ void

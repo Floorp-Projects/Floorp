@@ -117,8 +117,6 @@ function simpleInnerHTMLTest() {
   p.innerHTML = "<x-html-obj-elem5></x-html-obj-elem5>";
   let el = p.firstChild;
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element is not upgraded.");
-  document.body.appendChild(p);
   is(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element should have the prototype of the custom type.");
 }
 
@@ -140,9 +138,6 @@ function twoElementInnerHTMLTest() {
   let el1 = p.firstChild;
   let el2 = p.lastChild;
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element is not upgraded.");
-  isnot(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element is not upgraded.");
-  document.body.appendChild(p);
   is(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
   is(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
 }
