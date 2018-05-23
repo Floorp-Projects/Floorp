@@ -489,11 +489,12 @@ EditorBase::GetDesiredSpellCheckState()
   return element->Spellcheck();
 }
 
-NS_IMETHODIMP
+void
 EditorBase::PreDestroy(bool aDestroyingFrames)
 {
-  if (mDidPreDestroy)
-    return NS_OK;
+  if (mDidPreDestroy) {
+    return;
+  }
 
   Selection* selection = GetSelection();
   if (selection) {
@@ -537,7 +538,6 @@ EditorBase::PreDestroy(bool aDestroyingFrames)
   }
 
   mDidPreDestroy = true;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1185,13 +1185,6 @@ EditorBase::PasteTransferable(nsITransferable* aTransferable)
 
 NS_IMETHODIMP
 EditorBase::CanPaste(int32_t aSelectionType, bool* aCanPaste)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-EditorBase::CanPasteTransferable(nsITransferable* aTransferable,
-                                 bool* aCanPaste)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
