@@ -9,10 +9,13 @@ const tests = fs.readdirSync(fixtures).map(name => {
 
   const dirname = path.relative(__dirname, path.join(fixtures, name));
 
+  const inputTS = path.join(dirname, "input.ts");
+  const inputJS = path.join(dirname, "input.js");
+
   return {
     name: _.camelCase(name),
     dirname,
-    input: `./${path.join(dirname, "input.js")}`,
+    input: `./${fs.existsSync(inputTS) ? inputTS : inputJS}`,
     output: path.join(dirname, "output.js")
   };
 }).filter(Boolean);
@@ -68,9 +71,9 @@ module.exports = [
       },
       devtool,
       module: {
-        loaders: babelEnabled
-          ? [
-              {
+        loaders: [
+          babelEnabled
+            ? {
                 test: /\.js$/,
                 exclude: /node_modules/,
                 loader: "babel-loader",
@@ -85,8 +88,14 @@ module.exports = [
                     ])
                 }
               }
-            ]
-          : []
+            : null,
+          {
+            test: /\.tsx?$/,
+            exclude: /node_modules/,
+            loader: "ts-loader",
+            options: {}
+          }
+        ].filter(Boolean)
       }
     };
   })

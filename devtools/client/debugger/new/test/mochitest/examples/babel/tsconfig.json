@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "experimentalDecorators": true
+  },
+  "include": [
+    "fixtures/*/input.ts",
+    "fixtures/*/src/*.ts"
+  ]
+}

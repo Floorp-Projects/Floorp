@@ -128,8 +128,8 @@ function testImportedBindings(dbg) {
    {
      line: 25,
      column: 16,
-     expression: "_mod4.original;",
-     result: '"an-original"',
+     expression: "_mod3.aNamed;",
+     result: '"a-named"',
    },
    {
      line: 26,
@@ -161,8 +161,8 @@ function testImportedBindings(dbg) {
    {
      line: 34,
      column: 20,
-     expression: "_mod9.original;",
-     result: '"an-original2"',
+     expression: "_mod8.aNamed2;",
+     result: '"a-named2"',
    },
    {
      line: 35,
