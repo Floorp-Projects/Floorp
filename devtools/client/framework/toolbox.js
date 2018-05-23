@@ -46,8 +46,6 @@ loader.lazyRequireGetter(this, "InspectorFront",
   "devtools/shared/fronts/inspector", true);
 loader.lazyRequireGetter(this, "flags",
   "devtools/shared/flags");
-loader.lazyRequireGetter(this, "showDoorhanger",
-  "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "createPerformanceFront",
   "devtools/shared/fronts/performance", true);
 loader.lazyRequireGetter(this, "getPreferenceFront",
@@ -144,7 +142,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
-  this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
   this._updateTextBoxMenuItems = this._updateTextBoxMenuItems.bind(this);
   this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
   this._onTabsOrderUpdated = this._onTabsOrderUpdated.bind(this);
@@ -184,7 +181,6 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._onToolSelected);
-  this.on("ready", this._showDevEditionPromo);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
@@ -2760,7 +2756,6 @@ Toolbox.prototype = {
     this._target.off("frame-update", this._updateFrames);
     this.off("select", this._onToolSelected);
     this.off("host-changed", this._refreshHostTitle);
-    this.off("ready", this._showDevEditionPromo);
 
     gDevTools.off("tool-registered", this._toolRegistered);
     gDevTools.off("tool-unregistered", this._toolUnregistered);
@@ -2957,18 +2952,6 @@ Toolbox.prototype = {
 
   _highlighterHidden: function() {
     this.emit("highlighter-hide");
-  },
-
-  /**
-   * For displaying the promotional Doorhanger on first opening of
-   * the developer tools, promoting the Developer Edition.
-   */
-  _showDevEditionPromo: function() {
-    // Do not display in browser toolbox
-    if (this.target.chrome) {
-      return;
-    }
-    showDoorhanger({ window: this.win, type: "deveditionpromo" });
   },
 
   /**
