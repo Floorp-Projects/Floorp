@@ -125,9 +125,6 @@ class TimeStamp;
   /* Collect thread responsiveness information. */ \
   macro(6, "responsiveness", Responsiveness) \
   \
-  /* Restyle profiling. */ \
-  macro(7, "restyle", Restyle) \
-  \
   /* Take a snapshot of the window on every composition. */ \
   macro(7, "screenshots", Screenshots) \
   \
