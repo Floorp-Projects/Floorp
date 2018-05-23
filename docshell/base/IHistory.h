@@ -71,22 +71,28 @@ public:
      */
     TOP_LEVEL = 1 << 0,
     /**
-     * Indicates whether the URI was loaded as part of a permanent redirect.
+     * Indicates whether the URI is the target of a permanent redirect.
      */
     REDIRECT_PERMANENT = 1 << 1,
     /**
-     * Indicates whether the URI was loaded as part of a temporary redirect.
+     * Indicates whether the URI is the target of a temporary redirect.
      */
     REDIRECT_TEMPORARY = 1 << 2,
     /**
-     * Indicates the URI is redirecting  (Response code 3xx).
+     * Indicates the URI will redirect  (Response code 3xx).
      */
     REDIRECT_SOURCE = 1 << 3,
     /**
      * Indicates the URI caused an error that is unlikely fixable by a
      * retry, like a not found or unfetchable page.
      */
-    UNRECOVERABLE_ERROR = 1 << 4
+    UNRECOVERABLE_ERROR = 1 << 4,
+    /**
+     * If REDIRECT_SOURCE is set, this indicates that the redirect is permanent.
+     * Note this differs from REDIRECT_PERMANENT because that one refers to how
+     * we reached the URI, while this is used when the URI itself redirects.
+     */
+    REDIRECT_SOURCE_PERMANENT = 1 << 5
   };
 
   /**

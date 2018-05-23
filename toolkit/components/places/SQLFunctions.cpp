@@ -676,16 +676,16 @@ namespace places {
       return NS_OK;
     }
 
-    enum RedirectState {
-      eRedirectUnknown,
-      eIsRedirect,
-      eIsNotRedirect
+    enum RedirectBonus {
+      eUnknown,
+      eRedirect,
+      eNormal
     };
 
-    RedirectState isRedirect = eRedirectUnknown;
+    RedirectBonus mostRecentVisitBonus = eUnknown;
 
     if (numEntries > 1) {
-      isRedirect = aArguments->AsInt32(1) ? eIsRedirect : eIsNotRedirect;
+      mostRecentVisitBonus = aArguments->AsInt32(1) ? eRedirect : eNormal;
     }
 
     int32_t typed = 0;
@@ -735,8 +735,9 @@ namespace places {
 
     if (visitCount > 0) {
       // Get a sample of the last visits to the page, to calculate its weight.
-      // In case of a temporary or permanent redirect, calculate the frecency
+      // In case the visit is a redirect target, calculate the frecency
       // as if the original page was visited.
+      // If it's a redirect source, we may want to use a lower bonus.
       nsCString redirectsTransitionFragment =
         nsPrintfCString("%d AND %d ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
                                       nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
@@ -744,10 +745,9 @@ namespace places {
         NS_LITERAL_CSTRING(
           "/* do not warn (bug 659740 - SQLite may ignore index if few visits exist) */"
           "SELECT "
-            "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
-            "origin.visit_type, "
-            "v.visit_type, "
-            "target.id NOTNULL "
+            "IFNULL(origin.visit_type, v.visit_type) AS visit_type, "
+            "target.visit_type AS target_visit_type, "
+            "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400) AS age_in_days "
           "FROM moz_historyvisits v "
           "LEFT JOIN moz_historyvisits origin ON origin.id = v.from_visit "
                                             "AND v.visit_type BETWEEN "
@@ -770,35 +770,23 @@ namespace places {
            numSampledVisits < maxVisits &&
            NS_SUCCEEDED(getVisits->ExecuteStep(&hasResult)) && hasResult;
            numSampledVisits++) {
+        // If this is a redirect target, we'll use the visitType of the source,
+        // otherwise the actual visitType.
+        int32_t visitType = getVisits->AsInt32(0);
 
-        int32_t visitType;
-        bool isNull = false;
-        rv = getVisits->GetIsNull(1, &isNull);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (isRedirect == eIsRedirect || isNull) {
-          // Use the main visit_type.
-          rv = getVisits->GetInt32(2, &visitType);
-          NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-          // This is a redirect target, so use the origin visit_type.
-          rv = getVisits->GetInt32(1, &visitType);
-          NS_ENSURE_SUCCESS(rv, rv);
+        // When adding a new visit, we should haved passed-in whether we should
+        // use the redirect bonus. We can't fetch this information from the
+        // database, because we only store redirect targets.
+        // For older visits we extract the value from the database.
+        bool useRedirectBonus = mostRecentVisitBonus == eRedirect;
+        if (mostRecentVisitBonus == eUnknown || numSampledVisits > 0) {
+          int32_t targetVisitType = getVisits->AsInt32(1);
+          useRedirectBonus = targetVisitType == nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT ||
+                             (targetVisitType == nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY &&
+                              visitType != nsINavHistoryService::TRANSITION_TYPED);
         }
 
-        RedirectState visitIsRedirect = isRedirect;
-
-        // If we don't know if this is a redirect or not, or this is not the
-        // most recent visit that we're looking at, then we use the redirect
-        // value from the database.
-        if (visitIsRedirect == eRedirectUnknown || numSampledVisits >= 1) {
-          int32_t redirect;
-          rv = getVisits->GetInt32(3, &redirect);
-          NS_ENSURE_SUCCESS(rv, rv);
-          visitIsRedirect = !!redirect ? eIsRedirect : eIsNotRedirect;
-        }
-
-        bonus = history->GetFrecencyTransitionBonus(visitType, true, visitIsRedirect == eIsRedirect);
+        bonus = history->GetFrecencyTransitionBonus(visitType, true, useRedirectBonus);
 
         // Add the bookmark visit bonus.
         if (hasBookmark) {
@@ -807,7 +795,7 @@ namespace places {
 
         // If bonus was zero, we can skip the work to determine the weight.
         if (bonus) {
-          int32_t ageInDays = getVisits->AsInt32(0);
+          int32_t ageInDays = getVisits->AsInt32(2);
           int32_t weight = history->GetFrecencyAgedWeight(ageInDays);
           pointsForSampledVisits += (float)(weight * (bonus / 100.0));
         }

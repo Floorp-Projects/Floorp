@@ -198,8 +198,9 @@ private:
  *
  * @param {int64_t} pageId
  *        The id of the page.  Pass -1 if the page is being added right now.
- * @param [optional] {int32_t} redirect
- *        Whether the page visit is a redirect.  Default is false.
+ * @param [optional] {int32_t} useRedirectBonus
+ *        Whether we should use the lower redirect bonus for the most recent
+ *        page visit.  If not passed in, it will use a database guess.
  */
 class CalculateFrecencyFunction final : public mozIStorageFunction
 {
