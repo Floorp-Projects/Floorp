@@ -12,8 +12,6 @@ interface nsIDOMXULSelectControlElement : nsIDOMXULControlElement {
   attribute long selectedIndex;
 
   attribute DOMString value;
-  
-  nsIDOMXULSelectControlItemElement appendItem(in DOMString label, in DOMString value);
 
   readonly attribute unsigned long itemCount;
   long getIndexOfItem(in nsIDOMXULSelectControlItemElement item);
