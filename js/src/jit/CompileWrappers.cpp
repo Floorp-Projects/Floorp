@@ -257,7 +257,7 @@ CompileCompartment::runtime()
 const void*
 CompileCompartment::addressOfRandomNumberGenerator()
 {
-    return compartment()->randomNumberGenerator.ptr();
+    return JS::GetRealmForCompartment(compartment())->addressOfRandomNumberGenerator();
 }
 
 const JitCompartment*

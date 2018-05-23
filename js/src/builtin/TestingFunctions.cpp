@@ -4428,8 +4428,7 @@ SetRNGState(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    cx->compartment()->ensureRandomNumberGenerator();
-    cx->compartment()->randomNumberGenerator.ref().setState(seed0, seed1);
+    cx->realm()->getOrCreateRandomNumberGenerator().setState(seed0, seed1);
 
     args.rval().setUndefined();
     return true;

@@ -751,18 +751,10 @@ struct JSCompartment
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-    // Random number generator for Math.random().
-    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
-
-    // Initialize randomNumberGenerator if needed.
-    void ensureRandomNumberGenerator();
-
   private:
     mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
 
   public:
-    js::HashNumber randomHashCode();
-
     mozilla::HashCodeScrambler randomHashCodeScrambler();
 
     static size_t offsetOfRegExps() {
@@ -821,6 +813,9 @@ class JS::Realm : public JSCompartment
 
     friend class js::AutoSetNewObjectMetadata;
     js::NewObjectMetadataState objectMetadataState_ { js::ImmediateMetadata() };
+
+    // Random number generator for Math.random().
+    mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator_;
 
     JSPrincipals* principals_ = nullptr;
 
@@ -1224,6 +1219,15 @@ class JS::Realm : public JSCompartment
     bool ensureDelazifyScriptsForDebugger(JSContext* cx);
 
     void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg, JS::HandleObject handler);
+
+    // Initializes randomNumberGenerator if needed.
+    mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
+
+    const void* addressOfRandomNumberGenerator() const {
+        return randomNumberGenerator_.ptr();
+    }
+
+    js::HashNumber randomHashCode();
 };
 
 namespace js {
