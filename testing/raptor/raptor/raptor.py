@@ -119,6 +119,7 @@ class Raptor(object):
 
         proc = self.runner.process_handler
         self.output_handler.proc = proc
+        self.control_server.browser_proc = proc
 
         try:
             self.runner.wait(timeout)
