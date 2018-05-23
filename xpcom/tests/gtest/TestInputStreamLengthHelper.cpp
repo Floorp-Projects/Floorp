@@ -22,7 +22,7 @@ TEST(TestInputStreamLengthHelper, NonLengthStream) {
   NS_NewCStringInputStream(getter_AddRefs(stream), buf);
 
   bool called = false;
-  InputStreamLengthHelper::GetLength(stream, [&](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
     ASSERT_EQ(buf.Length(), aLength);
     called = true;
   });
@@ -93,7 +93,7 @@ TEST(TestInputStreamLengthHelper, LengthStream) {
   nsCOMPtr<nsIInputStream> stream = new LengthStream(42, NS_OK, 0, false);
 
   bool called = false;
-  InputStreamLengthHelper::GetLength(stream, [&](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
     ASSERT_EQ(42, aLength);
     called = true;
   });
@@ -106,7 +106,7 @@ TEST(TestInputStreamLengthHelper, InvalidLengthStream) {
     new LengthStream(42, NS_ERROR_NOT_AVAILABLE, 0, false);
 
   bool called = false;
-  InputStreamLengthHelper::GetLength(stream, [&](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
     ASSERT_EQ(-1, aLength);
     called = true;
   });
@@ -119,7 +119,7 @@ TEST(TestInputStreamLengthHelper, AsyncLengthStream) {
     new LengthStream(22, NS_BASE_STREAM_WOULD_BLOCK, 123, true);
 
   bool called = false;
-  InputStreamLengthHelper::GetLength(stream, [&](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
     ASSERT_EQ(22, aLength);
     called = true;
   });
@@ -132,7 +132,7 @@ TEST(TestInputStreamLengthHelper, FallbackLengthStream) {
     new LengthStream(-1, NS_BASE_STREAM_WOULD_BLOCK, 123, false);
 
   bool called = false;
-  InputStreamLengthHelper::GetLength(stream, [&](int64_t aLength) {
+  InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
     ASSERT_EQ(123, aLength);
     called = true;
   });
