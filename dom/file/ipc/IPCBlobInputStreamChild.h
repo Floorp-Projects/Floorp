@@ -76,6 +76,13 @@ public:
   RecvStreamReady(const OptionalIPCStream& aStream) override;
 
   void
+  LengthNeeded(IPCBlobInputStream* aStream,
+               nsIEventTarget* aEventTarget);
+
+  mozilla::ipc::IPCResult
+  RecvLengthReady(const int64_t& aLength) override;
+
+  void
   Shutdown();
 
   void
@@ -102,6 +109,11 @@ private:
   {
     RefPtr<IPCBlobInputStream> mStream;
     nsCOMPtr<nsIEventTarget> mEventTarget;
+    enum
+    {
+      eStreamNeeded,
+      eLengthNeeded,
+    } mOp;
   };
   nsTArray<PendingOperation> mPendingOperations;
 

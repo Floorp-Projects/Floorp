@@ -90,7 +90,7 @@ SerializeInputStreamParent(nsIInputStream* aInputStream, uint64_t aSize,
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsresult rv;
-  IPCBlobInputStreamParent* parentActor =
+  RefPtr<IPCBlobInputStreamParent> parentActor =
     IPCBlobInputStreamParent::Create(aInputStream, aSize, aChildID, &rv,
                                      aManager);
   if (!parentActor) {
@@ -102,6 +102,11 @@ SerializeInputStreamParent(nsIInputStream* aInputStream, uint64_t aSize,
                                                     parentActor->Size())) {
     return NS_ERROR_FAILURE;
   }
+
+  // We need manually to increase the reference for this actor because the
+  // IPC allocator method is not triggered. The Release() is called by IPDL
+  // when the actor is deleted.
+  parentActor.get()->AddRef();
 
   aIPCBlob.inputStream() = parentActor;
   return NS_OK;
