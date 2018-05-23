@@ -27,11 +27,11 @@
       mockGenerateMessages
     );
 
-    await domLoc.translateFragment(document.body);
-
-    // we just care that it doesn't throw here.
-    ok(1);
-
+    await domLoc.translateFragment(document.body).then(() => {
+      ok(false, "Expected translateFragment to throw on missing l10n-id");
+    }, () => {
+      ok(true, "Expected translateFragment to throw on missing l10n-id");
+    });
     SimpleTest.finish();
   });
   </script>
