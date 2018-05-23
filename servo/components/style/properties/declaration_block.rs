@@ -518,33 +518,53 @@ impl PropertyDeclarationBlock {
                 }
 
                 let important = self.declarations_importance[i];
-                // For declarations from parsing, non-important declarations
-                // shouldn't override existing important one.
-                if important && !importance.important() &&
-                    matches!(source, DeclarationSource::Parsing) {
-                    return true;
-                }
+                match (important, importance.important()) {
+                    (false, true) => {}
 
-                if matches!(source, DeclarationSource::Parsing) {
-                    // As a compatibility hack, specially on Android,
-                    // don't allow to override a prefixed webkit display
-                    // value with an unprefixed version from parsing
-                    // code.
-                    //
-                    // TODO(emilio): Unship.
-                    if let PropertyDeclaration::Display(old_display) = *slot {
-                        use properties::longhands::display::computed_value::T as display;
-
-                        if let PropertyDeclaration::Display(new_display) = declaration {
-                            if display::should_ignore_parsed_value(old_display, new_display) {
-                                return false;
-                            }
+                    (true, false) => {
+                        // For declarations set from the OM, more-important
+                        // declarations are overridden.
+                        if !matches!(source, DeclarationSource::CssOm) {
+                            return false
                         }
+                    }
+                    _ => if *slot == declaration {
+                        return false;
                     }
                 }
 
-                index_to_remove = Some(i);
-                break;
+                match source {
+                    // CSSOM preserves the declaration position, and
+                    // overrides importance.
+                    DeclarationSource::CssOm => {
+                        *slot = declaration;
+                        self.declarations_importance.set(i, importance.important());
+                        return true;
+                    }
+                    DeclarationSource::Parsing => {
+                        // As a compatibility hack, specially on Android,
+                        // don't allow to override a prefixed webkit display
+                        // value with an unprefixed version from parsing
+                        // code.
+                        //
+                        // TODO(emilio): Unship.
+                        if let PropertyDeclaration::Display(old_display) = *slot {
+                            use properties::longhands::display::computed_value::T as display;
+
+                            if let PropertyDeclaration::Display(new_display) = declaration {
+                                if display::should_ignore_parsed_value(old_display, new_display) {
+                                    return false;
+                                }
+                            }
+                        }
+
+                        // NOTE(emilio): We could avoid this and just override for
+                        // properties not affected by logical props, but it's not
+                        // clear it's worth it given the `definitely_new` check.
+                        index_to_remove = Some(i);
+                        break;
+                    }
+                }
             }
 
             if let Some(index) = index_to_remove {
