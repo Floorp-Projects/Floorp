@@ -18,7 +18,7 @@ function run_test() {
   var drives = root.directoryEntries;
   Assert.ok(drives.hasMoreElements());
   while (drives.hasMoreElements()) {
-    var newPath = drives.getNext().QueryInterface(nsIFile).path;
+    var newPath = drives.nextFile.path;
     Assert.equal(newPath.indexOf("\0"), -1);
   }
 }

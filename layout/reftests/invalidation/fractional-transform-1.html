@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate either rect.</title>
+
+<style>
+body {
+  margin: 0;
+  height: 5000px;
+}
+</style>
+
+<body>
+
+<svg width="768" height="1000">
+
+  <g transform="translate(0 -2000.3234)">
+    <rect x="100" y="2300" height="50" width="50" fill="grey" class="reftest-no-paint"/>
+  </g>
+
+  <g transform="translate(0 -4000.6468)">
+    <rect x="200" y="4300" height="50" width="50" fill="grey" class="reftest-no-paint"/>
+  </g>
+
+</svg>
+
+<script>
+
+document.documentElement.scrollTop = 177;
+
+window.addEventListener("MozReftestInvalidate", function (e) {
+  document.documentElement.scrollTop = 30;
+  document.documentElement.removeAttribute("class");
+});
+
+</script>

@@ -501,7 +501,7 @@ function check_JSON_backup(aIsAutomaticBackup) {
     bookmarksBackupDir.append("bookmarkbackups");
     let files = bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
-      let entry = files.getNext().QueryInterface(Ci.nsIFile);
+      let entry = files.nextFile;
       if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
         profileBookmarksJSONFile = entry;
         break;

@@ -161,6 +161,7 @@ private:
   RefPtr<WebExtensionPolicy> mExtension;
 
   bool mHasActiveTabPermission;
+  bool mRestricted;
 
   RefPtr<MatchPatternSet> mMatches;
   RefPtr<MatchPatternSet> mExcludeMatches;

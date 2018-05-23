@@ -481,18 +481,6 @@ check_prog('HFS_TOOL', extra_programs.HFS_TOOL,
 check_prog('RPMBUILD', extra_programs.RPMBUILD,
            allow_missing=True)
 
-option('--enable-system-hunspell',
-       help="Use system hunspell (located with pkgconfig)")
-
-@depends('--enable-system-hunspell', compile_environment)
-def check_for_hunspell(value, compile_env):
-    return value and compile_env
-
-system_hunspell = pkg_check_modules('MOZ_HUNSPELL', 'hunspell',
-                                    when=check_for_hunspell)
-
-set_config('MOZ_SYSTEM_HUNSPELL', depends_if(system_hunspell)(lambda _: True))
-
 
 @depends(target)
 @imports('os')

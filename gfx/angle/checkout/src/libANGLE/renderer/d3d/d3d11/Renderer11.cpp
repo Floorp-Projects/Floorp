@@ -352,29 +352,6 @@ void GetTriFanIndices(const void *indices,
     }
 }
 
-bool DrawCallNeedsTranslation(const gl::Context *context, GLenum mode)
-{
-    const auto &glState     = context->getGLState();
-    const gl::VertexArray *vertexArray = glState.getVertexArray();
-    VertexArray11 *vertexArray11       = GetImplAs<VertexArray11>(vertexArray);
-    // Direct drawing doesn't support dynamic attribute storage since it needs the first and count
-    // to translate when applyVertexBuffer. GL_LINE_LOOP and GL_TRIANGLE_FAN are not supported
-    // either since we need to simulate them in D3D.
-    if (vertexArray11->hasActiveDynamicAttrib(context) || mode == GL_LINE_LOOP ||
-        mode == GL_TRIANGLE_FAN)
-    {
-        return true;
-    }
-
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(glState.getProgram());
-    if (InstancedPointSpritesActive(programD3D, mode))
-    {
-        return true;
-    }
-
-    return false;
-}
-
 bool IsArrayRTV(ID3D11RenderTargetView *rtv)
 {
     D3D11_RENDER_TARGET_VIEW_DESC desc;
@@ -428,12 +405,6 @@ void PopulateFormatDeviceCaps(ID3D11Device *device,
 
         *outMaxSamples = sampleCount;
     }
-}
-
-bool CullsEverything(const gl::State &glState)
-{
-    return (glState.getRasterizerState().cullFace &&
-            glState.getRasterizerState().cullMode == gl::CullFaceMode::FrontAndBack);
 }
 
 }  // anonymous namespace
@@ -1427,92 +1398,14 @@ void *Renderer11::getD3DDevice()
     return reinterpret_cast<void *>(mDevice);
 }
 
-bool Renderer11::applyPrimitiveType(const gl::State &glState, GLenum mode, GLsizei count)
+gl::Error Renderer11::drawArrays(const gl::Context *context, const gl::DrawCallParams &params)
 {
-    D3D11_PRIMITIVE_TOPOLOGY primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
-
-    GLsizei minCount = 0;
-
-    switch (mode)
-    {
-        case GL_POINTS:
-        {
-            bool usesPointSize = GetImplAs<ProgramD3D>(glState.getProgram())->usesPointSize();
-
-            // ProgramBinary assumes non-point rendering if gl_PointSize isn't written,
-            // which affects varying interpolation. Since the value of gl_PointSize is
-            // undefined when not written, just skip drawing to avoid unexpected results.
-            if (!usesPointSize && !glState.isTransformFeedbackActiveUnpaused())
-            {
-                // Notify developers of risking undefined behavior.
-                WARN() << "Point rendering without writing to gl_PointSize.";
-                return false;
-            }
-
-            // If instanced pointsprites are enabled and the shader uses gl_PointSize, the topology
-            // must be D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST.
-            if (usesPointSize && getWorkarounds().useInstancedPointSpriteEmulation)
-            {
-                primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            }
-            else
-            {
-                primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
-            }
-            minCount = 1;
-            break;
-        }
-        case GL_LINES:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-            minCount          = 2;
-            break;
-        case GL_LINE_LOOP:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-            minCount          = 2;
-            break;
-        case GL_LINE_STRIP:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-            minCount          = 2;
-            break;
-        case GL_TRIANGLES:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            minCount          = CullsEverything(glState) ? std::numeric_limits<GLsizei>::max() : 3;
-            break;
-        case GL_TRIANGLE_STRIP:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
-            minCount          = CullsEverything(glState) ? std::numeric_limits<GLsizei>::max() : 3;
-            break;
-        // emulate fans via rewriting index buffer
-        case GL_TRIANGLE_FAN:
-            primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-            minCount          = CullsEverything(glState) ? std::numeric_limits<GLsizei>::max() : 3;
-            break;
-        default:
-            UNREACHABLE();
-            return false;
-    }
-
-    mStateManager.setPrimitiveTopology(primitiveTopology);
-
-    return count >= minCount;
-}
-
-gl::Error Renderer11::drawArrays(const gl::Context *context,
-                                 GLenum mode,
-                                 GLint startVertex,
-                                 GLsizei count,
-                                 GLsizei instances)
-{
-    const auto &glState = context->getGLState();
-
-    if (!applyPrimitiveType(glState, mode, count))
+    if (params.vertexCount() < static_cast<size_t>(mStateManager.getCurrentMinimumDrawCount()))
     {
         return gl::NoError();
     }
 
-    DrawCallVertexParams vertexParams(startVertex, count, instances);
-    ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, false));
-
+    const auto &glState = context->getGLState();
     if (glState.isTransformFeedbackActiveUnpaused())
     {
         ANGLE_TRY(markTransformFeedbackUsage(context));
@@ -1520,10 +1413,14 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
 
     gl::Program *program = glState.getProgram();
     ASSERT(program != nullptr);
-    GLsizei adjustedInstanceCount = GetAdjustedInstanceCount(program, instances);
+    GLsizei adjustedInstanceCount = GetAdjustedInstanceCount(program, params.instances());
     ProgramD3D *programD3D        = GetImplAs<ProgramD3D>(program);
 
-    if (programD3D->usesGeometryShader(mode) && glState.isTransformFeedbackActiveUnpaused())
+    // Note: vertex indexes can be arbitrarily large.
+    UINT clampedVertexCount = params.getClampedVertexCount<UINT>();
+
+    if (programD3D->usesGeometryShader(params.mode()) &&
+        glState.isTransformFeedbackActiveUnpaused())
     {
         // Since we use a geometry if-and-only-if we rewrite vertex streams, transform feedback
         // won't get the correct output. To work around this, draw with *only* the stream out
@@ -1533,11 +1430,11 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
 
         if (adjustedInstanceCount > 0)
         {
-            mDeviceContext->DrawInstanced(count, adjustedInstanceCount, 0, 0);
+            mDeviceContext->DrawInstanced(clampedVertexCount, adjustedInstanceCount, 0, 0);
         }
         else
         {
-            mDeviceContext->Draw(count, 0);
+            mDeviceContext->Draw(clampedVertexCount, 0);
         }
 
         rx::ShaderExecutableD3D *pixelExe = nullptr;
@@ -1553,45 +1450,47 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
 
         // Retrieve the geometry shader.
         rx::ShaderExecutableD3D *geometryExe = nullptr;
-        ANGLE_TRY(programD3D->getGeometryExecutableForPrimitiveType(context, mode, &geometryExe,
-                                                                    nullptr));
+        ANGLE_TRY(programD3D->getGeometryExecutableForPrimitiveType(context, params.mode(),
+                                                                    &geometryExe, nullptr));
 
         mStateManager.setGeometryShader(
             &GetAs<ShaderExecutable11>(geometryExe)->getGeometryShader());
 
         if (adjustedInstanceCount > 0)
         {
-            mDeviceContext->DrawInstanced(count, adjustedInstanceCount, 0, 0);
+            mDeviceContext->DrawInstanced(clampedVertexCount, adjustedInstanceCount, 0, 0);
         }
         else
         {
-            mDeviceContext->Draw(count, 0);
+            mDeviceContext->Draw(clampedVertexCount, 0);
         }
         return gl::NoError();
     }
 
-    if (mode == GL_LINE_LOOP)
+    if (params.mode() == GL_LINE_LOOP)
     {
-        return drawLineLoop(context, count, GL_NONE, nullptr, 0, adjustedInstanceCount);
+        return drawLineLoop(context, clampedVertexCount, GL_NONE, nullptr, 0,
+                            adjustedInstanceCount);
     }
 
-    if (mode == GL_TRIANGLE_FAN)
+    if (params.mode() == GL_TRIANGLE_FAN)
     {
-        return drawTriangleFan(context, count, GL_NONE, nullptr, 0, adjustedInstanceCount);
+        return drawTriangleFan(context, clampedVertexCount, GL_NONE, nullptr, 0,
+                               adjustedInstanceCount);
     }
 
     bool useInstancedPointSpriteEmulation =
         programD3D->usesPointSize() && getWorkarounds().useInstancedPointSpriteEmulation;
 
-    if (mode != GL_POINTS || !useInstancedPointSpriteEmulation)
+    if (params.mode() != GL_POINTS || !useInstancedPointSpriteEmulation)
     {
         if (adjustedInstanceCount == 0)
         {
-            mDeviceContext->Draw(count, 0);
+            mDeviceContext->Draw(clampedVertexCount, 0);
         }
         else
         {
-            mDeviceContext->DrawInstanced(count, adjustedInstanceCount, 0, 0);
+            mDeviceContext->DrawInstanced(clampedVertexCount, adjustedInstanceCount, 0, 0);
         }
         return gl::NoError();
     }
@@ -1604,7 +1503,7 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
     // D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST and DrawIndexedInstanced is called instead.
     if (adjustedInstanceCount == 0)
     {
-        mDeviceContext->DrawIndexedInstanced(6, count, 0, 0, 0);
+        mDeviceContext->DrawIndexedInstanced(6, clampedVertexCount, 0, 0, 0);
         return gl::NoError();
     }
 
@@ -1613,10 +1512,11 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
     // batch of points. An offset into the instanced data buffer is calculated and applied on each
     // iteration to ensure all instances are rendered correctly. Each instance being rendered
     // requires the inputlayout cache to reapply buffers and offsets.
-    for (GLsizei i = 0; i < instances; i++)
+    for (GLsizei i = 0; i < params.instances(); i++)
     {
-        ANGLE_TRY(mStateManager.updateVertexOffsetsForPointSpritesEmulation(startVertex, i));
-        mDeviceContext->DrawIndexedInstanced(6, count, 0, 0, 0);
+        ANGLE_TRY(
+            mStateManager.updateVertexOffsetsForPointSpritesEmulation(params.baseVertex(), i));
+        mDeviceContext->DrawIndexedInstanced(6, clampedVertexCount, 0, 0, 0);
     }
 
     // This required by updateVertexOffsets... above but is outside of the loop for speed.
@@ -1624,61 +1524,50 @@ gl::Error Renderer11::drawArrays(const gl::Context *context,
     return gl::NoError();
 }
 
-gl::Error Renderer11::drawElements(const gl::Context *context,
-                                   GLenum mode,
-                                   GLsizei count,
-                                   GLenum type,
-                                   const void *indices,
-                                   GLsizei instances)
+gl::Error Renderer11::drawElements(const gl::Context *context, const gl::DrawCallParams &params)
 {
-    const auto &glState = context->getGLState();
-
-    if (!applyPrimitiveType(glState, mode, count))
+    if (params.indexCount() < mStateManager.getCurrentMinimumDrawCount())
     {
         return gl::NoError();
     }
 
     // Transform feedback is not allowed for DrawElements, this error should have been caught at the
     // API validation layer.
+    const auto &glState = context->getGLState();
     ASSERT(!glState.isTransformFeedbackActiveUnpaused());
 
-    const auto &lazyIndexRange = context->getParams<gl::HasIndexRange>();
-
-    bool usePrimitiveRestartWorkaround =
-        UsePrimitiveRestartWorkaround(glState.isPrimitiveRestartEnabled(), type);
-    DrawCallVertexParams vertexParams(!usePrimitiveRestartWorkaround, lazyIndexRange, 0, instances);
-
-    ANGLE_TRY(mStateManager.applyIndexBuffer(context, indices, count, type, lazyIndexRange,
-                                             usePrimitiveRestartWorkaround));
-    ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, true));
-
-    int startVertex = static_cast<int>(vertexParams.firstVertex());
+    // If this draw call is coming from an indirect call, offset by the indirect call's base vertex.
+    // No base vertex parameter exists for a normal drawElements, so params.baseVertex will be zero.
+    int startVertex = static_cast<int>(params.firstVertex() - params.baseVertex());
     int baseVertex  = -startVertex;
 
     const gl::Program *program    = glState.getProgram();
-    GLsizei adjustedInstanceCount = GetAdjustedInstanceCount(program, instances);
+    GLsizei adjustedInstanceCount = GetAdjustedInstanceCount(program, params.instances());
 
-    if (mode == GL_LINE_LOOP)
+    if (params.mode() == GL_LINE_LOOP)
     {
-        return drawLineLoop(context, count, type, indices, baseVertex, adjustedInstanceCount);
+        return drawLineLoop(context, params.indexCount(), params.type(), params.indices(),
+                            baseVertex, adjustedInstanceCount);
     }
 
-    if (mode == GL_TRIANGLE_FAN)
+    if (params.mode() == GL_TRIANGLE_FAN)
     {
-        return drawTriangleFan(context, count, type, indices, baseVertex, adjustedInstanceCount);
+        return drawTriangleFan(context, params.indexCount(), params.type(), params.indices(),
+                               baseVertex, adjustedInstanceCount);
     }
 
     const ProgramD3D *programD3D = GetImplAs<ProgramD3D>(glState.getProgram());
 
-    if (mode != GL_POINTS || !programD3D->usesInstancedPointSpriteEmulation())
+    if (params.mode() != GL_POINTS || !programD3D->usesInstancedPointSpriteEmulation())
     {
         if (adjustedInstanceCount == 0)
         {
-            mDeviceContext->DrawIndexed(count, 0, baseVertex);
+            mDeviceContext->DrawIndexed(params.indexCount(), 0, baseVertex);
         }
         else
         {
-            mDeviceContext->DrawIndexedInstanced(count, adjustedInstanceCount, 0, baseVertex, 0);
+            mDeviceContext->DrawIndexedInstanced(params.indexCount(), adjustedInstanceCount, 0,
+                                                 baseVertex, 0);
         }
         return gl::NoError();
     }
@@ -1696,9 +1585,9 @@ gl::Error Renderer11::drawElements(const gl::Context *context,
     // Indexed pointsprite emulation replicates data for duplicate entries found in the index
     // buffer. This is not an efficent rendering mechanism and is only used on downlevel renderers
     // that do not support geometry shaders.
-    if (instances == 0)
+    if (params.instances() == 0)
     {
-        mDeviceContext->DrawIndexedInstanced(6, count, 0, 0, 0);
+        mDeviceContext->DrawIndexedInstanced(6, params.indexCount(), 0, 0, 0);
         return gl::NoError();
     }
 
@@ -1706,146 +1595,65 @@ gl::Error Renderer11::drawElements(const gl::Context *context,
     // efficent code path. Instanced rendering of emulated pointsprites requires a loop to draw each
     // batch of points. An offset into the instanced data buffer is calculated and applied on each
     // iteration to ensure all instances are rendered correctly.
-    GLsizei elementsToRender = vertexParams.vertexCount();
+    UINT clampedVertexCount = params.getClampedVertexCount<UINT>();
 
     // Each instance being rendered requires the inputlayout cache to reapply buffers and offsets.
-    for (GLsizei i = 0; i < instances; i++)
+    for (GLsizei i = 0; i < params.instances(); i++)
     {
         ANGLE_TRY(mStateManager.updateVertexOffsetsForPointSpritesEmulation(startVertex, i));
-        mDeviceContext->DrawIndexedInstanced(6, elementsToRender, 0, 0, 0);
+        mDeviceContext->DrawIndexedInstanced(6, clampedVertexCount, 0, 0, 0);
     }
     mStateManager.invalidateVertexBuffer();
     return gl::NoError();
 }
 
 gl::Error Renderer11::drawArraysIndirect(const gl::Context *context,
-                                         GLenum mode,
-                                         const void *indirect)
+                                         const gl::DrawCallParams &params)
 {
-    const auto &glState = context->getGLState();
-    ASSERT(!glState.isTransformFeedbackActiveUnpaused());
-
-    if (!applyPrimitiveType(glState, mode, std::numeric_limits<int>::max() - 1))
+    if (std::numeric_limits<GLsizei>::max() == mStateManager.getCurrentMinimumDrawCount())
     {
         return gl::NoError();
     }
+
+    const gl::State &glState = context->getGLState();
+    ASSERT(!glState.isTransformFeedbackActiveUnpaused());
 
     gl::Buffer *drawIndirectBuffer = glState.getTargetBuffer(gl::BufferBinding::DrawIndirect);
     ASSERT(drawIndirectBuffer);
     Buffer11 *storage = GetImplAs<Buffer11>(drawIndirectBuffer);
-    uintptr_t offset  = reinterpret_cast<uintptr_t>(indirect);
 
-    if (!DrawCallNeedsTranslation(context, mode))
-    {
-        DrawCallVertexParams vertexParams(0, 0, 0);
-        ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, false));
-        ID3D11Buffer *buffer = nullptr;
-        ANGLE_TRY_RESULT(storage->getBuffer(context, BUFFER_USAGE_INDIRECT), buffer);
-        mDeviceContext->DrawInstancedIndirect(buffer, static_cast<unsigned int>(offset));
-        return gl::NoError();
-    }
+    uintptr_t offset = reinterpret_cast<uintptr_t>(params.indirect());
 
-    const uint8_t *bufferData = nullptr;
-    ANGLE_TRY(storage->getData(context, &bufferData));
-    ASSERT(bufferData);
-    const gl::DrawArraysIndirectCommand *args =
-        reinterpret_cast<const gl::DrawArraysIndirectCommand *>(bufferData + offset);
-    GLuint count     = args->count;
-    GLuint instances = args->instanceCount;
-    GLuint first     = args->first;
-
-    DrawCallVertexParams vertexParams(first, count, instances);
-    ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, false));
-
-    if (mode == GL_LINE_LOOP)
-    {
-        return drawLineLoop(context, count, GL_NONE, nullptr, 0, instances);
-    }
-    if (mode == GL_TRIANGLE_FAN)
-    {
-        return drawTriangleFan(context, count, GL_NONE, nullptr, 0, instances);
-    }
-
-    mDeviceContext->DrawInstanced(count, instances, 0, 0);
+    ID3D11Buffer *buffer = nullptr;
+    ANGLE_TRY_RESULT(storage->getBuffer(context, BUFFER_USAGE_INDIRECT), buffer);
+    mDeviceContext->DrawInstancedIndirect(buffer, static_cast<unsigned int>(offset));
     return gl::NoError();
 }
 
 gl::Error Renderer11::drawElementsIndirect(const gl::Context *context,
-                                           GLenum mode,
-                                           GLenum type,
-                                           const void *indirect)
+                                           const gl::DrawCallParams &params)
 {
-    const auto &glState = context->getGLState();
-    ASSERT(!glState.isTransformFeedbackActiveUnpaused());
-
-    if (!applyPrimitiveType(glState, mode, std::numeric_limits<int>::max() - 1))
+    if (std::numeric_limits<GLsizei>::max() == mStateManager.getCurrentMinimumDrawCount())
     {
         return gl::NoError();
     }
+
+    const gl::State &glState = context->getGLState();
+    ASSERT(!glState.isTransformFeedbackActiveUnpaused());
 
     gl::Buffer *drawIndirectBuffer = glState.getTargetBuffer(gl::BufferBinding::DrawIndirect);
     ASSERT(drawIndirectBuffer);
     Buffer11 *storage = GetImplAs<Buffer11>(drawIndirectBuffer);
-    uintptr_t offset  = reinterpret_cast<uintptr_t>(indirect);
+    uintptr_t offset  = reinterpret_cast<uintptr_t>(params.indirect());
 
-    // TODO(jmadill): Remove the if statement and compute indirect parameters lazily.
-    bool usePrimitiveRestartWorkaround =
-        UsePrimitiveRestartWorkaround(glState.isPrimitiveRestartEnabled(), type);
-
-    if (!DrawCallNeedsTranslation(context, mode) && !IsStreamingIndexData(context, type))
-    {
-        ANGLE_TRY(mStateManager.applyIndexBuffer(context, nullptr, 0, type, gl::HasIndexRange(),
-                                                 usePrimitiveRestartWorkaround));
-        DrawCallVertexParams vertexParams(0, 0, 0);
-        ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, true));
-        ID3D11Buffer *buffer = nullptr;
-        ANGLE_TRY_RESULT(storage->getBuffer(context, BUFFER_USAGE_INDIRECT), buffer);
-        mDeviceContext->DrawIndexedInstancedIndirect(buffer, static_cast<unsigned int>(offset));
-        return gl::NoError();
-    }
-
-    const uint8_t *bufferData = nullptr;
-    ANGLE_TRY(storage->getData(context, &bufferData));
-    ASSERT(bufferData);
-
-    const gl::DrawElementsIndirectCommand *cmd =
-        reinterpret_cast<const gl::DrawElementsIndirectCommand *>(bufferData + offset);
-    GLsizei count     = cmd->count;
-    GLuint instances  = cmd->primCount;
-    GLuint firstIndex = cmd->firstIndex;
-    GLint baseVertex  = cmd->baseVertex;
-
-    // TODO(jmadill): Fix const cast.
-    const gl::Type &typeInfo = gl::GetTypeInfo(type);
-    const void *indices =
-        reinterpret_cast<const void *>(static_cast<uintptr_t>(firstIndex * typeInfo.bytes));
-    gl::HasIndexRange lazyIndexRange(const_cast<gl::Context *>(context), count, type, indices);
-
-    ANGLE_TRY(mStateManager.applyIndexBuffer(context, indices, count, type, lazyIndexRange,
-                                             usePrimitiveRestartWorkaround));
-
-    DrawCallVertexParams vertexParams(false, lazyIndexRange, baseVertex, instances);
-
-    ANGLE_TRY(mStateManager.applyVertexBuffer(context, mode, vertexParams, true));
-
-    int baseVertexLocation = -static_cast<int>(lazyIndexRange.getIndexRange().value().start);
-
-    if (mode == GL_LINE_LOOP)
-    {
-        return drawLineLoop(context, count, type, indices, baseVertexLocation, instances);
-    }
-
-    if (mode == GL_TRIANGLE_FAN)
-    {
-        return drawTriangleFan(context, count, type, indices, baseVertexLocation, instances);
-    }
-
-    mDeviceContext->DrawIndexedInstanced(count, instances, 0, baseVertexLocation, 0);
+    ID3D11Buffer *buffer = nullptr;
+    ANGLE_TRY_RESULT(storage->getBuffer(context, BUFFER_USAGE_INDIRECT), buffer);
+    mDeviceContext->DrawIndexedInstancedIndirect(buffer, static_cast<unsigned int>(offset));
     return gl::NoError();
 }
 
 gl::Error Renderer11::drawLineLoop(const gl::Context *context,
-                                   GLsizei count,
+                                   GLuint count,
                                    GLenum type,
                                    const void *indexPointer,
                                    int baseVertex,
@@ -1882,8 +1690,6 @@ gl::Error Renderer11::drawLineLoop(const gl::Context *context,
     }
 
     // Checked by Renderer11::applyPrimitiveType
-    ASSERT(count >= 0);
-
     if (static_cast<unsigned int>(count) + 1 >
         (std::numeric_limits<unsigned int>::max() / sizeof(unsigned int)))
     {
@@ -1929,7 +1735,7 @@ gl::Error Renderer11::drawLineLoop(const gl::Context *context,
 }
 
 gl::Error Renderer11::drawTriangleFan(const gl::Context *context,
-                                      GLsizei count,
+                                      GLuint count,
                                       GLenum type,
                                       const void *indices,
                                       int baseVertex,
@@ -2464,7 +2270,7 @@ gl::Error Renderer11::copyImageCube(const gl::Context *context,
                                     GLenum destFormat,
                                     const gl::Offset &destOffset,
                                     TextureStorage *storage,
-                                    GLenum target,
+                                    gl::TextureTarget target,
                                     GLint level)
 {
     TextureStorage11_Cube *storage11 = GetAs<TextureStorage11_Cube>(storage);
@@ -2538,7 +2344,7 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
                                   GLenum destType,
                                   const gl::Offset &destOffset,
                                   TextureStorage *storage,
-                                  GLenum destTarget,
+                                  gl::TextureTarget destTarget,
                                   GLint destLevel,
                                   bool unpackFlipY,
                                   bool unpackPremultiplyAlpha,
@@ -2557,7 +2363,7 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
 
     // Check for fast path where a CopySubresourceRegion can be used.
     if (unpackPremultiplyAlpha == unpackUnmultiplyAlpha && !unpackFlipY &&
-        source->getFormat(GL_TEXTURE_2D, sourceLevel).info->format == destFormat &&
+        source->getFormat(gl::TextureTarget::_2D, sourceLevel).info->format == destFormat &&
         sourceStorage11->getFormatSet().internalFormat ==
             destStorage11->getFormatSet().internalFormat)
     {
@@ -2601,9 +2407,11 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
         ASSERT(destRTV.valid());
 
         gl::Box sourceArea(sourceRect.x, sourceRect.y, 0, sourceRect.width, sourceRect.height, 1);
-        gl::Extents sourceSize(
-            static_cast<int>(source->getWidth(source->getTarget(), sourceLevel)),
-            static_cast<int>(source->getHeight(source->getTarget(), sourceLevel)), 1);
+        gl::Extents sourceSize(static_cast<int>(source->getWidth(
+                                   NonCubeTextureTypeToTarget(source->getType()), sourceLevel)),
+                               static_cast<int>(source->getHeight(
+                                   NonCubeTextureTypeToTarget(source->getType()), sourceLevel)),
+                               1);
         if (unpackFlipY)
         {
             sourceArea.y += sourceArea.height;
@@ -2615,7 +2423,7 @@ gl::Error Renderer11::copyTexture(const gl::Context *context,
 
         // Use nearest filtering because source and destination are the same size for the direct
         // copy
-        GLenum sourceFormat = source->getFormat(GL_TEXTURE_2D, sourceLevel).info->format;
+        GLenum sourceFormat = source->getFormat(gl::TextureTarget::_2D, sourceLevel).info->format;
         ANGLE_TRY(mBlit->copyTexture(context, *sourceSRV, sourceArea, sourceSize, sourceFormat,
                                      destRTV, destArea, destSize, nullptr, destFormat, destType,
                                      GL_NEAREST, false, unpackPremultiplyAlpha,
@@ -2713,6 +2521,7 @@ gl::Error Renderer11::createRenderTarget(int width,
 
         TextureHelper11 texture;
         ANGLE_TRY(allocateTexture(desc, formatInfo, &texture));
+        texture.setDebugName("createRenderTarget.Texture");
 
         d3d11::SharedSRV srv;
         d3d11::SharedSRV blitSRV;
@@ -2726,6 +2535,7 @@ gl::Error Renderer11::createRenderTarget(int width,
             srvDesc.Texture2D.MipLevels       = 1;
 
             ANGLE_TRY(allocateResource(srvDesc, texture.get(), &srv));
+            srv.setDebugName("createRenderTarget.SRV");
 
             if (formatInfo.blitSRVFormat != formatInfo.srvFormat)
             {
@@ -2738,6 +2548,7 @@ gl::Error Renderer11::createRenderTarget(int width,
                 blitSRVDesc.Texture2D.MipLevels       = 1;
 
                 ANGLE_TRY(allocateResource(blitSRVDesc, texture.get(), &blitSRV));
+                blitSRV.setDebugName("createRenderTarget.BlitSRV");
             }
             else
             {
@@ -2756,6 +2567,7 @@ gl::Error Renderer11::createRenderTarget(int width,
 
             d3d11::DepthStencilView dsv;
             ANGLE_TRY(allocateResource(dsvDesc, texture.get(), &dsv));
+            dsv.setDebugName("createRenderTarget.DSV");
 
             *outRT = new TextureRenderTarget11(std::move(dsv), texture, srv, format, formatInfo,
                                                width, height, 1, supportedSamples);
@@ -2770,6 +2582,7 @@ gl::Error Renderer11::createRenderTarget(int width,
 
             d3d11::RenderTargetView rtv;
             ANGLE_TRY(allocateResource(rtvDesc, texture.get(), &rtv));
+            rtv.setDebugName("createRenderTarget.RTV");
 
             if (formatInfo.dataInitializerFunction != nullptr)
             {
@@ -2825,7 +2638,7 @@ gl::Error Renderer11::loadExecutable(const uint8_t *function,
 
     switch (type)
     {
-        case gl::SHADER_VERTEX:
+        case gl::ShaderType::Vertex:
         {
             d3d11::VertexShader vertexShader;
             d3d11::GeometryShader streamOutShader;
@@ -2856,21 +2669,21 @@ gl::Error Renderer11::loadExecutable(const uint8_t *function,
                                                     std::move(streamOutShader));
         }
         break;
-        case gl::SHADER_FRAGMENT:
+        case gl::ShaderType::Fragment:
         {
             d3d11::PixelShader pixelShader;
             ANGLE_TRY(allocateResource(shaderData, &pixelShader));
             *outExecutable = new ShaderExecutable11(function, length, std::move(pixelShader));
         }
         break;
-        case gl::SHADER_GEOMETRY:
+        case gl::ShaderType::Geometry:
         {
             d3d11::GeometryShader geometryShader;
             ANGLE_TRY(allocateResource(shaderData, &geometryShader));
             *outExecutable = new ShaderExecutable11(function, length, std::move(geometryShader));
         }
         break;
-        case gl::SHADER_COMPUTE:
+        case gl::ShaderType::Compute:
         {
             d3d11::ComputeShader computeShader;
             ANGLE_TRY(allocateResource(shaderData, &computeShader));
@@ -2897,16 +2710,16 @@ gl::Error Renderer11::compileToExecutable(gl::InfoLog &infoLog,
 
     switch (type)
     {
-        case gl::SHADER_VERTEX:
+        case gl::ShaderType::Vertex:
             profileStream << "vs";
             break;
-        case gl::SHADER_FRAGMENT:
+        case gl::ShaderType::Fragment:
             profileStream << "ps";
             break;
-        case gl::SHADER_GEOMETRY:
+        case gl::ShaderType::Geometry:
             profileStream << "gs";
             break;
-        case gl::SHADER_COMPUTE:
+        case gl::ShaderType::Compute:
             profileStream << "cs";
             break;
         default:
@@ -3244,6 +3057,7 @@ gl::Error Renderer11::readFromAttachment(const gl::Context *context,
         createStagingTexture(textureHelper.getTextureType(), textureHelper.getFormatSet(), safeSize,
                              StagingAccess::READ),
         stagingHelper);
+    stagingHelper.setDebugName("readFromAttachment::stagingHelper");
 
     TextureHelper11 resolvedTextureHelper;
 
@@ -3268,6 +3082,7 @@ gl::Error Renderer11::readFromAttachment(const gl::Context *context,
 
         ANGLE_TRY(
             allocateTexture(resolveDesc, textureHelper.getFormatSet(), &resolvedTextureHelper));
+        resolvedTextureHelper.setDebugName("readFromAttachment::resolvedTextureHelper");
 
         mDeviceContext->ResolveSubresource(resolvedTextureHelper.get(), 0, textureHelper.get(),
                                            sourceSubResource, textureHelper.getFormat());
@@ -3784,7 +3599,7 @@ GLenum Renderer11::getVertexComponentType(gl::VertexFormatType vertexFormatType)
 gl::ErrorOrResult<unsigned int> Renderer11::getVertexSpaceRequired(
     const gl::VertexAttribute &attrib,
     const gl::VertexBinding &binding,
-    GLsizei count,
+    size_t count,
     GLsizei instances) const
 {
     if (!attrib.enabled)
@@ -3796,13 +3611,16 @@ gl::ErrorOrResult<unsigned int> Renderer11::getVertexSpaceRequired(
     const unsigned int divisor = binding.getDivisor();
     if (instances == 0 || divisor == 0)
     {
-        elementCount = count;
+        // This could be a clipped cast.
+        elementCount = gl::clampCast<unsigned int>(count);
     }
     else
     {
         // Round up to divisor, if possible
         elementCount = UnsignedCeilDivide(static_cast<unsigned int>(instances), divisor);
     }
+
+    ASSERT(elementCount > 0);
 
     gl::VertexFormatType formatType      = gl::GetVertexFormatType(attrib);
     const D3D_FEATURE_LEVEL featureLevel = mRenderer11DeviceCaps.featureLevel;

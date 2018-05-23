@@ -38,8 +38,6 @@
 using mozilla::DebugOnly;
 using mozilla::LogLevel;
 
-static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
-
 //
 // Log module for nsIDocumentLoader logging...
 //
@@ -180,9 +178,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDocLoader)
    NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
-   if (aIID.Equals(kThisImplCID))
-     foundInterface = static_cast<nsIDocumentLoader *>(this);
-   else
+   NS_INTERFACE_MAP_ENTRY_CONCRETE(nsDocLoader)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(nsDocLoader, mChildrenInOnload)

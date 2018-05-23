@@ -34,9 +34,6 @@ class RenderTargetD3D : public FramebufferAttachmentRenderTarget
     virtual unsigned int getSerial() const;
     static unsigned int issueSerials(unsigned int count);
 
-    // Only currently applies to D3D11.
-    virtual void signalDirty(const gl::Context *context) {}
-
   private:
     const unsigned int mSerial;
     static unsigned int mCurrentSerial;

@@ -178,12 +178,14 @@ public:
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams,
                  nsAString& aDataURL,
+                 nsIPrincipal& aSubjectPrincipal,
                  ErrorResult& aRv);
 
   void ToBlob(JSContext* aCx,
               BlobCallback& aCallback,
               const nsAString& aType,
               JS::Handle<JS::Value> aParams,
+              nsIPrincipal& aSubjectPrincipal,
               ErrorResult& aRv);
 
   OffscreenCanvas* TransferControlToOffscreen(ErrorResult& aRv);
@@ -203,7 +205,7 @@ public:
   }
   already_AddRefed<File> MozGetAsFile(const nsAString& aName,
                                       const nsAString& aType,
-                                      CallerType aCallerType,
+                                      nsIPrincipal& aSubjectPrincipal,
                                       ErrorResult& aRv);
   already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
                                                  ErrorResult& aRv);
@@ -211,7 +213,7 @@ public:
   void SetMozPrintCallback(PrintCallback* aCallback);
 
   already_AddRefed<CanvasCaptureMediaStream>
-  CaptureStream(const Optional<double>& aFrameRate, ErrorResult& aRv);
+  CaptureStream(const Optional<double>& aFrameRate, nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
 
   /**
    * Get the size in pixels of this canvas element
@@ -354,15 +356,18 @@ protected:
   CreateContext(CanvasContextType aContextType) override;
 
   nsresult ExtractData(JSContext* aCx,
+                       nsIPrincipal& aSubjectPrincipal,
                        nsAString& aType,
                        const nsAString& aOptions,
                        nsIInputStream** aStream);
   nsresult ToDataURLImpl(JSContext* aCx,
+                         nsIPrincipal& aSubjectPrincipal,
                          const nsAString& aMimeType,
                          const JS::Value& aEncoderOptions,
                          nsAString& aDataURL);
   nsresult MozGetAsFileImpl(const nsAString& aName,
                             const nsAString& aType,
+                            nsIPrincipal& aSubjectPrincipal,
                             File** aResult);
   void CallPrintCallback();
 

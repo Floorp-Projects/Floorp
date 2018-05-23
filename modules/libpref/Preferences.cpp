@@ -3987,9 +3987,8 @@ pref_LoadPrefsInDir(nsIFile* aDir,
                     uint32_t aSpecialFilesCount)
 {
   nsresult rv, rv2;
-  bool hasMoreElements;
 
-  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+  nsCOMPtr<nsIDirectoryEnumerator> dirIterator;
 
   // This may fail in some normal cases, such as embedders who do not use a
   // GRE.
@@ -4004,21 +4003,12 @@ pref_LoadPrefsInDir(nsIFile* aDir,
     return rv;
   }
 
-  rv = dirIterator->HasMoreElements(&hasMoreElements);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMArray<nsIFile> prefFiles(INITIAL_PREF_FILES);
   nsCOMArray<nsIFile> specialFiles(aSpecialFilesCount);
   nsCOMPtr<nsIFile> prefFile;
 
-  while (hasMoreElements && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISupports> supports;
-    rv = dirIterator->GetNext(getter_AddRefs(supports));
-    prefFile = do_QueryInterface(supports);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-
+  while (NS_SUCCEEDED(dirIterator->GetNextFile(getter_AddRefs(prefFile))) &&
+         prefFile) {
     nsAutoCString leafName;
     prefFile->GetNativeLeafName(leafName);
     MOZ_ASSERT(
@@ -4045,8 +4035,6 @@ pref_LoadPrefsInDir(nsIFile* aDir,
         prefFiles.AppendObject(prefFile);
       }
     }
-
-    rv = dirIterator->HasMoreElements(&hasMoreElements);
   }
 
   if (prefFiles.Count() + specialFiles.Count() == 0) {

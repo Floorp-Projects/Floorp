@@ -802,7 +802,7 @@ NS_INTERFACE_MAP_BEGIN(nsProtocolProxyService)
 NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService)
 NS_INTERFACE_MAP_ENTRY(nsIProtocolProxyService2)
 NS_INTERFACE_MAP_ENTRY(nsIObserver)
-if ( aIID.Equals(NS_GET_IID(nsProtocolProxyService)) )  foundInterface = static_cast<nsIProtocolProxyService2*>(this); else
+NS_INTERFACE_MAP_ENTRY_CONCRETE(nsProtocolProxyService)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIProtocolProxyService)
 NS_IMPL_QUERY_CLASSINFO(nsProtocolProxyService)
 NS_INTERFACE_MAP_END

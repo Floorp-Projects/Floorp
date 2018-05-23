@@ -3673,7 +3673,7 @@ function checkFilesInDirRecursive(aDir, aCallback) {
 
   let dirEntries = aDir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
-    let entry = dirEntries.getNext().QueryInterface(Ci.nsIFile);
+    let entry = dirEntries.nextFile;
 
     if (entry.exists()) {
       if (entry.isDirectory()) {

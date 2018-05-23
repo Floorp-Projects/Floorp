@@ -39,19 +39,13 @@ GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
 {
   AssertIsOnIOThread();
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = aDir->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  bool hasMore;
-  while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore &&
-         !aCanceled) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
+         file && !aCanceled) {
     bool isDir;
     rv = file->IsDirectory(&isDir);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -187,19 +181,13 @@ public:
 
     aUsageInfo->AppendToFileUsage(paddingSize);
 
-    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    bool hasMore;
-    while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore &&
-           !aCanceled) {
-      nsCOMPtr<nsISupports> entry;
-      rv = entries->GetNext(getter_AddRefs(entry));
-      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED(rv = entries->GetNextFile(getter_AddRefs(file))) &&
+           file && !aCanceled) {
       nsAutoString leafName;
       rv = file->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }

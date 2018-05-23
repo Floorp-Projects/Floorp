@@ -104,12 +104,6 @@ class Buffer11 : public BufferD3D
     gl::Error unmap(const gl::Context *context, GLboolean *result) override;
     gl::Error markTransformFeedbackUsage(const gl::Context *context) override;
 
-    // We use two set of dirty events. Static buffers are marked dirty whenever
-    // data changes, because they must be re-translated. Direct buffers only need to be
-    // updated when the underlying ID3D11Buffer pointer changes - hopefully far less often.
-    angle::Subject *getStaticSubject();
-    angle::Subject *getDirectSubject();
-
   private:
     class BufferStorage;
     class EmulatedIndexedStorage;
@@ -179,9 +173,6 @@ class Buffer11 : public BufferD3D
     ConstantBufferCache mConstantBufferRangeStoragesCache;
     size_t mConstantBufferStorageAdditionalSize;
     unsigned int mMaxConstantBufferLruCount;
-
-    angle::Subject mStaticSubject;
-    angle::Subject mDirectSubject;
 };
 
 }  // namespace rx

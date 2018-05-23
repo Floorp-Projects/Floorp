@@ -631,7 +631,7 @@ const mapStateToProps = state => {
     hitCount: (0, _selectors.getHitCountForSource)(state, sourceId),
     coverageOn: (0, _selectors.getCoverageEnabled)(state),
     conditionalPanelLine: (0, _selectors.getConditionalPanelLine)(state),
-    symbols: (0, _selectors.getSymbols)(state, selectedSource && selectedSource.toJS())
+    symbols: (0, _selectors.getSymbols)(state, selectedSource)
   };
 };
 

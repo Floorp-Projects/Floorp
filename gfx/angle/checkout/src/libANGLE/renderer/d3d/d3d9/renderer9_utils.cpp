@@ -156,31 +156,32 @@ D3DCULL ConvertCullMode(gl::CullFaceMode cullFace, GLenum frontFace)
     return cull;
 }
 
-D3DCUBEMAP_FACES ConvertCubeFace(GLenum cubeFace)
+D3DCUBEMAP_FACES ConvertCubeFace(gl::TextureTarget cubeFace)
 {
     D3DCUBEMAP_FACES face = D3DCUBEMAP_FACE_POSITIVE_X;
 
     switch (cubeFace)
     {
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        face = D3DCUBEMAP_FACE_POSITIVE_X;
-        break;
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        face = D3DCUBEMAP_FACE_NEGATIVE_X;
-        break;
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        face = D3DCUBEMAP_FACE_POSITIVE_Y;
-        break;
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        face = D3DCUBEMAP_FACE_NEGATIVE_Y;
-        break;
-      case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        face = D3DCUBEMAP_FACE_POSITIVE_Z;
-        break;
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        face = D3DCUBEMAP_FACE_NEGATIVE_Z;
-        break;
-      default: UNREACHABLE();
+        case gl::TextureTarget::CubeMapPositiveX:
+            face = D3DCUBEMAP_FACE_POSITIVE_X;
+            break;
+        case gl::TextureTarget::CubeMapNegativeX:
+            face = D3DCUBEMAP_FACE_NEGATIVE_X;
+            break;
+        case gl::TextureTarget::CubeMapPositiveY:
+            face = D3DCUBEMAP_FACE_POSITIVE_Y;
+            break;
+        case gl::TextureTarget::CubeMapNegativeY:
+            face = D3DCUBEMAP_FACE_NEGATIVE_Y;
+            break;
+        case gl::TextureTarget::CubeMapPositiveZ:
+            face = D3DCUBEMAP_FACE_POSITIVE_Z;
+            break;
+        case gl::TextureTarget::CubeMapNegativeZ:
+            face = D3DCUBEMAP_FACE_NEGATIVE_Z;
+            break;
+        default:
+            UNREACHABLE();
     }
 
     return face;

@@ -681,7 +681,9 @@ protected:
   void CompleteAsyncScroll(const nsRect &aRange, nsAtom* aOrigin = nullptr);
 
   bool HasPluginFrames();
-  bool HasPerspective() const;
+  bool HasPerspective() const {
+    return mOuter->ChildrenHavePerspective();
+  }
   bool HasBgAttachmentLocal() const;
   uint8_t GetScrolledFrameDir() const;
 

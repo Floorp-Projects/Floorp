@@ -71,9 +71,9 @@ add_task(async function test_validation() {
   addon2.uninstall();
 });
 
-add_task(async function test_registration() {
-  const WORD = "Flehgragh";
+const WORD = "Flehgragh";
 
+add_task(async function test_registration() {
   spellCheck.dictionary = "en-US";
 
   ok(!spellCheck.check(WORD), "Word should not pass check before add-on loads");
@@ -103,4 +103,61 @@ SFX A   0       en         [^elr]
   await new Promise(executeSoon);
 
   ok(!spellCheck.check(WORD), "Word should not pass check after add-on unloads");
+});
+
+// Tests that existing unpacked dictionaries are migrated to
+// WebExtension dictionaries on schema bump.
+add_task(async function test_migration() {
+  let profileDir = gProfD.clone();
+  profileDir.append("extensions");
+
+  await promiseShutdownManager();
+
+  const ID = "en-US@dictionaries.mozilla.org";
+  await promiseWriteInstallRDFToDir({
+    id: ID,
+    type: "64",
+    version: "1.0",
+    targetApplications: [{
+        id: "xpcshell@tests.mozilla.org",
+        minVersion: "61",
+        maxVersion: "61.*"}],
+  }, profileDir, ID, {
+    "dictionaries/en-US.dic": `1\n${WORD}\n`,
+    "dictionaries/en-US.aff": "",
+  });
+
+  await promiseStartupManager();
+
+  ok(spellCheck.check(WORD), "Word should pass check after initial load");
+
+  var {XPIDatabase, XPIProvider, XPIStates} = ChromeUtils.import("resource://gre/modules/addons/XPIProvider.jsm", null);
+
+  let addon = await XPIDatabase.getVisibleAddonForID(ID);
+  let state = XPIStates.findAddon(ID);
+
+  // Mangle the add-on state to match what an unpacked dictionary looked
+  // like in older versions.
+  XPIDatabase.setAddonProperties(addon, {
+    startupData: null,
+    type: "dictionary",
+  });
+
+  state.type = "dictionary";
+  state.startupData = null;
+  XPIStates.save();
+
+  // Dictionary add-ons usually do not unregister dictionaries at app
+  // shutdown, so force them to here.
+  XPIProvider.activeAddons.get(ID).scope.shutdown(0);
+  await promiseShutdownManager();
+
+  ok(!spellCheck.check(WORD), "Word should not pass check while add-on manager is shut down");
+
+  // Drop the schema version to the last one that supported legacy
+  // dictionaries.
+  Services.prefs.setIntPref("extensions.databaseSchema", 25);
+  await promiseStartupManager();
+
+  ok(spellCheck.check(WORD), "Word should pass check while add-on load is loaded");
 });

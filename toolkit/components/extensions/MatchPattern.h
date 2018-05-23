@@ -257,7 +257,8 @@ protected:
 private:
   explicit MatchPattern(nsISupports* aParent) : mParent(aParent) {}
 
-  void Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath, ErrorResult& aRv);
+  void Init(JSContext* aCx, const nsAString& aPattern, bool aIgnorePath,
+            bool aRestrictSchemes, ErrorResult& aRv);
 
   bool SubsumesDomain(const MatchPattern& aPattern) const;
 

@@ -569,34 +569,6 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
     self->mWatchdogManager->RecordContextActivity(self, active);
 }
 
-static inline bool
-IsWebExtensionPrincipal(nsIPrincipal* principal, nsAString& addonId)
-{
-    if (auto policy = BasePrincipal::Cast(principal)->AddonPolicy()) {
-        policy->GetId(addonId);
-        return true;
-    }
-    return false;
-}
-
-static bool
-IsWebExtensionContentScript(BasePrincipal* principal, nsAString& addonId)
-{
-    if (!principal->Is<ExpandedPrincipal>()) {
-        return false;
-    }
-
-    auto expanded = principal->As<ExpandedPrincipal>();
-
-    for (auto& prin : expanded->WhiteList()) {
-        if (IsWebExtensionPrincipal(prin, addonId)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 // static
 bool
 XPCJSContext::InterruptCallback(JSContext* cx)
@@ -636,7 +608,8 @@ XPCJSContext::InterruptCallback(JSContext* cx)
     if (chrome) {
         prefName = PREF_MAX_SCRIPT_RUN_TIME_CHROME;
         limit = Preferences::GetInt(prefName, 20);
-    } else if (IsWebExtensionContentScript(principal, addonId)) {
+    } else if (auto policy = principal->ContentScriptAddonPolicy()) {
+        policy->GetId(addonId);
         prefName = PREF_MAX_SCRIPT_RUN_TIME_EXT_CONTENT;
         limit = Preferences::GetInt(prefName, 5);
     } else {
