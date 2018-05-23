@@ -7050,6 +7050,26 @@ nsCSSFrameConstructor::StyleNewChildRange(nsIContent* aStartChild,
   }
 }
 
+nsIFrame*
+nsCSSFrameConstructor::FindNextSiblingForAppend(const InsertionPoint& aInsertion)
+{
+  auto SlowPath = [&]() -> nsIFrame* {
+    FlattenedChildIterator iter(aInsertion.mContainer,
+                                /* aStartAtBeginning = */ false);
+    iter.GetPreviousChild(); // Prime the iterator.
+    StyleDisplay unused = UNSET_DISPLAY;
+    return FindNextSibling(iter, unused);
+  };
+
+  if (!IsDisplayContents(aInsertion.mContainer) &&
+      !nsLayoutUtils::GetAfterFrame(aInsertion.mContainer)) {
+    MOZ_ASSERT(!SlowPath());
+    return nullptr;
+  }
+
+  return SlowPath();
+}
+
 void
 nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
                                        InsertionKind aInsertionKind)
@@ -7144,17 +7164,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   MOZ_ASSERT(!parentFrame->IsFieldSetFrame() && !parentFrame->IsDetailsFrame(),
              "Parent frame should not be fieldset or details!");
 
-  // Deal with possible :after generated content on the parent, or display:
-  // contents.
-  nsIFrame* nextSibling = nullptr;
-  if (IsDisplayContents(insertion.mContainer) ||
-      nsLayoutUtils::GetAfterFrame(insertion.mContainer)) {
-    FlattenedChildIterator iter(insertion.mContainer);
-    iter.Seek(insertion.mContainer->GetLastChild());
-    StyleDisplay unused = UNSET_DISPLAY;
-    nextSibling = FindNextSibling(iter, unused);
-  }
-
+  nsIFrame* nextSibling = FindNextSiblingForAppend(insertion);
   if (nextSibling) {
     parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
   } else {
@@ -7183,10 +7193,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     //
     // FIXME(emilio): This kinda sucks! :(
     if (nextSibling && !wf) {
-      FlattenedChildIterator iter(insertion.mContainer);
-      iter.Seek(insertion.mContainer->GetLastChild());
-      StyleDisplay unused = UNSET_DISPLAY;
-      nextSibling = FindNextSibling(iter, unused);
+      nextSibling = FindNextSiblingForAppend(insertion);
       if (nextSibling) {
         parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
         containingBlock = GetFloatContainingBlock(parentFrame);

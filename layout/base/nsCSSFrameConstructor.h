@@ -2038,6 +2038,14 @@ private:
   void CheckForFirstLineInsertion(nsIFrame* aParentFrame,
                                   nsFrameItems& aFrameItems);
 
+  /**
+   * Find the next frame for appending to a given insertion point.
+   *
+   * We're appending, so this is almost always null, except for a few edge
+   * cases.
+   */
+  nsIFrame* FindNextSiblingForAppend(const InsertionPoint&);
+
   // The direction in which we should look for siblings.
   enum class SiblingDirection
   {
