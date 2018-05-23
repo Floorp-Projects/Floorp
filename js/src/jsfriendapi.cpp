@@ -1537,7 +1537,7 @@ js::EnableAccessValidation(JSContext* cx, bool enabled)
 JS_FRIEND_API(void)
 js::SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
 {
-    global->compartment()->setValidAccessPtr(accessp);
+    global->realm()->setValidAccessPtr(accessp);
 }
 
 JS_FRIEND_API(bool)
