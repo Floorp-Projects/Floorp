@@ -1,0 +1,9 @@
+<script>
+	try { o1 = document.createElement('i') } catch(e) { }
+	try { o2 = document.createElement('style') } catch(e) { }
+	try { document.documentElement.appendChild(o1) } catch(e) { }
+	try { document.head.appendChild(o2) } catch(e) { }
+	try { document.writeln("<data id='id0'></data>\n<style id='id0'>#id0{margin-left:619}#id0{display:ruby-base}</style>") } catch(e) { }
+	try { o1.innerHTML = "<style>" } catch(e) { }
+	try { document.styleSheets[2].insertRule(":first-letter { }", 0); } catch(e) { }
+</script>
