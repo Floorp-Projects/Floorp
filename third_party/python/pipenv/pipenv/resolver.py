@@ -68,7 +68,7 @@ def main():
     results = resolve(
         packages,
         pre=do_pre,
-        sources=project.pipfile_sources,
+        sources=project.sources,
         verbose=is_verbose,
         clear=do_clear,
         system=system,
