@@ -401,11 +401,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     base_cmd.append('--e10s')
 
             # Ignore chunking if we have user specified test paths
-            if os.environ.get('MOZHARNESS_TEST_PATHS'):
-                base_cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
-            elif c.get('total_chunks') and c.get('this_chunk') and not self.verify_enabled:
-                base_cmd.extend(['--total-chunks', c['total_chunks'],
-                                 '--this-chunk', c['this_chunk']])
+            if not (self.verify_enabled or self.per_test_coverage):
+                if os.environ.get('MOZHARNESS_TEST_PATHS'):
+                    base_cmd.extend(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+                elif c.get('total_chunks') and c.get('this_chunk'):
+                    base_cmd.extend(['--total-chunks', c['total_chunks'],
+                                     '--this-chunk', c['this_chunk']])
 
             if c['no_random']:
                 if suite_category == "mochitest":

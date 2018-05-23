@@ -155,40 +155,42 @@ JS_GetIsSecureContext(JSCompartment* compartment)
 JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment)
 {
-    return compartment->principals();
+    Realm* realm = JS::GetRealmForCompartment(compartment);
+    return realm->principals();
 }
 
 JS_FRIEND_API(void)
 JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals)
 {
     // Short circuit if there's no change.
-    if (principals == compartment->principals())
+    Realm* realm = JS::GetRealmForCompartment(compartment);
+    if (principals == realm->principals())
         return;
 
-    // Any compartment with the trusted principals -- and there can be
-    // multiple -- is a system compartment.
-    const JSPrincipals* trusted = compartment->runtimeFromMainThread()->trustedPrincipals();
+    // Any realm with the trusted principals -- and there can be
+    // multiple -- is a system realm.
+    const JSPrincipals* trusted = realm->runtimeFromMainThread()->trustedPrincipals();
     bool isSystem = principals && principals == trusted;
 
     // Clear out the old principals, if any.
-    if (compartment->principals()) {
-        JS_DropPrincipals(TlsContext.get(), compartment->principals());
-        compartment->setPrincipals(nullptr);
+    if (realm->principals()) {
+        JS_DropPrincipals(TlsContext.get(), realm->principals());
+        realm->setPrincipals(nullptr);
         // We'd like to assert that our new principals is always same-origin
         // with the old one, but JSPrincipals doesn't give us a way to do that.
         // But we can at least assert that we're not switching between system
         // and non-system.
-        MOZ_ASSERT(compartment->isSystem() == isSystem);
+        MOZ_ASSERT(realm->isSystem() == isSystem);
     }
 
     // Set up the new principals.
     if (principals) {
         JS_HoldPrincipals(principals);
-        compartment->setPrincipals(principals);
+        realm->setPrincipals(principals);
     }
 
     // Update the system flag.
-    compartment->setIsSystem(isSystem);
+    realm->setIsSystem(isSystem);
 }
 
 JS_FRIEND_API(JSPrincipals*)
@@ -333,7 +335,7 @@ js::GetCompartmentZone(JSCompartment* comp)
 JS_FRIEND_API(bool)
 js::IsSystemCompartment(JSCompartment* comp)
 {
-    return comp->isSystem();
+    return JS::GetRealmForCompartment(comp)->isSystem();
 }
 
 JS_FRIEND_API(bool)

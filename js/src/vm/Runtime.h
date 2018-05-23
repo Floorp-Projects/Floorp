@@ -586,7 +586,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     bool isSelfHostingGlobal(JSObject* global) {
         return global == selfHostingGlobal_;
     }
-    bool isSelfHostingCompartment(JSCompartment* comp) const;
     bool isSelfHostingZone(const JS::Zone* zone) const;
     bool createLazySelfHostedFunctionClone(JSContext* cx, js::HandlePropertyName selfHostedName,
                                            js::HandleAtom name, unsigned nargs,
@@ -942,6 +941,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     // The implementation-defined abstract operation HostResolveImportedModule.
     js::MainThreadData<JS::ModuleResolveHook> moduleResolveHook;
+
+    // A hook that implements the abstract operations
+    // HostGetImportMetaProperties and HostFinalizeImportMeta.
+    js::MainThreadData<JS::ModuleMetadataHook> moduleMetadataHook;
 
   public:
 #if defined(JS_BUILD_BINAST)

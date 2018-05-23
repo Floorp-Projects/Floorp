@@ -23,8 +23,6 @@ from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.treeherder import split_symbol, join_symbol, add_suffix
 from taskgraph.util.platforms import platform_family
-from taskgraph import files_changed
-from mozpack.path import match as mozpackmatch
 from taskgraph.util.schema import (
     validate_schema,
     optionally_keyed_by,
@@ -32,6 +30,8 @@ from taskgraph.util.schema import (
 )
 from taskgraph.util.taskcluster import get_artifact_path
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
+
+from taskgraph.util.perfile import perfile_number_of_chunks
 
 from voluptuous import (
     Any,
@@ -42,7 +42,6 @@ from voluptuous import (
 
 import copy
 import logging
-import math
 
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
@@ -379,7 +378,6 @@ test_description_schema = Schema({
         'test-platform',
         Any(basestring, None),
     ),
-
 }, required=True)
 
 
@@ -791,9 +789,13 @@ def split_chunks(config, tests):
     symbol."""
     for test in tests:
         if test['suite'].startswith('test-verify'):
-            test['chunks'] = perfile_number_of_chunks(config, test['test-name'])
-            if test['chunks'] == 0:
-                continue
+            env = config.params.get('try_task_config', {}) or {}
+            env = env.get('templates', {}).get('env', {})
+            test['chunks'] = perfile_number_of_chunks(env.get('MOZHARNESS_TEST_PATHS', ''),
+                                                      config.params.get('head_repository', ''),
+                                                      config.params.get('head_rev', ''),
+                                                      test['test-name'])
+
             # limit the number of chunks we run for test-verify mode because
             # test-verify is comprehensive and takes a lot of time, if we have
             # >30 tests changed, this is probably an import of external tests,
@@ -802,7 +804,7 @@ def split_chunks(config, tests):
             if test['chunks'] > maximum_number_verify_chunks:
                 test['chunks'] = maximum_number_verify_chunks
 
-        if test['chunks'] == 1:
+        if test['chunks'] <= 1:
             test['this-chunk'] = 1
             yield test
             continue
@@ -817,51 +819,6 @@ def split_chunks(config, tests):
                 chunked['treeherder-symbol'], this_chunk)
 
             yield chunked
-
-
-def perfile_number_of_chunks(config, type):
-    # A rough estimate of how many chunks we need based on simple rules
-    # for determining what a test file is.
-
-    # TODO: Make this flexible based on coverage vs verify || test type
-    tests_per_chunk = 10.0
-
-    if type.startswith('test-verify-wpt'):
-        file_patterns = ['testing/web-platform/tests/**']
-    elif type.startswith('test-verify-gpu'):
-        file_patterns = ['**/*webgl*/**/test_*',
-                         '**/dom/canvas/**/test_*',
-                         '**/gfx/tests/**/test_*',
-                         '**/devtools/canvasdebugger/**/browser_*',
-                         '**/reftest*/**']
-    elif type.startswith('test-verify'):
-        file_patterns = ['**/test_*',
-                         '**/browser_*',
-                         '**/crashtest*/**',
-                         'js/src/test/test/',
-                         'js/src/test/non262/',
-                         'js/src/test/test262/']
-
-    changed_files = files_changed.get_changed_files(config.params.get('head_repository'),
-                                                    config.params.get('head_rev'))
-    test_count = 0
-    for pattern in file_patterns:
-        for path in changed_files:
-            if mozpackmatch(path, pattern):
-                gpu = False
-                if type == 'test-verify-e10s':
-                    # file_patterns for test-verify will pick up some gpu tests, lets ignore
-                    # in the case of reftest, we will not have any in the regular case
-                    gpu_dirs = ['dom/canvas', 'gfx/tests', 'devtools/canvasdebugger', 'webgl']
-                    for gdir in gpu_dirs:
-                        if len(path.split(gdir)) > 1:
-                            gpu = True
-
-                if not gpu:
-                    test_count += 1
-
-    chunks = test_count/tests_per_chunk
-    return int(math.ceil(chunks))
 
 
 @transforms.add

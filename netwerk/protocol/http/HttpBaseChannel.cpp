@@ -59,6 +59,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
+#include "mozilla/InputStreamLengthHelper.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIMIMEInputStream.h"
 #include "nsIXULRuntime.h"
@@ -188,6 +189,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mBlockAuthPrompt(false)
   , mAllowStaleCacheContent(false)
   , mAddedAsNonTailRequest(false)
+  , mAsyncOpenWaitingForStreamLength(false)
   , mTlsFlags(0)
   , mSuspendCount(0)
   , mInitialRwin(0)
@@ -219,7 +221,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mIsTrackingResource(false)
   , mLastRedirectFlags(0)
   , mReqContentLength(0U)
-  , mReqContentLengthDetermined(false)
+  , mPendingInputStreamLengthOperation(false)
 {
   LOG(("Creating HttpBaseChannel @%p\n", this));
 
@@ -1011,12 +1013,7 @@ HttpBaseChannel::CloneUploadStream(int64_t* aContentLength,
 
   clonedStream.forget(aClonedStream);
 
-  if (mReqContentLengthDetermined) {
-    *aContentLength = mReqContentLength;
-  } else {
-    *aContentLength = -1;
-  }
-
+  *aContentLength = mReqContentLength;
   return NS_OK;
 }
 
@@ -1042,48 +1039,81 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
                "nsIMIMEInputStream should not include headers");
   }
 
-  if (aContentLength < 0 && !aStreamHasHeaders) {
-    nsresult rv = aStream->Available(reinterpret_cast<uint64_t*>(&aContentLength));
-    if (NS_FAILED(rv) || aContentLength < 0) {
-      NS_ERROR("unable to determine content length");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   nsresult rv = SetRequestMethod(aMethod);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aStreamHasHeaders) {
-    // SetRequestHeader propagates headers to chrome if HttpChannelChild
-    nsAutoCString contentLengthStr;
-    contentLengthStr.AppendInt(aContentLength);
-    SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr,
-                     false);
-    if (!aContentType.IsVoid()) {
-      if (aContentType.IsEmpty()) {
-        SetEmptyRequestHeader(NS_LITERAL_CSTRING("Content-Type"));
-      } else {
-        SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
-                         false);
-      }
+  if (!aStreamHasHeaders && !aContentType.IsVoid()) {
+    if (aContentType.IsEmpty()) {
+      SetEmptyRequestHeader(NS_LITERAL_CSTRING("Content-Type"));
+    } else {
+      SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
+                       false);
     }
   }
 
   mUploadStreamHasHeaders = aStreamHasHeaders;
 
-  // We already have the content length. We don't need to determinate it.
-  if (aContentLength > 0) {
-    mReqContentLength = aContentLength;
-    mReqContentLengthDetermined = true;
-  }
-
   nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aStream);
   if (!seekable) {
     nsCOMPtr<nsIInputStream> stream = aStream;
-    aStream = new PartiallySeekableInputStream(stream.forget());
+    seekable = new PartiallySeekableInputStream(stream.forget());
   }
 
-  mUploadStream = aStream;
+  mUploadStream = do_QueryInterface(seekable);
+
+  if (aContentLength >= 0) {
+    ExplicitSetUploadStreamLength(aContentLength, aStreamHasHeaders);
+    return NS_OK;
+  }
+
+  // Sync access to the stream length.
+  int64_t length;
+  if (InputStreamLengthHelper::GetSyncLength(aStream, &length)) {
+    ExplicitSetUploadStreamLength(length >= 0 ? length : 0,
+                                  aStreamHasHeaders);
+    return NS_OK;
+  }
+
+  // Let's resolve the size of the stream.
+  RefPtr<HttpBaseChannel> self = this;
+  InputStreamLengthHelper::GetAsyncLength(aStream,
+    [self, aStreamHasHeaders](int64_t aLength) {
+      self->mPendingInputStreamLengthOperation = false;
+      self->ExplicitSetUploadStreamLength(aLength >= 0 ? aLength : 0,
+                                          aStreamHasHeaders);
+      self->MaybeResumeAsyncOpen();
+    });
+  mPendingInputStreamLengthOperation = true;
+  return NS_OK;
+}
+
+nsresult
+HttpBaseChannel::ExplicitSetUploadStreamLength(uint64_t aContentLength,
+                                               bool aStreamHasHeaders)
+{
+  // We already have the content length. We don't need to determinate it.
+  mReqContentLength = aContentLength;
+
+  if (aStreamHasHeaders) {
+    return NS_OK;
+  }
+
+  nsAutoCString header;
+  header.AssignLiteral("Content-Length");
+
+  // Maybe the content-length header has been already set.
+  nsAutoCString value;
+  nsresult rv = GetRequestHeader(header, value);
+  if (NS_SUCCEEDED(rv) && !value.IsEmpty()) {
+    return NS_OK;
+  }
+
+  // SetRequestHeader propagates headers to chrome if HttpChannelChild
+  MOZ_ASSERT(!mWasOpened);
+  nsAutoCString contentLengthStr;
+  contentLengthStr.AppendInt(aContentLength);
+  SetRequestHeader(header, contentLengthStr, false);
+
   return NS_OK;
 }
 
@@ -1094,6 +1124,47 @@ HttpBaseChannel::GetUploadStreamHasHeaders(bool *hasHeaders)
 
   *hasHeaders = mUploadStreamHasHeaders;
   return NS_OK;
+}
+
+bool
+HttpBaseChannel::MaybeWaitForUploadStreamLength(nsIStreamListener *aListener,
+                                                nsISupports *aContext)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mAsyncOpenWaitingForStreamLength, "AsyncOpen() called twice?");
+
+  if (!mPendingInputStreamLengthOperation) {
+    return false;
+  }
+
+  mListener = aListener;
+  mListenerContext = aContext;
+  mAsyncOpenWaitingForStreamLength = true;
+  return true;
+}
+
+void
+HttpBaseChannel::MaybeResumeAsyncOpen()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mPendingInputStreamLengthOperation);
+
+  if (!mAsyncOpenWaitingForStreamLength) {
+    return;
+  }
+
+  nsCOMPtr<nsIStreamListener> listener;
+  listener.swap(mListener);
+
+  nsCOMPtr<nsISupports> context;
+  context.swap(mListenerContext);
+
+  mAsyncOpenWaitingForStreamLength = false;
+
+  nsresult rv = AsyncOpen(listener, context);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    DoAsyncAbort(rv);
+  }
 }
 
 //-----------------------------------------------------------------------------

@@ -36,7 +36,7 @@ js::Debugger::fromJSObject(const JSObject* obj)
 /* static */ inline bool
 js::Debugger::checkNoExecute(JSContext* cx, HandleScript script)
 {
-    if (!cx->compartment()->isDebuggee() || !cx->noExecuteDebuggerTop)
+    if (!cx->realm()->isDebuggee() || !cx->noExecuteDebuggerTop)
         return true;
     return slowPathCheckNoExecute(cx, script);
 }
@@ -53,7 +53,7 @@ js::Debugger::onEnterFrame(JSContext* cx, AbstractFramePtr frame)
 /* static */ js::ResumeMode
 js::Debugger::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 {
-    if (!cx->compartment()->isDebuggee())
+    if (!cx->realm()->isDebuggee())
         return ResumeMode::Continue;
     return slowPathOnDebuggerStatement(cx, frame);
 }
@@ -61,7 +61,7 @@ js::Debugger::onDebuggerStatement(JSContext* cx, AbstractFramePtr frame)
 /* static */ js::ResumeMode
 js::Debugger::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
 {
-    if (!cx->compartment()->isDebuggee())
+    if (!cx->realm()->isDebuggee())
         return ResumeMode::Continue;
     return slowPathOnExceptionUnwind(cx, frame);
 }
@@ -69,21 +69,21 @@ js::Debugger::onExceptionUnwind(JSContext* cx, AbstractFramePtr frame)
 /* static */ void
 js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance)
 {
-    if (cx->compartment()->isDebuggee())
+    if (cx->realm()->isDebuggee())
         slowPathOnNewWasmInstance(cx, wasmInstance);
 }
 
 /* static */ void
 js::Debugger::onNewPromise(JSContext* cx, Handle<PromiseObject*> promise)
 {
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         slowPathPromiseHook(cx, Debugger::OnNewPromise, promise);
 }
 
 /* static */ void
 js::Debugger::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise)
 {
-    if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
+    if (MOZ_UNLIKELY(cx->realm()->isDebuggee()))
         slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
 }
 

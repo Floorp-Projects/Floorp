@@ -254,6 +254,7 @@ class ModuleObject : public NativeObject
         NamespaceSlot,
         StatusSlot,
         EvaluationErrorSlot,
+        MetaObjectSlot,
         HostDefinedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
@@ -304,6 +305,7 @@ class ModuleObject : public NativeObject
     ModuleStatus status() const;
     bool hadEvaluationError() const;
     Value evaluationError() const;
+    JSObject* metaObject() const;
     Value hostDefinedField() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
@@ -314,6 +316,8 @@ class ModuleObject : public NativeObject
 
     static bool Instantiate(JSContext* cx, HandleModuleObject self);
     static bool Evaluate(JSContext* cx, HandleModuleObject self);
+
+    void setMetaObject(JSObject* obj);
 
     void setHostDefinedField(const JS::Value& value);
 
@@ -406,6 +410,9 @@ class MOZ_STACK_CLASS ModuleBuilder
     template <typename K, typename V>
     ArrayObject* createArray(const JS::Rooted<GCHashMap<K, V>>& map);
 };
+
+JSObject*
+GetOrCreateModuleMetaObject(JSContext* cx, HandleObject module);
 
 } // namespace js
 

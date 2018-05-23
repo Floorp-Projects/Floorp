@@ -190,7 +190,7 @@ ProxyObject::create(JSContext* cx, const Class* clasp, Handle<TaggedProto> proto
     pobj->initShape(shape);
 
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
-    cx->compartment()->setObjectPendingMetadata(cx, pobj);
+    cx->realm()->setObjectPendingMetadata(cx, pobj);
 
     js::gc::gcTracer.traceCreateObject(pobj);
 

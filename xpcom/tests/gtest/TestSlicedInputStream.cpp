@@ -512,3 +512,149 @@ TEST(TestSlicedInputStream, AsyncInputStream) {
 
   testing::ConsumeAndValidateStream(async, inputData);
 }
+
+TEST(TestSlicedInputStream, QIInputStreamLength) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  for (int i = 0; i < 4; i++) {
+    nsCOMPtr<nsIInputStream> sis;
+    {
+      RefPtr<testing::LengthInputStream> stream =
+        new testing::LengthInputStream(buf, i % 2, i > 1);
+
+      sis = new SlicedInputStream(stream.forget(), 0, 5);
+    }
+
+    {
+      nsCOMPtr<nsIInputStreamLength> qi = do_QueryInterface(sis);
+      ASSERT_EQ(!!(i % 2), !!qi);
+    }
+
+    {
+      nsCOMPtr<nsIAsyncInputStreamLength> qi = do_QueryInterface(sis);
+      ASSERT_EQ(i > 1, !!qi);
+    }
+  }
+}
+
+TEST(TestSlicedInputStream, InputStreamLength) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> sis;
+  {
+    RefPtr<testing::LengthInputStream> stream =
+      new testing::LengthInputStream(buf, true, false);
+
+    sis = new SlicedInputStream(stream.forget(), 0, 5);
+  }
+
+  nsCOMPtr<nsIInputStreamLength> qi = do_QueryInterface(sis);
+  ASSERT_TRUE(!!qi);
+
+  int64_t size;
+  nsresult rv = qi->Length(&size);
+  ASSERT_EQ(NS_OK, rv);
+  ASSERT_EQ(5, size);
+}
+
+TEST(TestSlicedInputStream, NegativeInputStreamLength) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> sis;
+  {
+    RefPtr<testing::LengthInputStream> stream =
+      new testing::LengthInputStream(buf, true, false, NS_OK, true);
+
+    sis = new SlicedInputStream(stream.forget(), 0, 5);
+  }
+
+  nsCOMPtr<nsIInputStreamLength> qi = do_QueryInterface(sis);
+  ASSERT_TRUE(!!qi);
+
+  int64_t size;
+  nsresult rv = qi->Length(&size);
+  ASSERT_EQ(NS_OK, rv);
+  ASSERT_EQ(-1, size);
+}
+
+TEST(TestSlicedInputStream, AsyncInputStreamLength) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> sis;
+  {
+    RefPtr<testing::LengthInputStream> stream =
+      new testing::LengthInputStream(buf, false, true);
+
+    sis = new SlicedInputStream(stream.forget(), 0, 5);
+  }
+
+  nsCOMPtr<nsIAsyncInputStreamLength> qi = do_QueryInterface(sis);
+  ASSERT_TRUE(!!qi);
+
+  RefPtr<testing::LengthCallback> callback = new testing::LengthCallback();
+
+  nsresult rv =
+    qi->AsyncLengthWait(callback, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  ASSERT_EQ(5, callback->Size());
+}
+
+TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> sis;
+  {
+    RefPtr<testing::LengthInputStream> stream =
+      new testing::LengthInputStream(buf, false, true, NS_OK, true);
+
+    sis = new SlicedInputStream(stream.forget(), 0, 5);
+  }
+
+  nsCOMPtr<nsIAsyncInputStreamLength> qi = do_QueryInterface(sis);
+  ASSERT_TRUE(!!qi);
+
+  RefPtr<testing::LengthCallback> callback = new testing::LengthCallback();
+
+  nsresult rv =
+    qi->AsyncLengthWait(callback, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback->Called(); }));
+  ASSERT_EQ(-1, callback->Size());
+}
+
+TEST(TestSlicedInputStream, AbortLengthCallback) {
+  nsCString buf;
+  buf.AssignLiteral("Hello world");
+
+  nsCOMPtr<nsIInputStream> sis;
+  {
+    RefPtr<testing::LengthInputStream> stream =
+      new testing::LengthInputStream(buf, false, true, NS_OK, true);
+
+    sis = new SlicedInputStream(stream.forget(), 0, 5);
+  }
+
+  nsCOMPtr<nsIAsyncInputStreamLength> qi = do_QueryInterface(sis);
+  ASSERT_TRUE(!!qi);
+
+  RefPtr<testing::LengthCallback> callback1 = new testing::LengthCallback();
+  nsresult rv =
+    qi->AsyncLengthWait(callback1, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  RefPtr<testing::LengthCallback> callback2 = new testing::LengthCallback();
+  rv = qi->AsyncLengthWait(callback2, GetCurrentThreadSerialEventTarget());
+  ASSERT_EQ(NS_OK, rv);
+
+  MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return callback2->Called(); }));
+  ASSERT_TRUE(!callback1->Called());
+  ASSERT_EQ(-1, callback2->Size());
+}

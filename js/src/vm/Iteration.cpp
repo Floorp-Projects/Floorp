@@ -930,7 +930,7 @@ js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
     // Step 1 (implicit).
 
     // Step 2.
-    RootedObject templateObject(cx, cx->compartment()->getOrCreateIterResultTemplateObject(cx));
+    RootedObject templateObject(cx, cx->realm()->getOrCreateIterResultTemplateObject(cx));
     if (!templateObject)
         return nullptr;
 
@@ -939,10 +939,10 @@ js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
                                                                               templateObject));
 
     // Step 3.
-    resultObj->setSlot(JSCompartment::IterResultObjectValueSlot, value);
+    resultObj->setSlot(Realm::IterResultObjectValueSlot, value);
 
     // Step 4.
-    resultObj->setSlot(JSCompartment::IterResultObjectDoneSlot,
+    resultObj->setSlot(Realm::IterResultObjectDoneSlot,
                        done ? TrueHandleValue : FalseHandleValue);
 
     // Step 5.
@@ -950,8 +950,10 @@ js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
 }
 
 NativeObject*
-JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
+Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
 {
+    MOZ_ASSERT(cx->realm() == this);
+
     if (iterResultTemplate_)
         return iterResultTemplate_;
 
@@ -995,9 +997,9 @@ JSCompartment::getOrCreateIterResultTemplateObject(JSContext* cx)
 
     // Make sure that the properties are in the right slots.
     DebugOnly<Shape*> shape = templateObject->lastProperty();
-    MOZ_ASSERT(shape->previous()->slot() == JSCompartment::IterResultObjectValueSlot &&
+    MOZ_ASSERT(shape->previous()->slot() == Realm::IterResultObjectValueSlot &&
                shape->previous()->propidRef() == NameToId(cx->names().value));
-    MOZ_ASSERT(shape->slot() == JSCompartment::IterResultObjectDoneSlot &&
+    MOZ_ASSERT(shape->slot() == Realm::IterResultObjectDoneSlot &&
                shape->propidRef() == NameToId(cx->names().done));
 
     iterResultTemplate_.set(templateObject);
