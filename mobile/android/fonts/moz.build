@@ -13,12 +13,4 @@ if not CONFIG['MOZ_ANDROID_EXCLUDE_FONTS']:
         'CharisSILCompact-BI.ttf',
         'CharisSILCompact-I.ttf',
         'CharisSILCompact-R.ttf',
-        'ClearSans-Bold.ttf',
-        'ClearSans-BoldItalic.ttf',
-        'ClearSans-Italic.ttf',
-        'ClearSans-Light.ttf',
-        'ClearSans-Medium.ttf',
-        'ClearSans-MediumItalic.ttf',
-        'ClearSans-Regular.ttf',
-        'ClearSans-Thin.ttf',
     ]
