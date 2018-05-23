@@ -2376,6 +2376,9 @@ IonBuilder::inspectOpcode(JSOp op)
         return Ok();
       }
 
+      case JSOP_IMPORTMETA:
+          return jsop_importmeta();
+
       // ===== NOT Yet Implemented =====
       // Read below!
 
@@ -2440,7 +2443,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_RETSUB:
       case JSOP_SETINTRINSIC:
       case JSOP_THROWMSG:
-      case JSOP_IMPORTMETA:
         // === !! WARNING WARNING WARNING !! ===
         // Do you really want to sacrifice performance by not implementing this
         // operation in the optimizing compiler?
@@ -13141,6 +13143,21 @@ IonBuilder::jsop_implicitthis(PropertyName* name)
     current->push(implicitThis);
 
     return resumeAfter(implicitThis);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_importmeta()
+{
+    ModuleObject* module = GetModuleObjectForScript(script());
+    MOZ_ASSERT(module);
+
+    // The object must have been created already when we compiled for baseline.
+    JSObject* metaObject = module->metaObject();
+    MOZ_ASSERT(metaObject);
+
+    pushConstant(ObjectValue(*metaObject));
+
+    return Ok();
 }
 
 MInstruction*

@@ -1020,7 +1020,6 @@ BaselineCompiler::emitBody()
           case JSOP_UNUSED206:
           case JSOP_UNUSED223:
           case JSOP_LIMIT:
-          case JSOP_IMPORTMETA:
             // === !! WARNING WARNING WARNING !! ===
             // Do you really want to sacrifice performance by not implementing
             // this operation in the BaselineCompiler?
@@ -5079,5 +5078,19 @@ BaselineCompiler::emit_JSOP_DERIVEDCONSTRUCTOR()
 
     masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
     frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_IMPORTMETA()
+{
+    RootedModuleObject module(cx, GetModuleObjectForScript(script));
+    MOZ_ASSERT(module);
+
+    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+    if (!metaObject)
+        return false;
+
+    frame.push(ObjectValue(*metaObject));
     return true;
 }
