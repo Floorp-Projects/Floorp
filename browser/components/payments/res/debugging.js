@@ -386,6 +386,24 @@ let buttonActions = {
     });
   },
 
+  setAddressErrors() {
+    let request = Object.assign({}, requestStore.getState().request);
+    request.paymentDetails = Object.assign({}, requestStore.getState().request.paymentDetails);
+    request.paymentDetails.shippingAddressErrors = {
+      addressLine: "Can only ship to ROADS, not DRIVES, BOULEVARDS, or STREETS",
+      city: "Can only ship to CITIES, not TOWNSHIPS or VILLAGES",
+      country: "Can only ship to USA, not CA",
+      organization: "Can only ship to CORPORATIONS, not CONSORTIUMS",
+      phone: "Only allowed to ship to area codes that start with 9",
+      postalCode: "Only allowed to ship to postalCodes that start with 0",
+      recipient: "Can only ship to names that start with J",
+      region: "Can only ship to regions that start with M",
+    };
+    requestStore.setState({
+      request,
+    });
+  },
+
   setStateDefault() {
     requestStore.setState({
       completionState: "initial",
