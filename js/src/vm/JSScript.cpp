@@ -3956,7 +3956,7 @@ JSScript::traceChildren(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
 
     if (trc->isMarkingTracer())
-        compartment()->mark();
+        realm()->mark();
 
     jit::TraceJitScripts(trc, this);
 }
