@@ -19,12 +19,13 @@ LOG = get_proxy_logger(component='control_server')
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-def MakeCustomHandlerClass(results_handler):
+def MakeCustomHandlerClass(results_handler, shutdown_browser):
 
     class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
 
         def __init__(self, *args, **kwargs):
             self.results_handler = results_handler
+            self.shutdown_browser = shutdown_browser
             super(MyHandler, self).__init__(*args, **kwargs)
 
         def do_GET(self):
@@ -61,6 +62,9 @@ def MakeCustomHandlerClass(results_handler):
             LOG.info("received " + data['type'] + ": " + str(data['data']))
             if data['type'] == 'webext_results':
                 self.results_handler.add(data['data'])
+            elif data['data'] == "__raptor_shutdownBrowser":
+                # webext is telling us it's done, and time to shutdown the browser
+                self.shutdown_browser()
 
         def do_OPTIONS(self):
             self.send_response(200, "ok")
@@ -82,6 +86,7 @@ class RaptorControlServer():
         self._server_thread = None
         self.port = None
         self.results_handler = results_handler
+        self.browser_proc = None
 
     def start(self):
         config_dir = os.path.join(here, 'tests')
@@ -95,7 +100,7 @@ class RaptorControlServer():
         server_address = ('', self.port)
 
         server_class = BaseHTTPServer.HTTPServer
-        handler_class = MakeCustomHandlerClass(self.results_handler)
+        handler_class = MakeCustomHandlerClass(self.results_handler, self.shutdown_browser)
 
         httpd = server_class(server_address, handler_class)
 
@@ -104,6 +109,20 @@ class RaptorControlServer():
         self._server_thread.start()
         LOG.info("raptor control server running on port %d..." % self.port)
         self.server = httpd
+
+    def shutdown_browser(self):
+        LOG.info("shutting down browser (pid: %d)" % self.browser_proc.pid)
+        self.kill_thread = threading.Thread(target=self.wait_for_quit)
+        self.kill_thread.daemon = True
+        self.kill_thread.start()
+
+    def wait_for_quit(self, timeout=5):
+        """Wait timeout seconds for the process to exit. If it hasn't
+        exited by then, kill it.
+        """
+        self.browser_proc.wait(timeout)
+        if self.browser_proc.poll() is None:
+            self.browser_proc.kill()
 
     def stop(self):
         LOG.info("shutting down control server")
