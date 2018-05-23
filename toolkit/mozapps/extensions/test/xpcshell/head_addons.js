@@ -358,6 +358,11 @@ function isNightlyChannel() {
 }
 
 
+async function restartWithLocales(locales) {
+  Services.locale.setRequestedLocales(locales);
+  await promiseRestartManager();
+}
+
 /**
  * Returns a map of Addon objects for installed add-ons with the given
  * IDs. The returned map contains a key for the ID of each add-on that
