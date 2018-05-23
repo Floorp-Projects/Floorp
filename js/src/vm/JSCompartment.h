@@ -19,6 +19,7 @@
 #include "gc/Barrier.h"
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
+#include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/ReceiverGuard.h"
@@ -1045,9 +1046,9 @@ class JS::Realm : public JSCompartment
     js::NewProxyCache newProxyCache;
     js::ArraySpeciesLookup arraySpeciesLookup;
 
-    js::ScriptCountsMap* scriptCountsMap = nullptr;
-    js::ScriptNameMap* scriptNameMap = nullptr;
-    js::DebugScriptMap* debugScriptMap = nullptr;
+    js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
+    js::UniquePtr<js::ScriptNameMap> scriptNameMap;
+    js::UniquePtr<js::DebugScriptMap> debugScriptMap;
 
     // Last time at which an animation was played for this realm.
     int64_t lastAnimationTime = 0;
