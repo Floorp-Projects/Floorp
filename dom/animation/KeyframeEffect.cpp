@@ -1785,14 +1785,16 @@ KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const
   nsIFrame* frame = GetStyleFrame();
   if (HasAnimationOfProperty(eCSSProperty_opacity)) {
     effectSet->SetMayHaveOpacityAnimation();
-    if (frame) {
+    while (frame) {
       frame->SetMayHaveOpacityAnimation();
+      frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame);
     }
   }
   if (HasAnimationOfProperty(eCSSProperty_transform)) {
     effectSet->SetMayHaveTransformAnimation();
-    if (frame) {
+    while (frame) {
       frame->SetMayHaveTransformAnimation();
+      frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame);
     }
   }
 }
