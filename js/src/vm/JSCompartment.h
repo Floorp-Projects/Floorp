@@ -751,12 +751,6 @@ struct JSCompartment
 
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
 
-  private:
-    mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
-
-  public:
-    mozilla::HashCodeScrambler randomHashCodeScrambler();
-
     static size_t offsetOfRegExps() {
         return offsetof(JSCompartment, regExps);
     }
@@ -816,6 +810,9 @@ class JS::Realm : public JSCompartment
 
     // Random number generator for Math.random().
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator_;
+
+    // Random number generator for randomHashCodeScrambler().
+    mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
 
     JSPrincipals* principals_ = nullptr;
 
@@ -1228,6 +1225,8 @@ class JS::Realm : public JSCompartment
     }
 
     js::HashNumber randomHashCode();
+
+    mozilla::HashCodeScrambler randomHashCodeScrambler();
 };
 
 namespace js {
