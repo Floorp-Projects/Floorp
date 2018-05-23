@@ -20,37 +20,26 @@ var smoothScrollPref = "general.smoothScroll";
 function startTest() {
   SpecialPowers.pushPrefEnv({"set":[[smoothScrollPref, false]]}, runTest);
 }
-function runTest() {
-    t = document.getElementById("t");
-    e = t.contentDocument.getElementById("e");
-    t.contentWindow.scrollTo(0,0);
-    utils = SpecialPowers.getDOMWindowUtils(window);
-    iterations = 0;
 
-  // Do a couple of scrolls to ensure we've triggered activity heuristics.
-    waitForAllPaintsFlushed(function () {
-      t.contentWindow.scrollByLines(1);
-      waitForAllPaintsFlushed(function () {
-        t.contentWindow.scrollByLines(1);
-        waitForAllPaintsFlushed(function () {
-          // Clear paint state now and scroll again.
-          utils.checkAndClearPaintedState(e);
-          t.contentWindow.scrollByLines(1);
-          waitForAllPaintsFlushed(nextIteration);
-        });
-      });
-    });
-}
-function nextIteration() {
-  var painted = utils.checkAndClearPaintedState(e);
-  is(painted, false, "Fully-visible scrolled element should not have been painted");
-  if (++iterations == 10) {
-    SimpleTest.finish();
-    window.close();
-  } else {
+async function runTest() {
+  let t = document.getElementById("t");
+  let e = t.contentDocument.getElementById("e");
+  t.contentWindow.scrollTo(0,0);
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  for (let i = 0; i < 15; i++) {
+    let painted = utils.checkAndClearPaintedState(e);
+    // We ignore the first few scrolls, to ensure we have triggered activity
+    // heuristics.
+    if (i >= 5) {
+      is(painted, false,
+         "Fully-visible scrolled element should not have been painted");
+    }
     t.contentWindow.scrollByLines(1);
-    waitForAllPaintsFlushed(nextIteration);
+    await promiseAllPaintsDone(null, true);
   }
+  SimpleTest.finish();
+  window.close();
 }
 </script>
 </pre>

@@ -114,7 +114,7 @@ fails-if(webrender&&winWidget) == table-width-3.html table-width-3-ref.html # bu
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-fails-if(gtkWidget) random-if(winWidget) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429, bug 1328771
+fails-if(gtkWidget||Android) random-if(winWidget) == semantics-1.xhtml semantics-1-ref.xhtml # bug 1309429, bug 1328771
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html

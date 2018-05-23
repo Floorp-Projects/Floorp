@@ -1,9 +1,9 @@
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
-fuzzy-if(Android,43-43,8-8) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html # bug 1392259
+fuzzy-if(Android,1-1,2-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html # bug 1392259
 fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
 fuzzy-if(Android,3,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
-fuzzy-if(Android,43-43,8-8) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html # bug 1392259
+fuzzy-if(Android,1-1,2-2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html # bug 1392259
 fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
 fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
 
@@ -11,7 +11,7 @@ fuzzy-if(Android,3,7) skip-if(!Android) pref(apz.allow_zooming,true) == async-sc
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
 fuzzy-if(Android,54,20) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
-fuzzy-if(Android,45,22) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
+fuzzy-if(Android,45,26) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
 
 # Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
 # As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
