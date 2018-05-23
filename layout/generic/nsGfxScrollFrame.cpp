@@ -2217,13 +2217,6 @@ ScrollFrameHelper::HasPluginFrames()
 }
 
 bool
-ScrollFrameHelper::HasPerspective() const
-{
-  const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  return disp->mChildPerspective.GetUnit() != eStyleUnit_None;
-}
-
-bool
 ScrollFrameHelper::HasBgAttachmentLocal() const
 {
   const nsStyleBackground* bg = mOuter->StyleBackground();
