@@ -38,7 +38,7 @@ let gSiteDataSettings = {
       let label = document.createElement("label");
       label.setAttribute("crop", "end");
       if (l10n) {
-        if (l10n.raw) {
+        if (l10n.hasOwnProperty("raw")) {
           box.setAttribute("tooltiptext", l10n.raw);
           label.setAttribute("value", l10n.raw);
         } else {
