@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
-  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
@@ -1002,14 +1001,6 @@ var PageMetadataMessenger = {
   }
 };
 PageMetadataMessenger.init();
-
-addMessageListener("Bookmarks:GetPageDetails", (message) => {
-  let doc = content.document;
-  let isErrorPage = /^about:(neterror|certerror|blocked)/.test(doc.documentURI);
-  sendAsyncMessage("Bookmarks:GetPageDetails:Result",
-                   { isErrorPage,
-                     description: PlacesUIUtils.getDescriptionFromDocument(doc) });
-});
 
 addEventListener("InstallBrowserTheme", LightWeightThemeWebInstallListener, false, true);
 addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstallListener, false, true);

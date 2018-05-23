@@ -387,7 +387,7 @@ FeedResultService.prototype = {
       // fall through
     case "bookmarks":
       Services.cpmm.sendAsyncMessage("FeedConverter:addLiveBookmark",
-                                     { spec, title, subtitle });
+                                     { spec, title });
       break;
     }
   },

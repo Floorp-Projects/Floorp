@@ -78,7 +78,6 @@
 <!ENTITY col.url.label           "Location">
 <!ENTITY col.mostrecentvisit.label "Most Recent Visit">
 <!ENTITY col.visitcount.label    "Visit Count">
-<!ENTITY col.description.label   "Description">
 <!ENTITY col.dateadded.label     "Added">
 <!ENTITY col.lastmodified.label  "Last Modified">
 
