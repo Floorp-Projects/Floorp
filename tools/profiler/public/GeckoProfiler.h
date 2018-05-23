@@ -206,7 +206,7 @@ private:
 
   // We combine the active bit with the feature bits so they can be read or
   // written in a single atomic operation.
-  static mozilla::Atomic<uint32_t> sActiveAndFeatures;
+  static mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::Relaxed> sActiveAndFeatures;
 };
 
 } // namespace detail
