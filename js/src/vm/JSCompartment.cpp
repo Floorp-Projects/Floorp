@@ -55,7 +55,6 @@ JSCompartment::JSCompartment(Zone* zone)
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     validAccessPtr(nullptr),
-    randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
     debugEnvs(nullptr),
     enumerators(nullptr),
     jitCompartment_(nullptr),
@@ -69,6 +68,7 @@ Realm::Realm(JS::Zone* zone, const JS::RealmOptions& options)
     creationOptions_(options.creationOptions()),
     behaviors_(options.behaviors()),
     global_(nullptr),
+    randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
     wasm(zone->runtimeFromMainThread())
 {
     MOZ_ASSERT_IF(creationOptions_.mergeable(),
@@ -1336,7 +1336,7 @@ Realm::randomHashCode()
 }
 
 mozilla::HashCodeScrambler
-JSCompartment::randomHashCodeScrambler()
+Realm::randomHashCodeScrambler()
 {
     return mozilla::HashCodeScrambler(randomKeyGenerator_.next(),
                                       randomKeyGenerator_.next());
