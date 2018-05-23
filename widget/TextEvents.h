@@ -228,14 +228,57 @@ public:
     return IsKeyEventOnPlugin(mMessage);
   }
 
+  // IsInputtingText() and IsInputtingLineBreak() are used to check if
+  // it should cause eKeyPress events even on web content.
+  // UI Events defines that "keypress" event should be fired "if and only if
+  // that key normally produces a character value".
+  // <https://www.w3.org/TR/uievents/#event-type-keypress>
+  // Additionally, for backward compatiblity with all existing browsers,
+  // there is an spec issue for Enter key press.
+  // <https://github.com/w3c/uievents/issues/183>
   bool IsInputtingText() const
   {
     // NOTE: On some keyboard layout, some characters are inputted with Control
-    //       key or Alt key, but at that time, widget unset the modifier flag
-    //       from eKeyPress event.
+    //       key or Alt key, but at that time, widget clears the modifier flag
+    //       from eKeyPress event because our TextEditor won't handle eKeyPress
+    //       events as inputting text (bug 1346832).
+    // NOTE: There are some complicated issues of our traditional behavior.
+    //       -- On Windows, KeyboardLayout::WillDispatchKeyboardEvent() clears
+    //       MODIFIER_ALT and MODIFIER_CONTROL of eKeyPress event if it
+    //       should be treated as inputting a character because AltGr is
+    //       represented with both Alt key and Ctrl key are pressed, and
+    //       some keyboard layout may produces a character with Ctrl key.
+    //       -- On Linux, KeymapWrapper doesn't have this hack since perhaps,
+    //       we don't have any bug reports that user cannot input proper
+    //       character with Alt and/or Ctrl key.
+    //       -- On macOS, TextInputHandler::InsertText() clears MODIFIER_ALT
+    //       and MDOFIEIR_CONTROL of eKeyPress event.  However, this method
+    //       is called only when an editor has focus (even if IME is disabled
+    //       in password field or by |ime-mode: disabled;|) because it's
+    //       called while TextInputHandler::HandleKeyDownEvent() calls
+    //       interpretKeyEvents: to notify text input processor of Cocoa
+    //       (including IME).  In other words, when we need to disable IME
+    //       completey when no editor has focus, we cannot call
+    //       interpretKeyEvents:.  So, TextInputHandler::InsertText() won't
+    //       be called when no editor has focus so that neither MODIFIER_ALT
+    //       nor MODIFIER_CONTROL is cleared.  So, fortunately, altKey and
+    //       ctrlKey values of "keypress" events are same as the other browsers
+    //       only when no editor has focus.
+    // NOTE: As mentioned above, for compatibility with the other browsers on
+    //       macOS, we should keep MODIFIER_ALT and MODIFIER_CONTROL flags of
+    //       eKeyPress events when no editor has focus.  However, Alt key,
+    //       labeled "option" on keyboard for Mac, is AltGraph key on the other
+    //       platforms.  So, even if MODIFIER_ALT is set, we need to dispatch
+    //       eKeyPress event even on web content unless mCharCode is 0.
+    //       Therefore, we need to ignore MODIFIER_ALT flag here only on macOS.
     return mMessage == eKeyPress &&
            mCharCode &&
-           !(mModifiers & (MODIFIER_ALT |
+           !(mModifiers & (
+#ifndef XP_MACOSX
+                           // So, ignore MODIFIER_ALT only on macOS since
+                           // option key is used as AltGraph key on macOS.
+                           MODIFIER_ALT |
+#endif // #ifndef XP_MAXOSX
                            MODIFIER_CONTROL |
                            MODIFIER_META |
                            MODIFIER_OS));
