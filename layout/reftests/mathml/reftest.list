@@ -37,7 +37,7 @@ random-if(smallScreen&&Android) fuzzy(255,200) fuzzy-if(webrender&&!gtkWidget,11
 == mfenced-5b.xhtml mfenced-5-ref.xhtml
 == mfenced-5c.xhtml mfenced-5-ref.xhtml
 == mfenced-5d.xhtml mfenced-5-ref.xhtml
-== mfenced-6.html mfenced-6-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-6.html mfenced-6-ref.html
 == mfenced-7.html mfenced-7-ref.html
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
