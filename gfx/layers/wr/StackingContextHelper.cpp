@@ -34,12 +34,12 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const gfx::CompositionOp& aMixBlendMode,
                                              bool aBackfaceVisible,
                                              bool aIsPreserve3D,
-                                             const Maybe<gfx::Matrix4x4>& aTransformForScrollData,
+                                             const Maybe<nsDisplayTransform*>& aDeferredTransformItem,
                                              const wr::WrClipId* aClipNodeId,
                                              bool aRasterizeLocally)
   : mBuilder(&aBuilder)
   , mScale(1.0f, 1.0f)
-  , mTransformForScrollData(aTransformForScrollData)
+  , mDeferredTransformItem(aDeferredTransformItem)
   , mIsPreserve3D(aIsPreserve3D)
   , mRasterizeLocally(aRasterizeLocally || aParentSC.mRasterizeLocally)
 {
@@ -89,10 +89,10 @@ StackingContextHelper::~StackingContextHelper()
   }
 }
 
-const Maybe<gfx::Matrix4x4>&
-StackingContextHelper::GetTransformForScrollData() const
+const Maybe<nsDisplayTransform*>&
+StackingContextHelper::GetDeferredTransformItem() const
 {
-  return mTransformForScrollData;
+  return mDeferredTransformItem;
 }
 
 } // namespace layers
