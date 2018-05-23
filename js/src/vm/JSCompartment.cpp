@@ -50,7 +50,6 @@ JSCompartment::JSCompartment(Zone* zone)
     performanceMonitoring(runtime_),
     data(nullptr),
     regExps(),
-    arraySpeciesLookup(),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
     objectMetadataState(ImmediateMetadata()),
