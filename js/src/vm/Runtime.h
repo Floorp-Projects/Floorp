@@ -943,6 +943,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     // The implementation-defined abstract operation HostResolveImportedModule.
     js::MainThreadData<JS::ModuleResolveHook> moduleResolveHook;
 
+    // A hook that implements the abstract operations
+    // HostGetImportMetaProperties and HostFinalizeImportMeta.
+    js::MainThreadData<JS::ModuleMetadataHook> moduleMetadataHook;
+
   public:
 #if defined(JS_BUILD_BINAST)
     js::BinaryASTSupport& binast() {

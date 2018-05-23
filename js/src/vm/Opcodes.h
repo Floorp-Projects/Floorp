@@ -63,6 +63,7 @@
  *     Super
  *     Arguments
  *     Var Scope
+ *     Modules
  *   [Operators]
  *     Comparison Operators
  *     Arithmetic Operators
@@ -2344,14 +2345,22 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
+    macro(JSOP_CALL_IGNORES_RV, 231, "call-ignores-rv", NULL, 3, -1, 1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    /*
+     * Push "import.meta"
+     *
+     *   Category: Variables and Scopes
+     *   Type: Modules
+     *   Operands:
+     *   Stack: => import.meta
+     */ \
+    macro(JSOP_IMPORTMETA,    232, "importmeta", NULL,      1,  0,  1,  JOF_BYTE)
 
 /*
  * In certain circumstances it may be useful to "pad out" the opcode space to
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(macro) \
-    macro(232) \
     macro(233) \
     macro(234) \
     macro(235) \
