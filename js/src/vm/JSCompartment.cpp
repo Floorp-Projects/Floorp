@@ -48,15 +48,10 @@ JSCompartment::JSCompartment(Zone* zone)
     regExps(),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
-    objectMetadataTable(nullptr),
     innerViews(zone),
-    lazyArrayBuffers(nullptr),
-    nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     validAccessPtr(nullptr),
-    debugEnvs(nullptr),
     enumerators(nullptr),
-    jitCompartment_(nullptr),
     lcovOutput()
 {
     runtime_->numCompartments++;
@@ -88,12 +83,7 @@ JSCompartment::~JSCompartment()
     if (rt->lcovOutput().isEnabled())
         rt->lcovOutput().writeLCovResult(lcovOutput);
 
-    js_delete(jitCompartment_);
-    js_delete(debugEnvs);
-    js_delete(objectMetadataTable);
-    js_delete(lazyArrayBuffers);
-    js_delete(nonSyntacticLexicalEnvironments_);
-    js_free(enumerators);
+    MOZ_ASSERT(enumerators == iteratorSentinel_.get());
 
 #ifdef DEBUG
     // Avoid assertion destroying the unboxed layouts list if the embedding
@@ -113,6 +103,13 @@ JSCompartment::init(JSContext* maybecx)
             ReportOutOfMemory(maybecx);
         return false;
     }
+
+    NativeIteratorSentinel sentinel(NativeIterator::allocateSentinel(maybecx));
+    if (!sentinel)
+        return false;
+
+    iteratorSentinel_ = Move(sentinel);
+    enumerators = iteratorSentinel_.get();
 
     return true;
 }
@@ -135,10 +132,6 @@ Realm::init(JSContext* maybecx)
      * also create tons of iframes, which seems unlikely).
      */
     JS::ResetTimeZone();
-
-    enumerators = NativeIterator::allocateSentinel(maybecx);
-    if (!enumerators)
-        return false;
 
     if (!savedStacks_.init() ||
         !varNames_.init() ||
@@ -196,18 +189,14 @@ JSCompartment::ensureJitCompartmentExists(JSContext* cx)
     if (!zone()->getJitZone(cx))
         return false;
 
-    /* Set the compartment early, so linking works. */
-    jitCompartment_ = cx->new_<JitCompartment>();
-
-    if (!jitCompartment_)
+    UniquePtr<JitCompartment> jitComp = cx->make_unique<JitCompartment>();
+    if (!jitComp)
         return false;
 
-    if (!jitCompartment_->initialize(cx)) {
-        js_delete(jitCompartment_);
-        jitCompartment_ = nullptr;
+    if (!jitComp->initialize(cx))
         return false;
-    }
 
+    jitCompartment_ = Move(jitComp);
     return true;
 }
 
@@ -537,9 +526,11 @@ LexicalEnvironmentObject*
 JSCompartment::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleObject enclosing)
 {
     if (!nonSyntacticLexicalEnvironments_) {
-        nonSyntacticLexicalEnvironments_ = cx->new_<ObjectWeakMap>(cx);
-        if (!nonSyntacticLexicalEnvironments_ || !nonSyntacticLexicalEnvironments_->init())
+        auto map = cx->make_unique<ObjectWeakMap>(cx);
+        if (!map || !map->init())
             return nullptr;
+
+        nonSyntacticLexicalEnvironments_ = Move(map);
     }
 
     // If a wrapped WithEnvironmentObject was passed in, unwrap it, as we may
@@ -1029,13 +1020,6 @@ Realm::forgetAllocationMetadataBuilder()
 }
 
 void
-Realm::clearObjectMetadata()
-{
-    js_delete(objectMetadataTable);
-    objectMetadataTable = nullptr;
-}
-
-void
 Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, this, obj);
@@ -1044,7 +1028,7 @@ Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
     if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
-            objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
+            objectMetadataTable = cx->make_unique<ObjectWeakMap>(cx);
             if (!objectMetadataTable || !objectMetadataTable->init())
                 oomUnsafe.crash("setNewObjectMetadata");
         }
