@@ -3,7 +3,7 @@
 
 fuzzy(111,1802) fuzzy-if(skiaContent,130,1000) == additive-1.svg additive-1-ref.svg # bug 981344, bug 1239766
 == animate-width-1.svg lime.svg
-fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,15,30) fuzzy-if(gtkWidget,1,30) == paced-1.svg paced-1-ref.svg # bug 981640, Bug 1293550
+fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,15,30) fuzzy-if(gtkWidget,1,30) fuzzy-if(webrender,3-3,9-9) == paced-1.svg paced-1-ref.svg # bug 981640, Bug 1293550
 fuzzy-if(skiaContent,7,90) == rotate-angle-1.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,7,90) == rotate-angle-2.svg rotate-angle-ref.svg
 fuzzy-if(skiaContent,7,130) == rotate-angle-3.svg rotate-angle-ref.svg
