@@ -181,15 +181,18 @@ class SingleTestMixin(object):
         mozinfo.update({'verify': True})
         self.info("Per-test run using mozinfo: %s" % str(mozinfo.info))
 
-        # determine which files were changed on this push
-        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
-        contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
         changed_files = set()
-        for c in contents['changesets']:
-            self.info(" {cset} {desc}".format(
-                cset=c['node'][0:12],
-                desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
-            changed_files |= set(c['files'])
+        if os.environ.get('MOZHARNESS_TEST_PATHS', None) is not None:
+            changed_files |= set(os.environ['MOZHARNESS_TEST_PATHS'].split(':'))
+        else:
+            # determine which files were changed on this push
+            url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
+            contents = self.retry(get_automationrelevance, attempts=2, sleeptime=10)
+            for c in contents['changesets']:
+                self.info(" {cset} {desc}".format(
+                    cset=c['node'][0:12],
+                    desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
+                changed_files |= set(c['files'])
 
         if self.config.get('per_test_category') == "web-platform":
             self._find_wpt_tests(dirs, changed_files)

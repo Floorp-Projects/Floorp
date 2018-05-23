@@ -104,7 +104,7 @@ BaselineCompiler::compile()
     // When code coverage is only enabled for optimizations, or when a Debugger
     // set the collectCoverageInfo flag, we have to create the ScriptCounts if
     // they do not exist.
-    if (!script->hasScriptCounts() && cx->compartment()->collectCoverage()) {
+    if (!script->hasScriptCounts() && cx->realm()->collectCoverage()) {
         if (!script->initScriptCounts(cx))
             return Method_Error;
     }
@@ -5078,5 +5078,19 @@ BaselineCompiler::emit_JSOP_DERIVEDCONSTRUCTOR()
 
     masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
     frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_IMPORTMETA()
+{
+    RootedModuleObject module(cx, GetModuleObjectForScript(script));
+    MOZ_ASSERT(module);
+
+    JSObject* metaObject = GetOrCreateModuleMetaObject(cx, module);
+    if (!metaObject)
+        return false;
+
+    frame.push(ObjectValue(*metaObject));
     return true;
 }

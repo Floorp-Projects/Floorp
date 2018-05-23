@@ -3925,6 +3925,21 @@ GetModuleResolveHook(JSRuntime* rt);
 extern JS_PUBLIC_API(void)
 SetModuleResolveHook(JSRuntime* rt, ModuleResolveHook func);
 
+using ModuleMetadataHook = bool (*)(JSContext*, HandleObject, HandleObject);
+
+/**
+ * Get the hook for populating the import.meta metadata object.
+ */
+extern JS_PUBLIC_API(ModuleMetadataHook)
+GetModuleMetadataHook(JSRuntime* rt);
+
+/**
+ * Set the hook for populating the import.meta metadata object to the given
+ * function.
+ */
+extern JS_PUBLIC_API(void)
+SetModuleMetadataHook(JSRuntime* rt, ModuleMetadataHook func);
+
 /**
  * Parse the given source buffer as a module in the scope of the current global
  * of cx and return a source text module record.

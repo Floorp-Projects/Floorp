@@ -230,6 +230,7 @@
     macro(maximumFractionDigits, maximumFractionDigits, "maximumFractionDigits") \
     macro(maximumSignificantDigits, maximumSignificantDigits, "maximumSignificantDigits") \
     macro(message, message, "message") \
+    macro(meta, meta, "meta") \
     macro(minDays, minDays, "minDays") \
     macro(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
     macro(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits") \

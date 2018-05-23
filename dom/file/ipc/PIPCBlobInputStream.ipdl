@@ -21,12 +21,16 @@ protocol PIPCBlobInputStream
 parent:
   async StreamNeeded();
 
+  async LengthNeeded();
+
   // When this is called, the parent releases the inputStream and sends a
   // __delete__.
   async Close();
 
 child:
   async StreamReady(OptionalIPCStream aStream);
+
+  async LengthReady(int64_t aLength);
 
 both:
   // __delete__ can be called by parent and by child for 2 reasons:

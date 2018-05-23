@@ -1020,7 +1020,6 @@ nsDocShell::LoadURI(nsIURI* aURI,
                       nullptr,      // No type hint
                       VoidString(), // No forced download
                       postStream,
-                      -1, // XXXbaku
                       headersStream,
                       loadType,
                       nullptr, // No SHEntry
@@ -4932,7 +4931,7 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                       mozilla::net::RP_Unset,
                       nsContentUtils::GetSystemPrincipal(), nullptr,
                       INTERNAL_LOAD_FLAGS_NONE, EmptyString(),
-                      nullptr, VoidString(), nullptr, -1, nullptr,
+                      nullptr, VoidString(), nullptr, nullptr,
                       LOAD_ERROR_PAGE, nullptr, true, VoidString(), this,
                       nullptr, nullptr, nullptr);
 }
@@ -5034,7 +5033,6 @@ nsDocShell::Reload(uint32_t aReloadFlags)
                       NS_LossyConvertUTF16toASCII(contentTypeHint).get(),
                       VoidString(),    // No forced download
                       nullptr,         // No post data
-                      -1,              // No post data length
                       nullptr,         // No headers data
                       loadType,        // Load type
                       nullptr,         // No SHEntry
@@ -9145,7 +9143,6 @@ public:
                     uint32_t aFlags,
                     const char* aTypeHint,
                     nsIInputStream* aPostData,
-                    int64_t aPostDataLength,
                     nsIInputStream* aHeadersData,
                     uint32_t aLoadType,
                     nsISHEntry* aSHEntry,
@@ -9165,7 +9162,6 @@ public:
     , mTriggeringPrincipal(aTriggeringPrincipal)
     , mPrincipalToInherit(aPrincipalToInherit)
     , mPostData(aPostData)
-    , mPostDataLength(aPostDataLength)
     , mHeadersData(aHeadersData)
     , mSHEntry(aSHEntry)
     , mFlags(aFlags)
@@ -9193,7 +9189,7 @@ public:
                                    mFlags, EmptyString(),
                                    mTypeHint.IsVoid() ? nullptr
                                                       : mTypeHint.get(),
-                                   VoidString(), mPostData, mPostDataLength,
+                                   VoidString(), mPostData,
                                    mHeadersData, mLoadType, mSHEntry,
                                    mFirstParty, mSrcdoc, mSourceDocShell,
                                    mBaseURI, nullptr,
@@ -9214,7 +9210,6 @@ private:
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCOMPtr<nsIInputStream> mPostData;
-  int64_t mPostDataLength;
   nsCOMPtr<nsIInputStream> mHeadersData;
   nsCOMPtr<nsISHEntry> mSHEntry;
   uint32_t mFlags;
@@ -9265,7 +9260,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                          const char* aTypeHint,
                          const nsAString& aFileName,
                          nsIInputStream* aPostData,
-                         int64_t aPostDataLength,
                          nsIInputStream* aHeadersData,
                          uint32_t aLoadType,
                          nsISHEntry* aSHEntry,
@@ -9617,7 +9611,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                         aTypeHint,
                                         VoidString(),    // No forced download
                                         aPostData,
-                                        aPostDataLength,
                                         aHeadersData,
                                         aLoadType,
                                         aSHEntry,
@@ -9708,7 +9701,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         new InternalLoadEvent(this, aURI, aOriginalURI, aResultPrincipalURI,
                               aLoadReplace, aReferrer, aReferrerPolicy,
                               aTriggeringPrincipal, principalToInherit,
-                              aFlags, aTypeHint, aPostData, aPostDataLength,
+                              aFlags, aTypeHint, aPostData,
                               aHeadersData, aLoadType, aSHEntry, aFirstParty,
                               aSrcdoc, aSourceDocShell, aBaseURI);
       return DispatchToTabGroup(TaskCategory::Other, ev.forget());
@@ -10231,7 +10224,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
                  aTriggeringPrincipal, principalToInherit, aTypeHint,
-                 aFileName, aPostData, aPostDataLength, aHeadersData,
+                 aFileName, aPostData, aHeadersData,
                  aFirstParty, aDocShell, getter_AddRefs(req),
                  (aFlags & INTERNAL_LOAD_FLAGS_FIRST_LOAD) != 0,
                  (aFlags & INTERNAL_LOAD_FLAGS_BYPASS_CLASSIFIER) != 0,
@@ -10375,7 +10368,6 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       const char* aTypeHint,
                       const nsAString& aFileName,
                       nsIInputStream* aPostData,
-                      int64_t aPostDataLength,
                       nsIInputStream* aHeadersData,
                       bool aFirstParty,
                       nsIDocShell** aDocShell,
@@ -10811,7 +10803,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       }
 
       // we really need to have a content type associated with this stream!!
-      postChannel->SetUploadStream(aPostData, EmptyCString(), aPostDataLength);
+      postChannel->SetUploadStream(aPostData, EmptyCString(), -1);
     }
 
     /* If there is a valid postdata *and* it is a History Load,
@@ -12300,7 +12292,6 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
                     contentType.get(),  // Type hint
                     VoidString(),       // No forced file download
                     postData,           // Post data stream
-                    -1,                 // Post data stream length
                     nullptr,            // No headers stream
                     aLoadType,          // Load type
                     aEntry,             // SHEntry
@@ -13292,7 +13283,6 @@ public:
                    const char16_t* aTargetSpec,
                    const nsAString& aFileName,
                    nsIInputStream* aPostDataStream,
-                   int64_t aPostDataStreamLength,
                    nsIInputStream* aHeadersDataStream,
                    bool aNoOpenerImplied,
                    bool aIsUserTriggered,
@@ -13312,7 +13302,7 @@ public:
     if (mIsTrusted || jsapi.Init(mContent->OwnerDoc()->GetScopeObject())) {
       mHandler->OnLinkClickSync(mContent, mURI,
                                 mTargetSpec.get(), mFileName,
-                                mPostDataStream, mPostDataStreamLength,
+                                mPostDataStream,
                                 mHeadersDataStream, mNoOpenerImplied,
                                 nullptr, nullptr, mIsUserTriggered,
                                 mTriggeringPrincipal);
@@ -13326,7 +13316,6 @@ private:
   nsString mTargetSpec;
   nsString mFileName;
   nsCOMPtr<nsIInputStream> mPostDataStream;
-  int64_t mPostDataStreamLength;
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent> mContent;
   PopupControlState mPopupState;
@@ -13342,7 +13331,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    const char16_t* aTargetSpec,
                                    const nsAString& aFileName,
                                    nsIInputStream* aPostDataStream,
-                                   int64_t aPostDataStreamLength,
                                    nsIInputStream* aHeadersDataStream,
                                    bool aNoOpenerImplied,
                                    bool aIsUserTriggered,
@@ -13354,7 +13342,6 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
   , mTargetSpec(aTargetSpec)
   , mFileName(aFileName)
   , mPostDataStream(aPostDataStream)
-  , mPostDataStreamLength(aPostDataStreamLength)
   , mHeadersDataStream(aHeadersDataStream)
   , mContent(aContent)
   , mPopupState(mHandler->mScriptGlobal->GetPopupControlState())
@@ -13371,7 +13358,6 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         const char16_t* aTargetSpec,
                         const nsAString& aFileName,
                         nsIInputStream* aPostDataStream,
-                        int64_t aPostDataStreamLength,
                         nsIInputStream* aHeadersDataStream,
                         bool aIsUserTriggered,
                         bool aIsTrusted,
@@ -13418,8 +13404,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
 
   nsCOMPtr<nsIRunnable> ev =
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
-                         aPostDataStream, aPostDataStreamLength,
-                         aHeadersDataStream, noOpenerImplied,
+                         aPostDataStream, aHeadersDataStream, noOpenerImplied,
                          aIsUserTriggered, aIsTrusted, aTriggeringPrincipal);
   return DispatchToTabGroup(TaskCategory::UI, ev.forget());
 }
@@ -13438,7 +13423,6 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             const char16_t* aTargetSpec,
                             const nsAString& aFileName,
                             nsIInputStream* aPostDataStream,
-                            int64_t aPostDataStreamLength,
                             nsIInputStream* aHeadersDataStream,
                             bool aNoOpenerImplied,
                             nsIDocShell** aDocShell,
@@ -13599,7 +13583,6 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                              NS_LossyConvertUTF16toASCII(typeHint).get(),
                              aFileName,                 // Download as file
                              aPostDataStream,           // Post data stream
-                             aPostDataStreamLength,     // Post data stream length
                              aHeadersDataStream,        // Headers stream
                              loadType,                  // Load type
                              nullptr,                   // No SHEntry

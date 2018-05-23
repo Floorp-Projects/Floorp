@@ -6,6 +6,7 @@
 
 #include "SlicedInputStream.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/ScopeExit.h"
 #include "nsISeekableStream.h"
 #include "nsStreamUtils.h"
@@ -29,6 +30,12 @@ NS_INTERFACE_MAP_BEGIN(SlicedInputStream)
                                      mWeakAsyncInputStream || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamCallback,
                                      mWeakAsyncInputStream || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamLength,
+                                     mWeakInputStreamLength || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStreamLength,
+                                     mWeakAsyncInputStreamLength || !mInputStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIInputStreamLengthCallback,
+                                     mWeakAsyncInputStreamLength || !mInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -38,6 +45,8 @@ SlicedInputStream::SlicedInputStream(already_AddRefed<nsIInputStream> aInputStre
   , mWeakIPCSerializableInputStream(nullptr)
   , mWeakSeekableInputStream(nullptr)
   , mWeakAsyncInputStream(nullptr)
+  , mWeakInputStreamLength(nullptr)
+  , mWeakAsyncInputStreamLength(nullptr)
   , mStart(aStart)
   , mLength(aLength)
   , mCurPos(0)
@@ -98,7 +107,41 @@ SlicedInputStream::SetSourceStream(already_AddRefed<nsIInputStream> aInputStream
   if (asyncInputStream && SameCOMIdentity(mInputStream, asyncInputStream)) {
     mWeakAsyncInputStream = asyncInputStream;
   }
+
+  nsCOMPtr<nsIInputStreamLength> streamLength = do_QueryInterface(mInputStream);
+  if (streamLength &&
+      SameCOMIdentity(mInputStream, streamLength)) {
+    mWeakInputStreamLength = streamLength;
+  }
+
+  nsCOMPtr<nsIAsyncInputStreamLength> asyncStreamLength =
+    do_QueryInterface(mInputStream);
+  if (asyncStreamLength &&
+      SameCOMIdentity(mInputStream, asyncStreamLength)) {
+    mWeakAsyncInputStreamLength = asyncStreamLength;
+  }
 }
+
+uint64_t
+SlicedInputStream::AdjustRange(uint64_t aRange)
+{
+  CheckedUint64 range(aRange);
+  range += mCurPos;
+
+  // Let's remove extra length from the end.
+  if (range.isValid() && range.value() > mStart + mLength) {
+    aRange -= XPCOM_MIN((uint64_t)aRange, range.value() - (mStart + mLength));
+  }
+
+  // Let's remove extra length from the begin.
+  if (mCurPos < mStart) {
+    aRange -= XPCOM_MIN((uint64_t)aRange, mStart - mCurPos);
+  }
+
+  return aRange;
+}
+
+// nsIInputStream interface
 
 NS_IMETHODIMP
 SlicedInputStream::Close()
@@ -108,8 +151,6 @@ SlicedInputStream::Close()
   mClosed = true;
   return mInputStream->Close();
 }
-
-// nsIInputStream interface
 
 NS_IMETHODIMP
 SlicedInputStream::Available(uint64_t* aLength)
@@ -130,16 +171,7 @@ SlicedInputStream::Available(uint64_t* aLength)
     return rv;
   }
 
-  // Let's remove extra length from the end.
-  if (*aLength + mCurPos > mStart + mLength) {
-    *aLength -= XPCOM_MIN(*aLength, (*aLength + mCurPos) - (mStart + mLength));
-  }
-
-  // Let's remove extra length from the begin.
-  if (mCurPos < mStart) {
-    *aLength -= XPCOM_MIN(*aLength, mStart - mCurPos);
-  }
-
+  *aLength = AdjustRange(*aLength);
   return NS_OK;
 }
 
@@ -545,6 +577,80 @@ SlicedInputStream::SetEOF()
 
   mClosed = true;
   return mWeakSeekableInputStream->SetEOF();
+}
+
+// nsIInputStreamLength
+
+NS_IMETHODIMP
+SlicedInputStream::Length(int64_t* aLength)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakInputStreamLength);
+
+  nsresult rv = mWeakInputStreamLength->Length(aLength);
+  if (rv == NS_BASE_STREAM_CLOSED) {
+    mClosed = true;
+    return rv;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (*aLength == -1) {
+    return NS_OK;
+  }
+
+  *aLength = (int64_t)AdjustRange((uint64_t)*aLength);
+  return NS_OK;
+}
+
+// nsIAsyncInputStreamLength
+
+NS_IMETHODIMP
+SlicedInputStream::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
+                                   nsIEventTarget* aEventTarget)
+{
+  NS_ENSURE_STATE(mInputStream);
+  NS_ENSURE_STATE(mWeakAsyncInputStreamLength);
+
+  nsCOMPtr<nsIInputStreamLengthCallback> callback = aCallback ? this : nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+    mAsyncWaitLengthCallback = aCallback;
+  }
+
+  return mWeakAsyncInputStreamLength->AsyncLengthWait(callback, aEventTarget);
+}
+
+// nsIInputStreamLengthCallback
+
+NS_IMETHODIMP
+SlicedInputStream::OnInputStreamLengthReady(nsIAsyncInputStreamLength* aStream,
+                                            int64_t aLength)
+{
+  MOZ_ASSERT(mInputStream);
+  MOZ_ASSERT(mWeakAsyncInputStreamLength);
+  MOZ_ASSERT(mWeakAsyncInputStreamLength == aStream);
+
+  nsCOMPtr<nsIInputStreamLengthCallback> callback;
+  {
+      MutexAutoLock lock(mMutex);
+
+    // We have been canceled in the meanwhile.
+    if (!mAsyncWaitLengthCallback) {
+      return NS_OK;
+    }
+
+    callback.swap(mAsyncWaitLengthCallback);
+  }
+
+  if (aLength != -1) {
+    aLength = (int64_t)AdjustRange((uint64_t)aLength);
+  }
+
+  MOZ_ASSERT(callback);
+  return callback->OnInputStreamLengthReady(this, aLength);
 }
 
 } // namespace mozilla

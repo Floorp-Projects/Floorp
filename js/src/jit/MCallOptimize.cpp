@@ -1394,7 +1394,7 @@ IonBuilder::inlineMathRandom(CallInfo& callInfo)
     // MRandom JIT code directly accesses the RNG. It's (barely) possible to
     // inline Math.random without it having been called yet, so ensure RNG
     // state that isn't guaranteed to be initialized already.
-    script()->compartment()->ensureRandomNumberGenerator();
+    script()->realm()->getOrCreateRandomNumberGenerator();
 
     callInfo.setImplicitlyUsedUnchecked();
 

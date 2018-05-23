@@ -136,7 +136,7 @@ web-platform-tests-wdspec-headless:
 
 test-verify-wpt:
     description: "Extra verification of web-platform tests modified on this push"
-    suite: test-verify-wpt
+    suite: test-verify
     treeherder-symbol: TVw
     max-run-time: 10800
     run-on-projects:

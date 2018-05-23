@@ -417,6 +417,7 @@ class NameResolver
             break;
 
           case ParseNodeKind::NewTarget:
+          case ParseNodeKind::ImportMeta:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
             MOZ_ASSERT(cur->pn_left->isKind(ParseNodeKind::PosHolder));
             MOZ_ASSERT(cur->pn_right->isKind(ParseNodeKind::PosHolder));

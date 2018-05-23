@@ -256,15 +256,15 @@ ReportError(JSContext* cx, JSErrorReport* reportp, JSErrorCallback callback,
 static void
 PopulateReportBlame(JSContext* cx, JSErrorReport* report)
 {
-    JSCompartment* compartment = cx->compartment();
-    if (!compartment)
+    JS::Realm* realm = cx->realm();
+    if (!realm)
         return;
 
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
      * rather than a builtin frame and which we're allowed to know about.
      */
-    NonBuiltinFrameIter iter(cx, compartment->principals());
+    NonBuiltinFrameIter iter(cx, realm->principals());
     if (iter.done())
         return;
 
