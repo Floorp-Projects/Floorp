@@ -4261,7 +4261,8 @@ nsStyleContent::CalcDifference(const nsStyleContent& aNewData) const
 //
 
 nsStyleTextReset::nsStyleTextReset(const nsPresContext* aContext)
-  : mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
+  : mTextOverflow()
+  , mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE)
   , mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID)
   , mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL)
   , mInitialLetterSink(0)
@@ -4272,9 +4273,15 @@ nsStyleTextReset::nsStyleTextReset(const nsPresContext* aContext)
 }
 
 nsStyleTextReset::nsStyleTextReset(const nsStyleTextReset& aSource)
+  : mTextOverflow(aSource.mTextOverflow)
+  , mTextDecorationLine(aSource.mTextDecorationLine)
+  , mTextDecorationStyle(aSource.mTextDecorationStyle)
+  , mUnicodeBidi(aSource.mUnicodeBidi)
+  , mInitialLetterSink(aSource.mInitialLetterSink)
+  , mInitialLetterSize(aSource.mInitialLetterSize)
+  , mTextDecorationColor(aSource.mTextDecorationColor)
 {
   MOZ_COUNT_CTOR(nsStyleTextReset);
-  *this = aSource;
 }
 
 nsStyleTextReset::~nsStyleTextReset()

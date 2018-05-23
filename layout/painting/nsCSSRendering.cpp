@@ -2165,10 +2165,7 @@ IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::Side aSide)
   StyleComplexColor color = aBorder.mBorderColor[aSide];
   // We don't know the foreground color here, so if it's being used
   // we must assume it might be transparent.
-  if (!color.IsNumericColor()) {
-    return false;
-  }
-  return NS_GET_A(color.mColor) == 255;
+  return !color.MaybeTransparent();
 }
 
 /**

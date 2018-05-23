@@ -2861,7 +2861,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUserInterface
 
   bool HasCustomScrollbars() const
   {
-    return !mScrollbarFaceColor.mIsAuto || !mScrollbarTrackColor.mIsAuto;
+    return !mScrollbarFaceColor.IsAuto() || !mScrollbarTrackColor.IsAuto();
   }
 };
 
