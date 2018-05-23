@@ -227,7 +227,7 @@ add_task(async function test_sync_event_data_is_filtered_for_target() {
     let called = false;
     client.on("sync", e => called = true);
     await client.maybeSync(timestamp3 + 1, fakeServerTime - 10);
-    equal(called, false, `no sync event for ${client.collectionName}`);
+    equal(called, false, `shouldn't have sync event for ${client.collectionName}`);
 
     // In ?_since=5000 entries, only one entry matches.
     let syncEventData;
@@ -546,7 +546,7 @@ function getSampleResponse(req, port) {
         "versionRange": [{
           "targetApplication": [{
             "guid": "xpcshell@tests.mozilla.org",
-            "minVersion": "99999"
+            "maxVersion": "20"
           }],
         }],
         "id": "86771771-e803-4006-95e9-c9275d58b3d1"

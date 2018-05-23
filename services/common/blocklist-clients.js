@@ -147,14 +147,17 @@ async function targetAppFilter(entry, environment) {
     return entry;
   }
 
-  const { appID, version: appVersion } = environment;
+  const { appID, version: appVersion, toolkitVersion } = environment;
   const { versionRange } = entry;
+
+  // Everywhere in this method, we avoid checking the minVersion, because
+  // we want to retain items whose minVersion is higher than the current
+  // app version, so that we have the items around for app updates.
 
   // Gfx blocklist has a specific versionRange object, which is not a list.
   if (!Array.isArray(versionRange)) {
-    const { minVersion = "0", maxVersion = "*" } = versionRange;
-    const matchesRange = (Services.vc.compare(appVersion, minVersion) >= 0 &&
-                          Services.vc.compare(appVersion, maxVersion) <= 0);
+    const { maxVersion = "*" } = versionRange;
+    const matchesRange = (Services.vc.compare(appVersion, maxVersion) <= 0);
     return matchesRange ? entry : null;
   }
 
@@ -173,10 +176,13 @@ async function targetAppFilter(entry, environment) {
       if (!guid) {
         return entry;
       }
-      const { minVersion = "0", maxVersion = "*" } = ta;
+      const { maxVersion = "*" } = ta;
       if (guid == appID &&
-          Services.vc.compare(appVersion, minVersion) >= 0 &&
           Services.vc.compare(appVersion, maxVersion) <= 0) {
+        return entry;
+      }
+      if (guid == "toolkit@mozilla.org" &&
+          Services.vc.compare(toolkitVersion, maxVersion) <= 0) {
         return entry;
       }
     }
