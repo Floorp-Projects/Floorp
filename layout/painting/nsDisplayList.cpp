@@ -8634,14 +8634,14 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
   }
 
   nsTArray<mozilla::wr::WrFilterOp> filters;
-  Maybe<Matrix4x4> transformForScrollData;
+  Maybe<nsDisplayTransform*> deferredTransformItem;
   if (!mFrame->HasPerspective()) {
     // If it has perspective, we create a new scroll data via the
     // UpdateScrollData call because that scenario is more complex. Otherwise
     // we can just stash the transform on the StackingContextHelper and
     // apply it to any scroll data that are created inside this
     // nsDisplayTransform.
-    transformForScrollData = Some(GetTransform().GetMatrix());
+    deferredTransformItem = Some(this);
   }
 
   // If it looks like we're animated, we should rasterize in local space
@@ -8661,7 +8661,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            gfx::CompositionOp::OP_OVER,
                            !BackfaceIsHidden(),
                            mFrame->Extend3DContext() && !mNoExtendContext,
-                           transformForScrollData,
+                           deferredTransformItem,
                            nullptr,
                            rasterizeLocally);
 
