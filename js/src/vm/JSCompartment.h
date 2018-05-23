@@ -555,9 +555,6 @@ struct JSCompartment
     JS::Zone*                    zone_;
     JSRuntime*                   runtime_;
 
-  public:
-    bool                         isSelfHosting;
-
   private:
     friend struct JSRuntime;
     friend struct JSContext;
@@ -631,13 +628,6 @@ struct JSCompartment
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
-
-    /*
-     * Lazily initialized script source object to use for scripts cloned
-     * from the self-hosting global.
-     */
-    js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
-
     // Keep track of the metadata objects which can be associated with each JS
     // object. Both keys and values are in this compartment.
     js::ObjectWeakMap* objectMetadataTable;
@@ -768,7 +758,6 @@ struct JSCompartment
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
-    void sweepSelfHostingScriptSource();
     void sweepJitCompartment();
     void sweepRegExps();
     void sweepDebugEnvironments();
@@ -988,6 +977,7 @@ class JS::Realm : public JSCompartment
     unsigned enterRealmDepth_ = 0;
 
     bool isAtomsRealm_ = false;
+    bool isSelfHostingRealm_ = false;
     bool marked_ = true;
     bool isSystem_ = false;
 
@@ -1002,6 +992,12 @@ class JS::Realm : public JSCompartment
     js::UniquePtr<js::ScriptCountsMap> scriptCountsMap;
     js::UniquePtr<js::ScriptNameMap> scriptNameMap;
     js::UniquePtr<js::DebugScriptMap> debugScriptMap;
+
+    /*
+     * Lazily initialized script source object to use for scripts cloned
+     * from the self-hosting global.
+     */
+    js::ReadBarrieredScriptSourceObject selfHostingScriptSource { nullptr };
 
     // Last time at which an animation was played for this realm.
     int64_t lastAnimationTime = 0;
@@ -1049,6 +1045,13 @@ class JS::Realm : public JSCompartment
         isAtomsRealm_ = true;
     }
 
+    bool isSelfHostingRealm() const {
+        return isSelfHostingRealm_;
+    }
+    void setIsSelfHostingRealm() {
+        isSelfHostingRealm_ = true;
+    }
+
     /* The global object for this realm.
      *
      * This returns nullptr if this is the atoms realm.  (The global_ field is
@@ -1086,6 +1089,8 @@ class JS::Realm : public JSCompartment
      * This method clears out tables of roots in preparation for the final GC.
      */
     void finishRoots();
+
+    void sweepSelfHostingScriptSource();
 
     void clearScriptCounts();
     void clearScriptNames();

@@ -3599,17 +3599,17 @@ CreateEmptyScriptForClone(JSContext* cx, HandleScript src)
      * use for them.
      */
     RootedObject sourceObject(cx);
-    if (cx->runtime()->isSelfHostingCompartment(src->compartment())) {
-        if (!cx->compartment()->selfHostingScriptSource) {
+    if (src->realm()->isSelfHostingRealm()) {
+        if (!cx->realm()->selfHostingScriptSource) {
             CompileOptions options(cx);
             FillSelfHostingCompileOptions(options);
 
             ScriptSourceObject* obj = frontend::CreateScriptSourceObject(cx, options);
             if (!obj)
                 return nullptr;
-            cx->compartment()->selfHostingScriptSource.set(obj);
+            cx->realm()->selfHostingScriptSource.set(obj);
         }
-        sourceObject = cx->compartment()->selfHostingScriptSource;
+        sourceObject = cx->realm()->selfHostingScriptSource;
     } else {
         sourceObject = src->sourceObject();
         if (!cx->compartment()->wrap(cx, &sourceObject))
@@ -4435,11 +4435,11 @@ void
 JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
 {
     if (fun) {
-        if (fun->compartment()->isSelfHosting) {
-            // The self-hosting compartment is shared across runtimes, so we
-            // can't use JSAutoRealm: it could cause races. Functions in the
-            // self-hosting compartment will never be lazy, so we can safely
-            // assume we don't have to delazify.
+        if (fun->realm()->isSelfHostingRealm()) {
+            // The self-hosting realm is shared across runtimes, so we can't use
+            // JSAutoRealm: it could cause races. Functions in the self-hosting
+            // realm will never be lazy, so we can safely assume we don't have
+            // to delazify.
             script_ = fun->nonLazyScript();
         } else {
             JSAutoRealm ar(cx_, fun);
@@ -4455,9 +4455,9 @@ JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
 void
 JSScript::AutoDelazify::dropScript()
 {
-    // Don't touch script_ if it's in the self-hosting compartment, see the
-    // comment in holdScript.
-    if (script_ && !script_->compartment()->isSelfHosting)
+    // Don't touch script_ if it's in the self-hosting realm, see the comment
+    // in holdScript.
+    if (script_ && !script_->realm()->isSelfHostingRealm())
         script_->setDoNotRelazify(oldDoNotRelazify_);
     script_ = nullptr;
 }

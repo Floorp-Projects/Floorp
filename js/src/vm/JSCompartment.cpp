@@ -44,13 +44,11 @@ using mozilla::PodArrayZero;
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
-    isSelfHosting(false),
     performanceMonitoring(runtime_),
     data(nullptr),
     regExps(),
     globalWriteBarriered(0),
     detachedTypedObjects(0),
-    selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
     innerViews(zone),
     lazyArrayBuffers(nullptr),
@@ -765,7 +763,7 @@ Realm::sweepGlobalObject()
 }
 
 void
-JSCompartment::sweepSelfHostingScriptSource()
+Realm::sweepSelfHostingScriptSource()
 {
     if (selfHostingScriptSource.unbarrieredGet() &&
         IsAboutToBeFinalized(&selfHostingScriptSource))
