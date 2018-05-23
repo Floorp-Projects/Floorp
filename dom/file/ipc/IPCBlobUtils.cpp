@@ -97,16 +97,16 @@ SerializeInputStreamParent(nsIInputStream* aInputStream, uint64_t aSize,
     return rv;
   }
 
+  // We need manually to increase the reference for this actor because the
+  // IPC allocator method is not triggered. The Release() is called by IPDL
+  // when the actor is deleted.
+  parentActor.get()->AddRef();
+
   if (!aManager->SendPIPCBlobInputStreamConstructor(parentActor,
                                                     parentActor->ID(),
                                                     parentActor->Size())) {
     return NS_ERROR_FAILURE;
   }
-
-  // We need manually to increase the reference for this actor because the
-  // IPC allocator method is not triggered. The Release() is called by IPDL
-  // when the actor is deleted.
-  parentActor.get()->AddRef();
 
   aIPCBlob.inputStream() = parentActor;
   return NS_OK;
