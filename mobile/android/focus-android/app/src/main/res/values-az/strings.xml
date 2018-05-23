@@ -8,6 +8,7 @@
   <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
   <string name="search_hint">%1$s üçün axtar</string>
   <string name="menu_share">Paylaş…</string>
+  <string name="menu_report_site_issue">Sayt Problemini Bildir</string>
   <string name="menu_open_with_default_browser2">%1$s ilə aç</string>
   <string name="menu_open_with_a_browser2">Bununla aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana əlavə et</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
   <string name="text_selection_search_action">Məxfi Axtar</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s sizi idar&#601;nin ba&#351;&#305;na qoyur</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bunu m&#601;xfi s&#601;yyah olaraq i&#351;l&#601;din:\n  "<ul>"\n    "<li>Birba&#351;a t&#601;tbiqd&#601; axtar&#305;n v&#601; g&#601;zin</li>"\n    "<li>&#304;zl&#601;yicil&#601;ri &#601;ng&#601;ll&#601;yin (v&#601; ya t&#601;nziml&#601;m&#601;d&#601;n icaz&#601; verin)</li>"\n    "<li>&#199;&#601;r&#601;zl&#601;ri, axtar&#305;&#351; v&#601; g&#601;zm&#601; tarix&#231;&#601;sini silm&#601;k &#252;&#231;&#252;n pozun</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s q&#252;rurla Mozilla t&#601;r&#601;find&#601;n. Missiyam&#305;z sa&#287;lam v&#601; a&#231;&#305;q interneti t&#601;min etm&#601;kdir.<br/>\n<a href="%2$s">&#399;trafl&#305; &#246;yr&#601;n</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Məxfilik və Təhlükəsizlik</string>
+  <string name="preference_privacy_and_security_summary">İzlənmə, çərəzlər, məlumat seçimləri</string>
+  <string name="preference_search_summary">Əsas olaraq qur, avto tamamlama</string>
+  <string name="preference_mozilla_summary">%1$s haqqında, kömək</string>
+  <string name="preference_category_tracking_protection">İzlənmə Qoruması</string>
+  <string name="preference_category_web_content">Web Məzmun</string>
+  <string name="preference_category_switching_apps">Tətbiq Keçidi</string>
+  <string name="preference_category_general">Ümumi</string>
+  <string name="preference_category_data_collection_use">Məlumat yığılması və istifadəsi</string>
   <string name="preference_category_search">Axtar</string>
   <string name="preference_search_engine_default">İlkin hal</string>
   <string name="preference_state_on">Açıq</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
   <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
   <string name="custom_autocomplete_quick_add">Fərdi ünvan əlavə et</string>
+  <string name="preference_category_cookies">Çərəzlər və Sayt Məlumatları</string>
+  <string name="preference_category_data_choices">Məlumat Seçimləri</string>
   <string name="preference_autocomplete_title_remove">Fərdi ünvanı sil</string>
   <string name="preference_autocomplete_learn_more">Ətraflı öyrən</string>
   <string name="preference_autocomplete_custom_summary">Avtomatik tamamlanacaq fərdi ünvanları idarə edin.</string>
   <string name="preference_autocomplete_add_title">Əlavə ediləcək ünvan</string>
   <string name="preference_autocomplete_add_hint">Ünvanı yapışdırın və ya daxil edin</string>
+  <string name="preference_autocomplete_add_example2">Məsələn: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Məsələn: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Yeni fərdi ünvan əlavə edildi.</string>
   <string name="preference_autocomplete_menu_remove">Sil</string>

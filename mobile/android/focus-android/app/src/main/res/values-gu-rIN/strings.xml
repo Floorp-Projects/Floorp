@@ -105,6 +105,7 @@
   <string name="content_description_blocking_switch">ટ્રેકર્સને અવરોધિત કરો</string>
   <string name="your_rights">તમારા અધિકારો</string>
   <string name="external_app_prompt_title">અન્ય એપ્લિકેશનમાં લિંક ખોલો</string>
+  <string name="external_app_prompt">તમે %2$sમાં આ લિંકને ખોલવા માટે %1$s છોડી શકો છો.</string>
   <string name="external_app_prompt_no_app_title">એક એપ્લિકેશન શોધો જે લિંક ખોલી શકે છે</string>
   <string name="external_multiple_apps_matched_exit">ખાનગી બ્રાઉઝિંગ બહાર નીકળીએ?</string>
   <string name="download_snackbar_finished">%1$s સમાપ્ત થઈ</string>

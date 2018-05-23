@@ -8,6 +8,7 @@
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
   <string name="menu_share">Rhannu…</string>
+  <string name="menu_report_site_issue">Adrodd ar Fater Gwefan</string>
   <string name="menu_open_with_default_browser2">Agor gyda %1$s</string>
   <string name="menu_open_with_a_browser2">Agor yn…</string>
   <string name="menu_add_to_home_screen">Ychwanegu i\'r sgrin Cartref</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Dileu\'r hanes pori</string>
   <string name="text_selection_search_action">Chwilio\'n Breifat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu ddiweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Preifatrwydd a Diogelwch</string>
+  <string name="preference_privacy_and_security_summary">Tracio, mewngofnodion, dewisiadau data</string>
+  <string name="preference_search_summary">Gosod y rhagosodiad, awtogwblhau</string>
+  <string name="preference_mozilla_summary">Ynghylch %1$s, cymorth</string>
+  <string name="preference_category_tracking_protection">Diogelwch rhag Tracio</string>
+  <string name="preference_category_web_content">Cynnwys Gwe</string>
+  <string name="preference_category_switching_apps">Newid Apiau</string>
+  <string name="preference_category_general">Cyffredinol</string>
+  <string name="preference_category_data_collection_use">Casglu a Defnydd Data</string>
   <string name="preference_category_search">Chwilio</string>
   <string name="preference_search_engine_default">Rhagosodiad</string>
   <string name="preference_state_on">Ymlaen</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
   <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
   <string name="custom_autocomplete_quick_add">Ychwanegu URL cyfaddas</string>
+  <string name="preference_category_cookies">Cwcis a Data Gwefan</string>
+  <string name="preference_category_data_choices">Dewisiadau Data</string>
   <string name="preference_autocomplete_title_remove">Tynnu URLau cyfaddas</string>
   <string name="preference_autocomplete_learn_more">Dysgu rhagor</string>
   <string name="preference_autocomplete_custom_summary">Ychwanegu a rheoli URLs awtogwblhau cyfaddas.</string>
   <string name="preference_autocomplete_add_title">URLau i\'w hychwanegu</string>
   <string name="preference_autocomplete_add_hint">Gludo neu rhoi URL</string>
+  <string name="preference_autocomplete_add_example2">Esiampl: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Esiampl: example.com</string>
   <string name="preference_autocomplete_add_confirmation">URL cyfaddas newydd wedi ei ychwanegu.</string>
   <string name="preference_autocomplete_menu_remove">Tynnu</string>

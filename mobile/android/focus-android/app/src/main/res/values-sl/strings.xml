@@ -8,6 +8,7 @@
   <string name="feedback_erase">Vaša zgodovina brskanja je bila izbrisana.</string>
   <string name="search_hint">Išči %1$s</string>
   <string name="menu_share">Deli …</string>
+  <string name="menu_report_site_issue">Prijavi napako strani</string>
   <string name="menu_open_with_default_browser2">Odpri v %1$s</string>
   <string name="menu_open_with_a_browser2">Odpri v …</string>
   <string name="menu_add_to_home_screen">Dodaj na domač zaslon</string>
@@ -26,6 +27,13 @@
   <string name="shortcut_erase_long_label">Počisti zgodovino brskanja</string>
   <string name="text_selection_search_action">Iščite zasebno</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje nadzor v va&#353;e roke.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Uporabljajte ga kot zaseben brskalnik:\n  "<ul>"\n    "<li>I&#353;&#269;ite in brskajte naravnost iz aplikacije</li>"\n    "<li>Zavra&#269;ajte sledilce (ali spremenite nastavitve zavra&#269;anja sledilcev)</li>"\n    "<li>Bri&#353;ite pi&#353;kotke ter zgodovino strani in iskanja</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s razvija Mozilla. Na&#353;e poslanstvo je spodbujati zdrav in odprt internet.<br/>\n<a href="%2$s">Ve&#269; o tem</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Zasebnost in varnost</string>
+  <string name="preference_privacy_and_security_summary">Sledenje, piškotki, podatkovne možnosti</string>
+  <string name="preference_mozilla_summary">O %1$su, pomoč</string>
+  <string name="preference_category_tracking_protection">Zaščita pred sledenjem</string>
+  <string name="preference_category_web_content">Spletna vsebina</string>
+  <string name="preference_category_general">Splošno</string>
+  <string name="preference_category_data_collection_use">Zbiranje in uporaba podatkov</string>
   <string name="preference_category_search">Iskanje</string>
   <string name="preference_search_engine_default">Privzet</string>
   <string name="preference_state_on">Vključeno</string>
@@ -39,11 +47,14 @@
   <string name="preference_autocomplete_action_add">+ Dodaj URL po meri</string>
   <string name="preference_autocomplete_title_add">Dodaj URL po meri</string>
   <string name="custom_autocomplete_quick_add">Dodaj spletni naslov po meri</string>
+  <string name="preference_category_cookies">Piškotki in podatki strani</string>
+  <string name="preference_category_data_choices">Podatkovne možnosti</string>
   <string name="preference_autocomplete_title_remove">Odstrani URL po meri</string>
   <string name="preference_autocomplete_learn_more">Več o tem</string>
   <string name="preference_autocomplete_custom_summary">Dodajte in upravljajte z URL-ji po meri za samodejno dokončevanje.</string>
   <string name="preference_autocomplete_add_title">URL za dodajanje</string>
   <string name="preference_autocomplete_add_hint">Prilepite ali vpišite URL</string>
+  <string name="preference_autocomplete_add_example2">Primer: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Primer: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nov URL po meri dodan.</string>
   <string name="preference_autocomplete_menu_remove">Odstrani</string>

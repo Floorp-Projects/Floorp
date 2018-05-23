@@ -174,5 +174,5 @@
   <string name="security_popup_insecure_connection">Conexiune nesigură</string>
   <string name="security_popup_security_verified">Verificat de: %1$s</string>
   <string name="site_security_icon_content_description">Securitatea site-ului</string>
-  <string name="preference_autocomplete_duplicate_url_error">Acest URL există deja</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL-ul există deja</string>
 </resources>

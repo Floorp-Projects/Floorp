@@ -8,6 +8,7 @@
   <string name="feedback_erase">Ваш историјат прегледања је обрисан.</string>
   <string name="search_hint">Претражи %1$s</string>
   <string name="menu_share">Подели…</string>
+  <string name="menu_report_site_issue">Пријави проблем на сајту</string>
   <string name="menu_open_with_default_browser2">Отвори у %1$s</string>
   <string name="menu_open_with_a_browser2">Отвори у…</string>
   <string name="menu_add_to_home_screen">Додај на почетни екран</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Обриши историју прегледања</string>
   <string name="text_selection_search_action">Претражујте приватно</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1074;&#1072;&#1084; &#1076;&#1072;&#1112;&#1077; &#1082;&#1086;&#1085;&#1090;&#1088;&#1086;&#1083;&#1091;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1050;&#1086;&#1088;&#1080;&#1089;&#1090;&#1080;&#1090;&#1077; &#1075;&#1072; &#1082;&#1072;&#1086; &#1087;&#1088;&#1080;&#1074;&#1072;&#1090;&#1085;&#1080; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1095;:\n  "<ul>"\n    "<li>&#1055;&#1088;&#1077;&#1090;&#1088;&#1072;&#1078;&#1091;&#1112;&#1090;&#1077; &#1080; &#1089;&#1091;&#1088;&#1092;&#1091;&#1112;&#1090;&#1077; &#1076;&#1080;&#1088;&#1077;&#1082;&#1090;&#1085;&#1086; &#1091; &#1072;&#1087;&#1083;&#1080;&#1082;&#1072;&#1094;&#1080;&#1112;&#1080;</li>"\n    "<li>&#1041;&#1083;&#1086;&#1082;&#1080;&#1088;&#1072;&#1112;&#1090;&#1077; &#1087;&#1088;&#1072;&#1090;&#1080;&#1086;&#1094;&#1077; (&#1080;&#1083;&#1080; &#1080;&#1093; &#1086;&#1084;&#1086;&#1075;&#1091;&#1115;&#1080;&#1090;&#1077; &#1091; &#1087;&#1086;&#1089;&#1090;&#1072;&#1074;&#1082;&#1072;&#1084;&#1072;)</li>"\n    "<li>&#1048;&#1079;&#1073;&#1088;&#1080;&#1096;&#1080;&#1090;&#1077; &#1089;&#1074;&#1077; &#1082;&#1086;&#1083;&#1072;&#1095;&#1080;&#1115;&#1077; &#1082;&#1072;&#1086; &#1080; &#1080;&#1089;&#1090;&#1086;&#1088;&#1080;&#1112;&#1072;&#1090; &#1087;&#1088;&#1077;&#1075;&#1083;&#1077;&#1076;&#1072;&#1114;&#1072; &#1080; &#1087;&#1088;&#1077;&#1090;&#1088;&#1072;&#1075;&#1077;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#1112;&#1077; &#1089;&#1090;&#1074;&#1086;&#1088;&#1080;&#1083;&#1072; Mozilla. &#1053;&#1072;&#1096;&#1072; &#1084;&#1080;&#1089;&#1080;&#1112;&#1072; &#1112;&#1077; &#1085;&#1077;&#1075;&#1086;&#1074;&#1072;&#1114;&#1077; &#1079;&#1076;&#1088;&#1072;&#1074;&#1086;&#1075; &#1080; &#1086;&#1090;&#1074;&#1086;&#1088;&#1077;&#1085;&#1086;&#1075; &#1080;&#1085;&#1090;&#1077;&#1088;&#1085;&#1077;&#1090;&#1072;.<br/>\n<a href="%2$s">&#1057;&#1072;&#1079;&#1085;&#1072;&#1112;&#1090;&#1077; &#1074;&#1080;&#1096;&#1077;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Приватност и безбедност</string>
+  <string name="preference_privacy_and_security_summary">Праћење, колачићи, избори података</string>
+  <string name="preference_search_summary">Постави подразумевано, аутоматски заврши</string>
+  <string name="preference_mozilla_summary">О %1$s-у, помоћ</string>
+  <string name="preference_category_tracking_protection">Заштита од праћења</string>
+  <string name="preference_category_web_content">Веб садржај</string>
+  <string name="preference_category_switching_apps">Мењање апликација</string>
+  <string name="preference_category_general">Општа</string>
+  <string name="preference_category_data_collection_use">Сакупљање и коришћење података</string>
   <string name="preference_category_search">Претраживач</string>
   <string name="preference_search_engine_default">Подразумевано</string>
   <string name="preference_state_on">Укључено</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Додај URL</string>
   <string name="preference_autocomplete_title_add">Додај URL</string>
   <string name="custom_autocomplete_quick_add">Додај URL</string>
+  <string name="preference_category_cookies">Колачићи и подаци сајта</string>
+  <string name="preference_category_data_choices">Избори података</string>
   <string name="preference_autocomplete_title_remove">Уклони URL адресе</string>
   <string name="preference_autocomplete_learn_more">Сазнајте више</string>
   <string name="preference_autocomplete_custom_summary">Додавање и управљање аутоматски завршеним URL адресама.</string>
   <string name="preference_autocomplete_add_title">URL за додавање</string>
   <string name="preference_autocomplete_add_hint">Налепите или унесите URL</string>
+  <string name="preference_autocomplete_add_example2">Пример: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Пример: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Нови URL додат.</string>
   <string name="preference_autocomplete_menu_remove">Уклони</string>

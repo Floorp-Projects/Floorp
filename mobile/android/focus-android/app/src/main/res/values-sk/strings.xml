@@ -8,6 +8,7 @@
   <string name="feedback_erase">Vaša história prehliadania bola vymazaná.</string>
   <string name="search_hint">Vyhľadať %1$s</string>
   <string name="menu_share">Zdieľať…</string>
+  <string name="menu_report_site_issue">Nahlásiť problém so stránkou</string>
   <string name="menu_open_with_default_browser2">Otvoriť v aplikácii %1$s</string>
   <string name="menu_open_with_a_browser2">Otvoriť pomocou…</string>
   <string name="menu_add_to_home_screen">Pridať na úvodnú obrazovku</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Vymazať históriu</string>
   <string name="text_selection_search_action">Súkromné vyhľadávanie</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;va kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vajte ho ako s&#250;kromn&#253; prehliada&#269;:\n  "<ul>"\n    "<li>Vyh&#318;ad&#225;vajte a prehliadajte priamo prostredn&#237;ctvom aplik&#225;cie</li>"\n    "<li>Blokujte sledovacie prvky (v nastaveniach m&#244;&#382;ete sledovacie prvky povoli&#357;)</li>"\n    "<li>Vyma&#382;te cookies, hist&#243;riu vyh&#318;ad&#225;vania a prehliadania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vyv&#237;ja Mozilla. Na&#353;a misia je podporova&#357; zdrav&#253; a otvoren&#253; internet.<br/>\n<a href="%2$s">&#270;al&#353;ie inform&#225;cie</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Súkromie a bezpečnosť</string>
+  <string name="preference_privacy_and_security_summary">Sledovanie, súbory cookie, údaje o používaní</string>
+  <string name="preference_search_summary">Predvolené nastavenia, automatické dopĺňanie</string>
+  <string name="preference_mozilla_summary">O aplikácii %1$s, pomocník</string>
+  <string name="preference_category_tracking_protection">Ochrana pred sledovaním</string>
+  <string name="preference_category_web_content">Webový obsah</string>
+  <string name="preference_category_switching_apps">Prepínanie medzi aplikáciami</string>
+  <string name="preference_category_general">Všeobecné</string>
+  <string name="preference_category_data_collection_use">Zbieranie údajov a ich použitie</string>
   <string name="preference_category_search">Vyhľadávanie</string>
   <string name="preference_search_engine_default">Predvolený</string>
   <string name="preference_state_on">Zapnuté</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Pridať vlastnú URL</string>
   <string name="preference_autocomplete_title_add">Pridať vlastnú URL</string>
   <string name="custom_autocomplete_quick_add">Pridať vlastnú URL</string>
+  <string name="preference_category_cookies">Cookies a údaje stránok</string>
+  <string name="preference_category_data_choices">Odosielanie údajov</string>
   <string name="preference_autocomplete_title_remove">Odstrániť vlastné URL</string>
   <string name="preference_autocomplete_learn_more">Ďalšie informácie</string>
   <string name="preference_autocomplete_custom_summary">Pridanie a správa vlastných URL adries na dokončovanie.</string>
   <string name="preference_autocomplete_add_title">Adresa na pridanie</string>
   <string name="preference_autocomplete_add_hint">Prilepte alebo zadajte URL adresu</string>
+  <string name="preference_autocomplete_add_example2">Príklad: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Príklad: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Bola pridaná nová vlastná URL adresa.</string>
   <string name="preference_autocomplete_menu_remove">Odstrániť</string>

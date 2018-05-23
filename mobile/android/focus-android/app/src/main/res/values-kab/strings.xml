@@ -8,6 +8,7 @@
   <string name="feedback_erase">Amazray-inek n unadi yettwasfeḍ.</string>
   <string name="search_hint">Nadi %1$s</string>
   <string name="menu_share">Bḍu…</string>
+  <string name="menu_report_site_issue">Azen-d ugur-agi</string>
   <string name="menu_open_with_default_browser2">Ldi di %1$s</string>
   <string name="menu_open_with_a_browser2">Ldi deg…</string>
   <string name="menu_add_to_home_screen">Rnu γer ugdil agejdan</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Sfeḍ amazray n tunigin</string>
   <string name="text_selection_search_action">Anadi uslig</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ad k-d-yefk afus ad teqqime&#7693; d aqe&#7771;&#7771;u.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Seqdec-it d iminig uslig:\n  "<ul>"\n    "<li>Nadi sakin snirem akken iwata deg usnas</li>"\n    "<li>Sew&#7717;el imesfu&#611;al (ne&#947; snifel i&#947;ewwa&#7771;en akken ad tsirge&#7693; imesfu&#947;al)</li>"\n    "<li>Sfe&#7693; inagan n tuqna akked amazray n tunigin d unadi</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s yesnulfa-t-id Mozilla. Tu&#947;da&#7789;-nne&#947; ad n&#7717;areb &#947;ef internet yeldin d tezmert-is.<br/>\n<a href="%2$s">Issin ugar</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">"Tabaḍnit  &amp; Taɣellist"</string>
+  <string name="preference_privacy_and_security_summary">Aḍfaṛ, inagan n tuqqna, isefka yettwaleqḍen</string>
+  <string name="preference_search_summary">Amsedday amezwer, tira tawurmant</string>
+  <string name="preference_mozilla_summary">Ɣef %1$s, tallelt</string>
+  <string name="preference_category_tracking_protection">Ammesten mgal adfaṛ</string>
+  <string name="preference_category_web_content">Agbur Web</string>
+  <string name="preference_category_switching_apps">Tunigin gar yisnasen</string>
+  <string name="preference_category_general">Amatu</string>
+  <string name="preference_category_data_collection_use">Alqaḍ &amp; Aseqdec n yisefka</string>
   <string name="preference_category_search">Nadi</string>
   <string name="preference_search_engine_default">Amezwer</string>
   <string name="preference_state_on">Yermed</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Rnu URL aganan</string>
   <string name="preference_autocomplete_title_add">Rnu URL aganan</string>
   <string name="custom_autocomplete_quick_add">Rnu URL aganan</string>
+  <string name="preference_category_cookies">Inagan n tuqqna d yisefka n yismal</string>
+  <string name="preference_category_data_choices">Alqaḍ n yisefka</string>
   <string name="preference_autocomplete_title_remove">Kkes URLs iganen</string>
   <string name="preference_autocomplete_learn_more">Issin ugar</string>
   <string name="preference_autocomplete_custom_summary">Rnu u sefrek taččart tawurmant n URLs.</string>
   <string name="preference_autocomplete_add_title">URL ad ternuḍ</string>
   <string name="preference_autocomplete_add_hint">Senṭeḍ neγ sekcem URL</string>
+  <string name="preference_autocomplete_add_example2">Amedya: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Amedya: example.com</string>
   <string name="preference_autocomplete_add_confirmation">URL aganan amaynut ittwarna.</string>
   <string name="preference_autocomplete_menu_remove">Kkes</string>

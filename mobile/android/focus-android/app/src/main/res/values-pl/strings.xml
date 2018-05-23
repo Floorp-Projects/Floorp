@@ -8,6 +8,7 @@
   <string name="feedback_erase">Usunięto historię przeglądania.</string>
   <string name="search_hint">Wyszukaj „%1$s”</string>
   <string name="menu_share">Udostępnij…</string>
+  <string name="menu_report_site_issue">Zgłoś problem ze stroną</string>
   <string name="menu_open_with_default_browser2">Otwórz w aplikacji %1$s</string>
   <string name="menu_open_with_a_browser2">Otwórz w…</string>
   <string name="menu_add_to_home_screen">Dodaj do ekranu głównego</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Usuń historię przeglądania</string>
   <string name="text_selection_search_action">Wyszukaj prywatnie</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s daje wi&#281;ksz&#261; kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Jako prywatna przegl&#261;darka umo&#380;liwia:\n  "<ul>"\n    "<li>wyszukiwanie i&#160;przegl&#261;danie prosto z&#160;aplikacji</li>"\n    "<li>blokowanie &#347;ledzenia (mo&#380;na to zmieni&#263; w&#160;ustawieniach)</li>"\n    "<li>usuwanie ciasteczek oraz ca&#322;ej historii wyszukiwania i&#160;przegl&#261;dania</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jest tworzony przez Mozill&#281;. Naszym celem jest wspieranie zdrowego i&#160;otwartego Internetu.<br/>\n<a href="%2$s">Wi&#281;cej informacji</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Prywatność i bezpieczeństwo</string>
+  <string name="preference_privacy_and_security_summary">Śledzenie, ciasteczka, udostępniane dane</string>
+  <string name="preference_search_summary">Domyślna wyszukiwarka, automatyczne uzupełnianie</string>
+  <string name="preference_mozilla_summary">O programie %1$s, pomoc</string>
+  <string name="preference_category_tracking_protection">Ochrona przed śledzeniem</string>
+  <string name="preference_category_web_content">Strony</string>
+  <string name="preference_category_switching_apps">Przełączanie aplikacji</string>
+  <string name="preference_category_general">Ogólne</string>
+  <string name="preference_category_data_collection_use">Zbieranie i wykorzystywanie danych</string>
   <string name="preference_category_search">Wyszukiwanie</string>
   <string name="preference_search_engine_default">Domyślna</string>
   <string name="preference_state_on">Włączone</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Dodaj inny adres</string>
   <string name="preference_autocomplete_title_add">Dodaj inny adres</string>
   <string name="custom_autocomplete_quick_add">Dodaj inny adres</string>
+  <string name="preference_category_cookies">Ciasteczka i dane stron</string>
+  <string name="preference_category_data_choices">Udostępniane dane</string>
   <string name="preference_autocomplete_title_remove">Usuń inny adres</string>
   <string name="preference_autocomplete_learn_more">Więcej informacji</string>
   <string name="preference_autocomplete_custom_summary">Dodawanie i zarządzenie innymi adresami automatycznego uzupełniania.</string>
   <string name="preference_autocomplete_add_title">Adres do dodania</string>
   <string name="preference_autocomplete_add_hint">Wklej lub wpisz adres</string>
+  <string name="preference_autocomplete_add_example2">Przykład: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Przykład: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Dodano nowy adres.</string>
   <string name="preference_autocomplete_menu_remove">Usuń</string>

@@ -55,6 +55,7 @@
   <string name="preference_privacy_block_social_summary">Yɨ´ɨ nuu daa web saa kuvi kuntada noo´o jee kutuvi daa botones kuvi kua´a</string>
   <string name="preference_privacy_block_content">Chiyu´u daa ka̱a̱ nita daa inka contenido</string>
   <string name="preference_privacy_block_content_summary2">Dee tee ya´a kuvi sá´á daa web nsatiñu vii</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Kuvi</string>
   <string name="preference_privacy_secure_mode">Ntu tuvi</string>
   <string name="preference_privacy_stealth_summary">Chiyu´u daa tutu web saa sama ka̱a̱</string>
   <string name="preference_category_performance">Naja satiñu</string>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">Waša pśeglědowańska historija jo se wulašowała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Źěliś…</string>
+  <string name="menu_report_site_issue">Sedłowy problem k wěsći daś</string>
   <string name="menu_open_with_default_browser2">W %1$s wócyniś</string>
   <string name="menu_open_with_a_browser2">Wócyniś w…</string>
   <string name="menu_add_to_home_screen">Startowej wobrazowce pśidaś</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Pśeglědowańsku historiju lašowaś</string>
   <string name="text_selection_search_action">Priwatnje pytaś</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dajo was kontrolu wobchowa&#347;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;ywaj&#347;o jen ako priwatny wobgl&#283;dowak:\n  "<ul>"\n    "<li>Pytaj&#347;o a p&#347;egl&#283;duj&#347;o direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blok&#283;ruj&#347;o p&#347;esl&#283;dowaki (abo aktualiz&#283;ruj&#347;o nastajenja, aby p&#347;esl&#283;dowaki dow&#243;li&#322;)</li>"\n    "<li>La&#353;uj&#347;o cookieje a pyta&#324;sku a p&#347;egl&#283;dowa&#324;sku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s se w&#243;t Mozilla wuwija. Na&#353;a misija jo sp&#283;chowanje strowego, w&#243;tw&#243;rjonego interneta.<br/>\n<a href="%2$s">Dal&#353;ne informacije</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
+  <string name="preference_privacy_and_security_summary">Slědowanje, cookieje, datowe wuběrki</string>
+  <string name="preference_search_summary">Standard nastajiś, awtomatiske wudopołnjenje</string>
+  <string name="preference_mozilla_summary">Wó %1$s, pomoc</string>
+  <string name="preference_category_tracking_protection">Slědowański šćit</string>
+  <string name="preference_category_web_content">Webwopśimjeśe</string>
+  <string name="preference_category_switching_apps">Pśešaltowanje nałoženjow</string>
+  <string name="preference_category_general">Powšykne</string>
+  <string name="preference_category_data_collection_use">Zběranje a wužywanje datow</string>
   <string name="preference_category_search">Pytaś</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">Zašaltowany</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Swójsku adresu pśidaś</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu pśidaś</string>
   <string name="custom_autocomplete_quick_add">Swójski URL pśidaś</string>
+  <string name="preference_category_cookies">Cookieje a sedłowe daty</string>
+  <string name="preference_category_data_choices">Datowe wuběrki</string>
   <string name="preference_autocomplete_title_remove">Swójske adrese wótwónoźeś</string>
   <string name="preference_autocomplete_learn_more">Dalšne informacije</string>
   <string name="preference_autocomplete_custom_summary">Swójske adrese za wudopołnjenje pśidaś a zastojaś.</string>
   <string name="preference_autocomplete_add_title">Adresa, kótaraž ma se pśidaś</string>
   <string name="preference_autocomplete_add_hint">Adresu zasajźiś abo zapódaś</string>
+  <string name="preference_autocomplete_add_example2">Pśikład: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Pśikład: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa pśidana.</string>
   <string name="preference_autocomplete_menu_remove">Wótwónoźeś</string>

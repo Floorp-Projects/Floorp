@@ -8,6 +8,7 @@
   <string name="feedback_erase">Waša přehladowanska historija je so zhašała.</string>
   <string name="search_hint">Pytanje za %1$s</string>
   <string name="menu_share">Dźělić…</string>
+  <string name="menu_report_site_issue">Sydłowy problem zdźělić</string>
   <string name="menu_open_with_default_browser2">W %1$s wočinić</string>
   <string name="menu_open_with_a_browser2">Wočinić w…</string>
   <string name="menu_add_to_home_screen">Startowej wobrazowce přidać</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Přehladowansku historiju zhašeć</string>
   <string name="text_selection_search_action">Priwatnje pytać</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s da was kontrolu wobchowa&#263;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Wu&#382;iwaj&#263;e j&#243;n jako priwatny wobhladowak:\n  "<ul>"\n    "<li>Pytaj&#263;e a p&#345;ehladuj&#263;e direktnje w na&#322;o&#382;enju</li>"\n    "<li>Blokuj&#263;e p&#345;es&#263;&#283;howaki (abo aktualizuj&#263;e nastajenja, zo by&#353;&#263;e p&#345;es&#263;&#283;howaki dowoli&#322;)</li>"\n    "<li>Zha&#353;ej&#263;e placki a pytansku a p&#345;ehladowansku historiju</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s so wot Mozilla wuwiwa. Na&#353;a misija je sp&#283;chowanje stroweho, wotewrjeneho interneta.<br/>\n<a href="%2$s">Dal&#353;e informacije</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Priwatnosć a wěstota</string>
+  <string name="preference_privacy_and_security_summary">Slědowanje, placki, datowe wuběry</string>
+  <string name="preference_search_summary">Standard nastajić, awtomatiske wudospołnjenje</string>
+  <string name="preference_mozilla_summary">Wo %1$s, pomoc</string>
+  <string name="preference_category_tracking_protection">Slědowanski škit</string>
+  <string name="preference_category_web_content">Webwobsah</string>
+  <string name="preference_category_switching_apps">Přešaltowanje nałoženjow</string>
+  <string name="preference_category_general">Powšitkowne</string>
+  <string name="preference_category_data_collection_use">Zběranje a wužiwanje datow</string>
   <string name="preference_category_search">Pytać</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">Zapinjeny</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Swójsku adresu přidać</string>
   <string name="preference_autocomplete_title_add">Swójsku adresu přidać</string>
   <string name="custom_autocomplete_quick_add">Swójski URL přidać</string>
+  <string name="preference_category_cookies">Placki a sydłowe daty</string>
+  <string name="preference_category_data_choices">Datowy wuběr</string>
   <string name="preference_autocomplete_title_remove">Swójske adresy wotstronić</string>
   <string name="preference_autocomplete_learn_more">Dalše informacije</string>
   <string name="preference_autocomplete_custom_summary">Swójske adresy za wudospołnjenje přidać a rjadowác.</string>
   <string name="preference_autocomplete_add_title">Adresa, kotraž ma so přidać</string>
   <string name="preference_autocomplete_add_hint">Adresu zasadźić abo zapodać</string>
+  <string name="preference_autocomplete_add_example2">Přikład: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Přikład: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nowa swójska adresa přidata.</string>
   <string name="preference_autocomplete_menu_remove">Wotstronić</string>

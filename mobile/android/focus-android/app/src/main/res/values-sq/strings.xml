@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">Vetëplotësim</string>
   <string name="preference_category_autocomplete_preinstalled">Listë Parazgjedhje URLsh</string>
   <string name="preference_autocomplete_preinstalled_summary">Aktivizojeni që %1$s-i të vetëplotësojë te shtylla e adresave mbi 450 URL popullore.</string>
+  <string name="preference_category_autocomplete_custom_urls">URL Vetjake</string>
   <string name="preference_autocomplete_subitem_customlist">URLra Vetjake</string>
   <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
   <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
+  <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
   <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
   <string name="preference_autocomplete_learn_more">Mësoni më tepër</string>
   <string name="preference_autocomplete_custom_summary">Shtoni dhe administroni URLra vetjake vetëplotësimesh.</string>
@@ -58,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">Të trupëzuara në sajte për të gjurmuar vizitat tuaja dhe për të shfaqur funksione, të tillë si butona ndarjeje me të tjerët</string>
   <string name="preference_privacy_block_content">Blloko të tjerë gjurmues lënde</string>
   <string name="preference_privacy_block_content_summary2">Aktivizimi mund të bëjë që disa faqe të sillen ndryshe nga ç’pritet</string>
+  <string name="preference_privacy_category_cookies">Blloko cookie-t</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Jo</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Blloko vetëm cookie-t nga palë të treta</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Po</string>
   <string name="preference_privacy_secure_mode">Fshehtas</string>
   <string name="preference_privacy_stealth_summary">Fshihi faqet web kur kalohet nga një aplikacion në tjetrin</string>
   <string name="preference_category_performance">Punim</string>
   <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
   <string name="preference_performance_block_webfonts_summary">Mund të sjellë mungesë ikonash ose figurash</string>
+  <string name="preference_performance_block_javascript">Blloko JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Faqet mund të ngarkohen më shpejt, por mundet gjithashtu të sillen në mënyrë të papritur</string>
   <string name="preference_default_browser2">Bëje %1$s-in shfletuesin parazgjedhje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Dërgo të dhëna përdorimi</string>
@@ -166,4 +174,5 @@
   <string name="security_popup_insecure_connection">Lidhje e Pasigurt</string>
   <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
   <string name="site_security_icon_content_description">Siguri Sajti</string>
+  <string name="preference_autocomplete_duplicate_url_error">Ka tashmë një URL të tillë</string>
 </resources>

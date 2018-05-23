@@ -8,6 +8,7 @@
   <string name="feedback_erase">Gezinti geçmişiniz silinmiştir.</string>
   <string name="search_hint">%1$s terimini ara</string>
   <string name="menu_share">Paylaş…</string>
+  <string name="menu_report_site_issue">Siteyle ilgili sorun bildir</string>
   <string name="menu_open_with_default_browser2">%1$s ile aç</string>
   <string name="menu_open_with_a_browser2">Birlikte aç…</string>
   <string name="menu_add_to_home_screen">Ana ekrana ekle</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Gezinti geçmişini sil</string>
   <string name="text_selection_search_action">Gizli arama</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s kontrol&#252; size verir.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Onu gizlilik odakl&#305; bir taray&#305;c&#305; olarak kullanabilirsiniz:\n  "<ul>"\n    "<li>Do&#287;rudan uygulamada arama yapabilir ve web&#8217;de gezinebilirsiniz</li>"\n    "<li>Takip&#231;ileri engelleyebilirsiniz (veya belli takip&#231;ilere izin verebilirsiniz)</li>"\n    "<li>Tek d&#252;&#287;meyle &#231;erezleri, arama ve gezinti ge&#231;mi&#351;inizi silebilirsiniz</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla taraf&#305;ndan geli&#351;tirilmi&#351;tir. Misyonumuz daha sa&#287;l&#305;kl&#305; ve a&#231;&#305;k bir internet yaratmakt&#305;r.<br/>\n<a href="%2$s">Daha fazla bilgi al&#305;n</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Gizlilik ve Güvenlik</string>
+  <string name="preference_privacy_and_security_summary">İzlenme, çerezler, veri tercihleri</string>
+  <string name="preference_search_summary">Varsayılan yap, otomatik tamamlama</string>
+  <string name="preference_mozilla_summary">%1$s hakkında, yardım</string>
+  <string name="preference_category_tracking_protection">İzlenme Koruması</string>
+  <string name="preference_category_web_content">Web içeriği</string>
+  <string name="preference_category_switching_apps">Uygulama geçişi</string>
+  <string name="preference_category_general">Genel</string>
+  <string name="preference_category_data_collection_use">Veri toplanması ve kullanımı</string>
   <string name="preference_category_search">Arama</string>
   <string name="preference_search_engine_default">Varsayılan</string>
   <string name="preference_state_on">Açık</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Özel adres ekle</string>
   <string name="preference_autocomplete_title_add">Özel adres ekle</string>
   <string name="custom_autocomplete_quick_add">Özel adres ekle</string>
+  <string name="preference_category_cookies">Çerezler ve site verileri</string>
+  <string name="preference_category_data_choices">Veri tercihleri</string>
   <string name="preference_autocomplete_title_remove">Özel adresleri sil</string>
   <string name="preference_autocomplete_learn_more">Daha fazla bilgi al</string>
   <string name="preference_autocomplete_custom_summary">Otomatik tamamlanacak özel adresleri ekleyin ve yönetin.</string>
   <string name="preference_autocomplete_add_title">Eklenecek adres</string>
   <string name="preference_autocomplete_add_hint">Adresi yapıştırın veya yazın</string>
+  <string name="preference_autocomplete_add_example2">Örnek: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Örnek: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Yeni özel adres eklendi.</string>
   <string name="preference_autocomplete_menu_remove">Sil</string>

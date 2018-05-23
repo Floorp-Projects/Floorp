@@ -8,6 +8,7 @@
   <string name="feedback_erase">Din nettleserhistorikk har blitt slettet.</string>
   <string name="search_hint">Søk etter %1$s</string>
   <string name="menu_share">Del …</string>
+  <string name="menu_report_site_issue">Rapporter problem med nettsted</string>
   <string name="menu_open_with_default_browser2">Åpne i %1$s</string>
   <string name="menu_open_with_a_browser2">Åpne i…</string>
   <string name="menu_add_to_home_screen">Legg til på startskjermen</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Slett nettleserhistorikk</string>
   <string name="text_selection_search_action">Søk privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gir deg kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Bruk den som en privat nettleser:\n  "<ul>"\n    "<li>S&#248;k og surf rett i appen</li>"\n    "<li>Blokker sporere (eller oppdater innstillingene for &#229; tillate sporere)</li>"\n    "<li>Slett for &#229; fjerne infokapsler samt s&#248;k- og nettleserhistorikk</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s er produsert av Mozilla. V&#229;r misjon er &#229; fremme et sunt, &#229;pent Internett.<br/>\n<a href="%2$s">Les mer</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Personvern og sikkerhet</string>
+  <string name="preference_privacy_and_security_summary">Sporing, infokapsler, datavalg</string>
+  <string name="preference_search_summary">Sett standard, autofullfør</string>
+  <string name="preference_mozilla_summary">Om %1$s, hjelp</string>
+  <string name="preference_category_tracking_protection">Sporingsbeskyttelse</string>
+  <string name="preference_category_web_content">Nettinnhold</string>
+  <string name="preference_category_switching_apps">Bytte mellom apper</string>
+  <string name="preference_category_general">Generelt</string>
+  <string name="preference_category_data_collection_use">Datainnsamling og bruk</string>
   <string name="preference_category_search">Søk</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">På</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Legg til egendefinert nettadresse</string>
   <string name="preference_autocomplete_title_add">Legg til egendefinert nettadresse</string>
   <string name="custom_autocomplete_quick_add">Legg til egendefinert nettadresse</string>
+  <string name="preference_category_cookies">Infokapsler og nettstedsdata</string>
+  <string name="preference_category_data_choices">Datavalg</string>
   <string name="preference_autocomplete_title_remove">Fjern tilpassede nettadresser</string>
   <string name="preference_autocomplete_learn_more">Les mer</string>
   <string name="preference_autocomplete_custom_summary">Legg til og administrer tilpassede nettadresser for autofullføring.</string>
   <string name="preference_autocomplete_add_title">Nettadresse å legge til</string>
   <string name="preference_autocomplete_add_hint">Lim inn eller skriv inn nettadresse</string>
+  <string name="preference_autocomplete_add_example2">Eksempel: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Eksempel: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Ny tilpasset nettadresse lagt til.</string>
   <string name="preference_autocomplete_menu_remove">Fjern</string>

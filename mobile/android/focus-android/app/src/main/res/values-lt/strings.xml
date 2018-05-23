@@ -2,11 +2,15 @@
 <resources>
   <string name="action_cancel">Atsisakyti</string>
   <string name="action_ok">Gerai</string>
+  <string name="action_save">Įrašyti</string>
   <string name="urlbar_hint">Įveskite adresą arba paieškos žodžius</string>
   <string name="teaser">Automatinis privatusis naršymas.\nNaršykite. Išvalykite. Kartokite.</string>
   <string name="feedback_erase">Jūsų naršymo žurnalas buvo išvalytas.</string>
   <string name="search_hint">Ieškoti „%1$s“</string>
   <string name="menu_share">Dalintis…</string>
+  <string name="menu_report_site_issue">Pranešti apie svetainės problemą</string>
+  <string name="menu_open_with_default_browser2">Atverti per „%1$s“</string>
+  <string name="menu_open_with_a_browser2">Atverti per…</string>
   <string name="menu_add_to_home_screen">Įtraukti į pradžios ekraną</string>
   <string name="menu_whats_new">Kas naujo</string>
   <string name="menu_settings">Nuostatos</string>
@@ -14,6 +18,7 @@
   <string name="menu_help">Žinynas</string>
   <string name="menu_rights">Jūsų teisės</string>
   <string name="menu_trackers_blocked_title">Užblokuoti sekimo elementai</string>
+  <string name="menu_custom_tab_branding">Įgalino „%1$s“</string>
   <string name="share_dialog_title">Dalintis per</string>
   <string name="notification_erase_text">Valyti naršymo žurnalą</string>
   <string name="notification_action_open">Atverti</string>
@@ -21,8 +26,26 @@
   <string name="shortcut_erase_short_label">Valyti</string>
   <string name="shortcut_erase_long_label">Valyti naršymo žurnalą</string>
   <string name="text_selection_search_action">Ieškoti privačiai</string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; suteikia jums kontrol&#281;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Naudokite j&#261; kaip priva&#269;i&#261; nar&#353;ykl&#281;:\n  "<ul>"\n    "<li>Ie&#353;kokite ir nar&#353;ykite pa&#269;ioje programoje</li>"\n    "<li>Blokuoti steb&#279;jimo elementus (arba atnaujinkite nuostatas, nor&#279;dami juos leisti)</li>"\n    "<li>I&#353;trinkite, nor&#279;dami pa&#353;alinti slapukus, paie&#353;kos ir nar&#353;ymo &#382;urnalus</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#8222;%1$s&#8220; yra &#8222;Mozillos&#8220; k&#363;rinys. M&#363;s&#371; misija yra skatinti sveik&#261;, atvir&#261; internet&#261;.<br/>\n<a href="%2$s">Su&#382;inoti daugiau</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privatumas ir saugumas</string>
+  <string name="preference_privacy_and_security_summary">Stebėjimas, slapukai, duomenų siuntimas</string>
+  <string name="preference_search_summary">Parinkite numatytąją, automatinio užbaigimo</string>
+  <string name="preference_mozilla_summary">Apie „%1$s“, žinynas</string>
+  <string name="preference_category_tracking_protection">Apsauga nuo stebėjimo</string>
+  <string name="preference_category_web_content">Saityno turinys</string>
+  <string name="preference_category_switching_apps">Programų perjungimas</string>
+  <string name="preference_category_general">Bendrosios</string>
+  <string name="preference_category_data_collection_use">Duomenų rinkimas ir naudojimas</string>
   <string name="preference_category_search">Paieška</string>
   <string name="preference_search_engine_default">Numatytoji</string>
+  <string name="preference_state_on">Taip</string>
+  <string name="preference_state_off">Ne</string>
+  <string name="preference_subitem_autocomplete">Automatinis URL užbaigimas</string>
+  <string name="preference_switch_autocomplete">Automatinis užbaigimas</string>
+  <string name="preference_category_autocomplete_preinstalled">Numatytasis URL sąrašas</string>
+  <string name="preference_autocomplete_preinstalled_summary">Įjungus, „%1$s“ automatiškai užbaigs virš 450 populiarių URL adreso lauke</string>
+  <string name="preference_category_autocomplete_custom_urls">Pasirinktiniai URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Pasirinktiniai URL</string>
   <string name="preference_language">Kalba</string>
   <string name="preference_language_systemdefault">Sistemos numatytoji</string>
   <string name="preference_category_privacy">Privatumas</string>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">Diles re beu agas istori peuri.</string>
   <string name="search_hint">Hwilas %1$s</string>
   <string name="menu_share">Ranna…</string>
+  <string name="menu_report_site_issue">Derivas kudyn war an wiasva</string>
   <string name="menu_open_with_default_browser2">Ygeri dre %1$s</string>
   <string name="menu_open_with_a_browser2">Ygeri dre…</string>
   <string name="menu_add_to_home_screen">Keworra dhe\'n skrin dre</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Dilea an istori peuri</string>
   <string name="text_selection_search_action">Hwilas yn privedh</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gans %1$s yth esowgh hwi ow kul maystri.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gwrewgh hy usya avel peurell brivedh:\n  "<ul>"\n    "<li>Hwilas ha peuri a-berth y\'n dowlen</li>"\n    "<li>Lettya helerghellow (po ri kummyas dhedha y\'n settyansow)</li>"\n    "<li>Dilea cookies, keffrys ha istori hwilas ha peuri</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Askorrys gans Mozilla yw %1$s. Agan amkan yw maga kesrosweyth yagh hag ygor.<br/>\n<a href="%2$s">Dyski moy</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privetter ha sekerder</string>
+  <string name="preference_privacy_and_security_summary">Helerghi, cookies, dewisyow data</string>
+  <string name="preference_search_summary">Settya defowt, awto-gowlwul</string>
+  <string name="preference_mozilla_summary">A-dro dhe %1$s, gweres</string>
+  <string name="preference_category_tracking_protection">Difresans rag helerghi</string>
+  <string name="preference_category_web_content">Dalgh gwias</string>
+  <string name="preference_category_switching_apps">Skwychya towlennow</string>
+  <string name="preference_category_general">Ollgemmyn</string>
+  <string name="preference_category_data_collection_use">Kuntel data ha devnydh</string>
   <string name="preference_category_search">Hwilas</string>
   <string name="preference_search_engine_default">Defowt</string>
   <string name="preference_state_on">Byw</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Keworra URL personelhes</string>
   <string name="preference_autocomplete_title_add">Keworra URL personelhes</string>
   <string name="custom_autocomplete_quick_add">Keworra URL personelhes</string>
+  <string name="preference_category_cookies">Cookies ha data gwiasvaow</string>
+  <string name="preference_category_data_choices">Dewisyow data</string>
   <string name="preference_autocomplete_title_remove">Dilea URLs personelhes</string>
   <string name="preference_autocomplete_learn_more">Dyski moy</string>
   <string name="preference_autocomplete_custom_summary">Keworra ha dyghtya URLs kollenwel awtomatek personelhes.</string>
   <string name="preference_autocomplete_add_title">An URL dhe geworra</string>
   <string name="preference_autocomplete_add_hint">Glusowgh po entrowgh URL</string>
+  <string name="preference_autocomplete_add_example2">Ensampel: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Ensampel: ensampel.com</string>
   <string name="preference_autocomplete_add_confirmation">URL personelhes nowydh keworrys.</string>
   <string name="preference_autocomplete_menu_remove">Dilea</string>

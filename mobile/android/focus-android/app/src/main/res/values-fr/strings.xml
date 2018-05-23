@@ -8,6 +8,7 @@
   <string name="feedback_erase">Votre historique de navigation a été effacé.</string>
   <string name="search_hint">Rechercher %1$s</string>
   <string name="menu_share">Partager…</string>
+  <string name="menu_report_site_issue">Signaler un problème sur ce site</string>
   <string name="menu_open_with_default_browser2">Ouvrir avec %1$s</string>
   <string name="menu_open_with_a_browser2">Ouvrir avec…</string>
   <string name="menu_add_to_home_screen">Ajouter à l’écran d’accueil</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Effacer l’historique de navigation</string>
   <string name="text_selection_search_action">Faire une recherche privée</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vous aide &#224; rester aux commandes.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Utilisez-le comme un navigateur priv&#233;&#160;:\n<ul>\n<li>Effectuez des recherches et naviguez depuis l&#8217;application</li>\n<li>Bloquez les traqueurs (ou modifiez les param&#232;tres pour les autoriser)</li>\n<li>Effacez les cookies, ainsi que les historiques de navigation et de recherche</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s est r&#233;alis&#233; par Mozilla. Notre mission est de d&#233;fendre l&#8217;ouverture et la bonne sant&#233; d&#8217;Internet.<br/>\n<a href="%2$s">En savoir plus</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Vie privée et sécurité</string>
+  <string name="preference_privacy_and_security_summary">Pistage, cookies, données collectées</string>
+  <string name="preference_search_summary">Moteur par défaut, saisie semi-automatique</string>
+  <string name="preference_mozilla_summary">À propos de %1$s, aide</string>
+  <string name="preference_category_tracking_protection">Protection contre le pistage</string>
+  <string name="preference_category_web_content">Contenu web</string>
+  <string name="preference_category_switching_apps">Navigation entre les applications</string>
+  <string name="preference_category_general">Général</string>
+  <string name="preference_category_data_collection_use">Collecte de données et utilisation</string>
   <string name="preference_category_search">Recherche</string>
   <string name="preference_search_engine_default">Par défaut</string>
   <string name="preference_state_on">Activée</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Ajouter une adresse personnalisée</string>
   <string name="preference_autocomplete_title_add">Ajouter une adresse personnalisée</string>
   <string name="custom_autocomplete_quick_add">Ajouter une adresse personnalisée</string>
+  <string name="preference_category_cookies">Cookies et données de sites</string>
+  <string name="preference_category_data_choices">Données collectées</string>
   <string name="preference_autocomplete_title_remove">Supprimer des adresses personnalisées</string>
   <string name="preference_autocomplete_learn_more">En savoir plus</string>
   <string name="preference_autocomplete_custom_summary">Ajouter et gérer des adresses personnalisées pour la saisie semi-automatique.</string>
   <string name="preference_autocomplete_add_title">Adresse web à ajouter</string>
   <string name="preference_autocomplete_add_hint">Coller ou saisir une adresse web</string>
+  <string name="preference_autocomplete_add_example2">Exemple : mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemple : example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nouvelle adresse personnalisée ajoutée.</string>
   <string name="preference_autocomplete_menu_remove">Supprimer</string>

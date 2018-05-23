@@ -8,6 +8,7 @@
   <string name="feedback_erase">Riwayat penjelajahan Anda sudah dihapus.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Bagikan…</string>
+  <string name="menu_report_site_issue">Laporkan Masalah Situs</string>
   <string name="menu_open_with_default_browser2">Buka di %1$s</string>
   <string name="menu_open_with_a_browser2">Buka di…</string>
   <string name="menu_add_to_home_screen">Tambahkan ke Beranda</string>
@@ -26,6 +27,9 @@
   <string name="shortcut_erase_long_label">Hapus riwayat penjelajahan</string>
   <string name="text_selection_search_action">Mencari Secara Pribadi</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s menempatkan Anda dalam kendali.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakan sebagai peramban privat:\n  "<ul>"\n    "<li>Cari dan menjelajah langsung di dalam aplikasi</li>"\n    "<li>Memblokir pelacak (atau ubah di setelan untuk izinkan pelacak)</li>"\n    "<li>Hapus untuk menghilangkan kuki termasuk juga riwayat pencarian dan penjelajahan</li>"\n  "</ul>"\n "</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s diproduksi oleh Mozilla. Misi kami adalah untuk memelihara Internet yang sehat dan terbuka.<br/>" "<a href="%2$s">Pelajari lebih lanjut</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privasi &amp; Keamanan</string>
+  <string name="preference_category_tracking_protection">Perlindungan Pelacakan</string>
+  <string name="preference_category_general">Umum</string>
   <string name="preference_category_search">Cari</string>
   <string name="preference_search_engine_default">Baku</string>
   <string name="preference_state_on">Aktif</string>
@@ -39,11 +43,13 @@
   <string name="preference_autocomplete_action_add">+ Tambah URL ubahsuai</string>
   <string name="preference_autocomplete_title_add">Tambah URL ubahsuai</string>
   <string name="custom_autocomplete_quick_add">Tambahkan URL kustom</string>
+  <string name="preference_category_cookies">Kuki dan Data Situs</string>
   <string name="preference_autocomplete_title_remove">Hapus URLs ubahsuai</string>
   <string name="preference_autocomplete_learn_more">Pelajari lebih lanjut</string>
   <string name="preference_autocomplete_custom_summary">Tambahkan dan kelola lengkapi-otomatis URL ubahsuai.</string>
   <string name="preference_autocomplete_add_title">URL untuk ditambahkan</string>
   <string name="preference_autocomplete_add_hint">Tempel atau masukkan URL</string>
+  <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Contoh: contoh.id</string>
   <string name="preference_autocomplete_add_confirmation">URL ubahsuai baru ditambahkan.</string>
   <string name="preference_autocomplete_menu_remove">Hapus</string>

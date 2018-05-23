@@ -8,6 +8,7 @@
   <string name="feedback_erase">உங்கள் உலாவல் வரலாறு அழிக்கப்பட்டது.</string>
   <string name="search_hint">%1$s சொல்லைத் தேடு</string>
   <string name="menu_share">பகிர்…</string>
+  <string name="menu_report_site_issue">தள சிக்கலைத் தெரிவி</string>
   <string name="menu_open_with_default_browser2">%1$s உலாவியில் திற</string>
   <string name="menu_open_with_a_browser2">உலாவியில் திற…</string>
   <string name="menu_add_to_home_screen">முகப்பு திரைக்கு சேர்</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">உலாவல் வரலாற்றை அகற்று</string>
   <string name="text_selection_search_action">அந்தரங்க நிலையில் உலாவு</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2953;&#2994;&#3006;&#2997;&#3007; &#2953;&#2969;&#3021;&#2965;&#2995;&#3016;&#2965;&#3021; &#2965;&#2975;&#3021;&#2975;&#3009;&#2986;&#3021;&#2986;&#2975;&#3009;&#2980;&#3021;&#2980;&#3009;&#2965;&#3007;&#2993;&#2980;&#3009;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#2949;&#2984;&#3021;&#2980;&#2992;&#2969;&#3021;&#2965; &#2953;&#2994;&#3006;&#2997;&#3007;&#2991;&#3006;&#2965;&#2986;&#3021; &#2986;&#2991;&#2985;&#3021;&#2986;&#2975;&#3009;&#2980;&#3021;&#2980;&#3009;&#2965;:\n  "<ul>"\n    "<li>&#2980;&#3015;&#2975;&#2994;&#3009;&#2965;&#3021;&#2965;&#3009;&#2990;&#3021; &#2953;&#2994;&#3006;&#2997;&#2994;&#3009;&#2965;&#3021;&#2965;&#3009;&#2990;&#3021; &#2951;&#2984;&#3021;&#2980; &#2953;&#2994;&#3006;&#2997;&#3007;&#2991;&#3016;&#2986;&#3021; &#2986;&#3006;&#2997;&#3007;&#2991;&#3009;&#2969;&#3021;&#2965;&#2995;&#3021;</li>"\n    "<li>&#2986;&#3007;&#2985;&#3021;&#2980;&#3018;&#2975;&#2992;&#3007;&#2965;&#2995;&#3016;&#2980;&#3021; &#2980;&#2975;&#3009; (&#2949;&#2994;&#3021;&#2994;&#2980;&#3009; &#2949;&#2990;&#3016;&#2997;&#3009;&#2965;&#2995;&#3016; &#2990;&#3006;&#2993;&#3021;&#2993;&#3007; &#2986;&#3007;&#2985;&#3021;&#2980;&#3018;&#2975;&#2992;&#3007;&#2991;&#3016; &#2949;&#2985;&#3009;&#2990;&#2980;&#3007;)</li>"\n    "<li>&#2984;&#3007;&#2985;&#3016;&#2997;&#3007;&#2965;&#2995;&#3016; &#2949;&#2965;&#2993;&#3021;&#2993;&#3009;&#2997;&#2980;&#2985;&#3021; &#2990;&#3010;&#2994;&#2990;&#3021; &#2980;&#3015;&#2975;&#2994;&#3021; &#2990;&#2993;&#3021;&#2993;&#3009;&#2990;&#3021; &#2953;&#2994;&#3006;&#2997;&#2994;&#3021; &#2997;&#2992;&#2994;&#3006;&#2993;&#3021;&#2993;&#3016;&#2991;&#3009;&#2990;&#3021; &#2970;&#3015;&#2992;&#3021;&#2980;&#3021;&#2980;&#3009; &#2949;&#2965;&#2993;&#3021;&#2993;&#3009;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#2962;&#2992;&#3009; &#2990;&#3018;&#2970;&#3007;&#2994;&#3021;&#2994;&#3006; &#2980;&#2991;&#3006;&#2992;&#3007;&#2986;&#3021;&#2986;&#3006;&#2965;&#3009;&#2990;&#3021;. &#2958;&#2969;&#3021;&#2965;&#2995;&#3007;&#2985;&#3021; &#2984;&#3019;&#2965;&#3021;&#2965;&#2990;&#3021; &#2997;&#3015;&#2965;&#2990;&#3006;&#2985; &#2950;&#2992;&#3019;&#2965;&#3021;&#2965;&#3007;&#2991;&#2990;&#3006;&#2985; &#2980;&#3007;&#2993;&#2984;&#3021;&#2980; &#2951;&#2979;&#3016;&#2991;&#2980;&#3021;&#2980;&#3016;&#2965;&#3021; &#2965;&#3007;&#2975;&#3016;&#2965;&#3021;&#2965;&#2970;&#3021; &#2970;&#3014;&#2991;&#3021;&#2997;&#2980;&#3006;&#2965;&#3009;&#2990;&#3021;.<br/>\n<a href="%2$s">&#2990;&#3015;&#2994;&#3009;&#2990;&#3021; &#2949;&#2993;&#3007;&#2991;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">தனியுரிமை மற்றும் பாதுகாப்பு</string>
+  <string name="preference_privacy_and_security_summary">தடமறிதல், நினைவிகள், தரவு தேர்வுகள்</string>
+  <string name="preference_search_summary">தானிரப்பியை இயல்பாக அமை</string>
+  <string name="preference_mozilla_summary">%1$s பற்றிய உதவி</string>
+  <string name="preference_category_tracking_protection">தடமறியல் பாதுகாப்பு</string>
+  <string name="preference_category_web_content">வலை உள்ளடக்கம்</string>
+  <string name="preference_category_switching_apps">செயலிகள் இடமாற்றம்</string>
+  <string name="preference_category_general">பொது</string>
+  <string name="preference_category_data_collection_use">தரவு சேகரிப்பு மற்றும் பயனளவு</string>
   <string name="preference_category_search">தேடு</string>
   <string name="preference_search_engine_default">முன்னிருப்பு</string>
   <string name="preference_state_on">இயக்கு</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ தனிபயன் URL சேர்</string>
   <string name="preference_autocomplete_title_add">தனிபயன் URL சேர்</string>
   <string name="custom_autocomplete_quick_add">தனிபயன் URL சேர்</string>
+  <string name="preference_category_cookies">நினைவிகள் மற்றும் தள தரவு</string>
+  <string name="preference_category_data_choices">தரவு தெரிவுகள்</string>
   <string name="preference_autocomplete_title_remove">தனிபயன் URLs நீக்கு</string>
   <string name="preference_autocomplete_learn_more">மேலும் அறிய</string>
   <string name="preference_autocomplete_custom_summary">தனிபயன் தானியங்குநிரப்பு URLs சேர்த்து நிர்வகி.</string>
   <string name="preference_autocomplete_add_title">சேர்க்க வேண்டிய URL</string>
   <string name="preference_autocomplete_add_hint">URL ஒட்டு அல்லது உள்ளிடு</string>
+  <string name="preference_autocomplete_add_example2">எ.கா: mozilla.org</string>
   <string name="preference_autocomplete_add_example">எகா: example.com</string>
   <string name="preference_autocomplete_add_confirmation">புது தனிபயன் URL சேர்க்கப்பட்டது.</string>
   <string name="preference_autocomplete_menu_remove">நீக்கு</string>

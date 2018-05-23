@@ -8,6 +8,7 @@
   <string name="feedback_erase">तपाईंको ब्राउजिङ इतिहास मेटाईयो ।</string>
   <string name="search_hint">%1$s खोज्नुहोस्</string>
   <string name="menu_share">साझेदारी…</string>
+  <string name="menu_open_with_default_browser2">%1$s मा खोल्नुहोस्</string>
   <string name="menu_open_with_a_browser2">…मा खोल्नुहोस्</string>
   <string name="menu_add_to_home_screen">गृह स्क्रिनमा थप्नुहोस्</string>
   <string name="menu_whats_new">नयाँ के छ</string>
@@ -30,9 +31,11 @@
   <string name="preference_subitem_autocomplete">URL स्वत: पूर्ण</string>
   <string name="preference_switch_autocomplete">स्वत: पूर्ण</string>
   <string name="preference_category_autocomplete_preinstalled">पूर्वनिर्धारित URL सूची</string>
+  <string name="preference_category_autocomplete_custom_urls">अनुकूल URL हरू</string>
   <string name="preference_autocomplete_subitem_customlist">अनुकूलन URLहरू</string>
   <string name="preference_autocomplete_action_add">+ अनुकूल URL थप्नुहोस्</string>
   <string name="preference_autocomplete_title_add">+ अनुकूल URL थप्नुहोस्</string>
+  <string name="custom_autocomplete_quick_add">अनुकूल URL थप्नुहोस्</string>
   <string name="preference_autocomplete_title_remove">+ अनुकूल URL हटाउनुहोस्</string>
   <string name="preference_autocomplete_learn_more">थप जान्नुहोस्</string>
   <string name="preference_autocomplete_custom_summary">स्वत: पूर्ण URLहरू थप्नुहोस र व्यवस्थापन गर्नुहोस् ।</string>
@@ -52,6 +55,8 @@
   <string name="preference_privacy_block_social">सामाजिक ट्रयाकहरू अवरुद्द गर्नुहोस्</string>
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रयाकरहरू ब्लक गर्नुहोस्</string>
   <string name="preference_privacy_block_content_summary2">सक्षम पार्नाले केहि पृष्ठहरू अनपेक्षित रूपमा व्यवहार गर्न सक्छन्</string>
+  <string name="preference_privacy_should_block_cookies_no_option">होेइन</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">हुन्छ</string>
   <string name="preference_privacy_secure_mode">चुपचाप</string>
   <string name="preference_privacy_stealth_summary">अनुप्रयोगहरू स्विच गर्दा वेबपेजहरू लुकाउनुहोस्</string>
   <string name="preference_category_performance">कार्यसम्पादन</string>
@@ -91,6 +96,7 @@
   <string name="content_description_blocking_switch">ट्रयाकरहरू अवरुद्द गर्नुहोस्</string>
   <string name="your_rights">तपाईँका अधिकारहरु</string>
   <string name="external_app_prompt_title">लिङ्कलाई अर्को अनुप्रयोगमा खोल्नुहोस्</string>
+  <string name="external_multiple_apps_matched_exit">निजी ब्राउजिङ्ग बन्द गर्न चाहनुहुन्छ ?</string>
   <string name="download_snackbar_finished">%1$s सकियो</string>
   <string name="download_snackbar_open">खोल्नुहोस्</string>
   <string name="download_dialog_title">डाउनलोड असफल भयो</string>
@@ -104,6 +110,7 @@
   <string name="error_malformedURI_title">यो ठेगाना मान्य छैन</string>
   <string name="error_redirectLoop_title">पृष्ठ राम्रोसँग पुनः निर्देशित हुन सकिरहेको छैन</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#160;<li>&#2351;&#2379; &#2360;&#2350;&#2360;&#2381;&#2351;&#2366; &#2325;&#2361;&#2367;&#2354;&#2375; &#2325;&#2361;&#2367;&#2305; &#2313;&#2340;&#2381;&#2346;&#2344;&#2381;&#2344; &#2361;&#2369;&#2344;&#2369;&#2325;&#2379; &#2325;&#2366;&#2352;&#2339; &#2325;&#2369;&#2325;&#2367;&#2332; &#2309;&#2325;&#2381;&#2359;&#2350; &#2327;&#2366;&#2352;&#2367;&#2319;&#2325;&#2379; &#2357;&#2366; &#2360;&#2381;&#2357;&#2368;&#2325;&#2366;&#2352;&#2381;&#2344; &#2344;&#2360;&#2325;&#2367;&#2319;&#2325;&#2379;&#2354;&#2375; &#2327;&#2352;&#2381;&#2342;&#2366; &#2361;&#2369;&#2344;&#2375; &#2327;&#2352;&#2381;&#2342;&#2331;&#2404;</li>&#160;</ul>]]></string>
+  <string name="error_unsupportedprotocol_title">यो ठेगाना बुझिएन</string>
   <string name="error_generic_title">ओहो</string>
   <string name="contextmenu_link_share">लिङ्क साझा गर्नुहोस्</string>
   <string name="contextmenu_link_copy">लिङ्क ठेगाना प्रतिलिपि गर्नुहोस्</string>
@@ -125,4 +132,9 @@
   <string name="gv_prompt_username_hint">प्रयोगकर्ता नाम</string>
   <string name="gv_prompt_password_hint">गोप्यशब्द</string>
   <string name="gv_prompt_clear">खाली गर्नुहोस्</string>
+  <string name="security_popup_secure_connection">सुरक्षित जडान</string>
+  <string name="security_popup_insecure_connection">असुरक्षित जडान</string>
+  <string name="security_popup_security_verified">रुजू गरेको: %1$s</string>
+  <string name="site_security_icon_content_description">साईट सुरक्षा</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL पहिल्यै अवस्थित छ</string>
 </resources>

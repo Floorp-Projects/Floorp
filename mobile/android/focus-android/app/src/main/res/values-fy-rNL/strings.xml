@@ -8,6 +8,7 @@
   <string name="feedback_erase">Jo sneupskiednis is wiske.</string>
   <string name="search_hint">Sykje nei %1$s</string>
   <string name="menu_share">Diele…</string>
+  <string name="menu_report_site_issue">Websiteprobleem rapportearje</string>
   <string name="menu_open_with_default_browser2">Iepenje yn %1$s</string>
   <string name="menu_open_with_a_browser2">Iepenje yn…</string>
   <string name="menu_add_to_home_screen">Tafoegje oan startskerm</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Navigaasjeskiednis wiskje</string>
   <string name="text_selection_search_action">Privee sykje</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s jout jo de kontr&#244;le.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Br&#251;k as in priveebrowser:\n  "<ul>"\n    "<li>Streekrjocht fan de app &#250;t sykje en browse</li>"\n    "<li>Trackers blokkearje (of ynstellingen bywurkje om se ta te stean)</li>"\n    "<li>Wiskjen smyt sawol cookies as syk- en navigaasjeskiednis fuort</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wurdt makke troch Mozilla. Us misje is it fersoargjen fan in s&#251;n en iepen ynternet.<br/>\n<a href="%2$s">Mear ynfo</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privacy en befeiliging</string>
+  <string name="preference_privacy_and_security_summary">Folgjen, cookies, gegevenskarren</string>
+  <string name="preference_search_summary">As standert ynstelle, auto-oanfolje</string>
+  <string name="preference_mozilla_summary">Oer %1$s, help</string>
+  <string name="preference_category_tracking_protection">Beskerming tsjin folgjen</string>
+  <string name="preference_category_web_content">Webynhâld</string>
+  <string name="preference_category_switching_apps">Apps wikselje</string>
+  <string name="preference_category_general">Algemien</string>
+  <string name="preference_category_data_collection_use">Gegevenssamling en gebrûk</string>
   <string name="preference_category_search">Sykje</string>
   <string name="preference_search_engine_default">Standert</string>
   <string name="preference_state_on">Oan</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Oanpaste URL tafoegje</string>
   <string name="preference_autocomplete_title_add">Oanpaste URL tafoegje</string>
   <string name="custom_autocomplete_quick_add">Oanpaste URL tafoegje</string>
+  <string name="preference_category_cookies">Cookies en websitegegevens</string>
+  <string name="preference_category_data_choices">Gegevensopsjes</string>
   <string name="preference_autocomplete_title_remove">Oanpaste URL’s fuortsmite</string>
   <string name="preference_autocomplete_learn_more">Mear ynfo</string>
   <string name="preference_autocomplete_custom_summary">Eigen URL’s foar automatysk oanfoljen tafoegje en beheare.</string>
   <string name="preference_autocomplete_add_title">Ta te foegjen URL</string>
   <string name="preference_autocomplete_add_hint">Plak of fier URL yn</string>
+  <string name="preference_autocomplete_add_example2">Foarbyld: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Foarbyld: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Nije oanpaste URL tafoege.</string>
   <string name="preference_autocomplete_menu_remove">Fuortsmite</string>

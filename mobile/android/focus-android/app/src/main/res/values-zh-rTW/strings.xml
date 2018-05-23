@@ -8,6 +8,7 @@
   <string name="feedback_erase">已清除您的瀏覽紀錄。</string>
   <string name="search_hint">搜尋 %1$s</string>
   <string name="menu_share">分享…</string>
+  <string name="menu_report_site_issue">回報網站問題</string>
   <string name="menu_open_with_default_browser2">使用 %1$s 開啟</string>
   <string name="menu_open_with_a_browser2">開啟於…</string>
   <string name="menu_add_to_home_screen">新增至裝置主畫面</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">清除瀏覽紀錄</string>
   <string name="text_selection_search_action">隱私搜尋</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35731;&#24744;&#21487;&#33258;&#34892;&#25511;&#21046;&#32218;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#30070;&#20316;&#31169;&#23494;&#28687;&#35261;&#22120;&#20351;&#29992;:\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#31243;&#24335;&#20013;&#25628;&#23563;&#12289;&#28687;&#35261;</li>"\n    "<li>&#23553;&#37782;&#36861;&#36452;&#22120;&#65288;&#20063;&#21487;&#35519;&#25972;&#35373;&#23450;&#65292;&#20801;&#35377;&#36861;&#36452;&#22120;&#65289;</li>"\n    "<li>&#28165;&#38500; Cookie&#12289;&#25628;&#23563;&#32000;&#37636;&#12289;&#19978;&#32178;&#32000;&#37636;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#26159;&#30001; Mozilla &#25152;&#25171;&#36896;&#65292;&#25105;&#20497;&#30340;&#20351;&#21629;&#26159;&#22521;&#39178;&#19968;&#20491;&#20581;&#24247;&#12289;&#38283;&#25918;&#30340;&#32178;&#38555;&#32178;&#36335;&#12290;<br/>\n<a href="%2$s">&#20102;&#35299;&#26356;&#22810;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">隱私與安全</string>
+  <string name="preference_privacy_and_security_summary">追蹤、Cookie、回報資料</string>
+  <string name="preference_search_summary">設為預設瀏覽器、自動完成</string>
+  <string name="preference_mozilla_summary">關於 %1$s、使用說明</string>
+  <string name="preference_category_tracking_protection">追蹤保護</string>
+  <string name="preference_category_web_content">網站內容</string>
+  <string name="preference_category_switching_apps">切換應用程式</string>
+  <string name="preference_category_general">一般</string>
+  <string name="preference_category_data_collection_use">資料收集與使用</string>
   <string name="preference_category_search">搜尋</string>
   <string name="preference_search_engine_default">預設</string>
   <string name="preference_state_on">開啟</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ 新增自訂網址</string>
   <string name="preference_autocomplete_title_add">新增自訂網址</string>
   <string name="custom_autocomplete_quick_add">新增自訂網址</string>
+  <string name="preference_category_cookies">Cookie 與網站資料</string>
+  <string name="preference_category_data_choices">回報資料</string>
   <string name="preference_autocomplete_title_remove">移除自訂網址</string>
   <string name="preference_autocomplete_learn_more">了解更多</string>
   <string name="preference_autocomplete_custom_summary">新增與管理自訂自動完成網址。</string>
   <string name="preference_autocomplete_add_title">要新增的網址</string>
   <string name="preference_autocomplete_add_hint">貼上或輸入網址</string>
+  <string name="preference_autocomplete_add_example2">例如: mozilla.org</string>
   <string name="preference_autocomplete_add_example">舉例: example.com</string>
   <string name="preference_autocomplete_add_confirmation">已新增自訂網址。</string>
   <string name="preference_autocomplete_menu_remove">移除</string>

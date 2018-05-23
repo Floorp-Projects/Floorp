@@ -8,6 +8,7 @@
   <string name="feedback_erase">Die Surf-Chronik wurde gelöscht.</string>
   <string name="search_hint">Suchen nach %1$s</string>
   <string name="menu_share">Teilen …</string>
+  <string name="menu_report_site_issue">Seitenproblem melden</string>
   <string name="menu_open_with_default_browser2">In %1$s öffnen</string>
   <string name="menu_open_with_a_browser2">Öffnen in…</string>
   <string name="menu_add_to_home_screen">Zum Startbildschirm hinzufügen</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Browser-Chronik löschen</string>
   <string name="text_selection_search_action">Privat Suchen</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s gibt Ihnen die Kontrolle.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Verwenden Sie ihn als privaten Browser:\n  "<ul>"\n    "<li>Suchen und bl&#228;ttern Sie in der App</li>"\n    "<li>Blockieren Sie Tracker (oder aktualisieren Sie die Einstellungen, um Tracker zu erlauben)</li>"\n    "<li>Entfernen Sie Cookies, um Such- und Browserverlauf zu l&#246;schen</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s wird von Mozilla entwickelt. Unsere Mission ist es, ein gesundes, offenes Internet zu f&#246;rdern.<br/>\n<a href="%2$s">Erfahren Sie mehr</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Datenschutz &amp; Sicherheit</string>
+  <string name="preference_privacy_and_security_summary">Aktivitätenverfolgung, Cookies, Datenübermittlung</string>
+  <string name="preference_search_summary">Als Standard setzen, automatisch vervollständigen</string>
+  <string name="preference_mozilla_summary">Über %1$s, Hilfe</string>
+  <string name="preference_category_tracking_protection">Schutz vor Aktivitätenverfolgung</string>
+  <string name="preference_category_web_content">Web-Inhalt</string>
+  <string name="preference_category_switching_apps">Apps wechseln</string>
+  <string name="preference_category_general">Allgemein</string>
+  <string name="preference_category_data_collection_use">Sammlung und Nutzung von Daten</string>
   <string name="preference_category_search">Suche</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">An</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Benutzerdefinierte Adresse hinzufügen</string>
   <string name="preference_autocomplete_title_add">Benutzerdefinierte Adresse hinzufügen</string>
   <string name="custom_autocomplete_quick_add">Benutzerdefinierte Adresse hinzufügen</string>
+  <string name="preference_category_cookies">Cookies und Websitedaten</string>
+  <string name="preference_category_data_choices">Datenübermittlung</string>
   <string name="preference_autocomplete_title_remove">Benutzerdefinierte Adressen entfernen</string>
   <string name="preference_autocomplete_learn_more">Weitere Informationen</string>
   <string name="preference_autocomplete_custom_summary">Benutzerdefinierte Adressen für Autovervollständigung hinzufügen und verwalten.</string>
   <string name="preference_autocomplete_add_title">Hinzuzufügende Adresse</string>
   <string name="preference_autocomplete_add_hint">Adresse eingeben oder einfügen</string>
+  <string name="preference_autocomplete_add_example2">Beispiel: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Beispiel: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Neue benutzerdefinierte Adresse hinzugefügt.</string>
   <string name="preference_autocomplete_menu_remove">Entfernen</string>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">페이지 탐색 기록이 삭제되었습니다.</string>
   <string name="search_hint">%1$s 검색</string>
   <string name="menu_share">공유…</string>
+  <string name="menu_report_site_issue">사이트 이슈 보고</string>
   <string name="menu_open_with_default_browser2">%1$s로/으로 열기</string>
   <string name="menu_open_with_a_browser2">다른 브라우저로 열기</string>
   <string name="menu_add_to_home_screen">초기 화면에 추가하기</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">방문 기록 지우기</string>
   <string name="text_selection_search_action">사생활 보호 검색</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#47484; &#50668;&#47084; &#44592;&#45733;&#51004;&#47196; &#49324;&#50857;&#54624; &#49688; &#51080;&#49845;&#45768;&#45796;.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#44060;&#51064; &#51221;&#48372; &#48372;&#54840; &#48652;&#46972;&#50864;&#51200;&#47196; &#49324;&#50857;:\n  "<ul>"\n    "<li>&#50545;&#50640;&#49436; &#44160;&#49353; &#48143; &#48652;&#46972;&#50864;&#51669;&#54616;&#44592;</li>"\n    "<li>&#52628;&#51201;&#44592; &#52264;&#45800;(&#49444;&#51221;&#51012; &#48320;&#44221;&#54644; &#54728;&#50857;&#54624; &#49688; &#51080;&#51020;)</li>"\n    "<li>&#51064;&#53552;&#45367; &#44592;&#47197;&#51060;&#45208; &#44160;&#49353; &#44592;&#47197;, &#53216;&#53412; &#49325;&#51228;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s&#45716; Mozilla&#51032; &#51228;&#54408;&#51077;&#45768;&#45796;. Mozilla&#51032; &#49324;&#47749;&#51008; &#44148;&#44053;&#54616;&#44256; &#44060;&#48169;&#51201;&#51064; &#51064;&#53552;&#45367;&#51012; &#51312;&#49457;&#54616;&#45716; &#44163;&#51077;&#45768;&#45796;.<br/><a href="%2$s">&#45908; &#50508;&#50500;&#48372;&#44592;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">개인정보 보호 및 보안</string>
+  <string name="preference_privacy_and_security_summary">추적, 쿠키, 데이타 선택</string>
+  <string name="preference_search_summary">기본 설정, 자동 완성</string>
+  <string name="preference_mozilla_summary">%1$s 정보, 도움말</string>
+  <string name="preference_category_tracking_protection">추적 방지</string>
+  <string name="preference_category_web_content">웹 콘텐츠</string>
+  <string name="preference_category_switching_apps">앱 전환</string>
+  <string name="preference_category_general">일반</string>
+  <string name="preference_category_data_collection_use">데이터 수집 및 사용</string>
   <string name="preference_category_search">검색</string>
   <string name="preference_search_engine_default">기본</string>
   <string name="preference_state_on">사용 중</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ 사용자 정의 URL 추가</string>
   <string name="preference_autocomplete_title_add">사용자 정의 URL 추가</string>
   <string name="custom_autocomplete_quick_add">사용자 정의 URL 추가</string>
+  <string name="preference_category_cookies">쿠키와 사이트 데이타</string>
+  <string name="preference_category_data_choices">데이타 선택</string>
   <string name="preference_autocomplete_title_remove">사용자 정의 URL 삭제</string>
   <string name="preference_autocomplete_learn_more">더 알아보기</string>
   <string name="preference_autocomplete_custom_summary">사용자 정의 자동 완성 URL 추가하고 관리합니다.</string>
   <string name="preference_autocomplete_add_title">추가할 URL</string>
   <string name="preference_autocomplete_add_hint">URL 입력 또는 붙여넣기</string>
+  <string name="preference_autocomplete_add_example2">예: mozilla.org</string>
   <string name="preference_autocomplete_add_example">예: example.com</string>
   <string name="preference_autocomplete_add_confirmation">새 사용자 정의 URL이 추가되었습니다.</string>
   <string name="preference_autocomplete_menu_remove">삭제</string>

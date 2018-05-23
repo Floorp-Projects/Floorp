@@ -8,6 +8,9 @@
   <string name="feedback_erase">Mté dont na ré ko wíl.</string>
   <string name="search_hint">KwàɁn lô %1$s</string>
   <string name="menu_share">Tă~làz...</string>
+  <string name="menu_report_site_issue">Gús KwàɁn m-xâc</string>
+  <string name="menu_open_with_default_browser2">Mb-šàlɁ leɁn %1$s</string>
+  <string name="menu_open_with_a_browser2">Mb-šàlɁ leɁn</string>
   <string name="menu_add_to_home_screen">M-tòb lô yíʔb</string>
   <string name="menu_whats_new">Ko kùb</string>
   <string name="menu_settings">Thús kùey</string>
@@ -15,6 +18,7 @@
   <string name="menu_help">Lì ché</string>
   <string name="menu_rights">Ko nákin niél</string>
   <string name="menu_trackers_blocked_title">TòɁw-ná lô men dè-kè</string>
+  <string name="menu_custom_tab_branding">ChaɁn %1$s</string>
   <string name="share_dialog_title">Tă~làz leɁn</string>
   <string name="notification_erase_text">Tób bí lô góš</string>
   <string name="notification_action_open">Mb-šàlɁ lá</string>
@@ -22,6 +26,12 @@
   <string name="shortcut_erase_short_label">Tòb bì</string>
   <string name="shortcut_erase_long_label">Tób bí lô góš</string>
   <string name="text_selection_search_action">KwàɁn chán ná</string>
+  <string name="preference_privacy_and_security_header">Yent-chó wìʔ</string>
+  <string name="preference_privacy_and_security_summary">Nêd, cookies ner yêts</string>
+  <string name="preference_mozilla_summary">KwàɁn %1$s, lì-chél</string>
+  <string name="preference_category_web_content">KwàɁn šò=leɁn</string>
+  <string name="preference_category_switching_apps">Sè App</string>
+  <string name="preference_category_general">Ré=tá</string>
   <string name="preference_category_search">KwàɁn</string>
   <string name="preference_search_engine_default">b-šèn=ná</string>
   <string name="preference_state_on">Blá Kìy</string>
@@ -29,13 +39,18 @@
   <string name="preference_subitem_autocomplete">URL mkéy</string>
   <string name="preference_switch_autocomplete">Mkéy</string>
   <string name="preference_category_autocomplete_preinstalled">URL dób lá</string>
+  <string name="preference_category_autocomplete_custom_urls">Tùs kùe URLs</string>
   <string name="preference_autocomplete_subitem_customlist">Tùs kùe URLs</string>
   <string name="preference_autocomplete_action_add">m-tób tùs kùe URL</string>
   <string name="preference_autocomplete_title_add">M-tób tùs kùe URL</string>
+  <string name="custom_autocomplete_quick_add">M-tòb URL</string>
+  <string name="preference_category_cookies">Cookies ner kwàɁn mb-šèn=lû</string>
+  <string name="preference_category_data_choices">B-šèn=ná kùe</string>
   <string name="preference_autocomplete_title_remove">Mkìb tùs kùe URLs</string>
   <string name="preference_autocomplete_learn_more">Lab kùe</string>
   <string name="preference_autocomplete_add_title">M-tòb URL</string>
   <string name="preference_autocomplete_add_hint">Lí chop ó m-tòb URL</string>
+  <string name="preference_autocomplete_add_example2">"VáɁ: mozilla.org "</string>
   <string name="preference_autocomplete_add_example">M-tòb: sálépágina.com</string>
   <string name="preference_autocomplete_add_confirmation">Dób lá URL kùb.</string>
   <string name="preference_autocomplete_menu_remove">Kìb</string>
@@ -48,9 +63,17 @@
   <string name="preference_privacy_block_analytics">TòɁw-ná lô men dè-kè</string>
   <string name="preference_privacy_block_social">TòɁw-ná lô men dè-kè</string>
   <string name="preference_privacy_block_content">TòɁw-ná lô men dè-kè</string>
+  <string name="preference_privacy_category_cookies">TòɁw cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">N-gén=tá</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">TòɁw 3 cookies ná táɁ thîb mèn</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">ăɁ</string>
   <string name="preference_privacy_secure_mode">Yìz</string>
   <string name="preference_category_performance">Sà dè kèy sín</string>
+  <string name="preference_performance_block_webfonts">TòɁw letr Internet</string>
+  <string name="preference_performance_block_javascript">TòɁw lô JavaScript</string>
+  <string name="preference_default_browser2">"M-tòb %1$s mdó-lás=lû "</string>
   <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">M-tàl kò lì-chèl</string>
   <string name="preference_mozilla_telemetry_summary">Lab kùe</string>
   <string name="preference_privacy_notice">M-bláb kùe</string>
   <string name="preference_about">Cho nak kùe %1$s</string>
@@ -75,11 +98,17 @@
   <string name="accessibility_announcement_loading">Mdé láɁ ní</string>
   <string name="accessibility_announcement_loading_finished">Lô nó-šàlɁ</string>
   <string name="content_description_menu">Wì kó ták lìl</string>
+  <string name="content_description_forward">Gûa sìs nêd</string>
   <string name="content_description_reload">TeɁ zàp lô</string>
+  <string name="content_description_back">Bì-rè nêd</string>
   <string name="content_description_stop">B-láɁ mdé láɁ=y</string>
+  <string name="content_description_customtab_exit">Bí-ré app</string>
   <string name="content_description_blocking_switch">TòɁw-ná lô men dè-kè</string>
   <string name="your_rights">Ko nákin niél</string>
   <string name="external_app_prompt_title">Mb-šàlɁ nêt (n̆eza) lenɁ tá thîb app</string>
+  <string name="external_app_prompt">Tàk rûl trè %1$s zá tàk mb-šàlɁ nêd ré lenɁ %2$s.</string>
+  <string name="external_app_prompt_no_app_title">KwàɁn app kó tàk mb-šàlɁ nêd ré</string>
+  <string name="external_app_prompt_no_app">Niè thîb app tàk mb-šàlɁ nêd ré. Tàk rûl trè %1$s zá tàk mb-šàlɁ nêd ré lenɁ %2$s.</string>
   <string name="external_multiple_apps_matched_exit">¿Mb-ròɁ gá?</string>
   <string name="download_snackbar_finished">%1$s tèlôy</string>
   <string name="download_snackbar_open">Mb-šàlɁ lá</string>
@@ -92,7 +121,9 @@
   <string name="error_timeout_title">Gàdt là nì</string>
   <string name="error_hostLookup_title">Ngyé-n yìb rè</string>
   <string name="error_malformedURI_title">Ngyé-n nêt (n̆eza) ré</string>
+  <string name="error_redirectLoop_title">Kàp m-kêl leɁ=nî</string>
   <string name="error_unsupportedprotocol_title">Ngyé-n men rè</string>
+  <string name="error_sslhandshake_title">Ngyé-n kwàɁn nàk</string>
   <string name="error_generic_title">Oops</string>
   <string name="error_generic_message">Gádt mdé láɁ=n yêts ré</string>
   <string name="contextmenu_link_share">Tă~làz nêt (n̆eza)</string>
@@ -102,6 +133,11 @@
   <string name="contextmenu_image_save">Mb-lòɁ sóg lô mòn</string>
   <string name="contextmenu_open_in_new_tab">Mb-šàlɁ lô (lawo) kúb</string>
   <string name="firstrun_defaultbrowser_title">M-tób kì ko lùt ta wí</string>
+  <string name="firstrun_defaultbrowser_text2">Lleva la navegación privada a otro nivel. Bloquea anuncios publicitarios y otro tipo de contenido que puede rastrearte a través de los sitios y ralentizar el tiempo de descarga de las páginas.</string>
+  <string name="firstrun_search_title">Kò kwàʔn lû, nêb lû</string>
+  <string name="firstrun_search_text">¿Buscas algo diferente? Elige otro motor de búsqueda predeterminado en Ajustes.</string>
+  <string name="firstrun_shortcut_title">Agrega atajos a la pantalla principal</string>
+  <string name="firstrun_privacy_title">Acostúmbrate a la privacidad</string>
   <string name="firstrun_close_button">ăɁ, gùa!</string>
   <string name="firstrun_skip_button">B-láɁ=y</string>
   <string name="firstrun_next_button">Tá thîb vá</string>
@@ -111,4 +147,12 @@
   <string name="notification_browsing_session_channel_name">Lút ta níe kúe</string>
   <string name="tabs_tray_action_erase">Tób bí lô góš</string>
   <string name="download_firefox">B-là Firefox</string>
+  <string name="gv_prompt_username_hint">Chó lèl</string>
+  <string name="gv_prompt_password_hint">Contraseñ</string>
+  <string name="gv_prompt_clear">Tòb-bì</string>
+  <string name="security_popup_secure_connection">Bès-tá m-dób kîy</string>
+  <string name="security_popup_insecure_connection">WíɁ bès-tá</string>
+  <string name="security_popup_security_verified">WíɁ=y: %1$s</string>
+  <string name="site_security_icon_content_description">Zá nî-éy</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL šò=là</string>
 </resources>

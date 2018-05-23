@@ -8,6 +8,7 @@
   <string name="feedback_erase">Vòstre istoric de navegacion es estat escafat.</string>
   <string name="search_hint">Recercar %1$s</string>
   <string name="menu_share">Partejar…</string>
+  <string name="menu_report_site_issue">Senhalar un problèma sul site</string>
   <string name="menu_open_with_default_browser2">Dobrir amb %1$s</string>
   <string name="menu_open_with_a_browser2">Dobrir amb…</string>
   <string name="menu_add_to_home_screen">Apondre a l’ecran d’acuèlh</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Escafar l\'istoric de navegacion</string>
   <string name="text_selection_search_action">Recèrca privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s vos d&#242;na lo contr&#242;la.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Utiliza-lo coma un navegador privat&#8239;:\n  "<ul>"\n    "<li>Recercatz e navegatz dins l&#8217;aplicacion</li>"\n    "<li>Blocatz los tra&#231;adors (se cambiatz pas lo param&#232;tre)</li>"\n    "<li>Escafatz los cookies e los istorics de rec&#232;rcas e navegacion</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produch per Mozilla. N&#242;stra mission es d&#8217;encoratjar un Internet dob&#232;rt e en bona santat.<br/>\n<a href="%2$s">Ne saber mai</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Vida privada e seguretat</string>
+  <string name="preference_privacy_and_security_summary">Seguiment, cookies, donadas reculhidas</string>
+  <string name="preference_search_summary">Motor per defaut, autocompletacion</string>
+  <string name="preference_mozilla_summary">A prepaus de %1$s, ajuda</string>
+  <string name="preference_category_tracking_protection">Proteccion contra lo seguiment</string>
+  <string name="preference_category_web_content">Contengut web</string>
+  <string name="preference_category_switching_apps">Bascula entre las aplicacions</string>
+  <string name="preference_category_general">General</string>
+  <string name="preference_category_data_collection_use">Collecta de donadas e utilizacion</string>
   <string name="preference_category_search">Recèrca</string>
   <string name="preference_search_engine_default">Per defaut</string>
   <string name="preference_state_on">Activat</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Ajustar una adreça personalizada</string>
   <string name="preference_autocomplete_title_add">Ajustar una adreça personalizada</string>
   <string name="custom_autocomplete_quick_add">Ajustar una adreça personalizada</string>
+  <string name="preference_category_cookies">Cookies e donadas de sites</string>
+  <string name="preference_category_data_choices">Donadas reculhidas</string>
   <string name="preference_autocomplete_title_remove">Levar d’adreças personalizadas</string>
   <string name="preference_autocomplete_learn_more">Ne saber mai</string>
   <string name="preference_autocomplete_custom_summary">Apondre e gerir las adreças personalizadas per las completar automaticament.</string>
   <string name="preference_autocomplete_add_title">Adreça d\'apondre</string>
   <string name="preference_autocomplete_add_hint">Pegar o picar una adreça web</string>
+  <string name="preference_autocomplete_add_example2">Exemple : mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemple : exemple.com</string>
   <string name="preference_autocomplete_add_confirmation">Novèla adreça personalizada ajustada.</string>
   <string name="preference_autocomplete_menu_remove">Suprimir</string>

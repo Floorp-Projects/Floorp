@@ -8,6 +8,9 @@
   <string name="feedback_erase">Baleróse\'l to historial de restolar.</string>
   <string name="search_hint">Guetar %1$s</string>
   <string name="menu_share">Compartir…</string>
+  <string name="menu_report_site_issue">Informar de fallu del sitiu</string>
+  <string name="menu_open_with_default_browser2">Abrir en %1$s</string>
+  <string name="menu_open_with_a_browser2">Abrir en…</string>
   <string name="menu_add_to_home_screen">Amestar a la pantalla d\'aniciu</string>
   <string name="menu_whats_new">Qué hai nuevo</string>
   <string name="menu_settings">Axustes</string>
@@ -15,6 +18,7 @@
   <string name="menu_help">Ayuda</string>
   <string name="menu_rights">Los tos drechos</string>
   <string name="menu_trackers_blocked_title">Rastrexadores bloquiaos</string>
+  <string name="menu_custom_tab_branding">Cola potencia de %1$s</string>
   <string name="share_dialog_title">Compartir per</string>
   <string name="notification_erase_text">Balerar historial de restolar</string>
   <string name="notification_action_open">Abrir</string>
@@ -23,6 +27,15 @@
   <string name="shortcut_erase_long_label">Balerar historial de restolar</string>
   <string name="text_selection_search_action">Guetar de mou priváu</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s date\'l control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#218;salu como restolador priv&#225;u:\n  "<ul>"\n    "<li>Gueta y restola direutamente na aplicaci&#243;n</li>"\n    "<li>Bloquia los rastrexadores (o anueva los axustes pa perm&#237;tilos)</li>"\n    "<li>Balera les cookies am&#225;s del to historial de restolar y gueta</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s produzlu Mozilla. La nuesa misi&#243;n ye fomentar un internet sano y abierto.<br/>\n<a href="%2$s">Deprendi mas</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privacidá y seguranza</string>
+  <string name="preference_privacy_and_security_summary">Rastrexu, cookies y escoyetes de datos</string>
+  <string name="preference_search_summary">Predeterminación, autocompletáu</string>
+  <string name="preference_mozilla_summary">Tocante a %1$s, ayuda</string>
+  <string name="preference_category_tracking_protection">Proteición de rastrexu</string>
+  <string name="preference_category_web_content">Conteníu web</string>
+  <string name="preference_category_switching_apps">Cambéu d\'aplicaciones</string>
+  <string name="preference_category_general">Xeneral</string>
+  <string name="preference_category_data_collection_use">Recoyida y usu de datos</string>
   <string name="preference_category_search">Gueta</string>
   <string name="preference_search_engine_default">Por defeutu</string>
   <string name="preference_state_on">Sí</string>
@@ -30,14 +43,19 @@
   <string name="preference_subitem_autocomplete">Autocompletáu d\'URLs</string>
   <string name="preference_switch_autocomplete">Autocompletáu</string>
   <string name="preference_category_autocomplete_preinstalled">Llistáu d\'URLs por defeutu</string>
+  <string name="preference_category_autocomplete_custom_urls">URLs personalizaes</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizaes</string>
   <string name="preference_autocomplete_action_add">+ Amestar URL personalizada</string>
   <string name="preference_autocomplete_title_add">Amestar URL personalizada</string>
+  <string name="custom_autocomplete_quick_add">Amestar URL personalizada</string>
+  <string name="preference_category_cookies">Cookies y datos del sitiu</string>
+  <string name="preference_category_data_choices">Escoyetes de datos</string>
   <string name="preference_autocomplete_title_remove">Desaniciar URL personalizada</string>
   <string name="preference_autocomplete_learn_more">Deprendi más</string>
   <string name="preference_autocomplete_custom_summary">Amiesta o xestiona URLs personalizaes d\'autocompletáu.</string>
   <string name="preference_autocomplete_add_title">URL p\'amestar</string>
   <string name="preference_autocomplete_add_hint">Apega o introduz la URL</string>
+  <string name="preference_autocomplete_add_example2">Exemplu: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemplu: exemplu.com</string>
   <string name="preference_autocomplete_add_confirmation">Amestóse una URL nueva personalizada.</string>
   <string name="preference_autocomplete_menu_remove">Desaniciar</string>
@@ -54,11 +72,17 @@
   <string name="preference_privacy_block_social_summary">Intégrase en sitios pa rastrexar les tos visites y amosar funcionalidaes como botones de compartición</string>
   <string name="preference_privacy_block_content">Bloquiar otros rastrexadores</string>
   <string name="preference_privacy_block_content_summary2">Activalo quiciabes faiga que delles páxines se comporten de mou inesperáu</string>
+  <string name="preference_privacy_category_cookies">Bloquéu de cookies</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Non</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloquiar namái cookies de terceros</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Anubre les páxines web al camudar d\'aplicaciones</string>
   <string name="preference_category_performance">Rindimientu</string>
   <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
   <string name="preference_performance_block_webfonts_summary">Pue facer que falten iconos o imáxenes</string>
+  <string name="preference_performance_block_javascript">Bloquiar JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Les páxines podríen cargar aína pero tamién podríe comportase de mou inesperáu</string>
   <string name="preference_default_browser2">Predeterminar %1$s</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Unviar datos d\'usu</string>
@@ -155,4 +179,12 @@
   <string name="your_rights_content3"><![CDATA["Nun tienes concedíu dengún drechu o llicencia total o parcial sobre les marques rexistraes de la Mozilla Foundation, esto inclúi los nomes y logos Mozilla, Firefox o %1$s. "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Equ&#237;</a>" pue alcontrase información adicional."]]></string>
   <string name="your_rights_content4"><![CDATA["El códigu fonte adicional de %1$s ta disponible so otres "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">llicencies</a>" de baldre y códigu abiertu."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s tamién usa llistaos de bloquéu forníos por Disconnect, Inc. como trabayos separtaos ya independientes so la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">GNU General Public License v3</a>" y disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">equ&#237;</a>.]]></string>
+  <string name="gv_prompt_username_hint">Nome d\'usuariu</string>
+  <string name="gv_prompt_password_hint">Contraseña</string>
+  <string name="gv_prompt_clear">Llimpiar</string>
+  <string name="security_popup_secure_connection">Conexón segura</string>
+  <string name="security_popup_insecure_connection">Conexón insegura</string>
+  <string name="security_popup_security_verified">Verificáu por: %1$s</string>
+  <string name="site_security_icon_content_description">Seguranza del sitiu</string>
+  <string name="preference_autocomplete_duplicate_url_error">Yá esiste la URL</string>
 </resources>

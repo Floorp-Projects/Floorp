@@ -34,9 +34,11 @@
   <string name="preference_switch_autocomplete">Aŭtomata kompletigo</string>
   <string name="preference_category_autocomplete_preinstalled">Norma listo de adresoj</string>
   <string name="preference_autocomplete_preinstalled_summary">Aktivigu por igi %1$s aŭtomate kompletigi pli ol 450 popularajn adresojn en la adresa strio.</string>
+  <string name="preference_category_autocomplete_custom_urls">Personecigitaj adresoj</string>
   <string name="preference_autocomplete_subitem_customlist">Personecigitaj adresoj</string>
   <string name="preference_autocomplete_action_add">+ Aldoni personecigitan adreson</string>
   <string name="preference_autocomplete_title_add">Aldoni personecigitan adreson</string>
+  <string name="custom_autocomplete_quick_add">Aldoni personecigitan adreson</string>
   <string name="preference_autocomplete_title_remove">Forigi personecigitajn adresojn</string>
   <string name="preference_autocomplete_learn_more">Pli da informo</string>
   <string name="preference_autocomplete_custom_summary">Aldoni kaj administri aŭtomatan kompletigon de personecigitaj adresoj.</string>
@@ -58,11 +60,17 @@
   <string name="preference_privacy_block_social_summary">Inkluzivitaj en retejoj por spuri viajn vizitojn kaj montri funkciojn, kiel dividajn butonojn</string>
   <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
   <string name="preference_privacy_block_content_summary2">Se vi ŝaltas tion ĉi, kelkaj paĝoj povus neatendite konduti</string>
+  <string name="preference_privacy_category_cookies">Bloki kuketojn</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ne</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloki nur nerektajn kuketojn</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Jes</string>
   <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
   <string name="preference_privacy_stealth_summary">Kaŝi retpaĝojn dum ŝanĝo de programo</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
+  <string name="preference_performance_block_javascript">Bloki JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Paĝoj povas aperi pli rapide, sed ankaŭ povas konduti neatendite</string>
   <string name="preference_default_browser2">Igi %1$s via norma retumilo</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Sendi datumojn pri uzo</string>
@@ -166,4 +174,5 @@
   <string name="security_popup_insecure_connection">Nesekura konekto</string>
   <string name="security_popup_security_verified">Kontrolita de: %1$s</string>
   <string name="site_security_icon_content_description">Sekureco de retejo</string>
+  <string name="preference_autocomplete_duplicate_url_error">Retadreso jam ekzistas</string>
 </resources>

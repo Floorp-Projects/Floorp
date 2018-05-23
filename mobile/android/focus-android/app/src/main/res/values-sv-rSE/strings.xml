@@ -8,6 +8,7 @@
   <string name="feedback_erase">Din webbhistorik har raderats.</string>
   <string name="search_hint">Sök efter %1$s</string>
   <string name="menu_share">Dela…</string>
+  <string name="menu_report_site_issue">Rapportera webbplatsproblem</string>
   <string name="menu_open_with_default_browser2">Öppna med %1$s</string>
   <string name="menu_open_with_a_browser2">Öppna med…</string>
   <string name="menu_add_to_home_screen">Lägg till på startskärmen</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
   <string name="text_selection_search_action">Sök privat</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#228;r utvecklad av Mozilla. V&#229;rt uppdrag &#228;r att fr&#228;mja ett h&#228;lsosamt, &#246;ppet Internet.<br/>\n<a href="%2$s">L&#228;s mer</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Sekretess &amp; säkerhet</string>
+  <string name="preference_privacy_and_security_summary">Spårning, kakor, dataval</string>
+  <string name="preference_search_summary">Ange standard, autokomplettera</string>
+  <string name="preference_mozilla_summary">Om %1$s, hjälp</string>
+  <string name="preference_category_tracking_protection">Spårningsskydd</string>
+  <string name="preference_category_web_content">Webbinnehåll</string>
+  <string name="preference_category_switching_apps">Växla appar</string>
+  <string name="preference_category_general">Allmänt</string>
+  <string name="preference_category_data_collection_use">Datainsamling &amp; användning</string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_state_on">På</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Lägg till anpassad webbadress</string>
   <string name="preference_autocomplete_title_add">Lägg till anpassad webbadress</string>
   <string name="custom_autocomplete_quick_add">Lägg till anpassad webbadress</string>
+  <string name="preference_category_cookies">Kakor och webbplatsdata</string>
+  <string name="preference_category_data_choices">Dataval</string>
   <string name="preference_autocomplete_title_remove">Ta bort anpassade webbadresser</string>
   <string name="preference_autocomplete_learn_more">Läs mer</string>
   <string name="preference_autocomplete_custom_summary">Lägg till och hantera anpassade autokompletterade webbadresser.</string>
   <string name="preference_autocomplete_add_title">Webbadress att lägga till</string>
   <string name="preference_autocomplete_add_hint">Klistra in eller ange webbadress</string>
+  <string name="preference_autocomplete_add_example2">Exempel: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exempel: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Ny anpassad webbadress tillagd.</string>
   <string name="preference_autocomplete_menu_remove">Ta bort</string>

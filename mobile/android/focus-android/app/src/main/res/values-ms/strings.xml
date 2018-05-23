@@ -8,6 +8,7 @@
   <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
   <string name="search_hint">Cari %1$s</string>
   <string name="menu_share">Kongsi…</string>
+  <string name="menu_report_site_issue">Laporkan Isu Laman</string>
   <string name="menu_open_with_default_browser2">Buka dalam %1$s</string>
   <string name="menu_open_with_a_browser2">Buka dalam…</string>
   <string name="menu_add_to_home_screen">Tambah ke Skrin Halaman utama</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Buang sejarah pelayaran</string>
   <string name="text_selection_search_action">Cari secara Rahsia</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk menghapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privasi &amp; Keselamatan</string>
+  <string name="preference_privacy_and_security_summary">Penjejakan, kuki, pilihan data</string>
+  <string name="preference_search_summary">Tetapkan piawai, autolengkap</string>
+  <string name="preference_mozilla_summary">Perihal %1$s, bantuan</string>
+  <string name="preference_category_tracking_protection">Perlindungan Penjejakan</string>
+  <string name="preference_category_web_content">Kandungan Web</string>
+  <string name="preference_category_switching_apps">Aplikasi Penukaran</string>
+  <string name="preference_category_general">Umum</string>
+  <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
   <string name="preference_category_search">Carian</string>
   <string name="preference_search_engine_default">Piawai</string>
   <string name="preference_state_on">Aktif</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
   <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
   <string name="custom_autocomplete_quick_add">Tambah URL penyesuaian</string>
+  <string name="preference_category_cookies">Kuki dan Data Laman</string>
+  <string name="preference_category_data_choices">Pilihan Data</string>
   <string name="preference_autocomplete_title_remove">Buang URLs penyesuaian</string>
   <string name="preference_autocomplete_learn_more">Ketahui selanjutnya</string>
   <string name="preference_autocomplete_custom_summary">Tambah dan urus penyesuaian URL auto-lengkap.</string>
   <string name="preference_autocomplete_add_title">URL untuk ditambah</string>
   <string name="preference_autocomplete_add_hint">Tampal atau masukkan URL</string>
+  <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Contoh: example.com</string>
   <string name="preference_autocomplete_add_confirmation">Penyesuaian URL baru ditambah.</string>
   <string name="preference_autocomplete_menu_remove">Buang</string>

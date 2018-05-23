@@ -8,6 +8,7 @@
   <string name="feedback_erase">Sto\'i ña ntsinu.</string>
   <string name="search_hint">Ndukù %1$s</string>
   <string name="menu_share">Stucha…</string>
+  <string name="menu_report_site_issue">Ka tu\'un ña kue va\'a yee sitio\'yo</string>
   <string name="menu_open_with_default_browser2">Kuna tsi %1$s</string>
   <string name="menu_open_with_a_browser2">Kuna tsi…</string>
   <string name="menu_add_to_home_screen">Chika\'a nu pantalla xina</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Stòo ña ndukuku sata</string>
   <string name="text_selection_search_action">Nduku Sèè</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Kuu kuachu\'un&#241;a.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Kuu nduku seu &#241;a\'a:\n  "<ul>"\n    "<li>Nduku &#241;a kunu nu kaa ndusu\'ku</li>"\n    "<li>Kasi &#241;a kuni kunche\'e &#241;a sau)</li>"\n    "<li>Stoo cookies tsi &#241;a ndukuku sata</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s Mozilla sai. Kunikue iin Internet nuna &#241;a kuu kuchu\'un ntina yivi.<br/>\n<a href="%2$s">kavi cha kutua</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Ña i\'í tsi Ña kunka vai</string>
+  <string name="preference_privacy_and_security_summary">Lista ña rastreo, cookies tsi tutu</string>
+  <string name="preference_search_summary">Chikai tana xina, cha ntacha\'a mií ña</string>
+  <string name="preference_mozilla_summary">Tu\'un tsa %1$s, ña chinhe\'e yo</string>
+  <string name="preference_category_tracking_protection">Protección de rastreo</string>
+  <string name="preference_category_web_content">Tutu web</string>
+  <string name="preference_category_switching_apps">Sama kue aplicacion</string>
+  <string name="preference_category_general">Ntií</string>
+  <string name="preference_category_data_collection_use">Satutu kue tutu cha nchi vai</string>
   <string name="preference_category_search">Nduku</string>
   <string name="preference_search_engine_default">Tsa sa\'an yee</string>
   <string name="preference_state_on">Kuna</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Chaa URL</string>
   <string name="preference_autocomplete_title_add">Chaa URL</string>
   <string name="custom_autocomplete_quick_add">Chaa URL</string>
+  <string name="preference_category_cookies">Cookies tsi tutu sitio</string>
+  <string name="preference_category_data_choices">Katsi tutù</string>
   <string name="preference_autocomplete_title_remove">Stòo URLs nchau</string>
   <string name="preference_autocomplete_learn_more">Skua\'a kuakaa</string>
   <string name="preference_autocomplete_custom_summary">Chaa a sama URLs tana kuni meu.</string>
   <string name="preference_autocomplete_add_title">Chaa URL</string>
   <string name="preference_autocomplete_add_hint">Chistiin a chaa URL</string>
+  <string name="preference_autocomplete_add_example2">Tana: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Kua: sivi.com</string>
   <string name="preference_autocomplete_add_confirmation">Ntutsaa URL nchau.</string>
   <string name="preference_autocomplete_menu_remove">Xitaá</string>
@@ -57,6 +70,7 @@
   <string name="preference_privacy_block_analytics">Kasi ña ndukuyo</string>
   <string name="preference_privacy_block_analytics_summary">Kuachu\'un ña tava satutuku tsi chikuau ña sau tana katavu tsi samu</string>
   <string name="preference_privacy_block_social">Kasi ña ndukuyo</string>
+  <string name="preference_privacy_block_social_summary">Ntachiiaña nu ke sitiotava ntanii ña ntsinu cha snai boton tana kua\'á</string>
   <string name="preference_privacy_block_content">Kasi ña ndukuyo inka tsio</string>
   <string name="preference_privacy_block_content_summary2">Tatu na Kuachu\'un ña ku kueva\'a nuna pàguina</string>
   <string name="preference_privacy_category_cookies">Kasi cookies</string>
@@ -69,6 +83,7 @@
   <string name="preference_performance_block_webfonts">Makuau kuni siin ña\'a</string>
   <string name="preference_performance_block_webfonts_summary">Kuu kuncheu ika ña\'a icono a tutu ndatavana ña tsa koo</string>
   <string name="preference_performance_block_javascript">Kasi JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Ku yàchika kitsa kue página, ti ku ma nuna va’i</string>
   <string name="preference_default_browser2">Saa %1$s navegador xinaa</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Chachu\'un tu\'un nchachu\'un</string>
