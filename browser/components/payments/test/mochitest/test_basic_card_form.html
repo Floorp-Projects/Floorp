@@ -219,14 +219,18 @@ add_task(async function test_add_noSelectedShippingAddress() {
     selectedShippingAddress: null,
   });
   await asyncElementRendered();
-  checkCCForm(form, {});
+  checkCCForm(form, {
+    billingAddressGUID: address1.guid,
+  });
 
   info("now test with a missing selectedShippingAddress");
   await form.requestStore.setState({
     selectedShippingAddress: "some-missing-guid",
   });
   await asyncElementRendered();
-  checkCCForm(form, {});
+  checkCCForm(form, {
+    billingAddressGUID: address1.guid,
+  });
 
   form.remove();
   await form.requestStore.reset();

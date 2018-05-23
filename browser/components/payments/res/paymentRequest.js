@@ -137,7 +137,6 @@ var paymentRequest = {
       };
 
       state["address-page"] = {
-        selectedStateKey: "selectedShippingAddress",
         addressFields: null,
         guid: null,
       };
@@ -146,10 +145,12 @@ var paymentRequest = {
         Object.assign(state["address-page"], {
           title: paymentDialog.dataset.shippingAddressTitleAdd,
         });
+        state.page.selectedStateKey = ["selectedShippingAddress"];
       } else {
         Object.assign(state["address-page"], {
           title: paymentDialog.dataset.billingAddressTitleAdd,
         });
+        state.page.selectedStateKey = ["basic-card-page", "billingAddressGUID"];
       }
     } else if (!hasSavedCards) {
       state.page = {
