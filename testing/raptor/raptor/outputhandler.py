@@ -6,8 +6,6 @@
 from __future__ import absolute_import
 
 import json
-import time
-from threading import Thread
 
 from mozlog import get_proxy_logger
 
@@ -27,10 +25,6 @@ class OutputHandler(object):
         try:
             data = json.loads(line)
         except ValueError:
-            if line.find('__raptor_shutdownBrowser') != -1:
-                    self.kill_thread = Thread(target=self.wait_for_quit)
-                    self.kill_thread.daemon = True
-                    self.kill_thread.start()
             self.process_output(line)
             return
 
@@ -42,11 +36,3 @@ class OutputHandler(object):
     def process_output(self, line):
         if "error" in line or "warning" in line or "raptor" in line:
             LOG.process_output(self.proc.pid, line)
-
-    def wait_for_quit(self, timeout=5):
-        """Wait timeout seconds for the process to exit. If it hasn't
-        exited by then, kill it.
-        """
-        time.sleep(timeout)
-        if self.proc.poll() is None:
-            self.proc.kill()

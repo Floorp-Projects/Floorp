@@ -344,11 +344,8 @@ function cleanUp() {
     console.log("benchmark complete");
   }
   window.onload = null;
-  // done, dump to console to tell framework to shutdown browser; currently
-  // this only works with Firefox as google chrome doesn't support dump()
-  if (browserName === "firefox")
-    window.dump("\n__raptor_shutdownBrowser\n");
-
+  // tell the control server we are done and the browser can be shutdown
+  postToControlServer("status", "__raptor_shutdownBrowser");
 }
 
 function runner() {
