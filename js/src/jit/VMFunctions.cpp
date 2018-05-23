@@ -747,9 +747,9 @@ void
 PostGlobalWriteBarrier(JSRuntime* rt, JSObject* obj)
 {
     MOZ_ASSERT(obj->is<GlobalObject>());
-    if (!obj->compartment()->globalWriteBarriered) {
+    if (!obj->realm()->globalWriteBarriered) {
         PostWriteBarrier(rt, obj);
-        obj->compartment()->globalWriteBarriered = 1;
+        obj->realm()->globalWriteBarriered = 1;
     }
 }
 
