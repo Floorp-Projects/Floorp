@@ -170,6 +170,7 @@ with Files('docs/**'):
 
 EXTRA_JS_MODULES += [
     'addons/MatchURLFilters.jsm',
+    'addons/SecurityInfo.jsm',
     'addons/WebNavigation.jsm',
     'addons/WebNavigationContent.js',
     'addons/WebNavigationFrames.jsm',

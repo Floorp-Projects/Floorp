@@ -177,6 +177,148 @@
         }
       },
       {
+        "id": "CertificateInfo",
+        "type": "object",
+        "description": "Contains the certificate properties of the request if it is a secure request.",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "validity": {
+            "type": "object",
+            "description": "Contains start and end dates in GMT.",
+            "properties": {
+              "startGMT": { "type": "string" },
+              "endGMT": { "type": "string" }
+            }
+          },
+          "fingerprint": {
+            "type": "object",
+            "properties": {
+              "sha1": { "type": "string" },
+              "sha256": { "type": "string" }
+            }
+          },
+          "serialNumber": {
+            "type": "string"
+          },
+          "isBuiltInRoot": {
+            "type": "boolean"
+          },
+          "subjectPublicKeyInfoDigest": {
+            "type": "object",
+            "properties": {
+              "sha256": { "type": "string" }
+            }
+          },
+          "keyUsages": {
+            "type": "string"
+          },
+          "rawDER": {
+            "optional": true,
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      {
+        "id": "CertificateTransparencyStatus",
+        "type": "string",
+        "enum": ["not_applicable", "policy_compliant", "policy_not_enough_scts", "policy_not_diverse_scts"]
+      },
+      {
+        "id": "TransportWeaknessReasons",
+        "type": "string",
+        "enum": ["cipher"]
+      },
+      {
+        "id": "SecurityInfo",
+        "type": "object",
+        "description": "Contains the security properties of the request (ie. SSL/TLS information).",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "insecure",
+              "weak",
+              "broken",
+              "secure"
+            ]
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "Error message if state is \"broken\"",
+            "optional": true
+          },
+          "protocolVersion": {
+            "type": "string",
+            "description": "Protocol version if state is \"secure\"",
+            "enum": [
+              "TLSv1",
+              "TLSv1.1",
+              "TLSv1.2",
+              "TLSv1.3",
+              "unknown"
+            ],
+            "optional": true
+          },
+          "cipherSuite": {
+            "type": "string",
+            "description": "The cipher suite used in this request if state is \"secure\".",
+            "optional": true
+          },
+          "certificates": {
+            "description": "Certificate data if state is \"secure\".  Will only contain one entry unless <code>certificateChain</code> is passed as an option.",
+            "type": "array",
+            "items": { "$ref": "CertificateInfo" }
+          },
+          "isDomainMismatch": {
+            "description": "The domain name does not match the certificate domain.",
+            "type": "boolean",
+            "optional": true
+          },
+          "isExtendedValidation": {
+            "type": "boolean",
+            "optional": true
+          },
+          "isNotValidAtThisTime": {
+            "description": "The certificate is either expired or is not yet valid.  See <code>CertificateInfo.validity</code> for start and end dates.",
+            "type": "boolean",
+            "optional": true
+          },
+          "isUntrusted": {
+            "type": "boolean",
+            "optional": true
+          },
+          "certificateTransparencyStatus": {
+            "description": "Certificate transparency compliance per RFC 6962.  See <code>https://www.certificate-transparency.org/what-is-ct</code> for more information.",
+            "$ref": "CertificateTransparencyStatus",
+            "optional": true
+          },
+          "hsts": {
+            "type": "boolean",
+            "description": "True if host uses Strict Transport Security and state is \"secure\".",
+            "optional": true
+          },
+          "hpkp": {
+            "type": "string",
+            "description": "True if host uses Public Key Pinning and state is \"secure\".",
+            "optional": true
+          },
+          "weaknessReasons": {
+            "type": "array",
+            "items": { "$ref": "TransportWeaknessReasons" },
+            "description": "list of reasons that cause the request to be considered weak, if state is \"weak\"",
+            "optional": true
+          }
+        }
+      },
+      {
         "id": "UploadData",
         "type": "object",
         "properties": {
@@ -225,6 +367,35 @@
           "additionalProperties": {"type": "any"},
           "isInstanceOf": "StreamFilter"
         }
+      },
+      {
+        "name": "getSecurityInfo",
+        "type": "function",
+        "async": true,
+        "description": "Retrieves the security information for the request.  Returns a promise that will resolve to a SecurityInfo object.",
+        "parameters": [
+          {
+            "name": "requestId",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "optional": true,
+            "type": "object",
+            "properties": {
+              "certificateChain": {
+                "type": "boolean",
+                "description": "Include the entire certificate chain.",
+                "optional": true
+              },
+              "rawDER": {
+                "type": "boolean",
+                "description": "Include raw certificate data for processing by the extension.",
+                "optional": true
+              }
+            }
+          }
+        ]
       }
     ],
     "events": [
