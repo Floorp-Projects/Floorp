@@ -29,7 +29,6 @@ DevToolsModules(
     'developer-toolbar.js',
     'devices.js',
     'DOMHelpers.jsm',
-    'doorhanger.js',
     'enum.js',
     'file-saver.js',
     'getjson.js',
