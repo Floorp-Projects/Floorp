@@ -12,33 +12,36 @@ const TEST_URL = "data:text/html,<html><head><title>Test for the " +
                  "<h1>Keybindings!</h1></body></html>";
 
 const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
-let keysetMap = { };
+ChromeUtils.defineModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
+const isMac = AppConstants.platform == "macosx";
 
+let allKeys = [];
 function buildDevtoolsKeysetMap(keyset) {
-  [].forEach.call(
-    keyset.querySelectorAll("key"),
-    function(key) {
-      if (!key.getAttribute("key")) {
-        return;
+  // Fetches all the keyboard shortcuts which were defined by lazyGetter 'KeyShortcuts' in
+  // devtools-startup.js and added to the DOM by 'hookKeyShortcuts'
+  [...keyset.querySelectorAll("key")].forEach(key => {
+    if (!key.getAttribute("key")) {
+      return;
+    }
+
+    let modifiers = key.getAttribute("modifiers");
+    allKeys.push({
+      toolId: key.id.split("_")[1],
+      key: key.getAttribute("key"),
+      modifiers: modifiers,
+      modifierOpt: {
+        shiftKey: modifiers.match("shift"),
+        ctrlKey: modifiers.match("ctrl"),
+        altKey: modifiers.match("alt"),
+        metaKey: modifiers.match("meta"),
+        accelKey: modifiers.match("accel")
+      },
+      synthesizeKey: function() {
+        EventUtils.synthesizeKey(this.key, this.modifierOpt);
       }
-
-      let modifiers = key.getAttribute("modifiers");
-
-      keysetMap[key.id.split("_")[1]] = {
-        key: key.getAttribute("key"),
-        modifiers: modifiers,
-        modifierOpt: {
-          shiftKey: modifiers.match("shift"),
-          ctrlKey: modifiers.match("ctrl"),
-          altKey: modifiers.match("alt"),
-          metaKey: modifiers.match("meta"),
-          accelKey: modifiers.match("accel")
-        },
-        synthesizeKey: function() {
-          EventUtils.synthesizeKey(this.key, this.modifierOpt);
-        }
-      };
     });
+  });
 }
 
 function setupKeyBindingsTest() {
@@ -59,36 +62,58 @@ add_task(async function() {
 
   setupKeyBindingsTest();
 
-  let onToolboxReady = gDevTools.once("toolbox-ready");
-  keysetMap.inspector.synthesizeKey();
-  let toolbox = await onToolboxReady;
+  info("Test the first inspector key (there are 2 of them on Mac)");
+  let inspectorKeys = allKeys.filter(({ toolId }) => {
+    return toolId === "inspector" || toolId === "inspectorMac";
+  });
 
-  await inspectorShouldBeOpenAndHighlighting();
+  if (isMac) {
+    is(inspectorKeys.length, 2, "There are 2 inspector keys on Mac");
+  } else {
+    is(inspectorKeys.length, 1, "Only 1 inspector key on non-Mac platforms");
+  }
+
+  info("The first inspector key should open the toolbox.");
+  let onToolboxReady = gDevTools.once("toolbox-ready");
+  inspectorKeys[0].synthesizeKey();
+  let toolbox = await onToolboxReady;
+  await inspectorShouldBeOpenAndHighlighting(inspectorKeys[0]);
 
   let onSelectTool = gDevTools.once("select-tool-command");
-  keysetMap.webconsole.synthesizeKey();
+  let webconsole = allKeys.filter(({ toolId }) => toolId === "webconsole")[0];
+  webconsole.synthesizeKey();
   await onSelectTool;
   await webconsoleShouldBeSelected();
 
   onSelectTool = gDevTools.once("select-tool-command");
-  keysetMap.jsdebugger.synthesizeKey();
+  let jsdebugger = allKeys.filter(({ toolId }) => toolId === "jsdebugger")[0];
+  jsdebugger.synthesizeKey();
   await onSelectTool;
   await jsdebuggerShouldBeSelected();
 
   onSelectTool = gDevTools.once("select-tool-command");
-  keysetMap.netmonitor.synthesizeKey();
+  let netmonitor = allKeys.filter(({ toolId }) => toolId === "netmonitor")[0];
+  netmonitor.synthesizeKey();
   await onSelectTool;
   await netmonitorShouldBeSelected();
 
+  if (isMac) {
+    info("On MacOS, we check the extra inspector shortcut too");
+    onSelectTool = gDevTools.once("select-tool-command");
+    inspectorKeys[1].synthesizeKey();
+    await onSelectTool;
+    await inspectorShouldBeOpenAndHighlighting(inspectorKeys[1]);
+  }
+
   gBrowser.removeCurrentTab();
 
-  async function inspectorShouldBeOpenAndHighlighting() {
+  async function inspectorShouldBeOpenAndHighlighting(inspector) {
     is(toolbox.currentToolId, "inspector", "Correct tool has been loaded");
 
     await toolbox.once("picker-started");
 
     ok(true, "picker-started event received, highlighter started");
-    keysetMap.inspector.synthesizeKey();
+    inspector.synthesizeKey();
 
     await toolbox.once("picker-stopped");
     ok(true, "picker-stopped event received, highlighter stopped");
