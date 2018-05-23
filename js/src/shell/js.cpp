@@ -4312,6 +4312,24 @@ CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier
 }
 
 static bool
+ShellModuleMetadataHook(JSContext* cx, HandleObject module, HandleObject metaObject)
+{
+    // For the shell, just use the script's filename as the base URL.
+    RootedScript script(cx, module->as<ModuleObject>().script());
+    const char* filename = script->scriptSource()->filename();
+    MOZ_ASSERT(filename);
+
+    RootedString url(cx, NewStringCopyZ<CanGC>(cx, filename));
+    if (!url)
+        return false;
+
+    if (!JS_DefineProperty(cx, metaObject, "url", url, JSPROP_ENUMERATE))
+        return false;
+
+    return true;
+}
+
+static bool
 GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -9316,6 +9334,7 @@ main(int argc, char** argv, char** envp)
     js::SetPreserveWrapperCallback(cx, DummyPreserveWrapperCallback);
 
     JS::SetModuleResolveHook(cx->runtime(), CallModuleResolveHook);
+    JS::SetModuleMetadataHook(cx->runtime(), ShellModuleMetadataHook);
 
     result = Shell(cx, &op, envp);
 

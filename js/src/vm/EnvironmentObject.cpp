@@ -3215,9 +3215,19 @@ WithEnvironmentObject::scope() const
 ModuleEnvironmentObject*
 js::GetModuleEnvironmentForScript(JSScript* script)
 {
+    ModuleObject* module = GetModuleObjectForScript(script);
+    if (!module)
+        return nullptr;
+
+    return module->environment();
+}
+
+ModuleObject*
+js::GetModuleObjectForScript(JSScript* script)
+{
     for (ScopeIter si(script); si; si++) {
         if (si.kind() == ScopeKind::Module)
-            return si.scope()->as<ModuleScope>().module()->environment();
+            return si.scope()->as<ModuleScope>().module();
     }
     return nullptr;
 }
