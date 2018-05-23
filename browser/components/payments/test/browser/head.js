@@ -143,18 +143,24 @@ function spawnTaskInNewDialog(requestId, contentTaskFn, args = null) {
 async function addSampleAddressesAndBasicCard() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
+  let address1GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
+  let address2GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
+  let card1GUID = formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
+
+  return {
+    address1GUID,
+    address2GUID,
+    card1GUID,
+  };
 }
 
 /**
@@ -178,6 +184,24 @@ function checkPaymentAddressMatchesStorageAddress(paymentAddress, storageAddress
      `${storageAddress["family-name"]}`,
      "Recipient name should match");
   is(paymentAddress.phone, storageAddress.tel, "Phone should match");
+}
+
+/**
+ * Checks that a card from autofill storage matches a Payment Request MethodDetails response.
+ * @param {MethodDetails} methodDetails
+ * @param {object} card
+ * @param {string} msg to describe the check
+ */
+function checkPaymentMethodDetailsMatchesCard(methodDetails, card, msg) {
+  info(msg);
+  // The card expiry month should be a zero-padded two-digit string.
+  let cardExpiryMonth = card["cc-exp-month"] < 10 ?
+                       "0" + card["cc-exp-month"] :
+                       card["cc-exp-month"].toString();
+  is(methodDetails.cardholderName, card["cc-name"], "Check cardholderName");
+  is(methodDetails.cardNumber, card["cc-number"], "Check cardNumber");
+  is(methodDetails.expiryMonth, cardExpiryMonth, "Check expiryMonth");
+  is(methodDetails.expiryYear, card["cc-exp-year"], "Check expiryYear");
 }
 
 /**
@@ -214,6 +238,14 @@ async function setupPaymentDialog(browser, {methodData, details, options, mercha
 
   await dialogReadyPromise;
   info("dialog ready");
+
+  await spawnPaymentDialogTask(frame, () => {
+    let elementHeight = (element) =>
+      element.getBoundingClientRect().height;
+    content.isHidden = (element) => elementHeight(element) == 0;
+    content.isVisible = (element) => elementHeight(element) > 0;
+  });
+  info("helper functions injected into frame");
 
   return {win, requestId, frame};
 }
@@ -269,4 +301,10 @@ add_task(async function setup_head() {
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
+}
+
+async function selectPaymentDialogShippingAddressByCountry(frame, country) {
+  await spawnPaymentDialogTask(frame,
+                               PTU.DialogContentTasks.selectShippingAddressByCountry,
+                               country);
 }
