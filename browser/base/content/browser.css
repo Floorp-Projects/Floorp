@@ -1269,6 +1269,11 @@ toolbarpaletteitem[place="palette"][hidden] {
   display: none;
 }
 
+.toolbarpaletteitem-box {
+  /* Prevent children from getting events */
+  pointer-events: none;
+}
+
 toolbarpaletteitem[place="palette"] > .toolbarpaletteitem-box {
   -moz-box-pack: center;
   width: 7em;
