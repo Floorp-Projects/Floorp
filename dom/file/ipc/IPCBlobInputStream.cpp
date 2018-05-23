@@ -125,6 +125,8 @@ NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIFileMetadata)
   NS_INTERFACE_MAP_ENTRY(nsIAsyncFileMetadata)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStreamLength)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncInputStreamLength)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
@@ -133,6 +135,7 @@ IPCBlobInputStream::IPCBlobInputStream(IPCBlobInputStreamChild* aActor)
   , mState(eInit)
   , mStart(0)
   , mLength(0)
+  , mConsumed(false)
   , mMutex("IPCBlobInputStream::mMutex")
 {
   MOZ_ASSERT(aActor);
@@ -218,7 +221,17 @@ IPCBlobInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount)
   }
 
   MOZ_ASSERT(asyncRemoteStream);
-  return asyncRemoteStream->Read(aBuffer, aCount, aReadCount);
+  nsresult rv = asyncRemoteStream->Read(aBuffer, aCount, aReadCount);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    mConsumed = true;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -250,7 +263,18 @@ IPCBlobInputStream::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
   }
 
   MOZ_ASSERT(asyncRemoteStream);
-  return asyncRemoteStream->ReadSegments(aWriter, aClosure, aCount, aResult);
+  nsresult rv = asyncRemoteStream->ReadSegments(aWriter, aClosure, aCount, aResult);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // If some data has been read, we mark the stream as consumed.
+  if (*aResult != 0) {
+    MutexAutoLock lock(mMutex);
+    mConsumed = true;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -763,6 +787,143 @@ IPCBlobInputStream::EnsureAsyncRemoteStream(const MutexAutoLock& aProofOfLock)
   mRemoteStream = nullptr;
 
   return NS_OK;
+}
+
+// nsIInputStreamLength
+
+NS_IMETHODIMP
+IPCBlobInputStream::Length(int64_t* aLength)
+{
+  MutexAutoLock lock(mMutex);
+
+  if (mState == eClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (mConsumed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_BASE_STREAM_WOULD_BLOCK;
+}
+
+// nsIAsyncInputStreamLength
+
+NS_IMETHODIMP
+IPCBlobInputStream::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
+                                    nsIEventTarget* aEventTarget)
+{
+  MutexAutoLock lock(mMutex);
+
+  if (mState == eClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  if (mConsumed) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // If we have the callback, we must have the event target.
+  if (NS_WARN_IF(!!aCallback != !!aEventTarget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(mActor);
+
+  mLengthCallback = aCallback;
+  mLengthCallbackEventTarget = aEventTarget;
+
+  if (aCallback) {
+    mActor->LengthNeeded(this, aEventTarget);
+  }
+
+  return NS_OK;
+}
+
+namespace {
+
+class InputStreamLengthCallbackRunnable final : public CancelableRunnable
+{
+public:
+  static void
+  Execute(nsIInputStreamLengthCallback* aCallback,
+          nsIEventTarget* aEventTarget,
+          IPCBlobInputStream* aStream,
+          int64_t aLength)
+  {
+    MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(aEventTarget);
+
+    RefPtr<InputStreamLengthCallbackRunnable> runnable =
+      new InputStreamLengthCallbackRunnable(aCallback, aStream, aLength);
+
+    nsCOMPtr<nsIEventTarget> target = aEventTarget;
+    target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    mCallback->OnInputStreamLengthReady(mStream, mLength);
+    mCallback = nullptr;
+    mStream = nullptr;
+    return NS_OK;
+  }
+
+private:
+  InputStreamLengthCallbackRunnable(nsIInputStreamLengthCallback* aCallback,
+                                    IPCBlobInputStream* aStream,
+                                    int64_t aLength)
+    : CancelableRunnable("dom::InputStreamLengthCallbackRunnable")
+    , mCallback(aCallback)
+    , mStream(aStream)
+    , mLength(aLength)
+  {
+    MOZ_ASSERT(mCallback);
+    MOZ_ASSERT(mStream);
+  }
+
+  nsCOMPtr<nsIInputStreamLengthCallback> mCallback;
+  RefPtr<IPCBlobInputStream> mStream;
+  int64_t mLength;
+};
+
+} // anonymous
+
+void
+IPCBlobInputStream::LengthReady(int64_t aLength)
+{
+  nsCOMPtr<nsIInputStreamLengthCallback> lengthCallback;
+  nsCOMPtr<nsIEventTarget> lengthCallbackEventTarget;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    // We have been closed in the meantime.
+    if (mState == eClosed || mConsumed) {
+      return;
+    }
+
+    if (mStart > 0) {
+      aLength -= mStart;
+    }
+
+    if (mLength < mActor->Size()) {
+      // If the remote stream must be sliced, we must return here the correct
+      // value.
+      aLength = XPCOM_MIN(aLength, (int64_t)mLength);
+    }
+
+    lengthCallback.swap(mLengthCallback);
+    lengthCallbackEventTarget.swap(mLengthCallbackEventTarget);
+  }
+
+  if (lengthCallback) {
+    InputStreamLengthCallbackRunnable::Execute(lengthCallback,
+                                               lengthCallbackEventTarget,
+                                               this,
+                                               aLength);
+  }
 }
 
 } // namespace dom

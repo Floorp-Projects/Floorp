@@ -354,7 +354,9 @@ BackgroundParentImpl::AllocPIPCBlobInputStreamParent(const nsID& aID,
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
+    mozilla::dom::IPCBlobInputStreamParent::Create(aID, aSize, this);
+  return actor.forget().take();
 }
 
 mozilla::ipc::IPCResult
@@ -376,7 +378,8 @@ BackgroundParentImpl::DeallocPIPCBlobInputStreamParent(PIPCBlobInputStreamParent
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  delete aActor;
+  RefPtr<mozilla::dom::IPCBlobInputStreamParent> actor =
+    dont_AddRef(static_cast<mozilla::dom::IPCBlobInputStreamParent*>(aActor));
   return true;
 }
 
