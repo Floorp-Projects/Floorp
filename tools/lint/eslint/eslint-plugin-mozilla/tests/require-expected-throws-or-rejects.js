@@ -29,7 +29,8 @@ ruleTester.run("no-useless-run-test", rule, {
     "Assert.rejects(foo, /assertion/)",
     "Assert.rejects(foo, /assertion/, 'msg')",
     "Assert.rejects(foo, ex => {}, 'msg')",
-    "Assert.rejects(foo, foo, 'msg')"
+    "Assert.rejects(foo, foo, 'msg')",
+    "Assert.rejects(foo, foo.bar, 'msg')"
   ],
   invalid: [
     invalidCode("Assert.throws(() => foo());",
