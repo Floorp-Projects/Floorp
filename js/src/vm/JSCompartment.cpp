@@ -1330,10 +1330,9 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 HashNumber
-JSCompartment::randomHashCode()
+Realm::randomHashCode()
 {
-    ensureRandomNumberGenerator();
-    return HashNumber(randomNumberGenerator.ref().next());
+    return HashNumber(getOrCreateRandomNumberGenerator().next());
 }
 
 mozilla::HashCodeScrambler
