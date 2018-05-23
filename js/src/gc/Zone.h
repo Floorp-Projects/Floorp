@@ -220,7 +220,7 @@ struct Zone : public JS::shadow::Zone,
 
     void beginSweepTypes(bool releaseTypes);
 
-    bool hasMarkedCompartments();
+    bool hasMarkedRealms();
 
     void scheduleGC() { MOZ_ASSERT(!CurrentThreadIsHeapBusy()); gcScheduled_ = true; }
     void unscheduleGC() { gcScheduled_ = false; }
