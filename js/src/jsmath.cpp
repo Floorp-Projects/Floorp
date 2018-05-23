@@ -716,22 +716,22 @@ js::GenerateXorShift128PlusSeed(mozilla::Array<uint64_t, 2>& seed)
     } while (seed[0] == 0 && seed[1] == 0);
 }
 
-void
-JSCompartment::ensureRandomNumberGenerator()
+mozilla::non_crypto::XorShift128PlusRNG&
+Realm::getOrCreateRandomNumberGenerator()
 {
-    if (randomNumberGenerator.isNothing()) {
+    if (randomNumberGenerator_.isNothing()) {
         mozilla::Array<uint64_t, 2> seed;
         GenerateXorShift128PlusSeed(seed);
-        randomNumberGenerator.emplace(seed[0], seed[1]);
+        randomNumberGenerator_.emplace(seed[0], seed[1]);
     }
+
+    return randomNumberGenerator_.ref();
 }
 
 double
 js::math_random_impl(JSContext* cx)
 {
-    JSCompartment* comp = cx->compartment();
-    comp->ensureRandomNumberGenerator();
-    return comp->randomNumberGenerator.ref().nextDouble();
+    return cx->realm()->getOrCreateRandomNumberGenerator().nextDouble();
 }
 
 bool
