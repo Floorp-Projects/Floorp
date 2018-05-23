@@ -1219,7 +1219,7 @@ IonBuilder::initArgumentsObject()
     MOZ_ASSERT(info().needsArgsObj());
 
     bool mapped = script()->hasMappedArgsObj();
-    ArgumentsObject* templateObj = script()->compartment()->maybeArgumentsTemplateObject(mapped);
+    ArgumentsObject* templateObj = script()->realm()->maybeArgumentsTemplateObject(mapped);
 
     MCreateArgumentsObject* argsObj =
         MCreateArgumentsObject::New(alloc(), current->environmentChain(), templateObj);
