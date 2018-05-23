@@ -8,7 +8,6 @@ from __future__ import absolute_import
 import json
 import os
 import sys
-import time
 
 import mozinfo
 
@@ -47,6 +46,7 @@ class Raptor(object):
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor')
+        self.addons_installed = False
         self.control_server = None
         self.playback = None
 
@@ -103,7 +103,11 @@ class Raptor(object):
                         test['name'],
                         self.control_server.port)
 
-        self.profile.addons.install(os.path.join(webext_dir, 'raptor'))
+        # must intall raptor addon each time because we dynamically update some content
+        raptor_webext = os.path.join(webext_dir, 'raptor')
+        self.log.info("installing webext %s" % raptor_webext)
+        self.profile.addons.install(raptor_webext)
+        webext_id = self.profile.addons.addon_details(raptor_webext)['id']
 
         # some tests require tools to playback the test pages
         if test.get('playback', None) is not None:
@@ -113,7 +117,6 @@ class Raptor(object):
 
         self.runner.start()
 
-        first_time = int(time.time()) * 1000
         proc = self.runner.process_handler
         self.output_handler.proc = proc
 
@@ -128,16 +131,13 @@ class Raptor(object):
         if self.playback is not None:
             self.playback.stop()
 
+        # remove the raptor webext; as it must be reloaded with each subtest anyway
+        self.log.info("removing webext %s" % raptor_webext)
+        self.profile.addons.remove_addon(webext_id)
+
         if self.runner.is_running():
             self.log("Application timed out after {} seconds".format(timeout))
             self.runner.stop()
-
-        proc.output.append(
-            "__startBeforeLaunchTimestamp%d__endBeforeLaunchTimestamp"
-            % first_time)
-        proc.output.append(
-            "__startAfterTerminationTimestamp%d__endAfterTerminationTimestamp"
-            % (int(time.time()) * 1000))
 
     def process_results(self):
         return self.results_handler.summarize_and_output(self.config)

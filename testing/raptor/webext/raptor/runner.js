@@ -353,6 +353,8 @@ function cleanUp() {
 
 function runner() {
   let config = getTestConfig();
+  console.log("test name is: " + config.test_name);
+  console.log("test settings url is: " + config.test_settings_url);
   testName = config.test_name;
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
