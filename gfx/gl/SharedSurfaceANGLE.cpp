@@ -34,8 +34,10 @@ CreatePBufferSurface(GLLibraryEGL* egl,
     MOZ_ASSERT(preCallErr == LOCAL_EGL_SUCCESS);
     EGLSurface surface = egl->fCreatePbufferSurface(display, config, attribs);
     EGLint err = egl->fGetError();
-    if (err != LOCAL_EGL_SUCCESS)
+    if (err != LOCAL_EGL_SUCCESS) {
+        gfxCriticalError() << "Failed to create Pbuffer surface error: " << gfx::hexa(err) << " Size : " << size;
         return 0;
+    }
 
     return surface;
 }
