@@ -4,7 +4,7 @@
 == flexbox-abspos-child-002.html flexbox-abspos-child-002-ref.html
 
 # Tests for handling anonymous flex items
-fuzzy-if(Android,225,116) == flexbox-anonymous-items-001.html flexbox-anonymous-items-001-ref.html
+== flexbox-anonymous-items-001.html flexbox-anonymous-items-001-ref.html
 
 # Tests for alignment of flex lines (align-content property)
 == flexbox-align-content-horiz-001a.xhtml flexbox-align-content-horiz-001-ref.xhtml
