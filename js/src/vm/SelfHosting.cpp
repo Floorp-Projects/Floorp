@@ -2815,7 +2815,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         return nullptr;
 
     cx->runtime()->selfHostingGlobal_ = shg;
-    realm->isSelfHosting = true;
+    realm->setIsSelfHostingRealm();
     realm->setIsSystem(true);
 
     if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions))
@@ -2984,12 +2984,6 @@ JSRuntime::traceSelfHostingGlobal(JSTracer* trc)
 {
     if (selfHostingGlobal_ && !parentRuntime)
         TraceRoot(trc, const_cast<NativeObject**>(&selfHostingGlobal_.ref()), "self-hosting global");
-}
-
-bool
-JSRuntime::isSelfHostingCompartment(JSCompartment* comp) const
-{
-    return selfHostingGlobal_->compartment() == comp;
 }
 
 bool
