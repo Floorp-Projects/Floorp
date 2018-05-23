@@ -8,6 +8,7 @@ skip-if(!retainedDisplayList) == retained-dl-scroll-out-of-view-1.html retained-
 skip-if(!retainedDisplayList) == retained-dl-displayport-1.html retained-dl-displayport-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-prerender-transform-1.html retained-dl-prerender-transform-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-animation-on-pseudo.html retained-dl-animation-on-pseudo-ref.html
+skip-if(!retainedDisplayList) == retained-dl-opacity-animation-on-ib-split.html retained-dl-opacity-animation-on-ib-split-ref.html
 == retained-dl-wrap-list.html retained-dl-wrap-list-ref.html
 == retained-dl-zindex-1.html retained-dl-zindex-1-ref.html
 == retained-dl-zindex-2.html retained-dl-zindex-2-ref.html
