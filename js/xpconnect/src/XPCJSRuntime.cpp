@@ -339,8 +339,7 @@ PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
     }
 
     // WebExtension principals get a free pass.
-    nsString addonId;
-    if (IsWebExtensionPrincipal(principal, addonId)) {
+    if (principal->AddonPolicy()) {
         return true;
     }
 

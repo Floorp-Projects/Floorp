@@ -1971,23 +1971,14 @@ GetLastModifiedTime(nsIFile* aFile, bool aPersistent)
         return NS_OK;
       }
 
-      nsCOMPtr<nsISimpleEnumerator> entries;
+      nsCOMPtr<nsIDirectoryEnumerator> entries;
       rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
 
-      bool hasMore;
-      while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-        nsCOMPtr<nsISupports> entry;
-        rv = entries->GetNext(getter_AddRefs(entry));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-        MOZ_ASSERT(file);
-
+      nsCOMPtr<nsIFile> file;
+      while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
         rv = GetLastModifiedTime(file, aTimestamp);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
@@ -4228,23 +4219,14 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
     return rv;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> childDirectory = do_QueryInterface(entry);
-    MOZ_ASSERT(childDirectory);
-
+  nsCOMPtr<nsIFile> childDirectory;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(childDirectory)))) && childDirectory) {
     bool isDirectory;
     rv = childDirectory->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4316,19 +4298,12 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     usageInfo = new UsageInfo();
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    NS_ENSURE_TRUE(file, NS_NOINTERFACE);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6738,20 +6713,13 @@ QuotaUsageRequestBase::GetUsageForOrigin(QuotaManager* aQuotaManager,
       initialized = aQuotaManager->IsTemporaryStorageInitialized();
     }
 
-    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool hasMore;
-    while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-           hasMore && !mCanceled) {
-      nsCOMPtr<nsISupports> entry;
-      rv = entries->GetNext(getter_AddRefs(entry));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-      NS_ENSURE_TRUE(file, NS_NOINTERFACE);
-
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+           file && !mCanceled) {
       bool isDirectory;
       rv = file->IsDirectory(&isDirectory);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6904,7 +6872,7 @@ GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
     return NS_OK;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -6912,18 +6880,9 @@ GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
 
   bool persistent = aPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) &&
-         hasMore && !mCanceled) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
-    MOZ_ASSERT(originDir);
-
+  nsCOMPtr<nsIFile> originDir;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
+         originDir && !mCanceled) {
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7406,7 +7365,7 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     return;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   if (NS_WARN_IF(NS_FAILED(
         directory->GetDirectoryEntries(getter_AddRefs(entries)))) || !entries) {
     return;
@@ -7423,17 +7382,8 @@ ClearRequestBase::DeleteFiles(QuotaManager* aQuotaManager,
     originScope.SetPrefix(prefixSanitized);
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    MOZ_ASSERT(file);
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8576,23 +8526,15 @@ CreateOrUpgradeDirectoryMetadataHelper::CreateOrUpgradeMetadataFiles()
     return NS_OK;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
-    MOZ_ASSERT(originDir);
-
+  nsCOMPtr<nsIFile> originDir;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
+         originDir) {
     nsString leafName;
     rv = originDir->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8742,25 +8684,15 @@ CreateOrUpgradeDirectoryMetadataHelper::MaybeUpgradeOriginDirectory(
       }
     }
 
-    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    bool hasMore;
-    while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-      nsCOMPtr<nsISupports> entry;
-      rv = entries->GetNext(getter_AddRefs(entry));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-      if (NS_WARN_IF(!file)) {
-        return rv;
-      }
-
+    nsCOMPtr<nsIFile> file;
+    while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) &&
+           file) {
       nsString leafName;
       rv = file->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -8908,23 +8840,15 @@ UpgradeStorageFrom0_0To1_0Helper::DoUpgrade()
     return NS_OK;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
-    MOZ_ASSERT(originDir);
-
+  nsCOMPtr<nsIFile> originDir;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
+         originDir) {
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9041,23 +8965,14 @@ UpgradeStorageFrom1_0To2_0Helper::DoUpgrade()
   MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
   MOZ_ASSERT(exists);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
-    MOZ_ASSERT(originDir);
-
+  nsCOMPtr<nsIFile> originDir;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) && originDir) {
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9153,26 +9068,15 @@ UpgradeStorageFrom1_0To2_0Helper::MaybeUpgradeClients(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv =
     aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    if (NS_WARN_IF(!file)) {
-      return rv;
-    }
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9379,23 +9283,14 @@ UpgradeStorageFrom2_0To2_1Helper::DoUpgrade()
   MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
   MOZ_ASSERT(exists);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
-    MOZ_ASSERT(originDir);
-
+  nsCOMPtr<nsIFile> originDir;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) && originDir) {
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9483,26 +9378,15 @@ UpgradeStorageFrom2_0To2_1Helper::MaybeUpgradeClients(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   nsresult rv =
     aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  bool hasMore;
-  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
-    nsCOMPtr<nsISupports> entry;
-    rv = entries->GetNext(getter_AddRefs(entry));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
-    if (NS_WARN_IF(!file)) {
-      return rv;
-    }
-
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(file)))) && file) {
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {

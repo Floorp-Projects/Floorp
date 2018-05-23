@@ -19,6 +19,7 @@
 #include "nsNetCID.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsQueryObject.h"
 #include "mozilla/ipc/URIUtils.h"
 
 using namespace mozilla::ipc;
@@ -47,10 +48,7 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
   NS_INTERFACE_MAP_ENTRY(nsINestedURI)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableURI)
-  // see nsJARURI::Equals
-  if (aIID.Equals(NS_GET_IID(nsJARURI)))
-      foundInterface = reinterpret_cast<nsISupports*>(this);
-  else
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(nsJARURI)
 NS_INTERFACE_MAP_END
 
 nsresult
@@ -337,8 +335,7 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
         if (!aBaseURL)
             return NS_ERROR_MALFORMED_URI;
 
-        RefPtr<nsJARURI> otherJAR;
-        aBaseURL->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
+        RefPtr<nsJARURI> otherJAR = do_QueryObject(aBaseURL);
         NS_ENSURE_TRUE(otherJAR, NS_NOINTERFACE);
 
         mJARFile = otherJAR->mJARFile;
@@ -564,8 +561,7 @@ nsJARURI::EqualsInternal(nsIURI *other,
     if (!other)
         return NS_OK;	// not equal
 
-    RefPtr<nsJARURI> otherJAR;
-    other->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
+    RefPtr<nsJARURI> otherJAR = do_QueryObject(other);
     if (!otherJAR)
         return NS_OK;   // not equal
 

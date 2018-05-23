@@ -291,8 +291,7 @@ function getEdgeLocalDataFolder() {
     // Let's try the long way:
     let dirEntries = packages.directoryEntries;
     while (dirEntries.hasMoreElements()) {
-      let subDir = dirEntries.getNext();
-      subDir.QueryInterface(Ci.nsIFile);
+      let subDir = dirEntries.nextFile;
       if (subDir.leafName.startsWith("Microsoft.MicrosoftEdge") && subDir.isReadable() &&
           subDir.isDirectory()) {
         gEdgeDir = subDir;
@@ -388,7 +387,7 @@ Bookmarks.prototype = {
     let entries = aSourceFolder.directoryEntries;
     let rv = [];
     while (entries.hasMoreElements()) {
-      let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+      let entry = entries.nextFile;
       try {
         // Make sure that entry.path == entry.target to not follow .lnk folder
         // shortcuts which could lead to infinite cycles.
@@ -509,7 +508,7 @@ Cookies.prototype = {
       for (let folder of folders) {
         let entries = folder.directoryEntries;
         while (entries.hasMoreElements()) {
-          let entry = entries.getNext().QueryInterface(Ci.nsIFile);
+          let entry = entries.nextFile;
           // Skip eventual bogus entries.
           if (!entry.isFile() || !/\.(cookie|txt)$/.test(entry.leafName))
             continue;

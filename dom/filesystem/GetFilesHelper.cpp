@@ -338,26 +338,17 @@ GetFilesHelperBase::ExploreDirectory(const nsAString& aDOMPath, nsIFile* aFile)
     return rv;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
   for (;;) {
-    bool hasMore = false;
-    if (NS_WARN_IF(NS_FAILED(entries->HasMoreElements(&hasMore))) || !hasMore) {
+    nsCOMPtr<nsIFile> currFile;
+    if (NS_WARN_IF(NS_FAILED(entries->GetNextFile(getter_AddRefs(currFile)))) || !currFile) {
       break;
     }
-
-    nsCOMPtr<nsISupports> supp;
-    if (NS_WARN_IF(NS_FAILED(entries->GetNext(getter_AddRefs(supp))))) {
-      break;
-    }
-
-    nsCOMPtr<nsIFile> currFile = do_QueryInterface(supp);
-    MOZ_ASSERT(currFile);
-
     bool isLink, isSpecial, isFile, isDir;
     if (NS_WARN_IF(NS_FAILED(currFile->IsSymlink(&isLink)) ||
                    NS_FAILED(currFile->IsSpecial(&isSpecial))) ||

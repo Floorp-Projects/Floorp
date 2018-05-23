@@ -322,4 +322,13 @@
       ]]></constructor>
     </implementation>
   </binding>
+
+  <binding id="toolbarpaletteitem">
+    <content>
+      <xul:hbox class="toolbarpaletteitem-box">
+        <children/>
+      </xul:hbox>
+      <xul:label class="toolbarpaletteitem-label" xbl:inherits="xbl:text=title"/>
+    </content>
+  </binding>
 </bindings>

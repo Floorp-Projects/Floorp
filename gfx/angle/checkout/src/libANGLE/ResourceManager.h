@@ -130,7 +130,7 @@ class ShaderProgramManager : public ResourceManagerBase<HandleAllocator>
 
     GLuint createShader(rx::GLImplFactory *factory,
                         const Limitations &rendererLimitations,
-                        GLenum type);
+                        ShaderType type);
     void deleteShader(const Context *context, GLuint shader);
     Shader *getShader(GLuint handle) const;
 
@@ -159,12 +159,12 @@ class TextureManager : public TypedResourceManager<Texture, HandleAllocator, Tex
 
     void signalAllTexturesDirty(const Context *context) const;
 
-    Texture *checkTextureAllocation(rx::GLImplFactory *factory, GLuint handle, GLenum target)
+    Texture *checkTextureAllocation(rx::GLImplFactory *factory, GLuint handle, TextureType type)
     {
-        return checkObjectAllocation(factory, handle, target);
+        return checkObjectAllocation(factory, handle, type);
     }
 
-    static Texture *AllocateNewObject(rx::GLImplFactory *factory, GLuint handle, GLenum target);
+    static Texture *AllocateNewObject(rx::GLImplFactory *factory, GLuint handle, TextureType type);
     static void DeleteObject(const Context *context, Texture *texture);
 
     void enableHandleAllocatorLogging();

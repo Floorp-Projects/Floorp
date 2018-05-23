@@ -33,7 +33,7 @@ namespace
 
 template <typename ParamType>
 void QueryTexLevelParameterBase(const Texture *texture,
-                                GLenum target,
+                                TextureTarget target,
                                 GLint level,
                                 GLenum pname,
                                 ParamType *params)
@@ -727,13 +727,13 @@ void GetShaderVariableBufferResourceProperty(const ShaderVariableBuffer &buffer,
             }
             break;
         case GL_REFERENCED_BY_VERTEX_SHADER:
-            params[(*outputPosition)++] = static_cast<GLint>(buffer.vertexStaticUse);
+            params[(*outputPosition)++] = static_cast<GLint>(buffer.isActive(ShaderType::Vertex));
             break;
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
-            params[(*outputPosition)++] = static_cast<GLint>(buffer.fragmentStaticUse);
+            params[(*outputPosition)++] = static_cast<GLint>(buffer.isActive(ShaderType::Fragment));
             break;
         case GL_REFERENCED_BY_COMPUTE_SHADER:
-            params[(*outputPosition)++] = static_cast<GLint>(buffer.computeStaticUse);
+            params[(*outputPosition)++] = static_cast<GLint>(buffer.isActive(ShaderType::Compute));
             break;
         default:
             UNREACHABLE();
@@ -848,8 +848,19 @@ void QueryFramebufferAttachmentParameteriv(const Context *context,
             break;
 
         case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-            *params = attachmentObject->cubeMapFace();
-            break;
+        {
+            TextureTarget face = attachmentObject->cubeMapFace();
+            if (face != TextureTarget::InvalidEnum)
+            {
+                *params = ToGLenum(attachmentObject->cubeMapFace());
+            }
+            else
+            {
+                // This happens when the attachment isn't a texture cube map face
+                *params = GL_NONE;
+            }
+        }
+        break;
 
         case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
             *params = attachmentObject->getRedSize();
@@ -1008,6 +1019,18 @@ void QueryProgramiv(const Context *context, const Program *program, GLenum pname
         case GL_ACTIVE_ATOMIC_COUNTER_BUFFERS:
             *params = program->getActiveAtomicCounterBufferCount();
             break;
+        case GL_GEOMETRY_LINKED_INPUT_TYPE_EXT:
+            *params = program->getGeometryShaderInputPrimitiveType();
+            break;
+        case GL_GEOMETRY_LINKED_OUTPUT_TYPE_EXT:
+            *params = program->getGeometryShaderOutputPrimitiveType();
+            break;
+        case GL_GEOMETRY_LINKED_VERTICES_OUT_EXT:
+            *params = program->getGeometryShaderMaxVertices();
+            break;
+        case GL_GEOMETRY_SHADER_INVOCATIONS_EXT:
+            *params = program->getGeometryShaderInvocations();
+            break;
         default:
             UNREACHABLE();
             break;
@@ -1075,7 +1098,7 @@ void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *
     switch (pname)
     {
         case GL_SHADER_TYPE:
-            *params = shader->getType();
+            *params = static_cast<GLint>(ToGLenum(shader->getType()));
             return;
         case GL_DELETE_STATUS:
             *params = shader->isFlaggedForDeletion();
@@ -1099,7 +1122,7 @@ void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *
 }
 
 void QueryTexLevelParameterfv(const Texture *texture,
-                              GLenum target,
+                              TextureTarget target,
                               GLint level,
                               GLenum pname,
                               GLfloat *params)
@@ -1108,7 +1131,7 @@ void QueryTexLevelParameterfv(const Texture *texture,
 }
 
 void QueryTexLevelParameteriv(const Texture *texture,
-                              GLenum target,
+                              TextureTarget target,
                               GLint level,
                               GLenum pname,
                               GLint *params)
@@ -1402,13 +1425,13 @@ GLint GetUniformResourceProperty(const Program *program, GLuint index, const GLe
             return static_cast<GLint>(uniform.blockInfo.isRowMajorMatrix);
 
         case GL_REFERENCED_BY_VERTEX_SHADER:
-            return uniform.vertexStaticUse;
+            return uniform.isActive(ShaderType::Vertex);
 
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
-            return uniform.fragmentStaticUse;
+            return uniform.isActive(ShaderType::Fragment);
 
         case GL_REFERENCED_BY_COMPUTE_SHADER:
-            return uniform.computeStaticUse;
+            return uniform.isActive(ShaderType::Compute);
 
         case GL_ATOMIC_COUNTER_BUFFER_INDEX:
             return (uniform.isAtomicCounter() ? uniform.bufferIndex : -1);
@@ -1445,13 +1468,13 @@ GLint GetBufferVariableResourceProperty(const Program *program, GLuint index, co
             return static_cast<GLint>(bufferVariable.blockInfo.isRowMajorMatrix);
 
         case GL_REFERENCED_BY_VERTEX_SHADER:
-            return bufferVariable.vertexStaticUse;
+            return bufferVariable.isActive(ShaderType::Vertex);
 
         case GL_REFERENCED_BY_FRAGMENT_SHADER:
-            return bufferVariable.fragmentStaticUse;
+            return bufferVariable.isActive(ShaderType::Fragment);
 
         case GL_REFERENCED_BY_COMPUTE_SHADER:
-            return bufferVariable.computeStaticUse;
+            return bufferVariable.isActive(ShaderType::Compute);
 
         case GL_TOP_LEVEL_ARRAY_SIZE:
             return bufferVariable.topLevelArraySize;

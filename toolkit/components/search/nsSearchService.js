@@ -2850,10 +2850,11 @@ SearchService.prototype = {
       // NS_APP_DISTRIBUTION_SEARCH_DIR_LIST is defined by each app
       // so this throws during unit tests (but not xpcshell tests).
       locations = {hasMoreElements: () => false};
+
     }
     while (locations.hasMoreElements()) {
       let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-      if (dir.directoryEntries.hasMoreElements())
+      if (dir.directoryEntries.nextFile)
         distDirs.push(dir);
     }
 
@@ -3209,12 +3210,9 @@ SearchService.prototype = {
   _loadEnginesFromDir: function SRCH_SVC__loadEnginesFromDir(aDir) {
     LOG("_loadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
 
-    var files = aDir.directoryEntries
-                    .QueryInterface(Ci.nsIDirectoryEnumerator);
-
-    while (files.hasMoreElements()) {
-      var file = files.nextFile;
-
+    var files = aDir.directoryEntries;
+    var file;
+    while ((file = files.nextFile)) {
       // Ignore hidden and empty files, and directories
       if (!file.isFile() || file.fileSize == 0 || file.isHidden())
         continue;

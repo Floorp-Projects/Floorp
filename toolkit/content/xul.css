@@ -306,15 +306,6 @@ toolbarspring {
   -moz-box-flex: 1000;
 }
 
-toolbarpaletteitem {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem");
-}
-
-toolbarpaletteitem[place="palette"] {
-  -moz-box-orient: vertical;
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem-palette");
-}
-
 /********* menu ***********/
 
 menubar > menu {

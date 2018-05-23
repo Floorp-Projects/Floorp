@@ -16,7 +16,6 @@ browser.jar:
     content/browser/preferences/connection.js
     content/browser/preferences/fonts.xul
     content/browser/preferences/fonts.js
-    content/browser/preferences/handlers.xml
     content/browser/preferences/handlers.css
     content/browser/preferences/languages.xul
     content/browser/preferences/languages.js

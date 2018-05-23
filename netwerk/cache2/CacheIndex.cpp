@@ -2688,11 +2688,7 @@ CacheIndex::SetupDirectoryEnumerator()
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  rv = file->GetDirectoryEntries(getter_AddRefs(enumerator));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mDirEnumerator = do_QueryInterface(enumerator, &rv);
+  rv = file->GetDirectoryEntries(getter_AddRefs(mDirEnumerator));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

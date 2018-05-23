@@ -1149,7 +1149,7 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let displayPixelRatio = getDisplayPixelRatio(this.win);
     let { devicePixelRatio } = this.win;
     let offset = (displayPixelRatio / 2) % 1;
-    let fontSize = GRID_FONT_SIZE * displayPixelRatio;
+    let fontSize = GRID_FONT_SIZE * devicePixelRatio;
     let canvasX = Math.round(this._canvasPosition.x * devicePixelRatio);
     let canvasY = Math.round(this._canvasPosition.y * devicePixelRatio);
 
@@ -1173,8 +1173,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let textWidth = Math.max(textHeight, this.ctx.measureText(lineNumber).width);
 
     // Padding in pixels for the line number text inside of the line number container.
-    let padding = 3 * displayPixelRatio;
-    let offsetFromEdge = 2 * displayPixelRatio;
+    let padding = 3 * devicePixelRatio;
+    let offsetFromEdge = 2 * devicePixelRatio;
 
     let boxWidth = textWidth + 2 * padding;
     let boxHeight = textHeight + 2 * padding;

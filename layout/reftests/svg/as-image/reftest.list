@@ -132,18 +132,18 @@ fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-vi
 
 == img-widthAndHeight-meet-1.html  img-widthAndHeight-meet-1-ref.html
 == img-widthAndHeight-meet-2.html  img-widthAndHeight-meet-2-ref.html
-== img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
-== img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
+fuzzy-if(webrender,255-255,21-21) == img-widthAndHeight-slice-1.html img-widthAndHeight-slice-1-ref.html
+fuzzy-if(webrender,255-255,12-12) == img-widthAndHeight-slice-2.html img-widthAndHeight-slice-2-ref.html
 
 == img-height-meet-1.html   img-height-meet-1-ref.html
 == img-height-meet-2.html   img-height-meet-2-ref.html
-== img-height-slice-1.html  img-height-slice-1-ref.html
-== img-height-slice-2.html  img-height-slice-2-ref.html
+fuzzy-if(webrender,255-255,21-21) == img-height-slice-1.html  img-height-slice-1-ref.html
+fuzzy-if(webrender,255-255,12-12) == img-height-slice-2.html  img-height-slice-2-ref.html
 
 == img-width-meet-1.html   img-width-meet-1-ref.html
 == img-width-meet-2.html   img-width-meet-2-ref.html
-== img-width-slice-1.html  img-width-slice-1-ref.html
-== img-width-slice-2.html  img-width-slice-2-ref.html
+fuzzy-if(webrender,255-255,21-21) == img-width-slice-1.html  img-width-slice-1-ref.html
+fuzzy-if(webrender,255-255,12-12) == img-width-slice-2.html  img-width-slice-2-ref.html
 
 # Alternate version of "width & height both non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
@@ -154,10 +154,10 @@ fuzzy-if(d2d,16,10) == img-content-outside-viewBox-1.html img-content-outside-vi
 
 # Alternate versions of "only one dimension is non-%-valued" tests, but now
 # with no explicit viewBox, to trigger "synthesize-viewBox" behavior
-== img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
-== img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
-fuzzy-if(skiaContent,255,10) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
-fuzzy-if(skiaContent,255,10) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
+fuzzy-if(webrender,255-255,20-20) == img-novb-height-meet-1.html    img-novb-height-all-1-ref.html
+fuzzy-if(webrender,255-255,20-20) == img-novb-height-slice-1.html   img-novb-height-all-1-ref.html
+fuzzy-if(skiaContent,255,10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-meet-1.html     img-novb-width-all-1-ref.html
+fuzzy-if(skiaContent,255,10) fuzzy-if(webrender,255-255,20-20) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html
 
 # with with a fragmentIdentifier viewBox
 == img-fragment-1a.html  img-fragment-1-ref.html

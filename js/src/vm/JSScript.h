@@ -250,7 +250,7 @@ typedef HashMap<JSScript*,
 class DebugScript
 {
     friend class ::JSScript;
-    friend struct ::JSCompartment;
+    friend class JS::Realm;
 
     /*
      * When non-zero, compile script in single-step mode. The top bit is set and

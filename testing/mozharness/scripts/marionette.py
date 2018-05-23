@@ -17,7 +17,6 @@ from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.testing.errors import LogcatErrorList
 from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_options
 from mozharness.mozilla.testing.unittest import TestSummaryOutputParserHelper
@@ -33,7 +32,7 @@ from mozharness.mozilla.structuredlog import StructuredOutputParser
 #       builds is turned off, Bug 1209180.
 
 
-class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMixin,
+class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
                      CodeCoverageMixin):
     config_options = [[
         ["--application"],
@@ -115,7 +114,6 @@ class MarionetteTest(TestingMixin, MercurialScript, BlobUploadMixin, TransferMix
         "help": "Tries to enable the WebRender compositor."
         }
      ]] + copy.deepcopy(testing_config_options) \
-        + copy.deepcopy(blobupload_config_options) \
         + copy.deepcopy(code_coverage_config_options)
 
     repos = []

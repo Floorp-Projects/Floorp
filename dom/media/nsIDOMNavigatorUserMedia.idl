@@ -26,7 +26,7 @@ interface nsIGetUserMediaDevicesSuccessCallback : nsISupports
 interface nsIDOMGetUserMediaSuccessCallback : nsISupports
 {
   /*
-   * value must be a nsIDOMBlob if picture is true and a
+   * value must be a Blob if picture is true and a
    * DOMLocalMediaStream if either audio or video are true.
    */
   void onSuccess(in nsISupports value);

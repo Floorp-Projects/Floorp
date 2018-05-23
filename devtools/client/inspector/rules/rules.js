@@ -821,7 +821,7 @@ CssRuleView.prototype = {
       return promise.resolve(undefined);
     }
 
-    if (this.popup.isOpen) {
+    if (this._popup && this.popup.isOpen) {
       this.popup.hidePopup();
     }
 

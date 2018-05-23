@@ -460,7 +460,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
     switch (traceKind) {
       case JS::TraceKind::Object: {
         JSObject* obj = static_cast<JSObject*>(thing);
-        RealmStats& realmStats = obj->compartment()->realmStats();
+        RealmStats& realmStats = obj->realm()->realmStats();
         JS::ClassInfo info;        // This zeroes all the sizes.
         info.objectsGCHeap += thingSize;
 
@@ -507,7 +507,7 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 
       case JS::TraceKind::Script: {
         JSScript* script = static_cast<JSScript*>(thing);
-        RealmStats& realmStats = script->compartment()->realmStats();
+        RealmStats& realmStats = script->realm()->realmStats();
         realmStats.scriptsGCHeap += thingSize;
         realmStats.scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
         realmStats.typeInferenceTypeScripts += script->sizeOfTypeScript(rtStats->mallocSizeOf_);
@@ -826,8 +826,8 @@ CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats, ObjectPrivateVis
     MOZ_ASSERT(totalArenaSize % gc::ArenaSize == 0);
 #endif
 
-    for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next())
-        comp->nullRealmStats();
+    for (RealmsIter realm(rt, WithAtoms); !realm.done(); realm.next())
+        realm->nullRealmStats();
 
     size_t numDirtyChunks =
         (rtStats->gcHeapChunkTotal - rtStats->gcHeapUnusedChunks) / gc::ChunkSize;
@@ -949,8 +949,8 @@ AddSizeOfTab(JSContext* cx, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     for (size_t i = 0; i < rtStats.realmStatsVector.length(); i++)
         rtStats.realmTotals.addSizes(rtStats.realmStatsVector[i]);
 
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        comp->nullRealmStats();
+    for (RealmsInZoneIter realm(zone); !realm.done(); realm.next())
+        realm->nullRealmStats();
 
     rtStats.zTotals.addToTabSizes(sizes);
     rtStats.realmTotals.addToTabSizes(sizes);
