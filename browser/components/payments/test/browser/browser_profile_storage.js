@@ -8,29 +8,12 @@ const details = PTU.Details.total60USD;
 add_task(async function test_initial_state() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
-  let address1GUID = formAutofillStorage.addresses.add({
-    "given-name": "Timothy",
-    "additional-name": "John",
-    "family-name": "Berners-Lee",
-    organization: "World Wide Web Consortium",
-    "street-address": "32 Vassar Street\nMIT Room 32-G524",
-    "address-level2": "Cambridge",
-    "address-level1": "MA",
-    "postal-code": "02139",
-    country: "US",
-    tel: "+16172535702",
-    email: "timbl@w3.org",
-  });
+  let address1GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL);
   await onChanged;
 
   onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                       (subject, data) => data == "add");
-  let card1GUID = formAutofillStorage.creditCards.add({
-    "cc-name": "John Doe",
-    "cc-number": "1234567812345678",
-    "cc-exp-month": 4,
-    "cc-exp-year": 2028,
-  });
+  let card1GUID = formAutofillStorage.creditCards.add(PTU.BasicCards.JohnDoe);
   await onChanged;
 
   await BrowserTestUtils.withNewTab({
@@ -61,7 +44,7 @@ add_task(async function test_initial_state() {
       is(savedAddresses[address1GUID].guid, address1GUID, "Check address guid matches key");
 
       is(Object.keys(savedBasicCards).length, 1, "Initially one savedBasicCards");
-      is(savedBasicCards[card1GUID]["cc-number"], "************5678", "Check cc-number");
+      is(savedBasicCards[card1GUID]["cc-number"], "************1111", "Check cc-number");
       is(savedBasicCards[card1GUID].guid, card1GUID, "Check card guid matches key");
       is(savedBasicCards[card1GUID].methodName, "basic-card",
          "Check card has a methodName of basic-card");
@@ -73,16 +56,7 @@ add_task(async function test_initial_state() {
     let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                             (subject, data) => data == "add");
     info("adding an address");
-    let address2GUID = formAutofillStorage.addresses.add({
-      "given-name": "John",
-      "additional-name": "",
-      "family-name": "Smith",
-      "street-address": "331 E. Evelyn Ave.",
-      "address-level2": "Mountain View",
-      "address-level1": "CA",
-      "postal-code": "94041",
-      country: "US",
-    });
+    let address2GUID = formAutofillStorage.addresses.add(PTU.Addresses.TimBL2);
     await onChanged;
 
     await spawnPaymentDialogTask(frame, async function checkAdd({
@@ -172,11 +146,11 @@ add_task(async function test_initial_state() {
       } = contentWin.document.querySelector("payment-dialog").requestStore.getState();
 
       is(Object.keys(savedAddresses).length, 1, "Now one savedAddresses");
-      is(savedAddresses[address2GUID].name, "John Smith", "Check full name");
+      is(savedAddresses[address2GUID].name, "Timothy Johann Berners-Lee", "Check full name");
       is(savedAddresses[address2GUID].guid, address2GUID, "Check address guid matches key");
 
       is(Object.keys(savedBasicCards).length, 1, "Still one savedBasicCards");
-      is(savedBasicCards[card1GUID]["cc-number"], "************5678", "Check cc-number");
+      is(savedBasicCards[card1GUID]["cc-number"], "************1111", "Check cc-number");
       is(savedBasicCards[card1GUID].guid, card1GUID, "Check card guid matches key");
     }, {
       address2GUID,
