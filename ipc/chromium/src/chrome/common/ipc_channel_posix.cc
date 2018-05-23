@@ -423,10 +423,27 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       fds = wire_fds;
       num_fds = num_wire_fds;
     } else {
-      const size_t prev_size = input_overflow_fds_.size();
-      input_overflow_fds_.resize(prev_size + num_wire_fds);
-      memcpy(&input_overflow_fds_[prev_size], wire_fds,
-             num_wire_fds * sizeof(int));
+      // This code may look like a no-op in the case where
+      // num_wire_fds == 0, but in fact:
+      //
+      // 1. wire_fds will be nullptr, so passing it to memcpy is
+      // undefined behavior according to the C standard, even though
+      // the memcpy length is 0.
+      //
+      // 2. prev_size will be an out-of-bounds index for
+      // input_overflow_fds_; this is undefined behavior according to
+      // the C++ standard, even though the element only has its
+      // pointer taken and isn't accessed (and the corresponding
+      // operation on a C array would be defined).
+      //
+      // UBSan makes #1 a fatal error, and assertions in libstdc++ do
+      // the same for #2 if enabled.
+      if (num_wire_fds > 0) {
+        const size_t prev_size = input_overflow_fds_.size();
+        input_overflow_fds_.resize(prev_size + num_wire_fds);
+        memcpy(&input_overflow_fds_[prev_size], wire_fds,
+               num_wire_fds * sizeof(int));
+      }
       fds = &input_overflow_fds_[0];
       num_fds = input_overflow_fds_.size();
     }

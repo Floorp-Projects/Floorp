@@ -2863,14 +2863,16 @@ public:
 #endif
     mOldListIndex = aIndex;
   }
-  OldListIndex GetOldListIndex(nsDisplayList* aList, uint32_t aListKey)
+  bool GetOldListIndex(nsDisplayList* aList, uint32_t aListKey, OldListIndex* aOutIndex)
   {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d (outer type was %d at depth %d, now is %d)", GetPerFrameKey(), mOldListKey, mOldNestingDepth, aListKey);
-    }
 #endif
-    return mOldListIndex;
+      return false;
+    }
+    *aOutIndex = mOldListIndex;
+    return true;
   }
 
   const nsRect& GetPaintRect() const {
@@ -2910,7 +2912,6 @@ protected:
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 public:
-  uintptr_t mOldList = 0;
   uint32_t mOldListKey = 0;
   uint32_t mOldNestingDepth = 0;
   bool mMergedItem = false;
@@ -2918,6 +2919,7 @@ public:
 protected:
 #endif
   OldListIndex mOldListIndex;
+  uintptr_t mOldList = 0;
 
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
@@ -5384,6 +5386,7 @@ public:
   bool OpacityAppliedToChildren() const { return mOpacityAppliedToChildren; }
 
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
+  static bool MayNeedActiveLayer(nsIFrame* aFrame);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 

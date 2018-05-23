@@ -26,6 +26,8 @@ ChromeUtils.defineModuleGetter(this, "TelemetryUtils",
                                "resource://gre/modules/TelemetryUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "TelemetryEnvironment",
                                "resource://gre/modules/TelemetryEnvironment.jsm");
+ChromeUtils.defineModuleGetter(this, "ObjectUtils",
+                               "resource://gre/modules/ObjectUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
                                "resource://gre/modules/osfile.jsm");
 
@@ -84,6 +86,27 @@ function timeDeltaFrom(monotonicStartTime) {
     return Math.round(now - monotonicStartTime);
   }
   return -1;
+}
+
+// Converts extra integer fields to strings, rounds floats to three
+// decimal places (nanosecond precision for timings), and removes profile
+// directory paths and URLs from potential error messages.
+function normalizeExtraTelemetryFields(extra) {
+  let result = {};
+  for (let key in extra) {
+    let value = extra[key];
+    let type = typeof value;
+    if (type == "string") {
+      result[key] = cleanErrorMessage(value);
+    } else if (type == "number") {
+      result[key] = Number.isInteger(value) ? value.toString(10) :
+                    value.toFixed(3);
+    } else if (type != "undefined") {
+      throw new TypeError(`Invalid type ${
+        type} for extra telemetry field ${key}`);
+    }
+  }
+  return ObjectUtils.isEmpty(result) ? undefined : result;
 }
 
 // This function validates the payload of a telemetry "event" - this can be
@@ -577,13 +600,18 @@ class SyncTelemetryImpl {
       return;
     }
 
+    let { object, method, value, extra } = eventDetails;
+    if (extra) {
+      extra = normalizeExtraTelemetryFields(extra);
+      eventDetails = { object, method, value, extra };
+    }
+
     if (!validateTelemetryEvent(eventDetails)) {
       // we've already logged what the problem is...
       return;
     }
     log.debug("recording event", eventDetails);
 
-    let { object, method, value, extra } = eventDetails;
     if (extra && Resource.serverTime && !extra.serverTime) {
       extra.serverTime = String(Resource.serverTime);
     }

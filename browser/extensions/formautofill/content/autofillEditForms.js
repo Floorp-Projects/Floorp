@@ -197,13 +197,16 @@ class EditCreditCard extends EditAutofillForm {
     this.attachEventListeners();
   }
 
-  loadRecord(record, addresses) {
+  loadRecord(record, addresses, preserveFieldValues) {
     // _record must be updated before generateYears and generateBillingAddressOptions are called.
     this._record = record;
     this._addresses = addresses;
-    this.generateYears();
     this.generateBillingAddressOptions();
-    super.loadRecord(record);
+    if (!preserveFieldValues) {
+      // Re-generating the years will reset the selected option.
+      this.generateYears();
+      super.loadRecord(record);
+    }
   }
 
   generateYears() {

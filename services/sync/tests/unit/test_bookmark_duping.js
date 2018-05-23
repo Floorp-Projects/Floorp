@@ -74,7 +74,8 @@ async function promiseNoLocalItem(guid) {
   let got = await bms.fetch({ guid });
   ok(!got, `No record remains with GUID ${guid}`);
   // and while we are here ensure the places cache doesn't still have it.
-  await Assert.rejects(PlacesUtils.promiseItemId(guid));
+  await Assert.rejects(PlacesUtils.promiseItemId(guid),
+    /no item found for the given GUID/);
 }
 
 async function validate(collection, expectedFailures = []) {
