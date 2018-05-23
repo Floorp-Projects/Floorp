@@ -800,7 +800,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants,
                        UsedNameTracker& usedNames,
-                       ScriptSourceObject* sourceObject)
+                       ScriptSourceObject* sourceObject,
+                       ParseGoal parseGoal)
   : AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
     context(cx),
     alloc(alloc),
@@ -816,7 +817,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
     checkOptionsCalled(false),
 #endif
     isUnexpectedEOF_(false),
-    awaitHandling_(AwaitIsName)
+    awaitHandling_(AwaitIsName),
+    parseGoal_(uint8_t(parseGoal))
 {
     cx->frontendCollectionPool().addActiveCompilation();
     tempPoolMark = alloc.mark();
@@ -853,8 +855,9 @@ PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc
                                                  const ReadOnlyCompileOptions& options,
                                                  bool foldConstants, UsedNameTracker& usedNames,
                                                  LazyScript* lazyOuterFunction,
-                                                 ScriptSourceObject* sourceObject)
-  : ParserBase(cx, alloc, options, foldConstants, usedNames, sourceObject),
+                                                 ScriptSourceObject* sourceObject,
+                                                 ParseGoal parseGoal)
+  : ParserBase(cx, alloc, options, foldConstants, usedNames, sourceObject, parseGoal),
     handler(cx, alloc, lazyOuterFunction)
 {
 
@@ -868,8 +871,9 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   UsedNameTracker& usedNames,
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction,
-                                                  ScriptSourceObject* sourceObject)
-  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction, sourceObject),
+                                                  ScriptSourceObject* sourceObject,
+                                                  ParseGoal parseGoal)
+  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction, sourceObject, parseGoal),
     tokenStream(cx, options, chars, length)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
@@ -2551,7 +2555,8 @@ PerHandlerParser<SyntaxParseHandler>::finishFunction(bool isStandaloneFunction /
                                           pc->innerFunctionsForLazy,
                                           funbox->bufStart, funbox->bufEnd,
                                           funbox->toStringStart,
-                                          funbox->startLine, funbox->startColumn);
+                                          funbox->startLine, funbox->startColumn,
+                                          parseGoal());
     if (!lazy)
         return false;
 
@@ -5351,6 +5356,22 @@ GeneralParser<ParseHandler, CharT>::importDeclaration()
     return asFinalParser()->importDeclaration();
 }
 
+template <class ParseHandler, typename CharT>
+inline typename ParseHandler::Node
+GeneralParser<ParseHandler, CharT>::importDeclarationOrImportMeta(YieldHandling yieldHandling)
+{
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
+
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt))
+        return null();
+
+    if (tt == TokenKind::Dot)
+        return expressionStatement(yieldHandling);
+
+    return importDeclaration();
+}
+
 template<typename CharT>
 bool
 Parser<FullParseHandler, CharT>::checkExportedName(JSAtom* exportName)
@@ -7699,7 +7720,7 @@ GeneralParser<ParseHandler, CharT>::statement(YieldHandling yieldHandling)
 
       // ImportDeclaration (only inside modules)
       case TokenKind::Import:
-        return importDeclaration();
+        return importDeclarationOrImportMeta(yieldHandling);
 
       // ExportDeclaration (only inside modules)
       case TokenKind::Export:
@@ -7892,7 +7913,7 @@ GeneralParser<ParseHandler, CharT>::statementListItem(YieldHandling yieldHandlin
 
       // ImportDeclaration (only inside modules)
       case TokenKind::Import:
-        return importDeclaration();
+        return importDeclarationOrImportMeta(yieldHandling);
 
       // ExportDeclaration (only inside modules)
       case TokenKind::Export:
@@ -8712,6 +8733,10 @@ GeneralParser<ParseHandler, CharT>::memberExpr(YieldHandling yieldHandling,
         if (!thisName)
             return null();
         lhs = handler.newSuperBase(thisName, pos());
+        if (!lhs)
+            return null();
+    } else if (tt == TokenKind::Import) {
+        lhs = importMeta();
         if (!lhs)
             return null();
     } else {
@@ -9888,6 +9913,45 @@ GeneralParser<ParseHandler, CharT>::tryNewTarget(Node &newTarget)
 
     newTarget = handler.newNewTarget(newHolder, targetHolder);
     return !!newTarget;
+}
+
+template <class ParseHandler, typename CharT>
+typename ParseHandler::Node
+GeneralParser<ParseHandler, CharT>::importMeta()
+{
+    MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
+
+    uint32_t begin = pos().begin;
+
+    if (parseGoal() != ParseGoal::Module) {
+        errorAt(begin, JSMSG_IMPORT_OUTSIDE_MODULE);
+        return null();
+    }
+
+    Node importHolder = handler.newPosHolder(pos());
+    if (!importHolder)
+        return null();
+
+    TokenKind next;
+    if (!tokenStream.getToken(&next))
+        return null();
+    if (next != TokenKind::Dot) {
+        error(JSMSG_UNEXPECTED_TOKEN, "dot", TokenKindToDesc(next));
+        return null();
+    }
+
+    if (!tokenStream.getToken(&next))
+        return null();
+    if (next != TokenKind::Meta) {
+        error(JSMSG_UNEXPECTED_TOKEN, "meta", TokenKindToDesc(next));
+        return null();
+    }
+
+    Node metaHolder = handler.newPosHolder(pos());
+    if (!metaHolder)
+        return null();
+
+    return handler.newImportMeta(importHolder, metaHolder);
 }
 
 template <class ParseHandler, typename CharT>

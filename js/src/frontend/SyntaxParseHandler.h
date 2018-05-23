@@ -297,6 +297,9 @@ class SyntaxParseHandler
     Node newExportBatchSpec(const TokenPos& pos) {
         return NodeGeneric;
     }
+    Node newImportMeta(Node importHolder, Node metaHolder) {
+        return NodeGeneric;
+    }
 
     Node newSetThis(Node thisName, Node value) { return value; }
 

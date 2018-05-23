@@ -4302,7 +4302,8 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
                    const frontend::AtomVector& closedOverBindings,
                    Handle<GCVector<JSFunction*, 8>> innerFunctions,
                    uint32_t sourceStart, uint32_t sourceEnd,
-                   uint32_t toStringStart, uint32_t lineno, uint32_t column)
+                   uint32_t toStringStart, uint32_t lineno, uint32_t column,
+                   frontend::ParseGoal parseGoal)
 {
     union {
         PackedView p;
@@ -4323,6 +4324,7 @@ LazyScript::Create(JSContext* cx, HandleFunction fun,
     p.isLikelyConstructorWrapper = false;
     p.isDerivedClassConstructor = false;
     p.needsHomeObject = false;
+    p.parseGoal = uint32_t(parseGoal);
 
     LazyScript* res = LazyScript::CreateRaw(cx, fun, sourceObject, packedFields,
                                             sourceStart, sourceEnd,

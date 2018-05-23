@@ -560,6 +560,10 @@ class FullParseHandler
         return new_<NullaryNode>(ParseNodeKind::ExportBatchSpec, JSOP_NOP, pos);
     }
 
+    ParseNode* newImportMeta(ParseNode* importHolder, ParseNode* metaHolder) {
+        return new_<BinaryNode>(ParseNodeKind::ImportMeta, JSOP_NOP, importHolder, metaHolder);
+    }
+
     ParseNode* newExprStatement(ParseNode* expr, uint32_t end) {
         MOZ_ASSERT(expr->pn_pos.end <= end);
         return new_<UnaryNode>(ParseNodeKind::ExpressionStatement,

@@ -4479,7 +4479,8 @@ JS_BufferIsCompilableUnit(JSContext* cx, HandleObject obj, const char* utf8, siz
                                                                   options, chars, length,
                                                                   /* foldConstants = */ true,
                                                                   usedNames, nullptr, nullptr,
-                                                                  sourceObject);
+                                                                  sourceObject,
+                                                                  frontend::ParseGoal::Script);
     JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
     if (!parser.checkOptions() || !parser.parse()) {
         // We ran into an error. If it was because we ran out of source, we
