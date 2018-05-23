@@ -91,4 +91,4 @@ fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-i
 
 == color-layer-1a.html color-layer-1-ref.html
 
-fuzzy-if(webrender,1-1,104-105) == corner-split.html corner-split-ref.svg
+fuzzy-if(webrender,1-1,104-162) == corner-split.html corner-split-ref.svg
