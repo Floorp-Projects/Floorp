@@ -50,7 +50,6 @@ JSCompartment::JSCompartment(Zone* zone)
     detachedTypedObjects(0),
     innerViews(zone),
     gcIncomingGrayPointers(nullptr),
-    validAccessPtr(nullptr),
     enumerators(nullptr)
 {
     runtime_->numCompartments++;
