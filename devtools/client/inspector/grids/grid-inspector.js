@@ -52,7 +52,6 @@ const GRID_COLORS = [
 class GridInspector {
   constructor(inspector, window) {
     this.document = window.document;
-    this.highlighters = inspector.highlighters;
     this.inspector = inspector;
     this.store = inspector.store;
     this.telemetry = inspector.telemetry;
@@ -74,6 +73,14 @@ class GridInspector {
     this.onToggleShowInfiniteLines = this.onToggleShowInfiniteLines.bind(this);
 
     this.init();
+  }
+
+  get highlighters() {
+    if (!this._highlighters) {
+      this._highlighters = this.inspector.highlighters;
+    }
+
+    return this._highlighters;
   }
 
   /**
@@ -102,8 +109,11 @@ class GridInspector {
       }
     );
 
-    this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
-    this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
+    this.document.addEventListener("mousemove", () => {
+      this.highlighters.on("grid-highlighter-hidden", this.onHighlighterHidden);
+      this.highlighters.on("grid-highlighter-shown", this.onHighlighterShown);
+    }, { once: true });
+
     this.inspector.sidebar.on("select", this.onSidebarSelect);
     this.inspector.on("new-root", this.onNavigate);
 
@@ -115,8 +125,11 @@ class GridInspector {
    * and cleans up references.
    */
   destroy() {
-    this.highlighters.off("grid-highlighter-hidden", this.onHighlighterHidden);
-    this.highlighters.off("grid-highlighter-shown", this.onHighlighterShown);
+    if (this._highlighters) {
+      this.highlighters.off("grid-highlighter-hidden", this.onHighlighterHidden);
+      this.highlighters.off("grid-highlighter-shown", this.onHighlighterShown);
+    }
+
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onNavigate);
 
@@ -128,8 +141,8 @@ class GridInspector {
       this.swatchColorPickerTooltip.destroy();
     }
 
+    this._highlighters = null;
     this.document = null;
-    this.highlighters = null;
     this.inspector = null;
     this.layoutInspector = null;
     this.store = null;
@@ -163,7 +176,8 @@ class GridInspector {
    *         The color to use.
    */
   getInitialGridColor(nodeFront, customColor, fallbackColor) {
-    let highlighted = nodeFront == this.highlighters.gridHighlighterShown;
+    let highlighted = this._highlighters &&
+      nodeFront == this.highlighters.gridHighlighterShown;
 
     let color;
     if (customColor) {
@@ -295,6 +309,8 @@ class GridInspector {
       let colorForHost = customColors[hostname] ? customColors[hostname][i] : undefined;
       let fallbackColor = GRID_COLORS[i % GRID_COLORS.length];
       let color = this.getInitialGridColor(nodeFront, colorForHost, fallbackColor);
+      let highlighted = this._highlighters &&
+        nodeFront == this.highlighters.gridHighlighterShown;
 
       grids.push({
         id: i,
@@ -302,7 +318,7 @@ class GridInspector {
         color,
         direction: grid.direction,
         gridFragments: grid.gridFragments,
-        highlighted: nodeFront == this.highlighters.gridHighlighterShown,
+        highlighted,
         nodeFront,
         writingMode: grid.writingMode,
       });
@@ -427,7 +443,8 @@ class GridInspector {
         oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",")) {
       // Same list of containers, but let's check if the geometry of the current grid has
       // changed, if it hasn't we can safely abort.
-      if (!this.highlighters.gridHighlighterShown ||
+      if (!this._highlighters ||
+          !this.highlighters.gridHighlighterShown ||
           (this.highlighters.gridHighlighterShown &&
            !this.haveCurrentFragmentsChanged(newGridFronts))) {
         return;

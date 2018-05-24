@@ -26,7 +26,6 @@ const NUMERIC = /^-?[\d\.]+$/;
  */
 function BoxModel(inspector, window) {
   this.document = window.document;
-  this.highlighters = inspector.highlighters;
   this.inspector = inspector;
   this.store = inspector.store;
 
@@ -58,10 +57,19 @@ BoxModel.prototype = {
 
     this.untrackReflows();
 
+    this._highlighters = null;
     this.document = null;
-    this.highlighters = null;
     this.inspector = null;
     this.walker = null;
+  },
+
+  get highlighters() {
+    if (!this._highlighters) {
+      // highlighters is a lazy getter in the inspector.
+      this._highlighters = this.inspector.highlighters;
+    }
+
+    return this._highlighters;
   },
 
   /**

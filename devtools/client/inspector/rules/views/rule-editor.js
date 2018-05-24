@@ -174,10 +174,11 @@ RuleEditor.prototype = {
           selector = this.ruleView.inspector.selectionCssSelector;
         }
 
+        let isHighlighted = this.ruleView._highlighters &&
+          this.ruleView.highlighters.selectorHighlighterShown === selector;
         let selectorHighlighter = createChild(header, "span", {
           class: "ruleview-selectorhighlighter" +
-                 (this.ruleView.highlighters.selectorHighlighterShown === selector ?
-                  " highlighted" : ""),
+                 (isHighlighted ? " highlighted" : ""),
           title: l10n("rule.selectorHighlighter.tooltip")
         });
         selectorHighlighter.addEventListener("click", () => {
