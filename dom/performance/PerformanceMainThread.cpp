@@ -81,6 +81,7 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
   , mChannel(aChannel)
 {
   MOZ_ASSERT(aWindow, "Parent window object should be provided");
+  CreateNavigationTimingEntry();
 }
 
 PerformanceMainThread::~PerformanceMainThread()
@@ -310,29 +311,8 @@ PerformanceMainThread::CreationTime() const
 }
 
 void
-PerformanceMainThread::EnsureDocEntry()
+PerformanceMainThread::CreateNavigationTimingEntry()
 {
-  if (!mDocEntry && nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
-
-    UniquePtr<PerformanceTimingData> timing(
-      new PerformanceTimingData(mChannel, nullptr, 0));
-
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
-    if (httpChannel) {
-      timing->SetPropertiesFromHttpChannel(httpChannel);
-    }
-
-    nsAutoString name;
-    GetURLSpecFromChannel(mChannel, name);
-
-    mDocEntry = new PerformanceNavigationTiming(std::move(timing), this, name);
-  }
-}
-
-void
-PerformanceMainThread::CreateDocumentEntry(nsITimedChannel* aChannel)
-{
-  MOZ_ASSERT(aChannel);
   MOZ_ASSERT(!mDocEntry, "mDocEntry should be null.");
 
   if (!nsContentUtils::IsPerformanceNavigationTimingEnabled()) {
@@ -340,14 +320,28 @@ PerformanceMainThread::CreateDocumentEntry(nsITimedChannel* aChannel)
   }
 
   nsAutoString name;
-  GetURLSpecFromChannel(aChannel, name);
+  GetURLSpecFromChannel(mChannel, name);
 
   UniquePtr<PerformanceTimingData> timing(
-      new PerformanceTimingData(aChannel, nullptr, 0));
+      new PerformanceTimingData(mChannel, nullptr, 0));
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel) {
+    timing->SetPropertiesFromHttpChannel(httpChannel);
+  }
+
   mDocEntry = new PerformanceNavigationTiming(std::move(timing), this, name);
 }
 
 void
+PerformanceMainThread::QueueNavigationTimingEntry()
+{
+  if (mDocEntry) {
+    QueueEntry(mDocEntry);
+  }
+}
+
++void
 PerformanceMainThread::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
   // We return an empty list when 'privacy.resistFingerprinting' is on.
@@ -359,7 +353,6 @@ PerformanceMainThread::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
   aRetval = mResourceEntries;
   aRetval.AppendElements(mUserEntries);
 
-  EnsureDocEntry();
   if (mDocEntry) {
     aRetval.AppendElement(mDocEntry);
   }
@@ -379,7 +372,7 @@ PerformanceMainThread::GetEntriesByType(const nsAString& aEntryType,
 
   if (aEntryType.EqualsLiteral("navigation")) {
     aRetval.Clear();
-    EnsureDocEntry();
+
     if (mDocEntry) {
       aRetval.AppendElement(mDocEntry);
     }
@@ -402,7 +395,7 @@ PerformanceMainThread::GetEntriesByName(const nsAString& aName,
 
   if (aName.EqualsLiteral("document")) {
     aRetval.Clear();
-    EnsureDocEntry();
+
     if (mDocEntry) {
       aRetval.AppendElement(mDocEntry);
     }
