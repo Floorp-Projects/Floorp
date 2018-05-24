@@ -11,9 +11,11 @@ from __future__ import absolute_import
 import filter
 
 import json
+import os
+
 from mozlog import get_proxy_logger
 
-LOG = get_proxy_logger(component="output")
+LOG = get_proxy_logger(component="raptor-output")
 
 
 class Output(object):
@@ -83,7 +85,14 @@ class Output(object):
             LOG.error("error: no summarized raptor results found!")
             return False
 
-        results_path = "raptor.json"
+        if os.environ['MOZ_UPLOAD_DIR']:
+            # i.e. testing/mozharness/build/raptor.json locally; in production it will
+            # be at /tasks/task_*/build/ (where it will be picked up by mozharness later
+            # and made into a tc artifact accessible in treeherder as perfherder-data.json)
+            results_path = os.path.join(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']),
+                                        'raptor.json')
+        else:
+            results_path = os.path.join(os.getcwd(), 'raptor.json')
 
         with open(results_path, 'w') as f:
             for result in self.summarized_results:
@@ -96,6 +105,8 @@ class Output(object):
 
         json.dump(self.summarized_results, open(results_path, 'w'), indent=2,
                   sort_keys=True)
+
+        LOG.info("results can also be found locally at: %s" % results_path)
         return True
 
     @classmethod
