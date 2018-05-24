@@ -1544,13 +1544,6 @@ nsIFrame::HasAnimationOfTransform() const
 }
 
 bool
-nsIFrame::ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const
-{
-  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  return aStyleDisplay->HasPerspective(this);
-}
-
-bool
 nsIFrame::HasOpacityInternal(float aThreshold,
                              EffectSet* aEffectSet) const
 {
@@ -11001,7 +10994,7 @@ nsIFrame::IsVisuallyAtomic(EffectSet* aEffectSet,
          IsTransformed(aStyleDisplay) ||
          // strictly speaking, 'perspective' doesn't require visual atomicity,
          // but the spec says it acts like the rest of these
-         ChildrenHavePerspective(aStyleDisplay) ||
+         aStyleDisplay->mChildPerspective.GetUnit() == eStyleUnit_Coord ||
          aStyleEffects->mMixBlendMode != NS_STYLE_BLEND_NORMAL ||
          nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
