@@ -7,4 +7,3 @@ toolkit.jar:
   pluginproblem/pluginProblem.xml                 (content/pluginProblem.xml)
   pluginproblem/pluginProblemContent.css          (content/pluginProblemContent.css)
   pluginproblem/pluginProblemBinding.css          (content/pluginProblemBinding.css)
-  pluginproblem/pluginReplaceBinding.css          (content/pluginReplaceBinding.css)
