@@ -21,6 +21,7 @@ namespace layers {
 
 AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
  : mInitialised(false)
+ , mSentDL(false)
  , mIsChanged(false)
  , mUseExternalImage(false)
  , mFilter(wr::ImageRendering::Auto)
@@ -287,6 +288,13 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
                              (pipeline->mIsChanged || op == Some(TextureHost::ADD_IMAGE)) &&
                              !!pipeline->mCurrentTexture;
 
+    if (!pipeline->mSentDL) {
+      // If we haven't sent a display list yet, do it anyway, even if it's just
+      // an empty DL with a stacking context and no actual image. Otherwise WR
+      // will assert about missing the pipeline
+      updateDisplayList = true;
+    }
+
     // Request to generate frame if there is an update.
     if (updateDisplayList || !op.isNothing()) {
       SetWillGenerateFrame();
@@ -302,13 +310,12 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
       }
       continue;
     }
+
+    pipeline->mSentDL = true;
     pipeline->mIsChanged = false;
 
     wr::LayoutSize contentSize { pipeline->mScBounds.Width(), pipeline->mScBounds.Height() };
     wr::DisplayListBuilder builder(pipelineId, contentSize);
-
-    MOZ_ASSERT(!keys.IsEmpty());
-    MOZ_ASSERT(pipeline->mCurrentTexture.get());
 
     float opacity = 1.0f;
     builder.PushStackingContext(wr::ToLayoutRect(pipeline->mScBounds),
@@ -324,28 +331,31 @@ AsyncImagePipelineManager::ApplyAsyncImages(wr::TransactionBuilder& aTxn)
                                 // This is fine to do unconditionally because we only push images here.
                                 wr::GlyphRasterSpace::Screen());
 
-    LayoutDeviceRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
-    if (pipeline->mScaleToSize.isSome()) {
-      rect = LayoutDeviceRect(0, 0, pipeline->mScaleToSize.value().width, pipeline->mScaleToSize.value().height);
+    if (pipeline->mCurrentTexture && !keys.IsEmpty()) {
+      LayoutDeviceRect rect(0, 0, pipeline->mCurrentTexture->GetSize().width, pipeline->mCurrentTexture->GetSize().height);
+      if (pipeline->mScaleToSize.isSome()) {
+        rect = LayoutDeviceRect(0, 0, pipeline->mScaleToSize.value().width, pipeline->mScaleToSize.value().height);
+      }
+
+      if (pipeline->mUseExternalImage) {
+        MOZ_ASSERT(pipeline->mCurrentTexture->AsWebRenderTextureHost());
+        Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
+        pipeline->mCurrentTexture->PushDisplayItems(builder,
+                                                    wr::ToLayoutRect(rect),
+                                                    wr::ToLayoutRect(rect),
+                                                    pipeline->mFilter,
+                                                    range_keys);
+        HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
+      } else {
+        MOZ_ASSERT(keys.Length() == 1);
+        builder.PushImage(wr::ToLayoutRect(rect),
+                          wr::ToLayoutRect(rect),
+                          true,
+                          pipeline->mFilter,
+                          keys[0]);
+      }
     }
 
-    if (pipeline->mUseExternalImage) {
-      MOZ_ASSERT(pipeline->mCurrentTexture->AsWebRenderTextureHost());
-      Range<wr::ImageKey> range_keys(&keys[0], keys.Length());
-      pipeline->mCurrentTexture->PushDisplayItems(builder,
-                                                  wr::ToLayoutRect(rect),
-                                                  wr::ToLayoutRect(rect),
-                                                  pipeline->mFilter,
-                                                  range_keys);
-      HoldExternalImage(pipelineId, epoch, pipeline->mCurrentTexture->AsWebRenderTextureHost());
-    } else {
-      MOZ_ASSERT(keys.Length() == 1);
-      builder.PushImage(wr::ToLayoutRect(rect),
-                        wr::ToLayoutRect(rect),
-                        true,
-                        pipeline->mFilter,
-                        keys[0]);
-    }
     builder.PopStackingContext();
 
     wr::BuiltDisplayList dl;
