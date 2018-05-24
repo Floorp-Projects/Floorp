@@ -9,6 +9,7 @@ name = "pypi"
 pipenv = "==2018.5.18"
 virtualenv = "==15.2.0"
 six = "==1.10.0"
+attrs = "==18.1.0"
 
 [requires]
 python_version = "2.7"
