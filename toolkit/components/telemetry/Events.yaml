@@ -301,3 +301,13 @@ devtools.main:
     extra_keys:
       oldpanel: The panel the user is switching from
       newpanel: The panel the user is switching to
+  execute_js:
+    objects: ["webconsole"]
+    bug_numbers: [1463083]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has executed some JS in the Web Console.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      lines: The number of lines contained in the command.
