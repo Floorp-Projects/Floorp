@@ -322,9 +322,6 @@ typedef nsTArray<EventRecord> EventRecordArray;
 typedef nsClassHashtable<ProcessIDHashKey, EventRecordArray> EventRecordsMapType;
 
 EventRecordsMapType gEventRecords;
-// Provide separate storage for "dynamic builtin" events needed to
-// support "build faster" in local developer builds.
-EventRecordsMapType gBuiltinEventRecords;
 
 // The details on dynamic events that are recorded from addons are registered here.
 StaticAutoPtr<nsTArray<DynamicEventInfo>> gDynamicEventInfo;
@@ -404,17 +401,12 @@ IsExpired(const EventKey& key)
 
 EventRecordArray*
 GetEventRecordsForProcess(const StaticMutexAutoLock& lock, ProcessID processType,
-                          const EventKey& eventKey, bool isDynamicBuiltin)
+                          const EventKey& eventKey)
 {
-  // Put dynamic-builtin events (used to support "build faster") in a
-  // separate storage.
-  EventRecordsMapType& processStorage =
-    isDynamicBuiltin ? gBuiltinEventRecords : gEventRecords;
-
   EventRecordArray* eventRecords = nullptr;
-  if (!processStorage.Get(uint32_t(processType), &eventRecords)) {
+  if (!gEventRecords.Get(uint32_t(processType), &eventRecords)) {
     eventRecords = new EventRecordArray();
-    processStorage.Put(uint32_t(processType), eventRecords);
+    gEventRecords.Put(uint32_t(processType), eventRecords);
   }
   return eventRecords;
 }
@@ -483,9 +475,8 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
     processType = ProcessID::Dynamic;
   }
 
-  bool isDynamicBuiltin = eventKey->dynamic && (*gDynamicEventInfo)[eventKey->id].builtin;
   EventRecordArray* eventRecords =
-    GetEventRecordsForProcess(lock, processType, *eventKey, isDynamicBuiltin);
+    GetEventRecordsForProcess(lock, processType, *eventKey);
 
   // Apply hard limit on event count in storage.
   if (eventRecords->Length() >= kMaxEventRecords) {
@@ -756,7 +747,6 @@ TelemetryEvent::DeInitializeGlobalState()
   gCategoryNames.Clear();
   gEnabledCategories.Clear();
   gEventRecords.Clear();
-  gBuiltinEventRecords.Clear();
 
   gDynamicEventInfo = nullptr;
 
@@ -1168,11 +1158,9 @@ TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* cx,
 
     // Take a snapshot of the plain and dynamic builtin events.
     snapshotter(gEventRecords);
-    snapshotter(gBuiltinEventRecords);
 
     if (aClear) {
       gEventRecords.Clear();
-      gBuiltinEventRecords.Clear();
     }
   }
 
@@ -1212,7 +1200,6 @@ TelemetryEvent::ClearEvents()
   }
 
   gEventRecords.Clear();
-  gBuiltinEventRecords.Clear();
 }
 
 void
@@ -1255,7 +1242,6 @@ TelemetryEvent::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   };
 
   n += getSizeOfRecords(gEventRecords);
-  n += getSizeOfRecords(gBuiltinEventRecords);
 
   n += gEventNameIDMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = gEventNameIDMap.ConstIter(); !iter.Done(); iter.Next()) {
