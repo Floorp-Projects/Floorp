@@ -7,7 +7,7 @@
 #ifndef MOZILLA_GFX_X11TEXTURESOURCEOGL__H
 #define MOZILLA_GFX_X11TEXTURESOURCEOGL__H
 
-#ifdef GL_PROVIDER_GLX
+#ifdef MOZ_X11
 
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/TextureHostOGL.h"

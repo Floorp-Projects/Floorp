@@ -7,10 +7,8 @@
 #include "X11TextureHost.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "mozilla/layers/X11TextureSourceBasic.h"
-#ifdef GL_PROVIDER_GLX
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/X11TextureSourceOGL.h"
-#endif
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
 
@@ -43,12 +41,10 @@ X11TextureHost::Lock()
         mTextureSource =
           new X11TextureSourceBasic(mCompositor->AsBasicCompositor(), mSurface);
         break;
-#ifdef GL_PROVIDER_GLX
       case LayersBackend::LAYERS_OPENGL:
         mTextureSource =
           new X11TextureSourceOGL(mCompositor->AsCompositorOGL(), mSurface);
         break;
-#endif
       default:
         return false;
     }
@@ -78,11 +74,9 @@ X11TextureHost::GetFormat() const
     return SurfaceFormat::UNKNOWN;
   }
   gfxContentType type = mSurface->GetContentType();
-#ifdef GL_PROVIDER_GLX
   if (mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL) {
     return X11TextureSourceOGL::ContentTypeToSurfaceFormat(type);
   }
-#endif
   return X11TextureSourceBasic::ContentTypeToSurfaceFormat(type);
 }
 
