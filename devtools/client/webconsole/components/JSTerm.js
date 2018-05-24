@@ -18,6 +18,7 @@ loader.lazyRequireGetter(this, "PropTypes", "devtools/client/shared/vendor/react
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "KeyCodes", "devtools/client/shared/keycodes", true);
 loader.lazyRequireGetter(this, "Editor", "devtools/client/sourceeditor/editor");
+loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
@@ -155,6 +156,8 @@ class JSTerm extends Component {
     this.COMPLETE_HINT_ONLY = 2;
     this.COMPLETE_PAGEUP = 3;
     this.COMPLETE_PAGEDOWN = 4;
+
+    this._telemetry = new Telemetry();
 
     EventEmitter.decorate(this);
     hud.jsterm = this;
@@ -438,6 +441,11 @@ class JSTerm extends Component {
     };
 
     this.webConsoleClient.evaluateJSAsync(str, onResult, evalOptions);
+
+    this._telemetry.recordEvent("devtools.main", "execute_js", "webconsole", null, {
+      lines: str.split(/\n/).length
+    });
+
     return deferred.promise;
   }
 
