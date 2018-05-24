@@ -60,7 +60,7 @@ class MoveEmitterARM64
     void completeCycle(const MoveOperand& from, const MoveOperand& to, MoveOp::Type type);
 
   public:
-    MoveEmitterARM64(MacroAssembler& masm)
+    explicit MoveEmitterARM64(MacroAssembler& masm)
       : inCycle_(false),
         masm(masm),
         pushedAtStart_(masm.framePushed()),
