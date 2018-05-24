@@ -20,7 +20,6 @@
 #include "nsIContent.h"                 // for nsIContent, etc
 #include "nsIContentIterator.h"         // for nsIContentIterator
 #include "nsID.h"                       // for NS_GET_IID
-#include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIEditor.h"                  // for nsIEditor, etc
 #include "nsINode.h"                    // for nsINode
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor
@@ -1912,16 +1911,6 @@ TextServicesDocument::IsTextNode(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, false);
   return nsINode::TEXT_NODE == aContent->NodeType();
-}
-
-// static
-bool
-TextServicesDocument::IsTextNode(nsIDOMNode* aNode)
-{
-  NS_ENSURE_TRUE(aNode, false);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-  return IsTextNode(content);
 }
 
 nsresult

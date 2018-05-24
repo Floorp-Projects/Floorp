@@ -141,7 +141,7 @@ public:
 
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
-  NS_IMETHOD DeleteNode(nsIDOMNode* aNode) override;
+  NS_IMETHOD DeleteNode(nsINode* aNode) override;
 
   NS_IMETHOD SelectAll() override;
 
@@ -1018,7 +1018,6 @@ protected: // Shouldn't be used by friend classes
   nsresult SetSelectionAtDocumentStart(Selection* aSelection);
 
   static Element* GetEnclosingTable(nsINode* aNode);
-  static nsIDOMNode* GetEnclosingTable(nsIDOMNode* aNode);
 
   // Methods for handling plaintext quotations
   nsresult PasteAsPlaintextQuotation(int32_t aSelectionType);

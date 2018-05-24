@@ -38,7 +38,6 @@
 class mozInlineSpellChecker;
 class nsAtom;
 class nsIContent;
-class nsIDOMNode;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
 class nsIEditorObserver;
@@ -1400,14 +1399,6 @@ protected: // May be called by friends.
                                bool bNoBlockCrossing = false);
 
   /**
-   * Returns true if aNode is of the type implied by aTag.
-   */
-  static inline bool NodeIsType(nsIDOMNode* aNode, nsAtom* aTag)
-  {
-    return GetTag(aNode) == aTag;
-  }
-
-  /**
    * Returns true if aParent can contain a child of type aTag.
    */
   bool CanContain(nsINode& aParent, nsIContent& aChild) const;
@@ -1418,14 +1409,12 @@ protected: // May be called by friends.
   /**
    * Returns true if aNode is our root node.
    */
-  bool IsRoot(nsIDOMNode* inNode);
   bool IsRoot(nsINode* inNode);
   bool IsEditorRoot(nsINode* aNode);
 
   /**
    * Returns true if aNode is a descendant of our root node.
    */
-  bool IsDescendantOfRoot(nsIDOMNode* inNode);
   bool IsDescendantOfRoot(nsINode* inNode);
   bool IsDescendantOfEditorRoot(nsINode* aNode);
 
@@ -1437,7 +1426,6 @@ protected: // May be called by friends.
   /**
    * returns true if aNode is an editable node.
    */
-  bool IsEditable(nsIDOMNode* aNode);
   bool IsEditable(nsINode* aNode)
   {
     NS_ENSURE_TRUE(aNode, false);
@@ -1503,11 +1491,8 @@ protected: // May be called by friends.
   /**
    * From html rules code - migration in progress.
    */
-  static nsAtom* GetTag(nsIDOMNode* aNode);
-
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
 
-  static bool IsTextNode(nsIDOMNode* aNode);
   static bool IsTextNode(nsINode* aNode)
   {
     return aNode->NodeType() == nsINode::TEXT_NODE;
@@ -1796,8 +1781,6 @@ protected: // Shouldn't be used by friend classes
    *      methods may return wrong index if aChild doesn't have previous
    *      sibling or next sibling.
    */
-  static int32_t GetChildOffset(nsIDOMNode* aChild,
-                                nsIDOMNode* aParent);
   static int32_t GetChildOffset(nsINode* aChild,
                                 nsINode* aParent);
 
