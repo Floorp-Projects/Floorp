@@ -76,7 +76,7 @@ class GeckoViewContentModule {
           }
         }
 
-        if (settings && enabled) {
+        if (settings) {
           this.onSettingsUpdate();
         }
       }
