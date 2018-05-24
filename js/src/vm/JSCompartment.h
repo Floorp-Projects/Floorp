@@ -614,28 +614,10 @@ struct JSCompartment
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
-    // Keep track of the metadata objects which can be associated with each JS
-    // object. Both keys and values are in this compartment.
-    js::UniquePtr<js::ObjectWeakMap> objectMetadataTable;
-
-    // Map from array buffers to views sharing that storage.
-    JS::WeakCache<js::InnerViewTable> innerViews;
-
-    // Inline transparent typed objects do not initially have an array buffer,
-    // but can have that buffer created lazily if it is accessed later. This
-    // table manages references from such typed objects to their buffers.
-    js::UniquePtr<js::ObjectWeakMap> lazyArrayBuffers;
 
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-  protected:
-    // All non-syntactic lexical environments in the compartment. These are kept in
-    // a map because when loading scripts into a non-syntactic environment, we need
-    // to use the same lexical environment to persist lexical bindings.
-    js::UniquePtr<js::ObjectWeakMap> nonSyntacticLexicalEnvironments_;
-
-  public:
     /*
      * During GC, stores the head of a list of incoming pointers from gray cells.
      *
@@ -697,10 +679,6 @@ struct JSCompartment
         explicit StringWrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers, nullptr) {}
     };
 
-    js::LexicalEnvironmentObject*
-    getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, js::HandleObject enclosing);
-    js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(JSObject* enclosing) const;
-
     /*
      * These methods mark pointers that cross compartment boundaries. They are
      * called in per-zone GCs to prevent the wrappers' outgoing edges from
@@ -716,7 +694,6 @@ struct JSCompartment
     void sweepSavedStacks();
     void sweepRegExps();
     void sweepDebugEnvironments();
-    void sweepNativeIterators();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
@@ -732,18 +709,6 @@ struct JSCompartment
     /* Bookkeeping information for debug scope objects. */
     js::UniquePtr<js::DebugEnvironments> debugEnvs;
 
-    /*
-     * List of potentially active iterators that may need deleted property
-     * suppression.
-     */
-  private:
-    using NativeIteratorSentinel = js::UniquePtr<js::NativeIterator, JS::FreePolicy>;
-    NativeIteratorSentinel iteratorSentinel_;
-  public:
-    js::NativeIterator* enumerators;
-
-    MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
-
     // These flags help us to discover if a compartment that shouldn't be alive
     // manages to outlive a GC. Note that these flags have to be on the
     // compartment, not the realm, because same-compartment realms can have
@@ -752,6 +717,68 @@ struct JSCompartment
     bool maybeAlive = true;
 };
 
+namespace js {
+
+// ObjectRealm stores various tables and other state associated with particular
+// objects in a realm. To make sure the correct ObjectRealm is used for an
+// object, use of the ObjectRealm::get(obj) static method is required.
+class ObjectRealm
+{
+    using NativeIteratorSentinel = js::UniquePtr<js::NativeIterator, JS::FreePolicy>;
+    NativeIteratorSentinel iteratorSentinel_;
+
+    // All non-syntactic lexical environments in the realm. These are kept in a
+    // map because when loading scripts into a non-syntactic environment, we
+    // need to use the same lexical environment to persist lexical bindings.
+    js::UniquePtr<js::ObjectWeakMap> nonSyntacticLexicalEnvironments_;
+
+    ObjectRealm(const ObjectRealm&) = delete;
+    void operator=(const ObjectRealm&) = delete;
+
+  public:
+    // List of potentially active iterators that may need deleted property
+    // suppression.
+    js::NativeIterator* enumerators = nullptr;
+
+    // Map from array buffers to views sharing that storage.
+    JS::WeakCache<js::InnerViewTable> innerViews;
+
+    // Inline transparent typed objects do not initially have an array buffer,
+    // but can have that buffer created lazily if it is accessed later. This
+    // table manages references from such typed objects to their buffers.
+    js::UniquePtr<js::ObjectWeakMap> lazyArrayBuffers;
+
+    // Keep track of the metadata objects which can be associated with each JS
+    // object. Both keys and values are in this realm.
+    js::UniquePtr<js::ObjectWeakMap> objectMetadataTable;
+
+    static inline ObjectRealm& get(const JSObject* obj);
+
+    explicit ObjectRealm(JS::Zone* zone);
+    ~ObjectRealm();
+
+    MOZ_MUST_USE bool init(JSContext* maybecx);
+
+    void finishRoots();
+    void trace(JSTracer* trc);
+    void sweepAfterMinorGC();
+    void sweepNativeIterators();
+
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t* innerViewsArg,
+                                size_t* lazyArrayBuffersArg,
+                                size_t* objectMetadataTablesArg,
+                                size_t* nonSyntacticLexicalEnvironmentsArg);
+
+    MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
+
+    js::LexicalEnvironmentObject*
+    getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, js::HandleObject enclosing);
+    js::LexicalEnvironmentObject* getNonSyntacticLexicalEnvironment(JSObject* enclosing) const;
+};
+
+} // namespace js
+
 class JS::Realm : public JSCompartment
 {
     const JS::RealmCreationOptions creationOptions_;
@@ -759,6 +786,10 @@ class JS::Realm : public JSCompartment
 
     friend struct ::JSContext;
     js::ReadBarrieredGlobalObject global_;
+
+    // Note: this is private to enforce use of ObjectRealm::get(obj).
+    js::ObjectRealm objects_;
+    friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
 
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
@@ -865,6 +896,9 @@ class JS::Realm : public JSCompartment
   private:
     void updateDebuggerObservesFlag(unsigned flag);
 
+    Realm(const Realm&) = delete;
+    void operator=(const Realm&) = delete;
+
   public:
     Realm(JS::Zone* zone, const JS::RealmOptions& options);
     ~Realm();
@@ -949,6 +983,8 @@ class JS::Realm : public JSCompartment
      */
     void finishRoots();
 
+    void sweepAfterMinorGC();
+    void sweepObjectRealm();
     void sweepSelfHostingScriptSource();
     void sweepTemplateObjects();
 

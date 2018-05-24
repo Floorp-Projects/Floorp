@@ -43,6 +43,12 @@ JS::Realm::globalIsAboutToBeFinalized()
     return global_ && js::gc::IsAboutToBeFinalizedUnbarriered(global_.unsafeGet());
 }
 
+/* static */ inline js::ObjectRealm&
+js::ObjectRealm::get(const JSObject* obj)
+{
+    return obj->realm()->objects_;
+}
+
 template <typename T>
 js::AutoRealm::AutoRealm(JSContext* cx, const T& target)
   : cx_(cx),
@@ -160,9 +166,9 @@ JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
 }
 
 MOZ_ALWAYS_INLINE bool
-JSCompartment::objectMaybeInIteration(JSObject* obj)
+js::ObjectRealm::objectMaybeInIteration(JSObject* obj)
 {
-    MOZ_ASSERT(obj->compartment() == this);
+    MOZ_ASSERT(&ObjectRealm::get(obj) == this);
 
     // If the list is empty we're not iterating any objects.
     js::NativeIterator* next = enumerators->next();
