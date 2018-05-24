@@ -1503,7 +1503,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .panel-header > label {
   flex: auto;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   margin: 0;
   text-align: center;
 }
