@@ -22,7 +22,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
-import org.mozilla.focus.helpers.TestHelper;
 
 import java.util.Collections;
 
@@ -44,7 +43,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.isEnabled;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.containsString;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
@@ -101,6 +99,9 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(isDisplayed()));
 
         /* Search Engine List */
+        onView(withText(R.string.preference_category_search))
+                .perform(click());
+        Screengrab.screenshot("Search_Submenu");
         onView(withText(R.string.preference_search_engine_default))
                 .perform(click());
         onView(withText(R.string.preference_search_installed_search_engines))
@@ -172,10 +173,16 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withId(R.id.domainView))
                 .check(matches(isDisplayed()));
         Screengrab.screenshot("Autocomplete_Add_Custom_URL_Dialog");
+        onView(withId(R.id.save))
+                .perform(click());
+        device.waitForIdle();
+        Screengrab.screenshot("Autocomplete_Add_Custom_URL_Error_Popup");
+
         onView(withId(R.id.domainView))
                 .perform(typeText("screenshot.com"), closeSoftKeyboard());
         onView(withId(R.id.save))
                 .perform(click());
+        Screengrab.screenshot("Autocomplete_Add_Custom_URL_Saved_Popup");
         onView(withText(addCustomURLAction))
                 .check(matches(isDisplayed()));
 
@@ -200,12 +207,19 @@ public class SettingsScreenshots extends ScreenshotTest {
         onView(withText(urlAutocompletemenu))
                 .check(matches(isDisplayed()));
         Espresso.pressBack();
+        Espresso.pressBack();
 
-        /* scroll down */
+        /*
         assertTrue(TestHelper.settingsHeading.waitForExists(waitingTime));
         UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
         settingsView.scrollToEnd(4);
         Screengrab.screenshot("Settings_View_Bottom");
+        */
+
+        // "Mozilla" submenu
+        onView(withText(R.string.preference_category_mozilla))
+                .perform(click());
+        Screengrab.screenshot("Mozilla_Submenu");
 
         // "About" screen
         final String aboutLabel = getString(R.string.preference_about, getString(R.string.app_name));
@@ -222,6 +236,8 @@ public class SettingsScreenshots extends ScreenshotTest {
 
         // leave about page, tap menu and go to settings again
         openSettings();
+        onView(withText(R.string.preference_category_mozilla))
+                .perform(click());
 
         // "Your rights" screen
         final String yourRightsLabel = getString(R.string.menu_rights);
@@ -235,5 +251,17 @@ public class SettingsScreenshots extends ScreenshotTest {
                 .check(matches(withText("focus:rights")));
 
         Screengrab.screenshot("YourRights_Page");
+
+
+        // "Privacy & Security" submenu
+        openSettings();
+        onView(withText(R.string.preference_privacy_and_security_header))
+                .perform(click());
+        Screengrab.screenshot("Privacy_Security_Submenu_top");
+        UiScrollable settingsView = new UiScrollable(new UiSelector().scrollable(true));
+        if (settingsView.exists()) {        // On tablet, this will not be found
+            settingsView.scrollToEnd(4);
+            Screengrab.screenshot("Privacy_Security_Submenu_bottom");
+        }
     }
 }

@@ -18,9 +18,12 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.focus.R;
 import org.mozilla.focus.helpers.TestHelper;
 
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.support.test.espresso.web.sugar.Web.onWebView;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
@@ -49,12 +52,12 @@ public class BadURLTest {
     };
 
     @After
-    public void tearDown() throws Exception {
-        mActivityTestRule.getActivity().finishAndRemoveTask();
+    public void tearDown() {
+       mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void BadURLcheckTest() throws InterruptedException, UiObjectNotFoundException {
+    public void BadURLcheckTest() throws UiObjectNotFoundException {
 
         UiObject cancelOpenAppBtn = TestHelper.mDevice.findObject(new UiSelector()
                 .resourceId("android:id/button2"));
@@ -67,12 +70,12 @@ public class BadURLTest {
         TestHelper.inlineAutocompleteEditText.setText("htps://www.mozilla.org");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.tryAgainBtn.waitForExists(waitingTime);
 
         // Check for error message
-        assertTrue(TestHelper.notFoundMsg.exists());
-        assertTrue(TestHelper.notFounddetailedMsg.exists());
-        assertTrue(TestHelper.tryAgainBtn.exists());
+        onWebView(withText(R.string.error_malformedURI_title));
+        onWebView(withText(R.string.error_malformedURI_message));
+        onWebView(withText("Try Again"));
+
         TestHelper.floatingEraseButton.perform(click());
 
         /* provide market URL that is handled by Google Play app */

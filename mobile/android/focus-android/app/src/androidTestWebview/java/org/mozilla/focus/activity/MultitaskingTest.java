@@ -58,7 +58,6 @@ public class MultitaskingTest {
         webServer.enqueue(createMockResponseFromAsset("tab1.html"));
         webServer.enqueue(createMockResponseFromAsset("tab2.html"));
         webServer.enqueue(createMockResponseFromAsset("tab3.html"));
-
         webServer.enqueue(createMockResponseFromAsset("tab2.html"));
 
         webServer.start();

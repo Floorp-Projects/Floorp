@@ -12,7 +12,6 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.IdlingRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -66,14 +65,14 @@ public class PageVisitTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         IdlingRegistry.getInstance().unregister(loadingIdlingResource);
 
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void visitPagesTest() throws InterruptedException, UiObjectNotFoundException {
+    public void visitPagesTest() {
         final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         // What's new page
@@ -100,6 +99,10 @@ public class PageVisitTest {
         clickMenuItem(R.id.settings);
 
         // "About" page
+        final String mozillaMenuLabel = context.getString(R.string.preference_category_mozilla, context.getString(R.string.app_name));
+        onData(withTitleText(mozillaMenuLabel))
+                .check(matches(isDisplayed()))
+                .perform(click());
 
         final String aboutLabel = context.getString(R.string.preference_about, context.getString(R.string.app_name));
 
@@ -112,6 +115,9 @@ public class PageVisitTest {
         pressBack();  // This takes to main view
         openMenu();
         clickMenuItem(R.id.settings);
+        onData(withTitleText(mozillaMenuLabel))
+                .check(matches(isDisplayed()))
+                .perform(click());
 
         // "Your rights" page
         onData(withTitleText(context.getString(R.string.your_rights)))

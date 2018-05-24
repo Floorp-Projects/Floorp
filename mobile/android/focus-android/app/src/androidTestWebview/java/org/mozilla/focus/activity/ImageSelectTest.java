@@ -38,8 +38,31 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 public class ImageSelectTest {
     private static final String TEST_PATH = "/";
 
-    private Context appContext;
     private MockWebServer webServer;
+    private UiObject rabbitImage;
+    private UiObject imageMenuTitle = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/topPanel")
+            .enabled(true));
+    private UiObject imageMenuTitleText = TestHelper.mDevice.findObject(new UiSelector()
+            .className("android.widget.TextView")
+            .enabled(true)
+            .instance(0));
+    private UiObject shareMenu = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
+            .text("Share image")
+            .enabled(true));
+    private UiObject copyMenu = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
+            .text("Copy image address")
+            .enabled(true));
+    private UiObject saveMenu = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/design_menu_item_text")
+            .text("Save image")
+            .enabled(true));
+    private UiObject warning = TestHelper.mDevice.findObject(new UiSelector()
+            .resourceId(TestHelper.getAppName() + ":id/warning")
+            .text("Saved and shared images will not be deleted when you erase Firefox Focus history.")
+            .enabled(true));
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule  = new ActivityTestRule<MainActivity>(MainActivity.class) {
@@ -47,7 +70,7 @@ public class ImageSelectTest {
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
 
-            appContext = InstrumentationRegistry.getInstrumentation()
+            Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
 
@@ -55,6 +78,17 @@ public class ImageSelectTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
+
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                rabbitImage = TestHelper.mDevice.findObject(new UiSelector()
+                        .resourceId("rabbitImage")
+                        .enabled(true));
+            } else {
+                rabbitImage = TestHelper.mDevice.findObject(new UiSelector()
+                        .description("Smiley face")
+                        .enabled(true));
+            }
 
             webServer = new MockWebServer();
 
@@ -88,44 +122,14 @@ public class ImageSelectTest {
         }
     };
 
+
     @After
-    public void tearDown() throws Exception {
-        mActivityTestRule.getActivity().finishAndRemoveTask();
+    public void tearDown() {
+       mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
-    private UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
-            .description("focus test page")
-            .enabled(true));
-
-    private UiObject rabbitImage = TestHelper.mDevice.findObject(new UiSelector()
-            .description("Smiley face")
-            .enabled(true));
-    private UiObject imageMenuTitle = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/topPanel")
-            .enabled(true));
-    private UiObject imageMenuTitleText = TestHelper.mDevice.findObject(new UiSelector()
-            .className("android.widget.TextView")
-            .enabled(true)
-            .instance(0));
-    private UiObject shareMenu = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
-            .text("Share image")
-            .enabled(true));
-    private UiObject copyMenu = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
-            .text("Copy image address")
-            .enabled(true));
-    private UiObject saveMenu = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/design_menu_item_text")
-            .text("Save image")
-            .enabled(true));
-    private UiObject warning = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/warning")
-            .text("Saved and shared images will not be deleted when you erase Firefox Focus history.")
-            .enabled(true));
-
     @Test
-    public void ImageMenuTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void ImageMenuTest() throws UiObjectNotFoundException {
         final String imagePath = webServer.url(TEST_PATH).toString() + "rabbit.jpg";
 
         // Load website with service worker
@@ -135,18 +139,15 @@ public class ImageSelectTest {
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         assertTrue(TestHelper.webView.waitForExists(waitingTime));
-        assertTrue(titleMsg.waitForExists(waitingTime));
 
         // Assert website is loaded
-        assertTrue("Website title loaded", titleMsg.exists());
+        TestHelper.waitForWebSiteTitleLoad();
 
         // Find image and long tap it
-        Assert.assertTrue(rabbitImage.exists());
         rabbitImage.dragTo(rabbitImage, 10);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
-        Assert.assertEquals(imageMenuTitleText.getText(),
-                webServer.url(TEST_PATH).toString() + "rabbit.jpg");
+        Assert.assertEquals(imageMenuTitleText.getText(), imagePath);
         Assert.assertTrue(shareMenu.exists());
         Assert.assertTrue(copyMenu.exists());
         Assert.assertTrue(saveMenu.exists());
@@ -182,7 +183,8 @@ public class ImageSelectTest {
         assertTrue(TestHelper.webView.waitForExists(waitingTime));
 
         // Assert website is loaded
-        assertTrue(titleMsg.waitForExists(waitingTime));
+        TestHelper.waitForWebSiteTitleLoad();
+        TestHelper.progressBar.waitUntilGone(waitingTime);
 
         // Find image and long tap it
         Assert.assertTrue(rabbitImage.exists());

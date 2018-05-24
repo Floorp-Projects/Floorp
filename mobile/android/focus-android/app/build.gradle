@@ -236,7 +236,7 @@ android {
 
         // UI tests
         androidTestGeckoCompile {
-            java.srcDirs += ['src/androidTestGecko/java']
+           java.srcDirs += ['src/androidTestGecko/java']
         }
     }
 }

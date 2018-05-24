@@ -20,13 +20,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 
-import static android.support.test.espresso.action.ViewActions.click;
+import java.io.IOException;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
+import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
-public class TypicalUseScenarioTest {
+public class SettingsBlockToggleTest {
+    private static final String TEST_PATH = "/";
+    private MockWebServer webServer;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -44,100 +51,93 @@ public class TypicalUseScenarioTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
+            webServer = new MockWebServer();
+
+            try {
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+
+                webServer.start();
+            } catch (IOException e) {
+                throw new AssertionError("Could not start web server", e);
+            }
+        }
+
+        @Override
+        protected void afterActivityFinished() {
+            super.afterActivityFinished();
+
+            try {
+                webServer.close();
+                webServer.shutdown();
+            } catch (IOException e) {
+                throw new AssertionError("Could not stop web server", e);
+            }
         }
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void TypicalUseTest() throws InterruptedException, UiObjectNotFoundException {
+    public void SettingsToggleTest() throws UiObjectNotFoundException {
 
+        UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("Privacy & Security")
+                .resourceId("android:id/title"));
         UiObject blockAdTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(3));
+                .instance(1));
         UiObject blockAdTrackerValue = blockAdTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
+
         UiObject blockAnalyticTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(5));
+                .instance(2));
         UiObject blockAnalyticTrackerValue = blockAnalyticTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
+
         UiObject blockSocialTrackerEntry = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")
-                .instance(7));
+                .instance(4));
         UiObject blockSocialTrackerValue = blockSocialTrackerEntry.getChild(new UiSelector()
                 .className("android.widget.Switch"));
-
-        // Let's search for something
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla focus");
-        TestHelper.hint.waitForExists(waitingTime);
-        assertTrue(TestHelper.hint.getText().equals("Search for mozilla focus"));
-        TestHelper.hint.click();
-        TestHelper.waitForWebContent();
-        assertTrue (TestHelper.browserURLbar.getText().contains("mozilla"));
-        assertTrue (TestHelper.browserURLbar.getText().contains("focus"));
-
-        // Let's delete my history
-        TestHelper.floatingEraseButton.perform(click());
-        TestHelper.erasedMsg.waitForExists(waitingTime);
-        assertTrue(TestHelper.erasedMsg.exists());
-        TestHelper.erasedMsg.waitUntilGone(waitingTime);
-
-        // Let's go to an actual URL which is https://
-        TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("https://www.google.com");
-        TestHelper.hint.waitForExists(waitingTime);
-        assertTrue(TestHelper.hint.getText().equals("Search for https://www.google.com"));
-        TestHelper.pressEnterKey();
-        TestHelper.waitForWebContent();
-        assertTrue (TestHelper.browserURLbar.getText().contains("https://www.google"));
-
-        // The DOM for lockicon is not detected consistenly, even when it is visible.
-        // Disabling the check
-        //TestHelper.lockIcon.waitForExists(waitingTime * 2);
-        //assertTrue (TestHelper.lockIcon.isEnabled());
-
-        // Let's delete my history again
-        TestHelper.floatingEraseButton.perform(click());
-        TestHelper.erasedMsg.waitForExists(waitingTime);
-        assertTrue(TestHelper.erasedMsg.exists());
-        TestHelper.erasedMsg.waitUntilGone(waitingTime);
 
         // Let's go to an actual URL which is http://
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("http://www.example.com");
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
-        assertTrue(TestHelper.hint.getText().equals("Search for http://www.example.com"));
         TestHelper.pressEnterKey();
         TestHelper.waitForWebContent();
-        assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
+        assertTrue (TestHelper.browserURLbar.getText().contains(webServer.url(TEST_PATH).toString()));
         assertTrue (!TestHelper.lockIcon.exists());
 
         /* Go to settings and disable everything */
-        TestHelper.menuButton.perform(click());
-        TestHelper.browserViewSettingsMenuItem.click();
-        TestHelper.settingsHeading.waitForExists(waitingTime);
+        openSettings();
+        privacyHeading.waitForExists(waitingTime);
+        privacyHeading.click();
         blockAdTrackerEntry.click();
-        blockAnalyticTrackerEntry.click();
-        blockSocialTrackerEntry.click();
         assertTrue(blockAdTrackerValue.getText().equals("OFF"));
+        blockAnalyticTrackerEntry.click();
         assertTrue(blockAnalyticTrackerValue.getText().equals("OFF"));
+        blockSocialTrackerEntry.click();
         assertTrue(blockSocialTrackerValue.getText().equals("OFF"));
+
+        // Turn back on
         blockAdTrackerEntry.click();
         blockAnalyticTrackerEntry.click();
         blockSocialTrackerEntry.click();
 
         //Back to the webpage
         TestHelper.pressBackKey();
+        TestHelper.pressBackKey();
         TestHelper.waitForWebContent();
-        assertTrue (TestHelper.browserURLbar.getText().contains("http://www.example.com"));
+        assertTrue (TestHelper.browserURLbar.getText().contains(webServer.url(TEST_PATH).toString()));
         assertTrue (!TestHelper.lockIcon.exists());
     }
 }

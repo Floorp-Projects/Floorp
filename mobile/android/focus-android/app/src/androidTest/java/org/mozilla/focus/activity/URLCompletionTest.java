@@ -6,6 +6,7 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.DataInteraction;
@@ -32,15 +33,17 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.PreferenceMatchers.withTitleText;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
@@ -49,7 +52,23 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 
 @RunWith(AndroidJUnit4.class)
 public class URLCompletionTest {
-    String site = "680news.com";
+    private String site = "680news.com";
+
+    // From API 24 and above
+    private DataInteraction CustomURLRow = onData(anything())
+            .inAdapterView(allOf(withId(android.R.id.list),
+                childAtPosition(
+                        withId(android.R.id.list_container),
+            0)))
+            .atPosition(4);
+
+    // From API 23 and below
+    private DataInteraction CustomURLRow_old = onData(anything())
+            .inAdapterView(allOf(withId(android.R.id.list),
+                    childAtPosition(
+                            withClassName(is("android.widget.LinearLayout")),
+                            0)))
+            .atPosition(4);
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -127,11 +146,13 @@ public class URLCompletionTest {
         toggleAutocomplete();       // Disable autocomplete
         Espresso.pressBack();
         Espresso.pressBack();
+        Espresso.pressBack();
         checkACOff(site.substring(0, 3));
 
         // Now enable autocomplete
         OpenCustomCompleteDialog();
         toggleAutocomplete();
+        Espresso.pressBack();
         Espresso.pressBack();
         Espresso.pressBack();
 
@@ -173,20 +194,25 @@ public class URLCompletionTest {
     }
 
     // exit to the main view from custom autocomplete dialog
-    private static void exitToTop() {
+    private void exitToTop() {
+        Espresso.pressBack();
         Espresso.pressBack();
         Espresso.pressBack();
         Espresso.pressBack();
     }
 
-    private static void toggleAutocomplete() {
+    private void toggleAutocomplete() {
         onView(withText("Add and manage custom autocomplete URLs."))
                 .perform(click());
     }
 
-    private static void OpenCustomCompleteDialog() {
+    private void OpenCustomCompleteDialog() {
         mDevice.waitForIdle();
         openSettings();
+
+        onData(withTitleText("Search"))
+                .check(matches(isDisplayed()))
+                .perform(click());
 
         onData(withTitleText("URL Autocomplete"))
                 .check(matches(isDisplayed()))
@@ -195,7 +221,7 @@ public class URLCompletionTest {
     }
 
     // Check autocompletion is turned off
-    private static void checkACOff(String url) throws UiObjectNotFoundException {
+    private void checkACOff(String url) throws UiObjectNotFoundException {
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.setText(url);
         TestHelper.hint.waitForExists(waitingTime);
@@ -204,22 +230,20 @@ public class URLCompletionTest {
     }
 
     // Check autocompletion is turned on
-    private static void checkACOn(String url) throws UiObjectNotFoundException {
+    private void checkACOn(String url) throws UiObjectNotFoundException {
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-        TestHelper.inlineAutocompleteEditText.setText(url.substring(0, 2));
+        TestHelper.inlineAutocompleteEditText.setText(url.substring(0, 1));
         TestHelper.hint.waitForExists(waitingTime);
         assertTrue (TestHelper.inlineAutocompleteEditText.getText().equals(url));
         TestHelper.cleartextField.click();
     }
 
-    private static void removeACSite() {
-        DataInteraction CustomURLRow = onData(anything())
-                .inAdapterView(allOf(withId(android.R.id.list),
-                        childAtPosition(
-                                withId(android.R.id.list_container),
-                                0)))
-                .atPosition(4);
-        CustomURLRow.perform(click());
+    private void removeACSite() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            CustomURLRow.perform(click());
+        } else {
+            CustomURLRow_old.perform(click());
+        }
         mDevice.waitForIdle();
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getContext());
         mDevice.waitForIdle();   // wait until dialog fully appears
@@ -231,14 +255,13 @@ public class URLCompletionTest {
                 .perform((click()));
     }
 
-    private static void addAutoComplete(String sitename, boolean... checkSuccess) {
-        DataInteraction CustomURLRow = onData(anything())
-                .inAdapterView(allOf(withId(android.R.id.list),
-                        childAtPosition(
-                                withId(android.R.id.list_container),
-                                0)))
-                .atPosition(4);
-        CustomURLRow.perform(click());
+    private void addAutoComplete(String sitename, boolean... checkSuccess) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            CustomURLRow.perform(click());
+        } else {
+            CustomURLRow_old.perform(click());
+        }
+
         mDevice.waitForIdle();
 
         onView(withText("+ Add custom URL"))
@@ -246,8 +269,11 @@ public class URLCompletionTest {
         onView(withId(R.id.domainView))
                 .check(matches(isDisplayed()));
 
+        mDevice.waitForIdle();
+
+
         onView(withId(R.id.domainView))
-                .perform(typeText(sitename), closeSoftKeyboard());
+                .perform(replaceText(sitename), closeSoftKeyboard());
         onView(withId(R.id.save))
                 .perform(click());
 

@@ -58,7 +58,7 @@ public class SearchEngineSelectionTest {
     }
 
     @Test
-    public void SearchTest() throws InterruptedException, UiObjectNotFoundException {
+    public void SearchTest() throws UiObjectNotFoundException {
 
         UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
                 .className("android.widget.LinearLayout")

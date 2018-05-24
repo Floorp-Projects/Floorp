@@ -62,17 +62,17 @@ public class SwitchLocaleTest {
     }
 
     @BeforeClass
-    public static void setupBeforeClass() throws Exception {
+    public static void setupBeforeClass() {
         changeLocale("fr");
     }
 
     @AfterClass
-    public static void tearDownAfterClass() throws Exception {
+    public static void tearDownAfterClass() {
         changeLocale("en");
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
@@ -97,10 +97,7 @@ public class SwitchLocaleTest {
             .className("android.widget.CheckedTextView")
             .instance(0)
             .enabled(true));
-    private UiObject localeList = TestHelper.mDevice.findObject(new UiSelector()
-            .className("android.widget.ListView")
-            .enabled(true));
-    private UiObject LanguageSelection = TestHelper.settingsList.getChild(new UiSelector()
+    private UiObject languageHeading = TestHelper.settingsList.getChild(new UiSelector()
             .className("android.widget.LinearLayout")
             .instance(0));
     private UiObject englishHeading = TestHelper.mDevice.findObject(new UiSelector()
@@ -111,7 +108,7 @@ public class SwitchLocaleTest {
             .text("Paramètres"));
 
     @Test
-    public void EnglishSystemLocaleTest() throws InterruptedException, UiObjectNotFoundException {
+    public void EnglishSystemLocaleTest() throws UiObjectNotFoundException {
 
         UiObject frenchMenuItem = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
@@ -127,10 +124,10 @@ public class SwitchLocaleTest {
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
 
         openSettings();
-        LanguageSelection.waitForExists(waitingTime);
+        languageHeading.waitForExists(waitingTime);
 
         /* system locale is in English, check it is now set to system locale */
-        LanguageSelection.click();
+        languageHeading.click();
         sysDefaultLocale.waitForExists(waitingTime);
         Assert.assertTrue(sysDefaultLocale.isChecked());
 
@@ -158,12 +155,12 @@ public class SwitchLocaleTest {
         TestHelper.settingsMenuItem.click();
 
         /* re-enter settings, change it back to system locale, verify the locale is changed */
-        LanguageSelection.click();
+        languageHeading.click();
         Assert.assertTrue(frenchLocaleinEn.isChecked());
         appViews.scrollToBeginning(10);
         sysDefaultLocale.waitForExists(waitingTime);
         sysDefaultLocale.click();
-        LanguageSelection.waitForExists(waitingTime);
+        languageHeading.waitForExists(waitingTime);
         Assert.assertTrue(englishHeading.exists());
         Assert.assertTrue(englishMenuItem.exists());
         TestHelper.pressBackKey();
@@ -178,7 +175,7 @@ public class SwitchLocaleTest {
     }
 
     @Test
-    public void FrenchLocaleTest() throws InterruptedException, UiObjectNotFoundException {
+    public void FrenchLocaleTest() throws UiObjectNotFoundException {
 
         UiObject frenchMenuItem = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
@@ -194,13 +191,13 @@ public class SwitchLocaleTest {
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
 
         openSettings();
-        LanguageSelection.waitForExists(waitingTime);
+        languageHeading.waitForExists(waitingTime);
 
         /* system locale is in French, check it is now set to system locale */
         frenchHeading.waitForExists(waitingTime);
         Assert.assertTrue(frenchHeading.exists());
         Assert.assertTrue(frenchMenuItem.exists());
-        LanguageSelection.click();
+        languageHeading.click();
         Assert.assertTrue(sysDefaultLocale.isChecked());
 
         /* change locale to English in the setting, verify the locale is changed */

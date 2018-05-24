@@ -52,7 +52,7 @@ def generate_ui_test_task(dependencies):
 		command = ('echo "--" > .adjust_token'
 			' && ./gradlew --no-daemon clean assembleFocusWebviewUniversalDebug assembleFocusWebviewUniversalDebugAndroidTest'
 			' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-			' && tools/taskcluster/execute-firebase-test.sh focusWebviewUniversal app-focus-webview-universal-debug model=sailfish,version=26 model=Nexus5X,version=23 model=Nexus9,version=25 model=sailfish,version=25'),
+			' && tools/taskcluster/execute-firebase-test.sh focusWebviewUniversal app-focus-webview-universal-debug model=walleye,version=26 model=shamu,version=23 model=Nexus9,version=23'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {
@@ -69,8 +69,10 @@ def generate_gecko_X86_ui_test_task(dependencies):
 		description = "Run UI tests for Klar Gecko X86 for Android.",
 		command = ('echo "--" > .adjust_token'
 			' && ./gradlew --no-daemon clean assembleKlarGeckoX86Debug assembleKlarGeckoX86DebugAndroidTest'
+			' && ./gradlew --no-daemon clean assembleKlarGeckoArmDebug assembleKlarGeckoArmDebugAndroidTest'
 			' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-			' && tools/taskcluster/execute-firebase-test.sh klarGeckoX86 app-klar-gecko-x86-debug model=Nexus5X,version=23'),
+			' && tools/taskcluster/execute-firebase-test.sh klarGeckoArm app-klar-gecko-arm-debug model=walleye,version=26 model=shamu,version=23'
+			' && tools/taskcluster/execute-firebase-test.sh klarGeckoX86 app-klar-gecko-x86-debug model=Nexus9,version=25'),
 		dependencies = dependencies,
 		scopes = [ 'secrets:get:project/focus/firebase' ],
 		artifacts = {

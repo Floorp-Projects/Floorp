@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
@@ -49,42 +50,42 @@ public class SettingsAppearanceTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void settingsScreenTest() throws InterruptedException, UiObjectNotFoundException {
+    public void settingsScreenTest() throws UiObjectNotFoundException {
 
-        UiObject SearchEngineSelection = TestHelper.settingsList.getChild(new UiSelector()
-                .className("android.widget.LinearLayout")
-                .instance(0));
+        UiObject languageHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("Language")
+                .resourceId("android:id/title"));
+        UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .text("Privacy & Security")
+                .resourceId("android:id/title"));
         UiObject searchHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Search")
                 .resourceId("android:id/title"));
-        UiObject privacyHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .text("Privacy")
+        UiObject defaultHeading = TestHelper.mDevice.findObject(new UiSelector()
+                .textContains("default browser")
                 .resourceId("android:id/title"));
-        UiObject perfHeading = TestHelper.mDevice.findObject(new UiSelector()
-                .text("Performance")
-                .resourceId("android:id/title"));
+        UiObject defaultSwitch = TestHelper.mDevice.findObject(new UiSelector()
+                .resourceId(TestHelper.getAppName() + ":id/switch_widget"));
         UiObject mozHeading = TestHelper.mDevice.findObject(new UiSelector()
                 .text("Mozilla")
                 .resourceId("android:id/title"));
 
         /* Go to Settings */
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
-
         openSettings();
-        SearchEngineSelection.waitForExists(waitingTime);
+        languageHeading.waitForExists(waitingTime);
 
         /* Check the first element and other headings are present */
-        assertTrue(SearchEngineSelection.isEnabled());
+        assertTrue(languageHeading.exists());
         assertTrue(searchHeading.exists());
         assertTrue(privacyHeading.exists());
-        TestHelper.swipeUpScreen();
-        assertTrue(perfHeading.exists());
-        mozHeading.waitForExists(waitingTime);
+        assertTrue(defaultHeading.exists());
+        assertFalse(defaultSwitch.isChecked());
         assertTrue(mozHeading.exists());
     }
 }

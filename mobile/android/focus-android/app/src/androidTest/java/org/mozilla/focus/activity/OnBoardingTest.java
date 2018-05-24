@@ -46,12 +46,12 @@ public class OnBoardingTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void OnBoardingTest() throws InterruptedException, UiObjectNotFoundException {
+    public void OnBoardingTest() throws UiObjectNotFoundException {
 
         // Let's search for something
         TestHelper.firstSlide.waitForExists(waitingTime);

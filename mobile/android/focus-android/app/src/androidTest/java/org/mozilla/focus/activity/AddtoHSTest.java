@@ -80,14 +80,11 @@ public class AddtoHSTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
-    private UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
-                        .description("focus test page")
-                        .enabled(true));
-    UiObject welcomeBtn = TestHelper.mDevice.findObject(new UiSelector()
+    private UiObject welcomeBtn = TestHelper.mDevice.findObject(new UiSelector()
             .resourceId("com.android.launcher3:id/cling_dismiss_longpress_info")
             .text("GOT IT")
             .enabled(true));
@@ -101,6 +98,7 @@ public class AddtoHSTest {
 
     private void openAddtoHSDialog() throws UiObjectNotFoundException {
         TestHelper.menuButton.perform(click());
+        TestHelper.AddtoHSmenuItem.waitForExists(waitingTime);
         // If the menu item is not clickable, wait and retry
         while (!TestHelper.AddtoHSmenuItem.isClickable()) {
             TestHelper.pressBackKey();
@@ -110,7 +108,7 @@ public class AddtoHSTest {
     }
 
     @Test
-    public void AddToHomeScreenTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void AddToHomeScreenTest() throws UiObjectNotFoundException {
 
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
@@ -123,10 +121,10 @@ public class AddtoHSTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
+        TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
         if (!AppConstants.isGeckoBuild()) {
-            Assert.assertTrue("Website title loaded", titleMsg.exists());
+            TestHelper.waitForWebSiteTitleLoad();
         }
 
         openAddtoHSDialog();
@@ -162,7 +160,7 @@ public class AddtoHSTest {
     }
 
     @Test
-    public void NonameTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void NonameTest() throws UiObjectNotFoundException {
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
                 .description("localhost")
@@ -174,10 +172,10 @@ public class AddtoHSTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
+        TestHelper.progressBar.waitForExists(waitingTime);
         Assert.assertTrue(TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime));
         if (!AppConstants.isGeckoBuild()) {
-            Assert.assertTrue("Website title loaded", titleMsg.exists());
+            TestHelper.waitForWebSiteTitleLoad();
         }
 
         openAddtoHSDialog();
@@ -213,7 +211,7 @@ public class AddtoHSTest {
     }
 
     @Test
-    public void SearchTermShortcutTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void SearchTermShortcutTest() throws UiObjectNotFoundException {
         UiObject shortcutIcon = TestHelper.mDevice.findObject(new UiSelector()
                 .className("android.widget.TextView")
                 .descriptionContains("helloworld")
@@ -225,10 +223,10 @@ public class AddtoHSTest {
         TestHelper.inlineAutocompleteEditText.setText("helloworld");
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        TestHelper.waitForWebContent();
         // In certain cases, where progressBar disappears immediately, below will return false
         // since it busy waits, it will unblock when the bar isn't visible, regardless of the
         // return value
+        TestHelper.progressBar.waitForExists(waitingTime);
         TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
 
         openAddtoHSDialog();

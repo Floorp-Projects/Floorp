@@ -6,6 +6,7 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
@@ -33,7 +34,6 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 public class DownloadTest {
     private static final String TEST_PATH = "/";
 
-    private Context appContext;
     private MockWebServer webServer;
 
     @Rule
@@ -42,7 +42,7 @@ public class DownloadTest {
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
 
-            appContext = InstrumentationRegistry.getInstrumentation()
+            Context appContext = InstrumentationRegistry.getInstrumentation()
                     .getTargetContext()
                     .getApplicationContext();
 
@@ -59,6 +59,8 @@ public class DownloadTest {
                         .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("rabbit.jpg")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("download.jpg")));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("download.jpg")));
                 webServer.enqueue(new MockResponse()
@@ -84,7 +86,7 @@ public class DownloadTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown()  {
 
         // If notification is still up, this will take it off screen
         TestHelper.pressBackKey();
@@ -92,30 +94,38 @@ public class DownloadTest {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
-    private UiObject downloadIcon = TestHelper.mDevice.findObject(new UiSelector()
-            .description("download icon")
-            .enabled(true));
     private UiObject downloadTitle = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/title_template")
+            .resourceId(TestHelper.getAppName() + ":id/title_template")
             .enabled(true));
     private UiObject downloadFileName = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/download_dialog_file_name")
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_file_name")
             .enabled(true));
     private UiObject downloadWarning = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/download_dialog_warning")
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_warning")
             .enabled(true));
     private UiObject downloadCancelBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/download_dialog_cancel")
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_cancel")
             .enabled(true));
     private UiObject downloadBtn = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/download_dialog_download")
+            .resourceId(TestHelper.getAppName() + ":id/download_dialog_download")
             .enabled(true));
     private UiObject completedMsg = TestHelper.mDevice.findObject(new UiSelector()
-            .resourceId("org.mozilla.focus.debug:id/snackbar_text")
+            .resourceId(TestHelper.getAppName() + ":id/snackbar_text")
             .enabled(true));
 
     @Test
-    public void DownloadFileTest() throws InterruptedException, UiObjectNotFoundException, IOException {
+    public void DownloadFileTest() throws UiObjectNotFoundException  {
+        UiObject downloadIcon;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            downloadIcon = TestHelper.mDevice.findObject(new UiSelector()
+                    .resourceId("download")
+                    .enabled(true));
+        } else {
+            downloadIcon = TestHelper.mDevice.findObject(new UiSelector()
+                    .description("download icon")
+                    .enabled(true));
+        }
 
         // Load website with service worker
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
@@ -123,11 +133,12 @@ public class DownloadTest {
         TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
-        Assert.assertTrue(downloadIcon.waitForExists(waitingTime));
+        TestHelper.waitForWebContent();
+        TestHelper.progressBar.waitUntilGone(waitingTime);
 
-        // Find download icon tap it
-        Assert.assertTrue(downloadIcon.isClickable());
+
         downloadIcon.click();
+
         downloadTitle.waitForExists(waitingTime);
         Assert.assertTrue(downloadTitle.isEnabled());
         Assert.assertTrue(downloadCancelBtn.isEnabled());

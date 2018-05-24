@@ -7,7 +7,6 @@ package org.mozilla.focus.activity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
@@ -22,6 +21,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.helpers.TestHelper;
 
+import java.io.IOException;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
 import static android.support.test.espresso.action.ViewActions.click;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
@@ -33,6 +37,8 @@ import static org.mozilla.focus.helpers.TestHelper.waitingTime;
 // This test erases URL and checks for message
 @RunWith(AndroidJUnit4.class)
 public class TrashcanTest {
+    private static final String TEST_PATH = "/";
+    private MockWebServer webServer;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule
@@ -50,23 +56,48 @@ public class TrashcanTest {
                     .edit()
                     .putBoolean(FIRSTRUN_PREF, true)
                     .apply();
+
+            webServer = new MockWebServer();
+
+            try {
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("plain_test.html")));
+
+                webServer.start();
+            } catch (IOException e) {
+                throw new AssertionError("Could not start web server", e);
+            }
+        }
+
+        @Override
+        protected void afterActivityFinished() {
+            super.afterActivityFinished();
+
+            try {
+                webServer.close();
+                webServer.shutdown();
+            } catch (IOException e) {
+                throw new AssertionError("Could not stop web server", e);
+            }
         }
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void TrashTest() throws InterruptedException, UiObjectNotFoundException {
+    public void TrashTest() throws UiObjectNotFoundException {
 
         // Open a webpage
-        //TestHelper.urlBar.waitForExists(waitingTime);
-        //TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         TestHelper.waitForWebContent();
@@ -79,11 +110,11 @@ public class TrashcanTest {
     }
 
     @Test
-    public void systemBarTest() throws InterruptedException, UiObjectNotFoundException {
+    public void systemBarTest() throws UiObjectNotFoundException {
         // Open a webpage
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         TestHelper.waitForWebContent();
@@ -101,7 +132,7 @@ public class TrashcanTest {
     }
 
     @Test
-    public void systemBarHomeViewTest() throws InterruptedException, UiObjectNotFoundException, RemoteException {
+    public void systemBarHomeViewTest() throws UiObjectNotFoundException  {
 
         // Initialize UiDevice instance
         final int LAUNCH_TIMEOUT = 5000;
@@ -109,7 +140,7 @@ public class TrashcanTest {
         // Open a webpage
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("mozilla");
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         TestHelper.waitForWebContent();

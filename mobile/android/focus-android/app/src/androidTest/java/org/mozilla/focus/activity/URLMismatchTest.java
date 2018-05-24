@@ -10,7 +10,6 @@ import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiObjectNotFoundException;
 
 import org.junit.After;
 import org.junit.Rule;
@@ -36,8 +35,6 @@ import static org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime;
 // This test checks whether URL and displayed site are in sync
 @RunWith(AndroidJUnit4.class)
 public class URLMismatchTest {
-    private static final String MOZILLA_WEBSITE_SLOGAN_SELECTOR = ".content h2";
-    private static final String MOZILLA_WEBSITE_SLOGAN_TEXT = "We make the internet safer, healthier and faster for good.";
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<MainActivity>(MainActivity.class) {
@@ -57,12 +54,12 @@ public class URLMismatchTest {
     };
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mActivityTestRule.getActivity().finishAndRemoveTask();
     }
 
     @Test
-    public void MismatchTest() throws InterruptedException, UiObjectNotFoundException {
+    public void MismatchTest() {
         // Type "mozilla" into the URL bar.
         onView(withId(R.id.urlView))
                 .check(matches(isDisplayed()))
@@ -93,7 +90,8 @@ public class URLMismatchTest {
                 .perform(pressImeActionButton());
 
         // Wait until site is loaded
-        TestHelper.progressBar.waitForExists(webPageLoadwaitingTime);
+        onView(withId(R.id.webview))
+                .check(matches(isDisplayed()));
         TestHelper.progressBar.waitUntilGone(webPageLoadwaitingTime);
 
         // The displayed URL contains www.mozilla.org
