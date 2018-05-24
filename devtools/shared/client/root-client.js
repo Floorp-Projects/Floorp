@@ -148,7 +148,8 @@ RootClient.prototype = {
         scope: form.scope,
         fetch: form.fetch,
         registrationActor: form.actor,
-        active: form.active
+        active: form.active,
+        lastUpdateTime: form.lastUpdateTime
       });
     });
 
