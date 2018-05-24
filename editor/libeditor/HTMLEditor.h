@@ -1034,7 +1034,7 @@ protected: // Shouldn't be used by friend classes
    */
   nsresult InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                       bool aAddCites,
-                                      nsIDOMNode** aNodeInserted);
+                                      nsINode** aNodeInserted);
 
   nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
                         bool aIsSafe,

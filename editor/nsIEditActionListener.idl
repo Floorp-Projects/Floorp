@@ -7,6 +7,7 @@
 #include "domstubs.idl"
 
 webidl CharacterData;
+webidl Node;
 webidl Selection;
 
 /*
@@ -35,7 +36,7 @@ interface nsIEditActionListener : nsISupports
    * @param aResult   The result of the create node operation.
    */
   void DidCreateNode(in DOMString aTag,
-                     in nsIDOMNode aNewNode,
+                     in Node aNewNode,
                      in nsresult aResult);
 
   /**
@@ -43,7 +44,7 @@ interface nsIEditActionListener : nsISupports
    * @param aNode     The DOM Node to insert.
    * @param aResult   The result of the insert node operation.
    */
-  void DidInsertNode(in nsIDOMNode aNode,
+  void DidInsertNode(in Node aNode,
                      in nsresult aResult);
 
   /**
@@ -51,7 +52,7 @@ interface nsIEditActionListener : nsISupports
    * @param aChild    The node to delete
    * @param aResult   The result of the delete node operation.
    */
-  void DidDeleteNode(in nsIDOMNode aChild, in nsresult aResult);
+  void DidDeleteNode(in Node aChild, in nsresult aResult);
 
   /**
    * Called after the editor splits a node.
@@ -60,8 +61,8 @@ interface nsIEditActionListener : nsISupports
    * @param aNewLeftNode         The new node resulting from the split, becomes
    *                             the previous sibling of aExistingRightNode.
    */
-  void DidSplitNode(in nsIDOMNode aExistingRightNode,
-                    in nsIDOMNode aNewLeftNode);
+  void DidSplitNode(in Node aExistingRightNode,
+                    in Node aNewLeftNode);
 
   /**
    * Called after the editor joins 2 nodes.
@@ -72,10 +73,10 @@ interface nsIEditActionListener : nsISupports
    * @param aParent     The parent of aRightNode
    * @param aResult     The result of the join operation.
    */
-  void DidJoinNodes(in nsIDOMNode aLeftNode,
-                          in nsIDOMNode aRightNode,
-                          in nsIDOMNode aParent,
-                          in nsresult    aResult);
+  void DidJoinNodes(in Node aLeftNode,
+                    in Node aRightNode,
+                    in Node aParent,
+                    in nsresult aResult);
 
   /**
    * Called after the editor inserts text.

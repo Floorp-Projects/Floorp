@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 #include "domstubs.idl"
 
-interface nsIDOMNode;
+webidl Node;
 
 /** A class which can represent any node which points to an
   * external URI, e.g. <a>, <img>, <script> etc,
@@ -19,7 +19,7 @@ interface nsIDOMNode;
 
 interface nsIURIRefObject  : nsISupports
 {
-  attribute nsIDOMNode node;
+  attribute Node node;
 
   /**
    * Go back to the beginning of the attribute list.
