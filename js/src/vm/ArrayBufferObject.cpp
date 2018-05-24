@@ -492,8 +492,8 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
 
     // When detaching a buffer with typed object views, any jitcode accessing
     // such views must be deoptimized so that detachment checks are performed.
-    // This is done by setting a compartment-wide flag indicating that buffers
-    // with typed object views have been detached.
+    // This is done by setting a zone-wide flag indicating that buffers with
+    // typed object views have been detached.
     if (buffer->hasTypedObjectViews()) {
         // Make sure the global object's group has been instantiated, so the
         // flag change will be observed.
@@ -501,7 +501,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         if (!JSObject::getGroup(cx, cx->global()))
             oomUnsafe.crash("ArrayBufferObject::detach");
         MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
-        cx->compartment()->detachedTypedObjects = 1;
+        cx->zone()->detachedTypedObjects = 1;
     }
 
     // Update all views of the buffer to account for the buffer having been
