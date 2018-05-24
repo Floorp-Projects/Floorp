@@ -2845,25 +2845,21 @@ public:
   // Set the nsDisplayList that this item belongs to, and what
   // index it is within that list. Temporary state for merging
   // used by RetainedDisplayListBuilder.
-  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex, uint32_t aListKey, uint32_t aNestingDepth)
+  void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex)
   {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     mOldList = reinterpret_cast<uintptr_t>(aList);
-    mOldListKey = aListKey;
-    mOldNestingDepth = aNestingDepth;
 #endif
     mOldListIndex = aIndex;
   }
-  bool GetOldListIndex(nsDisplayList* aList, uint32_t aListKey, OldListIndex* aOutIndex)
+  OldListIndex GetOldListIndex(nsDisplayList* aList)
   {
-    if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d (outer type was %d at depth %d, now is %d)", GetPerFrameKey(), mOldListKey, mOldNestingDepth, aListKey);
-#endif
-      return false;
+    if (mOldList != reinterpret_cast<uintptr_t>(aList)) {
+      MOZ_CRASH_UNSAFE_PRINTF("Item found was in the wrong list! type %d", GetPerFrameKey());
     }
-    *aOutIndex = mOldListIndex;
-    return true;
+#endif
+    return mOldListIndex;
   }
 
 protected:
@@ -2893,14 +2889,12 @@ protected:
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 public:
-  uint32_t mOldListKey = 0;
-  uint32_t mOldNestingDepth = 0;
+  uintptr_t mOldList = 0;
   bool mMergedItem = false;
   bool mPreProcessedItem = false;
 protected:
 #endif
   OldListIndex mOldListIndex;
-  uintptr_t mOldList = 0;
 
   bool      mForceNotVisible;
   bool      mDisableSubpixelAA;
@@ -5365,7 +5359,6 @@ public:
   bool OpacityAppliedToChildren() const { return mOpacityAppliedToChildren; }
 
   static bool NeedsActiveLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
-  static bool MayNeedActiveLayer(nsIFrame* aFrame);
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
