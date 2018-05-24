@@ -707,3 +707,25 @@ add_task(async function test_reconcile_both_modified_conflict() {
     await cleanup(server);
   }
 });
+
+add_task(async function test_wipe() {
+  let {profileStorage, server, engine} = await setup();
+  try {
+    let guid = profileStorage.addresses.add(TEST_PROFILE_1);
+
+    expectLocalProfiles(profileStorage, [{guid}]);
+
+    let promiseObserved = promiseOneObserver("formautofill-storage-changed");
+
+    await engine._wipeClient();
+
+    let {subject, data} = await promiseObserved;
+    Assert.equal(subject.wrappedJSObject.sourceSync, true, "it should be noted this came from sync");
+    Assert.equal(subject.wrappedJSObject.collectionName, "addresses", "got the correct collection");
+    Assert.equal(data, "removeAll", "a removeAll should be noted");
+
+    expectLocalProfiles(profileStorage, []);
+  } finally {
+    await cleanup(server);
+  }
+});

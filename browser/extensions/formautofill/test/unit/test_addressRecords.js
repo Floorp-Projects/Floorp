@@ -482,7 +482,11 @@ add_task(async function test_notifyUsed() {
   let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
 
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "notifyUsed");
+    (subject, data) =>
+      data == "notifyUsed" &&
+      subject.wrappedJSObject.guid == guid &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME
+  );
 
   profileStorage.addresses.notifyUsed(guid);
   await onChanged;
@@ -511,6 +515,7 @@ add_task(async function test_remove() {
     "formautofill-storage-changed",
     (subject, data) =>
       data == "remove" &&
+      subject.wrappedJSObject.guid == guid &&
       subject.wrappedJSObject.collectionName == COLLECTION_NAME
   );
 
