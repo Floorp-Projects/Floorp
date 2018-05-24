@@ -23,10 +23,8 @@ class VertexArray9 : public VertexArrayImpl
   public:
     VertexArray9(const gl::VertexArrayState &data) : VertexArrayImpl(data) {}
 
-    gl::Error syncState(const gl::Context *context,
-                        const gl::VertexArray::DirtyBits &dirtyBits,
-                        const gl::VertexArray::DirtyAttribBitsArray &attribBits,
-                        const gl::VertexArray::DirtyBindingBitsArray &bindingBits) override;
+    void syncState(const gl::Context *context,
+                   const gl::VertexArray::DirtyBits &dirtyBits) override;
 
     ~VertexArray9() override {}
 
@@ -36,16 +34,13 @@ class VertexArray9 : public VertexArrayImpl
     Serial mCurrentStateSerial;
 };
 
-inline gl::Error VertexArray9::syncState(const gl::Context *context,
-                                         const gl::VertexArray::DirtyBits &dirtyBits,
-                                         const gl::VertexArray::DirtyAttribBitsArray &attribBits,
-                                         const gl::VertexArray::DirtyBindingBitsArray &bindingBits)
+inline void VertexArray9::syncState(const gl::Context *context,
+                                    const gl::VertexArray::DirtyBits &dirtyBits)
 {
     ASSERT(dirtyBits.any());
     Renderer9 *renderer = GetImplAs<Context9>(context)->getRenderer();
     mCurrentStateSerial = renderer->generateSerial();
-    return gl::NoError();
 }
-}  // namespace rx
+}
 
 #endif // LIBANGLE_RENDERER_D3D_D3D9_VERTEXARRAY9_H_

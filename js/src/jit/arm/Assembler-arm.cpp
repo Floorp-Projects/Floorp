@@ -15,7 +15,7 @@
 #include "jit/arm/disasm/Disasm-arm.h"
 #include "jit/arm/MacroAssembler-arm.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
 #include "vm/JSCompartment.h"
 

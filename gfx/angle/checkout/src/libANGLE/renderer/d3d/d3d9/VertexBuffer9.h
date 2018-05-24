@@ -28,7 +28,7 @@ class VertexBuffer9 : public VertexBuffer
                                     const gl::VertexBinding &binding,
                                     GLenum currentValueType,
                                     GLint start,
-                                    size_t count,
+                                    GLsizei count,
                                     GLsizei instances,
                                     unsigned int offset,
                                     const uint8_t *sourceData) override;

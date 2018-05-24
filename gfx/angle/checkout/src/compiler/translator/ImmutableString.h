@@ -128,10 +128,7 @@ class ImmutableString
         }
     };
 
-    // This hash encodes the opening parentheses location (if any), name length and whether the name
-    // contains { or [ characters in addition to a 19-bit hash. This way the hash is more useful for
-    // lookups. The string passed in should be at most 63 characters.
-    uint32_t mangledNameHash() const;
+    uint32_t hash32() const;
 
   private:
     const char *mData;

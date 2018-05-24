@@ -6,7 +6,7 @@
 
 #include "jit/arm/Assembler-arm.h"
 #include "jit/Bailouts.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 

@@ -541,10 +541,10 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
 }
 
 static inline void
-RegisterEnumerator(JSContext* cx, NativeIterator* ni)
+RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni)
 {
     /* Register non-escaping native enumerators (for-in) with the current context. */
-    ni->link(cx->compartment()->enumerators);
+    ni->link(realm.enumerators);
 
     MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
     ni->flags |= JSITER_ACTIVE;
@@ -611,7 +611,10 @@ CreatePropertyIterator(JSContext* cx, Handle<JSObject*> objBeingIterated,
     if (hadError)
         return nullptr;
 
-    RegisterEnumerator(cx, ni);
+    ObjectRealm& realm =
+        objBeingIterated ? ObjectRealm::get(objBeingIterated) : ObjectRealm::get(propIter);
+    RegisterEnumerator(realm, ni);
+
     return propIter;
 }
 
@@ -820,7 +823,7 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
     *numGuards = guards.length();
 
     IteratorHashPolicy::Lookup lookup(guards.begin(), guards.length(), key);
-    auto p = cx->compartment()->iteratorCache.lookup(lookup);
+    auto p = ObjectRealm::get(obj).iteratorCache.lookup(lookup);
     if (!p)
         return nullptr;
 
@@ -870,7 +873,7 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
                                       ni->guardCount(),
                                       ni->guard_key);
 
-    JSCompartment::IteratorCache& cache = cx->compartment()->iteratorCache;
+    ObjectRealm::IteratorCache& cache = ObjectRealm::get(obj).iteratorCache;
     bool ok;
     auto p = cache.lookupForAdd(lookup);
     if (MOZ_LIKELY(!p)) {
@@ -896,7 +899,7 @@ js::GetIterator(JSContext* cx, HandleObject obj)
     if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
         NativeIterator* ni = iterobj->getNativeIterator();
         UpdateNativeIterator(ni, obj);
-        RegisterEnumerator(cx, ni);
+        RegisterEnumerator(ObjectRealm::get(obj), ni);
         return iterobj;
     }
 
@@ -1347,7 +1350,7 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
 static bool
 SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, Handle<JSFlatString*> str)
 {
-    NativeIterator* enumeratorList = cx->compartment()->enumerators;
+    NativeIterator* enumeratorList = ObjectRealm::get(obj).enumerators;
     NativeIterator* ni = enumeratorList->next();
 
     while (ni != enumeratorList) {
@@ -1362,7 +1365,7 @@ SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj, Handle<JSFlatStri
 bool
 js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
 {
-    if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj)))
+    if (MOZ_LIKELY(!ObjectRealm::get(obj).objectMaybeInIteration(obj)))
         return true;
 
     if (JSID_IS_SYMBOL(id))
@@ -1377,7 +1380,7 @@ js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id)
 bool
 js::SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index)
 {
-    if (MOZ_LIKELY(!cx->compartment()->objectMaybeInIteration(obj)))
+    if (MOZ_LIKELY(!ObjectRealm::get(obj).objectMaybeInIteration(obj)))
         return true;
 
     RootedId id(cx);

@@ -36,13 +36,6 @@ ShShaderSpec SelectShaderSpec(GLint majorVersion, GLint minorVersion, bool isWeb
             return isWebGL ? SH_WEBGL2_SPEC : SH_GLES3_SPEC;
         }
     }
-
-    // GLES1 emulation: Use GLES3 shader spec.
-    if (!isWebGL && majorVersion == 1)
-    {
-        return SH_GLES3_SPEC;
-    }
-
     return isWebGL ? SH_WEBGL_SPEC : SH_GLES2_SPEC;
 }
 
@@ -200,22 +193,22 @@ Compiler::~Compiler()
     ANGLE_SWALLOW_ERR(mImplementation->release());
 }
 
-ShHandle Compiler::getCompilerHandle(ShaderType type)
+ShHandle Compiler::getCompilerHandle(GLenum type)
 {
     ShHandle *compiler = nullptr;
     switch (type)
     {
-        case ShaderType::Vertex:
+        case GL_VERTEX_SHADER:
             compiler = &mVertexCompiler;
             break;
 
-        case ShaderType::Fragment:
+        case GL_FRAGMENT_SHADER:
             compiler = &mFragmentCompiler;
             break;
-        case ShaderType::Compute:
+        case GL_COMPUTE_SHADER:
             compiler = &mComputeCompiler;
             break;
-        case ShaderType::Geometry:
+        case GL_GEOMETRY_SHADER_EXT:
             compiler = &mGeometryCompiler;
             break;
         default:
@@ -230,7 +223,7 @@ ShHandle Compiler::getCompilerHandle(ShaderType type)
             sh::Initialize();
         }
 
-        *compiler = sh::ConstructCompiler(ToGLenum(type), mSpec, mOutputType, &mResources);
+        *compiler = sh::ConstructCompiler(type, mSpec, mOutputType, &mResources);
         ASSERT(*compiler);
         activeCompilerHandles++;
     }
@@ -238,7 +231,7 @@ ShHandle Compiler::getCompilerHandle(ShaderType type)
     return *compiler;
 }
 
-const std::string &Compiler::getBuiltinResourcesString(ShaderType type)
+const std::string &Compiler::getBuiltinResourcesString(GLenum type)
 {
     return sh::GetBuiltInResourcesString(getCompilerHandle(type));
 }

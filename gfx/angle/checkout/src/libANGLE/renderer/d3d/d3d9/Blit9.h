@@ -11,7 +11,8 @@
 
 #include "common/angleutils.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums.h"
+
+#include <GLES2/gl2.h>
 
 namespace gl
 {
@@ -50,7 +51,7 @@ class Blit9 : angle::NonCopyable
                        GLenum destFormat,
                        const gl::Offset &destOffset,
                        TextureStorage *storage,
-                       gl::TextureTarget target,
+                       GLenum target,
                        GLint level);
     gl::Error copyTexture(const gl::Context *context,
                           const gl::Texture *source,
@@ -59,7 +60,7 @@ class Blit9 : angle::NonCopyable
                           GLenum destFormat,
                           const gl::Offset &destOffset,
                           TextureStorage *storage,
-                          gl::TextureTarget destTarget,
+                          GLenum destTarget,
                           GLint destLevel,
                           bool flipY,
                           bool premultiplyAlpha,

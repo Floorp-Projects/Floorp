@@ -11,7 +11,6 @@
 
 #include "angle_gl.h"
 #include "common/angleutils.h"
-#include "libANGLE/PackedGLEnums.h"
 
 #include <EGL/egl.h>
 
@@ -48,12 +47,12 @@ void QueryRenderbufferiv(const Context *context,
                          GLint *params);
 void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *params);
 void QueryTexLevelParameterfv(const Texture *texture,
-                              TextureTarget target,
+                              GLenum target,
                               GLint level,
                               GLenum pname,
                               GLfloat *params);
 void QueryTexLevelParameteriv(const Texture *texture,
-                              TextureTarget target,
+                              GLenum target,
                               GLint level,
                               GLenum pname,
                               GLint *params);

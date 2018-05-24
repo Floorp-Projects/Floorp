@@ -48,7 +48,7 @@ class ICStubSpace
     }
 };
 
-// Space for optimized stubs. Every JitCompartment has a single
+// Space for optimized stubs. Every JitRealm has a single
 // OptimizedICStubSpace.
 struct OptimizedICStubSpace : public ICStubSpace
 {

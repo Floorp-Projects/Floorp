@@ -49,15 +49,17 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
     virtual gl::Error onDestroy(const gl::Context *context);
 
     virtual gl::Error setImage(const gl::Context *context,
-                               const gl::ImageIndex &index,
+                               GLenum target,
+                               size_t level,
                                GLenum internalFormat,
                                const gl::Extents &size,
                                GLenum format,
                                GLenum type,
                                const gl::PixelUnpackState &unpack,
-                               const uint8_t *pixels)    = 0;
+                               const uint8_t *pixels) = 0;
     virtual gl::Error setSubImage(const gl::Context *context,
-                                  const gl::ImageIndex &index,
+                                  GLenum target,
+                                  size_t level,
                                   const gl::Box &area,
                                   GLenum format,
                                   GLenum type,
@@ -65,14 +67,16 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
                                   const uint8_t *pixels) = 0;
 
     virtual gl::Error setCompressedImage(const gl::Context *context,
-                                         const gl::ImageIndex &index,
+                                         GLenum target,
+                                         size_t level,
                                          GLenum internalFormat,
                                          const gl::Extents &size,
                                          const gl::PixelUnpackState &unpack,
                                          size_t imageSize,
-                                         const uint8_t *pixels)    = 0;
+                                         const uint8_t *pixels) = 0;
     virtual gl::Error setCompressedSubImage(const gl::Context *context,
-                                            const gl::ImageIndex &index,
+                                            GLenum target,
+                                            size_t level,
                                             const gl::Box &area,
                                             GLenum format,
                                             const gl::PixelUnpackState &unpack,
@@ -80,18 +84,21 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
                                             const uint8_t *pixels) = 0;
 
     virtual gl::Error copyImage(const gl::Context *context,
-                                const gl::ImageIndex &index,
+                                GLenum target,
+                                size_t level,
                                 const gl::Rectangle &sourceArea,
                                 GLenum internalFormat,
-                                gl::Framebuffer *source)    = 0;
+                                const gl::Framebuffer *source) = 0;
     virtual gl::Error copySubImage(const gl::Context *context,
-                                   const gl::ImageIndex &index,
+                                   GLenum target,
+                                   size_t level,
                                    const gl::Offset &destOffset,
                                    const gl::Rectangle &sourceArea,
-                                   gl::Framebuffer *source) = 0;
+                                   const gl::Framebuffer *source) = 0;
 
     virtual gl::Error copyTexture(const gl::Context *context,
-                                  const gl::ImageIndex &index,
+                                  GLenum target,
+                                  size_t level,
                                   GLenum internalFormat,
                                   GLenum type,
                                   size_t sourceLevel,
@@ -100,7 +107,8 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
                                   bool unpackUnmultiplyAlpha,
                                   const gl::Texture *source);
     virtual gl::Error copySubTexture(const gl::Context *context,
-                                     const gl::ImageIndex &index,
+                                     GLenum target,
+                                     size_t level,
                                      const gl::Offset &destOffset,
                                      size_t sourceLevel,
                                      const gl::Rectangle &sourceArea,
@@ -112,24 +120,24 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
     virtual gl::Error copyCompressedTexture(const gl::Context *context, const gl::Texture *source);
 
     virtual gl::Error setStorage(const gl::Context *context,
-                                 gl::TextureType type,
+                                 GLenum target,
                                  size_t levels,
                                  GLenum internalFormat,
                                  const gl::Extents &size) = 0;
 
     virtual gl::Error setStorageMultisample(const gl::Context *context,
-                                            gl::TextureType type,
+                                            GLenum target,
                                             GLsizei samples,
                                             GLint internalformat,
                                             const gl::Extents &size,
                                             bool fixedSampleLocations) = 0;
 
     virtual gl::Error setEGLImageTarget(const gl::Context *context,
-                                        gl::TextureType type,
+                                        GLenum target,
                                         egl::Image *image) = 0;
 
     virtual gl::Error setImageExternal(const gl::Context *context,
-                                       gl::TextureType type,
+                                       GLenum target,
                                        egl::Stream *stream,
                                        const egl::Stream::GLTextureDescription &desc) = 0;
 

@@ -87,7 +87,7 @@ class CompileZone
     void setMinorGCShouldCancelIonCompilations();
 };
 
-class JitCompartment;
+class JitRealm;
 
 class CompileCompartment
 {
@@ -101,7 +101,7 @@ class CompileCompartment
 
     const void* addressOfRandomNumberGenerator();
 
-    const JitCompartment* jitCompartment();
+    const JitRealm* jitRealm();
 
     const GlobalObject* maybeGlobal();
     const uint32_t* addressOfGlobalWriteBarriered();
