@@ -25,7 +25,8 @@ gl::Error TextureImpl::onDestroy(const gl::Context *context)
 }
 
 gl::Error TextureImpl::copyTexture(const gl::Context *context,
-                                   const gl::ImageIndex &index,
+                                   GLenum target,
+                                   size_t level,
                                    GLenum internalFormat,
                                    GLenum type,
                                    size_t sourceLevel,
@@ -39,7 +40,8 @@ gl::Error TextureImpl::copyTexture(const gl::Context *context,
 }
 
 gl::Error TextureImpl::copySubTexture(const gl::Context *context,
-                                      const gl::ImageIndex &index,
+                                      GLenum target,
+                                      size_t level,
                                       const gl::Offset &destOffset,
                                       size_t sourceLevel,
                                       const gl::Rectangle &sourceArea,

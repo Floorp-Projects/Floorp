@@ -46,13 +46,11 @@ TSymbol::TSymbol(TSymbolTable *symbolTable,
 
 ImmutableString TSymbol::name() const
 {
-    if (!mName.empty())
+    if (mName != "")
     {
         return mName;
     }
-    // This can be called for nameless function parameters in HLSL.
-    ASSERT(mSymbolType == SymbolType::AngleInternal ||
-           (mSymbolType == SymbolType::Empty && isVariable()));
+    ASSERT(mSymbolType == SymbolType::AngleInternal);
     int uniqueId = mUniqueId.get();
     ImmutableStringBuilder symbolNameOut(sizeof(uniqueId) * 2u + 1u);
     symbolNameOut << 's';
@@ -81,14 +79,6 @@ TStructure::TStructure(TSymbolTable *symbolTable,
                        const TFieldList *fields,
                        SymbolType symbolType)
     : TSymbol(symbolTable, name, symbolType), TFieldListCollection(fields)
-{
-}
-
-TStructure::TStructure(const TSymbolUniqueId &id,
-                       const ImmutableString &name,
-                       TExtension extension,
-                       const TFieldList *fields)
-    : TSymbol(id, name, SymbolType::BuiltIn, extension), TFieldListCollection(fields)
 {
 }
 
@@ -134,17 +124,6 @@ TInterfaceBlock::TInterfaceBlock(TSymbolTable *symbolTable,
     ASSERT(name != nullptr);
 }
 
-TInterfaceBlock::TInterfaceBlock(const TSymbolUniqueId &id,
-                                 const ImmutableString &name,
-                                 TExtension extension,
-                                 const TFieldList *fields)
-    : TSymbol(id, name, SymbolType::BuiltIn, extension),
-      TFieldListCollection(fields),
-      mBlockStorage(EbsUnspecified),
-      mBinding(0)
-{
-}
-
 TFunction::TFunction(TSymbolTable *symbolTable,
                      const ImmutableString &name,
                      SymbolType symbolType,
@@ -166,7 +145,32 @@ TFunction::TFunction(TSymbolTable *symbolTable,
     ASSERT(name != nullptr || symbolType == SymbolType::AngleInternal);
 }
 
-void TFunction::addParameter(const TVariable *p)
+TFunction::TFunction(TSymbolTable *symbolTable,
+                     const ImmutableString &name,
+                     TExtension extension,
+                     TConstParameter *parameters,
+                     size_t paramCount,
+                     const TType *retType,
+                     TOperator op,
+                     bool knownToNotHaveSideEffects)
+    : TSymbol(symbolTable, name, SymbolType::BuiltIn, extension),
+      mParametersVector(nullptr),
+      mParameters(parameters),
+      mParamCount(paramCount),
+      returnType(retType),
+      mMangledName(""),
+      mOp(op),
+      defined(false),
+      mHasPrototypeDeclaration(false),
+      mKnownToNotHaveSideEffects(knownToNotHaveSideEffects)
+{
+    ASSERT(name != nullptr);
+    ASSERT(op != EOpNull);
+    ASSERT(paramCount == 0 || parameters != nullptr);
+    mMangledName = buildMangledName();
+}
+
+void TFunction::addParameter(const TConstParameter &p)
 {
     ASSERT(mParametersVector);
     mParametersVector->push_back(p);
@@ -191,7 +195,7 @@ ImmutableString TFunction::buildMangledName() const
 
     for (size_t i = 0u; i < mParamCount; ++i)
     {
-        newName += mParameters[i]->getType().getMangledName();
+        newName += mParameters[i].type->getMangledName();
     }
     return ImmutableString(newName);
 }

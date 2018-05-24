@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/in-content/syncDisconnect.css" type="text/css"?>
+
+<window id="syncDisconnectDialog" class="windowDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        role="dialog"
+        onload="gSyncDisconnectDialog.init();"
+        data-l10n-id="sync-disconnect-dialog"
+        data-l10n-attrs="title, style">
+
+  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <link rel="localization" href="browser/preferences/syncDisconnect.ftl"/>
+  <script src="chrome://global/content/l10n.js"/>
+  <script src="chrome://browser/content/preferences/in-content/syncDisconnect.js"/>
+
+  <vbox id="deleteOptionsContent">
+    <description id="syncDisconnectHeading" data-l10n-id="sync-disconnect-heading"></description>
+
+    <vbox class="deleteOptions">
+      <hbox class="deleteOption">
+        <checkbox id="deleteRemoteSyncData"
+                  oncommand="gSyncDisconnectDialog.onDeleteOptionChange(event)"/>
+        <vbox>
+          <label class="deleteCaption" data-l10n-id="sync-disconnect-remove-sync-caption"/>
+          <label class="deleteData" data-l10n-id="sync-disconnect-remove-sync-data"/>
+        </vbox>
+      </hbox>
+
+      <hbox class="deleteOption">
+        <checkbox id="deleteRemoteOtherData"
+                  oncommand="gSyncDisconnectDialog.onDeleteOptionChange(event)"/>
+        <vbox>
+          <label class="deleteCaption" data-l10n-id="sync-disconnect-remove-other-caption"/>
+          <label class="deleteData" data-l10n-id="sync-disconnect-remove-other-data"/>
+        </vbox>
+      </hbox>
+    </vbox>
+
+    <vbox>
+      <spacer flex="1"/>
+      <hbox class="actionButtons" align="right" flex="1">
+        <button id="butCancel"
+                oncommand="close(event);"
+                class="syncDisconnectButton"
+                data-l10n-id="sync-disconnect-cancel"/>
+        <button id="butDisconnect"
+                oncommand="gSyncDisconnectDialog.accept(event);"
+                class="syncDisconnectButton"
+                data-l10n-id="sync-disconnect-confirm-disconnect"/>
+      </hbox>
+    </vbox>
+  </vbox>
+
+  <vbox id="deletingContent" align="center" pack="center" flex="1" hidden="true">
+    <hbox align="center">
+      <image class="disconnectThrobber"/>
+      <label class="deleteCaption" data-l10n-id="sync-disconnect-disconnecting"/>
+    </hbox>
+  </vbox>
+</window>

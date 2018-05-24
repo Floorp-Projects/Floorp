@@ -11,8 +11,8 @@
 #include "compiler/translator/CallDAG.h"
 
 #include "compiler/translator/Diagnostics.h"
+#include "compiler/translator/IntermTraverse.h"
 #include "compiler/translator/SymbolTable.h"
-#include "compiler/translator/tree_util/IntermTraverse.h"
 
 namespace sh
 {
@@ -116,13 +116,16 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
         return false;
     }
 
-    void visitFunctionPrototype(TIntermFunctionPrototype *node) override
+    bool visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node) override
     {
         ASSERT(mCurrentFunction == nullptr);
 
         // Function declaration, create an empty record.
         auto &record = mFunctions[node->getFunction()->uniqueId().get()];
         record.name  = node->getFunction()->name();
+
+        // No need to traverse the parameters.
+        return false;
     }
 
     // Track functions called from another function.

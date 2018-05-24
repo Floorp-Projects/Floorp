@@ -92,7 +92,7 @@ class BufferFactoryD3D : angle::NonCopyable
     virtual gl::ErrorOrResult<unsigned int> getVertexSpaceRequired(
         const gl::VertexAttribute &attrib,
         const gl::VertexBinding &binding,
-        size_t count,
+        GLsizei count,
         GLsizei instances) const = 0;
 };
 
@@ -158,8 +158,8 @@ class RendererD3D : public BufferFactoryD3D, public MultisampleTextureInitialize
                                     GLenum destFormat,
                                     const gl::Offset &destOffset,
                                     TextureStorage *storage,
-                                    gl::TextureTarget target,
-                                    GLint level)    = 0;
+                                    GLenum target,
+                                    GLint level) = 0;
     virtual gl::Error copyImage3D(const gl::Context *context,
                                   const gl::Framebuffer *framebuffer,
                                   const gl::Rectangle &sourceRect,
@@ -183,7 +183,7 @@ class RendererD3D : public BufferFactoryD3D, public MultisampleTextureInitialize
                                   GLenum destType,
                                   const gl::Offset &destOffset,
                                   TextureStorage *storage,
-                                  gl::TextureTarget destTarget,
+                                  GLenum destTarget,
                                   GLint destLevel,
                                   bool unpackFlipY,
                                   bool unpackPremultiplyAlpha,
@@ -303,7 +303,7 @@ class RendererD3D : public BufferFactoryD3D, public MultisampleTextureInitialize
     angle::WorkerThreadPool *getWorkerThreadPool();
 
     gl::Error getIncompleteTexture(const gl::Context *context,
-                                   gl::TextureType type,
+                                   GLenum type,
                                    gl::Texture **textureOut);
 
     Serial generateSerial();
