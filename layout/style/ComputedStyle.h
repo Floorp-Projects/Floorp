@@ -44,27 +44,10 @@
 #define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA   0x002000000
 // See ComputedStyle::RelevantLinkIsVisited
 #define NS_STYLE_RELEVANT_LINK_VISITED     0x004000000
-// See ComputedStyle::IsStyleIfVisited
-#define NS_STYLE_IS_STYLE_IF_VISITED       0x008000000
-// See ComputedStyle::HasChildThatUsesGrandancestorStyle
-#define NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE 0x010000000
-// See ComputedStyle::IsShared
-#define NS_STYLE_IS_SHARED                 0x020000000
-// See ComputedStyle::AssertStructsNotUsedElsewhere
-// (This bit is currently only used in #ifdef DEBUG code.)
-#define NS_STYLE_IS_GOING_AWAY             0x040000000
 // See ComputedStyle::ShouldSuppressLineBreak
 #define NS_STYLE_SUPPRESS_LINEBREAK        0x080000000
-// See ComputedStyle::IsInDisplayNoneSubtree
-#define NS_STYLE_IN_DISPLAY_NONE_SUBTREE   0x100000000
-// See ComputedStyle::FindChildWithRules
-#define NS_STYLE_INELIGIBLE_FOR_SHARING    0x200000000
-// See ComputedStyle::HasChildThatUsesResetStyle
-#define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
 // See ComputedStyle::IsTextCombined
 #define NS_STYLE_IS_TEXT_COMBINED          0x800000000
-// Whether a ComputedStyle is a Gecko or Servo context
-#define NS_STYLE_CONTEXT_IS_GECKO          0x1000000000
 // See ComputedStyle::GetPseudoEnum
 #define NS_STYLE_CONTEXT_TYPE_SHIFT        37
 
@@ -186,7 +169,6 @@ public:
 
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 
-
   // Does this ComputedStyle or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
@@ -204,10 +186,6 @@ public:
   bool ShouldSuppressLineBreak() const
     { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
 
-  // Does this ComputedStyle or any of its ancestors have display:none set?
-  bool IsInDisplayNoneSubtree() const
-    { return !!(mBits & NS_STYLE_IN_DISPLAY_NONE_SUBTREE); }
-
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText.
   bool IsTextCombined() const
@@ -220,47 +198,11 @@ public:
   bool HasPseudoElementData() const
     { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
 
-  bool HasChildThatUsesResetStyle() const
-    { return mBits & NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE; }
-
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
   bool RelevantLinkVisited() const
     { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
-
-  // Is this a ComputedStyle for a link?
-  inline bool IsLinkContext() const;
-
-  // Is this ComputedStyle the GetStyleIfVisited() for some other style
-  // context?
-  bool IsStyleIfVisited() const
-    { return !!(mBits & NS_STYLE_IS_STYLE_IF_VISITED); }
-
-  // Tells this ComputedStyle that it should return true from
-  // IsStyleIfVisited.
-  void SetIsStyleIfVisited()
-    { mBits |= NS_STYLE_IS_STYLE_IF_VISITED; }
-
-  // Does any descendant of this ComputedStyle have any style values
-  // that were computed based on this ComputedStyle's ancestors?
-  bool HasChildThatUsesGrandancestorStyle() const
-    { return !!(mBits & NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE); }
-
-  // Is this ComputedStyle shared with a sibling or cousin?
-  // (See nsStyleSet::GetContext.)
-  bool IsShared() const
-    { return !!(mBits & NS_STYLE_IS_SHARED); }
-
-  /**
-   * Returns whether this ComputedStyle has cached style data for a
-   * given style struct and it does NOT own that struct.  This can
-   * happen because it was inherited from the parent ComputedStyle, or
-   * because it was stored conditionally on the rule node.
-   */
-  bool HasCachedDependentStyleData(nsStyleStructID aSID) {
-    return mBits & GetBitForSID(aSID);
-  }
 
   ComputedStyle* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
   {
