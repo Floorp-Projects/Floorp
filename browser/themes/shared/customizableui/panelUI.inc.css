@@ -609,7 +609,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   text-align: center;
   text-shadow: none;
   max-width: 15em;
-  color: GrayText;
+  color: rgba(12, 12, 13, 0.5);
 }
 
 /* The boxes with "instructions" get extra top and bottom padding for space

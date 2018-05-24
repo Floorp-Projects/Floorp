@@ -1553,6 +1553,10 @@ nsIFrame::HasOpacityInternal(float aThreshold,
     return true;
   }
 
+  if (!mMayHaveOpacityAnimation) {
+    return false;
+  }
+
   EffectSet* effects =
     aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
   if (!effects) {

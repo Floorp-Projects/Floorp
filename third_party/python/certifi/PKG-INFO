@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: certifi
-Version: 2018.1.18
+Version: 2018.4.16
 Summary: Python package for providing Mozilla's CA Bundle.
 Home-page: http://certifi.io/
 Author: Kenneth Reitz

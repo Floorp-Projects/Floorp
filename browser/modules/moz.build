@@ -123,7 +123,6 @@ BROWSER_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
-    'AboutHome.jsm',
     'AboutNewTab.jsm',
     'AsyncTabSwitcher.jsm',
     'AttributionCode.jsm',

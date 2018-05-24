@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<head>
+<style>
+@keyframes anim {
+  from, to { opacity: 0; }
+}
+
+.anim {
+  animation: anim 100s infinite;
+}
+</style>
+</head>
+<body>
+  <span id="animating" class="reftest-no-display-list">A <span style="display:block"></span> C</span>
+</body>
+<script>
+window.addEventListener("MozReftestInvalidate", () => {
+  document.getElementById("animating").classList.add("anim");
+  document.documentElement.removeAttribute("class");
+});
+</script>
+</html>

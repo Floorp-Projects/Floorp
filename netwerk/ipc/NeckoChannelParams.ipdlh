@@ -234,6 +234,7 @@ struct FTPChannelOpenArgs
   nsCString                 entityID;
   OptionalIPCStream         uploadStream;
   OptionalLoadInfoArgs      loadInfo;
+  uint32_t                  loadFlags;
 };
 
 struct FTPChannelConnectArgs

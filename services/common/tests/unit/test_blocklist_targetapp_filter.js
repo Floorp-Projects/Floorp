@@ -2,6 +2,7 @@ const BlocklistClients = ChromeUtils.import("resource://services-common/blocklis
 const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
 
 const APP_ID = "xpcshell@tests.mozilla.org";
+const TOOLKIT_ID = "toolkit@mozilla.org";
 
 let client;
 
@@ -84,10 +85,17 @@ add_task(async function test_returns_without_guid_or_with_matching_guid() {
         guid: APP_ID,
       }]
     }]
+  }, {
+    willMatch: true,
+    versionRange: [{
+      targetApplication: [{
+        guid: TOOLKIT_ID,
+      }]
+    }]
   }]);
 
   const list = await client.get();
-  equal(list.length, 2);
+  equal(list.length, 3);
   ok(list.every(e => e.willMatch));
 });
 add_task(clear_state);
@@ -126,10 +134,29 @@ add_task(async function test_returns_without_app_version_or_with_matching_versio
         maxVersion: "1",
       }]
     }]
+  }, {
+    willMatch: true,
+    versionRange: [{
+      targetApplication: [{
+        guid: TOOLKIT_ID,
+        minVersion: "0",
+      }]
+    }]
+  }, {
+    willMatch: true,
+    versionRange: [{
+      targetApplication: [{
+        guid: TOOLKIT_ID,
+        minVersion: "0",
+        maxVersion: "9999",
+      }]
+    }]
+    // We can't test the false case with maxVersion for toolkit, because the toolkit version
+    // is 0 in xpcshell.
   }]);
 
   const list = await client.get();
-  equal(list.length, 3);
+  equal(list.length, 5);
   ok(list.every(e => e.willMatch));
 });
 add_task(clear_state);

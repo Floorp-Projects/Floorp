@@ -1,0 +1,36 @@
+job-defaults:
+    platform: linux64/opt
+    treeherder:
+        kind: test
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+
+upload:
+    description: Generate and store the web-platform-tests manifest
+    treeherder:
+        symbol: Wm
+    index:
+        product: source
+        job-name: manifest-upload
+    run:
+        using: run-task
+        command: >
+            cd /builds/worker/checkouts/gecko
+            && ./mach wpt-manifest-update
+            && gzip testing/web-platform/meta/MANIFEST.json testing/web-platform/mozilla/meta/MANIFEST.json
+    worker:
+        artifacts:
+            - type: file
+              path: /builds/worker/checkouts/gecko/testing/web-platform/meta/MANIFEST.json.gz
+              name: public/manifest.json.gz
+            - type: file
+              path: /builds/worker/checkouts/gecko/testing/web-platform/mozilla/meta/MANIFEST.json.gz
+              name: public/moz_manifest.json.gz
+        max-run-time: 3600
+    when:
+        files-changed:
+            - 'testing/web-platform/tests/**'
+            - 'testing/web-platform/mozilla/tests/**'

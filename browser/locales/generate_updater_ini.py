@@ -12,6 +12,7 @@ import codecs
 import re
 import shutil
 
+
 def main(output, updater_ini, updater_ini_append, locale=None):
     assert(locale is not None)
     fixup_re = re.compile('^(Info|Title)Text=')
@@ -19,7 +20,8 @@ def main(output, updater_ini, updater_ini_append, locale=None):
     with codecs.open(updater_ini, 'rb', 'utf_8') as f:
         for line in f:
             line = fixup_re.sub(r'\1=', line)
-            line = line.replace('%MOZ_APP_DISPLAYNAME%', buildconfig.substs['MOZ_APP_DISPLAYNAME'])
+            line = line.replace('%MOZ_APP_DISPLAYNAME%',
+                                buildconfig.substs['MOZ_APP_DISPLAYNAME'])
             output.write(line)
     if buildconfig.substs['OS_TARGET'] == 'WINNT':
         # Also append the contents of `updater_ini_append`.

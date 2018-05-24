@@ -35,7 +35,8 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
 
       await PTU.DialogContentUtils.waitForState(content, (state) => {
-        return state.page.id == "address-page";
+        return state.page.id == "address-page" &&
+               state["address-page"].selectedStateKey == "selectedShippingAddress";
       }, "Address page is shown first during on-boarding if there are no saved addresses");
     });
 
@@ -46,6 +47,16 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
     let headerTextContent =
       spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getElementTextContent, "header");
     ok(headerTextContent, "Total Header contains text");
+
+    info("Check if the page title is visible on the address page");
+    let isAddressPageTitleVisible = spawnPaymentDialogTask(frame,
+                                                           PTU.DialogContentTasks.isElementVisible,
+                                                           "address-form h1");
+    ok(isAddressPageTitleVisible, "Address page title is visible");
+    let titleTextContent =
+      spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getElementTextContent,
+                             "address-form h1");
+    ok(titleTextContent, "Address page title contains text");
 
     let isAddressPageCancelButtonVisible =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
@@ -72,6 +83,17 @@ add_task(async function test_onboarding_wizard_without_saved_addresses_and_saved
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.isElementVisible,
                                    "basic-card-form .save-button");
     ok(isBasicCardPageSaveButtonVisible, "Basic card page is rendered");
+
+    let isBasicCardPageTitleVisible = spawnPaymentDialogTask(frame,
+                                                             // eslint-disable-next-line max-len
+                                                             PTU.DialogContentTasks.isElementVisible,
+                                                             "basic-card-form h1");
+    ok(isBasicCardPageTitleVisible, "Basic card page title is visible");
+    titleTextContent =
+      spawnPaymentDialogTask(frame,
+                             PTU.DialogContentTasks.getElementTextContent,
+                             "basic-card-form h1");
+    ok(titleTextContent, "Basic card page title contains text");
 
     await spawnPaymentDialogTask(frame, async function() {
       let {

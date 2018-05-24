@@ -2907,7 +2907,14 @@ nsDOMWindowUtils::CheckAndClearPaintedState(Element* aElement, bool* aResult)
     }
   }
 
-  *aResult = frame->CheckAndClearPaintedState();
+  while (frame) {
+    if (!frame->CheckAndClearPaintedState()) {
+      *aResult = false;
+      return NS_OK;
+    }
+    frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame);
+  }
+  *aResult = true;
   return NS_OK;
 }
 
@@ -2936,7 +2943,14 @@ nsDOMWindowUtils::CheckAndClearDisplayListState(Element* aElement, bool* aResult
     }
   }
 
-  *aResult = frame->CheckAndClearDisplayListState();
+  while (frame) {
+    if (!frame->CheckAndClearDisplayListState()) {
+      *aResult = false;
+      return NS_OK;
+    }
+    frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame);
+  }
+  *aResult = true;
   return NS_OK;
 
 }

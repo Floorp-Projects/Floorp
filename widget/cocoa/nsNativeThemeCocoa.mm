@@ -4099,6 +4099,12 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    case NS_THEME_SEPARATOR:
+    {
+      aResult->SizeTo(1, 1);
+      break;
+    }
+
     case NS_THEME_TREETWISTY:
     case NS_THEME_TREETWISTYOPEN:
     {

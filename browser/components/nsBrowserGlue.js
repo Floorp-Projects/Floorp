@@ -141,7 +141,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
 });
 
-/* global AboutHome:false, ContentPrefServiceParent:false, ContentSearch:false,
+/* global ContentPrefServiceParent:false, ContentSearch:false,
           UpdateListener:false, webrtcUI:false */
 
 /**
@@ -152,7 +152,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 let initializedModules = {};
 
 [
-  ["AboutHome", "resource:///modules/AboutHome.jsm", "init"],
   ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm", "alwaysInit"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
@@ -210,8 +209,6 @@ const listeners = {
   },
 
   mm: {
-    "AboutHome:MaybeShowMigrateMessage": ["AboutHome"],
-    "AboutHome:RequestUpdate": ["AboutHome"],
     "Content:Click": ["ContentClick"],
     "ContentSearch": ["ContentSearch"],
     "FormValidation:ShowPopup": ["FormValidationHandler"],
