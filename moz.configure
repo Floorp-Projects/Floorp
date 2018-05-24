@@ -403,6 +403,39 @@ def tup_progs(build_backends):
 
 tup = check_prog('TUP', tup_progs)
 
+@depends_if(tup)
+@checking('for tup version')
+@imports('re')
+def tup_version(tup):
+    tup_min_version = '0.7.6'
+    out = check_cmd_output(tup, '--version',
+                           onerror=lambda: die('Failed to get tup version'))
+    m = re.search(r'tup v?([0-9]+\.[0-9]+\.[0-9]+)', out)
+
+    if not m:
+        raise FatalCheckError('Unknown version of tup: %s' % out)
+    ver = Version(m.group(1))
+
+    if ver < tup_min_version:
+        raise FatalCheckError('To use the tup backend you must have tup version '
+                              '%s or greater in your path' % tup_min_version)
+    return ver
+
+@depends_if(tup)
+@checking('for tup ldpreload dependency checker')
+def tup_is_ldpreload(tup):
+    out = check_cmd_output(tup, 'server',
+                           onerror=lambda: die('Failed to get tup dependency checker'))
+    if out.rstrip() != 'ldpreload':
+        raise FatalCheckError('To use the tup backend, please use a version '
+                              'of tup compiled with the ldpreload dependency '
+                              'checker. Either compile tup locally with '
+                              'CONFIG_TUP_SERVER=ldpreload in your tup.config '
+                              'file, or use the version from the toolchain '
+                              'task via |./mach artifact toolchain '
+                              '--from-build linux64-tup|')
+    return True
+
 # watchman detection
 # ==============================================================
 
