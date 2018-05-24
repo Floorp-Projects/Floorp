@@ -290,3 +290,14 @@ devtools.main:
     description: User is editing a CSS rule by clicking on or next to a CSS property, enabling / disabling a rule or creating a new property.
     release_channel_collection: opt-out
     expiry_version: never
+  sidepanel_changed:
+    objects: ["inspector"]
+    bug_numbers: [1463083]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User has switched sidepanel tabs.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      oldpanel: The panel the user is switching from
+      newpanel: The panel the user is switching to
