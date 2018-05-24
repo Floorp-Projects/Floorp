@@ -19,13 +19,6 @@
 #include "vm/ReceiverGuard.h"
 #include "vm/Stack.h"
 
-/*
- * For cacheable native iterators, whether the iterator is currently active.
- * Not serialized by XDR.
- */
-#define JSITER_ACTIVE       0x1000
-#define JSITER_UNREUSABLE   0x2000
-
 namespace js {
 
 class PropertyIteratorObject;
@@ -59,9 +52,20 @@ struct NativeIterator
 
   public:
     uint32_t guard_key = 0;
-    uint32_t flags = 0;
+
+  public:
+    // For cacheable native iterators, whether the iterator is currently
+    // active.  Not serialized by XDR.
+    struct Flags
+    {
+        static constexpr uint32_t Active = 0x1;
+        static constexpr uint32_t NotReusable = 0x2;
+        static constexpr uint32_t All = Active | NotReusable;
+    };
 
   private:
+    uint32_t flags_ = 0; // consists of Flags bits
+
     /* While in compartment->enumerators, these form a doubly linked list. */
     NativeIterator* next_ = nullptr;
     NativeIterator* prev_ = nullptr;
@@ -185,6 +189,29 @@ struct NativeIterator
     void incCursor() {
         propertyCursor_++;
     }
+
+    bool isActive() const {
+        return flags_ & Flags::Active;
+    }
+
+    void markActive() {
+        flags_ |= Flags::Active;
+    }
+
+    void markInactive() {
+        flags_ &= ~Flags::Active;
+    }
+
+    bool isReusable() const {
+        // Cached NativeIterators are reusable if they're not active and
+        // aren't marked as not reusable, i.e. if no flags are set.
+        return flags_ == 0;
+    }
+
+    void markNotReusable() {
+        flags_ |= Flags::NotReusable;
+    }
+
     void link(NativeIterator* other) {
         /* A NativeIterator cannot appear in the enumerator list twice. */
         MOZ_ASSERT(!next_ && !prev_);
@@ -219,6 +246,10 @@ struct NativeIterator
 
     static constexpr size_t offsetOfPropertiesEnd() {
         return offsetof(NativeIterator, propertiesEnd_);
+    }
+
+    static constexpr size_t offsetOfFlags() {
+        return offsetof(NativeIterator, flags_);
     }
 
     static constexpr size_t offsetOfNext() {
