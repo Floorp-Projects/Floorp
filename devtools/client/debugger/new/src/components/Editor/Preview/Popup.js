@@ -31,8 +31,6 @@ var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
 
 var _editor = require("../../../utils/editor/index");
 
-var _preview = require("../../../utils/preview");
-
 var _Svg = require("devtools/client/debugger/new/dist/vendors").vendored["Svg"];
 
 var _Svg2 = _interopRequireDefault(_Svg);
@@ -137,31 +135,22 @@ class Popup extends _react.Component {
     });
   }
 
-  getObjectProperties() {
+  getChildren() {
     const {
       popupObjectProperties
     } = this.props;
     const root = this.getRoot();
     const value = getValue(root);
+    const actor = value ? value.actor : null;
+    const loadedRootProperties = popupObjectProperties[actor];
 
-    if (!value) {
-      return null;
-    }
-
-    return popupObjectProperties[value.actor];
-  }
-
-  getChildren() {
-    const properties = this.getObjectProperties();
-    const root = this.getRoot();
-
-    if (!properties) {
+    if (!loadedRootProperties) {
       return null;
     }
 
     const children = getChildren({
       item: root,
-      loadedProperties: new Map([[root.path, properties]])
+      loadedProperties: new Map([[root.path, loadedRootProperties]])
     });
 
     if (children.length > 0) {
@@ -232,12 +221,12 @@ class Popup extends _react.Component {
 
     let header = null;
 
-    if ((0, _preview.isImmutable)(this.getObjectProperties())) {
+    if (extra.immutable) {
       header = this.renderImmutable(extra.immutable);
       roots = roots.filter(r => r.type != NODE_TYPES.PROTOTYPE);
     }
 
-    if ((0, _preview.isReactComponent)(this.getObjectProperties())) {
+    if (extra.react) {
       header = this.renderReact(extra.react);
       roots = roots.filter(r => ["state", "props"].includes(r.name));
     }

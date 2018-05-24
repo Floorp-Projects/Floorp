@@ -2146,7 +2146,7 @@ async function getAllGeneratedLocations(location, originalSource) {
   }));
 }
 
-async function getOriginalLocation(location, { search } = {}) {
+async function getOriginalLocation(location) {
   if (!isGeneratedId(location.sourceId)) {
     return location;
   }
@@ -2156,31 +2156,11 @@ async function getOriginalLocation(location, { search } = {}) {
     return location;
   }
 
-  // First check for an exact match
-  let match = map.originalPositionFor({
+  const { source: sourceUrl, line, column } = map.originalPositionFor({
     line: location.line,
     column: location.column == null ? 0 : location.column
   });
 
-  // If there is not an exact match, look for a match with a bias at the
-  // current location and then on subsequent lines
-  if (search) {
-    let line = location.line;
-    let column = location.column == null ? 0 : location.column;
-
-    while (match.source === null) {
-      match = map.originalPositionFor({
-        line,
-        column,
-        bias: SourceMapConsumer[search]
-      });
-
-      line += search == "LEAST_UPPER_BOUND" ? 1 : -1;
-      column = search == "LEAST_UPPER_BOUND" ? 0 : Infinity;
-    }
-  }
-
-  const { source: sourceUrl, line, column } = match;
   if (sourceUrl == null) {
     // No url means the location didn't map.
     return location;
