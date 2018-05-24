@@ -14,11 +14,11 @@ ChromeUtils.import("resource://normandy/lib/Addons.jsm");
 ChromeUtils.import("resource://normandy/lib/LogManager.jsm");
 ChromeUtils.import("resource://normandy/lib/Storage.jsm");
 ChromeUtils.import("resource://normandy/lib/Heartbeat.jsm");
-ChromeUtils.import("resource://normandy/lib/FilterExpressions.jsm");
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm");
 ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
-ChromeUtils.import("resource://normandy/lib/Sampling.jsm");
 
+ChromeUtils.defineModuleGetter(
+  this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
 ChromeUtils.defineModuleGetter(this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 ChromeUtils.defineModuleGetter(
   this, "AddonStudies", "resource://normandy/lib/AddonStudies.jsm");

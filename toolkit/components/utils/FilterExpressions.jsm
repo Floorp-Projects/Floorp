@@ -5,10 +5,10 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-ChromeUtils.import("resource://normandy/lib/Sampling.jsm");
-ChromeUtils.import("resource://normandy/lib/PreferenceFilters.jsm");
 
-ChromeUtils.defineModuleGetter(this, "mozjexl", "resource://normandy-vendor/mozjexl.js");
+ChromeUtils.defineModuleGetter(this, "PreferenceFilters", "resource://gre/modules/components-utils/PreferenceFilters.jsm");
+ChromeUtils.defineModuleGetter(this, "Sampling", "resource://gre/modules/components-utils/Sampling.jsm");
+ChromeUtils.defineModuleGetter(this, "mozjexl", "resource://gre/modules/components-utils/mozjexl.js");
 
 var EXPORTED_SYMBOLS = ["FilterExpressions"];
 

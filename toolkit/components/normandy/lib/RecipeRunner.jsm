@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "timerManager",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Storage: "resource://normandy/lib/Storage.jsm",
-  FilterExpressions: "resource://normandy/lib/FilterExpressions.jsm",
+  FilterExpressions: "resource://gre/modules/components-utils/FilterExpressions.jsm",
   NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
