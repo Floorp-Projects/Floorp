@@ -1,1 +1,2 @@
-<window id="reftest" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="window.arguments[0]()"></window>
+<window id="reftest" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+</window>
