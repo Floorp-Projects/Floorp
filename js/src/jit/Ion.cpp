@@ -1893,21 +1893,51 @@ CompileBackEnd(MIRGenerator* mir)
     return GenerateCode(mir, lir);
 }
 
-// Find a builder which the current thread can finish.
-static IonBuilder*
-GetFinishedBuilder(JSRuntime* rt, GlobalHelperThreadState::IonBuilderVector& finished,
-                   const AutoLockHelperThreadState& locked)
+static inline bool
+TooManyUnlinkedBuilders(JSRuntime* rt)
 {
-    for (size_t i = 0; i < finished.length(); i++) {
-        IonBuilder* testBuilder = finished[i];
-        if (testBuilder->script()->runtimeFromAnyThread() == rt) {
-            HelperThreadState().remove(finished, &i);
-            rt->jitRuntime()->numFinishedBuildersRef(locked)--;
-            return testBuilder;
-        }
-    }
+    static const size_t MaxUnlinkedBuilders = 100;
+    return rt->jitRuntime()->ionLazyLinkListSize() > MaxUnlinkedBuilders;
+}
 
-    return nullptr;
+static void
+MoveFinshedBuildersToLazyLinkList(JSRuntime* rt, const AutoLockHelperThreadState& lock)
+{
+    // Incorporate any off thread compilations for the runtime which have
+    // finished, failed or have been cancelled.
+
+    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
+
+    for (size_t i = 0; i < finished.length(); i++) {
+        // Find a finished builder for the runtime.
+        IonBuilder* builder = finished[i];
+        if (builder->script()->runtimeFromAnyThread() != rt)
+            continue;
+
+        HelperThreadState().remove(finished, &i);
+        rt->jitRuntime()->numFinishedBuildersRef(lock)--;
+
+        JSScript* script = builder->script();
+        MOZ_ASSERT(script->hasBaselineScript());
+        script->baselineScript()->setPendingIonBuilder(rt, script, builder);
+        rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
+    }
+}
+
+static void
+EagerlyLinkExcessBuilders(JSContext* cx, AutoLockHelperThreadState& lock)
+{
+    JSRuntime* rt = cx->runtime();
+    MOZ_ASSERT(TooManyUnlinkedBuilders(rt));
+
+    do {
+        jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
+        RootedScript script(cx, builder->script());
+
+        AutoUnlockHelperThreadState unlock(lock);
+        AutoRealm ar(cx, script);
+        jit::LinkIonScript(cx, script);
+    } while (TooManyUnlinkedBuilders(rt));
 }
 
 void
@@ -1920,31 +1950,17 @@ AttachFinishedCompilations(JSContext* cx)
         return;
 
     AutoLockHelperThreadState lock;
-    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
 
-    // Incorporate any off thread compilations for the runtime which have
-    // finished, failed or have been cancelled.
     while (true) {
-        // Find a finished builder for the runtime.
-        IonBuilder* builder = GetFinishedBuilder(rt, finished, lock);
-        if (!builder)
+        MoveFinshedBuildersToLazyLinkList(rt, lock);
+
+        if (!TooManyUnlinkedBuilders(rt))
             break;
 
-        JSScript* script = builder->script();
-        MOZ_ASSERT(script->hasBaselineScript());
-        script->baselineScript()->setPendingIonBuilder(rt, script, builder);
-        rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
+        EagerlyLinkExcessBuilders(cx, lock);
 
-        // Don't keep more than 100 lazy link builders in a runtime.
-        // Link the oldest ones immediately.
-        while (rt->jitRuntime()->ionLazyLinkListSize() > 100) {
-            jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
-            RootedScript script(cx, builder->script());
-
-            AutoUnlockHelperThreadState unlock(lock);
-            AutoRealm ar(cx, script);
-            jit::LinkIonScript(cx, script);
-        }
+        // Linking releases the lock so we must now check the finished list
+        // again.
     }
 
     MOZ_ASSERT(!rt->jitRuntime()->numFinishedBuilders());
