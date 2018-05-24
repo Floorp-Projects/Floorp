@@ -2579,7 +2579,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         r->sweepSelfHostingScriptSource();
         r->sweepDebugEnvironments();
         r->sweepJitRealm();
-        r->sweepNativeIterators();
+        r->sweepObjectRealm();
         r->sweepTemplateObjects();
     }
 }
@@ -5431,7 +5431,7 @@ SweepMisc(GCParallelTask* task)
         r->sweepTemplateObjects();
         r->sweepSavedStacks();
         r->sweepSelfHostingScriptSource();
-        r->sweepNativeIterators();
+        r->sweepObjectRealm();
         r->sweepRegExps();
     }
 }
