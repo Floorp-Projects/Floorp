@@ -22,6 +22,10 @@ public:
 
   static PrincipalKind Kind() { return eExpandedPrincipal; }
 
+  // For use from the XPCOM factory constructor only.  Do not ever use this
+  // constructor by hand!
+  ExpandedPrincipal();
+
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
 
