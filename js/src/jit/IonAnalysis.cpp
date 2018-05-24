@@ -4212,7 +4212,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext* cx, HandleFunction fun,
     if (!jit::CanLikelyAllocateMoreExecutableMemory())
         return true;
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return false;
 
     if (!script->hasBaselineScript()) {
@@ -4466,7 +4466,7 @@ jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg)
     if (!jit::CanLikelyAllocateMoreExecutableMemory())
         return true;
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return false;
 
     MIRGraph graph(&temp);

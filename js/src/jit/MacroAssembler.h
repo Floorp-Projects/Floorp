@@ -33,7 +33,7 @@
 #include "jit/AtomicOp.h"
 #include "jit/IonInstrumentation.h"
 #include "jit/IonTypes.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/TemplateObject.h"
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"

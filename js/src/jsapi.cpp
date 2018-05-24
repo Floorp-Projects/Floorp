@@ -1294,7 +1294,7 @@ JS_GlobalLexicalEnvironment(JSObject* obj)
 extern JS_PUBLIC_API(bool)
 JS_HasExtensibleLexicalEnvironment(JSObject* obj)
 {
-    return obj->is<GlobalObject>() || obj->compartment()->getNonSyntacticLexicalEnvironment(obj);
+    return obj->is<GlobalObject>() || ObjectRealm::get(obj).getNonSyntacticLexicalEnvironment(obj);
 }
 
 extern JS_PUBLIC_API(JSObject*)
@@ -1304,7 +1304,7 @@ JS_ExtensibleLexicalEnvironment(JSObject* obj)
     if (obj->is<GlobalObject>())
         lexical = JS_GlobalLexicalEnvironment(obj);
     else
-        lexical = obj->compartment()->getNonSyntacticLexicalEnvironment(obj);
+        lexical = ObjectRealm::get(obj).getNonSyntacticLexicalEnvironment(obj);
     MOZ_ASSERT(lexical);
     return lexical;
 }
@@ -3630,7 +3630,7 @@ CreateNonSyntacticEnvironmentChain(JSContext* cx, AutoObjectVector& envChain,
         //
         // TODOshu: disallow the subscript loader from using non-distinguished
         // objects as dynamic scopes.
-        env.set(cx->compartment()->getOrCreateNonSyntacticLexicalEnvironment(cx, env));
+        env.set(ObjectRealm::get(env).getOrCreateNonSyntacticLexicalEnvironment(cx, env));
         if (!env)
             return false;
     } else {

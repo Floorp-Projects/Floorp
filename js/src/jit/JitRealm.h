@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_JitCompartment_h
-#define jit_JitCompartment_h
+#ifndef jit_JitRealm_h
+#define jit_JitRealm_h
 
 #include "mozilla/Array.h"
 #include "mozilla/DebugOnly.h"
@@ -59,7 +59,7 @@ class JitcodeGlobalTable;
 class JitRuntime
 {
   private:
-    friend class JitCompartment;
+    friend class JitRealm;
 
     // Executable allocator for all code except wasm code.
     MainThreadData<ExecutableAllocator> execAlloc_;
@@ -449,7 +449,7 @@ enum class BailoutReturnStub {
     Count
 };
 
-class JitCompartment
+class JitRealm
 {
     friend class JitActivation;
 
@@ -475,9 +475,9 @@ class JitCompartment
                              BailoutReturnStub::Count,
                              BailoutReturnStubInfo> bailoutReturnStubInfo_;
 
-    // The JitCompartment stores stubs to concatenate strings inline and perform
-    // RegExp calls inline.  These bake in zone and compartment specific
-    // pointers and can't be stored in JitRuntime.
+    // The JitRealm stores stubs to concatenate strings inline and perform
+    // RegExp calls inline.  These bake in zone and realm specific pointers
+    // and can't be stored in JitRuntime.
     //
     // These are weak pointers, but they can by accessed during off-thread Ion
     // compilation and therefore can't use the usual read barrier. Instead, we
@@ -551,8 +551,8 @@ class JitCompartment
         return bailoutReturnStubInfo_[kind].addr;
     }
 
-    JitCompartment();
-    ~JitCompartment();
+    JitRealm();
+    ~JitRealm();
 
     MOZ_MUST_USE bool initialize(JSContext* cx);
 
@@ -564,7 +564,7 @@ class JitCompartment
         return stubs_[StringConcat];
     }
 
-    void sweep(JSCompartment* compartment);
+    void sweep(JS::Realm* realm);
 
     void discardStubs() {
         for (ReadBarrieredJitCode& stubRef : stubs_)
@@ -623,7 +623,7 @@ class JitCompartment
     bool stringsCanBeInNursery;
 };
 
-// Called from JSCompartment::discardJitCode().
+// Called from Zone::discardJitCode().
 void InvalidateAll(FreeOp* fop, JS::Zone* zone);
 void FinishInvalidation(FreeOp* fop, JSScript* script);
 
@@ -681,4 +681,4 @@ class MOZ_STACK_CLASS MaybeAutoWritableJitCode
 } // namespace jit
 } // namespace js
 
-#endif /* jit_JitCompartment_h */
+#endif /* jit_JitRealm_h */

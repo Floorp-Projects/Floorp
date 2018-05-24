@@ -2578,8 +2578,8 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         r->sweepGlobalObject();
         r->sweepSelfHostingScriptSource();
         r->sweepDebugEnvironments();
-        r->sweepJitCompartment();
-        r->sweepNativeIterators();
+        r->sweepJitRealm();
+        r->sweepObjectRealm();
         r->sweepTemplateObjects();
     }
 }
@@ -5431,7 +5431,7 @@ SweepMisc(GCParallelTask* task)
         r->sweepTemplateObjects();
         r->sweepSavedStacks();
         r->sweepSelfHostingScriptSource();
-        r->sweepNativeIterators();
+        r->sweepObjectRealm();
         r->sweepRegExps();
     }
 }
@@ -5552,8 +5552,8 @@ GCRuntime::sweepJitDataOnMainThread(FreeOp* fop)
             js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
         }
 
-        for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
-            c->sweepJitCompartment();
+        for (SweepGroupRealmsIter r(rt); !r.done(); r.next())
+            r->sweepJitRealm();
 
         for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
             if (jit::JitZone* jitZone = zone->jitZone())

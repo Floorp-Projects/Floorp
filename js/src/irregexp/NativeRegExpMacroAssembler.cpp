@@ -107,7 +107,7 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(JSContext* cx, LifoAlloc*
 RegExpCode
 NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
 {
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return RegExpCode();
 
     JitSpew(SPEW_PREFIX "GenerateCode");
