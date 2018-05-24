@@ -93,18 +93,18 @@ struct StaticMutex
 {
   SRWLOCK mMutex;
 
-  constexpr StaticMutex()
-    : mMutex(SRWLOCK_INIT)
-  {
-  }
-
   inline void Lock() { AcquireSRWLockExclusive(&mMutex); }
 
   inline void Unlock() { ReleaseSRWLockExclusive(&mMutex); }
 };
+
+// Normally, we'd use a constexpr constructor, but MSVC likes to create
+// static initializers anyways.
+#define STATIC_MUTEX_INIT SRWLOCK_INIT
+
 #else
-struct StaticMutex : public Mutex
-{
+typedef Mutex StaticMutex;
+
 #if defined(XP_DARWIN)
 #define STATIC_MUTEX_INIT OS_SPINLOCK_INIT
 #elif defined(XP_LINUX) && !defined(ANDROID)
@@ -112,11 +112,7 @@ struct StaticMutex : public Mutex
 #else
 #define STATIC_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
 #endif
-  constexpr StaticMutex()
-    : Mutex{ STATIC_MUTEX_INIT }
-  {
-  }
-};
+
 #endif
 
 template<typename T>
