@@ -23,7 +23,7 @@ function renderExceptionSummary(exception) {
 
   const preview = exception.preview;
 
-  if (!preview || !preview.name || !preview.message) {
+  if (!preview) {
     return;
   }
 
