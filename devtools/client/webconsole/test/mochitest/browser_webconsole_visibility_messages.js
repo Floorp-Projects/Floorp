@@ -41,7 +41,7 @@ add_task(async function() {
   await waitFor(() => (document.visibilityState == "hidden"));
 
   const onAllMessagesInStore = new Promise(done => {
-    const store = hud.ui.newConsoleOutput.getStore();
+    const store = hud.ui.consoleOutput.getStore();
     store.subscribe(() => {
       const messages = store.getState().messages.messagesById.size;
       // Also consider the "in-console log" message

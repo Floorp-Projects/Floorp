@@ -15,12 +15,12 @@ const {
   getPrivatePacket,
 } = require("devtools/client/webconsole/test/helpers");
 
-const NewConsoleOutputWrapper =
-  require("devtools/client/webconsole/new-console-output-wrapper");
+const WebConsoleOutputWrapper =
+  require("devtools/client/webconsole/webconsole-output-wrapper");
 const { messagesAdd } =
   require("devtools/client/webconsole/actions/messages");
 
-function getNewConsoleOutputWrapper() {
+function getWebConsoleOutputWrapper() {
   const hud = {
     proxy: {
       releaseActor: () => {},
@@ -31,12 +31,12 @@ function getNewConsoleOutputWrapper() {
       },
     },
   };
-  return new NewConsoleOutputWrapper(null, hud);
+  return new WebConsoleOutputWrapper(null, hud);
 }
 
-describe("NewConsoleOutputWrapper", () => {
+describe("WebConsoleOutputWrapper", () => {
   it("clears queues when dispatchMessagesClear is called", () => {
-    const ncow = getNewConsoleOutputWrapper();
+    const ncow = getWebConsoleOutputWrapper();
     ncow.queuedMessageAdds.push({fakePacket: "message"});
     ncow.queuedMessageUpdates.push({fakePacket: "message-update"});
     ncow.queuedRequestUpdates.push({fakePacket: "request-update"});
@@ -49,7 +49,7 @@ describe("NewConsoleOutputWrapper", () => {
   });
 
   it("removes private packets from message queue on dispatchPrivateMessagesClear", () => {
-    const ncow = getNewConsoleOutputWrapper();
+    const ncow = getWebConsoleOutputWrapper();
 
     const publicLog = stubPackets.get("console.log('mymap')");
     ncow.queuedMessageAdds.push(
@@ -65,7 +65,7 @@ describe("NewConsoleOutputWrapper", () => {
 
   it("removes private packets from network update queue on dispatchPrivateMessagesClear",
     () => {
-      const ncow = getNewConsoleOutputWrapper();
+      const ncow = getWebConsoleOutputWrapper();
 
       const postId = Symbol();
       const getId = Symbol();
@@ -98,7 +98,7 @@ describe("NewConsoleOutputWrapper", () => {
 
   it("removes private packets from network request queue on dispatchPrivateMessagesClear",
     () => {
-      const ncow = getNewConsoleOutputWrapper();
+      const ncow = getWebConsoleOutputWrapper();
 
       ncow.getStore().dispatch(messagesAdd([
         stubPackets.get("GET request"),
