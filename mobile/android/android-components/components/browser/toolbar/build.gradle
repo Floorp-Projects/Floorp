@@ -27,7 +27,7 @@ android {
 }
 
 dependencies {
-    implementation project(':concept-toolbar')
+    api project(':concept-toolbar')
 
     implementation project(':browser-menu')
 
