@@ -922,20 +922,29 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
      */
     if (!ss->firstHsDone) {
         PRBool allowEarlySend = PR_FALSE;
+        PRBool firstClientWrite = PR_FALSE;
 
         ssl_Get1stHandshakeLock(ss);
-        if (ss->opt.enableFalseStart ||
-            (ss->opt.enable0RttData && !ss->sec.isServer)) {
+        /* The client can sometimes send before the handshake is fully
+         * complete. In TLS 1.2: false start; in TLS 1.3: 0-RTT. */
+        if (!ss->sec.isServer &&
+            (ss->opt.enableFalseStart || ss->opt.enable0RttData)) {
             ssl_GetSSL3HandshakeLock(ss);
-            /* The client can sometimes send before the handshake is fully
-             * complete. In TLS 1.2: false start; in TLS 1.3: 0-RTT. */
             zeroRtt = ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
                       ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted;
             allowEarlySend = ss->ssl3.hs.canFalseStart || zeroRtt;
+            firstClientWrite = ss->ssl3.hs.ws == idle_handshake;
             ssl_ReleaseSSL3HandshakeLock(ss);
         }
         if (!allowEarlySend && ss->handshake) {
             rv = ssl_Do1stHandshake(ss);
+        }
+        if (firstClientWrite) {
+            /* Wait until after sending ClientHello and double-check 0-RTT. */
+            ssl_GetSSL3HandshakeLock(ss);
+            zeroRtt = ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+                      ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted;
+            ssl_ReleaseSSL3HandshakeLock(ss);
         }
         ssl_Release1stHandshakeLock(ss);
     }
