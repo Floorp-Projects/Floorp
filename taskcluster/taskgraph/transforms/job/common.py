@@ -194,7 +194,7 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
         ])
 
 
-def docker_worker_use_artifacts(config, job, taskdesc, use_artifacts):
+def support_use_artifacts(config, job, taskdesc, use_artifacts):
     """Set a JSON object of artifact URLs in an environment variable.
 
     This will tell the run-task script to download the artifacts.
