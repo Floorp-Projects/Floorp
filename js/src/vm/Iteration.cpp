@@ -666,7 +666,7 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
     // ...and no properties.
     propertyCursor_(reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
     propertiesEnd_(propertyCursor_),
-    guard_key(guardKey),
+    guardKey_(guardKey),
     flags_(0)
 {
     MOZ_ASSERT(!*hadError);
@@ -729,7 +729,7 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
             pobj = pobj->staticPrototype();
         } while (pobj);
 
-        guard_key = key;
+        guardKey_ = key;
         MOZ_ASSERT(i == numGuards);
     }
 
@@ -766,7 +766,7 @@ js::NewEmptyPropertyIterator(JSContext* cx)
 IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
 {
     NativeIterator* ni = obj->getNativeIterator();
-    if (ni->guard_key != lookup.key || ni->guardCount() != lookup.numGuards)
+    if (ni->guardKey() != lookup.key || ni->guardCount() != lookup.numGuards)
         return false;
 
     return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()), lookup.guards,
@@ -863,7 +863,7 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
 
     IteratorHashPolicy::Lookup lookup(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()),
                                       ni->guardCount(),
-                                      ni->guard_key);
+                                      ni->guardKey());
 
     ObjectRealm::IteratorCache& cache = ObjectRealm::get(obj).iteratorCache;
     bool ok;
