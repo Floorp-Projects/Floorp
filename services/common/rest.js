@@ -275,6 +275,11 @@ RESTRequest.prototype = {
       channel.setRequestHeader(key, headers[key], false);
     }
 
+    // REST requests accept JSON by default
+    if (!headers.accept) {
+      channel.setRequestHeader("accept", "application/json;q=0.9,*/*;q=0.2", false);
+    }
+
     // Set HTTP request body.
     if (method == "PUT" || method == "POST" || method == "PATCH") {
       // Convert non-string bodies into JSON with utf-8 encoding. If a string
