@@ -370,6 +370,7 @@ class AutofillRecords {
 
     Services.obs.notifyObservers({wrappedJSObject: {
       sourceSync,
+      guid: record.guid,
       collectionName: this._collectionName,
     }}, "formautofill-storage-changed", "add");
     return recordToSave.guid;
@@ -470,7 +471,10 @@ class AutofillRecords {
     recordFound.timeLastUsed = Date.now();
 
     this._store.saveSoon();
-    Services.obs.notifyObservers(null, "formautofill-storage-changed", "notifyUsed");
+    Services.obs.notifyObservers({wrappedJSObject: {
+      guid,
+      collectionName: this._collectionName,
+    }}, "formautofill-storage-changed", "notifyUsed");
   }
 
   /**
@@ -517,6 +521,7 @@ class AutofillRecords {
     this._store.saveSoon();
     Services.obs.notifyObservers({wrappedJSObject: {
       sourceSync,
+      guid,
       collectionName: this._collectionName,
     }}, "formautofill-storage-changed", "remove");
   }
@@ -837,6 +842,8 @@ class AutofillRecords {
     this._store.saveSoon();
     Services.obs.notifyObservers({wrappedJSObject: {
       sourceSync: true,
+      guid: remoteRecord.guid,
+      forkedGUID,
       collectionName: this._collectionName,
     }}, "formautofill-storage-changed", "reconcile");
 
@@ -1187,10 +1194,16 @@ class AutofillRecords {
     return mergedGUIDs;
   }
 
-  // A test-only helper.
-  _nukeAllRecords() {
+  /**
+   * Unconditionally remove all data and tombstones for this collection.
+   */
+  removeAll({sourceSync = false} = {}) {
     this._store.data[this._collectionName] = [];
-    // test-only, so there's no good reason to request a save!
+    this._store.saveSoon();
+    Services.obs.notifyObservers({wrappedJSObject: {
+      sourceSync,
+      collectionName: this._collectionName,
+    }}, "formautofill-storage-changed", "removeAll");
   }
 
   _stripComputedFields(record) {
