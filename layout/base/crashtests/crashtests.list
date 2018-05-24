@@ -535,4 +535,5 @@ load 1453196.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1414303.html
 load 1461812.html
 load 1462412.html
+load 1463940.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1461749.html
