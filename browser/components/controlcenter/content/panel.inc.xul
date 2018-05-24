@@ -72,7 +72,14 @@
                        crop="end">&trackingProtection.detectedNotBlocked4;</description>
           <description id="tracking-not-detected"
                        crop="end">&trackingProtection.notDetected4;</description>
+          <description id="tracking-reload-required"
+                       crop="end">&trackingProtection.reloadRequired;</description>
 
+          <button id="tracking-action-reload"
+                  class="tracking-protection-button"
+                  label="&trackingProtection.reload.label;"
+                  accesskey="&trackingProtection.reload.accesskey;"
+                  oncommand="TrackingProtection.hideIdentityPopupAndReload();" />
           <button id="tracking-action-unblock"
                   class="tracking-protection-button"
                   label="&trackingProtection.unblock2.label;"

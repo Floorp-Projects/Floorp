@@ -906,6 +906,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingProtection.detectedBlocked3 "&brandShortName; is blocking parts of the page that may track your browsing.">
 <!ENTITY trackingProtection.detectedNotBlocked4 "Trackers have been detected on this webpage.">
 <!ENTITY trackingProtection.notDetected4 "No trackers detected on this page.">
+<!ENTITY trackingProtection.reloadRequired "You have enabled Tracking Protection. To block all trackers please reload the current webpage.">
 <!-- LOCALIZATION NOTE (trackingProtection.unblock.label, trackingProtection.unblock.accesskey):
      The associated button with this label and accesskey is only shown when opening the control
      center while looking at a site with trackers in NON-private browsing mode. -->
@@ -918,6 +919,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY trackingProtection.unblockPrivate2.accesskey "T">
 <!ENTITY trackingProtection.block3.label "Turn Tracking Protection ON">
 <!ENTITY trackingProtection.block3.accesskey "T">
+<!ENTITY trackingProtection.reload.label "Reload This Page">
+<!ENTITY trackingProtection.reload.accesskey "R">
 
 <!ENTITY pluginNotification.showAll.label "Show All">
 <!ENTITY pluginNotification.showAll.accesskey "S">
