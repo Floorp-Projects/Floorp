@@ -21,7 +21,6 @@ EXTRA_JS_MODULES['services-common'] += [
     'kinto-storage-adapter.js',
     'logmanager.js',
     'observers.js',
-    'remote-settings.js',
     'rest.js',
     'uptake-telemetry.js',
     'utils.js',
