@@ -109,6 +109,12 @@ JSCompartment::init(JSContext* maybecx)
 bool
 ObjectRealm::init(JSContext* maybecx)
 {
+    if (!iteratorCache.init()) {
+        if (maybecx)
+            ReportOutOfMemory(maybecx);
+        return false;
+    }
+
     NativeIteratorSentinel sentinel(NativeIterator::allocateSentinel(maybecx));
     if (!sentinel)
         return false;
@@ -141,8 +147,7 @@ Realm::init(JSContext* maybecx)
         return false;
 
     if (!savedStacks_.init() ||
-        !varNames_.init() ||
-        !iteratorCache.init())
+        !varNames_.init())
     {
         if (maybecx)
             ReportOutOfMemory(maybecx);
@@ -1013,7 +1018,7 @@ Realm::purge()
     dtoaCache.purge();
     newProxyCache.purge();
     objectGroups.purge();
-    iteratorCache.clearAndShrink();
+    objects_.iteratorCache.clearAndShrink();
     arraySpeciesLookup.purge();
 }
 
