@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Ferifiearre troch: %1$s</string>
   <string name="site_security_icon_content_description">Sidefeilichheid</string>
   <string name="preference_autocomplete_duplicate_url_error">URL bestiet al</string>
+  <string name="find_in_page">Sykje op side</string>
+  <string name="http_auth_dialog_title">Autentikaasje fereaske</string>
+  <string name="http_auth_dialog_username">Brûkersnamme</string>
+  <string name="http_auth_dialog_password">Wachtwurd</string>
+  <string name="preference_performance_request_desktop_site">Desktopwebsite opfreegje</string>
 </resources>

@@ -8,6 +8,7 @@
   <string name="feedback_erase">तपाईंको ब्राउजिङ इतिहास मेटाईयो ।</string>
   <string name="search_hint">%1$s खोज्नुहोस्</string>
   <string name="menu_share">साझेदारी…</string>
+  <string name="menu_report_site_issue">साइटको समस्या दर्ता गर्नुहोस्‌</string>
   <string name="menu_open_with_default_browser2">%1$s मा खोल्नुहोस्</string>
   <string name="menu_open_with_a_browser2">…मा खोल्नुहोस्</string>
   <string name="menu_add_to_home_screen">गृह स्क्रिनमा थप्नुहोस्</string>
@@ -17,6 +18,7 @@
   <string name="menu_help">मद्दत</string>
   <string name="menu_rights">तपाईँका अधिकारहरु</string>
   <string name="menu_trackers_blocked_title">त्र्याकरहरु अवरुद्ध गरियो</string>
+  <string name="menu_custom_tab_branding">%1$s द्वारा संचालित</string>
   <string name="share_dialog_title">मार्फत बाड्नुहोस्</string>
   <string name="notification_erase_text">ब्राउजिङ्ग इतिहास खाली गर्नुहोस्</string>
   <string name="notification_action_open">खोल्नुहोस्</string>
@@ -24,6 +26,15 @@
   <string name="shortcut_erase_short_label">मेटाउनुहोस्</string>
   <string name="shortcut_erase_long_label">ब्राउजिङ्ग इतिहास खाली गर्नुहोस्</string>
   <string name="text_selection_search_action">निजी रूपमा खोज्नुहोस्</string>
+  <string name="preference_privacy_and_security_header">गोपनीयता र सुरक्षा</string>
+  <string name="preference_privacy_and_security_summary">ट्रयाकिङ, कुकीहरू, डाटा विकल्पहरु</string>
+  <string name="preference_search_summary">पूर्वनिर्धारित सेट गर्नुहोस्, स्वत: पूर्ण</string>
+  <string name="preference_mozilla_summary">%1$s को बारेमा, सहयोग</string>
+  <string name="preference_category_tracking_protection">ट्रयाकिङ्ग सुरक्षा</string>
+  <string name="preference_category_web_content">वेब सामग्री</string>
+  <string name="preference_category_switching_apps">अनुप्रयोगहरू बदल्ने</string>
+  <string name="preference_category_general">साधारण</string>
+  <string name="preference_category_data_collection_use">डेटा संग्रह र प्रयोग</string>
   <string name="preference_category_search">खोजी गर्नुहोस्</string>
   <string name="preference_search_engine_default">पूर्वनिर्धारित</string>
   <string name="preference_state_on">खुला</string>
@@ -36,11 +47,14 @@
   <string name="preference_autocomplete_action_add">+ अनुकूल URL थप्नुहोस्</string>
   <string name="preference_autocomplete_title_add">+ अनुकूल URL थप्नुहोस्</string>
   <string name="custom_autocomplete_quick_add">अनुकूल URL थप्नुहोस्</string>
+  <string name="preference_category_cookies">कुकीहरु र साइट डेटा</string>
+  <string name="preference_category_data_choices">डाटा विकल्पहरू</string>
   <string name="preference_autocomplete_title_remove">+ अनुकूल URL हटाउनुहोस्</string>
   <string name="preference_autocomplete_learn_more">थप जान्नुहोस्</string>
   <string name="preference_autocomplete_custom_summary">स्वत: पूर्ण URLहरू थप्नुहोस र व्यवस्थापन गर्नुहोस् ।</string>
   <string name="preference_autocomplete_add_title">थप्नु पर्ने URL</string>
   <string name="preference_autocomplete_add_hint">URL टाँस्नुहोस् वा प्रविष्ट गर्नुहोस्</string>
+  <string name="preference_autocomplete_add_example2">उदाहरण: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Example: example.com</string>
   <string name="preference_autocomplete_add_confirmation">नयाँ अनुकुल URL थपियो ।</string>
   <string name="preference_autocomplete_menu_remove">हटाउनुहोस्</string>
@@ -55,13 +69,16 @@
   <string name="preference_privacy_block_social">सामाजिक ट्रयाकहरू अवरुद्द गर्नुहोस्</string>
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रयाकरहरू ब्लक गर्नुहोस्</string>
   <string name="preference_privacy_block_content_summary2">सक्षम पार्नाले केहि पृष्ठहरू अनपेक्षित रूपमा व्यवहार गर्न सक्छन्</string>
+  <string name="preference_privacy_category_cookies">कुकीहरु ब्लक गर्नुहोस्</string>
   <string name="preference_privacy_should_block_cookies_no_option">होेइन</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">3rd-party कुकीहरू मात्र ब्लक गर्नुहोस्</string>
   <string name="preference_privacy_should_block_cookies_yes_option">हुन्छ</string>
   <string name="preference_privacy_secure_mode">चुपचाप</string>
   <string name="preference_privacy_stealth_summary">अनुप्रयोगहरू स्विच गर्दा वेबपेजहरू लुकाउनुहोस्</string>
   <string name="preference_category_performance">कार्यसम्पादन</string>
   <string name="preference_performance_block_webfonts">वेब फन्टहरू अवरुद्ध गर्नुहोस्</string>
   <string name="preference_performance_block_webfonts_summary">प्रतीकहरू वा तस्विरहरु हराउन सक्छन्</string>
+  <string name="preference_performance_block_javascript">JavaScript ब्लक गर्नुहोस्</string>
   <string name="preference_default_browser2">%1$s लाई पूर्वनिर्धारित ब्राउजर बनाउनुहोस्</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">उपयोग डाटा पठाउनुहोस्</string>
@@ -81,10 +98,12 @@
   <string name="search_add_manually_example">Example: example.com/search/?q=%s</string>
   <string name="search_add_confirmation">नयाँ खोजी इन्जिन थपियो ।</string>
   <string name="search_add_error_empty_name">खोजी इन्जिनको नाम प्रविष्ट गर्नुहोस्</string>
+  <string name="search_add_error_duplicate_name">एक स्थापित खोजि इन्जिनले पहिले नै त्यो नाम प्रयोग गरिरहेको छ ।</string>
   <string name="search_add_error_empty_search">खोजी स्ट्रिङ प्रविष्ट गर्नुहोस्</string>
   <string name="content_description_clear_input">आगत खाली गर्नुहोस्</string>
   <string name="content_description_dismiss_input">खारेज गर्नुहोस्</string>
   <string name="content_description_erase">ब्राउजिङ्ग इतिहास खाली गर्नुहोस्</string>
+  <string name="content_description_tab_counter">खुला ट्याबहरु: %1$s</string>
   <string name="content_description_lock">सुरक्षित जडान</string>
   <string name="accessibility_announcement_loading">लोड हुँदैछ</string>
   <string name="accessibility_announcement_loading_finished">वेबसाइट लोड भयो</string>
@@ -96,6 +115,7 @@
   <string name="content_description_blocking_switch">ट्रयाकरहरू अवरुद्द गर्नुहोस्</string>
   <string name="your_rights">तपाईँका अधिकारहरु</string>
   <string name="external_app_prompt_title">लिङ्कलाई अर्को अनुप्रयोगमा खोल्नुहोस्</string>
+  <string name="external_app_prompt_no_app_title">लिङ्क खोल्न सक्ने अनुप्रयोग खोज्नुहोस्</string>
   <string name="external_multiple_apps_matched_exit">निजी ब्राउजिङ्ग बन्द गर्न चाहनुहुन्छ ?</string>
   <string name="download_snackbar_finished">%1$s सकियो</string>
   <string name="download_snackbar_open">खोल्नुहोस्</string>
@@ -137,4 +157,9 @@
   <string name="security_popup_security_verified">रुजू गरेको: %1$s</string>
   <string name="site_security_icon_content_description">साईट सुरक्षा</string>
   <string name="preference_autocomplete_duplicate_url_error">URL पहिल्यै अवस्थित छ</string>
+  <string name="find_in_page">पृष्ठमा फेला पार्नुहोस्</string>
+  <string name="http_auth_dialog_title">प्रमाणीकरण आवश्यक</string>
+  <string name="http_auth_dialog_username">प्रयोगकर्ता नाम</string>
+  <string name="http_auth_dialog_password">गोप्यशब्द</string>
+  <string name="preference_performance_request_desktop_site">डेस्कटप साईट अनुरोध गर्नुहोस्</string>
 </resources>

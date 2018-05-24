@@ -8,6 +8,7 @@
   <string name="feedback_erase">Vaše historie prohlížení byla vymazána.</string>
   <string name="search_hint">Hledat %1$s</string>
   <string name="menu_share">Sdílet…</string>
+  <string name="menu_report_site_issue">Nahlášení chyby stránky</string>
   <string name="menu_open_with_default_browser2">Otevřít v aplikaci %1$s</string>
   <string name="menu_open_with_a_browser2">Otevřít v…</string>
   <string name="menu_add_to_home_screen">Přidat na domovskou obrazovku</string>
@@ -26,6 +27,8 @@
   <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
   <string name="text_selection_search_action">Vyhledávejte soukromě</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s v&#225;m d&#225;v&#225; kontrolu.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Pou&#382;&#237;vejte ho jako soukrom&#253; prohl&#237;&#382;e&#269;:\n  "<ul>"\n    "<li>Vyhled&#225;vejte a prohl&#237;&#382;ejte p&#345;&#237;mo v aplikaci</li>"\n    "<li>Blokujte sledovac&#237; prvky (nebo aktualizujte nastaven&#237; pro povolen&#237; sledovac&#237;ch prvk&#367;)</li>"\n    "<li>Tla&#269;&#237;tkem sma&#382;te cookies a historii vyhled&#225;v&#225;n&#237; a prohl&#237;&#382;en&#237;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s je vyv&#237;jen Mozillou. Na&#353;&#237; mis&#237; je podporovat zdrav&#253; a otev&#345;en&#253; internet.<br/>\n<a href="%2$s">Zjist&#283;te v&#237;ce</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Soukromí a zabezpečení</string>
+  <string name="preference_privacy_and_security_summary">Sledování, soubory cookie, možnosti hlášení</string>
   <string name="preference_category_search">Hledat</string>
   <string name="preference_search_engine_default">Výchozí</string>
   <string name="preference_state_on">Zapnuto</string>

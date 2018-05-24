@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Dilyswyd gan: %1$s</string>
   <string name="site_security_icon_content_description">Diogelwch Gwefan</string>
   <string name="preference_autocomplete_duplicate_url_error">URL eisoes yn bod</string>
+  <string name="find_in_page">Canfod ar y Dudalen</string>
+  <string name="http_auth_dialog_title">Angen dilysiad</string>
+  <string name="http_auth_dialog_username">Enw Defnyddiwr</string>
+  <string name="http_auth_dialog_password">Cyfrinair</string>
+  <string name="preference_performance_request_desktop_site">Gwefan bwrdd gwaith</string>
 </resources>

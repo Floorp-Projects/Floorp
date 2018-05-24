@@ -8,6 +8,7 @@
   <string name="feedback_erase">S\'ha esborrat l\'historial de navegació.</string>
   <string name="search_hint">Cerca %1$s</string>
   <string name="menu_share">Comparteix…</string>
+  <string name="menu_report_site_issue">Informa d\'un problema amb el lloc</string>
   <string name="menu_open_with_default_browser2">Obre amb el %1$s</string>
   <string name="menu_open_with_a_browser2">Obre amb…</string>
   <string name="menu_add_to_home_screen">Afegeix a la pantalla d\'inici</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Esborra l\'historial de navegació</string>
   <string name="text_selection_search_action">Cerca privada</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s us d&#243;na el control.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Com a navegador privat, us permet:\n  "<ul>"\n    "<li>Cercar i navegar directament des de l\'aplicaci&#243;</li>"\n    "<li>Blocar els elements de seguiment (o canviar els par&#224;metres per permetre\'ls)</li>"\n    "<li>Esborrar les galetes i l\'historial de cerques i de navegaci&#243;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">El %1$s est&#224; creat per Mozilla. La nostra missi&#243; &#233;s fomentar un Internet obert i saludable.<br/>\n<a href="%2$s">M&#233;s informaci&#243;</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privadesa i seguretat</string>
+  <string name="preference_privacy_and_security_summary">Seguiment, galetes, elecció de dades</string>
+  <string name="preference_search_summary">Valor per defecte, emplenament automàtic</string>
+  <string name="preference_mozilla_summary">Quant al %1$s, ajuda</string>
+  <string name="preference_category_tracking_protection">Protecció contra el seguiment</string>
+  <string name="preference_category_web_content">Contingut web</string>
+  <string name="preference_category_switching_apps">Canvi d\'aplicacions</string>
+  <string name="preference_category_general">General</string>
+  <string name="preference_category_data_collection_use">Ús i recollida de dades</string>
   <string name="preference_category_search">Cerca</string>
   <string name="preference_search_engine_default">Per defecte</string>
   <string name="preference_state_on">Activat</string>
@@ -34,14 +44,19 @@
   <string name="preference_switch_autocomplete">Emplenament automàtic</string>
   <string name="preference_category_autocomplete_preinstalled">Llista d\'URL per defecte</string>
   <string name="preference_autocomplete_preinstalled_summary">Activeu-lo per fer permetre que el %1$s empleni automàticament més de 450 URL populars a la barra d\'adreces.</string>
+  <string name="preference_category_autocomplete_custom_urls">URL personalitzats</string>
   <string name="preference_autocomplete_subitem_customlist">URL personalitzats</string>
   <string name="preference_autocomplete_action_add">+ Afegeix un URL personalitzat</string>
   <string name="preference_autocomplete_title_add">URL personalitzat nou</string>
+  <string name="custom_autocomplete_quick_add">Afegeix URL personalitzat</string>
+  <string name="preference_category_cookies">Galetes i dades dels llocs</string>
+  <string name="preference_category_data_choices">Elecció de dades</string>
   <string name="preference_autocomplete_title_remove">Elimina URL personalitzats</string>
   <string name="preference_autocomplete_learn_more">Més informació</string>
   <string name="preference_autocomplete_custom_summary">Afegiu i gestioneu els URL d\'emplenament automàtic personalitzats.</string>
   <string name="preference_autocomplete_add_title">URL per afegir</string>
   <string name="preference_autocomplete_add_hint">Enganxeu o escriviu un URL</string>
+  <string name="preference_autocomplete_add_example2">Exemple: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Exemple: example.com</string>
   <string name="preference_autocomplete_add_confirmation">S\'ha afegit un URL personalitzat nou.</string>
   <string name="preference_autocomplete_menu_remove">Elimina</string>
@@ -58,11 +73,17 @@
   <string name="preference_privacy_block_social_summary">Està incrustat en els llocs per fer el seguiment de les vostres visites i per mostrar alguns elements com els botons de compartició</string>
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
   <string name="preference_privacy_block_content_summary2">Si s\'activa, algunes pàgines podrien comportar-se de forma inesperada</string>
+  <string name="preference_privacy_category_cookies">Bloca les galetes</string>
+  <string name="preference_privacy_should_block_cookies_no_option">No</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca només les galetes de tercers</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Sí</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
   <string name="preference_privacy_stealth_summary">Amaga les pàgines web en canviar d\'aplicacions</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>
+  <string name="preference_performance_block_javascript">Bloca el JavaScript</string>
+  <string name="preference_performance_block_javascript_summary">Les pàgines es poden carregar més ràpid, però també poden comportar-se de forma inesperada</string>
   <string name="preference_default_browser2">Fes que el %1$s sigui el navegador per defecte</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Envia dades d\'ús</string>
@@ -166,4 +187,10 @@
   <string name="security_popup_insecure_connection">Connexió insegura</string>
   <string name="security_popup_security_verified">Verificat per: %1$s</string>
   <string name="site_security_icon_content_description">Seguretat del lloc</string>
+  <string name="preference_autocomplete_duplicate_url_error">L\'URL ja existeix</string>
+  <string name="find_in_page">Cerca a la pàgina</string>
+  <string name="http_auth_dialog_title">Cal autenticació</string>
+  <string name="http_auth_dialog_username">Nom d\'usuari</string>
+  <string name="http_auth_dialog_password">Contrasenya</string>
+  <string name="preference_performance_request_desktop_site">Mostra lloc d\'escriptori</string>
 </resources>

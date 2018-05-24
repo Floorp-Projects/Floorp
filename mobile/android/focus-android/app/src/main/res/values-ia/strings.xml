@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Verificate per: %1$s</string>
   <string name="site_security_icon_content_description">Securitate del sito</string>
   <string name="preference_autocomplete_duplicate_url_error">Le URL existe ja</string>
+  <string name="find_in_page">Trovar in le pagina</string>
+  <string name="http_auth_dialog_title">Authentication necessari</string>
+  <string name="http_auth_dialog_username">Nomine de usator</string>
+  <string name="http_auth_dialog_password">Contrasigno</string>
+  <string name="preference_performance_request_desktop_site">Requirer le sito del scriptorio</string>
 </resources>
