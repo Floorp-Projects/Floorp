@@ -490,8 +490,13 @@ this.TelemetryFeed = class TelemetryFeed {
   }
 
   uninit() {
-    Services.obs.removeObserver(this.browserOpenNewtabStart,
-      "browser-open-newtab-start");
+    try {
+      Services.obs.removeObserver(this.browserOpenNewtabStart,
+        "browser-open-newtab-start");
+    } catch (e) {
+      // Operation can fail when uninit is called before
+      // init has finished setting up the observer
+    }
 
     // Only uninit if the getter has initialized it
     if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {

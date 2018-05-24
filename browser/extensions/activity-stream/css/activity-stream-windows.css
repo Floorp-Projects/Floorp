@@ -167,8 +167,8 @@ body {
     background-image: url("../data/content/assets/glyph-edit-16.svg"); }
   .icon.icon-pocket {
     background-image: url("../data/content/assets/glyph-pocket-16.svg"); }
-  .icon.icon-historyItem {
-    background-image: url("../data/content/assets/glyph-historyItem-16.svg"); }
+  .icon.icon-history-item {
+    background-image: url("chrome://browser/skin/history.svg"); }
   .icon.icon-trending {
     background-image: url("../data/content/assets/glyph-trending-16.svg");
     transform: translateY(2px); }
@@ -191,9 +191,6 @@ body {
     background-image: url("chrome://browser/skin/edit-copy.svg"); }
   .icon.icon-open-file {
     background-image: url("../data/content/assets/glyph-open-file-16.svg"); }
-  .icon.icon-download-folder {
-    background-image: url("../data/content/assets/glyph-download-icon.svg");
-    background-size: 100%; }
   .icon.icon-webextension {
     background-image: url("../data/content/assets/glyph-webextension-16.svg"); }
   .icon.icon-highlights {
@@ -775,9 +772,6 @@ main {
       margin-inline-start: auto;
       offset-inline-end: 0;
       offset-inline-start: auto; } }
-  @media (min-width: 1122px) {
-    .sections-list .section-list {
-      grid-template-columns: repeat(auto-fit, 309px); } }
 
 .sections-list .section-empty-state {
   border: 1px solid var(--newtab-border-secondary-color);
@@ -806,6 +800,10 @@ main {
   @media (min-width: 1122px) {
     .sections-list .section-empty-state {
       height: 370px; } }
+
+@media (min-width: 1122px) {
+  .sections-list .normal-cards .section-list {
+    grid-template-columns: repeat(auto-fit, 309px); } }
 
 .activity-stream.welcome {
   overflow: hidden; }
@@ -1250,6 +1248,9 @@ main {
     background: transparent; }
     .card-outer.placeholder .card {
       box-shadow: inset 0 0 0 1px var(--newtab-inner-box-shadow-color); }
+    .card-outer.placeholder .card-preview-image-outer,
+    .card-outer.placeholder .card-context {
+      display: none; }
   .card-outer .card {
     border-radius: 3px;
     box-shadow: var(--newtab-card-shadow);
@@ -1280,6 +1281,7 @@ main {
     .card-outer:-moz-any(:hover, :focus, .active):not(.placeholder) .card-host-name.alternate {
       display: block; }
   .card-outer .card-preview-image-outer {
+    background-color: #D7D7DB;
     border-radius: 3px 3px 0 0;
     height: 122px;
     overflow: hidden;
@@ -1302,21 +1304,13 @@ main {
         opacity: 1; }
   .card-outer .card-details {
     padding: 15px 16px 12px; }
-    .card-outer .card-details.no-image {
-      padding-top: 16px; }
   .card-outer .card-text {
     max-height: 78px;
     overflow: hidden; }
-    .card-outer .card-text.no-image {
-      max-height: 192px; }
     .card-outer .card-text.no-host-name, .card-outer .card-text.no-context {
       max-height: 97px; }
-    .card-outer .card-text.no-image.no-host-name, .card-outer .card-text.no-image.no-context {
-      max-height: 211px; }
     .card-outer .card-text.no-host-name.no-context {
       max-height: 116px; }
-    .card-outer .card-text.no-image.no-host-name.no-context {
-      max-height: 230px; }
     .card-outer .card-text:not(.no-description) .card-title {
       max-height: 57px;
       overflow: hidden; }
@@ -1329,13 +1323,6 @@ main {
     text-transform: uppercase; }
   .card-outer .card-host-name.alternate {
     display: none; }
-  .card-outer .card-download-icon {
-    float: inline-end;
-    margin-inline-start: 15px;
-    margin-top: 2px; }
-    .card-outer .card-download-icon.icon-download-folder {
-      height: 36px;
-      width: 36px; }
   .card-outer .card-title {
     font-size: 14px;
     font-weight: 600;
@@ -1367,33 +1354,87 @@ main {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; }
-  @media (min-width: 1122px) {
-    .card-outer {
-      height: 370px; }
-      .card-outer .card-preview-image-outer {
-        height: 155px; }
-      .card-outer .card-details {
-        padding: 13px 16px 12px; }
-      .card-outer .card-text {
-        max-height: 140px; }
-      .card-outer .card-host-name {
-        font-size: 12px;
-        padding-bottom: 5px; }
-      .card-outer .card-download-icon.icon-download-folder {
-        height: 54px;
-        width: 54px; }
-      .card-outer .card-title {
-        font-size: 17px;
-        line-height: 23px;
-        margin-bottom: 0; }
-      .card-outer .card-text:not(.no-description) .card-title {
-        max-height: 69px; }
-      .card-outer .card-description {
-        font-size: 15px;
-        line-height: 23px; }
-      .card-outer .card-context {
-        bottom: 4px;
-        font-size: 14px; } }
+
+@media (min-width: 1122px) {
+  .normal-cards .card-outer {
+    height: 370px; }
+    .normal-cards .card-outer .card-preview-image-outer {
+      height: 155px; }
+    .normal-cards .card-outer .card-details {
+      padding: 13px 16px 12px; }
+    .normal-cards .card-outer .card-text {
+      max-height: 140px; }
+    .normal-cards .card-outer .card-host-name {
+      font-size: 12px;
+      padding-bottom: 5px; }
+    .normal-cards .card-outer .card-title {
+      font-size: 17px;
+      line-height: 23px;
+      margin-bottom: 0; }
+    .normal-cards .card-outer .card-text:not(.no-description) .card-title {
+      max-height: 69px; }
+    .normal-cards .card-outer .card-description {
+      font-size: 15px;
+      line-height: 23px; }
+    .normal-cards .card-outer .card-context {
+      bottom: 4px;
+      font-size: 14px; } }
+
+.compact-cards .card-outer {
+  height: 160px; }
+  .compact-cards .card-outer .card-preview-image-outer {
+    height: 108px; }
+  .compact-cards .card-outer .card-details {
+    padding: 12px 16px; }
+  .compact-cards .card-outer .card-host-name {
+    line-height: 10px; }
+  .compact-cards .card-outer .card-text .card-title,
+  .compact-cards .card-outer .card-text:not(.no-description) .card-title {
+    font-size: 10px;
+    line-height: 12px;
+    max-height: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; }
+  .compact-cards .card-outer .card-description {
+    display: none; }
+  .compact-cards .card-outer .card-context {
+    background-color: var(--newtab-card-background-color);
+    border-radius: 16px;
+    height: 32px;
+    width: 32px;
+    padding: 8px;
+    top: 92px;
+    left: auto;
+    offset-inline-end: 12px; }
+    .compact-cards .card-outer .card-context::after {
+      border: 1px solid var(--newtab-card-hairline-color);
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
+      content: '';
+      position: absolute;
+      height: 50%;
+      width: 100%;
+      top: 0;
+      left: 0; }
+    .compact-cards .card-outer .card-context .card-context-icon {
+      margin-inline-end: 0;
+      height: 16px;
+      width: 16px; }
+      .compact-cards .card-outer .card-context .card-context-icon.icon-bookmark-added {
+        fill: #0A84FF; }
+      .compact-cards .card-outer .card-context .card-context-icon.icon-download {
+        fill: #12BC00; }
+      .compact-cards .card-outer .card-context .card-context-icon.icon-history-item {
+        fill: #B1B1B3; }
+      .compact-cards .card-outer .card-context .card-context-icon.icon-pocket {
+        fill: #D70022; }
+    .compact-cards .card-outer .card-context .card-context-label {
+      display: none; }
+
+@media not all and (min-width: 1122px) {
+  .compact-cards .hide-for-narrow {
+    display: none; } }
 
 .manual-migration-container {
   color: var(--newtab-text-conditional-color);
