@@ -350,18 +350,15 @@ Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
   MOZ_ASSERT(aNewStyle);
 
   uint32_t equalStructs;
-  nsChangeHint result = const_cast<mozilla::ComputedStyle*>(aOldStyle)->
-    CalcStyleDifference(
-      const_cast<mozilla::ComputedStyle*>(aNewStyle),
-      &equalStructs);
+  nsChangeHint result = const_cast<ComputedStyle*>(aOldStyle)->
+    CalcStyleDifference(const_cast<ComputedStyle*>(aNewStyle), &equalStructs);
 
-  *aAnyStyleStructChanged = equalStructs != NS_STYLE_INHERIT_MASK;
+  *aAnyStyleStructChanged =
+    equalStructs != StyleStructConstants::kAllStructsMask;
 
-  const uint32_t kInheritStructsMask =
-    NS_STYLE_INHERIT_MASK & ~NS_STYLE_RESET_STRUCT_MASK;
-
+  const auto kInheritedStructsMask = StyleStructConstants::kInheritedStructsMask;
   *aOnlyResetStructsChanged =
-    (equalStructs & kInheritStructsMask) == kInheritStructsMask;
+    (equalStructs & kInheritedStructsMask) == kInheritedStructsMask;
 
   return result;
 }
