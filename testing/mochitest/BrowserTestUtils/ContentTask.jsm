@@ -118,6 +118,8 @@ var ContentMessageListener = {
       ContentTask._testScope.info(aMessage.data.name);
     } else if (aMessage.name == "content-task:test-todo") {
       ContentTask._testScope.todo(aMessage.data.expr, aMessage.data.name);
+    } else if (aMessage.name == "content-task:test-todo_is") {
+      ContentTask._testScope.todo_is(aMessage.data.a, aMessage.data.b, aMessage.data.name);
     }
   },
 };
@@ -126,3 +128,4 @@ Services.mm.addMessageListener("content-task:complete", ContentMessageListener);
 Services.mm.addMessageListener("content-task:test-result", ContentMessageListener);
 Services.mm.addMessageListener("content-task:test-info", ContentMessageListener);
 Services.mm.addMessageListener("content-task:test-todo", ContentMessageListener);
+Services.mm.addMessageListener("content-task:test-todo_is", ContentMessageListener);
