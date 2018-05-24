@@ -74,30 +74,6 @@ enum class TypeCode
     Limit                                = 0x80
 };
 
-enum class ValType
-{
-    I32                                  = uint8_t(TypeCode::I32),
-    I64                                  = uint8_t(TypeCode::I64),
-    F32                                  = uint8_t(TypeCode::F32),
-    F64                                  = uint8_t(TypeCode::F64),
-
-    AnyRef                               = uint8_t(TypeCode::AnyRef),
-
-    // ------------------------------------------------------------------------
-    // The rest of these types are currently only emitted internally when
-    // compiling asm.js and are rejected by wasm validation.
-
-    I8x16                                = uint8_t(TypeCode::I8x16),
-    I16x8                                = uint8_t(TypeCode::I16x8),
-    I32x4                                = uint8_t(TypeCode::I32x4),
-    F32x4                                = uint8_t(TypeCode::F32x4),
-    B8x16                                = uint8_t(TypeCode::B8x16),
-    B16x8                                = uint8_t(TypeCode::B16x8),
-    B32x4                                = uint8_t(TypeCode::B32x4)
-};
-
-typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
-
 // The representation of a null reference value throughout the compiler.
 
 static const intptr_t NULLREF_VALUE = intptr_t((void*)nullptr);
