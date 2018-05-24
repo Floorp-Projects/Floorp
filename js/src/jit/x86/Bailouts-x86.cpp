@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/Bailouts.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "vm/JSCompartment.h"
 #include "vm/JSContext.h"
 

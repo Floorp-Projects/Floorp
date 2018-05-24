@@ -11,7 +11,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
 
