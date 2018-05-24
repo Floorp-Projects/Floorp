@@ -3251,9 +3251,20 @@ js::PrimitiveToObject(JSContext* cx, const Value& v)
         return NumberObject::create(cx, v.toNumber());
     if (v.isBoolean())
         return BooleanObject::create(cx, v.toBoolean());
+#ifdef ENABLE_BIGINT
+    if (v.isSymbol()) {
+        RootedSymbol symbol(cx, v.toSymbol());
+        return SymbolObject::create(cx, symbol);
+    }
+    MOZ_ASSERT(v.isBigInt());
+    RootedBigInt bigInt(cx, v.toBigInt());
+    // Return nullptr because BigIntObject has not been defined yet.
+    return nullptr;
+#else
     MOZ_ASSERT(v.isSymbol());
     RootedSymbol symbol(cx, v.toSymbol());
     return SymbolObject::create(cx, symbol);
+#endif
 }
 
 /*
