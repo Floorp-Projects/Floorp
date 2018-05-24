@@ -41,21 +41,20 @@ const nsStyle##name_ * ComputedStyle::PeekStyle##name_() {  \
 // Helper functions for GetStyle* and PeekStyle*
 #define STYLE_STRUCT_INHERITED(name_)                                       \
 template<bool aComputeData>                                                 \
-const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));        \
+const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                 \
+  const auto kStructID = StyleStructID::name_;                              \
+  const bool needToCompute = !HasRequestedStruct(kStructID);                \
   if (!aComputeData && needToCompute) {                                     \
     return nullptr;                                                         \
   }                                                                         \
-                                                                            \
   const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
-                                                                            \
   /* perform any remaining main thread work on the struct */                \
   if (needToCompute) {                                                      \
     MOZ_ASSERT(NS_IsMainThread());                                          \
     MOZ_ASSERT(!mozilla::IsInServoTraversal());                             \
     const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
     /* the ComputedStyle owns the struct */                                 \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
+    SetRequestedStruct(kStructID);                                          \
   }                                                                         \
   return data;                                                              \
 }
@@ -63,7 +62,8 @@ const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
 #define STYLE_STRUCT_RESET(name_)                                           \
 template<bool aComputeData>                                                 \
 const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
-  const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));        \
+  const auto kStructID = StyleStructID::name_;                              \
+  const bool needToCompute = !HasRequestedStruct(kStructID);                \
   if (!aComputeData && needToCompute) {                                     \
     return nullptr;                                                         \
   }                                                                         \
@@ -72,7 +72,7 @@ const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
   if (needToCompute) {                                                      \
     const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
     /* the ComputedStyle owns the struct */                                 \
-    AddStyleBit(NS_STYLE_INHERIT_BIT(name_));                               \
+    SetRequestedStruct(kStructID);                                          \
   }                                                                         \
   return data;                                                              \
 }
@@ -91,13 +91,11 @@ void
 ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther)
 {
   // Only resolve structs that are not already resolved in this struct.
-  uint64_t ourBits = mBits & NS_STYLE_INHERIT_MASK;
-  uint64_t otherBits = aOther->mBits & NS_STYLE_INHERIT_MASK;
-  uint64_t newBits = otherBits & ~ourBits & NS_STYLE_INHERIT_MASK;
+  auto newBits = aOther->mRequestedStructs & ~mRequestedStructs;
 
 #define STYLE_STRUCT(name_)                                                    \
   if (nsStyle##name_::kHasFinishStyle &&                                       \
-      (newBits & NS_STYLE_INHERIT_BIT(name_))) {                               \
+      (newBits & StyleStructConstants::BitFor(StyleStructID::name_))) {        \
     const nsStyle##name_* data = ComputedData()->GetStyle##name_();            \
     const nsStyle##name_* oldData = aOther->ComputedData()->GetStyle##name_(); \
     const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, oldData);     \
@@ -105,7 +103,7 @@ ComputedStyle::ResolveSameStructsAs(const ComputedStyle* aOther)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-  mBits |= newBits;
+  mRequestedStructs |= newBits;
 }
 
 } // namespace mozilla
