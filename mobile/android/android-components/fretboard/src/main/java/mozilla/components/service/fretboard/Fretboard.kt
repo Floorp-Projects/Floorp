@@ -4,4 +4,37 @@
 
 package mozilla.components.service.fretboard
 
-class Fretboard
+/**
+ * Entry point of the library
+ *
+ * @param source experiment remote source
+ * @param storage experiment local storage mechanism
+ */
+class Fretboard(
+    private val source: ExperimentSource,
+    private val storage: ExperimentStorage
+) {
+    internal var experiments: List<Experiment> = listOf()
+        private set
+
+    /**
+     * Loads experiments from local storage
+     */
+    fun loadExperiments() {
+        experiments = storage.retrieve()
+    }
+
+    /**
+     * Requests new experiments from the server and
+     * saves them to local storage
+     */
+    fun updateExperiments() {
+        try {
+            val serverExperiments = source.getExperiments(experiments)
+            experiments = serverExperiments
+            storage.save(serverExperiments)
+        } catch (e: ExperimentDownloadException) {
+            // Keep using the local experiments
+        }
+    }
+}

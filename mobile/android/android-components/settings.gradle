@@ -1,1 +1,1 @@
-include ':fretboard'
+include ':fretboard', ':fretboard-client-kinto', ':fretboard-storage-flatfile'
