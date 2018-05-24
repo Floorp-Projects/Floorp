@@ -66,7 +66,8 @@
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_vendor">
+            android:title="@string/pref_header_vendor"
+            android:id="@+id/pref_header_vendor">
         <extra android:name="resource"
                android:value="preferences_vendor"/>
     </header>
