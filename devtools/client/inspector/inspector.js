@@ -13,7 +13,6 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
-const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
 const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
@@ -29,6 +28,7 @@ loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-short
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
 loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup");
+loader.lazyRequireGetter(this, "HighlightersOverlay", "devtools/client/inspector/shared/highlighters-overlay");
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
@@ -112,7 +112,6 @@ function Inspector(toolbox) {
   // Stores all the instances of sidebar panels like rule view, computed view, ...
   this._panels = new Map();
 
-  this.highlighters = new HighlightersOverlay(this);
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
@@ -188,6 +187,14 @@ Inspector.prototype = {
 
   get highlighter() {
     return this.toolbox.highlighter;
+  },
+
+  get highlighters() {
+    if (!this._highlighters) {
+      this._highlighters = new HighlightersOverlay(this);
+    }
+
+    return this._highlighters;
   },
 
   // Added in 53.
@@ -1101,10 +1108,12 @@ Inspector.prototype = {
     let onExpand = this.markup.expandNode(this.selection.nodeFront);
 
     // Restore the highlighter states prior to emitting "new-root".
-    await Promise.all([
-      this.highlighters.restoreFlexboxState(),
-      this.highlighters.restoreGridState()
-    ]);
+    if (this._highlighters) {
+      await Promise.all([
+        this.highlighters.restoreFlexboxState(),
+        this.highlighters.restoreGridState()
+      ]);
+    }
 
     this.emit("new-root");
 
@@ -1337,12 +1346,16 @@ Inspector.prototype = {
       this.threePaneTooltip.destroy();
     }
 
+    if (this._highlighters) {
+      this._highlighters.destroy();
+      this._highlighters = null;
+    }
+
     let cssPropertiesDestroyer = this._cssProperties.front.destroy();
     let sidebarDestroyer = this.sidebar.destroy();
     let ruleViewSideBarDestroyer = this.ruleViewSideBar ?
       this.ruleViewSideBar.destroy() : null;
     let markupDestroyer = this._destroyMarkup();
-    let highlighterDestroyer = this.highlighters.destroy();
 
     this.teardownSplitter();
     this.teardownToolbar();
@@ -1356,7 +1369,6 @@ Inspector.prototype = {
     this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
-    this.highlighters = null;
     this.is3PaneModeEnabled = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
@@ -1371,7 +1383,6 @@ Inspector.prototype = {
     this.threePaneTooltip = null;
 
     this._panelDestroyer = promise.all([
-      highlighterDestroyer,
       cssPropertiesDestroyer,
       markupDestroyer,
       sidebarDestroyer,
