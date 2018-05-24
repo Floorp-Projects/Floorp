@@ -34,6 +34,7 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/resource.js',
     'modules/service.js',
     'modules/status.js',
+    'modules/SyncDisconnect.jsm',
     'modules/SyncedTabs.jsm',
     'modules/telemetry.js',
     'modules/UIState.jsm',

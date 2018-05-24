@@ -12,7 +12,6 @@
 
 #include "GLSLANG/ShaderLang.h"
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums_autogen.h"
 #include "libANGLE/RefCountObject.h"
 
 namespace rx
@@ -30,9 +29,9 @@ class Compiler final : public RefCountObjectNoID
   public:
     Compiler(rx::GLImplFactory *implFactory, const ContextState &data);
 
-    ShHandle getCompilerHandle(ShaderType shaderType);
+    ShHandle getCompilerHandle(GLenum type);
     ShShaderOutput getShaderOutputType() const { return mOutputType; }
-    const std::string &getBuiltinResourcesString(ShaderType type);
+    const std::string &getBuiltinResourcesString(GLenum type);
 
   private:
     ~Compiler() override;

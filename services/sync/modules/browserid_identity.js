@@ -224,11 +224,6 @@ this.BrowserIDManager.prototype = {
     switch (topic) {
     case fxAccountsCommon.ONLOGIN_NOTIFICATION: {
       this._log.info("A user has logged in");
-      // If our existing Sync state is that we needed to reauth, clear that
-      // state now - it will get reset back if a problem persists.
-      if (Weave.Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
-        Weave.Status.login = LOGIN_SUCCEEDED;
-      }
       this.resetCredentials();
       let accountData = await this._fxaService.getSignedInUser();
       this._updateSignedInUser(accountData);
@@ -238,6 +233,7 @@ this.BrowserIDManager.prototype = {
         this._log.info("The user is not verified");
         break;
       }
+      // intentional fall-through - the user is verified.
     }
     // We've been configured with an already verified user, so fall-through.
     case fxAccountsCommon.ONVERIFIED_NOTIFICATION: {
@@ -246,16 +242,18 @@ this.BrowserIDManager.prototype = {
       // Set the username now - that will cause Sync to know it is configured
       let accountData = await this._fxaService.getSignedInUser();
       this.username = accountData.email;
+      Weave.Status.login = LOGIN_SUCCEEDED;
 
       // And actually sync. If we've never synced before, we force a full sync.
       // If we have, then we are probably just reauthenticating so it's a normal sync.
-      // We can use any pref that must be set if we've synced before.
-      let isFirstSync = !Svc.Prefs.get("client.syncID", null);
+      // We can use any pref that must be set if we've synced before, and check
+      // the sync lock state because we might already be doing that first sync.
+      let isFirstSync = !Weave.Service.locked && !Svc.Prefs.get("client.syncID", null);
       if (isFirstSync) {
         this._log.info("Doing initial sync actions");
         Svc.Prefs.set("firstSync", "resetClient");
+        Services.obs.notifyObservers(null, "weave:service:setup-complete");
       }
-      Services.obs.notifyObservers(null, "weave:service:setup-complete");
       // There's no need to wait for sync to complete and it would deadlock
       // our AsyncObserver.
       Weave.Service.sync({why: "login"});

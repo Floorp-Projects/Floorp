@@ -23,11 +23,6 @@ struct Box;
 struct PixelUnpackState;
 }  // namespace gl
 
-namespace angle
-{
-class Subject;
-}  // namespace angle
-
 namespace rx
 {
 class SwapChainD3D;
@@ -37,7 +32,7 @@ class ImageD3D;
 class TextureStorage : angle::NonCopyable
 {
   public:
-    TextureStorage() : mSubject(nullptr) {}
+    TextureStorage() {}
     virtual ~TextureStorage() {}
 
     virtual gl::Error onDestroy(const gl::Context *context);
@@ -67,12 +62,6 @@ class TextureStorage : angle::NonCopyable
     // This is a no-op for most implementations of TextureStorage. Some (e.g. TextureStorage11_2D) might override it.
     virtual gl::Error useLevelZeroWorkaroundTexture(const gl::Context *context,
                                                     bool useLevelZeroTexture);
-
-    // Only used for D3D11.
-    void setSubject(const angle::Subject *subject);
-
-  protected:
-    const angle::Subject *mSubject;
 };
 
 inline gl::Error TextureStorage::onDestroy(const gl::Context *context)
@@ -84,11 +73,6 @@ inline gl::Error TextureStorage::useLevelZeroWorkaroundTexture(const gl::Context
                                                                bool useLevelZeroTexture)
 {
     return gl::NoError();
-}
-
-inline void TextureStorage::setSubject(const angle::Subject *subject)
-{
-    mSubject = subject;
 }
 
 using TexStoragePointer = angle::UniqueObjectPointer<TextureStorage, gl::Context>;

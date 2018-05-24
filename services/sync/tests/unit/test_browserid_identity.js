@@ -265,6 +265,35 @@ add_task(async function test_ensureLoggedIn() {
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
 });
 
+add_task(async function test_syncState() {
+  // Avoid polling for an unverified user.
+  let identityConfig = makeIdentityConfig();
+  let fxaInternal = makeFxAccountsInternalMock(identityConfig);
+  fxaInternal.startVerifiedCheck = () => {};
+  configureFxAccountIdentity(globalBrowseridManager, globalIdentityConfig, fxaInternal);
+
+  // arrange for no logged in user.
+  let fxa = globalBrowseridManager._fxaService;
+  let signedInUser = fxa.internal.currentAccountState.storageManager.accountData;
+  fxa.internal.currentAccountState.storageManager.accountData = null;
+  await Assert.rejects(globalBrowseridManager._ensureValidToken(true),
+    /Can't possibly get keys; User is not signed in/, "expecting rejection due to no user");
+  // Restore to an unverified user.
+  signedInUser.verified = false;
+  fxa.internal.currentAccountState.storageManager.accountData = signedInUser;
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  // The browserid_identity observers are async, so call them directly.
+  await globalBrowseridManager.observe(null, ONLOGIN_NOTIFICATION, "");
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED,
+               "should not have changed the login state for an unverified user");
+
+  // now pretend the user because verified.
+  signedInUser.verified = true;
+  await globalBrowseridManager.observe(null, ONVERIFIED_NOTIFICATION, "");
+  Assert.equal(Status.login, LOGIN_SUCCEEDED,
+               "should have changed the login state to success");
+});
+
 add_task(async function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
     let bimExp = new BrowserIDManager();

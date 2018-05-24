@@ -292,13 +292,10 @@ bool VaryingPacking::collectAndPackUserVaryings(gl::InfoLog &infoLog,
         const sh::Varying *output = ref.second.fragment;
 
         // Only pack statically used varyings that have a matched input or output, plus special
-        // builtins. Note that we pack all statically used user-defined varyings even if they are
-        // not active. GLES specs are a bit vague on whether it's allowed to only pack active
-        // varyings, though GLES 3.1 spec section 11.1.2.1 says that "device-dependent
-        // optimizations" may be used to make vertex shader outputs fit.
+        // builtins.
         if ((input && output && output->staticUse) ||
-            (input && input->isBuiltIn() && input->active) ||
-            (output && output->isBuiltIn() && output->active))
+            (input && input->isBuiltIn() && input->staticUse) ||
+            (output && output->isBuiltIn() && output->staticUse))
         {
             const sh::Varying *varying = output ? output : input;
 

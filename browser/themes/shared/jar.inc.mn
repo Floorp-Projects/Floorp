@@ -107,6 +107,7 @@
   skin/classic/browser/preferences/in-content/siteDataSettings.css (../shared/incontentprefs/siteDataSettings.css)
   skin/classic/browser/preferences/in-content/sync-devices.svg (../shared/incontentprefs/sync-devices.svg)
   skin/classic/browser/preferences/in-content/sync.svg         (../shared/incontentprefs/sync.svg)
+  skin/classic/browser/preferences/in-content/syncDisconnect.css (../shared/incontentprefs/syncDisconnect.css)
 * skin/classic/browser/preferences/in-content/containers.css   (../shared/incontentprefs/containers.css)
 * skin/classic/browser/preferences/containers.css              (../shared/preferences/containers.css)
   skin/classic/browser/fxa/default-avatar.svg                  (../shared/fxa/default-avatar.svg)

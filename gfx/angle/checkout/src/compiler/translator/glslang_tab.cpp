@@ -3268,7 +3268,7 @@ yyreduce:
         (yyval.interm.function) = (yyvsp[-1].interm.function);
         if ((yyvsp[0].interm.param).type->getBasicType() != EbtVoid)
         {
-            (yyvsp[-1].interm.function)->addParameter((yyvsp[0].interm.param).createVariable(&context->symbolTable));
+            (yyvsp[-1].interm.function)->addParameter((yyvsp[0].interm.param).turnToConst());
         }
     }
 
@@ -3287,7 +3287,7 @@ yyreduce:
         }
         else
         {
-            (yyvsp[-2].interm.function)->addParameter((yyvsp[0].interm.param).createVariable(&context->symbolTable));
+            (yyvsp[-2].interm.function)->addParameter((yyvsp[0].interm.param).turnToConst());
         }
     }
 
@@ -4630,7 +4630,7 @@ yyreduce:
 
     {
         (yyval.interm.intermBlock) = new TIntermBlock();
-        context->appendStatement((yyval.interm.intermBlock), (yyvsp[0].interm.intermNode));
+        (yyval.interm.intermBlock)->appendStatement((yyvsp[0].interm.intermNode));
     }
 
     break;
@@ -4639,7 +4639,7 @@ yyreduce:
 
     {
         (yyval.interm.intermBlock) = (yyvsp[-1].interm.intermBlock);
-        context->appendStatement((yyval.interm.intermBlock), (yyvsp[0].interm.intermNode));
+        (yyval.interm.intermBlock)->appendStatement((yyvsp[0].interm.intermNode));
     }
 
     break;

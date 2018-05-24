@@ -6,15 +6,13 @@
 
 #include "compiler/translator/ValidateGlobalInitializer.h"
 
-#include "compiler/translator/tree_util/IntermTraverse.h"
+#include "compiler/translator/IntermTraverse.h"
 
 namespace sh
 {
 
 namespace
 {
-
-const int kMaxAllowedTraversalDepth = 256;
 
 class ValidateGlobalInitializerTraverser : public TIntermTraverser
 {
@@ -27,7 +25,7 @@ class ValidateGlobalInitializerTraverser : public TIntermTraverser
     bool visitBinary(Visit visit, TIntermBinary *node) override;
     bool visitUnary(Visit visit, TIntermUnary *node) override;
 
-    bool isValid() const { return mIsValid && mMaxDepth < mMaxAllowedDepth; }
+    bool isValid() const { return mIsValid; }
     bool issueWarning() const { return mIssueWarning; }
 
   private:
@@ -119,12 +117,11 @@ bool ValidateGlobalInitializerTraverser::visitUnary(Visit visit, TIntermUnary *n
 }
 
 ValidateGlobalInitializerTraverser::ValidateGlobalInitializerTraverser(int shaderVersion)
-    : TIntermTraverser(true, false, false, nullptr),
+    : TIntermTraverser(true, false, false),
       mShaderVersion(shaderVersion),
       mIsValid(true),
       mIssueWarning(false)
 {
-    setMaxAllowedDepth(kMaxAllowedTraversalDepth);
 }
 
 }  // namespace

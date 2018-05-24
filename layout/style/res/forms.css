@@ -175,15 +175,10 @@ input > .preview-div {
   white-space: pre;
 }
 
-input > .anonymous-div.wrap {
-  white-space: pre-wrap;
-}
-textarea > .anonymous-div.inherit-overflow,
-input > .anonymous-div.inherit-overflow {
+textarea > .anonymous-div.inherit-overflow {
   overflow: inherit;
 }
-textarea > .anonymous-div.inherit-scroll-behavior,
-input > .anonymous-div.inherit-scroll-behavior {
+textarea > .anonymous-div.inherit-scroll-behavior {
   scroll-behavior: inherit;
   overscroll-behavior: inherit;
 }

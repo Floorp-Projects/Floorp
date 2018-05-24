@@ -328,23 +328,24 @@ void TOutputGLSLBase::writeVariableType(const TType &type)
     }
 }
 
-void TOutputGLSLBase::writeFunctionParameters(const TFunction *func)
+void TOutputGLSLBase::writeFunctionParameters(const TIntermSequence &args)
 {
     TInfoSinkBase &out = objSink();
-    size_t paramCount  = func->getParamCount();
-    for (size_t i = 0; i < paramCount; ++i)
+    for (TIntermSequence::const_iterator iter = args.begin(); iter != args.end(); ++iter)
     {
-        const TVariable *param = func->getParam(i);
-        const TType &type      = param->getType();
+        const TIntermSymbol *arg = (*iter)->getAsSymbolNode();
+        ASSERT(arg != nullptr);
+
+        const TType &type = arg->getType();
         writeVariableType(type);
 
-        if (param->symbolType() != SymbolType::Empty)
-            out << " " << hashName(param);
+        if (arg->variable().symbolType() != SymbolType::Empty)
+            out << " " << hashName(&arg->variable());
         if (type.isArray())
             out << ArrayString(type);
 
         // Put a comma if this is not the last argument.
-        if (i != paramCount - 1)
+        if (iter != args.end() - 1)
             out << ", ";
     }
 }
@@ -846,7 +847,7 @@ bool TOutputGLSLBase::visitBlock(Visit visit, TIntermBlock *node)
 {
     TInfoSinkBase &out = objSink();
     // Scope the blocks except when at the global scope.
-    if (getCurrentTraversalDepth() > 0)
+    if (mDepth > 0)
     {
         out << "{\n";
     }
@@ -863,7 +864,7 @@ bool TOutputGLSLBase::visitBlock(Visit visit, TIntermBlock *node)
     }
 
     // Scope the blocks except when at the global scope.
-    if (getCurrentTraversalDepth() > 0)
+    if (mDepth > 0)
     {
         out << "}\n";
     }
@@ -889,9 +890,10 @@ bool TOutputGLSLBase::visitInvariantDeclaration(Visit visit, TIntermInvariantDec
     return false;
 }
 
-void TOutputGLSLBase::visitFunctionPrototype(TIntermFunctionPrototype *node)
+bool TOutputGLSLBase::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node)
 {
     TInfoSinkBase &out = objSink();
+    ASSERT(visit == PreVisit);
 
     const TType &type = node->getType();
     writeVariableType(type);
@@ -901,8 +903,10 @@ void TOutputGLSLBase::visitFunctionPrototype(TIntermFunctionPrototype *node)
     out << " " << hashFunctionNameIfNeeded(node->getFunction());
 
     out << "(";
-    writeFunctionParameters(node->getFunction());
+    writeFunctionParameters(*(node->getSequence()));
     out << ")";
+
+    return false;
 }
 
 bool TOutputGLSLBase::visitAggregate(Visit visit, TIntermAggregate *node)

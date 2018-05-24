@@ -14,7 +14,6 @@
 #include "common/debug.h"
 
 #include "libANGLE/Error.h"
-#include "libANGLE/PackedGLEnums.h"
 
 namespace gl
 {
@@ -44,17 +43,14 @@ class ImageD3D : angle::NonCopyable
     GLsizei getHeight() const { return mHeight; }
     GLsizei getDepth() const { return mDepth; }
     GLenum getInternalFormat() const { return mInternalFormat; }
-    gl::TextureType getType() const { return mType; }
+    GLenum getTarget() const { return mTarget; }
     bool isRenderableFormat() const { return mRenderable; }
 
     void markDirty() { mDirty = true; }
     void markClean() { mDirty = false; }
     virtual bool isDirty() const = 0;
 
-    virtual bool redefine(gl::TextureType type,
-                          GLenum internalformat,
-                          const gl::Extents &size,
-                          bool forceRelease) = 0;
+    virtual bool redefine(GLenum target, GLenum internalformat, const gl::Extents &size, bool forceRelease) = 0;
 
     virtual gl::Error loadData(const gl::Context *context,
                                const gl::Box &area,
@@ -99,7 +95,7 @@ class ImageD3D : angle::NonCopyable
     GLsizei mDepth;
     GLenum mInternalFormat;
     bool mRenderable;
-    gl::TextureType mType;
+    GLenum mTarget;
 
     bool mDirty;
 };

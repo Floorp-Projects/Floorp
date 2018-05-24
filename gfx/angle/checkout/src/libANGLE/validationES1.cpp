@@ -9,54 +9,20 @@
 #include "libANGLE/validationES1.h"
 
 #include "common/debug.h"
-#include "libANGLE/Context.h"
-#include "libANGLE/ErrorStrings.h"
-#include "libANGLE/validationES.h"
-
-#define ANGLE_VALIDATE_IS_GLES1(context)                              \
-    if (context->getClientMajorVersion() > 1)                         \
-    {                                                                 \
-        ANGLE_VALIDATION_ERR(context, InvalidOperation(), GLES1Only); \
-        return false;                                                 \
-    }
-
-namespace
-{
-
-bool ValidateAlphaFuncCommon(gl::Context *context, gl::AlphaTestFunc func)
-{
-    switch (func)
-    {
-        case gl::AlphaTestFunc::AlwaysPass:
-        case gl::AlphaTestFunc::Equal:
-        case gl::AlphaTestFunc::Gequal:
-        case gl::AlphaTestFunc::Greater:
-        case gl::AlphaTestFunc::Lequal:
-        case gl::AlphaTestFunc::Less:
-        case gl::AlphaTestFunc::Never:
-        case gl::AlphaTestFunc::NotEqual:
-            return true;
-        default:
-            context->handleError(gl::InvalidEnum() << gl::kErrorEnumNotSupported);
-            return false;
-    }
-}
-
-}  // anonymous namespace
 
 namespace gl
 {
 
-bool ValidateAlphaFunc(Context *context, AlphaTestFunc func, GLfloat ref)
+bool ValidateAlphaFunc(Context *context, GLenum func, GLfloat ref)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    return ValidateAlphaFuncCommon(context, func);
+    UNIMPLEMENTED();
+    return true;
 }
 
-bool ValidateAlphaFuncx(Context *context, AlphaTestFunc func, GLfixed ref)
+bool ValidateAlphaFuncx(Context *context, GLenum func, GLfixed ref)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    return ValidateAlphaFuncCommon(context, func);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateClearColorx(Context *context, GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
@@ -73,8 +39,8 @@ bool ValidateClearDepthx(Context *context, GLfixed depth)
 
 bool ValidateClientActiveTexture(Context *context, GLenum texture)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    return ValidateMultitextureUnit(context, texture);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateClipPlanef(Context *context, GLenum p, const GLfloat *eqn)
@@ -91,19 +57,19 @@ bool ValidateClipPlanex(Context *context, GLenum plane, const GLfixed *equation)
 
 bool ValidateColor4f(Context *context, GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateColor4ub(Context *context, GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateColor4x(Context *context, GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -261,7 +227,7 @@ bool ValidateGetTexEnvxv(Context *context, GLenum target, GLenum pname, GLfixed 
     return true;
 }
 
-bool ValidateGetTexParameterxv(Context *context, TextureType target, GLenum pname, GLfixed *params)
+bool ValidateGetTexParameterxv(Context *context, GLenum target, GLenum pname, GLfixed *params)
 {
     UNIMPLEMENTED();
     return true;
@@ -323,19 +289,19 @@ bool ValidateLineWidthx(Context *context, GLfixed width)
 
 bool ValidateLoadIdentity(Context *context)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateLoadMatrixf(Context *context, const GLfloat *m)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateLoadMatrixx(Context *context, const GLfixed *m)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -369,30 +335,21 @@ bool ValidateMaterialxv(Context *context, GLenum face, GLenum pname, const GLfix
     return true;
 }
 
-bool ValidateMatrixMode(Context *context, MatrixType mode)
+bool ValidateMatrixMode(Context *context, GLenum mode)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    switch (mode)
-    {
-        case MatrixType::Projection:
-        case MatrixType::Modelview:
-        case MatrixType::Texture:
-            return true;
-        default:
-            ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidMatrixMode);
-            return false;
-    }
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateMultMatrixf(Context *context, const GLfloat *m)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateMultMatrixx(Context *context, const GLfixed *m)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -403,30 +360,30 @@ bool ValidateMultiTexCoord4f(Context *context,
                              GLfloat r,
                              GLfloat q)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    return ValidateMultitextureUnit(context, target);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateMultiTexCoord4x(Context *context,
-                             GLenum target,
+                             GLenum texture,
                              GLfixed s,
                              GLfixed t,
                              GLfixed r,
                              GLfixed q)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    return ValidateMultitextureUnit(context, target);
+    UNIMPLEMENTED();
+    return true;
 }
 
 bool ValidateNormal3f(Context *context, GLfloat nx, GLfloat ny, GLfloat nz)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidateNormal3x(Context *context, GLfixed nx, GLfixed ny, GLfixed nz)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -504,25 +461,13 @@ bool ValidatePolygonOffsetx(Context *context, GLfixed factor, GLfixed units)
 
 bool ValidatePopMatrix(Context *context)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    const auto &stack = context->getGLState().gles1().currentMatrixStack();
-    if (stack.size() == 1)
-    {
-        ANGLE_VALIDATION_ERR(context, StackUnderflow(), MatrixStackUnderflow);
-        return false;
-    }
+    UNIMPLEMENTED();
     return true;
 }
 
 bool ValidatePushMatrix(Context *context)
 {
-    ANGLE_VALIDATE_IS_GLES1(context);
-    const auto &stack = context->getGLState().gles1().currentMatrixStack();
-    if (stack.size() == stack.max_size())
-    {
-        ANGLE_VALIDATION_ERR(context, StackOverflow(), MatrixStackOverflow);
-        return false;
-    }
+    UNIMPLEMENTED();
     return true;
 }
 
@@ -608,16 +553,13 @@ bool ValidateTexEnvxv(Context *context, GLenum target, GLenum pname, const GLfix
     return true;
 }
 
-bool ValidateTexParameterx(Context *context, TextureType target, GLenum pname, GLfixed param)
+bool ValidateTexParameterx(Context *context, GLenum target, GLenum pname, GLfixed param)
 {
     UNIMPLEMENTED();
     return true;
 }
 
-bool ValidateTexParameterxv(Context *context,
-                            TextureType target,
-                            GLenum pname,
-                            const GLfixed *params)
+bool ValidateTexParameterxv(Context *context, GLenum target, GLenum pname, const GLfixed *params)
 {
     UNIMPLEMENTED();
     return true;
@@ -747,172 +689,6 @@ bool ValidatePointSizePointerOES(Context *context, GLenum type, GLsizei stride, 
 }
 
 bool ValidateQueryMatrixxOES(Context *context, GLfixed *mantissa, GLint *exponent)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGenFramebuffersOES(Context *context, GLsizei n, GLuint *framebuffers)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateDeleteFramebuffersOES(Context *context, GLsizei n, const GLuint *framebuffers)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGenRenderbuffersOES(Context *context, GLsizei n, GLuint *renderbuffers)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateDeleteRenderbuffersOES(Context *context, GLsizei n, const GLuint *renderbuffers)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateBindFramebufferOES(Context *context, GLenum target, GLuint framebuffer)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateBindRenderbufferOES(Context *context, GLenum target, GLuint renderbuffer)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateCheckFramebufferStatusOES(Context *context, GLenum target)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateFramebufferRenderbufferOES(Context *context,
-                                        GLenum target,
-                                        GLenum attachment,
-                                        GLenum rbtarget,
-                                        GLuint renderbuffer)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateFramebufferTexture2DOES(Context *context,
-                                     GLenum target,
-                                     GLenum attachment,
-                                     TextureTarget textarget,
-                                     GLuint texture,
-                                     GLint level)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGenerateMipmapOES(Context *context, TextureType target)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGetFramebufferAttachmentParameterivOES(Context *context,
-                                                    GLenum target,
-                                                    GLenum attachment,
-                                                    GLenum pname,
-                                                    GLint *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGetRenderbufferParameterivOES(Context *context,
-                                           GLenum target,
-                                           GLenum pname,
-                                           GLint *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateIsFramebufferOES(Context *context, GLuint framebuffer)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateIsRenderbufferOES(Context *context, GLuint renderbuffer)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateRenderbufferStorageOES(Context *context,
-                                    GLenum target,
-                                    GLint internalformat,
-                                    GLsizei width,
-                                    GLsizei height)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-// GL_OES_texture_cube_map
-
-bool ValidateGetTexGenfvOES(Context *context, GLenum coord, GLenum pname, GLfloat *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGetTexGenivOES(Context *context, GLenum coord, GLenum pname, int *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateGetTexGenxvOES(Context *context, GLenum coord, GLenum pname, GLfixed *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGenfvOES(Context *context, GLenum coord, GLenum pname, const GLfloat *params)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGenivOES(Context *context, GLenum coord, GLenum pname, const GLint *param)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGenxvOES(Context *context, GLenum coord, GLenum pname, const GLint *param)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGenfOES(Context *context, GLenum coord, GLenum pname, GLfloat param)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGeniOES(Context *context, GLenum coord, GLenum pname, GLint param)
-{
-    UNIMPLEMENTED();
-    return true;
-}
-
-bool ValidateTexGenxOES(Context *context, GLenum coord, GLenum pname, GLfixed param)
 {
     UNIMPLEMENTED();
     return true;
