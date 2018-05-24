@@ -450,7 +450,7 @@ nsINode::GetComposedDocInternal() const
 }
 
 DocumentOrShadowRoot*
-nsINode::GetUncomposedDocOrConnectedShadowRoot()
+nsINode::GetUncomposedDocOrConnectedShadowRoot() const
 {
   if (IsInUncomposedDoc()) {
     return OwnerDoc();

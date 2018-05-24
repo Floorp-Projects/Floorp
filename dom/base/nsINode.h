@@ -692,7 +692,7 @@ public:
    * Returns OwnerDoc() if the node is in uncomposed document and ShadowRoot if
    * the node is in Shadow DOM and is in composed document.
    */
-  mozilla::dom::DocumentOrShadowRoot* GetUncomposedDocOrConnectedShadowRoot();
+  mozilla::dom::DocumentOrShadowRoot* GetUncomposedDocOrConnectedShadowRoot() const;
 
   /**
    * The values returned by this function are the ones defined for
