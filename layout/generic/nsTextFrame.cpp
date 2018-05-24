@@ -10420,7 +10420,11 @@ nsTextFrame::CountGraphemeClusters() const
 bool
 nsTextFrame::HasNonSuppressedText()
 {
-  if (HasAnyStateBits(TEXT_ISNOT_ONLY_WHITESPACE)) {
+  if (HasAnyStateBits(TEXT_ISNOT_ONLY_WHITESPACE |
+                      // If we haven't reflowed yet, or are currently doing so,
+                      // just return true because we can't be sure.
+                      NS_FRAME_FIRST_REFLOW |
+                      NS_FRAME_IN_REFLOW)) {
     return true;
   }
 
