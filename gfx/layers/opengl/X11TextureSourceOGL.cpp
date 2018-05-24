@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef GL_PROVIDER_GLX
-
 #include "X11TextureSourceOGL.h"
 #include "gfxXlibSurface.h"
 #include "gfx2DGlue.h"
@@ -103,4 +101,3 @@ X11TextureSourceOGL::ContentTypeToSurfaceFormat(gfxContentType aType)
 }
 }
 
-#endif

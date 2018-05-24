@@ -12,9 +12,7 @@
 #include <X11/Xlib.h>
 #include "X11UndefineNone.h"
 
-#if defined(GL_PROVIDER_GLX)
 #include "GLXLibrary.h"
-#endif
 
 #include "nsSize.h"
 
@@ -86,12 +84,10 @@ public:
     // Find a visual and colormap pair suitable for rendering to this surface.
     bool GetColormapAndVisual(Colormap* colormap, Visual **visual);
 
-#if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();
     // Binds a GLXPixmap backed by this context's surface.
     // Primarily for use in sharing surfaces.
     void BindGLXPixmap(GLXPixmap aPixmap);
-#endif
 
     // Return true if cairo will take its slow path when this surface is used
     // in a pattern with EXTEND_PAD.  As a workaround for XRender's RepeatPad
@@ -114,9 +110,7 @@ protected:
 
     const mozilla::gfx::IntSize DoSizeQuery();
 
-#if defined(GL_PROVIDER_GLX)
     GLXPixmap mGLXPixmap;
-#endif
 };
 
 #endif /* GFX_XLIBSURFACE_H */
