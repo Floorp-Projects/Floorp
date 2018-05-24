@@ -97,7 +97,7 @@ public:
 
     bool AccelerateLayersByDefault() override;
 
-#ifdef GL_PROVIDER_GLX
+#ifdef MOZ_X11
     already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource() override;
 #endif
 

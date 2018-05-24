@@ -42,11 +42,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/X11Util.h"
 
-#ifdef GL_PROVIDER_GLX
 #include "GLContextProvider.h"
 #include "GLContextGLX.h"
 #include "GLXLibrary.h"
-#endif
 
 /* Undefine the Status from Xlib since it will conflict with system headers on OSX */
 #if defined(__APPLE__) && defined(Status)
@@ -508,7 +506,7 @@ gfxPlatformGtk::CheckVariationFontSupport()
   return major * 1000000 + minor * 1000 + patch >= 2007001;
 }
 
-#ifdef GL_PROVIDER_GLX
+#ifdef MOZ_X11
 
 class GLXVsyncSource final : public VsyncSource
 {
