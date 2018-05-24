@@ -8,7 +8,7 @@
 // and the 3 panes rendered are all of equal widths in the BOTTOM host.
 
 add_task(async function() {
-  info("Switch to 2 pane inspector to test that 3 pane toggle button behavior");
+  info("Switch to 2 pane inspector to test the 3 pane toggle button behavior");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 
   const { inspector } = await openInspectorForURL("about:blank");
@@ -43,6 +43,7 @@ add_task(async function() {
   info("Checking the state of the 2 pane inspector");
   sidebarWidth = inspector.splitBox.state.width;
   ok(button.classList.contains("pane-collapsed"), "The button is in collapsed state");
+  debugger;
   is(inspector.sidebar.getCurrentTabID(), "ruleview",
     "Rule view is shown in the sidebar");
   is(ruleViewSidebar.style.display, "none", "The split rule view sidebar is hidden");

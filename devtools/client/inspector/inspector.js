@@ -643,7 +643,7 @@ Inspector.prototype = {
     Services.prefs.setBoolPref(THREE_PANE_ENABLED_PREF, this.is3PaneModeEnabled);
 
     await this.setupToolbar();
-    await this.addRuleView();
+    await this.addRuleView({ skipQueue: true });
   },
 
   /**
@@ -710,7 +710,7 @@ Inspector.prototype = {
    * @params {String} defaultTab
    *         Thie id of the default tab for the sidebar.
    */
-  async addRuleView(defaultTab = "ruleview") {
+  async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
     const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
 
     if (this.is3PaneModeEnabled) {
@@ -756,11 +756,19 @@ Inspector.prototype = {
       this.ruleViewSideBar.hide();
       await this.ruleViewSideBar.removeTab("ruleview");
 
-      this.sidebar.addExistingTab(
+      if (skipQueue) {
+        this.sidebar.addExistingTab(
         "ruleview",
         INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
         defaultTab == "ruleview",
         0);
+      } else {
+        this.sidebar.queueExistingTab(
+          "ruleview",
+          INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+          defaultTab == "ruleview",
+          0);
+      }
     }
 
     this.emit("ruleview-added");
@@ -830,13 +838,13 @@ Inspector.prototype = {
 
     // Append all side panels
 
-    await this.addRuleView(defaultTab);
+    await this.addRuleView({ defaultTab });
 
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
     let layoutId = "layoutview";
     let layoutTitle = INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2");
-    this.sidebar.addTab(
+    this.sidebar.queueTab(
       layoutId,
       layoutTitle,
       {
@@ -856,7 +864,7 @@ Inspector.prototype = {
       },
       defaultTab == layoutId);
 
-    this.sidebar.addExistingTab(
+    this.sidebar.queueExistingTab(
       "computedview",
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
@@ -867,7 +875,7 @@ Inspector.prototype = {
     if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
       const animationId = "newanimationinspector";
 
-      this.sidebar.addTab(
+      this.sidebar.queueTab(
         animationId,
         animationTitle,
         {
@@ -884,7 +892,7 @@ Inspector.prototype = {
         },
         defaultTab == animationId);
     } else {
-      this.sidebar.addFrameTab(
+      this.sidebar.queueFrameTab(
         "animationinspector",
         animationTitle,
         "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
@@ -895,7 +903,7 @@ Inspector.prototype = {
     // with a lazy defined Tab thanks to `panel` being a function
     let fontId = "fontinspector";
     let fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
-    this.sidebar.addTab(
+    this.sidebar.queueTab(
       fontId,
       fontTitle,
       {
@@ -914,6 +922,8 @@ Inspector.prototype = {
         }
       },
       defaultTab == fontId);
+
+    this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
     this.sidebar.on("show", this.onSidebarShown);

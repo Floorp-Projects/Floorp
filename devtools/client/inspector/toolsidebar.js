@@ -85,6 +85,13 @@ ToolSidebar.prototype = {
   },
 
   /**
+   * Adds all the queued tabs.
+   */
+  addAllQueuedTabs: function() {
+    this._tabbar.addAllQueuedTabs();
+  },
+
+  /**
    * Register a side-panel tab.
    *
    * @param {String} tab uniq id
@@ -141,6 +148,65 @@ ToolSidebar.prototype = {
     });
 
     this.addTab(id, title, panel, selected, index);
+  },
+
+  /**
+   * Queues a side-panel tab to be added..
+   *
+   * @param {String} tab uniq id
+   * @param {String} title tab title
+   * @param {React.Component} panel component. See `InspectorPanelTab` as an example.
+   * @param {Boolean} selected true if the panel should be selected
+   * @param {Number} index the position where the tab should be inserted
+   */
+  queueTab: function(id, title, panel, selected, index) {
+    this._tabbar.queueTab(id, title, selected, panel, null, index);
+    this.emit("new-tab-registered", id);
+  },
+
+  /**
+   * Helper API for queuing side-panels that use existing DOM nodes
+   * (defined within inspector.xhtml) as the content.
+   *
+   * @param {String} tab uniq id
+   * @param {String} title tab title
+   * @param {Boolean} selected true if the panel should be selected
+   * @param {Number} index the position where the tab should be inserted
+   */
+  queueExistingTab: function(id, title, selected, index) {
+    let panel = this.InspectorTabPanel({
+      id: id,
+      idPrefix: this.TABPANEL_ID_PREFIX,
+      key: id,
+      title: title,
+    });
+
+    this.queueTab(id, title, panel, selected, index);
+  },
+
+  /**
+   * Helper API for queuing side-panels that use existing <iframe> nodes
+   * (defined within inspector.xhtml) as the content.
+   * The document must have a title, which will be used as the name of the tab.
+   *
+   * @param {String} tab uniq id
+   * @param {String} title tab title
+   * @param {String} url
+   * @param {Boolean} selected true if the panel should be selected
+   * @param {Number} index the position where the tab should be inserted
+   */
+  queueFrameTab: function(id, title, url, selected, index) {
+    let panel = this.InspectorTabPanel({
+      id: id,
+      idPrefix: this.TABPANEL_ID_PREFIX,
+      key: id,
+      title: title,
+      url: url,
+      onMount: this.onSidePanelMounted.bind(this),
+      onUnmount: this.onSidePanelUnmounted.bind(this),
+    });
+
+    this.queueTab(id, title, panel, selected, index);
   },
 
   onSidePanelMounted: function(content, props) {
