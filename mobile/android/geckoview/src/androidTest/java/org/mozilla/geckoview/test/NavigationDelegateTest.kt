@@ -6,9 +6,11 @@ package org.mozilla.geckoview.test
 
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.GeckoSession.TrackingProtectionDelegate;
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDevToolsAPI
 import org.mozilla.geckoview.test.util.Callbacks
 
@@ -22,6 +24,26 @@ import org.junit.runner.RunWith
 @MediumTest
 @ReuseSession(false)
 class NavigationDelegateTest : BaseSessionTest() {
+
+    @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
+    @Test fun trackingProtectionBasic() {
+        val category = TrackingProtectionDelegate.CATEGORY_TEST;
+        sessionRule.runtime.settings.trackingProtectionCategories = category
+        sessionRule.session.loadTestPath(TRACKERS_PATH)
+
+        sessionRule.waitUntilCalled(
+                object : Callbacks.TrackingProtectionDelegate {
+            @AssertCalled(count = 1)
+            override fun onTrackerBlocked(session: GeckoSession, uri: String,
+                                          categories: Int) {
+                assertThat("Category should be set",
+                           categories,
+                           equalTo(category))
+                assertThat("URI should not be null", uri, notNullValue())
+                assertThat("URI should match", uri, endsWith("trackertest.org/tracker.js"))
+            }
+        })
+    }
 
     @Test fun load() {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
