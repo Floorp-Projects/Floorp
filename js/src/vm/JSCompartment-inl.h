@@ -177,7 +177,7 @@ js::ObjectRealm::objectMaybeInIteration(JSObject* obj)
 
     // If the list contains a single object, check if it's |obj|.
     if (next->next() == enumerators)
-        return next->obj == obj;
+        return &next->objectBeingIterated() == obj;
 
     return true;
 }
