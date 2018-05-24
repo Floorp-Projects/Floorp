@@ -5098,14 +5098,14 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
     JS::PrepareForFullGC(aCx);
 
     if (aShrinking) {
-      JS::GCForReason(aCx, GC_SHRINK, JS::gcreason::DOM_WORKER);
+      JS::NonIncrementalGC(aCx, GC_SHRINK, JS::gcreason::DOM_WORKER);
 
       if (!aCollectChildren) {
         LOG(WorkerLog(), ("Worker %p collected idle garbage\n", this));
       }
     }
     else {
-      JS::GCForReason(aCx, GC_NORMAL, JS::gcreason::DOM_WORKER);
+      JS::NonIncrementalGC(aCx, GC_NORMAL, JS::gcreason::DOM_WORKER);
       LOG(WorkerLog(), ("Worker %p collected garbage\n", this));
     }
   }
