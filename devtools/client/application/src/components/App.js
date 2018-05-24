@@ -37,7 +37,7 @@ class App extends Component {
         { className: `application ${isEmpty ? "application--empty" : ""}` },
         isEmpty
           ? WorkerListEmpty({ serviceContainer })
-          : WorkerList({ workers, client, serviceContainer })
+          : WorkerList({ workers, client })
       )
     );
   }
