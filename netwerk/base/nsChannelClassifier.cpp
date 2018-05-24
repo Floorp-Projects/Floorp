@@ -1024,6 +1024,12 @@ TrackingURICallback::OnTrackerFound(nsresult aErrorCode)
   } else {
     MOZ_ASSERT(mChannelClassifier->ShouldEnableTrackingAnnotation());
 
+    // Even with TP disabled, we still want to show the user that there
+    // are unblocked trackers on the site, so notify the UI that we loaded
+    // tracking content. UI code can treat this notification differently
+    // depending on whether TP is enabled or disabled.
+    mChannelClassifier->NotifyTrackingProtectionDisabled(channel);
+
     SetIsTrackingResourceHelper(channel);
     if (CachedPrefs::GetInstance()->IsLowerNetworkPriority()) {
       LowerPriorityHelper(channel);
