@@ -14,7 +14,12 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES['components-utils'] = [
     'ClientEnvironment.jsm',
+    'FilterExpressions.jsm',
     'JsonSchemaValidator.jsm',
+    'mozjexl.js',
+    'PreferenceFilters.jsm',
+    'Sampling.jsm',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
