@@ -538,9 +538,20 @@ static void*
 base_alloc(size_t aSize);
 
 // Set to true once the allocator has been initialized.
-static Atomic<bool> malloc_initialized(false);
+#if defined(_MSC_VER) && !defined(__clang__)
+// MSVC may create a static initializer for an Atomic<bool>, which may actually
+// run after `malloc_init` has been called once, which triggers multiple
+// initializations.
+// We work around the problem by not using an Atomic<bool> at all. There is a
+// theoretical problem with using `malloc_initialized` non-atomically, but
+// practically, this is only true if `malloc_init` is never called before
+// threads are created.
+static bool malloc_initialized;
+#else
+static Atomic<bool> malloc_initialized;
+#endif
 
-static StaticMutex gInitLock;
+static StaticMutex gInitLock = { STATIC_MUTEX_INIT };
 
 // ***************************************************************************
 // Statistics data structures.
