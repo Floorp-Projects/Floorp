@@ -1599,7 +1599,8 @@ ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
   // child of it.
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
-  if (ChildID() != aCpId && !contentParent->CanCommunicateWith(ChildID())) {
+  if (!contentParent ||
+      (ChildID() != aCpId && !contentParent->CanCommunicateWith(ChildID()))) {
     return IPC_FAIL_NO_REASON(this);
   }
 
