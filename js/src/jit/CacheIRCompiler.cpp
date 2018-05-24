@@ -1648,10 +1648,10 @@ CacheIRCompiler::emitGuardNoDetachedTypedObjects()
     if (!addFailurePath(&failure))
         return false;
 
-    // All stubs manipulating typed objects must check the compartment-wide
-    // flag indicating whether their underlying storage might be detached, to
-    // bail out if needed.
-    int32_t* address = &cx_->compartment()->detachedTypedObjects;
+    // All stubs manipulating typed objects must check the zone-wide flag
+    // indicating whether their underlying storage might be detached, to bail
+    // out if needed.
+    uint32_t* address = &cx_->zone()->detachedTypedObjects;
     masm.branch32(Assembler::NotEqual, AbsoluteAddress(address), Imm32(0), failure->label());
     return true;
 }

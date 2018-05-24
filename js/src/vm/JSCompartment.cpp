@@ -46,7 +46,6 @@ JSCompartment::JSCompartment(Zone* zone)
     runtime_(zone->runtimeFromAnyThread()),
     data(nullptr),
     regExps(),
-    detachedTypedObjects(0),
     innerViews(zone),
     gcIncomingGrayPointers(nullptr),
     enumerators(nullptr)

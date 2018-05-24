@@ -597,10 +597,6 @@ struct JSCompartment
                                       js::SystemAllocPolicy>;
     IteratorCache iteratorCache;
 
-    // Non-zero if the storage underlying any typed object in this compartment
-    // might be detached.
-    int32_t                      detachedTypedObjects;
-
     // Recompute the probability with which this compartment should record
     // profiling data (stack traces, allocations log, etc.) about each
     // allocation. We consult the probabilities requested by the Debugger
