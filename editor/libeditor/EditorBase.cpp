@@ -1396,7 +1396,7 @@ EditorBase::CreateNodeWithTransaction(
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       listener->DidCreateNode(nsDependentAtomString(&aTagName),
-                              GetAsDOMNode(newElement), rv);
+                              newElement, rv);
     }
   }
 
@@ -1455,7 +1455,7 @@ EditorBase::InsertNodeWithTransaction(
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidInsertNode(aContentToInsert.AsDOMNode(), rv);
+      listener->DidInsertNode(&aContentToInsert, rv);
     }
   }
 
@@ -1535,8 +1535,7 @@ EditorBase::SplitNodeWithTransaction(
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidSplitNode(aStartOfRightNode.GetContainerAsDOMNode(),
-                             GetAsDOMNode(newNode));
+      listener->DidSplitNode(aStartOfRightNode.GetContainer(), newNode);
     }
   }
 
@@ -1614,8 +1613,7 @@ EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidJoinNodes(aLeftNode.AsDOMNode(), aRightNode.AsDOMNode(),
-                             parent->AsDOMNode(), rv);
+      listener->DidJoinNodes(&aLeftNode, &aRightNode, parent, rv);
     }
   }
 
@@ -1663,7 +1661,7 @@ EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidDeleteNode(aNode.AsDOMNode(), rv);
+      listener->DidDeleteNode(&aNode, rv);
     }
   }
 

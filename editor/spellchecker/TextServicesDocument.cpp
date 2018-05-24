@@ -3157,52 +3157,49 @@ TextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*>* aOffsetTable,
  */
 
 NS_IMETHODIMP
-TextServicesDocument::DidInsertNode(nsIDOMNode* aNode,
+TextServicesDocument::DidInsertNode(nsINode* aNode,
                                     nsresult aResult)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidDeleteNode(nsIDOMNode* aChild,
+TextServicesDocument::DidDeleteNode(nsINode* aChild,
                                     nsresult aResult)
 {
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return NS_OK;
   }
-  nsCOMPtr<nsINode> child = do_QueryInterface(aChild);
-  DidDeleteNode(child);
+  DidDeleteNode(aChild);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidSplitNode(nsIDOMNode* aExistingRightNode,
-                                   nsIDOMNode* aNewLeftNode)
+TextServicesDocument::DidSplitNode(nsINode* aExistingRightNode,
+                                   nsINode* aNewLeftNode)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TextServicesDocument::DidJoinNodes(nsIDOMNode* aLeftNode,
-                                   nsIDOMNode* aRightNode,
-                                   nsIDOMNode* aParent,
+TextServicesDocument::DidJoinNodes(nsINode* aLeftNode,
+                                   nsINode* aRightNode,
+                                   nsINode* aParent,
                                    nsresult aResult)
 {
   if (NS_WARN_IF(NS_FAILED(aResult))) {
     return NS_OK;
   }
-  nsCOMPtr<nsINode> leftNode = do_QueryInterface(aLeftNode);
-  nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
-  if (NS_WARN_IF(!leftNode) || NS_WARN_IF(!rightNode)) {
+  if (NS_WARN_IF(!aLeftNode) || NS_WARN_IF(!aRightNode)) {
     return NS_OK;
   }
-  DidJoinNodes(*leftNode, *rightNode);
+  DidJoinNodes(*aLeftNode, *aRightNode);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TextServicesDocument::DidCreateNode(const nsAString& aTag,
-                                    nsIDOMNode* aNewNode,
+                                    nsINode* aNewNode,
                                     nsresult aResult)
 {
   return NS_OK;

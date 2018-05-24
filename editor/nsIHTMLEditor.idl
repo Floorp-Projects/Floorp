@@ -128,7 +128,7 @@ interface nsIHTMLEditor : nsISupports
    *
    * @param aNode      the node to test
    */
-  boolean nodeIsBlock(in nsIDOMNode node);
+  boolean nodeIsBlock(in Node node);
 
   /**
    * Insert some HTML source at the current location
@@ -171,7 +171,7 @@ interface nsIHTMLEditor : nsISupports
                              in AString aInfoStr,
                              in AString aFlavor,
                              in Document aSourceDoc,
-                             in nsIDOMNode aDestinationNode,
+                             in Node aDestinationNode,
                              in long aDestinationOffset,
                              in boolean aDeleteSelection);
 
