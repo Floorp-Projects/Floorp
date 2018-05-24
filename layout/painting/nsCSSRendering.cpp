@@ -3264,7 +3264,7 @@ nsCSSRendering::PrepareImageLayer(nsPresContext* aPresContext,
   if (!state.mImageRenderer.PrepareImage()) {
     // There's no image or it's not ready to be painted.
     if (aOutIsTransformedFixed &&
-        StyleImageLayerAttachment::Fixed == aLayer.mAttachment) {
+        NS_STYLE_IMAGELAYER_ATTACHMENT_FIXED == aLayer.mAttachment) {
 
       nsIFrame* attachedToFrame = aPresContext->PresShell()->GetRootFrame();
       NS_ASSERTION(attachedToFrame, "no root frame");
