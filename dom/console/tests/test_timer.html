@@ -70,7 +70,7 @@ async function runTest() {
            ("name" in obj.timer) &&
            obj.timer.name == 'test' &&
            ("duration" in obj.timer) &&
-           obj.timer.duration > 0 &&
+           obj.timer.duration >= 0 &&
            obj.arguments[1] == 1 &&
            obj.arguments[2] == 2 &&
            obj.arguments[3] == 3 &&
@@ -86,7 +86,7 @@ async function runTest() {
            ("name" in obj.timer) &&
            obj.timer.name == 'test' &&
            ("duration" in obj.timer) &&
-           obj.timer.duration > 0;
+           obj.timer.duration >= 0;
   });
   console.timeEnd('test');
   await cl;
