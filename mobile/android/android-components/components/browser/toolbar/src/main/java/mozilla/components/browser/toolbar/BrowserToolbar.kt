@@ -15,6 +15,7 @@ import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.ktx.android.view.dp
 import mozilla.components.support.ktx.android.view.forEach
+import mozilla.components.support.ktx.android.view.isVisible
 
 /**
  * A customizable toolbar for browsers.
@@ -45,6 +46,15 @@ class BrowserToolbar @JvmOverloads constructor(
     // them in tests.
     @VisibleForTesting internal var displayToolbar = DisplayToolbar(context, this)
     @VisibleForTesting internal var editToolbar = EditToolbar(context, this)
+
+    /**
+     * Set/Get whether a site security icon (usually a lock or globe icon) should be next to the URL.
+     */
+    var displaySiteSecurityIcon: Boolean
+        get() = displayToolbar.iconView.isVisible()
+        set(value) {
+            displayToolbar.iconView.visibility = if (value) View.VISIBLE else View.GONE
+        }
 
     private var state: State = State.DISPLAY
     private var url: String = ""

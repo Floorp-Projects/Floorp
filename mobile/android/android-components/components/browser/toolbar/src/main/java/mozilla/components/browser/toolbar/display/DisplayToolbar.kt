@@ -50,7 +50,7 @@ internal class DisplayToolbar(
                 View.VISIBLE
         }
 
-    private val iconView = ImageView(context).apply {
+    internal val iconView = ImageView(context).apply {
         val padding = dp(ICON_PADDING_DP)
         setPadding(padding, padding, padding, padding)
 
@@ -187,7 +187,8 @@ internal class DisplayToolbar(
             }
 
         val urlRight = measuredWidth - actionWidth - if (menuView.isVisible()) height else 0
-        urlView.layout(0 + iconView.measuredWidth, 0, urlRight, bottom)
+        val urlLeft = if (iconView.isVisible()) iconView.measuredWidth else 0
+        urlView.layout(urlLeft, 0, urlRight, bottom)
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
 
