@@ -16,7 +16,7 @@ add_task(async function test_add_link() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
@@ -96,7 +96,7 @@ add_task(async function test_edit_link() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
@@ -375,7 +375,7 @@ add_task(async function test_private_persist_addresses() {
       // setupPaymentDialog from a private window.
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
