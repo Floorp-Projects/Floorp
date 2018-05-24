@@ -587,6 +587,13 @@ Str(JSContext* cx, const Value& v, StringifyContext* scx)
         return NumberValueToStringBuffer(cx, v, scx->sb);
     }
 
+#ifdef ENABLE_BIGINT
+    if (v.isBigInt()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BIGINT_NOT_SERIALIZABLE);
+        return false;
+    }
+#endif
+
     /* Step 10. */
     MOZ_ASSERT(v.isObject());
     RootedObject obj(cx, &v.toObject());

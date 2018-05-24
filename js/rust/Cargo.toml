@@ -39,6 +39,7 @@ doctest = false
 debugmozjs = ['mozjs_sys/debugmozjs']
 promises = ['mozjs_sys/promises']
 nonzero = []
+bigint = ['mozjs_sys/bigint']
 
 [dependencies.mozjs_sys]
 path = "../src"

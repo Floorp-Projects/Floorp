@@ -8,6 +8,7 @@ build = "build.rs"
 [features]
 debugmozjs = []
 promises = []
+bigint = []
 
 [lib]
 name = "mozjs_sys"
