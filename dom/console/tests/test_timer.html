@@ -11,6 +11,9 @@
 
 SimpleTest.waitForExplicitFinish();
 
+var reduceTimePrecisionPrevPrefValue = SpecialPowers.getBoolPref("privacy.reduceTimerPrecision");
+SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", false);
+
 function ConsoleListener() {
   SpecialPowers.addObserver(this, "console-api-log-event");
 }
@@ -103,6 +106,8 @@ async function runTest() {
 
 runTest().then(() => {
   listener.shutdown();
+
+  SpecialPowers.setBoolPref("privacy.reduceTimerPrecision", reduceTimePrecisionPrevPrefValue);
   SimpleTest.finish();
 });
 

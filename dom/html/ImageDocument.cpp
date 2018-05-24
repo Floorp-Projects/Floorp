@@ -273,7 +273,8 @@ ImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
-    if (!GetRootElement()) {
+    if (!InitialSetupHasBeenDone()) {
+      MOZ_ASSERT(!GetRootElement(), "Where did the root element come from?");
       // Create synthetic document
 #ifdef DEBUG
       nsresult rv =
@@ -290,14 +291,14 @@ ImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
     target->AddEventListener(NS_LITERAL_STRING("resize"), this, false);
     target->AddEventListener(NS_LITERAL_STRING("keypress"), this, false);
 
-    if (GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
+    if (!InitialSetupHasBeenDone()) {
       LinkStylesheet(NS_LITERAL_STRING("resource://content-accessible/ImageDocument.css"));
       if (!nsContentUtils::IsChildOfSameType(this)) {
         LinkStylesheet(NS_LITERAL_STRING("resource://content-accessible/TopLevelImageDocument.css"));
         LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/media/TopLevelImageDocument.css"));
       }
+      InitialSetupDone();
     }
-    BecomeInteractive();
   }
 }
 

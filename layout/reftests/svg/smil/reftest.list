@@ -165,7 +165,7 @@ fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 == anim-paintserver-1.svg anim-paintserver-1-ref.svg
 
 # animate attributes on text content children
-== anim-text-attr-01.svg anim-text-attr-01-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-text-attr-01.svg anim-text-attr-01-ref.svg
 
 # animate where the base value is non-interpolatable but will be replaced anyway
 == anim-fill-overpaintserver-1.svg lime.svg
@@ -207,7 +207,7 @@ fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-targethref-9.svg anim-standard-ref.svg
 == anim-targethref-10.svg anim-standard-ref.svg
 
-== anim-text-rotate-01.svg anim-text-rotate-01-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-text-rotate-01.svg anim-text-rotate-01-ref.svg
 == anim-feFuncR-tableValues-01.svg anim-feFuncR-tableValues-01-ref.svg
 
 skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
