@@ -823,7 +823,7 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
     *numGuards = guards.length();
 
     IteratorHashPolicy::Lookup lookup(guards.begin(), guards.length(), key);
-    auto p = cx->compartment()->iteratorCache.lookup(lookup);
+    auto p = ObjectRealm::get(obj).iteratorCache.lookup(lookup);
     if (!p)
         return nullptr;
 
@@ -873,7 +873,7 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
                                       ni->guardCount(),
                                       ni->guard_key);
 
-    JSCompartment::IteratorCache& cache = cx->compartment()->iteratorCache;
+    ObjectRealm::IteratorCache& cache = ObjectRealm::get(obj).iteratorCache;
     bool ok;
     auto p = cache.lookupForAdd(lookup);
     if (MOZ_LIKELY(!p)) {

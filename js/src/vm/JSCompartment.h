@@ -592,11 +592,6 @@ struct JSCompartment
   public:
     js::RegExpCompartment        regExps;
 
-    using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
-                                      js::IteratorHashPolicy,
-                                      js::SystemAllocPolicy>;
-    IteratorCache iteratorCache;
-
     // Recompute the probability with which this compartment should record
     // profiling data (stack traces, allocations log, etc.) about each
     // allocation. We consult the probabilities requested by the Debugger
@@ -751,6 +746,11 @@ class ObjectRealm
     // Keep track of the metadata objects which can be associated with each JS
     // object. Both keys and values are in this realm.
     js::UniquePtr<js::ObjectWeakMap> objectMetadataTable;
+
+    using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
+                                      js::IteratorHashPolicy,
+                                      js::SystemAllocPolicy>;
+    IteratorCache iteratorCache;
 
     static inline ObjectRealm& get(const JSObject* obj);
 
