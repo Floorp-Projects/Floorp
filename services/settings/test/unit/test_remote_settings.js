@@ -1,9 +1,11 @@
+/* import-globals-from ../../../common/tests/unit/head_helpers.js */
+
 const { Constructor: CC } = Components;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
+const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
