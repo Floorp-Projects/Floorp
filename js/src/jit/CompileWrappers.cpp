@@ -8,7 +8,7 @@
 
 #include "gc/GC.h"
 #include "jit/Ion.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 
 #include "vm/JSCompartment-inl.h"
 
@@ -260,10 +260,10 @@ CompileCompartment::addressOfRandomNumberGenerator()
     return JS::GetRealmForCompartment(compartment())->addressOfRandomNumberGenerator();
 }
 
-const JitCompartment*
-CompileCompartment::jitCompartment()
+const JitRealm*
+CompileCompartment::jitRealm()
 {
-    return compartment()->jitCompartment();
+    return JS::GetRealmForCompartment(compartment())->jitRealm();
 }
 
 const GlobalObject*

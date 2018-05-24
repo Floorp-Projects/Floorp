@@ -10,7 +10,7 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/Snapshots.h"
 #include "vm/JSContext.h"

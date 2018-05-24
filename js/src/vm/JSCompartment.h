@@ -31,7 +31,7 @@
 namespace js {
 
 namespace jit {
-class JitCompartment;
+class JitRealm;
 } // namespace jit
 
 namespace gc {
@@ -714,7 +714,6 @@ struct JSCompartment
 
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
-    void sweepJitCompartment();
     void sweepRegExps();
     void sweepDebugEnvironments();
     void sweepNativeIterators();
@@ -751,15 +750,6 @@ struct JSCompartment
     // cross-realm pointers without wrappers.
     bool scheduledForDestruction = false;
     bool maybeAlive = true;
-
-  protected:
-    js::UniquePtr<js::jit::JitCompartment> jitCompartment_;
-
-  public:
-    bool ensureJitCompartmentExists(JSContext* cx);
-    js::jit::JitCompartment* jitCompartment() {
-        return jitCompartment_.get();
-    }
 };
 
 class JS::Realm : public JSCompartment
@@ -790,6 +780,8 @@ class JS::Realm : public JSCompartment
     mozilla::non_crypto::XorShift128PlusRNG randomKeyGenerator_;
 
     JSPrincipals* principals_ = nullptr;
+
+    js::UniquePtr<js::jit::JitRealm> jitRealm_;
 
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
@@ -894,7 +886,7 @@ class JS::Realm : public JSCompartment
                                 size_t* savedStacksSet,
                                 size_t* varNamesSet,
                                 size_t* nonSyntacticLexicalScopes,
-                                size_t* jitCompartment,
+                                size_t* jitRealm,
                                 size_t* privateData,
                                 size_t* scriptCountsMapArg);
 
@@ -1227,6 +1219,13 @@ class JS::Realm : public JSCompartment
     }
     void setValidAccessPtr(bool* accessp) {
         validAccessPtr_ = accessp;
+    }
+
+    bool ensureJitRealmExists(JSContext* cx);
+    void sweepJitRealm();
+
+    js::jit::JitRealm* jitRealm() {
+        return jitRealm_.get();
     }
 };
 

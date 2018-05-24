@@ -27,7 +27,7 @@
 
 #include "jit/ExecutableAllocator.h"
 
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "js/MemoryMetrics.h"
 
 using namespace js::jit;

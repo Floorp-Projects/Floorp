@@ -7,7 +7,7 @@
 #ifndef jit_none_MacroAssembler_none_h
 #define jit_none_MacroAssembler_none_h
 
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/MoveResolver.h"
 #include "jit/shared/Assembler-shared.h"
 
