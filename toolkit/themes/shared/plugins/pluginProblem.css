@@ -74,7 +74,6 @@ html|a {
 :-moz-handler-blocked .icon {
   background-image: url(chrome://mozapps/skin/plugins/contentPluginBlocked.png);
 }
-a .icon,
 :-moz-handler-clicktoplay .icon {
   background-image: url(chrome://mozapps/skin/plugins/plugin.svg);
   fill: var(--grey-10);
@@ -98,8 +97,7 @@ a .icon,
 }
 
 /* on desktop, don't ever show the tap-to-play UI: that is for mobile only */
-:-moz-handler-clicktoplay .msgTapToPlay,
-a .msgTapToPlay  {
+:-moz-handler-clicktoplay .msgTapToPlay {
   display: none;
 }
 
