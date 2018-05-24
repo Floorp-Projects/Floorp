@@ -1,10 +1,10 @@
-
 #!/usr/bin/python
 import json
 
 import re
 import subprocess
 import sys
+
 
 def count_ctors(filename):
     proc = subprocess.Popen(
@@ -48,6 +48,7 @@ def count_ctors(filename):
     print >>sys.stderr, "Couldn't find .init_array or .ctors in", filename
     sys.exit(1)
 
+
 if __name__ == '__main__':
     for f in sys.argv[1:]:
         perfherder_data = {
@@ -62,5 +63,4 @@ if __name__ == '__main__':
                 }]}
             ]
         }
-        print "PERFHERDER_DATA: %s" % json.dumps(perfherder_data)
-
+        print("PERFHERDER_DATA: %s" % json.dumps(perfherder_data))

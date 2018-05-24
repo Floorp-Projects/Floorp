@@ -19,6 +19,9 @@ nsresult
 GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
                            nsCString& fp);
 
+void
+LossyUTF8ToUTF16(const char* str, uint32_t len, /*out*/ nsAString& result);
+
 // Must be used on the main thread only.
 nsresult
 GetPIPNSSBundleString(const char* stringName, nsAString& result);

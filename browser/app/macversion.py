@@ -36,9 +36,9 @@ majorVersion = re.match(r'^(\d+)[^\d].*', options.version).group(1)
 twodigityear = buildid[2:4]
 month = buildid[4:6]
 if month[0] == '0':
-  month = month[1]
+    month = month[1]
 day = buildid[6:8]
 if day[0] == '0':
-  day = day[1]
+    day = day[1]
 
-print '%s.%s.%s' % (majorVersion + twodigityear, month, day)
+print('%s.%s.%s' % (majorVersion + twodigityear, month, day))

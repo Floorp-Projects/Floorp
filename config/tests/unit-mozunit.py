@@ -2,18 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 import os
 from mozunit import main, MockedOpen
 import unittest
 from tempfile import mkstemp
+
 
 class TestMozUnit(unittest.TestCase):
     def test_mocked_open(self):
         # Create a temporary file on the file system.
         (fd, path) = mkstemp()
         with os.fdopen(fd, 'w') as file:
-            file.write('foobar');
+            file.write('foobar')
 
         self.assertFalse(os.path.exists('file1'))
         self.assertFalse(os.path.exists('file2'))
@@ -81,6 +81,7 @@ class TestMozUnit(unittest.TestCase):
         # Check that the file created inside MockedOpen wasn't actually
         # created.
         self.assertRaises(IOError, open, 'file3', 'r')
+
 
 if __name__ == "__main__":
     main()

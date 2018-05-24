@@ -751,6 +751,17 @@ KeyframeEffect::BuildProperties(const ComputedStyle* aStyle)
   return result;
 }
 
+template<typename FrameEnumFunc>
+static void
+EnumerateContinuationsOrIBSplitSiblings(nsIFrame* aFrame,
+                                        FrameEnumFunc&& aFunc)
+{
+  while (aFrame) {
+    aFunc(aFrame);
+    aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
+  }
+}
+
 void
 KeyframeEffect::UpdateTargetRegistration()
 {
@@ -773,11 +784,12 @@ KeyframeEffect::UpdateTargetRegistration()
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
-    nsIFrame* f = GetPrimaryFrame();
-    while (f) {
-      f->MarkNeedsDisplayItemRebuild();
-      f = f->GetNextContinuation();
-    }
+    nsIFrame* frame = GetPrimaryFrame();
+    EnumerateContinuationsOrIBSplitSiblings(frame,
+      [](nsIFrame* aFrame) {
+        aFrame->MarkNeedsDisplayItemRebuild();
+      }
+    );
   } else if (!isRelevant && mInEffectSet) {
     UnregisterTarget();
   }
@@ -802,11 +814,12 @@ KeyframeEffect::UnregisterTarget()
       EffectSet::DestroyEffectSet(mTarget->mElement, mTarget->mPseudoType);
     }
   }
-  nsIFrame* f = GetPrimaryFrame();
-  while (f) {
-    f->MarkNeedsDisplayItemRebuild();
-    f = f->GetNextContinuation();
-  }
+  nsIFrame* frame = GetPrimaryFrame();
+  EnumerateContinuationsOrIBSplitSiblings(frame,
+    [](nsIFrame* aFrame) {
+      aFrame->MarkNeedsDisplayItemRebuild();
+    }
+  );
 }
 
 void
@@ -1785,15 +1798,19 @@ KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const
   nsIFrame* frame = GetStyleFrame();
   if (HasAnimationOfProperty(eCSSProperty_opacity)) {
     effectSet->SetMayHaveOpacityAnimation();
-    if (frame) {
-      frame->SetMayHaveOpacityAnimation();
-    }
+    EnumerateContinuationsOrIBSplitSiblings(frame,
+      [](nsIFrame* aFrame) {
+        aFrame->SetMayHaveOpacityAnimation();
+      }
+    );
   }
   if (HasAnimationOfProperty(eCSSProperty_transform)) {
     effectSet->SetMayHaveTransformAnimation();
-    if (frame) {
-      frame->SetMayHaveTransformAnimation();
-    }
+    EnumerateContinuationsOrIBSplitSiblings(frame,
+      [](nsIFrame* aFrame) {
+        aFrame->SetMayHaveTransformAnimation();
+      }
+    );
   }
 }
 

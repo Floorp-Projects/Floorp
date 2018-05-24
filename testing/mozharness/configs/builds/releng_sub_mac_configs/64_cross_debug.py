@@ -2,7 +2,6 @@ import os
 
 config = {
     'default_actions': [
-        'clobber',
         'build',
         'update',  # decided by query_is_nightly()
     ],

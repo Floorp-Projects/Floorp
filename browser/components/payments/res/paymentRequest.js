@@ -115,6 +115,7 @@ var paymentRequest = {
     log.debug("onShowPaymentRequest: domReadyPromise resolved");
     log.debug("onShowPaymentRequest, isPrivate?", detail.isPrivate);
 
+    let paymentDialog = document.querySelector("payment-dialog");
     let state = {
       request: detail.request,
       savedAddresses: detail.savedAddresses,
@@ -125,10 +126,18 @@ var paymentRequest = {
       },
     };
 
+    // Onboarding wizard flow.
     if (Object.keys(detail.savedAddresses).length == 0) {
       state.page = {
         id: "address-page",
         onboardingWizard: true,
+      };
+
+      state["address-page"] = {
+        selectedStateKey: "selectedShippingAddress",
+        addressFields: null,
+        guid: null,
+        title: paymentDialog.dataset.shippingAddressTitleAdd,
       };
     } else if (Object.keys(detail.savedBasicCards).length == 0) {
       state.page = {
@@ -137,7 +146,7 @@ var paymentRequest = {
       };
     }
 
-    document.querySelector("payment-dialog").setStateFromParent(state);
+    paymentDialog.setStateFromParent(state);
   },
 
   cancel() {
