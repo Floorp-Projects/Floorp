@@ -1853,7 +1853,10 @@ public:
     return HasPerspective(StyleDisplay());
   }
 
-  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const;
+  bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const {
+    MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+    return aStyleDisplay->HasPerspectiveStyle();
+  }
   bool ChildrenHavePerspective() const {
     return ChildrenHavePerspective(StyleDisplay());
   }
