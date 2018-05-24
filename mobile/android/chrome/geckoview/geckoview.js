@@ -94,7 +94,7 @@ var ModuleManager = {
     this._frozenSettings = Object.freeze(Object.assign({}, this._settings));
 
     this.forEach(module => {
-      if (module.enabled && module.impl) {
+      if (module.impl) {
         module.impl.onSettingsUpdate();
       }
     });
@@ -192,6 +192,7 @@ class ModuleInfo {
   onInit() {
     if (this._impl) {
       this._impl.onInit();
+      this._impl.onSettingsUpdate();
     }
     this._loadPhase(this._onInitPhase);
     this._onInitPhase = null;
