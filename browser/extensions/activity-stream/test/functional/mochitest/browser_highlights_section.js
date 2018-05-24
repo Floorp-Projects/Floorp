@@ -31,7 +31,7 @@ test_highlights(
     is(found, 2, "there should be 2 highlights cards");
 
     found = content.document.querySelectorAll(".section-list .placeholder").length;
-    is(found, 1, "there should be 1 highlights placeholder");
+    is(found, 6, "there should be 2 rows * 4 - 2 = 6 highlights placeholder");
 
     found = content.document.querySelectorAll(".card-context-icon.icon-bookmark-added").length;
     is(found, 2, "there should be 2 bookmark icons");
