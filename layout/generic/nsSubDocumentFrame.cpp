@@ -462,9 +462,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (mPreviousCaret) {
         aBuilder->MarkFrameModifiedDuringBuilding(mPreviousCaret);
       }
-      if (aBuilder->GetCaretFrame()) {
-        aBuilder->MarkFrameModifiedDuringBuilding(aBuilder->GetCaretFrame());
-      }
     }
     mPreviousCaret = aBuilder->GetCaretFrame();
   }

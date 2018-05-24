@@ -98,9 +98,7 @@ SelectAGRForFrame(nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR)
 // jump into those immediately rather than walking the entire thing.
 bool
 RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
-                                                  AnimatedGeometryRoot* aAGR,
-                                                  uint32_t aCallerKey,
-                                                  uint32_t aNestingDepth)
+                                                  AnimatedGeometryRoot* aAGR)
 {
   // The DAG merging algorithm does not have strong mechanisms in place to keep the
   // complexity of the resulting DAG under control. In some cases we can build up
@@ -142,7 +140,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
 
     size_t i = aList->mOldItems.Length();
     aList->mOldItems.AppendElement(OldItemInfo(item));
-    item->SetOldListIndex(aList, OldListIndex(i), aCallerKey, aNestingDepth);
+    item->SetOldListIndex(aList, OldListIndex(i));
     if (initializeDAG) {
       if (i == 0) {
         aList->mDAG.AddNode(Span<const MergedListIndex>());
@@ -155,7 +153,7 @@ RetainedDisplayListBuilder::PreProcessDisplayList(RetainedDisplayList* aList,
     nsIFrame* f = item->Frame();
 
     if (item->GetChildren()) {
-      if (!PreProcessDisplayList(item->GetChildren(), SelectAGRForFrame(f, aAGR), item->GetPerFrameKey(), aNestingDepth + 1)) {
+      if (!PreProcessDisplayList(item->GetChildren(), SelectAGRForFrame(f, aAGR))) {
         return false;
       }
     }
@@ -267,12 +265,11 @@ OldItemInfo::IsChanged()
  */
 class MergeState {
 public:
-  MergeState(RetainedDisplayListBuilder* aBuilder, RetainedDisplayList& aOldList, uint32_t aOuterKey)
+  MergeState(RetainedDisplayListBuilder* aBuilder, RetainedDisplayList& aOldList)
     : mBuilder(aBuilder)
     , mOldList(&aOldList)
     , mOldItems(Move(aOldList.mOldItems))
     , mOldDAG(Move(*reinterpret_cast<DirectedAcyclicGraph<OldListUnits>*>(&aOldList.mDAG)))
-    , mOuterKey(aOuterKey)
     , mResultIsModified(false)
   {
     mMergedDAG.EnsureCapacityFor(mOldDAG);
@@ -292,8 +289,7 @@ public:
           if (mBuilder->MergeDisplayLists(aNewItem->GetChildren(),
                                           oldItem->GetChildren(),
                                           aNewItem->GetChildren(),
-                                          containerASRForChildren,
-                                          aNewItem->GetPerFrameKey())) {
+                                          containerASRForChildren)) {
             mResultIsModified = true;
 
           }
@@ -335,9 +331,8 @@ public:
     for (nsDisplayItem* i : *items) {
       if (i != aItem && i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-        if (i->GetOldListIndex(mOldList, mOuterKey, aOutIndex)) {
-          return true;
-        }
+        *aOutIndex = i->GetOldListIndex(mOldList);
+        return true;
       }
     }
     return false;
@@ -396,7 +391,7 @@ public:
         Maybe<const ActiveScrolledRoot*> containerASRForChildren;
         nsDisplayList empty;
         if (mBuilder->MergeDisplayLists(&empty, item->GetChildren(), item->GetChildren(),
-                                        containerASRForChildren, item->GetPerFrameKey())) {
+                                        containerASRForChildren)) {
           mResultIsModified = true;
         }
         UpdateASR(item, containerASRForChildren);
@@ -485,7 +480,6 @@ public:
   // and assert when we try swap the contents
   nsDisplayList mMergedItems;
   DirectedAcyclicGraph<MergedListUnits> mMergedDAG;
-  uint32_t mOuterKey;
   bool mResultIsModified;
 };
 
@@ -503,10 +497,9 @@ bool
 RetainedDisplayListBuilder::MergeDisplayLists(nsDisplayList* aNewList,
                                               RetainedDisplayList* aOldList,
                                               RetainedDisplayList* aOutList,
-                                              mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR,
-                                              uint32_t aOuterKey)
+                                              mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR)
 {
-  MergeState merge(this, *aOldList, aOuterKey);
+  MergeState merge(this, *aOldList);
 
   Maybe<MergedListIndex> previousItemIndex;
   while (nsDisplayItem* item = aNewList->RemoveBottom()) {
