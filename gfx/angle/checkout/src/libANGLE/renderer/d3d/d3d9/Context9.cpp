@@ -63,13 +63,13 @@ FramebufferImpl *Context9::createFramebuffer(const gl::FramebufferState &data)
 
 TextureImpl *Context9::createTexture(const gl::TextureState &state)
 {
-    switch (state.getType())
+    switch (state.getTarget())
     {
-        case gl::TextureType::_2D:
+        case GL_TEXTURE_2D:
             return new TextureD3D_2D(state, mRenderer);
-        case gl::TextureType::CubeMap:
+        case GL_TEXTURE_CUBE_MAP:
             return new TextureD3D_Cube(state, mRenderer);
-        case gl::TextureType::External:
+        case GL_TEXTURE_EXTERNAL_OES:
             return new TextureD3D_External(state, mRenderer);
         default:
             UNREACHABLE();

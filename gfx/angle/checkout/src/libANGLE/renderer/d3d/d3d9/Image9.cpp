@@ -237,16 +237,13 @@ gl::Error Image9::CopyImage(const gl::Context *context,
     return gl::NoError();
 }
 
-bool Image9::redefine(gl::TextureType type,
-                      GLenum internalformat,
-                      const gl::Extents &size,
-                      bool forceRelease)
+bool Image9::redefine(GLenum target, GLenum internalformat, const gl::Extents &size, bool forceRelease)
 {
     // 3D textures are not supported by the D3D9 backend.
     ASSERT(size.depth <= 1);
 
     // Only 2D and cube texture are supported by the D3D9 backend.
-    ASSERT(type == gl::TextureType::_2D || type == gl::TextureType::CubeMap);
+    ASSERT(target == GL_TEXTURE_2D || target == GL_TEXTURE_CUBE_MAP);
 
     if (mWidth != size.width ||
         mHeight != size.height ||
@@ -257,7 +254,6 @@ bool Image9::redefine(gl::TextureType type,
         mWidth = size.width;
         mHeight = size.height;
         mDepth = size.depth;
-        mType           = type;
         mInternalFormat = internalformat;
 
         // compute the d3d format that will be used
@@ -411,8 +407,7 @@ gl::Error Image9::setManagedSurface2D(const gl::Context *context,
 {
     IDirect3DSurface9 *surface = nullptr;
     TextureStorage9 *storage9  = GetAs<TextureStorage9>(storage);
-    gl::Error error =
-        storage9->getSurfaceLevel(context, gl::TextureTarget::_2D, level, false, &surface);
+    gl::Error error = storage9->getSurfaceLevel(context, GL_TEXTURE_2D, level, false, &surface);
     if (error.isError())
     {
         return error;
@@ -427,7 +422,7 @@ gl::Error Image9::setManagedSurfaceCube(const gl::Context *context,
 {
     IDirect3DSurface9 *surface = nullptr;
     TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
-    gl::Error error = storage9->getSurfaceLevel(context, gl::CubeFaceIndexToTextureTarget(face),
+    gl::Error error = storage9->getSurfaceLevel(context, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                                 level, false, &surface);
     if (error.isError())
     {
@@ -551,10 +546,10 @@ gl::Error Image9::loadData(const gl::Context *context,
     // 3D textures are not supported by the D3D9 backend.
     ASSERT(area.z == 0 && area.depth == 1);
 
-    const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
+    const gl::InternalFormat &packFormat = gl::GetPackFormatInfo(mInternalFormat, type);
     GLuint inputRowPitch                 = 0;
     ANGLE_TRY_RESULT(
-        formatInfo.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength),
+        packFormat.computeRowPitch(area.width, unpack.alignment, unpack.rowLength),
         inputRowPitch);
     ASSERT(!applySkipImages);
     ASSERT(unpack.skipPixels == 0);
@@ -594,7 +589,7 @@ gl::Error Image9::loadCompressedData(const gl::Context *context,
 
     const gl::InternalFormat &formatInfo = gl::GetSizedInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch                = 0;
-    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0), inputRowPitch);
+    ANGLE_TRY_RESULT(formatInfo.computeRowPitch(area.width, 1, 0), inputRowPitch);
     GLsizei inputDepthPitch = 0;
     ANGLE_TRY_RESULT(formatInfo.computeDepthPitch(area.height, 0, inputDepthPitch),
                      inputDepthPitch);
