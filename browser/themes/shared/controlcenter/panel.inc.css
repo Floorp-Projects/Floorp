@@ -294,26 +294,45 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg#enabled");
 }
 
-#tracking-protection-content[state="loaded-tracking-content"]  {
+#tracking-protection-content[enabled="false"],
+#tracking-protection-content[state="loaded-tracking-content"] {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg#disabled");
 }
 
-#tracking-action-block,
-#tracking-action-unblock,
-#tracking-action-unblock-private {
-  margin: 1em 0 0;
+/* Show the "on" label by default, except when TP is disabled or there's a local exception. */
+#tracking-protection-label-off,
+#tracking-protection-content[enabled="false"] > #tracking-protection-label-on,
+#tracking-protection-content[state="loaded-tracking-content"] > #tracking-protection-label-on {
+  display: none;
 }
 
-#tracking-protection-content[state] > #tracking-not-detected,
-#tracking-protection-content:not([state="blocked-tracking-content"]) > #tracking-blocked,
-#main-window[privatebrowsingmode] #tracking-action-unblock,
-#main-window:not([privatebrowsingmode]) #tracking-action-unblock-private,
-#tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock,
-#tracking-protection-content:not([state="blocked-tracking-content"]) #tracking-action-unblock-private,
-#tracking-protection-content:not([state="loaded-tracking-content"]) > #tracking-loaded,
-#tracking-protection-content:not([state="loaded-tracking-content"]) #tracking-action-block,
-#tracking-protection-content:not([state]) > #tracking-actions {
+#tracking-protection-label-on,
+#tracking-protection-content[enabled="false"] > #tracking-protection-label-off,
+#tracking-protection-content[state="loaded-tracking-content"] > #tracking-protection-label-off {
+  display: -moz-box;
+}
+
+#tracking-protection-content > description {
   display: none;
+}
+
+.tracking-protection-button {
+  margin: 1em 0 0;
+  display: none;
+}
+
+/* Show the right tracking descriptions and buttons for the corresponding state. */
+
+/* Default state / Tracking not detected */
+#tracking-protection-content:not([state]) > #tracking-not-detected,
+/* Blocking tracking, offer buttons to unblock (depending on PBM). */
+#tracking-protection-content[state="blocked-tracking-content"] > #tracking-blocked,
+#main-window:not([privatebrowsingmode]) #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock,
+#main-window[privatebrowsingmode] #tracking-protection-content[state="blocked-tracking-content"] > #tracking-action-unblock-private,
+/* Disabled or has an exception, offer to block the site. */
+#tracking-protection-content[state="loaded-tracking-content"]:-moz-any([enabled="false"],[hasException]) > #tracking-loaded,
+#tracking-protection-content[state="loaded-tracking-content"]:-moz-any([enabled="false"],[hasException]) > #tracking-action-block {
+  display: -moz-box;
 }
 
 /* PERMISSIONS */

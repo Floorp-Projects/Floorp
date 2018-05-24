@@ -5,6 +5,11 @@
 var EXPORTED_SYMBOLS = ["PrivateBrowsingUtils"];
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gPBMTPWhitelist",
+                                   "@mozilla.org/pbm-tp-whitelist;1",
+                                   "nsIPrivateBrowsingTrackingProtectionWhitelist");
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -54,15 +59,15 @@ var PrivateBrowsingUtils = {
   },
 
   addToTrackingAllowlist(aURI) {
-    let pbmtpWhitelist = Cc["@mozilla.org/pbm-tp-whitelist;1"]
-                           .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
-    pbmtpWhitelist.addToAllowList(aURI);
+    gPBMTPWhitelist.addToAllowList(aURI);
+  },
+
+  existsInTrackingAllowlist(aURI) {
+    return gPBMTPWhitelist.existsInAllowList(aURI);
   },
 
   removeFromTrackingAllowlist(aURI) {
-    let pbmtpWhitelist = Cc["@mozilla.org/pbm-tp-whitelist;1"]
-                           .getService(Ci.nsIPrivateBrowsingTrackingProtectionWhitelist);
-    pbmtpWhitelist.removeFromAllowList(aURI);
+    gPBMTPWhitelist.removeFromAllowList(aURI);
   },
 
   get permanentPrivateBrowsing() {
