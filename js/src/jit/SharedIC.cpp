@@ -494,11 +494,11 @@ ICUpdatedStub::initUpdatingChain(JSContext* cx, ICStubSpace* space)
 JitCode*
 ICStubCompiler::getStubCode()
 {
-    JitCompartment* comp = cx->compartment()->jitCompartment();
+    JitRealm* realm = cx->realm()->jitRealm();
 
     // Check for existing cached stubcode.
     uint32_t stubKey = getKey();
-    JitCode* stubCode = comp->getStubCode(stubKey);
+    JitCode* stubCode = realm->getStubCode(stubKey);
     if (stubCode)
         return stubCode;
 
@@ -523,7 +523,7 @@ ICStubCompiler::getStubCode()
         return nullptr;
 
     // Cache newly compiled stubcode.
-    if (!comp->putStubCode(cx, stubKey, newStubCode))
+    if (!realm->putStubCode(cx, stubKey, newStubCode))
         return nullptr;
 
     // After generating code, run postGenerateStubCode().  We must not fail
@@ -2041,7 +2041,7 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
         BailoutReturnStub kind = hasReceiver_ ? BailoutReturnStub::GetPropSuper
                                               : BailoutReturnStub::GetProp;
         void* address = code->raw() + bailoutReturnOffset_.offset();
-        cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
+        cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
     }
 }
 

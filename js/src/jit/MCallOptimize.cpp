@@ -2152,7 +2152,7 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
         return InliningStatus_NotInlined;
 
     JSContext* cx = TlsContext.get();
-    if (!cx->compartment()->jitCompartment()->ensureRegExpMatcherStubExists(cx)) {
+    if (!cx->realm()->jitRealm()->ensureRegExpMatcherStubExists(cx)) {
         cx->clearPendingException(); // OOM or overrecursion.
         return InliningStatus_NotInlined;
     }
@@ -2196,7 +2196,7 @@ IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
         return InliningStatus_NotInlined;
 
     JSContext* cx = TlsContext.get();
-    if (!cx->compartment()->jitCompartment()->ensureRegExpSearcherStubExists(cx)) {
+    if (!cx->realm()->jitRealm()->ensureRegExpSearcherStubExists(cx)) {
         cx->clearPendingException(); // OOM or overrecursion.
         return abort(AbortReason::Error);
     }
@@ -2240,7 +2240,7 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
         return InliningStatus_NotInlined;
 
     JSContext* cx = TlsContext.get();
-    if (!cx->compartment()->jitCompartment()->ensureRegExpTesterStubExists(cx)) {
+    if (!cx->realm()->jitRealm()->ensureRegExpTesterStubExists(cx)) {
         cx->clearPendingException(); // OOM or overrecursion.
         return InliningStatus_NotInlined;
     }

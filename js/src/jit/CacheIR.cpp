@@ -1604,7 +1604,7 @@ GetPropIRGenerator::tryAttachTypedObject(HandleObject obj, ObjOperandId objId, H
     if (!obj->is<TypedObject>())
         return false;
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->compartment()->detachedTypedObjects)
+    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->zone()->detachedTypedObjects)
         return false;
 
     TypedObject* typedObj = &obj->as<TypedObject>();
@@ -2070,7 +2070,7 @@ GetPropIRGenerator::tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
 
     // Don't attach typed object stubs if the underlying storage could be
     // detached, as the stub will always bail out.
-    if (IsPrimitiveArrayTypedObject(obj) && cx_->compartment()->detachedTypedObjects)
+    if (IsPrimitiveArrayTypedObject(obj) && cx_->zone()->detachedTypedObjects)
         return false;
 
     TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
@@ -3296,7 +3296,7 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
     if (!obj->is<TypedObject>())
         return false;
 
-    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->compartment()->detachedTypedObjects)
+    if (!cx_->runtime()->jitSupportsFloatingPoint || cx_->zone()->detachedTypedObjects)
         return false;
 
     if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>())
@@ -3690,9 +3690,8 @@ SetPropIRGenerator::tryAttachSetTypedElement(HandleObject obj, ObjOperandId objI
             return false;
 
         // Don't attach stubs if the underlying storage for typed objects
-        // in the compartment could be detached, as the stub will always
-        // bail out.
-        if (cx_->compartment()->detachedTypedObjects)
+        // in the zone could be detached, as the stub will always bail out.
+        if (cx_->zone()->detachedTypedObjects)
             return false;
     }
 
@@ -4373,7 +4372,7 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
     GeneratePrototypeHoleGuards(writer, obj, objId);
 
     ObjOperandId iterId =
-        writer.guardAndGetIterator(objId, iterobj, &cx_->compartment()->enumerators);
+        writer.guardAndGetIterator(objId, iterobj, &ObjectRealm::get(obj).enumerators);
     writer.loadObjectResult(iterId);
     writer.returnFromIC();
 
