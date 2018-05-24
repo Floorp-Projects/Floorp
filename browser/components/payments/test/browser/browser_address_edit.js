@@ -374,7 +374,7 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
 });
 
 add_task(async function test_private_persist_addresses() {
-  await formAutofillStorage.addresses._nukeAllRecords();
+  formAutofillStorage.addresses.removeAll();
   await setup();
 
   is((await formAutofillStorage.addresses.getAll()).length, 2,
