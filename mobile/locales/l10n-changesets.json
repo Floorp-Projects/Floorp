@@ -33,7 +33,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "844007f6fcb1"
+        "revision": "89ca396a656a"
     }, 
     "bg": {
         "platforms": [
@@ -111,7 +111,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "9163ecd3664e"
+        "revision": "b716211c4af3"
     }, 
     "en-GB": {
         "platforms": [
@@ -279,7 +279,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "212046797338"
+        "revision": "3620acca9757"
     }, 
     "ja": {
         "platforms": [
@@ -297,7 +297,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "299e9b9b7d61"
+        "revision": "434280e7f905"
     }, 
     "kk": {
         "platforms": [
@@ -333,7 +333,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "dfae7ee8ed20"
+        "revision": "b58aa2106568"
     }, 
     "mai": {
         "platforms": [
@@ -369,7 +369,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "187888b72f47"
+        "revision": "86b9bde14788"
     }, 
     "ne-NP": {
         "platforms": [
@@ -381,7 +381,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "703d83a0d1af"
+        "revision": "1b1a2203786a"
     }, 
     "nn-NO": {
         "platforms": [
@@ -435,7 +435,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "46866ed008f1"
+        "revision": "643f5cf12c73"
     }, 
     "ru": {
         "platforms": [
@@ -489,7 +489,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "3ed43c282adc"
+        "revision": "8f1e8db3ca19"
     }, 
     "th": {
         "platforms": [
@@ -555,7 +555,7 @@
         "platforms": [
             "android-multilocale"
         ], 
-        "revision": "e73d39ca7cb5"
+        "revision": "b7d94235e1b7"
     }, 
     "zh-TW": {
         "platforms": [
