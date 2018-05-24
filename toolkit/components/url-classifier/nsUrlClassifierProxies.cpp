@@ -129,7 +129,7 @@ UrlClassifierDBServiceWorkerProxy::DoLocalLookupRunnable::Run()
 nsresult
 UrlClassifierDBServiceWorkerProxy::DoLocalLookup(const nsACString& spec,
                                                  const nsACString& tables,
-                                                 LookupResultArray* results)
+                                                 LookupResultArray* results) const
 
 {
   // Run synchronously on background thread. NS_DISPATCH_SYNC does *not* do
@@ -195,7 +195,7 @@ UrlClassifierDBServiceWorkerProxy::ClearCache()
 }
 
 nsresult
-UrlClassifierDBServiceWorkerProxy::OpenDb()
+UrlClassifierDBServiceWorkerProxy::OpenDb() const
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("nsUrlClassifierDBServiceWorker::OpenDb",
@@ -205,7 +205,7 @@ UrlClassifierDBServiceWorkerProxy::OpenDb()
 }
 
 nsresult
-UrlClassifierDBServiceWorkerProxy::CloseDb()
+UrlClassifierDBServiceWorkerProxy::CloseDb() const
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("nsUrlClassifierDBServiceWorker::CloseDb",
@@ -215,7 +215,7 @@ UrlClassifierDBServiceWorkerProxy::CloseDb()
 }
 
 nsresult
-UrlClassifierDBServiceWorkerProxy::PreShutdown()
+UrlClassifierDBServiceWorkerProxy::PreShutdown() const
 {
   nsCOMPtr<nsIRunnable> r =
     NewRunnableMethod("nsUrlClassifierDBServiceWorker::PreShutdown",
@@ -225,7 +225,7 @@ UrlClassifierDBServiceWorkerProxy::PreShutdown()
 }
 
 nsresult
-UrlClassifierDBServiceWorkerProxy::CacheCompletions(const ConstCacheResultArray& aEntries)
+UrlClassifierDBServiceWorkerProxy::CacheCompletions(const ConstCacheResultArray& aEntries) const
 {
   nsCOMPtr<nsIRunnable> r = new CacheCompletionsRunnable(mTarget, aEntries);
   return DispatchToWorkerThread(r);
@@ -253,7 +253,7 @@ UrlClassifierDBServiceWorkerProxy::ClearLastResultsRunnable::Run()
 
 nsresult
 UrlClassifierDBServiceWorkerProxy::GetCacheInfo(const nsACString& aTable,
-                                                nsIUrlClassifierGetCacheCallback* aCallback)
+                                                nsIUrlClassifierGetCacheCallback* aCallback) const
 {
   nsCOMPtr<nsIRunnable> r = new GetCacheInfoRunnable(mTarget, aTable, aCallback);
   return DispatchToWorkerThread(r);
