@@ -1533,8 +1533,11 @@ impl<'a, ConcreteThreadSafeLayoutNode> PostorderNodeMutTraversal<ConcreteThreadS
 
         let style = node.style(self.style_context());
 
-        // Bail out if this node has an ancestor with display: none.
-        if style.is_in_display_none_subtree() {
+        // Bail out if this node has display: none.
+        //
+        // We shouldn't try to construct flows for nodes in this subtree, the
+        // style system guarantees this.
+        if style.get_box().display.is_none() {
             self.set_flow_construction_result(node, ConstructionResult::None);
             return;
         }
