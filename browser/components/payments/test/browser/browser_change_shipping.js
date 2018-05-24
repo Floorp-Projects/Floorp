@@ -14,7 +14,7 @@ add_task(async function test_change_shipping() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         options: PTU.Options.requestShippingOption,
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
@@ -35,7 +35,7 @@ add_task(async function test_change_shipping() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-      details: PTU.Details.twoShippingOptionsEUR,
+      details: Object.assign({}, PTU.Details.twoShippingOptionsEUR, PTU.Details.total2USD),
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
@@ -81,7 +81,9 @@ add_task(async function test_default_shippingOptions_noneSelected() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let shippingOptionDetails = deepClone(PTU.Details.twoShippingOptions);
+    let shippingOptionDetails = Object.assign(
+      deepClone(PTU.Details.twoShippingOptions), PTU.Details.total2USD
+    );
     info("make sure no shipping options are selected");
     shippingOptionDetails.shippingOptions.forEach(opt => delete opt.selected);
 
@@ -109,7 +111,7 @@ add_task(async function test_default_shippingOptions_noneSelected() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-      details: shippingOptionDetailsEUR,
+      details: Object.assign(shippingOptionDetailsEUR, PTU.Details.total1pt75EUR),
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
@@ -140,7 +142,9 @@ add_task(async function test_default_shippingOptions_allSelected() {
     gBrowser,
     url: BLANK_PAGE_URL,
   }, async browser => {
-    let shippingOptionDetails = deepClone(PTU.Details.twoShippingOptions);
+    let shippingOptionDetails = Object.assign(
+      deepClone(PTU.Details.twoShippingOptions), PTU.Details.total2USD
+    );
     info("make sure no shipping options are selected");
     shippingOptionDetails.shippingOptions.forEach(opt => opt.selected = true);
 
@@ -168,7 +172,7 @@ add_task(async function test_default_shippingOptions_allSelected() {
 
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-      details: shippingOptionDetailsEUR,
+      details: Object.assign(shippingOptionDetailsEUR, PTU.Details.total1pt75EUR),
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
@@ -202,7 +206,7 @@ add_task(async function test_no_shippingchange_without_shipping() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
@@ -241,7 +245,7 @@ add_task(async function test_address_edit() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
         options: PTU.Options.requestShippingOption,
       }
@@ -309,7 +313,7 @@ add_task(async function test_address_removal() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
         options: PTU.Options.requestShippingOption,
       }

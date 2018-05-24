@@ -24,7 +24,7 @@ add_task(async function test_request_shipping_present() {
       let {win, frame} =
         await setupPaymentDialog(browser, {
           methodData: [PTU.MethodData.basicCard],
-          details: PTU.Details.twoShippingOptions,
+          details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
           options,
           merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
         }
@@ -58,7 +58,7 @@ add_task(async function test_request_shipping_not_present() {
     let {win, frame} =
       await setupPaymentDialog(browser, {
         methodData: [PTU.MethodData.basicCard],
-        details: PTU.Details.twoShippingOptions,
+        details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
         merchantTaskFn: PTU.ContentTasks.createAndShowRequest,
       }
     );
