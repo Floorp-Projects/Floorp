@@ -9,7 +9,7 @@
 
 const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 const { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
-const { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
+const { CATEGORY_INDEX } = require("devtools/client/performance/modules/categories");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
 add_task(function() {
@@ -89,20 +89,20 @@ const gProfile = RecordingUtils.deflateProfile({
         { location: "http://content/A" },
         { location: "http://content/E" },
         { location: "http://content/F" },
-        { location: "platform_JS", category: CATEGORY_MASK("js") },
+        { location: "platform_JS", category: CATEGORY_INDEX("js") },
       ]
     }, {
       time: 1 + 1 + 2 + 3,
       frames: [
         { location: "(root)" },
-        { location: "platform_JS2", category: CATEGORY_MASK("js") },
+        { location: "platform_JS2", category: CATEGORY_INDEX("js") },
       ]
     }, {
       time: 1 + 1 + 2 + 3 + 5,
       frames: [
         { location: "(root)" },
         { location: "http://content/A" },
-        { location: "platform_GC", category: CATEGORY_MASK("gc", 1) },
+        { location: "platform_GC", category: CATEGORY_INDEX("gc") },
       ]
     }]
   }]
