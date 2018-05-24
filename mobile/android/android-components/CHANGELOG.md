@@ -1,3 +1,23 @@
+# 0.7
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.41
+  * Kotlin coroutines 0.22.5
+  * GeckoView Nightly
+    * date: 2018.05.16
+    * version: 62.0.20180516100458
+    * revision: dedd25bfd2794eaba95225361f82c701e49c9339
+
+* **browser-toolbar**: Added support for dynamic actions. Made site security indicator optional. Added support for overriding default height and padding.
+* **feature-session**: Added new use case implementation to support reloading URLs. Fixed bugs when restoring sessions from storage. Use `AtomicFile` for `DefaultSessionStorage`.
+* **feature-search**: New component - Connects an (concept) engine implementation with the browser search module and provides search related use case implementations e.g. searching using the default provider.
+* **support-ktx**: Added extension method to check if a `String` represents a URL.
+* **samples-browser**: Added default search integration using the new feature-search component.
+* **samples-toolbar**: New sample app - Shows how to customize the browser-toolbar component.
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.6...v0.7)
+
 # 0.6
 
 * Compiled against:
@@ -15,7 +35,7 @@
 * **support-ktx**: Added extension methods to `View` for checking visibility (`View.isVisible`, `View.isInvisible` and `View.isGone`).
 * **samples-browser**: Use new browser menu component and switch to Gecko as default engine.
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.6...v0.5.1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.5.1...v0.6)
 
 # 0.5.1
 
