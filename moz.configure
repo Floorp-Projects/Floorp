@@ -436,6 +436,12 @@ def tup_is_ldpreload(tup):
                               '--from-build linux64-tup|')
     return True
 
+@depends_if(tup, using_sccache)
+def tup_and_sccache(tup, using_sccache):
+    if tup and using_sccache:
+        die('Cannot use sccache with tup yet. Please disable sccache or use '
+            'the make backend until it is supported.')
+
 # watchman detection
 # ==============================================================
 
