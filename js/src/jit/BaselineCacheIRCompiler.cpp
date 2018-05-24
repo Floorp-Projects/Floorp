@@ -9,6 +9,7 @@
 #include "jit/CacheIR.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
+#include "proxy/DeadObjectProxy.h"
 #include "proxy/Proxy.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -286,12 +287,18 @@ bool
 BaselineCacheIRCompiler::emitGuardCompartment()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
-    reader.stubOffset(); // Read global wrapper.
     AutoScratchRegister scratch(allocator, masm);
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
+
+    // Verify that the global wrapper is still valid, as
+    // it is pre-requisite for doing the compartment check.
+    Address globalWrapper(stubAddress(reader.stubOffset()));
+    masm.loadPtr(globalWrapper, scratch);
+    Address handlerAddr(scratch, ProxyObject::offsetOfHandler());
+    masm.branchPtr(Assembler::Equal, handlerAddr, ImmPtr(&DeadObjectProxy::singleton), failure->label());
 
     Address addr(stubAddress(reader.stubOffset()));
     masm.branchTestObjCompartment(Assembler::NotEqual, obj, addr, scratch, failure->label());

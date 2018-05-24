@@ -1,6 +1,6 @@
 include dirAuto/reftest.list
 include numeral/reftest.list
-== bdi-element.html bdi-element-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bdi-element.html bdi-element-ref.html
 == bidi-000.html bidi-000-ref.html
 == bidi-001.html bidi-001-ref.html
 == bidi-001-j.html bidi-001-ref.html

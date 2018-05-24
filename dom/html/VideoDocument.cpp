@@ -79,14 +79,13 @@ VideoDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
   // anything that might require it....
   MediaDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
-  if (aScriptGlobalObject) {
-    if (!nsContentUtils::IsChildOfSameType(this) &&
-        GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE) {
+  if (aScriptGlobalObject && !InitialSetupHasBeenDone()) {
+    if (!nsContentUtils::IsChildOfSameType(this)) {
       LinkStylesheet(NS_LITERAL_STRING("resource://content-accessible/TopLevelVideoDocument.css"));
       LinkStylesheet(NS_LITERAL_STRING("chrome://global/skin/media/TopLevelVideoDocument.css"));
       LinkScript(NS_LITERAL_STRING("chrome://global/content/TopLevelVideoDocument.js"));
     }
-    BecomeInteractive();
+    InitialSetupDone();
   }
 }
 

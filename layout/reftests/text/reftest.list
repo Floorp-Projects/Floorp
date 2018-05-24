@@ -28,7 +28,7 @@ fails-if(cocoaWidget) == lineheight-metrics-1.html lineheight-metrics-1-ref.html
 == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
-== long-1.html long-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html
 fuzzy-if(Android,255,325) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html

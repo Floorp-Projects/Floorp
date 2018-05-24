@@ -1349,7 +1349,7 @@ bool
 TypedObject::isAttached() const
 {
     if (is<InlineTransparentTypedObject>()) {
-        ObjectWeakMap* table = compartment()->lazyArrayBuffers;
+        ObjectWeakMap* table = compartment()->lazyArrayBuffers.get();
         if (table) {
             JSObject* buffer = table->lookup(this);
             if (buffer)
@@ -2143,12 +2143,15 @@ InlineTypedObject::obj_moved(JSObject* dst, JSObject* src)
 ArrayBufferObject*
 InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
 {
-    ObjectWeakMap*& table = cx->compartment()->lazyArrayBuffers;
-    if (!table) {
-        table = cx->new_<ObjectWeakMap>(cx);
+    if (!cx->compartment()->lazyArrayBuffers) {
+        auto table = cx->make_unique<ObjectWeakMap>(cx);
         if (!table || !table->init())
             return nullptr;
+
+        cx->compartment()->lazyArrayBuffers = Move(table);
     }
+
+    ObjectWeakMap* table = cx->compartment()->lazyArrayBuffers.get();
 
     JSObject* obj = table->lookup(this);
     if (obj)
