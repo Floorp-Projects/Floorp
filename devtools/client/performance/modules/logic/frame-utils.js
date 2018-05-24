@@ -9,7 +9,7 @@ const { assert } = require("devtools/shared/DevToolsUtils");
 const { isChromeScheme, isContentScheme, isWASM, parseURL } =
   require("devtools/client/shared/source-utils");
 
-const { CATEGORY_MASK, CATEGORY_MAPPINGS } = require("devtools/client/performance/modules/categories");
+const { CATEGORY_INDEX, CATEGORIES } = require("devtools/client/performance/modules/categories");
 
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_R = "r".charCodeAt(0);
@@ -190,7 +190,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
  */
 function computeIsContentAndCategory(frame) {
   // Only C++ stack frames have associated category information.
-  if (frame.category) {
+  if (frame.category !== null && frame.category !== undefined) {
     return;
   }
 
@@ -234,18 +234,18 @@ function computeIsContentAndCategory(frame) {
           isChromeScheme(location, j) &&
           (location.includes("resource://devtools") ||
            location.includes("resource://devtools"))) {
-        frame.category = CATEGORY_MASK("tools");
+        frame.category = CATEGORY_INDEX("tools");
         return;
       }
     }
   }
 
   if (location === "EnterJIT") {
-    frame.category = CATEGORY_MASK("js");
+    frame.category = CATEGORY_INDEX("js");
     return;
   }
 
-  frame.category = CATEGORY_MASK("other");
+  frame.category = CATEGORY_INDEX("other");
 }
 
 /**
@@ -393,7 +393,10 @@ function getFrameInfo(node, options) {
       data.isMetaCategory = node.isMetaCategory;
     }
     data.samples = node.youngestFrameSamples;
-    data.categoryData = CATEGORY_MAPPINGS[node.category] || {};
+    const hasCategory = node.category !== null && node.category !== undefined;
+    data.categoryData = hasCategory
+      ? (CATEGORIES[node.category] || CATEGORIES[CATEGORY_INDEX("other")])
+      : {};
     data.nodeType = node.nodeType;
 
     // Frame name (function location or some meta information)

@@ -6,7 +6,7 @@
  * Generates a generalized profile with some samples.
  */
 exports.synthesizeProfile = () => {
-  const { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
+  const { CATEGORY_INDEX } = require("devtools/client/performance/modules/categories");
   const RecordingUtils = require("devtools/shared/performance/recording-utils");
 
   return RecordingUtils.deflateProfile({
@@ -15,34 +15,34 @@ exports.synthesizeProfile = () => {
       samples: [{
         time: 1,
         frames: [
-          { category: CATEGORY_MASK("other"), location: "(root)" },
-          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("js"), location: "C (http://foo/bar/baz:56)" }
+          { category: CATEGORY_INDEX("other"), location: "(root)" },
+          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_INDEX("js"), location: "C (http://foo/bar/baz:56)" }
         ]
       }, {
         time: 1 + 1,
         frames: [
-          { category: CATEGORY_MASK("other"), location: "(root)" },
-          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("gc", 1), location: "D (http://foo/bar/baz:78:9)" }
+          { category: CATEGORY_INDEX("other"), location: "(root)" },
+          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" }
         ]
       }, {
         time: 1 + 1 + 2,
         frames: [
-          { category: CATEGORY_MASK("other"), location: "(root)" },
-          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("css"), location: "B (http://foo/bar/baz:34)" },
-          { category: CATEGORY_MASK("gc", 1), location: "D (http://foo/bar/baz:78:9)" }
+          { category: CATEGORY_INDEX("other"), location: "(root)" },
+          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_INDEX("layout"), location: "B (http://foo/bar/baz:34)" },
+          { category: CATEGORY_INDEX("gc"), location: "D (http://foo/bar/baz:78:9)" }
         ]
       }, {
         time: 1 + 1 + 2 + 3,
         frames: [
-          { category: CATEGORY_MASK("other"), location: "(root)" },
-          { category: CATEGORY_MASK("other"), location: "A (http://foo/bar/baz:12)" },
-          { category: CATEGORY_MASK("gc", 2), location: "E (http://foo/bar/baz:90)" },
-          { category: CATEGORY_MASK("network"), location: "F (http://foo/bar/baz:99)" }
+          { category: CATEGORY_INDEX("other"), location: "(root)" },
+          { category: CATEGORY_INDEX("other"), location: "A (http://foo/bar/baz:12)" },
+          { category: CATEGORY_INDEX("gc"), location: "E (http://foo/bar/baz:90)" },
+          { category: CATEGORY_INDEX("network"), location: "F (http://foo/bar/baz:99)" }
         ]
       }]
     }]
