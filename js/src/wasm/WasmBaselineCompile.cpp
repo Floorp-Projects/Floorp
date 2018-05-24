@@ -8343,7 +8343,7 @@ BaseCompiler::emitGetGlobal()
             pushF64(value.f64());
             break;
           case ValType::AnyRef:
-            pushRef(value.ptr());
+            pushRef(intptr_t(value.ptr()));
             break;
           default:
             MOZ_CRASH("Global constant type");
