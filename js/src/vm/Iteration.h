@@ -26,7 +26,8 @@ class PropertyIteratorObject;
 struct NativeIterator
 {
   private:
-    // Object being iterated.  Non-null except in NativeIterator sentinels.
+    // Object being iterated.  Non-null except in NativeIterator sentinels and
+    // empty property iterators created when |null| or |undefined| is iterated.
     GCPtrObject objectBeingIterated_ = {};
 
     // Internal iterator object.
@@ -92,8 +93,8 @@ struct NativeIterator
     /** Initialize a |JSCompartment::enumerators| sentinel. */
     NativeIterator();
 
-    JSObject& objectBeingIterated() const {
-        return *objectBeingIterated_;
+    JSObject* objectBeingIterated() const {
+        return objectBeingIterated_;
     }
 
     void changeObjectBeingIterated(JSObject& obj) {

@@ -1231,7 +1231,7 @@ static bool
 SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
                         Handle<JSFlatString*> str)
 {
-    if (ni->objectBeingIterated() != *obj)
+    if (ni->objectBeingIterated() != obj)
         return true;
 
     // Optimization for the following common case:
