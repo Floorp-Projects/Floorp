@@ -187,7 +187,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
      *                         value = "true")})
      * </pre>
      */
-    @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD, ElementType.TYPE})
+    @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
     public @interface Setting {
         enum Key {
@@ -246,6 +246,17 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
 
         Key key();
         String value();
+    }
+
+    /**
+     * If a test requests a default open session, reuse a cached session instead of creating an
+     * open session every time. A new session is still created if the test requests a non-default
+     * session such as a closed session or a session with custom settings.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ReuseSession {
+        boolean value() default true;
     }
 
     /**
@@ -764,6 +775,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     private static GeckoRuntime sRuntime;
     private static RDPConnection sRDPConnection;
     private static long sLongestWait;
+    protected static GeckoSession sCachedSession;
+    protected static Tab sCachedRDPTab;
 
     public final Environment env = new Environment();
 
@@ -792,6 +805,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
     protected boolean mWithDevTools;
     protected Map<GeckoSession, Tab> mRDPTabs;
     protected Tab mRDPChromeProcess;
+    protected boolean mReuseSession;
 
     public GeckoSessionTestRule() {
         mDefaultSettings = new GeckoSessionSettings();
@@ -931,6 +945,8 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 mClosedSession = ((ClosedSessionAtStart) annotation).value();
             } else if (WithDevToolsAPI.class.equals(annotation.annotationType())) {
                 mWithDevTools = ((WithDevToolsAPI) annotation).value();
+            } else if (ReuseSession.class.equals(annotation.annotationType())) {
+                mReuseSession = ((ReuseSession) annotation).value();
             }
         }
     }
@@ -966,6 +982,7 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mNullDelegates = new HashSet<>();
         mClosedSession = false;
         mWithDevTools = false;
+        mReuseSession = true;
 
         applyAnnotations(Arrays.asList(description.getTestClass().getAnnotations()), settings);
         applyAnnotations(description.getAnnotations(), settings);
@@ -978,9 +995,6 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         mTestScopeDelegates = testDelegates;
         mLastWaitStart = 0;
         mLastWaitEnd = 0;
-        if (mWithDevTools) {
-            mRDPTabs = new HashMap<>();
-        }
 
         final InvocationHandler recorder = new InvocationHandler() {
             @Override
@@ -1053,16 +1067,20 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             runtimeSettingsBuilder.arguments(new String[] { "-purgecaches" })
                     .extras(InstrumentationRegistry.getArguments())
                     .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true);
+                    .javaCrashReportingEnabled(true)
+                    .remoteDebuggingEnabled(true);
 
             sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
                 runtimeSettingsBuilder.build());
         }
 
-        sRuntime.getSettings().setRemoteDebuggingEnabled(mWithDevTools);
-
-        mMainSession = new GeckoSession(settings);
+        final boolean useDefaultSession = !mClosedSession && mDefaultSettings.equals(settings);
+        if (useDefaultSession && mReuseSession && sCachedSession != null) {
+            mMainSession = sCachedSession;
+        } else {
+            mMainSession = new GeckoSession(settings);
+        }
         prepareSession(mMainSession);
 
         if (mDisplaySize != null) {
@@ -1072,16 +1090,29 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
             mDisplay.surfaceChanged(mDisplaySurface, mDisplaySize.x, mDisplaySize.y);
         }
 
-        if (!mClosedSession) {
+        if (useDefaultSession && mReuseSession) {
+            if (sCachedSession == null) {
+                // We are creating a cached session.
+                final boolean withDevTools = mWithDevTools;
+                mWithDevTools = true; // Always get an RDP tab for cached session.
+                openSession(mMainSession);
+                sCachedSession = mMainSession;
+                sCachedRDPTab = mRDPTabs.get(mMainSession);
+                mWithDevTools = withDevTools;
+            } else {
+                // We are reusing a cached session.
+                mMainSession.loadUri("about:blank");
+                waitForOpenSession(mMainSession);
+            }
+        } else if (!mClosedSession) {
             openSession(mMainSession);
         }
     }
 
     protected void prepareSession(final GeckoSession session) throws Throwable {
         for (final Class<?> cls : CALLBACK_CLASSES) {
-            if (!mNullDelegates.contains(cls)) {
-                getCallbackSetter(cls).invoke(session, mCallbackProxy);
-            }
+            getCallbackSetter(cls).invoke(
+                    session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
         }
     }
 
@@ -1109,7 +1140,11 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
                 sRDPConnection = new RDPConnection(address);
                 sRDPConnection.setTimeout(mTimeoutMillis);
             }
-            final Tab tab = sRDPConnection.getMostRecentTab();
+            if (mRDPTabs == null) {
+                mRDPTabs = new HashMap<>();
+            }
+            final Tab tab = session.equals(sCachedSession) ? sCachedRDPTab
+                                                           : sRDPConnection.getMostRecentTab();
             mRDPTabs.put(session, tab);
         }
     }
@@ -1171,7 +1206,12 @@ public class GeckoSessionTestRule extends UiThreadTestRule {
         for (final GeckoSession session : mSubSessions) {
             cleanupSession(session);
         }
-        cleanupSession(mMainSession);
+        if (mMainSession.equals(sCachedSession)) {
+            // We have to detach the Promises object, but keep the Tab itself.
+            sCachedRDPTab.getPromises().detach();
+        } else {
+            cleanupSession(mMainSession);
+        }
 
         if (mDisplay != null) {
             mDisplay.surfaceDestroyed();
