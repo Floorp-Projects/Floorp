@@ -6,7 +6,8 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { a, button, dd, dl, dt, header, li, section, span } = require("devtools/client/shared/vendor/react-dom-factories");
+const { a, br, button, dd, dl, dt, header, li, section, span, time } =
+  require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
 
@@ -136,6 +137,13 @@ class Worker extends Component {
         Strings.GetStringFromName("start"))
       : null;
 
+    const lastUpdated = worker.lastUpdateTime
+      ? span({ className: "worker__data__updated" },
+          "Updated ",
+          time({ className: "js-sw-updated"},
+            new Date(worker.lastUpdateTime / 1000).toLocaleString()))
+      : null;
+
     return li({ className: "worker js-sw-container" },
       header(
         { className: "worker__header" },
@@ -151,7 +159,9 @@ class Worker extends Component {
         dd({},
             span({ title: worker.scope, className: "js-source-url" },
               this.formatSource(worker.url)),
-            debugLink),
+            debugLink,
+            lastUpdated ? br({}) : null,
+            lastUpdated ? lastUpdated : null),
         dt({ className: "worker__meta-name" }, "Status"),
         dd({},
           Strings.GetStringFromName(status).toLowerCase(),

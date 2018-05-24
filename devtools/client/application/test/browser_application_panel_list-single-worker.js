@@ -33,6 +33,10 @@ add_task(async function() {
   ok(scopeEl.textContent.startsWith(expectedScope),
     "Service worker has the expected scope");
 
+  let updatedEl = workerContainer.querySelector(".js-sw-updated");
+  ok(updatedEl.textContent.includes(`${new Date().getFullYear()}`),
+    "Service worker has a last updated time");
+
   info("Unregister the service worker");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     let registration = await content.wrappedJSObject.sw;
