@@ -35,7 +35,7 @@ std::vector<VarT> GetActiveShaderVariables(const std::vector<VarT> *variableList
     for (size_t varIndex = 0; varIndex < variableList->size(); varIndex++)
     {
         const VarT &var = variableList->at(varIndex);
-        if (var.active)
+        if (var.staticUse)
         {
             result.push_back(var);
         }
@@ -74,20 +74,20 @@ bool CompareShaderVar(const sh::ShaderVariable &x, const sh::ShaderVariable &y)
     return gl::VariableSortOrder(x.type) < gl::VariableSortOrder(y.type);
 }
 
-const char *GetShaderTypeString(ShaderType type)
+const char *GetShaderTypeString(GLenum type)
 {
     switch (type)
     {
-        case ShaderType::Vertex:
+        case GL_VERTEX_SHADER:
             return "VERTEX";
 
-        case ShaderType::Fragment:
+        case GL_FRAGMENT_SHADER:
             return "FRAGMENT";
 
-        case ShaderType::Compute:
+        case GL_COMPUTE_SHADER:
             return "COMPUTE";
 
-        case ShaderType::Geometry:
+        case GL_GEOMETRY_SHADER_EXT:
             return "GEOMETRY";
 
         default:
@@ -96,7 +96,7 @@ const char *GetShaderTypeString(ShaderType type)
     }
 }
 
-ShaderState::ShaderState(ShaderType shaderType)
+ShaderState::ShaderState(GLenum shaderType)
     : mLabel(),
       mShaderType(shaderType),
       mShaderVersion(100),
@@ -114,7 +114,7 @@ ShaderState::~ShaderState()
 Shader::Shader(ShaderProgramManager *manager,
                rx::GLImplFactory *implFactory,
                const gl::Limitations &rendererLimitations,
-               ShaderType type,
+               GLenum type,
                GLuint handle)
     : mState(type),
       mImplementation(implFactory->createShader(mState)),
@@ -394,22 +394,22 @@ void Shader::resolveCompile(const Context *context)
 
     switch (mState.mShaderType)
     {
-        case ShaderType::Compute:
+        case GL_COMPUTE_SHADER:
         {
             mState.mLocalSize = sh::GetComputeShaderLocalGroupSize(compilerHandle);
             break;
         }
-        case ShaderType::Vertex:
+        case GL_VERTEX_SHADER:
         {
             {
                 mState.mOutputVaryings = GetShaderVariables(sh::GetOutputVaryings(compilerHandle));
-                mState.mAllAttributes    = GetShaderVariables(sh::GetAttributes(compilerHandle));
-                mState.mActiveAttributes = GetActiveShaderVariables(&mState.mAllAttributes);
+                mState.mActiveAttributes =
+                    GetActiveShaderVariables(sh::GetAttributes(compilerHandle));
                 mState.mNumViews = sh::GetVertexShaderNumViews(compilerHandle);
             }
             break;
         }
-        case ShaderType::Fragment:
+        case GL_FRAGMENT_SHADER:
         {
             mState.mInputVaryings = GetShaderVariables(sh::GetInputVaryings(compilerHandle));
             // TODO(jmadill): Figure out why we only sort in the FS, and if we need to.
@@ -418,7 +418,7 @@ void Shader::resolveCompile(const Context *context)
                 GetActiveShaderVariables(sh::GetOutputVariables(compilerHandle));
             break;
         }
-        case ShaderType::Geometry:
+        case GL_GEOMETRY_SHADER_EXT:
         {
             mState.mInputVaryings  = GetShaderVariables(sh::GetInputVaryings(compilerHandle));
             mState.mOutputVaryings = GetShaderVariables(sh::GetOutputVaryings(compilerHandle));
@@ -529,12 +529,6 @@ const std::vector<sh::Attribute> &Shader::getActiveAttributes(const Context *con
     return mState.getActiveAttributes();
 }
 
-const std::vector<sh::Attribute> &Shader::getAllAttributes(const Context *context)
-{
-    resolveCompile(context);
-    return mState.getAllAttributes();
-}
-
 const std::vector<sh::OutputVariable> &Shader::getActiveOutputVariables(const Context *context)
 {
     resolveCompile(context);
@@ -545,7 +539,7 @@ std::string Shader::getTransformFeedbackVaryingMappedName(const std::string &tfV
                                                           const Context *context)
 {
     // TODO(jiawei.shao@intel.com): support transform feedback on geometry shader.
-    ASSERT(mState.getShaderType() == ShaderType::Vertex);
+    ASSERT(mState.getShaderType() == GL_VERTEX_SHADER);
     const auto &varyings = getOutputVaryings(context);
     auto bracketPos      = tfVaryingName.find("[");
     if (bracketPos != std::string::npos)

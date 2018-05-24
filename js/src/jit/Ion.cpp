@@ -31,7 +31,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
 #include "jit/Linker.h"
@@ -215,7 +215,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 
     JitContext jctx(cx, nullptr);
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
@@ -391,18 +391,18 @@ JSContext::freeOsrTempData()
     osrTempData_ = nullptr;
 }
 
-JitCompartment::JitCompartment()
+JitRealm::JitRealm()
   : stubCodes_(nullptr)
 {
 }
 
-JitCompartment::~JitCompartment()
+JitRealm::~JitRealm()
 {
     js_delete(stubCodes_);
 }
 
 bool
-JitCompartment::initialize(JSContext* cx)
+JitRealm::initialize(JSContext* cx)
 {
     stubCodes_ = cx->new_<ICStubCodeMap>(cx->zone());
     if (!stubCodes_)
@@ -431,7 +431,7 @@ PopNextBitmaskValue(uint32_t* bitmask)
 }
 
 void
-JitCompartment::performStubReadBarriers(uint32_t stubsToBarrier) const
+JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const
 {
     while (stubsToBarrier) {
         auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
@@ -442,7 +442,7 @@ JitCompartment::performStubReadBarriers(uint32_t stubsToBarrier) const
 }
 
 void
-JitCompartment::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
+JitRealm::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
 {
     while (simdTemplatesToBarrier) {
         auto type = PopNextBitmaskValue<SimdType>(&simdTemplatesToBarrier);
@@ -629,10 +629,10 @@ JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt)
 }
 
 void
-JitCompartment::sweep(JSCompartment* compartment)
+JitRealm::sweep(JS::Realm* realm)
 {
     // Any outstanding compilations should have been cancelled by the GC.
-    MOZ_ASSERT(!HasOffThreadIonCompile(compartment));
+    MOZ_ASSERT(!HasOffThreadIonCompile(JS::GetCompartmentForRealm(realm)));
 
     stubCodes_->sweep();
 
@@ -660,7 +660,7 @@ JitZone::sweep()
 }
 
 size_t
-JitCompartment::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
     if (stubCodes_)
@@ -1893,21 +1893,51 @@ CompileBackEnd(MIRGenerator* mir)
     return GenerateCode(mir, lir);
 }
 
-// Find a builder which the current thread can finish.
-static IonBuilder*
-GetFinishedBuilder(JSRuntime* rt, GlobalHelperThreadState::IonBuilderVector& finished,
-                   const AutoLockHelperThreadState& locked)
+static inline bool
+TooManyUnlinkedBuilders(JSRuntime* rt)
 {
-    for (size_t i = 0; i < finished.length(); i++) {
-        IonBuilder* testBuilder = finished[i];
-        if (testBuilder->script()->runtimeFromAnyThread() == rt) {
-            HelperThreadState().remove(finished, &i);
-            rt->jitRuntime()->numFinishedBuildersRef(locked)--;
-            return testBuilder;
-        }
-    }
+    static const size_t MaxUnlinkedBuilders = 100;
+    return rt->jitRuntime()->ionLazyLinkListSize() > MaxUnlinkedBuilders;
+}
 
-    return nullptr;
+static void
+MoveFinshedBuildersToLazyLinkList(JSRuntime* rt, const AutoLockHelperThreadState& lock)
+{
+    // Incorporate any off thread compilations for the runtime which have
+    // finished, failed or have been cancelled.
+
+    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
+
+    for (size_t i = 0; i < finished.length(); i++) {
+        // Find a finished builder for the runtime.
+        IonBuilder* builder = finished[i];
+        if (builder->script()->runtimeFromAnyThread() != rt)
+            continue;
+
+        HelperThreadState().remove(finished, &i);
+        rt->jitRuntime()->numFinishedBuildersRef(lock)--;
+
+        JSScript* script = builder->script();
+        MOZ_ASSERT(script->hasBaselineScript());
+        script->baselineScript()->setPendingIonBuilder(rt, script, builder);
+        rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
+    }
+}
+
+static void
+EagerlyLinkExcessBuilders(JSContext* cx, AutoLockHelperThreadState& lock)
+{
+    JSRuntime* rt = cx->runtime();
+    MOZ_ASSERT(TooManyUnlinkedBuilders(rt));
+
+    do {
+        jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
+        RootedScript script(cx, builder->script());
+
+        AutoUnlockHelperThreadState unlock(lock);
+        AutoRealm ar(cx, script);
+        jit::LinkIonScript(cx, script);
+    } while (TooManyUnlinkedBuilders(rt));
 }
 
 void
@@ -1920,31 +1950,17 @@ AttachFinishedCompilations(JSContext* cx)
         return;
 
     AutoLockHelperThreadState lock;
-    GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
 
-    // Incorporate any off thread compilations for the runtime which have
-    // finished, failed or have been cancelled.
     while (true) {
-        // Find a finished builder for the runtime.
-        IonBuilder* builder = GetFinishedBuilder(rt, finished, lock);
-        if (!builder)
+        MoveFinshedBuildersToLazyLinkList(rt, lock);
+
+        if (!TooManyUnlinkedBuilders(rt))
             break;
 
-        JSScript* script = builder->script();
-        MOZ_ASSERT(script->hasBaselineScript());
-        script->baselineScript()->setPendingIonBuilder(rt, script, builder);
-        rt->jitRuntime()->ionLazyLinkListAdd(rt, builder);
+        EagerlyLinkExcessBuilders(cx, lock);
 
-        // Don't keep more than 100 lazy link builders in a runtime.
-        // Link the oldest ones immediately.
-        while (rt->jitRuntime()->ionLazyLinkListSize() > 100) {
-            jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getLast();
-            RootedScript script(cx, builder->script());
-
-            AutoUnlockHelperThreadState unlock(lock);
-            AutoRealm ar(cx, script);
-            jit::LinkIonScript(cx, script);
-        }
+        // Linking releases the lock so we must now check the finished list
+        // again.
     }
 
     MOZ_ASSERT(!rt->jitRuntime()->numFinishedBuilders());
@@ -2035,10 +2051,10 @@ IonCompile(JSContext* cx, JSScript* script,
 
     JitContext jctx(cx, temp);
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return AbortReason::Alloc;
 
-    if (!cx->compartment()->jitCompartment()->ensureIonStubsExist(cx))
+    if (!cx->realm()->jitRealm()->ensureIonStubsExist(cx))
         return AbortReason::Alloc;
 
     MIRGraph* graph = alloc->new_<MIRGraph>(temp);

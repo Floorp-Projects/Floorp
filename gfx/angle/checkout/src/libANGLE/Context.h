@@ -19,7 +19,6 @@
 #include "libANGLE/Caps.h"
 #include "libANGLE/Constants.h"
 #include "libANGLE/ContextState.h"
-#include "libANGLE/Context_gles_1_0_autogen.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/HandleAllocator.h"
 #include "libANGLE/PackedGLEnums.h"
@@ -62,7 +61,7 @@ class VertexArray;
 struct VertexAttribute;
 class ProgramPipeline;
 
-class Context final : angle::NonCopyable
+class Context final : public ValidationContext
 {
   public:
     Context(rx::EGLImplFactory *implFactory,
@@ -74,7 +73,7 @@ class Context final : angle::NonCopyable
             const egl::DisplayExtensions &displayExtensions);
 
     egl::Error onDestroy(const egl::Display *display);
-    ~Context();
+    ~Context() override;
 
     egl::Error makeCurrent(egl::Display *display, egl::Surface *surface);
     egl::Error releaseSurface(const egl::Display *display);
@@ -82,13 +81,13 @@ class Context final : angle::NonCopyable
     // These create  and destroy methods are merely pass-throughs to
     // ResourceManager, which owns these object types
     GLuint createBuffer();
-    GLuint createShader(ShaderType type);
+    GLuint createShader(GLenum type);
     GLuint createProgram();
     GLuint createTexture();
     GLuint createRenderbuffer();
-    GLuint genPaths(GLsizei range);
+    GLuint createPaths(GLsizei range);
     GLuint createProgramPipeline();
-    GLuint createShaderProgramv(ShaderType type, GLsizei count, const GLchar *const *strings);
+    GLuint createShaderProgramv(GLenum type, GLsizei count, const GLchar *const *strings);
 
     void deleteBuffer(GLuint buffer);
     void deleteShader(GLuint shader);
@@ -99,19 +98,19 @@ class Context final : angle::NonCopyable
     void deleteProgramPipeline(GLuint pipeline);
 
     // CHROMIUM_path_rendering
-    bool isPath(GLuint path) const;
-    bool isPathGenerated(GLuint path) const;
-    void pathCommands(GLuint path,
-                      GLsizei numCommands,
-                      const GLubyte *commands,
-                      GLsizei numCoords,
-                      GLenum coordType,
-                      const void *coords);
+    bool hasPathData(GLuint path) const;
+    bool hasPath(GLuint path) const;
+    void setPathCommands(GLuint path,
+                         GLsizei numCommands,
+                         const GLubyte *commands,
+                         GLsizei numCoords,
+                         GLenum coordType,
+                         const void *coords);
     void pathParameterf(GLuint path, GLenum pname, GLfloat value);
     void pathParameteri(GLuint path, GLenum pname, GLint value);
     void getPathParameterfv(GLuint path, GLenum pname, GLfloat *value);
     void getPathParameteriv(GLuint path, GLenum pname, GLint *value);
-    void pathStencilFunc(GLenum func, GLint ref, GLuint mask);
+    void setPathStencilFunc(GLenum func, GLint ref, GLuint mask);
 
     // Framebuffers are owned by the Context, so these methods do not pass through
     GLuint createFramebuffer();
@@ -126,11 +125,119 @@ class Context final : angle::NonCopyable
     void setFenceNV(GLuint fence, GLenum condition);
     GLboolean testFenceNV(GLuint fence);
 
-    // GLES1 emulation: Interface to entry points
-    ANGLE_GLES1_CONTEXT_API
+    // OpenGL ES 1
+    void alphaFunc(GLenum func, GLfloat ref);
+    void alphaFuncx(GLenum func, GLfixed ref);
+    void clearColorx(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
+    void clearDepthx(GLfixed depth);
+    void clientActiveTexture(GLenum texture);
+    void clipPlanef(GLenum p, const GLfloat *eqn);
+    void clipPlanex(GLenum plane, const GLfixed *equation);
+    void color4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+    void color4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
+    void color4x(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
+    void colorPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);
+    void cullFace(GLenum mode);
+    void depthRangex(GLfixed n, GLfixed f);
+    void disableClientState(GLenum array);
+    void enableClientState(GLenum array);
+    void fogf(GLenum pname, GLfloat param);
+    void fogfv(GLenum pname, const GLfloat *params);
+    void fogx(GLenum pname, GLfixed param);
+    void fogxv(GLenum pname, const GLfixed *param);
+    void frustumf(GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f);
+    void frustumx(GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GLfixed f);
+    void getBufferParameteriv(GLenum target, GLenum pname, GLint *params);
+    void getClipPlanef(GLenum plane, GLfloat *equation);
+    void getClipPlanex(GLenum plane, GLfixed *equation);
+    void getFixedv(GLenum pname, GLfixed *params);
+    void getLightfv(GLenum light, GLenum pname, GLfloat *params);
+    void getLightxv(GLenum light, GLenum pname, GLfixed *params);
+    void getMaterialfv(GLenum face, GLenum pname, GLfloat *params);
+    void getMaterialxv(GLenum face, GLenum pname, GLfixed *params);
+    void getTexEnvfv(GLenum target, GLenum pname, GLfloat *params);
+    void getTexEnviv(GLenum target, GLenum pname, GLint *params);
+    void getTexEnvxv(GLenum target, GLenum pname, GLfixed *params);
+    void getTexParameterxv(GLenum target, GLenum pname, GLfixed *params);
+    void lightModelf(GLenum pname, GLfloat param);
+    void lightModelfv(GLenum pname, const GLfloat *params);
+    void lightModelx(GLenum pname, GLfixed param);
+    void lightModelxv(GLenum pname, const GLfixed *param);
+    void lightf(GLenum light, GLenum pname, GLfloat param);
+    void lightfv(GLenum light, GLenum pname, const GLfloat *params);
+    void lightx(GLenum light, GLenum pname, GLfixed param);
+    void lightxv(GLenum light, GLenum pname, const GLfixed *params);
+    void lineWidthx(GLfixed width);
+    void loadIdentity();
+    void loadMatrixf(const GLfloat *m);
+    void loadMatrixx(const GLfixed *m);
+    void logicOp(GLenum opcode);
+    void materialf(GLenum face, GLenum pname, GLfloat param);
+    void materialfv(GLenum face, GLenum pname, const GLfloat *params);
+    void materialx(GLenum face, GLenum pname, GLfixed param);
+    void materialxv(GLenum face, GLenum pname, const GLfixed *param);
+    void matrixMode(GLenum mode);
+    void multMatrixf(const GLfloat *m);
+    void multMatrixx(const GLfixed *m);
+    void multiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
+    void multiTexCoord4x(GLenum texture, GLfixed s, GLfixed t, GLfixed r, GLfixed q);
+    void normal3f(GLfloat nx, GLfloat ny, GLfloat nz);
+    void normal3x(GLfixed nx, GLfixed ny, GLfixed nz);
+    void normalPointer(GLenum type, GLsizei stride, const void *pointer);
+    void orthof(GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f);
+    void orthox(GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GLfixed f);
+    void pointParameterf(GLenum pname, GLfloat param);
+    void pointParameterfv(GLenum pname, const GLfloat *params);
+    void pointParameterx(GLenum pname, GLfixed param);
+    void pointParameterxv(GLenum pname, const GLfixed *params);
+    void pointSize(GLfloat size);
+    void pointSizex(GLfixed size);
+    void polygonOffsetx(GLfixed factor, GLfixed units);
+    void popMatrix();
+    void pushMatrix();
+    void rotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
+    void rotatex(GLfixed angle, GLfixed x, GLfixed y, GLfixed z);
+    void sampleCoveragex(GLclampx value, GLboolean invert);
+    void scalef(GLfloat x, GLfloat y, GLfloat z);
+    void scalex(GLfixed x, GLfixed y, GLfixed z);
+    void shadeModel(GLenum mode);
+    void texCoordPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);
+    void texEnvf(GLenum target, GLenum pname, GLfloat param);
+    void texEnvfv(GLenum target, GLenum pname, const GLfloat *params);
+    void texEnvi(GLenum target, GLenum pname, GLint param);
+    void texEnviv(GLenum target, GLenum pname, const GLint *params);
+    void texEnvx(GLenum target, GLenum pname, GLfixed param);
+    void texEnvxv(GLenum target, GLenum pname, const GLfixed *params);
+    void texParameterx(GLenum target, GLenum pname, GLfixed param);
+    void texParameterxv(GLenum target, GLenum pname, const GLfixed *params);
+    void translatef(GLfloat x, GLfloat y, GLfloat z);
+    void translatex(GLfixed x, GLfixed y, GLfixed z);
+    void vertexPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);
+
+    // GL_OES_draw_texture
+    void drawTexf(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);
+    void drawTexfv(const GLfloat *coords);
+    void drawTexi(GLint x, GLint y, GLint z, GLint width, GLint height);
+    void drawTexiv(const GLint *coords);
+    void drawTexs(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height);
+    void drawTexsv(const GLshort *coords);
+    void drawTexx(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
+    void drawTexxv(const GLfixed *coords);
+
+    // GL_OES_matrix_palette
+    void currentPaletteMatrix(GLuint matrixpaletteindex);
+    void loadPaletteFromModelViewMatrix();
+    void matrixIndexPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);
+    void weightPointer(GLint size, GLenum type, GLsizei stride, const void *pointer);
+
+    // GL_OES_point_size_array
+    void pointSizePointer(GLenum type, GLsizei stride, const void *pointer);
+
+    // GL_OES_query_matrix
+    GLbitfield queryMatrixx(GLfixed *mantissa, GLint *exponent);
 
     // OpenGL ES 2+
-    void bindTexture(TextureType target, GLuint handle);
+    void bindTexture(GLenum target, GLuint handle);
     void bindReadFramebuffer(GLuint framebufferHandle);
     void bindDrawFramebuffer(GLuint framebufferHandle);
     void bindVertexArray(GLuint vertexArrayHandle);
@@ -155,164 +262,37 @@ class Context final : angle::NonCopyable
     void endQuery(GLenum target);
     void queryCounter(GLuint id, GLenum target);
     void getQueryiv(GLenum target, GLenum pname, GLint *params);
-    void getQueryivRobust(GLenum target,
-                          GLenum pname,
-                          GLsizei bufSize,
-                          GLsizei *length,
-                          GLint *params);
-
     void getQueryObjectiv(GLuint id, GLenum pname, GLint *params);
-    void getQueryObjectivRobust(GLuint id,
-                                GLenum pname,
-                                GLsizei bufSize,
-                                GLsizei *length,
-                                GLint *params);
     void getQueryObjectuiv(GLuint id, GLenum pname, GLuint *params);
-    void getQueryObjectuivRobust(GLuint id,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 GLuint *params);
     void getQueryObjecti64v(GLuint id, GLenum pname, GLint64 *params);
-    void getQueryObjecti64vRobust(GLuint id,
-                                  GLenum pname,
-                                  GLsizei bufSize,
-                                  GLsizei *length,
-                                  GLint64 *params);
     void getQueryObjectui64v(GLuint id, GLenum pname, GLuint64 *params);
-    void getQueryObjectui64vRobust(GLuint id,
-                                   GLenum pname,
-                                   GLsizei bufSize,
-                                   GLsizei *length,
-                                   GLuint64 *params);
 
     void vertexAttribDivisor(GLuint index, GLuint divisor);
     void vertexBindingDivisor(GLuint bindingIndex, GLuint divisor);
 
     void getBufferParameteriv(BufferBinding target, GLenum pname, GLint *params);
-    void getBufferParameterivRobust(BufferBinding target,
-                                    GLenum pname,
-                                    GLsizei bufSize,
-                                    GLsizei *length,
-                                    GLint *params);
-
     void getFramebufferAttachmentParameteriv(GLenum target,
                                              GLenum attachment,
                                              GLenum pname,
                                              GLint *params);
-    void getFramebufferAttachmentParameterivRobust(GLenum target,
-                                                   GLenum attachment,
-                                                   GLenum pname,
-                                                   GLsizei bufSize,
-                                                   GLsizei *length,
-                                                   GLint *params);
     void getRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params);
-    void getRenderbufferParameterivRobust(GLenum target,
-                                          GLenum pname,
-                                          GLsizei bufSize,
-                                          GLsizei *length,
-                                          GLint *params);
 
-    void getTexParameterfv(TextureType target, GLenum pname, GLfloat *params);
-    void getTexParameterfvRobust(TextureType target,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 GLfloat *params);
-    void getTexParameteriv(TextureType target, GLenum pname, GLint *params);
-    void getTexParameterivRobust(TextureType target,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 GLint *params);
-    void getTexParameterIivRobust(TextureType target,
-                                  GLenum pname,
-                                  GLsizei bufSize,
-                                  GLsizei *length,
-                                  GLint *params);
-    void getTexParameterIuivRobust(TextureType target,
-                                   GLenum pname,
-                                   GLsizei bufSize,
-                                   GLsizei *length,
-                                   GLuint *params);
+    void getTexParameterfv(GLenum target, GLenum pname, GLfloat *params);
+    void getTexParameteriv(GLenum target, GLenum pname, GLint *params);
+    void getTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params);
+    void getTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params);
+    void texParameterf(GLenum target, GLenum pname, GLfloat param);
+    void texParameterfv(GLenum target, GLenum pname, const GLfloat *params);
+    void texParameteri(GLenum target, GLenum pname, GLint param);
+    void texParameteriv(GLenum target, GLenum pname, const GLint *params);
 
-    void getTexLevelParameteriv(TextureTarget target, GLint level, GLenum pname, GLint *params);
-    void getTexLevelParameterivRobust(TextureTarget target,
-                                      GLint level,
-                                      GLenum pname,
-                                      GLsizei bufSize,
-                                      GLsizei *length,
-                                      GLint *params);
-    void getTexLevelParameterfv(TextureTarget target, GLint level, GLenum pname, GLfloat *params);
-    void getTexLevelParameterfvRobust(TextureTarget target,
-                                      GLint level,
-                                      GLenum pname,
-                                      GLsizei bufSize,
-                                      GLsizei *length,
-                                      GLfloat *params);
-    void texParameterf(TextureType target, GLenum pname, GLfloat param);
-    void texParameterfv(TextureType target, GLenum pname, const GLfloat *params);
-    void texParameterfvRobust(TextureType target,
-                              GLenum pname,
-                              GLsizei bufSize,
-                              const GLfloat *params);
-    void texParameteri(TextureType target, GLenum pname, GLint param);
-    void texParameteriv(TextureType target, GLenum pname, const GLint *params);
-    void texParameterivRobust(TextureType target,
-                              GLenum pname,
-                              GLsizei bufSize,
-                              const GLint *params);
-    void texParameterIivRobust(TextureType target,
-                               GLenum pname,
-                               GLsizei bufSize,
-                               const GLint *params);
-    void texParameterIuivRobust(TextureType target,
-                                GLenum pname,
-                                GLsizei bufSize,
-                                const GLuint *params);
     void samplerParameteri(GLuint sampler, GLenum pname, GLint param);
     void samplerParameteriv(GLuint sampler, GLenum pname, const GLint *param);
-    void samplerParameterivRobust(GLuint sampler,
-                                  GLenum pname,
-                                  GLsizei bufSize,
-                                  const GLint *param);
-    void samplerParameterIivRobust(GLuint sampler,
-                                   GLenum pname,
-                                   GLsizei bufSize,
-                                   const GLint *param);
-    void samplerParameterIuivRobust(GLuint sampler,
-                                    GLenum pname,
-                                    GLsizei bufSize,
-                                    const GLuint *param);
     void samplerParameterf(GLuint sampler, GLenum pname, GLfloat param);
     void samplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param);
-    void samplerParameterfvRobust(GLuint sampler,
-                                  GLenum pname,
-                                  GLsizei bufSize,
-                                  const GLfloat *param);
 
     void getSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params);
-    void getSamplerParameterivRobust(GLuint sampler,
-                                     GLenum pname,
-                                     GLsizei bufSize,
-                                     GLsizei *length,
-                                     GLint *params);
-    void getSamplerParameterIivRobust(GLuint sampler,
-                                      GLenum pname,
-                                      GLsizei bufSize,
-                                      GLsizei *length,
-                                      GLint *params);
-    void getSamplerParameterIuivRobust(GLuint sampler,
-                                       GLenum pname,
-                                       GLsizei bufSize,
-                                       GLsizei *length,
-                                       GLuint *params);
     void getSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat *params);
-    void getSamplerParameterfvRobust(GLuint sampler,
-                                     GLenum pname,
-                                     GLsizei bufSize,
-                                     GLsizei *length,
-                                     GLfloat *params);
 
     void programParameteri(GLuint program, GLenum pname, GLint value);
 
@@ -337,12 +317,6 @@ class Context final : angle::NonCopyable
                                GLenum programInterface,
                                GLenum pname,
                                GLint *params);
-    void getProgramInterfaceivRobust(GLuint program,
-                                     GLenum programInterface,
-                                     GLenum pname,
-                                     GLsizei bufSize,
-                                     GLsizei *length,
-                                     GLint *params);
 
     Buffer *getBuffer(GLuint handle) const;
     FenceNV *getFenceNV(GLuint handle);
@@ -366,8 +340,8 @@ class Context final : angle::NonCopyable
                         GLchar *label) const;
     void getObjectPtrLabel(const void *ptr, GLsizei bufSize, GLsizei *length, GLchar *label) const;
 
-    Texture *getTargetTexture(TextureType type) const;
-    Texture *getSamplerTexture(unsigned int sampler, TextureType type) const;
+    Texture *getTargetTexture(GLenum target) const;
+    Texture *getSamplerTexture(unsigned int sampler, GLenum type) const;
 
     Compiler *getCompiler() const;
 
@@ -377,38 +351,16 @@ class Context final : angle::NonCopyable
     bool isTransformFeedbackGenerated(GLuint vertexArray);
 
     void getBooleanv(GLenum pname, GLboolean *params);
-    void getBooleanvRobust(GLenum pname, GLsizei bufSize, GLsizei *length, GLboolean *params);
     void getBooleanvImpl(GLenum pname, GLboolean *params);
     void getFloatv(GLenum pname, GLfloat *params);
-    void getFloatvRobust(GLenum pname, GLsizei bufSize, GLsizei *length, GLfloat *params);
     void getFloatvImpl(GLenum pname, GLfloat *params);
     void getIntegerv(GLenum pname, GLint *params);
-    void getIntegervRobust(GLenum pname, GLsizei bufSize, GLsizei *length, GLint *data);
     void getIntegervImpl(GLenum pname, GLint *params);
     void getInteger64vImpl(GLenum pname, GLint64 *params);
     void getPointerv(GLenum pname, void **params) const;
-    void getPointervRobustANGLERobust(GLenum pname,
-                                      GLsizei bufSize,
-                                      GLsizei *length,
-                                      void **params);
     void getBooleani_v(GLenum target, GLuint index, GLboolean *data);
-    void getBooleani_vRobust(GLenum target,
-                             GLuint index,
-                             GLsizei bufSize,
-                             GLsizei *length,
-                             GLboolean *data);
     void getIntegeri_v(GLenum target, GLuint index, GLint *data);
-    void getIntegeri_vRobust(GLenum target,
-                             GLuint index,
-                             GLsizei bufSize,
-                             GLsizei *length,
-                             GLint *data);
     void getInteger64i_v(GLenum target, GLuint index, GLint64 *data);
-    void getInteger64i_vRobust(GLenum target,
-                               GLuint index,
-                               GLsizei bufSize,
-                               GLsizei *length,
-                               GLint64 *data);
 
     void activeShaderProgram(GLuint pipeline, GLuint program);
     void activeTexture(GLenum texture);
@@ -473,35 +425,10 @@ class Context final : angle::NonCopyable
     void vertexAttribI4iv(GLuint index, const GLint *v);
     void vertexAttribI4uiv(GLuint index, const GLuint *v);
     void getVertexAttribiv(GLuint index, GLenum pname, GLint *params);
-    void getVertexAttribivRobust(GLuint index,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 GLint *params);
     void getVertexAttribfv(GLuint index, GLenum pname, GLfloat *params);
-    void getVertexAttribfvRobust(GLuint index,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 GLfloat *params);
     void getVertexAttribIiv(GLuint index, GLenum pname, GLint *params);
-    void getVertexAttribIivRobust(GLuint index,
-                                  GLenum pname,
-                                  GLsizei bufSize,
-                                  GLsizei *length,
-                                  GLint *params);
     void getVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params);
-    void getVertexAttribIuivRobust(GLuint index,
-                                   GLenum pname,
-                                   GLsizei bufSize,
-                                   GLsizei *length,
-                                   GLuint *params);
     void getVertexAttribPointerv(GLuint index, GLenum pname, void **pointer);
-    void getVertexAttribPointervRobust(GLuint index,
-                                       GLenum pname,
-                                       GLsizei bufSize,
-                                       GLsizei *length,
-                                       void **pointer);
 
     void debugMessageControl(GLenum source,
                              GLenum type,
@@ -569,30 +496,8 @@ class Context final : angle::NonCopyable
                     GLenum format,
                     GLenum type,
                     void *pixels);
-    void readPixelsRobust(GLint x,
-                          GLint y,
-                          GLsizei width,
-                          GLsizei height,
-                          GLenum format,
-                          GLenum type,
-                          GLsizei bufSize,
-                          GLsizei *length,
-                          GLsizei *columns,
-                          GLsizei *rows,
-                          void *pixels);
-    void readnPixelsRobust(GLint x,
-                           GLint y,
-                           GLsizei width,
-                           GLsizei height,
-                           GLenum format,
-                           GLenum type,
-                           GLsizei bufSize,
-                           GLsizei *length,
-                           GLsizei *columns,
-                           GLsizei *rows,
-                           void *data);
 
-    void copyTexImage2D(TextureTarget target,
+    void copyTexImage2D(GLenum target,
                         GLint level,
                         GLenum internalformat,
                         GLint x,
@@ -601,7 +506,7 @@ class Context final : angle::NonCopyable
                         GLsizei height,
                         GLint border);
 
-    void copyTexSubImage2D(TextureTarget target,
+    void copyTexSubImage2D(GLenum target,
                            GLint level,
                            GLint xoffset,
                            GLint yoffset,
@@ -610,7 +515,7 @@ class Context final : angle::NonCopyable
                            GLsizei width,
                            GLsizei height);
 
-    void copyTexSubImage3D(TextureType target,
+    void copyTexSubImage3D(GLenum target,
                            GLint level,
                            GLint xoffset,
                            GLint yoffset,
@@ -622,7 +527,7 @@ class Context final : angle::NonCopyable
 
     void framebufferTexture2D(GLenum target,
                               GLenum attachment,
-                              TextureTarget textarget,
+                              GLenum textarget,
                               GLuint texture,
                               GLint level);
 
@@ -636,18 +541,18 @@ class Context final : angle::NonCopyable
                                  GLuint texture,
                                  GLint level,
                                  GLint layer);
-    void framebufferTextureMultiviewLayered(GLenum target,
-                                            GLenum attachment,
-                                            GLuint texture,
-                                            GLint level,
-                                            GLint baseViewIndex,
-                                            GLsizei numViews);
-    void framebufferTextureMultiviewSideBySide(GLenum target,
-                                               GLenum attachment,
-                                               GLuint texture,
-                                               GLint level,
-                                               GLsizei numViews,
-                                               const GLint *viewportOffsets);
+    void framebufferTextureMultiviewLayeredANGLE(GLenum target,
+                                                 GLenum attachment,
+                                                 GLuint texture,
+                                                 GLint level,
+                                                 GLint baseViewIndex,
+                                                 GLsizei numViews);
+    void framebufferTextureMultiviewSideBySideANGLE(GLenum target,
+                                                    GLenum attachment,
+                                                    GLuint texture,
+                                                    GLint level,
+                                                    GLsizei numViews,
+                                                    const GLint *viewportOffsets);
 
     void drawBuffers(GLsizei n, const GLenum *bufs);
     void readBuffer(GLenum mode);
@@ -662,7 +567,7 @@ class Context final : angle::NonCopyable
                                   GLsizei width,
                                   GLsizei height);
 
-    void texImage2D(TextureTarget target,
+    void texImage2D(GLenum target,
                     GLint level,
                     GLint internalformat,
                     GLsizei width,
@@ -671,17 +576,7 @@ class Context final : angle::NonCopyable
                     GLenum format,
                     GLenum type,
                     const void *pixels);
-    void texImage2DRobust(TextureTarget target,
-                          GLint level,
-                          GLint internalformat,
-                          GLsizei width,
-                          GLsizei height,
-                          GLint border,
-                          GLenum format,
-                          GLenum type,
-                          GLsizei bufSize,
-                          const void *pixels);
-    void texImage3D(TextureType target,
+    void texImage3D(GLenum target,
                     GLint level,
                     GLint internalformat,
                     GLsizei width,
@@ -691,18 +586,7 @@ class Context final : angle::NonCopyable
                     GLenum format,
                     GLenum type,
                     const void *pixels);
-    void texImage3DRobust(TextureType target,
-                          GLint level,
-                          GLint internalformat,
-                          GLsizei width,
-                          GLsizei height,
-                          GLsizei depth,
-                          GLint border,
-                          GLenum format,
-                          GLenum type,
-                          GLsizei bufSize,
-                          const void *pixels);
-    void texSubImage2D(TextureTarget target,
+    void texSubImage2D(GLenum target,
                        GLint level,
                        GLint xoffset,
                        GLint yoffset,
@@ -711,17 +595,7 @@ class Context final : angle::NonCopyable
                        GLenum format,
                        GLenum type,
                        const void *pixels);
-    void texSubImage2DRobust(TextureTarget target,
-                             GLint level,
-                             GLint xoffset,
-                             GLint yoffset,
-                             GLsizei width,
-                             GLsizei height,
-                             GLenum format,
-                             GLenum type,
-                             GLsizei bufSize,
-                             const void *pixels);
-    void texSubImage3D(TextureType target,
+    void texSubImage3D(GLenum target,
                        GLint level,
                        GLint xoffset,
                        GLint yoffset,
@@ -732,19 +606,7 @@ class Context final : angle::NonCopyable
                        GLenum format,
                        GLenum type,
                        const void *pixels);
-    void texSubImage3DRobust(TextureType target,
-                             GLint level,
-                             GLint xoffset,
-                             GLint yoffset,
-                             GLint zoffset,
-                             GLsizei width,
-                             GLsizei height,
-                             GLsizei depth,
-                             GLenum format,
-                             GLenum type,
-                             GLsizei bufSize,
-                             const void *pixels);
-    void compressedTexImage2D(TextureTarget target,
+    void compressedTexImage2D(GLenum target,
                               GLint level,
                               GLenum internalformat,
                               GLsizei width,
@@ -752,16 +614,7 @@ class Context final : angle::NonCopyable
                               GLint border,
                               GLsizei imageSize,
                               const void *data);
-    void compressedTexImage2DRobust(TextureTarget target,
-                                    GLint level,
-                                    GLenum internalformat,
-                                    GLsizei width,
-                                    GLsizei height,
-                                    GLint border,
-                                    GLsizei imageSize,
-                                    GLsizei dataSize,
-                                    const GLvoid *data);
-    void compressedTexImage3D(TextureType target,
+    void compressedTexImage3D(GLenum target,
                               GLint level,
                               GLenum internalformat,
                               GLsizei width,
@@ -770,17 +623,7 @@ class Context final : angle::NonCopyable
                               GLint border,
                               GLsizei imageSize,
                               const void *data);
-    void compressedTexImage3DRobust(TextureType target,
-                                    GLint level,
-                                    GLenum internalformat,
-                                    GLsizei width,
-                                    GLsizei height,
-                                    GLsizei depth,
-                                    GLint border,
-                                    GLsizei imageSize,
-                                    GLsizei dataSize,
-                                    const GLvoid *data);
-    void compressedTexSubImage2D(TextureTarget target,
+    void compressedTexSubImage2D(GLenum target,
                                  GLint level,
                                  GLint xoffset,
                                  GLint yoffset,
@@ -789,17 +632,7 @@ class Context final : angle::NonCopyable
                                  GLenum format,
                                  GLsizei imageSize,
                                  const void *data);
-    void compressedTexSubImage2DRobust(TextureTarget target,
-                                       GLint level,
-                                       GLint xoffset,
-                                       GLint yoffset,
-                                       GLsizei width,
-                                       GLsizei height,
-                                       GLenum format,
-                                       GLsizei imageSize,
-                                       GLsizei dataSize,
-                                       const GLvoid *data);
-    void compressedTexSubImage3D(TextureType target,
+    void compressedTexSubImage3D(GLenum target,
                                  GLint level,
                                  GLint xoffset,
                                  GLint yoffset,
@@ -810,21 +643,9 @@ class Context final : angle::NonCopyable
                                  GLenum format,
                                  GLsizei imageSize,
                                  const void *data);
-    void compressedTexSubImage3DRobust(TextureType target,
-                                       GLint level,
-                                       GLint xoffset,
-                                       GLint yoffset,
-                                       GLint zoffset,
-                                       GLsizei width,
-                                       GLsizei height,
-                                       GLsizei depth,
-                                       GLenum format,
-                                       GLsizei imageSize,
-                                       GLsizei dataSize,
-                                       const GLvoid *data);
     void copyTexture(GLuint sourceId,
                      GLint sourceLevel,
-                     TextureTarget destTarget,
+                     GLenum destTarget,
                      GLuint destId,
                      GLint destLevel,
                      GLint internalFormat,
@@ -834,7 +655,7 @@ class Context final : angle::NonCopyable
                      GLboolean unpackUnmultiplyAlpha);
     void copySubTexture(GLuint sourceId,
                         GLint sourceLevel,
-                        TextureTarget destTarget,
+                        GLenum destTarget,
                         GLuint destId,
                         GLint destLevel,
                         GLint xoffset,
@@ -848,17 +669,12 @@ class Context final : angle::NonCopyable
                         GLboolean unpackUnmultiplyAlpha);
     void compressedCopyTexture(GLuint sourceId, GLuint destId);
 
-    void generateMipmap(TextureType target);
+    void generateMipmap(GLenum target);
 
     void flush();
     void finish();
 
     void getBufferPointerv(BufferBinding target, GLenum pname, void **params);
-    void getBufferPointervRobust(BufferBinding target,
-                                 GLenum pname,
-                                 GLsizei bufSize,
-                                 GLsizei *length,
-                                 void **params);
     void *mapBuffer(BufferBinding target, GLenum access);
     GLboolean unmapBuffer(BufferBinding target);
     void *mapBufferRange(BufferBinding target,
@@ -886,11 +702,11 @@ class Context final : angle::NonCopyable
     void getSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
 
     // CHROMIUM_framebuffer_mixed_samples
-    void coverageModulation(GLenum components);
+    void setCoverageModulation(GLenum components);
 
     // CHROMIUM_path_rendering
-    void matrixLoadf(GLenum matrixMode, const GLfloat *matrix);
-    void matrixLoadIdentity(GLenum matrixMode);
+    void loadPathRenderingMatrix(GLenum matrixMode, const GLfloat *matrix);
+    void loadPathRenderingIdentityMatrix(GLenum matrixMode);
     void stencilFillPath(GLuint path, GLenum fillMode, GLuint mask);
     void stencilStrokePath(GLuint path, GLint reference, GLuint mask);
     void coverFillPath(GLuint path, GLenum coverMode);
@@ -966,7 +782,7 @@ class Context final : angle::NonCopyable
     void bindFramebuffer(GLenum target, GLuint framebuffer);
     void bindRenderbuffer(GLenum target, GLuint renderbuffer);
 
-    void texStorage2DMultisample(TextureType target,
+    void texStorage2DMultisample(GLenum target,
                                  GLsizei samples,
                                  GLenum internalformat,
                                  GLsizei width,
@@ -974,11 +790,6 @@ class Context final : angle::NonCopyable
                                  GLboolean fixedsamplelocations);
 
     void getMultisamplefv(GLenum pname, GLuint index, GLfloat *val);
-    void getMultisamplefvRobust(GLenum pname,
-                                GLuint index,
-                                GLsizei bufSize,
-                                GLsizei *length,
-                                GLfloat *val);
 
     void copyBufferSubData(BufferBinding readTarget,
                            BufferBinding writeTarget,
@@ -1014,11 +825,6 @@ class Context final : angle::NonCopyable
     void getAttachedShaders(GLuint program, GLsizei maxcount, GLsizei *count, GLuint *shaders);
     GLint getAttribLocation(GLuint program, const GLchar *name);
     void getProgramiv(GLuint program, GLenum pname, GLint *params);
-    void getProgramivRobust(GLuint program,
-                            GLenum pname,
-                            GLsizei bufSize,
-                            GLsizei *length,
-                            GLint *params);
     void getProgramPipelineiv(GLuint pipeline, GLenum pname, GLint *params);
     void getProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei *length, GLchar *infolog);
     void getProgramPipelineInfoLog(GLuint pipeline,
@@ -1026,12 +832,6 @@ class Context final : angle::NonCopyable
                                    GLsizei *length,
                                    GLchar *infoLog);
     void getShaderiv(GLuint shader, GLenum pname, GLint *params);
-    void getShaderivRobust(GLuint shader,
-                           GLenum pname,
-                           GLsizei bufSize,
-                           GLsizei *length,
-                           GLint *params);
-
     void getShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *infolog);
     void getShaderPrecisionFormat(GLenum shadertype,
                                   GLenum precisiontype,
@@ -1039,17 +839,7 @@ class Context final : angle::NonCopyable
                                   GLint *precision);
     void getShaderSource(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *source);
     void getUniformfv(GLuint program, GLint location, GLfloat *params);
-    void getUniformfvRobust(GLuint program,
-                            GLint location,
-                            GLsizei bufSize,
-                            GLsizei *length,
-                            GLfloat *params);
     void getUniformiv(GLuint program, GLint location, GLint *params);
-    void getUniformivRobust(GLuint program,
-                            GLint location,
-                            GLsizei bufSize,
-                            GLsizei *length,
-                            GLint *params);
     GLint getUniformLocation(GLuint program, const GLchar *name);
     GLboolean isBuffer(GLuint buffer);
     GLboolean isEnabled(GLenum cap);
@@ -1163,11 +953,6 @@ class Context final : angle::NonCopyable
     void programBinary(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length);
 
     void getUniformuiv(GLuint program, GLint location, GLuint *params);
-    void getUniformuivRobust(GLuint program,
-                             GLint location,
-                             GLsizei bufSize,
-                             GLsizei *length,
-                             GLuint *params);
     GLint getFragDataLocation(GLuint program, const GLchar *name);
     void getUniformIndices(GLuint program,
                            GLsizei uniformCount,
@@ -1183,12 +968,6 @@ class Context final : angle::NonCopyable
                                  GLuint uniformBlockIndex,
                                  GLenum pname,
                                  GLint *params);
-    void getActiveUniformBlockivRobust(GLuint program,
-                                       GLuint uniformBlockIndex,
-                                       GLenum pname,
-                                       GLsizei bufSize,
-                                       GLsizei *length,
-                                       GLint *params);
     void getActiveUniformBlockName(GLuint program,
                                    GLuint uniformBlockIndex,
                                    GLsizei bufSize,
@@ -1202,14 +981,8 @@ class Context final : angle::NonCopyable
     GLenum clientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout);
     void waitSync(GLsync sync, GLbitfield flags, GLuint64 timeout);
     void getInteger64v(GLenum pname, GLint64 *params);
-    void getInteger64vRobust(GLenum pname, GLsizei bufSize, GLsizei *length, GLint64 *data);
 
     void getBufferParameteri64v(BufferBinding target, GLenum pname, GLint64 *params);
-    void getBufferParameteri64vRobust(BufferBinding target,
-                                      GLenum pname,
-                                      GLsizei bufSize,
-                                      GLsizei *length,
-                                      GLint64 *params);
     void genSamplers(GLsizei count, GLuint *samplers);
     void deleteSamplers(GLsizei count, const GLuint *samplers);
     void getInternalformativ(GLenum target,
@@ -1217,12 +990,6 @@ class Context final : angle::NonCopyable
                              GLenum pname,
                              GLsizei bufSize,
                              GLint *params);
-    void getInternalformativRobust(GLenum target,
-                                   GLenum internalformat,
-                                   GLenum pname,
-                                   GLsizei bufSize,
-                                   GLsizei *length,
-                                   GLint *params);
 
     void programUniform1i(GLuint program, GLint location, GLint v0);
     void programUniform2i(GLuint program, GLint location, GLint v0, GLint v1);
@@ -1319,22 +1086,7 @@ class Context final : angle::NonCopyable
 
     void getTranslatedShaderSource(GLuint shader, GLsizei bufsize, GLsizei *length, GLchar *source);
     void getnUniformfv(GLuint program, GLint location, GLsizei bufSize, GLfloat *params);
-    void getnUniformfvRobust(GLuint program,
-                             GLint location,
-                             GLsizei bufSize,
-                             GLsizei *length,
-                             GLfloat *params);
     void getnUniformiv(GLuint program, GLint location, GLsizei bufSize, GLint *params);
-    void getnUniformivRobust(GLuint program,
-                             GLint location,
-                             GLsizei bufSize,
-                             GLsizei *length,
-                             GLint *params);
-    void getnUniformuivRobust(GLuint program,
-                              GLint location,
-                              GLsizei bufSize,
-                              GLsizei *length,
-                              GLuint *params);
     void readnPixels(GLint x,
                      GLint y,
                      GLsizei width,
@@ -1343,27 +1095,22 @@ class Context final : angle::NonCopyable
                      GLenum type,
                      GLsizei bufSize,
                      void *data);
-    void eGLImageTargetTexture2D(TextureType target, GLeglImageOES image);
+    void eGLImageTargetTexture2D(GLenum target, GLeglImageOES image);
     void eGLImageTargetRenderbufferStorage(GLenum target, GLeglImageOES image);
 
     void getFramebufferParameteriv(GLenum target, GLenum pname, GLint *params);
-    void getFramebufferParameterivRobust(GLenum target,
-                                         GLenum pname,
-                                         GLsizei bufSize,
-                                         GLsizei *length,
-                                         GLint *params);
     void framebufferParameteri(GLenum target, GLenum pname, GLint param);
 
     void dispatchCompute(GLuint numGroupsX, GLuint numGroupsY, GLuint numGroupsZ);
     void dispatchComputeIndirect(GLintptr indirect);
 
     void texStorage1D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width);
-    void texStorage2D(TextureType target,
+    void texStorage2D(GLenum target,
                       GLsizei levels,
                       GLenum internalFormat,
                       GLsizei width,
                       GLsizei height);
-    void texStorage3D(TextureType target,
+    void texStorage3D(GLenum target,
                       GLsizei levels,
                       GLenum internalFormat,
                       GLsizei width,
@@ -1374,7 +1121,7 @@ class Context final : angle::NonCopyable
     void memoryBarrierByRegion(GLbitfield barriers);
 
     // Consumes the error.
-    void handleError(const Error &error);
+    void handleError(const Error &error) override;
 
     GLenum getError();
     void markContextLost();
@@ -1417,64 +1164,18 @@ class Context final : angle::NonCopyable
 
     bool isRobustResourceInitEnabled() const { return mGLState.isRobustResourceInitEnabled(); }
 
-    bool isCurrentTransformFeedback(const TransformFeedback *tf) const;
-    bool isCurrentVertexArray(const VertexArray *va) const;
-
-    const ContextState &getContextState() const { return mState; }
-    GLint getClientMajorVersion() const { return mState.getClientMajorVersion(); }
-    GLint getClientMinorVersion() const { return mState.getClientMinorVersion(); }
-    const Version &getClientVersion() const { return mState.getClientVersion(); }
-    const State &getGLState() const { return mState.getState(); }
-    const Caps &getCaps() const { return mState.getCaps(); }
-    const TextureCapsMap &getTextureCaps() const { return mState.getTextureCaps(); }
-    const Extensions &getExtensions() const { return mState.getExtensions(); }
-    const Limitations &getLimitations() const { return mState.getLimitations(); }
-    bool skipValidation() const { return mSkipValidation; }
-
-    // Specific methods needed for validation.
-    bool getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *numParams);
-    bool getIndexedQueryParameterInfo(GLenum target, GLenum *type, unsigned int *numParams);
-
-    Program *getProgram(GLuint handle) const;
-    Shader *getShader(GLuint handle) const;
-
-    bool isTextureGenerated(GLuint texture) const;
-    bool isBufferGenerated(GLuint buffer) const;
-    bool isRenderbufferGenerated(GLuint renderbuffer) const;
-    bool isFramebufferGenerated(GLuint framebuffer) const;
-    bool isProgramPipelineGenerated(GLuint pipeline) const;
-
-    bool usingDisplayTextureShareGroup() const;
-
-    // Hack for the special WebGL 1 "DEPTH_STENCIL" internal format.
-    GLenum getConvertedRenderbufferFormat(GLenum internalformat) const;
-
-    bool isWebGL() const { return mState.isWebGL(); }
-    bool isWebGL1() const { return mState.isWebGL1(); }
-
-    template <typename T>
-    const T &getParams() const;
-
-    bool isValidBufferBinding(BufferBinding binding) const { return mValidBufferBindings[binding]; }
-
   private:
     Error prepareForDraw();
-    Error prepareForClear(GLbitfield mask);
-    Error prepareForClearBuffer(GLenum buffer, GLint drawbuffer);
-    Error syncState();
-    Error syncState(const State::DirtyBits &bitMask, const State::DirtyObjects &objectMask);
-    Error syncDirtyBits();
-    Error syncDirtyBits(const State::DirtyBits &bitMask);
-    Error syncDirtyObjects();
-    Error syncDirtyObjects(const State::DirtyObjects &objectMask);
-    Error syncStateForReadPixels();
-    Error syncStateForTexImage();
-    Error syncStateForBlit();
-
+    void syncRendererState();
+    void syncRendererState(const State::DirtyBits &bitMask, const State::DirtyObjects &objectMask);
+    void syncStateForReadPixels();
+    void syncStateForTexImage();
+    void syncStateForClear();
+    void syncStateForBlit();
     VertexArray *checkVertexArrayAllocation(GLuint vertexArrayHandle);
     TransformFeedback *checkTransformFeedbackAllocation(GLuint transformFeedback);
 
-    void detachBuffer(Buffer *buffer);
+    void detachBuffer(GLuint buffer);
     void detachTexture(GLuint texture);
     void detachFramebuffer(GLuint framebuffer);
     void detachRenderbuffer(GLuint renderbuffer);
@@ -1493,18 +1194,6 @@ class Context final : angle::NonCopyable
 
     LabeledObject *getLabeledObject(GLenum identifier, GLuint name) const;
     LabeledObject *getLabeledObjectFromPtr(const void *ptr) const;
-
-    ContextState mState;
-    bool mSkipValidation;
-    bool mDisplayTextureShareGroup;
-
-    // Stores for each buffer binding type whether is it allowed to be used in this context.
-    angle::PackedEnumBitSet<BufferBinding> mValidBufferBindings;
-
-    // Caches entry point parameters and values re-used between layers.
-    mutable const ParamTypeInfo *mSavedArgsType;
-    static constexpr size_t kParamsBufferSize = 128u;
-    mutable std::array<uint8_t, kParamsBufferSize> mParamsBuffer;
 
     std::unique_ptr<rx::ContextImpl> mImplementation;
 
@@ -1559,7 +1248,6 @@ class Context final : angle::NonCopyable
     egl::Display *mCurrentDisplay;
     Framebuffer *mSurfacelessFramebuffer;
     bool mWebGLContext;
-    bool mExtensionsEnabled;
     MemoryProgramCache *mMemoryProgramCache;
 
     State::DirtyBits mTexImageDirtyBits;
@@ -1579,14 +1267,6 @@ class Context final : angle::NonCopyable
     mutable angle::ScratchBuffer mScratchBuffer;
     mutable angle::ScratchBuffer mZeroFilledBuffer;
 };
-
-template <typename T>
-const T &Context::getParams() const
-{
-    const T *params = reinterpret_cast<T *>(mParamsBuffer.data());
-    ASSERT(mSavedArgsType->hasDynamicType(T::TypeInfo));
-    return *params;
-}
 
 template <EntryPoint EP, typename... ArgsT>
 ANGLE_INLINE void Context::gatherParams(ArgsT &&... args)

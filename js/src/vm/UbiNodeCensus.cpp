@@ -32,8 +32,6 @@ CountDeleter::operator()(CountBase* ptr)
 
 JS_PUBLIC_API(bool)
 Census::init() {
-    AutoLockForExclusiveAccess lock(cx);
-    atomsZone = cx->runtime()->atomsRealm(lock)->zone();
     return targetZones.init();
 }
 
@@ -942,7 +940,7 @@ CensusHandler::operator() (BreadthFirst<CensusHandler>& traversal,
     if (census.targetZones.count() == 0 || census.targetZones.has(zone))
         return rootCount->count(mallocSizeOf, referent);
 
-    if (zone == census.atomsZone) {
+    if (zone->isAtomsZone()) {
         traversal.abandonReferent();
         return rootCount->count(mallocSizeOf, referent);
     }
