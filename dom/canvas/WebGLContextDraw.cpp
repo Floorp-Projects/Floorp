@@ -205,7 +205,21 @@ WebGLContext::BindFakeBlack(uint32_t texUnit, TexTarget target, FakeBlackType fa
     UniquePtr<FakeBlackTexture>& fakeBlackTex = *slot;
 
     if (!fakeBlackTex) {
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 1);
+        if (IsWebGL2()) {
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, 0);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
+        }
+
         fakeBlackTex = FakeBlackTexture::Create(gl, target, fakeBlack);
+
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mPixelStore_UnpackAlignment);
+        if (IsWebGL2()) {
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mPixelStore_UnpackSkipPixels);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mPixelStore_UnpackSkipRows);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mPixelStore_UnpackSkipImages);
+        }
         if (!fakeBlackTex) {
             return false;
         }
@@ -995,13 +1009,8 @@ WebGLContext::FakeBlackTexture::Create(gl::GLContext* gl, TexTarget target,
     gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
     gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
 
-    // We allocate our zeros on the heap, and we overallocate (16 bytes instead of 4) to
-    // minimize the risk of running into a driver bug in texImage2D, as it is a bit
-    // unusual maybe to create 1x1 textures, and the stack may not have the alignment that
-    // TexImage2D expects.
-
     const webgl::DriverUnpackInfo dui = {texFormat, texFormat, LOCAL_GL_UNSIGNED_BYTE};
-    UniqueBuffer zeros = moz_xcalloc(1, 16); // Infallible allocation.
+    UniqueBuffer zeros = moz_xcalloc(1, 4); // Infallible allocation.
 
     MOZ_ASSERT(gl->IsCurrent());
 
