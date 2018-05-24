@@ -303,6 +303,15 @@ public:
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
   int64_t GetLength() const;
+  // Return the length and offset where next channel data will write to. Main
+  // thread only.
+  // This method should be removed as part of bug 1464045.
+  struct LengthAndOffset
+  {
+    int64_t mLength;
+    int64_t mOffset;
+  };
+  LengthAndOffset GetLengthAndOffset() const;
   // Returns the unique resource ID. Call only on the main thread or while
   // holding the media cache lock.
   int64_t GetResourceID() { return mResourceID; }
