@@ -40,6 +40,10 @@ addMessageListener("content-task:spawn", function(msg) {
     sendAsyncMessage("content-task:test-todo", {id, expr, name});
   }
 
+  function todo_is(a, b, name) {
+    sendAsyncMessage("content-task:test-todo_is", {id, a, b, name});
+  }
+
   function info(name) {
     sendAsyncMessage("content-task:test-info", {id, name});
   }
