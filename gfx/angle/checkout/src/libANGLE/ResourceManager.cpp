@@ -161,9 +161,10 @@ void ShaderProgramManager::reset(const Context *context)
 
 GLuint ShaderProgramManager::createShader(rx::GLImplFactory *factory,
                                           const gl::Limitations &rendererLimitations,
-                                          ShaderType type)
+                                          GLenum type)
 {
-    ASSERT(type != ShaderType::InvalidEnum);
+    ASSERT(type == GL_VERTEX_SHADER || type == GL_FRAGMENT_SHADER || type == GL_COMPUTE_SHADER ||
+           type == GL_GEOMETRY_SHADER_EXT);
     GLuint handle    = mHandleAllocator.allocate();
     mShaders.assign(handle, new Shader(this, factory, rendererLimitations, type, handle));
     return handle;
@@ -222,11 +223,9 @@ void ShaderProgramManager::deleteObject(const Context *context,
 // TextureManager Implementation.
 
 // static
-Texture *TextureManager::AllocateNewObject(rx::GLImplFactory *factory,
-                                           GLuint handle,
-                                           TextureType type)
+Texture *TextureManager::AllocateNewObject(rx::GLImplFactory *factory, GLuint handle, GLenum target)
 {
-    Texture *texture = new Texture(factory, handle, type);
+    Texture *texture = new Texture(factory, handle, target);
     texture->addRef();
     return texture;
 }

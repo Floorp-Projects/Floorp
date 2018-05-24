@@ -3308,7 +3308,7 @@ protected:
     return !mNext && mStack.Length() > 0;
   }
 
-  virtual bool ShouldFlattenNextItem() const
+  virtual bool ShouldFlattenNextItem()
   {
     return mNext && mNext->ShouldFlattenAway(mBuilder);
   }

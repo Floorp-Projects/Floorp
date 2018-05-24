@@ -55,7 +55,7 @@ class BufferD3D : public BufferImpl
     virtual void initializeStaticData(const gl::Context *context);
     virtual void invalidateStaticData(const gl::Context *context);
 
-    void promoteStaticUsage(const gl::Context *context, size_t dataSize);
+    void promoteStaticUsage(const gl::Context *context, int dataSize);
 
     gl::Error getIndexRange(const gl::Context *context,
                             GLenum type,
@@ -80,7 +80,7 @@ class BufferD3D : public BufferImpl
     StaticIndexBufferInterface *mStaticIndexBuffer;
     unsigned int mStaticBufferCacheTotalSize;
     unsigned int mStaticVertexBufferOutOfDate;
-    size_t mUnmodifiedDataUse;
+    unsigned int mUnmodifiedDataUse;
     D3DBufferUsage mUsage;
 };
 

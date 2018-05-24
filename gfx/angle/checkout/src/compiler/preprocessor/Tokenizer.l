@@ -64,7 +64,6 @@ typedef pp::SourceLocation YYLTYPE;
         yyextra->lineStart = true;     \
     } while(0);
 
-#define YY_NO_INPUT
 #define YY_USER_ACTION                                              \
     do                                                              \
     {                                                               \

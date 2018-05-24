@@ -8,7 +8,6 @@
 #include "compiler/translator/ValidateMaxParameters.h"
 
 #include "compiler/translator/IntermNode.h"
-#include "compiler/translator/Symbol.h"
 
 namespace sh
 {
@@ -19,7 +18,7 @@ bool ValidateMaxParameters(TIntermBlock *root, unsigned int maxParameters)
     {
         TIntermFunctionDefinition *definition = node->getAsFunctionDefinition();
         if (definition != nullptr &&
-            definition->getFunctionPrototype()->getFunction()->getParamCount() > maxParameters)
+            definition->getFunctionPrototype()->getSequence()->size() > maxParameters)
         {
             return false;
         }
