@@ -485,7 +485,7 @@ SkipZoneForGC(Zone* zone);
  * the system.
  */
 extern JS_PUBLIC_API(void)
-GCForReason(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason);
+NonIncrementalGC(JSContext* cx, JSGCInvocationKind gckind, gcreason::Reason reason);
 
 /*
  * Incremental GC:
@@ -534,7 +534,7 @@ IncrementalGCSlice(JSContext* cx, gcreason::Reason reason, int64_t millis = 0);
 /**
  * If IsIncrementalGCInProgress(cx), this call finishes the ongoing collection
  * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(cx),
- * this is equivalent to GCForReason. When this function returns,
+ * this is equivalent to NonIncrementalGC. When this function returns,
  * IsIncrementalGCInProgress(cx) will always be false.
  */
 extern JS_PUBLIC_API(void)
