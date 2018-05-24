@@ -104,6 +104,10 @@ function processFlagFilter(type, value) {
 }
 
 function isFlagFilterMatch(item, { type, value, negative }) {
+  if (value == null) {
+    return false;
+  }
+
   // Ensures when filter token is exactly a flag ie. "remote-ip:", all values are shown
   if (value.length < 1) {
     return true;
