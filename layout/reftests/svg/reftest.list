@@ -159,7 +159,7 @@ fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-0
 == dynamic-stroke-opacity-01.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
-== dynamic-text-01.svg dynamic-text-01-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dynamic-text-01.svg dynamic-text-01-ref.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7
@@ -495,14 +495,14 @@ fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
-== tspan-rotate-01.svg tspan-rotate-ref.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-03.svg tspan-rotate-ref.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-05.svg tspan-rotate-ref.svg
-fuzzy-if(skiaContent,1,550) == tspan-rotate-06.svg tspan-rotate-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-03.svg tspan-rotate-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-05.svg tspan-rotate-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-06.svg tspan-rotate-ref.svg
 == tspan-rotate-07.svg tspan-rotate-07-ref.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 fuzzy-if(skiaContent,1,100) == tspan-xy-01.svg tspan-xy-ref.svg

@@ -110,17 +110,17 @@ fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor-multiple-dx.sv
 == simple-multiline-pc.svg simple-multiline-pc-ref.svg
 == simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
 
-fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
-== textpath-a.svg textpath-a-ref.svg
-== textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
-== textpath-anchor-end.svg textpath-anchor-end-ref.svg
-== textpath-invalid-parent.svg textpath-invalid-parent-ref.svg
-== textpath-multiline.svg textpath-multiline-ref.svg
-== textpath-multiline-2.svg textpath-multiline-2-ref.svg
-== textpath-after.svg textpath-after-ref.svg
-== textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
-== textpath-reset-position.svg textpath-reset-position-ref.svg
-== textpath-inherit-position.svg textpath-inherit-position-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-a.svg textpath-a-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-end.svg textpath-anchor-end-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-invalid-parent.svg textpath-invalid-parent-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline.svg textpath-multiline-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline-2.svg textpath-multiline-2-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after.svg textpath-after-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.svg textpath-reset-position-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg
 
 == textLength.svg textLength-ref.svg
 fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg

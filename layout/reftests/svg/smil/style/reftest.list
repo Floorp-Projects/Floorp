@@ -71,12 +71,12 @@ fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css
 
 # 'font-size' property, from/by/to with pixel values only
 == anim-css-fontsize-1-from-by-px-px.svg    anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-px.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' property (accepts unitless values)
-== anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-no-no.svg    anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-no-px.svg    anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-no.svg    anim-css-fontsize-1-ref.svg
 
 # 'font-size' mapped attribute (accepts unitless values)
 == anim-mapped-fontsize-1-from-to-no-no.svg anim-css-fontsize-1-ref.svg
@@ -87,9 +87,9 @@ fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css
 == anim-css-fontsize-1-from-by-pct-pct.svg  anim-css-fontsize-1-ref.svg
 == anim-css-fontsize-1-from-by-pct-px.svg   anim-css-fontsize-1-ref.svg
 == anim-css-fontsize-1-from-by-px-pct.svg   anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg
-== anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-pct.svg  anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-pct-px.svg   anim-css-fontsize-1-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == anim-css-fontsize-1-from-to-px-pct.svg   anim-css-fontsize-1-ref.svg
 
 # 'font-size' property, with negative addition
 == anim-css-fontsize-2-from-by-px-px.svg    anim-css-fontsize-2-ref.svg

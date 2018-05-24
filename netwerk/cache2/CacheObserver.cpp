@@ -62,10 +62,10 @@ int32_t CacheObserver::sMaxMemoryEntrySize = kDefaultMaxMemoryEntrySize;
 static int32_t const kDefaultMaxDiskEntrySize = 50 * 1024; // 50 MB
 int32_t CacheObserver::sMaxDiskEntrySize = kDefaultMaxDiskEntrySize;
 
-static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 10 * 1024; // 10MB
+static uint32_t const kDefaultMaxDiskChunksMemoryUsage = 40 * 1024; // 40MB
 uint32_t CacheObserver::sMaxDiskChunksMemoryUsage = kDefaultMaxDiskChunksMemoryUsage;
 
-static uint32_t const kDefaultMaxDiskPriorityChunksMemoryUsage = 10 * 1024; // 10MB
+static uint32_t const kDefaultMaxDiskPriorityChunksMemoryUsage = 40 * 1024; // 40MB
 uint32_t CacheObserver::sMaxDiskPriorityChunksMemoryUsage = kDefaultMaxDiskPriorityChunksMemoryUsage;
 
 static uint32_t const kDefaultCompressionLevel = 1;

@@ -11,7 +11,7 @@ fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-ro
 skip-if(!cocoaWidget) fails-if(webrender&&cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul
 == text-crop.xul text-crop-ref.xul
-== text-small-caps-1.xul text-small-caps-1-ref.xul
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-small-caps-1.xul text-small-caps-1-ref.xul
 fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630-ref.html
 fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525-ref.html
 

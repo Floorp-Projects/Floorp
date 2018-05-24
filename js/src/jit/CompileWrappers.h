@@ -104,6 +104,7 @@ class CompileCompartment
     const JitCompartment* jitCompartment();
 
     const GlobalObject* maybeGlobal();
+    const uint32_t* addressOfGlobalWriteBarriered();
 
     bool hasAllocationMetadataBuilder();
 
