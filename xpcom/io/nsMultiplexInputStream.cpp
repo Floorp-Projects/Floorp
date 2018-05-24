@@ -27,6 +27,8 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamLength.h"
+#include "nsNetUtil.h"
+#include "nsStreamUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -240,6 +242,16 @@ nsMultiplexInputStream::GetCount(uint32_t* aCount)
 NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 {
+  nsCOMPtr<nsIInputStream> stream = aStream;
+
+  if (!NS_InputStreamIsBuffered(stream)) {
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                            stream.forget(), 4096);
+    NS_ENSURE_SUCCESS(rv, rv);
+    stream = bufferedStream;
+  }
+
   MutexAutoLock lock(mLock);
 
   StreamData* streamData = mStreams.AppendElement();
@@ -247,7 +259,7 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  streamData->Initialize(aStream);
+  streamData->Initialize(stream);
 
   UpdateQIMap(*streamData, 1);
 
