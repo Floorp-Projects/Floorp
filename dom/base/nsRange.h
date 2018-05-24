@@ -270,7 +270,8 @@ public:
   // where each face was used).
   nsresult GetUsedFontFaces(
       nsTArray<nsAutoPtr<mozilla::dom::InspectorFontFace>>& aResult,
-      uint32_t aMaxRanges);
+      uint32_t aMaxRanges,
+      bool aSkipCollapsedWhitespace);
 
   // nsIMutationObserver methods
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
