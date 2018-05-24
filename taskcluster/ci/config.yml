@@ -3,6 +3,7 @@ project-repo-param-prefix: ''
 treeherder:
     group-names:
         'cram': 'Cram tests'
+        'js-bench': 'JavaScript shell benchmarks'
         'mocha': 'Mocha unit tests'
         'py': 'Python unit tests'
         'A': 'Android Gradle tests'
