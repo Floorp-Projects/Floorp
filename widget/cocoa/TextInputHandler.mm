@@ -175,17 +175,14 @@ GetKeyNameForNativeKeyCode(unsigned short aNativeKeyCode)
 }
 
 static const char*
-GetCharacters(const NSString* aString)
+GetCharacters(const nsAString& aString)
 {
-  nsAutoString str;
-  nsCocoaUtils::GetStringForNSString(aString, str);
-  if (str.IsEmpty()) {
+  if (aString.IsEmpty()) {
     return "";
   }
-
   nsAutoString escapedStr;
-  for (uint32_t i = 0; i < str.Length(); i++) {
-    char16_t ch = str[i];
+  for (uint32_t i = 0; i < aString.Length(); i++) {
+    char16_t ch = aString.CharAt(i);
     if (ch < 0x20) {
       nsPrintfCString utf8str("(U+%04X)", ch);
       escapedStr += NS_ConvertUTF8toUTF16(utf8str);
@@ -201,6 +198,14 @@ GetCharacters(const NSString* aString)
   // the result will be freed automatically by cocoa.
   NSString* result = nsCocoaUtils::ToNSString(escapedStr);
   return [result UTF8String];
+}
+
+static const char*
+GetCharacters(const NSString* aString)
+{
+  nsAutoString str;
+  nsCocoaUtils::GetStringForNSString(aString, str);
+  return GetCharacters(str);
 }
 
 static const char*
@@ -1202,10 +1207,13 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
     char16_t uniChar = static_cast<char16_t>(aKeyEvent.mCharCode);
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
-       "aNativeKeyEvent=%p, [aNativeKeyEvent characters]=\"%s\", "
+       "aNativeKeyEvent=%p, aInsertString=%p (\"%s\"), "
+       "[aNativeKeyEvent characters]=\"%s\", "
        "aKeyEvent={ mMessage=%s, mCharCode=0x%X(%s) }, kbType=0x%X, "
        "IsOpenedIMEMode()=%s",
-       this, aNativeKeyEvent, utf8Chars.get(),
+       this, aNativeKeyEvent, aInsertString,
+       aInsertString ? GetCharacters(*aInsertString) : "",
+       GetCharacters([aNativeKeyEvent characters]),
        GetGeckoKeyEventType(aKeyEvent), aKeyEvent.mCharCode,
        uniChar ? NS_ConvertUTF16toUTF8(&uniChar, 1).get() : "",
        static_cast<unsigned int>(kbType), TrueOrFalse(IsOpenedIMEMode())));
@@ -1227,6 +1235,14 @@ TISInputSourceWrapper::WillDispatchKeyboardEvent(
     ("%p TISInputSourceWrapper::WillDispatchKeyboardEvent, "
      "aKeyEvent.mKeyCode=0x%X, aKeyEvent.mCharCode=0x%X",
      this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode));
+
+  // If aInsertString is not nullptr (it means InsertText() is called)
+  // and it acutally inputs a character, we don't need to append alternative
+  // charCode values since such keyboard event shouldn't be handled as
+  // a shortcut key.
+  if (aInsertString && charCode) {
+    return;
+  }
 
   TISInputSourceWrapper USLayout("com.apple.keylayout.US");
   bool isRomanKeyboardLayout = IsASCIICapable();
@@ -2439,6 +2455,11 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p IMEInputHandler::InsertText, "
+     "maybe dispatches eKeyPress event without control, alt and meta modifiers",
+     this));
+
   // Dispatch keypress event with char instead of compositionchange event
   WidgetKeyboardEvent keypressEvent(true, eKeyPress, widget);
   // XXX Why do we need to dispatch keypress event for not inputting any
@@ -2459,12 +2480,6 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     // FYI: TextEventDispatcher will set mKeyCode to 0 for printable key's
     //      keypress events even if they don't cause inputting non-empty string.
   }
-
-  // Remove basic modifiers from keypress event because if they are included,
-  // nsPlaintextEditor ignores the event.
-  keypressEvent.mModifiers &= ~(MODIFIER_CONTROL |
-                                MODIFIER_ALT |
-                                MODIFIER_META);
 
   // TODO:
   // If mCurrentKeyEvent.mKeyEvent is null, the text should be inputted as
@@ -3254,10 +3269,23 @@ IMEInputHandler::WillDispatchKeyboardEvent(
     TISInputSourceWrapper tis;
     tis.InitByLayoutID(KeyboardLayoutOverrideRef().mKeyboardLayout, true);
     tis.WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
-    return;
+  } else {
+    TISInputSourceWrapper::CurrentInputSource().
+      WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
   }
-  TISInputSourceWrapper::CurrentInputSource().
-    WillDispatchKeyboardEvent(nativeEvent, insertString, aKeyboardEvent);
+
+  // Remove basic modifiers from keypress event because if they are included
+  // but this causes inputting text, since TextEditor won't handle eKeyPress
+  // events whose ctrlKey, altKey or metaKey is true as text input.
+  // Note that this hack should be used only when an editor has focus because
+  // this is a hack for TextEditor and modifier key information may be
+  // important for current web app.
+  if (IsEditableContent() && insertString &&
+      aKeyboardEvent.mMessage == eKeyPress && aKeyboardEvent.mCharCode) {
+    aKeyboardEvent.mModifiers &= ~(MODIFIER_CONTROL |
+                                   MODIFIER_ALT |
+                                   MODIFIER_META);
+  }
 }
 
 void
