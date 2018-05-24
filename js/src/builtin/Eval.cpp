@@ -489,9 +489,10 @@ js::NewJSMEnvironment(JSContext* cx)
     if (!varEnv)
         return nullptr;
 
-    // Force LexicalEnvironmentObject to be created
-    MOZ_ASSERT(!cx->compartment()->getNonSyntacticLexicalEnvironment(varEnv));
-    if (!cx->compartment()->getOrCreateNonSyntacticLexicalEnvironment(cx, varEnv))
+    // Force LexicalEnvironmentObject to be created.
+    ObjectRealm& realm = ObjectRealm::get(varEnv);
+    MOZ_ASSERT(!realm.getNonSyntacticLexicalEnvironment(varEnv));
+    if (!realm.getOrCreateNonSyntacticLexicalEnvironment(cx, varEnv))
         return nullptr;
 
     return varEnv;
@@ -509,7 +510,7 @@ js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject 
                             AutoObjectVector& targetObj)
 {
     assertSameCompartment(cx, varEnv);
-    MOZ_ASSERT(cx->compartment()->getNonSyntacticLexicalEnvironment(varEnv));
+    MOZ_ASSERT(ObjectRealm::get(varEnv).getNonSyntacticLexicalEnvironment(varEnv));
     MOZ_DIAGNOSTIC_ASSERT(scriptArg->noScriptRval());
 
     RootedObject env(cx, JS_ExtensibleLexicalEnvironment(varEnv));
@@ -538,7 +539,7 @@ js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject 
             return false;
 
         // Create an extensible LexicalEnvironmentObject for target object
-        env = cx->compartment()->getOrCreateNonSyntacticLexicalEnvironment(cx, env);
+        env = ObjectRealm::get(env).getOrCreateNonSyntacticLexicalEnvironment(cx, env);
         if (!env)
             return false;
     }

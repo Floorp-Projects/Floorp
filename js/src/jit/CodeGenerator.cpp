@@ -399,7 +399,7 @@ CodeGenerator::CodeGenerator(MIRGenerator* gen, LIRGraph* graph, MacroAssembler*
   , ionScriptLabels_(gen->alloc())
   , scriptCounts_(nullptr)
   , simdTemplatesToReadBarrier_(0)
-  , compartmentStubsToReadBarrier_(0)
+  , realmStubsToReadBarrier_(0)
 {
 }
 
@@ -1894,7 +1894,7 @@ CreateMatchResultFallback(MacroAssembler& masm, LiveRegisterSet regsToSave,
 }
 
 JitCode*
-JitCompartment::generateRegExpMatcherStub(JSContext* cx)
+JitRealm::generateRegExpMatcherStub(JSContext* cx)
 {
     Register regexp = RegExpMatcherRegExpReg;
     Register input = RegExpMatcherStringReg;
@@ -2217,8 +2217,8 @@ CodeGenerator::visitRegExpMatcher(LRegExpMatcher* lir)
     OutOfLineRegExpMatcher* ool = new(alloc()) OutOfLineRegExpMatcher(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitCompartment* jitCompartment = gen->compartment->jitCompartment();
-    JitCode* regExpMatcherStub = jitCompartment->regExpMatcherStubNoBarrier(&compartmentStubsToReadBarrier_);
+    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    JitCode* regExpMatcherStub = jitRealm->regExpMatcherStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpMatcherStub);
     masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, ool->entry());
     masm.bind(ool->rejoin());
@@ -2230,7 +2230,7 @@ static const int32_t RegExpSearcherResultNotFound = -1;
 static const int32_t RegExpSearcherResultFailed = -2;
 
 JitCode*
-JitCompartment::generateRegExpSearcherStub(JSContext* cx)
+JitRealm::generateRegExpSearcherStub(JSContext* cx)
 {
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
@@ -2367,8 +2367,8 @@ CodeGenerator::visitRegExpSearcher(LRegExpSearcher* lir)
     OutOfLineRegExpSearcher* ool = new(alloc()) OutOfLineRegExpSearcher(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitCompartment* jitCompartment = gen->compartment->jitCompartment();
-    JitCode* regExpSearcherStub = jitCompartment->regExpSearcherStubNoBarrier(&compartmentStubsToReadBarrier_);
+    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    JitCode* regExpSearcherStub = jitRealm->regExpSearcherStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpSearcherStub);
     masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpSearcherResultFailed), ool->entry());
     masm.bind(ool->rejoin());
@@ -2380,7 +2380,7 @@ static const int32_t RegExpTesterResultNotFound = -1;
 static const int32_t RegExpTesterResultFailed = -2;
 
 JitCode*
-JitCompartment::generateRegExpTesterStub(JSContext* cx)
+JitRealm::generateRegExpTesterStub(JSContext* cx)
 {
     Register regexp = RegExpTesterRegExpReg;
     Register input = RegExpTesterStringReg;
@@ -2504,8 +2504,8 @@ CodeGenerator::visitRegExpTester(LRegExpTester* lir)
     OutOfLineRegExpTester* ool = new(alloc()) OutOfLineRegExpTester(lir);
     addOutOfLineCode(ool, lir->mir());
 
-    const JitCompartment* jitCompartment = gen->compartment->jitCompartment();
-    JitCode* regExpTesterStub = jitCompartment->regExpTesterStubNoBarrier(&compartmentStubsToReadBarrier_);
+    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    JitCode* regExpTesterStub = jitRealm->regExpTesterStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(regExpTesterStub);
 
     masm.branch32(Assembler::Equal, ReturnReg, Imm32(RegExpTesterResultFailed), ool->entry());
@@ -8202,8 +8202,8 @@ CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs, Registe
     OutOfLineCode* ool = oolCallVM(ConcatStringsInfo, lir, ArgList(lhs, rhs),
                                    StoreRegisterTo(output));
 
-    const JitCompartment* jitCompartment = gen->compartment->jitCompartment();
-    JitCode* stringConcatStub = jitCompartment->stringConcatStubNoBarrier(&compartmentStubsToReadBarrier_);
+    const JitRealm* jitRealm = gen->compartment->jitRealm();
+    JitCode* stringConcatStub = jitRealm->stringConcatStubNoBarrier(&realmStubsToReadBarrier_);
     masm.call(stringConcatStub);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
@@ -8483,7 +8483,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
 }
 
 JitCode*
-JitCompartment::generateStringConcatStub(JSContext* cx)
+JitRealm::generateStringConcatStub(JSContext* cx)
 {
     StackMacroAssembler masm(cx);
 
@@ -10293,9 +10293,9 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
     // Perform any read barriers which were skipped while compiling the
     // script, which may have happened off-thread.
-    const JitCompartment* jc = gen->compartment->jitCompartment();
-    jc->performStubReadBarriers(compartmentStubsToReadBarrier_);
-    jc->performSIMDTemplateReadBarriers(simdTemplatesToReadBarrier_);
+    const JitRealm* jr = gen->compartment->jitRealm();
+    jr->performStubReadBarriers(realmStubsToReadBarrier_);
+    jr->performSIMDTemplateReadBarriers(simdTemplatesToReadBarrier_);
 
     // We finished the new IonScript. Invalidate the current active IonScript,
     // so we can replace it with this new (probably higher optimized) version.

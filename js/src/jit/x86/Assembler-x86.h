@@ -11,7 +11,7 @@
 
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/shared/Assembler-shared.h"
 #include "jit/x86-shared/Constants-x86-shared.h"
 

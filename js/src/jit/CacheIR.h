@@ -43,8 +43,8 @@ enum class BaselineCacheIRStubKind;
 // This class stores the CacheIR and the location of GC things stored in the
 // stub, for the GC.
 //
-// JitCompartment has a CacheIRStubInfo* -> JitCode* weak map that's used to
-// share both the IR and JitCode between CacheIR stubs. This HashMap owns the
+// JitZone has a CacheIRStubInfo* -> JitCode* weak map that's used to share both
+// the IR and JitCode between Baseline CacheIR stubs. This HashMap owns the
 // stubInfo (it uses UniquePtr), so once there are no references left to the
 // shared stub code, we can also free the CacheIRStubInfo.
 //
