@@ -126,7 +126,7 @@ function server_quota_error(request, response) {
 }
 
 function server_headers(metadata, response) {
-  let ignore_headers = ["host", "user-agent", "accept", "accept-language",
+  let ignore_headers = ["host", "user-agent", "accept-language",
                         "accept-encoding", "accept-charset", "keep-alive",
                         "connection", "pragma", "origin", "cache-control",
                         "content-length"];
@@ -391,25 +391,27 @@ add_task(async function test_weave_timestamp() {
   Assert.equal(Resource.serverTime, TIMESTAMP);
 });
 
-add_task(async function test_get_no_headers() {
-  _("GET: no special request headers");
+add_task(async function test_get_default_headers() {
+  _("GET: Accept defaults to application/json");
   let res_headers = new Resource(server.baseURI + "/headers");
-  let content = await res_headers.get();
-  Assert.equal(content.data, "{}");
+  let content = JSON.parse((await res_headers.get()).data);
+  Assert.equal(content.accept, "application/json;q=0.9,*/*;q=0.2");
 });
 
-add_task(async function test_put_default_content_type() {
-  _("PUT: Content-Type defaults to text/plain");
+add_task(async function test_put_default_headers() {
+  _("PUT: Accept defaults to application/json, Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
-  let content = await res_headers.put("data");
-  Assert.equal(content.data, JSON.stringify({"content-type": "text/plain"}));
+  let content = JSON.parse((await res_headers.put("data")).data);
+  Assert.equal(content.accept, "application/json;q=0.9,*/*;q=0.2");
+  Assert.equal(content["content-type"], "text/plain");
 });
 
-add_task(async function test_post_default_content_type() {
-  _("POST: Content-Type defaults to text/plain");
+add_task(async function test_post_default_headers() {
+  _("POST: Accept defaults to application/json, Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
-  let content = await res_headers.post("data");
-  Assert.equal(content.data, JSON.stringify({"content-type": "text/plain"}));
+  let content = JSON.parse((await res_headers.post("data")).data);
+  Assert.equal(content.accept, "application/json;q=0.9,*/*;q=0.2");
+  Assert.equal(content["content-type"], "text/plain");
 });
 
 add_task(async function test_setHeader() {
@@ -417,8 +419,8 @@ add_task(async function test_setHeader() {
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("X-What-Is-Weave", "awesome");
   Assert.equal(res_headers.headers["x-what-is-weave"], "awesome");
-  let content = await res_headers.get();
-  Assert.equal(content.data, JSON.stringify({"x-what-is-weave": "awesome"}));
+  let content = JSON.parse((await res_headers.get()).data);
+  Assert.equal(content["x-what-is-weave"], "awesome");
 });
 
 add_task(async function test_setHeader_overwrite() {
@@ -428,9 +430,9 @@ add_task(async function test_setHeader_overwrite() {
   res_headers.setHeader("X-Another-Header", "hello world");
   Assert.equal(res_headers.headers["x-what-is-weave"], "more awesomer");
   Assert.equal(res_headers.headers["x-another-header"], "hello world");
-  let content = await res_headers.get();
-  Assert.equal(content.data, JSON.stringify({"x-another-header": "hello world",
-                                             "x-what-is-weave": "more awesomer"}));
+  let content = JSON.parse((await res_headers.get()).data);
+  Assert.equal(content["x-what-is-weave"], "more awesomer");
+  Assert.equal(content["x-another-header"], "hello world");
 });
 
 add_task(async function test_put_override_content_type() {
@@ -438,16 +440,16 @@ add_task(async function test_put_override_content_type() {
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
   Assert.equal(res_headers.headers["content-type"], "application/foobar");
-  let content = await res_headers.put("data");
-  Assert.equal(content.data, JSON.stringify({"content-type": "application/foobar"}));
+  let content = JSON.parse((await res_headers.put("data")).data);
+  Assert.equal(content["content-type"], "application/foobar");
 });
 
 add_task(async function test_post_override_content_type() {
   _("POST: override default Content-Type");
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
-  let content = await res_headers.post("data");
-  Assert.equal(content.data, JSON.stringify({"content-type": "application/foobar"}));
+  let content = JSON.parse((await res_headers.post("data")).data);
+  Assert.equal(content["content-type"], "application/foobar");
 });
 
 add_task(async function test_weave_backoff() {
