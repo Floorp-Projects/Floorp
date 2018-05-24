@@ -2590,11 +2590,12 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       iter->Init(currange);
       // loop through the content iterator for each content node
       while (!iter->IsDone()) {
-        // Query interface to cast nsIContent to nsIDOMNode
+        // Query interface to cast nsIContent to Element
         //  then get tagType to compare to  aTagName
         // Clone node of each desired type and append it to the aDomFrag
         nsINode* currentNode = iter->GetCurrentNode();
-        selectedElement = do_QueryInterface(currentNode);
+        selectedElement = currentNode && currentNode->IsElement() ?
+          currentNode->AsElement() : nullptr;
         if (selectedElement) {
           // If we already found a node, then we have another element,
           //  thus there's not just one element selected
@@ -3171,8 +3172,7 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
                                        nsGkAtoms::a) ||
           (element->IsHTMLElement(nsGkAtoms::body) &&
            element->HasAttr(kNameSpaceID_None, nsGkAtoms::background))) {
-        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
-        nodes->AppendElement(domNode);
+        nodes->AppendElement(node);
        }
      }
      iter->Next();
@@ -3259,13 +3259,12 @@ HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteNode(nsIDOMNode* aDOMNode)
+HTMLEditor::DeleteNode(nsINode* aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
-  if (NS_WARN_IF(!node)) {
+  if (NS_WARN_IF(!aNode)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = DeleteNodeWithTransaction(*node);
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3672,18 +3671,6 @@ HTMLEditor::GetEnclosingTable(nsINode* aNode)
   }
   return nullptr;
 }
-
-nsIDOMNode*
-HTMLEditor::GetEnclosingTable(nsIDOMNode* aNode)
-{
-  MOZ_ASSERT(aNode, "null node passed to HTMLEditor::GetEnclosingTable");
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, nullptr);
-  nsCOMPtr<Element> table = GetEnclosingTable(node);
-  nsCOMPtr<nsIDOMNode> ret = do_QueryInterface(table);
-  return ret;
-}
-
 
 /**
  * This method scans the selection for adjacent text nodes

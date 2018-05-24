@@ -38,7 +38,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"

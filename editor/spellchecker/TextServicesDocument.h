@@ -16,7 +16,6 @@
 
 class nsIContent;
 class nsIContentIterator;
-class nsIDOMNode;
 class nsIEditor;
 class nsINode;
 class nsISelectionController;
@@ -262,7 +261,6 @@ private:
 
   static bool IsBlockNode(nsIContent* aContent);
   static bool IsTextNode(nsIContent* aContent);
-  static bool IsTextNode(nsIDOMNode* aNode);
 
   static bool DidSkip(nsIContentIterator* aFilteredIter);
   static void ClearDidSkip(nsIContentIterator* aFilteredIter);
