@@ -71,9 +71,14 @@ class BrowserToolbar @JvmOverloads constructor(
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        // Our toolbar will always use the full width and a fixed height
+        // Our toolbar will always use the full width and a fixed height (default) or the provided
+        // height if it's an exact value.
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = dp(TOOLBAR_HEIGHT_DP)
+        val height = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            MeasureSpec.getSize(heightMeasureSpec)
+        } else {
+            dp(DEFAULT_TOOLBAR_HEIGHT_DP)
+        }
 
         setMeasuredDimension(width, height)
 
@@ -177,6 +182,6 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     companion object {
-        private const val TOOLBAR_HEIGHT_DP = 56
+        private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
     }
 }
