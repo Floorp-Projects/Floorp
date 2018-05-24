@@ -234,7 +234,7 @@ public:
   // that key normally produces a character value".
   // <https://www.w3.org/TR/uievents/#event-type-keypress>
   // Additionally, for backward compatiblity with all existing browsers,
-  // there is an spec issue for Enter key press.
+  // there is a spec issue for Enter key press.
   // <https://github.com/w3c/uievents/issues/183>
   bool IsInputtingText() const
   {
@@ -247,23 +247,25 @@ public:
     //       MODIFIER_ALT and MODIFIER_CONTROL of eKeyPress event if it
     //       should be treated as inputting a character because AltGr is
     //       represented with both Alt key and Ctrl key are pressed, and
-    //       some keyboard layout may produces a character with Ctrl key.
+    //       some keyboard layouts may produces a character with Ctrl key.
     //       -- On Linux, KeymapWrapper doesn't have this hack since perhaps,
     //       we don't have any bug reports that user cannot input proper
     //       character with Alt and/or Ctrl key.
-    //       -- On macOS, TextInputHandler::InsertText() clears MODIFIER_ALT
-    //       and MDOFIEIR_CONTROL of eKeyPress event.  However, this method
-    //       is called only when an editor has focus (even if IME is disabled
-    //       in password field or by |ime-mode: disabled;|) because it's
-    //       called while TextInputHandler::HandleKeyDownEvent() calls
-    //       interpretKeyEvents: to notify text input processor of Cocoa
-    //       (including IME).  In other words, when we need to disable IME
-    //       completey when no editor has focus, we cannot call
-    //       interpretKeyEvents:.  So, TextInputHandler::InsertText() won't
-    //       be called when no editor has focus so that neither MODIFIER_ALT
-    //       nor MODIFIER_CONTROL is cleared.  So, fortunately, altKey and
-    //       ctrlKey values of "keypress" events are same as the other browsers
-    //       only when no editor has focus.
+    //       -- On macOS, IMEInputHandler::WillDispatchKeyboardEvent() clears
+    //       MODIFIER_ALT and MDOFIEIR_CONTROL of eKeyPress event only when
+    //       TextInputHandler::InsertText() has been called for the event.
+    //       I.e., they are cleared only when an editor has focus (even if IME
+    //       is disabled in password field or by |ime-mode: disabled;|) because
+    //       TextInputHandler::InsertText() is called while
+    //       TextInputHandler::HandleKeyDownEvent() calls interpretKeyEvents:
+    //       to notify text input processor of Cocoa (including IME).  In other
+    //       words, when we need to disable IME completey when no editor has
+    //       focus, we cannot call interpretKeyEvents:.  So,
+    //       TextInputHandler::InsertText() won't be called when no editor has
+    //       focus so that neither MODIFIER_ALT nor MODIFIER_CONTROL is
+    //       cleared.  So, fortunately, altKey and ctrlKey values of "keypress"
+    //       events are same as the other browsers only when no editor has
+    //       focus.
     // NOTE: As mentioned above, for compatibility with the other browsers on
     //       macOS, we should keep MODIFIER_ALT and MODIFIER_CONTROL flags of
     //       eKeyPress events when no editor has focus.  However, Alt key,

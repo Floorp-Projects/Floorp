@@ -90,15 +90,8 @@ async function runTests()
        kDescription + "'a' key press with control key should not cause firing keypress event");
 
     keypress = await testNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {altKey: true, ctrlKey: true}, "\u0001", "a");
-    if (kTest.isEditable) {
-      // XXX Currently, control + option + a inputs \u00E5 if IME is available,
-      //     but this must be a bug of our widget for Cocoa.
-      todo(!keypress,
-           kDescription + "'a' key press with option key and control key should not cause firing keypress event");
-    } else {
-      ok(!keypress,
-         kDescription + "'a' key press with option key and control key should not cause firing keypress event");
-    }
+    ok(!keypress,
+       kDescription + "'a' key press with option key and control key should not cause firing keypress event");
 
     // XXX Cannot test with command key for now since keyup event won't be fired due to macOS's limitation.
 
