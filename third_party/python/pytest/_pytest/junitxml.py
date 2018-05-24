@@ -17,6 +17,7 @@ import re
 import sys
 import time
 import pytest
+from _pytest import nodes
 from _pytest.config import filename_arg
 
 # Python 2.X and 3.X compatibility
@@ -252,7 +253,7 @@ def mangle_test_address(address):
     except ValueError:
         pass
     # convert file path to dotted path
-    names[0] = names[0].replace("/", '.')
+    names[0] = names[0].replace(nodes.SEP, '.')
     names[0] = _py_ext_re.sub("", names[0])
     # put any params back
     names[-1] += possible_open_bracket + params
@@ -378,8 +379,8 @@ class LogXML(object):
             close_report = next(
                 (rep for rep in self.open_reports
                  if (rep.nodeid == report.nodeid and
-                      getattr(rep, "item_index", None) == report_ii and
-                      getattr(rep, "worker_id", None) == report_wid
+                     getattr(rep, "item_index", None) == report_ii and
+                     getattr(rep, "worker_id", None) == report_wid
                      )
                  ), None)
             if close_report:
@@ -444,9 +445,9 @@ class LogXML(object):
         """
         if self.global_properties:
             return Junit.properties(
-                    [
-                        Junit.property(name=name, value=value)
-                        for name, value in self.global_properties
-                    ]
+                [
+                    Junit.property(name=name, value=value)
+                    for name, value in self.global_properties
+                ]
             )
         return ''
