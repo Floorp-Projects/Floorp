@@ -13,10 +13,12 @@ NS_IMPL_CLASSINFO(ExpandedPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
                   NS_EXPANDEDPRINCIPAL_CID)
 NS_IMPL_QUERY_INTERFACE_CI(ExpandedPrincipal,
                            nsIPrincipal,
-                           nsIExpandedPrincipal)
+                           nsIExpandedPrincipal,
+                           nsISerializable)
 NS_IMPL_CI_INTERFACE_GETTER(ExpandedPrincipal,
                             nsIPrincipal,
-                            nsIExpandedPrincipal)
+                            nsIExpandedPrincipal,
+                            nsISerializable)
 
 struct OriginComparator
 {
@@ -52,6 +54,11 @@ ExpandedPrincipal::ExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteLis
   for (size_t i = 0; i < aWhiteList.Length(); ++i) {
     mPrincipals.InsertElementSorted(aWhiteList[i], c);
   }
+}
+
+ExpandedPrincipal::ExpandedPrincipal()
+  : BasePrincipal(eExpandedPrincipal)
+{
 }
 
 ExpandedPrincipal::~ExpandedPrincipal()
@@ -234,14 +241,71 @@ ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 // Methods implementing nsISerializable //
 //////////////////////////////////////////
 
+// We've had way too many issues with unversioned serializations, so
+// explicitly version this one.
+static const uint32_t kSerializationVersion = 1;
+
 NS_IMETHODIMP
 ExpandedPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  uint32_t version;
+  nsresult rv = aStream->Read32(&version);
+  if (version != kSerializationVersion) {
+    MOZ_ASSERT(false,
+               "We really need to add handling of the old(?) version here");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  uint32_t count;
+  rv = aStream->Read32(&count);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!mPrincipals.SetCapacity(count, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  OriginComparator c;
+  for (uint32_t i = 0; i < count; ++i) {
+    nsCOMPtr<nsISupports> read;
+    rv = aStream->ReadObject(true, getter_AddRefs(read));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(read);
+    if (!principal) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    // Play it safe and InsertElementSorted, in case the sort order
+    // changed for some bizarre reason.
+    mPrincipals.InsertElementSorted(Move(principal), c);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 ExpandedPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = aStream->Write32(kSerializationVersion);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->Write32(mPrincipals.Length());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for (auto& principal : mPrincipals) {
+    rv = aStream->WriteObject(principal, true);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
