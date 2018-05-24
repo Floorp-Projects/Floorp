@@ -280,9 +280,7 @@ public:
   void NotifyLoadID(uint32_t aLoadID);
 
   // Notifies the cache that the channel has closed with the given status.
-  void NotifyDataEnded(uint32_t aLoadID,
-                       nsresult aStatus,
-                       bool aReopenOnError = false);
+  void NotifyDataEnded(uint32_t aLoadID, nsresult aStatus);
 
   // Notifies the stream that the suspend status of the client has changed.
   // Main thread only.
@@ -468,9 +466,7 @@ private:
                                  bool aSeekable,
                                  int64_t aLength);
 
-  void NotifyDataEndedInternal(uint32_t aLoadID,
-                               nsresult aStatus,
-                               bool aReopenOnError);
+  void NotifyDataEndedInternal(uint32_t aLoadID, nsresult aStatus);
 
   void UpdateDownloadStatistics(AutoLock&);
 

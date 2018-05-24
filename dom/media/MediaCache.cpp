@@ -2193,9 +2193,7 @@ MediaCacheStream::UpdateDownloadStatistics(AutoLock&)
 }
 
 void
-MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
-                                          nsresult aStatus,
-                                          bool aReopenOnError)
+MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID, nsresult aStatus)
 {
   MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   AutoLock lock(mMediaCache->Monitor());
@@ -2239,18 +2237,15 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
 }
 
 void
-MediaCacheStream::NotifyDataEnded(uint32_t aLoadID,
-                                  nsresult aStatus,
-                                  bool aReopenOnError)
+MediaCacheStream::NotifyDataEnded(uint32_t aLoadID, nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadID > 0);
 
   RefPtr<ChannelMediaResource> client = mClient;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "MediaCacheStream::NotifyDataEnded",
-    [client, this, aLoadID, aStatus, aReopenOnError]() {
-      NotifyDataEndedInternal(aLoadID, aStatus, aReopenOnError);
+    "MediaCacheStream::NotifyDataEnded", [client, this, aLoadID, aStatus]() {
+      NotifyDataEndedInternal(aLoadID, aStatus);
     });
   OwnerThread()->Dispatch(r.forget());
 }
