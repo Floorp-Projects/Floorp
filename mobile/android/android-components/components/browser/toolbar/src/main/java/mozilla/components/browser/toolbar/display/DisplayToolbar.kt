@@ -171,27 +171,27 @@ internal class DisplayToolbar(
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        iconView.layout(left, top, left + iconView.measuredWidth, bottom)
+        iconView.layout(0, 0, iconView.measuredWidth, measuredHeight)
 
         var actionWidth = 0
         actions
             .mapNotNull { it.view }
             .reversed()
             .forEach { view ->
-                val viewRight = right - actionWidth - if (menuView.isVisible()) height else 0
+                val viewRight = measuredWidth - actionWidth - if (menuView.isVisible()) height else 0
                 val viewLeft = viewRight - view.measuredWidth
 
-                view.layout(viewLeft, top, viewRight, bottom)
+                view.layout(viewLeft, 0, viewRight, measuredHeight)
 
                 actionWidth += view.measuredWidth
             }
 
-        val urlRight = right - actionWidth - if (menuView.isVisible()) height else 0
-        urlView.layout(left + iconView.measuredWidth, top, urlRight, bottom)
+        val urlRight = measuredWidth - actionWidth - if (menuView.isVisible()) height else 0
+        urlView.layout(0 + iconView.measuredWidth, 0, urlRight, bottom)
 
-        progressView.layout(left, bottom - progressView.measuredHeight, right, bottom)
+        progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
 
-        menuView.layout(right - menuView.measuredWidth, top, right, bottom)
+        menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
     }
 
     companion object {

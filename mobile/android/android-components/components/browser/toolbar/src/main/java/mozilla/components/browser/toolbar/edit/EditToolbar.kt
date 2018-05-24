@@ -96,9 +96,9 @@ class EditToolbar(
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        cancelView.layout(right - cancelView.measuredWidth, top, right, bottom)
+        cancelView.layout(measuredWidth - cancelView.measuredWidth, 0, measuredWidth, measuredHeight)
 
-        urlView.layout(left, top, right - cancelView.measuredWidth, bottom)
+        urlView.layout(0, 0, measuredWidth - cancelView.measuredWidth, bottom)
     }
 
     companion object {
