@@ -62,8 +62,8 @@ pref("browser.cache.memory.max_entry_size",  5120);
 // (priority) like html, css, fonts and js, and one for other data like images,
 // video, etc.
 // Note: 0 means no limit.
-pref("browser.cache.disk.max_chunks_memory_usage", 10240);
-pref("browser.cache.disk.max_priority_chunks_memory_usage", 10240);
+pref("browser.cache.disk.max_chunks_memory_usage", 40960);
+pref("browser.cache.disk.max_priority_chunks_memory_usage", 40960);
 
 pref("browser.cache.disk_cache_ssl",        true);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically

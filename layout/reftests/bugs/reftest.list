@@ -656,7 +656,7 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 372768-1.html 372768-1-ref.html
 fuzzy-if(webrender&&winWidget,83-83,2-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
-== 373381-1.html 373381-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 373381-1.html 373381-1-ref.html
 fuzzy-if(skiaContent&&!Android,2,40) == 373381-2.html 373381-2-ref.html
 random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373381-4.html 373381-4-ref.html
@@ -1606,9 +1606,9 @@ fails-if(!haveTestPlugin) HTTP == 599476.html 599476-ref.html
 == 599882-2.html 599882-2-ref.html
 == 600045-1.html 600045-1-ref.html
 == 600803-1.html 600803-1-ref.html
-== 600974-1.html 600974-1-ref.html
-== 600974-2.html 600974-1-ref.html
-== 600974-3.html 600974-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-1.html 600974-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-2.html 600974-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 600974-3.html 600974-1-ref.html
 == 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
 fuzzy-if(Android,8,20) == 602200-3.html 602200-3-ref.html

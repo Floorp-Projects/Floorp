@@ -455,7 +455,7 @@ LCovSource::writeScript(JSScript* script)
     return true;
 }
 
-LCovCompartment::LCovCompartment()
+LCovRealm::LCovRealm()
   : alloc_(4096),
     outTN_(&alloc_),
     sources_(nullptr)
@@ -464,7 +464,7 @@ LCovCompartment::LCovCompartment()
 }
 
 void
-LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script, const char* name)
+LCovRealm::collectCodeCoverageInfo(JS::Realm* realm, JSScript* script, const char* name)
 {
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
@@ -474,7 +474,7 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script, 
         return;
 
     // Get the existing source LCov summary, or create a new one.
-    LCovSource* source = lookupOrAdd(comp, name);
+    LCovSource* source = lookupOrAdd(realm, name);
     if (!source)
         return;
 
@@ -486,12 +486,12 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSScript* script, 
 }
 
 LCovSource*
-LCovCompartment::lookupOrAdd(JSCompartment* comp, const char* name)
+LCovRealm::lookupOrAdd(JS::Realm* realm, const char* name)
 {
-    // On the first call, write the compartment name, and allocate a LCovSource
+    // On the first call, write the realm name, and allocate a LCovSource
     // vector in the LifoAlloc.
     if (!sources_) {
-        if (!writeCompartmentName(comp))
+        if (!writeRealmName(realm))
             return nullptr;
 
         LCovSourceVector* raw = alloc_.pod_malloc<LCovSourceVector>();
@@ -525,7 +525,7 @@ LCovCompartment::lookupOrAdd(JSCompartment* comp, const char* name)
 }
 
 void
-LCovCompartment::exportInto(GenericPrinter& out, bool* isEmpty) const
+LCovRealm::exportInto(GenericPrinter& out, bool* isEmpty) const
 {
     if (!sources_ || outTN_.hadOutOfMemory())
         return;
@@ -551,12 +551,12 @@ LCovCompartment::exportInto(GenericPrinter& out, bool* isEmpty) const
 }
 
 bool
-LCovCompartment::writeCompartmentName(JSCompartment* comp)
+LCovRealm::writeRealmName(JS::Realm* realm)
 {
     JSContext* cx = TlsContext.get();
 
     // lcov trace files are starting with an optional test case name, that we
-    // recycle to be a compartment name.
+    // recycle to be a realm name.
     //
     // Note: The test case name has some constraint in terms of valid character,
     // thus we escape invalid chracters with a "_" symbol in front of its
@@ -567,6 +567,7 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
         {
             // Hazard analysis cannot tell that the callback does not GC.
             JS::AutoSuppressGCAnalysis nogc;
+            JSCompartment* comp = JS::GetCompartmentForRealm(realm);
             (*cx->runtime()->compartmentNameCallback)(cx, comp, name, sizeof(name));
         }
         for (char *s = name; s < name + sizeof(name) && *s; s++) {
@@ -581,7 +582,7 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
         }
         outTN_.put("\n", 1);
     } else {
-        outTN_.printf("Compartment_%p%p\n", (void*) size_t('_'), comp);
+        outTN_.printf("Realm_%p%p\n", (void*) size_t('_'), realm);
     }
 
     return !outTN_.hadOutOfMemory();
@@ -649,7 +650,7 @@ LCovRuntime::finishFile()
 }
 
 void
-LCovRuntime::writeLCovResult(LCovCompartment& comp)
+LCovRuntime::writeLCovResult(LCovRealm& realm)
 {
     if (!out_.isInitialized())
         return;
@@ -663,7 +664,7 @@ LCovRuntime::writeLCovResult(LCovCompartment& comp)
             return;
     }
 
-    comp.exportInto(out_, &isEmpty_);
+    realm.exportInto(out_, &isEmpty_);
     out_.flush();
 }
 

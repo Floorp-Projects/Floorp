@@ -597,15 +597,6 @@ struct JSCompartment
                                       js::SystemAllocPolicy>;
     IteratorCache iteratorCache;
 
-    /*
-     * For generational GC, record whether a write barrier has added this
-     * compartment's global to the store buffer since the last minor GC.
-     *
-     * This is used to avoid calling into the VM every time a nursery object is
-     * written to a property of the global.
-     */
-    uint32_t                     globalWriteBarriered;
-
     // Non-zero if the storage underlying any typed object in this compartment
     // might be detached.
     int32_t                      detachedTypedObjects;
@@ -629,7 +620,7 @@ struct JSCompartment
 #endif
     // Keep track of the metadata objects which can be associated with each JS
     // object. Both keys and values are in this compartment.
-    js::ObjectWeakMap* objectMetadataTable;
+    js::UniquePtr<js::ObjectWeakMap> objectMetadataTable;
 
     // Map from array buffers to views sharing that storage.
     JS::WeakCache<js::InnerViewTable> innerViews;
@@ -637,7 +628,7 @@ struct JSCompartment
     // Inline transparent typed objects do not initially have an array buffer,
     // but can have that buffer created lazily if it is accessed later. This
     // table manages references from such typed objects to their buffers.
-    js::ObjectWeakMap* lazyArrayBuffers;
+    js::UniquePtr<js::ObjectWeakMap> lazyArrayBuffers;
 
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
@@ -646,7 +637,7 @@ struct JSCompartment
     // All non-syntactic lexical environments in the compartment. These are kept in
     // a map because when loading scripts into a non-syntactic environment, we need
     // to use the same lexical environment to persist lexical bindings.
-    js::ObjectWeakMap* nonSyntacticLexicalEnvironments_;
+    js::UniquePtr<js::ObjectWeakMap> nonSyntacticLexicalEnvironments_;
 
   public:
     /*
@@ -661,16 +652,6 @@ struct JSCompartment
   private:
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
     bool getOrCreateWrapper(JSContext* cx, js::HandleObject existing, js::MutableHandleObject obj);
-
-  private:
-    // This pointer is controlled by the embedder. If it is non-null, and if
-    // cx->enableAccessValidation is true, then we assert that *validAccessPtr
-    // is true before running any code in this compartment.
-    bool* validAccessPtr;
-
-  public:
-    bool isAccessValid() const { return validAccessPtr ? *validAccessPtr : true; }
-    void setValidAccessPtr(bool* accessp) { validAccessPtr = accessp; }
 
   protected:
     explicit JSCompartment(JS::Zone* zone);
@@ -754,12 +735,16 @@ struct JSCompartment
     }
 
     /* Bookkeeping information for debug scope objects. */
-    js::DebugEnvironments* debugEnvs;
+    js::UniquePtr<js::DebugEnvironments> debugEnvs;
 
     /*
      * List of potentially active iterators that may need deleted property
      * suppression.
      */
+  private:
+    using NativeIteratorSentinel = js::UniquePtr<js::NativeIterator, JS::FreePolicy>;
+    NativeIteratorSentinel iteratorSentinel_;
+  public:
     js::NativeIterator* enumerators;
 
     MOZ_ALWAYS_INLINE bool objectMaybeInIteration(JSObject* obj);
@@ -772,17 +757,13 @@ struct JSCompartment
     bool maybeAlive = true;
 
   protected:
-    js::jit::JitCompartment* jitCompartment_;
+    js::UniquePtr<js::jit::JitCompartment> jitCompartment_;
 
   public:
     bool ensureJitCompartmentExists(JSContext* cx);
     js::jit::JitCompartment* jitCompartment() {
-        return jitCompartment_;
+        return jitCompartment_.get();
     }
-
-    // Aggregated output used to collect JSScript hit counts when code coverage
-    // is enabled.
-    js::coverage::LCovCompartment lcovOutput;
 };
 
 class JS::Realm : public JSCompartment
@@ -820,6 +801,11 @@ class JS::Realm : public JSCompartment
     const js::AllocationMetadataBuilder* allocationMetadataBuilder_ = nullptr;
     void* realmPrivate_ = nullptr;
 
+    // This pointer is controlled by the embedder. If it is non-null, and if
+    // cx->enableAccessValidation is true, then we assert that *validAccessPtr
+    // is true before running any code in this realm.
+    bool* validAccessPtr_ = nullptr;
+
     js::ReadBarriered<js::ArgumentsObject*> mappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::ArgumentsObject*> unmappedArgumentsTemplate_ { nullptr };
     js::ReadBarriered<js::NativeObject*> iterResultTemplate_ { nullptr };
@@ -851,6 +837,10 @@ class JS::Realm : public JSCompartment
     // WebAssembly state for the realm.
     js::wasm::Realm wasm;
 
+    // Aggregated output used to collect JSScript hit counts when code coverage
+    // is enabled.
+    js::coverage::LCovRealm lcovOutput;
+
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
     js::ArraySpeciesLookup arraySpeciesLookup;
@@ -869,6 +859,15 @@ class JS::Realm : public JSCompartment
 
     // Last time at which an animation was played for this realm.
     int64_t lastAnimationTime = 0;
+
+    /*
+     * For generational GC, record whether a write barrier has added this
+     * realm's global to the store buffer since the last minor GC.
+     *
+     * This is used to avoid calling into the VM every time a nursery object is
+     * written to a property of the global.
+     */
+    uint32_t globalWriteBarriered = 0;
 
     uint32_t warnedAboutStringGenericsMethods = 0;
 #ifdef DEBUG
@@ -1014,7 +1013,6 @@ class JS::Realm : public JSCompartment
     void setAllocationMetadataBuilder(const js::AllocationMetadataBuilder* builder);
     void forgetAllocationMetadataBuilder();
     void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
-    void clearObjectMetadata();
 
     bool hasObjectPendingMetadata() const {
         return objectMetadataState_.is<js::PendingMetadata>();
@@ -1227,6 +1225,13 @@ class JS::Realm : public JSCompartment
     js::HashNumber randomHashCode();
 
     mozilla::HashCodeScrambler randomHashCodeScrambler();
+
+    bool isAccessValid() const {
+        return validAccessPtr_ ? *validAccessPtr_ : true;
+    }
+    void setValidAccessPtr(bool* accessp) {
+        validAccessPtr_ = accessp;
+    }
 };
 
 namespace js {
