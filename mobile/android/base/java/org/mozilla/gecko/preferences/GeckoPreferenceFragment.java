@@ -40,6 +40,7 @@ import android.view.MenuInflater;
 public class GeckoPreferenceFragment extends PreferenceFragment {
 
     public static final int ACCOUNT_LOADER_ID = 1;
+    public static final int HEADER_ID_UNDEFINED = -1;
     private AccountLoaderCallbacks accountLoaderCallbacks;
     private SyncPreference syncPreference;
 
@@ -149,7 +150,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             return R.id.pref_header_notifications;
         }
 
-        return -1;
+        return HEADER_ID_UNDEFINED;
     }
 
     private void updateParentTitle() {
@@ -161,13 +162,9 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
         final GeckoPreferences activity = (GeckoPreferences) getActivity();
         if (activity.isMultiPane()) {
-            // In a multi-pane activity, the title is "Settings", and the action
-            // bar is along the top of the screen. We don't want to change those.
-            activity.showBreadCrumbs(newTitle, newTitle);
-            activity.switchToHeader(getHeader());
+            activity.trySwitchToHeader(getHeader());
             return;
         }
-
         Log.v(LOGTAG, "Setting activity title to " + newTitle);
         activity.setTitle(newTitle);
     }
