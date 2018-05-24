@@ -849,7 +849,8 @@ ObjectRealm::sweepNativeIterators()
         NativeIterator* next = ni->next();
         if (gc::IsAboutToBeFinalizedUnbarriered(&iterObj))
             ni->unlink();
-        MOZ_ASSERT_IF(ni->obj, &ObjectRealm::get(ni->obj) == this);
+        MOZ_ASSERT_IF(ni->objectBeingIterated(),
+                      &ObjectRealm::get(ni->objectBeingIterated()) == this);
         ni = next;
     }
 }
