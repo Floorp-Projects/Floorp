@@ -336,12 +336,20 @@ PerformanceMainThread::CreateNavigationTimingEntry()
 void
 PerformanceMainThread::QueueNavigationTimingEntry()
 {
-  if (mDocEntry) {
-    QueueEntry(mDocEntry);
+  if (!mDocEntry) {
+    return;
   }
+
+  // Let's update some values.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
+  if (httpChannel) {
+    mDocEntry->UpdatePropertiesFromHttpChannel(httpChannel);
+  }
+
+  QueueEntry(mDocEntry);
 }
 
-+void
+void
 PerformanceMainThread::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
   // We return an empty list when 'privacy.resistFingerprinting' is on.

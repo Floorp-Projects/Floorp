@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+class PerformanceNavigationTiming;
+
 class PerformanceMainThread final : public Performance
                                   , public PerformanceStorage
 {
@@ -84,7 +86,7 @@ protected:
 
   void DispatchBufferFullEvent() override;
 
-  RefPtr<PerformanceEntry> mDocEntry;
+  RefPtr<PerformanceNavigationTiming> mDocEntry;
   RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<PerformanceTiming> mTiming;
