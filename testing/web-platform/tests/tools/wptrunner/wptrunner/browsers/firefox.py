@@ -341,10 +341,11 @@ class FirefoxBrowser(Browser):
             if self.stack_fixer:
                 data = self.stack_fixer(data)
             if self.lsan_handler:
-                self.lsan_handler.log(data)
-            self.logger.process_output(self.pid(),
-                                      data,
-                                      command=" ".join(self.runner.command))
+                data = self.lsan_handler.log(data)
+            if data is not None:
+                self.logger.process_output(self.pid(),
+                                           data,
+                                           command=" ".join(self.runner.command))
 
     def is_alive(self):
         if self.runner:
