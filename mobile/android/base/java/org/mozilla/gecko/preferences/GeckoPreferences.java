@@ -57,7 +57,6 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.DynamicToolbar;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -74,7 +73,6 @@ import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
-import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
@@ -466,9 +464,17 @@ public class GeckoPreferences
     }
 
     @TargetApi(11)
-    public void switchToHeader(int id) {
+    public void trySwitchToHeader(int id) {
+        /**
+         * Can't switch to an unknown header.
+         * See {@link GeckoPreferenceFragment#getHeader()}
+         */
+        if (id == GeckoPreferenceFragment.HEADER_ID_UNDEFINED) {
+            return;
+        }
+
+        // Can't switch to a header if there are no headers!
         if (mHeaders == null) {
-            // Can't switch to a header if there are no headers!
             return;
         }
 
