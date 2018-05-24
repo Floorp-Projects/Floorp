@@ -199,9 +199,8 @@ struct Census {
     // is an element of the set. If the targetZones set is empty, then nodes in
     // all zones are considered.
     JS::ZoneSet targetZones;
-    Zone* atomsZone;
 
-    explicit Census(JSContext* cx) : cx(cx), atomsZone(nullptr) { }
+    explicit Census(JSContext* cx) : cx(cx) { }
 
     MOZ_MUST_USE JS_PUBLIC_API(bool) init();
 };
