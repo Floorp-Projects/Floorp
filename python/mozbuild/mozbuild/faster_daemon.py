@@ -72,15 +72,9 @@ class Daemon(object):
         defines = dict(self.config_environment.acdefines)
         # These additions work around warts in the build system: see
         # http://searchfox.org/mozilla-central/rev/ad093e98f42338effe2e2513e26c3a311dd96422/config/faster/rules.mk#92-93
-        # and
-        # http://searchfox.org/mozilla-central/rev/ad093e98f42338effe2e2513e26c3a311dd96422/python/mozbuild/mozbuild/backend/tup.py#244-253.
         defines.update({
             'AB_CD': 'en-US',
             'BUILD_FASTER': '1',
-        })
-        defines.update({
-            'BOOKMARKS_INCLUDE_DIR': mozpath.join(self.config_environment.topsrcdir,
-                                                  'browser', 'locales', 'en-US', 'profile'),
         })
         return defines
 
