@@ -19,7 +19,6 @@
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
 #include "nsLookAndFeel.h"
 #include "nsMenuFrame.h"
@@ -1552,12 +1551,10 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect)
 {
-  if (IsWidgetScrollbarPart(aWidgetType)) {
-    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (style->StyleUserInterface()->HasCustomScrollbars()) {
-      return DrawCustomScrollbarPart(aContext, aFrame, style,
-                                     aWidgetType, aRect, aDirtyRect);
-    }
+  if (aFrame->StyleUserInterface()->HasCustomScrollbars() &&
+      IsWidgetScrollbarPart(aWidgetType)) {
+    return DrawCustomScrollbarPart(aContext, aFrame, aWidgetType,
+                                   aRect, aDirtyRect);
   }
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -4266,19 +4263,19 @@ GetScrollbarArrowColor(nscolor aTrackColor)
 nsresult
 nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
                                           nsIFrame* aFrame,
-                                          ComputedStyle* aStyle,
                                           uint8_t aWidgetType,
                                           const nsRect& aRect,
                                           const nsRect& aClipRect)
 {
-  MOZ_ASSERT(!aStyle->StyleUserInterface()->mScrollbarFaceColor.mIsAuto ||
-             !aStyle->StyleUserInterface()->mScrollbarTrackColor.mIsAuto);
+  ComputedStyle* style = aFrame->Style();
+  MOZ_ASSERT(!style->StyleUserInterface()->mScrollbarFaceColor.mIsAuto ||
+             !style->StyleUserInterface()->mScrollbarTrackColor.mIsAuto);
 
   gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
           dr(aClipRect.X(), aClipRect.Y(),
              aClipRect.Width(), aClipRect.Height());
 
-  nscolor trackColor = GetScrollbarTrackColor(aStyle);
+  nscolor trackColor = GetScrollbarTrackColor(style);
   HBRUSH dcBrush = (HBRUSH) GetStockObject(DC_BRUSH);
 
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
@@ -4314,7 +4311,7 @@ nsNativeThemeWin::DrawCustomScrollbarPart(gfxContext* aContext,
           tr2.Deflate(0, dev2css);
         }
         nativeDrawing.TransformToNativeRect(tr2, widgetRect);
-        nscolor faceColor = GetScrollbarFaceColor(aStyle);
+        nscolor faceColor = GetScrollbarFaceColor(style);
         ::SetDCBrushColor(hdc, ToColorRef(faceColor));
         ::FillRect(hdc, &widgetRect, dcBrush);
         break;
