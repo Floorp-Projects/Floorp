@@ -25,8 +25,6 @@ public:
   virtual void AddEntry(nsIHttpChannel* aChannel,
                         nsITimedChannel* aTimedChannel) = 0;
 
-  virtual void CreateDocumentEntry(nsITimedChannel* aChannel) = 0;
-
 protected:
   virtual ~PerformanceStorage() {}
 };
