@@ -23,8 +23,6 @@
 #include "nsString.h"
 #include "GeckoProfiler.h"
 
-#define NOTIFY_GLOBAL_OBSERVERS
-
 static const uint32_t kMinTelemetryNotifyObserversLatencyMs = 1;
 
 // Log module for nsObserverService logging...
@@ -296,13 +294,6 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
   if (observerList) {
     observerList->NotifyObservers(aSubject, aTopic, aSomeData);
   }
-
-#ifdef NOTIFY_GLOBAL_OBSERVERS
-  observerList = mObserverTopicTable.GetEntry("*");
-  if (observerList) {
-    observerList->NotifyObservers(aSubject, aTopic, aSomeData);
-  }
-#endif
 
   uint32_t latencyMs = round((TimeStamp::Now() - start).ToMilliseconds());
   if (latencyMs >= kMinTelemetryNotifyObserversLatencyMs) {
