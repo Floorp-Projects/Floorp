@@ -43,7 +43,6 @@ add_task(async function() {
   info("Checking the state of the 2 pane inspector");
   sidebarWidth = inspector.splitBox.state.width;
   ok(button.classList.contains("pane-collapsed"), "The button is in collapsed state");
-  debugger;
   is(inspector.sidebar.getCurrentTabID(), "ruleview",
     "Rule view is shown in the sidebar");
   is(ruleViewSidebar.style.display, "none", "The split rule view sidebar is hidden");
