@@ -121,7 +121,7 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM64>
     LSnapshot* snapshot_;
 
   public:
-    OutOfLineBailout(LSnapshot* snapshot)
+    explicit OutOfLineBailout(LSnapshot* snapshot)
       : snapshot_(snapshot)
     { }
 
