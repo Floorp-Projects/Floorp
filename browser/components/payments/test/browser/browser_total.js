@@ -22,7 +22,7 @@ add_task(async function test_modifier_with_no_method_selected() {
   };
   const args = {
     methodData: [PTU.MethodData.bobPay, PTU.MethodData.basicCard],
-    details: PTU.Details.bobPayPaymentModifier,
+    details: Object.assign({}, PTU.Details.bobPayPaymentModifier, PTU.Details.total2USD),
   };
   await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
@@ -39,7 +39,7 @@ add_task(async function test_modifier_with_no_method_selected() {
   };
   const args = {
     methodData: [PTU.MethodData.bobPay, PTU.MethodData.basicCard],
-    details: PTU.Details.bobPayPaymentModifier,
+    details: Object.assign({}, PTU.Details.bobPayPaymentModifier, PTU.Details.total2USD),
   };
   await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
   await cleanupFormAutofillStorage();

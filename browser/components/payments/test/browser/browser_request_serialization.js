@@ -23,7 +23,7 @@ add_task(async function test_serializeRequest_displayItems() {
   };
   const args = {
     methodData: [PTU.MethodData.basicCard],
-    details: PTU.Details.twoDisplayItems,
+    details: Object.assign({}, PTU.Details.twoDisplayItems, PTU.Details.total32USD),
   };
   await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
@@ -59,10 +59,10 @@ add_task(async function test_serializeRequest_shippingOptions() {
 
   const argsTestCases = [{
     methodData: [PTU.MethodData.basicCard],
-    details: PTU.Details.twoShippingOptions,
+    details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
   }, {
     methodData: [PTU.MethodData.basicCard],
-    details: PTU.Details.twoShippingOptions,
+    details: Object.assign({}, PTU.Details.twoShippingOptions, PTU.Details.total2USD),
     options: PTU.Options.requestShippingOption,
   }];
   for (let args of argsTestCases) {
@@ -124,7 +124,8 @@ add_task(async function test_serializeRequest_modifiers() {
 
   const args = {
     methodData: [PTU.MethodData.basicCard, PTU.MethodData.bobPay],
-    details: PTU.Details.bobPayPaymentModifier,
+    details: Object.assign({}, PTU.Details.twoDisplayItems,
+                           PTU.Details.bobPayPaymentModifier, PTU.Details.total2USD),
   };
   await spawnInDialogForMerchantTask(PTU.ContentTasks.createAndShowRequest, testTask, args);
 });
