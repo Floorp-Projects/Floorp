@@ -20,6 +20,7 @@ import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.ktx.android.view.dp
 
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
@@ -36,6 +37,7 @@ class ToolbarActivity : AppCompatActivity() {
             ToolbarConfiguration.DEFAULT -> setupDefaultToolbar()
             ToolbarConfiguration.FOCUS_TABLET -> setupFocusTabletToolbar()
             ToolbarConfiguration.FOCUS_PHONE -> setupFocusPhoneToolbar()
+            ToolbarConfiguration.SEEDLING -> setupSeedlingToolbar()
         }
 
         recyclerView.adapter = ConfigurationAdapter(configuration)
@@ -155,6 +157,35 @@ class ToolbarActivity : AppCompatActivity() {
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.displayUrl("https://www.mozilla.org/en-US/firefox/mobile/")
+    }
+
+    /**
+     * A large dark toolbar with padding, flexible space and branding.
+     */
+    private fun setupSeedlingToolbar() {
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Setup background and size/padding
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        toolbar.setBackgroundColor(0xFF38383D.toInt())
+        toolbar.layoutParams.height = toolbar.dp(104)
+        toolbar.setPadding(
+                toolbar.dp(58),
+                toolbar.dp(24),
+                toolbar.dp(58),
+                toolbar.dp(24))
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Hide the site security icon
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        toolbar.displaySiteSecurityIcon = false
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Display a URL
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        toolbar.displayUrl("https://www.nytimes.com/video")
     }
 
     private fun simulateReload(toolbar: BrowserToolbar) {

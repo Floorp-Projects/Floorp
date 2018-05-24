@@ -12,7 +12,8 @@ import android.widget.TextView
 enum class ToolbarConfiguration(val label: String) {
     DEFAULT("Default"),
     FOCUS_TABLET("Firefox Focus (Tablet)"),
-    FOCUS_PHONE("Firefox Focus (Phone)")
+    FOCUS_PHONE("Firefox Focus (Phone)"),
+    SEEDLING("Seedling")
 }
 
 class ConfigurationAdapter(val configuration: ToolbarConfiguration) : RecyclerView.Adapter<ConfigurationViewHolder>() {

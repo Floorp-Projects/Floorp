@@ -34,13 +34,13 @@ kotlin {
 }
 
 dependencies {
-    implementation project(':concept-toolbar')
-
     implementation project(':browser-toolbar')
     implementation project(':browser-menu')
 
     implementation project(':ui-colors')
     implementation project(':ui-icons')
+
+    implementation project(':support-ktx')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${rootProject.ext.dependencies['kotlin']}"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${rootProject.ext.dependencies['coroutines']}"
