@@ -31,7 +31,7 @@ namespace mozilla {
 
 // Update this version number to force re-running the benchmark. Such as when
 // an improvement to FFVP9 or LIBVPX is deemed worthwhile.
-const uint32_t VP9Benchmark::sBenchmarkVersionID = 3;
+const uint32_t VP9Benchmark::sBenchmarkVersionID = 4;
 
 const char* VP9Benchmark::sBenchmarkFpsPref = "media.benchmark.vp9.fps";
 const char* VP9Benchmark::sBenchmarkFpsVersionCheck = "media.benchmark.vp9.versioncheck";
