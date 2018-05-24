@@ -13,7 +13,7 @@
 
 #include "gc/Marking.h"
 #include "jit/ExecutableAllocator.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "vm/JSCompartment.h"
 
 using mozilla::DebugOnly;

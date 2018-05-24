@@ -14,8 +14,8 @@
 
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
-#include "jit/JitCompartment.h"
 #include "jit/JitOptions.h"
+#include "jit/JitRealm.h"
 #include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
@@ -173,23 +173,23 @@ JSRuntime::createJitRuntime(JSContext* cx)
 }
 
 bool
-JSCompartment::ensureJitCompartmentExists(JSContext* cx)
+Realm::ensureJitRealmExists(JSContext* cx)
 {
     using namespace js::jit;
-    if (jitCompartment_)
+    if (jitRealm_)
         return true;
 
     if (!zone()->getJitZone(cx))
         return false;
 
-    UniquePtr<JitCompartment> jitComp = cx->make_unique<JitCompartment>();
-    if (!jitComp)
+    UniquePtr<JitRealm> jitRealm = cx->make_unique<JitRealm>();
+    if (!jitRealm)
         return false;
 
-    if (!jitComp->initialize(cx))
+    if (!jitRealm->initialize(cx))
         return false;
 
-    jitCompartment_ = Move(jitComp);
+    jitRealm_ = Move(jitRealm);
     return true;
 }
 
@@ -752,10 +752,10 @@ Realm::sweepSelfHostingScriptSource()
 }
 
 void
-JSCompartment::sweepJitCompartment()
+Realm::sweepJitRealm()
 {
-    if (jitCompartment_)
-        jitCompartment_->sweep(this);
+    if (jitRealm_)
+        jitRealm_->sweep(this);
 }
 
 void
@@ -977,7 +977,7 @@ Realm::clearTables()
     // No scripts should have run in this realm. This is used when merging
     // a realm that has been used off thread into another realm and zone.
     JS::GetCompartmentForRealm(this)->assertNoCrossCompartmentWrappers();
-    MOZ_ASSERT(!jitCompartment_);
+    MOZ_ASSERT(!jitRealm_);
     MOZ_ASSERT(!debugEnvs);
     MOZ_ASSERT(enumerators->next() == enumerators);
 
@@ -1267,7 +1267,7 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* savedStacksSet,
                               size_t* varNamesSet,
                               size_t* nonSyntacticLexicalEnvironmentsArg,
-                              size_t* jitCompartment,
+                              size_t* jitRealm,
                               size_t* privateData,
                               size_t* scriptCountsMapArg)
 {
@@ -1290,8 +1290,8 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     if (nonSyntacticLexicalEnvironments_)
         *nonSyntacticLexicalEnvironmentsArg +=
             nonSyntacticLexicalEnvironments_->sizeOfIncludingThis(mallocSizeOf);
-    if (jitCompartment_)
-        *jitCompartment += jitCompartment_->sizeOfIncludingThis(mallocSizeOf);
+    if (jitRealm_)
+        *jitRealm += jitRealm_->sizeOfIncludingThis(mallocSizeOf);
 
     auto callback = runtime_->sizeOfIncludingThisCompartmentCallback;
     if (callback)

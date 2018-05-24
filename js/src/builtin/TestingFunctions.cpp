@@ -5212,7 +5212,7 @@ BaselineCompile(JSContext* cx, unsigned argc, Value* vp)
             returnedStr = "can't compile";
             break;
         }
-        if (!cx->compartment()->ensureJitCompartmentExists(cx))
+        if (!cx->realm()->ensureJitRealmExists(cx))
             return false;
 
         jit::MethodStatus status = jit::BaselineCompile(cx, script, forceDebug);

@@ -31,7 +31,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitCommon.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/JitSpewer.h"
 #include "jit/LICM.h"
 #include "jit/Linker.h"
@@ -215,7 +215,7 @@ JitRuntime::initialize(JSContext* cx, AutoLockForExclusiveAccess& lock)
 
     JitContext jctx(cx, nullptr);
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return false;
 
     functionWrappers_ = cx->new_<VMWrapperMap>(cx);
@@ -391,18 +391,18 @@ JSContext::freeOsrTempData()
     osrTempData_ = nullptr;
 }
 
-JitCompartment::JitCompartment()
+JitRealm::JitRealm()
   : stubCodes_(nullptr)
 {
 }
 
-JitCompartment::~JitCompartment()
+JitRealm::~JitRealm()
 {
     js_delete(stubCodes_);
 }
 
 bool
-JitCompartment::initialize(JSContext* cx)
+JitRealm::initialize(JSContext* cx)
 {
     stubCodes_ = cx->new_<ICStubCodeMap>(cx->zone());
     if (!stubCodes_)
@@ -431,7 +431,7 @@ PopNextBitmaskValue(uint32_t* bitmask)
 }
 
 void
-JitCompartment::performStubReadBarriers(uint32_t stubsToBarrier) const
+JitRealm::performStubReadBarriers(uint32_t stubsToBarrier) const
 {
     while (stubsToBarrier) {
         auto stub = PopNextBitmaskValue<StubIndex>(&stubsToBarrier);
@@ -442,7 +442,7 @@ JitCompartment::performStubReadBarriers(uint32_t stubsToBarrier) const
 }
 
 void
-JitCompartment::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
+JitRealm::performSIMDTemplateReadBarriers(uint32_t simdTemplatesToBarrier) const
 {
     while (simdTemplatesToBarrier) {
         auto type = PopNextBitmaskValue<SimdType>(&simdTemplatesToBarrier);
@@ -629,10 +629,10 @@ JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt)
 }
 
 void
-JitCompartment::sweep(JSCompartment* compartment)
+JitRealm::sweep(JS::Realm* realm)
 {
     // Any outstanding compilations should have been cancelled by the GC.
-    MOZ_ASSERT(!HasOffThreadIonCompile(compartment));
+    MOZ_ASSERT(!HasOffThreadIonCompile(JS::GetCompartmentForRealm(realm)));
 
     stubCodes_->sweep();
 
@@ -660,7 +660,7 @@ JitZone::sweep()
 }
 
 size_t
-JitCompartment::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
     if (stubCodes_)
@@ -2051,10 +2051,10 @@ IonCompile(JSContext* cx, JSScript* script,
 
     JitContext jctx(cx, temp);
 
-    if (!cx->compartment()->ensureJitCompartmentExists(cx))
+    if (!cx->realm()->ensureJitRealmExists(cx))
         return AbortReason::Alloc;
 
-    if (!cx->compartment()->jitCompartment()->ensureIonStubsExist(cx))
+    if (!cx->realm()->jitRealm()->ensureIonStubsExist(cx))
         return AbortReason::Alloc;
 
     MIRGraph* graph = alloc->new_<MIRGraph>(temp);

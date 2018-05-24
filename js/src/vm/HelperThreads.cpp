@@ -235,8 +235,8 @@ JitDataStructuresExist(const CompilationSelector& selector)
 {
     struct Matcher
     {
-        bool match(JSScript* script)    { return !!script->compartment()->jitCompartment(); }
-        bool match(JSCompartment* comp) { return !!comp->jitCompartment(); }
+        bool match(JSScript* script)    { return !!script->realm()->jitRealm(); }
+        bool match(JSCompartment* comp) { return !!JS::GetRealmForCompartment(comp)->jitRealm(); }
         bool match(Zone* zone)          { return !!zone->jitZone(); }
         bool match(ZonesInState zbs)    { return zbs.runtime->hasJitRuntime(); }
         bool match(JSRuntime* runtime)  { return runtime->hasJitRuntime(); }

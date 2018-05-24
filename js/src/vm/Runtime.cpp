@@ -32,7 +32,7 @@
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/IonBuilder.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
 #include "js/Date.h"
