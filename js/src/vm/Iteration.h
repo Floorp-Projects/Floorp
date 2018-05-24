@@ -45,7 +45,6 @@ struct NativeIterator
     // the start of iterated strings.
     HeapReceiverGuard* guardsEnd_; // initialized by constructor
 
-  public:
     // The next property, pointing into an array of strings directly after any
     // HeapReceiverGuards that appear directly after |*this|, as part of an
     // overall allocation that stores |*this|, receiver guards, and iterated
@@ -58,6 +57,7 @@ struct NativeIterator
     // change as properties are deleted from the observed object.
     GCPtrFlatString* propertiesEnd_; // initialized by constructor
 
+  public:
     uint32_t guard_key = 0;
     uint32_t flags = 0;
 
@@ -125,8 +125,6 @@ struct NativeIterator
                       "HeapReceiverGuards are present, with no padding space "
                       "required for correct alignment");
 
-        // Note: JIT code inlines this computation to reset |propertyCursor_|
-        //       when an iterator ends: see |CodeGenerator::visitIteratorEnd|.
         return reinterpret_cast<GCPtrFlatString*>(guardsEnd_);
     }
 
@@ -134,8 +132,42 @@ struct NativeIterator
         return propertiesEnd_;
     }
 
+    GCPtrFlatString* nextProperty() const {
+        return propertyCursor_;
+    }
+
+    MOZ_ALWAYS_INLINE JS::Value nextIteratedValueAndAdvance() {
+        if (propertyCursor_ >= propertiesEnd_) {
+            MOZ_ASSERT(propertyCursor_ == propertiesEnd_);
+            return JS::MagicValue(JS_NO_ITER_VALUE);
+        }
+
+        JSFlatString* str = *propertyCursor_;
+        incCursor();
+        return JS::StringValue(str);
+    }
+
+    void resetPropertyCursorForReuse() {
+        // Note: JIT code inlines |propertyCursor_| resetting when an iterator
+        //       ends: see |CodeGenerator::visitIteratorEnd|.
+        propertyCursor_ = propertiesBegin();
+    }
+
+    bool previousPropertyWas(JS::Handle<JSFlatString*> str) {
+        return propertyCursor_ > propertiesBegin() && propertyCursor_[-1] == str;
+    }
+
     size_t numKeys() const {
         return mozilla::PointerRangeSize(propertiesBegin(), propertiesEnd());
+    }
+
+    void trimLastProperty() {
+        propertiesEnd_--;
+
+        // This invokes the pre barrier on this property, since it's no longer
+        // going to be marked, and it ensures that any existing remembered set
+        // entry will be dropped.
+        *propertiesEnd_ = nullptr;
     }
 
     JSObject* iterObj() const {

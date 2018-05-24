@@ -1016,18 +1016,6 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
 
 /*** Iterator objects ****************************************************************************/
 
-MOZ_ALWAYS_INLINE void
-NativeIteratorNext(NativeIterator* ni, MutableHandleValue rval)
-{
-    if (ni->propertyCursor_ >= ni->propertiesEnd()) {
-        MOZ_ASSERT(ni->propertyCursor_ == ni->propertiesEnd());
-        rval.setMagic(JS_NO_ITER_VALUE);
-    } else {
-        rval.setString(*ni->currentProperty());
-        ni->incCursor();
-    }
-}
-
 bool
 js::IsPropertyIterator(HandleValue v)
 {
@@ -1174,11 +1162,9 @@ js::CloseIterator(JSObject* obj)
         MOZ_ASSERT(ni->flags & JSITER_ACTIVE);
         ni->flags &= ~JSITER_ACTIVE;
 
-        /*
-         * Reset the enumerator; it may still be in the cached iterators
-         * for this thread, and can be reused.
-         */
-        ni->propertyCursor_ = ni->propertiesBegin();
+        // Reset the enumerator; it may still be in the cached iterators for
+        // this thread and can be reused.
+        ni->resetPropertyCursorForReuse();
     }
 }
 
@@ -1256,14 +1242,14 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
     //
     // Note that usually both strings will be atoms so we only check for pointer
     // equality here.
-    if (ni->propertyCursor_ > ni->propertiesBegin() && ni->propertyCursor_[-1] == str)
+    if (ni->previousPropertyWas(str))
         return true;
 
     while (true) {
         bool restart = false;
 
         // Check whether id is still to come.
-        GCPtrFlatString* const cursor = ni->propertyCursor_;
+        GCPtrFlatString* const cursor = ni->nextProperty();
         GCPtrFlatString* const end = ni->propertiesEnd();
         for (GCPtrFlatString* idp = cursor; idp < end; ++idp) {
             // Common case: both strings are atoms.
@@ -1296,7 +1282,7 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
 
             // If GetPropertyDescriptor above removed a property from ni, start
             // over.
-            if (end != ni->propertiesEnd() || cursor != ni->propertyCursor_) {
+            if (end != ni->propertiesEnd() || cursor != ni->nextProperty()) {
                 restart = true;
                 break;
             }
@@ -1309,12 +1295,8 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
             } else {
                 for (GCPtrFlatString* p = idp; p + 1 != end; p++)
                     *p = *(p + 1);
-                ni->propertiesEnd_--;
 
-                // This invokes the pre barrier on this element, since
-                // it's no longer going to be marked, and ensures that
-                // any existing remembered set entry will be dropped.
-                *ni->propertiesEnd_ = nullptr;
+                ni->trimLastProperty();
             }
 
             // Don't reuse modified native iterators.
@@ -1391,7 +1373,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     // Fast path for native iterators.
     if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
         NativeIterator* ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        NativeIteratorNext(ni, rval);
+        rval.set(ni->nextIteratedValueAndAdvance());
         return true;
     }
 
@@ -1410,7 +1392,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     {
         AutoRealm ar(cx, obj);
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-        NativeIteratorNext(ni, rval);
+        rval.set(ni->nextIteratedValueAndAdvance());
     }
     return cx->compartment()->wrap(cx, rval);
 }
