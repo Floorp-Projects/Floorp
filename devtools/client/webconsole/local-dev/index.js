@@ -40,8 +40,8 @@ pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.autoMultiline", true);
 pref("devtools.webconsole.sidebarToggle", true);
 
-const NewConsoleOutputWrapper = require("../new-console-output-wrapper");
-const NewWebConsoleFrame = require("../new-webconsole").NewWebConsoleFrame;
+const WebConsoleOutputWrapper = require("../webconsole-output-wrapper");
+const WebConsoleFrame = require("../webconsole-frame").WebConsoleFrame;
 
 // Copied from netmonitor/index.js:
 window.addEventListener("DOMContentLoaded", () => {
@@ -81,18 +81,18 @@ function onConnect(connection) {
     getInspectorSelection: () => { },
     target: connection.tabConnection.tabTarget,
     _browserConsole: false,
-    NewConsoleOutputWrapper,
+    WebConsoleOutputWrapper,
   };
-  consoleFrame = new NewWebConsoleFrame(owner);
+  consoleFrame = new WebConsoleFrame(owner);
   consoleFrame.init().then(function() {
-    console.log("NewWebConsoleFrame initialized");
+    console.log("WebConsoleFrame initialized");
   });
 }
 
 // This is just a hack until the local dev environment includes jsterm
 window.evaluateJS = function(input) {
   consoleFrame.webConsoleClient.evaluateJSAsync(`${input}`, function(r) {
-    consoleFrame.newConsoleOutput.dispatchMessageAdd(r);
+    consoleFrame.consoleOutput.dispatchMessageAdd(r);
   }, {});
 };
 

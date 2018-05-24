@@ -324,19 +324,19 @@ class JSTerm extends Component {
       return;
     }
 
-    if (this.hud.newConsoleOutput) {
-      this.hud.newConsoleOutput.dispatchMessageAdd(response, true).then(callback);
+    if (this.hud.consoleOutput) {
+      this.hud.consoleOutput.dispatchMessageAdd(response, true).then(callback);
     }
   }
 
   inspectObjectActor(objectActor) {
-    this.hud.newConsoleOutput.dispatchMessageAdd({
+    this.hud.consoleOutput.dispatchMessageAdd({
       helperResult: {
         type: "inspectObject",
         object: objectActor
       }
     }, true);
-    return this.hud.newConsoleOutput;
+    return this.hud.consoleOutput;
   }
 
   /**
@@ -501,8 +501,8 @@ class JSTerm extends Component {
    *        this Web Console.
    */
   clearOutput(clearStorage) {
-    if (this.hud && this.hud.newConsoleOutput) {
-      this.hud.newConsoleOutput.dispatchMessagesClear();
+    if (this.hud && this.hud.consoleOutput) {
+      this.hud.consoleOutput.dispatchMessagesClear();
     }
 
     this.webConsoleClient.clearNetworkRequests();
@@ -519,8 +519,8 @@ class JSTerm extends Component {
    * This method emits the "private-messages-cleared" notification.
    */
   clearPrivateMessages() {
-    if (this.hud && this.hud.newConsoleOutput) {
-      this.hud.newConsoleOutput.dispatchPrivateMessagesClear();
+    if (this.hud && this.hud.consoleOutput) {
+      this.hud.consoleOutput.dispatchPrivateMessagesClear();
       this.emit("private-messages-cleared");
     }
   }

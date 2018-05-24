@@ -1904,7 +1904,7 @@ Toolbox.prototype = {
       pending.push("message_count");
 
       // Cold webconsole event message_count is handled in
-      // devtools/client/webconsole/new-console-output-wrapper.js
+      // devtools/client/webconsole/webconsole-output-wrapper.js
       if (!cold) {
         this.telemetry.addEventProperty(
           "devtools.main", "enter", "webconsole", null, "message_count", 0);
