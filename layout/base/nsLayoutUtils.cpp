@@ -20,6 +20,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsCharTraits.h"
@@ -10185,4 +10186,28 @@ nsLayoutUtils::ParseFontLanguageOverride(const nsAString& aLangTag)
     result = (result << 8) + 0x20;
   }
   return result;
+}
+
+/* static */ ComputedStyle*
+nsLayoutUtils::StyleForScrollbar(nsIFrame* aScrollbarPart)
+{
+  nsIFrame* scrollFrame =
+    GetClosestFrameOfType(aScrollbarPart, LayoutFrameType::Scroll);
+  MOZ_ASSERT(scrollFrame, "Scrollbar part frame "
+             "should have a scroll frame ancestor");
+
+  if (scrollFrame->GetParent()->IsViewportFrame()) {
+    nsPresContext* pc = scrollFrame->PresContext();
+    if (Element* root = pc->Document()->GetRootElement()) {
+      if (nsIFrame* frameOfRoot = root->GetPrimaryFrame()) {
+        return frameOfRoot->Style();
+      }
+      // If the root doesn't have primary frame, get the computed style
+      // from the element. Dropping the strong reference is fine because
+      // the style should be held strongly by the element.
+      RefPtr<ComputedStyle> style = pc->StyleSet()->ResolveServoStyle(root);
+      return style.get();
+    }
+  }
+  return scrollFrame->Style();
 }
