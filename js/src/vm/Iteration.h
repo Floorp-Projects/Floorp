@@ -50,8 +50,7 @@ struct NativeIterator
     // change as properties are deleted from the observed object.
     GCPtrFlatString* propertiesEnd_; // initialized by constructor
 
-  public:
-    uint32_t guard_key = 0;
+    uint32_t guardKey_; // initialized by constructor
 
   public:
     // For cacheable native iterators, whether the iterator is currently
@@ -69,6 +68,8 @@ struct NativeIterator
     /* While in compartment->enumerators, these form a doubly linked list. */
     NativeIterator* next_ = nullptr;
     NativeIterator* prev_ = nullptr;
+
+    // END OF PROPERTIES
 
     // No further fields appear after here *in NativeIterator*, but this class
     // is always allocated with space tacked on immediately after |this| to
@@ -188,6 +189,10 @@ struct NativeIterator
 
     void incCursor() {
         propertyCursor_++;
+    }
+
+    uint32_t guardKey() const {
+        return guardKey_;
     }
 
     bool isActive() const {
