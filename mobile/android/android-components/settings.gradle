@@ -99,3 +99,5 @@ project(':support-utils').projectDir = new File(rootDir, 'components/support/uti
 include ':samples-browser'
 project(':samples-browser').projectDir = new File(rootDir, 'samples/browser')
 
+include ':samples-toolbar'
+project(':samples-toolbar').projectDir = new File(rootDir, 'samples/toolbar')
