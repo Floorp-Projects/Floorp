@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # This script checks various aspects of SpiderMonkey code style.  The current checks are as
 # follows.
 #
@@ -33,7 +33,7 @@
 #   statement should go, even to a human.  Therefore, we check the #include
 #   statements within each #if/#endif block (including nested ones) in
 #   isolation, but don't try to do any order checking between such blocks.
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 from __future__ import print_function
 
@@ -45,12 +45,12 @@ import sys
 # We don't bother checking files in these directories, because they're (a) auxiliary or (b)
 # imported code that doesn't follow our coding style.
 ignored_js_src_dirs = [
-   'js/src/config/',            # auxiliary stuff
-   'js/src/ctypes/libffi/',     # imported code
-   'js/src/devtools/',          # auxiliary stuff
-   'js/src/editline/',          # imported code
-   'js/src/gdb/',               # auxiliary stuff
-   'js/src/vtune/'              # imported code
+    'js/src/config/',            # auxiliary stuff
+    'js/src/ctypes/libffi/',     # imported code
+    'js/src/devtools/',          # auxiliary stuff
+    'js/src/editline/',          # imported code
+    'js/src/gdb/',               # auxiliary stuff
+    'js/src/vtune/'              # imported code
 ]
 
 # We ignore #includes of these files, because they don't follow the usual rules.
@@ -58,9 +58,9 @@ included_inclnames_to_ignore = set([
     'ffi.h',                    # generated in ctypes/libffi/
     'devtools/sharkctl.h',      # we ignore devtools/ in general
     'devtools/Instruments.h',   # we ignore devtools/ in general
-    'double-conversion/double-conversion.h', # strange MFBT case
+    'double-conversion/double-conversion.h',  # strange MFBT case
     'javascript-trace.h',       # generated in $OBJDIR if HAVE_DTRACE is defined
-    'frontend/ReservedWordsGenerated.h', # generated in $OBJDIR
+    'frontend/ReservedWordsGenerated.h',  # generated in $OBJDIR
     'gc/StatsPhasesGenerated.h',         # generated in $OBJDIR
     'gc/StatsPhasesGenerated.cpp',       # generated in $OBJDIR
     'jit/LOpcodes.h',           # generated in $OBJDIR
@@ -92,7 +92,7 @@ included_inclnames_to_ignore = set([
     'unicode/ucol.h',           # ICU
     'unicode/udat.h',           # ICU
     'unicode/udatpg.h',         # ICU
-    'unicode/udisplaycontext.h',# ICU
+    'unicode/udisplaycontext.h',  # ICU
     'unicode/uenum.h',          # ICU
     'unicode/uloc.h',           # ICU
     'unicode/unistr.h',         # ICU
@@ -110,8 +110,9 @@ included_inclnames_to_ignore = set([
 # ignore #includes of them when checking #include ordering.
 oddly_ordered_inclnames = set([
     'ctypes/typedefs.h',        # Included multiple times in the body of ctypes/CTypes.h
-    'frontend/BinSource-auto.h', # Included in the body of frontend/BinSource.h
-    'frontend/ReservedWordsGenerated.h', # Included in the body of frontend/TokenStream.h
+    'frontend/BinSource-auto.h',  # Included in the body of frontend/BinSource.h
+    # Included in the body of frontend/TokenStream.h
+    'frontend/ReservedWordsGenerated.h',
     'gc/StatsPhasesGenerated.h',         # Included in the body of gc/Statistics.h
     'gc/StatsPhasesGenerated.cpp',       # Included in the body of gc/Statistics.cpp
     'psapi.h',                  # Must be included after "util/Windows.h" on Windows
@@ -317,7 +318,8 @@ def check_style(enable_fixup):
                 with open(filename, 'w') as f:
                     f.write(code.to_source())
 
-            check_file(filename, inclname, file_kind, code, all_inclnames, included_h_inclnames)
+            check_file(filename, inclname, file_kind, code,
+                       all_inclnames, included_h_inclnames)
 
         edges[inclname] = included_h_inclnames
 
@@ -326,7 +328,7 @@ def check_style(enable_fixup):
     # Compare expected and actual output.
     difflines = difflib.unified_diff(expected_output, actual_output,
                                      fromfile='check_spidermonkey_style.py expected output',
-                                       tofile='check_spidermonkey_style.py actual output')
+                                     tofile='check_spidermonkey_style.py actual output')
     ok = True
     for diffline in difflines:
         ok = False
@@ -338,7 +340,7 @@ def check_style(enable_fixup):
 def module_name(name):
     '''Strip the trailing .cpp, .h, inlines.h or -inl.h from a filename.'''
 
-    return name.replace('inlines.h', '').replace('-inl.h', '').replace('.h', '').replace('.cpp', '')
+    return name.replace('inlines.h', '').replace('-inl.h', '').replace('.h', '').replace('.cpp', '')  # NOQA: E501
 
 
 def is_module_header(enclosing_inclname, header_inclname):
@@ -435,6 +437,7 @@ class CppBlock(object):
 
     Each kid is either an Include (representing a #include), OrdinaryCode, or
     a nested CppBlock.'''
+
     def __init__(self, start_line=""):
         self.start = start_line
         self.end = ''
@@ -508,7 +511,8 @@ class CppBlock(object):
             cutoff = last_include_index + 1
 
             if should_try_to_sort(includes):
-                output.extend(pretty_sorted_includes(includes) + batch[cutoff:])
+                output.extend(pretty_sorted_includes(
+                    includes) + batch[cutoff:])
             else:
                 output.extend(batch)
             del batch[:]
@@ -540,6 +544,7 @@ class CppBlock(object):
 
 class OrdinaryCode(object):
     ''' A list of lines of code that aren't #include/#if/#else/#endif lines. '''
+
     def __init__(self, lines=None):
         self.lines = lines if lines is not None else []
 
@@ -566,14 +571,16 @@ def read_file(f):
             m = re.match(r'(\s*#\s*include\s+)"([^"]*)"(.*)', line)
             if m is not None:
                 prefix, inclname, suffix = m.groups()
-                block_stack[-1].kids.append(Include(prefix, inclname, suffix, linenum, is_system=False))
+                block_stack[-1].kids.append(Include(prefix,
+                                                    inclname, suffix, linenum, is_system=False))
                 continue
 
             # Look for a |#include <...>| line.
             m = re.match(r'(\s*#\s*include\s+)<([^>]*)>(.*)', line)
             if m is not None:
                 prefix, inclname, suffix = m.groups()
-                block_stack[-1].kids.append(Include(prefix, inclname, suffix, linenum, is_system=True))
+                block_stack[-1].kids.append(Include(prefix,
+                                                    inclname, suffix, linenum, is_system=True))
                 continue
 
             # Look for a |#{if,ifdef,ifndef}| line.
@@ -601,7 +608,8 @@ def read_file(f):
                 # Close the current block.
                 block_stack.pop().end = line
                 if len(block_stack) == 0:
-                    raise ValueError("#endif without #if at line " + str(linenum))
+                    raise ValueError(
+                        "#endif without #if at line " + str(linenum))
                 continue
 
         # Otherwise, we have an ordinary line.
@@ -648,7 +656,8 @@ def check_file(filename, inclname, file_kind, code, all_inclnames, included_h_in
                 # Check a file doesn't #include itself.  (We do this here because the cycle
                 # detection below doesn't detect this case.)
                 if inclname == include.inclname:
-                    error(filename, include.linenum, 'the file includes itself')
+                    error(filename, include.linenum,
+                          'the file includes itself')
 
     def check_includes_order(include1, include2):
         '''Check the ordering of two #include statements.'''
@@ -689,6 +698,7 @@ def find_cycles(all_inclnames, edges):
     def draw_SCC(c):
         cset = set(c)
         drawn = set()
+
         def draw(v, indent):
             out('   ' * indent + ('-> ' if indent else '   ') + v)
             if v in drawn:
@@ -704,7 +714,8 @@ def find_cycles(all_inclnames, edges):
     for scc in sorted(SCCs):
         if len(scc) != 1:
             if not have_drawn_an_SCC:
-                error('(multiple files)', None, 'header files form one or more cycles')
+                error('(multiple files)', None,
+                      'header files form one or more cycles')
                 have_drawn_an_SCC = True
 
             draw_SCC(scc)
@@ -762,8 +773,8 @@ def main():
     elif sys.argv[1:] == []:
         fixup = False
     else:
-        print("TEST-UNEXPECTED-FAIL | check_spidermonkey_style.py | unexpected command line options: " +
-              repr(sys.argv[1:]))
+        print("TEST-UNEXPECTED-FAIL | check_spidermonkey_style.py | unexpected command "
+              "line options: " + repr(sys.argv[1:]))
         sys.exit(1)
 
     ok = check_style(fixup)

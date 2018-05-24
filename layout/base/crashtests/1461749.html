@@ -1,0 +1,19 @@
+<style>
+:last-of-type {
+  display: contents;
+}
+</style>
+<script>
+function start() {
+  o1 = document.createElement('footer')
+  o2 = document.createElement('t')
+  document.documentElement.appendChild(o1)
+  document.documentElement.appendChild(o2)
+  o3 = o1.attachShadow({
+      mode: "open"
+  })
+  o2.getClientRects()
+  o3.innerHTML = ">"
+}
+window.addEventListener('load', start)
+</script>

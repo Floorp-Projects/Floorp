@@ -37,6 +37,11 @@ function run_test() {
         "_test.string.getPref": "日本語",
         "_test.string.gIsUTF8": "false",
       }
+    }, {
+      filename: "autoconfig-chromecheck.cfg",
+      prefs: {
+        "_test.string.typeofComponents": "undefined",
+      }
     }];
 
     function testAutoConfig(test) {

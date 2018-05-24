@@ -3780,6 +3780,10 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
 void
 PresShell::ScheduleViewManagerFlush(PaintType aType)
 {
+  if (MOZ_UNLIKELY(mIsDestroying)) {
+    return;
+  }
+
   if (aType == PAINT_DELAYED_COMPRESS) {
     // Delay paint for 1 second.
     static const uint32_t kPaintDelayPeriod = 1000;

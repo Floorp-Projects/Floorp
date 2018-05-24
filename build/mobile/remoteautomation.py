@@ -18,25 +18,27 @@ from mozscreenshot import dump_screen
 import mozcrash
 
 # signatures for logcat messages that we don't care about much
-fennecLogcatFilters = [ "The character encoding of the HTML document was not declared",
-                        "Use of Mutation Events is deprecated. Use MutationObserver instead.",
-                        "Unexpected value from nativeGetEnabledTags: 0" ]
+fennecLogcatFilters = ["The character encoding of the HTML document was not declared",
+                       "Use of Mutation Events is deprecated. Use MutationObserver instead.",
+                       "Unexpected value from nativeGetEnabledTags: 0"]
+
 
 class RemoteAutomation(Automation):
 
-    def __init__(self, device, appName = '', remoteProfile = None, remoteLog = None,
+    def __init__(self, device, appName='', remoteProfile=None, remoteLog=None,
                  processArgs=None):
         self._device = device
         self._appName = appName
         self._remoteProfile = remoteProfile
         self._remoteLog = remoteLog
-        self._processArgs = processArgs or {};
+        self._processArgs = processArgs or {}
 
         self.lastTestSeen = "remoteautomation.py"
         Automation.__init__(self)
 
     # Set up what we need for the remote environment
-    def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, lsanPath=None, ubsanPath=None):
+    def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False,
+                    lsanPath=None, ubsanPath=None):
         # Because we are running remote, we don't want to mimic the local env
         # so no copying of os.environ
         if env is None:
@@ -65,37 +67,40 @@ class RemoteAutomation(Automation):
         # Set WebRTC logging in case it is not set yet.
         # On Android, environment variables cannot contain ',' so the
         # standard WebRTC setting for NSPR_LOG_MODULES is not available.
-        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')
+        # env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5')  # NOQA: E501
         env.setdefault('R_LOG_LEVEL', '6')
         env.setdefault('R_LOG_DESTINATION', 'stderr')
         env.setdefault('R_LOG_VERBOSE', '1')
 
         return env
 
-    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath, outputHandler=None):
+    def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo,
+                      symbolsPath, outputHandler=None):
         """ Wait for tests to finish.
             If maxTime seconds elapse or no output is detected for timeout
             seconds, kill the process and fail the test.
         """
         proc.utilityPath = utilityPath
         # maxTime is used to override the default timeout, we should honor that
-        status = proc.wait(timeout = maxTime, noOutputTimeout = timeout)
+        status = proc.wait(timeout=maxTime, noOutputTimeout=timeout)
         self.lastTestSeen = proc.getLastTestSeen
 
         topActivity = self._device.get_top_activity(timeout=60)
         if topActivity == proc.procName:
-            print "Browser unexpectedly found running. Killing..."
+            print("Browser unexpectedly found running. Killing...")
             proc.kill(True)
         if status == 1:
             if maxTime:
-                print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
-                      "allowed maximum time of %s seconds" % (self.lastTestSeen, maxTime)
+                print("TEST-UNEXPECTED-FAIL | %s | application ran for longer than "
+                      "allowed maximum time of %s seconds" % (
+                          self.lastTestSeen, maxTime))
             else:
-                print "TEST-UNEXPECTED-FAIL | %s | application ran for longer than " \
-                      "allowed maximum time" % (self.lastTestSeen)
+                print("TEST-UNEXPECTED-FAIL | %s | application ran for longer than "
+                      "allowed maximum time" % (self.lastTestSeen))
         if status == 2:
-            print "TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output" \
-                % (self.lastTestSeen, int(timeout))
+            print("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with"
+                  "no output"
+                  % (self.lastTestSeen, int(timeout)))
 
         return status
 
@@ -107,7 +112,7 @@ class RemoteAutomation(Automation):
             self._device.shell_output('echo > %s' % traces, root=True)
             self._device.shell_output('chmod 666 %s' % traces, root=True)
         except Exception as e:
-            print "Error deleting %s: %s" % (traces, str(e))
+            print("Error deleting %s: %s" % (traces, str(e)))
 
     def checkForANRs(self):
         traces = "/data/anr/traces.txt"
@@ -117,18 +122,19 @@ class RemoteAutomation(Automation):
                 if t:
                     stripped = t.strip()
                     if len(stripped) > 0:
-                        print "Contents of %s:" % traces
-                        print t
+                        print("Contents of %s:" % traces)
+                        print(t)
                 # Once reported, delete traces
                 self.deleteANRs()
             except Exception as e:
-                print "Error pulling %s: %s" % (traces, str(e))
+                print("Error pulling %s: %s" % (traces, str(e)))
         else:
-            print "%s not found" % traces
+            print("%s not found" % traces)
 
     def deleteTombstones(self):
         # delete any tombstone files from device
-        self._device.rm("/data/tombstones", force=True, recursive=True, root=True)
+        self._device.rm("/data/tombstones", force=True,
+                        recursive=True, root=True)
 
     def checkForTombstones(self):
         # pull any tombstones from device and move to MOZ_UPLOAD_DIR
@@ -152,17 +158,19 @@ class RemoteAutomation(Automation):
                             os.rename(f, newname)
                             break
             else:
-                print "%s does not exist; tombstone check skipped" % remoteDir
+                print("%s does not exist; tombstone check skipped" % remoteDir)
         else:
-            print "MOZ_UPLOAD_DIR not defined; tombstone check skipped"
+            print("MOZ_UPLOAD_DIR not defined; tombstone check skipped")
 
     def checkForCrashes(self, directory, symbolsPath):
         self.checkForANRs()
         self.checkForTombstones()
 
-        logcat = self._device.get_logcat(filter_out_regexps=fennecLogcatFilters)
+        logcat = self._device.get_logcat(
+            filter_out_regexps=fennecLogcatFilters)
 
-        javaException = mozcrash.check_for_java_exception(logcat, test_name=self.lastTestSeen)
+        javaException = mozcrash.check_for_java_exception(
+            logcat, test_name=self.lastTestSeen)
         if javaException:
             return True
 
@@ -179,18 +187,21 @@ class RemoteAutomation(Automation):
                 # minidumps directory is automatically created when Fennec
                 # (first) starts, so its lack of presence is a hint that
                 # something went wrong.
-                print "Automation Error: No crash directory (%s) found on remote device" % remoteCrashDir
+                print("Automation Error: No crash directory (%s) found on remote device" %
+                      remoteCrashDir)
                 return True
             self._device.pull(remoteCrashDir, dumpDir)
 
             logger = get_default_logger()
-            crashed = mozcrash.log_crashes(logger, dumpDir, symbolsPath, test=self.lastTestSeen)
+            crashed = mozcrash.log_crashes(
+                logger, dumpDir, symbolsPath, test=self.lastTestSeen)
 
         finally:
             try:
                 shutil.rmtree(dumpDir)
             except Exception as e:
-                print "WARNING: unable to remove directory %s: %s" % (dumpDir, str(e))
+                print("WARNING: unable to remove directory %s: %s" % (
+                    dumpDir, str(e)))
         return crashed
 
     def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
@@ -203,14 +214,15 @@ class RemoteAutomation(Automation):
         if app == "am" and extraArgs[0] in ('instrument', 'start'):
             return app, extraArgs
 
-        cmd, args = Automation.buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs)
+        cmd, args = Automation.buildCommandLine(
+            self, app, debuggerInfo, profileDir, testURL, extraArgs)
         try:
             args.remove('-foreground')
-        except:
+        except Exception:
             pass
         return app, args
 
-    def Process(self, cmd, stdout = None, stderr = None, env = None, cwd = None):
+    def Process(self, cmd, stdout=None, stderr=None, env=None, cwd=None):
         return self.RProcess(self._device, cmd, self._remoteLog, env, cwd, self._appName,
                              **self._processArgs)
 
@@ -220,7 +232,7 @@ class RemoteAutomation(Automation):
             self.device = device
             self.lastTestSeen = "remoteautomation.py"
             self.messageLogger = messageLogger
-            self.proc =  stdout
+            self.proc = stdout
             self.procName = cmd[0].split(posixpath.sep)[-1]
             self.stdoutlen = 0
             self.utilityPath = None
@@ -235,7 +247,7 @@ class RemoteAutomation(Automation):
                 cmd = ' '.join(cmd)
                 self.procName = app
                 if not self.device.shell_bool(cmd):
-                    print "remote_automation.py failed to launch %s" % cmd
+                    print("remote_automation.py failed to launch %s" % cmd)
             else:
                 args = cmd
                 if args[0] == app:
@@ -251,7 +263,8 @@ class RemoteAutomation(Automation):
                     self.device.launch_activity(app, activity, e10s=True, moz_env=env,
                                                 extra_args=args, url=url)
                 else:
-                    self.device.launch_fennec(app, moz_env=env, extra_args=args, url=url)
+                    self.device.launch_fennec(
+                        app, moz_env=env, extra_args=args, url=url)
 
             # Setting timeout at 1 hour since on a remote device this takes much longer.
             # Temporarily increased to 90 minutes because no more chunks can be created.
@@ -279,7 +292,8 @@ class RemoteAutomation(Automation):
             if not self.device.is_file(self.proc):
                 return False
             try:
-                newLogContent = self.device.get_file(self.proc, offset=self.stdoutlen)
+                newLogContent = self.device.get_file(
+                    self.proc, offset=self.stdoutlen)
             except Exception:
                 return False
             if not newLogContent:
@@ -288,10 +302,11 @@ class RemoteAutomation(Automation):
             self.stdoutlen += len(newLogContent)
 
             if self.messageLogger is None:
-                testStartFilenames = re.findall(r"TEST-START \| ([^\s]*)", newLogContent)
+                testStartFilenames = re.findall(
+                    r"TEST-START \| ([^\s]*)", newLogContent)
                 if testStartFilenames:
                     self.lastTestSeen = testStartFilenames[-1]
-                print newLogContent
+                print(newLogContent)
                 return True
 
             self.logBuffer += newLogContent
@@ -329,7 +344,7 @@ class RemoteAutomation(Automation):
                                         self.counts['fail'] += val
                                     elif "Todo:" in line:
                                         self.counts['todo'] += val
-                                except:
+                                except Exception:
                                     pass
 
             return True
@@ -344,16 +359,16 @@ class RemoteAutomation(Automation):
         # If the process is still running but no output is received in *noOutputTimeout*
         # seconds, return 2;
         # Else, once the process exits/goes to background, return 0.
-        def wait(self, timeout = None, noOutputTimeout = None):
+        def wait(self, timeout=None, noOutputTimeout=None):
             timer = 0
             noOutputTimer = 0
             interval = 10
-            if timeout == None:
+            if timeout is None:
                 timeout = self.timeout
             status = 0
             top = self.procName
             slowLog = False
-            endTime = datetime.datetime.now() + datetime.timedelta(seconds = timeout)
+            endTime = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
             while top == self.procName:
                 # Get log updates on each interval, but if it is taking
                 # too long, only do it every 60 seconds
@@ -379,13 +394,13 @@ class RemoteAutomation(Automation):
                 if not hasOutput:
                     top = self.device.get_top_activity(timeout=60)
                     if top is None:
-                        print "Failed to get top activity, retrying, once..."
+                        print("Failed to get top activity, retrying, once...")
                         top = self.device.get_top_activity(timeout=60)
             # Flush anything added to stdout during the sleep
             self.read_stdout()
             return status
 
-        def kill(self, stagedShutdown = False):
+        def kill(self, stagedShutdown=False):
             if self.utilityPath:
                 # Take a screenshot to capture the screen state just before
                 # the application is killed. There are on-device screenshot
@@ -397,27 +412,27 @@ class RemoteAutomation(Automation):
                 # Trigger an ANR report with "kill -3" (SIGQUIT)
                 try:
                     self.device.pkill(self.procName, sig=3, attempts=1)
-                except:
+                except:  # NOQA: E722
                     pass
                 time.sleep(3)
                 # Trigger a breakpad dump with "kill -6" (SIGABRT)
                 try:
                     self.device.pkill(self.procName, sig=6, attempts=1)
-                except:
+                except:  # NOQA: E722
                     pass
                 # Wait for process to end
                 retries = 0
                 while retries < 3:
                     if self.device.process_exist(self.procName):
-                        print "%s still alive after SIGABRT: waiting..." % self.procName
+                        print("%s still alive after SIGABRT: waiting..." % self.procName)
                         time.sleep(5)
                     else:
                         return
                     retries += 1
                 try:
                     self.device.pkill(self.procName, sig=9, attempts=1)
-                except:
-                    print "%s still alive after SIGKILL!" % self.procName
+                except:  # NOQA: E722
+                    print("%s still alive after SIGKILL!" % self.procName)
                 if self.device.process_exist(self.procName):
                     self.device.stop_application(self.procName)
             else:

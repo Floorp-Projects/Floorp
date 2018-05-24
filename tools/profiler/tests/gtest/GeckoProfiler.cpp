@@ -42,7 +42,6 @@ InactiveFeaturesAndParamsCheck()
   ASSERT_TRUE(!profiler_is_active());
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-  ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
   profiler_get_start_params(&entries, &interval, &features, &filters);
 
@@ -87,7 +86,6 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       features, filters, MOZ_ARRAY_LENGTH(filters));
@@ -109,7 +107,6 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
     // Profiler::Threads is added because filters has multiple entries.
     ActiveParamsCheck(999999, 3,
@@ -132,7 +129,6 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Privacy));
-    ASSERT_TRUE(profiler_feature_active(ProfilerFeature::Restyle));
 
     ActiveParamsCheck(88888, 10,
                       availableFeatures, filters, MOZ_ARRAY_LENGTH(filters));
@@ -153,7 +149,6 @@ TEST(GeckoProfiler, FeaturesAndParams)
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
     // Entries and intervals go to defaults if 0 is specified.
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
@@ -267,7 +262,6 @@ TEST(GeckoProfiler, DifferentThreads)
     ASSERT_TRUE(profiler_is_active());
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
     ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-    ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
     ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
                       features, filters, MOZ_ARRAY_LENGTH(filters));
@@ -296,7 +290,6 @@ TEST(GeckoProfiler, DifferentThreads)
           ASSERT_TRUE(profiler_is_active());
           ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
           ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Privacy));
-          ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::Restyle));
 
           ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES,
                             PROFILER_DEFAULT_INTERVAL,

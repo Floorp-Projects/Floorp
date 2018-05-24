@@ -7,7 +7,8 @@ class RequestHandler(SimpleHTTPRequestHandler, object):
         # Map autofill paths to their own directory
         autofillPath = "/formautofill"
         if (path.startswith(autofillPath)):
-            path = "browser/extensions/formautofill/content" + path[len(autofillPath):]
+            path = "browser/extensions/formautofill/content" + \
+                path[len(autofillPath):]
         else:
             path = "browser/components/payments/res" + path
 

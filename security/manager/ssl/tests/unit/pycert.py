@@ -570,6 +570,8 @@ class Certificate(object):
                 directoryName = stringToDN(name,
                                            tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
                 generalName['directoryName'] = directoryName
+            elif '@' in name:
+                generalName['rfc822Name'] = name
             else:
                 # The string may have things like '\0' (i.e. a slash
                 # followed by the number zero) that have to be decoded into

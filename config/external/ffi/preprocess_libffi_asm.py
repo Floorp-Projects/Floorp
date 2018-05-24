@@ -11,6 +11,7 @@ import re
 import shlex
 import subprocess
 
+
 def main(output, input_asm, defines, includes):
     defines = shlex.split(defines)
     includes = shlex.split(includes)

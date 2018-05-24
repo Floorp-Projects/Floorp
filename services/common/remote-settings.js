@@ -64,6 +64,11 @@ class ClientEnvironment extends ClientEnvironmentBase {
     Services.appinfo.QueryInterface(Ci.nsIXULAppInfo);
     return Services.appinfo.ID;
   }
+
+  static get toolkitVersion() {
+    Services.appinfo.QueryInterface(Ci.nsIPlatformInfo);
+    return Services.appinfo.platformVersion;
+  }
 }
 
 /**

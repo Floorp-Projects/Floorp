@@ -833,15 +833,6 @@ pref("gecko.handlerService.schemes.ircs.3.uriTemplate", "chrome://browser-region
 
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
 
-pref("browser.EULA.version", 3);
-pref("browser.rights.version", 3);
-pref("browser.rights.3.shown", false);
-
-#ifdef DEBUG
-// Don't show the about:rights notification in debug builds.
-pref("browser.rights.override", true);
-#endif
-
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
 pref("browser.sessionstore.resuming_after_os_restart", false);

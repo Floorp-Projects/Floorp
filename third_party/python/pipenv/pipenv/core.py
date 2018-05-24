@@ -44,9 +44,11 @@ from .utils import (
     get_requirement,
     is_pinned,
     is_star,
-    TemporaryDirectory,
     rmtree,
     split_argument,
+)
+from ._compat import (
+    TemporaryDirectory,
 )
 from .import pep508checker, progress
 from .environments import (
@@ -103,7 +105,7 @@ else:
     STARTING_LABEL = '   '
 # Enable shell completion.
 click_completion.init()
-# Disable colors, for the soulless.
+# Disable colors, for the color blind and others who do not prefer colors.
 if PIPENV_COLORBLIND:
     crayons.disable()
 # Disable spinner, for cleaner build logs (the unworthy).
@@ -461,13 +463,13 @@ def ensure_python(three=None, python=None):
         if not PYENV_INSTALLED:
             abort()
         else:
-            if (not PIPENV_DONT_USE_PYENV) and (SESSION_IS_INTERACTIVE):
+            if (not PIPENV_DONT_USE_PYENV) and (SESSION_IS_INTERACTIVE or PIPENV_YES):
                 version_map = {
                     # TODO: Keep this up to date!
                     # These versions appear incompatible with pew:
                     # '2.5': '2.5.6',
                     '2.6': '2.6.9',
-                    '2.7': '2.7.14',
+                    '2.7': '2.7.15',
                     # '3.1': '3.1.5',
                     # '3.2': '3.2.6',
                     '3.3': '3.3.7',
@@ -799,8 +801,8 @@ def do_install_dependencies(
     for dep, ignore_hash, block in deps_list_bar:
         if len(procs) < PIPENV_MAX_SUBPROCESS:
             # Use a specific index, if specified.
-            dep, index = split_argument(dep, short='i', long_='index')
-            dep, extra_index = split_argument(dep, long_='extra-index-url')
+            dep, index = split_argument(dep, short='i', long_='index', num=1)
+            dep, extra_indexes = split_argument(dep, long_='extra-index-url')
             # Install the module.
             c = pip_install(
                 dep,
@@ -811,7 +813,7 @@ def do_install_dependencies(
                 block=block,
                 index=index,
                 requirements_dir=requirements_dir,
-                extra_indexes=extra_index,
+                extra_indexes=extra_indexes,
             )
             c.dep = dep
             c.ignore_hash = ignore_hash
@@ -831,8 +833,8 @@ def do_install_dependencies(
             failed_deps_list, label=INSTALL_LABEL2
         ):
             # Use a specific index, if specified.
-            dep, index = split_argument(dep, short='i', long_='index')
-            dep, extra_index = split_argument(dep, long_='extra-index-url')
+            dep, index = split_argument(dep, short='i', long_='index', num=1)
+            dep, extra_indexes = split_argument(dep, long_='extra-index-url')
             # Install the module.
             c = pip_install(
                 dep,
@@ -842,7 +844,7 @@ def do_install_dependencies(
                 verbose=verbose,
                 index=index,
                 requirements_dir=requirements_dir,
-                extra_indexes=extra_index,
+                extra_indexes=extra_indexes,
             )
             # The Installation failed...
             if c.return_code != 0:
@@ -1006,8 +1008,6 @@ def do_lock(
             sys.exit(1)
         cached_lockfile = project.lockfile_content
     if write:
-        project.destroy_lockfile()
-    if write:
         # Alert the user of progress.
         click.echo(
             u'{0} {1} {2}'.format(
@@ -1128,8 +1128,7 @@ def do_lock(
     # Add refs for VCS installs.
     # TODO: be smarter about this.
     vcs_deps = convert_deps_to_pip(project.vcs_packages, project, r=False)
-    pip_freeze = delegator.run('{0} freeze'.format(escape_grouped_arguments(which_pip(allow_global=system)))).out
-    for dep in vcs_deps:
+    if vcs_deps:
         for line in pip_freeze.strip().split('\n'):
             # if the line doesn't match a vcs dependency in the Pipfile,
             # ignore it
@@ -1166,13 +1165,7 @@ def do_lock(
                 default_package
             ]
     if write:
-        # Write out the lockfile.
-        with open(project.lockfile_location, 'w') as f:
-            simplejson.dump(
-                lockfile, f, indent=4, separators=(',', ': '), sort_keys=True
-            )
-            # Write newline at end of document. GH Issue #319.
-            f.write('\n')
+        project.write_lockfile(lockfile)
         click.echo(
             '{0}'.format(
                 crayons.normal(
@@ -1353,7 +1346,7 @@ def do_init(
                 do_lock(system=system, pre=pre, keep_outdated=keep_outdated)
     # Write out the lockfile if it doesn't exist.
     if not project.lockfile_exists and not skip_lock:
-        if system or allow_global:
+        if system or allow_global and not PIPENV_VIRTUALENV:
             click.echo(
                 '{0}: --system is intended to be used for Pipfile installation, '
                 'not installation of specific packages. Aborting.'.format(
@@ -1459,7 +1452,7 @@ def pip_install(
         sources = [{'url': index}]
         if extra_indexes:
             if isinstance(extra_indexes, six.string_types):
-                extra_indexes = [extra_indexes,]
+                extra_indexes = [extra_indexes]
             for idx in extra_indexes:
                 try:
                     extra_src = project.find_source(idx).get('url')
@@ -1733,10 +1726,11 @@ def do_outdated():
                 pass
     outdated = []
     for package in packages:
-        if package in updated_packages:
-            if updated_packages[package] != packages[package]:
+        norm_name = pep423_name(package)
+        if norm_name in updated_packages:
+            if updated_packages[norm_name] != packages[package]:
                 outdated.append(
-                    (package, updated_packages[package], packages[package])
+                    (package, updated_packages[norm_name], packages[package])
                 )
     for package, new_version, old_version in outdated:
         click.echo(
@@ -1893,7 +1887,7 @@ def do_install(
     index_indicators = ['-i', '--index', '--extra-index-url']
     index, extra_indexes = None, None
     if more_packages and any(more_packages[0].startswith(s) for s in index_indicators):
-        line, index = split_argument(' '.join(line), short='i', long_='index')
+        line, index = split_argument(' '.join(line), short='i', long_='index', num=1)
         line, extra_indexes = split_argument(line, long_='extra-index-url')
         package_names = line.split()
         package_name = package_names[0]
@@ -2018,6 +2012,14 @@ def do_install(
                 err=True,
             )
             click.echo(crayons.blue(format_pip_error(c.err)), err=True)
+            if 'setup.py egg_info' in c.err:
+                click.echo(
+                    "This is likely caused by a bug in {0}. "
+                    "Report this to its maintainers.".format(
+                        crayons.green(package_name),
+                    ),
+                    err=True,
+                )
             requirements_directory.cleanup()
             sys.exit(1)
         click.echo(
@@ -2491,19 +2493,30 @@ def do_sync(
     unused=False,
     sequential=False,
 ):
+    # The lock file needs to exist because sync won't write to it.
+    if not project.lockfile_exists:
+        click.echo(
+            '{0}: Pipfile.lock is missing! You need to run {1} first.'.format(
+                crayons.red('Error', bold=True),
+                crayons.red('$ pipenv lock', bold=True),
+            ),
+            err=True,
+        )
+        sys.exit(1)
+
+    # Ensure that virtualenv is available.
+    ensure_project(three=three, python=python, validate=False)
+
+    # Install everything.
     requirements_dir = TemporaryDirectory(
         suffix='-requirements', prefix='pipenv-'
     )
-    # Ensure that virtualenv is available.
-    ensure_project(three=three, python=python, validate=False)
-    concurrent = (not sequential)
-    ensure_lockfile()
-    # Install everything.
     do_init(
         dev=dev,
         verbose=verbose,
-        concurrent=concurrent,
+        concurrent=(not sequential),
         requirements_dir=requirements_dir,
+        ignore_pipfile=True,    # Don't check if Pipfile and lock match.
     )
     requirements_dir.cleanup()
     click.echo(crayons.green('All dependencies are now up-to-date!'))
