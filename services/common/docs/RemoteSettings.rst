@@ -4,7 +4,7 @@
 Remote Settings
 ===============
 
-The `remote-settings.js <https://dxr.mozilla.org/mozilla-central/source/services/common/remote-settings.js>`_ module offers the ability to fetch remote settings that are kept in sync with Mozilla servers.
+The `remote-settings.js <https://dxr.mozilla.org/mozilla-central/source/services/settings/remote-settings.js>`_ module offers the ability to fetch remote settings that are kept in sync with Mozilla servers.
 
 
 Usage
@@ -14,7 +14,7 @@ The ``get()`` method returns the list of entries for a specific key. Each entry 
 
 .. code-block:: js
 
-    const { RemoteSettings } = ChromeUtils.import("resource://services-common/remote-settings.js", {});
+    const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
 
     const data = await RemoteSettings("a-key").get();
 
