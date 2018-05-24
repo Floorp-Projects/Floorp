@@ -113,7 +113,7 @@ into actual modules used by the WebConsole and other Devtools.
 The WebConsole UI is built using [React](http://docs.firefox-dev.tools/frontend/react.html)
 components (in `components/`).
 
-The React application is rendered from `new-console-output-wrapper.js`.
+The React application is rendered from `webconsole-output-wrapper.js`.
 It contains 3 top components:
 * **ConsoleOutput** (in `ConsoleOutput.js`) is the component where messages are rendered.
 * **FilterBar** (in `FilterBar.js`) is the component for the filter bars (filter input and toggle buttons).

@@ -15,7 +15,7 @@ const { INDENT_WIDTH } =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const store = hud.ui.newConsoleOutput.getStore();
+  const store = hud.ui.consoleOutput.getStore();
   logAllStoreChanges(hud);
 
   const onMessagesLogged = waitForMessage(hud, "log-6");

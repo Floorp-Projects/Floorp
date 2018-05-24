@@ -40,7 +40,7 @@ const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
  * @param object webConsoleOwner
  *        The WebConsole owner object.
  */
-function NewWebConsoleFrame(webConsoleOwner) {
+function WebConsoleFrame(webConsoleOwner) {
   this.owner = webConsoleOwner;
   this.hudId = this.owner.hudId;
   this.isBrowserConsole = this.owner._browserConsole;
@@ -52,7 +52,7 @@ function NewWebConsoleFrame(webConsoleOwner) {
 
   EventEmitter.decorate(this);
 }
-NewWebConsoleFrame.prototype = {
+WebConsoleFrame.prototype = {
   /**
    * Getter for the debugger WebConsoleClient.
    * @type object
@@ -82,7 +82,7 @@ NewWebConsoleFrame.prototype = {
   async init() {
     this._initUI();
     await this._initConnection();
-    await this.newConsoleOutput.init();
+    await this.consoleOutput.init();
 
     let id = WebConsoleUtils.supportsString(this.hudId);
     if (Services.obs) {
@@ -108,7 +108,7 @@ NewWebConsoleFrame.prototype = {
       toolbox.off("select", this._onChangeSplitConsoleState);
     }
 
-    this.window = this.owner = this.newConsoleOutput = null;
+    this.window = this.owner = this.consoleOutput = null;
 
     let onDestroy = () => {
       this._destroyer.resolve(null);
@@ -204,8 +204,8 @@ NewWebConsoleFrame.prototype = {
     let toolbox = gDevTools.getToolbox(this.owner.target);
 
     // Handle both launchpad and toolbox loading
-    let Wrapper = this.owner.NewConsoleOutputWrapper || this.window.NewConsoleOutput;
-    this.newConsoleOutput =
+    let Wrapper = this.owner.WebConsoleOutputWrapper || this.window.WebConsoleOutput;
+    this.consoleOutput =
       new Wrapper(this.outputNode, this, toolbox, this.owner, this.document);
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
@@ -253,7 +253,7 @@ NewWebConsoleFrame.prototype = {
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
       shortcuts.on("Esc", event => {
         if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
-          this.newConsoleOutput.dispatchSidebarClose();
+          this.consoleOutput.dispatchSidebarClose();
           this.jsterm.focus();
         }
       });
@@ -293,7 +293,7 @@ NewWebConsoleFrame.prototype = {
    */
   _onToolboxPrefChanged: function() {
     let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-    this.newConsoleOutput.dispatchTimestampsToggle(newValue);
+    this.consoleOutput.dispatchTimestampsToggle(newValue);
   },
 
   /**
@@ -306,7 +306,7 @@ NewWebConsoleFrame.prototype = {
   },
 
   _onChangeSplitConsoleState: function() {
-    this.newConsoleOutput.dispatchSplitConsoleCloseButtonToggle();
+    this.consoleOutput.dispatchSplitConsoleCloseButtonToggle();
   },
 
   /**
@@ -328,7 +328,7 @@ NewWebConsoleFrame.prototype = {
 
     // Wait for completion of any async dispatch before notifying that the console
     // is fully updated after a page reload
-    await this.newConsoleOutput.waitAsyncDispatches();
+    await this.consoleOutput.waitAsyncDispatches();
     this.emit("reloaded");
   },
 
@@ -336,7 +336,7 @@ NewWebConsoleFrame.prototype = {
     if (this.persistLog) {
       // Add a _type to hit convertCachedPacket.
       packet._type = true;
-      this.newConsoleOutput.dispatchMessageAdd(packet);
+      this.consoleOutput.dispatchMessageAdd(packet);
     } else {
       this.jsterm.clearOutput(false);
     }
@@ -360,4 +360,4 @@ function quickRestart() {
   Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
 }
 
-exports.NewWebConsoleFrame = NewWebConsoleFrame;
+exports.WebConsoleFrame = WebConsoleFrame;
