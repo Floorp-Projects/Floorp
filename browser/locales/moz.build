@@ -25,6 +25,16 @@ if CONFIG['MOZ_UPDATER']:
     # work.
     LOCALIZED_FILES['..'] += ['!updater.ini']
 
+LOCALIZED_GENERATED_FILES += ['bookmarks.html']
+bookmarks = LOCALIZED_GENERATED_FILES['bookmarks.html']
+bookmarks.script = 'generate_bookmarks.py'
+bookmarks.inputs = [
+    # This input will not be considered for localization.
+    'generic/profile/bookmarks.html.in',
+    # The `locales/en-US/` will be rewritten to the locale-specific path.
+    'en-US/profile/bookmarks.inc',
+]
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "General")
 
