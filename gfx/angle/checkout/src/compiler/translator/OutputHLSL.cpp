@@ -15,17 +15,17 @@
 #include "common/utilities.h"
 #include "compiler/translator/BuiltInFunctionEmulator.h"
 #include "compiler/translator/BuiltInFunctionEmulatorHLSL.h"
+#include "compiler/translator/FindSymbolNode.h"
 #include "compiler/translator/ImageFunctionHLSL.h"
 #include "compiler/translator/InfoSink.h"
+#include "compiler/translator/NodeSearch.h"
+#include "compiler/translator/RemoveSwitchFallThrough.h"
 #include "compiler/translator/StructureHLSL.h"
 #include "compiler/translator/TextureFunctionHLSL.h"
 #include "compiler/translator/TranslatorHLSL.h"
 #include "compiler/translator/UniformHLSL.h"
 #include "compiler/translator/UtilsHLSL.h"
 #include "compiler/translator/blocklayout.h"
-#include "compiler/translator/tree_ops/RemoveSwitchFallThrough.h"
-#include "compiler/translator/tree_util/FindSymbolNode.h"
-#include "compiler/translator/tree_util/NodeSearch.h"
 #include "compiler/translator/util.h"
 
 namespace sh
@@ -1756,30 +1756,35 @@ bool OutputHLSL::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition 
 
     out << TypeString(node->getFunctionPrototype()->getType()) << " ";
 
-    const TFunction *func = node->getFunction();
+    TIntermSequence *parameters = node->getFunctionPrototype()->getSequence();
 
-    if (func->isMain())
+    if (node->getFunction()->isMain())
     {
         out << "gl_main(";
     }
     else
     {
-        out << DecorateFunctionIfNeeded(func) << DisambiguateFunctionName(func)
+        out << DecorateFunctionIfNeeded(node->getFunction()) << DisambiguateFunctionName(parameters)
             << (mOutputLod0Function ? "Lod0(" : "(");
     }
 
-    size_t paramCount = func->getParamCount();
-    for (unsigned int i = 0; i < paramCount; i++)
+    for (unsigned int i = 0; i < parameters->size(); i++)
     {
-        const TVariable *param = func->getParam(i);
-        ensureStructDefined(param->getType());
+        TIntermSymbol *symbol = (*parameters)[i]->getAsSymbolNode();
 
-        writeParameter(param, out);
-
-        if (i < paramCount - 1)
+        if (symbol)
         {
-            out << ", ";
+            ensureStructDefined(symbol->getType());
+
+            writeParameter(symbol, out);
+
+            if (i < parameters->size() - 1)
+            {
+                out << ", ";
+            }
         }
+        else
+            UNREACHABLE();
     }
 
     out << ")\n";
@@ -1866,29 +1871,32 @@ bool OutputHLSL::visitInvariantDeclaration(Visit visit, TIntermInvariantDeclarat
     return false;
 }
 
-void OutputHLSL::visitFunctionPrototype(TIntermFunctionPrototype *node)
+bool OutputHLSL::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node)
 {
     TInfoSinkBase &out = getInfoSink();
 
+    ASSERT(visit == PreVisit);
     size_t index = mCallDag.findIndex(node->getFunction()->uniqueId());
     // Skip the prototype if it is not implemented (and thus not used)
     if (index == CallDAG::InvalidIndex)
     {
-        return;
+        return false;
     }
 
-    const TFunction *func = node->getFunction();
+    TIntermSequence *arguments = node->getSequence();
 
-    TString name = DecorateFunctionIfNeeded(func);
-    out << TypeString(node->getType()) << " " << name << DisambiguateFunctionName(func)
+    TString name = DecorateFunctionIfNeeded(node->getFunction());
+    out << TypeString(node->getType()) << " " << name << DisambiguateFunctionName(arguments)
         << (mOutputLod0Function ? "Lod0(" : "(");
 
-    size_t paramCount = func->getParamCount();
-    for (unsigned int i = 0; i < paramCount; i++)
+    for (unsigned int i = 0; i < arguments->size(); i++)
     {
-        writeParameter(func->getParam(i), out);
+        TIntermSymbol *symbol = (*arguments)[i]->getAsSymbolNode();
+        ASSERT(symbol != nullptr);
 
-        if (i < paramCount - 1)
+        writeParameter(symbol, out);
+
+        if (i < arguments->size() - 1)
         {
             out << ", ";
         }
@@ -1904,6 +1912,8 @@ void OutputHLSL::visitFunctionPrototype(TIntermFunctionPrototype *node)
         node->traverse(this);
         mOutputLod0Function = false;
     }
+
+    return false;
 }
 
 bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
@@ -2117,24 +2127,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
         case EOpImulExtended:
             ASSERT(node->getUseEmulatedFunction());
             writeEmulatedFunctionTriplet(out, visit, node->getOp());
-            break;
-        case EOpBarrier:
-            // barrier() is translated to GroupMemoryBarrierWithGroupSync(), which is the
-            // cheapest *WithGroupSync() function, without any functionality loss, but
-            // with the potential for severe performance loss.
-            outputTriplet(out, visit, "GroupMemoryBarrierWithGroupSync(", "", ")");
-            break;
-        case EOpMemoryBarrierShared:
-            outputTriplet(out, visit, "GroupMemoryBarrier(", "", ")");
-            break;
-        case EOpMemoryBarrierAtomicCounter:
-        case EOpMemoryBarrierBuffer:
-        case EOpMemoryBarrierImage:
-            outputTriplet(out, visit, "DeviceMemoryBarrier(", "", ")");
-            break;
-        case EOpGroupMemoryBarrier:
-        case EOpMemoryBarrier:
-            outputTriplet(out, visit, "AllMemoryBarrier(", "", ")");
             break;
         default:
             UNREACHABLE();
@@ -2650,13 +2642,22 @@ void OutputHLSL::outputLineDirective(TInfoSinkBase &out, int line)
     }
 }
 
-void OutputHLSL::writeParameter(const TVariable *param, TInfoSinkBase &out)
+void OutputHLSL::writeParameter(const TIntermSymbol *symbol, TInfoSinkBase &out)
 {
-    const TType &type    = param->getType();
-    TQualifier qualifier = type.getQualifier();
+    TQualifier qualifier = symbol->getQualifier();
+    const TType &type    = symbol->getType();
+    const TVariable &variable = symbol->variable();
+    TString nameStr;
 
-    TString nameStr = DecorateVariableIfNeeded(*param);
-    ASSERT(nameStr != "");  // HLSL demands named arguments, also for prototypes
+    if (variable.symbolType() ==
+        SymbolType::Empty)  // HLSL demands named arguments, also for prototypes
+    {
+        nameStr = "x" + str(mUniqueIndex++);
+    }
+    else
+    {
+        nameStr = DecorateVariableIfNeeded(variable);
+    }
 
     if (IsSampler(type.getBasicType()))
     {

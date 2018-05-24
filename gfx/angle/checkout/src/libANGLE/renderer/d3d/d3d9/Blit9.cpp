@@ -258,8 +258,7 @@ gl::Error Blit9::copy2D(const gl::Context *context,
 
     IDirect3DSurface9 *destSurface = nullptr;
     TextureStorage9 *storage9      = GetAs<TextureStorage9>(storage);
-    gl::Error error =
-        storage9->getSurfaceLevel(context, gl::TextureTarget::_2D, level, true, &destSurface);
+    gl::Error error = storage9->getSurfaceLevel(context, GL_TEXTURE_2D, level, true, &destSurface);
     if (error.isError())
     {
         SafeRelease(source);
@@ -282,7 +281,7 @@ gl::Error Blit9::copyCube(const gl::Context *context,
                           GLenum destFormat,
                           const gl::Offset &destOffset,
                           TextureStorage *storage,
-                          gl::TextureTarget target,
+                          GLenum target,
                           GLint level)
 {
     gl::Error error = initialize();
@@ -331,7 +330,7 @@ gl::Error Blit9::copyTexture(const gl::Context *context,
                              GLenum destFormat,
                              const gl::Offset &destOffset,
                              TextureStorage *storage,
-                             gl::TextureTarget destTarget,
+                             GLenum destTarget,
                              GLint destLevel,
                              bool flipY,
                              bool premultiplyAlpha,
@@ -355,8 +354,8 @@ gl::Error Blit9::copyTexture(const gl::Context *context,
     ANGLE_TRY(sourceStorage9->getBaseTexture(context, &sourceTexture));
 
     IDirect3DSurface9 *sourceSurface = nullptr;
-    ANGLE_TRY(sourceStorage9->getSurfaceLevel(context, gl::TextureTarget::_2D, sourceLevel, true,
-                                              &sourceSurface));
+    ANGLE_TRY(
+        sourceStorage9->getSurfaceLevel(context, GL_TEXTURE_2D, sourceLevel, true, &sourceSurface));
 
     IDirect3DSurface9 *destSurface = nullptr;
     gl::Error error =

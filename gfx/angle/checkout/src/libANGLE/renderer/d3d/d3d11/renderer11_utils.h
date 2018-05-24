@@ -33,6 +33,7 @@ class Renderer11;
 class RenderTarget11;
 struct Renderer11DeviceCaps;
 
+using RenderTargetArray = std::array<RenderTarget11 *, gl::IMPLEMENTATION_MAX_DRAW_BUFFERS>;
 using RTVArray          = std::array<ID3D11RenderTargetView *, gl::IMPLEMENTATION_MAX_DRAW_BUFFERS>;
 
 namespace gl_d3d11
@@ -397,6 +398,7 @@ enum class StagingAccess
 
 bool UsePresentPathFast(const Renderer11 *renderer, const gl::FramebufferAttachment *colorbuffer);
 bool UsePrimitiveRestartWorkaround(bool primitiveRestartFixedIndexEnabled, GLenum type);
+bool IsStreamingIndexData(const gl::Context *context, GLenum srcType);
 
 enum class IndexStorageType
 {
@@ -419,7 +421,8 @@ IndexStorageType ClassifyIndexStorage(const gl::State &glState,
                                       const gl::Buffer *elementArrayBuffer,
                                       GLenum elementType,
                                       GLenum destElementType,
-                                      unsigned int offset);
+                                      unsigned int offset,
+                                      bool *needsTranslation);
 
 }  // namespace rx
 

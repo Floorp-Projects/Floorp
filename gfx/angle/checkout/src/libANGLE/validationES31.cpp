@@ -281,7 +281,7 @@ bool ValidateProgramResourceIndex(const Program *programObject,
     }
 }
 
-bool ValidateProgramUniform(Context *context,
+bool ValidateProgramUniform(gl::Context *context,
                             GLenum valueType,
                             GLuint program,
                             GLint location,
@@ -295,12 +295,12 @@ bool ValidateProgramUniform(Context *context,
     }
 
     const LinkedUniform *uniform = nullptr;
-    Program *programObject       = GetValidProgram(context, program);
+    gl::Program *programObject   = GetValidProgram(context, program);
     return ValidateUniformCommonBase(context, programObject, location, count, &uniform) &&
            ValidateUniformValue(context, valueType, uniform->type);
 }
 
-bool ValidateProgramUniformMatrix(Context *context,
+bool ValidateProgramUniformMatrix(gl::Context *context,
                                   GLenum valueType,
                                   GLuint program,
                                   GLint location,
@@ -315,12 +315,12 @@ bool ValidateProgramUniformMatrix(Context *context,
     }
 
     const LinkedUniform *uniform = nullptr;
-    Program *programObject       = GetValidProgram(context, program);
+    gl::Program *programObject   = GetValidProgram(context, program);
     return ValidateUniformCommonBase(context, programObject, location, count, &uniform) &&
            ValidateUniformMatrixValue(context, valueType, uniform->type);
 }
 
-bool ValidateVertexAttribFormatCommon(Context *context,
+bool ValidateVertexAttribFormatCommon(ValidationContext *context,
                                       GLuint attribIndex,
                                       GLint size,
                                       GLenum type,
@@ -389,19 +389,16 @@ bool ValidateGetBooleani_vRobustANGLE(Context *context,
         return false;
     }
 
-    GLsizei numParams = 0;
-
-    if (!ValidateIndexedStateQuery(context, target, index, &numParams))
+    if (!ValidateIndexedStateQuery(context, target, index, length))
     {
         return false;
     }
 
-    if (!ValidateRobustBufferSize(context, bufSize, numParams))
+    if (!ValidateRobustBufferSize(context, bufSize, *length))
     {
         return false;
     }
 
-    SetRobustLengthParam(length, numParams);
     return true;
 }
 
@@ -429,7 +426,7 @@ bool ValidateDrawIndirectBase(Context *context, GLenum mode, const void *indirec
         return false;
     }
 
-    Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
+    gl::Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
     if (!drawIndirectBuffer)
     {
         context->handleError(InvalidOperation() << "zero is bound to DRAW_INDIRECT_BUFFER");
@@ -466,7 +463,7 @@ bool ValidateDrawIndirectBase(Context *context, GLenum mode, const void *indirec
 bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indirect)
 {
     const State &state                          = context->getGLState();
-    TransformFeedback *curTransformFeedback     = state.getCurrentTransformFeedback();
+    gl::TransformFeedback *curTransformFeedback = state.getCurrentTransformFeedback();
     if (curTransformFeedback && curTransformFeedback->isActive() &&
         !curTransformFeedback->isPaused())
     {
@@ -478,7 +475,7 @@ bool ValidateDrawArraysIndirect(Context *context, GLenum mode, const void *indir
     if (!ValidateDrawIndirectBase(context, mode, indirect))
         return false;
 
-    Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
+    gl::Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
     CheckedNumeric<size_t> checkedOffset(reinterpret_cast<size_t>(indirect));
     // In OpenGL ES3.1 spec, session 10.5, it defines the struct of DrawArraysIndirectCommand
     // which's size is 4 * sizeof(uint).
@@ -502,7 +499,7 @@ bool ValidateDrawElementsIndirect(Context *context, GLenum mode, GLenum type, co
 
     const State &state             = context->getGLState();
     const VertexArray *vao         = state.getVertexArray();
-    Buffer *elementArrayBuffer     = vao->getElementArrayBuffer().get();
+    gl::Buffer *elementArrayBuffer = vao->getElementArrayBuffer().get();
     if (!elementArrayBuffer)
     {
         context->handleError(InvalidOperation() << "zero is bound to ELEMENT_ARRAY_BUFFER");
@@ -512,7 +509,7 @@ bool ValidateDrawElementsIndirect(Context *context, GLenum mode, GLenum type, co
     if (!ValidateDrawIndirectBase(context, mode, indirect))
         return false;
 
-    Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
+    gl::Buffer *drawIndirectBuffer = state.getTargetBuffer(BufferBinding::DrawIndirect);
     CheckedNumeric<size_t> checkedOffset(reinterpret_cast<size_t>(indirect));
     // In OpenGL ES3.1 spec, session 10.5, it defines the struct of DrawElementsIndirectCommand
     // which's size is 5 * sizeof(uint).
@@ -653,7 +650,7 @@ bool ValidateProgramUniform1iv(Context *context,
     }
 
     const LinkedUniform *uniform = nullptr;
-    Program *programObject       = GetValidProgram(context, program);
+    gl::Program *programObject   = GetValidProgram(context, program);
     return ValidateUniformCommonBase(context, programObject, location, count, &uniform) &&
            ValidateUniform1ivValue(context, uniform->type, count, value);
 }
@@ -857,7 +854,7 @@ bool ValidateProgramUniformMatrix4x3fv(Context *context,
 }
 
 bool ValidateGetTexLevelParameterBase(Context *context,
-                                      TextureTarget target,
+                                      GLenum target,
                                       GLint level,
                                       GLenum pname,
                                       GLsizei *length)
@@ -873,21 +870,20 @@ bool ValidateGetTexLevelParameterBase(Context *context,
         *length = 0;
     }
 
-    TextureType type = TextureTargetToType(target);
-
-    if (!ValidTexLevelDestinationTarget(context, type))
+    if (!ValidTexLevelDestinationTarget(context, target))
     {
         ANGLE_VALIDATION_ERR(context, InvalidEnum(), InvalidTextureTarget);
         return false;
     }
 
-    if (context->getTargetTexture(type) == nullptr)
+    if (context->getTargetTexture(IsCubeMapTextureTarget(target) ? GL_TEXTURE_CUBE_MAP : target) ==
+        nullptr)
     {
         context->handleError(InvalidEnum() << "No texture bound.");
         return false;
     }
 
-    if (!ValidMipLevel(context, type, level))
+    if (!ValidMipLevel(context, target, level))
     {
         context->handleError(InvalidValue());
         return false;
@@ -932,7 +928,7 @@ bool ValidateGetTexLevelParameterBase(Context *context,
 }
 
 bool ValidateGetTexLevelParameterfv(Context *context,
-                                    TextureTarget target,
+                                    GLenum target,
                                     GLint level,
                                     GLenum pname,
                                     GLfloat *params)
@@ -940,20 +936,8 @@ bool ValidateGetTexLevelParameterfv(Context *context,
     return ValidateGetTexLevelParameterBase(context, target, level, pname, nullptr);
 }
 
-bool ValidateGetTexLevelParameterfvRobustANGLE(Context *context,
-                                               TextureTarget target,
-                                               GLint level,
-                                               GLenum pname,
-                                               GLsizei bufSize,
-                                               GLsizei *length,
-                                               GLfloat *params)
-{
-    UNIMPLEMENTED();
-    return false;
-}
-
 bool ValidateGetTexLevelParameteriv(Context *context,
-                                    TextureTarget target,
+                                    GLenum target,
                                     GLint level,
                                     GLenum pname,
                                     GLint *params)
@@ -961,20 +945,8 @@ bool ValidateGetTexLevelParameteriv(Context *context,
     return ValidateGetTexLevelParameterBase(context, target, level, pname, nullptr);
 }
 
-bool ValidateGetTexLevelParameterivRobustANGLE(Context *context,
-                                               TextureTarget target,
-                                               GLint level,
-                                               GLenum pname,
-                                               GLsizei bufSize,
-                                               GLsizei *length,
-                                               GLint *params)
-{
-    UNIMPLEMENTED();
-    return false;
-}
-
 bool ValidateTexStorage2DMultisample(Context *context,
-                                     TextureType target,
+                                     GLenum target,
                                      GLsizei samples,
                                      GLint internalFormat,
                                      GLsizei width,
@@ -987,7 +959,7 @@ bool ValidateTexStorage2DMultisample(Context *context,
         return false;
     }
 
-    if (target != TextureType::_2DMultisample)
+    if (target != GL_TEXTURE_2D_MULTISAMPLE)
     {
         context->handleError(InvalidEnum() << "Target must be TEXTURE_2D_MULTISAMPLE.");
         return false;
@@ -1075,27 +1047,14 @@ bool ValidateGetMultisamplefv(Context *context, GLenum pname, GLuint index, GLfl
     }
 
     Framebuffer *framebuffer = context->getGLState().getDrawFramebuffer();
-    GLint samples            = 0;
-    ANGLE_VALIDATION_TRY(framebuffer->getSamples(context, &samples));
 
-    if (index >= static_cast<GLuint>(samples))
+    if (index >= static_cast<GLuint>(framebuffer->getSamples(context)))
     {
         context->handleError(InvalidValue() << "Index must be less than the value of SAMPLES.");
         return false;
     }
 
     return true;
-}
-
-bool ValidateGetMultisamplefvRobustANGLE(Context *context,
-                                         GLenum pname,
-                                         GLuint index,
-                                         GLsizei bufSize,
-                                         GLsizei *length,
-                                         GLfloat *val)
-{
-    UNIMPLEMENTED();
-    return false;
 }
 
 bool ValidateFramebufferParameteri(Context *context, GLenum target, GLenum pname, GLint param)
@@ -1208,17 +1167,6 @@ bool ValidateGetFramebufferParameteriv(Context *context, GLenum target, GLenum p
     return true;
 }
 
-bool ValidateGetFramebufferParameterivRobustANGLE(Context *context,
-                                                  GLenum target,
-                                                  GLenum pname,
-                                                  GLsizei bufSize,
-                                                  GLsizei *length,
-                                                  GLint *params)
-{
-    UNIMPLEMENTED();
-    return false;
-}
-
 bool ValidateGetProgramResourceIndex(Context *context,
                                      GLuint program,
                                      GLenum programInterface,
@@ -1246,7 +1194,7 @@ bool ValidateGetProgramResourceIndex(Context *context,
     return true;
 }
 
-bool ValidateBindVertexBuffer(Context *context,
+bool ValidateBindVertexBuffer(ValidationContext *context,
                               GLuint bindingIndex,
                               GLuint buffer,
                               GLintptr offset,
@@ -1296,7 +1244,7 @@ bool ValidateBindVertexBuffer(Context *context,
     return true;
 }
 
-bool ValidateVertexBindingDivisor(Context *context, GLuint bindingIndex, GLuint divisor)
+bool ValidateVertexBindingDivisor(ValidationContext *context, GLuint bindingIndex, GLuint divisor)
 {
     if (context->getClientVersion() < ES_3_1)
     {
@@ -1323,7 +1271,7 @@ bool ValidateVertexBindingDivisor(Context *context, GLuint bindingIndex, GLuint 
     return true;
 }
 
-bool ValidateVertexAttribFormat(Context *context,
+bool ValidateVertexAttribFormat(ValidationContext *context,
                                 GLuint attribindex,
                                 GLint size,
                                 GLenum type,
@@ -1334,7 +1282,7 @@ bool ValidateVertexAttribFormat(Context *context,
                                             false);
 }
 
-bool ValidateVertexAttribIFormat(Context *context,
+bool ValidateVertexAttribIFormat(ValidationContext *context,
                                  GLuint attribindex,
                                  GLint size,
                                  GLenum type,
@@ -1343,7 +1291,9 @@ bool ValidateVertexAttribIFormat(Context *context,
     return ValidateVertexAttribFormatCommon(context, attribindex, size, type, relativeoffset, true);
 }
 
-bool ValidateVertexAttribBinding(Context *context, GLuint attribIndex, GLuint bindingIndex)
+bool ValidateVertexAttribBinding(ValidationContext *context,
+                                 GLuint attribIndex,
+                                 GLuint bindingIndex)
 {
     if (context->getClientVersion() < ES_3_1)
     {
@@ -1432,7 +1382,7 @@ bool ValidateDispatchCompute(Context *context,
     const State &state = context->getGLState();
     Program *program   = state.getProgram();
 
-    if (program == nullptr || !program->hasLinkedShaderStage(ShaderType::Compute))
+    if (program == nullptr || !program->hasLinkedComputeShader())
     {
         ANGLE_VALIDATION_ERR(context, InvalidOperation(), NoActiveProgramWithComputeShader);
         return false;
@@ -1475,7 +1425,7 @@ bool ValidateDispatchComputeIndirect(Context *context, GLintptr indirect)
     const State &state = context->getGLState();
     Program *program   = state.getProgram();
 
-    if (program == nullptr || !program->hasLinkedShaderStage(ShaderType::Compute))
+    if (program == nullptr || !program->hasLinkedComputeShader())
     {
         ANGLE_VALIDATION_ERR(context, InvalidOperation(), NoActiveProgramWithComputeShader);
         return false;
@@ -1493,7 +1443,7 @@ bool ValidateDispatchComputeIndirect(Context *context, GLintptr indirect)
         return false;
     }
 
-    Buffer *dispatchIndirectBuffer = state.getTargetBuffer(BufferBinding::DispatchIndirect);
+    gl::Buffer *dispatchIndirectBuffer = state.getTargetBuffer(BufferBinding::DispatchIndirect);
     if (!dispatchIndirectBuffer)
     {
         ANGLE_VALIDATION_ERR(context, InvalidOperation(), DispatchIndirectBufferNotBound);
@@ -1743,18 +1693,6 @@ bool ValidateGetProgramInterfaceiv(Context *context,
     return true;
 }
 
-bool ValidateGetProgramInterfaceivRobustANGLE(Context *context,
-                                              GLuint program,
-                                              GLenum programInterface,
-                                              GLenum pname,
-                                              GLsizei bufSize,
-                                              GLsizei *length,
-                                              GLint *params)
-{
-    UNIMPLEMENTED();
-    return false;
-}
-
 static bool ValidateGenOrDeleteES31(Context *context, GLint n)
 {
     if (context->getClientVersion() < ES_3_1)
@@ -1817,7 +1755,7 @@ bool ValidateActiveShaderProgram(Context *context, GLuint pipeline, GLuint progr
 }
 
 bool ValidateCreateShaderProgramv(Context *context,
-                                  ShaderType type,
+                                  GLenum type,
                                   GLsizei count,
                                   const GLchar *const *strings)
 {

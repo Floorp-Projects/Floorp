@@ -11,7 +11,6 @@
 #define LIBGLESV2_PROC_TABLE_H_
 
 #include <EGL/egl.h>
-#include <stddef.h>
 #include <utility>
 
 namespace egl

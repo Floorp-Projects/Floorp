@@ -24,7 +24,7 @@ ImageD3D::ImageD3D()
       mDepth(0),
       mInternalFormat(GL_NONE),
       mRenderable(false),
-      mType(gl::TextureType::InvalidEnum),
+      mTarget(GL_NONE),
       mDirty(false)
 {
 }

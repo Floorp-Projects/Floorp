@@ -29,11 +29,11 @@ gl::ImageIndex GetImageIndex(EGLenum eglTarget, const egl::AttributeMap &attribs
         return gl::ImageIndex::MakeInvalid();
     }
 
-    gl::TextureTarget target = egl_gl::EGLImageTargetToTextureTarget(eglTarget);
+    GLenum target = egl_gl::EGLImageTargetToGLTextureTarget(eglTarget);
     GLint mip     = static_cast<GLint>(attribs.get(EGL_GL_TEXTURE_LEVEL_KHR, 0));
     GLint layer   = static_cast<GLint>(attribs.get(EGL_GL_TEXTURE_ZOFFSET_KHR, 0));
 
-    if (target == gl::TextureTarget::_3D)
+    if (target == GL_TEXTURE_3D)
     {
         return gl::ImageIndex::Make3D(mip, layer);
     }

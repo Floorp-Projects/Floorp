@@ -121,10 +121,10 @@ Renderer9::Renderer9(egl::Display *display) : RendererD3D(display), mStateManage
     mMaxNullColorbufferLRU = 0;
     for (int i = 0; i < NUM_NULL_COLORBUFFER_CACHE_ENTRIES; i++)
     {
-        mNullRenderTargetCache[i].lruCount     = 0;
-        mNullRenderTargetCache[i].width        = 0;
-        mNullRenderTargetCache[i].height       = 0;
-        mNullRenderTargetCache[i].renderTarget = nullptr;
+        mNullColorbufferCache[i].lruCount = 0;
+        mNullColorbufferCache[i].width    = 0;
+        mNullColorbufferCache[i].height   = 0;
+        mNullColorbufferCache[i].buffer   = nullptr;
     }
 
     mAppliedVertexShader  = nullptr;
@@ -937,7 +937,7 @@ gl::Error Renderer9::setSamplerState(const gl::Context *context,
                                      gl::Texture *texture,
                                      const gl::SamplerState &samplerState)
 {
-    CurSamplerState &appliedSampler = (type == gl::ShaderType::Fragment)
+    CurSamplerState &appliedSampler = (type == gl::SHADER_FRAGMENT)
                                           ? mCurPixelSamplerStates[index]
                                           : mCurVertexSamplerStates[index];
 
@@ -955,7 +955,7 @@ gl::Error Renderer9::setSamplerState(const gl::Context *context,
     if (appliedSampler.forceSet || appliedSampler.baseLevel != baseLevel ||
         memcmp(&samplerState, &appliedSampler, sizeof(gl::SamplerState)) != 0)
     {
-        int d3dSamplerOffset = (type == gl::ShaderType::Fragment) ? 0 : D3DVERTEXTEXTURESAMPLER0;
+        int d3dSamplerOffset = (type == gl::SHADER_FRAGMENT) ? 0 : D3DVERTEXTEXTURESAMPLER0;
         int d3dSampler       = index + d3dSamplerOffset;
 
         mDevice->SetSamplerState(d3dSampler, D3DSAMP_ADDRESSU,
@@ -995,13 +995,13 @@ gl::Error Renderer9::setTexture(const gl::Context *context,
                                 int index,
                                 gl::Texture *texture)
 {
-    int d3dSamplerOffset = (type == gl::ShaderType::Fragment) ? 0 : D3DVERTEXTEXTURESAMPLER0;
+    int d3dSamplerOffset = (type == gl::SHADER_FRAGMENT) ? 0 : D3DVERTEXTEXTURESAMPLER0;
     int d3dSampler                    = index + d3dSamplerOffset;
     IDirect3DBaseTexture9 *d3dTexture = nullptr;
     bool forceSetTexture              = false;
 
     std::vector<uintptr_t> &appliedTextures =
-        (type == gl::ShaderType::Fragment) ? mCurPixelTextures : mCurVertexTextures;
+        (type == gl::SHADER_FRAGMENT) ? mCurPixelTextures : mCurVertexTextures;
 
     if (texture)
     {
@@ -1041,12 +1041,9 @@ gl::Error Renderer9::updateState(const gl::Context *context, GLenum drawMode)
     // Applies the render target surface, depth stencil surface, viewport rectangle and
     // scissor rectangle to the renderer
     gl::Framebuffer *framebuffer = glState.getDrawFramebuffer();
-    ASSERT(framebuffer && !framebuffer->hasAnyDirtyBit());
+    ASSERT(framebuffer && !framebuffer->hasAnyDirtyBit() && framebuffer->cachedComplete());
 
-    Framebuffer9 *framebuffer9 = GetImplAs<Framebuffer9>(framebuffer);
-
-    ANGLE_TRY(applyRenderTarget(context, framebuffer9->getCachedColorRenderTargets()[0],
-                                framebuffer9->getCachedDepthStencilRenderTarget()));
+    ANGLE_TRY(applyRenderTarget(context, framebuffer));
 
     // Setting viewport state
     setViewport(glState.getViewport(), glState.getNearPlane(), glState.getFarPlane(), drawMode,
@@ -1161,89 +1158,109 @@ bool Renderer9::applyPrimitiveType(GLenum mode, GLsizei count, bool usesPointSiz
     return mPrimitiveCount > 0;
 }
 
-gl::Error Renderer9::getNullColorRenderTarget(const gl::Context *context,
-                                              const RenderTarget9 *depthRenderTarget,
-                                              const RenderTarget9 **outColorRenderTarget)
+gl::Error Renderer9::getNullColorbuffer(const gl::Context *context,
+                                        const gl::FramebufferAttachment *depthbuffer,
+                                        const gl::FramebufferAttachment **outColorBuffer)
 {
-    ASSERT(depthRenderTarget);
+    ASSERT(depthbuffer);
 
-    const gl::Extents &size = depthRenderTarget->getExtents();
+    const gl::Extents &size = depthbuffer->getSize();
 
     // search cached nullcolorbuffers
     for (int i = 0; i < NUM_NULL_COLORBUFFER_CACHE_ENTRIES; i++)
     {
-        if (mNullRenderTargetCache[i].renderTarget != nullptr &&
-            mNullRenderTargetCache[i].width == size.width &&
-            mNullRenderTargetCache[i].height == size.height)
+        if (mNullColorbufferCache[i].buffer != nullptr &&
+            mNullColorbufferCache[i].width == size.width &&
+            mNullColorbufferCache[i].height == size.height)
         {
-            mNullRenderTargetCache[i].lruCount = ++mMaxNullColorbufferLRU;
-            *outColorRenderTarget              = mNullRenderTargetCache[i].renderTarget;
+            mNullColorbufferCache[i].lruCount = ++mMaxNullColorbufferLRU;
+            *outColorBuffer                   = mNullColorbufferCache[i].buffer;
             return gl::NoError();
         }
     }
 
-    RenderTargetD3D *nullRenderTarget = nullptr;
-    ANGLE_TRY(createRenderTarget(size.width, size.height, GL_NONE, 0, &nullRenderTarget));
+    auto *implFactory = context->getImplementation();
+
+    gl::Renderbuffer *nullRenderbuffer = new gl::Renderbuffer(implFactory, 0);
+    gl::Error error = nullRenderbuffer->setStorage(context, GL_NONE, size.width, size.height);
+    if (error.isError())
+    {
+        SafeDelete(nullRenderbuffer);
+        return error;
+    }
+
+    gl::FramebufferAttachment *nullbuffer = new gl::FramebufferAttachment(
+        context, GL_RENDERBUFFER, GL_NONE, gl::ImageIndex::MakeInvalid(), nullRenderbuffer);
 
     // add nullbuffer to the cache
-    NullRenderTargetCacheEntry *oldest = &mNullRenderTargetCache[0];
+    NullColorbufferCacheEntry *oldest = &mNullColorbufferCache[0];
     for (int i = 1; i < NUM_NULL_COLORBUFFER_CACHE_ENTRIES; i++)
     {
-        if (mNullRenderTargetCache[i].lruCount < oldest->lruCount)
+        if (mNullColorbufferCache[i].lruCount < oldest->lruCount)
         {
-            oldest = &mNullRenderTargetCache[i];
+            oldest = &mNullColorbufferCache[i];
         }
     }
 
-    SafeDelete(oldest->renderTarget);
-    oldest->renderTarget = GetAs<RenderTarget9>(nullRenderTarget);
+    delete oldest->buffer;
+    oldest->buffer   = nullbuffer;
     oldest->lruCount = ++mMaxNullColorbufferLRU;
     oldest->width    = size.width;
     oldest->height   = size.height;
 
-    *outColorRenderTarget = oldest->renderTarget;
+    *outColorBuffer = nullbuffer;
     return gl::NoError();
 }
 
 gl::Error Renderer9::applyRenderTarget(const gl::Context *context,
-                                       const RenderTarget9 *colorRenderTargetIn,
-                                       const RenderTarget9 *depthStencilRenderTarget)
+                                       const gl::FramebufferAttachment *colorAttachment,
+                                       const gl::FramebufferAttachment *depthStencilAttachment)
 {
+    const gl::FramebufferAttachment *renderAttachment = colorAttachment;
+
     // if there is no color attachment we must synthesize a NULL colorattachment
     // to keep the D3D runtime happy.  This should only be possible if depth texturing.
-    const RenderTarget9 *colorRenderTarget = colorRenderTargetIn;
-    if (colorRenderTarget == nullptr)
+    if (renderAttachment == nullptr)
     {
-        ANGLE_TRY(getNullColorRenderTarget(context, depthStencilRenderTarget, &colorRenderTarget));
+        ANGLE_TRY(getNullColorbuffer(context, depthStencilAttachment, &renderAttachment));
     }
-    ASSERT(colorRenderTarget != nullptr);
+    ASSERT(renderAttachment != nullptr);
 
     size_t renderTargetWidth     = 0;
     size_t renderTargetHeight    = 0;
     D3DFORMAT renderTargetFormat = D3DFMT_UNKNOWN;
 
+    RenderTarget9 *renderTarget = nullptr;
+    ANGLE_TRY(renderAttachment->getRenderTarget(context, &renderTarget));
+    ASSERT(renderTarget);
+
     bool renderTargetChanged        = false;
-    unsigned int renderTargetSerial = colorRenderTarget->getSerial();
+    unsigned int renderTargetSerial = renderTarget->getSerial();
     if (renderTargetSerial != mAppliedRenderTargetSerial)
     {
         // Apply the render target on the device
-        IDirect3DSurface9 *renderTargetSurface = colorRenderTarget->getSurface();
+        IDirect3DSurface9 *renderTargetSurface = renderTarget->getSurface();
         ASSERT(renderTargetSurface);
 
         mDevice->SetRenderTarget(0, renderTargetSurface);
         SafeRelease(renderTargetSurface);
 
-        renderTargetWidth  = colorRenderTarget->getWidth();
-        renderTargetHeight = colorRenderTarget->getHeight();
-        renderTargetFormat = colorRenderTarget->getD3DFormat();
+        renderTargetWidth  = renderTarget->getWidth();
+        renderTargetHeight = renderTarget->getHeight();
+        renderTargetFormat = renderTarget->getD3DFormat();
 
         mAppliedRenderTargetSerial = renderTargetSerial;
         renderTargetChanged        = true;
     }
 
-    unsigned int depthStencilSerial = 0;
-    if (depthStencilRenderTarget != nullptr)
+    RenderTarget9 *depthStencilRenderTarget = nullptr;
+    unsigned int depthStencilSerial         = 0;
+
+    if (depthStencilAttachment != nullptr)
     {
+        ANGLE_TRY(depthStencilAttachment->getRenderTarget(context, &depthStencilRenderTarget));
+        ASSERT(depthStencilRenderTarget);
+
         depthStencilSerial = depthStencilRenderTarget->getSerial();
     }
 
@@ -1261,11 +1278,8 @@ gl::Error Renderer9::applyRenderTarget(const gl::Context *context,
             mDevice->SetDepthStencilSurface(depthStencilSurface);
             SafeRelease(depthStencilSurface);
 
-            const gl::InternalFormat &format =
-                gl::GetSizedInternalFormatInfo(depthStencilRenderTarget->getInternalFormat());
-
-            depthSize   = format.depthBits;
-            stencilSize = format.stencilBits;
+            depthSize   = depthStencilAttachment->getDepthSize();
+            stencilSize = depthStencilAttachment->getStencilSize();
         }
         else
         {
@@ -1288,6 +1302,13 @@ gl::Error Renderer9::applyRenderTarget(const gl::Context *context,
     }
 
     return gl::NoError();
+}
+
+gl::Error Renderer9::applyRenderTarget(const gl::Context *context,
+                                       const gl::Framebuffer *framebuffer)
+{
+    return applyRenderTarget(context, framebuffer->getColorbuffer(0),
+                             framebuffer->getDepthOrStencilbuffer());
 }
 
 gl::Error Renderer9::applyVertexBuffer(const gl::Context *context,
@@ -1317,12 +1338,11 @@ gl::Error Renderer9::applyIndexBuffer(const gl::Context *context,
                                       GLenum type,
                                       TranslatedIndexData *indexInfo)
 {
-    gl::VertexArray *vao                     = context->getGLState().getVertexArray();
-    gl::Buffer *elementArrayBuffer           = vao->getElementArrayBuffer().get();
-    const gl::DrawCallParams &drawCallParams = context->getParams<gl::DrawCallParams>();
+    gl::VertexArray *vao           = context->getGLState().getVertexArray();
+    gl::Buffer *elementArrayBuffer = vao->getElementArrayBuffer().get();
+    const auto &lazyIndexRange     = context->getParams<gl::HasIndexRange>();
 
-    GLenum dstType = GL_NONE;
-    ANGLE_TRY(GetIndexTranslationDestType(context, drawCallParams, false, &dstType));
+    GLenum dstType = GetIndexTranslationDestType(type, lazyIndexRange, false);
 
     ANGLE_TRY(mIndexDataManager->prepareIndexData(context, type, dstType, count, elementArrayBuffer,
                                                   indices, indexInfo));
@@ -1397,10 +1417,8 @@ gl::Error Renderer9::drawElementsImpl(const gl::Context *context,
 
     ANGLE_TRY(applyIndexBuffer(context, indices, count, mode, type, &indexInfo));
 
-    const auto &drawCallParams = context->getParams<gl::DrawCallParams>();
-    ANGLE_TRY(drawCallParams.ensureIndexRangeResolved(context));
-
-    const gl::IndexRange &indexRange = drawCallParams.getIndexRange();
+    const auto &lazyIndexRange       = context->getParams<gl::HasIndexRange>();
+    const gl::IndexRange &indexRange = lazyIndexRange.getIndexRange().value();
     size_t vertexCount               = indexRange.vertexCount();
     ANGLE_TRY(applyVertexBuffer(context, mode, static_cast<GLsizei>(indexRange.start),
                                 static_cast<GLsizei>(vertexCount), instances, &indexInfo));
@@ -1806,8 +1824,8 @@ gl::Error Renderer9::applyShaders(const gl::Context *context, GLenum drawMode)
 
 gl::Error Renderer9::applyUniforms(ProgramD3D *programD3D)
 {
-    // Skip updates if we're not dirty. Note that D3D9 cannot have compute or geometry.
-    if (!programD3D->anyShaderUniformsDirty())
+    // Skip updates if we're not dirty. Note that D3D9 cannot have compute.
+    if (!programD3D->areVertexUniformsDirty() && !programD3D->areFragmentUniformsDirty())
     {
         return gl::NoError();
     }
@@ -1909,8 +1927,8 @@ void Renderer9::applyUniformnbv(const D3DUniform *targetUniform, const GLint *v)
 
 gl::Error Renderer9::clear(const gl::Context *context,
                            const ClearParameters &clearParams,
-                           const RenderTarget9 *colorRenderTarget,
-                           const RenderTarget9 *depthStencilRenderTarget)
+                           const gl::FramebufferAttachment *colorBuffer,
+                           const gl::FramebufferAttachment *depthStencilBuffer)
 {
     if (clearParams.colorType != GL_FLOAT)
     {
@@ -1935,16 +1953,23 @@ gl::Error Renderer9::clear(const gl::Context *context,
     DWORD stencil = clearParams.stencilValue & 0x000000FF;
 
     unsigned int stencilUnmasked = 0x0;
-    if (clearParams.clearStencil && depthStencilRenderTarget)
+    if (clearParams.clearStencil && depthStencilBuffer->getStencilSize() > 0)
     {
-        const gl::InternalFormat &depthStencilFormat =
-            gl::GetSizedInternalFormatInfo(depthStencilRenderTarget->getInternalFormat());
-        if (depthStencilFormat.stencilBits > 0)
+        ASSERT(depthStencilBuffer != nullptr);
+
+        RenderTargetD3D *stencilRenderTarget = nullptr;
+        gl::Error error = depthStencilBuffer->getRenderTarget(context, &stencilRenderTarget);
+        if (error.isError())
         {
-            const d3d9::D3DFormat &d3dFormatInfo =
-                d3d9::GetD3DFormatInfo(depthStencilRenderTarget->getD3DFormat());
-            stencilUnmasked = (0x1 << d3dFormatInfo.stencilBits) - 1;
+            return error;
         }
+
+        RenderTarget9 *stencilRenderTarget9 = GetAs<RenderTarget9>(stencilRenderTarget);
+        ASSERT(stencilRenderTarget9);
+
+        const d3d9::D3DFormat &d3dFormatInfo =
+            d3d9::GetD3DFormatInfo(stencilRenderTarget9->getD3DFormat());
+        stencilUnmasked = (0x1 << d3dFormatInfo.stencilBits) - 1;
     }
 
     const bool needMaskedStencilClear =
@@ -1955,12 +1980,21 @@ gl::Error Renderer9::clear(const gl::Context *context,
     D3DCOLOR color            = D3DCOLOR_ARGB(255, 0, 0, 0);
     if (clearColor)
     {
-        ASSERT(colorRenderTarget != nullptr);
+        ASSERT(colorBuffer != nullptr);
 
-        const gl::InternalFormat &formatInfo =
-            gl::GetSizedInternalFormatInfo(colorRenderTarget->getInternalFormat());
+        RenderTargetD3D *colorRenderTarget = nullptr;
+        gl::Error error = colorBuffer->getRenderTarget(context, &colorRenderTarget);
+        if (error.isError())
+        {
+            return error;
+        }
+
+        RenderTarget9 *colorRenderTarget9 = GetAs<RenderTarget9>(colorRenderTarget);
+        ASSERT(colorRenderTarget9);
+
+        const gl::InternalFormat &formatInfo = *colorBuffer->getFormat().info;
         const d3d9::D3DFormat &d3dFormatInfo =
-            d3d9::GetD3DFormatInfo(colorRenderTarget->getD3DFormat());
+            d3d9::GetD3DFormatInfo(colorRenderTarget9->getD3DFormat());
 
         color =
             D3DCOLOR_ARGB(gl::unorm<8>((formatInfo.alphaBits == 0 && d3dFormatInfo.alphaBits > 0)
@@ -2206,7 +2240,11 @@ void Renderer9::releaseDeviceResources()
 
     for (int i = 0; i < NUM_NULL_COLORBUFFER_CACHE_ENTRIES; i++)
     {
-        SafeDelete(mNullRenderTargetCache[i].renderTarget);
+        if (mNullColorbufferCache[i].buffer)
+        {
+            mNullColorbufferCache[i].buffer->detach(mDisplay->getProxyContext());
+        }
+        SafeDelete(mNullColorbufferCache[i].buffer);
     }
 }
 
@@ -2342,7 +2380,7 @@ bool Renderer9::isRemovedDeviceResettable() const
 
     SafeRelease(d3d9Ex);
 #else
-    UNREACHABLE();
+    ASSERT(UNREACHABLE());
 #endif
 
     return success;
@@ -2473,7 +2511,7 @@ gl::Error Renderer9::copyImageCube(const gl::Context *context,
                                    GLenum destFormat,
                                    const gl::Offset &destOffset,
                                    TextureStorage *storage,
-                                   gl::TextureTarget target,
+                                   GLenum target,
                                    GLint level)
 {
     RECT rect;
@@ -2520,7 +2558,7 @@ gl::Error Renderer9::copyTexture(const gl::Context *context,
                                  GLenum destType,
                                  const gl::Offset &destOffset,
                                  TextureStorage *storage,
-                                 gl::TextureTarget destTarget,
+                                 GLenum destTarget,
                                  GLint destLevel,
                                  bool unpackFlipY,
                                  bool unpackPremultiplyAlpha,
@@ -2656,7 +2694,7 @@ gl::Error Renderer9::loadExecutable(const uint8_t *function,
 
     switch (type)
     {
-        case gl::ShaderType::Vertex:
+        case gl::SHADER_VERTEX:
         {
             IDirect3DVertexShader9 *vshader = nullptr;
             gl::Error error = createVertexShader((DWORD *)function, length, &vshader);
@@ -2667,7 +2705,7 @@ gl::Error Renderer9::loadExecutable(const uint8_t *function,
             *outExecutable = new ShaderExecutable9(function, length, vshader);
         }
         break;
-        case gl::ShaderType::Fragment:
+        case gl::SHADER_FRAGMENT:
         {
             IDirect3DPixelShader9 *pshader = nullptr;
             gl::Error error                = createPixelShader((DWORD *)function, length, &pshader);
@@ -2701,10 +2739,10 @@ gl::Error Renderer9::compileToExecutable(gl::InfoLog &infoLog,
 
     switch (type)
     {
-        case gl::ShaderType::Vertex:
+        case gl::SHADER_VERTEX:
             profileStream << "vs";
             break;
-        case gl::ShaderType::Fragment:
+        case gl::SHADER_FRAGMENT:
             profileStream << "ps";
             break;
         default:
@@ -2998,7 +3036,7 @@ GLenum Renderer9::getVertexComponentType(gl::VertexFormatType vertexFormatType) 
 
 gl::ErrorOrResult<unsigned int> Renderer9::getVertexSpaceRequired(const gl::VertexAttribute &attrib,
                                                                   const gl::VertexBinding &binding,
-                                                                  size_t count,
+                                                                  GLsizei count,
                                                                   GLsizei instances) const
 {
     if (!attrib.enabled)
@@ -3221,8 +3259,7 @@ gl::Error Renderer9::applyTextures(const gl::Context *context, gl::ShaderType sh
         }
         else
         {
-            gl::TextureType textureType =
-                programD3D->getSamplerTextureType(shaderType, samplerIndex);
+            GLenum textureType = programD3D->getSamplerTextureType(shaderType, samplerIndex);
 
             // Texture is not sampler complete or it is in use by the framebuffer.  Bind the
             // incomplete texture.
@@ -3235,9 +3272,8 @@ gl::Error Renderer9::applyTextures(const gl::Context *context, gl::ShaderType sh
     }
 
     // Set all the remaining textures to NULL
-    size_t samplerCount = (shaderType == gl::ShaderType::Fragment)
-                              ? caps.maxTextureImageUnits
-                              : caps.maxVertexTextureImageUnits;
+    size_t samplerCount = (shaderType == gl::SHADER_FRAGMENT) ? caps.maxTextureImageUnits
+                                                              : caps.maxVertexTextureImageUnits;
 
     // TODO(jmadill): faster way?
     for (size_t samplerIndex = samplerRange; samplerIndex < samplerCount; samplerIndex++)
@@ -3250,8 +3286,8 @@ gl::Error Renderer9::applyTextures(const gl::Context *context, gl::ShaderType sh
 
 gl::Error Renderer9::applyTextures(const gl::Context *context)
 {
-    ANGLE_TRY(applyTextures(context, gl::ShaderType::Vertex));
-    ANGLE_TRY(applyTextures(context, gl::ShaderType::Fragment));
+    ANGLE_TRY(applyTextures(context, gl::SHADER_VERTEX));
+    ANGLE_TRY(applyTextures(context, gl::SHADER_FRAGMENT));
     return gl::NoError();
 }
 

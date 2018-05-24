@@ -148,6 +148,8 @@ class Renderer11 : public RendererD3D
                                    HANDLE shareHandle,
                                    const egl::AttributeMap &attribs) const override;
 
+    bool applyPrimitiveType(const gl::State &glState, GLenum mode, GLsizei count);
+
     // lost device
     bool testDeviceLost() override;
     bool testDeviceResettable() override;
@@ -180,7 +182,7 @@ class Renderer11 : public RendererD3D
                             GLenum destFormat,
                             const gl::Offset &destOffset,
                             TextureStorage *storage,
-                            gl::TextureTarget target,
+                            GLenum target,
                             GLint level) override;
     gl::Error copyImage3D(const gl::Context *context,
                           const gl::Framebuffer *framebuffer,
@@ -205,7 +207,7 @@ class Renderer11 : public RendererD3D
                           GLenum destType,
                           const gl::Offset &destOffset,
                           TextureStorage *storage,
-                          gl::TextureTarget destTarget,
+                          GLenum destTarget,
                           GLint destLevel,
                           bool unpackFlipY,
                           bool unpackPremultiplyAlpha,
@@ -343,7 +345,7 @@ class Renderer11 : public RendererD3D
     // function.
     gl::ErrorOrResult<unsigned int> getVertexSpaceRequired(const gl::VertexAttribute &attrib,
                                                            const gl::VertexBinding &binding,
-                                                           size_t count,
+                                                           GLsizei count,
                                                            GLsizei instances) const override;
 
     gl::Error readFromAttachment(const gl::Context *context,
@@ -378,10 +380,24 @@ class Renderer11 : public RendererD3D
 
     DeviceImpl *createEGLDevice() override;
 
-    gl::Error drawArrays(const gl::Context *context, const gl::DrawCallParams &params);
-    gl::Error drawElements(const gl::Context *context, const gl::DrawCallParams &params);
-    gl::Error drawArraysIndirect(const gl::Context *context, const gl::DrawCallParams &params);
-    gl::Error drawElementsIndirect(const gl::Context *context, const gl::DrawCallParams &params);
+    gl::Error drawArrays(const gl::Context *context,
+                         GLenum mode,
+                         GLint startVertex,
+                         GLsizei count,
+                         GLsizei instances);
+
+    gl::Error drawElements(const gl::Context *context,
+                           GLenum mode,
+                           GLsizei count,
+                           GLenum type,
+                           const void *indices,
+                           GLsizei instances);
+
+    gl::Error drawArraysIndirect(const gl::Context *context, GLenum mode, const void *indirect);
+    gl::Error drawElementsIndirect(const gl::Context *context,
+                                   GLenum mode,
+                                   GLenum type,
+                                   const void *indirect);
 
     // Necessary hack for default framebuffers in D3D.
     FramebufferImpl *createDefaultFramebuffer(const gl::FramebufferState &state) override;
@@ -461,13 +477,13 @@ class Renderer11 : public RendererD3D
     angle::WorkaroundsD3D generateWorkarounds() const override;
 
     gl::Error drawLineLoop(const gl::Context *context,
-                           GLuint count,
+                           GLsizei count,
                            GLenum type,
                            const void *indices,
                            int baseVertex,
                            int instances);
     gl::Error drawTriangleFan(const gl::Context *context,
-                              GLuint count,
+                              GLsizei count,
                               GLenum type,
                               const void *indices,
                               int baseVertex,
