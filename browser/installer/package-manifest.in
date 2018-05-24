@@ -299,6 +299,7 @@
 @RESPATH@/components/CaptivePortalDetectComponents.manifest
 @RESPATH@/components/captivedetect.js
 @RESPATH@/components/servicesComponents.manifest
+@RESPATH@/components/servicesSettings.manifest
 @RESPATH@/components/cryptoComponents.manifest
 @RESPATH@/components/TelemetryStartup.js
 @RESPATH@/components/TelemetryStartup.manifest
