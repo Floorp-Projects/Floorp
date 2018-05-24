@@ -93,6 +93,7 @@ nsChangeHint
 ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
                                    uint32_t* aEqualStructs)
 {
+  MOZ_ASSERT(aNewContext);
   AUTO_PROFILER_LABEL("ComputedStyle::CalcStyleDifference", CSS);
 
   static_assert(nsStyleStructID_Length <= 32,
@@ -101,7 +102,6 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
   *aEqualStructs = 0;
 
   nsChangeHint hint = nsChangeHint(0);
-  NS_ENSURE_TRUE(aNewContext, hint);
   // We must always ensure that we populate the structs on the new style
   // context that are filled in on the old context, so that if we get
   // two style changes in succession, the second of which causes a real
@@ -270,12 +270,12 @@ ComputedStyle::CalcStyleDifference(ComputedStyle* aNewContext,
     // doesn't use Peek* functions to get the structs on the old
     // context.  But this isn't a big concern because these struct
     // getters should be called during frame construction anyway.
-    if (ThreadsafeStyleDisplay()->IsAbsPosContainingBlockForAppropriateFrame(this) ==
+    if (ThreadsafeStyleDisplay()->IsAbsPosContainingBlockForAppropriateFrame(*this) ==
         aNewContext->ThreadsafeStyleDisplay()->
-          IsAbsPosContainingBlockForAppropriateFrame(aNewContext) &&
-        ThreadsafeStyleDisplay()->IsFixedPosContainingBlockForAppropriateFrame(this) ==
+          IsAbsPosContainingBlockForAppropriateFrame(*aNewContext) &&
+        ThreadsafeStyleDisplay()->IsFixedPosContainingBlockForAppropriateFrame(*this) ==
         aNewContext->ThreadsafeStyleDisplay()->
-          IsFixedPosContainingBlockForAppropriateFrame(aNewContext)) {
+          IsFixedPosContainingBlockForAppropriateFrame(*aNewContext)) {
       // While some styles that cause the frame to be a containing block
       // has changed, the overall result hasn't.
       hint &= ~nsChangeHint_UpdateContainingBlock;

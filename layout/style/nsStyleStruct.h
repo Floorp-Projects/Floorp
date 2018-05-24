@@ -2508,12 +2508,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
    * The same as IsAbsPosContainingBlock, except skipping the tests that
    * are based on the frame rather than the ComputedStyle (thus
    * potentially returning a false positive).
-   *
-   * FIXME(stylo-everywhere): Pretty sure the template can go here.
    */
-  template<class ComputedStyleLike>
   inline bool IsAbsPosContainingBlockForAppropriateFrame(
-                ComputedStyleLike* aComputedStyle) const;
+    mozilla::ComputedStyle&) const;
 
   /**
    * Returns true when the element has the transform property
@@ -2540,12 +2537,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
    * The same as IsFixedPosContainingBlock, except skipping the tests that
    * are based on the frame rather than the ComputedStyle (thus
    * potentially returning a false positive).
-   *
-   * FIXME(stylo-everywhere): Pretty sure the template can go here.
    */
-  template<class ComputedStyleLike>
   inline bool IsFixedPosContainingBlockForAppropriateFrame(
-                ComputedStyleLike* aComputedStyle) const;
+    mozilla::ComputedStyle&) const;
 
   /**
    * Returns the final combined transform.
@@ -2562,14 +2556,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
 private:
   // Helpers for above functions, which do some but not all of the tests
   // for them (since transform must be tested separately for each).
-  //
-  // FIXME(stylo-everywhere): Pretty sure the template can go here.
-  template<class ComputedStyleLike>
-  inline bool HasAbsPosContainingBlockStyleInternal(
-                ComputedStyleLike* aComputedStyle) const;
-  template<class ComputedStyleLike>
+  inline bool HasAbsPosContainingBlockStyleInternal() const;
   inline bool HasFixedPosContainingBlockStyleInternal(
-                ComputedStyleLike* aComputedStyle) const;
+    mozilla::ComputedStyle&) const;
   void GenerateCombinedTransform();
 public:
   // Return the 'float' and 'clear' properties, with inline-{start,end} values
