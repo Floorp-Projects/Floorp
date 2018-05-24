@@ -140,7 +140,7 @@ nsBufferedStream::Seek(int32_t whence, int64_t offset)
     nsCOMPtr<nsISeekableStream> ras = do_QueryInterface(mStream, &rv);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG
-        NS_ERROR("mStream doesn't QI to nsISeekableStream");
+        NS_WARNING("mStream doesn't QI to nsISeekableStream");
 #endif
         return rv;
     }

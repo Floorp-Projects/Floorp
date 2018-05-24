@@ -10,6 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
+#include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
@@ -230,8 +231,7 @@ public:
   ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                uint32_t aCount, uint32_t *aResult) override
   {
-    MOZ_CRASH("This should not be called!");
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_IMETHOD
@@ -281,8 +281,7 @@ public:
   ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                uint32_t aCount, uint32_t *aResult) override
   {
-    MOZ_CRASH("This should not be called!");
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_IMETHOD
@@ -385,6 +384,90 @@ TEST(TestMultiplexInputStream, Available) {
   rv = s->Available(&length);
   ASSERT_EQ(NS_OK, rv);
   ASSERT_EQ(buffer.Length(), length);
+}
+
+class NonBufferableStringStream final : public nsIInputStream
+{
+  nsCOMPtr<nsIInputStream> mStream;
+
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit NonBufferableStringStream(const nsACString& aBuffer)
+  {
+    NS_NewCStringInputStream(getter_AddRefs(mStream), aBuffer);
+  }
+
+  NS_IMETHOD
+  Available(uint64_t* aLength) override
+  {
+    return mStream->Available(aLength);
+  }
+
+  NS_IMETHOD
+  Read(char* aBuffer, uint32_t aCount, uint32_t* aReadCount) override
+  {
+    return mStream->Read(aBuffer, aCount, aReadCount);
+  }
+
+  NS_IMETHOD
+  ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
+               uint32_t aCount, uint32_t *aResult) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD
+  Close() override
+  {
+    return mStream->Close();
+  }
+
+  NS_IMETHOD
+  IsNonBlocking(bool* aNonBlocking) override
+  {
+    return mStream->IsNonBlocking(aNonBlocking);
+  }
+
+private:
+  ~NonBufferableStringStream() = default;
+};
+
+NS_IMPL_ISUPPORTS(NonBufferableStringStream, nsIInputStream)
+
+TEST(TestMultiplexInputStream, Bufferable) {
+  nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
+    do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
+
+  nsCOMPtr<nsIInputStream> s = do_QueryInterface(multiplexStream);
+  ASSERT_TRUE(!!s);
+
+  nsCString buf1;
+  buf1.AssignLiteral("Hello ");
+  nsCOMPtr<nsIInputStream> inputStream1;
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputStream1), buf1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCString buf2;
+  buf2.AssignLiteral("world");
+  nsCOMPtr<nsIInputStream> inputStream2 = new NonBufferableStringStream(buf2);
+
+  rv = multiplexStream->AppendStream(inputStream1);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  rv = multiplexStream->AppendStream(inputStream2);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCOMPtr<nsIInputStream> stream(do_QueryInterface(multiplexStream));
+  ASSERT_TRUE(!!stream);
+
+  char buf3[1024];
+  uint32_t size = 0;
+  rv = stream->ReadSegments(NS_CopySegmentToBuffer, buf3, sizeof(buf3), &size);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  ASSERT_EQ(size, buf1.Length() + buf2.Length());
+  ASSERT_TRUE(!strncmp(buf3, "Hello world", size));
 }
 
 TEST(TestMultiplexInputStream, QILengthInputStream) {
