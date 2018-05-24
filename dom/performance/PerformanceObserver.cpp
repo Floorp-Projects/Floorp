@@ -146,7 +146,6 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
                              ErrorResult& aRv)
 {
   if (aOptions.mEntryTypes.IsEmpty()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
@@ -161,7 +160,6 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
   }
 
   if (validEntryTypes.IsEmpty()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
 
