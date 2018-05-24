@@ -1,0 +1,2 @@
+# Register resource aliases
+resource services-settings resource://gre/modules/services-settings/
