@@ -57,28 +57,36 @@
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file">
         <vbox id="tracking-protection-content" flex="1">
-          <label class="identity-popup-headline"
+          <label id="tracking-protection-label-on"
+                 class="identity-popup-headline"
                  crop="end"
-                 value="&trackingProtection.title;" />
+                 value="&trackingProtection.on;" />
+          <label id="tracking-protection-label-off"
+                 class="identity-popup-headline"
+                 crop="end"
+                 value="&trackingProtection.off;" />
 
           <description id="tracking-blocked"
                        crop="end">&trackingProtection.detectedBlocked3;</description>
           <description id="tracking-loaded"
-                       crop="end">&trackingProtection.detectedNotBlocked3;</description>
+                       crop="end">&trackingProtection.detectedNotBlocked4;</description>
           <description id="tracking-not-detected"
-                       crop="end">&trackingProtection.notDetected3;</description>
+                       crop="end">&trackingProtection.notDetected4;</description>
 
           <button id="tracking-action-unblock"
-                  label="&trackingProtection.unblock.label;"
-                  accesskey="&trackingProtection.unblock.accesskey;"
+                  class="tracking-protection-button"
+                  label="&trackingProtection.unblock2.label;"
+                  accesskey="&trackingProtection.unblock2.accesskey;"
                   oncommand="TrackingProtection.disableForCurrentPage();" />
           <button id="tracking-action-unblock-private"
-                  label="&trackingProtection.unblockPrivate.label;"
-                  accesskey="&trackingProtection.unblockPrivate.accesskey;"
+                  class="tracking-protection-button"
+                  label="&trackingProtection.unblockPrivate2.label;"
+                  accesskey="&trackingProtection.unblockPrivate2.accesskey;"
                   oncommand="TrackingProtection.disableForCurrentPage();" />
           <button id="tracking-action-block"
-                  label="&trackingProtection.block2.label;"
-                  accesskey="&trackingProtection.block2.accesskey;"
+                  class="tracking-protection-button"
+                  label="&trackingProtection.block3.label;"
+                  accesskey="&trackingProtection.block3.accesskey;"
                   oncommand="TrackingProtection.enableForCurrentPage();" />
         </vbox>
       </hbox>
