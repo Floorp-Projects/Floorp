@@ -3117,9 +3117,6 @@ pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ComputedStyleBorrowe
     if flags.contains(ComputedValueFlags::IS_IN_PSEUDO_ELEMENT_SUBTREE) {
         result |= structs::NS_STYLE_HAS_PSEUDO_ELEMENT_DATA as u64;
     }
-    if flags.contains(ComputedValueFlags::IS_IN_DISPLAY_NONE_SUBTREE) {
-        result |= structs::NS_STYLE_IN_DISPLAY_NONE_SUBTREE as u64;
-    }
     result
 }
 
