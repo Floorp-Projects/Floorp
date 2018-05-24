@@ -283,7 +283,7 @@ Reify(JSContext* cx, JSCompartment* origin, HandleObject objp)
     Rooted<PropertyIteratorObject*> iterObj(cx, &objp->as<PropertyIteratorObject>());
     NativeIterator* ni = iterObj->getNativeIterator();
 
-    RootedObject obj(cx, &ni->objectBeingIterated());
+    RootedObject obj(cx, ni->objectBeingIterated());
     {
         AutoCloseIterator close(cx, iterObj);
 
