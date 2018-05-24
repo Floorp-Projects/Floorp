@@ -148,7 +148,7 @@ describe("ASRouter", () => {
       await Router.sendNextMessage(targetStub, null);
 
       assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.currentId, ALL_MESSAGE_IDS[0]);
+      assert.equal(Router.state.lastMessageId, ALL_MESSAGE_IDS[0]);
     });
     it("should not return a message if all messages are blocked", async () => {
       await Router.setState(() => ({blockList: ALL_MESSAGE_IDS}));
@@ -157,7 +157,7 @@ describe("ASRouter", () => {
       await Router.sendNextMessage(targetStub, null);
 
       assert.calledOnce(targetStub.sendAsyncMessage);
-      assert.equal(Router.state.currentId, null);
+      assert.equal(Router.state.lastMessageId, null);
     });
   });
 
@@ -173,17 +173,17 @@ describe("ASRouter", () => {
   });
 
   describe("#onMessage: CONNECT_UI_REQUEST", () => {
-    it("should set state.currentId to a message id", async () => {
+    it("should set state.lastMessageId to a message id", async () => {
       await Router.onMessage(fakeAsyncMessage({type: "CONNECT_UI_REQUEST"}));
 
-      assert.include(ALL_MESSAGE_IDS, Router.state.currentId);
+      assert.include(ALL_MESSAGE_IDS, Router.state.lastMessageId);
     });
     it("should send a message back to the to the target", async () => {
       // force the only message to be a regular message so getRandomItemFromArray picks it
       await Router.setState({messages: [{id: "foo", template: "simple_template", content: {title: "Foo", body: "Foo123"}}]});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
-      const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.currentId);
+      const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.lastMessageId);
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "SET_MESSAGE", data: currentMessage});
     });
     it("should send a message back to the to the target if there is a bundle, too", async () => {
@@ -191,47 +191,43 @@ describe("ASRouter", () => {
       await Router.setState({messages: [{id: "foo1", template: "simple_template", bundled: 2, content: {title: "Foo1", body: "Foo123-1"}}]});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
-      const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.currentId);
+      const [currentMessage] = Router.state.messages.filter(message => message.id === Router.state.lastMessageId);
       assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME);
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].type, "SET_BUNDLED_MESSAGES");
       assert.equal(msg.target.sendAsyncMessage.firstCall.args[1].data.bundle[0].content, currentMessage.content);
     });
-    it("should send a CLEAR_MESSAGE message and set state.currentId to null if no messages are available", async () => {
+    it("should send a CLEAR_ALL message if no messages are available", async () => {
       await Router.setState({messages: []});
       const msg = fakeAsyncMessage({type: "CONNECT_UI_REQUEST"});
       await Router.onMessage(msg);
 
-      assert.isNull(Router.state.currentId);
-      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
+      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_ALL"});
     });
   });
 
   describe("#onMessage: BLOCK_MESSAGE_BY_ID", () => {
-    it("should add the id to the blockList, state.currentId to null if it is the blocked message id, and send a CLEAR_MESSAGE message", async () => {
-      await Router.setState({currentId: "foo"});
+    it("should add the id to the blockList and broadcast a CLEAR_MESSAGE message with the id", async () => {
+      await Router.setState({lastMessageId: "foo"});
       const msg = fakeAsyncMessage({type: "BLOCK_MESSAGE_BY_ID", data: {id: "foo"}});
       await Router.onMessage(msg);
 
       assert.isTrue(Router.state.blockList.includes("foo"));
-      assert.isNull(Router.state.currentId);
-      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
-      assert.calledOnce(Router._storage.set);
-      assert.calledWithExactly(Router._storage.set, "blockList", ["foo"]);
+      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE", data: {id: "foo"}});
     });
   });
 
   describe("#onMessage: BLOCK_BUNDLE", () => {
-    it("should add all the ids in the bundle to the blockList, state.currentId to null, and send a CLEAR_MESSAGE message", async () => {
-      await Router.setState({currentId: "foo"});
+    it("should add all the ids in the bundle to the blockList and send a CLEAR_BUNDLE message", async () => {
+      const bundleIds = [FAKE_BUNDLE[0].id, FAKE_BUNDLE[1].id];
+      await Router.setState({lastMessageId: "foo"});
       const msg = fakeAsyncMessage({type: "BLOCK_BUNDLE", data: {bundle: FAKE_BUNDLE}});
       await Router.onMessage(msg);
 
       assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[0].id));
       assert.isTrue(Router.state.blockList.includes(FAKE_BUNDLE[1].id));
-      assert.isNull(Router.state.currentId);
-      assert.calledWith(msg.target.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_MESSAGE"});
+      assert.calledWith(channel.sendAsyncMessage, PARENT_TO_CHILD_MESSAGE_NAME, {type: "CLEAR_BUNDLE"});
       assert.calledOnce(Router._storage.set);
-      assert.calledWithExactly(Router._storage.set, "blockList", [FAKE_BUNDLE[0].id, FAKE_BUNDLE[1].id]);
+      assert.calledWithExactly(Router._storage.set, "blockList", bundleIds);
     });
   });
 

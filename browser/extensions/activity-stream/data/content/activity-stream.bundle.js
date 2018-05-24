@@ -112,7 +112,7 @@ const actionTypes = {};
 /* harmony export (immutable) */ __webpack_exports__["c"] = actionTypes;
 
 
-for (const type of ["ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "THEME_UPDATE", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "DOWNLOAD_CHANGED", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "THEME_UPDATE", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "UNINIT", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 }
 
@@ -998,8 +998,17 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_4_react___default.a.Pu
         this.setState({ bundle: action.data });
         break;
       case "CLEAR_MESSAGE":
-        this.setState({ message: {}, bundle: {} });
+        if (action.data.id === this.state.message.id) {
+          this.setState({ message: {} });
+        }
         break;
+      case "CLEAR_BUNDLE":
+        if (this.state.bundle.bundle) {
+          this.setState({ bundle: {} });
+        }
+        break;
+      case "CLEAR_ALL":
+        this.setState({ message: {}, bundle: {} });
     }
   }
 
@@ -2970,6 +2979,18 @@ class SnippetsMap extends Map {
     });
   }
 
+  getAddonsInfo() {
+    return new Promise(resolve => {
+      this._dispatch(__WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["b" /* actionCreators */].OnlyToMain({ type: __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].ADDONS_INFO_REQUEST }));
+      global.addMessageListener("ActivityStream:MainToContent", function onMessage({ data: action }) {
+        if (action.type === __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__["c" /* actionTypes */].ADDONS_INFO_RESPONSE) {
+          resolve(action.data);
+          global.removeMessageListener("ActivityStream:MainToContent", onMessage);
+        }
+      });
+    });
+  }
+
   /**
    * connect - Attaches an indexedDB back-end to the Map so that any set values
    *           are also cached in a store. It also restores any existing values
@@ -3877,7 +3898,7 @@ class ASRouterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureCo
   }
 
   renderMessageItem(msg) {
-    const isCurrent = msg.id === this.state.currentId;
+    const isCurrent = msg.id === this.state.lastMessageId;
     const isBlocked = this.state.blockList.includes(msg.id);
 
     let itemClassName = "message-item";
@@ -4453,7 +4474,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
-const CARDS_PER_ROW = 3;
+const CARDS_PER_ROW_DEFAULT = 3;
+const CARDS_PER_ROW_COMPACT_WIDE = 4;
 
 function getFormattedMessage(message) {
   return typeof message === "string" ? __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
@@ -4466,7 +4488,14 @@ function getFormattedMessage(message) {
 class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponent {
   _dispatchImpressionStats() {
     const { props } = this;
-    const maxCards = 3 * props.maxRows;
+    let cardsPerRow = CARDS_PER_ROW_DEFAULT;
+    if (props.compactCards && global.matchMedia(`(min-width: 1072px)`).matches) {
+      // If the section has compact cards and the viewport is wide enough, we show
+      // 4 columns instead of 3.
+      // $break-point-widest = 1072px (from _variables.scss)
+      cardsPerRow = CARDS_PER_ROW_COMPACT_WIDE;
+    }
+    const maxCards = cardsPerRow * props.maxRows;
     const cards = props.rows.slice(0, maxCards);
 
     if (this.needsImpressionStats(cards)) {
@@ -4552,36 +4581,48 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
     return false;
   }
 
-  numberOfPlaceholders(items) {
-    if (items === 0) {
-      return CARDS_PER_ROW;
-    }
-    const remainder = items % CARDS_PER_ROW;
-    if (remainder === 0) {
-      return 0;
-    }
-    return CARDS_PER_ROW - remainder;
-  }
-
   render() {
     const {
       id, eventSource, title, icon, rows,
-      emptyState, dispatch, maxRows,
+      emptyState, dispatch, compactCards, maxRows,
       contextMenuOptions, initialized, disclaimer,
       pref, privacyNoticeURL, isFirst, isLast
     } = this.props;
-    const maxCards = CARDS_PER_ROW * maxRows;
+
+    const maxCardsPerRow = compactCards ? CARDS_PER_ROW_COMPACT_WIDE : CARDS_PER_ROW_DEFAULT;
+    const maxCards = maxCardsPerRow * maxRows;
+    const maxCardsOnNarrow = CARDS_PER_ROW_DEFAULT * maxRows;
 
     // Show topics only for top stories and if it's not initialized yet (so
     // content doesn't shift when it is loaded) or has loaded with topics
     const shouldShowTopics = id === "topstories" && (!this.props.topics || this.props.topics.length > 0);
 
     const realRows = rows.slice(0, maxCards);
-    const placeholders = this.numberOfPlaceholders(realRows.length);
 
     // The empty state should only be shown after we have initialized and there is no content.
     // Otherwise, we should show placeholders.
     const shouldShowEmptyState = initialized && !rows.length;
+
+    const cards = [];
+    if (!shouldShowEmptyState) {
+      for (let i = 0; i < maxCards; i++) {
+        const link = realRows[i];
+        // On narrow viewports, we only show 3 cards per row. We'll mark the rest as
+        // .hide-for-narrow to hide in CSS via @media query.
+        const className = i >= maxCardsOnNarrow ? "hide-for-narrow" : "";
+        cards.push(link ? __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__["a" /* Card */], { key: i,
+          index: i,
+          className: className,
+          dispatch: dispatch,
+          link: link,
+          contextMenuOptions: contextMenuOptions,
+          eventSource: eventSource,
+          shouldSendImpressionStats: this.props.shouldSendImpressionStats,
+          isWebExtension: this.props.isWebExtension }) : __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__["b" /* PlaceholderCard */], { key: i, className: className }));
+      }
+    }
+
+    const sectionClassName = ["section", compactCards ? "compact-cards" : "normal-cards"].join(" ");
 
     // <Section> <-- React component
     // <section> <-- HTML5 element
@@ -4590,7 +4631,7 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
       this.props,
       __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
         __WEBPACK_IMPORTED_MODULE_3_content_src_components_CollapsibleSection_CollapsibleSection__["a" /* CollapsibleSection */],
-        { className: "section", icon: icon,
+        { className: sectionClassName, icon: icon,
           title: title,
           id: id,
           eventSource: eventSource,
@@ -4606,9 +4647,7 @@ class Section extends __WEBPACK_IMPORTED_MODULE_6_react___default.a.PureComponen
         !shouldShowEmptyState && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           "ul",
           { className: "section-list", style: { padding: 0 } },
-          realRows.map((link, index) => link && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__["a" /* Card */], { key: index, index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions,
-            eventSource: eventSource, shouldSendImpressionStats: this.props.shouldSendImpressionStats, isWebExtension: this.props.isWebExtension })),
-          placeholders > 0 && [...new Array(placeholders)].map((_, i) => __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(__WEBPACK_IMPORTED_MODULE_0_content_src_components_Card_Card__["b" /* PlaceholderCard */], { key: i }))
+          cards
         ),
         shouldShowEmptyState && __WEBPACK_IMPORTED_MODULE_6_react___default.a.createElement(
           "div",
@@ -4699,7 +4738,7 @@ var Actions = __webpack_require__(1);
 const cardContextTypes = {
   history: {
     intlID: "type_label_visited",
-    icon: "historyItem"
+    icon: "history-item"
   },
   bookmark: {
     intlID: "type_label_bookmarked",
@@ -4882,32 +4921,32 @@ class Card__Card extends external__React__default.a.PureComponent {
   }
 
   render() {
-    const { index, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
+    const { index, className, link, dispatch, contextMenuOptions, eventSource, shouldSendImpressionStats } = this.props;
     const { props } = this;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
     const { icon, intlID } = cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
     const hasImage = link.image || link.hasImage;
     const imageStyle = { backgroundImage: link.image ? `url(${link.image})` : "none" };
+    const outerClassName = ["card-outer", className, isContextMenuOpen && "active", props.placeholder && "placeholder"].filter(v => v).join(" ");
 
     return external__React__default.a.createElement(
       "li",
-      { className: `card-outer${isContextMenuOpen ? " active" : ""}${props.placeholder ? " placeholder" : ""}` },
+      { className: outerClassName },
       external__React__default.a.createElement(
         "a",
         { href: link.type === "pocket" ? link.open_url : link.url, onClick: !props.placeholder ? this.onLinkClick : undefined },
         external__React__default.a.createElement(
           "div",
           { className: "card" },
-          hasImage && external__React__default.a.createElement(
+          external__React__default.a.createElement(
             "div",
             { className: "card-preview-image-outer" },
-            external__React__default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
+            hasImage && external__React__default.a.createElement("div", { className: `card-preview-image${this.state.imageLoaded ? " loaded" : ""}`, style: imageStyle })
           ),
           external__React__default.a.createElement(
             "div",
-            { className: `card-details${hasImage ? "" : " no-image"}` },
-            link.type === "download" && external__React__default.a.createElement("div", { className: "card-download-icon icon icon-download-folder" }),
+            { className: "card-details" },
             link.type === "download" && external__React__default.a.createElement(
               "div",
               { className: "card-host-name alternate" },
@@ -4916,11 +4955,12 @@ class Card__Card extends external__React__default.a.PureComponent {
             link.hostname && external__React__default.a.createElement(
               "div",
               { className: "card-host-name" },
-              link.hostname
+              link.hostname,
+              link.type === "download" && `  \u2014 ${link.description}`
             ),
             external__React__default.a.createElement(
               "div",
-              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name", hasImage ? "" : "no-image"].join(" ") },
+              { className: ["card-text", icon ? "" : "no-context", link.description ? "" : "no-description", link.hostname ? "" : "no-host-name"].join(" ") },
               external__React__default.a.createElement(
                 "h4",
                 { className: "card-title", dir: "auto" },
@@ -4979,7 +5019,7 @@ Card__Card.defaultProps = { link: {} };
 const Card = Object(external__ReactRedux_["connect"])(state => ({ platform: state.Prefs.values.platform }))(Card__Card);
 /* harmony export (immutable) */ __webpack_exports__["a"] = Card;
 
-const PlaceholderCard = () => external__React__default.a.createElement(Card, { placeholder: true });
+const PlaceholderCard = props => external__React__default.a.createElement(Card, { placeholder: true, className: props.className });
 /* harmony export (immutable) */ __webpack_exports__["b"] = PlaceholderCard;
 
 
@@ -5775,7 +5815,7 @@ class _StartupOverlay extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pure
             ),
             __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(
               "form",
-              { method: "get", action: "https://accounts.firefox.com", target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
+              { method: "get", action: "https://accounts.firefox.com?entrypoint=activity-stream-firstrun&utm_source=activity-stream&utm_campaign=firstrun", target: "_blank", rel: "noopener noreferrer", onSubmit: this.onSubmit },
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "service", type: "hidden", value: "sync" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "action", type: "hidden", value: "email" }),
               __WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement("input", { name: "context", type: "hidden", value: "fx_desktop_v3" }),

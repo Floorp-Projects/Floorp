@@ -89,7 +89,7 @@ this.SnippetsFeed = class SnippetsFeed {
     });
   }
 
-  async getAddonInfo() {
+  async getAddonsInfo(target) {
     const {addons, fullData} = await AddonManager.getActiveAddons(["extension", "service"]);
     const info = {};
     for (const addon of addons) {
@@ -107,7 +107,8 @@ this.SnippetsFeed = class SnippetsFeed {
         });
       }
     }
-    return info;
+    const data = {addons: info, isFullData: fullData};
+    this.store.dispatch(ac.OnlyToOneContent({type: at.ADDONS_INFO_RESPONSE, data}, target));
   }
 
   async getTotalBookmarksCount(target) {
@@ -152,7 +153,6 @@ this.SnippetsFeed = class SnippetsFeed {
       selectedSearchEngine: await this.getSelectedSearchEngine(),
       defaultBrowser: this.isDefaultBrowser(),
       isDevtoolsUser: this.isDevtoolsUser(),
-      addonInfo: await this.getAddonInfo(),
       blockList: await this._getBlockList() || [],
       previousSessionEnd: this._previousSessionEnd
     };
@@ -193,7 +193,7 @@ this.SnippetsFeed = class SnippetsFeed {
     browser.loadURI(url);
   }
 
-  onAction(action) {
+  async onAction(action) {
     switch (action.type) {
       case at.INIT:
         this.init();
@@ -213,6 +213,9 @@ this.SnippetsFeed = class SnippetsFeed {
         break;
       case at.TOTAL_BOOKMARKS_REQUEST:
         this.getTotalBookmarksCount(action.meta.fromTarget);
+        break;
+      case at.ADDONS_INFO_REQUEST:
+        await this.getAddonsInfo(action.meta.fromTarget);
         break;
     }
   }

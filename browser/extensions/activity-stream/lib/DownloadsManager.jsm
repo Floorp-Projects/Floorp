@@ -22,14 +22,6 @@ class DownloadElement extends DownloadsViewUI.DownloadElementShell {
     return this._download;
   }
 
-  get fileType() {
-    if (!this.download.target.path) {
-      return null;
-    }
-    let items = this.download.target.path.split(".");
-    return items[items.length - 1].toUpperCase();
-  }
-
   downloadsCmd_copyLocation() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(this.download.source.url);
@@ -52,14 +44,7 @@ this.DownloadsManager = class DownloadsManager {
 
   formatDownload(element) {
     const downloadedItem = element.download;
-    let description;
-    if (element.fileType) {
-      // If we have a file type: '1.5 MB — PNG'
-      description = `${element.sizeStrings.stateLabel} \u2014 ${element.fileType}`;
-    } else {
-      // If we do not have a file type: '1.5 MB'
-      description = `${element.sizeStrings.stateLabel}`;
-    }
+    const description = element.sizeStrings.stateLabel;
     return {
       hostname: new URL(downloadedItem.source.url).hostname,
       url: downloadedItem.source.url,

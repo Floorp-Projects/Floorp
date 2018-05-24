@@ -41,6 +41,7 @@ const BUILT_IN_SECTIONS = {
       button: {id: "section_disclaimer_topstories_buttontext"}
     },
     privacyNoticeURL: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
+    compactCards: false,
     maxRows: 1,
     availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     emptyState: {
@@ -73,7 +74,8 @@ const BUILT_IN_SECTIONS = {
     eventSource: "HIGHLIGHTS",
     icon: "highlights",
     title: {id: "header_highlights"},
-    maxRows: 3,
+    compactCards: true,
+    maxRows: 2,
     emptyState: {
       message: {id: "highlights_empty_state"},
       icon: "highlights"
