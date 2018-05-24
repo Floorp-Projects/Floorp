@@ -3111,15 +3111,6 @@ public:
     return ResolveToLength<true>(aGap, aPercentageBasis);
   }
 
-  /**
-   * Get the computed style for the given scrollbar part frame.
-   *
-   * Generally it returns the computed style of the scroll frame which
-   * contains the given part frame. If the scroll frame is for the
-   * viewport, the computed style of the document element is returned.
-   */
-  static ComputedStyle* StyleForScrollbar(nsIFrame* aScrollbarPart);
-
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
