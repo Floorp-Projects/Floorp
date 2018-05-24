@@ -52,6 +52,7 @@ public final class Tab extends Actor {
      */
     public void detach() {
         sendPacket("{\"type\":\"detach\"}", TAB_STATE_PARSER).get();
+        release();
     }
 
     /**
