@@ -9,7 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.util.schema import Schema
-from taskgraph.transforms.job.common import support_vcs_checkout, docker_worker_use_artifacts
+from taskgraph.transforms.job.common import support_use_artifacts, support_vcs_checkout
 from voluptuous import Required, Any
 
 run_task_schema = Schema({
@@ -51,6 +51,9 @@ def common_setup(config, job, taskdesc):
         support_vcs_checkout(config, job, taskdesc,
                              sparse=bool(run['sparse-profile']))
 
+    if run['use-artifacts']:
+        support_use_artifacts(config, job, taskdesc, run['use-artifacts'])
+
     taskdesc['worker'].setdefault('env', {})['MOZ_SCM_LEVEL'] = config.params['level']
 
 
@@ -65,7 +68,7 @@ def add_checkout_to_command(run, command):
                        run['sparse-profile'])
 
 
-docker_defaults = {
+defaults = {
     'cache-dotcache': False,
     'checkout': True,
     'comm-checkout': False,
@@ -74,14 +77,11 @@ docker_defaults = {
 }
 
 
-@run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=docker_defaults)
+@run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=defaults)
 def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
     common_setup(config, job, taskdesc)
-
-    if run['use-artifacts']:
-        docker_worker_use_artifacts(config, job, taskdesc, run['use-artifacts'])
 
     if run.get('cache-dotcache'):
         worker['caches'].append({
@@ -108,7 +108,7 @@ def docker_worker_run_task(config, job, taskdesc):
     worker['command'] = command
 
 
-@run_job_using("native-engine", "run-task", schema=run_task_schema)
+@run_job_using("native-engine", "run-task", schema=run_task_schema, defaults=defaults)
 def native_engine_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']
