@@ -1983,8 +1983,8 @@ BaselineCacheIRCompiler::emitGuardAndGetIterator()
     masm.branchTest32(Assembler::NonZero, Address(niScratch, offsetof(NativeIterator, flags)),
                       Imm32(JSITER_ACTIVE|JSITER_UNREUSABLE), failure->label());
 
-    // Pre-write barrier for store to 'obj'.
-    Address iterObjAddr(niScratch, offsetof(NativeIterator, obj));
+    // Pre-write barrier for store to 'objectBeingIterated_'.
+    Address iterObjAddr(niScratch, NativeIterator::offsetOfObjectBeingIterated());
     EmitPreBarrier(masm, iterObjAddr, MIRType::Object);
 
     // Mark iterator as active.
@@ -1992,7 +1992,7 @@ BaselineCacheIRCompiler::emitGuardAndGetIterator()
     masm.storePtr(obj, iterObjAddr);
     masm.or32(Imm32(JSITER_ACTIVE), iterFlagsAddr);
 
-    // Post-write barrier for stores to 'obj'.
+    // Post-write barrier for stores to 'objectBeingIterated_'.
     emitPostBarrierSlot(output, TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), scratch1);
 
     // Chain onto the active iterator stack. Note that Baseline CacheIR stub

@@ -32,11 +32,10 @@ class PropertyIteratorObject;
 
 struct NativeIterator
 {
-  public:
-    // Object being iterated.
-    GCPtrObject obj = {};
-
   private:
+    // Object being iterated.  Non-null except in NativeIterator sentinels.
+    GCPtrObject objectBeingIterated_ = {};
+
     // Internal iterator object.
     JSObject* iterObj_ = nullptr;
 
@@ -87,6 +86,14 @@ struct NativeIterator
 
     /** Initialize a |JSCompartment::enumerators| sentinel. */
     NativeIterator();
+
+    JSObject& objectBeingIterated() const {
+        return *objectBeingIterated_;
+    }
+
+    void changeObjectBeingIterated(JSObject& obj) {
+        objectBeingIterated_ = &obj;
+    }
 
     HeapReceiverGuard* guardsBegin() const {
         static_assert(alignof(HeapReceiverGuard) <= alignof(NativeIterator),
@@ -143,13 +150,6 @@ struct NativeIterator
         return next_;
     }
 
-    static inline size_t offsetOfNext() {
-        return offsetof(NativeIterator, next_);
-    }
-    static inline size_t offsetOfPrev() {
-        return offsetof(NativeIterator, prev_);
-    }
-
     void incCursor() {
         propertyCursor_++;
     }
@@ -173,6 +173,10 @@ struct NativeIterator
 
     void trace(JSTracer* trc);
 
+    static constexpr size_t offsetOfObjectBeingIterated() {
+        return offsetof(NativeIterator, objectBeingIterated_);
+    }
+
     static constexpr size_t offsetOfGuardsEnd() {
         return offsetof(NativeIterator, guardsEnd_);
     }
@@ -183,6 +187,14 @@ struct NativeIterator
 
     static constexpr size_t offsetOfPropertiesEnd() {
         return offsetof(NativeIterator, propertiesEnd_);
+    }
+
+    static constexpr size_t offsetOfNext() {
+        return offsetof(NativeIterator, next_);
+    }
+
+    static constexpr size_t offsetOfPrev() {
+        return offsetof(NativeIterator, prev_);
     }
 };
 
