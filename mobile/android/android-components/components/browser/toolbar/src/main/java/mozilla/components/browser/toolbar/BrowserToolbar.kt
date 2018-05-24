@@ -61,7 +61,11 @@ class BrowserToolbar @JvmOverloads constructor(
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         forEach { child ->
-            child.layout(left, top, right, bottom)
+            child.layout(
+                    left + paddingLeft,
+                    top + paddingTop,
+                    right - paddingRight,
+                    bottom - paddingBottom)
         }
     }
 
@@ -73,9 +77,12 @@ class BrowserToolbar @JvmOverloads constructor(
 
         setMeasuredDimension(width, height)
 
-        // Let the children measure themselves using our fixed size
-        val childWidthSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
-        val childHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        // Let the children measure themselves using our fixed size (with padding substraced)
+        val childWidth = width - paddingLeft - paddingRight
+        val childHeight = height - paddingTop - paddingBottom
+
+        val childWidthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY)
+        val childHeightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY)
 
         forEach { child -> child.measure(childWidthSpec, childHeightSpec) }
     }
