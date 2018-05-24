@@ -3108,10 +3108,10 @@ JSScript::finalize(FreeOp* fop)
     // fullyInitFromEmitter() or fullyInitTrivial().
 
     // Collect code coverage information for this script and all its inner
-    // scripts, and store the aggregated information on the compartment.
+    // scripts, and store the aggregated information on the realm.
     MOZ_ASSERT_IF(hasScriptName(), fop->runtime()->lcovOutput().isEnabled());
     if (fop->runtime()->lcovOutput().isEnabled() && hasScriptName()) {
-        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), this, getScriptName());
+        realm()->lcovOutput.collectCodeCoverageInfo(realm(), this, getScriptName());
         destroyScriptName();
     }
 

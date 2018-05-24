@@ -4046,11 +4046,11 @@ ICIteratorMore_Native::Compiler::generateStubCode(MacroAssembler& masm)
                             obj, &failure);
     masm.loadObjPrivate(obj, JSObject::ITER_CLASS_NFIXED_SLOTS, nativeIterator);
 
-    // If props_cursor < props_end, load the next string and advance the cursor.
-    // Else, return MagicValue(JS_NO_ITER_VALUE).
+    // If propertyCursor_ < propertiesEnd_, load the next string and advance
+    // the cursor.  Otherwise return MagicValue(JS_NO_ITER_VALUE).
     Label iterDone;
-    Address cursorAddr(nativeIterator, offsetof(NativeIterator, props_cursor));
-    Address cursorEndAddr(nativeIterator, offsetof(NativeIterator, props_end));
+    Address cursorAddr(nativeIterator, NativeIterator::offsetOfPropertyCursor());
+    Address cursorEndAddr(nativeIterator, NativeIterator::offsetOfPropertiesEnd());
     masm.loadPtr(cursorAddr, scratch);
     masm.branchPtr(Assembler::BelowOrEqual, cursorEndAddr, scratch, &iterDone);
 

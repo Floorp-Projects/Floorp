@@ -395,6 +395,7 @@ void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst, 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
 {
+    JSContext* cx_;
     CompactBufferWriter buffer_;
 
     uint32_t nextOperandId_;
@@ -414,6 +415,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     static const size_t MaxOperandIds = 20;
     static const size_t MaxStubDataSizeInBytes = 20 * sizeof(uintptr_t);
     bool tooLarge_;
+
+    void assertSameCompartment(JSObject*);
 
     void writeOp(CacheOp op) {
         MOZ_ASSERT(uint32_t(op) <= UINT8_MAX);
@@ -471,6 +474,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
   public:
     explicit CacheIRWriter(JSContext* cx)
       : CustomAutoRooter(cx),
+        cx_(cx),
         nextOperandId_(0),
         nextInstructionId_(0),
         numInputOperands_(0),
@@ -585,8 +589,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         guardShape(obj, shape);
     }
     void guardXrayExpandoShapeAndDefaultProto(ObjOperandId obj, JSObject* shapeWrapper) {
+        assertSameCompartment(shapeWrapper);
         writeOpWithOperandId(CacheOp::GuardXrayExpandoShapeAndDefaultProto, obj);
-        buffer_.writeByte(uint32_t(!!shapeWrapper));        addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
+        buffer_.writeByte(uint32_t(!!shapeWrapper));
+        addStubField(uintptr_t(shapeWrapper), StubField::Type::JSObject);
     }
     // Guard rhs[slot] == prototypeObject
     void guardFunctionPrototype(ObjOperandId rhs, uint32_t slot, ObjOperandId protoId) {
@@ -621,6 +627,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         guardGroup(obj, group);
     }
     void guardProto(ObjOperandId obj, JSObject* proto) {
+        assertSameCompartment(proto);
         writeOpWithOperandId(CacheOp::GuardProto, obj);
         addStubField(uintptr_t(proto), StubField::Type::JSObject);
     }
@@ -652,6 +659,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
     }
     void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
+        assertSameCompartment(expected);
         writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
         addStubField(uintptr_t(expected), StubField::Type::JSObject);
     }
@@ -676,6 +684,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         buffer_.writeByte(uint32_t(magic));
     }
     void guardCompartment(ObjOperandId obj, JSObject* global, JSCompartment* compartment) {
+        assertSameCompartment(global);
         writeOpWithOperandId(CacheOp::GuardCompartment, obj);
         // Add a reference to the compartment's global to keep it alive.
         addStubField(uintptr_t(global), StubField::Type::JSObject);
@@ -752,6 +761,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
     ObjOperandId loadObject(JSObject* obj) {
+        assertSameCompartment(obj);
         ObjOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadObject, res);
         addStubField(uintptr_t(obj), StubField::Type::JSObject);
