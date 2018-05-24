@@ -206,7 +206,7 @@ class FunctionCompiler
 
         for (size_t i = args.length(); i < locals_.length(); i++) {
             MInstruction* ins = nullptr;
-            switch (locals_[i]) {
+            switch (locals_[i].code()) {
               case ValType::I32:
                 ins = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
                 break;
@@ -2305,7 +2305,7 @@ EmitGetGlobal(FunctionCompiler& f)
     MIRType mirType = ToMIRType(value.type());
 
     MDefinition* result;
-    switch (value.type()) {
+    switch (value.type().code()) {
       case ValType::I32:
         result = f.constant(Int32Value(value.i32()), mirType);
         break;
@@ -2971,7 +2971,7 @@ EmitSimdShift(FunctionCompiler& f, ValType operandType, MSimdShift::Operation op
 static ValType
 SimdToLaneType(ValType type)
 {
-    switch (type) {
+    switch (type.code()) {
       case ValType::I8x16:
       case ValType::I16x8:
       case ValType::I32x4:  return ValType::I32;
@@ -3077,7 +3077,7 @@ EmitSimdShuffle(FunctionCompiler& f, ValType simdType)
 static inline Scalar::Type
 SimdExprTypeToViewType(ValType type, unsigned* defaultNumElems)
 {
-    switch (type) {
+    switch (type.code()) {
         case ValType::I8x16: *defaultNumElems = 16; return Scalar::Int8x16;
         case ValType::I16x8: *defaultNumElems = 8; return Scalar::Int16x8;
         case ValType::I32x4: *defaultNumElems = 4; return Scalar::Int32x4;
@@ -3220,7 +3220,7 @@ EmitSimdBooleanChainedCtor(FunctionCompiler& f, ValType valType, MIRType type,
 static bool
 EmitSimdCtor(FunctionCompiler& f, ValType type)
 {
-    switch (type) {
+    switch (type.code()) {
       case ValType::I8x16:
         return EmitSimdChainedCtor(f, type, MIRType::Int8x16, SimdConstant::SplatX16(0));
       case ValType::I16x8:

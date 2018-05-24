@@ -1047,7 +1047,7 @@ BaseLocalIter::settle()
 
     MOZ_ASSERT(argsIter_.done());
     if (index_ < locals_.length()) {
-        switch (locals_[index_]) {
+        switch (locals_[index_].code()) {
           case ValType::I32:
           case ValType::I64:
           case ValType::F32:
@@ -3630,7 +3630,7 @@ class BaseCompiler final : public BaseCompilerInterface
     // args based on the info we read.
 
     void passArg(ValType type, const Stk& arg, FunctionCall* call) {
-        switch (type) {
+        switch (type.code()) {
           case ValType::I32: {
             ABIArg argLoc = call->abi.next(MIRType::Int32);
             if (argLoc.kind() == ABIArg::Stack) {
@@ -7169,7 +7169,7 @@ BaseCompiler::emitBranchSetup(BranchState* b)
         break;
       }
       case LatentOp::Compare: {
-        switch (latentType_) {
+        switch (latentType_.code()) {
           case ValType::I32: {
             if (popConstI32(&b->i32.imm)) {
                 b->i32.lhs = popI32();
@@ -7200,7 +7200,7 @@ BaseCompiler::emitBranchSetup(BranchState* b)
         break;
       }
       case LatentOp::Eqz: {
-        switch (latentType_) {
+        switch (latentType_.code()) {
           case ValType::I32: {
             latentIntCmp_ = Assembler::Equal;
             b->i32.lhs = popI32();
@@ -7229,7 +7229,7 @@ BaseCompiler::emitBranchSetup(BranchState* b)
 void
 BaseCompiler::emitBranchPerform(BranchState* b)
 {
-    switch (latentType_) {
+    switch (latentType_.code()) {
       case ValType::I32: {
         if (b->i32.rhsImm) {
             jumpConditionalWithJoinReg(b, latentIntCmp_, b->i32.lhs, Imm32(b->i32.imm));
@@ -8096,7 +8096,7 @@ BaseCompiler::emitGetLocal()
     // until needed, until they may be affected by a store, or until a
     // sync.  This is intended to reduce register pressure.
 
-    switch (locals_[slot]) {
+    switch (locals_[slot].code()) {
       case ValType::I32:
         pushLocalI32(slot);
         break;
@@ -8127,7 +8127,7 @@ BaseCompiler::emitSetOrTeeLocal(uint32_t slot)
         return true;
 
     bceLocalIsUpdated(slot);
-    switch (locals_[slot]) {
+    switch (locals_[slot].code()) {
       case ValType::I32: {
         RegI32 rv = popI32();
         syncLocal(slot);
@@ -8219,7 +8219,7 @@ BaseCompiler::emitGetGlobal()
 
     if (global.isConstant()) {
         Val value = global.constantValue();
-        switch (value.type()) {
+        switch (value.type().code()) {
           case ValType::I32:
             pushI32(value.i32());
             break;
@@ -8238,7 +8238,7 @@ BaseCompiler::emitGetGlobal()
         return true;
     }
 
-    switch (global.type()) {
+    switch (global.type().code()) {
       case ValType::I32: {
         RegI32 rv = needI32();
         ScratchI32 tmp(*this);
@@ -8287,7 +8287,7 @@ BaseCompiler::emitSetGlobal()
 
     const GlobalDesc& global = env_.globals[id];
 
-    switch (global.type()) {
+    switch (global.type().code()) {
       case ValType::I32: {
         RegI32 rv = popI32();
         ScratchI32 tmp(*this);
@@ -8453,7 +8453,7 @@ BaseCompiler::loadCommon(MemoryAccessDesc* access, ValType type)
     RegI32 tls, temp1, temp2, temp3;
     needLoadTemps(*access, &temp1, &temp2, &temp3);
 
-    switch (type) {
+    switch (type.code()) {
       case ValType::I32: {
         RegI32 rp = popMemoryAccess(access, &check);
 #ifdef JS_CODEGEN_ARM
@@ -8542,7 +8542,7 @@ BaseCompiler::storeCommon(MemoryAccessDesc* access, ValType resultType)
     RegI32 tls;
     RegI32 temp = needStoreTemp(*access, resultType);
 
-    switch (resultType) {
+    switch (resultType.code()) {
       case ValType::I32: {
         RegI32 rv = popI32();
         RegI32 rp = popMemoryAccess(access, &check);
@@ -8630,7 +8630,7 @@ BaseCompiler::emitSelect()
     BranchState b(&done);
     emitBranchSetup(&b);
 
-    switch (NonAnyToValType(type)) {
+    switch (NonAnyToValType(type).code()) {
       case ValType::I32: {
         RegI32 r, rs;
         pop2xI32(&r, &rs);
@@ -9151,7 +9151,7 @@ BaseCompiler::emitWait(ValType type, uint32_t byteSize)
     if (deadCode_)
         return true;
 
-    switch (type) {
+    switch (type.code()) {
       case ValType::I32:
         emitInstanceCall(lineOrBytecode, SigPIIL_, ExprType::I32, SymbolicAddress::WaitI32);
         break;

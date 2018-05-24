@@ -269,8 +269,8 @@ class Encoder
     }
     MOZ_MUST_USE bool writeValType(ValType type) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        MOZ_ASSERT(size_t(type) < size_t(TypeCode::Limit));
-        return writeFixedU8(uint8_t(type));
+        MOZ_ASSERT(size_t(type.bitsUnsafe()) < size_t(TypeCode::Limit));
+        return writeFixedU8(uint8_t(type.bitsUnsafe()));
     }
     MOZ_MUST_USE bool writeBlockType(ExprType type) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
@@ -672,7 +672,7 @@ class Decoder
         return i64;
     }
     ValType uncheckedReadValType() {
-        return (ValType)uncheckedReadFixedU8();
+        return ValType::fromTypeCode(uncheckedReadFixedU8());
     }
     Op uncheckedReadOp() {
         static_assert(size_t(Op::Limit) == 256, "fits");
