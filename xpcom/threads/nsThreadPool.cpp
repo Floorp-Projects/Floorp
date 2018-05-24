@@ -213,6 +213,8 @@ nsThreadPool::Run()
           }
           shutdownThreadOnExit = mThreads.RemoveObject(current);
         } else {
+          AUTO_PROFILER_LABEL("nsThreadPool::Run::Wait", IDLE);
+
           TimeDuration delta = timeout - (now - idleSince);
           LOG(("THRD-P(%p) %s waiting [%f]\n", this, mName.BeginReading(),
                delta.ToMilliseconds()));
