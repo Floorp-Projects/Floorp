@@ -11,8 +11,8 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
 
-ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-common/remote-settings.js");
-ChromeUtils.defineModuleGetter(this, "jexlFilterFunc", "resource://services-common/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "RemoteSettings", "resource://services-settings/remote-settings.js");
+ChromeUtils.defineModuleGetter(this, "jexlFilterFunc", "resource://services-settings/remote-settings.js");
 
 const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";
 const PREF_BLOCKLIST_ONECRL_COLLECTION       = "services.blocklist.onecrl.collection";
