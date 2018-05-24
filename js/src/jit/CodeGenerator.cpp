@@ -9929,7 +9929,8 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     LoadNativeIterator(masm, obj, temp1, ool->entry());
 
     // Clear active bit.
-    masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
+    masm.and32(Imm32(~NativeIterator::Flags::Active),
+               Address(temp1, NativeIterator::offsetOfFlags()));
 
     // Reset property cursor.
     masm.loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);

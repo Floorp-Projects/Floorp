@@ -546,8 +546,8 @@ RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni)
     /* Register non-escaping native enumerators (for-in) with the current context. */
     ni->link(realm.enumerators);
 
-    MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
-    ni->flags |= JSITER_ACTIVE;
+    MOZ_ASSERT(!ni->isActive());
+    ni->markActive();
 }
 
 static PropertyIteratorObject*
@@ -667,7 +667,7 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
     propertyCursor_(reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
     propertiesEnd_(propertyCursor_),
     guard_key(guardKey),
-    flags(0)
+    flags_(0)
 {
     MOZ_ASSERT(!*hadError);
 
@@ -823,7 +823,7 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
     MOZ_ASSERT(iterobj->compartment() == cx->compartment());
 
     NativeIterator* ni = iterobj->getNativeIterator();
-    if (ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE))
+    if (!ni->isReusable())
         return nullptr;
 
     return iterobj;
@@ -1159,8 +1159,8 @@ js::CloseIterator(JSObject* obj)
 
         ni->unlink();
 
-        MOZ_ASSERT(ni->flags & JSITER_ACTIVE);
-        ni->flags &= ~JSITER_ACTIVE;
+        MOZ_ASSERT(ni->isActive());
+        ni->markInactive();
 
         // Reset the enumerator; it may still be in the cached iterators for
         // this thread and can be reused.
@@ -1299,8 +1299,9 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
                 ni->trimLastProperty();
             }
 
-            // Don't reuse modified native iterators.
-            ni->flags |= JSITER_UNREUSABLE;
+            // Modified NativeIterators omit properties that possibly shouldn't
+            // be omitted, so they can't be reused.
+            ni->markNotReusable();
             return true;
         }
 
