@@ -3,7 +3,7 @@ set -e -v
 
 # This script is for building tup on Linux.
 
-TUP_REVISION=411cb983147a048ea2bc6f8c56f7f55fd248ce60
+TUP_REVISION=v0.7.6
 
 WORKSPACE=$HOME/workspace
 UPLOAD_DIR=$HOME/artifacts
