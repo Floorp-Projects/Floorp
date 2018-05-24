@@ -215,6 +215,14 @@ Inspector.prototype = {
     return this._notificationBox;
   },
 
+  get search() {
+    if (!this._search) {
+      this._search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
+    }
+
+    return this._search;
+  },
+
   /**
    * Handle promise rejections for various asynchronous actions, and only log errors if
    * the inspector panel still exists.
@@ -378,9 +386,10 @@ Inspector.prototype = {
     this.searchClearButton = this.panelDoc.getElementById("inspector-searchinput-clear");
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
-    this.search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
-    this.search.on("search-cleared", this._clearSearchResultsLabel);
-    this.search.on("search-result", this._updateSearchResultsLabel);
+    this.searchBox.addEventListener("focus", () => {
+      this.search.on("search-cleared", this._clearSearchResultsLabel);
+      this.search.on("search-result", this._updateSearchResultsLabel);
+    }, { once: true });
 
     let shortcuts = new KeyShortcuts({
       window: this.panelDoc.defaultView,
@@ -1351,6 +1360,11 @@ Inspector.prototype = {
       this._highlighters = null;
     }
 
+    if (this._search) {
+      this._search.destroy();
+      this._search = null;
+    }
+
     let cssPropertiesDestroyer = this._cssProperties.front.destroy();
     let sidebarDestroyer = this.sidebar.destroy();
     let ruleViewSideBarDestroyer = this.ruleViewSideBar ?
@@ -1363,7 +1377,6 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
-    this.search.destroy();
 
     this._notificationBox = null;
     this._target = null;
@@ -1374,7 +1387,6 @@ Inspector.prototype = {
     this.panelWin.inspector = null;
     this.panelWin = null;
     this.resultsLength = null;
-    this.search = null;
     this.searchBox = null;
     this.show3PaneTooltip = null;
     this.sidebar = null;

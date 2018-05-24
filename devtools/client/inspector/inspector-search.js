@@ -36,11 +36,10 @@ function InspectorSearch(inspector, input, clearBtn) {
   this.searchClearButton = clearBtn;
   this._lastSearched = null;
 
-  this.searchClearButton.hidden = true;
-
   this._onKeyDown = this._onKeyDown.bind(this);
   this._onInput = this._onInput.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
+
   this.searchBox.addEventListener("keydown", this._onKeyDown, true);
   this.searchBox.addEventListener("input", this._onInput, true);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
