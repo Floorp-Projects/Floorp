@@ -13,37 +13,44 @@
 namespace gl
 {
 
-ActiveVariable::ActiveVariable()
+StaticallyUsed::StaticallyUsed()
+    : vertexStaticUse(false), fragmentStaticUse(false), computeStaticUse(false)
 {
 }
 
-ActiveVariable::~ActiveVariable()
+StaticallyUsed::~StaticallyUsed()
 {
 }
 
-ActiveVariable::ActiveVariable(const ActiveVariable &rhs) = default;
-ActiveVariable &ActiveVariable::operator=(const ActiveVariable &rhs) = default;
+StaticallyUsed::StaticallyUsed(const StaticallyUsed &rhs) = default;
+StaticallyUsed &StaticallyUsed::operator=(const StaticallyUsed &rhs) = default;
 
-void ActiveVariable::setActive(ShaderType shaderType, bool used)
+void StaticallyUsed::setStaticUse(GLenum shaderType, bool used)
 {
-    ASSERT(shaderType != ShaderType::InvalidEnum);
-    mActiveUseBits.set(shaderType, used);
+    switch (shaderType)
+    {
+        case GL_VERTEX_SHADER:
+            vertexStaticUse = used;
+            break;
+
+        case GL_FRAGMENT_SHADER:
+            fragmentStaticUse = used;
+            break;
+
+        case GL_COMPUTE_SHADER:
+            computeStaticUse = used;
+            break;
+
+        default:
+            UNREACHABLE();
+    }
 }
 
-bool ActiveVariable::isActive(ShaderType shaderType) const
+void StaticallyUsed::unionReferencesWith(const StaticallyUsed &other)
 {
-    ASSERT(shaderType != ShaderType::InvalidEnum);
-    return mActiveUseBits[shaderType];
-}
-
-void ActiveVariable::unionReferencesWith(const ActiveVariable &other)
-{
-    mActiveUseBits |= other.mActiveUseBits;
-}
-
-ShaderType ActiveVariable::getFirstShaderTypeWhereActive() const
-{
-    return static_cast<ShaderType>(gl::ScanForward(mActiveUseBits.bits()));
+    vertexStaticUse |= other.vertexStaticUse;
+    fragmentStaticUse |= other.fragmentStaticUse;
+    computeStaticUse |= other.computeStaticUse;
 }
 
 LinkedUniform::LinkedUniform()
@@ -85,7 +92,7 @@ LinkedUniform::LinkedUniform(const sh::Uniform &uniform)
 
 LinkedUniform::LinkedUniform(const LinkedUniform &uniform)
     : sh::Uniform(uniform),
-      ActiveVariable(uniform),
+      StaticallyUsed(uniform),
       typeInfo(uniform.typeInfo),
       bufferIndex(uniform.bufferIndex),
       blockInfo(uniform.blockInfo)
@@ -95,7 +102,7 @@ LinkedUniform::LinkedUniform(const LinkedUniform &uniform)
 LinkedUniform &LinkedUniform::operator=(const LinkedUniform &uniform)
 {
     sh::Uniform::operator=(uniform);
-    ActiveVariable::operator=(uniform);
+    StaticallyUsed::operator=(uniform);
     typeInfo             = uniform.typeInfo;
     bufferIndex          = uniform.bufferIndex;
     blockInfo            = uniform.blockInfo;

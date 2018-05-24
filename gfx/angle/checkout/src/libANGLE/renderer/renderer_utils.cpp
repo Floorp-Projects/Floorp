@@ -477,23 +477,22 @@ void IncompleteTextureSet::onDestroy(const gl::Context *context)
     // Clear incomplete textures.
     for (auto &incompleteTexture : mIncompleteTextures)
     {
-        if (incompleteTexture.get() != nullptr)
-        {
-            ANGLE_SWALLOW_ERR(incompleteTexture->onDestroy(context));
-            incompleteTexture.set(context, nullptr);
-        }
+        ANGLE_SWALLOW_ERR(incompleteTexture.second->onDestroy(context));
+        incompleteTexture.second.set(context, nullptr);
     }
+    mIncompleteTextures.clear();
 }
 
 gl::Error IncompleteTextureSet::getIncompleteTexture(
     const gl::Context *context,
-    gl::TextureType type,
+    GLenum type,
     MultisampleTextureInitializer *multisampleInitializer,
     gl::Texture **textureOut)
 {
-    *textureOut = mIncompleteTextures[type].get();
-    if (*textureOut != nullptr)
+    auto iter = mIncompleteTextures.find(type);
+    if (iter != mIncompleteTextures.end())
     {
+        *textureOut = iter->second.get();
         return gl::NoError();
     }
 
@@ -506,12 +505,12 @@ gl::Error IncompleteTextureSet::getIncompleteTexture(
     const gl::Box area(0, 0, 0, 1, 1, 1);
 
     // If a texture is external use a 2D texture for the incomplete texture
-    gl::TextureType createType = (type == gl::TextureType::External) ? gl::TextureType::_2D : type;
+    GLenum createType = (type == GL_TEXTURE_EXTERNAL_OES) ? GL_TEXTURE_2D : type;
 
     gl::Texture *tex = new gl::Texture(implFactory, std::numeric_limits<GLuint>::max(), createType);
     angle::UniqueObjectPointer<gl::Texture, gl::Context> t(tex, context);
 
-    if (createType == gl::TextureType::_2DMultisample)
+    if (createType == GL_TEXTURE_2D_MULTISAMPLE)
     {
         ANGLE_TRY(t->setStorageMultisample(context, createType, 1, GL_RGBA8, colorSize, true));
     }
@@ -520,23 +519,24 @@ gl::Error IncompleteTextureSet::getIncompleteTexture(
         ANGLE_TRY(t->setStorage(context, createType, 1, GL_RGBA8, colorSize));
     }
 
-    if (type == gl::TextureType::CubeMap)
+    if (type == GL_TEXTURE_CUBE_MAP)
     {
-        for (gl::TextureTarget face : gl::AllCubeFaceTextureTargets())
+        for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X; face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+             face++)
         {
             ANGLE_TRY(
                 t->setSubImage(context, unpack, face, 0, area, GL_RGBA, GL_UNSIGNED_BYTE, color));
         }
     }
-    else if (type == gl::TextureType::_2DMultisample)
+    else if (type == GL_TEXTURE_2D_MULTISAMPLE)
     {
         // Call a specialized clear function to init a multisample texture.
         ANGLE_TRY(multisampleInitializer->initializeMultisampleTextureToBlack(context, t.get()));
     }
     else
     {
-        ANGLE_TRY(t->setSubImage(context, unpack, gl::NonCubeTextureTypeToTarget(createType), 0,
-                                 area, GL_RGBA, GL_UNSIGNED_BYTE, color));
+        ANGLE_TRY(
+            t->setSubImage(context, unpack, createType, 0, area, GL_RGBA, GL_UNSIGNED_BYTE, color));
     }
 
     t->syncState();

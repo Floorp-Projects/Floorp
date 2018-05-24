@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
+#include "compiler/translator/IntermTraverse.h"
 #include "compiler/translator/SymbolTable.h"
-#include "compiler/translator/tree_util/IntermTraverse.h"
 
 namespace sh
 {
@@ -31,10 +31,7 @@ void OutputFunction(TInfoSinkBase &out, const char *str, const TFunction *func)
 class TOutputTraverser : public TIntermTraverser
 {
   public:
-    TOutputTraverser(TInfoSinkBase &out)
-        : TIntermTraverser(true, false, false), mOut(out), mIndentDepth(0)
-    {
-    }
+    TOutputTraverser(TInfoSinkBase &out) : TIntermTraverser(true, false, false), mOut(out) {}
 
   protected:
     void visitSymbol(TIntermSymbol *) override;
@@ -46,7 +43,7 @@ class TOutputTraverser : public TIntermTraverser
     bool visitIfElse(Visit visit, TIntermIfElse *node) override;
     bool visitSwitch(Visit visit, TIntermSwitch *node) override;
     bool visitCase(Visit visit, TIntermCase *node) override;
-    void visitFunctionPrototype(TIntermFunctionPrototype *node) override;
+    bool visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node) override;
     bool visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node) override;
     bool visitAggregate(Visit visit, TIntermAggregate *) override;
     bool visitBlock(Visit visit, TIntermBlock *) override;
@@ -55,10 +52,7 @@ class TOutputTraverser : public TIntermTraverser
     bool visitLoop(Visit visit, TIntermLoop *) override;
     bool visitBranch(Visit visit, TIntermBranch *) override;
 
-    int getCurrentIndentDepth() const { return mIndentDepth + getCurrentTraversalDepth(); }
-
     TInfoSinkBase &mOut;
-    int mIndentDepth;
 };
 
 //
@@ -85,7 +79,7 @@ void OutputTreeText(TInfoSinkBase &out, TIntermNode *node, const int depth)
 
 void TOutputTraverser::visitSymbol(TIntermSymbol *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     if (node->variable().symbolType() == SymbolType::Empty)
     {
@@ -102,7 +96,7 @@ void TOutputTraverser::visitSymbol(TIntermSymbol *node)
 
 bool TOutputTraverser::visitSwizzle(Visit visit, TIntermSwizzle *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "vector swizzle (";
     node->writeOffsetsAsXYZW(&mOut);
     mOut << ")";
@@ -114,7 +108,7 @@ bool TOutputTraverser::visitSwizzle(Visit visit, TIntermSwizzle *node)
 
 bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     switch (node->getOp())
     {
@@ -276,7 +270,7 @@ bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
         TIntermConstantUnion *intermConstantUnion = node->getRight()->getAsConstantUnion();
         ASSERT(intermConstantUnion);
 
-        OutputTreeText(mOut, intermConstantUnion, getCurrentIndentDepth() + 1);
+        OutputTreeText(mOut, intermConstantUnion, mDepth + 1);
 
         // The following code finds the field name from the constant union
         const TConstantUnion *constantUnion   = intermConstantUnion->getConstantValue();
@@ -300,7 +294,7 @@ bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
 
 bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     switch (node->getOp())
     {
@@ -354,37 +348,32 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
 
 bool TOutputTraverser::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Function Definition:\n";
+    mOut << "\n";
     return true;
 }
 
 bool TOutputTraverser::visitInvariantDeclaration(Visit visit, TIntermInvariantDeclaration *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Invariant Declaration:\n";
     return true;
 }
 
-void TOutputTraverser::visitFunctionPrototype(TIntermFunctionPrototype *node)
+bool TOutputTraverser::visitFunctionPrototype(Visit visit, TIntermFunctionPrototype *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     OutputFunction(mOut, "Function Prototype", node->getFunction());
     mOut << " (" << node->getCompleteString() << ")";
     mOut << "\n";
-    size_t paramCount = node->getFunction()->getParamCount();
-    for (size_t i = 0; i < paramCount; ++i)
-    {
-        const TVariable *param = node->getFunction()->getParam(i);
-        OutputTreeText(mOut, node, getCurrentIndentDepth() + 1);
-        mOut << "parameter: " << param->name() << " (" << param->getType().getCompleteString()
-             << ")";
-    }
+
+    return true;
 }
 
 bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     if (node->getOp() == EOpNull)
     {
@@ -456,7 +445,7 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
 
 bool TOutputTraverser::visitBlock(Visit visit, TIntermBlock *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Code block\n";
 
     return true;
@@ -464,7 +453,7 @@ bool TOutputTraverser::visitBlock(Visit visit, TIntermBlock *node)
 
 bool TOutputTraverser::visitDeclaration(Visit visit, TIntermDeclaration *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Declaration\n";
 
     return true;
@@ -472,18 +461,18 @@ bool TOutputTraverser::visitDeclaration(Visit visit, TIntermDeclaration *node)
 
 bool TOutputTraverser::visitTernary(Visit visit, TIntermTernary *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     mOut << "Ternary selection";
     mOut << " (" << node->getCompleteString() << ")\n";
 
-    ++mIndentDepth;
+    ++mDepth;
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Condition\n";
     node->getCondition()->traverse(this);
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     if (node->getTrueExpression())
     {
         mOut << "true case\n";
@@ -491,29 +480,29 @@ bool TOutputTraverser::visitTernary(Visit visit, TIntermTernary *node)
     }
     if (node->getFalseExpression())
     {
-        OutputTreeText(mOut, node, getCurrentIndentDepth());
+        OutputTreeText(mOut, node, mDepth);
         mOut << "false case\n";
         node->getFalseExpression()->traverse(this);
     }
 
-    --mIndentDepth;
+    --mDepth;
 
     return false;
 }
 
 bool TOutputTraverser::visitIfElse(Visit visit, TIntermIfElse *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     mOut << "If test\n";
 
-    ++mIndentDepth;
+    ++mDepth;
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     mOut << "Condition\n";
     node->getCondition()->traverse(this);
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     if (node->getTrueBlock())
     {
         mOut << "true case\n";
@@ -526,19 +515,19 @@ bool TOutputTraverser::visitIfElse(Visit visit, TIntermIfElse *node)
 
     if (node->getFalseBlock())
     {
-        OutputTreeText(mOut, node, getCurrentIndentDepth());
+        OutputTreeText(mOut, node, mDepth);
         mOut << "false case\n";
         node->getFalseBlock()->traverse(this);
     }
 
-    --mIndentDepth;
+    --mDepth;
 
     return false;
 }
 
 bool TOutputTraverser::visitSwitch(Visit visit, TIntermSwitch *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     mOut << "Switch\n";
 
@@ -547,7 +536,7 @@ bool TOutputTraverser::visitSwitch(Visit visit, TIntermSwitch *node)
 
 bool TOutputTraverser::visitCase(Visit visit, TIntermCase *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     if (node->getCondition() == nullptr)
     {
@@ -567,7 +556,7 @@ void TOutputTraverser::visitConstantUnion(TIntermConstantUnion *node)
 
     for (size_t i = 0; i < size; i++)
     {
-        OutputTreeText(mOut, node, getCurrentIndentDepth());
+        OutputTreeText(mOut, node, mDepth);
         switch (node->getConstantValue()[i].getType())
         {
             case EbtBool:
@@ -608,16 +597,16 @@ void TOutputTraverser::visitConstantUnion(TIntermConstantUnion *node)
 
 bool TOutputTraverser::visitLoop(Visit visit, TIntermLoop *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     mOut << "Loop with condition ";
     if (node->getType() == ELoopDoWhile)
         mOut << "not ";
     mOut << "tested first\n";
 
-    ++mIndentDepth;
+    ++mDepth;
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     if (node->getCondition())
     {
         mOut << "Loop Condition\n";
@@ -628,7 +617,7 @@ bool TOutputTraverser::visitLoop(Visit visit, TIntermLoop *node)
         mOut << "No loop condition\n";
     }
 
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
     if (node->getBody())
     {
         mOut << "Loop Body\n";
@@ -641,19 +630,19 @@ bool TOutputTraverser::visitLoop(Visit visit, TIntermLoop *node)
 
     if (node->getExpression())
     {
-        OutputTreeText(mOut, node, getCurrentIndentDepth());
+        OutputTreeText(mOut, node, mDepth);
         mOut << "Loop Terminal Expression\n";
         node->getExpression()->traverse(this);
     }
 
-    --mIndentDepth;
+    --mDepth;
 
     return false;
 }
 
 bool TOutputTraverser::visitBranch(Visit visit, TIntermBranch *node)
 {
-    OutputTreeText(mOut, node, getCurrentIndentDepth());
+    OutputTreeText(mOut, node, mDepth);
 
     switch (node->getFlowOp())
     {
@@ -677,9 +666,9 @@ bool TOutputTraverser::visitBranch(Visit visit, TIntermBranch *node)
     if (node->getExpression())
     {
         mOut << " with expression\n";
-        ++mIndentDepth;
+        ++mDepth;
         node->getExpression()->traverse(this);
-        --mIndentDepth;
+        --mDepth;
     }
     else
     {

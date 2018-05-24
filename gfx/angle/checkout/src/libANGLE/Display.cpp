@@ -1049,9 +1049,6 @@ void Display::initDisplayExtensions()
     // Enable program cache control since it is not back-end dependent.
     mDisplayExtensions.programCacheControl = true;
 
-    // Request extension is implemented in the ANGLE frontend
-    mDisplayExtensions.createContextExtensionsEnabled = true;
-
     mDisplayExtensionString = GenerateExtensionsString(mDisplayExtensions);
 }
 

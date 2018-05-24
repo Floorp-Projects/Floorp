@@ -20,25 +20,24 @@ namespace gl
 {
 struct UniformTypeInfo;
 
-struct ActiveVariable
+struct StaticallyUsed
 {
-    ActiveVariable();
-    ActiveVariable(const ActiveVariable &rhs);
-    virtual ~ActiveVariable();
+    StaticallyUsed();
+    StaticallyUsed(const StaticallyUsed &rhs);
+    virtual ~StaticallyUsed();
 
-    ActiveVariable &operator=(const ActiveVariable &rhs);
+    StaticallyUsed &operator=(const StaticallyUsed &rhs);
 
-    ShaderType getFirstShaderTypeWhereActive() const;
-    void setActive(ShaderType shaderType, bool used);
-    void unionReferencesWith(const ActiveVariable &other);
-    bool isActive(ShaderType shaderType) const;
+    void setStaticUse(GLenum shaderType, bool used);
+    void unionReferencesWith(const StaticallyUsed &other);
 
-  private:
-    ShaderBitSet mActiveUseBits;
+    bool vertexStaticUse;
+    bool fragmentStaticUse;
+    bool computeStaticUse;
 };
 
 // Helper struct representing a single shader uniform
-struct LinkedUniform : public sh::Uniform, public ActiveVariable
+struct LinkedUniform : public sh::Uniform, public StaticallyUsed
 {
     LinkedUniform();
     LinkedUniform(GLenum type,
@@ -70,7 +69,7 @@ struct LinkedUniform : public sh::Uniform, public ActiveVariable
     sh::BlockMemberInfo blockInfo;
 };
 
-struct BufferVariable : public sh::ShaderVariable, public ActiveVariable
+struct BufferVariable : public sh::ShaderVariable, public StaticallyUsed
 {
     BufferVariable();
     BufferVariable(GLenum type,
@@ -89,7 +88,7 @@ struct BufferVariable : public sh::ShaderVariable, public ActiveVariable
 
 // Parent struct for atomic counter, uniform block, and shader storage block buffer, which all
 // contain a group of shader variables, and have a GL buffer backed.
-struct ShaderVariableBuffer : public ActiveVariable
+struct ShaderVariableBuffer : public StaticallyUsed
 {
     ShaderVariableBuffer();
     ShaderVariableBuffer(const ShaderVariableBuffer &other);

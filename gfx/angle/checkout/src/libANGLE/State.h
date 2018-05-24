@@ -16,7 +16,6 @@
 #include "common/angleutils.h"
 #include "common/bitset_utils.h"
 #include "libANGLE/Debug.h"
-#include "libANGLE/GLES1State.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/ProgramPipeline.h"
 #include "libANGLE/RefCountObject.h"
@@ -175,10 +174,10 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     // Texture binding & active texture unit manipulation
     void setActiveSampler(unsigned int active);
     unsigned int getActiveSampler() const;
-    void setSamplerTexture(const Context *context, TextureType type, Texture *texture);
-    Texture *getTargetTexture(TextureType type) const;
-    Texture *getSamplerTexture(unsigned int sampler, TextureType type) const;
-    GLuint getSamplerTextureId(unsigned int sampler, TextureType type) const;
+    void setSamplerTexture(const Context *context, GLenum type, Texture *texture);
+    Texture *getTargetTexture(GLenum target) const;
+    Texture *getSamplerTexture(unsigned int sampler, GLenum type) const;
+    GLuint getSamplerTextureId(unsigned int sampler, GLenum type) const;
     void detachTexture(const Context *context, const TextureMap &zeroTextures, GLuint texture);
     void initializeZeroTextures(const Context *context, const TextureMap &zeroTextures);
 
@@ -245,7 +244,7 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     const OffsetBindingPointer<Buffer> &getIndexedShaderStorageBuffer(size_t index) const;
 
     // Detach a buffer from all bindings
-    void detachBuffer(const Context *context, const Buffer *buffer);
+    void detachBuffer(const Context *context, GLuint bufferName);
 
     // Vertex attrib manipulation
     void setEnableVertexAttribArray(unsigned int attribNum, bool enabled);
@@ -334,7 +333,7 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     // State query functions
     void getBooleanv(GLenum pname, GLboolean *params);
     void getFloatv(GLenum pname, GLfloat *params);
-    Error getIntegerv(const Context *context, GLenum pname, GLint *params);
+    void getIntegerv(const Context *context, GLenum pname, GLint *params);
     void getPointerv(GLenum pname, void **params) const;
     void getIntegeri_v(GLenum target, GLuint index, GLint *data);
     void getInteger64i_v(GLenum target, GLuint index, GLint64 *data);
@@ -441,12 +440,10 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     using DirtyObjects = angle::BitSet<DIRTY_OBJECT_MAX>;
     void clearDirtyObjects() { mDirtyObjects.reset(); }
     void setAllDirtyObjects() { mDirtyObjects.set(); }
-    Error syncDirtyObjects(const Context *context);
-    Error syncDirtyObjects(const Context *context, const DirtyObjects &bitset);
-    Error syncDirtyObject(const Context *context, GLenum target);
+    void syncDirtyObjects(const Context *context);
+    void syncDirtyObjects(const Context *context, const DirtyObjects &bitset);
+    void syncDirtyObject(const Context *context, GLenum target);
     void setObjectDirty(GLenum target);
-    void setFramebufferDirty(const Framebuffer *framebuffer) const;
-    void setVertexArrayDirty(const VertexArray *vertexArray) const;
 
     // This actually clears the current value dirty bits.
     // TODO(jmadill): Pass mutable dirty bits into Impl.
@@ -471,12 +468,6 @@ class State : public angle::ObserverInterface, angle::NonCopyable
                               angle::SubjectMessage message) override;
 
     Error clearUnclearedActiveTextures(const Context *context);
-
-    bool isCurrentTransformFeedback(const TransformFeedback *tf) const;
-    bool isCurrentVertexArray(const VertexArray *va) const;
-
-    GLES1State &gles1() { return mGLES1State; }
-    const GLES1State &gles1() const { return mGLES1State; }
 
   private:
     void syncProgramTextures(const Context *context);
@@ -533,7 +524,7 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     size_t mActiveSampler;  // Active texture unit selector - GL_TEXTURE0
 
     typedef std::vector<BindingPointer<Texture>> TextureBindingVector;
-    typedef angle::PackedEnumMap<TextureType, TextureBindingVector> TextureBindingMap;
+    typedef std::map<GLenum, TextureBindingVector> TextureBindingMap;
     TextureBindingMap mSamplerTextures;
 
     // Texture Completeness Caching
@@ -545,7 +536,7 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     //
     // Note this requires that we also invalidate the completeness cache manually on events like
     // re-binding textures/samplers or a change in the program. For more information see the
-    // Observer.h header and the design doc linked there.
+    // signal_utils.h header and the design doc linked there.
 
     // A cache of complete textures. nullptr indicates unbound or incomplete.
     // Don't use BindingPointer because this cache is only valid within a draw call.
@@ -565,9 +556,10 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     typedef std::map<GLenum, BindingPointer<Query>> ActiveQueryMap;
     ActiveQueryMap mActiveQueries;
 
-    // Stores the currently bound buffer for each binding point. It has an entry for the element
-    // array buffer but it should not be used. Instead this bind point is owned by the current
-    // vertex array object.
+    // Stores the currently bound buffer for each binding point. It has entries for the element
+    // array buffer and the transform feedback buffer but these should not be used. Instead these
+    // bind points are respectively owned by current the vertex array object and the current
+    // transform feedback object.
     using BoundBufferMap = angle::PackedEnumMap<BufferBinding, BindingPointer<Buffer>>;
     BoundBufferMap mBoundBuffers;
 
@@ -578,7 +570,9 @@ class State : public angle::ObserverInterface, angle::NonCopyable
 
     BindingPointer<TransformFeedback> mTransformFeedback;
 
+    BindingPointer<Buffer> mPixelUnpackBuffer;
     PixelUnpackState mUnpack;
+    BindingPointer<Buffer> mPixelPackBuffer;
     PixelPackState mPack;
 
     bool mPrimitiveRestart;
@@ -606,11 +600,8 @@ class State : public angle::ObserverInterface, angle::NonCopyable
     // GL_ANGLE_program_cache_control
     bool mProgramBinaryCacheEnabled;
 
-    // GLES1 emulation: state specific to GLES1
-    GLES1State mGLES1State;
-
     DirtyBits mDirtyBits;
-    mutable DirtyObjects mDirtyObjects;
+    DirtyObjects mDirtyObjects;
     mutable AttributesMask mDirtyCurrentValues;
 };
 
