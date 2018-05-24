@@ -95,13 +95,13 @@ reftest.Runner = class {
   }
 
   async openWindow() {
-    let reftestWin;
+    let reftestWin = this.parentWindow.open(
+        "chrome://marionette/content/reftest.xul",
+        "reftest",
+        "chrome,dialog,height=600,width=600");
+
     await new Promise(resolve => {
-      reftestWin = this.parentWindow.openDialog(
-          "chrome://marionette/content/reftest.xul",
-          "reftest",
-          "chrome,dialog,height=600,width=600,all",
-          resolve);
+      reftestWin.addEventListener("load", resolve, {once: true});
     });
 
     let browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
