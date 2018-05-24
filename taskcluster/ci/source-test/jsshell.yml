@@ -1,0 +1,32 @@
+job-defaults:
+    platform: linux64/opt
+    require-build: true
+    worker-type:
+        by-platform:
+            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        by-platform:
+            linux64.*:
+                docker-image: {in-tree: "desktop1604-test"}
+                max-run-time: 1800
+    treeherder:
+        kind: test
+        tier: 2
+    run:
+        using: run-task
+        use-artifacts:
+            build:
+                - target.jsshell.zip
+    run-on-projects: ['mozilla-central', 'try']
+
+bench-ares6:
+    description: Ares6 JavaScript shell benchmark suite
+    treeherder:
+        symbol: js-bench(ares6)
+    run:
+        command: >
+            cd $USE_ARTIFACT_PATH/build &&
+            unzip -q -d jsshell target.jsshell.zip &&
+            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
+            cd /builds/worker/checkouts/gecko &&
+            ./mach jsshell-bench --binary $JSSHELL --perfherder ares6

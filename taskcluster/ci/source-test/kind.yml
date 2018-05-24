@@ -14,6 +14,7 @@ jobs-from:
    - cram.yml
    - doc.yml
    - file-metadata.yml
+   - jsshell.yml
    - mocha.yml
    - mozlint.yml
    - python.yml
