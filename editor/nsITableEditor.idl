@@ -6,8 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
-
 webidl Element;
 webidl Node;
 webidl Range;
