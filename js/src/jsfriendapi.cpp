@@ -1425,7 +1425,7 @@ js::SetAllocationMetadataBuilder(JSContext* cx, const AllocationMetadataBuilder*
 JS_FRIEND_API(JSObject*)
 js::GetAllocationMetadata(JSObject* obj)
 {
-    ObjectWeakMap* map = obj->compartment()->objectMetadataTable;
+    ObjectWeakMap* map = obj->compartment()->objectMetadataTable.get();
     if (map)
         return map->lookup(obj);
     return nullptr;
@@ -1537,7 +1537,7 @@ js::EnableAccessValidation(JSContext* cx, bool enabled)
 JS_FRIEND_API(void)
 js::SetCompartmentValidAccessPtr(JSContext* cx, JS::HandleObject global, bool* accessp)
 {
-    global->compartment()->setValidAccessPtr(accessp);
+    global->realm()->setValidAccessPtr(accessp);
 }
 
 JS_FRIEND_API(bool)

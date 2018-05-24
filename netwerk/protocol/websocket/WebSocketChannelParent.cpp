@@ -283,6 +283,14 @@ void
 WebSocketChannelParent::ActorDestroy(ActorDestroyReason why)
 {
   LOG(("WebSocketChannelParent::ActorDestroy() %p\n", this));
+
+  // Make sure we close the channel if the content process dies without going
+  // through a clean shutdown.
+  if (mChannel) {
+    Unused << mChannel->Close(nsIWebSocketChannel::CLOSE_GOING_AWAY,
+                              NS_LITERAL_CSTRING("Child was killed"));
+  }
+
   mIPCOpen = false;
 }
 

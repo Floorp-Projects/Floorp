@@ -4036,16 +4036,20 @@ CodeGenerator::maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal, OutOf
 {
     // Check whether an object is a global that we have already barriered before
     // calling into the VM.
+    //
+    // We only check for the script's global, not other globals within the same
+    // compartment, because we bake in a pointer to realm->globalWriteBarriered
+    // and doing that would be invalid for other realms because they could be
+    // collected before the Ion code is discarded.
 
     if (!maybeGlobal->isConstant())
         return;
 
     JSObject* obj = &maybeGlobal->toConstant()->toObject();
-    if (!isGlobalObject(obj))
+    if (gen->compartment->maybeGlobal() != obj)
         return;
 
-    JSCompartment* comp = obj->compartment();
-    auto addr = AbsoluteAddress(&comp->globalWriteBarriered);
+    auto addr = AbsoluteAddress(gen->compartment->addressOfGlobalWriteBarriered());
     masm.branch32(Assembler::NotEqual, addr, Imm32(0), ool->rejoin());
 }
 
@@ -9872,11 +9876,11 @@ CodeGenerator::visitIteratorMore(LIteratorMore* lir)
     Register outputScratch = output.scratchReg();
     LoadNativeIterator(masm, obj, outputScratch, ool->entry());
 
-    // If props_cursor < props_end, load the next string and advance the cursor.
-    // Else, return MagicValue(JS_NO_ITER_VALUE).
+    // If propertyCursor_ < propertiesEnd_, load the next string and advance
+    // the cursor.  Otherwise return MagicValue(JS_NO_ITER_VALUE).
     Label iterDone;
-    Address cursorAddr(outputScratch, offsetof(NativeIterator, props_cursor));
-    Address cursorEndAddr(outputScratch, offsetof(NativeIterator, props_end));
+    Address cursorAddr(outputScratch, NativeIterator::offsetOfPropertyCursor());
+    Address cursorEndAddr(outputScratch, NativeIterator::offsetOfPropertiesEnd());
     masm.loadPtr(cursorAddr, temp);
     masm.branchPtr(Assembler::BelowOrEqual, cursorEndAddr, temp, &iterDone);
 
@@ -9928,9 +9932,8 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
 
     // Reset property cursor.
-    Address propCursor(temp1, offsetof(NativeIterator, props_cursor));
-    masm.computeEffectiveAddress(Address(temp1, sizeof(NativeIterator)), temp2);
-    masm.storePtr(temp2, propCursor);
+    masm.loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);
+    masm.storePtr(temp2, Address(temp1, NativeIterator::offsetOfPropertyCursor()));
 
     // Unlink from the iterator list.
     const Register next = temp2;
