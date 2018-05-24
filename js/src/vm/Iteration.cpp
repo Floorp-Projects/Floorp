@@ -57,7 +57,7 @@ static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKG
 void
 NativeIterator::trace(JSTracer* trc)
 {
-    TraceNullableEdge(trc, &obj, "obj");
+    TraceNullableEdge(trc, &objectBeingIterated_, "objectBeingIterated_");
 
     // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
     // GC removes any elements from the list, it won't remove this one.
@@ -658,7 +658,7 @@ NativeIterator::allocateSentinel(JSContext* maybecx)
 NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                                Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
                                uint32_t numGuards, uint32_t guardKey, bool* hadError)
-  : obj(objBeingIterated),
+  : objectBeingIterated_(objBeingIterated),
     iterObj_(propIter),
     // NativeIterator initially acts (before full initialization) as if it
     // contains no guards...
@@ -771,14 +771,6 @@ IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
 
     return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()), lookup.guards,
                     ni->guardCount());
-}
-
-static inline void
-UpdateNativeIterator(NativeIterator* ni, JSObject* obj)
-{
-    // Update the object for which the native iterator is associated, so
-    // SuppressDeletedPropertyHelper will recognize the iterator as a match.
-    ni->obj = obj;
 }
 
 static inline bool
@@ -898,7 +890,7 @@ js::GetIterator(JSContext* cx, HandleObject obj)
     uint32_t numGuards = 0;
     if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
         NativeIterator* ni = iterobj->getNativeIterator();
-        UpdateNativeIterator(ni, obj);
+        ni->changeObjectBeingIterated(*obj);
         RegisterEnumerator(ObjectRealm::get(obj), ni);
         return iterobj;
     }
@@ -1253,7 +1245,7 @@ static bool
 SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
                         Handle<JSFlatString*> str)
 {
-    if (ni->obj != obj)
+    if (ni->objectBeingIterated() != *obj)
         return true;
 
     // Optimization for the following common case:
