@@ -125,3 +125,4 @@ var ContentMessageListener = {
 Services.mm.addMessageListener("content-task:complete", ContentMessageListener);
 Services.mm.addMessageListener("content-task:test-result", ContentMessageListener);
 Services.mm.addMessageListener("content-task:test-info", ContentMessageListener);
+Services.mm.addMessageListener("content-task:test-todo", ContentMessageListener);
