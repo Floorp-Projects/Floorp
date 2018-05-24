@@ -4372,7 +4372,7 @@ GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject
     GeneratePrototypeHoleGuards(writer, obj, objId);
 
     ObjOperandId iterId =
-        writer.guardAndGetIterator(objId, iterobj, &cx_->compartment()->enumerators);
+        writer.guardAndGetIterator(objId, iterobj, &ObjectRealm::get(obj).enumerators);
     writer.loadObjectResult(iterId);
     writer.returnFromIC();
 
