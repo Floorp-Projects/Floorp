@@ -782,10 +782,10 @@ js::Nursery::collect(JS::gcreason::Reason reason)
             zone->setPreservingCode(false);
             zone->discardJitCode(rt->defaultFreeOp());
             zone->setPreservingCode(preserving);
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-                if (jit::JitCompartment* jitComp = c->jitCompartment()) {
-                    jitComp->discardStubs();
-                    jitComp->stringsCanBeInNursery = false;
+            for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
+                if (jit::JitRealm* jitRealm = r->jitRealm()) {
+                    jitRealm->discardStubs();
+                    jitRealm->stringsCanBeInNursery = false;
                 }
             }
             zone->allocNurseryStrings = false;

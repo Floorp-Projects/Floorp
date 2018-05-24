@@ -321,7 +321,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     // MSimdBox instruction is encoded, it might have either been created by
     // IonBuilder, or by the Eager Simd Unbox phase.
     //
-    // As the template objects are weak references, the JitCompartment is using
+    // As the template objects are weak references, the JitRealm is using
     // Read Barriers, but such barrier cannot be used during the compilation. To
     // work around this issue, the barriers are captured during
     // CodeGenerator::link.
@@ -330,8 +330,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
     // Barriered objects in a bit mask.
     uint32_t simdTemplatesToReadBarrier_;
 
-    // Bit mask of JitCompartment stubs that are to be read-barriered.
-    uint32_t compartmentStubsToReadBarrier_;
+    // Bit mask of JitRealm stubs that are to be read-barriered.
+    uint32_t realmStubsToReadBarrier_;
 
     void addSimdTemplateToReadBarrier(SimdType simdType);
 

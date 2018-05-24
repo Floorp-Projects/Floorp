@@ -1646,7 +1646,7 @@ ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
 {
     BailoutReturnStub kind = BailoutReturnStub::SetProp;
     void* address = code->raw() + bailoutReturnOffset_.offset();
-    cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
+    cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 //
@@ -1798,7 +1798,7 @@ GetTemplateObjectForSimd(JSContext* cx, JSFunction* target, MutableHandleObject 
     // Create a template object based on retType.
     RootedGlobalObject global(cx, cx->global());
     Rooted<SimdTypeDescr*> descr(cx, GlobalObject::getOrCreateSimdTypeDescr(cx, global, retType));
-    res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+    res.set(cx->realm()->jitRealm()->getSimdTemplateObjectFor(cx, descr));
     return true;
 }
 
@@ -1903,7 +1903,7 @@ GetTemplateObjectForClassHook(JSContext* cx, JSNative hook, CallArgs& args,
 
     if (hook == SimdTypeDescr::call && JitSupportsSimd()) {
         Rooted<SimdTypeDescr*> descr(cx, &args.callee().as<SimdTypeDescr>());
-        templateObject.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
+        templateObject.set(cx->realm()->jitRealm()->getSimdTemplateObjectFor(cx, descr));
         return !!templateObject;
     }
 
@@ -2880,7 +2880,7 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
     void* address = code->raw() + bailoutReturnOffset_.offset();
     BailoutReturnStub kind = isConstructing_ ? BailoutReturnStub::New
                                              : BailoutReturnStub::Call;
-    cx->compartment()->jitCompartment()->initBailoutReturnAddr(address, getKey(), kind);
+    cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
 }
 
 typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, HandleObject newTarget,

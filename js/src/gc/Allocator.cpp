@@ -9,7 +9,7 @@
 #include "gc/GCInternals.h"
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
-#include "jit/JitCompartment.h"
+#include "jit/JitRealm.h"
 #include "threading/CpuCount.h"
 #include "vm/JSContext.h"
 #include "vm/Runtime.h"
