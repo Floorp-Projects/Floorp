@@ -39,7 +39,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/CustomElementRegistry.h"
-#include "mozilla/dom/MessageBroadcaster.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -7719,7 +7718,7 @@ nsContentUtils::GetHostOrIPv6WithBrackets(nsIURI* aURI, nsAString& aHost)
 }
 
 bool
-nsContentUtils::CallOnAllRemoteChildren(MessageBroadcaster* aManager,
+nsContentUtils::CallOnAllRemoteChildren(ChromeMessageBroadcaster* aManager,
                                         CallOnRemoteChildFunction aCallback,
                                         void* aArg)
 {
@@ -7730,7 +7729,7 @@ nsContentUtils::CallOnAllRemoteChildren(MessageBroadcaster* aManager,
       continue;
     }
 
-    RefPtr<MessageBroadcaster> nonLeafMM = MessageBroadcaster::From(childMM);
+    RefPtr<ChromeMessageBroadcaster> nonLeafMM = ChromeMessageBroadcaster::From(childMM);
     if (nonLeafMM) {
       if (CallOnAllRemoteChildren(nonLeafMM, aCallback, aArg)) {
         return true;
@@ -7760,7 +7759,7 @@ nsContentUtils::CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
 {
   nsGlobalWindowOuter* window = nsGlobalWindowOuter::Cast(aWindow);
   if (window->IsChromeWindow()) {
-    RefPtr<MessageBroadcaster> windowMM = window->GetMessageManager();
+    RefPtr<ChromeMessageBroadcaster> windowMM = window->GetMessageManager();
     if (windowMM) {
       CallOnAllRemoteChildren(windowMM, aCallback, aArg);
     }
