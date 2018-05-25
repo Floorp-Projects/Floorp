@@ -11,6 +11,9 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+// TabChildGlobal
+var global = this;
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
@@ -39,10 +42,11 @@ XPCOMUtils.defineLazyGetter(this, "gNSSErrorsBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/nsserrors.properties");
 });
 
-// TabChildGlobal
-var global = this;
+XPCOMUtils.defineLazyProxy(this, "contextMenu", () => {
+  return new ContextMenu(global);
+});
 
-var contextMenu = this.contextMenu = new ContextMenu(global);
+Services.els.addSystemEventListener(global, "contextmenu", contextMenu, false);
 
 // Load the form validation popup handler
 var formSubmitObserver = new FormSubmitObserver(content, this);
