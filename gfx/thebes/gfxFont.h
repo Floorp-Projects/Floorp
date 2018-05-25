@@ -631,12 +631,17 @@ protected:
 };
 
 struct gfxTextRange {
-    enum class MatchType : uint8_t {
+    enum class MatchType : uint16_t {
+        // The CSS generic that mapped to this font, if any. This field of
+        // the MatchType stores a FontFamilyType value as defined in the enum
+        // in gfxFontFamilyList.h.
+        kGenericMask    = 0x00ff,
+
         // Flags for recording the kind of font-matching that was used.
         // Note that multiple flags may be set on a single range.
-        kFontGroup      = 0x01,
-        kPrefsFallback  = 0x02,
-        kSystemFallback = 0x04
+        kFontGroup      = 0x0100,
+        kPrefsFallback  = 0x0200,
+        kSystemFallback = 0x0400
     };
     gfxTextRange(uint32_t aStart, uint32_t aEnd,
                  gfxFont* aFont, MatchType aMatchType,
