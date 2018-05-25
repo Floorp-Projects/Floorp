@@ -226,8 +226,9 @@ public:
   // before the reactions in its reaction queue are invoked.
   // The element reaction queues are stored in CustomElementData.
   // We need to lookup ElementReactionQueueMap again to get relevant reaction queue.
-  // The choice of 1 for the auto size here is based on gut feeling.
-  typedef AutoTArray<RefPtr<Element>, 1> ElementQueue;
+  // The choice of 3 for the auto size here is based on running Custom Elements
+  // wpt tests.
+  typedef AutoTArray<RefPtr<Element>, 3> ElementQueue;
 
   /**
    * Enqueue a custom element upgrade reaction
