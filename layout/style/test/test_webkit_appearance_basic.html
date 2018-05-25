@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1429713
+-->
+<head>
+  <title>Test pref layout.css.webkit-appearance.enabled</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/AddTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1429713">Mozilla Bug 1429713</a>
+<div id="content" style="display: none">
+  <iframe id="iframe"></iframe>
+</div>
+<script type="text/javascript">
+</script>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+
+function iframe_reload() {
+  return new Promise(resolve => {
+    iframe.addEventListener("load", _ => resolve());
+    iframe.contentWindow.location.reload();
+  });
+}
+
+add_task(async function runTests() {
+  // Pref changes only take affect after a page is reloaded, which is why we
+  // use an iframe here and reload it after the pref changes.
+
+  const iframe = document.getElementById("iframe");
+
+  // Test pref enabled:
+
+  await SpecialPowers.pushPrefEnv({
+    "set": [["layout.css.webkit-appearance.enabled", true]],
+  });
+
+  await iframe_reload();
+
+  let win = iframe.contentWindow;
+  let testElem = win.document.body;
+  testElem.style["-webkit-appearance"] = "none";
+  is(window.getComputedStyle(testElem)["-webkit-appearance"], "none",
+     "Pref should enable -webkit-appearance support");
+
+  // Test pref disabled:
+
+  await SpecialPowers.pushPrefEnv({
+    "set": [["layout.css.webkit-appearance.enabled", false]],
+  });
+
+  await iframe_reload();
+
+  win = iframe.contentWindow;
+  testElem = win.document.body;
+  testElem.style["-webkit-appearance"] = "none";
+  is(window.getComputedStyle(testElem)["-webkit-appearance"], undefined,
+     "Pref should disable -webkit-appearance support");
+});
+
+</script>
+</pre>
+</body>
+</html>
