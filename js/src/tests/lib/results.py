@@ -12,7 +12,7 @@ def escape_cmdline(args):
 
 class TestOutput:
     """Output from a test run."""
-    def __init__(self, test, cmd, out, err, rc, dt, timed_out):
+    def __init__(self, test, cmd, out, err, rc, dt, timed_out, extra=None):
         self.test = test   # Test
         self.cmd = cmd     # str:   command line of test
         self.out = out     # str:   stdout
@@ -20,6 +20,7 @@ class TestOutput:
         self.rc = rc       # int:   return code
         self.dt = dt       # float: run time
         self.timed_out = timed_out # bool: did the test time out
+        self.extra = extra # includes the pid on some platforms
 
     def describe_failure(self):
         if self.timed_out:
@@ -212,7 +213,7 @@ class ResultsSink:
                             label, result.test, time=output.dt,
                             message=msg)
                 tup = (result.result, result.test.expect, result.test.random)
-                self.print_automation_result(self.LABELS[tup][0], result.test, time=output.dt)
+                self.print_automation_result(self.LABELS[tup][0], result.test, time=output.dt, extra=getattr(output, 'extra', None))
                 return
 
             if dev_label:
@@ -292,7 +293,7 @@ class ResultsSink:
         return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
 
     def print_automation_result(self, label, test, message=None, skip=False,
-                                time=None):
+                                time=None, extra=None):
         result = label
         result += " | " + test.path
         args = []
@@ -309,7 +310,7 @@ class ResultsSink:
         result += ' [{:.1f} s]'.format(time)
         print(result)
 
-        details = { 'extra': {} }
+        details = { 'extra': extra.copy() if extra else {} }
         if self.options.shell_args:
             details['extra']['shell_args'] = self.options.shell_args
         details['extra']['jitflags'] = test.jitflags
