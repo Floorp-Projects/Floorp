@@ -158,7 +158,7 @@ class Worker extends Component {
         { className: "worker__data" },
         dt({ className: "worker__meta-name" }, "Source"),
         dd({},
-            span({ title: worker.scope, className: "js-source-url" },
+            span({ title: worker.scope, className: "worker__source-url js-source-url" },
               this.formatSource(worker.url)),
             debugLink,
             lastUpdated ? br({}) : null,
