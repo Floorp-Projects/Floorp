@@ -16,7 +16,6 @@ config = {
         'MOZ_OBJDIR': '%(abs_obj_dir)s',
         'PATH': 'C:/mozilla-build/nsis-3.01;C:/mozilla-build/python27;'
                 '%s' % (os.environ.get('path')),
-        'PROPERTIES_FILE': os.path.join(os.getcwd(), 'buildprops.json'),
         'TINDERBOX_OUTPUT': '1',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
