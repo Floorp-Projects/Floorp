@@ -995,7 +995,9 @@ var WebRequest = {
 
   getSecurityInfo: (details) => {
     let channel = ChannelWrapper.getRegisteredChannel(details.id, details.extension, details.tabParent);
-    return SecurityInfo.getSecurityInfo(channel.channel, details.options);
+    if (channel) {
+      return SecurityInfo.getSecurityInfo(channel.channel, details.options);
+    }
   },
 };
 

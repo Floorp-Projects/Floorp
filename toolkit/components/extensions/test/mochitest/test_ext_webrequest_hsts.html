@@ -185,6 +185,31 @@ add_task(async function test_hsts_header() {
 
   await extension.unload();
 });
+
+add_task(async function test_nonBlocking_securityInfo() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": [
+        "webRequest",
+        "<all_urls>",
+      ],
+    },
+    async background() {
+      let tab;
+      browser.webRequest.onHeadersReceived.addListener(async (details) => {
+        let securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, {});
+        browser.test.assertTrue(!securityInfo, "securityInfo undefined on http request");
+        browser.tabs.remove(tab.id);
+        browser.test.notifyPass("success");
+      }, {urls: ["<all_urls>"], types: ["main_frame"]});
+      tab = await browser.tabs.create({url: "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html"});
+    },
+  });
+  await extension.startup();
+
+  await extension.awaitFinish("success");
+  await extension.unload();
+});
 </script>
 </head>
 <body>
