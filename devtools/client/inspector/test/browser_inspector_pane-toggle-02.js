@@ -8,7 +8,7 @@
 // and the 3 panes rendered are all of equal widths in the BOTTOM host.
 
 add_task(async function() {
-  info("Switch to 2 pane inspector to test that 3 pane toggle button behavior");
+  info("Switch to 2 pane inspector to test the 3 pane toggle button behavior");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 
   const { inspector } = await openInspectorForURL("about:blank");

@@ -24,6 +24,8 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _source = require("../../utils/source");
 
+var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
 var _clipboard = require("../../utils/clipboard");
 
 var _tabs = require("../../utils/tabs");
@@ -173,7 +175,7 @@ class Tab extends _react.PureComponent {
       shouldHide: icon => ["file", "javascript"].includes(icon)
     }), _react2.default.createElement("div", {
       className: "filename"
-    }, filename), _react2.default.createElement(_Button.CloseButton, {
+    }, (0, _devtoolsModules.getUnicodeUrlPath)(filename)), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
       tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
     }));

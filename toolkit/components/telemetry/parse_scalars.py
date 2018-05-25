@@ -92,6 +92,10 @@ class ScalarType:
         if not self._strict_type_checks:
             return
 
+        def validate_notification_email(notification_email):
+            # Perform simple email validation to make sure it doesn't contain spaces or commas.
+            return not any(c in notification_email for c in [',', ' '])
+
         # The required and optional fields in a scalar type definition.
         REQUIRED_FIELDS = {
             'bug_numbers': list,  # This contains ints. See LIST_FIELDS_CONTENT.
@@ -141,6 +145,14 @@ class ScalarType:
         if len(wrong_type_names) > 0:
             ParserError(self._name + ' - ' + ', '.join(wrong_type_names) +
                         '.\nSee: {}#required-fields'.format(BASE_DOC_URL)).handle_later()
+
+        # Check that the email addresses doesn't contain spaces or commas
+        notification_emails = definition.get('notification_emails')
+        for notification_email in notification_emails:
+            print validate_notification_email(notification_email)
+            if not validate_notification_email(notification_email):
+                ParserError(self._name + ' - invalid email address: ' + notification_email +
+                            '.\nSee: {}'.format(BASE_DOC_URL)).handle_later()
 
         # Check that the lists are not empty and that data in the lists
         # have the correct types.

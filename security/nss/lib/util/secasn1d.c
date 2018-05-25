@@ -2987,7 +2987,9 @@ SEC_ASN1DecoderFinish(SEC_ASN1DecoderContext *cx)
      * XXX anything else that needs to be finished?
      */
 
-    PORT_FreeArena(cx->our_pool, PR_TRUE);
+    if (cx) {
+        PORT_FreeArena(cx->our_pool, PR_TRUE);
+    }
 
     return rv;
 }
