@@ -74,8 +74,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this.onFrameUnload = this.onFrameUnload.bind(this);
     this.onStyleSheetAdded = this.onStyleSheetAdded.bind(this);
 
-    this.inspector.tabActor.on("will-navigate", this.onFrameUnload);
-    this.inspector.tabActor.on("stylesheet-added", this.onStyleSheetAdded);
+    this.inspector.targetActor.on("will-navigate", this.onFrameUnload);
+    this.inspector.targetActor.on("stylesheet-added", this.onStyleSheetAdded);
 
     this._styleApplied = this._styleApplied.bind(this);
     this._watchedSheets = new Set();
@@ -86,8 +86,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       return;
     }
     protocol.Actor.prototype.destroy.call(this);
-    this.inspector.tabActor.off("will-navigate", this.onFrameUnload);
-    this.inspector.tabActor.off("stylesheet-added", this.onStyleSheetAdded);
+    this.inspector.targetActor.off("will-navigate", this.onFrameUnload);
+    this.inspector.targetActor.off("stylesheet-added", this.onStyleSheetAdded);
     this.inspector = null;
     this.walker = null;
     this.refMap = null;
@@ -111,7 +111,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     // We need to use CSS from the inspected window in order to use CSS.supports() and
     // detect the right platform features from there.
-    const CSS = this.inspector.tabActor.window.CSS;
+    const CSS = this.inspector.targetActor.window.CSS;
 
     return {
       actor: this.actorID,
@@ -190,8 +190,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *         The actor for this style sheet
    */
   _sheetRef: function(sheet) {
-    const tabActor = this.inspector.tabActor;
-    const actor = tabActor.createStyleSheetActor(sheet);
+    const targetActor = this.inspector.targetActor;
+    const actor = targetActor.createStyleSheetActor(sheet);
     return actor;
   },
 
@@ -263,7 +263,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *   object with 'fontFaces', a list of fonts that apply to this node.
    */
   getAllUsedFontFaces: function(options) {
-    const windows = this.inspector.tabActor.windows;
+    const windows = this.inspector.targetActor.windows;
     let fontsList = [];
     for (const win of windows) {
       fontsList = [...fontsList,
@@ -1141,7 +1141,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
 
       // We need to grab CSS from the window, since calling supports() on the
       // one from the current global will fail due to not being an HTML global.
-      const CSS = this.pageStyle.inspector.tabActor.window.CSS;
+      const CSS = this.pageStyle.inspector.targetActor.window.CSS;
       form.declarations = declarations.map(decl => {
         // Use the 1-arg CSS.supports() call so that we also accept !important
         // in the value.

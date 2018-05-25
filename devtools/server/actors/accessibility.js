@@ -382,9 +382,9 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
  * service.
  */
 const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
-  initialize(conn, tabActor) {
+  initialize(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
     this.refMap = new Map();
     this.setA11yServiceGetter();
     this.onPick = this.onPick.bind(this);
@@ -404,11 +404,11 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   },
 
   get rootWin() {
-    return this.tabActor && this.tabActor.window;
+    return this.targetActor && this.targetActor.window;
   },
 
   get rootDoc() {
-    return this.tabActor && this.tabActor.window.document;
+    return this.targetActor && this.targetActor.window.document;
   },
 
   reset() {
@@ -447,7 +447,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
     this.highlighter.destroy();
     this.highlighter = null;
 
-    this.tabActor = null;
+    this.targetActor = null;
     this.refMap = null;
   },
 
@@ -918,7 +918,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * Start picker content listeners.
    */
   _startPickerListeners: function() {
-    const target = this.tabActor.chromeEventHandler;
+    const target = this.targetActor.chromeEventHandler;
     target.addEventListener("mousemove", this.onHovered, true);
     target.addEventListener("click", this.onPick, true);
     target.addEventListener("mousedown", this._preventContentEvent, true);
@@ -932,7 +932,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
    * If content is still alive, stop picker content listeners.
    */
   _stopPickerListeners: function() {
-    const target = this.tabActor.chromeEventHandler;
+    const target = this.targetActor.chromeEventHandler;
 
     if (!target) {
       return;
@@ -967,7 +967,7 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
  * tools UI.
  */
 const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
-  initialize(conn, tabActor) {
+  initialize(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
 
     this.initializedDeferred = defer();
@@ -989,7 +989,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
     }
 
     Services.obs.addObserver(this, "a11y-init-or-shutdown");
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
   },
 
   bootstrap() {
@@ -1181,7 +1181,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
    */
   getWalker() {
     if (!this.walker) {
-      this.walker = new AccessibleWalkerActor(this.conn, this.tabActor);
+      this.walker = new AccessibleWalkerActor(this.conn, this.targetActor);
     }
     return this.walker;
   },
@@ -1216,7 +1216,7 @@ const AccessibilityActor = ActorClassWithSpec(accessibilitySpec, {
 
     Actor.prototype.destroy.call(this);
     this.walker = null;
-    this.tabActor = null;
+    this.targetActor = null;
     resolver();
   }
 });

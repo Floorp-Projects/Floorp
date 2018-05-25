@@ -60,7 +60,7 @@ addTest(function() {
 addTest(function() {
   info("Try to get a NodeFront from a valid actorID and valid complex path");
   gWalker.getNodeFromActor(gWalker.actorID,
-    ["tabActor", "window", "document", "body"]).then(bodyNode => {
+    ["targetActor", "window", "document", "body"]).then(bodyNode => {
       ok(bodyNode, "A node was returned");
       gWalker.querySelector(gWalker.rootNode, "body").then(node => {
         is(bodyNode, node, "The body node was returned");

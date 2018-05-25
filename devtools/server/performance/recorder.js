@@ -39,11 +39,11 @@ const DRAIN_ALLOCATIONS_TIMEOUT = 2000;
  * @param Target target
  *        The target owning this connection.
  */
-function PerformanceRecorder(conn, tabActor) {
+function PerformanceRecorder(conn, targetActor) {
   EventEmitter.decorate(this);
 
   this.conn = conn;
-  this.tabActor = tabActor;
+  this.targetActor = targetActor;
 
   this._pendingConsoleRecordings = [];
   this._recordings = [];
@@ -100,9 +100,9 @@ PerformanceRecorder.prototype = {
    * found in ./actors.js.
    */
   _connectComponents: function() {
-    this._profiler = new Profiler(this.tabActor);
-    this._memory = new Memory(this.tabActor);
-    this._timeline = new Timeline(this.tabActor);
+    this._profiler = new Profiler(this.targetActor);
+    this._memory = new Memory(this.targetActor);
+    this._timeline = new Timeline(this.targetActor);
     this._profiler.registerEventNotifications({ events: PROFILER_EVENTS });
   },
 

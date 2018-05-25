@@ -133,11 +133,11 @@ function TabTarget(tab) {
     this._client = tab.client;
     this._chrome = tab.chrome;
   }
-  // Default isTabActor to true if not explicitly specified
-  if (typeof tab.isTabActor == "boolean") {
-    this._isTabActor = tab.isTabActor;
+  // Default isBrowsingContext to true if not explicitly specified
+  if (typeof tab.isBrowsingContext == "boolean") {
+    this._isBrowsingContext = tab.isBrowsingContext;
   } else {
-    this._isTabActor = true;
+    this._isBrowsingContext = true;
   }
 }
 
@@ -308,11 +308,13 @@ TabTarget.prototype = {
     return this._chrome;
   },
 
-  // Tells us if the related actor implements TabActor interface
-  // and requires to call `attach` request before being used
-  // and `detach` during cleanup
-  get isTabActor() {
-    return this._isTabActor;
+  // Tells us if the related actor implements BrowsingContextTargetActor
+  // interface and requires to call `attach` request before being used and
+  // `detach` during cleanup.
+  // TODO: This flag is quite confusing, try to find a better way.
+  // Bug 1465635 hopes to blow up these classes entirely.
+  get isBrowsingContext() {
+    return this._isBrowsingContext;
   },
 
   get window() {
@@ -419,12 +421,12 @@ TabTarget.prototype = {
     } else if (this._form.isWebExtension &&
           this.client.mainRoot.traits.webExtensionAddonConnect) {
       // The addonActor form is related to a WebExtensionParentActor instance,
-      // which isn't a tab actor on its own, it is an actor living in the parent process
-      // with access to the addon metadata, it can control the addon (e.g. reloading it)
-      // and listen to the AddonManager events related to the lifecycle of the addon
-      // (e.g. when the addon is disabled or uninstalled ).
-      // To retrieve the TabActor instance, we call its "connect" method,
-      // (which fetches the TabActor form from a WebExtensionChildActor instance).
+      // which isn't a target actor on its own, it is an actor living in the parent
+      // process with access to the addon metadata, it can control the addon (e.g.
+      // reloading it) and listen to the AddonManager events related to the lifecycle of
+      // the addon (e.g. when the addon is disabled or uninstalled).
+      // To retrieve the target actor instance, we call its "connect" method, (which
+      // fetches the target actor form from a WebExtensionChildActor instance).
       const {form} = await this._client.request({
         to: this._form.actor, type: "connect",
       });
@@ -476,13 +478,13 @@ TabTarget.prototype = {
 
           attachTab();
         }, e => this._remote.reject(e));
-    } else if (this.isTabActor) {
+    } else if (this.isBrowsingContext) {
       // In the remote debugging case, the protocol connection will have been
       // already initialized in the connection screen code.
       attachTab();
     } else {
-      // AddonActor and chrome debugging on RootActor doesn't inherits from
-      // TabActor and doesn't need to be attached.
+      // AddonActor and chrome debugging on RootActor doesn't inherit from
+      // BrowsingContextTargetActor and doesn't need to be attached.
       attachConsole();
     }
 
@@ -772,7 +774,7 @@ WorkerTarget.prototype = {
     return true;
   },
 
-  get isTabActor() {
+  get isBrowsingContext() {
     return true;
   },
 

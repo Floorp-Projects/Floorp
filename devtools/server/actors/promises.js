@@ -19,7 +19,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * @param conn DebuggerServerConnection.
-   * @param parentActor TabActor|RootActor
+   * @param parentActor BrowsingContextTargetActor|RootActor
    */
   initialize: function(conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);

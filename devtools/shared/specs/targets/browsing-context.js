@@ -5,7 +5,7 @@
 
 const {types, generateActorSpec, RetVal, Option} = require("devtools/shared/protocol");
 
-types.addDictType("tab.attach", {
+types.addDictType("browsingContextTarget.attach", {
   type: "string",
   threadActor: "number",
   cacheDisabled: "boolean",
@@ -13,53 +13,53 @@ types.addDictType("tab.attach", {
   traits: "json"
 });
 
-types.addDictType("tab.detach", {
+types.addDictType("browsingContextTarget.detach", {
   error: "nullable:string",
   type: "nullable:string"
 });
 
-types.addDictType("tab.switchtoframe", {
+types.addDictType("browsingContextTarget.switchtoframe", {
   error: "nullable:string",
   message: "nullable:string"
 });
 
-types.addDictType("tab.listframes", {
-  frames: "array:tab.window"
+types.addDictType("browsingContextTarget.listframes", {
+  frames: "array:browsingContextTarget.window"
 });
 
-types.addDictType("tab.window", {
+types.addDictType("browsingContextTarget.window", {
   id: "string",
   parentID: "nullable:string",
   url: "string",
   title: "string"
 });
 
-types.addDictType("tab.workers", {
+types.addDictType("browsingContextTarget.workers", {
   error: "nullable:string"
 });
 
-types.addDictType("tab.reload", {
+types.addDictType("browsingContextTarget.reload", {
   force: "boolean"
 });
 
-types.addDictType("tab.reconfigure", {
+types.addDictType("browsingContextTarget.reconfigure", {
   javascriptEnabled: "nullable:boolean",
   cacheDisabled: "nullable:boolean",
   serviceWorkersTestingEnabled: "nullable:boolean",
   performReload: "nullable:boolean"
 });
 
-const tabSpec = generateActorSpec({
-  typeName: "tab",
+const browsingContextTargetSpec = generateActorSpec({
+  typeName: "browsingContextTarget",
 
   methods: {
     attach: {
       request: {},
-      response: RetVal("tab.attach")
+      response: RetVal("browsingContextTarget.attach")
     },
     detach: {
       request: {},
-      response: RetVal("tab.detach")
+      response: RetVal("browsingContextTarget.detach")
     },
     ensureCSSErrorReportingEnabled: {
       request: {},
@@ -71,7 +71,7 @@ const tabSpec = generateActorSpec({
     },
     reload: {
       request: {
-        options: Option(0, "tab.reload"),
+        options: Option(0, "browsingContextTarget.reload"),
       },
       response: {}
     },
@@ -83,7 +83,7 @@ const tabSpec = generateActorSpec({
     },
     reconfigure: {
       request: {
-        options: Option(0, "tab.reconfigure")
+        options: Option(0, "browsingContextTarget.reconfigure")
       },
       response: {}
     },
@@ -91,15 +91,15 @@ const tabSpec = generateActorSpec({
       request: {
         windowId: Option(0, "string")
       },
-      response: RetVal("tab.switchtoframe")
+      response: RetVal("browsingContextTarget.switchtoframe")
     },
     listFrames: {
       request: {},
-      response: RetVal("tab.listframes")
+      response: RetVal("browsingContextTarget.listframes")
     },
     listWorkers: {
       request: {},
-      response: RetVal("tab.workers")
+      response: RetVal("browsingContextTarget.workers")
     },
     logInPage: {
       request: {
@@ -112,4 +112,4 @@ const tabSpec = generateActorSpec({
   }
 });
 
-exports.tabSpec = tabSpec;
+exports.browsingContextTargetSpec = browsingContextTargetSpec;

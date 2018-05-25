@@ -41,7 +41,7 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     },
   },
 
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     Actor.prototype.initialize.call(this, conn);
 
     this._onRecordingStarted = this._onRecordingStarted.bind(this);
@@ -51,7 +51,7 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     this._onTimelineData = this._onTimelineData.bind(this);
     this._onConsoleProfileStart = this._onConsoleProfileStart.bind(this);
 
-    this.bridge = new PerformanceRecorder(conn, tabActor);
+    this.bridge = new PerformanceRecorder(conn, targetActor);
 
     this.bridge.on("recording-started", this._onRecordingStarted);
     this.bridge.on("recording-stopping", this._onRecordingStopping);

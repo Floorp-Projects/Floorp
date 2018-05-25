@@ -24,11 +24,11 @@ const { TouchSimulator } = require("devtools/server/actors/emulation/touch-simul
  */
 const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
 
-  initialize(conn, tabActor) {
+  initialize(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
-    this.docShell = tabActor.docShell;
-    this.touchSimulator = new TouchSimulator(tabActor.chromeEventHandler);
+    this.targetActor = targetActor;
+    this.docShell = targetActor.docShell;
+    this.touchSimulator = new TouchSimulator(targetActor.chromeEventHandler);
   },
 
   destroy() {
@@ -36,7 +36,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     this.clearNetworkThrottling();
     this.clearTouchEventsOverride();
     this.clearUserAgentOverride();
-    this.tabActor = null;
+    this.targetActor = null;
     this.docShell = null;
     this.touchSimulator = null;
     protocol.Actor.prototype.destroy.call(this);
@@ -48,10 +48,10 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
    * monitor, which for historical reasons is part of the console actor.
    */
   get _consoleActor() {
-    if (this.tabActor.exited) {
+    if (this.targetActor.exited) {
       return null;
     }
-    const form = this.tabActor.form();
+    const form = this.targetActor.form();
     return this.conn._getOrCreateActor(form.consoleActor);
   },
 

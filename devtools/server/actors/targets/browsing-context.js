@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,9 +6,18 @@
 
 /* global XPCNativeWrapper */
 
-// For performance matters, this file should only be loaded in the targeted
-// document process. For example, it shouldn't be evaluated in the parent
-// process until we try to debug a document living in the parent process.
+/*
+ * BrowsingContextTargetActor is an abstract class used by target actors that hold
+ * documents, such as frames, chrome windows, etc.
+ *
+ * This class is extended by ContentActor, ChromeActor, and WindowActor.
+ *
+ * See devtools/docs/backend/actor-hierarchy.md for more details.
+ *
+ * For performance matters, this file should only be loaded in the targeted context's
+ * process. For example, it shouldn't be evaluated in the parent process until we try to
+ * debug a document living in the parent process.
+ */
 
 var { Ci, Cu, Cr, Cc } = require("chrome");
 var Services = require("Services");
@@ -21,14 +28,14 @@ var {
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
-var { TabSources } = require("./utils/TabSources");
-var makeDebugger = require("./utils/make-debugger");
+var { TabSources } = require("devtools/server/actors/utils/TabSources");
+var makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const InspectorUtils = require("InspectorUtils");
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const { tabSpec } = require("devtools/shared/specs/tab");
+const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
@@ -86,12 +93,19 @@ function getInnerId(window) {
                .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 }
 
-const tabPrototype = {
+const browsingContextTargetPrototype = {
 
   /**
-   * Creates a TabActor whose main goal is to manage lifetime and
-   * expose the tab actors being registered via DebuggerServer.registerModule.
-   * But also track the lifetime of the document being tracked.
+   * BrowsingContextTargetActor is an abstract class used by target actors that
+   * hold documents, such as frames, chrome windows, etc.  The term "browsing
+   * context" is defined in the HTML spec as "an environment in which `Document`
+   * objects are presented to the user".  In Gecko, this means a browsing context
+   * is a `docShell`.
+   *
+   * TODO: Bug 1465637: Rename "tab" actors to something else.
+   * The main goal of this class is to expose the tab actors being registered via
+   * `DebuggerServer.registerModule` and manage their lifetimes.  In addition,
+   * this class also tracks the lifetime of the targeted browsing context.
    *
    * ### Main requests:
    *
@@ -103,36 +117,37 @@ const tabPrototype = {
    *    Instantiates a ThreadActor that can be later attached to in order to
    *    debug JS sources in the document.
    * `switchToFrame`:
-   *  Change the targeted document of the whole TabActor, and its child tab actors
+   *  Change the targeted document of the whole actor, and its child tab actors
    *  to an iframe or back to its original document.
    *
-   * Most of the TabActor properties (like `chromeEventHandler` or `docShells`)
-   * are meant to be used by the various child tab actors.
+   * Most properties (like `chromeEventHandler` or `docShells`) are meant to be
+   * used by the various child target actors.
    *
    * ### RDP events:
    *
    *  - `tabNavigated`:
-   *    Sent when the tab is about to navigate or has just navigated to
-   *    a different document.
+   *    Sent when the browsing context is about to navigate or has just navigated
+   *    to a different document.
    *    This event contains the following attributes:
-   *     * url (string) The new URI being loaded.
-   *     * nativeConsoleAPI (boolean) `false` if the console API of the page has
-   *                                          been overridden (e.g. by Firebug),
-   *                                  `true`  if the Gecko implementation is used.
-   *     * state (string) `start` if we just start requesting the new URL,
-   *                      `stop`  if the new URL is done loading.
-   *     * isFrameSwitching (boolean) Indicates the event is dispatched when
-   *                                  switching the TabActor context to
-   *                                  a different frame. When we switch to
-   *                                  an iframe, there is no document load.
-   *                                  The targeted document is most likely
-   *                                  going to be already done loading.
-   *     * title (string) The document title being loaded.
-   *                      (sent only on state=stop)
+   *     * url (string)
+   *       The new URI being loaded.
+   *     * nativeConsoleAPI (boolean)
+   *       `false` if the console API of the page has been overridden (e.g. by Firebug)
+   *       `true`  if the Gecko implementation is used
+   *     * state (string)
+   *       `start` if we just start requesting the new URL
+   *       `stop`  if the new URL is done loading
+   *     * isFrameSwitching (boolean)
+   *       Indicates the event is dispatched when switching the actor context to a
+   *       different frame. When we switch to an iframe, there is no document
+   *       load. The targeted document is most likely going to be already done
+   *       loading.
+   *     * title (string)
+   *       The document title being loaded. (sent only on state=stop)
    *
    *  - `frameUpdate`:
    *    Sent when there was a change in the child frames contained in the document
-   *    or when the tab's context was switched to another frame.
+   *    or when the actor's context was switched to another frame.
    *    This event can have four different forms depending on the type of change:
    *    * One or many frames are updated:
    *      { frames: [{ id, url, title, parentID }, ...] }
@@ -140,18 +155,17 @@ const tabPrototype = {
    *      { frames: [{ id, destroy: true }]}
    *    * All frames got destroyed:
    *      { destroyAll: true }
-   *    * We switched the context of the TabActor to a specific frame:
+   *    * We switched the context of the actor to a specific frame:
    *      { selected: #id }
    *
    * ### Internal, non-rdp events:
-   * Various events are also dispatched on the TabActor itself that are not
-   * related to RDP, so, not sent to the client. They all relate to the documents
-   * tracked by the TabActor (its main targeted document, but also any of its
-   * iframes).
+   *
+   * Various events are also dispatched on the actor itself without being sent to
+   * the client. They all relate to the documents tracked by this target actor
+   * (its main targeted document, but also any of its iframes):
    *  - will-navigate
-   *    This event fires once navigation starts.
-   *    All pending user prompts are dealt with,
-   *    but it is fired before the first request starts.
+   *    This event fires once navigation starts. All pending user prompts are
+   *    dealt with, but it is fired before the first request starts.
    *  - navigate
    *    This event is fired once the document's readyState is "complete".
    *  - window-ready
@@ -164,27 +178,27 @@ const tabPrototype = {
    *       this page, so it's now live again and we should resume handling it.
    *     * For each existing document, when an `attach` request is received.
    *       At this point scripts in the page will be already loaded.
-   *     * When `swapFrameLoaders` is used, such as with moving tabs between
-   *       windows or toggling Responsive Design Mode.
+   *     * When `swapFrameLoaders` is used, such as with moving browsing contexts
+   *       between windows or toggling Responsive Design Mode.
    *  - window-destroyed
    *    This event is fired in two cases:
    *     * When the window object is destroyed, i.e. when the related document
-   *       is garbage collected. This can happen when the tab is closed or the
-   *       iframe is removed from the DOM.
+   *       is garbage collected. This can happen when the browsing context is
+   *       closed or the iframe is removed from the DOM.
    *       It is equivalent of `inner-window-destroyed` event.
    *     * When the page goes into the bfcache and gets frozen.
    *       The equivalent of `pagehide`.
    *  - changed-toplevel-document
-   *    This event fires when we switch the TabActor targeted document
+   *    This event fires when we switch the actor's targeted document
    *    to one of its iframes, or back to its original top document.
    *    It is dispatched between window-destroyed and window-ready.
    *  - stylesheet-added
    *    This event is fired when a StyleSheetActor is created.
-   *    It contains the following attribute :
+   *    It contains the following attribute:
    *     * actor (StyleSheetActor) The created actor.
    *
    * Note that *all* these events are dispatched in the following order
-   * when we switch the context of the TabActor to a given iframe:
+   * when we switch the context of the actor to a given iframe:
    *  - will-navigate
    *  - window-destroyed
    *  - changed-toplevel-document
@@ -229,7 +243,7 @@ const tabPrototype = {
       // as well as frame switching via `switchToFrame` request
       frames: true,
       // Do not require to send reconfigure request to reset the document state
-      // to what it was before using the TabActor
+      // to what it was before using the actor
       noTabReconfigureOnClose: true,
       // Supports the logInPage request.
       logInPage: true,
@@ -281,8 +295,10 @@ const tabPrototype = {
     return this._contextPool;
   },
 
-  // A constant prefix that will be used to form the actor ID by the server.
-  actorPrefix: "tab",
+  /**
+   * A constant prefix that will be used to form the actor ID by the server.
+   */
+  typeName: "browsingContextTarget",
 
   /**
    * An object on which listen for DOMWindowCreated and pageshow events.
@@ -292,7 +308,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the nsIMessageManager associated to the tab.
+   * Getter for the nsIMessageManager associated to the browsing context.
    */
   get messageManager() {
     try {
@@ -305,15 +321,15 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the tab's doc shell.
+   * Getter for the browsing context's `docShell`.
    */
   get docShell() {
-    throw new Error(
-      "The docShell getter should be implemented by a subclass of TabActor");
+    throw new Error("`docShell` getter should be overridden by a subclass of " +
+                    "`BrowsingContextTargetActor`");
   },
 
   /**
-   * Getter for the list of all docshell in this tabActor
+   * Getter for the list of all `docShell`s in the browsing context.
    * @return {Array}
    */
   get docShells() {
@@ -321,7 +337,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the tab content's DOM window.
+   * Getter for the browsing context's current DOM window.
    */
   get window() {
     // On xpcshell, there is no document
@@ -344,10 +360,10 @@ const tabPrototype = {
 
   /**
    * Getter for the WebExtensions ContentScript globals related to the
-   * current tab content's DOM window.
+   * browsing context's current DOM window.
    */
   get webextensionsContentScriptGlobals() {
-    // Ignore xpcshell runtime which spawn TabActors without a window
+    // Ignore xpcshell runtime which spawns target actors without a window
     // and only retrieve the content scripts globals if the ExtensionContent JSM module
     // has been already loaded (which is true if the WebExtensions internals have already
     // been loaded in the same content process).
@@ -359,7 +375,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the list of all content DOM windows in this tabActor
+   * Getter for the list of all content DOM windows in the browsing context.
    * @return {Array}
    */
   get windows() {
@@ -370,7 +386,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the original docShell the tabActor got attached to in the first
+   * Getter for the original docShell this actor got attached to in the first
    * place.
    * Note that your actor should normally *not* rely on this top level docShell
    * if you want it to show information relative to the iframe that's currently
@@ -387,7 +403,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the original window the tabActor got attached to in the first
+   * Getter for the original window this actor got attached to in the first
    * place.
    * Note that your actor should normally *not* rely on this top level window if
    * you want it to show information relative to the iframe that's currently
@@ -407,7 +423,7 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the nsIWebNavigation for the tab.
+   * Getter for the nsIWebNavigation for the target.
    */
   get webNavigation() {
     return this.docShell
@@ -416,25 +432,21 @@ const tabPrototype = {
   },
 
   /**
-   * Getter for the tab's document.
+   * Getter for the browsing context's document.
    */
   get contentDocument() {
     return this.webNavigation.document;
   },
 
   /**
-   * Getter for the tab title.
-   * @return string
-   *         Tab title.
+   * Getter for the browsing context's title.
    */
   get title() {
     return this.contentDocument.contentTitle;
   },
 
   /**
-   * Getter for the tab URL.
-   * @return string
-   *         Tab URL.
+   * Getter for the browsing context's URL.
    */
   get url() {
     if (this.webNavigation.currentURI) {
@@ -456,14 +468,14 @@ const tabPrototype = {
     assert(!this.exited,
                "form() shouldn't be called on exited browser actor.");
     assert(this.actorID,
-               "tab should have an actorID.");
+               "Actor should have an actorID.");
 
     const response = {
       actor: this.actorID
     };
 
     // We may try to access window while the document is closing, then
-    // accessing window throws. Also on xpcshell we are using tabactor even if
+    // accessing window throws. Also on xpcshell we are using this actor even if
     // there is no valid document.
     if (this.docShell && !this.docShell.isBeingDestroyed()) {
       response.title = this.title;
@@ -497,17 +509,18 @@ const tabPrototype = {
   },
 
   /**
-   * Called by the root actor when the underlying tab is closed.
+   * Called by the root actor when the underlying browsing context is closed.
    */
   exit() {
     if (this.exited) {
       return;
     }
 
-    // Tell the thread actor that the tab is closed, so that it may terminate
+    // Tell the thread actor that the browsing context is closed, so that it may terminate
     // instead of resuming the debuggee script.
     if (this._attached) {
-      this.threadActor._tabClosed = true;
+      // TODO: Bug 997119: Remove this coupling with thread actor
+      this.threadActor._parentClosed = true;
     }
 
     this._detach();
@@ -523,8 +536,8 @@ const tabPrototype = {
   },
 
   /**
-   * Return true if the given global is associated with this tab and should be
-   * added as a debuggee, false otherwise.
+   * Return true if the given global is associated with this browsing context and should
+   * be added as a debuggee, false otherwise.
    */
   _shouldAddNewGlobalAsDebuggee(wrappedGlobal) {
     if (wrappedGlobal.hostAnnotations &&
@@ -562,7 +575,7 @@ const tabPrototype = {
   _appendExtraActors: appendExtraActors,
 
   /**
-   * Does the actual work of attaching to a tab.
+   * Does the actual work of attaching to a browsing context.
    */
   _attach() {
     if (this._attached) {
@@ -686,8 +699,8 @@ const tabPrototype = {
   },
 
   observe(subject, topic, data) {
-    // Ignore any event that comes before/after the tab actor is attached
-    // That typically happens during firefox shutdown.
+    // Ignore any event that comes before/after the actor is attached.
+    // That typically happens during Firefox shutdown.
     if (!this.attached) {
       return;
     }
@@ -750,16 +763,15 @@ const tabPrototype = {
       } else {
         // If for some reason (typically during Firefox shutdown), the original
         // document is destroyed, and there is no other top level docshell,
-        // we detach the tab actor to unregister all listeners and prevent any
-        // exception
+        // we detach the actor to unregister all listeners and prevent any
+        // exception.
         this.exit();
       }
       return;
     }
 
-    // If the currently targeted context is destroyed,
-    // and we aren't on the top-level document,
-    // we have to switch to the top-level one.
+    // If the currently targeted browsing context is destroyed, and we aren't on
+    // the top-level document, we have to switch to the top-level one.
     if (webProgress.DOMWindow == this.window &&
         this.window != this._originalWindow) {
       this._changeTopLevelDocument(this._originalWindow);
@@ -881,17 +893,17 @@ const tabPrototype = {
   },
 
   /**
-   * Does the actual work of detaching from a tab.
+   * Does the actual work of detaching from a browsing context.
    *
-   * @returns false if the tab wasn't attached or true of detaching succeeds.
+   * @returns false if the actor wasn't attached or true of detaching succeeds.
    */
   _detach() {
     if (!this.attached) {
       return false;
     }
 
-    // Check for docShell availability, as it can be already gone
-    // during Firefox shutdown.
+    // Check for `docShell` availability, as it can be already gone during
+    // Firefox shutdown.
     if (this.docShell) {
       this._unwatchDocShell(this.docShell);
       this._restoreDocumentSettings();
@@ -968,7 +980,7 @@ const tabPrototype = {
   },
 
   /**
-   * Bring the tab's window to front.
+   * Bring the browsing context's window to front.
    */
   focus() {
     if (this.window) {
@@ -978,7 +990,7 @@ const tabPrototype = {
   },
 
   /**
-   * Reload the page in this tab.
+   * Reload the page in this browsing context.
    */
   reload(request) {
     const force = request && request.options && request.options.force;
@@ -993,19 +1005,19 @@ const tabPrototype = {
       this.webNavigation.reload(force ?
         Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE :
         Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
-    }, "TabActor.prototype.reload's delayed body"));
+    }, "BrowsingContextTargetActor.prototype.reload's delayed body"));
     return {};
   },
 
   /**
-   * Navigate this tab to a new location
+   * Navigate this browsing context to a new location
    */
   navigateTo(request) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.dispatchToMainThread(DevToolsUtils.makeInfallible(() => {
       this.window.location = request.url;
-    }, "TabActor.prototype.navigateTo's delayed body"));
+    }, "BrowsingContextTargetActor.prototype.navigateTo's delayed body"));
     return {};
   },
 
@@ -1016,7 +1028,7 @@ const tabPrototype = {
     const options = request.options || {};
 
     if (!this.docShell) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return {};
     }
     this._toggleDevToolsSettings(options);
@@ -1133,7 +1145,7 @@ const tabPrototype = {
    */
   _getJavascriptEnabled() {
     if (!this.docShell) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return null;
     }
 
@@ -1154,7 +1166,7 @@ const tabPrototype = {
    */
   _getCacheDisabled() {
     if (!this.docShell) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return null;
     }
 
@@ -1168,7 +1180,7 @@ const tabPrototype = {
    */
   _getServiceWorkersTestingEnabled() {
     if (!this.docShell) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return null;
     }
 
@@ -1182,7 +1194,7 @@ const tabPrototype = {
    */
   preNest() {
     if (!this.window) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return;
     }
     const windowUtils = this.window
@@ -1197,7 +1209,7 @@ const tabPrototype = {
    */
   postNest(nestData) {
     if (!this.window) {
-      // The tab is already closed.
+      // The browsing context is already closed.
       return;
     }
     const windowUtils = this.window
@@ -1237,9 +1249,9 @@ const tabPrototype = {
     const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShell);
-    // Here is the very important call where we switch the currently
-    // targeted context (it will indirectly update this.window and
-    // many other attributes defined from docShell).
+    // Here is the very important call where we switch the currently targeted
+    // browsing context (it will indirectly update this.window and many other
+    // attributes defined from docShell).
     Object.defineProperty(this, "docShell", {
       value: docShell,
       enumerable: true,
@@ -1303,8 +1315,8 @@ const tabPrototype = {
   },
 
   /**
-   * Start notifying server and client about a new document
-   * being loaded in the currently targeted context.
+   * Start notifying server and client about a new document being loaded in the
+   * currently targeted browsing context.
    */
   _willNavigate(window, newURI, request, isFrameSwitching = false) {
     let isTopLevel = window == this.window;
@@ -1314,11 +1326,11 @@ const tabPrototype = {
       // Clear the iframe list if the original top-level document changes.
       this._notifyDocShellDestroyAll();
 
-      // If the top level document changes and we are targeting
-      // an iframe, we need to reset to the upcoming new top level document.
-      // But for this will-navigate event, we will dispatch on the old window.
-      // (The inspector codebase expect to receive will-navigate for the
-      // currently displayed document in order to cleanup the markup view)
+      // If the top level document changes and we are targeting an iframe, we
+      // need to reset to the upcoming new top level document. But for this
+      // will-navigate event, we will dispatch on the old window. (The inspector
+      // codebase expect to receive will-navigate for the currently displayed
+      // document in order to cleanup the markup view)
       if (this.window != this._originalWindow) {
         reset = true;
         window = this.window;
@@ -1326,11 +1338,10 @@ const tabPrototype = {
       }
     }
 
-    // will-navigate event needs to be dispatched synchronously,
-    // by calling the listeners in the order or registration.
-    // This event fires once navigation starts,
-    // (all pending user prompts are dealt with),
-    // but before the first request starts.
+    // will-navigate event needs to be dispatched synchronously, by calling the
+    // listeners in the order or registration. This event fires once navigation
+    // starts, (all pending user prompts are dealt with), but before the first
+    // request starts.
     this.emit("will-navigate", {
       window: window,
       isTopLevel: isTopLevel,
@@ -1338,7 +1349,7 @@ const tabPrototype = {
       request: request
     });
 
-    // We don't do anything for inner frames in TabActor.
+    // We don't do anything for inner frames here.
     // (we will only update thread actor on window-ready)
     if (!isTopLevel) {
       return;
@@ -1371,7 +1382,7 @@ const tabPrototype = {
 
   /**
    * Notify server and client about a new document done loading in the current
-   * targeted context.
+   * targeted browsing context.
    */
   _navigate(window, isFrameSwitching = false) {
     const isTopLevel = window == this.window;
@@ -1385,7 +1396,7 @@ const tabPrototype = {
       isTopLevel: isTopLevel
     });
 
-    // We don't do anything for inner frames in TabActor.
+    // We don't do anything for inner frames here.
     // (we will only update thread actor on window-ready)
     if (!isTopLevel) {
       return;
@@ -1464,20 +1475,21 @@ const tabPrototype = {
   },
 };
 
-exports.tabPrototype = tabPrototype;
-exports.TabActor = ActorClassWithSpec(tabSpec, tabPrototype);
+exports.browsingContextTargetPrototype = browsingContextTargetPrototype;
+exports.BrowsingContextTargetActor =
+  ActorClassWithSpec(browsingContextTargetSpec, browsingContextTargetPrototype);
 
 /**
  * The DebuggerProgressListener object is an nsIWebProgressListener which
- * handles onStateChange events for the inspected browser. If the user tries to
- * navigate away from a paused page, the listener makes sure that the debuggee
- * is resumed before the navigation begins.
+ * handles onStateChange events for the targeted browsing context. If the user
+ * tries to navigate away from a paused page, the listener makes sure that the
+ * debuggee is resumed before the navigation begins.
  *
- * @param TabActor aTabActor
- *        The tab actor associated with this listener.
+ * @param BrowsingContextTargetActor targetActor
+ *        The browsing context target actor associated with this listener.
  */
-function DebuggerProgressListener(tabActor) {
-  this._tabActor = tabActor;
+function DebuggerProgressListener(targetActor) {
+  this._targetActor = targetActor;
   this._onWindowCreated = this.onWindowCreated.bind(this);
   this._onWindowHidden = this.onWindowHidden.bind(this);
 
@@ -1523,9 +1535,9 @@ DebuggerProgressListener.prototype = {
     handler.addEventListener("pageshow", this._onWindowCreated, true);
     handler.addEventListener("pagehide", this._onWindowHidden, true);
 
-    // Dispatch the _windowReady event on the tabActor for pre-existing windows
+    // Dispatch the _windowReady event on the targetActor for pre-existing windows
     for (const win of this._getWindowsInDocShell(docShell)) {
-      this._tabActor._windowReady(win);
+      this._targetActor._windowReady(win);
       this._knownWindowIDs.set(getWindowID(win), win);
     }
   },
@@ -1565,7 +1577,7 @@ DebuggerProgressListener.prototype = {
   },
 
   onWindowCreated: DevToolsUtils.makeInfallible(function(evt) {
-    if (!this._tabActor.attached) {
+    if (!this._targetActor.attached) {
       return;
     }
 
@@ -1589,13 +1601,13 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    this._tabActor._windowReady(window);
+    this._targetActor._windowReady(window);
 
     this._knownWindowIDs.set(innerID, window);
   }, "DebuggerProgressListener.prototype.onWindowCreated"),
 
   onWindowHidden: DevToolsUtils.makeInfallible(function(evt) {
-    if (!this._tabActor.attached) {
+    if (!this._targetActor.attached) {
       return;
     }
 
@@ -1614,12 +1626,12 @@ DebuggerProgressListener.prototype = {
     }
 
     const window = evt.target.defaultView;
-    this._tabActor._windowDestroyed(window, null, true);
+    this._targetActor._windowDestroyed(window, null, true);
     this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
 
   observe: DevToolsUtils.makeInfallible(function(subject, topic) {
-    if (!this._tabActor.attached) {
+    if (!this._targetActor.attached) {
       return;
     }
 
@@ -1630,13 +1642,13 @@ DebuggerProgressListener.prototype = {
     const window = this._knownWindowIDs.get(innerID);
     if (window) {
       this._knownWindowIDs.delete(innerID);
-      this._tabActor._windowDestroyed(window, innerID);
+      this._targetActor._windowDestroyed(window, innerID);
     }
   }, "DebuggerProgressListener.prototype.observe"),
 
   onStateChange:
   DevToolsUtils.makeInfallible(function(progress, request, flag, status) {
-    if (!this._tabActor.attached) {
+    if (!this._targetActor.attached) {
       return;
     }
 
@@ -1649,7 +1661,7 @@ DebuggerProgressListener.prototype = {
     if (isDocument && isStop) {
       // Watch document stop to ensure having the new iframe url.
       progress.QueryInterface(Ci.nsIDocShell);
-      this._tabActor._notifyDocShellsUpdate([progress]);
+      this._targetActor._notifyDocShellsUpdate([progress]);
     }
 
     const window = progress.DOMWindow;
@@ -1657,7 +1669,7 @@ DebuggerProgressListener.prototype = {
       // One of the earliest events that tells us a new URI
       // is being loaded in this window.
       const newURI = request instanceof Ci.nsIChannel ? request.URI.spec : null;
-      this._tabActor._willNavigate(window, newURI, request);
+      this._targetActor._willNavigate(window, newURI, request);
     }
     if (isWindow && isStop) {
       // Don't dispatch "navigate" event just yet when there is a redirect to
@@ -1676,14 +1688,14 @@ DebuggerProgressListener.prototype = {
           // Ignore events from iframes
           if (evt.target === window.document) {
             handler.removeEventListener("DOMContentLoaded", onLoad, true);
-            this._tabActor._navigate(window);
+            this._targetActor._navigate(window);
           }
         };
         handler.addEventListener("DOMContentLoaded", onLoad, true);
       } else {
         // Somewhat equivalent of load event.
         // (window.document.readyState == complete)
-        this._tabActor._navigate(window);
+        this._targetActor._navigate(window);
       }
     }
   }, "DebuggerProgressListener.prototype.onStateChange")

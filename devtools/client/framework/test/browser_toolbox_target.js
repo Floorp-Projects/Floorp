@@ -49,11 +49,11 @@ add_task(async function() {
   info("Toolbox destroyed");
 
   // Also wait for tabDetached. Toolbox destroys the Target which calls
-  // TabActor.detach(). But Target doesn't wait for detach's end to resolve.
-  // Whereas it is quite important as it is a significant part of toolbox
-  // cleanup. If we do not wait for it and starts removing debugged document,
-  // the actor is still considered as being attached and continues processing
-  // events.
+  // BrowsingContextTargetActor.detach(). But Target doesn't wait for detach's
+  // end to resolve. Whereas it is quite important as it is a significant part
+  // of toolbox cleanup. If we do not wait for it and starts removing debugged
+  // document, the actor is still considered as being attached and continues
+  // processing events.
   await onTabActorDetached;
 
   iframe.remove();

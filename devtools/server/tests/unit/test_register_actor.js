@@ -51,12 +51,12 @@ function test_deprecated_api() {
 // Bug 988237: Test the new lazy actor loading
 function test_lazy_api() {
   let isActorLoaded = false;
-  let isActorInstanciated = false;
+  let isActorInstantiated = false;
   function onActorEvent(subject, topic, data) {
     if (data == "loaded") {
       isActorLoaded = true;
     } else if (data == "instantiated") {
-      isActorInstanciated = true;
+      isActorInstantiated = true;
     }
   }
   Services.obs.addObserver(onActorEvent, "actor");
@@ -69,7 +69,7 @@ function test_lazy_api() {
   Assert.ok(DebuggerServer.tabActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(DebuggerServer.globalActorFactories.hasOwnProperty("lazyActor"));
   Assert.ok(!isActorLoaded);
-  Assert.ok(!isActorInstanciated);
+  Assert.ok(!isActorInstantiated);
 
   const client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect().then(function onConnect() {
@@ -79,7 +79,7 @@ function test_lazy_api() {
     // On listTabs, the actor is still not loaded,
     // but we can see its name in the list of available actors
     Assert.ok(!isActorLoaded);
-    Assert.ok(!isActorInstanciated);
+    Assert.ok(!isActorInstantiated);
     Assert.ok("lazyActor" in response);
 
     const {LazyFront} = require("xpcshell-test/registertestactors-03");
@@ -91,7 +91,7 @@ function test_lazy_api() {
 
     // Finally, the actor is loaded on the first request being made to it
     Assert.ok(isActorLoaded);
-    Assert.ok(isActorInstanciated);
+    Assert.ok(isActorInstantiated);
 
     Services.obs.removeObserver(onActorEvent, "actor");
     client.close().then(() => run_next_test());

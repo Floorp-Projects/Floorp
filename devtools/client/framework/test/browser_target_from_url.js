@@ -19,7 +19,7 @@ function assertIsTabTarget(target, url, chrome = false) {
   is(target.url, url);
   is(target.isLocalTab, false);
   is(target.chrome, chrome);
-  is(target.isTabActor, true);
+  is(target.isBrowsingContext, true);
   is(target.isRemote, true);
 }
 
@@ -44,7 +44,7 @@ add_task(async function() {
   is(target.url, window.location.href);
   is(target.isLocalTab, false);
   is(target.chrome, true);
-  is(target.isTabActor, true);
+  is(target.isBrowsingContext, true);
   is(target.isRemote, true);
 
   info("Test tab");

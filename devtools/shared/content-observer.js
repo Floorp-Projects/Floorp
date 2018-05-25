@@ -13,8 +13,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
  * event sent immediately after a web content document window has been set up,
  * but before any script code has been executed.
  */
-function ContentObserver(tabActor) {
-  this._contentWindow = tabActor.window;
+function ContentObserver(targetActor) {
+  this._contentWindow = targetActor.window;
   this._onContentGlobalCreated = this._onContentGlobalCreated.bind(this);
   this._onInnerWindowDestroyed = this._onInnerWindowDestroyed.bind(this);
   this.startListening();

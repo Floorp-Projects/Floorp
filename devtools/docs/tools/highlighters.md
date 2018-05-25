@@ -123,10 +123,10 @@ Its goal is to provide a simple way for highlighters to insert their content int
 Using this helper is quite simple:
 
 ```js
-let helper = new CanvasFrameAnonymousContentHelper(tabActor, this.buildMarkup.bind(this));
+let helper = new CanvasFrameAnonymousContentHelper(targetActor, this.buildMarkup.bind(this));
 ```
 
-It only requires a `tabActor`, which highlighters get when they are instantiated, and a callback function that will be used to create and insert the content the first time the highlighter is shown, and every time there's a page navigation.
+It only requires a `targetActor`, which highlighters get when they are instantiated, and a callback function that will be used to create and insert the content the first time the highlighter is shown, and every time there's a page navigation.
 
 The returned object provides the following API:
 
@@ -147,9 +147,9 @@ A good way to get started is by taking a look at [existing highlighters here](ht
 Here is some boilerplate code for a new highlighter class:
 
 ```js
- function MyNewHighlighter(tabActor) {
-   this.doc = tabActor.window.document;
-   this.markup = new CanvasFrameAnonymousContentHelper(tabActor, this._buildMarkup.bind(this));
+ function MyNewHighlighter(targetActor) {
+   this.doc = targetActor.window.document;
+   this.markup = new CanvasFrameAnonymousContentHelper(targetActor, this._buildMarkup.bind(this));
  }
 
  MyNewHighlighter.prototype = {

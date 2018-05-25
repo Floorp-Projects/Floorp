@@ -2203,7 +2203,7 @@ Toolbox.prototype = {
 
   _listFrames: function(event) {
     if (!this._target.activeTab || !this._target.activeTab.traits.frames) {
-      // We are not targetting a regular TabActor
+      // We are not targetting a regular BrowsingContextTargetActor
       // it can be either an addon or browser toolbox actor
       return promise.resolve();
     }

@@ -6,11 +6,14 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { TabActor, tabPrototype } = require("./tab");
+const {
+  BrowsingContextTargetActor,
+  browsingContextTargetPrototype
+} = require("devtools/server/actors/targets/browsing-context");
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { tabSpec } = require("devtools/shared/specs/tab");
+const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 /**
  * Creates a WindowActor for debugging a single window, like a browser window in Firefox,
@@ -18,15 +21,14 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  * process only because the root actor's `onGetWindow` doesn't try to cross process
  * boundaries.)  Both chrome and content windows are supported.
  *
- * Most of the implementation is inherited from TabActor.  WindowActor exposes all tab
- * actors via its form() request, like TabActor.
+ * Most of the implementation is inherited from BrowsingContextTargetActor. WindowActor
+ * exposes all tab actors via its form() request, like BrowsingContextTargetActor.
  *
  * You can request a specific window's actor via RootActor.getWindow().
  *
- * Caveat: Protocol.js expects only the prototype object, and does
- * not maintain the prototype chain when it constructs the
- * ActorClass. For this reason we are using `extend` to
- * maintain the properties of TabActor.prototype
+ * Caveat: Protocol.js expects only the prototype object, and does not maintain the
+ * prototype chain when it constructs the ActorClass. For this reason we are using
+ * `extend` to maintain the properties of BrowsingContextTargetActor.prototype
  *
  * @param connection DebuggerServerConnection
  *        The connection to the client.
@@ -34,10 +36,10 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  *        The window.
  */
 
-const windowPrototype = extend({}, tabPrototype);
+const windowPrototype = extend({}, browsingContextTargetPrototype);
 
 windowPrototype.initialize = function(connection, window) {
-  TabActor.prototype.initialize.call(this, connection);
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection);
 
   const docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDocShell);
@@ -52,7 +54,7 @@ windowPrototype.initialize = function(connection, window) {
 windowPrototype.isRootActor = true;
 
 windowPrototype.observe = function(subject, topic, data) {
-  TabActor.prototype.observe.call(this, subject, topic, data);
+  BrowsingContextTargetActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
   }
@@ -66,7 +68,7 @@ windowPrototype._attach = function() {
     return false;
   }
 
-  TabActor.prototype._attach.call(this);
+  BrowsingContextTargetActor.prototype._attach.call(this);
 
   // Listen for chrome docshells in addition to content docshells
   if (this.docShell.itemType == Ci.nsIDocShellTreeItem.typeChrome) {
@@ -85,9 +87,9 @@ windowPrototype._detach = function() {
     Services.obs.removeObserver(this, "chrome-webnavigation-destroy");
   }
 
-  TabActor.prototype._detach.call(this);
+  BrowsingContextTargetActor.prototype._detach.call(this);
 
   return true;
 };
 
-exports.WindowActor = ActorClassWithSpec(tabSpec, windowPrototype);
+exports.WindowActor = ActorClassWithSpec(browsingContextTargetSpec, windowPrototype);

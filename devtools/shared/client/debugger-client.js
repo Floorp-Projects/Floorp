@@ -327,17 +327,17 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a tab actor.
+   * Attach to a tab's target actor.
    *
-   * @param string tabActor
-   *        The actor ID for the tab to attach.
+   * @param string targetActor
+   *        The target actor ID for the tab to attach.
    * @param function onResponse
    *        Called with the response packet and a TabClient
    *        (which will be undefined on error).
    */
-  attachTab: function(tabActor, onResponse = noop) {
-    if (this._clients.has(tabActor)) {
-      const cachedTab = this._clients.get(tabActor);
+  attachTab: function(targetActor, onResponse = noop) {
+    if (this._clients.has(targetActor)) {
+      const cachedTab = this._clients.get(targetActor);
       const cachedResponse = {
         cacheDisabled: cachedTab.cacheDisabled,
         javascriptEnabled: cachedTab.javascriptEnabled,
@@ -348,7 +348,7 @@ DebuggerClient.prototype = {
     }
 
     const packet = {
-      to: tabActor,
+      to: targetActor,
       type: "attach"
     };
     return this.request(packet).then(response => {

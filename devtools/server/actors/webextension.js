@@ -11,17 +11,18 @@ const Services = require("Services");
 const { ChromeActor, chromePrototype } = require("./chrome");
 const makeDebugger = require("./utils/make-debugger");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { tabSpec } = require("devtools/shared/specs/tab");
+const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
 loader.lazyRequireGetter(this, "ChromeUtils");
 const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet.";
 
 /**
- * Creates a TabActor for debugging all the contexts associated to a target WebExtensions
- * add-on running in a child extension process.
- * Most of the implementation is inherited from ChromeActor (which inherits most of its
- * implementation from TabActor).
+ * Creates a target actor for debugging all the contexts associated to a target
+ * WebExtensions add-on running in a child extension process. Most of the implementation
+ * is inherited from ChromeActor (which inherits most of its implementation from
+ * BrowsingContextTargetActor).
+ *
  * WebExtensionChildActor is created by a WebExtensionParentActor counterpart, when its
  * parent actor's `connect` method has been called (on the listAddons RDP package),
  * it runs in the same process that the extension is running into (which can be the main
@@ -29,20 +30,21 @@ const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet."
  * if the extension is running in oop-mode).
  *
  * A WebExtensionChildActor contains all tab actors, like a regular ChromeActor
- * or TabActor.
+ * or BrowsingContextTargetActor.
  *
  * History lecture:
- * - The add-on actors used to not inherit TabActor because of the different way the
- * add-on APIs where exposed to the add-on itself, and for this reason the Addon Debugger
- * has only a sub-set of the feature available in the Tab or in the Browser Toolbox.
+ * - The add-on actors used to not inherit BrowsingContextTargetActor because of the
+ *   different way the add-on APIs where exposed to the add-on itself, and for this reason
+ *   the Addon Debugger has only a sub-set of the feature available in the Tab or in the
+ *   Browser Toolbox.
  * - In a WebExtensions add-on all the provided contexts (background, popups etc.),
- * besides the Content Scripts which run in the content process, hooked to an existent
- * tab, by creating a new WebExtensionActor which inherits from ChromeActor, we can
- * provide a full features Addon Toolbox (which is basically like a BrowserToolbox which
- * filters the visible sources and frames to the one that are related to the target
- * add-on).
+ *   besides the Content Scripts which run in the content process, hooked to an existent
+ *   tab, by creating a new WebExtensionActor which inherits from ChromeActor, we can
+ *   provide a full features Addon Toolbox (which is basically like a BrowserToolbox which
+ *   filters the visible sources and frames to the one that are related to the target
+ *   add-on).
  * - When the WebExtensions OOP mode has been introduced, this actor has been refactored
- * and moved from the main process to the new child extension process.
+ *   and moved from the main process to the new child extension process.
  *
  * @param {DebuggerServerConnection} conn
  *        The connection to the client.
@@ -76,7 +78,7 @@ webExtensionChildPrototype.initialize = function(conn, chromeGlobal, prefix, add
   });
 
   // Bind the _allowSource helper to this, it is used in the
-  // TabActor to lazily create the TabSources instance.
+  // BrowsingContextTargetActor to lazily create the TabSources instance.
   this._allowSource = this._allowSource.bind(this);
   this._onParentExit = this._onParentExit.bind(this);
 
@@ -186,7 +188,7 @@ webExtensionChildPrototype._searchForExtensionWindow = function() {
   return undefined;
 };
 
-// Customized ChromeActor/TabActor hooks.
+// Customized ChromeActor/BrowsingContextTargetActor hooks.
 
 webExtensionChildPrototype._onDocShellDestroy = function(docShell) {
   // Stop watching this docshell (the unwatch() method will check if we
@@ -215,7 +217,7 @@ webExtensionChildPrototype._onNewExtensionWindow = function(window) {
 
 webExtensionChildPrototype._attach = function() {
   // NOTE: we need to be sure that `this.window` can return a
-  // window before calling the ChromeActor.onAttach, or the TabActor
+  // window before calling the ChromeActor.onAttach, or the BrowsingContextTargetActor
   // will not be subscribed to the child doc shell updates.
 
   if (!this.window || this.window.document.nodePrincipal.addonId !== this.id) {
@@ -395,4 +397,5 @@ webExtensionChildPrototype._onParentExit = function(msg) {
   this.exit();
 };
 
-exports.WebExtensionChildActor = ActorClassWithSpec(tabSpec, webExtensionChildPrototype);
+exports.WebExtensionChildActor =
+  ActorClassWithSpec(browsingContextTargetSpec, webExtensionChildPrototype);

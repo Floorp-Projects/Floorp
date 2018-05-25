@@ -1737,7 +1737,7 @@ NetworkMonitor.prototype = {
  *
  * @constructor
  * @param number outerWindowID
- *        The outerWindowID of the TabActor's main window.
+ *        The outerWindowID of the target actor's main window.
  * @param nsIMessageManager messageManager
  *        The nsIMessageManager to use to communicate with the parent process.
  * @param object DebuggerServerConnection

@@ -21,18 +21,25 @@ const EventEmitter = require("devtools/shared/event-emitter");
 LayoutChangesObserver.prototype._setTimeout = cb => cb;
 LayoutChangesObserver.prototype._clearTimeout = function() {};
 
-// Mock the tabActor since we only really want to test the LayoutChangesObserver
+// Mock the targetActor since we only really want to test the LayoutChangesObserver
 // and don't want to depend on a window object, nor want to test protocol.js
-class MockTabActor extends EventEmitter {
+class MockTargetActor extends EventEmitter {
   constructor() {
     super();
-    this.window = new MockWindow();
+    this.docShell = new MockDocShell();
+    this.window = new MockWindow(this.docShell);
     this.windows = [this.window];
     this.attached = true;
   }
+
+  get chromeEventHandler() {
+    return this.docShell.chromeEventHandler;
+  }
 }
 
-function MockWindow() {}
+function MockWindow(docShell) {
+  this.docShell = docShell;
+}
 MockWindow.prototype = {
   QueryInterface: function() {
     const self = this;
@@ -40,9 +47,6 @@ MockWindow.prototype = {
       getInterface: function() {
         return {
           QueryInterface: function() {
-            if (!self.docShell) {
-              self.docShell = new MockDocShell();
-            }
             return self.docShell;
           }
         };
@@ -99,39 +103,38 @@ function run_test() {
 
 function instancesOfObserversAreSharedBetweenWindows() {
   info("Checking that when requesting twice an instances of the observer " +
-    "for the same TabActor, the instance is shared");
+    "for the same BrowsingContextTargetActor, the instance is shared");
 
-  info("Checking 2 instances of the observer for the tabActor 1");
-  const tabActor1 = new MockTabActor();
-  const obs11 = getLayoutChangesObserver(tabActor1);
-  const obs12 = getLayoutChangesObserver(tabActor1);
+  info("Checking 2 instances of the observer for the targetActor 1");
+  const targetActor1 = new MockTargetActor();
+  const obs11 = getLayoutChangesObserver(targetActor1);
+  const obs12 = getLayoutChangesObserver(targetActor1);
   Assert.equal(obs11, obs12);
 
-  info("Checking 2 instances of the observer for the tabActor 2");
-  const tabActor2 = new MockTabActor();
-  const obs21 = getLayoutChangesObserver(tabActor2);
-  const obs22 = getLayoutChangesObserver(tabActor2);
+  info("Checking 2 instances of the observer for the targetActor 2");
+  const targetActor2 = new MockTargetActor();
+  const obs21 = getLayoutChangesObserver(targetActor2);
+  const obs22 = getLayoutChangesObserver(targetActor2);
   Assert.equal(obs21, obs22);
 
-  info("Checking that observers instances for 2 different tabActors are " +
+  info("Checking that observers instances for 2 different targetActors are " +
     "different");
   Assert.notEqual(obs11, obs21);
 
-  releaseLayoutChangesObserver(tabActor1);
-  releaseLayoutChangesObserver(tabActor1);
-  releaseLayoutChangesObserver(tabActor2);
-  releaseLayoutChangesObserver(tabActor2);
+  releaseLayoutChangesObserver(targetActor1);
+  releaseLayoutChangesObserver(targetActor1);
+  releaseLayoutChangesObserver(targetActor2);
+  releaseLayoutChangesObserver(targetActor2);
 }
 
 function eventsAreBatched() {
   info("Checking that reflow events are batched and only sent when the " +
     "timeout expires");
 
-  // Note that in this test, we mock the TabActor and its window property, so we
-  // also mock the setTimeout/clearTimeout mechanism and just call the callback
-  // manually
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  // Note that in this test, we mock the target actor and its window property, so we also
+  // mock the setTimeout/clearTimeout mechanism and just call the callback manually
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
 
   const reflowsEvents = [];
   const onReflows = reflows => reflowsEvents.push(reflows);
@@ -142,19 +145,19 @@ function eventsAreBatched() {
   observer.on("resize", onResize);
 
   info("Fake one reflow event");
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
   info("Checking that no batched reflow event has been emitted");
   Assert.equal(reflowsEvents.length, 0);
 
   info("Fake another reflow event");
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
   info("Checking that still no batched reflow event has been emitted");
   Assert.equal(reflowsEvents.length, 0);
 
   info("Fake a few of resize events too");
-  tabActor.window.docShell.mockResize();
-  tabActor.window.docShell.mockResize();
-  tabActor.window.docShell.mockResize();
+  targetActor.window.docShell.mockResize();
+  targetActor.window.docShell.mockResize();
+  targetActor.window.docShell.mockResize();
   info("Checking that still no batched resize event has been emitted");
   Assert.equal(resizeEvents.length, 0);
 
@@ -166,15 +169,15 @@ function eventsAreBatched() {
 
   observer.off("reflows", onReflows);
   observer.off("resize", onResize);
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
   info("Checking that if no reflows were detected and the event batching " +
   "loop expires, then no reflows event is sent");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
 
   const reflowsEvents = [];
   const onReflows = (reflows) => reflowsEvents.push(reflows);
@@ -185,14 +188,14 @@ function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
   Assert.equal(reflowsEvents.length, 0);
 
   observer.off("reflows", onReflows);
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function observerIsAlreadyStarted() {
   info("Checking that the observer is already started when getting it");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
   Assert.ok(observer.isObserving);
 
   observer.stop();
@@ -201,28 +204,28 @@ function observerIsAlreadyStarted() {
   observer.start();
   Assert.ok(observer.isObserving);
 
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function destroyStopsObserving() {
   info("Checking that the destroying the observer stops it");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
   Assert.ok(observer.isObserving);
 
   observer.destroy();
   Assert.ok(!observer.isObserving);
 
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function stoppingAndStartingSeveralTimesWorksCorrectly() {
   info("Checking that the stopping and starting several times the observer" +
     " works correctly");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
 
   Assert.ok(observer.isObserving);
   observer.start();
@@ -237,58 +240,58 @@ function stoppingAndStartingSeveralTimesWorksCorrectly() {
   observer.stop();
   Assert.ok(!observer.isObserving);
 
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function reflowsArentStackedWhenStopped() {
   info("Checking that when stopped, reflows aren't stacked in the observer");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
 
   info("Stoping the observer");
   observer.stop();
 
   info("Faking reflows");
-  tabActor.window.docShell.observer.reflow();
-  tabActor.window.docShell.observer.reflow();
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
 
   info("Checking that reflows aren't recorded");
   Assert.equal(observer.reflows.length, 0);
 
   info("Starting the observer and faking more reflows");
   observer.start();
-  tabActor.window.docShell.observer.reflow();
-  tabActor.window.docShell.observer.reflow();
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
 
   info("Checking that reflows are recorded");
   Assert.equal(observer.reflows.length, 3);
 
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
 
 function stackedReflowsAreResetOnStop() {
   info("Checking that stacked reflows are reset on stop");
 
-  const tabActor = new MockTabActor();
-  const observer = getLayoutChangesObserver(tabActor);
+  const targetActor = new MockTargetActor();
+  const observer = getLayoutChangesObserver(targetActor);
 
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
   Assert.equal(observer.reflows.length, 1);
 
   observer.stop();
   Assert.equal(observer.reflows.length, 0);
 
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
   Assert.equal(observer.reflows.length, 0);
 
   observer.start();
   Assert.equal(observer.reflows.length, 0);
 
-  tabActor.window.docShell.observer.reflow();
+  targetActor.window.docShell.observer.reflow();
   Assert.equal(observer.reflows.length, 1);
 
-  releaseLayoutChangesObserver(tabActor);
+  releaseLayoutChangesObserver(targetActor);
 }
