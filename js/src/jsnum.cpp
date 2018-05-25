@@ -1591,9 +1591,21 @@ js::ToNumberSlow(JSContext* cx, HandleValue v_, double* out)
         return false;
     }
 
-    MOZ_ASSERT(v.isUndefined());
-    *out = GenericNaN();
-    return true;
+    if (v.isUndefined()) {
+        *out = GenericNaN();
+        return true;
+    }
+
+    MOZ_ASSERT(v.isSymbol() || IF_BIGINT(v.isBigInt(), false));
+    if (!cx->helperThread()) {
+        unsigned errnum = JSMSG_SYMBOL_TO_NUMBER;
+#ifdef ENABLE_BIGINT
+        if (v.isBigInt())
+            errnum = JSMSG_BIGINT_TO_NUMBER;
+#endif
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errnum);
+    }
+    return false;
 }
 
 /*

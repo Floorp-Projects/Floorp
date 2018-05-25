@@ -9,5 +9,6 @@
         "MSAN_OPTIONS": "external_symbolizer_path={TOOLTOOL_CHECKOUT}/clang/bin/llvm-symbolizer:log_path={OUTDIR}/sanitize_log"
     },
     "ignore-test-failures": "true",
-    "max-errors": 2
+    "max-errors": 6,
+    "use_minidump": false
 }

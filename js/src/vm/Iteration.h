@@ -19,24 +19,17 @@
 #include "vm/ReceiverGuard.h"
 #include "vm/Stack.h"
 
-/*
- * For cacheable native iterators, whether the iterator is currently active.
- * Not serialized by XDR.
- */
-#define JSITER_ACTIVE       0x1000
-#define JSITER_UNREUSABLE   0x2000
-
 namespace js {
 
 class PropertyIteratorObject;
 
 struct NativeIterator
 {
-  public:
-    // Object being iterated.
-    GCPtrObject obj = {};
-
   private:
+    // Object being iterated.  Non-null except in NativeIterator sentinels and
+    // empty property iterators created when |null| or |undefined| is iterated.
+    GCPtrObject objectBeingIterated_ = {};
+
     // Internal iterator object.
     JSObject* iterObj_ = nullptr;
 
@@ -46,7 +39,6 @@ struct NativeIterator
     // the start of iterated strings.
     HeapReceiverGuard* guardsEnd_; // initialized by constructor
 
-  public:
     // The next property, pointing into an array of strings directly after any
     // HeapReceiverGuards that appear directly after |*this|, as part of an
     // overall allocation that stores |*this|, receiver guards, and iterated
@@ -59,13 +51,26 @@ struct NativeIterator
     // change as properties are deleted from the observed object.
     GCPtrFlatString* propertiesEnd_; // initialized by constructor
 
-    uint32_t guard_key = 0;
-    uint32_t flags = 0;
+    uint32_t guardKey_; // initialized by constructor
+
+  public:
+    // For cacheable native iterators, whether the iterator is currently
+    // active.  Not serialized by XDR.
+    struct Flags
+    {
+        static constexpr uint32_t Active = 0x1;
+        static constexpr uint32_t NotReusable = 0x2;
+        static constexpr uint32_t All = Active | NotReusable;
+    };
 
   private:
+    uint32_t flags_ = 0; // consists of Flags bits
+
     /* While in compartment->enumerators, these form a doubly linked list. */
     NativeIterator* next_ = nullptr;
     NativeIterator* prev_ = nullptr;
+
+    // END OF PROPERTIES
 
     // No further fields appear after here *in NativeIterator*, but this class
     // is always allocated with space tacked on immediately after |this| to
@@ -87,6 +92,14 @@ struct NativeIterator
 
     /** Initialize a |JSCompartment::enumerators| sentinel. */
     NativeIterator();
+
+    JSObject* objectBeingIterated() const {
+        return objectBeingIterated_;
+    }
+
+    void changeObjectBeingIterated(JSObject& obj) {
+        objectBeingIterated_ = &obj;
+    }
 
     HeapReceiverGuard* guardsBegin() const {
         static_assert(alignof(HeapReceiverGuard) <= alignof(NativeIterator),
@@ -118,8 +131,6 @@ struct NativeIterator
                       "HeapReceiverGuards are present, with no padding space "
                       "required for correct alignment");
 
-        // Note: JIT code inlines this computation to reset |propertyCursor_|
-        //       when an iterator ends: see |CodeGenerator::visitIteratorEnd|.
         return reinterpret_cast<GCPtrFlatString*>(guardsEnd_);
     }
 
@@ -127,8 +138,42 @@ struct NativeIterator
         return propertiesEnd_;
     }
 
+    GCPtrFlatString* nextProperty() const {
+        return propertyCursor_;
+    }
+
+    MOZ_ALWAYS_INLINE JS::Value nextIteratedValueAndAdvance() {
+        if (propertyCursor_ >= propertiesEnd_) {
+            MOZ_ASSERT(propertyCursor_ == propertiesEnd_);
+            return JS::MagicValue(JS_NO_ITER_VALUE);
+        }
+
+        JSFlatString* str = *propertyCursor_;
+        incCursor();
+        return JS::StringValue(str);
+    }
+
+    void resetPropertyCursorForReuse() {
+        // Note: JIT code inlines |propertyCursor_| resetting when an iterator
+        //       ends: see |CodeGenerator::visitIteratorEnd|.
+        propertyCursor_ = propertiesBegin();
+    }
+
+    bool previousPropertyWas(JS::Handle<JSFlatString*> str) {
+        return propertyCursor_ > propertiesBegin() && propertyCursor_[-1] == str;
+    }
+
     size_t numKeys() const {
         return mozilla::PointerRangeSize(propertiesBegin(), propertiesEnd());
+    }
+
+    void trimLastProperty() {
+        propertiesEnd_--;
+
+        // This invokes the pre barrier on this property, since it's no longer
+        // going to be marked, and it ensures that any existing remembered set
+        // entry will be dropped.
+        *propertiesEnd_ = nullptr;
     }
 
     JSObject* iterObj() const {
@@ -143,16 +188,36 @@ struct NativeIterator
         return next_;
     }
 
-    static inline size_t offsetOfNext() {
-        return offsetof(NativeIterator, next_);
-    }
-    static inline size_t offsetOfPrev() {
-        return offsetof(NativeIterator, prev_);
-    }
-
     void incCursor() {
         propertyCursor_++;
     }
+
+    uint32_t guardKey() const {
+        return guardKey_;
+    }
+
+    bool isActive() const {
+        return flags_ & Flags::Active;
+    }
+
+    void markActive() {
+        flags_ |= Flags::Active;
+    }
+
+    void markInactive() {
+        flags_ &= ~Flags::Active;
+    }
+
+    bool isReusable() const {
+        // Cached NativeIterators are reusable if they're not active and
+        // aren't marked as not reusable, i.e. if no flags are set.
+        return flags_ == 0;
+    }
+
+    void markNotReusable() {
+        flags_ |= Flags::NotReusable;
+    }
+
     void link(NativeIterator* other) {
         /* A NativeIterator cannot appear in the enumerator list twice. */
         MOZ_ASSERT(!next_ && !prev_);
@@ -173,6 +238,10 @@ struct NativeIterator
 
     void trace(JSTracer* trc);
 
+    static constexpr size_t offsetOfObjectBeingIterated() {
+        return offsetof(NativeIterator, objectBeingIterated_);
+    }
+
     static constexpr size_t offsetOfGuardsEnd() {
         return offsetof(NativeIterator, guardsEnd_);
     }
@@ -183,6 +252,18 @@ struct NativeIterator
 
     static constexpr size_t offsetOfPropertiesEnd() {
         return offsetof(NativeIterator, propertiesEnd_);
+    }
+
+    static constexpr size_t offsetOfFlags() {
+        return offsetof(NativeIterator, flags_);
+    }
+
+    static constexpr size_t offsetOfNext() {
+        return offsetof(NativeIterator, next_);
+    }
+
+    static constexpr size_t offsetOfPrev() {
+        return offsetof(NativeIterator, prev_);
     }
 };
 

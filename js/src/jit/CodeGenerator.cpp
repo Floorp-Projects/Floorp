@@ -1792,6 +1792,7 @@ CreateDependentString::generate(MacroAssembler& masm, const JSAtomState& names,
 
         // Post-barrier the base store, whether it was the direct or indirect
         // base (both will end up in temp1 here).
+        masm.branchPtrInNurseryChunk(Assembler::Equal, string, temp2, &done);
         masm.branchPtrInNurseryChunk(Assembler::NotEqual, temp1, temp2, &done);
 
         LiveRegisterSet regsToSave(RegisterSet::Volatile());
@@ -9929,7 +9930,8 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd* lir)
     LoadNativeIterator(masm, obj, temp1, ool->entry());
 
     // Clear active bit.
-    masm.and32(Imm32(~JSITER_ACTIVE), Address(temp1, offsetof(NativeIterator, flags)));
+    masm.and32(Imm32(~NativeIterator::Flags::Active),
+               Address(temp1, NativeIterator::offsetOfFlags()));
 
     // Reset property cursor.
     masm.loadPtr(Address(temp1, NativeIterator::offsetOfGuardsEnd()), temp2);

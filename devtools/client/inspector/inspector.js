@@ -133,6 +133,7 @@ function Inspector(toolbox) {
   this._updateDebuggerPausedWarning = this._updateDebuggerPausedWarning.bind(this);
 
   this.onDetached = this.onDetached.bind(this);
+  this.onHostChanged = this.onHostChanged.bind(this);
   this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
   this.onNewSelection = this.onNewSelection.bind(this);
   this.onNewRoot = this.onNewRoot.bind(this);
@@ -238,7 +239,7 @@ Inspector.prototype = {
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
     this.walker.on("new-root", this.onNewRoot);
-
+    this.toolbox.on("host-changed", this.onHostChanged);
     this.selection.on("new-node-front", this.onNewSelection);
     this.selection.on("detached-front", this.onDetached);
 
@@ -646,6 +647,59 @@ Inspector.prototype = {
   },
 
   /**
+   * Sets the inspector sidebar split box state. Shows the splitter inside the sidebar
+   * split box, specifies the end panel control and resizes the split box width depending
+   * on the width of the toolbox.
+   */
+  setSidebarSplitBoxState() {
+    const toolboxWidth =
+      this.panelDoc.getElementById("inspector-splitter-box").clientWidth;
+
+    // Get the inspector sidebar's (right panel in horizontal mode or bottom panel in
+    // vertical mode) width.
+    const sidebarWidth = this.splitBox.state.width;
+    // This variable represents the width of the right panel in horizontal mode or
+    // bottom-right panel in vertical mode width in 3 pane mode.
+    let sidebarSplitboxWidth;
+
+    if (this.useLandscapeMode()) {
+      // Whether or not doubling the inspector sidebar's (right panel in horizontal mode
+      // or bottom panel in vertical mode) width will be bigger than half of the
+      // toolbox's width.
+      const canDoubleSidebarWidth = (sidebarWidth * 2) < (toolboxWidth / 2);
+
+      // Resize the main split box's end panel that contains the middle and right panel.
+      // Attempts to resize the main split box's end panel to be double the size of the
+      // existing sidebar's width when switching to 3 pane mode. However, if the middle
+      // and right panel's width together is greater than half of the toolbox's width,
+      // split all 3 panels to be equally sized by resizing the end panel to be 2/3 of
+      // the current toolbox's width.
+      this.splitBox.setState({
+        width: canDoubleSidebarWidth ? sidebarWidth * 2 : toolboxWidth * 2 / 3,
+      });
+
+      // In landscape/horizontal mode, set the right panel back to its original
+      // inspector sidebar width if we can double the sidebar width. Otherwise, set
+      // the width of the right panel to be 1/3 of the toolbox's width since all 3
+      // panels will be equally sized.
+      sidebarSplitboxWidth = canDoubleSidebarWidth ? sidebarWidth : toolboxWidth / 3;
+    } else {
+      // In portrait/vertical mode, set the bottom-right panel to be 1/2 of the
+      // toolbox's width.
+      sidebarSplitboxWidth = toolboxWidth / 2;
+    }
+
+    // Show the splitter inside the sidebar split box. Sets the width of the inspector
+    // sidebar and specify that the end (right in horizontal or bottom-right in
+    // vertical) panel of the sidebar split box should be controlled when resizing.
+    this.sidebarSplitBox.setState({
+      endPanelControl: true,
+      splitterSize: 1,
+      width: sidebarSplitboxWidth,
+    });
+  },
+
+  /**
    * Adds the rule view to the middle (in landscape/horizontal mode) or bottom-left panel
    * (in portrait/vertical mode) or inspector sidebar depending on whether or not it is 3
    * pane mode. The default tab specifies whether or not the rule view should be selected.
@@ -658,58 +712,14 @@ Inspector.prototype = {
    */
   async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
     const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
-    const toolboxWidth =
-      this.panelDoc.getElementById("inspector-splitter-box").clientWidth;
 
     if (this.is3PaneModeEnabled) {
       // Convert to 3 pane mode by removing the rule view from the inspector sidebar
       // and adding the rule view to the middle (in landscape/horizontal mode) or
       // bottom-left (in portrait/vertical mode) panel.
-
       ruleViewSidebar.style.display = "block";
 
-      // Get the inspector sidebar's (right panel in horizontal mode or bottom panel in
-      // vertical mode) width.
-      const sidebarWidth = this.splitBox.state.width;
-      // This variable represents the width of the right panel in horizontal mode or
-      // bottom-right panel in vertical mode width in 3 pane mode.
-      let sidebarSplitboxWidth;
-
-      if (this.useLandscapeMode()) {
-        // Whether or not doubling the inspector sidebar's (right panel in horizontal mode
-        // or bottom panel in vertical mode) width will be bigger than half of the
-        // toolbox's width.
-        const canDoubleSidebarWidth = (sidebarWidth * 2) < (toolboxWidth / 2);
-
-        // Resize the main split box's end panel that contains the middle and right panel.
-        // Attempts to resize the main split box's end panel to be double the size of the
-        // existing sidebar's width when switching to 3 pane mode. However, if the middle
-        // and right panel's width together is greater than half of the toolbox's width,
-        // split all 3 panels to be equally sized by resizing the end panel to be 2/3 of
-        // the current toolbox's width.
-        this.splitBox.setState({
-          width: canDoubleSidebarWidth ? sidebarWidth * 2 : toolboxWidth * 2 / 3,
-        });
-
-        // In landscape/horizontal mode, set the right panel back to its original
-        // inspector sidebar width if we can double the sidebar width. Otherwise, set
-        // the width of the right panel to be 1/3 of the toolbox's width since all 3
-        // panels will be equally sized.
-        sidebarSplitboxWidth = canDoubleSidebarWidth ? sidebarWidth : toolboxWidth / 3;
-      } else {
-        // In portrait/vertical mode, set the bottom-right panel to be 1/2 of the
-        // toolbox's width.
-        sidebarSplitboxWidth = toolboxWidth / 2;
-      }
-
-      // Show the splitter inside the sidebar split box. Sets the width of the inspector
-      // sidebar and specify that the end (right in horizontal or bottom-right in
-      // vertical) panel of the sidebar split box should be controlled when resizing.
-      this.sidebarSplitBox.setState({
-        endPanelControl: true,
-        splitterSize: 1,
-        width: sidebarSplitboxWidth,
-      });
+      this.setSidebarSplitBoxState();
 
       // Force the rule view panel creation by calling getPanel
       this.getPanel("ruleview");
@@ -725,13 +735,14 @@ Inspector.prototype = {
     } else {
       // Removes the rule view from the 3 pane mode and adds the rule view to the main
       // inspector sidebar.
-
       ruleViewSidebar.style.display = "none";
 
       // Set the width of the split box (right panel in horziontal mode and bottom panel
       // in vertical mode) to be the width of the inspector sidebar.
+      const splitterBox = this.panelDoc.getElementById("inspector-splitter-box");
       this.splitBox.setState({
-        width: this.useLandscapeMode() ? this.sidebarSplitBox.state.width : toolboxWidth,
+        width: this.useLandscapeMode() ?
+          this.sidebarSplitBox.state.width : splitterBox.clientWidth,
       });
 
       // Hide the splitter to prevent any drag events in the sidebar split box and
@@ -1193,6 +1204,18 @@ Inspector.prototype = {
            !selection.isAnonymousNode() &&
            !invalidTagNames.includes(
             selection.nodeFront.nodeName.toLowerCase());
+  },
+
+  /**
+   * Handler for the "host-changed" event from the toolbox. Resets the inspector
+   * sidebar sizes when the toolbox host type changes.
+   */
+  onHostChanged: function() {
+    if (!this.is3PaneModeEnabled) {
+      return;
+    }
+
+    this.setSidebarSplitBoxState();
   },
 
   /**

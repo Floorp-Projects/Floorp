@@ -39,7 +39,6 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsDOMWindowList.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -2914,7 +2913,7 @@ nsGlobalWindowOuter::Closed()
 }
 
 nsDOMWindowList*
-nsGlobalWindowOuter::GetWindowList()
+nsGlobalWindowOuter::GetFrames()
 {
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
@@ -2923,17 +2922,10 @@ nsGlobalWindowOuter::GetWindowList()
   return mFrames;
 }
 
-already_AddRefed<nsIDOMWindowCollection>
-nsGlobalWindowOuter::GetFrames()
-{
-  nsCOMPtr<nsIDOMWindowCollection> frames = GetWindowList();
-  return frames.forget();
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::IndexedGetterOuter(uint32_t aIndex)
 {
-  nsDOMWindowList* windows = GetWindowList();
+  nsDOMWindowList* windows = GetFrames();
   NS_ENSURE_TRUE(windows, nullptr);
 
   return windows->IndexedGetter(aIndex);
@@ -3751,7 +3743,7 @@ nsGlobalWindowOuter::GetScrollYOuter()
 uint32_t
 nsGlobalWindowOuter::Length()
 {
-  nsDOMWindowList* windows = GetWindowList();
+  nsDOMWindowList* windows = GetFrames();
 
   return windows ? windows->GetLength() : 0;
 }

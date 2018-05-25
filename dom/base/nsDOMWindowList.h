@@ -7,26 +7,25 @@
 #define nsDOMWindowList_h___
 
 #include "nsCOMPtr.h"
-#include "nsIDOMWindowCollection.h"
 #include <stdint.h>
 #include "nsIDocShell.h"
 
 class nsIDocShell;
 class nsIDOMWindow;
 
-class nsDOMWindowList : public nsIDOMWindowCollection
+class nsDOMWindowList final
 {
 public:
   explicit nsDOMWindowList(nsIDocShell* aDocShell);
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMWINDOWCOLLECTION
+  NS_INLINE_DECL_REFCOUNTING(nsDOMWindowList)
 
   uint32_t GetLength();
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> NamedItem(const nsAString& aName);
 
   //local methods
-  NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
+  void SetDocShell(nsIDocShell* aDocShell);
   already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemAt(uint32_t aIndex)
   {
     EnsureFresh();
@@ -38,7 +37,7 @@ public:
   }
 
 protected:
-  virtual ~nsDOMWindowList();
+  ~nsDOMWindowList();
 
   // Note: this function may flush and cause mDocShellNode to become null.
   void EnsureFresh();

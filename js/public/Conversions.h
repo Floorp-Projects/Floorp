@@ -122,7 +122,7 @@ ToBoolean(HandleValue v)
     if (v.isSymbol())
         return true;
 
-    /* The slow path handles strings and objects. */
+    /* The slow path handles strings, BigInts and objects. */
     return js::ToBooleanSlow(v);
 }
 

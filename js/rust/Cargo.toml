@@ -12,6 +12,9 @@ cmake = "0.1"
 glob = "0.2.11"
 
 [[test]]
+name = "bigint"
+required-features = ["bigint"]
+[[test]]
 name = "callback"
 [[test]]
 name = "enumerate"
@@ -39,6 +42,7 @@ doctest = false
 debugmozjs = ['mozjs_sys/debugmozjs']
 promises = ['mozjs_sys/promises']
 nonzero = []
+bigint = ['mozjs_sys/bigint']
 
 [dependencies.mozjs_sys]
 path = "../src"
