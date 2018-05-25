@@ -20,3 +20,5 @@ configparser==3.5.0 \
 setuptools==38.5.1 \
     --hash=sha256:7ffe771abfae419fd104f93400b61c935b5af10bfe4dfeec7a1bd495694eea35 \
     --hash=sha256:6425484c08e99a98a42209c25c3d325f749230b55284d66192784f941a7e6628
+autopep8==1.3.5 \
+    --hash=sha256:2284d4ae2052fedb9f466c09728e30d2e231cfded5ffd7b1a20c34123fdc4ba4
