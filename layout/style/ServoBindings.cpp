@@ -2892,12 +2892,12 @@ Gecko_ContentList_AppendAll(
 }
 
 const nsTArray<Element*>*
-Gecko_GetElementsWithId(const nsIDocument* aDocument, nsAtom* aId)
+Gecko_GetElementsWithId(const DocumentOrShadowRoot* aDocOrShadowRoot, nsAtom* aId)
 {
-  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aDocOrShadowRoot);
   MOZ_ASSERT(aId);
 
-  return aDocument->GetAllElementsForId(nsDependentAtomString(aId));
+  return aDocOrShadowRoot->GetAllElementsForId(nsDependentAtomString(aId));
 }
 
 bool

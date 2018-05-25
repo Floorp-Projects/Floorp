@@ -709,7 +709,7 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
                                  size_t aLength);
 
 const nsTArray<mozilla::dom::Element*>* Gecko_GetElementsWithId(
-    const nsIDocument* aDocument,
+    const mozilla::dom::DocumentOrShadowRoot* aDocOrShadowRoot,
     nsAtom* aId);
 
 // Check the value of the given bool preference. The pref name needs to
