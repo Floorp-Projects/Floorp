@@ -138,7 +138,7 @@ def generic_worker_hg_commands(base_repo, head_repo, head_rev, path):
             repo_name=head_repo.split('/')[-1]),
     ]
 
-    return ' '.join(args), ' '.join(logging_args)
+    return [' '.join(args), ' '.join(logging_args)]
 
 
 def docker_worker_setup_secrets(config, job, taskdesc):
