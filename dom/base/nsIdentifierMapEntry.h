@@ -19,19 +19,12 @@
 
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
-#include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
 class nsIContent;
 class nsContentList;
 class nsBaseContentList;
-
-namespace mozilla {
-namespace dom {
-class Element;
-}
-}
 
 /**
  * Right now our identifier map entries contain information for 'name'

@@ -30,9 +30,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/dom/ChromeMessageBroadcaster.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TimeoutManager.h"
@@ -88,7 +86,7 @@ nsCCUncollectableMarker::Init()
 }
 
 static void
-MarkChildMessageManagers(MessageBroadcaster* aMM)
+MarkChildMessageManagers(ChromeMessageBroadcaster* aMM)
 {
   aMM->MarkForCC();
 
@@ -99,8 +97,9 @@ MarkChildMessageManagers(MessageBroadcaster* aMM)
       continue;
     }
 
-    RefPtr<MessageBroadcaster> strongNonLeafMM = MessageBroadcaster::From(childMM);
-    MessageBroadcaster* nonLeafMM = strongNonLeafMM;
+    RefPtr<ChromeMessageBroadcaster> strongNonLeafMM =
+      ChromeMessageBroadcaster::From(childMM);
+    ChromeMessageBroadcaster* nonLeafMM = strongNonLeafMM;
 
     MessageListenerManager* tabMM = childMM;
 
