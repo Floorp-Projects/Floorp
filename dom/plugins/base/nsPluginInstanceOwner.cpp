@@ -902,6 +902,10 @@ nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
 bool
 nsPluginInstanceOwner::EnableIME(bool aEnable)
 {
+  if (NS_WARN_IF(!mPluginFrame)) {
+    return false;
+  }
+
   nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
   if (!widget) {
     widget = GetRootWidgetForPluginFrame(mPluginFrame);
