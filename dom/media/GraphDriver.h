@@ -489,10 +489,6 @@ public:
 
   void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
 
-  /* Fetch, or create a shared thread pool with up to one thread for
-   * AsyncCubebTask. */
-  SharedThreadPool* GetInitShutdownThread();
-
 private:
   /* Remove Mixer callbacks when switching */
   void RemoveCallback() ;
@@ -513,6 +509,12 @@ private:
    *  Fall back to a SystemClockDriver using a normal thread. If needed,
    *  the graph will try to re-open an audio stream later. */
   void FallbackToSystemClockDriver();
+
+  /* This is true when the method is executed on CubebOperation thread pool. */
+  bool OnCubebOperationThread()
+  {
+    return mInitShutdownThread->IsOnCurrentThreadInfallible();
+  }
 
   /* MediaStreamGraphs are always down/up mixed to output channels. */
   uint32_t mOutputChannels;
@@ -566,7 +568,7 @@ private:
 
   /* Shared thread pool with up to one thread for off-main-thread
    * initialization and shutdown of the audio stream via AsyncCubebTask. */
-  RefPtr<SharedThreadPool> mInitShutdownThread;
+  const RefPtr<SharedThreadPool> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
   /* Used to queue us to add the mixer callback on first run. */
@@ -603,11 +605,7 @@ public:
 
   nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL)
   {
-    SharedThreadPool* threadPool = mDriver->GetInitShutdownThread();
-    if (!threadPool) {
-      return NS_ERROR_FAILURE;
-    }
-    return threadPool->Dispatch(this, aFlags);
+    return mDriver->mInitShutdownThread->Dispatch(this, aFlags);
   }
 
 protected:
