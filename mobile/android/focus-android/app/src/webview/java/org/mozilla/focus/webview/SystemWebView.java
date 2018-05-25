@@ -224,6 +224,11 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     }
 
     @Override
+    public int findAll(String find) {
+        return super.findAll(find);
+    }
+
+    @Override
     public void destroy() {
         super.destroy();
 

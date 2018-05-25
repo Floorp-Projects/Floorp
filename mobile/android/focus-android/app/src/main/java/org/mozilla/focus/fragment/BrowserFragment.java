@@ -31,7 +31,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -145,6 +147,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private View refreshButton;
     private View stopButton;
 
+    private View findInPageView;
+    private TextView findInPageQuery;
+
     private IWebView.FullscreenCallback fullscreenCallback;
 
     private DownloadManager manager;
@@ -252,6 +257,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 urlView.setText(UrlUtils.stripUserInfo(url));
             }
         });
+
+        findInPageView = view.findViewById(R.id.find_in_page);
+
+        findInPageQuery = view.findViewById(R.id.queryText);
+
+        findInPageQuery.addTextChangedListener(new TextWatcher() {
+                                                   @Override
+                                                   public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                                                   }
+
+                                                   @Override
+                                                   public void onTextChanged(CharSequence s, int start, int before, int count) {
+                                                        int foo = getWebView().findAll(s.toString());
+                                                   }
+
+                                                   @Override
+                                                   public void afterTextChanged(Editable s) {
+
+                                                   }
+                                               }
+        );
 
         setBlockingEnabled(session.isBlockingEnabled());
         setShouldRequestDesktop(session.shouldRequestDesktopSite());
@@ -1048,7 +1075,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.find_in_page:
-                Toast.makeText(getContext(), "Not Implemented", Toast.LENGTH_SHORT).show();
+                    if (findInPageView.getVisibility() == View.GONE) {
+                        findInPageView.setVisibility(View.VISIBLE);
+                        findInPageQuery.requestFocus();
+                    }
                 break;
 
             default:

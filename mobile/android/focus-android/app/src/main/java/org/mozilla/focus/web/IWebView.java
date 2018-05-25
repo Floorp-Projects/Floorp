@@ -130,6 +130,8 @@ public interface IWebView {
 
     void exitFullscreen();
 
+    int findAll(String find);
+
     void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL);
 
     /**
