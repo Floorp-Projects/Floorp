@@ -2577,7 +2577,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         jitZone->sweep();
 
     for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-        r->objectGroups.sweep();
+        r->sweepObjectGroups();
         r->sweepRegExps();
         r->sweepSavedStacks();
         r->sweepVarNames();
@@ -5424,8 +5424,8 @@ static void
 SweepObjectGroups(GCParallelTask* task)
 {
     JSRuntime* runtime = task->runtime();
-    for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next())
-        c->objectGroups.sweep();
+    for (SweepGroupRealmsIter r(runtime); !r.done(); r.next())
+        r->sweepObjectGroups();
 }
 
 static void
@@ -8482,7 +8482,7 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     }
 
     for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
-        r->objectGroups.checkTablesAfterMovingGC();
+        r->checkObjectGroupTablesAfterMovingGC();
         r->dtoaCache.checkCacheAfterMovingGC();
         JS::GetCompartmentForRealm(r)->checkWrapperMapAfterMovingGC();
         r->checkScriptMapsAfterMovingGC();

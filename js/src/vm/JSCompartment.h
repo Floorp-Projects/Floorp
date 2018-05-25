@@ -603,9 +603,6 @@ struct JSCompartment
                                 size_t* crossCompartmentWrappersArg);
 
   public:
-    // Object group tables and other state in the compartment.
-    js::ObjectGroupCompartment   objectGroups;
-
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
@@ -789,6 +786,12 @@ class JS::Realm : public JSCompartment
     // Note: this is private to enforce use of ObjectRealm::get(obj).
     js::ObjectRealm objects_;
     friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
+
+    // Object group tables and other state in the realm. This is private to
+    // enforce use of ObjectGroupRealm::get(group)/getForNewObject(cx).
+    js::ObjectGroupRealm objectGroups_;
+    friend js::ObjectGroupRealm& js::ObjectGroupRealm::get(js::ObjectGroup* group);
+    friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(JSContext* cx);
 
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
@@ -991,14 +994,22 @@ class JS::Realm : public JSCompartment
     void sweepSelfHostingScriptSource();
     void sweepTemplateObjects();
 
+    void sweepObjectGroups() {
+        objectGroups_.sweep();
+    }
+
     void clearScriptCounts();
     void clearScriptNames();
 
     void purge();
 
+    void fixupAfterMovingGC();
     void fixupScriptMapsAfterMovingGC();
 
 #ifdef JSGC_HASH_TABLE_CHECKS
+    void checkObjectGroupTablesAfterMovingGC() {
+        objectGroups_.checkTablesAfterMovingGC();
+    }
     void checkScriptMapsAfterMovingGC();
 #endif
 
