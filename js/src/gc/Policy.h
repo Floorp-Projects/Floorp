@@ -119,8 +119,14 @@ namespace js {
 
 // Define the GCPolicy for all internal pointers.
 template <typename T>
-struct InternalGCPointerPolicy {
+struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
     using Type = typename mozilla::RemovePointer<T>::Type;
+
+#define IS_BASE_OF_OR(_1, BaseType, _2) mozilla::IsBaseOf<BaseType, Type>::value ||
+    static_assert(JS_FOR_EACH_TRACEKIND(IS_BASE_OF_OR) false,
+                  "InternalGCPointerPolicy must only be used for GC thing pointers");
+#undef IS_BASE_OF_OR
+
     static void preBarrier(T v) {
         if (v)
             Type::writeBarrierPre(v);
@@ -137,19 +143,16 @@ struct InternalGCPointerPolicy {
         if (*vp)
             TraceManuallyBarrieredEdge(trc, vp, name);
     }
-    static bool isValid(T v) {
-        return gc::IsCellPointerValidOrNull(v);
-    }
 };
 
 } // namespace js
 
 namespace JS {
 
-#define DEFINE_INTERNAL_GC_POLICY(type) \
-    template <> struct GCPolicy<type> : public js::InternalGCPointerPolicy<type> {};
-FOR_EACH_INTERNAL_GC_POINTER_TYPE(DEFINE_INTERNAL_GC_POLICY)
-#undef DEFINE_INTERNAL_GC_POLICY
+// Internally, all pointer types are treated as pointers to GC things by
+// default.
+template <typename T> struct GCPolicy<T*> : public js::InternalGCPointerPolicy<T*> {};
+template <typename T> struct GCPolicy<T* const> : public js::InternalGCPointerPolicy<T* const> {};
 
 template <typename T>
 struct GCPolicy<js::HeapPtr<T>>
