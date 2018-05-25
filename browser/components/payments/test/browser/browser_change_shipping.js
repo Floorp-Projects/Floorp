@@ -33,9 +33,14 @@ add_task(async function test_change_shipping() {
     is(shippingOptions.optionCount, 2, "there should be two shipping options");
     is(shippingOptions.selectedOptionID, "1", "selected should be '1'");
 
+    let paymentDetails = Object.assign({},
+                                       PTU.Details.twoShippingOptionsEUR,
+                                       PTU.Details.total1pt75EUR,
+                                       PTU.Details.twoDisplayItemsEUR,
+                                       PTU.Details.additionalDisplayItemsEUR);
     await ContentTask.spawn(browser, {
       eventName: "shippingaddresschange",
-      details: Object.assign({}, PTU.Details.twoShippingOptionsEUR, PTU.Details.total2USD),
+      details: paymentDetails,
     }, PTU.ContentTasks.updateWith);
     info("added shipping change handler to change to EUR");
 
@@ -47,6 +52,7 @@ add_task(async function test_change_shipping() {
     }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
     info("got shippingaddresschange event");
 
+    // verify update of shippingOptions
     shippingOptions =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingOptions);
     is(shippingOptions.selectedOptionCurrency, "EUR",
@@ -54,6 +60,42 @@ add_task(async function test_change_shipping() {
     is(shippingOptions.selectedOptionID, "1", "id:1 should still be selected");
     is(shippingOptions.selectedOptionValue, "1.01",
        "amount should be '1.01' after the shippingaddresschange");
+
+    await spawnPaymentDialogTask(frame, async function() {
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+      // verify update of total
+      // Note: The update includes a modifier, and modifiers must include a total
+      // so the expected total is that one
+      is(content.document.querySelector("#total > currency-amount").textContent,
+         "\u20AC2.50",
+         "Check updated total currency amount");
+
+      let btn = content.document.querySelector("#view-all");
+      btn.click();
+      await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.orderDetailsShowing;
+      }, "Order details show be showing now");
+
+      let container = content.document.querySelector("order-details");
+      let items = [...container.querySelectorAll(".main-list payment-details-item")]
+                  .map(item => Cu.waiveXrays(item));
+
+      // verify the updated displayItems
+      is(items.length, 2, "2 display items");
+      is(items[0].amountCurrency, "EUR", "First display item is in Euros");
+      is(items[1].amountCurrency, "EUR", "2nd display item is in Euros");
+      is(items[0].amountValue, "0.85", "First display item has 0.85 value");
+      is(items[1].amountValue, "1.70", "2nd display item has 1.70 value");
+
+      // verify the updated modifiers
+      items = [...container.querySelectorAll(".footer-items-list payment-details-item")]
+              .map(item => Cu.waiveXrays(item));
+      is(items.length, 1, "1 additional display item");
+      is(items[0].amountCurrency, "EUR", "First display item is in Euros");
+      is(items[0].amountValue, "1.00", "First display item has 1.00 value");
+    });
 
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);

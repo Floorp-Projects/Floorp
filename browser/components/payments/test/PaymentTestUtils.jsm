@@ -242,6 +242,18 @@ var PaymentTestUtils = {
         },
       ],
     },
+    twoDisplayItemsEUR: {
+      displayItems: [
+        {
+          label: "First",
+          amount: { currency: "EUR", value: "0.85" },
+        },
+        {
+          label: "Second",
+          amount: { currency: "EUR", value: "1.70" },
+        },
+      ],
+    },
     twoShippingOptions: {
       shippingOptions: [
         {
@@ -304,6 +316,23 @@ var PaymentTestUtils = {
           total: {
             label: "Total due",
             amount: { currency: "USD", value: "3.50" },
+          },
+        },
+      ],
+    },
+    additionalDisplayItemsEUR: {
+      modifiers: [
+        {
+          additionalDisplayItems: [
+            {
+              label: "Handling fee",
+              amount: { currency: "EUR", value: "1.00" },
+            },
+          ],
+          supportedMethods: "basic-card",
+          total: {
+            label: "Total due",
+            amount: { currency: "EUR", value: "2.50" },
           },
         },
       ],
