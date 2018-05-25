@@ -12,37 +12,28 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/mp4");
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
 
-    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
-      // 25819 is the offset of the first media segment's end
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25819));
-    });
+  const arrayBuffer = await fetchWithXHR("bipbop/bipbop2s.mp4");
+  // 25819 is the offset of the first media segment's end
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25819));
 
-    const target = 1.3;
+  const target = 1.3;
 
-    v.addEventListener("loadeddata", function() {
-      ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
-      v.currentTime = target;
-    }, {once: true});
+  await once(v, "loadeddata");
+  ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
+  v.currentTime = target;
 
-    v.addEventListener("seeking", function() {
-      is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");
-      fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
-        // 25819 is the offset of the first media segment's end
-        sb.addEventListener("updateend", function() {
-          ms.endOfStream();
-        });
-        sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
-      });
-    });
-
-    v.addEventListener("seeked", function() {
-      SimpleTest.finish();
-    });
-  });
+  await once(v, "seeking");
+  is(v.readyState, v.HAVE_METADATA);
+  // 25819 is the offset of the first media segment's end
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
+  await once(sb, "updateend");
+  ms.endOfStream();
+  await once(v, "seeked");
+  SimpleTest.finish();
 });
 
 </script>

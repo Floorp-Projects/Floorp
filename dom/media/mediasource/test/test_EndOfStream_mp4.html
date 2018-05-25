@@ -12,36 +12,15 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function() {
-  const ms = new MediaSource();
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/mp4");
 
-  const v = document.createElement("video");
-  v.src = URL.createObjectURL(ms);
-  document.body.appendChild(v);
-
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/mp4");
-
-    fetchWithXHR("bipbop/bipbop2s.mp4", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer));
-      let count = 0;
-      sb.addEventListener("updateend", function() {
-        ++count;
-        if (count == 1) {
-          setTimeout(function() {
-            let fail = false;
-            try {
-              ms.endOfStream();
-            } catch (e) {
-              fail = true;
-            }
-            ok(!fail, "MediaSource.endOfStream succeeded");
-            SimpleTest.finish();
-          }, 0);
-        }
-      });
-    });
-  });
+  sb.appendBuffer(new Uint8Array(await fetchWithXHR("bipbop/bipbop2s.mp4")));
+  await once(sb, "updateend");
+  await wait(0);
+  must_not_throw(() => ms.endOfStream(), "MediaSource.endOfStream succeeded");
+  SimpleTest.finish();
 });
 
 </script>
