@@ -248,6 +248,13 @@ NS_IMETHODIMP
 nsNSSComponent::GetPIPNSSBundleString(const char* name, nsAString& outString)
 {
   MutexAutoLock lock(mMutex);
+  return GetPIPNSSBundleStringLocked(name, outString, lock);
+}
+
+nsresult
+nsNSSComponent::GetPIPNSSBundleStringLocked(
+  const char* name, nsAString& outString, const MutexAutoLock& /*proofOfLock*/)
+{
   nsresult rv = NS_ERROR_FAILURE;
 
   outString.SetLength(0);
@@ -970,9 +977,11 @@ nsNSSComponent::TrustLoaded3rdPartyRoots()
 class LoadLoadableRootsTask final : public Runnable
 {
 public:
-  explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent)
+  explicit LoadLoadableRootsTask(nsNSSComponent* nssComponent,
+                                 nsCString&& rootModuleName)
     : Runnable("LoadLoadableRootsTask")
     , mNSSComponent(nssComponent)
+    , mRootModuleName(Move(rootModuleName))
   {
     MOZ_ASSERT(nssComponent);
   }
@@ -986,6 +995,7 @@ private:
   nsresult LoadLoadableRoots();
   RefPtr<nsNSSComponent> mNSSComponent;
   nsCOMPtr<nsIThread> mThread;
+  nsCString mRootModuleName;
 };
 
 nsresult
@@ -1003,6 +1013,9 @@ LoadLoadableRootsTask::Dispatch()
   return mThread->Dispatch(this, NS_DISPATCH_NORMAL);
 }
 
+// NB: If anything in this function can cause an acquisition of
+// nsNSSComponent::mMutex, this can potentially deadlock with
+// nsNSSComponent::Shutdown.
 NS_IMETHODIMP
 LoadLoadableRootsTask::Run()
 {
@@ -1231,27 +1244,11 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   // Find the best Roots module for our purposes.
   // Prefer the application's installation directory,
   // but also ensure the library is at least the version we expect.
-
-  nsAutoString modName;
-  nsresult rv = mNSSComponent->GetPIPNSSBundleString("RootCertModuleName",
-                                                     modName);
-  if (NS_FAILED(rv)) {
-    // When running Cpp unit tests on Android, this will fail because string
-    // bundles aren't available (see bug 1311077, bug 1228175 comment 12, and
-    // bug 929655). Because the module name is really only for display purposes,
-    // we can just hard-code the value here. Furthermore, if we want to be able
-    // to stop using string bundles in PSM in this way, we'll have to hard-code
-    // the string and only use the localized version when displaying it to the
-    // user, so this is a step in that direction anyway.
-    modName.AssignLiteral("Builtin Roots Module");
-  }
-  NS_ConvertUTF16toUTF8 modNameUTF8(modName);
-
   Vector<nsCString> possibleCKBILocations;
   // First try in the directory where we've already loaded
   // DLL_PREFIX nss3 DLL_SUFFIX, since that's likely to be correct.
   nsAutoCString nss3Dir;
-  rv = GetNSS3Directory(nss3Dir);
+  nsresult rv = GetNSS3Directory(nss3Dir);
   if (NS_SUCCEEDED(rv)) {
     if (!possibleCKBILocations.append(Move(nss3Dir))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1289,7 +1286,7 @@ LoadLoadableRootsTask::LoadLoadableRoots()
   }
 
   for (const auto& possibleCKBILocation : possibleCKBILocations) {
-    if (mozilla::psm::LoadLoadableRoots(possibleCKBILocation, modNameUTF8)) {
+    if (mozilla::psm::LoadLoadableRoots(possibleCKBILocation, mRootModuleName)) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("loaded CKBI from %s",
                                             possibleCKBILocation.get()));
       return NS_OK;
@@ -1300,12 +1297,14 @@ LoadLoadableRootsTask::LoadLoadableRoots()
 }
 
 void
-nsNSSComponent::UnloadLoadableRoots()
+nsNSSComponent::UnloadLoadableRoots(const MutexAutoLock& proofOfLock)
 {
   nsresult rv;
   nsAutoString modName;
-  rv = GetPIPNSSBundleString("RootCertModuleName", modName);
-  if (NS_FAILED(rv)) return;
+  rv = GetPIPNSSBundleStringLocked("RootCertModuleName", modName, proofOfLock);
+  if (NS_FAILED(rv)) {
+    return;
+  }
 
   NS_ConvertUTF16toUTF8 modNameUTF8(modName);
   ::mozilla::psm::UnloadLoadableRoots(modNameUTF8.get());
@@ -1576,9 +1575,9 @@ CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
 
 } // namespace
 
-void nsNSSComponent::setValidationOptions(bool isInitialSetting)
+void nsNSSComponent::setValidationOptions(
+  bool isInitialSetting, const mozilla::MutexAutoLock& proofOfLock)
 {
-  MutexAutoLock lock(mMutex);
   // This preference controls whether we do OCSP fetching and does not affect
   // OCSP stapling.
   // 0 = disabled, 1 = enabled
@@ -1701,7 +1700,7 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
   TimeDuration hardTimeout;
 
   GetRevocationBehaviorFromPrefs(&odc, &osc, &certShortLifetimeInDays,
-                                 softTimeout, hardTimeout, lock);
+                                 softTimeout, hardTimeout, proofOfLock);
   mDefaultCertVerifier = new SharedCertVerifier(odc, osc, softTimeout,
                                                 hardTimeout,
                                                 certShortLifetimeInDays,
@@ -2136,20 +2135,6 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_FAILURE;
   }
 
-  // TLSServerSocket may be run with the session cache enabled. It is necessary
-  // to call this once before that can happen. This specifies a maximum of 1000
-  // cache entries (the default number of cache entries is 10000, which seems a
-  // little excessive as there probably won't be that many clients connecting to
-  // any TLSServerSockets the browser runs.)
-  // Note that this must occur before any calls to SSL_ClearSessionCache
-  // (otherwise memory will leak).
-  if (SSL_ConfigServerSessionIDCache(1000, 0, 0, nullptr) != SECSuccess) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // dynamic options from prefs
-  setValidationOptions(true);
-
   mozilla::pkix::RegisterErrorTable();
 
   if (PK11_IsFIPS()) {
@@ -2198,20 +2183,54 @@ nsNSSComponent::InitializeNSS()
     mMitmDetecionEnabled =
       Preferences::GetBool("security.pki.mitm_canary_issuer.enabled", true);
 
-    mNSSInitialized = true;
-  }
-
 #ifdef XP_WIN
-  nsCOMPtr<nsINSSComponent> handle(this);
-  NS_DispatchToCurrentThread(NS_NewRunnableFunction("nsNSSComponent::TrustLoaded3rdPartyRoots",
-  [handle]() {
-    MOZ_ALWAYS_SUCCEEDS(handle->TrustLoaded3rdPartyRoots());
-  }));
+    nsCOMPtr<nsINSSComponent> handle(this);
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction("nsNSSComponent::TrustLoaded3rdPartyRoots",
+    [handle]() {
+      MOZ_ALWAYS_SUCCEEDS(handle->TrustLoaded3rdPartyRoots());
+    }));
 #endif // XP_WIN
 
-  RefPtr<LoadLoadableRootsTask> loadLoadableRootsTask(
-    new LoadLoadableRootsTask(this));
-  return loadLoadableRootsTask->Dispatch();
+    // TLSServerSocket may be run with the session cache enabled. It is
+    // necessary to call this once before that can happen. This specifies a
+    // maximum of 1000 cache entries (the default number of cache entries is
+    // 10000, which seems a little excessive as there probably won't be that
+    // many clients connecting to any TLSServerSockets the browser runs.) Note
+    // that this must occur before any calls to SSL_ClearSessionCache (otherwise
+    // memory will leak).
+    if (SSL_ConfigServerSessionIDCache(1000, 0, 0, nullptr) != SECSuccess) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Set dynamic options from prefs. This has to run after
+    // SSL_ConfigServerSessionIDCache.
+    setValidationOptions(true, lock);
+
+    nsAutoString rootModuleName;
+    rv = GetPIPNSSBundleStringLocked("RootCertModuleName", rootModuleName,
+                                     lock);
+    if (NS_FAILED(rv)) {
+      // When running Cpp unit tests on Android, this will fail because string
+      // bundles aren't available (see bug 1311077, bug 1228175 comment 12, and
+      // bug 929655). Because the module name is really only for display
+      // purposes, we can just hard-code the value here. Furthermore, if we want
+      // to be able to stop using string bundles in PSM in this way, we'll have
+      // to hard-code the string and only use the localized version when
+      // displaying it to the user, so this is a step in that direction anyway.
+      rootModuleName.AssignLiteral("Builtin Roots Module");
+    }
+    NS_ConvertUTF16toUTF8 rootModuleNameUTF8(rootModuleName);
+
+    RefPtr<LoadLoadableRootsTask> loadLoadableRootsTask(
+      new LoadLoadableRootsTask(this, Move(rootModuleNameUTF8)));
+    rv = loadLoadableRootsTask->Dispatch();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    mNSSInitialized = true;
+    return NS_OK;
+  }
 }
 
 void
@@ -2220,25 +2239,26 @@ nsNSSComponent::ShutdownNSS()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ShutdownNSS\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  // If we don't do this we might try to unload the loadable roots while the
-  // loadable roots loading thread is setting up EV information, which can cause
-  // it to fail to find the roots it is expecting.
-  Unused << BlockUntilLoadableRootsLoaded();
-
-  // This currently calls GetPIPNSSBundleString, which acquires mMutex, so we
-  // can't call it while already holding mMutex. This is fine as mMutex doesn't
-  // actually protect anything that UnloadLoadableRoots is modifying. Also,
-  // UnloadLoadableRoots is idempotent.
-  UnloadLoadableRoots();
-
   MutexAutoLock lock(mMutex);
 
-  // Other shutdown tasks are not guaranteed to be idempotent and we should
-  // avoid performing them more than once.
-  if (!mNSSInitialized) {
-    return;
+  // We have to block until the load loadable roots task has completed, because
+  // otherwise we might try to unload the loadable roots while the loadable
+  // roots loading thread is setting up EV information, which can cause
+  // it to fail to find the roots it is expecting. However, if initialization
+  // failed, we won't have dispatched the load loadable roots background task.
+  // In that case, we don't want to block on an event that will never happen.
+  if (mNSSInitialized) {
+    Unused << BlockUntilLoadableRootsLoaded();
+
+    // We can only run SSL_ShutdownServerSessionIDCache once (the rest of
+    // these operations are idempotent).
+    SSL_ClearSessionCache();
+    // TLSServerSocket may be run with the session cache enabled. This ensures
+    // those resources are cleaned up.
+    Unused << SSL_ShutdownServerSessionIDCache();
   }
-  mNSSInitialized = false;
+
+  UnloadLoadableRoots(lock);
 
 #ifdef XP_WIN
   mFamilySafetyRoot = nullptr;
@@ -2249,17 +2269,14 @@ nsNSSComponent::ShutdownNSS()
 
   Preferences::RemoveObserver(this, "security.");
 
-  SSL_ClearSessionCache();
-  // TLSServerSocket may be run with the session cache enabled. This ensures
-  // those resources are cleaned up.
-  Unused << SSL_ShutdownServerSessionIDCache();
-
   // Release the default CertVerifier. This will cause any held NSS resources
   // to be released.
   mDefaultCertVerifier = nullptr;
   // We don't actually shut down NSS - XPCOM does, after all threads have been
   // joined and the component manager has been shut down (and so there shouldn't
   // be any XPCOM objects holding NSS resources).
+
+  mNSSInitialized = false;
 }
 
 nsresult
@@ -2354,7 +2371,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.soft") ||
                prefName.EqualsLiteral("security.OCSP.timeoutMilliseconds.hard") ||
                prefName.EqualsLiteral("security.pki.distrust_ca_policy")) {
-      setValidationOptions(false);
+      MutexAutoLock lock(mMutex);
+      setValidationOptions(false, lock);
 #ifdef DEBUG
     } else if (prefName.EqualsLiteral("security.test.built_in_root_hash")) {
       MutexAutoLock lock(mMutex);

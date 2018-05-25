@@ -75,13 +75,4 @@
       </constructor>
     </implementation>
 </binding>
-
-<binding id="replacement" extends="chrome://pluginproblem/content/pluginProblem.xml#pluginProblem" inheritstyle="false" chromeOnlyContent="true" bindToUntrustedContent="true">
-  <implementation>
-    <constructor>
-      this.dispatchEvent(new CustomEvent("PluginPlaceholderReplaced"));
-    </constructor>
-    </implementation>
-</binding>
-
 </bindings>

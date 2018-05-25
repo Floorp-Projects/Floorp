@@ -1,9 +1,5 @@
 #filter substitution
-#include @BOOKMARKS_INCLUDE_DIR@/bookmarks.inc
-#define ja_jp_mac ja-JP-mac
-#if AB_CD == ja_jp_mac
-#define AB_CD ja
-#endif
+#include @BOOKMARKS_INCLUDE_PATH@
 
 #define mozilla_icon data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E %3Cpath d='M0 0h16v16H0z'/%3E %3Cpath d='M13.994 10.356H15V12h-3.171V7.741c0-1.308-.435-1.81-1.29-1.81-1.04 0-1.46.737-1.46 1.8v2.63h1.006V12H6.918V7.741c0-1.308-.435-1.81-1.291-1.81-1.039 0-1.459.737-1.459 1.8v2.63h1.441V12H1v-1.644h1.006V6.079H1V4.435h3.168v1.139a2.507 2.507 0 0 1 2.3-1.29A2.452 2.452 0 0 1 8.931 5.91 2.535 2.535 0 0 1 11.4 4.284 2.448 2.448 0 0 1 14 6.9v3.458z' fill='%23fff'/%3E %3C/svg%3E
 
