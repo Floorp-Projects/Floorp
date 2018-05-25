@@ -215,8 +215,8 @@ const Types = exports.__TypesForTests = [
     front: null,
   },
   {
-    types: ["tab"],
-    spec: "devtools/shared/specs/tab",
+    types: ["browsingContextTarget"],
+    spec: "devtools/shared/specs/targets/browsing-context",
     front: null,
   },
   {

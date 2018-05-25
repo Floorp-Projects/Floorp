@@ -16,8 +16,8 @@ const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
  * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of TabActor.prototype
- * */
+ * maintain the properties of BrowsingContextTargetActor.prototype
+ */
 const addonConsolePrototype = extend({}, WebConsoleActor.prototype);
 
 /**

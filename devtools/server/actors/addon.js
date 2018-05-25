@@ -135,7 +135,7 @@ BrowserAddonActor.prototype = {
     if (this.attached) {
       this.onDetach();
 
-      // The BrowserAddonActor is not a TabActor and it has to send
+      // The BrowserAddonActor is not a BrowsingContextTargetActor and it has to send
       // "tabDetached" directly to close the devtools toolbox window.
       this.conn.send({ from: this.actorID, type: "tabDetached" });
     }

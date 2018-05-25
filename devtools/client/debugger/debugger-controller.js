@@ -252,7 +252,7 @@ var DebuggerController = {
     DebuggerView.destroy();
     this.StackFrames.disconnect();
     this.ThreadState.disconnect();
-    if (this._target.isTabActor) {
+    if (this._target.isBrowsingContext) {
       this.Workers.disconnect();
     }
 
@@ -309,7 +309,7 @@ var DebuggerController = {
       }
     });
 
-    if (this._target.isTabActor) {
+    if (this._target.isBrowsingContext) {
       this.Workers.connect();
     }
     this.ThreadState.connect();

@@ -110,7 +110,7 @@ async function attachAddon(addonId) {
     form: addonActor,
     client,
     chrome: true,
-    isTabActor: true,
+    isBrowsingContext: true,
   });
 
   return addonTarget;

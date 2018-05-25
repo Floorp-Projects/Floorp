@@ -264,7 +264,7 @@ WebConsoleActor.prototype =
 
   /**
    * Flag used to track if we are listening for events from the progress
-   * listener of the tab actor. We use the progress listener to clear
+   * listener of the target actor. We use the progress listener to clear
    * this.evalWindow on page navigation.
    *
    * @private

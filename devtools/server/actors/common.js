@@ -133,13 +133,13 @@ exports.ObservedActorFactory = ObservedActorFactory;
  * actors are already there. Add all actors in the final extra actors table to
  * |pool|.
  *
- * The root actor and the tab actor use this to instantiate actors that other
+ * The root actor and the target actor use this to instantiate actors that other
  * parts of the browser have specified with DebuggerServer.addTabActor and
  * DebuggerServer.addGlobalActor.
  *
  * @param factories
  *     An object whose own property names are the names of properties to add to
- *     some reply packet (say, a tab actor grip or the "listTabs" response
+ *     some reply packet (say, a target actor grip or the "listTabs" response
  *     form), and whose own property values are actor constructor functions, as
  *     documented for addTabActor and addGlobalActor.
  *

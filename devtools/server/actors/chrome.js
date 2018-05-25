@@ -7,29 +7,32 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const { DebuggerServer } = require("../main");
-const { getChildDocShells, TabActor, tabPrototype } = require("./tab");
+const {
+  getChildDocShells,
+  BrowsingContextTargetActor,
+  browsingContextTargetPrototype
+} = require("devtools/server/actors/targets/browsing-context");
 const makeDebugger = require("./utils/make-debugger");
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { tabSpec } = require("devtools/shared/specs/tab");
+const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 /**
- * Creates a TabActor for debugging all the chrome content in the
- * current process. Most of the implementation is inherited from TabActor.
- * ChromeActor is a child of RootActor, it can be instanciated via
- * RootActor.getProcess request.
- * ChromeActor exposes all tab actors via its form() request, like TabActor.
+ * Creates a target actor for debugging all the chrome content in the current process.
+ * Most of the implementation is inherited from BrowsingContextTargetActor. ChromeActor is
+ * a child of RootActor, it can be instantiated via RootActor.getProcess request.
+ * ChromeActor exposes all tab actors via its form() request, like
+ * BrowsingContextTargetActor.
  *
  * History lecture:
- * All tab actors used to also be registered as global actors,
- * so that the root actor was also exposing tab actors for the main process.
- * Tab actors ended up having RootActor as parent actor,
- * but more and more features of the tab actors were relying on TabActor.
- * So we are now exposing a process actor that offers the same API as TabActor
- * by inheriting its functionality.
- * Global actors are now only the actors that are meant to be global,
- * and are no longer related to any specific scope/document.
+ * All tab actors used to also be registered as global actors, so that the root actor was
+ * also exposing tab actors for the main process. Tab actors ended up having RootActor as
+ * parent actor, but more and more features of the tab actors were relying on
+ * BrowsingContextTargetActor. So we are now exposing a process actor that offers the same
+ * API as BrowsingContextTargetActor by inheriting its functionality. Global actors are
+ * now only the actors that are meant to be global, and are no longer related to any
+ * specific scope/document.
  *
  * @param connection DebuggerServerConnection
  *        The connection to the client.
@@ -38,13 +41,14 @@ const { tabSpec } = require("devtools/shared/specs/tab");
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
  * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of TabActor.prototype
+ * maintain the properties of BrowsingContextTargetActor.prototype
  * */
 
-const chromePrototype = extend({}, tabPrototype);
+const chromePrototype = extend({}, browsingContextTargetPrototype);
 
 chromePrototype.initialize = function(connection) {
-  TabActor.prototype.initialize.call(this, connection);
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection);
+
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {
     findDebuggees: dbg => dbg.findAllGlobals(),
@@ -54,7 +58,7 @@ chromePrototype.initialize = function(connection) {
   // Ensure catching the creation of any new content docshell
   this.listenForNewDocShells = true;
 
-  // Defines the default docshell selected for the tab actor
+  // Defines the default docshell selected for the target actor
   let window = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
 
   // Default to any available top level window if there is no expected window
@@ -86,7 +90,7 @@ chromePrototype.initialize = function(connection) {
 chromePrototype.isRootActor = true;
 
 /**
- * Getter for the list of all docshells in this tabActor
+ * Getter for the list of all docshells in this targetActor
  * @return {Array}
  */
 Object.defineProperty(chromePrototype, "docShells", {
@@ -107,7 +111,7 @@ Object.defineProperty(chromePrototype, "docShells", {
 });
 
 chromePrototype.observe = function(subject, topic, data) {
-  TabActor.prototype.observe.call(this, subject, topic, data);
+  BrowsingContextTargetActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
   }
@@ -126,7 +130,7 @@ chromePrototype._attach = function() {
     return false;
   }
 
-  TabActor.prototype._attach.call(this);
+  BrowsingContextTargetActor.prototype._attach.call(this);
 
   // Listen for any new/destroyed chrome docshell
   Services.obs.addObserver(this, "chrome-webnavigation-create");
@@ -168,7 +172,7 @@ chromePrototype._detach = function() {
     this._progressListener.unwatch(docShell);
   }
 
-  TabActor.prototype._detach.call(this);
+  BrowsingContextTargetActor.prototype._detach.call(this);
   return undefined;
 };
 
@@ -206,4 +210,4 @@ chromePrototype.postNest = function(nestData) {
 
 chromePrototype.typeName = "Chrome";
 exports.chromePrototype = chromePrototype;
-exports.ChromeActor = ActorClassWithSpec(tabSpec, chromePrototype);
+exports.ChromeActor = ActorClassWithSpec(browsingContextTargetSpec, chromePrototype);

@@ -651,7 +651,7 @@ AddonDebugger.prototype = {
       form: addonActor,
       client: this.client,
       chrome: true,
-      isTabActor: false
+      isBrowsingContext: false
     };
 
     let toolboxOptions = {
