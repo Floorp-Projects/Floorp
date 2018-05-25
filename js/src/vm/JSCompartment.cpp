@@ -45,7 +45,6 @@ JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
     runtime_(zone->runtimeFromAnyThread()),
     data(nullptr),
-    regExps(),
     gcIncomingGrayPointers(nullptr)
 {
     runtime_->numCompartments++;
@@ -822,7 +821,7 @@ Realm::sweepJitRealm()
 }
 
 void
-JSCompartment::sweepRegExps()
+Realm::sweepRegExps()
 {
     /*
      * JIT code increments activeWarmUpCounter for any RegExpShared used by jit

@@ -48,7 +48,7 @@ js::CreateRegExpMatchResult(JSContext* cx, HandleString input, const MatchPairs&
      */
 
     /* Get the templateObject that defines the shape and type of the output object */
-    JSObject* templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
+    JSObject* templateObject = cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject)
         return false;
 
@@ -1568,7 +1568,7 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto)
 
     NativeObject* nproto = static_cast<NativeObject*>(proto);
 
-    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpPrototypeShape();
+    Shape* shape = cx->realm()->regExps.getOptimizableRegExpPrototypeShape();
     if (shape == nproto->lastProperty())
         return true;
 
@@ -1635,7 +1635,7 @@ js::RegExpPrototypeOptimizableRaw(JSContext* cx, JSObject* proto)
     if (!has)
         return false;
 
-    cx->compartment()->regExps.setOptimizableRegExpPrototypeShape(nproto->lastProperty());
+    cx->realm()->regExps.setOptimizableRegExpPrototypeShape(nproto->lastProperty());
     return true;
 }
 
@@ -1659,7 +1659,7 @@ js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto)
 
     RegExpObject* rx = &obj->as<RegExpObject>();
 
-    Shape* shape = cx->compartment()->regExps.getOptimizableRegExpInstanceShape();
+    Shape* shape = cx->realm()->regExps.getOptimizableRegExpInstanceShape();
     if (shape == rx->lastProperty())
         return true;
 
@@ -1672,7 +1672,7 @@ js::RegExpInstanceOptimizableRaw(JSContext* cx, JSObject* obj, JSObject* proto)
     if (!RegExpObject::isInitialShape(rx))
         return false;
 
-    cx->compartment()->regExps.setOptimizableRegExpInstanceShape(rx->lastProperty());
+    cx->realm()->regExps.setOptimizableRegExpInstanceShape(rx->lastProperty());
     return true;
 }
 
