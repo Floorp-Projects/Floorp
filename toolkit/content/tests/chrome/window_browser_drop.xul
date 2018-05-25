@@ -31,7 +31,7 @@ function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
       });
     }
 
-    let dataTransfer = new content.DataTransfer("dragstart", false);
+    let dataTransfer = new content.DataTransfer();
     for (let i = 0; i < data.length; i++) {
       let types = data[i];
       for (let j = 0; j < types.length; j++) {
@@ -165,18 +165,6 @@ async function dropLinksOnBrowser(browser, type) {
                     [ [ { type: "text/x-moz-url",
                           data: "http://www.mozilla.org/\nMozilla.org\nhttp://www.example.com/\nExample.com" } ] ],
                     "text/x-moz-url with 2 URLs drop on browser " + type);
-
-  // Dropping multiple items should open multiple pages.
-  await expectLink(browser,
-                    [ { url: "http://www.example.com/",
-                        name: "Example.com" },
-                      { url: "http://www.mozilla.org/",
-                        name: "http://www.mozilla.org/" }],
-                    [ [ { type: "text/x-moz-url",
-                          data: "http://www.example.com/\nExample.com" } ],
-                      [ { type: "text/plain",
-                          data: "http://www.mozilla.org/" } ] ],
-                    "text/x-moz-url and text/plain drop on browser " + type);
 
   // Dropping single item with multiple types should open single page.
   await expectLink(browser,
