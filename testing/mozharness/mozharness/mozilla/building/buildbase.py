@@ -1640,6 +1640,8 @@ or run without that action (ie: --no-{action})"
         # Call `size` and output with SysV format in decimal radix
         cmd = [size_prog, '-A', '-d', file]
         output = self.get_output_from_command(cmd)
+        if not output:
+            return {}
 
         # Format is:
         # <section-name> <size> <address>, ie:
