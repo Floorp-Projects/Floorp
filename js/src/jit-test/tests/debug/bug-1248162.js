@@ -10,5 +10,5 @@ for (var i = 0; i < 9; ++i) {
 }
 // jsfunfuzz-generated
 oomTest(function() {
-  newGlobal();
+  newGlobal({sameZoneAs: this});
 })

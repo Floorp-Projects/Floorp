@@ -8,7 +8,7 @@ loadFile(`
   var global = this;
   var p = new Proxy(o, {
     "deleteProperty": function (await , key) {
-      var g = newGlobal();
+      var g = newGlobal({sameZoneAs: this});
       g.parent = global;
       g.eval("var dbg = new Debugger(parent); dbg.onEnterFrame = function(frame) {};");
     }

@@ -18,6 +18,5 @@ dbg.onNewGlobalObject = function(global) {
     get.seen = true;
 };
 oomTest(function() {
-    newGlobal({
-    })
+    newGlobal({sameZoneAs: this})
 });

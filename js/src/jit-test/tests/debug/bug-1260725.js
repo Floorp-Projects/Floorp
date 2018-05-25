@@ -8,5 +8,5 @@ dbg.onNewGlobalObject = function(global) {
   dbg.memory.takeCensus({});
 };
 oomTest(function() {
-  newGlobal({})
+  newGlobal({sameZoneAs: this})
 });
