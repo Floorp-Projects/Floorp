@@ -32,10 +32,10 @@ object DownloadUtils {
 
     /**
      * Format as defined in RFC 2616 and RFC 5987
-     * Only the attachment type is supported.
+     * Both inline and attachment types are supported.
      */
-    private val CONTENT_DISPOSITION_PATTERN = Pattern.compile("attachment\\s*;\\s*filename\\s*=\\s*" +
-            "(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
+    private val CONTENT_DISPOSITION_PATTERN = Pattern.compile("(inline|attachment)\\s*;" +
+            "\\s*filename\\s*=\\s*(\"((?:\\\\.|[^\"\\\\])*)\"|[^;]*)\\s*" +
             "(?:;\\s*filename\\*\\s*=\\s*(utf-8|iso-8859-1)'[^']*'(\\S*))?",
             Pattern.CASE_INSENSITIVE)
 
@@ -139,19 +139,19 @@ object DownloadUtils {
 
             if (m.find()) {
                 // If escaped string is found, decode it using the given encoding.
-                val encodedFileName = m.group(4)
-                val encoding = m.group(3)
+                val encodedFileName = m.group(5)
+                val encoding = m.group(4)
 
                 if (encodedFileName != null) {
                     return decodeHeaderField(encodedFileName, encoding)
                 }
 
                 // Return quoted string if available and replace escaped characters.
-                val quotedFileName = m.group(2)
+                val quotedFileName = m.group(3)
 
                 return if (quotedFileName != null) {
                     quotedFileName.replace("\\\\(.)".toRegex(), "$1")
-                } else m.group(1)
+                } else m.group(2)
 
                 // Otherwise try to extract the unquoted file name
             }

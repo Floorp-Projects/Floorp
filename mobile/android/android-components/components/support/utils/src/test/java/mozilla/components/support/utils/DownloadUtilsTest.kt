@@ -9,6 +9,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
+
 @RunWith(RobolectricTestRunner::class)
 class DownloadUtilsTest {
 
@@ -20,32 +22,37 @@ class DownloadUtilsTest {
     fun testGuessFileName_contentDisposition() {
         // Default file name
         assertContentDisposition("downloadfile.bin", "")
-        assertContentDisposition("downloadfile.bin", "attachment")
-        assertContentDisposition("downloadfile.bin", "attachment;")
-        assertContentDisposition("downloadfile.bin", "attachment; filename")
-        assertContentDisposition(".bin", "attachment; filename=")
-        assertContentDisposition(".bin", "attachment; filename=\"\"")
 
-        // Provided filename field
-        assertContentDisposition("filename.jpg", "attachment; filename=\"filename.jpg\"")
-        assertContentDisposition("file\"name.jpg", "attachment; filename=\"file\\\"name.jpg\"")
-        assertContentDisposition("file\\name.jpg", "attachment; filename=\"file\\\\name.jpg\"")
-        assertContentDisposition("file\\\"name.jpg", "attachment; filename=\"file\\\\\\\"name.jpg\"")
-        assertContentDisposition("filename.jpg", "attachment; filename=filename.jpg")
-        assertContentDisposition("filename.jpg", "attachment; filename=filename.jpg; foo")
-        assertContentDisposition("filename.jpg", "attachment; filename=\"filename.jpg\"; foo")
+        CONTENT_DISPOSITION_TYPES.forEach { contentDisposition ->
+            //continuing with default filenames
+            assertContentDisposition("downloadfile.bin", contentDisposition)
+            assertContentDisposition("downloadfile.bin", contentDisposition + ";")
+            assertContentDisposition("downloadfile.bin", contentDisposition + "; filename")
+            assertContentDisposition(".bin", contentDisposition + "; filename=")
+            assertContentDisposition(".bin", contentDisposition + "; filename=\"\"")
 
-        // UTF-8 encoded filename* field
-        assertContentDisposition("\uD83E\uDD8A + x.jpg",
-                "attachment; filename=\"_.jpg\"; filename*=utf-8'en'%F0%9F%A6%8A%20+%20x.jpg")
-        assertContentDisposition("filename 的副本.jpg",
-                "attachment;filename=\"_.jpg\";" + "filename*=UTF-8''filename%20%E7%9A%84%E5%89%AF%E6%9C%AC.jpg")
-        assertContentDisposition("filename.jpg",
-                "attachment; filename=_.jpg; filename*=utf-8'en'filename.jpg")
+            // Provided filename field
+            assertContentDisposition("filename.jpg", contentDisposition + "; filename=\"filename.jpg\"")
+            assertContentDisposition("file\"name.jpg", contentDisposition + "; filename=\"file\\\"name.jpg\"")
+            assertContentDisposition("file\\name.jpg", contentDisposition + "; filename=\"file\\\\name.jpg\"")
+            assertContentDisposition("file\\\"name.jpg", contentDisposition + "; filename=\"file\\\\\\\"name.jpg\"")
+            assertContentDisposition("filename.jpg", contentDisposition + "; filename=filename.jpg")
+            assertContentDisposition("filename.jpg", contentDisposition + "; filename=filename.jpg; foo")
+            assertContentDisposition("filename.jpg", contentDisposition + "; filename=\"filename.jpg\"; foo")
 
-        // ISO-8859-1 encoded filename* field
-        assertContentDisposition("file' 'name.jpg",
-                "attachment; filename=\"_.jpg\"; filename*=iso-8859-1'en'file%27%20%27name.jpg")
+            // UTF-8 encoded filename* field
+            assertContentDisposition("\uD83E\uDD8A + x.jpg",
+                    contentDisposition + "; filename=\"_.jpg\"; filename*=utf-8'en'%F0%9F%A6%8A%20+%20x.jpg")
+            assertContentDisposition("filename 的副本.jpg",
+                    contentDisposition + ";filename=\"_.jpg\";" +
+                            "filename*=UTF-8''filename%20%E7%9A%84%E5%89%AF%E6%9C%AC.jpg")
+            assertContentDisposition("filename.jpg",
+                    contentDisposition + "; filename=_.jpg; filename*=utf-8'en'filename.jpg")
+
+            // ISO-8859-1 encoded filename* field
+            assertContentDisposition("file' 'name.jpg",
+                    contentDisposition + "; filename=\"_.jpg\"; filename*=iso-8859-1'en'file%27%20%27name.jpg")
+        }
     }
 
     private fun assertUrl(expected: String, url: String) {
