@@ -917,6 +917,7 @@ panelview .toolbarbutton-1,
   list-style-image: url(chrome://browser/skin/check.svg);
   -moz-context-properties: fill;
   fill: currentColor;
+  color: inherit;
 }
 
 #appMenu-popup .toolbaritem-combined-buttons {
