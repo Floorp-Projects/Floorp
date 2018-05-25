@@ -16,9 +16,9 @@
 #include "nsQueryObject.h"
 
 #include "mozilla/dom/URL.h"
+#include "nsDOMWindowList.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIPresShell.h"
@@ -381,14 +381,10 @@ nsChromeRegistry::FlushSkinCaches()
 nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
 {
   // Deal with our subframes first.
-  nsCOMPtr<nsIDOMWindowCollection> frames = aWindow->GetFrames();
-  uint32_t length;
-  frames->GetLength(&length);
-  uint32_t j;
-  for (j = 0; j < length; j++) {
-    nsCOMPtr<mozIDOMWindowProxy> childWin;
-    frames->Item(j, getter_AddRefs(childWin));
-    nsCOMPtr<nsPIDOMWindowOuter> piWindow = nsPIDOMWindowOuter::From(childWin);
+  nsDOMWindowList* frames = aWindow->GetFrames();
+  uint32_t length = frames->GetLength();
+  for (uint32_t j = 0; j < length; j++) {
+    nsCOMPtr<nsPIDOMWindowOuter> piWindow = frames->IndexedGetter(j);
     RefreshWindow(piWindow);
   }
 
