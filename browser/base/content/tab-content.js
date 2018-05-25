@@ -22,6 +22,8 @@ ChromeUtils.defineModuleGetter(this, "AboutReader",
   "resource://gre/modules/AboutReader.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
+  "resource:///modules/PageStyleHandler.jsm");
 XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
   let ssdp = ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
   // Register targets
@@ -291,6 +293,10 @@ var ContentSearchMediator = {
   },
 };
 ContentSearchMediator.init(this);
+
+addMessageListener("PageStyle:Switch", PageStyleHandler);
+addMessageListener("PageStyle:Disable", PageStyleHandler);
+addEventListener("pageshow", PageStyleHandler);
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
