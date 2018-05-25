@@ -41,13 +41,6 @@ RUN apt-get update && \
 # %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 
-# Stubbed out credentials; mozharness looks for this file an issues a WARNING
-# if it's not found, which causes the build to fail.  Note that this needs to
-# be in the parent of the workspace directory and in the directory where
-# mozharness is run (not its --work-dir).  See Bug 1169652.
-# %include taskcluster/docker/recipes/oauth.txt
-COPY topsrcdir/taskcluster/docker/recipes/oauth.txt /builds/worker/
-
 # Reset user/workdir from parent image so we can install software.
 WORKDIR /
 USER root
