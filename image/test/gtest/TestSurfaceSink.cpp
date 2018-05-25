@@ -602,6 +602,154 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteUnsafeComputedRow)
   });
 }
 
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocks)
+{
+  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
+    // Create a green buffer the same size as one row of the surface (which is 100x100),
+    // containing 60 pixels of green in the middle and 20 transparent pixels on
+    // either side.
+    uint32_t buffer[100];
+    for (int i = 0; i < 100; ++i) {
+      buffer[i] = 20 <= i && i < 80 ? BGRAColor::Green().AsPixel()
+                                    : BGRAColor::Transparent().AsPixel();
+    }
+
+    uint32_t count = 0;
+    WriteState result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                              int32_t aLength) {
+      ++count;
+      EXPECT_EQ(int32_t(100), aLength);
+      memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
+      return MakeTuple(int32_t(100), Maybe<WriteState>());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 0, 100, 100),
+                                    IntRect(0, 0, 100, 100));
+
+    // Check that the generated image is correct.
+    CheckGeneratedImage(aDecoder, IntRect(20, 0, 60, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                   int32_t aLength) {
+      count++;
+      for (int32_t i = 0; i < aLength; ++i) {
+        aBlockStart[i] = BGRAColor::Red().AsPixel();
+      }
+      return MakeTuple(aLength, Maybe<WriteState>());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedImage(aDecoder, IntRect(20, 0, 60, 100));
+  });
+}
+
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocksPartialRow)
+{
+  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
+    // Create a green buffer the same size as one row of the surface (which is 100x100),
+    // containing 60 pixels of green in the middle and 20 transparent pixels on
+    // either side.
+    uint32_t buffer[100];
+    for (int i = 0; i < 100; ++i) {
+      buffer[i] = 20 <= i && i < 80 ? BGRAColor::Green().AsPixel()
+                                    : BGRAColor::Transparent().AsPixel();
+    }
+
+    // Write the first 99 rows of our 100x100 surface and verify that even
+    // though our lambda will yield pixels forever, only one row is written per
+    // call to WritePixelsToRow().
+    for (int row = 0; row < 99; ++row) {
+      for (int32_t written = 0; written < 100; ) {
+        WriteState result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                                  int32_t aLength) {
+          // When we write the final block of pixels, it will request we start
+          // another row. We should abort at that point.
+          if (aLength == int32_t(100) && written == int32_t(100)) {
+            return MakeTuple(int32_t(0), Some(WriteState::NEED_MORE_DATA));
+          }
+
+          // It should always request enough data to fill the row. So it should
+          // request 100, 75, 50, and finally 25 pixels.
+          EXPECT_EQ(int32_t(100) - written, aLength);
+
+          // Only write one quarter of the pixels for the row.
+          memcpy(aBlockStart, &buffer[written], 25 * sizeof(uint32_t));
+          written += 25;
+
+          // We've written the last pixels remaining for the row.
+          if (written == int32_t(100)) {
+            return MakeTuple(int32_t(25), Maybe<WriteState>());
+          }
+
+          // We've written another quarter of the row but not yet all of it.
+          return MakeTuple(int32_t(25), Some(WriteState::NEED_MORE_DATA));
+        });
+
+        EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      }
+
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      Maybe<SurfaceInvalidRect> invalidRect = aSink->TakeInvalidRect();
+      EXPECT_TRUE(invalidRect.isSome());
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mInputSpaceRect);
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mOutputSpaceRect);
+
+      CheckGeneratedImage(aDecoder, IntRect(20, 0, 60, row + 1));
+    }
+
+    // Write the final line, which should finish the surface.
+    uint32_t count = 0;
+    WriteState result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                              int32_t aLength) {
+      ++count;
+      EXPECT_EQ(int32_t(100), aLength);
+      memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
+      return MakeTuple(int32_t(100), Maybe<WriteState>());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(1u, count);
+
+    // Note that the final invalid rect we expect here is only the last row;
+    // that's because we called TakeInvalidRect() repeatedly in the loop above.
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 99, 100, 1),
+                                    IntRect(0, 99, 100, 1));
+
+    // Check that the generated image is correct.
+    CheckGeneratedImage(aDecoder, IntRect(20, 0, 60, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                   int32_t aLength) {
+      count++;
+      for (int32_t i = 0; i < aLength; ++i) {
+        aBlockStart[i] = BGRAColor::Red().AsPixel();
+      }
+      return MakeTuple(aLength, Maybe<WriteState>());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedImage(aDecoder, IntRect(20, 0, 60, 100));
+  });
+}
+
 TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
 {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
