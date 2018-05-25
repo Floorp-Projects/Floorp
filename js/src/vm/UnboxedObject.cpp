@@ -553,6 +553,8 @@ MakeReplacementTemplateObject(JSContext* cx, HandleObjectGroup group, const Unbo
 /* static */ bool
 UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
 {
+    MOZ_ASSERT(cx->realm() == group->realm());
+
     AutoEnterAnalysis enter(cx);
 
     AutoSweepObjectGroup sweep(group);
@@ -570,7 +572,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     // slot accesses later on for sites that see converted objects from this
     // group and objects that were allocated using the replacement new group.
     if (layout.newScript()) {
-        replacementGroup = ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
         if (!replacementGroup)
             return false;
 
@@ -595,15 +597,15 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
         RootedScript script(cx, layout.allocationScript());
         jsbytecode* pc = layout.allocationPc();
 
-        replacementGroup = ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
         if (!replacementGroup)
             return false;
 
         PlainObject* templateObject = &script->getObject(pc)->as<PlainObject>();
         replacementGroup->addDefiniteProperties(cx, templateObject->lastProperty());
 
-        cx->compartment()->objectGroups.replaceAllocationSiteGroup(script, pc, JSProto_Object,
-                                                                   replacementGroup);
+        ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
+        realm.replaceAllocationSiteGroup(script, pc, JSProto_Object, replacementGroup);
 
         // Clear any baseline information at this opcode which might use the old group.
         if (script->hasBaselineScript()) {
@@ -636,8 +638,8 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     }
 
     ObjectGroup* nativeGroup =
-        ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto,
-                                          group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK);
+        ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto,
+                                    group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK);
     if (!nativeGroup)
         return false;
 

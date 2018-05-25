@@ -933,16 +933,21 @@ JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
 }
 
 void
+Realm::fixupAfterMovingGC()
+{
+    purge();
+    fixupGlobal();
+    objectGroups_.fixupTablesAfterMovingGC();
+    fixupScriptMapsAfterMovingGC();
+}
+
+void
 JSCompartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
     Realm* realm = JS::GetRealmForCompartment(this);
-
-    realm->purge();
-    realm->fixupGlobal();
-    objectGroups.fixupTablesAfterMovingGC();
-    realm->fixupScriptMapsAfterMovingGC();
+    realm->fixupAfterMovingGC();
 
     // Sweep the wrapper map to update values (wrapper objects) in this
     // compartment that may have been moved.
@@ -1035,7 +1040,7 @@ Realm::purge()
 {
     dtoaCache.purge();
     newProxyCache.purge();
-    objectGroups.purge();
+    objectGroups_.purge();
     objects_.iteratorCache.clearAndShrink();
     arraySpeciesLookup.purge();
 }
@@ -1052,7 +1057,7 @@ Realm::clearTables()
     MOZ_ASSERT(!debugEnvs_);
     MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
-    objectGroups.clearTables();
+    objectGroups_.clearTables();
     if (savedStacks_.initialized())
         savedStacks_.clear();
     if (varNames_.initialized())
@@ -1371,9 +1376,9 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     JSCompartment::addSizeOfExcludingThis(mallocSizeOf, crossCompartmentWrappersArg);
 
     *realmObject += mallocSizeOf(this);
-    objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
-                                        tiArrayTypeTables, tiObjectTypeTables,
-                                        realmTables);
+    objectGroups_.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
+                                         tiArrayTypeTables, tiObjectTypeTables,
+                                         realmTables);
     wasm.addSizeOfExcludingThis(mallocSizeOf, realmTables);
 
     objects_.addSizeOfExcludingThis(mallocSizeOf,

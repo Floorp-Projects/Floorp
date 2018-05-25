@@ -1770,7 +1770,7 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
         return resultConstStringSplit;
 
     JSContext* cx = TlsContext.get();
-    ObjectGroup* group = ObjectGroupCompartment::getStringSplitStringGroup(cx);
+    ObjectGroup* group = ObjectGroupRealm::getStringSplitStringGroup(cx);
     if (!group)
         return InliningStatus_NotInlined;
     AutoSweepObjectGroup sweep(group);

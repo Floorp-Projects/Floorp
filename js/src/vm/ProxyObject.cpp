@@ -64,8 +64,9 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
      * ways.
      */
     if (proto.isObject() && !options.singleton() && !clasp->isDOMClass()) {
+        ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
         RootedObject protoObj(cx, proto.toObject());
-        if (!JSObject::setNewGroupUnknown(cx, clasp, protoObj))
+        if (!JSObject::setNewGroupUnknown(cx, realm, clasp, protoObj))
             return nullptr;
     }
 

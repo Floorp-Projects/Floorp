@@ -158,7 +158,8 @@ JSObject::setSingleton(JSContext* cx, js::HandleObject obj)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
 
-    js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(cx, obj->getClass(),
+    js::ObjectGroupRealm& realm = js::ObjectGroupRealm::get(obj->group_);
+    js::ObjectGroup* group = js::ObjectGroup::lazySingletonGroup(cx, realm, obj->getClass(),
                                                                  obj->taggedProto());
     if (!group)
         return false;
