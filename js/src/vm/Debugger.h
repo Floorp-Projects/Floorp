@@ -754,8 +754,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
   private:
     static MOZ_MUST_USE bool ensureExecutionObservabilityOfFrame(JSContext* cx,
                                                                  AbstractFramePtr frame);
-    static MOZ_MUST_USE bool ensureExecutionObservabilityOfCompartment(JSContext* cx,
-                                                                       JSCompartment* comp);
+    static MOZ_MUST_USE bool ensureExecutionObservabilityOfRealm(JSContext* cx,
+                                                                 JS::Realm* realm);
 
     static bool hookObservesAllExecution(Hook which);
 

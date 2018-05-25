@@ -2742,9 +2742,8 @@ Debugger::ensureExecutionObservabilityOfFrame(JSContext* cx, AbstractFramePtr fr
 }
 
 /* static */ bool
-Debugger::ensureExecutionObservabilityOfCompartment(JSContext* cx, JSCompartment* comp)
+Debugger::ensureExecutionObservabilityOfRealm(JSContext* cx, Realm* realm)
 {
-    Realm* realm = JS::GetRealmForCompartment(comp);
     if (realm->debuggerObservesAllExecution())
         return true;
     ExecutionObservableRealms obs(cx);
@@ -3746,7 +3745,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
         for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
             if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            r->scheduledForDestruction = false;
+            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
             GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -4078,7 +4077,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     debuggeeRealm->updateDebuggerObservesAsmJS();
     debuggeeRealm->updateDebuggerObservesBinarySource();
     debuggeeRealm->updateDebuggerObservesCoverage();
-    if (observesAllExecution() && !ensureExecutionObservabilityOfCompartment(cx, debuggeeRealm))
+    if (observesAllExecution() && !ensureExecutionObservabilityOfRealm(cx, debuggeeRealm))
         return false;
 
     globalDebuggersGuard.release();
@@ -4963,7 +4962,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            r->scheduledForDestruction = false;
+            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
 
             GlobalObject* global = r->maybeGlobal();
 

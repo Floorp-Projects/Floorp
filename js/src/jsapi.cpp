@@ -682,7 +682,7 @@ JS::EnterRealm(JSContext* cx, JSObject* target)
 
     Realm* oldRealm = cx->realm();
     cx->enterRealmOf(target);
-    return JS::GetRealmForCompartment(oldRealm);
+    return JS::GetCompartmentForRealm(oldRealm);
 }
 
 JS_PUBLIC_API(void)
