@@ -3039,26 +3039,27 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
                 } else { /* handshaking as server */
                     new_flags |= PR_POLL_READ;
                 }
-            } else
+            } else if (ss->lastWriteBlocked) {
                 /* First handshake is in progress */
-                if (ss->lastWriteBlocked) {
                 if (new_flags & PR_POLL_READ) {
                     /* The caller is waiting for data to be received,
                     ** but the initial handshake is blocked on write, or the
                     ** client's first handshake record has not been written.
                     ** The code should select on write, not read.
                     */
-                    new_flags ^= PR_POLL_READ;  /* don't select on read. */
+                    new_flags &= ~PR_POLL_READ; /* don't select on read. */
                     new_flags |= PR_POLL_WRITE; /* do    select on write. */
                 }
             } else if (new_flags & PR_POLL_WRITE) {
                 /* The caller is trying to write, but the handshake is
                 ** blocked waiting for data to read, and the first
                 ** handshake has been sent.  So do NOT to poll on write
-                ** unless we did false start.
+                ** unless we did false start or we are doing 0-RTT.
                 */
-                if (!ss->ssl3.hs.canFalseStart) {
-                    new_flags ^= PR_POLL_WRITE; /* don't select on write. */
+                if (!(ss->ssl3.hs.canFalseStart ||
+                      ss->ssl3.hs.zeroRttState == ssl_0rtt_sent ||
+                      ss->ssl3.hs.zeroRttState == ssl_0rtt_accepted)) {
+                    new_flags &= ~PR_POLL_WRITE; /* don't select on write. */
                 }
                 new_flags |= PR_POLL_READ; /* do    select on read. */
             }
@@ -3097,6 +3098,9 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
             new_flags = 0;
         }
     }
+
+    SSL_TRC(20, ("%d: SSL[%d]: ssl_Poll flags %x -> %x",
+                 SSL_GETPID(), fd, how_flags, new_flags));
 
     if (new_flags && (fd->lower->methods->poll != NULL)) {
         PRInt16 lower_out_flags = 0;

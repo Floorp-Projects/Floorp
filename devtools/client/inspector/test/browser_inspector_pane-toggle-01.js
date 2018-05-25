@@ -8,7 +8,7 @@
 // this button is visible both in BOTTOM and SIDE hosts.
 
 add_task(async function() {
-  info("Switch to 2 pane inspector to test that 3 pane toggle button behavior");
+  info("Switch to 2 pane inspector to test the 3 pane toggle button behavior");
   await pushPref("devtools.inspector.three-pane-enabled", false);
 
   info("Open the inspector in a bottom toolbox host");

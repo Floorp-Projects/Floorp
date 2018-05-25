@@ -32,17 +32,10 @@
  *  Here we enforce this constraint.
  */
 
-#ifdef SK_CPU_BENDIAN
-    #define SK_BGRA_B32_SHIFT   24
-    #define SK_BGRA_G32_SHIFT   16
-    #define SK_BGRA_R32_SHIFT   8
-    #define SK_BGRA_A32_SHIFT   0
-#else
-    #define SK_BGRA_B32_SHIFT   0
-    #define SK_BGRA_G32_SHIFT   8
-    #define SK_BGRA_R32_SHIFT   16
-    #define SK_BGRA_A32_SHIFT   24
-#endif
+#define SK_BGRA_B32_SHIFT   0
+#define SK_BGRA_G32_SHIFT   8
+#define SK_BGRA_R32_SHIFT   16
+#define SK_BGRA_A32_SHIFT   24
 
 #if defined(SK_PMCOLOR_IS_RGBA) && defined(SK_PMCOLOR_IS_BGRA)
     #error "can't define PMCOLOR to be RGBA and BGRA"

@@ -7943,6 +7943,10 @@ class Tree extends Component {
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
         onClick: e => {
+          // We can stop the propagation since click handler on the node can be
+          // created in `renderItem`.
+          e.stopPropagation();
+
           // Since the user just clicked the node, there's no need to check if
           // it should be scrolled into view.
           this._focus(item, { preventAutoScroll: true });

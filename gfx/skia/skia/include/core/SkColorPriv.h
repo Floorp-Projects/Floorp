@@ -55,17 +55,10 @@ static inline U8CPU SkUnitScalarClampToByte(SkScalar x) {
  *  Here we enforce this constraint.
  */
 
-#ifdef SK_CPU_BENDIAN
-    #define SK_RGBA_R32_SHIFT   24
-    #define SK_RGBA_G32_SHIFT   16
-    #define SK_RGBA_B32_SHIFT   8
-    #define SK_RGBA_A32_SHIFT   0
-#else
-    #define SK_RGBA_R32_SHIFT   0
-    #define SK_RGBA_G32_SHIFT   8
-    #define SK_RGBA_B32_SHIFT   16
-    #define SK_RGBA_A32_SHIFT   24
-#endif
+#define SK_RGBA_R32_SHIFT   0
+#define SK_RGBA_G32_SHIFT   8
+#define SK_RGBA_B32_SHIFT   16
+#define SK_RGBA_A32_SHIFT   24
 
 #define SkGetPackedA32(packed)      ((uint32_t)((packed) << (24 - SK_A32_SHIFT)) >> 24)
 #define SkGetPackedR32(packed)      ((uint32_t)((packed) << (24 - SK_R32_SHIFT)) >> 24)

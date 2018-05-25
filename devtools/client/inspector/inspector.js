@@ -13,7 +13,6 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
 const {Toolbox} = require("devtools/client/framework/toolbox");
-const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const Store = require("devtools/client/inspector/store");
 const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
@@ -29,6 +28,7 @@ loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-short
 loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
 loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
 loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup");
+loader.lazyRequireGetter(this, "HighlightersOverlay", "devtools/client/inspector/shared/highlighters-overlay");
 loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
@@ -112,7 +112,6 @@ function Inspector(toolbox) {
   // Stores all the instances of sidebar panels like rule view, computed view, ...
   this._panels = new Map();
 
-  this.highlighters = new HighlightersOverlay(this);
   this.reflowTracker = new ReflowTracker(this._target);
   this.styleChangeTracker = new InspectorStyleChangeTracker(this);
 
@@ -189,6 +188,14 @@ Inspector.prototype = {
     return this.toolbox.highlighter;
   },
 
+  get highlighters() {
+    if (!this._highlighters) {
+      this._highlighters = new HighlightersOverlay(this);
+    }
+
+    return this._highlighters;
+  },
+
   // Added in 53.
   get canGetCssPath() {
     return this._target.client.traits.getCssPath;
@@ -205,6 +212,14 @@ Inspector.prototype = {
     }
 
     return this._notificationBox;
+  },
+
+  get search() {
+    if (!this._search) {
+      this._search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
+    }
+
+    return this._search;
   },
 
   /**
@@ -370,9 +385,10 @@ Inspector.prototype = {
     this.searchClearButton = this.panelDoc.getElementById("inspector-searchinput-clear");
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
-    this.search = new InspectorSearch(this, this.searchBox, this.searchClearButton);
-    this.search.on("search-cleared", this._clearSearchResultsLabel);
-    this.search.on("search-result", this._updateSearchResultsLabel);
+    this.searchBox.addEventListener("focus", () => {
+      this.search.on("search-cleared", this._clearSearchResultsLabel);
+      this.search.on("search-result", this._updateSearchResultsLabel);
+    }, { once: true });
 
     let shortcuts = new KeyShortcuts({
       window: this.panelDoc.defaultView,
@@ -626,7 +642,7 @@ Inspector.prototype = {
     Services.prefs.setBoolPref(THREE_PANE_ENABLED_PREF, this.is3PaneModeEnabled);
 
     await this.setupToolbar();
-    await this.addRuleView();
+    await this.addRuleView({ skipQueue: true });
   },
 
   /**
@@ -640,7 +656,7 @@ Inspector.prototype = {
    * @params {String} defaultTab
    *         Thie id of the default tab for the sidebar.
    */
-  async addRuleView(defaultTab = "ruleview") {
+  async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
     const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
     const toolboxWidth =
       this.panelDoc.getElementById("inspector-splitter-box").clientWidth;
@@ -729,11 +745,19 @@ Inspector.prototype = {
       this.ruleViewSideBar.hide();
       await this.ruleViewSideBar.removeTab("ruleview");
 
-      this.sidebar.addExistingTab(
+      if (skipQueue) {
+        this.sidebar.addExistingTab(
         "ruleview",
         INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
         defaultTab == "ruleview",
         0);
+      } else {
+        this.sidebar.queueExistingTab(
+          "ruleview",
+          INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+          defaultTab == "ruleview",
+          0);
+      }
     }
 
     this.emit("ruleview-added");
@@ -803,13 +827,13 @@ Inspector.prototype = {
 
     // Append all side panels
 
-    await this.addRuleView(defaultTab);
+    await this.addRuleView({ defaultTab });
 
     // Inject a lazy loaded react tab by exposing a fake React object
     // with a lazy defined Tab thanks to `panel` being a function
     let layoutId = "layoutview";
     let layoutTitle = INSPECTOR_L10N.getStr("inspector.sidebar.layoutViewTitle2");
-    this.sidebar.addTab(
+    this.sidebar.queueTab(
       layoutId,
       layoutTitle,
       {
@@ -829,7 +853,7 @@ Inspector.prototype = {
       },
       defaultTab == layoutId);
 
-    this.sidebar.addExistingTab(
+    this.sidebar.queueExistingTab(
       "computedview",
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
@@ -840,7 +864,7 @@ Inspector.prototype = {
     if (Services.prefs.getBoolPref("devtools.new-animationinspector.enabled")) {
       const animationId = "newanimationinspector";
 
-      this.sidebar.addTab(
+      this.sidebar.queueTab(
         animationId,
         animationTitle,
         {
@@ -857,7 +881,7 @@ Inspector.prototype = {
         },
         defaultTab == animationId);
     } else {
-      this.sidebar.addFrameTab(
+      this.sidebar.queueFrameTab(
         "animationinspector",
         animationTitle,
         "chrome://devtools/content/inspector/animation-old/animation-inspector.xhtml",
@@ -868,7 +892,7 @@ Inspector.prototype = {
     // with a lazy defined Tab thanks to `panel` being a function
     let fontId = "fontinspector";
     let fontTitle = INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle");
-    this.sidebar.addTab(
+    this.sidebar.queueTab(
       fontId,
       fontTitle,
       {
@@ -887,6 +911,8 @@ Inspector.prototype = {
         }
       },
       defaultTab == fontId);
+
+    this.sidebar.addAllQueuedTabs();
 
     // Persist splitter state in preferences.
     this.sidebar.on("show", this.onSidebarShown);
@@ -1090,10 +1116,12 @@ Inspector.prototype = {
     let onExpand = this.markup.expandNode(this.selection.nodeFront);
 
     // Restore the highlighter states prior to emitting "new-root".
-    await Promise.all([
-      this.highlighters.restoreFlexboxState(),
-      this.highlighters.restoreGridState()
-    ]);
+    if (this._highlighters) {
+      await Promise.all([
+        this.highlighters.restoreFlexboxState(),
+        this.highlighters.restoreGridState()
+      ]);
+    }
 
     this.emit("new-root");
 
@@ -1314,12 +1342,21 @@ Inspector.prototype = {
       this.threePaneTooltip.destroy();
     }
 
+    if (this._highlighters) {
+      this._highlighters.destroy();
+      this._highlighters = null;
+    }
+
+    if (this._search) {
+      this._search.destroy();
+      this._search = null;
+    }
+
     let cssPropertiesDestroyer = this._cssProperties.front.destroy();
     let sidebarDestroyer = this.sidebar.destroy();
     let ruleViewSideBarDestroyer = this.ruleViewSideBar ?
       this.ruleViewSideBar.destroy() : null;
     let markupDestroyer = this._destroyMarkup();
-    let highlighterDestroyer = this.highlighters.destroy();
 
     this.teardownSplitter();
     this.teardownToolbar();
@@ -1327,19 +1364,16 @@ Inspector.prototype = {
     this.breadcrumbs.destroy();
     this.reflowTracker.destroy();
     this.styleChangeTracker.destroy();
-    this.search.destroy();
 
     this._notificationBox = null;
     this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
-    this.highlighters = null;
     this.is3PaneModeEnabled = null;
     this.panelDoc = null;
     this.panelWin.inspector = null;
     this.panelWin = null;
     this.resultsLength = null;
-    this.search = null;
     this.searchBox = null;
     this.show3PaneTooltip = null;
     this.sidebar = null;
@@ -1348,7 +1382,6 @@ Inspector.prototype = {
     this.threePaneTooltip = null;
 
     this._panelDestroyer = promise.all([
-      highlighterDestroyer,
       cssPropertiesDestroyer,
       markupDestroyer,
       sidebarDestroyer,

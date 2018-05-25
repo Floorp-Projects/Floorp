@@ -84,7 +84,7 @@ enum SkColorType {
 #elif SK_PMCOLOR_BYTE_ORDER(R,G,B,A)
     kN32_SkColorType = kRGBA_8888_SkColorType,
 #else
-    #error "SK_*32_SHIFT values must correspond to BGRA or RGBA byte order"
+    kN32_SkColorType = kBGRA_8888_SkColorType,
 #endif
 };
 
