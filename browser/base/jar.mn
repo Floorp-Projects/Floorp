@@ -79,6 +79,7 @@ browser.jar:
         content/browser/pageinfo/feeds.js             (content/pageinfo/feeds.js)
         content/browser/pageinfo/permissions.js       (content/pageinfo/permissions.js)
         content/browser/pageinfo/security.js          (content/pageinfo/security.js)
+        content/browser/content-refreshblocker.js     (content/content-refreshblocker.js)
         content/browser/robot.ico                     (content/robot.ico)
         content/browser/static-robot.png              (content/static-robot.png)
         content/browser/safeMode.css                  (content/safeMode.css)
