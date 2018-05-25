@@ -235,13 +235,11 @@
                 oncommand="StarUI.panel.hidePopup();"/>
         <button id="editBookmarkPanelRemoveButton"
                 class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"
-                accesskey="&editBookmark.removeBookmark.accessKey;"/>
+                oncommand="StarUI.removeBookmarkButtonCommand();"/>
 #else
         <button id="editBookmarkPanelRemoveButton"
                 class="editBookmarkPanelBottomButton"
-                oncommand="StarUI.removeBookmarkButtonCommand();"
-                accesskey="&editBookmark.removeBookmark.accessKey;"/>
+                oncommand="StarUI.removeBookmarkButtonCommand();"/>
         <button id="editBookmarkPanelDoneButton"
                 class="editBookmarkPanelBottomButton"
                 label="&editBookmark.done.label;"
