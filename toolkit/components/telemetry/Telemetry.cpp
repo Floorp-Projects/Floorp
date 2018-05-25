@@ -82,11 +82,13 @@
 #include "mozilla/IOInterposer.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/HangMonitor.h"
 #if defined(XP_WIN)
 #include "mozilla/WinDllServices.h"
 #endif
 #include "nsNativeCharsetUtils.h"
 #include "nsProxyRelease.h"
+#include "HangReports.h"
 
 #if defined(MOZ_GECKO_PROFILER)
 #include "shared-libraries.h"
@@ -100,6 +102,7 @@
 namespace {
 
 using namespace mozilla;
+using namespace mozilla::HangMonitor;
 using Telemetry::Common::AutoHashtable;
 using Telemetry::Common::ToJSString;
 using Telemetry::Common::GetCurrentProduct;
@@ -107,7 +110,9 @@ using Telemetry::Common::SetCurrentProduct;
 using Telemetry::Common::SupportedProduct;
 using mozilla::dom::Promise;
 using mozilla::dom::AutoJSAPI;
+using mozilla::Telemetry::HangReports;
 using mozilla::Telemetry::CombinedStacks;
+using mozilla::Telemetry::ComputeAnnotationsKey;
 using mozilla::Telemetry::TelemetryIOInterposeObserver;
 
 #if defined(MOZ_GECKO_PROFILER)
@@ -144,6 +149,13 @@ public:
   static void ShutdownTelemetry();
   static void RecordSlowStatement(const nsACString &sql, const nsACString &dbName,
                                   uint32_t delay);
+#if defined(MOZ_GECKO_PROFILER)
+  static void RecordChromeHang(uint32_t aDuration,
+                               Telemetry::ProcessedStack &aStack,
+                               int32_t aSystemUptime,
+                               int32_t aFirefoxUptime,
+                               HangAnnotations&& aAnnotations);
+#endif
 #if defined(MOZ_GECKO_PROFILER)
   static void DoStackCapture(const nsACString& aKey);
 #endif
@@ -193,6 +205,8 @@ private:
   AutoHashtable<SlowSQLEntryType> mPrivateSQL;
   AutoHashtable<SlowSQLEntryType> mSanitizedSQL;
   Mutex mHashMutex;
+  HangReports mHangReports;
+  Mutex mHangReportsMutex;
   Atomic<bool> mCanRecordBase;
   Atomic<bool> mCanRecordExtended;
 
@@ -481,6 +495,7 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
 
 TelemetryImpl::TelemetryImpl()
   : mHashMutex("Telemetry::mHashMutex")
+  , mHangReportsMutex("Telemetry::mHangReportsMutex")
   , mCanRecordBase(false)
   , mCanRecordExtended(false)
   , mCachedTelemetryData(false)
@@ -498,6 +513,7 @@ TelemetryImpl::~TelemetryImpl() {
   // This is still racey as access to these collections is guarded using sTelemetry.
   // We will fix this in bug 1367344.
   MutexAutoLock hashLock(mHashMutex);
+  MutexAutoLock hangReportsLock(mHangReportsMutex);
 }
 
 void
@@ -633,6 +649,122 @@ NS_IMETHODIMP
 TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t *ret)
 {
   *ret = nsThreadManager::get().GetHighestNumberOfThreads();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+{
+  MutexAutoLock hangReportMutex(mHangReportsMutex);
+
+  const CombinedStacks& stacks = mHangReports.GetStacks();
+  JS::Rooted<JSObject*> fullReportObj(cx, CreateJSStackObject(cx, stacks));
+  if (!fullReportObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ret.setObject(*fullReportObj);
+
+  JS::Rooted<JSObject*> durationArray(cx, JS_NewArrayObject(cx, 0));
+  JS::Rooted<JSObject*> systemUptimeArray(cx, JS_NewArrayObject(cx, 0));
+  JS::Rooted<JSObject*> firefoxUptimeArray(cx, JS_NewArrayObject(cx, 0));
+  JS::Rooted<JSObject*> annotationsArray(cx, JS_NewArrayObject(cx, 0));
+  if (!durationArray || !systemUptimeArray || !firefoxUptimeArray ||
+      !annotationsArray) {
+    return NS_ERROR_FAILURE;
+  }
+
+  bool ok = JS_DefineProperty(cx, fullReportObj, "durations",
+                              durationArray, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ok = JS_DefineProperty(cx, fullReportObj, "systemUptime",
+                         systemUptimeArray, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ok = JS_DefineProperty(cx, fullReportObj, "firefoxUptime",
+                         firefoxUptimeArray, JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ok = JS_DefineProperty(cx, fullReportObj, "annotations", annotationsArray,
+                         JSPROP_ENUMERATE);
+  if (!ok) {
+    return NS_ERROR_FAILURE;
+  }
+
+
+  const size_t length = stacks.GetStackCount();
+  for (size_t i = 0; i < length; ++i) {
+    if (!JS_DefineElement(cx, durationArray, i, mHangReports.GetDuration(i),
+                          JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_DefineElement(cx, systemUptimeArray, i, mHangReports.GetSystemUptime(i),
+                          JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_DefineElement(cx, firefoxUptimeArray, i, mHangReports.GetFirefoxUptime(i),
+                          JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    size_t annotationIndex = 0;
+    const nsClassHashtable<nsStringHashKey, HangReports::AnnotationInfo>& annotationInfo =
+      mHangReports.GetAnnotationInfo();
+
+    for (auto iter = annotationInfo.ConstIter(); !iter.Done(); iter.Next()) {
+      const HangReports::AnnotationInfo* info = iter.Data();
+
+      JS::Rooted<JSObject*> keyValueArray(cx, JS_NewArrayObject(cx, 0));
+      if (!keyValueArray) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Create an array containing all the indices of the chrome hangs relative to this
+      // annotation.
+      JS::Rooted<JS::Value> indicesArray(cx);
+      if (!mozilla::dom::ToJSValue(cx, info->mHangIndices, &indicesArray)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // We're saving the annotation as [[indices], {annotation-data}], so add the indices
+      // array as the first element of that structure.
+      if (!JS_DefineElement(cx, keyValueArray, 0, indicesArray, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Create the annotations object...
+      JS::Rooted<JSObject*> jsAnnotation(cx, JS_NewPlainObject(cx));
+      if (!jsAnnotation) {
+        return NS_ERROR_FAILURE;
+      }
+
+      for (auto& annot : info->mAnnotations) {
+        JS::RootedValue jsValue(cx);
+        jsValue.setString(JS_NewUCStringCopyN(cx, annot.mValue.get(), annot.mValue.Length()));
+        if (!JS_DefineUCProperty(cx, jsAnnotation, annot.mName.get(), annot.mName.Length(),
+                                 jsValue, JSPROP_ENUMERATE)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+
+      // ... and append it after the indices array.
+      if (!JS_DefineElement(cx, keyValueArray, 1, jsAnnotation, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+      if (!JS_DefineElement(cx, annotationsArray, annotationIndex++,
+                         keyValueArray, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1455,6 +1587,22 @@ TelemetryImpl::RecordIceCandidates(const uint32_t iceCandidateBitmask,
 }
 
 #if defined(MOZ_GECKO_PROFILER)
+void
+TelemetryImpl::RecordChromeHang(uint32_t aDuration,
+                                Telemetry::ProcessedStack &aStack,
+                                int32_t aSystemUptime,
+                                int32_t aFirefoxUptime,
+                                HangAnnotations&& aAnnotations)
+{
+  if (!sTelemetry || !TelemetryHistogram::CanRecordExtended())
+    return;
+
+  MutexAutoLock hangReportMutex(sTelemetry->mHangReportsMutex);
+
+  sTelemetry->mHangReports.AddHang(aStack, aDuration,
+                                   aSystemUptime, aFirefoxUptime,
+                                   Move(aAnnotations));
+}
 
 void
 TelemetryImpl::DoStackCapture(const nsACString& aKey) {
@@ -1751,6 +1899,10 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     n += mPrivateSQL.SizeOfExcludingThis(aMallocSizeOf);
     n += mSanitizedSQL.SizeOfExcludingThis(aMallocSizeOf);
   }
+  { // Scope for mHangReportsMutex lock
+    MutexAutoLock lock(mHangReportsMutex);
+    n += mHangReports.SizeOfExcludingThis(aMallocSizeOf);
+  }
 
   // It's a bit gross that we measure this other stuff that lives outside of
   // TelemetryImpl... oh well.
@@ -2008,9 +2160,22 @@ void Init()
 }
 
 #if defined(MOZ_GECKO_PROFILER)
+void RecordChromeHang(uint32_t duration,
+                      ProcessedStack &aStack,
+                      int32_t aSystemUptime,
+                      int32_t aFirefoxUptime,
+                      HangAnnotations&& aAnnotations)
+{
+  TelemetryImpl::RecordChromeHang(duration, aStack,
+                                  aSystemUptime, aFirefoxUptime,
+                                  Move(aAnnotations));
+}
+
 void CaptureStack(const nsACString& aKey)
 {
+#ifdef MOZ_GECKO_PROFILER
   TelemetryImpl::DoStackCapture(aKey);
+#endif
 }
 #endif
 
