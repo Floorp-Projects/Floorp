@@ -1595,8 +1595,8 @@ var gBrowserInit = {
     // we should remove the attribute before first paint.
     let shouldRemoveFocusedAttribute = true;
     this._callWithURIToLoad(uriToLoad => {
-      if ((isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") &&
-          focusAndSelectUrlBar()) {
+      if (isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") {
+        focusAndSelectUrlBar();
         shouldRemoveFocusedAttribute = false;
         return;
       }
@@ -2282,39 +2282,35 @@ function focusAndSelectUrlBar(userInitiatedFocus = false) {
     gNavToolbox.addEventListener("aftercustomization", function() {
       focusAndSelectUrlBar(userInitiatedFocus);
     }, {once: true});
-
-    return true;
+    return;
   }
 
-  if (gURLBar) {
-    if (window.fullScreen)
-      FullScreen.showNavToolbox();
-
-    gURLBar.userInitiatedFocus = userInitiatedFocus;
-    gURLBar.select();
-    gURLBar.userInitiatedFocus = false;
-    if (document.activeElement == gURLBar.inputField)
-      return true;
+  if (window.fullScreen) {
+    FullScreen.showNavToolbox();
   }
-  return false;
+
+  gURLBar.userInitiatedFocus = userInitiatedFocus;
+  gURLBar.select();
+  gURLBar.userInitiatedFocus = false;
 }
 
 function openLocation() {
-  if (focusAndSelectUrlBar(true))
+  if (window.location.href == getBrowserURL()) {
+    focusAndSelectUrlBar(true);
     return;
-
-  if (window.location.href != getBrowserURL()) {
-    var win = getTopWin();
-    if (win) {
-      // If there's an open browser window, it should handle this command
-      win.focus();
-      win.openLocation();
-    } else {
-      // If there are no open browser windows, open a new one
-      window.openDialog("chrome://browser/content/", "_blank",
-                        "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
-    }
   }
+
+  // If there's an open browser window, redirect the command there.
+  let win = getTopWin();
+  if (win) {
+    win.focus();
+    win.openLocation();
+    return;
+  }
+
+  // There are no open browser windows; open a new one.
+  window.openDialog("chrome://browser/content/", "_blank",
+                    "chrome,all,dialog=no", BROWSER_NEW_TAB_URL);
 }
 
 function BrowserOpenTab(event) {

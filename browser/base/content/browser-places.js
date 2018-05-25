@@ -585,9 +585,7 @@ var PlacesCommandHook = {
   },
 
   searchBookmarks() {
-    if (!focusAndSelectUrlBar()) {
-      return;
-    }
+    focusAndSelectUrlBar();
     for (let char of ["*", " "]) {
       let code = char.charCodeAt(0);
       gURLBar.inputField.dispatchEvent(new KeyboardEvent("keypress", {
