@@ -665,6 +665,10 @@ class ObjectGroupRealm
     // on the basis of call-site pc.
     ReadBarrieredObjectGroup stringSplitStringGroup = {};
 
+  public:
+    // All unboxed layouts in the realm.
+    mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
+
     // END OF PROPERTIES
 
   private:
