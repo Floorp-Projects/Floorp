@@ -210,9 +210,9 @@ internal class DisplayToolbar(
         menuView.measure(squareSpec, squareSpec)
 
         // Measure all actions and use the available height for determining the size (square shape)
-        val navigationActionsWidth = measureActions(navigationActions, size=height)
-        val browserActionsWidth = measureActions(browserActions, size=height)
-        val pageActionsWidth = measureActions(pageActions, size=height)
+        val navigationActionsWidth = measureActions(navigationActions, size = height)
+        val browserActionsWidth = measureActions(browserActions, size = height)
+        val pageActionsWidth = measureActions(pageActions, size = height)
 
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0

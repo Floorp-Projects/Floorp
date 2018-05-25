@@ -69,12 +69,11 @@ class BrowserToolbar @JvmOverloads constructor(
      * Sets the padding to be applied to the URL text (in display mode).
      */
     fun setUrlTextPadding(
-            left: Int = displayToolbar.urlView.paddingLeft,
-            top: Int = displayToolbar.urlView.paddingTop,
-            right: Int = displayToolbar.urlView.paddingRight,
-            bottom: Int = displayToolbar.urlView.paddingBottom) {
-        displayToolbar.urlView.setPadding(left, top, right, bottom)
-    }
+        left: Int = displayToolbar.urlView.paddingLeft,
+        top: Int = displayToolbar.urlView.paddingTop,
+        right: Int = displayToolbar.urlView.paddingRight,
+        bottom: Int = displayToolbar.urlView.paddingBottom
+    ) = displayToolbar.urlView.setPadding(left, top, right, bottom)
 
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
@@ -89,7 +88,6 @@ class BrowserToolbar @JvmOverloads constructor(
 
             field = value
         }
-
 
     init {
         addView(displayToolbar)

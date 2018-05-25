@@ -325,7 +325,6 @@ class DisplayToolbarTest {
 
         displayToolbar.measure(widthSpec, heightSpec)
 
-
         val view = extractActionView(displayToolbar, "Back")!!
 
         assertEquals(56, view.measuredWidth)
