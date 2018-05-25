@@ -560,7 +560,6 @@ FRAME_STATE_BIT(Block, 63, BULLET_FRAME_IMAGE_LOADING)
 FRAME_STATE_GROUP(Image, nsImageFrame)
 
 FRAME_STATE_BIT(Image, 20, IMAGE_SIZECONSTRAINED)
-FRAME_STATE_BIT(Image, 21, IMAGE_GOTINITIALREFLOW)
 
 
 // == Frame state bits that apply to inline frames ============================

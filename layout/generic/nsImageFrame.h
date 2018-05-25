@@ -191,6 +191,11 @@ protected:
 
   void EnsureIntrinsicSizeAndRatio();
 
+  bool GotInitialReflow() const
+  {
+    return !HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
+  }
+
   virtual mozilla::LogicalSize
   ComputeSize(gfxContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
