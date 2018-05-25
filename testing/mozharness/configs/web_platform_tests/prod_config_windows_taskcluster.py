@@ -54,8 +54,6 @@ config = {
         }
     ],
 
-    "blob_uploader_auth_file" : 'C:/builds/oauth.txt',
-
     "download_minidump_stackwalk": True,
 
     "per_test_category": "web-platform",

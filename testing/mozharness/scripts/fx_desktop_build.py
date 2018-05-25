@@ -53,7 +53,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 "pgo_platforms": ['linux', 'linux64', 'win32', 'win64'],
                 # nightly stuff
                 "nightly_build": False,
-                'balrog_credentials_file': 'oauth.txt',
                 # hg tool stuff
                 "tools_repo": "https://hg.mozilla.org/build/tools",
                 # Seed all clones with mozilla-unified. This ensures subsequent
