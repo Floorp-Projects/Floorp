@@ -75,8 +75,7 @@ MarkFramesWithItemsAndImagesModified(nsDisplayList* aList)
 static AnimatedGeometryRoot*
 SelectAGRForFrame(nsIFrame* aFrame, AnimatedGeometryRoot* aParentAGR)
 {
-  if (!aFrame->IsStackingContext() ||
-      !aFrame->IsFixedPosContainingBlock()) {
+  if (!aFrame->IsStackingContext()) {
     return aParentAGR;
   }
 
