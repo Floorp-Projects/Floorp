@@ -2923,11 +2923,10 @@ nsGlobalWindowOuter::GetWindowList()
   return mFrames;
 }
 
-already_AddRefed<nsIDOMWindowCollection>
+nsDOMWindowList*
 nsGlobalWindowOuter::GetFrames()
 {
-  nsCOMPtr<nsIDOMWindowCollection> frames = GetWindowList();
-  return frames.forget();
+  return GetWindowList();
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
