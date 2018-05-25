@@ -149,6 +149,20 @@ class TimeScale {
   getDuration() {
     return this.maxEndTime - this.minStartTime;
   }
+
+  /**
+   * Return end time of given animation.
+   * This time does not include playbackRate and cratedTime.
+   * Also, if the animation has infinite iterations, this returns Infinity.
+   *
+   * @param {Object} animation
+   * @return {Numbber} end time
+   */
+  getEndTime({ state }) {
+    return state.iterationCount ?
+             state.delay + state.duration * state.iterationCount + state.endDelay :
+             Infinity;
+  }
 }
 
 module.exports = TimeScale;
