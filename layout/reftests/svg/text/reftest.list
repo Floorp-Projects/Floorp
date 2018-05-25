@@ -189,7 +189,7 @@ fuzzy-if(cocoaWidget,1,6) fuzzy-if(skiaContent,65,313) == pattern-content.svg pa
 fuzzy-if(skiaContent&&winWidget,126,336) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
-fuzzy-if(skiaContent,1,80) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
+fuzzy-if(skiaContent,1,80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg
