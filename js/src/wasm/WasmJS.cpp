@@ -254,6 +254,10 @@ GetImports(JSContext* cx,
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
                     return false;
                 }
+                if (obj->type() != global.type()) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TYPE_LINK);
+                    return false;
+                }
 
                 if (globalObjs.length() <= index && !globalObjs.resize(index + 1)) {
                     ReportOutOfMemory(cx);
