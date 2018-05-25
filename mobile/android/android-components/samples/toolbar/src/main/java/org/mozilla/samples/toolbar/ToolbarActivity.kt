@@ -51,7 +51,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.setBackgroundColor(
                 ContextCompat.getColor(this, mozilla.components.ui.colors.R.color.photonBlue80))
 
-        toolbar.displayUrl("https://www.mozilla.org/en-US/firefox/")
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/"
     }
 
     /**
@@ -74,7 +74,7 @@ class ToolbarActivity : AppCompatActivity() {
             "Reload") {
             simulateReload(toolbar)
         }
-        toolbar.addDisplayAction(reload)
+        toolbar.addBrowserAction(reload)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Create a menu that looks like the one in Firefox Focus
@@ -92,7 +92,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Display a URL
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        toolbar.displayUrl("https://www.mozilla.org/en-US/firefox/mobile/")
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
     }
 
     /**
@@ -156,7 +156,7 @@ class ToolbarActivity : AppCompatActivity() {
         // Display a URL
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        toolbar.displayUrl("https://www.mozilla.org/en-US/firefox/mobile/")
+        toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
     }
 
     /**
@@ -182,10 +182,38 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.displaySiteSecurityIcon = false
 
         ////////////////////////////////////////////////////////////////////////////////////////////
+        // Add a page action for reload and two browser actions
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val reload = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+                "Reload") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addPageAction(reload)
+
+        val pin = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
+                "Pin") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addBrowserAction(pin)
+
+        val turbo = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
+                "Turbo") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addBrowserAction(turbo)
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        toolbar.displayUrl("https://www.nytimes.com/video")
+        toolbar.url = "https://www.nytimes.com/video"
     }
 
     private fun simulateReload(toolbar: BrowserToolbar) {
