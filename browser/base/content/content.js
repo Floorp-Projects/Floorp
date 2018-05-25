@@ -55,6 +55,9 @@ XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
 XPCOMUtils.defineLazyProxy(this, "PageInfoListener",
                            "resource:///modules/PageInfoListener.jsm");
 
+XPCOMUtils.defineLazyProxy(this, "LightWeightThemeWebInstallListener",
+                           "resource:///modules/LightWeightThemeWebInstallListener.jsm");
+
 Services.els.addSystemEventListener(global, "contextmenu", contextMenu, false);
 
 Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
@@ -1011,6 +1014,10 @@ addMessageListener("Bookmarks:GetPageDetails", (message) => {
                    { isErrorPage,
                      description: PlacesUIUtils.getDescriptionFromDocument(doc) });
 });
+
+addEventListener("InstallBrowserTheme", LightWeightThemeWebInstallListener, false, true);
+addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstallListener, false, true);
+addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstallListener, false, true);
 
 let OfflineApps = {
   _docId: 0,
