@@ -201,6 +201,22 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
     CheckSurfacePipeMethodResults(&pipe, decoder);
   }
 
+  // Test that WritePixelBlocks() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = pipe.WritePixelBlocks<uint32_t>([&](uint32_t* aBlockStart,
+                                                            int32_t aLength) {
+      ++count;
+      EXPECT_EQ(int32_t(100), aLength);
+      memcpy(aBlockStart, buffer, 100 * sizeof(uint32_t));
+      return MakeTuple(int32_t(100), Maybe<WriteState>());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckSurfacePipeMethodResults(&pipe, decoder);
+  }
+
   // Test that WriteEmptyRow() gets passed through to the underlying pipeline.
   {
     uint32_t count = 0;
@@ -276,6 +292,22 @@ TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe)
       result = pipe.WriteBuffer(buffer, 0, 100);
       ++count;
     }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
+  }
+
+  // Test that WritePixelBlocks() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = pipe.WritePixelBlocks<uint8_t>([&](uint8_t* aBlockStart,
+                                                           int32_t aLength) {
+      ++count;
+      EXPECT_EQ(int32_t(100), aLength);
+      memcpy(aBlockStart, buffer, 100 * sizeof(uint8_t));
+      return MakeTuple(int32_t(100), Maybe<WriteState>());
+    });
+
     EXPECT_EQ(WriteState::FINISHED, result);
     EXPECT_EQ(100u, count);
     CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
