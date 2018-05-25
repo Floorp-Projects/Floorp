@@ -1930,7 +1930,7 @@ JitRealm::generateRegExpMatcherStub(JSContext* cx)
         maybeTemp4 = regs.takeAny();
     }
 
-    ArrayObject* templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
+    ArrayObject* templateObject = cx->realm()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject)
         return nullptr;
 
@@ -2543,7 +2543,7 @@ CodeGenerator::visitRegExpPrototypeOptimizable(LRegExpPrototypeOptimizable* ins)
     masm.loadJSContext(temp);
     masm.loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
     size_t offset = Realm::offsetOfRegExps() +
-                    RegExpCompartment::offsetOfOptimizableRegExpPrototypeShape();
+                    RegExpRealm::offsetOfOptimizableRegExpPrototypeShape();
     masm.loadPtr(Address(temp, offset), temp);
 
     masm.branchTestObjShapeUnsafe(Assembler::NotEqual, object, temp, ool->entry());
@@ -2603,7 +2603,7 @@ CodeGenerator::visitRegExpInstanceOptimizable(LRegExpInstanceOptimizable* ins)
     masm.loadJSContext(temp);
     masm.loadPtr(Address(temp, JSContext::offsetOfRealm()), temp);
     size_t offset = Realm::offsetOfRegExps() +
-                    RegExpCompartment::offsetOfOptimizableRegExpInstanceShape();
+                    RegExpRealm::offsetOfOptimizableRegExpInstanceShape();
     masm.loadPtr(Address(temp, offset), temp);
 
     masm.branchTestObjShapeUnsafe(Assembler::NotEqual, object, temp, ool->entry());
