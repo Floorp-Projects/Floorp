@@ -15,6 +15,7 @@
         android:background="@android:color/transparent"
         android:ems="10"
         android:hint="@string/find_in_page"
+        android:lines="1"
         android:paddingBottom="17dp"
         android:paddingTop="17dp"
         android:textCursorDrawable="@drawable/cursor"

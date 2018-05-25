@@ -8,6 +8,7 @@ package org.mozilla.focus.web;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.webkit.WebView;
 
 import org.mozilla.focus.session.Session;
 
@@ -130,7 +131,13 @@ public interface IWebView {
 
     void exitFullscreen();
 
-    int findAll(String find);
+    void findAllAsync(String find);
+
+    void findNext(boolean forward);
+
+    void clearMatches();
+
+    void setFindListener(IFindListener findListener);
 
     void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL);
 

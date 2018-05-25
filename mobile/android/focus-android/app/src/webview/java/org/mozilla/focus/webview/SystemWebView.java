@@ -37,6 +37,7 @@ import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.Download;
+import org.mozilla.focus.web.IFindListener;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
@@ -201,6 +202,11 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         linkHandler.setCallback(callback);
     }
 
+    @Override
+    public void setFindListener(IFindListener findListener) {
+        this.setFindListener((FindListener) findListener);
+    }
+
     public void loadUrl(String url) {
         // We need to check external URL handling here - shouldOverrideUrlLoading() is only
         // called by webview when clicking on a link, and not when opening a new page for the
@@ -221,11 +227,6 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
     @Override
     public void loadData(String baseURL, String data, String mimeType, String encoding, String historyURL) {
         loadDataWithBaseURL(baseURL, data, mimeType, encoding, historyURL);
-    }
-
-    @Override
-    public int findAll(String find) {
-        return super.findAll(find);
     }
 
     @Override

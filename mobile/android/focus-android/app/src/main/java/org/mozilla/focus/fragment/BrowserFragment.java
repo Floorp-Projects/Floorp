@@ -5,6 +5,7 @@
 package org.mozilla.focus.fragment;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
@@ -58,6 +59,7 @@ import org.mozilla.focus.architecture.NonNullObserver;
 import org.mozilla.focus.autocomplete.AutocompleteQuickAddPopup;
 import org.mozilla.focus.broadcastreceiver.DownloadBroadcastReceiver;
 import org.mozilla.focus.customtabs.CustomTabConfig;
+import org.mozilla.focus.findinpage.FindInPageCoordinator;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.menu.browser.BrowserMenu;
 import org.mozilla.focus.menu.context.WebContextMenu;
@@ -149,6 +151,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     private View findInPageView;
     private TextView findInPageQuery;
+    private TextView findInPageResultTextView;
 
     private IWebView.FullscreenCallback fullscreenCallback;
 
@@ -158,6 +161,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     private final SessionManager sessionManager;
     private Session session;
+    private final FindInPageCoordinator findInPageCoordinator = new FindInPageCoordinator();
 
     public BrowserFragment() {
         sessionManager = SessionManager.getInstance();
@@ -189,6 +193,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     //noinspection ConstantConditions - Not null
                     menu.updateTrackers(blockedTrackers);
                 }
+            }
+        });
+
+        findInPageCoordinator.getMatches().observe(this, new Observer<kotlin.Pair<Integer, Integer>>() {
+            @Override
+            public void onChanged(@Nullable kotlin.Pair<Integer, Integer> matches) {
+                updateFindInPageResult(matches.getFirst(), matches.getSecond());
             }
         });
     }
@@ -261,24 +272,26 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         findInPageView = view.findViewById(R.id.find_in_page);
 
         findInPageQuery = view.findViewById(R.id.queryText);
+        findInPageResultTextView = view.findViewById(R.id.resultText);
 
-        findInPageQuery.addTextChangedListener(new TextWatcher() {
-                                                   @Override
-                                                   public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        findInPageQuery.addTextChangedListener(
+                new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-                                                   }
+                    @Override
+                    public void afterTextChanged(Editable s) {}
 
-                                                   @Override
-                                                   public void onTextChanged(CharSequence s, int start, int before, int count) {
-                                                        int foo = getWebView().findAll(s.toString());
-                                                   }
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        IWebView webView = getWebView();
+                        if (webView == null) { return; }
 
-                                                   @Override
-                                                   public void afterTextChanged(Editable s) {
-
-                                                   }
-                                               }
+                        webView.findAllAsync(s.toString());
+                    }
+                }
         );
+
 
         setBlockingEnabled(session.isBlockingEnabled());
         setShouldRequestDesktop(session.shouldRequestDesktopSite());
@@ -763,6 +776,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     public void onCreateViewCalled() {
         manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
         downloadBroadcastReceiver = new DownloadBroadcastReceiver(browserContainer, manager);
+
+        IWebView webView = getWebView();
+        if (webView != null) {
+            webView.setFindListener(findInPageCoordinator);
+        }
     }
 
     @Override
@@ -1253,5 +1271,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         return false;
+    }
+
+    @SuppressLint("SetTextI18n")
+    void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
+        if (numberOfMatches > 0) {
+            findInPageResultTextView.setText(activeMatchOrdinal + "/" + numberOfMatches);
+        } else {
+            findInPageResultTextView.setText("");
+        }
     }
 }
