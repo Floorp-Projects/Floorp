@@ -23,14 +23,14 @@ a {
 a,
 a:hover,
 a:visited {
-  color: var(--blue-60) !important;
+  color: var(--theme-highlight-blue) !important;
   cursor: pointer;
 }
 
 a.disabled,
 a.disabled:hover,
 a.disabled:visited {
-  color: var(--grey-30) !important;
+  opacity: 0.5 !important;
   cursor: default;
 }
 

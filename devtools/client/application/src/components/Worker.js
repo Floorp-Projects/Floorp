@@ -124,7 +124,8 @@ class Worker extends Component {
         Strings.GetStringFromName("unregister"))
       : null;
 
-    const debugLinkDisabled = this.isRunning() ? "" : "worker__debug-link--disabled";
+    const debugLinkDisabled = this.isRunning() ? "" : "disabled";
+
     const debugLink = a({
       onClick: this.isRunning() ? this.debug : null,
       title: this.isRunning() ? null : "Only running service workers can be debugged",
