@@ -603,7 +603,9 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       let docElementListeners = this.getEventListeners(node) || [];
       let docListeners = this.getEventListeners(node.parentNode) || [];
 
-      return [...winListeners, ...docElementListeners, ...docListeners];
+      return [...winListeners, ...docElementListeners, ...docListeners].sort((a, b) => {
+        return a.type.localeCompare(b.type);
+      });
     }
     return this.getEventListeners(node);
   },
