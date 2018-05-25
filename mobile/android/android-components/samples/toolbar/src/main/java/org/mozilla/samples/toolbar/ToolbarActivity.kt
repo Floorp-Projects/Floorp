@@ -176,10 +176,45 @@ class ToolbarActivity : AppCompatActivity() {
                 toolbar.dp(24))
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // Hide the site security icon
+        // Hide the site security icon and set background to be drawn behind URL (+ page actions)
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.displaySiteSecurityIcon = false
+
+        toolbar.setUrlTextPadding(
+                left = toolbar.dp(16),
+                right = toolbar.dp(16)
+        )
+
+        toolbar.urlBackgroundDrawable = getDrawable(R.drawable.sample_url_background)
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Add navigation actions
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val grid = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_grid,
+                "Grid") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addNavigationAction(grid)
+
+        val back = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+                "Back") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addNavigationAction(back)
+
+        val forward = Toolbar.Action(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+                "Forward") {
+            simulateReload(toolbar)
+        }
+
+        toolbar.addNavigationAction(forward)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add a page action for reload and two browser actions
