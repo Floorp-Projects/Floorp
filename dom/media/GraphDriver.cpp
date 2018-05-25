@@ -775,10 +775,7 @@ AudioCallbackDriver::StartStream()
     return false;
   }
 
-  {
-    MonitorAutoLock mon(mGraphImpl->GetMonitor());
-    mStarted = true;
-  }
+  mStarted = true;
   return true;
 }
 
