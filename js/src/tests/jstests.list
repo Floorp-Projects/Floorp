@@ -464,3 +464,8 @@ skip script test262/language/expressions/tagged-template/cache-differing-express
 skip script test262/language/expressions/tagged-template/cache-identical-source.js
 skip script test262/language/expressions/tagged-template/cache-differing-expressions-eval.js
 skip script test262/language/expressions/tagged-template/cache-identical-source-eval.js
+
+# https://github.com/tc39/test262/issues/1566
+random script test262/built-ins/Atomics/wake/wake-all-on-loc.js
+random script test262/built-ins/Atomics/wake/wake-all.js
+random script test262/built-ins/Atomics/wake/wake-in-order.js
