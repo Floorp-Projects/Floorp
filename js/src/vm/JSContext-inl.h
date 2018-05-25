@@ -166,7 +166,6 @@ class CompartmentChecker
 
     void check(InterpreterFrame* fp);
     void check(AbstractFramePtr frame);
-    void check(SavedStacks* stacks);
 
     void check(Handle<PropertyDescriptor> desc) {
         check(desc.object());
