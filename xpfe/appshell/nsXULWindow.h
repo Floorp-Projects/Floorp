@@ -179,7 +179,6 @@ protected:
    // mDestroying is used to prevent reentry into into Destroy(), which can
    // otherwise happen due to script running as we tear down various things.
    bool                    mDestroying;
-   bool                    mSyncingAttributesToWidget = false;
    bool                    mRegistered;
    uint32_t                mPersistentAttributesDirty; // persistentAttributes
    uint32_t                mPersistentAttributesMask;
