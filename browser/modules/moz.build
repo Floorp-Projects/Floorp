@@ -70,6 +70,12 @@ with Files("ExtensionsUI.jsm"):
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
+with Files("LightWeightThemeWebInstallListener.jsm"):
+    BUG_COMPONENT = ("Firefox", "Theme")
+
+with Files("OpenInTabsUtils.jsm"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("PageInfoListener.jsm"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
@@ -93,9 +99,6 @@ with Files("SiteDataManager.jsm"):
 
 with Files("SitePermissions.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
-
-with Files("OpenInTabsUtils.jsm"):
-    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("ThemeVariableMap.jsm"):
     BUG_COMPONENT = ("Toolkit", "WebExtensions: Themes")
@@ -146,6 +149,7 @@ EXTRA_JS_MODULES += [
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
     'LaterRun.jsm',
+    'LightWeightThemeWebInstallListener.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PageInfoListener.jsm',
