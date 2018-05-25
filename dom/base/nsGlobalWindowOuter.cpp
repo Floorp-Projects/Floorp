@@ -2914,7 +2914,7 @@ nsGlobalWindowOuter::Closed()
 }
 
 nsDOMWindowList*
-nsGlobalWindowOuter::GetWindowList()
+nsGlobalWindowOuter::GetFrames()
 {
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
@@ -2923,16 +2923,10 @@ nsGlobalWindowOuter::GetWindowList()
   return mFrames;
 }
 
-nsDOMWindowList*
-nsGlobalWindowOuter::GetFrames()
-{
-  return GetWindowList();
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsGlobalWindowOuter::IndexedGetterOuter(uint32_t aIndex)
 {
-  nsDOMWindowList* windows = GetWindowList();
+  nsDOMWindowList* windows = GetFrames();
   NS_ENSURE_TRUE(windows, nullptr);
 
   return windows->IndexedGetter(aIndex);
@@ -3750,7 +3744,7 @@ nsGlobalWindowOuter::GetScrollYOuter()
 uint32_t
 nsGlobalWindowOuter::Length()
 {
-  nsDOMWindowList* windows = GetWindowList();
+  nsDOMWindowList* windows = GetFrames();
 
   return windows ? windows->GetLength() : 0;
 }
