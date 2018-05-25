@@ -24,6 +24,7 @@ public:
 
   uint32_t GetLength();
   already_AddRefed<nsPIDOMWindowOuter> IndexedGetter(uint32_t aIndex);
+  already_AddRefed<nsPIDOMWindowOuter> NamedItem(const nsAString& aName);
 
   //local methods
   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);

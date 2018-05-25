@@ -100,24 +100,27 @@ nsDOMWindowList::Item(uint32_t aIndex, mozIDOMWindowProxy** aReturn)
   return NS_OK;
 }
 
+already_AddRefed<nsPIDOMWindowOuter>
+nsDOMWindowList::NamedItem(const nsAString& aName)
+{
+  EnsureFresh();
+
+  if (!mDocShellNode) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  mDocShellNode->FindChildWithName(aName, false, false, nullptr,
+                                   nullptr, getter_AddRefs(item));
+
+  nsCOMPtr<nsPIDOMWindowOuter> childWindow(do_GetInterface(item));
+  return childWindow.forget();
+}
+
 NS_IMETHODIMP
 nsDOMWindowList::NamedItem(const nsAString& aName, mozIDOMWindowProxy** aReturn)
 {
-  nsCOMPtr<nsIDocShellTreeItem> item;
-
-  *aReturn = nullptr;
-
-  EnsureFresh();
-
-  if (mDocShellNode) {
-    mDocShellNode->FindChildWithName(aName, false, false, nullptr,
-                                     nullptr, getter_AddRefs(item));
-
-    nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-    if (globalObject) {
-      CallQueryInterface(globalObject.get(), aReturn);
-    }
-  }
-
+  nsCOMPtr<nsPIDOMWindowOuter> item = NamedItem(aName);
+  item.forget(aReturn);
   return NS_OK;
 }
