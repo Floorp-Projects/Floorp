@@ -4,6 +4,8 @@
 
 /* eslint-env mozilla/frame-script */
 
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var RefreshBlocker = {
   PREF: "accessibility.blockautorefresh",
 
