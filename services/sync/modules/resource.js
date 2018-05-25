@@ -125,6 +125,10 @@ Resource.prototype = {
       }
     }
 
+    if (!headers.has("accept")) {
+      headers.append("accept", "application/json;q=0.9,*/*;q=0.2");
+    }
+
     return headers;
   },
 

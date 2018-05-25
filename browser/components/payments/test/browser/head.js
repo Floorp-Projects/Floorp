@@ -255,8 +255,8 @@ async function setupFormAutofillStorage() {
 }
 
 function cleanupFormAutofillStorage() {
-  formAutofillStorage.addresses._nukeAllRecords();
-  formAutofillStorage.creditCards._nukeAllRecords();
+  formAutofillStorage.addresses.removeAll();
+  formAutofillStorage.creditCards.removeAll();
 }
 
 add_task(async function setup_head() {
