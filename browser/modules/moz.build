@@ -70,6 +70,9 @@ with Files("ExtensionsUI.jsm"):
 with Files("LaterRun.jsm"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
+with Files("PageInfoListener.jsm"):
+    BUG_COMPONENT = ("Firefox", "Page Info Window")
+
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -145,6 +148,7 @@ EXTRA_JS_MODULES += [
     'LaterRun.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
+    'PageInfoListener.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',
     'PluginContent.jsm',
