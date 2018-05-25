@@ -121,7 +121,9 @@ public:
   virtual void WaitForNextIteration() = 0;
   /* Wakes up the graph if it is waiting. */
   virtual void WakeUp() = 0;
-  /* Start the graph, init the driver, start the thread. */
+  /* Start the graph, init the driver, start the thread.
+   * A driver cannot be started twice, it must be shutdown
+   * before being started again. */
   virtual void Start() = 0;
   /* Revive this driver, as more messages just arrived. */
   virtual void Revive() = 0;
