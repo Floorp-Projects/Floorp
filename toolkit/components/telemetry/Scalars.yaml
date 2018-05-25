@@ -1140,6 +1140,21 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
+devtools.application:
+  opened_count:
+    bug_numbers:
+      - 1451734
+    description: >
+      Number of times the DevTools Application panel has been opened.
+    expires: "66"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - jdescottes@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.toolbox:
   tabs_reordered:
     bug_numbers:
