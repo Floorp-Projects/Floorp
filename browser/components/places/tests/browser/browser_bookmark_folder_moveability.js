@@ -23,7 +23,6 @@ add_task(async function() {
       title: "",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
-    let folderId = await PlacesUtils.promiseItemId(folder.guid);
     tree.selectItems([folder.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, folder.guid,
                  "Selected the expected node");
@@ -35,7 +34,7 @@ add_task(async function() {
     let shortcut = await PlacesUtils.bookmarks.insert({
       parentGuid: root.guid,
       title: "bar",
-      url: `place:folder=${folderId}`
+      url: `place:parent=${folder.guid}`
     });
     tree.selectItems([shortcut.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, shortcut.guid,
@@ -94,11 +93,10 @@ add_task(async function() {
       tree.selectItems([guid]);
       Assert.ok(!tree.controller.canMoveNode(tree.selectedNode),
                 "shouldn't be able to move default shortcuts to roots");
-      let id = await PlacesUtils.promiseItemId(guid);
       let s = await PlacesUtils.bookmarks.insert({
         parentGuid: root.guid,
         title: "bar",
-        url: `place:folder=${id}`,
+        url: `place:parent=${guid}`,
       });
       tree.selectItems([s.guid]);
       Assert.equal(tree.selectedNode.bookmarkGuid, s.guid,

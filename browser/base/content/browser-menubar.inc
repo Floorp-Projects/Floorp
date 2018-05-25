@@ -387,7 +387,7 @@
                onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                onpopupshowing="BookmarkingUI.onMainMenuPopupShowing(event);
                                if (!this.parentNode._placesView)
-                                 new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
+                                 new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="bookmarksShowAll"
                 label="&showAllBookmarks2.label;"
@@ -433,7 +433,7 @@
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.toolbarGuid}`);"/>
       </menu>
       <menu id="menu_unsortedBookmarks"
             class="menu-iconic bookmark-item"
@@ -445,7 +445,7 @@
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.unfiledGuid}`);"/>
       </menu>
       <menu id="menu_mobileBookmarks"
             class="menu-iconic bookmark-item"
@@ -458,7 +458,7 @@
 #endif
                    context="placesContext"
                    onpopupshowing="if (!this.parentNode._placesView)
-                                     new PlacesMenu(event, 'place:folder=MOBILE_BOOKMARKS');"/>
+                                     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.mobileGuid}`);"/>
       </menu>
       <menuseparator id="bookmarksMenuItemsSeparator"/>
       <!-- Bookmarks menu items -->

@@ -241,7 +241,7 @@ Test.prototype = {
 
     // Make a query.
     this.query = PlacesUtils.history.getNewQuery();
-    this.query.setFolders([DataHelper.defaults.bookmark.parent], 1);
+    this.query.setParents([DataHelper.defaults.bookmark.parentGuid], 1);
     this.opts = PlacesUtils.history.getNewQueryOptions();
     this.opts.asyncEnabled = true;
     this.result = PlacesUtils.history.executeQuery(this.query, this.opts);
@@ -265,20 +265,17 @@ Test.prototype = {
 var DataHelper = {
   defaults: {
     bookmark: {
-      parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       uri: "http://example.com/",
       title: "test bookmark"
     },
 
     folder: {
-      parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       title: "test folder"
     },
 
     separator: {
-      parent: PlacesUtils.bookmarks.unfiledBookmarksFolder,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid
     }
   },

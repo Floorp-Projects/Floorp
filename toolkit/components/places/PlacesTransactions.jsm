@@ -1448,8 +1448,7 @@ PT.SortByName.prototype = {
 
     // This is not great, since it does main-thread IO.
     // PromiseBookmarksTree can't be used, since it' won't stop at the first level'.
-    let folderId = await PlacesUtils.promiseItemId(guid);
-    let root = PlacesUtils.getFolderContents(folderId, false, false).root;
+    let root = PlacesUtils.getFolderContents(guid, false, false).root;
     for (let i = 0; i < root.childCount; ++i) {
       let node = root.getChild(i);
       oldOrderGuids.push(node.bookmarkGuid);

@@ -46,14 +46,12 @@ add_task(async function test() {
     }]
   });
 
-  let testFolderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
-
   let guid1 = bookmarks[1].guid;
   let guid2 = bookmarks[2].guid;
   let guid3 = bookmarks[3].guid;
 
   // query with natural order
-  let result = PlacesUtils.getFolderContents(testFolderId);
+  let result = PlacesUtils.getFolderContents(bookmarks[0].guid);
   let root = result.root;
 
   Assert.equal(root.childCount, 3);

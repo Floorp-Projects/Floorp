@@ -55,7 +55,7 @@ function promiseOnItemChanged() {
   });
 
   // query for bookmarks
-  let rootNode = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+  let rootNode = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
 
   // set up observer
   let promiseObserved = promiseOnItemChanged();

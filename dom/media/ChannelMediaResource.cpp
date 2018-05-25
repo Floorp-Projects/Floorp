@@ -384,7 +384,50 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
   }
 
-  mCacheStream.NotifyDataEnded(mLoadID, aStatus, true /*aReopenOnError*/);
+  // Note that aStatus might have succeeded --- this might be a normal close
+  // --- even in situations where the server cut us off because we were
+  // suspended. It is also possible that the server sends us fewer bytes than
+  // requested. So we need to "reopen on error" in that case too. The only
+  // cases where we don't need to reopen are when *we* closed the stream.
+  // But don't reopen if we need to seek and we don't think we can... that would
+  // cause us to just re-read the stream, which would be really bad.
+  /*
+   * | length |    offset |   reopen |
+   * +--------+-----------+----------+
+   * |     -1 |         0 |      yes |
+   * +--------+-----------+----------+
+   * |     -1 |       > 0 | seekable |
+   * +--------+-----------+----------+
+   * |      0 |         X |       no |
+   * +--------+-----------+----------+
+   * |    > 0 |         0 |      yes |
+   * +--------+-----------+----------+
+   * |    > 0 | != length | seekable |
+   * +--------+-----------+----------+
+   * |    > 0 | == length |       no |
+   */
+  if (aStatus != NS_ERROR_PARSED_DATA_CACHED && aStatus != NS_BINDING_ABORTED) {
+    auto lengthAndOffset = mCacheStream.GetLengthAndOffset();
+    int64_t length = lengthAndOffset.mLength;
+    int64_t offset = lengthAndOffset.mOffset;
+    if ((offset == 0 || mIsTransportSeekable) && offset != length) {
+      // If the stream did close normally, restart the channel if we're either
+      // at the start of the resource, or if the server is seekable and we're
+      // not at the end of stream. We don't restart the stream if we're at the
+      // end because not all web servers handle this case consistently; see:
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
+      nsresult rv = Seek(offset, false);
+      if (NS_SUCCEEDED(rv)) {
+        return rv;
+      }
+      // Close the streams that failed due to error. This will cause all
+      // client Read and Seek operations on those streams to fail. Blocked
+      // Reads will also be woken up.
+      Close();
+    }
+  }
+
+  mCacheStream.NotifyDataEnded(mLoadID, aStatus);
   return NS_OK;
 }
 

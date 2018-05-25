@@ -149,7 +149,6 @@ class ScalarType:
         # Check that the email addresses doesn't contain spaces or commas
         notification_emails = definition.get('notification_emails')
         for notification_email in notification_emails:
-            print validate_notification_email(notification_email)
             if not validate_notification_email(notification_email):
                 ParserError(self._name + ' - invalid email address: ' + notification_email +
                             '.\nSee: {}'.format(BASE_DOC_URL)).handle_later()

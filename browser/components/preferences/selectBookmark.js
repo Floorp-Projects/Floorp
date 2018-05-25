@@ -65,7 +65,7 @@ var SelectBookmarkDialog = {
     var names = [];
     var selectedNode = bookmarks.selectedNode;
     if (PlacesUtils.nodeIsFolder(selectedNode)) {
-      var contents = PlacesUtils.getFolderContents(selectedNode.itemId).root;
+      var contents = PlacesUtils.getFolderContents(selectedNode.bookmarkGuid).root;
       var cc = contents.childCount;
       for (var i = 0; i < cc; ++i) {
         var node = contents.getChild(i);

@@ -30,9 +30,7 @@ add_task(async function test_addBookmarksAndCheckGuids() {
     }]
   });
 
-  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
-
-  let root = PlacesUtils.getFolderContents(folderId).root;
+  let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
   Assert.equal(root.childCount, 5);
 
   // check bookmark guids
@@ -85,9 +83,7 @@ add_task(async function test_updateBookmarksAndCheckGuids() {
     }]
   });
 
-  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
-
-  let root = PlacesUtils.getFolderContents(folderId).root;
+  let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
   Assert.equal(root.childCount, 2);
 
   // ensure the bookmark and page guids remain the same after modifing other property.
@@ -198,9 +194,7 @@ add_task(async function test_addItemsWithGUIDs() {
     }]
   });
 
-  let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
-
-  let root = PlacesUtils.getFolderContents(folderId).root;
+  let root = PlacesUtils.getFolderContents(bookmarks[0].guid).root;
   Assert.equal(root.childCount, 2);
   Assert.equal(root.bookmarkGuid, FOLDER_GUID);
   Assert.equal(root.getChild(0).bookmarkGuid, BOOKMARK_GUID);

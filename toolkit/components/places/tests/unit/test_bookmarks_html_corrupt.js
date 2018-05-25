@@ -53,7 +53,7 @@ add_task(async function test_corrupt_database() {
  */
 var database_check = async function() {
   // BOOKMARKS MENU
-  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.menuGuid).root;
   Assert.equal(root.childCount, 2);
 
   let folderNode = root.getChild(1);
@@ -99,7 +99,7 @@ var database_check = async function() {
   root.containerOpen = false;
 
   // BOOKMARKS TOOLBAR
-  root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId).root;
+  root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid).root;
   Assert.equal(root.childCount, 3);
 
   // For now some promises are resolved later, so we can't guarantee an order.
@@ -123,7 +123,7 @@ var database_check = async function() {
   root.containerOpen = false;
 
   // UNFILED BOOKMARKS
-  root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+  root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
   Assert.equal(root.childCount, 1);
   root.containerOpen = false;
 

@@ -970,7 +970,7 @@ add_task(async function test_rewrite_tag_queries() {
     "Should retain existing tag");
 
   let { root: toolbarContainer } = PlacesUtils.getFolderContents(
-    PlacesUtils.toolbarFolderId, false, true);
+    PlacesUtils.bookmarks.toolbarGuid, false, true);
   equal(toolbarContainer.childCount, 3,
     "Should add queries and bookmark to toolbar");
 

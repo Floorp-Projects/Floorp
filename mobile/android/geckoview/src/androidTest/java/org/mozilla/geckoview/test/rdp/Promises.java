@@ -53,6 +53,7 @@ public final class Promises extends Actor {
             promise.release();
         }
         sendPacket("{\"type\":\"detach\"}", JSON_PARSER).get();
+        release();
     }
 
     /* package */ Promise[] getPromisesFromArray(final @NonNull JSONArray array,

@@ -753,10 +753,7 @@ var PlacesSearchBox = {
   _folders: [],
   get folders() {
     if (this._folders.length == 0) {
-      this._folders.push(PlacesUtils.bookmarksMenuFolderId,
-                         PlacesUtils.unfiledBookmarksFolderId,
-                         PlacesUtils.toolbarFolderId,
-                         PlacesUtils.mobileFolderId);
+      this._folders = PlacesUtils.bookmarks.userContentRoots;
     }
     return this._folders;
   },
@@ -931,10 +928,7 @@ var PlacesQueryBuilder = {
         break;
       case "bookmarks":
         filterCollection = "bookmarks";
-        folders.push(PlacesUtils.bookmarksMenuFolderId,
-                     PlacesUtils.toolbarFolderId,
-                     PlacesUtils.unfiledBookmarksFolderId,
-                     PlacesUtils.mobileFolderId);
+        folders = PlacesUtils.bookmarks.userContentRoots;
         break;
       case "downloads":
         filterCollection = "downloads";

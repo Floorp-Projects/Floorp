@@ -249,7 +249,9 @@ public:
 
   mozilla::Monitor& Monitor()
   {
-    MOZ_DIAGNOSTIC_ASSERT(!NS_IsMainThread());
+    // This method should only be called outside the main thread.
+    // The MOZ_DIAGNOSTIC_ASSERT(!NS_IsMainThread()) assertion should be
+    // re-added as part of bug 1464045
     return mMonitor;
   }
 
@@ -2191,9 +2193,7 @@ MediaCacheStream::UpdateDownloadStatistics(AutoLock&)
 }
 
 void
-MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
-                                          nsresult aStatus,
-                                          bool aReopenOnError)
+MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID, nsresult aStatus)
 {
   MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   AutoLock lock(mMediaCache->Monitor());
@@ -2201,45 +2201,6 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
   if (mClosed || aLoadID != mLoadID) {
     // Nothing to do if the stream is closed or a new load has begun.
     return;
-  }
-
-  // Note that aStatus might have succeeded --- this might be a normal close
-  // --- even in situations where the server cut us off because we were
-  // suspended. It is also possible that the server sends us fewer bytes than
-  // requested. So we need to "reopen on error" in that case too. The only
-  // cases where we don't need to reopen are when *we* closed the stream.
-  // But don't reopen if we need to seek and we don't think we can... that would
-  // cause us to just re-read the stream, which would be really bad.
-  /*
-   * | length |    offset |   reopen |
-   * +--------+-----------+----------+
-   * |     -1 |         0 |      yes |
-   * +--------+-----------+----------+
-   * |     -1 |       > 0 | seekable |
-   * +--------+-----------+----------+
-   * |      0 |         X |       no |
-   * +--------+-----------+----------+
-   * |    > 0 |         0 |      yes |
-   * +--------+-----------+----------+
-   * |    > 0 | != length | seekable |
-   * +--------+-----------+----------+
-   * |    > 0 | == length |       no |
-   */
-  if (aReopenOnError && aStatus != NS_ERROR_PARSED_DATA_CACHED &&
-      aStatus != NS_BINDING_ABORTED &&
-      (mChannelOffset == 0 || mIsTransportSeekable) &&
-      mChannelOffset != mStreamLength) {
-    // If the stream did close normally, restart the channel if we're either
-    // at the start of the resource, or if the server is seekable and we're
-    // not at the end of stream. We don't restart the stream if we're at the
-    // end because not all web servers handle this case consistently; see:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1373618#c36
-    mClient->CacheClientSeek(mChannelOffset, false);
-    return;
-    // Note CacheClientSeek() will call Seek() asynchronously which might fail
-    // and close the stream. This is OK for it is not an error we can recover
-    // from and we have a consistent behavior with that where CacheClientSeek()
-    // is called from MediaCache::Update().
   }
 
   // It is prudent to update channel/cache status before calling
@@ -2276,18 +2237,15 @@ MediaCacheStream::NotifyDataEndedInternal(uint32_t aLoadID,
 }
 
 void
-MediaCacheStream::NotifyDataEnded(uint32_t aLoadID,
-                                  nsresult aStatus,
-                                  bool aReopenOnError)
+MediaCacheStream::NotifyDataEnded(uint32_t aLoadID, nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLoadID > 0);
 
   RefPtr<ChannelMediaResource> client = mClient;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "MediaCacheStream::NotifyDataEnded",
-    [client, this, aLoadID, aStatus, aReopenOnError]() {
-      NotifyDataEndedInternal(aLoadID, aStatus, aReopenOnError);
+    "MediaCacheStream::NotifyDataEnded", [client, this, aLoadID, aStatus]() {
+      NotifyDataEndedInternal(aLoadID, aStatus);
     });
   OwnerThread()->Dispatch(r.forget());
 }
@@ -2445,11 +2403,19 @@ MediaCacheStream::Unpin()
 }
 
 int64_t
-MediaCacheStream::GetLength()
+MediaCacheStream::GetLength() const
 {
   MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return mStreamLength;
+}
+
+MediaCacheStream::LengthAndOffset
+MediaCacheStream::GetLengthAndOffset() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AutoLock lock(mMediaCache->Monitor());
+  return { mStreamLength, mChannelOffset };
 }
 
 int64_t

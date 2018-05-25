@@ -10,7 +10,7 @@ add_task(async function test_untitled_visited_bookmark() {
     }],
   });
 
-  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId);
+  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid);
 
   try {
     let fxBmk = await PlacesUtils.bookmarks.insert({
@@ -39,7 +39,7 @@ add_task(async function test_untitled_visited_bookmark() {
 add_task(async function test_untitled_unvisited_bookmark() {
   let tbURI = uri("http://getthunderbird.com");
 
-  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId);
+  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid);
 
   try {
     let tbBmk = await PlacesUtils.bookmarks.insert({
@@ -66,7 +66,7 @@ add_task(async function test_untitled_unvisited_bookmark() {
 });
 
 add_task(async function test_untitled_folder() {
-  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId);
+  let {root: node} = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid);
 
   try {
     let folder = await PlacesUtils.bookmarks.insert({
