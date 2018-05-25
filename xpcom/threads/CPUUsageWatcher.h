@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "mozilla/HangAnnotations.h"
-#include "mozilla/BackgroundHangMonitor.h"
 
 // We only support OSX and Windows, because on Linux we're forced to read
 // from /proc/stat in order to get global CPU values. We would prefer to not
@@ -32,13 +31,13 @@ enum CPUUsageWatcherError : uint8_t
 };
 
 class CPUUsageHangAnnotator
-  : public BackgroundHangAnnotator
+  : public HangMonitor::Annotator
 {
 public:
 };
 
 class CPUUsageWatcher
-  : public BackgroundHangAnnotator
+  : public HangMonitor::Annotator
 {
 public:
 #ifdef CPU_USAGE_WATCHER_ACTIVE
@@ -62,7 +61,7 @@ public:
   // usage values between now and the last time it was called.
   Result<Ok, CPUUsageWatcherError> CollectCPUUsage();
 
-  void AnnotateHang(BackgroundHangAnnotations& aAnnotations) final;
+  void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) final;
 private:
 #ifdef CPU_USAGE_WATCHER_ACTIVE
   bool mInitialized;

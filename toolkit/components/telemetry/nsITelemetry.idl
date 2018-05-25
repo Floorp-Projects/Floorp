@@ -129,6 +129,14 @@ interface nsITelemetry : nsISupports
   readonly attribute uint32_t maximalNumberOfConcurrentThreads;
 
   /*
+   * An array of chrome hang reports. Each element is a hang report represented
+   * as an object containing the hang duration, call stack PCs and information
+   * about modules in memory.
+   */
+  [implicit_jscontext]
+  readonly attribute jsval chromeHangs;
+
+  /*
    * Record the current thread's call stack on demand. Note that, the stack is
    * only captured at the first call. All subsequent calls result in incrementing
    * the capture counter without doing actual stack unwinding.
