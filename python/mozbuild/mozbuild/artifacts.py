@@ -668,8 +668,7 @@ class TaskCache(CacheManager):
         for artifact_name in artifact_job.find_candidate_artifacts(artifacts):
             # We can easily extract the task ID from the URL.  We can't easily
             # extract the build ID; we use the .ini files embedded in the
-            # downloaded artifact for this.  We could also use the uploaded
-            # public/build/buildprops.json for this purpose.
+            # downloaded artifact for this.
             url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
