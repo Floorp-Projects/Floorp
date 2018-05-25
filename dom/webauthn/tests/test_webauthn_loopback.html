@@ -116,9 +116,7 @@ function() {
     ok(aAssertion.response.authenticatorData instanceof ArrayBuffer, "AuthenticatorAssertionResponse.AuthenticatorData is an ArrayBuffer");
     ok(aAssertion.response.signature === aAssertion.response.signature, "AuthenticatorAssertionResponse.Signature is SameObject");
     ok(aAssertion.response.signature instanceof ArrayBuffer, "AuthenticatorAssertionResponse.Signature is an ArrayBuffer");
-    ok(aAssertion.response.userHandle === aAssertion.response.userHandle, "AuthenticatorAssertionResponse.UserHandle is SameObject");
-    ok(aAssertion.response.userHandle instanceof ArrayBuffer, "AuthenticatorAssertionResponse.UserHandle is an ArrayBuffer");
-    is(aAssertion.response.userHandle.byteLength, 0, "AuthenticatorAssertionResponse.UserHandle is emtpy");
+    ok(aAssertion.response.userHandle === null, "AuthenticatorAssertionResponse.UserHandle is null for u2f authenticators");
 
     ok(aAssertion.response.authenticatorData.byteLength > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));

@@ -15,7 +15,6 @@ const {
 class FlexboxInspector {
   constructor(inspector, window) {
     this.document = window.document;
-    this.highlighters = inspector.highlighters;
     this.inspector = inspector;
     this.store = inspector.store;
     this.walker = inspector.walker;
@@ -28,6 +27,16 @@ class FlexboxInspector {
     this.onUpdatePanel = this.onUpdatePanel.bind(this);
 
     this.init();
+  }
+
+  // Get the highlighters overlay from the Inspector.
+  get highlighters() {
+    if (!this._highlighters) {
+      // highlighters is a lazy getter in the inspector.
+      this._highlighters = this.inspector.highlighters;
+    }
+
+    return this._highlighters;
   }
 
   async init() {
@@ -44,25 +53,31 @@ class FlexboxInspector {
       return;
     }
 
-    this.highlighters.on("flexbox-highlighter-hidden", this.onHighlighterHidden);
-    this.highlighters.on("flexbox-highlighter-shown", this.onHighlighterShown);
+    this.document.addEventListener("mousemove", () => {
+      this.highlighters.on("flexbox-highlighter-hidden", this.onHighlighterHidden);
+      this.highlighters.on("flexbox-highlighter-shown", this.onHighlighterShown);
+    }, { once: true });
+
     this.inspector.sidebar.on("select", this.onSidebarSelect);
 
     this.onSidebarSelect();
   }
 
   destroy() {
-    this.highlighters.off("flexbox-highlighter-hidden", this.onHighlighterHidden);
-    this.highlighters.off("flexbox-highlighter-shown", this.onHighlighterShown);
+    if (this._highlighters) {
+      this.highlighters.off("flexbox-highlighter-hidden", this.onHighlighterHidden);
+      this.highlighters.off("flexbox-highlighter-shown", this.onHighlighterShown);
+    }
+
     this.inspector.selection.off("new-node-front", this.onUpdatePanel);
     this.inspector.sidebar.off("select", this.onSidebarSelect);
     this.inspector.off("new-root", this.onUpdatePanel);
 
     this.inspector.reflowTracker.untrackReflows(this, this.onReflow);
 
+    this._highlighters = null;
     this.document = null;
     this.hasGetCurrentFlexbox = null;
-    this.highlighters = null;
     this.inspector = null;
     this.layoutInspector = null;
     this.store = null;
@@ -274,9 +289,12 @@ class FlexboxInspector {
       }
     }
 
+    let highlighted = this._highlighters &&
+      nodeFront == this.highlighters.flexboxHighlighterShown;
+
     this.store.dispatch(updateFlexbox({
       actorID: flexboxFront.actorID,
-      highlighted: nodeFront == this.highlighters.flexboxHighlighterShown,
+      highlighted,
       nodeFront,
     }));
   }
