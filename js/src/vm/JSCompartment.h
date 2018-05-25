@@ -607,9 +607,6 @@ struct JSCompartment
     void checkWrapperMapAfterMovingGC();
 #endif
 
-    // All unboxed layouts in the compartment.
-    mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
-
     /*
      * During GC, stores the head of a list of incoming pointers from gray cells.
      *
