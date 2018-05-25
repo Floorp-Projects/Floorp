@@ -434,15 +434,23 @@ class AnimationInspector {
         await this.inspector.target.actorHasMethod("animations", "pauseSome");
     }
 
+    const { animations, timeScale } = this.state;
+
     try {
+      if (doPlay && animations.every(animation =>
+                      timeScale.getEndTime(animation) <= animation.state.currentTime)) {
+        await this.animationsFront.setCurrentTimes(animations, 0, true,
+                                                   { relativeToCreatedTime: true });
+      }
+
       // If the server does not support pauseSome/playSome function, (which happens
       // when connected to server older than FF62), use pauseAll/playAll instead.
       // See bug 1456857.
       if (this.hasPausePlaySome) {
         if (doPlay) {
-          await this.animationsFront.playSome(this.state.animations);
+          await this.animationsFront.playSome(animations);
         } else {
-          await this.animationsFront.pauseSome(this.state.animations);
+          await this.animationsFront.pauseSome(animations);
         }
       } else if (doPlay) {
         await this.animationsFront.playAll();
@@ -450,7 +458,7 @@ class AnimationInspector {
         await this.animationsFront.pauseAll();
       }
 
-      await this.updateAnimations(this.state.animations);
+      await this.updateAnimations(animations);
     } catch (e) {
       // Expected if we've already been destroyed or other node have been selected
       // in the meantime.
@@ -458,7 +466,7 @@ class AnimationInspector {
       return;
     }
 
-    await this.updateState([...this.state.animations]);
+    await this.updateState([...animations]);
   }
 
   /**
