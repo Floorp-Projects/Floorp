@@ -385,6 +385,11 @@ var gPermissionManager = {
                                                         this._lastPermissionSortColumn,
                                                         this._lastPermissionSortAscending);
     this._lastPermissionSortColumn = aColumn;
+    let sortDirection = this._lastPermissionSortAscending ? "descending" : "ascending";
+    let cols = document.querySelectorAll("treecol");
+    cols.forEach(c => c.removeAttribute("sortDirection"));
+    let column = document.querySelector(`treecol[data-field-name=${aColumn}]`);
+    column.setAttribute("sortDirection", sortDirection);
   },
 
   onApplyChanges() {
