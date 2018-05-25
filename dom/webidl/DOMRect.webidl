@@ -10,8 +10,9 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
-             optional unrestricted double width = 0, optional unrestricted double height = 0)]
+[Constructor,
+ Constructor(unrestricted double x, unrestricted double y,
+             unrestricted double width, unrestricted double height)]
 interface DOMRect : DOMRectReadOnly {
     inherit attribute unrestricted double x;
     inherit attribute unrestricted double y;
@@ -19,9 +20,7 @@ interface DOMRect : DOMRectReadOnly {
     inherit attribute unrestricted double height;
 };
 
-[ProbablyShortLivingWrapper,
- Constructor(optional unrestricted double x = 0, optional unrestricted double y = 0,
-             optional unrestricted double width = 0, optional unrestricted double height = 0)]
+[ProbablyShortLivingWrapper]
 interface DOMRectReadOnly {
     readonly attribute unrestricted double x;
     readonly attribute unrestricted double y;
@@ -31,8 +30,6 @@ interface DOMRectReadOnly {
     readonly attribute unrestricted double right;
     readonly attribute unrestricted double bottom;
     readonly attribute unrestricted double left;
-
-    [Default] object toJSON();
 };
 
 dictionary DOMRectInit {
