@@ -306,6 +306,12 @@ impl RootKind for *mut JS::Symbol {
     fn rootKind() -> JS::RootKind { JS::RootKind::Symbol }
 }
 
+#[cfg(feature = "bigint")]
+impl RootKind for *mut JS::BigInt {
+    #[inline(always)]
+    fn rootKind() -> JS::RootKind { JS::RootKind::BigInt }
+}
+
 impl RootKind for *mut JSScript {
     #[inline(always)]
     fn rootKind() -> JS::RootKind { JS::RootKind::Script }

@@ -1335,6 +1335,11 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/utypes.h',
     ]
 
+if CONFIG['ENABLE_BIGINT']:
+    system_headers += [
+        'gmp.h'
+    ]
+
 if CONFIG['MOZ_WAYLAND']:
     system_headers += [
         'wayland-client.h',

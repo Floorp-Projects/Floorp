@@ -8,6 +8,7 @@
 
 #include "nsJSPrincipals.h"
 #include "BasePrincipal.h"
+#include "nsDOMWindowList.h"
 #include "nsGlobalWindow.h"
 
 #include "XPCWrapper.h"
@@ -20,7 +21,6 @@
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsJSUtils.h"
 #include "xpcprivate.h"
 
@@ -134,20 +134,20 @@ IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
         return false;
     }
 
-    nsCOMPtr<nsIDOMWindowCollection> col = win->GetFrames();
+    nsDOMWindowList* col = win->GetFrames();
     if (!col) {
         return false;
     }
 
     nsCOMPtr<mozIDOMWindowProxy> domwin;
     if (JSID_IS_INT(id)) {
-        col->Item(JSID_TO_INT(id), getter_AddRefs(domwin));
+        domwin = col->IndexedGetter(JSID_TO_INT(id));
     } else if (JSID_IS_STRING(id)) {
         nsAutoJSString idAsString;
         if (!idAsString.init(cx, JSID_TO_STRING(id))) {
             return false;
         }
-        col->NamedItem(idAsString, getter_AddRefs(domwin));
+        domwin = col->NamedItem(idAsString);
     }
 
     return domwin != nullptr;

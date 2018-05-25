@@ -45,6 +45,18 @@ doesn't access the globally installed libraries either).
    development
    changes
 
+.. warning::
+
+   Python bugfix releases 2.6.8, 2.7.3, 3.1.5 and 3.2.3 include a change that
+   will cause "import random" to fail with "cannot import name urandom" on any
+   virtualenv created on a Unix host with an earlier release of Python
+   2.6/2.7/3.1/3.2, if the underlying system Python is upgraded. This is due to
+   the fact that a virtualenv uses the system Python's standard library but
+   contains its own copy of the Python interpreter, so an upgrade to the system
+   Python results in a mismatch between the version of the Python interpreter
+   and the version of the standard library. It can be fixed by removing
+   ``$ENV/bin/python`` and re-running virtualenv on the same target directory
+   with the upgraded Python.
 
 Other Documentation and Links
 -----------------------------

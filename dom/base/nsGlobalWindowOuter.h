@@ -582,7 +582,7 @@ public:
   nsresult Focus() override;
   void BlurOuter();
   already_AddRefed<nsPIDOMWindowOuter> GetFramesOuter();
-  already_AddRefed<nsIDOMWindowCollection> GetFrames() override;
+  nsDOMWindowList* GetFrames() final;
   uint32_t Length();
   already_AddRefed<nsPIDOMWindowOuter> GetTopOuter();
 
@@ -1003,9 +1003,6 @@ protected:
 
   void InitializeShowFocusRings();
 
-public:
-  // Outer windows only.
-  nsDOMWindowList* GetWindowList();
 protected:
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
