@@ -151,9 +151,9 @@ AccessibilityPanel.prototype = {
 
   updateA11YServiceDurationTimer() {
     if (this._front.enabled) {
-      this._telemetry.start(A11Y_SERVICE_DURATION, this);
+      this._telemetry.start(A11Y_SERVICE_DURATION, this, true);
     } else {
-      this._telemetry.finish(A11Y_SERVICE_DURATION, this);
+      this._telemetry.finish(A11Y_SERVICE_DURATION, this, true);
     }
   },
 
