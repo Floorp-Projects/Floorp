@@ -96,3 +96,13 @@ def lint(config, root):
         return ret
 
     return wrapper
+
+
+@pytest.fixture
+def create_temp_file(tmpdir):
+    def inner(contents, name=None):
+        name = name or 'temp.py'
+        path = tmpdir.join(name)
+        path.write(contents)
+        return path.strpath
+    return inner
