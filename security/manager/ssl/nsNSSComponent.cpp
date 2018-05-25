@@ -226,25 +226,6 @@ nsNSSComponent::~nsNSSComponent()
 }
 
 NS_IMETHODIMP
-nsNSSComponent::PIPBundleFormatStringFromName(const char* name,
-                                              const char16_t** params,
-                                              uint32_t numParams,
-                                              nsAString& outString)
-{
-  MutexAutoLock lock(mMutex);
-  nsresult rv = NS_ERROR_FAILURE;
-
-  if (mPIPNSSBundle && name) {
-    nsAutoString result;
-    rv = mPIPNSSBundle->FormatStringFromName(name, params, numParams, result);
-    if (NS_SUCCEEDED(rv)) {
-      outString = result;
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsNSSComponent::GetPIPNSSBundleString(const char* name, nsAString& outString)
 {
   MutexAutoLock lock(mMutex);
@@ -261,25 +242,6 @@ nsNSSComponent::GetPIPNSSBundleStringLocked(
   if (mPIPNSSBundle && name) {
     nsAutoString result;
     rv = mPIPNSSBundle->GetStringFromName(name, result);
-    if (NS_SUCCEEDED(rv)) {
-      outString = result;
-      rv = NS_OK;
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::GetNSSBundleString(const char* name, nsAString& outString)
-{
-  MutexAutoLock lock(mMutex);
-  nsresult rv = NS_ERROR_FAILURE;
-
-  outString.SetLength(0);
-  if (mNSSErrorsBundle && name) {
-    nsAutoString result;
-    rv = mNSSErrorsBundle->GetStringFromName(name, result);
     if (NS_SUCCEEDED(rv)) {
       outString = result;
       rv = NS_OK;
@@ -1363,22 +1325,14 @@ nsresult
 nsNSSComponent::InitializePIPNSSBundle()
 {
   MutexAutoLock lock(mMutex);
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-  if (NS_FAILED(rv) || !bundleService)
+  nsCOMPtr<nsIStringBundleService> bundleService(
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!bundleService) {
     return NS_ERROR_FAILURE;
+  }
 
-  bundleService->CreateBundle("chrome://pipnss/locale/pipnss.properties",
-                              getter_AddRefs(mPIPNSSBundle));
-  if (!mPIPNSSBundle)
-    rv = NS_ERROR_FAILURE;
-
-  bundleService->CreateBundle("chrome://pipnss/locale/nsserrors.properties",
-                              getter_AddRefs(mNSSErrorsBundle));
-  if (!mNSSErrorsBundle)
-    rv = NS_ERROR_FAILURE;
-
-  return rv;
+  return bundleService->CreateBundle("chrome://pipnss/locale/pipnss.properties",
+                                     getter_AddRefs(mPIPNSSBundle));
 }
 
 // Table of pref names and SSL cipher ID
