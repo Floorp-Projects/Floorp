@@ -62,12 +62,17 @@ class KeyframesProgressBar extends PureComponent {
 
   updateOffset(currentTime, animation, timeScale) {
     const {
+      createdTime,
       playbackRate,
-      previousStartTime = 0,
     } = animation.state;
 
-    const time =
-      (timeScale.minStartTime + currentTime - previousStartTime) * playbackRate;
+    // If createdTime is not defined (which happens when connected to server older
+    // than FF62), use previousStartTime instead. See bug 1454392
+    const baseTime = typeof createdTime === "undefined"
+                       ? (animation.state.previousStartTime || 0)
+                       : createdTime;
+    const time = (timeScale.minStartTime + currentTime - baseTime) * playbackRate;
+
     if (isNaN(time)) {
       // Setting an invalid currentTime will throw so bail out if time is not a number for
       // any reason.
