@@ -20,14 +20,12 @@ html|applet:not([height]), html|applet[height=""] {
   height: 200px;
 }
 
-a .mainBox,
 :-moz-handler-clicktoplay .mainBox,
 :-moz-handler-vulnerable-updatable .mainBox,
 :-moz-handler-vulnerable-no-update .mainBox,
 :-moz-handler-blocked .mainBox {
   -moz-user-focus: normal;
 }
-a .mainBox:focus,
 :-moz-handler-clicktoplay .mainBox:focus,
 :-moz-handler-vulnerable-updatable .mainBox:focus,
 :-moz-handler-vulnerable-no-update .mainBox:focus,
@@ -72,7 +70,6 @@ a .mainBox:focus,
   direction: rtl;
 }
 
-a .hoverBox,
 :-moz-handler-clicktoplay .hoverBox,
 :-moz-handler-vulnerable-updatable .hoverBox,
 :-moz-handler-vulnerable-no-update .hoverBox {
@@ -90,7 +87,6 @@ a .hoverBox,
   display: none;
 }
 
-a .msgClickToPlay,
 :-moz-handler-clicktoplay .msgClickToPlay,
 :-moz-handler-vulnerable-updatable .msgVulnerabilityStatus,
 :-moz-handler-vulnerable-updatable .msgCheckForUpdates,

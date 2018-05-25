@@ -549,6 +549,31 @@ add_task(async function test_get_no_headers() {
 });
 
 /**
+ * Client includes default Accept header in API requests
+ */
+add_task(async function test_default_accept_headers() {
+  let handler = httpd_handler(200, "OK");
+  let server = httpd_setup({"/resource": handler});
+
+  let request = new RESTRequest(server.baseURI + "/resource");
+  await request.get();
+
+  Assert.equal(request.response.status, 200);
+  Assert.equal(request.response.body, "");
+
+  let accept_header = handler.request.getHeader("accept");
+
+  Assert.ok(!accept_header.includes("text/html"));
+  Assert.ok(!accept_header.includes("application/xhtml+xml"));
+  Assert.ok(!accept_header.includes("applcation/xml"));
+
+  Assert.ok(accept_header.includes("application/json") ||
+            accept_header.includes("application/newlines"));
+
+  await promiseStopServer(server);
+});
+
+/**
  * Test changing the URI after having created the request.
  */
 add_task(async function test_changing_uri() {

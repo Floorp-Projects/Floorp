@@ -35,12 +35,19 @@ mochitest:
             default: mochitest/plain-chunked
     treeherder-symbol: M()
     loopback-video: true
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            windows10-64-qr/debug: []  # bug 1424755
+            default: built-projects
     instance-size:
         by-test-platform:
             linux64-jsdcov/opt: xlarge
             android.*: xlarge
             default: default
+    virtualization:
+        by-test-platform:
+            windows10-64-qr/.*: virtual-with-gpu
+            default: virtual
     chunks:
         by-test-platform:
             android-4.3-arm7-api-16/debug: 48

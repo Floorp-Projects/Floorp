@@ -191,6 +191,7 @@ let prepareTestCreditCards = async function(path) {
     "formautofill-storage-changed",
     (subject, data) =>
       data == "add" &&
+      subject.wrappedJSObject.guid &&
       subject.wrappedJSObject.collectionName == COLLECTION_NAME
   );
   Assert.ok(profileStorage.creditCards.add(TEST_CREDIT_CARD_1));
@@ -369,6 +370,7 @@ add_task(async function test_update() {
     "formautofill-storage-changed",
     (subject, data) =>
       data == "update" &&
+      subject.wrappedJSObject.guid == guid &&
       subject.wrappedJSObject.collectionName == COLLECTION_NAME
   );
 
@@ -467,8 +469,13 @@ add_task(async function test_notifyUsed() {
   let timeLastUsed = creditCards[1].timeLastUsed;
   let timesUsed = creditCards[1].timesUsed;
 
-  let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "notifyUsed");
+  let onChanged = TestUtils.topicObserved(
+    "formautofill-storage-changed",
+    (subject, data) =>
+      data == "notifyUsed" &&
+      subject.wrappedJSObject.collectionName == COLLECTION_NAME &&
+      subject.wrappedJSObject.guid == guid
+  );
 
   profileStorage.creditCards.notifyUsed(guid);
   await onChanged;
@@ -500,6 +507,7 @@ add_task(async function test_remove() {
     "formautofill-storage-changed",
     (subject, data) =>
       data == "remove" &&
+      subject.wrappedJSObject.guid == guid &&
       subject.wrappedJSObject.collectionName == COLLECTION_NAME
   );
 

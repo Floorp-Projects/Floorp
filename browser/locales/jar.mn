@@ -12,7 +12,8 @@
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
-*   locale/browser/bookmarks.html                  (generic/profile/bookmarks.html.in)
+# bookmarks.html is produced by LOCALIZED_GENERATED_FILES.
+    locale/browser/bookmarks.html                  (bookmarks.html)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
     locale/browser/aboutRobots.dtd                 (%chrome/browser/aboutRobots.dtd)

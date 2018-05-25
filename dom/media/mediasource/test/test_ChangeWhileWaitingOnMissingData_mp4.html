@@ -23,7 +23,7 @@ runWithMSE(function(ms, el) {
       // let seek to the last audio frame.
       // The seek will complete and then playback will stall.
       el.currentTime = 1.532517;
-      return Promise.all([ once(el, "seeked"), once(el, "stalled") ]);
+      return Promise.all([ once(el, "seeked"), once(el, "waiting") ]);
     })
     .then(function() {
       info("seek completed");

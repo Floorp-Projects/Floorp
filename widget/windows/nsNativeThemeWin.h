@@ -116,6 +116,7 @@ protected:
                        HBRUSH defaultBack);
   nsresult DrawCustomScrollbarPart(gfxContext* aContext,
                                    nsIFrame* aFrame,
+                                   mozilla::ComputedStyle* aStyle,
                                    uint8_t aWidgetType,
                                    const nsRect& aRect,
                                    const nsRect& aClipRect);

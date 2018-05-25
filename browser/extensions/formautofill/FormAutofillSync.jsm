@@ -332,6 +332,12 @@ FormAutofillEngine.prototype = {
     await formAutofillStorage.initialize();
     this._store.storage.resetSync();
   },
+
+  async _wipeClient() {
+    await formAutofillStorage.initialize();
+    this._store.storage.removeAll({sourceSync: true});
+  },
+
 };
 
 // The concrete engines

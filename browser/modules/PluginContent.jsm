@@ -25,9 +25,6 @@ var PluginContent = function(global) {
   this.init(global);
 };
 
-const FLASH_MIME_TYPE = "application/x-shockwave-flash";
-const REPLACEMENT_STYLE_SHEET = Services.io.newURI("chrome://pluginproblem/content/pluginReplaceBinding.css");
-
 const OVERLAY_DISPLAY = {
   HIDDEN: 0, // The overlay will be transparent
   BLANK: 1, // The overlay will be just a grey box
@@ -49,7 +46,6 @@ PluginContent.prototype = {
 
     // Note that the XBL binding is untrusted
     global.addEventListener("PluginBindingAttached", this, true, true);
-    global.addEventListener("PluginPlaceholderReplaced", this, true, true);
     global.addEventListener("PluginCrashed", this, true);
     global.addEventListener("PluginOutdated", this, true);
     global.addEventListener("PluginInstantiated", this, true);
@@ -73,7 +69,6 @@ PluginContent.prototype = {
     let global = this.global;
 
     global.removeEventListener("PluginBindingAttached", this, true);
-    global.removeEventListener("PluginPlaceholderReplaced", this, true, true);
     global.removeEventListener("PluginCrashed", this, true);
     global.removeEventListener("PluginOutdated", this, true);
     global.removeEventListener("PluginInstantiated", this, true);
@@ -182,15 +177,6 @@ PluginContent.prototype = {
   },
 
   _getPluginInfo(pluginElement) {
-    if (ChromeUtils.getClassName(pluginElement) === "HTMLAnchorElement") {
-      // Anchor elements are our place holders, and we only have them for Flash
-      let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-      return {
-        pluginName: "Shockwave Flash",
-        mimetype: FLASH_MIME_TYPE,
-        permissionString: pluginHost.getPermissionStringForType(FLASH_MIME_TYPE)
-      };
-    }
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     pluginElement.QueryInterface(Ci.nsIObjectLoadingContent);
 
@@ -494,34 +480,14 @@ PluginContent.prototype = {
     }
 
     if (eventType == "HiddenPlugin") {
-      let win = event.target.defaultView;
-      if (!win.mozHiddenPluginTouched) {
-        let pluginTag = event.tag.QueryInterface(Ci.nsIPluginTag);
-        if (win.top.document != this.content.document) {
-          return;
-        }
-        this._showClickToPlayNotification(pluginTag, false);
-        let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        try {
-          winUtils.loadSheet(REPLACEMENT_STYLE_SHEET, win.AGENT_SHEET);
-          win.mozHiddenPluginTouched = true;
-        } catch (e) {
-          Cu.reportError("Error adding plugin replacement style sheet: " + e);
-        }
+      let pluginTag = event.tag.QueryInterface(Ci.nsIPluginTag);
+      if (event.target.defaultView.top.document != this.content.document) {
+        return;
       }
+      this._showClickToPlayNotification(pluginTag, false);
     }
 
     let plugin = event.target;
-
-    if (eventType == "PluginPlaceholderReplaced") {
-      plugin.removeAttribute("href");
-      let overlay = this.getPluginUI(plugin, "main");
-      this.setVisibility(plugin, overlay, OVERLAY_DISPLAY.FULL);
-      // Add pseudo class so our styling will take effect
-      InspectorUtils.addPseudoClassLock(plugin, "-moz-handler-clicktoplay");
-      overlay.addEventListener("click", this, true);
-      return;
-    }
 
     if (!(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
@@ -699,19 +665,12 @@ PluginContent.prototype = {
   _handleClickToPlayEvent(plugin) {
     let doc = plugin.ownerDocument;
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-    let permissionString;
-    if (ChromeUtils.getClassName(plugin) === "HTMLAnchorElement") {
-      // We only have replacement content for Flash installs
-      permissionString = pluginHost.getPermissionStringForType(FLASH_MIME_TYPE);
-    } else {
-      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      // guard against giving pluginHost.getPermissionStringForType a type
-      // not associated with any known plugin
-      if (!this.isKnownPlugin(objLoadingContent))
-        return;
-      permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
-    }
-
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    // guard against giving pluginHost.getPermissionStringForType a type
+    // not associated with any known plugin
+    if (!this.isKnownPlugin(objLoadingContent))
+      return;
+    let permissionString = pluginHost.getPermissionStringForType(objLoadingContent.actualType);
     let principal = doc.defaultView.top.document.nodePrincipal;
     let pluginPermission = Services.perms.testPermissionFromPrincipal(principal, permissionString);
 
@@ -773,7 +732,6 @@ PluginContent.prototype = {
     let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 
     let pluginFound = false;
-    let placeHolderFound = false;
     for (let plugin of plugins) {
       plugin.QueryInterface(Ci.nsIObjectLoadingContent);
       if (!this.isKnownPlugin(plugin)) {
@@ -781,11 +739,7 @@ PluginContent.prototype = {
       }
       if (pluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
         let overlay = this.getPluginUI(plugin, "main");
-        if (ChromeUtils.getClassName(plugin) === "HTMLAnchorElement") {
-          placeHolderFound = true;
-        } else {
-          pluginFound = true;
-        }
+        pluginFound = true;
         if (newState == "block" || newState == "blockalways" || newState == "continueblocking") {
           if (overlay) {
             overlay.addEventListener("click", this, true);
@@ -801,12 +755,11 @@ PluginContent.prototype = {
       }
     }
 
-    // If there are no instances of the plugin on the page any more, what the
-    // user probably needs is for us to allow and then refresh. Additionally, if
-    // this is content that requires HLS or we replaced the placeholder the page
-    // needs to be refreshed for it to insert its plugins
+    // If there are no instances of the plugin on the page any more or if we've
+    // noted that the content needs to be reloaded due to replacing HLS, what the
+    // user probably needs is for us to allow and then refresh.
     if (newState != "block" && newState != "blockalways" && newState != "continueblocking" &&
-       (!pluginFound || placeHolderFound || contentWindow.pluginRequiresReload)) {
+       (!pluginFound || contentWindow.pluginRequiresReload)) {
       this.reloadPage();
     }
     this.updateNotificationUI();
