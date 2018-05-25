@@ -43,9 +43,7 @@ using mozilla::PodArrayZero;
 
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
-    runtime_(zone->runtimeFromAnyThread()),
-    data(nullptr),
-    gcIncomingGrayPointers(nullptr)
+    runtime_(zone->runtimeFromAnyThread())
 {
     runtime_->numCompartments++;
 }
@@ -791,7 +789,7 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 }
 
 void
-JSCompartment::sweepSavedStacks()
+Realm::sweepSavedStacks()
 {
     savedStacks_.sweep();
 }
