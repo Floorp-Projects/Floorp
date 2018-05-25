@@ -108,15 +108,12 @@ class FontInspector {
     this.provider = provider;
 
     this.inspector.selection.on("new-node-front", this.onNewNode);
+    // @see ToolSidebar.onSidebarTabSelected()
+    this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
     this.ruleView.on("property-value-updated", this.onRuleUpdated);
 
     // Listen for theme changes as the color of the previews depend on the theme
     gDevTools.on("theme-switched", this.onThemeChanged);
-
-    // If a node is already selected, call the handler for node change.
-    if (this.isSelectedNodeValid()) {
-      this.onNewNode();
-    }
   }
 
   /**
@@ -142,6 +139,7 @@ class FontInspector {
    */
   destroy() {
     this.inspector.selection.off("new-node-front", this.onNewNode);
+    this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.ruleView.off("property-value-updated", this.onRuleUpdated);
     gDevTools.off("theme-switched", this.onThemeChanged);
 
@@ -466,7 +464,9 @@ class FontInspector {
    * property value changes.
    */
   async onRuleUpdated() {
-    await this.refreshFontEditor();
+    if (this.isPanelVisible()) {
+      await this.refreshFontEditor();
+    }
   }
 
   /**
@@ -552,6 +552,11 @@ class FontInspector {
 
     const node = this.inspector.selection.nodeFront;
     const fonts = await this.getFontsForNode(node, options);
+    if (!fonts.length) {
+      this.store.dispatch(resetFontEditor());
+      return;
+    }
+
     // Get computed styles for the selected node, but filter by CSS font properties.
     this.nodeComputedStyle = await this.pageStyle.getComputed(node, {
       filterProperties: FONT_PROPERTIES
@@ -597,18 +602,16 @@ class FontInspector {
       return;
     }
 
-    let node = this.inspector.selection.nodeFront;
-
     let fonts = [];
     let otherFonts = [];
 
-    let { fontOptions } = this.store.getState();
-    let { previewText } = fontOptions;
-
-    if (!this.isSelectedNodeValid() || !this.isPanelVisible()) {
+    if (!this.isSelectedNodeValid()) {
       this.store.dispatch(updateFonts(fonts, otherFonts));
       return;
     }
+
+    let { fontOptions } = this.store.getState();
+    let { previewText } = fontOptions;
 
     let options = {
       includePreviews: true,
@@ -621,6 +624,7 @@ class FontInspector {
       options.includeVariations = true;
     }
 
+    let node = this.inspector.selection.nodeFront;
     fonts = await this.getFontsForNode(node, options);
     otherFonts = await this.getFontsNotInNode(fonts, options);
 
