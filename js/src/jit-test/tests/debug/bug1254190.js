@@ -10,6 +10,6 @@ dbg.onNewScript = function (s) {
 }
 log = "";
 oomTest(() => {
-    var static  = newGlobal();
+    var static  = newGlobal({sameZoneAs: this});
     g.eval("(function() {})()");
 });

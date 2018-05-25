@@ -14,6 +14,6 @@ function ERROR(msg) {
 var dbg = new Debugger;
 dbg.onNewGlobalObject = ERROR;
 oomTest(function() {
-    newGlobal();
+    newGlobal({sameZoneAs: this});
 })
 
