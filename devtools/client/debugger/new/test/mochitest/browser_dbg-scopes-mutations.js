@@ -25,7 +25,7 @@ add_task(async function() {
   let onPaused = waitForPaused(dbg);
   invokeInTab("mutate");
   await onPaused;
-  await waitForLoadedSource(dbg, "script-mutate");
+  await waitForSelectedSource(dbg, "script-mutate");
 
   is(
     getScopeNodeLabel(dbg, 2),

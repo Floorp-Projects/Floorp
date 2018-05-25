@@ -16,13 +16,13 @@ var _classnames = require("devtools/client/debugger/new/dist/vendors").vendored[
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _devtoolsSourceMap = require("devtools/client/shared/source-map/index.js");
-
 var _Button = require("../shared/Button/index");
 
 var _breakpoint = require("../../utils/breakpoint/index");
 
 var _prefs = require("../../utils/prefs");
+
+var _pause = require("../../utils/pause/index");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39,19 +39,19 @@ function getBreakpointLocation(source, line, column) {
 function getBreakpointText(selectedSource, breakpoint) {
   const {
     condition,
-    text,
-    originalText
+    text
   } = breakpoint;
+  return condition || text;
+}
 
-  if (condition) {
-    return condition;
+function isCurrentlyPausedAtBreakpoint(breakpoint, frame, why) {
+  if (!frame || (0, _pause.isInterrupted)(why)) {
+    return false;
   }
 
-  if (!selectedSource || (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id) || originalText.length == 0) {
-    return text;
-  }
-
-  return originalText;
+  const bpId = (0, _breakpoint.getLocationWithoutColumn)(breakpoint.location);
+  const pausedId = (0, _breakpoint.getLocationWithoutColumn)(frame.location);
+  return bpId === pausedId;
 }
 
 class Breakpoint extends _react.Component {
@@ -74,7 +74,9 @@ class Breakpoint extends _react.Component {
   shouldComponentUpdate(nextProps) {
     const prevBreakpoint = this.props.breakpoint;
     const nextBreakpoint = nextProps.breakpoint;
-    return !prevBreakpoint || this.props.selectedSource != nextProps.selectedSource || prevBreakpoint.text != nextBreakpoint.text || prevBreakpoint.disabled != nextBreakpoint.disabled || prevBreakpoint.condition != nextBreakpoint.condition || prevBreakpoint.hidden != nextBreakpoint.hidden || prevBreakpoint.isCurrentlyPaused != nextBreakpoint.isCurrentlyPaused;
+    const wasPaused = isCurrentlyPausedAtBreakpoint(prevBreakpoint, this.props.frame, this.props.why);
+    const isPaused = isCurrentlyPausedAtBreakpoint(nextBreakpoint, nextProps.frame, nextProps.why);
+    return !prevBreakpoint || this.props.selectedSource != nextProps.selectedSource || prevBreakpoint.text != nextBreakpoint.text || prevBreakpoint.disabled != nextBreakpoint.disabled || prevBreakpoint.condition != nextBreakpoint.condition || prevBreakpoint.hidden != nextBreakpoint.hidden || prevBreakpoint.frame != nextBreakpoint.frame || wasPaused != isPaused;
   }
 
   destroyEditor() {
@@ -144,22 +146,15 @@ class Breakpoint extends _react.Component {
   renderLineClose() {
     const {
       breakpoint,
-      onCloseClick,
-      selectedSource
+      onCloseClick
     } = this.props;
     const {
       location
     } = breakpoint;
-    let {
+    const {
       line,
       column
     } = location;
-
-    if (selectedSource && (0, _devtoolsSourceMap.isGeneratedId)(selectedSource.id) && breakpoint.generatedLocation) {
-      line = breakpoint.generatedLocation.line;
-      column = breakpoint.generatedLocation.column;
-    }
-
     return _react2.default.createElement("div", {
       className: "breakpoint-line-close"
     }, _react2.default.createElement("div", {
@@ -174,10 +169,12 @@ class Breakpoint extends _react.Component {
     const {
       breakpoint,
       onClick,
-      onContextMenu
+      onContextMenu,
+      frame,
+      why
     } = this.props;
     const locationId = breakpoint.locationId;
-    const isCurrentlyPaused = breakpoint.isCurrentlyPaused;
+    const isCurrentlyPaused = isCurrentlyPausedAtBreakpoint(breakpoint, frame, why);
     const isDisabled = breakpoint.disabled;
     const isConditional = !!breakpoint.condition;
     return _react2.default.createElement("div", {

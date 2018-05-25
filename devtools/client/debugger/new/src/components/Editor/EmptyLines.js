@@ -70,7 +70,7 @@ class EmptyLines extends _react.Component {
 
 const mapStateToProps = state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  const foundEmptyLines = (0, _selectors.getEmptyLines)(state, selectedSource.toJS());
+  const foundEmptyLines = (0, _selectors.getEmptyLines)(state, selectedSource.id);
   return {
     selectedSource,
     emptyLines: selectedSource ? foundEmptyLines : []

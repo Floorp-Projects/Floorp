@@ -31,6 +31,7 @@ Object.defineProperty(exports, "findScopeByName", {
 exports.firstString = firstString;
 exports.locationMoved = locationMoved;
 exports.makeLocationId = makeLocationId;
+exports.getLocationWithoutColumn = getLocationWithoutColumn;
 exports.makePendingLocationId = makePendingLocationId;
 exports.assertBreakpoint = assertBreakpoint;
 exports.assertPendingBreakpoint = assertPendingBreakpoint;
@@ -75,6 +76,14 @@ function makeLocationId(location) {
   } = location;
   const columnString = column || "";
   return `${sourceId}:${line}:${columnString}`;
+}
+
+function getLocationWithoutColumn(location) {
+  const {
+    sourceId,
+    line
+  } = location;
+  return `${sourceId}:${line}`;
 }
 
 function makePendingLocationId(location) {

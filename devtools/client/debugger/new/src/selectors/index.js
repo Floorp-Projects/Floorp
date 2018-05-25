@@ -252,3 +252,12 @@ Object.defineProperty(exports, "getRelativeSources", {
     return _getRelativeSources.getRelativeSources;
   }
 });
+
+var _mappedBreakpoints = require("./mappedBreakpoints");
+
+Object.defineProperty(exports, "getMappedBreakpoints", {
+  enumerable: true,
+  get: function () {
+    return _mappedBreakpoints.getMappedBreakpoints;
+  }
+});
