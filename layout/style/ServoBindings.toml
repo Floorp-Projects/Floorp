@@ -458,6 +458,7 @@ structs-types = [
     "mozilla::css::URLValue",
     "mozilla::css::URLValueData",
     "mozilla::dom::CallerType",
+    "mozilla::dom::ShadowRoot",
     "mozilla::AnonymousCounterStyle",
     "mozilla::AtomArray",
     "mozilla::FontStretch",
