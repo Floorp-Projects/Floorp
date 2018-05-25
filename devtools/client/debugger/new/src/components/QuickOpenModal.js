@@ -289,10 +289,6 @@ class QuickOpenModal extends _react.Component {
         }
 
         if (results) {
-          if (this.isShortcutQuery()) {
-            return this.setModifier(results[selectedIndex]);
-          }
-
           return this.selectResultItem(e, results[selectedIndex]);
         }
       }
@@ -360,18 +356,6 @@ class QuickOpenModal extends _react.Component {
       });
     };
 
-    this.renderLoading = () => {
-      const {
-        symbolsLoading
-      } = this.props;
-
-      if ((this.isFunctionQuery() || this.isVariableQuery()) && symbolsLoading) {
-        return _react2.default.createElement("div", {
-          className: "loading-indicator"
-        }, L10N.getStr("loadingText"));
-      }
-    };
-
     this.state = {
       results: null,
       selectedIndex: 0
@@ -416,6 +400,18 @@ class QuickOpenModal extends _react.Component {
     return !this.getResultCount() && !!query;
   }
 
+  getSummaryMessage() {
+    let summaryMsg = "";
+
+    if (this.isGotoQuery()) {
+      summaryMsg = L10N.getStr("shortcuts.gotoLine");
+    } else if ((this.isFunctionQuery() || this.isVariableQuery()) && this.props.symbolsLoading) {
+      summaryMsg = L10N.getStr("loadingText");
+    }
+
+    return summaryMsg;
+  }
+
   render() {
     const {
       enabled,
@@ -433,7 +429,6 @@ class QuickOpenModal extends _react.Component {
     const newResults = results && results.slice(0, 100);
     const items = this.highlightMatching(query, newResults || []);
     const expanded = !!items && items.length > 0;
-    const summaryMsg = this.isGotoQuery() ? L10N.getStr("shortcuts.gotoLine") : "";
     return _react2.default.createElement(_Modal2.default, {
       "in": enabled,
       handleClose: this.closeModal
@@ -442,7 +437,7 @@ class QuickOpenModal extends _react.Component {
       hasPrefix: true,
       count: this.getResultCount(),
       placeholder: L10N.getStr("sourceSearch.search"),
-      summaryMsg: summaryMsg,
+      summaryMsg: this.getSummaryMessage(),
       showErrorEmoji: this.shouldShowErrorEmoji(),
       onChange: this.onChange,
       onKeyDown: this.onKeyDown,
@@ -452,7 +447,7 @@ class QuickOpenModal extends _react.Component {
       selectedItemId: expanded && items[selectedIndex] ? items[selectedIndex].id : ""
     }, this.isSourceSearch() ? {
       size: "big"
-    } : {})), this.renderLoading(), newResults && _react2.default.createElement(_ResultList2.default, _extends({
+    } : {})), newResults && _react2.default.createElement(_ResultList2.default, _extends({
       key: "results",
       items: items,
       selected: selectedIndex,

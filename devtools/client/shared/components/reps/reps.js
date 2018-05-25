@@ -4409,6 +4409,10 @@ class Tree extends Component {
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
         onClick: e => {
+          // We can stop the propagation since click handler on the node can be
+          // created in `renderItem`.
+          e.stopPropagation();
+
           // Since the user just clicked the node, there's no need to check if
           // it should be scrolled into view.
           this._focus(item, { preventAutoScroll: true });
@@ -4417,7 +4421,6 @@ class Tree extends Component {
           } else {
             this.props.onExpand(item, e.altKey);
           }
-          e.stopPropagation();
         }
       });
     });
@@ -6446,7 +6449,7 @@ class ObjectInspector extends Component {
         block: nodeIsBlock(item)
       }),
       onClick: e => {
-        if (e.metaKey && onCmdCtrlClick) {
+        if (onCmdCtrlClick && (isMacOS && e.metaKey || !isMacOS && e.ctrlKey)) {
           onCmdCtrlClick(item, {
             depth,
             event: e,

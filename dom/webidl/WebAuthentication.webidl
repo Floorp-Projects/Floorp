@@ -35,7 +35,7 @@ interface AuthenticatorAttestationResponse : AuthenticatorResponse {
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
     [SameObject] readonly attribute ArrayBuffer      authenticatorData;
     [SameObject] readonly attribute ArrayBuffer      signature;
-    [SameObject] readonly attribute ArrayBuffer      userHandle;
+    [SameObject] readonly attribute ArrayBuffer?     userHandle;
 };
 
 dictionary PublicKeyCredentialParameters {
