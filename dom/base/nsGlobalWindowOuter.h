@@ -1003,9 +1003,6 @@ protected:
 
   void InitializeShowFocusRings();
 
-public:
-  // Outer windows only.
-  nsDOMWindowList* GetWindowList();
 protected:
   // Helper for getComputedStyle and getDefaultComputedStyle
   already_AddRefed<nsICSSDeclaration>
