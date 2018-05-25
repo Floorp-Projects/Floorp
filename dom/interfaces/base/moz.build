@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIDOMChromeWindow.idl',
     'nsIDOMGlobalPropertyInitializer.idl',
     'nsIDOMWindow.idl',
-    'nsIDOMWindowCollection.idl',
     'nsIDOMWindowUtils.idl',
     'nsIFocusManager.idl',
     'nsIIdleObserver.idl',

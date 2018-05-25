@@ -8,7 +8,7 @@
 #include "nsWindowSizes.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
-#include "nsIDOMWindowCollection.h"
+#include "nsDOMWindowList.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -67,22 +67,18 @@ AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindowOuter* aWindow,
 
   windowSizes.addToTabSizes(aSizes);
 
-  nsCOMPtr<nsIDOMWindowCollection> frames = aWindow->GetFrames();
+  nsDOMWindowList* frames = aWindow->GetFrames();
 
-  uint32_t length;
-  nsresult rv = frames->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t length = frames->GetLength();
 
   // Measure this window's descendents.
   for (uint32_t i = 0; i < length; i++) {
-      nsCOMPtr<mozIDOMWindowProxy> child;
-      rv = frames->Item(i, getter_AddRefs(child));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsPIDOMWindowOuter> child = frames->IndexedGetter(i);
       NS_ENSURE_STATE(child);
 
       nsGlobalWindowOuter* childWin = nsGlobalWindowOuter::Cast(child);
 
-      rv = AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes);
+      nsresult rv = AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes);
       NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;

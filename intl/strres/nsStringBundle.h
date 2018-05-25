@@ -27,6 +27,9 @@ public:
 
     nsCOMPtr<nsIPersistentProperties> mProps;
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+    size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 protected:
     virtual ~nsStringBundle();
 
@@ -62,6 +65,8 @@ class nsExtensibleStringBundle final : public nsIStringBundle
 
 public:
   nsExtensibleStringBundle();
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThisIfUnshared(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
   virtual ~nsExtensibleStringBundle();

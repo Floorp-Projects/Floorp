@@ -2309,19 +2309,20 @@ IonCacheIRCompiler::emitGuardAndGetIterator()
     masm.loadObjPrivate(output, JSObject::ITER_CLASS_NFIXED_SLOTS, niScratch);
 
     // Ensure the |active| and |unreusable| bits are not set.
-    masm.branchTest32(Assembler::NonZero, Address(niScratch, offsetof(NativeIterator, flags)),
-                      Imm32(JSITER_ACTIVE|JSITER_UNREUSABLE), failure->label());
+    masm.branchTest32(Assembler::NonZero,
+                      Address(niScratch, NativeIterator::offsetOfFlags()),
+                      Imm32(NativeIterator::Flags::All), failure->label());
 
-    // Pre-write barrier for store to 'obj'.
-    Address iterObjAddr(niScratch, offsetof(NativeIterator, obj));
+    // Pre-write barrier for store to 'objectBeingIterated_'.
+    Address iterObjAddr(niScratch, NativeIterator::offsetOfObjectBeingIterated());
     EmitPreBarrier(masm, iterObjAddr, MIRType::Object);
 
     // Mark iterator as active.
-    Address iterFlagsAddr(niScratch, offsetof(NativeIterator, flags));
+    Address iterFlagsAddr(niScratch, NativeIterator::offsetOfFlags());
     masm.storePtr(obj, iterObjAddr);
-    masm.or32(Imm32(JSITER_ACTIVE), iterFlagsAddr);
+    masm.or32(Imm32(NativeIterator::Flags::Active), iterFlagsAddr);
 
-    // Post-write barrier for stores to 'obj'.
+    // Post-write barrier for stores to 'objectBeingIterated_'.
     emitPostBarrierSlot(output, TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), scratch1);
 
     // Chain onto the active iterator stack.

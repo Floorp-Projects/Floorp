@@ -37,7 +37,6 @@
 #include "nsIStringBundle.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"

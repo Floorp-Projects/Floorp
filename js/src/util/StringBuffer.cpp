@@ -164,6 +164,14 @@ js::ValueToStringBufferSlow(JSContext* cx, const Value& arg, StringBuffer& sb)
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_STRING);
         return false;
     }
+#ifdef ENABLE_BIGINT
+    if (v.isBigInt()) {
+        JSLinearString* str = BigInt::toString(cx, v.toBigInt(), 10);
+        if (!str)
+            return false;
+        return sb.append(str);
+    }
+#endif
     MOZ_ASSERT(v.isUndefined());
     return sb.append(cx->names().undefined);
 }

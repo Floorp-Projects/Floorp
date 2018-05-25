@@ -1511,9 +1511,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.sources.getOriginalLocation(generatedLocation));
     const url = originalSourceActor ? originalSourceActor.url : null;
 
-    return this.sources.isBlackBoxed(url) || frame.onStep
-      ? undefined
-      : this._pauseAndRespond(frame, { type: "debuggerStatement" });
+    if (this.skipBreakpoints || this.sources.isBlackBoxed(url) || frame.onStep) {
+      return undefined;
+    }
+
+    return this._pauseAndRespond(frame, { type: "debuggerStatement" });
+  },
+
+  onSkipBreakpoints: function({ skip }) {
+    this.skipBreakpoints = skip;
+    return { skip };
   },
 
   /**
@@ -1552,7 +1559,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // We ignore sources without a url because we do not
     // want to pause at console evaluations or watch expressions.
-    if (!url || this.sources.isBlackBoxed(url)) {
+    if (!url || this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
       return undefined;
     }
 
@@ -1755,7 +1762,8 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
-  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties
+  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties,
+  "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints
 });
 
 exports.ThreadActor = ThreadActor;
