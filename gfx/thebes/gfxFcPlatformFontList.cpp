@@ -2423,8 +2423,23 @@ gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
         ++pos;
     }
 
-    nsAtom *atom = mLangService->LookupLanguage(aFcLang);
-    return atom == aLangGroup;
+    // We can safely use mLangService->LookupLanguage if we're on the main
+    // thread, or if we're in a Servo traversal that has locked the cache,
+    // but not if we're on the font enumeration thread used to populate the
+    // Font menu in about:preferences.
+    if (IsInServoTraversalWithoutMainThreadAssertion() || NS_IsMainThread()) {
+        nsAtom *atom = mLangService->LookupLanguage(aFcLang);
+        return atom == aLangGroup;
+    }
+
+    // Off-main-thread/non-servo-traversal version: fall back to
+    // GetUncachedLanguageGroup to avoid unsafe access to the lang-group
+    // mapping cache hashtable.
+    nsAutoCString lowered(aFcLang);
+    ToLowerCase(lowered);
+    RefPtr<nsAtom> lang = NS_Atomize(lowered);
+    RefPtr<nsAtom> group = mLangService->GetUncachedLanguageGroup(lang);
+    return group.get() == aLangGroup;
 }
 
 void
