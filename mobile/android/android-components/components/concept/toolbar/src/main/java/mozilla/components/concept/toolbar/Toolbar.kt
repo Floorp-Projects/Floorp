@@ -46,8 +46,19 @@ interface Toolbar {
 
     /**
      * Adds an action to be displayed on the right side of the toolbar in display mode.
+     *
+     * Related:
+     * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action
      */
-    fun addDisplayAction(action: Action)
+    fun addBrowserAction(action: Action)
+
+    /**
+     * Adds an action to be displayed on the right side of the URL in display mode.
+     *
+     * Related:
+     * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Page_actions
+     */
+    fun addPageAction(action: Action)
 
     /**
      * An action button to be added to the toolbar.

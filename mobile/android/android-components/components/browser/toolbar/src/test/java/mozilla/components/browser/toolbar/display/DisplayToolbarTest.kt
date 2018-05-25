@@ -116,6 +116,10 @@ class DisplayToolbarTest {
         displayToolbar.menuBuilder = BrowserMenuBuilder(emptyList())
 
         assertTrue(menuView.visibility == View.VISIBLE)
+
+        displayToolbar.menuBuilder = null
+
+        assertTrue(menuView.visibility == View.GONE)
     }
 
     @Test
@@ -148,7 +152,7 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `action gets added as view to toolbar`() {
+    fun `browser action gets added as view to toolbar`() {
         val contentDescription = "Mozilla"
 
         val toolbar = mock(BrowserToolbar::class.java)
@@ -157,7 +161,7 @@ class DisplayToolbarTest {
         assertNull(extractActionView(displayToolbar, contentDescription))
 
         val action = Toolbar.Action(0, contentDescription) {}
-        displayToolbar.addAction(action)
+        displayToolbar.addBrowserAction(action)
 
         val view = extractActionView(displayToolbar, contentDescription)
         assertNotNull(view)
@@ -165,7 +169,22 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `clicking action view triggers listener of action`() {
+    fun `browser actions do not get added as view if limit is reached`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.addBrowserAction(Toolbar.Action(0, "Action-1") {})
+        displayToolbar.addBrowserAction(Toolbar.Action(0, "Action-2") {})
+        displayToolbar.addBrowserAction(Toolbar.Action(0, "Action-3") {})
+
+        assertNotNull(extractActionView(displayToolbar, "Action-1"))
+        assertNotNull(extractActionView(displayToolbar, "Action-2"))
+
+        assertNull(extractActionView(displayToolbar, "Action-3"))
+    }
+
+    @Test
+    fun `clicking browser action view triggers listener of action`() {
         var callbackExecuted = false
 
         val action = Toolbar.Action(0, "Button") {
@@ -174,7 +193,7 @@ class DisplayToolbarTest {
 
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
-        displayToolbar.addAction(action)
+        displayToolbar.addBrowserAction(action)
 
         val view = extractActionView(displayToolbar, "Button")
         assertNotNull(view)
@@ -187,12 +206,12 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `action view will use square size`() {
+    fun `browser action view will use square size`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
 
         val action = Toolbar.Action(0, "action") {}
-        displayToolbar.addAction(action)
+        displayToolbar.addBrowserAction(action)
 
         val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
         val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
@@ -200,6 +219,58 @@ class DisplayToolbarTest {
         displayToolbar.measure(widthSpec, heightSpec)
 
         val view = extractActionView(displayToolbar, "action")!!
+
+        assertEquals(56, view.measuredWidth)
+        assertEquals(56, view.measuredHeight)
+    }
+
+    @Test
+    fun `page actions will be added as view to the toolbar`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        assertNull(extractActionView(displayToolbar, "Reader Mode"))
+
+        val action = Toolbar.Action(0, "Reader Mode") {}
+        displayToolbar.addPageAction(action)
+
+        assertNotNull(extractActionView(displayToolbar, "Reader Mode"))
+    }
+
+    @Test
+    fun `clicking a page action view will execute the listener of the action`() {
+        var listenerExecuted = false
+
+        val action = Toolbar.Action(0, "Reload") {
+            listenerExecuted = true
+        }
+
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        displayToolbar.addPageAction(action)
+
+        assertFalse(listenerExecuted)
+
+        val view = extractActionView(displayToolbar, "Reload")
+        assertNotNull(view)
+        view!!.performClick()
+
+        assertTrue(listenerExecuted)
+    }
+
+    fun `views for page actions will have a square shape`() {
+        val action = Toolbar.Action(0, "Open app") {}
+
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+        displayToolbar.addPageAction(action)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val view = extractActionView(displayToolbar, "Open app")!!
 
         assertEquals(56, view.measuredWidth)
         assertEquals(56, view.measuredHeight)

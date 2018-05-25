@@ -25,16 +25,34 @@ import mozilla.components.ui.progress.AnimatedProgressBar
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
  *
  * Structure:
- * +------+-----+--------------------+---------+------+
- * | icon | nav |         url        | actions | menu |
- * +------+-----+--------------------+---------+------+
+ *   +-------------+------+-----------------------+----------+------+
+ *   | navigation  | icon | url       [ page    ] | browser  | menu |
+ *   |   actions   |      |           [ actions ] | actions  |      |
+ *   +-------------+------+----------------------------------+------+
  *
- * - icon: Security indicator, usually a lock or globe icon.
- * - nav: Optional navigation buttons (back/forward) to be displayed on large devices like tablets
- * - url: The URL of the currently displayed website (read-only). Clicking this element will switch
- *        to editing mode.
- * - actions: Optional (page) action icons injected by other components (e.g. reader mode).
- * - menu: three dot menu button that opens the browser menu.
+ * Navigation actions (optional):
+ *     A dynamic list of clickable icons usually used for navigation on larger devices
+ *     (e.g. “back”/”forward” buttons.)
+ *
+ * Icon (optional):
+ *     Site security indicator icon (e.g. “Lock” icon) that may show a doorhanger when clicked.
+ *
+ * URL:
+ *     Section that displays the current URL (read-only)
+ *
+ * Page actions (optional):
+ *     A dynamic list of clickable icons inside the URL section (e.g. “reader mode” icon)
+ *
+ * Browser actions (optional):
+ *     A list of dynamic clickable icons on the toolbar (e.g. tabs tray button)
+ *
+ * Menu (optional):
+ *     A button that shows an overflow menu when clicked (constructed using the browser-menu
+ *     component)
+ *
+ * Progress (optional):
+ *     (Not shown in diagram) A horizontal photon-style progress bar provided by the ui-progress component.
+ *
  */
 @SuppressLint("ViewConstructor") // This view is only instantiated in code
 internal class DisplayToolbar(
@@ -93,7 +111,8 @@ internal class DisplayToolbar(
 
     private val progressView = AnimatedProgressBar(context)
 
-    private val actions: MutableList<DisplayAction> = mutableListOf()
+    private val browserActions: MutableList<DisplayAction> = mutableListOf()
+    private val pageActions: MutableList<DisplayAction> = mutableListOf()
 
     init {
         addView(iconView)
@@ -124,18 +143,32 @@ internal class DisplayToolbar(
      * If there is not enough room to show all icons then some icons may be moved to an overflow
      * menu.
      */
-    fun addAction(action: Toolbar.Action) {
+    fun addBrowserAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        actions.add(displayAction)
+        browserActions.add(displayAction)
 
-        if (actions.size < MAX_VISIBLE_ACTION_ITEMS) {
+        if (browserActions.size <= MAX_VISIBLE_ACTION_ITEMS) {
             val view = createActionView(context, action)
 
             displayAction.view = view
 
             addView(view)
         }
+    }
+
+    /**
+     * Adds an action to be displayed on the right side of the toolbar.
+     */
+    fun addPageAction(action: Toolbar.Action) {
+        val displayAction = DisplayAction(action)
+
+        createActionView(context, action).let {
+            displayAction.view = it
+            addView(it)
+        }
+
+        pageActions.add(displayAction)
     }
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
@@ -151,17 +184,27 @@ internal class DisplayToolbar(
         iconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
 
-        // If there are actions with a view then use the same square shape for them
-        var actionWidth = 0
-        actions
+        // If there are browser actions with a view then use the same square shape for them
+        var browserActionsWidth = 0
+        browserActions
             .mapNotNull { it.view }
             .forEach { view ->
                 view.measure(squareSpec, squareSpec)
-                actionWidth += height
+                browserActionsWidth += height
+            }
+
+        // Measure page actions with a view
+        var pageActionsWidth = 0
+        pageActions
+            .mapNotNull { it.view }
+            .forEach { view ->
+                view.measure(squareSpec, squareSpec)
+                pageActionsWidth += height
             }
 
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
-        val urlWidth = width - height - actionWidth - if (menuView.isVisible()) height else 0
+        val menuWidth = if (menuView.isVisible()) height else 0
+        val urlWidth = width - height - browserActionsWidth - pageActionsWidth - menuWidth
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
 
@@ -171,28 +214,46 @@ internal class DisplayToolbar(
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        // The icon is always on the left side of the toolbar
         iconView.layout(0, 0, iconView.measuredWidth, measuredHeight)
 
-        var actionWidth = 0
-        actions
+        // The menu is always on the right side of the toolbar
+        val menuWidth = if (menuView.isVisible()) height else 0
+        menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
+
+        // Now we add browser actions from the left side of the menu to the right (in reversed order)
+        var browserActionWidth = 0
+        browserActions
             .mapNotNull { it.view }
             .reversed()
             .forEach { view ->
-                val viewRight = measuredWidth - actionWidth - if (menuView.isVisible()) height else 0
+                val viewRight = measuredWidth - browserActionWidth - menuWidth
                 val viewLeft = viewRight - view.measuredWidth
 
                 view.layout(viewLeft, 0, viewRight, measuredHeight)
 
-                actionWidth += view.measuredWidth
+                browserActionWidth += view.measuredWidth
             }
 
-        val urlRight = measuredWidth - actionWidth - if (menuView.isVisible()) height else 0
+        // After browser actions we add page actions from the right to the left (in reversed order)
+        var pageActionsWidth = 0
+        pageActions
+            .mapNotNull { it.view }
+            .reversed()
+            .forEach { view ->
+                val viewRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth
+                val viewLeft = viewRight - view.measuredWidth
+
+                view.layout(viewLeft, 0, viewRight, measuredHeight)
+
+                pageActionsWidth += view.measuredWidth
+            }
+
+        val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth
         val urlLeft = if (iconView.isVisible()) iconView.measuredWidth else 0
-        urlView.layout(urlLeft, 0, urlRight, bottom)
+        urlView.layout(urlLeft, 0, urlRight, measuredHeight)
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
-
-        menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
     }
 
     companion object {
@@ -224,6 +285,9 @@ internal class DisplayToolbar(
     }
 }
 
+/**
+ * A wrapper helper to pair a Toolbar.Action with an optional View.
+ */
 private class DisplayAction(
     var actual: Toolbar.Action,
     var view: View? = null

@@ -234,7 +234,7 @@ class BrowserToolbarTest {
     }
 
     @Test
-    fun `add action will be forwarded to display toolbar`() {
+    fun `add browser action will be forwarded to display toolbar`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         val displayToolbar = mock(DisplayToolbar::class.java)
 
@@ -244,9 +244,26 @@ class BrowserToolbarTest {
             // Do nothing
         }
 
-        toolbar.addDisplayAction(action)
+        toolbar.addBrowserAction(action)
 
-        verify(displayToolbar).addAction(action)
+        verify(displayToolbar).addBrowserAction(action)
+    }
+
+    @Test
+    fun `add page action will be forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        val displayToolbar = mock(DisplayToolbar::class.java)
+
+        toolbar.displayToolbar = displayToolbar
+
+        val action = Toolbar.Action(0, "World") {
+            // Do nothing
+        }
+
+        toolbar.addPageAction(action)
+
+        verify(displayToolbar).addPageAction(action)
     }
 
     fun `URL update does not override search terms in edit mode`() {

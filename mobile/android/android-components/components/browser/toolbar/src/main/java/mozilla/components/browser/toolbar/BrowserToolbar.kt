@@ -132,13 +132,27 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
-     * Adds an action to be displayed on the right side of the toolbar in display mode.
+     * Adds an action to be displayed on the right side of the toolbar (outside of the URL bounding
+     * box) in display mode.
      *
      * If there is not enough room to show all icons then some icons may be moved to an overflow
      * menu.
+     *
+     * Related:
+     * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action
      */
-    override fun addDisplayAction(action: Toolbar.Action) {
-        displayToolbar.addAction(action)
+    override fun addBrowserAction(action: Toolbar.Action) {
+        displayToolbar.addBrowserAction(action)
+    }
+
+    /**
+     * Adds an action to be displayed on the right side of the URL in display mode.
+     *
+     * Related:
+     * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Page_actions
+     */
+    override fun addPageAction(action: Toolbar.Action) {
+        displayToolbar.addPageAction(action)
     }
 
     /**
