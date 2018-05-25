@@ -1066,6 +1066,7 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 }
 
 .sidebar-close-button::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
 }
 
@@ -1078,5 +1079,6 @@ html[dir="rtl"] .webconsole-output-wrapper img.collapse-button.arrow:not(.expand
 }
 
 #split-console-close-button::before {
+  fill: var(--theme-toolbar-photon-icon-color);
   background-image: var(--close-button-image);
 }
