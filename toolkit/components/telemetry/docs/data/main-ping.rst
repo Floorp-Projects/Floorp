@@ -117,6 +117,7 @@ Structure:
         scalars: {...},
         keyedScalars: {...},
         events: {...},
+        // parent process histograms and keyedHistograms are in main payload
       },
       "content": {
         scalars: {...},
