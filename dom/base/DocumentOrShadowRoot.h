@@ -13,7 +13,6 @@
 #include "nsIdentifierMapEntry.h"
 
 class nsContentList;
-class nsIDocument;
 class nsINode;
 
 namespace mozilla {
@@ -21,7 +20,6 @@ class StyleSheet;
 
 namespace dom {
 
-class Element;
 class StyleSheetList;
 class ShadowRoot;
 
