@@ -12,6 +12,6 @@ for (var i = 0; i < 9; ++ i) {
   dbg.onNewGlobalObject = ERROR;
 }
 oomTest(function() {
-  newGlobal();
+  newGlobal({sameZoneAs: this});
 })
 `);
