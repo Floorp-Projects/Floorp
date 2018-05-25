@@ -17,17 +17,6 @@ const TEST_DATA = [ // eslint-disable-line
     selector: "html",
     expected: [
       {
-        type: "load",
-        filename: TEST_URL,
-        attributes: [
-          "Bubbling",
-          "DOM0"
-        ],
-        handler: "function onload(event) {\n" +
-                 "  init();\n" +
-                 "}"
-      },
-      {
         type: "click",
         filename: TEST_URL + ":56",
         attributes: [
@@ -49,6 +38,17 @@ const TEST_DATA = [ // eslint-disable-line
                  "  alert(\"document event listener clicked\");\n" +
                  "}"
       },
+      {
+        type: "load",
+        filename: TEST_URL,
+        attributes: [
+          "Bubbling",
+          "DOM0"
+        ],
+        handler: "function onload(event) {\n" +
+                 "  init();\n" +
+                 "}"
+      }
     ]
   },
   {
