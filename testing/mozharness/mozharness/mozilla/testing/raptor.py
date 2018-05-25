@@ -103,35 +103,7 @@ class Raptor(TestingMixin, MercurialScript, Python3Virtualenv, CodeCoverageMixin
     #   mozharness: --geckoProfile try: <stuff>
     def query_gecko_profile_options(self):
         gecko_results = []
-        if self.buildbot_config:
-            # this is inside automation
-            # now let's see if we added GeckoProfile specs in the commit message
-            try:
-                junk, junk, opts = self.buildbot_config['sourcestamp']['changes'][-1]['comments'].partition('mozharness:')
-            except IndexError:
-                # when we don't have comments on changes (bug 1255187)
-                opts = None
-
-            if opts:
-                # In the case of a multi-line commit message, only examine
-                # the first line for mozharness options
-                opts = opts.split('\n')[0]
-                opts = re.sub(r'\w+:.*', '', opts).strip().split(' ')
-                if "--geckoProfile" in opts:
-                    # overwrite whatever was set here.
-                    self.gecko_profile = True
-                try:
-                    idx = opts.index('--geckoProfileInterval')
-                    if len(opts) > idx + 1:
-                        self.gecko_profile_interval = opts[idx + 1]
-                except ValueError:
-                    pass
-            else:
-                # no opts, check for '--geckoProfile' in try message text directly
-                if self.try_message_has_flag('geckoProfile'):
-                    self.gecko_profile = True
-
-        # finally, if gecko_profile is set, we add that to the raptor options
+        # if gecko_profile is set, we add that to the raptor options
         if self.gecko_profile:
             gecko_results.append('--geckoProfile')
             if self.gecko_profile_interval:
