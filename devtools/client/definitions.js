@@ -73,13 +73,9 @@ Tools.inspector = {
   label: l10n("inspector.label"),
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
-    if (osString == "Darwin") {
-      let cmdShiftC = "Cmd+Shift+" + l10n("inspector.commandkey");
-      let cmdOptC = "Cmd+Opt+" + l10n("inspector.commandkey");
-      return l10n("inspector.mac.tooltip", cmdShiftC, cmdOptC);
-    }
-
-    return l10n("inspector.tooltip2", "Ctrl+Shift+") + l10n("inspector.commandkey");
+    return l10n("inspector.tooltip2",
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+    l10n("inspector.commandkey"));
   },
   inMenu: true,
   commands: [
@@ -624,13 +620,13 @@ exports.ToolboxButtons = [
  *
  * @param {string} name
  *        The key to lookup.
- * @param {...string} args
+ * @param {string} arg
  *        Optional format argument.
  * @returns A localized version of the given key.
  */
-function l10n(name, ...args) {
+function l10n(name, arg) {
   try {
-    return args ? L10N.getFormatStr(name, ...args) : L10N.getStr(name);
+    return arg ? L10N.getFormatStr(name, arg) : L10N.getStr(name);
   } catch (ex) {
     console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
