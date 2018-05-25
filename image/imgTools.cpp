@@ -305,12 +305,14 @@ imgTools::DecodeImageAsync(nsIInputStream* aInStr,
  */
 static nsresult
 EncodeImageData(DataSourceSurface* aDataSurface,
+                DataSourceSurface::ScopedMap& aMap,
                 const nsACString& aMimeType,
                 const nsAString& aOutputOptions,
                 nsIInputStream** aStream)
 {
-  MOZ_ASSERT(aDataSurface->GetFormat() ==  SurfaceFormat::B8G8R8A8,
-             "We're assuming B8G8R8A8");
+  MOZ_ASSERT(aDataSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+             aDataSurface->GetFormat() == SurfaceFormat::B8G8R8X8,
+             "We're assuming B8G8R8A8/X8");
 
   // Get an image encoder for the media type
   nsAutoCString encoderCID(
@@ -321,27 +323,35 @@ EncodeImageData(DataSourceSurface* aDataSurface,
     return NS_IMAGELIB_ERROR_NO_ENCODER;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!aDataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    return NS_ERROR_FAILURE;
-  }
-
   IntSize size = aDataSurface->GetSize();
-  uint32_t dataLength = map.mStride * size.height;
+  uint32_t dataLength = aMap.GetStride() * size.height;
 
   // Encode the bitmap
-  nsresult rv = encoder->InitFromData(map.mData,
+  nsresult rv = encoder->InitFromData(aMap.GetData(),
                                       dataLength,
                                       size.width,
                                       size.height,
-                                      map.mStride,
+                                      aMap.GetStride(),
                                       imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                       aOutputOptions);
-  aDataSurface->Unmap();
   NS_ENSURE_SUCCESS(rv, rv);
 
   encoder.forget(aStream);
   return NS_OK;
+}
+
+static nsresult
+EncodeImageData(DataSourceSurface* aDataSurface,
+                const nsACString& aMimeType,
+                const nsAString& aOutputOptions,
+                nsIInputStream** aStream)
+{
+  DataSourceSurface::ScopedMap map(aDataSurface, DataSourceSurface::READ);
+  if (!map.IsMapped()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return EncodeImageData(aDataSurface, map, aMimeType, aOutputOptions, aStream);
 }
 
 NS_IMETHODIMP
@@ -358,7 +368,8 @@ imgTools::EncodeImage(imgIContainer* aContainer,
 
   RefPtr<DataSourceSurface> dataSurface;
 
-  if (frame->GetFormat() == SurfaceFormat::B8G8R8A8) {
+  if (frame->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+      frame->GetFormat() == SurfaceFormat::B8G8R8X8) {
     dataSurface = frame->GetDataSurface();
   } else {
     // Convert format to SurfaceFormat::B8G8R8A8
@@ -407,22 +418,33 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
                                imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
+  // If the given surface is the right size/format, we can encode it directly.
+  if (scaledSize == frame->GetSize() &&
+      (frame->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+       frame->GetFormat() == SurfaceFormat::B8G8R8X8)) {
+    RefPtr<DataSourceSurface> dataSurface = frame->GetDataSurface();
+    if (dataSurface) {
+      return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
+    }
+  }
+
+  // Otherwise we need to scale it using a draw target.
   RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)) {
+  DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::READ_WRITE);
+  if (!map.IsMapped()) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     map.mData,
+    Factory::CreateDrawTargetForData(BackendType::SKIA,
+                                     map.GetData(),
                                      dataSurface->GetSize(),
-                                     map.mStride,
+                                     map.GetStride(),
                                      SurfaceFormat::B8G8R8A8);
   if (!dt) {
     gfxWarning() << "imgTools::EncodeImage failed in CreateDrawTargetForData";
@@ -436,9 +458,7 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
                   DrawSurfaceOptions(),
                   DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
-  dataSurface->Unmap();
-
-  return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
+  return EncodeImageData(dataSurface, map, aMimeType, aOutputOptions, aStream);
 }
 
 NS_IMETHODIMP
@@ -492,16 +512,16 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)) {
+  DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::READ_WRITE);
+  if (!map.IsMapped()) {
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     map.mData,
+    Factory::CreateDrawTargetForData(BackendType::SKIA,
+                                     map.GetData(),
                                      dataSurface->GetSize(),
-                                     map.mStride,
+                                     map.GetStride(),
                                      SurfaceFormat::B8G8R8A8);
   if (!dt) {
     gfxWarning() <<
@@ -512,9 +532,7 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
                   IntRect(aOffsetX, aOffsetY, aWidth, aHeight),
                   IntPoint(0, 0));
 
-  dataSurface->Unmap();
-
-  return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
+  return EncodeImageData(dataSurface, map, aMimeType, aOutputOptions, aStream);
 }
 
 NS_IMETHODIMP

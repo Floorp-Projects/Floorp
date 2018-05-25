@@ -115,7 +115,7 @@ ThreadSafeGetDefaultFontHelper(const nsPresContext* aPresContext,
   }
   {
     AutoWriteLock guard(*sServoFFILock);
-  retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, nullptr);
+    retval = aPresContext->GetDefaultFont(aGenericId, aLanguage, nullptr);
   }
   return retval;
 }

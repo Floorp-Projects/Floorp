@@ -890,7 +890,8 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
      * inference to have unknown properties, to simplify handling of e.g.
      * NewFunctionClone.
      */
-    if (!JSObject::setNewGroupUnknown(cx, &JSFunction::class_, functionProto))
+    ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
+    if (!JSObject::setNewGroupUnknown(cx, realm, &JSFunction::class_, functionProto))
         return nullptr;
 
     return functionProto;

@@ -121,7 +121,6 @@ namespace js {
 template <typename T>
 struct InternalGCPointerPolicy {
     using Type = typename mozilla::RemovePointer<T>::Type;
-    static T initial() { return nullptr; }
     static void preBarrier(T v) {
         if (v)
             Type::writeBarrierPre(v);

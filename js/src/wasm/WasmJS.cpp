@@ -254,6 +254,10 @@ GetImports(JSContext* cx,
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
                     return false;
                 }
+                if (obj->type() != global.type()) {
+                    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_TYPE_LINK);
+                    return false;
+                }
 
                 if (globalObjs.length() <= index && !globalObjs.resize(index + 1)) {
                     ReportOutOfMemory(cx);
@@ -2167,7 +2171,7 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     RootedObject obj(cx, &args[0].toObject());
 
     RootedValue typeVal(cx);
-    if (!JS_GetProperty(cx, obj, "type", &typeVal))
+    if (!JS_GetProperty(cx, obj, "value", &typeVal))
         return false;
 
     RootedString typeStr(cx, ToString(cx, typeVal));

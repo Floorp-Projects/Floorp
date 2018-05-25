@@ -409,7 +409,7 @@ template <class T>
 class PreBarriered : public WriteBarrieredBase<T>
 {
   public:
-    PreBarriered() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    PreBarriered() : WriteBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
     /*
      * Allow implicit construction for use in generic contexts, such as
      * DebuggerWeakMap::markKeys.
@@ -453,12 +453,12 @@ template <class T>
 class GCPtr : public WriteBarrieredBase<T>
 {
   public:
-    GCPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    GCPtr() : WriteBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
     explicit GCPtr(const T& v) : WriteBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), v);
+        this->post(JS::SafelyInitialized<T>(), v);
     }
     explicit GCPtr(const GCPtr<T>& v) : WriteBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), v);
+        this->post(JS::SafelyInitialized<T>(), v);
     }
 #ifdef DEBUG
     ~GCPtr() {
@@ -471,7 +471,7 @@ class GCPtr : public WriteBarrieredBase<T>
         //
         // Note that when sweeping the wrapped pointer may already have been
         // freed by this point.
-        MOZ_ASSERT(CurrentThreadIsGCSweeping() || this->value == JS::GCPolicy<T>::initial());
+        MOZ_ASSERT(CurrentThreadIsGCSweeping() || this->value == JS::SafelyInitialized<T>());
         Poison(this, JS_FREED_HEAP_PTR_PATTERN, sizeof(*this), MemCheckKind::MakeNoAccess);
     }
 #endif
@@ -479,7 +479,7 @@ class GCPtr : public WriteBarrieredBase<T>
     void init(const T& v) {
         CheckTargetIsNotGray(v);
         this->value = v;
-        this->post(JS::GCPolicy<T>::initial(), v);
+        this->post(JS::SafelyInitialized<T>(), v);
     }
 
     DECLARE_POINTER_ASSIGN_OPS(GCPtr, T);
@@ -529,11 +529,11 @@ template <class T>
 class HeapPtr : public WriteBarrieredBase<T>
 {
   public:
-    HeapPtr() : WriteBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    HeapPtr() : WriteBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
 
     // Implicitly adding barriers is a reasonable default.
     MOZ_IMPLICIT HeapPtr(const T& v) : WriteBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), this->value);
+        this->post(JS::SafelyInitialized<T>(), this->value);
     }
 
     /*
@@ -543,18 +543,18 @@ class HeapPtr : public WriteBarrieredBase<T>
      * simply omit the rvalue variant.
      */
     MOZ_IMPLICIT HeapPtr(const HeapPtr<T>& v) : WriteBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), this->value);
+        this->post(JS::SafelyInitialized<T>(), this->value);
     }
 
     ~HeapPtr() {
         this->pre();
-        this->post(this->value, JS::GCPolicy<T>::initial());
+        this->post(this->value, JS::SafelyInitialized<T>());
     }
 
     void init(const T& v) {
         CheckTargetIsNotGray(v);
         this->value = v;
-        this->post(JS::GCPolicy<T>::initial(), this->value);
+        this->post(JS::SafelyInitialized<T>(), this->value);
     }
 
     DECLARE_POINTER_ASSIGN_OPS(HeapPtr, T);
@@ -611,17 +611,17 @@ class ReadBarriered : public ReadBarrieredBase<T>,
     using ReadBarrieredBase<T>::value;
 
   public:
-    ReadBarriered() : ReadBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    ReadBarriered() : ReadBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
 
     // It is okay to add barriers implicitly.
     MOZ_IMPLICIT ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), v);
+        this->post(JS::SafelyInitialized<T>(), v);
     }
 
     // The copy constructor creates a new weak edge but the wrapped pointer does
     // not escape, so no read barrier is necessary.
     explicit ReadBarriered(const ReadBarriered& v) : ReadBarrieredBase<T>(v) {
-        this->post(JS::GCPolicy<T>::initial(), v.unbarrieredGet());
+        this->post(JS::SafelyInitialized<T>(), v.unbarrieredGet());
     }
 
     // Move retains the lifetime status of the source edge, so does not fire
@@ -629,11 +629,11 @@ class ReadBarriered : public ReadBarrieredBase<T>,
     ReadBarriered(ReadBarriered&& v)
       : ReadBarrieredBase<T>(mozilla::Move(v))
     {
-        this->post(JS::GCPolicy<T>::initial(), v.value);
+        this->post(JS::SafelyInitialized<T>(), v.value);
     }
 
     ~ReadBarriered() {
-        this->post(this->value, JS::GCPolicy<T>::initial());
+        this->post(this->value, JS::SafelyInitialized<T>());
     }
 
     ReadBarriered& operator=(const ReadBarriered& v) {

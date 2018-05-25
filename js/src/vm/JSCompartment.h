@@ -557,10 +557,27 @@ struct JSCompartment
     JSRuntime*                   runtime_;
 
   private:
-    friend struct JSRuntime;
-    friend struct JSContext;
+    js::WrapperMap crossCompartmentWrappers;
 
   public:
+    /*
+     * During GC, stores the head of a list of incoming pointers from gray cells.
+     *
+     * The objects in the list are either cross-compartment wrappers, or
+     * debugger wrapper objects.  The list link is either in the second extra
+     * slot for the former, or a special slot for the latter.
+     */
+    JSObject* gcIncomingGrayPointers = nullptr;
+
+    void* data = nullptr;
+
+    // These flags help us to discover if a compartment that shouldn't be alive
+    // manages to outlive a GC. Note that these flags have to be on the
+    // compartment, not the realm, because same-compartment realms can have
+    // cross-realm pointers without wrappers.
+    bool scheduledForDestruction = false;
+    bool maybeAlive = true;
+
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
 
@@ -575,52 +592,18 @@ struct JSCompartment
         return runtime_;
     }
 
-  public:
-    void*                        data;
-
-  protected:
-    js::SavedStacks              savedStacks_;
-
-  private:
-    js::WrapperMap               crossCompartmentWrappers;
-
-  public:
     void assertNoCrossCompartmentWrappers() {
         MOZ_ASSERT(crossCompartmentWrappers.empty());
     }
-
-  public:
-    js::RegExpCompartment        regExps;
-
-    // Recompute the probability with which this compartment should record
-    // profiling data (stack traces, allocations log, etc.) about each
-    // allocation. We consult the probabilities requested by the Debugger
-    // instances observing us, if any.
-    void chooseAllocationSamplingProbability() { savedStacks_.chooseSamplingProbability(this); }
 
   protected:
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                 size_t* crossCompartmentWrappersArg);
 
   public:
-    // Object group tables and other state in the compartment.
-    js::ObjectGroupCompartment   objectGroups;
-
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
-
-    // All unboxed layouts in the compartment.
-    mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
-
-    /*
-     * During GC, stores the head of a list of incoming pointers from gray cells.
-     *
-     * The objects in the list are either cross-compartment wrappers, or
-     * debugger wrapper objects.  The list link is either in the second extra
-     * slot for the former, or a special slot for the latter.
-     */
-    JSObject*                    gcIncomingGrayPointers;
 
   private:
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
@@ -689,30 +672,11 @@ struct JSCompartment
     void sweepAfterMinorGC(JSTracer* trc);
 
     void sweepCrossCompartmentWrappers();
-    void sweepSavedStacks();
-    void sweepRegExps();
-    void sweepDebugEnvironments();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
 
-    js::SavedStacks& savedStacks() { return savedStacks_; }
-
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
-
-    static size_t offsetOfRegExps() {
-        return offsetof(JSCompartment, regExps);
-    }
-
-    /* Bookkeeping information for debug scope objects. */
-    js::UniquePtr<js::DebugEnvironments> debugEnvs;
-
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC. Note that these flags have to be on the
-    // compartment, not the realm, because same-compartment realms can have
-    // cross-realm pointers without wrappers.
-    bool scheduledForDestruction = false;
-    bool maybeAlive = true;
 };
 
 namespace js {
@@ -782,7 +746,7 @@ class ObjectRealm
 
 } // namespace js
 
-class JS::Realm : public JSCompartment
+class JS::Realm : private JSCompartment
 {
     const JS::RealmCreationOptions creationOptions_;
     JS::RealmBehaviors behaviors_;
@@ -793,6 +757,12 @@ class JS::Realm : public JSCompartment
     // Note: this is private to enforce use of ObjectRealm::get(obj).
     js::ObjectRealm objects_;
     friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
+
+    // Object group tables and other state in the realm. This is private to
+    // enforce use of ObjectGroupRealm::get(group)/getForNewObject(cx).
+    js::ObjectGroupRealm objectGroups_;
+    friend js::ObjectGroupRealm& js::ObjectGroupRealm::get(js::ObjectGroup* group);
+    friend js::ObjectGroupRealm& js::ObjectGroupRealm::getForNewObject(JSContext* cx);
 
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
@@ -816,6 +786,11 @@ class JS::Realm : public JSCompartment
     JSPrincipals* principals_ = nullptr;
 
     js::UniquePtr<js::jit::JitRealm> jitRealm_;
+
+    // Bookkeeping information for debug scope objects.
+    js::UniquePtr<js::DebugEnvironments> debugEnvs_;
+
+    js::SavedStacks savedStacks_;
 
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
@@ -862,6 +837,8 @@ class JS::Realm : public JSCompartment
     // Aggregated output used to collect JSScript hit counts when code coverage
     // is enabled.
     js::coverage::LCovRealm lcovOutput;
+
+    js::RegExpRealm regExps;
 
     js::DtoaCache dtoaCache;
     js::NewProxyCache newProxyCache;
@@ -927,6 +904,24 @@ class JS::Realm : public JSCompartment
                                 size_t* privateData,
                                 size_t* scriptCountsMapArg);
 
+    JS::Zone* zone() {
+        return zone_;
+    }
+    const JS::Zone* zone() const {
+        return zone_;
+    }
+
+    JSRuntime* runtimeFromMainThread() const {
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
+        return runtime_;
+    }
+
+    // Note: Unrestricted access to the runtime from an arbitrary thread
+    // can easily lead to races. Use this method very carefully.
+    JSRuntime* runtimeFromAnyThread() const {
+        return runtime_;
+    }
+
     const JS::RealmCreationOptions& creationOptions() const { return creationOptions_; }
     JS::RealmBehaviors& behaviors() { return behaviors_; }
     const JS::RealmBehaviors& behaviors() const { return behaviors_; }
@@ -987,18 +982,28 @@ class JS::Realm : public JSCompartment
     void finishRoots();
 
     void sweepAfterMinorGC();
+    void sweepDebugEnvironments();
     void sweepObjectRealm();
+    void sweepRegExps();
     void sweepSelfHostingScriptSource();
     void sweepTemplateObjects();
+
+    void sweepObjectGroups() {
+        objectGroups_.sweep();
+    }
 
     void clearScriptCounts();
     void clearScriptNames();
 
     void purge();
 
+    void fixupAfterMovingGC();
     void fixupScriptMapsAfterMovingGC();
 
 #ifdef JSGC_HASH_TABLE_CHECKS
+    void checkObjectGroupTablesAfterMovingGC() {
+        objectGroups_.checkTablesAfterMovingGC();
+    }
     void checkScriptMapsAfterMovingGC();
 #endif
 
@@ -1265,6 +1270,31 @@ class JS::Realm : public JSCompartment
 
     js::jit::JitRealm* jitRealm() {
         return jitRealm_.get();
+    }
+
+    js::DebugEnvironments* debugEnvs() {
+        return debugEnvs_.get();
+    }
+    js::UniquePtr<js::DebugEnvironments>& debugEnvsRef() {
+        return debugEnvs_;
+    }
+
+    js::SavedStacks& savedStacks() {
+        return savedStacks_;
+    }
+
+    // Recompute the probability with which this realm should record
+    // profiling data (stack traces, allocations log, etc.) about each
+    // allocation. We consult the probabilities requested by the Debugger
+    // instances observing us, if any.
+    void chooseAllocationSamplingProbability() {
+        savedStacks_.chooseSamplingProbability(this);
+    }
+
+    void sweepSavedStacks();
+
+    static constexpr size_t offsetOfRegExps() {
+        return offsetof(JS::Realm, regExps);
     }
 };
 

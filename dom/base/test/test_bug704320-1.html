@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+This Test is split into two for Bug 1453396
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 704320-Part1</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="referrerHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript">
+
+//generates URLs to test
+var generateURLArray = (function(from, to){
+  const baseURL = '://example.com/tests/dom/base/test/bug704320.sjs?action=create-1st-level-iframe&scheme-from=';
+  const schemeTo = '&scheme-to=';
+
+  return [
+    from + baseURL + from + schemeTo + to + '&policy=no-referrer-when-downgrade',
+    from + baseURL + from + schemeTo + to + '&policy=no-referrer',
+    from + baseURL + from + schemeTo + to + '&policy=unsafe-url',
+    from + baseURL + from + schemeTo + to + '&policy=origin',
+    from + baseURL + from + schemeTo + to + '&policy=origin-when-cross-origin',
+    from + baseURL + from + schemeTo + to + '&policy=same-origin',
+    from + baseURL + from + schemeTo + to + '&policy=strict-origin',
+    from + baseURL + from + schemeTo + to + '&policy=strict-origin-when-cross-origin',
+  ];
+});
+
+let testIframeUrls = [generateURLArray('http', 'http'),
+                      generateURLArray('https', 'https')];
+
+SimpleTest.waitForExplicitFinish();
+let advance = function(testName) {
+  testsGenerator[testName].next();
+};
+
+let testNames = ['testframeone', 'testframetwo'];
+let isTestFinished = 0;
+
+function checkTestsCompleted() {
+  isTestFinished++;
+  if (isTestFinished == 2) {
+    SimpleTest.finish();
+  }
+}
+let testsGenerator = {};
+SimpleTest.requestLongerTimeout(4);
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It performs all tests in sequence using four iframes.
+ */
+function startTests(testName, testIframeUrls) {
+  testsGenerator[testName] = (function*() {
+    var testframe = document.getElementById(testName);
+    testframe.onload = function() {
+      advance(testName);
+    }
+
+    // load the test frame from testIframeUrls[url]
+    // it will call back into this function via postMessage when it finishes
+    // loading and continue beyond the yield.
+    for(url in testIframeUrls) {
+      yield testframe.src = testIframeUrls[url];
+      // run test and check result for loaded test URL
+      yield checkExpectedGlobalResults(testName);
+    }
+    checkTestsCompleted();
+  })();
+}
+
+for (i = 0; i < testIframeUrls.length; i++) {
+  startTests(testNames[i], testIframeUrls[i]);
+}
+
+</script>
+</head>
+
+<body onload="testsGenerator[testNames[0]].next();
+              testsGenerator[testNames[1]].next();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704320">Mozilla Bug 704320 - HTTP/HTTPS to HTTPS/HTTP</a>
+<p id="display"></p>
+<pre id="content">
+</pre>
+  <iframe id="testframeone"></iframe>
+  <iframe id="testframetwo"></iframe>
+</body>

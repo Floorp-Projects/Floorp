@@ -350,32 +350,32 @@ if (typeof WebAssembly.Global === "function") {
     const Global = WebAssembly.Global;
 
     // These types should work:
-    assertEq(new Global({type: "i32"}) instanceof Global, true);
-    assertEq(new Global({type: "f32"}) instanceof Global, true);
-    assertEq(new Global({type: "f64"}) instanceof Global, true);
+    assertEq(new Global({value: "i32"}) instanceof Global, true);
+    assertEq(new Global({value: "f32"}) instanceof Global, true);
+    assertEq(new Global({value: "f64"}) instanceof Global, true);
 
     // These types should not work:
-    assertErrorMessage(() => new Global({type: "i64"}),   TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global({}),              TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global({type: "fnord"}), TypeError, /bad type for a WebAssembly.Global/);
-    assertErrorMessage(() => new Global(),                TypeError, /Global requires more than 0 arguments/);
+    assertErrorMessage(() => new Global({value: "i64"}),   TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global({}),               TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global({value: "fnord"}), TypeError, /bad type for a WebAssembly.Global/);
+    assertErrorMessage(() => new Global(),                 TypeError, /Global requires more than 0 arguments/);
 
     // Coercion of init value; ".value" accessor
-    assertEq((new Global({type: "i32"}, 3.14)).value, 3);
-    assertEq((new Global({type: "f32"}, { valueOf: () => 33.5 })).value, 33.5);
-    assertEq((new Global({type: "f64"}, "3.25")).value, 3.25);
+    assertEq((new Global({value: "i32"}, 3.14)).value, 3);
+    assertEq((new Global({value: "f32"}, { valueOf: () => 33.5 })).value, 33.5);
+    assertEq((new Global({value: "f64"}, "3.25")).value, 3.25);
 
     // Nothing special about NaN, it coerces just fine
-    assertEq((new Global({type: "i32"}, NaN)).value, 0);
+    assertEq((new Global({value: "i32"}, NaN)).value, 0);
 
     // The default init value is zero.
-    assertEq((new Global({type: "i32"})).value, 0);
-    assertEq((new Global({type: "f32"})).value, 0);
-    assertEq((new Global({type: "f64"})).value, 0);
+    assertEq((new Global({value: "i32"})).value, 0);
+    assertEq((new Global({value: "f32"})).value, 0);
+    assertEq((new Global({value: "f64"})).value, 0);
 
     {
         // "value" is enumerable
-        let x = new Global({type: "i32"});
+        let x = new Global({value: "i32"});
         let s = "";
         for ( let i in x )
             s = s + i + ",";
@@ -386,20 +386,20 @@ if (typeof WebAssembly.Global === "function") {
     assertEq("value" in Global.prototype, true);
 
     // Can't set the value of an immutable global
-    assertErrorMessage(() => (new Global({type: "i32"})).value = 10,
+    assertErrorMessage(() => (new Global({value: "i32"})).value = 10,
                        TypeError,
                        /can't set value of immutable global/);
 
     {
         // Can set the value of a mutable global
-        let g = new Global({type: "i32", mutable: true}, 37);
+        let g = new Global({value: "i32", mutable: true}, 37);
         g.value = 10;
         assertEq(g.value, 10);
     }
 
     {
         // Misc internal conversions
-        let g = new Global({type: "i32"}, 42);
+        let g = new Global({value: "i32"}, 42);
 
         // valueOf
         assertEq(g - 5, 37);
@@ -513,7 +513,7 @@ if (typeof WebAssembly.Global === "function") {
                                                (import "m" "g" (global i32)))`));
 
         // Mutable Global matched to immutable import
-        let gm = new Global({type: "i32", mutable: true}, 42);
+        let gm = new Global({value: "i32", mutable: true}, 42);
         assertErrorMessage(() => new Instance(m1, {m: {g: gm}}),
                            LinkError,
                            mutErr);
@@ -522,7 +522,7 @@ if (typeof WebAssembly.Global === "function") {
                                                (import "m" "g" (global (mut i32))))`));
 
         // Immutable Global matched to mutable import
-        let gi = new Global({type: "i32", mutable: false}, 42);
+        let gi = new Global({value: "i32", mutable: false}, 42);
         assertErrorMessage(() => new Instance(m2, {m: {g: gi}}),
                            LinkError,
                            mutErr);

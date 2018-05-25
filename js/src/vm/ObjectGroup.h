@@ -29,6 +29,7 @@ class HeapTypeSet;
 class AutoClearTypeInferenceStateOnOOM;
 class AutoSweepObjectGroup;
 class CompilerConstraintList;
+class ObjectGroupRealm;
 
 namespace gc {
 void MergeCompartments(JSCompartment* source, JSCompartment* target);
@@ -527,21 +528,22 @@ class ObjectGroup : public gc::TenuredCell
     static bool useSingletonForAllocationSite(JSScript* script, jsbytecode* pc,
                                               const Class* clasp);
 
-    // Static accessors for ObjectGroupCompartment NewTable.
+    // Static accessors for ObjectGroupRealm NewTable.
 
     static ObjectGroup* defaultNewGroup(JSContext* cx, const Class* clasp,
                                         TaggedProto proto,
                                         JSObject* associated = nullptr);
-    static ObjectGroup* lazySingletonGroup(JSContext* cx, const Class* clasp,
-                                           TaggedProto proto);
+    static ObjectGroup* lazySingletonGroup(JSContext* cx, ObjectGroupRealm& realm,
+                                           const Class* clasp, TaggedProto proto);
 
-    static void setDefaultNewGroupUnknown(JSContext* cx, const js::Class* clasp, JS::HandleObject obj);
+    static void setDefaultNewGroupUnknown(JSContext* cx, ObjectGroupRealm& realm,
+                                          const js::Class* clasp, JS::HandleObject obj);
 
 #ifdef DEBUG
     static bool hasDefaultNewGroup(JSObject* proto, const Class* clasp, ObjectGroup* group);
 #endif
 
-    // Static accessors for ObjectGroupCompartment ArrayObjectTable and PlainObjectTable.
+    // Static accessors for ObjectGroupRealm ArrayObjectTable and PlainObjectTable.
 
     enum class NewArrayKind {
         Normal,       // Specialize array group based on its element type.
@@ -561,7 +563,7 @@ class ObjectGroup : public gc::TenuredCell
                                     IdValuePair* properties, size_t nproperties,
                                     NewObjectKind newKind);
 
-    // Static accessors for ObjectGroupCompartment AllocationSiteTable.
+    // Static accessors for ObjectGroupRealm AllocationSiteTable.
 
     // Get a non-singleton group to use for objects created at the specified
     // allocation site.
@@ -589,8 +591,8 @@ class ObjectGroup : public gc::TenuredCell
     static ObjectGroup* defaultNewGroup(JSContext* cx, JSProtoKey key);
 };
 
-// Structure used to manage the groups in a compartment.
-class ObjectGroupCompartment
+// Structure used to manage the groups in a realm.
+class ObjectGroupRealm
 {
   private:
     class NewTable;
@@ -615,7 +617,7 @@ class ObjectGroupCompartment
     class AllocationSiteTable;
 
   private:
-    // Set of default 'new' or lazy groups in the compartment.
+    // Set of default 'new' or lazy groups in the realm.
     NewTable* defaultNewTable = nullptr;
     NewTable* lazyTable = nullptr;
 
@@ -655,13 +657,17 @@ class ObjectGroupCompartment
     // Table for referencing types of objects keyed to an allocation site.
     AllocationSiteTable* allocationSiteTable = nullptr;
 
-    // A single per-compartment ObjectGroup for all calls to StringSplitString.
+    // A single per-realm ObjectGroup for all calls to StringSplitString.
     // StringSplitString is always called from self-hosted code, and conceptually
     // the return object for a string.split(string) operation should have a
     // unified type.  Having a global group for this also allows us to remove
     // the hash-table lookup that would be required if we allocated this group
     // on the basis of call-site pc.
     ReadBarrieredObjectGroup stringSplitStringGroup = {};
+
+  public:
+    // All unboxed layouts in the realm.
+    mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
     // END OF PROPERTIES
 
@@ -673,8 +679,14 @@ class ObjectGroupCompartment
   public:
     struct NewEntry;
 
-    ObjectGroupCompartment() = default;
-    ~ObjectGroupCompartment();
+    ObjectGroupRealm() = default;
+    ~ObjectGroupRealm();
+
+    ObjectGroupRealm(ObjectGroupRealm&) = delete;
+    void operator=(ObjectGroupRealm&) = delete;
+
+    static ObjectGroupRealm& get(ObjectGroup* group);
+    static ObjectGroupRealm& getForNewObject(JSContext* cx);
 
     void replaceAllocationSiteGroup(JSScript* script, jsbytecode* pc,
                                     JSProtoKey kind, ObjectGroup* group);
@@ -693,7 +705,7 @@ class ObjectGroupCompartment
                                 size_t* allocationSiteTables,
                                 size_t* arrayGroupTables,
                                 size_t* plainObjectGroupTables,
-                                size_t* compartmentTables);
+                                size_t* realmTables);
 
     void clearTables();
 
