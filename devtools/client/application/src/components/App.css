@@ -56,8 +56,6 @@ a.disabled:visited {
 .application--empty {
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  line-height: 1.25;
 }
 
 .application:not(.application--empty) {
