@@ -13,7 +13,6 @@ config = {
     "locales_file": "%s/mobile/locales/l10n-changesets.json" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
     "ignore_locales": ["en-US"],
-    'balrog_credentials_file': 'oauth.txt',
     "tools_repo": "https://hg.mozilla.org/build/tools",
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",

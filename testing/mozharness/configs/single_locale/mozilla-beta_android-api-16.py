@@ -15,7 +15,6 @@ config = {
     "locales_dir": "mobile/android/locales",
     "locales_platform": "android-api-16",
     "ignore_locales": ["en-US"],
-    "balrog_credentials_file": "oauth.txt",
     "tools_repo": "https://hg.mozilla.org/build/tools",
     "platform": "android",
     "is_release_or_beta": True,
