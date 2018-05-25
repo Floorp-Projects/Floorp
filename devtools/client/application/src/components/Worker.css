@@ -50,6 +50,11 @@
   white-space: nowrap;
 }
 
+.worker__scope,
+.worker__source-url {
+  -moz-user-select: text;
+}
+
 .worker__meta-name {
   color: var(--grey-50);
   padding-inline-start: 4.5rem;
