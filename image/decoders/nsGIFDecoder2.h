@@ -65,8 +65,12 @@ private:
   ColormapIndexToPixel(uint8_t aIndex);
 
   /// A generator function that performs LZW decompression and yields pixels.
-  template <typename PixelSize> NextPixel<PixelSize>
-  YieldPixel(const uint8_t* aData, size_t aLength, size_t* aBytesReadOut);
+  template <typename PixelSize> Tuple<int32_t, Maybe<WriteState>>
+  YieldPixels(const uint8_t* aData,
+              size_t aLength,
+              size_t* aBytesReadOut,
+              PixelSize* aPixelBlock,
+              int32_t aBlockSize);
 
   /// Checks if we have transparency, either because the header indicates that
   /// there's alpha, or because the frame rect doesn't cover the entire image.
