@@ -51,6 +51,7 @@ a.disabled:visited {
   height: 100vh;
   padding: 0 2rem;
   display: grid;
+  -moz-user-select: none;
 }
 
 .application--empty {
