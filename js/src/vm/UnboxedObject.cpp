@@ -553,6 +553,8 @@ MakeReplacementTemplateObject(JSContext* cx, HandleObjectGroup group, const Unbo
 /* static */ bool
 UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
 {
+    MOZ_ASSERT(cx->realm() == group->realm());
+
     AutoEnterAnalysis enter(cx);
 
     AutoSweepObjectGroup sweep(group);
@@ -570,7 +572,7 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     // slot accesses later on for sites that see converted objects from this
     // group and objects that were allocated using the replacement new group.
     if (layout.newScript()) {
-        replacementGroup = ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
         if (!replacementGroup)
             return false;
 
@@ -595,15 +597,15 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
         RootedScript script(cx, layout.allocationScript());
         jsbytecode* pc = layout.allocationPc();
 
-        replacementGroup = ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto);
+        replacementGroup = ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto);
         if (!replacementGroup)
             return false;
 
         PlainObject* templateObject = &script->getObject(pc)->as<PlainObject>();
         replacementGroup->addDefiniteProperties(cx, templateObject->lastProperty());
 
-        cx->compartment()->objectGroups.replaceAllocationSiteGroup(script, pc, JSProto_Object,
-                                                                   replacementGroup);
+        ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
+        realm.replaceAllocationSiteGroup(script, pc, JSProto_Object, replacementGroup);
 
         // Clear any baseline information at this opcode which might use the old group.
         if (script->hasBaselineScript()) {
@@ -636,8 +638,8 @@ UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group)
     }
 
     ObjectGroup* nativeGroup =
-        ObjectGroupCompartment::makeGroup(cx, &PlainObject::class_, proto,
-                                          group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK);
+        ObjectGroupRealm::makeGroup(cx, &PlainObject::class_, proto,
+                                    group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK);
     if (!nativeGroup)
         return false;
 
@@ -1199,7 +1201,7 @@ CombinePlainObjectProperties(PlainObject* obj, Shape* templateShape,
 }
 
 static size_t
-ComputePlainObjectLayout(JSContext* cx, Shape* templateShape,
+ComputePlainObjectLayout(JSContext* cx, ObjectGroupRealm& realm, Shape* templateShape,
                          UnboxedLayout::PropertyVector& properties)
 {
     // Fill in the names for all the object's properties.
@@ -1218,7 +1220,7 @@ ComputePlainObjectLayout(JSContext* cx, Shape* templateShape,
     // properties, which will allow us to generate better code if the objects
     // have a subtype/supertype relation and are accessed at common sites.
     UnboxedLayout* bestExisting = nullptr;
-    for (UnboxedLayout* existing : cx->compartment()->unboxedLayouts) {
+    for (UnboxedLayout* existing : realm.unboxedLayouts) {
         if (PropertiesAreSuperset(properties, existing)) {
             if (!bestExisting ||
                 existing->properties().length() > bestExisting->properties().length())
@@ -1390,7 +1392,8 @@ js::TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter, Shape* te
             return true;
     }
 
-    layoutSize = ComputePlainObjectLayout(cx, templateShape, properties);
+    ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
+    layoutSize = ComputePlainObjectLayout(cx, realm, templateShape, properties);
 
     // The entire object must be allocatable inline.
     if (UnboxedPlainObject::offsetOfData() + layoutSize > JSObject::MAX_BYTE_SIZE)
@@ -1406,7 +1409,7 @@ js::TryConvertToUnboxedLayout(JSContext* cx, AutoEnterAnalysis& enter, Shape* te
         return false;
 
     // The unboxedLayouts list only tracks layouts for plain objects.
-    cx->compartment()->unboxedLayouts.insertFront(layout.get());
+    realm.unboxedLayouts.insertFront(layout.get());
 
     if (!SetLayoutTraceList(cx, layout.get()))
         return false;
