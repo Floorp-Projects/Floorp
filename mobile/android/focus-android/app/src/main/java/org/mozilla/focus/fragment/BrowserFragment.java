@@ -284,7 +284,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        IWebView webView = getWebView();
+                        final IWebView webView = getWebView();
                         if (webView == null) { return; }
 
                         webView.findAllAsync(s.toString());
@@ -292,6 +292,14 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 }
         );
 
+        ImageButton findInPagePrevious = view.findViewById(R.id.previousResult);
+        findInPagePrevious.setOnClickListener(this);
+
+        ImageButton findInPageNext = view.findViewById(R.id.nextResult);
+        findInPageNext.setOnClickListener(this);
+
+        ImageButton closeFindInPage = view.findViewById(R.id.close_find_in_page);
+        closeFindInPage.setOnClickListener(this);
 
         setBlockingEnabled(session.isBlockingEnabled());
         setShouldRequestDesktop(session.shouldRequestDesktopSite());
@@ -324,6 +332,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 if (menu != null) {
                     menu.updateLoading(loading);
                 }
+
+                hideFindInPage();
             }
         });
 
@@ -777,7 +787,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         manager = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
         downloadBroadcastReceiver = new DownloadBroadcastReceiver(browserContainer, manager);
 
-        IWebView webView = getWebView();
+        final IWebView webView = getWebView();
         if (webView != null) {
             webView.setFindListener(findInPageCoordinator);
         }
@@ -852,7 +862,10 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     }
 
     public boolean onBackPressed() {
-        if (canGoBack()) {
+        if (findInPageView.getVisibility() == View.VISIBLE) {
+            hideFindInPage();
+        }
+        else if (canGoBack()) {
             // Go back in web history
             goBack();
         } else {
@@ -982,7 +995,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.open_in_firefox_focus: {
-
                 sessionManager.moveCustomTabToRegularSessions(session);
 
                 final IWebView webView = getWebView();
@@ -1072,7 +1084,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         SupportUtils.getSumoURLForTopic(getContext(), SupportUtils.SumoTopic.TRACKERS));
                 break;
 
-            case R.id.add_to_homescreen:
+            case R.id.add_to_homescreen: {
                 final IWebView webView = getWebView();
                 if (webView == null) {
                     break;
@@ -1082,6 +1094,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 final String title = webView.getTitle();
                 showAddToHomescreenDialog(url, title);
                 break;
+            }
 
             case R.id.security_info:
                 showSecurityPopUp();
@@ -1093,11 +1106,34 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.find_in_page:
-                    if (findInPageView.getVisibility() == View.GONE) {
-                        findInPageView.setVisibility(View.VISIBLE);
-                        findInPageQuery.requestFocus();
-                    }
+                showFindInPage();
                 break;
+
+            case R.id.nextResult: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    break;
+                }
+
+                webView.findNext(true);
+                break;
+            }
+
+            case R.id.previousResult: {
+                final IWebView webView = getWebView();
+                if (webView == null) {
+                    break;
+                }
+
+                webView.findNext(true);
+                break;
+            }
+
+            case R.id.close_find_in_page: {
+                hideFindInPage();
+
+                break;
+            }
 
             default:
                 throw new IllegalArgumentException("Unhandled menu item in BrowserFragment");
@@ -1273,8 +1309,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         return false;
     }
 
+    private void showFindInPage() {
+        findInPageView.setVisibility(View.VISIBLE);
+        findInPageQuery.requestFocus();
+    }
+
+    private void hideFindInPage() {
+        final IWebView webView = getWebView();
+        if (webView == null) {
+            return;
+        }
+
+
+        webView.clearMatches();
+        findInPageCoordinator.reset();
+        findInPageView.setVisibility(View.GONE);
+        findInPageQuery.setText("");
+        findInPageQuery.clearFocus();
+        ViewUtils.hideKeyboard(findInPageQuery);
+    }
+
     @SuppressLint("SetTextI18n")
-    void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
+    private void updateFindInPageResult(Integer activeMatchOrdinal, Integer numberOfMatches) {
         if (numberOfMatches > 0) {
             findInPageResultTextView.setText(activeMatchOrdinal + "/" + numberOfMatches);
         } else {

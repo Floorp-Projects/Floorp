@@ -34,7 +34,7 @@
         app:layout_constraintEnd_toStartOf="@id/previousResult"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/previousResult"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -43,28 +43,34 @@
         app:layout_constraintEnd_toStartOf="@id/nextResult"
         app:layout_constraintStart_toEndOf="@+id/resultText"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_arrowhead_up" />
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Find previous result"
+        android:src="@drawable/ic_arrowhead_up" />
 
-    <ImageView
+    <ImageButton
         android:id="@+id/nextResult"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/close"
+        app:layout_constraintEnd_toStartOf="@id/close_find_in_page"
         app:layout_constraintStart_toEndOf="@+id/previousResult"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_arrowhead_down" />
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Find next result"
+        android:src="@drawable/ic_arrowhead_down" />
 
-    <ImageView
-        android:id="@+id/close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/close_find_in_page"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginEnd="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/nextResult"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_close" />
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Close find in page results"
+        android:src="@drawable/ic_close" />
 
 </android.support.constraint.ConstraintLayout>
