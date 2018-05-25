@@ -74,9 +74,9 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  * inspector-related actors, including the walker.
  */
 exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
 
     this._onColorPicked = this._onColorPicked.bind(this);
     this._onColorPickCanceled = this._onColorPickCanceled.bind(this);
@@ -92,11 +92,11 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._pageStylePromise = null;
     this._walkerPromise = null;
     this.walker = null;
-    this.tabActor = null;
+    this.targetActor = null;
   },
 
   get window() {
-    return this.tabActor.window;
+    return this.targetActor.window;
   },
 
   getWalker: function(options = {}) {
@@ -109,9 +109,9 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
 
     const window = this.window;
     const domReady = () => {
-      const tabActor = this.tabActor;
+      const targetActor = this.targetActor;
       window.removeEventListener("DOMContentLoaded", domReady, true);
-      this.walker = WalkerActor(this.conn, tabActor, options);
+      this.walker = WalkerActor(this.conn, targetActor, options);
       this.manage(this.walker);
       this.walker.once("destroyed", () => {
         this._walkerPromise = null;
@@ -238,7 +238,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   createEyeDropper: function() {
     this.destroyEyeDropper();
     this._highlighterEnv = new HighlighterEnvironment();
-    this._highlighterEnv.initFromTabActor(this.tabActor);
+    this._highlighterEnv.initFromTargetActor(this.targetActor);
     this._eyeDropper = new EyeDropper(this._highlighterEnv);
   },
 
@@ -266,7 +266,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._eyeDropper.show(this.window.document.documentElement, options);
     this._eyeDropper.once("selected", this._onColorPicked);
     this._eyeDropper.once("canceled", this._onColorPickCanceled);
-    this.tabActor.once("will-navigate", this.destroyEyeDropper);
+    this.targetActor.once("will-navigate", this.destroyEyeDropper);
   },
 
   /**
@@ -279,7 +279,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       this._eyeDropper.hide();
       this._eyeDropper.off("selected", this._onColorPicked);
       this._eyeDropper.off("canceled", this._onColorPickCanceled);
-      this.tabActor.off("will-navigate", this.destroyEyeDropper);
+      this.targetActor.off("will-navigate", this.destroyEyeDropper);
     }
   },
 
@@ -290,7 +290,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * don't render the canvasFrame without throwing any error.
    */
   supportsHighlighters: function() {
-    const doc = this.tabActor.window.document;
+    const doc = this.targetActor.window.document;
     const ns = doc.documentElement.namespaceURI;
 
     // XUL documents do not support insertAnonymousContent().

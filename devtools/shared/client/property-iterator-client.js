@@ -17,7 +17,7 @@ const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
  *        The debugger client parent.
  * @param grip Object
  *        A PropertyIteratorActor grip returned by the protocol via
- *        TabActor.enumProperties request.
+ *        BrowsingContextTargetActor.enumProperties request.
  */
 function PropertyIteratorClient(client, grip) {
   this._grip = grip;

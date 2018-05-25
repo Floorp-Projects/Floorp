@@ -231,19 +231,19 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
  * This actor observes function calls on certain objects or globals.
  */
 exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
     this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
     this._onContentFunctionCall = this._onContentFunctionCall.bind(this);
-    this.tabActor.on("window-ready", this._onGlobalCreated);
-    this.tabActor.on("window-destroyed", this._onGlobalDestroyed);
+    this.targetActor.on("window-ready", this._onGlobalCreated);
+    this.targetActor.on("window-destroyed", this._onGlobalDestroyed);
   },
   destroy: function(conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
-    this.tabActor.off("window-ready", this._onGlobalCreated);
-    this.tabActor.off("window-destroyed", this._onGlobalDestroyed);
+    this.targetActor.off("window-ready", this._onGlobalCreated);
+    this.targetActor.off("window-destroyed", this._onGlobalDestroyed);
     this.finalize();
   },
 
@@ -255,7 +255,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   onCall: null,
 
   /**
-   * Starts waiting for the current tab actor's document global to be
+   * Starts waiting for the current target actor's document global to be
    * created, in order to instrument the specified objects and become
    * aware of everything the content does with them.
    */
@@ -278,7 +278,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
       this.resumeRecording();
     }
     if (performReload) {
-      this.tabActor.window.location.reload();
+      this.targetActor.window.location.reload();
     }
   },
 
@@ -309,7 +309,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
    * Initialize the timestamp epoch used to offset function call timestamps.
    */
   initTimestampEpoch: function() {
-    this._timestampEpoch = this.tabActor.window.performance.now();
+    this._timestampEpoch = this.targetActor.window.performance.now();
   },
 
   /**
@@ -336,7 +336,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   },
 
   /**
-   * Invoked whenever the current tab actor's document global is created.
+   * Invoked whenever the current target actor's document global is created.
    */
   _onGlobalCreated: function({window, id, isTopLevel}) {
     if (!this._initialized) {
@@ -399,7 +399,8 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
         if (self._recording) {
           const type = CallWatcherFront.METHOD_FUNCTION;
           const stack = getStack(name);
-          const timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
+          const now = self.targetActor.window.performance.now();
+          const timestamp = now - self._timestampEpoch;
           subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
             args, result);
         }
@@ -432,8 +433,8 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
           if (self._recording) {
             const type = CallWatcherFront.GETTER_FUNCTION;
             const stack = getStack(name);
-            const timestamp =
-              self.tabActor.window.performance.now() - self._timestampEpoch;
+            const now = self.targetActor.window.performance.now();
+            const timestamp = now - self._timestampEpoch;
             subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
               args, result);
           }
@@ -448,8 +449,8 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
           if (self._recording) {
             const type = CallWatcherFront.SETTER_FUNCTION;
             const stack = getStack(name);
-            const timestamp =
-              self.tabActor.window.performance.now() - self._timestampEpoch;
+            const now = self.targetActor.window.performance.now();
+            const timestamp = now - self._timestampEpoch;
             subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
               args, undefined);
           }
@@ -516,7 +517,7 @@ exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   },
 
   /**
-   * Invoked whenever the current tab actor's inner window is destroyed.
+   * Invoked whenever the current target actor's inner window is destroyed.
    */
   _onGlobalDestroyed: function({window, id, isTopLevel}) {
     if (this._tracedWindowId == id) {

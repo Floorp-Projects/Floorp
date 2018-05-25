@@ -246,7 +246,7 @@ WalkerSearch.prototype = {
       }
     }
 
-    const documents = this.walker.tabActor.windows.map(win=>win.document);
+    const documents = this.walker.targetActor.windows.map(win=>win.document);
 
     // Sort the resulting nodes by order of appearance in the DOM
     resultList.sort((a, b) => {

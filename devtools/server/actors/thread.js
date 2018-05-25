@@ -60,7 +60,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._dbg = null;
     this._gripDepth = 0;
     this._threadLifetimePool = null;
-    this._tabClosed = false;
+    this._parentClosed = false;
     this._scripts = null;
     this._pauseOnDOMEvents = null;
 
@@ -392,10 +392,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       reportError(e, "Got an exception during TA__pauseAndRespond: ");
     }
 
-    // If the browser tab has been closed, terminate the debuggee script
+    // If the parent actor has been closed, terminate the debuggee script
     // instead of continuing. Executing JS after the content window is gone is
     // a bad idea.
-    return this._tabClosed ? null : undefined;
+    return this._parentClosed ? null : undefined;
   },
 
   _makeOnEnterFrame: function({ pauseAndRespond }) {
@@ -1598,7 +1598,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   /**
    * A function called when there's a new source from a thread actor's sources.
-   * Emits `newSource` on the tab actor.
+   * Emits `newSource` on the target actor.
    *
    * @param {SourceActor} source
    */
@@ -1621,7 +1621,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
   /**
    * A function called when there's an updated source from a thread actor' sources.
-   * Emits `updatedSource` on the tab actor.
+   * Emits `updatedSource` on the target actor.
    *
    * @param {SourceActor} source
    */

@@ -402,9 +402,9 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
  * up by calling setup().
  */
 exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
-  initialize: function(conn, tabActor) {
+  initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this.tabActor = tabActor;
+    this.targetActor = targetActor;
 
     this._onContentFunctionCall = this._onContentFunctionCall.bind(this);
 
@@ -431,7 +431,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
   },
 
   /**
-   * Starts waiting for the current tab actor's document global to be
+   * Starts waiting for the current target actor's document global to be
    * created, in order to instrument the Canvas context and become
    * aware of everything the content does with Web Audio.
    *
@@ -448,14 +448,14 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
 
     if (this._initialized) {
       if (reload) {
-        this.tabActor.window.location.reload();
+        this.targetActor.window.location.reload();
       }
       return;
     }
 
     this._initialized = true;
 
-    this._callWatcher = new CallWatcherActor(this.conn, this.tabActor);
+    this._callWatcher = new CallWatcherActor(this.conn, this.targetActor);
     this._callWatcher.onCall = this._onContentFunctionCall;
     this._callWatcher.setup({
       tracedGlobals: AUDIO_GLOBALS,
@@ -466,10 +466,10 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     });
     // Bind to `window-ready` so we can reenable recording on the
     // call watcher
-    this.tabActor.on("window-ready", this._onGlobalCreated);
+    this.targetActor.on("window-ready", this._onGlobalCreated);
     // Bind to the `window-destroyed` event so we can unbind events between
     // the global destruction and the `finalize` cleanup method on the actor.
-    this.tabActor.on("window-destroyed", this._onGlobalDestroyed);
+    this.targetActor.on("window-destroyed", this._onGlobalDestroyed);
   },
 
   /**
@@ -562,9 +562,9 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       // NS_ERROR_FAILURE errors with this silent try/catch.
     }
 
-    this.tabActor.off("window-destroyed", this._onGlobalDestroyed);
-    this.tabActor.off("window-ready", this._onGlobalCreated);
-    this.tabActor = null;
+    this.targetActor.off("window-destroyed", this._onGlobalDestroyed);
+    this.targetActor.off("window-ready", this._onGlobalCreated);
+    this.targetActor = null;
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();

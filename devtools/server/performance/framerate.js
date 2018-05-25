@@ -4,21 +4,21 @@
 "use strict";
 
 /**
- * A very simple utility for monitoring framerate. Takes a `tabActor`
+ * A very simple utility for monitoring framerate. Takes a `targetActor`
  * and monitors framerate over time. The actor wrapper around this
  * can be found at devtools/server/actors/framerate.js
  */
 class Framerate {
-  constructor(tabActor) {
-    this.tabActor = tabActor;
-    this._contentWin = tabActor.window;
+  constructor(targetActor) {
+    this.targetActor = targetActor;
+    this._contentWin = targetActor.window;
     this._onRefreshDriverTick = this._onRefreshDriverTick.bind(this);
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
-    this.tabActor.on("window-ready", this._onGlobalCreated);
+    this.targetActor.on("window-ready", this._onGlobalCreated);
   }
 
   destroy(conn) {
-    this.tabActor.off("window-ready", this._onGlobalCreated);
+    this.targetActor.off("window-ready", this._onGlobalCreated);
     this.stopRecording();
   }
 
@@ -31,7 +31,7 @@ class Framerate {
     }
     this._recording = true;
     this._ticks = [];
-    this._startTime = this.tabActor.docShell.now();
+    this._startTime = this.targetActor.docShell.now();
     this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
   }
 
@@ -82,11 +82,11 @@ class Framerate {
       return;
     }
     this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
-    this._ticks.push(this.tabActor.docShell.now() - this._startTime);
+    this._ticks.push(this.targetActor.docShell.now() - this._startTime);
   }
 
   /**
-   * When the content window for the tab actor is created.
+   * When the content window for the target actor is created.
    */
   _onGlobalCreated(win) {
     if (this._recording) {

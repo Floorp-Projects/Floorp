@@ -147,14 +147,14 @@ RootActor.prototype = {
     // Added in Firefox 40. Indicates that the backend supports registering custom
     // commands through the WebConsoleCommands API.
     webConsoleCommands: true,
-    // Whether root actor exposes tab actors and access to any window.
+    // Whether root actor exposes chrome target actors and access to any window.
     // If allowChromeProcess is true, you can:
     // * get a ChromeActor instance to debug chrome and any non-content
     //   resource via getProcess requests
     // * get a WindowActor instance to debug windows which could be chrome,
     //   like browser windows via getWindow requests
     // If allowChromeProcess is defined, but not true, it means that root actor
-    // no longer expose tab actors, but also that the above requests are
+    // no longer expose chrome target actors, but also that the above requests are
     // forbidden for security reasons.
     get allowChromeProcess() {
       return DebuggerServer.allowChromeProcess;
@@ -169,7 +169,7 @@ RootActor.prototype = {
     // markers, currently in use by the network monitor. Fx45+
     documentLoadingMarkers: true,
     // Whether or not the webextension addon actor have to be connected
-    // to retrieve the extension child process tab actors.
+    // to retrieve the extension child process target actors.
     webExtensionAddonConnect: true,
   },
 
@@ -573,7 +573,7 @@ RootActor.prototype = {
         this._globalActorPool.removeActor(actor);
       }
       if (this._tabActorPool) {
-        // Iterate over TabActor instances to also remove tab actors
+        // Iterate over BrowsingContextTargetActor instances to also remove tab actors
         // created during listTabs for each document.
         this._tabActorPool.forEach(tab => {
           tab.removeActorByName(name);

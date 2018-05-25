@@ -974,12 +974,10 @@ var DebuggerServer = {
    * @param Element frame
    *        The frame element with remote content to connect to.
    * @param function [onDestroy]
-   *        Optional function to invoke when the child process closes
-   *        or the connection shuts down. (Need to forget about the
-   *        related TabActor)
+   *        Optional function to invoke when the child process closes or the connection
+   *        shuts down. (Need to forget about the related target actor.)
    * @return object
-   *         A promise object that is resolved once the connection is
-   *         established.
+   *         A promise object that is resolved once the connection is established.
    */
   connectToFrame(connection, frame, onDestroy, {addonId} = {}) {
     return new Promise(resolve => {

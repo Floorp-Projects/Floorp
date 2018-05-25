@@ -2596,10 +2596,10 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     return this.childWindowPool;
   },
 
-  initialize(conn, tabActor) {
+  initialize(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
-    this.parentActor = tabActor;
+    this.parentActor = targetActor;
 
     this.childActorPool = new Map();
     this.childWindowPool = new Set();
@@ -2618,7 +2618,7 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     Services.obs.addObserver(this, "inner-window-destroyed");
     this.onPageChange = this.onPageChange.bind(this);
 
-    const handler = tabActor.chromeEventHandler;
+    const handler = targetActor.chromeEventHandler;
     handler.addEventListener("pageshow", this.onPageChange, true);
     handler.addEventListener("pagehide", this.onPageChange, true);
 

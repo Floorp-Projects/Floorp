@@ -96,7 +96,7 @@ function attachThread(toolbox) {
     });
   };
 
-  if (target.isTabActor) {
+  if (target.isBrowsingContext) {
     // Attaching a tab, a browser process, or a WebExtensions add-on.
     target.activeTab.attachThread(threadOptions, handleResponse);
   } else if (target.isAddon) {

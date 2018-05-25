@@ -122,7 +122,7 @@ var onConnectionReady = async function([aType, aTraits]) {
   const gParent = document.getElementById("globalActors");
 
   // Build the Remote Process button
-  // If Fx<39, tab actors were used to be exposed on RootActor
+  // If Fx<39, chrome target actors were used to be exposed on RootActor
   // but in Fx>=39, chrome is debuggable via getProcess() and ChromeActor
   if (globals.consoleActor || gClient.mainRoot.traits.allowChromeProcess) {
     const a = document.createElement("a");
@@ -163,8 +163,8 @@ var onConnectionReady = async function([aType, aTraits]) {
 function buildAddonLink(addon, parent) {
   const a = document.createElement("a");
   a.onclick = async function() {
-    const isTabActor = addon.isWebExtension;
-    openToolbox(addon, true, "webconsole", isTabActor);
+    const isBrowsingContext = addon.isWebExtension;
+    openToolbox(addon, true, "webconsole", isBrowsingContext);
   };
 
   a.textContent = addon.name;
@@ -223,12 +223,12 @@ function handleConnectionTimeout() {
  * The user clicked on one of the buttons.
  * Opens the toolbox.
  */
-function openToolbox(form, chrome = false, tool = "webconsole", isTabActor) {
+function openToolbox(form, chrome = false, tool = "webconsole", isBrowsingContext) {
   const options = {
     form: form,
     client: gClient,
     chrome: chrome,
-    isTabActor: isTabActor
+    isBrowsingContext: isBrowsingContext
   };
   TargetFactory.forRemoteTab(options).then((target) => {
     const hostType = Toolbox.HostType.WINDOW;

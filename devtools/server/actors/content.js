@@ -5,20 +5,23 @@
 "use strict";
 
 var { Cr } = require("chrome");
-var { TabActor, tabPrototype } = require("devtools/server/actors/tab");
+var {
+  BrowsingContextTargetActor,
+  browsingContextTargetPrototype
+} = require("devtools/server/actors/targets/browsing-context");
 
 const { extend } = require("devtools/shared/extend");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
-const { tabSpec } = require("devtools/shared/specs/tab");
+const { browsingContextTargetSpec } = require("devtools/shared/specs/targets/browsing-context");
 
 /**
- * Tab actor for documents living in a child process.
+ * Target actor for documents living in a child process.
  *
- * Depends on TabActor, defined in tab.js.
+ * Depends on BrowsingContextTargetActor, defined in browsing-context.js.
  */
 
 /**
- * Creates a tab actor for handling requests to the single tab, like
+ * Creates a target actor for handling requests to the single tab, like
  * attaching and detaching. ContentActor respects the actor factories
  * registered with DebuggerServer.addTabActor.
  *
@@ -28,20 +31,20 @@ const { tabSpec } = require("devtools/shared/specs/tab");
  *        The content script global holding |content| and |docShell| properties for a tab.
  * @param prefix
  *        the prefix used in protocol to create IDs for each actor.
- *        Used as ID identifying this particular TabActor from the parent process.
+ *        Used as ID identifying this particular target actor from the parent process.
  */
 
 /**
  * Protocol.js expects only the prototype object, and does not maintain the prototype
  * chain when it constructs the ActorClass. For this reason we are using `extend` to
- * maintain the properties of TabActor.prototype
- * */
+ * maintain the properties of BrowsingContextTargetActor.prototype
+ */
 
-const contentPrototype = extend({}, tabPrototype);
+const contentPrototype = extend({}, browsingContextTargetPrototype);
 
 contentPrototype.initialize = function(connection, chromeGlobal) {
   this._chromeGlobal = chromeGlobal;
-  TabActor.prototype.initialize.call(this, connection, chromeGlobal);
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection, chromeGlobal);
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
   this._chromeGlobal.addMessageListener("debug:form", this._sendForm);
@@ -75,7 +78,7 @@ contentPrototype.exit = function() {
     this._sendForm = null;
   }
 
-  TabActor.prototype.exit.call(this);
+  BrowsingContextTargetActor.prototype.exit.call(this);
 
   this._chromeGlobal = null;
 };
@@ -88,4 +91,4 @@ contentPrototype._sendForm = function() {
   this._chromeGlobal.sendAsyncMessage("debug:form", this.form());
 };
 
-exports.ContentActor = ActorClassWithSpec(tabSpec, contentPrototype);
+exports.ContentActor = ActorClassWithSpec(browsingContextTargetSpec, contentPrototype);

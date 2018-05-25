@@ -14,7 +14,7 @@ add_task(async function() {
   const client = await startTestDebuggerServer("promises-actor-test");
   const chromeActors = await getChromeActors(client);
 
-  // We have to attach the chrome TabActor before playing with the PromiseActor
+  // We have to attach the chrome target actor before playing with the PromiseActor
   await attachTab(client, chromeActors);
   await testAttach(client, chromeActors);
 

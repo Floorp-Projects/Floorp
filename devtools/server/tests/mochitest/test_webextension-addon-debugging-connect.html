@@ -45,7 +45,7 @@ async function test_connect_addon(oopMode) {
     form: addonActor,
     client,
     chrome: true,
-    isTabActor: true,
+    isBrowsingContext: true,
   });
   is(addonTarget.form.isOOP, oopMode,
      "Got the expected oop mode in the webextension actor form");

@@ -658,69 +658,69 @@ where each *tab* describes a single open tab, and *selected* is the index in the
 Each *tab* has the form:
 
 ```
-{ "actor":<tabActor>, "title":<title>, "url":<URL> }
+{ "actor":<targetActor>, "title":<title>, "url":<URL> }
 ```
 
-where *tabActor* is the name of an actor representing the tab, and *title* and *URL* are the title and URL of the web page currently visible in that tab. This form may have other properties describing other tab-specific actors.
+where *targetActor* is the name of an actor representing the tab, and *title* and *URL* are the title and URL of the web page currently visible in that tab. This form may have other properties describing other tab-specific actors.
 
-To attach to a *tabActor*, a client sends a message of the form:
-
-```
-{ "to":<tabActor>, "type":"attach" }
-```
-
-The tab actor replies:
+To attach to a *targetActor*, a client sends a message of the form:
 
 ```
-{ "from":<tabActor>, "type":"tabAttached", "threadActor":<tabThreadActor> }
+{ "to":<targetActor>, "type":"attach" }
+```
+
+The target actor replies:
+
+```
+{ "from":<targetActor>, "type":"tabAttached", "threadActor":<tabThreadActor> }
 ```
 
 where *tabThreadActor* is the name of a thread-like actor representing the tab's current content. If the user navigates the tab, *tabThreadActor* switches to the new content; we do not create a separate thread-like actor each page the tab visits.
 
-If the user closes the tab before the client attaches to it, *tabActor* replies:
+If the user closes the tab before the client attaches to it, *targetActor* replies:
 
 ```
-{ "from":<tabActor>, "type":"exited" }
+{ "from":<targetActor>, "type":"exited" }
 ```
 
 When the client is no longer interested in interacting with the tab, the client can request:
 
 ```
-{ "to":<tabActor>, "type":"detach" }
+{ "to":<targetActor>, "type":"detach" }
 ```
 
-The *tabActor* replies:
+The *targetActor* replies:
 
 ```
-{ "from":<tabActor>, "type":"detached" }
+{ "from":<targetActor>, "type":"detached" }
 ```
 
-If the client was not already attached to *tabActor*, *tabActor* sends an error reply of the form:
+If the client was not already attached to *targetActor*, *targetActor* sends an error reply of the form:
 
 ```
-{ "from":<tabActor>, "error":"wrongState" }
+{ "from":<targetActor>, "error":"wrongState" }
 ```
 
-While the client is attached, *tabActor* sends notifications to the client whenever the user navigates the tab to a new page. When navigation begins, *tabActor* sends a packet of the form:
+While the client is attached, *targetActor* sends notifications to the client whenever the user navigates the tab to a new page. When navigation begins, *targetActor* sends a packet of the form:
 
 ```
-{ "from":<tabActor>, "type":"tabNavigated", "state":"start",
+{ "from":<targetActor>, "type":"tabNavigated", "state":"start",
   "url":<newURL> }
 ```
 
-This indicates that the tab has begun navigating to *newURL*; JavaScript execution in the tab's prior page is suspended. When navigation is complete, *tabActor* sends a packet of the form:
+This indicates that the tab has begun navigating to *newURL*; JavaScript execution in the tab's prior page is suspended. When navigation is complete, *targetActor* sends a packet of the form:
 
 ```
-{ "from":<tabActor>, "type":"tabNavigated", "state":"stop",
+{ "from":<targetActor>, "type":"tabNavigated", "state":"stop",
   "url":<newURL>, "title":<newTitle> }
 ```
 
 where *newURL* and *newTitle* are the URL and title of the page the tab is now showing. The *tabThreadActor* given in the response to the original `"attach"` packet is now debugging the new page's code.
 
-If the user closes a tab to which the client is attached, its *tabActor* sends a notification packet of the form:
+If the user closes a tab to which the client is attached, its *targetActor* sends a notification packet of the form:
 
 ```
-{ "from":<tabActor>, "type":"tabDetached" }
+{ "from":<targetActor>, "type":"tabDetached" }
 ```
 
 The client is now detached from the tab.

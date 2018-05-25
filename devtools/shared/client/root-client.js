@@ -193,7 +193,7 @@ RootClient.prototype = {
   },
 
   /**
-   * Fetch the TabActor for the currently selected tab, or for a specific
+   * Fetch the target actor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
    * @param [optional] object filter
