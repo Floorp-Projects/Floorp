@@ -14,7 +14,7 @@ from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
     generic_worker_add_artifacts,
-    docker_worker_add_gecko_vcs_env_vars,
+    generic_worker_hg_commands,
     docker_worker_add_tooltool,
     support_vcs_checkout,
 )
@@ -87,7 +87,7 @@ def generic_worker_spidermonkey(config, job, taskdesc):
     worker = taskdesc['worker']
 
     generic_worker_add_artifacts(config, job, taskdesc)
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker.setdefault('env', {})
     env.update({
@@ -115,20 +115,17 @@ def generic_worker_spidermonkey(config, job, taskdesc):
         # Don't allow untested configurations yet
         raise Exception("spidermonkey-rust-bindings is not a supported configuration")
 
-    hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
-    hg_command.append('robustcheckout')
-    hg_command.extend(['--sharebase', 'y:\\hg-shared'])
-    hg_command.append('--purge')
-    hg_command.extend(['--upstream', 'https://hg.mozilla.org/mozilla-unified'])
-    hg_command.extend(['--revision', env['GECKO_HEAD_REV']])
-    hg_command.append(env['GECKO_HEAD_REPOSITORY'])
-    hg_command.append('.\\src')
+    hg_command = generic_worker_hg_commands(
+        'https://hg.mozilla.org/mozilla-unified',
+        env['GECKO_HEAD_REPOSITORY'],
+        env['GECKO_HEAD_REV'],
+        r'.\src',
+    )[0]
 
     command = ['c:\\mozilla-build\\msys\\bin\\bash.exe '  # string concat
                '"./src/taskcluster/scripts/builder/%s"' % script]
 
-    worker['command'] = []
-    worker['command'].extend([
-        ' '.join(hg_command),
-        ' '.join(command)
-    ])
+    worker['command'] = [
+        hg_command,
+        ' '.join(command),
+    ]

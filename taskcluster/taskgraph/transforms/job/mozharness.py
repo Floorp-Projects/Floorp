@@ -19,11 +19,11 @@ from voluptuous import Required, Optional, Any
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_workspace_cache,
-    docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
     generic_worker_add_artifacts,
+    generic_worker_hg_commands,
     support_vcs_checkout,
 )
 
@@ -238,8 +238,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     worker = taskdesc['worker']
 
     generic_worker_add_artifacts(config, job, taskdesc)
-
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -292,43 +291,20 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--custom-build-variant')
         mh_command.append(run['custom-build-variant-cfg'])
 
-    def checkout_repo(base_repo, head_repo, head_rev, path):
-        hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
-        hg_command.append('robustcheckout')
-        hg_command.extend(['--sharebase', 'y:\\hg-shared'])
-        hg_command.append('--purge')
-        hg_command.extend(['--upstream', base_repo])
-        hg_command.extend(['--revision', head_rev])
-        hg_command.append(head_repo)
-        hg_command.append(path)
-
-        logging_command = [
-            b":: TinderboxPrint:<a href={source_repo}/rev/{revision} "
-            b"title='Built from {repo_name} revision {revision}'>{revision}</a>\n".format(
-                revision=head_rev,
-                source_repo=head_repo,
-                repo_name=head_repo.split('/')[-1],
-            )]
-
-        return [
-            ' '.join(hg_command),
-            ' '.join(logging_command),
-        ]
-
-    hg_commands = checkout_repo(
+    hg_commands = generic_worker_hg_commands(
         base_repo=env['GECKO_BASE_REPOSITORY'],
         head_repo=env['GECKO_HEAD_REPOSITORY'],
         head_rev=env['GECKO_HEAD_REV'],
-        path='.\\build\\src')
+        path=r'.\build\src',
+    )
 
     if run['comm-checkout']:
         hg_commands.extend(
-            checkout_repo(
+            generic_worker_hg_commands(
                 base_repo=env['COMM_BASE_REPOSITORY'],
                 head_repo=env['COMM_HEAD_REPOSITORY'],
                 head_rev=env['COMM_HEAD_REV'],
-                path='.\\build\\src\\comm')
-        )
+                path=r'.\build\src\comm'))
 
     worker['command'] = []
     if taskdesc.get('needs-sccache'):

@@ -14,9 +14,9 @@ from voluptuous import Optional, Required, Any
 
 from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
-    docker_worker_add_gecko_vcs_env_vars,
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
+    generic_worker_hg_commands,
     support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
@@ -126,7 +126,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
         docker_worker_add_artifacts(config, job, taskdesc)
 
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc, sparse=True)
 
     env = worker['env']
@@ -196,7 +195,7 @@ def windows_toolchain(config, job, taskdesc):
     }]
     worker['chain-of-trust'] = True
 
-    docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
+    support_vcs_checkout(config, job, taskdesc)
 
     env = worker['env']
     env.update({
@@ -205,15 +204,11 @@ def windows_toolchain(config, job, taskdesc):
         'MOZ_AUTOMATION': '1',
     })
 
-    hg = r'c:\Program Files\Mercurial\hg.exe'
-    hg_command = ['"{}"'.format(hg)]
-    hg_command.append('robustcheckout')
-    hg_command.extend(['--sharebase', 'y:\\hg-shared'])
-    hg_command.append('--purge')
-    hg_command.extend(['--upstream', 'https://hg.mozilla.org/mozilla-unified'])
-    hg_command.extend(['--revision', '%GECKO_HEAD_REV%'])
-    hg_command.append('%GECKO_HEAD_REPOSITORY%')
-    hg_command.append('.\\build\\src')
+    hg_command = generic_worker_hg_commands(
+        'https://hg.mozilla.org/mozilla-unified',
+        env['GECKO_HEAD_REPOSITORY'],
+        env['GECKO_HEAD_REV'],
+        r'.\build\src')[0]
 
     # Use `mach` to invoke python scripts so in-tree libraries are available.
     if run['script'].endswith('.py'):
@@ -225,7 +220,7 @@ def windows_toolchain(config, job, taskdesc):
 
     bash = r'c:\mozilla-build\msys\bin\bash'
     worker['command'] = [
-        ' '.join(hg_command),
+        hg_command,
         # do something intelligent.
         r'{} build/src/taskcluster/scripts/misc/{}{}'.format(
             bash, run['script'], args)

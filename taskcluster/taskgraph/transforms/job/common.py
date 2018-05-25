@@ -59,25 +59,6 @@ def generic_worker_add_artifacts(config, job, taskdesc):
     add_artifacts(config, job, taskdesc, path=get_artifact_prefix(taskdesc))
 
 
-def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
-    """Add the GECKO_BASE_* and GECKO_HEAD_* env vars to the worker."""
-    env = taskdesc['worker'].setdefault('env', {})
-    env.update({
-        'GECKO_BASE_REPOSITORY': config.params['base_repository'],
-        'GECKO_HEAD_REF': config.params['head_rev'],
-        'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
-        'GECKO_HEAD_REV': config.params['head_rev'],
-    })
-
-    if 'comm_base_repository' in config.params:
-        taskdesc['worker']['env'].update({
-            'COMM_BASE_REPOSITORY': config.params['comm_base_repository'],
-            'COMM_HEAD_REF': config.params['comm_head_rev'],
-            'COMM_HEAD_REPOSITORY': config.params['comm_head_repository'],
-            'COMM_HEAD_REV': config.params['comm_head_rev'],
-        })
-
-
 def support_vcs_checkout(config, job, taskdesc, sparse=False):
     """Update a job/task with parameters to enable a VCS checkout.
 
@@ -130,6 +111,34 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
     # only some worker platforms have taskcluster-proxy enabled
     if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
         taskdesc['worker']['taskcluster-proxy'] = True
+
+
+def generic_worker_hg_commands(base_repo, head_repo, head_rev, path):
+    """Obtain commands needed to obtain a Mercurial checkout on generic-worker.
+
+    Returns two command strings. One performs the checkout. Another logs.
+    """
+    args = [
+        r'"c:\Program Files\Mercurial\hg.exe"',
+        'robustcheckout',
+        '--sharebase', r'y:\hg-shared',
+        '--purge',
+        '--upstream', base_repo,
+        '--revision', head_rev,
+        head_repo,
+        path,
+    ]
+
+    logging_args = [
+        b":: TinderboxPrint:<a href={source_repo}/rev/{revision} "
+        b"title='Built from {repo_name} revision {revision}'>{revision}</a>"
+        b"\n".format(
+            revision=head_rev,
+            source_repo=head_repo,
+            repo_name=head_repo.split('/')[-1]),
+    ]
+
+    return ' '.join(args), ' '.join(logging_args)
 
 
 def docker_worker_setup_secrets(config, job, taskdesc):

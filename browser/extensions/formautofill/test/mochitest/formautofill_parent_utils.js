@@ -31,6 +31,14 @@ var ParentUtils = {
           return;
         }
 
+        // every notification type should have the collection name.
+        let allowedNames = [ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME];
+        assert.ok(allowedNames.includes(subject.wrappedJSObject.collectionName),
+                  "should include the collection name");
+        // every notification except removeAll should have a guid.
+        if (data != "removeAll") {
+          assert.ok(subject.wrappedJSObject.guid, "should have a guid");
+        }
         Services.obs.removeObserver(observer, obsTopic);
         resolve();
       }, topic);
