@@ -9,6 +9,8 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
 import android.arch.lifecycle.Observer;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -1183,6 +1185,15 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             Context context = getActivity();
             if (context == null) {
                 return false;
+            }
+
+            if (session.isCustomTab()) {
+                ClipboardManager clipBoard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipBoard != null) {
+                    final Uri uri = Uri.parse(getUrl());
+                    clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri));
+                    Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show();
+                }
             }
 
             AutocompleteQuickAddPopup autocompletePopup = new AutocompleteQuickAddPopup(context, urlView.getText().toString());
