@@ -46,10 +46,16 @@ XPCOMUtils.defineLazyProxy(this, "contextMenu", () => {
   return new ContextMenu(global);
 });
 
+XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
+  return new FormSubmitObserver(content, this);
+}, {
+  // stub QI
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference])
+});
+
 Services.els.addSystemEventListener(global, "contextmenu", contextMenu, false);
 
-// Load the form validation popup handler
-var formSubmitObserver = new FormSubmitObserver(content, this);
+Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
 
 addMessageListener("RemoteLogins:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
