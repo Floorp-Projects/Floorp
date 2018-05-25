@@ -2171,7 +2171,7 @@ WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
     RootedObject obj(cx, &args[0].toObject());
 
     RootedValue typeVal(cx);
-    if (!JS_GetProperty(cx, obj, "type", &typeVal))
+    if (!JS_GetProperty(cx, obj, "value", &typeVal))
         return false;
 
     RootedString typeStr(cx, ToString(cx, typeVal));
