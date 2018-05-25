@@ -4,6 +4,13 @@
 
 .worker-list-empty {
   max-width: 65rem;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  color: var(--theme-toolbar-color);
+}
+
+.worker-list-empty__title {
+  font-size: 1.4rem;
 }
 
 .worker-list-empty__tips {
