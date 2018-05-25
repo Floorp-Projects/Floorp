@@ -57,13 +57,6 @@ public:
 
   NS_IMETHOD GetPIPNSSBundleString(const char* name,
                                    nsAString& outString) = 0;
-  NS_IMETHOD PIPBundleFormatStringFromName(const char* name,
-                                           const char16_t** params,
-                                           uint32_t numParams,
-                                           nsAString& outString) = 0;
-
-  NS_IMETHOD GetNSSBundleString(const char* name,
-                                nsAString& outString) = 0;
 
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
@@ -117,11 +110,6 @@ public:
 
   NS_IMETHOD GetPIPNSSBundleString(const char* name,
                                    nsAString& outString) override;
-  NS_IMETHOD PIPBundleFormatStringFromName(const char* name,
-                                           const char16_t** params,
-                                           uint32_t numParams,
-                                           nsAString& outString) override;
-  NS_IMETHOD GetNSSBundleString(const char* name, nsAString& outString) override;
   NS_IMETHOD LogoutAuthenticatedPK11() override;
 
 #ifdef DEBUG
@@ -195,7 +183,6 @@ private:
 
   // The following members are accessed from more than one thread:
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
-  nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   bool mNSSInitialized;
 #ifdef DEBUG
   nsString mTestBuiltInRootHash;
