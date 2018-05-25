@@ -18,8 +18,6 @@ var _immutable = require("devtools/client/shared/vendor/immutable");
 
 var I = _interopRequireWildcard(_immutable);
 
-var _reselect = require("devtools/client/debugger/new/dist/vendors").vendored["reselect"];
-
 var _lodash = require("devtools/client/shared/vendor/lodash");
 
 var _Breakpoint = require("./Breakpoint");
@@ -38,10 +36,6 @@ var _source = require("../../utils/source");
 
 var _selectors = require("../../selectors/index");
 
-var _pause = require("../../utils/pause/index");
-
-var _breakpoint = require("../../utils/breakpoint/index");
-
 var _BreakpointsContextMenu = require("./BreakpointsContextMenu");
 
 var _BreakpointsContextMenu2 = _interopRequireDefault(_BreakpointsContextMenu);
@@ -53,16 +47,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function isCurrentlyPausedAtBreakpoint(frame, why, breakpoint) {
-  if (!frame || !(0, _pause.isInterrupted)(why)) {
-    return false;
-  }
-
-  const bpId = (0, _breakpoint.makeLocationId)(breakpoint.location);
-  const pausedId = (0, _breakpoint.makeLocationId)(frame.location);
-  return bpId === pausedId;
-}
 
 function createExceptionOption(label, value, onChange, className) {
   return _react2.default.createElement("div", {
@@ -106,7 +90,7 @@ class Breakpoints extends _react.Component {
   }
 
   selectBreakpoint(breakpoint) {
-    this.props.selectLocation(breakpoint.location);
+    this.props.selectSpecificLocation(breakpoint.location);
   }
 
   removeBreakpoint(event, breakpoint) {
@@ -116,12 +100,16 @@ class Breakpoints extends _react.Component {
 
   renderBreakpoint(breakpoint) {
     const {
-      selectedSource
+      selectedSource,
+      why,
+      frame
     } = this.props;
     return _react2.default.createElement(_Breakpoint2.default, {
       key: breakpoint.locationId,
       breakpoint: breakpoint,
       selectedSource: selectedSource,
+      why: why,
+      frame: frame,
       onClick: () => this.selectBreakpoint(breakpoint),
       onContextMenu: e => (0, _BreakpointsContextMenu2.default)(_objectSpread({}, this.props, {
         breakpoint,
@@ -188,24 +176,10 @@ class Breakpoints extends _react.Component {
 
 }
 
-function updateLocation(sources, frame, why, bp) {
-  const source = (0, _selectors.getSourceInSources)(sources, bp.location.sourceId);
-  const isCurrentlyPaused = isCurrentlyPausedAtBreakpoint(frame, why, bp);
-  const locationId = (0, _breakpoint.makeLocationId)(bp.location);
-
-  const localBP = _objectSpread({}, bp, {
-    locationId,
-    isCurrentlyPaused,
-    source
-  });
-
-  return localBP;
-}
-
-const _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _selectors.getSources, _selectors.getTopFrame, _selectors.getPauseReason, (breakpoints, sources, frame, why) => breakpoints.map(bp => updateLocation(sources, frame, why, bp)).filter(bp => bp.source && !bp.source.isBlackBoxed));
-
 const mapStateToProps = state => ({
-  breakpoints: _getBreakpoints(state),
+  breakpoints: (0, _selectors.getMappedBreakpoints)(state),
+  frame: (0, _selectors.getTopFrame)(state),
+  why: (0, _selectors.getPauseReason)(state),
   selectedSource: (0, _selectors.getSelectedSource)(state)
 });
 

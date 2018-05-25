@@ -9,6 +9,8 @@ var _parser = require("../../../workers/parser/index");
 
 var _locColumn = require("./locColumn");
 
+var _rangeMetadata = require("./rangeMetadata");
+
 var _findGeneratedBindingFromPosition = require("./findGeneratedBindingFromPosition");
 
 var _buildGeneratedBindingList = require("./buildGeneratedBindingList");
@@ -30,10 +32,11 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
   }
 
   const generatedAstBindings = (0, _buildGeneratedBindingList.buildGeneratedBindingList)(scopes, generatedAstScopes, frame.this);
+  const originalRanges = await (0, _rangeMetadata.loadRangeMetadata)(source, frame, originalAstScopes, sourceMaps);
   const {
     mappedOriginalScopes,
     expressionLookup
-  } = await mapOriginalBindingsToGenerated(source, originalAstScopes, generatedAstBindings, client, sourceMaps);
+  } = await mapOriginalBindingsToGenerated(source, originalRanges, originalAstScopes, generatedAstBindings, client, sourceMaps);
   const mappedGeneratedScopes = generateClientScope(scopes, mappedOriginalScopes);
   return isReliableScope(mappedGeneratedScopes) ? {
     mappings: expressionLookup,
@@ -41,7 +44,7 @@ async function buildMappedScopes(source, frame, scopes, sourceMaps, client) {
   } : null;
 }
 
-async function mapOriginalBindingsToGenerated(source, originalAstScopes, generatedAstBindings, client, sourceMaps) {
+async function mapOriginalBindingsToGenerated(source, originalRanges, originalAstScopes, generatedAstBindings, client, sourceMaps) {
   const expressionLookup = {};
   const mappedOriginalScopes = [];
   const cachedSourceMaps = batchScopeMappings(originalAstScopes, source, sourceMaps);
@@ -51,7 +54,7 @@ async function mapOriginalBindingsToGenerated(source, originalAstScopes, generat
 
     for (const name of Object.keys(item.bindings)) {
       const binding = item.bindings[name];
-      const result = await findGeneratedBinding(cachedSourceMaps, client, source, name, binding, generatedAstBindings);
+      const result = await findGeneratedBinding(cachedSourceMaps, client, source, name, binding, originalRanges, generatedAstBindings);
 
       if (result) {
         generatedBindings[name] = result.grip;
@@ -213,7 +216,14 @@ function generateClientScope(scopes, originalScopes) {
   return result;
 }
 
-async function findGeneratedBinding(sourceMaps, client, source, name, originalBinding, generatedAstBindings) {
+function hasValidIdent(range, pos) {
+  return range.type === "match" || // For declarations, we allow the range on the identifier to be a
+  // more general "contains" to increase the chances of a match.
+  pos.type !== "ref" && range.type === "contains";
+} // eslint-disable-next-line complexity
+
+
+async function findGeneratedBinding(sourceMaps, client, source, name, originalBinding, originalRanges, generatedAstBindings) {
   // If there are no references to the implicits, then we have no way to
   // even attempt to map it back to the original since there is no location
   // data to use. Bail out instead of just showing it as unmapped.
@@ -227,27 +237,43 @@ async function findGeneratedBinding(sourceMaps, client, source, name, originalBi
   let genContent = null;
 
   for (const pos of refs) {
-    if (originalBinding.type === "import") {
-      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
-    } else {
-      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForStandardBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+    const range = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos);
+
+    if (range && hasValidIdent(range, pos)) {
+      if (originalBinding.type === "import") {
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+      } else {
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForStandardBinding)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+      }
     }
 
     if ((pos.type === "class-decl" || pos.type === "class-inner") && source.contentType && source.contentType.match(/\/typescript/)) {
-      // Resolve to first binding in the range
-      const declContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForNormalDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+      const declRange = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos.declaration);
 
-      if (declContent) {
-        // Prefer the declaration mapping in this case because TS sometimes
-        // maps class declaration names to "export.Foo = Foo;" or to
-        // the decorator logic itself
-        genContent = declContent;
+      if (declRange && declRange.type !== "multiple") {
+        // Resolve to first binding in the range
+        const declContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForNormalDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+
+        if (declContent) {
+          // Prefer the declaration mapping in this case because TS sometimes
+          // maps class declaration names to "export.Foo = Foo;" or to
+          // the decorator logic itself
+          genContent = declContent;
+        }
       }
     }
 
     if (!genContent && (pos.type === "import-decl" || pos.type === "import-ns-decl")) {
-      // match the import declaration location
-      genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+      const declRange = (0, _rangeMetadata.findMatchingRange)(originalRanges, pos.declaration); // The import declaration should have an original position mapping,
+      // but otherwise we don't really have preferences on the range type
+      // because it can have multiple bindings, but we do want to make sure
+      // that all of the bindings that match the range are part of the same
+      // import declaration.
+
+      if (declRange && declRange.singleDeclaration) {
+        // match the import declaration location
+        genContent = await (0, _findGeneratedBindingFromPosition.findGeneratedBindingForImportDeclaration)(sourceMaps, client, source, pos, name, originalBinding.type, generatedAstBindings);
+      }
     }
 
     if (genContent) {

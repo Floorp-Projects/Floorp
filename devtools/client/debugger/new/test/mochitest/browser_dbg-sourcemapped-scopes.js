@@ -46,7 +46,7 @@ add_task(async function() {
     "Block",
     ["three", "5"],
     ["two", "4"],
-    "Block",
+    "Function Body",
     ["three", "3"],
     ["two", "2"],
     "root",
@@ -73,7 +73,7 @@ add_task(async function() {
     ["aConst", '"const2"'],
     ["aLet", '"let2"'],
     "Outer:_Outer()",
-    "Block",
+    "Function Body",
     ["aConst", '"const1"'],
     ["aLet", '"let1"'],
     "Outer()",
@@ -86,7 +86,7 @@ add_task(async function() {
     "babel-line-start-bindings-es6",
     { line: 19, column: 4 },
     [
-      "Block",
+      "Function Body",
       ["<this>", "{\u2026}"],
       ["one", "1"],
       ["two", "2"],
@@ -102,7 +102,7 @@ add_task(async function() {
     "babel-this-arguments-bindings",
     { line: 4, column: 4 },
     [
-      "Block",
+      "Function Body",
       ["<this>", '"this-value"'],
       ["arrow", "undefined"],
       "fn",
@@ -123,7 +123,7 @@ add_task(async function() {
       "arrow",
       ["<this>", '"this-value"'],
       ["argArrow", '"arrow-arg"'],
-      "Block",
+      "Function Body",
       "arrow()",
       "fn",
       ["arg", '"arg-value"'],
@@ -158,12 +158,12 @@ add_task(async function() {
   ]);
 
   await breakpointScopes(dbg, "babel-classes", { line: 12, column: 6 }, [
-    "Block",
+    "Function Body",
     ["three", "3"],
     ["two", "2"],
     "Class",
     "Another()",
-    "Block",
+    "Function Body",
     "Another()",
     ["one", "1"],
     "Thing()",
@@ -174,7 +174,7 @@ add_task(async function() {
   await breakpointScopes(dbg, "babel-for-loops", { line: 5, column: 4 }, [
     "For",
     ["i", "1"],
-    "Block",
+    "Function Body",
     ["i", "0"],
     "Module",
     "root()"
@@ -183,7 +183,7 @@ add_task(async function() {
   await breakpointScopes(dbg, "babel-for-loops", { line: 9, column: 4 }, [
     "For",
     ["i", '"2"'],
-    "Block",
+    "Function Body",
     ["i", "0"],
     "Module",
     "root()"
@@ -192,7 +192,7 @@ add_task(async function() {
   await breakpointScopes(dbg, "babel-for-loops", { line: 13, column: 4 }, [
     "For",
     ["i", "3"],
-    "Block",
+    "Function Body",
     ["i", "0"],
     "Module",
     "root()"
@@ -201,13 +201,13 @@ add_task(async function() {
   await breakpointScopes(dbg, "babel-functions", { line: 6, column: 8 }, [
     "arrow",
     ["p3", "undefined"],
-    "Block",
+    "Function Body",
     "arrow()",
     "inner",
     ["p2", "undefined"],
     "Function Expression",
     "inner()",
-    "Block",
+    "Function Body",
     "inner()",
     "decl",
     ["p1", "undefined"],
@@ -268,7 +268,7 @@ add_task(async function() {
   await breakpointScopes(dbg, "babel-switches", { line: 7, column: 6 }, [
     "Switch",
     ["val", "2"],
-    "Block",
+    "Function Body",
     ["val", "1"],
     "Module",
     "root()"
@@ -279,7 +279,7 @@ add_task(async function() {
     ["val", "3"],
     "Switch",
     ["val", "2"],
-    "Block",
+    "Function Body",
     ["val", "1"],
     "Module",
     "root()"
@@ -290,8 +290,17 @@ add_task(async function() {
     ["two", "2"],
     "Catch",
     ["err", '"AnError"'],
-    "Block",
+    "Function Body",
     ["one", "1"],
+    "Module",
+    "root()"
+  ]);
+
+  await breakpointScopes(dbg, "babel-lex-and-nonlex", { line: 3, column: 4 }, [
+    "Function Body",
+    "Thing()",
+    "root",
+    "someHelper()",
     "Module",
     "root()"
   ]);
