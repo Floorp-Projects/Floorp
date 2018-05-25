@@ -308,10 +308,10 @@ DebuggerMemory::setAllocationSamplingProbability(JSContext* cx, unsigned argc, V
         dbg->allocationSamplingProbability = probability;
 
         // If this is a change any debuggees would observe, have all debuggee
-        // compartments recompute their sampling probabilities.
+        // realms recompute their sampling probabilities.
         if (dbg->enabled && dbg->trackingAllocationSites) {
             for (auto r = dbg->debuggees.all(); !r.empty(); r.popFront())
-                r.front()->compartment()->chooseAllocationSamplingProbability();
+                r.front()->realm()->chooseAllocationSamplingProbability();
         }
     }
 

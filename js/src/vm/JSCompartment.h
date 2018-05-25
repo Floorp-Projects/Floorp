@@ -557,10 +557,27 @@ struct JSCompartment
     JSRuntime*                   runtime_;
 
   private:
-    friend struct JSRuntime;
-    friend struct JSContext;
+    js::WrapperMap crossCompartmentWrappers;
 
   public:
+    /*
+     * During GC, stores the head of a list of incoming pointers from gray cells.
+     *
+     * The objects in the list are either cross-compartment wrappers, or
+     * debugger wrapper objects.  The list link is either in the second extra
+     * slot for the former, or a special slot for the latter.
+     */
+    JSObject* gcIncomingGrayPointers = nullptr;
+
+    void* data = nullptr;
+
+    // These flags help us to discover if a compartment that shouldn't be alive
+    // manages to outlive a GC. Note that these flags have to be on the
+    // compartment, not the realm, because same-compartment realms can have
+    // cross-realm pointers without wrappers.
+    bool scheduledForDestruction = false;
+    bool maybeAlive = true;
+
     JS::Zone* zone() { return zone_; }
     const JS::Zone* zone() const { return zone_; }
 
@@ -575,26 +592,9 @@ struct JSCompartment
         return runtime_;
     }
 
-  public:
-    void*                        data;
-
-  protected:
-    js::SavedStacks              savedStacks_;
-
-  private:
-    js::WrapperMap               crossCompartmentWrappers;
-
-  public:
     void assertNoCrossCompartmentWrappers() {
         MOZ_ASSERT(crossCompartmentWrappers.empty());
     }
-
-  public:
-    // Recompute the probability with which this compartment should record
-    // profiling data (stack traces, allocations log, etc.) about each
-    // allocation. We consult the probabilities requested by the Debugger
-    // instances observing us, if any.
-    void chooseAllocationSamplingProbability() { savedStacks_.chooseSamplingProbability(this); }
 
   protected:
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
@@ -604,15 +604,6 @@ struct JSCompartment
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkWrapperMapAfterMovingGC();
 #endif
-
-    /*
-     * During GC, stores the head of a list of incoming pointers from gray cells.
-     *
-     * The objects in the list are either cross-compartment wrappers, or
-     * debugger wrapper objects.  The list link is either in the second extra
-     * slot for the former, or a special slot for the latter.
-     */
-    JSObject*                    gcIncomingGrayPointers;
 
   private:
     bool getNonWrapperObjectForCurrentCompartment(JSContext* cx, js::MutableHandleObject obj);
@@ -681,21 +672,11 @@ struct JSCompartment
     void sweepAfterMinorGC(JSTracer* trc);
 
     void sweepCrossCompartmentWrappers();
-    void sweepSavedStacks();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
 
-    js::SavedStacks& savedStacks() { return savedStacks_; }
-
     void findOutgoingEdges(js::gc::ZoneComponentFinder& finder);
-
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC. Note that these flags have to be on the
-    // compartment, not the realm, because same-compartment realms can have
-    // cross-realm pointers without wrappers.
-    bool scheduledForDestruction = false;
-    bool maybeAlive = true;
 };
 
 namespace js {
@@ -808,6 +789,8 @@ class JS::Realm : public JSCompartment
 
     // Bookkeeping information for debug scope objects.
     js::UniquePtr<js::DebugEnvironments> debugEnvs_;
+
+    js::SavedStacks savedStacks_;
 
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
@@ -1277,6 +1260,20 @@ class JS::Realm : public JSCompartment
     js::UniquePtr<js::DebugEnvironments>& debugEnvsRef() {
         return debugEnvs_;
     }
+
+    js::SavedStacks& savedStacks() {
+        return savedStacks_;
+    }
+
+    // Recompute the probability with which this realm should record
+    // profiling data (stack traces, allocations log, etc.) about each
+    // allocation. We consult the probabilities requested by the Debugger
+    // instances observing us, if any.
+    void chooseAllocationSamplingProbability() {
+        savedStacks_.chooseSamplingProbability(this);
+    }
+
+    void sweepSavedStacks();
 
     static constexpr size_t offsetOfRegExps() {
         return offsetof(JS::Realm, regExps);

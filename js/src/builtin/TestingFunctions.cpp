@@ -1271,7 +1271,7 @@ SetSavedStacksRNGState(JSContext* cx, unsigned argc, Value* vp)
 
     // Either one or the other of the seed arguments must be non-zero;
     // make this true no matter what value 'seed' has.
-    cx->compartment()->savedStacks().setRNGState(seed, (seed + 1) * 33);
+    cx->realm()->savedStacks().setRNGState(seed, (seed + 1) * 33);
     return true;
 }
 
@@ -1279,7 +1279,7 @@ static bool
 GetSavedFrameCount(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setNumber(cx->compartment()->savedStacks().count());
+    args.rval().setNumber(cx->realm()->savedStacks().count());
     return true;
 }
 
@@ -1288,13 +1288,12 @@ ClearSavedFrames(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    js::SavedStacks& savedStacks = cx->compartment()->savedStacks();
+    js::SavedStacks& savedStacks = cx->realm()->savedStacks();
     if (savedStacks.initialized())
         savedStacks.clear();
 
-    for (ActivationIterator iter(cx); !iter.done(); ++iter) {
+    for (ActivationIterator iter(cx); !iter.done(); ++iter)
         iter->clearLiveSavedFrameCache();
-    }
 
     args.rval().setUndefined();
     return true;
