@@ -36,7 +36,7 @@ struct nsFont;
 namespace mozilla {
   class FontFamilyList;
   struct FontFamilyName;
-  enum FontFamilyType : uint32_t;
+  enum FontFamilyType : uint8_t;
   class SharedFontList;
   enum class CSSPseudoElementType : uint8_t;
   struct Keyframe;

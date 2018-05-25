@@ -166,7 +166,7 @@ public:
     // Return true if any match was found and appended, false if none.
     virtual bool
     FindAndAddFamilies(const nsAString& aFamily,
-                       nsTArray<gfxFontFamily*>* aOutput,
+                       nsTArray<FamilyAndGeneric>* aOutput,
                        FindFamiliesFlags aFlags,
                        gfxFontStyle* aStyle = nullptr,
                        gfxFloat aDevToCssSize = 1.0);
@@ -263,7 +263,7 @@ public:
     virtual void
     AddGenericFonts(mozilla::FontFamilyType aGenericType,
                     nsAtom* aLanguage,
-                    nsTArray<gfxFontFamily*>& aFamilyList);
+                    nsTArray<FamilyAndGeneric>& aFamilyList);
 
     nsTArray<RefPtr<gfxFontFamily>>*
     GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
@@ -304,6 +304,8 @@ public:
 
     bool AddWithLegacyFamilyName(const nsAString& aLegacyName,
                                  gfxFontEntry* aFontEntry);
+
+    static const char* GetGenericName(mozilla::FontFamilyType aGenericType);
 
 protected:
     class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable
@@ -403,12 +405,13 @@ protected:
                gfxFontStyle* aStyle = nullptr,
                gfxFloat aDevToCssSize = 1.0)
     {
-        AutoTArray<gfxFontFamily*,1> families;
+        AutoTArray<FamilyAndGeneric,1> families;
         return FindAndAddFamilies(aFamily,
                                   &families,
                                   aFlags,
                                   aStyle,
-                                  aDevToCssSize) ? families[0] : nullptr;
+                                  aDevToCssSize)
+               ? families[0].mFamily : nullptr;
     }
 
     // Lookup family name in global family list without substitutions or
@@ -487,8 +490,6 @@ protected:
 
     // helper function to map lang to lang group
     nsAtom* GetLangGroup(nsAtom* aLanguage);
-
-    static const char* GetGenericName(mozilla::FontFamilyType aGenericType);
 
     // gfxFontInfoLoader overrides, used to load in font cmaps
     virtual void InitLoader() override;
