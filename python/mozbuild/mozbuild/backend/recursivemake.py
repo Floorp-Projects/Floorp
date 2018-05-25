@@ -1232,23 +1232,6 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('COMPUTED_%s += %s\n' % (var,
                                                         ' '.join(make_quote(shell_quote(f)) for f in flags)))
 
-    def _process_java_jar_data(self, jar, backend_file):
-        target = jar.name
-        backend_file.write('JAVA_JAR_TARGETS += %s\n' % target)
-        backend_file.write('%s_DEST := %s.jar\n' % (target, jar.name))
-        if jar.sources:
-            backend_file.write('%s_JAVAFILES := %s\n' %
-                (target, ' '.join(jar.sources)))
-        if jar.generated_sources:
-            backend_file.write('%s_PP_JAVAFILES := %s\n' %
-                (target, ' '.join(jar.generated_sources)))
-        if jar.extra_jars:
-            backend_file.write('%s_EXTRA_JARS := %s\n' %
-                (target, ' '.join(sorted(set(jar.extra_jars)))))
-        if jar.javac_flags:
-            backend_file.write('%s_JAVAC_FLAGS := %s\n' %
-                (target, ' '.join(jar.javac_flags)))
-
     def _process_shared_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
         backend_file.write('FORCE_SHARED_LIB := 1\n')

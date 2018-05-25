@@ -125,6 +125,7 @@ linux-talos-flex:
 
 windows-qr-tests:
     - crashtest
+    - mochitest
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl
