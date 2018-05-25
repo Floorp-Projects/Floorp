@@ -512,6 +512,7 @@ load 1404789-2.html
 load 1406562.html
 load 1409147.html
 load 1411138.html
+pref(dom.webcomponents.shadowdom.enabled,true) load 1414100.html
 load 1419762.html
 load 1419802.html
 load 1420533.html
