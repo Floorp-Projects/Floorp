@@ -440,6 +440,7 @@ public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::Maybe<mozilla::layers::ScrollDirection> MaybeScrollDirection;
 
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
@@ -621,7 +622,7 @@ public:
    * which we are building display items at the moment.
    */
   ViewID GetCurrentScrollbarTarget() const { return mCurrentScrollbarTarget; }
-  nsDisplayOwnLayerFlags GetCurrentScrollbarFlags() const { return mCurrentScrollbarFlags; }
+  MaybeScrollDirection GetCurrentScrollbarDirection() const { return mCurrentScrollbarDirection; }
   /**
    * Returns true if building a scrollbar, and the scrollbar will not be
    * layerized.
@@ -1363,18 +1364,18 @@ public:
   class AutoCurrentScrollbarInfoSetter {
   public:
     AutoCurrentScrollbarInfoSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollTargetID,
-                                   nsDisplayOwnLayerFlags aScrollbarFlags, bool aWillHaveLayer)
+                                   const MaybeScrollDirection& aScrollbarDirection, bool aWillHaveLayer)
      : mBuilder(aBuilder) {
       aBuilder->mIsBuildingScrollbar = true;
       aBuilder->mCurrentScrollbarTarget = aScrollTargetID;
-      aBuilder->mCurrentScrollbarFlags = aScrollbarFlags;
+      aBuilder->mCurrentScrollbarDirection = aScrollbarDirection;
       aBuilder->mCurrentScrollbarWillHaveLayer = aWillHaveLayer;
     }
     ~AutoCurrentScrollbarInfoSetter() {
       // No need to restore old values because scrollbars cannot be nested.
       mBuilder->mIsBuildingScrollbar = false;
       mBuilder->mCurrentScrollbarTarget = FrameMetrics::NULL_SCROLL_ID;
-      mBuilder->mCurrentScrollbarFlags = (nsDisplayOwnLayerFlags)0;
+      mBuilder->mCurrentScrollbarDirection.reset();
       mBuilder->mCurrentScrollbarWillHaveLayer = false;
     }
   private:
@@ -1960,7 +1961,7 @@ private:
   nsDisplayListBuilderMode       mMode;
   ViewID                         mCurrentScrollParentId;
   ViewID                         mCurrentScrollbarTarget;
-  nsDisplayOwnLayerFlags         mCurrentScrollbarFlags;
+  MaybeScrollDirection           mCurrentScrollbarDirection;
   Preserves3DContext             mPreserves3DCtx;
   uint32_t                       mPerspectiveItemIndex;
   int32_t                        mSVGEffectsBuildingDepth;
@@ -5634,10 +5635,7 @@ protected:
 enum class nsDisplayOwnLayerFlags {
   eNone = 0,
   eGenerateSubdocInvalidations = 1 << 0,
-  eVerticalScrollbar = 1 << 1,
-  eHorizontalScrollbar = 1 << 2,
-  eGenerateScrollableLayer = 1 << 3,
-  eScrollbarContainer = 1 << 4,
+  eGenerateScrollableLayer = 1 << 1,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsDisplayOwnLayerFlags)
@@ -5713,6 +5711,7 @@ public:
 
   nsDisplayOwnLayerFlags GetFlags() { return mFlags; }
   bool IsScrollThumbLayer() const;
+  bool IsScrollbarContainer() const;
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 protected:
   nsDisplayOwnLayerFlags mFlags;
