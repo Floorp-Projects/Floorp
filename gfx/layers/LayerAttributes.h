@@ -24,10 +24,12 @@ enum class ScrollbarLayerType : uint8_t { None, Thumb, Container };
  *  It stores data for scroll thumb layer or container layers.
  */
 struct ScrollbarData {
-  ScrollbarData() = default;
+private:
 
+  /**
+   * This constructor is for Thumb layer type.
+   */
   ScrollbarData(ScrollDirection aDirection,
-                ScrollbarLayerType aScrollbarLayerType,
                 float aThumbRatio,
                 CSSCoord aThumbStart,
                 CSSCoord aThumbLength,
@@ -36,7 +38,7 @@ struct ScrollbarData {
                 CSSCoord aScrollTrackLength,
                 uint64_t aTargetViewId)
     : mDirection(Some(aDirection))
-    , mScrollbarLayerType(aScrollbarLayerType)
+    , mScrollbarLayerType(ScrollbarLayerType::Thumb)
     , mThumbRatio(aThumbRatio)
     , mThumbStart(aThumbStart)
     , mThumbLength(aThumbLength)
@@ -45,6 +47,45 @@ struct ScrollbarData {
     , mScrollTrackLength(aScrollTrackLength)
     , mTargetViewId(aTargetViewId)
   {}
+
+  /**
+   * This constructor is for Container layer type.
+   */
+  ScrollbarData(const Maybe<ScrollDirection>& aDirection,
+                uint64_t aTargetViewId)
+    : mDirection(aDirection)
+    , mScrollbarLayerType(ScrollbarLayerType::Container)
+    , mTargetViewId(aTargetViewId)
+  {}
+
+public:
+  ScrollbarData() = default;
+
+  static ScrollbarData CreateForThumb(ScrollDirection aDirection,
+                                      float aThumbRatio,
+                                      CSSCoord aThumbStart,
+                                      CSSCoord aThumbLength,
+                                      bool aThumbIsAsyncDraggable,
+                                      CSSCoord aScrollTrackStart,
+                                      CSSCoord aScrollTrackLength,
+                                      uint64_t aTargetViewId)
+  {
+    return ScrollbarData(aDirection,
+                         aThumbRatio,
+                         aThumbStart,
+                         aThumbLength,
+                         aThumbIsAsyncDraggable,
+                         aScrollTrackStart,
+                         aScrollTrackLength,
+                         aTargetViewId);
+  }
+
+  static ScrollbarData CreateForScrollbarContainer(const Maybe<ScrollDirection>& aDirection,
+                                                   uint64_t aTargetViewId)
+  {
+    return ScrollbarData(aDirection,
+                         aTargetViewId);
+  }
 
   /**
    * The mDirection contains a direction if mScrollbarLayerType is Thumb

@@ -998,7 +998,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mMode(aMode),
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
-      mCurrentScrollbarFlags(nsDisplayOwnLayerFlags::eNone),
       mPerspectiveItemIndex(0),
       mSVGEffectsBuildingDepth(0),
       mFilterASR(nullptr),
@@ -5063,7 +5062,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(nsDisplayListBuil
   MOZ_ASSERT(aBuilder->BuildCompositorHitTestInfo());
   MOZ_ASSERT(mHitTestInfo != mozilla::gfx::CompositorHitTestInfo::eInvisibleToHitTest);
 
-  if (aBuilder->GetCurrentScrollbarFlags() != nsDisplayOwnLayerFlags::eNone) {
+  if (aBuilder->GetCurrentScrollbarDirection().isSome()) {
     // In the case of scrollbar frames, we use the scrollbar's target scrollframe
     // instead of the scrollframe with which the scrollbar actually moves.
     MOZ_ASSERT(mHitTestInfo & CompositorHitTestInfo::eScrollbar);
@@ -7017,6 +7016,12 @@ nsDisplayOwnLayer::IsScrollThumbLayer() const
 }
 
 bool
+nsDisplayOwnLayer::IsScrollbarContainer() const
+{
+  return mScrollbarData.mScrollbarLayerType == layers::ScrollbarLayerType::Container;
+}
+
+bool
 nsDisplayOwnLayer::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) const
 {
   // Render scroll thumb layers even if they are invisible, because async
@@ -7035,14 +7040,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
 
-  if (IsScrollThumbLayer()) {
-    layer->SetScrollbarData(mScrollbarData);
-  } else if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
-    mScrollbarData.mScrollbarLayerType = ScrollbarLayerType::Container;
-    mScrollbarData.mDirection = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
-                                ? Some(ScrollDirection::eVertical)
-                                : Some(ScrollDirection::eHorizontal);
-
+  if (IsScrollThumbLayer() || IsScrollbarContainer()) {
     layer->SetScrollbarData(mScrollbarData);
   }
 
@@ -7090,20 +7088,14 @@ nsDisplayOwnLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
                                     mozilla::layers::WebRenderLayerScrollData* aLayerData)
 {
   bool ret = false;
-  if (IsScrollThumbLayer()) {
+
+  if (IsScrollThumbLayer() || IsScrollbarContainer()) {
     ret = true;
     if (aLayerData) {
       aLayerData->SetScrollbarData(mScrollbarData);
-      aLayerData->SetScrollbarAnimationId(mWrAnimationId);
-    }
-  } else if (mFlags & nsDisplayOwnLayerFlags::eScrollbarContainer) {
-    ret = true;
-    if (aLayerData) {
-      mScrollbarData.mScrollbarLayerType = ScrollbarLayerType::Container;
-      mScrollbarData.mDirection = (mFlags & nsDisplayOwnLayerFlags::eVerticalScrollbar)
-                                  ? Some(ScrollDirection::eVertical)
-                                  : Some(ScrollDirection::eHorizontal);
-      aLayerData->SetScrollbarData(mScrollbarData);
+      if (IsScrollThumbLayer()) {
+        aLayerData->SetScrollbarAnimationId(mWrAnimationId);
+      }
     }
   }
   return ret;
