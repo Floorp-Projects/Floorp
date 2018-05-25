@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Provjerio: %1$s</string>
   <string name="site_security_icon_content_description">Sigurnost stranice</string>
   <string name="preference_autocomplete_duplicate_url_error">URL već postoji</string>
+  <string name="find_in_page">Pronađi na stranici</string>
+  <string name="http_auth_dialog_title">Neophodna je autentikacija</string>
+  <string name="http_auth_dialog_username">Korisničko ime</string>
+  <string name="http_auth_dialog_password">Lozinka</string>
+  <string name="preference_performance_request_desktop_site">Zahtjevaj desktop stranicu</string>
 </resources>

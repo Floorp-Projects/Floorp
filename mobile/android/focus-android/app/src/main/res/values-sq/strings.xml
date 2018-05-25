@@ -8,6 +8,7 @@
   <string name="feedback_erase">Historiku juaj i shfletimit u fshi.</string>
   <string name="search_hint">Kërko për %1$s</string>
   <string name="menu_share">Ndajeni me të tjerët…</string>
+  <string name="menu_report_site_issue">Raporto Problem Sajti</string>
   <string name="menu_open_with_default_browser2">Hape në %1$s</string>
   <string name="menu_open_with_a_browser2">Hapeni në…</string>
   <string name="menu_add_to_home_screen">Shtoje te skena e Kreut</string>
@@ -26,6 +27,15 @@
   <string name="shortcut_erase_long_label">Fshi historik shfletimesh</string>
   <string name="text_selection_search_action">Kërkoni Privatisht</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i jua l&#235; juve kontrollin.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"P&#235;rdoreni si nj&#235; shfletues privat:\n  "<ul>"\n    "<li>B&#235;ni k&#235;rkime dhe shfletoni drejt e nga aplikacioni</li>"\n    "<li>Bllokoni gjurmues (ose p&#235;rdit&#235;soni rregullimet q&#235; t&#235; lejoni gjurmime)</li>"\n    "<li>Fshini cookies, si dhe historik k&#235;rkimesh dhe shfletimesh</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-i prodhohet nga Mozilla. Misioni yn&#235; &#235;sht&#235; t&#235; p&#235;rkujdesemi p&#235;r nj&#235; Internet t&#235; sh&#235;ndetsh&#235;m, t&#235; hapur.<br/>\n<a href="%2$s">M&#235;soni m&#235; tep&#235;r</a></p>]]></string>
+  <string name="preference_privacy_and_security_header">Privatësi &amp; Siguri</string>
+  <string name="preference_privacy_and_security_summary">Gjurmim, cookies, zgjedhje mbi të dhënat</string>
+  <string name="preference_search_summary">Caktoje parazgjedhje, vetëplotësim</string>
+  <string name="preference_mozilla_summary">Mbi %1$s, ndihmë</string>
+  <string name="preference_category_tracking_protection">Mbrojtje Nga Gjurmimet</string>
+  <string name="preference_category_web_content">Lëndë Web</string>
+  <string name="preference_category_switching_apps">Këmbim Aplikacionesh</string>
+  <string name="preference_category_general">Të përgjithshme</string>
+  <string name="preference_category_data_collection_use">Grumbullim &amp; Përdorim të Dhënash</string>
   <string name="preference_category_search">Kërkim</string>
   <string name="preference_search_engine_default">Parazgjedhje</string>
   <string name="preference_state_on">On</string>
@@ -39,11 +49,14 @@
   <string name="preference_autocomplete_action_add">+ Shtoni URL vetjake</string>
   <string name="preference_autocomplete_title_add">Shtoni URL vetjake</string>
   <string name="custom_autocomplete_quick_add">Shtoni URL vetjake</string>
+  <string name="preference_category_cookies">Cookies dhe të Dhëna Sajtesh</string>
+  <string name="preference_category_data_choices">Zgjedhje Mbi të Dhënat</string>
   <string name="preference_autocomplete_title_remove">Hiqni URLra Vetjake</string>
   <string name="preference_autocomplete_learn_more">Mësoni më tepër</string>
   <string name="preference_autocomplete_custom_summary">Shtoni dhe administroni URLra vetjake vetëplotësimesh.</string>
   <string name="preference_autocomplete_add_title">URL për shtim</string>
   <string name="preference_autocomplete_add_hint">Ngjitni ose jepni URL</string>
+  <string name="preference_autocomplete_add_example2">Shembull: mozilla.org</string>
   <string name="preference_autocomplete_add_example">Shembull: example.com</string>
   <string name="preference_autocomplete_add_confirmation">U shtua URL vetjake e re.</string>
   <string name="preference_autocomplete_menu_remove">Hiqe</string>
@@ -175,4 +188,9 @@
   <string name="security_popup_security_verified">Verifikuar nga: %1$s</string>
   <string name="site_security_icon_content_description">Siguri Sajti</string>
   <string name="preference_autocomplete_duplicate_url_error">Ka tashmë një URL të tillë</string>
+  <string name="find_in_page">Gjej në Faqe</string>
+  <string name="http_auth_dialog_title">Lypset mirëfilltësim</string>
+  <string name="http_auth_dialog_username">Emër përdoruesi</string>
+  <string name="http_auth_dialog_password">Fjalëkalim</string>
+  <string name="preference_performance_request_desktop_site">Kërko sajtin për dekstop</string>
 </resources>

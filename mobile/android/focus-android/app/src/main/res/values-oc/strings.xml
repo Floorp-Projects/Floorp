@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">Verificat per : %1$s</string>
   <string name="site_security_icon_content_description">Seguretat del site</string>
   <string name="preference_autocomplete_duplicate_url_error">L’adreça existís ja</string>
+  <string name="find_in_page">Recercar dins la pagina</string>
+  <string name="http_auth_dialog_title">Autentificacion requesida</string>
+  <string name="http_auth_dialog_username">Nom d’utilizaire</string>
+  <string name="http_auth_dialog_password">Senhal</string>
+  <string name="preference_performance_request_desktop_site">Veire version ordenador</string>
 </resources>

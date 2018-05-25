@@ -188,4 +188,9 @@
   <string name="security_popup_security_verified">验证机构：%1$s</string>
   <string name="site_security_icon_content_description">网站安全性</string>
   <string name="preference_autocomplete_duplicate_url_error">网址已存在</string>
+  <string name="find_in_page">在页面中查找</string>
+  <string name="http_auth_dialog_title">需要验证身份</string>
+  <string name="http_auth_dialog_username">用户名</string>
+  <string name="http_auth_dialog_password">密码</string>
+  <string name="preference_performance_request_desktop_site">要求桌面版网站</string>
 </resources>
