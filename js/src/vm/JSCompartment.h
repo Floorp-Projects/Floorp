@@ -691,7 +691,6 @@ struct JSCompartment
     void sweepCrossCompartmentWrappers();
     void sweepSavedStacks();
     void sweepRegExps();
-    void sweepDebugEnvironments();
 
     static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
     void fixupAfterMovingGC();
@@ -703,9 +702,6 @@ struct JSCompartment
     static size_t offsetOfRegExps() {
         return offsetof(JSCompartment, regExps);
     }
-
-    /* Bookkeeping information for debug scope objects. */
-    js::UniquePtr<js::DebugEnvironments> debugEnvs;
 
     // These flags help us to discover if a compartment that shouldn't be alive
     // manages to outlive a GC. Note that these flags have to be on the
@@ -816,6 +812,9 @@ class JS::Realm : public JSCompartment
     JSPrincipals* principals_ = nullptr;
 
     js::UniquePtr<js::jit::JitRealm> jitRealm_;
+
+    // Bookkeeping information for debug scope objects.
+    js::UniquePtr<js::DebugEnvironments> debugEnvs_;
 
     // Used by memory reporters and invalid otherwise.
     JS::RealmStats* realmStats_ = nullptr;
@@ -987,6 +986,7 @@ class JS::Realm : public JSCompartment
     void finishRoots();
 
     void sweepAfterMinorGC();
+    void sweepDebugEnvironments();
     void sweepObjectRealm();
     void sweepSelfHostingScriptSource();
     void sweepTemplateObjects();
@@ -1265,6 +1265,13 @@ class JS::Realm : public JSCompartment
 
     js::jit::JitRealm* jitRealm() {
         return jitRealm_.get();
+    }
+
+    js::DebugEnvironments* debugEnvs() {
+        return debugEnvs_.get();
+    }
+    js::UniquePtr<js::DebugEnvironments>& debugEnvsRef() {
+        return debugEnvs_;
     }
 };
 

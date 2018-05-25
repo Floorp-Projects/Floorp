@@ -710,8 +710,8 @@ Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMa
         return;
 
     /* Mark debug scopes, if present */
-    if (debugEnvs)
-        debugEnvs->trace(trc);
+    if (debugEnvs_)
+        debugEnvs_->trace(trc);
 
     objects_.trace(trc);
 
@@ -757,8 +757,8 @@ ObjectRealm::finishRoots()
 void
 Realm::finishRoots()
 {
-    if (debugEnvs)
-        debugEnvs->finish();
+    if (debugEnvs_)
+        debugEnvs_->finish();
 
     objects_.finishRoots();
 
@@ -833,10 +833,10 @@ JSCompartment::sweepRegExps()
 }
 
 void
-JSCompartment::sweepDebugEnvironments()
+Realm::sweepDebugEnvironments()
 {
-    if (debugEnvs)
-        debugEnvs->sweep();
+    if (debugEnvs_)
+        debugEnvs_->sweep();
 }
 
 void
@@ -1049,7 +1049,7 @@ Realm::clearTables()
     // a realm that has been used off thread into another realm and zone.
     JS::GetCompartmentForRealm(this)->assertNoCrossCompartmentWrappers();
     MOZ_ASSERT(!jitRealm_);
-    MOZ_ASSERT(!debugEnvs);
+    MOZ_ASSERT(!debugEnvs_);
     MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
     objectGroups.clearTables();
@@ -1239,7 +1239,7 @@ Realm::unsetIsDebuggee()
 {
     if (isDebuggee()) {
         debugModeBits_ &= ~DebuggerObservesMask;
-        DebugEnvironments::onCompartmentUnsetIsDebuggee(this);
+        DebugEnvironments::onRealmUnsetIsDebuggee(this);
     }
 }
 
