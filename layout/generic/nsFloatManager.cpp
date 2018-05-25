@@ -1930,9 +1930,6 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
     // we calculate a dfOffset value which is the top left of the content
     // rect relative to the margin rect.
     nsPoint offsetPoint = aContentRect.TopLeft() - aMarginRect.TopLeft();
-    MOZ_ASSERT(offsetPoint.x >= 0 && offsetPoint.y >= 0,
-               "aContentRect should be within aMarginRect, which we need "
-               "for our math to make sense.");
     LayoutDeviceIntPoint dfOffset =
       LayoutDevicePixel::FromAppUnitsRounded(offsetPoint,
                                              aAppUnitsPerDevPixel);
@@ -2014,10 +2011,10 @@ nsFloatManager::ImageShapeInfo::ImageShapeInfo(
             row >= hEx - kExpansionPerSide) {
           // Case 1: Expanded pixel.
           df[index] = MAX_MARGIN_5X;
-        } else if (col >= (uint32_t)dfOffset.x &&
-                   col < (uint32_t)(dfOffset.x + w) &&
-                   row >= (uint32_t)dfOffset.y &&
-                   row < (uint32_t)(dfOffset.y + h) &&
+        } else if ((int32_t)col >= dfOffset.x &&
+                   (int32_t)col < (dfOffset.x + aImageSize.width) &&
+                   (int32_t)row >= dfOffset.y &&
+                   (int32_t)row < (dfOffset.y + aImageSize.height) &&
                    aAlphaPixels[col - dfOffset.x +
                                 (row - dfOffset.y) * aStride] > threshold) {
           // Case 2: Image pixel that is opaque.
