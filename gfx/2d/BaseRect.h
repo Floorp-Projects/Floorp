@@ -124,7 +124,9 @@ struct BaseRect {
     result.y = std::max<T>(y, aRect.y);
     result.width = std::min<T>(x - result.x + width, aRect.x - result.x + aRect.width);
     result.height = std::min<T>(y - result.y + height, aRect.y - result.y + aRect.height);
-    if (result.width <= 0 || result.height <= 0) {
+    // See bug 1457110, this function expects to -only- size to 0,0 if the width/height
+    // is explicitly negative.
+    if (result.width < 0 || result.height < 0) {
       result.SizeTo(0, 0);
     }
     return result;
@@ -137,8 +139,17 @@ struct BaseRect {
   // 'this' can be the same object as either aRect1 or aRect2
   bool IntersectRect(const Sub& aRect1, const Sub& aRect2)
   {
-    *static_cast<Sub*>(this) = aRect1.Intersect(aRect2);
-    return !IsEmpty();
+    T newX = std::max<T>(aRect1.x, aRect2.x);
+    T newY = std::max<T>(aRect1.y, aRect2.y);
+    width = std::min<T>(aRect1.x - newX + aRect1.width, aRect2.x - newX + aRect2.width);
+    height = std::min<T>(aRect1.y - newY + aRect1.height, aRect2.y - newY + aRect2.height);
+    x = newX;
+    y = newY;
+    if (width <= 0 || height <= 0) {
+      SizeTo(0, 0);
+      return false;
+    }
+    return true;
   }
 
   // Returns the smallest rectangle that contains both the area of both
