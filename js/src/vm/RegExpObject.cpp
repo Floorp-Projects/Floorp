@@ -1208,16 +1208,16 @@ RegExpShared::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     return n;
 }
 
-/* RegExpCompartment */
+/* RegExpRealm */
 
-RegExpCompartment::RegExpCompartment()
+RegExpRealm::RegExpRealm()
   : matchResultTemplateObject_(nullptr),
     optimizableRegExpPrototypeShape_(nullptr),
     optimizableRegExpInstanceShape_(nullptr)
 {}
 
 ArrayObject*
-RegExpCompartment::createMatchResultTemplateObject(JSContext* cx)
+RegExpRealm::createMatchResultTemplateObject(JSContext* cx)
 {
     MOZ_ASSERT(!matchResultTemplateObject_);
 
@@ -1274,7 +1274,7 @@ RegExpZone::init()
 }
 
 void
-RegExpCompartment::sweep()
+RegExpRealm::sweep()
 {
     if (matchResultTemplateObject_ &&
         IsAboutToBeFinalized(&matchResultTemplateObject_))
