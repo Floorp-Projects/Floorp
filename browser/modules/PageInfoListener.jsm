@@ -1,33 +1,44 @@
-var PageInfoListener = {
-  init() {
-    addMessageListener("PageInfo:getData", this);
-  },
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["PageInfoListener"];
+
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Feeds: "resource:///modules/Feeds.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm"
+});
+
+var PageInfoListener = {
+  /* nsIMessageListener */
   receiveMessage(message) {
     let strings = message.data.strings;
     let window;
-    let document;
 
     let frameOuterWindowID = message.data.frameOuterWindowID;
 
     // If inside frame then get the frame's window and document.
     if (frameOuterWindowID != undefined) {
       window = Services.wm.getOuterWindowWithId(frameOuterWindowID);
-      document = window.document;
     } else {
-      window = content.window;
-      document = content.document;
+      window = message.target.content;
     }
+
+    let document = window.document;
 
     let pageInfoData = {metaViewRows: this.getMetaInfo(document),
                         docInfo: this.getDocumentInfo(document),
                         feeds: this.getFeedsInfo(document, strings),
                         windowInfo: this.getWindowInfo(window)};
 
-    sendAsyncMessage("PageInfo:data", pageInfoData);
+    message.target.sendAsyncMessage("PageInfo:data", pageInfoData);
 
     // Separate step so page info dialog isn't blank while waiting for this to finish.
-    this.getMediaInfo(document, window, strings);
+    this.getMediaInfo(document, window, strings, message.target);
   },
 
   getMetaInfo(document) {
@@ -80,7 +91,7 @@ var PageInfoListener = {
     documentURIObject.spec = document.documentURIObject.spec;
     docInfo.documentURIObject = documentURIObject;
 
-    docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(content);
+    docInfo.isContentWindowPrivate = PrivateBrowsingUtils.isContentWindowPrivate(document.ownerGlobal);
 
     return docInfo;
   },
@@ -116,9 +127,9 @@ var PageInfoListener = {
   },
 
   // Only called once to get the media tab's media elements from the content page.
-  getMediaInfo(document, window, strings) {
+  getMediaInfo(document, window, strings, mm) {
     let frameList = this.goThroughFrames(document, window);
-    this.processFrames(document, frameList, strings);
+    this.processFrames(document, frameList, strings, mm);
   },
 
   goThroughFrames(document, window) {
@@ -134,8 +145,9 @@ var PageInfoListener = {
     return frameList;
   },
 
-  async processFrames(document, frameList, strings) {
+  async processFrames(document, frameList, strings, mm) {
     let nodeCount = 0;
+    let content = document.ownerGlobal;
     for (let doc of frameList) {
       let iterator = doc.createTreeWalker(doc, content.NodeFilter.SHOW_ELEMENT);
 
@@ -144,7 +156,7 @@ var PageInfoListener = {
         let mediaItems = this.getMediaItems(document, strings, iterator.currentNode);
 
         if (mediaItems.length) {
-          sendAsyncMessage("PageInfo:mediaData",
+          mm.sendAsyncMessage("PageInfo:mediaData",
                            {mediaItems, isComplete: false});
         }
 
@@ -155,7 +167,7 @@ var PageInfoListener = {
       }
     }
     // Send that page info media fetching has finished.
-    sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
+    mm.sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
   },
 
   getMediaItems(document, strings, elem) {
@@ -164,6 +176,7 @@ var PageInfoListener = {
     // A node can have multiple media items associated with it - for example,
     // multiple background images.
     let mediaItems = [];
+    let content = document.ownerGlobal;
 
     let addImage = (url, type, alt, el, isBg) => {
       let element = this.serializeElementInfo(document, url, type, alt, el, isBg);
@@ -229,6 +242,7 @@ var PageInfoListener = {
 
   serializeElementInfo(document, url, type, alt, item, isBG) {
     let result = {};
+    let content = document.ownerGlobal;
 
     let imageText;
     if (!isBG &&
@@ -310,6 +324,7 @@ var PageInfoListener = {
   getValueText(node) {
 
     let valueText = "";
+    let content = node.ownerGlobal;
 
     // Form input elements don't generally contain information that is useful to our callers, so return nothing.
     if (node instanceof content.HTMLInputElement ||
@@ -369,4 +384,3 @@ var PageInfoListener = {
     return text.replace(endRE, "");
   }
 };
-PageInfoListener.init();

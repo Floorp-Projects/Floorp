@@ -31,7 +31,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Utils: "resource://gre/modules/sessionstore/Utils.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
-  Feeds: "resource:///modules/Feeds.jsm",
   ContextMenu: "resource:///modules/ContextMenu.jsm",
 });
 
@@ -53,9 +52,14 @@ XPCOMUtils.defineLazyProxy(this, "formSubmitObserver", () => {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference])
 });
 
+XPCOMUtils.defineLazyProxy(this, "PageInfoListener",
+                           "resource:///modules/PageInfoListener.jsm");
+
 Services.els.addSystemEventListener(global, "contextmenu", contextMenu, false);
 
 Services.obs.addObserver(formSubmitObserver, "invalidformsubmit", true);
+
+addMessageListener("PageInfo:getData", PageInfoListener);
 
 addMessageListener("RemoteLogins:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
