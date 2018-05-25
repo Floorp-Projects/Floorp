@@ -2,10 +2,11 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+This Test is split into two for Bug 1453396
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 704320</title>
+  <title>Test for Bug 704320-Part2</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="referrerHelper.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -29,9 +30,7 @@ var generateURLArray = (function(from, to){
   ];
 });
 
-let testIframeUrls = [generateURLArray('http', 'http'),
-                      generateURLArray('https', 'https'),
-                      generateURLArray('http', 'https'),
+let testIframeUrls = [generateURLArray('http', 'https'),
                       generateURLArray('https', 'http')];
 
 SimpleTest.waitForExplicitFinish();
@@ -39,13 +38,12 @@ let advance = function(testName) {
   testsGenerator[testName].next();
 };
 
-let testNames = ['testframeone', 'testframetwo', 'testframethree',
-                 'testframefour'];
+let testNames = ['testframeone', 'testframetwo'];
 let isTestFinished = 0;
 
 function checkTestsCompleted() {
   isTestFinished++;
-  if (isTestFinished == 4) {
+  if (isTestFinished == 2) {
     SimpleTest.finish();
   }
 }
@@ -82,15 +80,11 @@ for (i = 0; i < testIframeUrls.length; i++) {
 </head>
 
 <body onload="testsGenerator[testNames[0]].next();
-              testsGenerator[testNames[1]].next();
-              testsGenerator[testNames[2]].next();
-              testsGenerator[testNames[3]].next();">
+              testsGenerator[testNames[1]].next();">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=704320">Mozilla Bug 704320 - HTTP/HTTPS to HTTPS/HTTP</a>
 <p id="display"></p>
 <pre id="content">
 </pre>
   <iframe id="testframeone"></iframe>
   <iframe id="testframetwo"></iframe>
-  <iframe id="testframethree"></iframe>
-  <iframe id="testframefour"></iframe>
 </body>

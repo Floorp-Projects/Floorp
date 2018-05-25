@@ -3021,7 +3021,7 @@ ObjectGroup::detachNewScript(bool writeBarrier, ObjectGroup* replacement)
     MOZ_ASSERT(newScript);
 
     if (newScript->analyzed()) {
-        ObjectGroupCompartment& objectGroups = newScript->function()->compartment()->objectGroups;
+        ObjectGroupRealm& objectGroups = ObjectGroupRealm::get(this);
         TaggedProto proto = this->proto();
         if (proto.isObject() && IsForwarded(proto.toObject()))
             proto = TaggedProto(Forwarded(proto.toObject()));
@@ -3476,8 +3476,8 @@ JSFunction::setTypeForScriptedFunction(JSContext* cx, HandleFunction fun,
     } else {
         RootedObject funProto(cx, fun->staticPrototype());
         Rooted<TaggedProto> taggedProto(cx, TaggedProto(funProto));
-        ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, &JSFunction::class_,
-                                                               taggedProto);
+        ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, &JSFunction::class_,
+                                                         taggedProto);
         if (!group)
             return false;
 
@@ -3805,6 +3805,7 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
         return true;
 
     MOZ_ASSERT(this == group->newScript(sweep));
+    MOZ_ASSERT(cx->realm() == group->realm());
 
     if (regenerate)
         *regenerate = false;
@@ -3994,16 +3995,16 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
     ObjectGroupFlags initialFlags = group->flags(sweep) & OBJECT_FLAG_DYNAMIC_MASK;
 
     Rooted<TaggedProto> protoRoot(cx, group->proto());
-    ObjectGroup* initialGroup = ObjectGroupCompartment::makeGroup(cx, group->clasp(), protoRoot,
-                                                                  initialFlags);
+    ObjectGroup* initialGroup = ObjectGroupRealm::makeGroup(cx, group->clasp(), protoRoot,
+                                                            initialFlags);
     if (!initialGroup)
         return false;
 
     initialGroup->addDefiniteProperties(cx, templateObject()->lastProperty());
     group->addDefiniteProperties(cx, prefixShape);
 
-    cx->compartment()->objectGroups.replaceDefaultNewGroup(nullptr, group->proto(), function(),
-                                                           initialGroup);
+    ObjectGroupRealm& realm = ObjectGroupRealm::get(group);
+    realm.replaceDefaultNewGroup(nullptr, group->proto(), function(), initialGroup);
 
     templateObject()->setGroup(initialGroup);
 

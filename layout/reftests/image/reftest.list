@@ -118,6 +118,7 @@ fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-r
 == image-srcset-default-1x.html image-srcset-default-1x-ref.html
 == image-srcset-default-src-2x.html image-srcset-default-src-2x-ref.html
 == image-srcset-default-src-1x.html image-srcset-default-src-1x-ref.html
+== image-srcset-isize.html image-srcset-isize-ref.html
 == image-srcset-orientation-2x.html image-srcset-orientation-2x-ref.html
 == image-srcset-orientation-1x.html image-srcset-orientation-1x-ref.html
 == image-srcset-svg-3x.html image-srcset-svg-3x-ref.html

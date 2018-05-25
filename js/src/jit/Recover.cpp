@@ -1129,7 +1129,7 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedString str(cx, iter.read().toString());
     RootedString sep(cx, iter.read().toString());
-    RootedObjectGroup group(cx, ObjectGroupCompartment::getStringSplitStringGroup(cx));
+    RootedObjectGroup group(cx, ObjectGroupRealm::getStringSplitStringGroup(cx));
     if (!group) {
         return false;
     }
