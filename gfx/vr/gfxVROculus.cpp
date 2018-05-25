@@ -1678,9 +1678,11 @@ VRSystemManagerOculus::HandleInput()
     const GamepadHand hand = controller->GetHand();
     const uint32_t handIdx = static_cast<uint32_t>(hand) - 1;
     uint32_t buttonIdx = 0;
+    ovrHandType oculusHandType;
 
     switch (hand) {
       case dom::GamepadHand::Left:
+        oculusHandType = ovrHand_Left;
         HandleButtonPress(i, buttonIdx, ovrButton_LThumb, inputState.Buttons,
                           inputState.Touches);
         ++buttonIdx;
@@ -1698,6 +1700,7 @@ VRSystemManagerOculus::HandleInput()
         ++buttonIdx;
         break;
       case dom::GamepadHand::Right:
+        oculusHandType = ovrHand_Right;
         HandleButtonPress(i, buttonIdx, ovrButton_RThumb, inputState.Buttons,
                           inputState.Touches);
         ++buttonIdx;
@@ -1722,10 +1725,10 @@ VRSystemManagerOculus::HandleInput()
     controller->SetButtonTouched(inputState.Touches);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickXAxis);
-    HandleAxisMove(i, axis, inputState.Thumbstick[i].x);
+    HandleAxisMove(i, axis, inputState.Thumbstick[oculusHandType].x);
 
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickYAxis);
-    HandleAxisMove(i, axis, -inputState.Thumbstick[i].y);
+    HandleAxisMove(i, axis, -inputState.Thumbstick[oculusHandType].y);
 
     // Process pose state.
     GamepadPoseState poseState;
