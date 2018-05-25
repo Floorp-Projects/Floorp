@@ -2809,7 +2809,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         &shgClassOps
     };
 
-    AutoRealmUnchecked ar(cx, realm);
+    AutoRealmUnchecked ar(cx, compartment);
     Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
     if (!shg)
         return nullptr;
