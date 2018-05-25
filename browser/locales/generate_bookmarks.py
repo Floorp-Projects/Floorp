@@ -29,8 +29,11 @@ def main(output, bookmarks_html_in, bookmarks_inc, locale=None):
     if defines['AB_CD'] == 'ja-JP-mac':
         defines['AB_CD'] = 'ja'
 
-    defines['NIGHTLY_BUILD'] = CONFIG['NIGHTLY_BUILD']
     defines['BOOKMARKS_INCLUDE_PATH'] = bookmarks_inc
+
+    for var in ('NIGHTLY_BUILD',):
+        if var in CONFIG:
+            defines[var] = CONFIG[var]
 
     includes = preprocessor.preprocess(includes=[bookmarks_html_in],
                                        defines=defines,
