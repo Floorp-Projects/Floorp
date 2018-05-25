@@ -1244,7 +1244,6 @@ JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const
 template <>
 struct GCPolicy<JS::Value>
 {
-    static Value initial() { return UndefinedValue(); }
     static void trace(JSTracer* trc, Value* v, const char* name) {
         js::UnsafeTraceManuallyBarrieredEdge(trc, v, name);
     }

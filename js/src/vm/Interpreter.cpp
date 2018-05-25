@@ -1660,11 +1660,11 @@ class ReservedRooted : public RootedBase<T, ReservedRooted<T>>
     }
 
     explicit ReservedRooted(Rooted<T>* root) : savedRoot(root) {
-        *root = JS::GCPolicy<T>::initial();
+        *root = JS::SafelyInitialized<T>();
     }
 
     ~ReservedRooted() {
-        *savedRoot = JS::GCPolicy<T>::initial();
+        *savedRoot = JS::SafelyInitialized<T>();
     }
 
     void set(const T& p) const { *savedRoot = p; }

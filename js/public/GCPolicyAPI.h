@@ -13,9 +13,6 @@
 //
 // The GCPolicy provides at a minimum:
 //
-//   static T initial()
-//       - Construct and return an empty T.
-//
 //   static void trace(JSTracer, T* tp, const char* name)
 //       - Trace the edge |*tp|, calling the edge |name|. Containers like
 //         GCHashMap and GCHashSet use this method to trace their children.
@@ -72,10 +69,6 @@ namespace JS {
 template <typename T>
 struct StructGCPolicy
 {
-    static T initial() {
-        return T();
-    }
-
     static void trace(JSTracer* trc, T* tp, const char* name) {
         tp->trace(trc);
     }
@@ -102,7 +95,6 @@ template <typename T> struct GCPolicy : public StructGCPolicy<T> {};
 // This policy ignores any GC interaction, e.g. for non-GC types.
 template <typename T>
 struct IgnoreGCPolicy {
-    static T initial() { return T(); }
     static void trace(JSTracer* trc, T* t, const char* name) {}
     static bool needsSweep(T* v) { return false; }
     static bool isValid(const T& v) { return true; }
@@ -113,7 +105,6 @@ template <> struct GCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
 template <typename T>
 struct GCPointerPolicy
 {
-    static T initial() { return nullptr; }
     static void trace(JSTracer* trc, T* vp, const char* name) {
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
@@ -140,7 +131,6 @@ template <> struct GCPolicy<JSString*> : public GCPointerPolicy<JSString*> {};
 template <typename T>
 struct NonGCPointerPolicy
 {
-    static T initial() { return nullptr; }
     static void trace(JSTracer* trc, T* vp, const char* name) {
         if (*vp)
             (*vp)->trace(trc);
@@ -170,7 +160,6 @@ struct GCPolicy<JS::Heap<T>>
 template <typename T, typename D>
 struct GCPolicy<mozilla::UniquePtr<T, D>>
 {
-    static mozilla::UniquePtr<T,D> initial() { return mozilla::UniquePtr<T,D>(); }
     static void trace(JSTracer* trc, mozilla::UniquePtr<T,D>* tp, const char* name) {
         if (tp->get())
             GCPolicy<T>::trace(trc, tp->get(), name);
@@ -192,7 +181,6 @@ struct GCPolicy<mozilla::UniquePtr<T, D>>
 template <typename T>
 struct GCPolicy<mozilla::Maybe<T>>
 {
-    static mozilla::Maybe<T> initial() { return mozilla::Maybe<T>(); }
     static void trace(JSTracer* trc, mozilla::Maybe<T>* tp, const char* name) {
         if (tp->isSome())
             GCPolicy<T>::trace(trc, tp->ptr(), name);

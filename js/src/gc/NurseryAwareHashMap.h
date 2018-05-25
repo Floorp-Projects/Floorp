@@ -23,7 +23,7 @@ template <typename T>
 class UnsafeBareReadBarriered : public ReadBarrieredBase<T>
 {
   public:
-    UnsafeBareReadBarriered() : ReadBarrieredBase<T>(JS::GCPolicy<T>::initial()) {}
+    UnsafeBareReadBarriered() : ReadBarrieredBase<T>(JS::SafelyInitialized<T>()) {}
     MOZ_IMPLICIT UnsafeBareReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {}
     explicit UnsafeBareReadBarriered(const UnsafeBareReadBarriered& v) : ReadBarrieredBase<T>(v) {}
     UnsafeBareReadBarriered(UnsafeBareReadBarriered&& v)
@@ -42,7 +42,7 @@ class UnsafeBareReadBarriered : public ReadBarrieredBase<T>
 
     const T get() const {
         if (!InternalBarrierMethods<T>::isMarkable(this->value))
-            return JS::GCPolicy<T>::initial();
+            return JS::SafelyInitialized<T>();
         this->read();
         return this->value;
     }

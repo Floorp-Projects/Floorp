@@ -112,9 +112,6 @@ struct GCPolicy<mozilla::Variant<Ts...>>
 {
     using Impl = detail::GCVariantImplementation<Ts...>;
 
-    // Variants do not provide initial(). They do not have a default initial
-    // value and one must be provided.
-
     static void trace(JSTracer* trc, mozilla::Variant<Ts...>* v, const char* name) {
         Impl::trace(trc, v, name);
     }
