@@ -40,6 +40,21 @@ ARIAGridAccessible::NativeRole() const
   return r != roles::NOTHING ? r : roles::TABLE;
 }
 
+already_AddRefed<nsIPersistentProperties>
+ARIAGridAccessible::NativeAttributes()
+{
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    AccessibleWrap::NativeAttributes();
+
+  if (IsProbablyLayoutTable()) {
+    nsAutoString unused;
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
+                                  NS_LITERAL_STRING("true"), unused);
+  }
+
+  return attributes.forget();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Table
 
