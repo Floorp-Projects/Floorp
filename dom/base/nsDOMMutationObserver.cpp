@@ -23,7 +23,10 @@
 #include "nsThreadUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::dom;
+
+using mozilla::dom::TreeOrderComparator;
+using mozilla::dom::Animation;
+using mozilla::dom::Element;
 
 AutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;

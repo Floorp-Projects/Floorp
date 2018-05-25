@@ -7,7 +7,6 @@
 #include "mozilla/dom/StyleSheetList.h"
 
 #include "mozilla/dom/StyleSheetListBinding.h"
-#include "nsINode.h"
 
 namespace mozilla {
 namespace dom {
