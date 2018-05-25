@@ -41,14 +41,35 @@ add_task(async function test_show_manualAbort_dialog() {
 });
 
 add_task(async function test_show_completePayment() {
-  let {address1GUID, card1GUID} = await addSampleAddressesAndBasicCard();
-
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
-                                          (subject, data) => data == "update");
-  info("associating the card with the billing address");
-  formAutofillStorage.creditCards.update(card1GUID, {
-    billingAddressGUID: address1GUID,
-  }, true);
+                                          (subject, data) => data == "add");
+  let address = {
+    "given-name": "Timothy",
+    "additional-name": "John",
+    "family-name": "Berners-Lee",
+    organization: "World Wide Web Consortium",
+    "street-address": "32 Vassar Street\nMIT Room 32-G524",
+    "address-level2": "Cambridge",
+    "address-level1": "MA",
+    "postal-code": "02139",
+    country: "US",
+    tel: "+16172535702",
+    email: "timbl@example.org",
+  };
+  let addressGUID = await formAutofillStorage.addresses.add(address);
+  await onChanged;
+
+  onChanged = TestUtils.topicObserved("formautofill-storage-changed",
+                                      (subject, data) => data == "add");
+  let card = {
+    billingAddressGUID: addressGUID,
+    "cc-exp-month": 1,
+    "cc-exp-year": 9999,
+    "cc-name": "John Doe",
+    "cc-number": "999999999999",
+  };
+
+  formAutofillStorage.creditCards.add(card);
   await onChanged;
 
   await BrowserTestUtils.withNewTab({
@@ -65,7 +86,9 @@ add_task(async function test_show_completePayment() {
     );
 
     info("select the shipping address");
-    await selectPaymentDialogShippingAddressByCountry(frame, "US");
+    await spawnPaymentDialogTask(frame,
+                                 PTU.DialogContentTasks.selectShippingAddressByCountry,
+                                 "US");
 
     info("entering CSC");
     await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.setSecurityCode, {
@@ -78,16 +101,17 @@ add_task(async function test_show_completePayment() {
     info("acknowledging the completion from the merchant page");
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
 
-    let {shippingAddress} = result.response;
-    checkPaymentAddressMatchesStorageAddress(shippingAddress, PTU.Addresses.TimBL, "Shipping");
-
+    let actualShippingAddress = result.response.shippingAddress;
+    checkPaymentAddressMatchesStorageAddress(actualShippingAddress, address, "Shipping address");
     is(result.response.methodName, "basic-card", "Check methodName");
-    let {methodDetails} = result;
-    checkPaymentMethodDetailsMatchesCard(methodDetails, PTU.BasicCards.JohnDoe, "Payment method");
+    let methodDetails = result.methodDetails;
+    is(methodDetails.cardholderName, "John Doe", "Check cardholderName");
+    is(methodDetails.cardNumber, "999999999999", "Check cardNumber");
+    is(methodDetails.expiryMonth, "01", "Check expiryMonth");
+    is(methodDetails.expiryYear, "9999", "Check expiryYear");
     is(methodDetails.cardSecurityCode, "999", "Check cardSecurityCode");
     is(typeof methodDetails.methodName, "undefined", "Check methodName wasn't included");
-
-    checkPaymentAddressMatchesStorageAddress(methodDetails.billingAddress, PTU.Addresses.TimBL,
+    checkPaymentAddressMatchesStorageAddress(methodDetails.billingAddress, address,
                                              "Billing address");
 
     is(result.response.shippingOption, "2", "Check shipping option");
@@ -115,7 +139,7 @@ add_task(async function test_show_completePayment2() {
     }, PTU.ContentTasks.promisePaymentRequestEvent);
 
     info("changing shipping option to '1' from default selected option of '2'");
-    await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingOptionById, "1");
+    spawnPaymentDialogTask(frame, PTU.DialogContentTasks.selectShippingOptionById, "1");
 
     await ContentTask.spawn(browser, {
       eventName: "shippingoptionchange",
