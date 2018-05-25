@@ -5,46 +5,54 @@
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+var EXPORTED_SYMBOLS = ["PageStyleHandler"];
+
 var PageStyleHandler = {
-  init() {
-    addMessageListener("PageStyle:Switch", this);
-    addMessageListener("PageStyle:Disable", this);
-    addEventListener("pageshow", () => this.sendStyleSheetInfo());
+  getViewer(content) {
+    return content.document.docShell.contentViewer;
   },
 
-  get markupDocumentViewer() {
-    return docShell.contentViewer;
-  },
+  sendStyleSheetInfo(mm) {
+    let content = mm.content;
+    let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets(content), content);
 
-  sendStyleSheetInfo() {
-    let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets());
-
-    sendAsyncMessage("PageStyle:StyleSheets", {
+    mm.sendAsyncMessage("PageStyle:StyleSheets", {
       filteredStyleSheets,
-      authorStyleDisabled: this.markupDocumentViewer.authorStyleDisabled,
+      authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
       preferredStyleSheetSet: content.document.preferredStyleSheetSet
     });
   },
 
-  getAllStyleSheets(frameset = content) {
+  getAllStyleSheets(frameset) {
     let selfSheets = Array.slice(frameset.document.styleSheets);
     let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
     return selfSheets.concat(...subSheets);
   },
 
   receiveMessage(msg) {
+    let content = msg.target.content;
     switch (msg.name) {
       case "PageStyle:Switch":
-        this.markupDocumentViewer.authorStyleDisabled = false;
+        this.getViewer(content).authorStyleDisabled = false;
         this._stylesheetSwitchAll(content, msg.data.title);
         break;
 
       case "PageStyle:Disable":
-        this.markupDocumentViewer.authorStyleDisabled = true;
+        this.getViewer(content).authorStyleDisabled = true;
         break;
     }
 
-    this.sendStyleSheetInfo();
+    this.sendStyleSheetInfo(msg.target);
+  },
+
+  handleEvent(event) {
+    let win = event.target.ownerGlobal;
+    if (win != win.top) {
+      return;
+    }
+
+    let {docShell} = win.document;
+    this.sendStyleSheetInfo(docShell.tabChild.messageManager);
   },
 
   _stylesheetSwitchAll(frameset, title) {
@@ -75,7 +83,7 @@ var PageStyleHandler = {
     return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
   },
 
-  _filterStyleSheets(styleSheets) {
+  _filterStyleSheets(styleSheets, content) {
     let result = [];
 
     for (let currentStyleSheet of styleSheets) {
@@ -118,4 +126,3 @@ var PageStyleHandler = {
     return result;
   },
 };
-PageStyleHandler.init();
