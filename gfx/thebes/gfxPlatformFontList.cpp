@@ -751,7 +751,7 @@ gfxPlatformFontList::CheckFamily(gfxFontFamily *aFamily)
 
 bool
 gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
-                                        nsTArray<gfxFontFamily*>* aOutput,
+                                        nsTArray<FamilyAndGeneric>* aOutput,
                                         FindFamiliesFlags aFlags,
                                         gfxFontStyle* aStyle,
                                         gfxFloat aDevToCssSize)
@@ -818,7 +818,7 @@ gfxPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
     }
 
     if (familyEntry) {
-        aOutput->AppendElement(familyEntry);
+        aOutput->AppendElement(FamilyAndGeneric(familyEntry));
         return true;
     }
 
@@ -1011,12 +1011,12 @@ gfxPlatformFontList::GetFontFamiliesFromGenericFamilies(
         gfxFontStyle style;
         style.language = aLangGroup;
         style.systemFont = false;
-        AutoTArray<gfxFontFamily*,10> families;
+        AutoTArray<FamilyAndGeneric,10> families;
         FindAndAddFamilies(genericFamily, &families, FindFamiliesFlags(0),
                            &style);
-        for (gfxFontFamily* f : families) {
-            if (!aGenericFamilies->Contains(f)) {
-                aGenericFamilies->AppendElement(f);
+        for (const FamilyAndGeneric& f : families) {
+            if (!aGenericFamilies->Contains(f.mFamily)) {
+                aGenericFamilies->AppendElement(f.mFamily);
             }
         }
     }
@@ -1055,7 +1055,7 @@ gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
 void
 gfxPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
                                      nsAtom* aLanguage,
-                                     nsTArray<gfxFontFamily*>& aFamilyList)
+                                     nsTArray<FamilyAndGeneric>& aFamilyList)
 {
     // map lang ==> langGroup
     nsAtom* langGroup = GetLangGroup(aLanguage);
@@ -1068,7 +1068,10 @@ gfxPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
         GetPrefFontsLangGroup(aGenericType, prefLang);
 
     if (!prefFonts->IsEmpty()) {
-        aFamilyList.AppendElements(*prefFonts);
+        aFamilyList.SetCapacity(aFamilyList.Length() + prefFonts->Length());
+        for (auto& f : *prefFonts) {
+            aFamilyList.AppendElement(FamilyAndGeneric(f.get(), aGenericType));
+        }
     }
 }
 

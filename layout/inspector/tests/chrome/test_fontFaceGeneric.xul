@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="CSSGeneric attribute of InspectorFontFace"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTest();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function RunTest() {
+  var rng = document.createRange();
+  var elem, fonts;
+
+  elem = document.getElementById("test1");
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "one font found");
+  is(fonts[0].CSSGeneric, "serif", "font " + fonts[0].name + " was specified as CSS generic");
+  var serifFamily = fonts[0].CSSFamilyName;
+
+  elem = document.getElementById("test2");
+  elem.style.fontFamily = serifFamily + ", serif";
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 1, "one font found");
+  is(fonts[0].CSSFamilyName, serifFamily, "used the expected family (" + serifFamily + ")");
+  is(fonts[0].CSSGeneric, "", "font " + fonts[0].name + " was specified by name");
+
+  elem = document.getElementById("test3");
+  elem.getElementsByTagName("span")[0].style.fontFamily = serifFamily + ", serif";
+  rng.selectNode(elem);
+  fonts = InspectorUtils.getUsedFontFaces(rng);
+  is(fonts.length, 2, "two fonts found");
+  var checked = 0;
+  fonts.forEach(function(f) {
+    if (f.CSSFamilyName == serifFamily) {
+      is(f.CSSGeneric, "", "serif font " + f.name + " was specified by name");
+      checked++;
+    } else {
+      is(f.CSSGeneric, "monospace", "monospace font " + f.name + " was specified as generic");
+      checked++;
+    }
+  });
+  is(checked, 2, "two fonts checked");
+
+  SimpleTest.finish();
+}
+  ]]>
+  </script>
+
+  <!-- html:body contains elements the test will inspect -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <div id="test1" style="font-family: serif">test one</div>
+  <div id="test2" style="font-family: monospace">test two</div>
+  <div id="test3" style="font-family: monospace">test <span>three</span></div>
+  </body>
+
+</window>
