@@ -41,6 +41,10 @@ ShutdownXPCOM(nsIServiceManager* aServMgr);
 
 void SetICUMemoryFunctions();
 
+#ifdef ENABLE_BIGINT
+void SetGMPMemoryFunctions();
+#endif
+
 /**
  * C++ namespaced version of NS_LogTerm.
  */

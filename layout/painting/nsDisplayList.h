@@ -2857,10 +2857,10 @@ public:
   void SetOldListIndex(nsDisplayList* aList, OldListIndex aIndex, uint32_t aListKey, uint32_t aNestingDepth)
   {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    mOldList = reinterpret_cast<uintptr_t>(aList);
     mOldListKey = aListKey;
     mOldNestingDepth = aNestingDepth;
 #endif
+    mOldList = reinterpret_cast<uintptr_t>(aList);
     mOldListIndex = aIndex;
   }
   bool GetOldListIndex(nsDisplayList* aList, uint32_t aListKey, OldListIndex* aOutIndex)

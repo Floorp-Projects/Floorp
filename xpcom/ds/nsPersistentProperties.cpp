@@ -444,6 +444,16 @@ nsPersistentProperties::~nsPersistentProperties()
 {
 }
 
+size_t
+nsPersistentProperties::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  // The memory used by mTable is accounted for in mArena.
+  size_t n = 0;
+  n += mArena.SizeOfExcludingThis(aMallocSizeOf);
+  n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return aMallocSizeOf(this) + n;
+}
+
 nsresult
 nsPersistentProperties::Create(nsISupports* aOuter, REFNSIID aIID,
                                void** aResult)

@@ -396,6 +396,17 @@ ThreadClient.prototype = {
   }),
 
   /**
+   * Toggle pausing via breakpoints in the server.
+   *
+   * @param skip boolean
+   *        Whether the server should skip pausing via breakpoints
+   */
+  skipBreakpoints: DebuggerClient.requester({
+    type: "skipBreakpoints",
+    skip: arg(0),
+  }),
+
+  /**
    * An array of cached frames. Clients can observe the framesadded and
    * framescleared event to keep up to date on changes to this cache,
    * and can fill it using the fillFrames method.

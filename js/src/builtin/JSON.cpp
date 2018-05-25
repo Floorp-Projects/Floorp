@@ -15,6 +15,9 @@
 #include "jsutil.h"
 
 #include "builtin/Array.h"
+#ifdef ENABLE_BIGINT
+#include "builtin/BigInt.h"
+#endif
 #include "builtin/String.h"
 #include "util/StringBuffer.h"
 #include "vm/Interpreter.h"
@@ -291,6 +294,11 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
             if (!Unbox(cx, obj, vp))
                 return false;
         }
+#ifdef ENABLE_BIGINT
+        else if (cls == ESClass::BigInt) {
+            vp.setBigInt(obj->as<BigIntObject>().unbox());
+        }
+#endif
     }
 
     return true;
@@ -586,6 +594,14 @@ Str(JSContext* cx, const Value& v, StringifyContext* scx)
 
         return NumberValueToStringBuffer(cx, v, scx->sb);
     }
+
+#ifdef ENABLE_BIGINT
+    /* Step 10 in the BigInt proposal. */
+    if (v.isBigInt()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BIGINT_NOT_SERIALIZABLE);
+        return false;
+    }
+#endif
 
     /* Step 10. */
     MOZ_ASSERT(v.isObject());

@@ -15,6 +15,7 @@
 #include "nsWeakReference.h"
 #include "nsIErrorService.h"
 #include "nsIStringBundleOverride.h"
+#include "nsIMemoryReporter.h"
 
 #include "mozilla/LinkedList.h"
 
@@ -22,8 +23,11 @@ struct bundleCacheEntry_t;
 
 class nsStringBundleService : public nsIStringBundleService,
                               public nsIObserver,
-                              public nsSupportsWeakReference
+                              public nsSupportsWeakReference,
+                              public nsIMemoryReporter
 {
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
 public:
   nsStringBundleService();
 
@@ -32,6 +36,20 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLESERVICE
   NS_DECL_NSIOBSERVER
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool anonymize) override
+  {
+    size_t amt = SizeOfIncludingThis(MallocSizeOf);
+
+    MOZ_COLLECT_REPORT(
+      "explicit/string-bundle-service", KIND_HEAP, UNITS_BYTES,
+      amt,
+      "Memory used for StringBundleService bundles");
+    return NS_OK;
+  };
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
   virtual ~nsStringBundleService();

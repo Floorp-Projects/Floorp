@@ -25,6 +25,9 @@
 #include "unicode/uclean.h"
 #include "unicode/utypes.h"
 #endif // ENABLE_INTL_API
+#ifdef ENABLE_BIGINT
+#include "vm/BigIntType.h"
+#endif
 #include "vm/DateTime.h"
 #include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
@@ -77,7 +80,7 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
     MOZ_ASSERT(libraryInitState == InitState::Uninitialized,
                "must call JS_Init once before any JSAPI operation except "
-               "JS_SetICUMemoryFunctions");
+               "JS_SetICUMemoryFunctions or JS::SetGMPMemoryFunctions");
     MOZ_ASSERT(!JSRuntime::hasLiveRuntimes(),
                "how do we have live runtimes before JS_Init?");
 
@@ -132,6 +135,10 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
 
 #ifdef JS_SIMULATOR
     RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
+#endif
+
+#ifdef ENABLE_BIGINT
+    JS::BigInt::init();
 #endif
 
     libraryInitState = InitState::Running;

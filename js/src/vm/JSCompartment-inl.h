@@ -121,6 +121,16 @@ JSCompartment::wrap(JSContext* cx, JS::MutableHandleValue vp)
         return true;
     }
 
+#ifdef ENABLE_BIGINT
+    if (vp.isBigInt()) {
+        JS::RootedBigInt bi(cx, vp.toBigInt());
+        if (!wrap(cx, &bi))
+            return false;
+        vp.setBigInt(bi);
+        return true;
+    }
+#endif
+
     MOZ_ASSERT(vp.isObject());
 
     /*
@@ -177,7 +187,7 @@ js::ObjectRealm::objectMaybeInIteration(JSObject* obj)
 
     // If the list contains a single object, check if it's |obj|.
     if (next->next() == enumerators)
-        return next->obj == obj;
+        return next->objectBeingIterated() == obj;
 
     return true;
 }

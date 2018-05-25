@@ -180,6 +180,7 @@ let gSiteDataSettings = {
     }
 
     let keyword = this._searchBox.value.toLowerCase().trim();
+    let fragment = document.createDocumentFragment();
     for (let site of sites) {
       let host = site.host;
       if (keyword && !host.includes(keyword)) {
@@ -191,8 +192,9 @@ let gSiteDataSettings = {
       }
 
       let item = this._createSiteListItem(site);
-      this._list.appendChild(item);
+      fragment.appendChild(item);
     }
+    this._list.appendChild(fragment);
     this._updateButtonsState();
   },
 
