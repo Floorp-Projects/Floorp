@@ -757,19 +757,20 @@ namespace places {
             ) + redirectsTransitionFragment + NS_LITERAL_CSTRING(
           "WHERE v.place_id = :page_id "
           "ORDER BY v.visit_date DESC "
+          "LIMIT :max_visits "
         )
       );
       NS_ENSURE_STATE(getVisits);
       mozStorageStatementScoper visitsScoper(getVisits);
       rv = getVisits->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), pageId);
       NS_ENSURE_SUCCESS(rv, rv);
+      rv = getVisits->BindInt32ByName(NS_LITERAL_CSTRING("max_visits"),
+                                      history->GetNumVisitsForFrecency());
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // Fetch only a limited number of recent visits.
       bool hasResult = false;
-      for (int32_t maxVisits = history->GetNumVisitsForFrecency();
-           numSampledVisits < maxVisits &&
-           NS_SUCCEEDED(getVisits->ExecuteStep(&hasResult)) && hasResult;
-           numSampledVisits++) {
+      while (NS_SUCCEEDED(getVisits->ExecuteStep(&hasResult)) && hasResult) {
         // If this is a redirect target, we'll use the visitType of the source,
         // otherwise the actual visitType.
         int32_t visitType = getVisits->AsInt32(0);
@@ -799,6 +800,8 @@ namespace places {
           int32_t weight = history->GetFrecencyAgedWeight(ageInDays);
           pointsForSampledVisits += (float)(weight * (bonus / 100.0));
         }
+
+        numSampledVisits++;
       }
     }
 
