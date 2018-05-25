@@ -2947,7 +2947,7 @@ nsFrameLoader::EnsureMessageManager()
     parentManager = nsFrameMessageManager::GetGlobalMessageManager();
   }
 
-  mMessageManager = new ChromeMessageSender(parentManager);
+  mMessageManager = new ChromeMessageSender(nullptr, parentManager);
   if (!IsRemoteFrame()) {
     nsresult rv = MaybeCreateDocShell();
     if (NS_FAILED(rv)) {
@@ -3388,7 +3388,7 @@ nsFrameLoader::PopulateUserContextIdFromAttribute(OriginAttributes& aAttr)
   return NS_OK;
 }
 
-ProcessMessageManager*
+ChromeMessageSender*
 nsFrameLoader::GetProcessMessageManager() const
 {
   return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()
