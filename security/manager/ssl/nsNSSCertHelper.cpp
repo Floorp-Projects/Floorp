@@ -26,6 +26,13 @@
 
 using namespace mozilla;
 
+// To avoid relying on localized strings in PSM, we hard-code the root module
+// name internally. When we display it to the user in the list of modules in the
+// front-end, we look up the localized value and display that instead of this.
+const char* kRootModuleName = "Builtin Roots Module";
+const size_t kRootModuleNameLen = strlen(kRootModuleName);
+
+
 static nsresult
 GetPIPNSSBundle(nsIStringBundle** pipnssBundle)
 {

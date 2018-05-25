@@ -12,6 +12,9 @@
 #include "certt.h"
 #include "nsString.h"
 
+extern const char* kRootModuleName;
+extern const size_t kRootModuleNameLen;
+
 uint32_t
 getCertType(CERTCertificate* cert);
 
