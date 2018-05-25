@@ -22,6 +22,11 @@
   transition: @themeTransition@;
 }
 
+/* Increase contrast of UI links on dark themes */
+:root[lwt-popup-brighttext] panel .text-link {
+  color: #45a1ff;
+}
+
 /* Toolbar / content area border */
 
 #navigator-toolbox::after {

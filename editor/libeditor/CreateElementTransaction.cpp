@@ -95,7 +95,7 @@ CreateElementTransaction::DoTransaction()
   NS_ENSURE_STATE(mNewNode);
 
   // Try to insert formatting whitespace for the new node:
-  mEditorBase->MarkNodeDirty(GetAsDOMNode(mNewNode));
+  mEditorBase->MarkNodeDirty(mNewNode);
 
   // Insert the new node
   ErrorResult error;

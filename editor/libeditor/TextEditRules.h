@@ -472,6 +472,14 @@ protected:
   bool IsEditorDataAvailable() const { return !!mData; }
 #endif // #ifdef DEBUG
 
+  /**
+   * GetTextNodeAroundSelectionStartContainer() may return a Text node around
+   * start container of Selection.  If current selection container is not
+   * a text node, this will look for descendants and next siblings of the
+   * container.
+   */
+  inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
+
   // A buffer we use to store the real value of password editors.
   nsString mPasswordText;
   // A buffer we use to track the IME composition string.

@@ -102,7 +102,7 @@ InsertNodeTransaction::DoTransaction()
     }
   }
 
-  mEditorBase->MarkNodeDirty(GetAsDOMNode(mContentToInsert));
+  mEditorBase->MarkNodeDirty(mContentToInsert);
 
   ErrorResult error;
   mPointToInsert.GetContainer()->InsertBefore(*mContentToInsert,

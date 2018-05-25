@@ -7831,6 +7831,11 @@ var TabContextMenu = {
     }
     document.getElementById("context_closeOtherTabs").disabled = unpinnedTabsToClose < 1;
 
+    // Only one of close_tab/close_selected_tabs should be visible
+    let hasMultiSelectedTabs = !!gBrowser.multiSelectedTabsCount;
+    document.getElementById("context_closeTab").hidden = hasMultiSelectedTabs;
+    document.getElementById("context_closeSelectedTabs").hidden = !hasMultiSelectedTabs;
+
     // Hide "Bookmark All Tabs" for a pinned tab.  Update its state if visible.
     let bookmarkAllTabs = document.getElementById("context_bookmarkAllTabs");
     bookmarkAllTabs.hidden = this.contextTab.pinned;

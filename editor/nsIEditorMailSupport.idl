@@ -6,7 +6,8 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
-interface nsIDOMNode;
+
+webidl Node;
 
 [scriptable, builtinclass, uuid(fdf23301-4a94-11d3-9ce4-9960496c41bc)]
 
@@ -25,7 +26,7 @@ interface nsIEditorMailSupport : nsISupports
     * @param aQuotedText  The actual text to be quoted
     * @return             The node which was inserted
     */
-  nsIDOMNode insertAsQuotation(in AString aQuotedText);
+  Node insertAsQuotation(in AString aQuotedText);
 
   /**
    * Inserts a plaintext string at the current location,
@@ -57,9 +58,9 @@ interface nsIEditorMailSupport : nsISupports
     * @param aInsertHTML  Insert as html?  (vs plaintext)
     * @return             The node which was inserted
     */
-  nsIDOMNode insertAsCitedQuotation(in AString aQuotedText,
-                                    in AString aCitation,
-                                    in boolean aInsertHTML);
+  Node insertAsCitedQuotation(in AString aQuotedText,
+                              in AString aCitation,
+                              in boolean aInsertHTML);
 
   /**
    * Rewrap the selected part of the document, re-quoting if necessary.

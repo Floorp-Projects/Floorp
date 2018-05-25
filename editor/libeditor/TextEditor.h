@@ -22,9 +22,7 @@ class nsISelectionController;
 class nsITransferable;
 
 namespace mozilla {
-
 class AutoEditInitRulesTrigger;
-class HTMLEditRules;
 enum class EditAction : int32_t;
 
 namespace dom {
@@ -41,6 +39,16 @@ class TextEditor : public EditorBase
                  , public nsIEditorMailSupport
 {
 public:
+  /****************************************************************************
+   * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
+   *       classes under libeditor except EditorEventListener and
+   *       HTMLEditorEventListener because each public method which may fire
+   *       eEditorInput event will need to instantiate new stack class for
+   *       managing input type value of eEditorInput and cache some objects
+   *       for smarter handling.  In other words, when you add new root
+   *       method to edit the DOM tree, you can make your new method public.
+   ****************************************************************************/
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextEditor, EditorBase)
 
@@ -86,40 +94,11 @@ public:
   virtual bool CanPasteTransferable(nsITransferable* aTransferable);
 
   // Overrides of EditorBase
-  virtual nsresult RemoveAttributeOrEquivalent(
-                     Element* aElement,
-                     nsAtom* aAttribute,
-                     bool aSuppressTransaction) override;
-  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
-                                            nsAtom* aAttribute,
-                                            const nsAString& aValue,
-                                            bool aSuppressTransaction) override;
-  using EditorBase::RemoveAttributeOrEquivalent;
-  using EditorBase::SetAttributeOrEquivalent;
-
   virtual nsresult Init(nsIDocument& aDoc, Element* aRoot,
                         nsISelectionController* aSelCon, uint32_t aFlags,
                         const nsAString& aValue) override;
 
   nsresult DocumentIsEmpty(bool* aIsEmpty);
-
-  /**
-   * All editor operations which alter the doc should be prefaced
-   * with a call to StartOperation, naming the action and direction.
-   */
-  virtual nsresult StartOperation(EditAction opID,
-                                  nsIEditor::EDirection aDirection) override;
-
-  /**
-   * All editor operations which alter the doc should be followed
-   * with a call to EndOperation.
-   */
-  virtual nsresult EndOperation() override;
-
-  /**
-   * Make the given selection span the entire document.
-   */
-  virtual nsresult SelectEntireDocument(Selection* aSelection) override;
 
   virtual nsresult HandleKeyPressEvent(
                      WidgetKeyboardEvent* aKeyboardEvent) override;
@@ -127,6 +106,15 @@ public:
   virtual dom::EventTarget* GetDOMEventTarget() override;
 
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
+
+  /**
+   * InsertTextAsAction() inserts aStringToInsert at selection.
+   * Although this method is implementation of nsIPlaintextEditor.insertText(),
+   * this treats the input is an edit action.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult InsertTextAsAction(const nsAString& aStringToInsert);
 
   /**
    * DeleteSelectionAsAction() removes selection content or content around
@@ -139,81 +127,6 @@ public:
    */
   nsresult DeleteSelectionAsAction(EDirection aDirection,
                                    EStripWrappers aStripWrappers);
-
-  /**
-   * DeleteSelectionWithTransaction() removes selected content or content
-   * around caret with transactions.
-   *
-   * @param aDirection          How much range should be removed.
-   * @param aStripWrappers      Whether the parent blocks should be removed
-   *                            when they become empty.
-   */
-  virtual nsresult
-  DeleteSelectionWithTransaction(EDirection aAction,
-                                 EStripWrappers aStripWrappers);
-
-  /**
-   * OnInputText() is called when user inputs text with keyboard or something.
-   *
-   * @param aStringToInsert     The string to insert.
-   */
-  nsresult OnInputText(const nsAString& aStringToInsert);
-
-  /**
-   * OnInputParagraphSeparator() is called when user tries to separate current
-   * paragraph with Enter key press or something.
-   */
-  nsresult OnInputParagraphSeparator();
-
-  /**
-   * InsertTextAsAction() inserts aStringToInsert at selection.
-   * Although this method is implementation of nsIPlaintextEditor.insertText(),
-   * this treats the input is an edit action.
-   *
-   * @param aStringToInsert     The string to insert.
-   */
-  nsresult InsertTextAsAction(const nsAString& aStringToInsert);
-
-  /**
-   * InsertParagraphSeparatorAsAction() inserts a line break if it's TextEditor
-   * or inserts new paragraph if it's HTMLEditor and it's possible.
-   * Although, this method is implementation of
-   * nsIPlaintextEditor.insertLineBreak(), this treats the input is an edit
-   * action.
-   */
-  nsresult InsertParagraphSeparatorAsAction();
-
-  nsresult InsertTextAt(const nsAString& aStringToInsert,
-                        nsINode* aDestinationNode,
-                        int32_t aDestOffset,
-                        bool aDoDeleteSelection);
-
-  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
-                                          int32_t aIndex,
-                                          nsIDocument* aSourceDoc,
-                                          nsINode* aDestinationNode,
-                                          int32_t aDestOffset,
-                                          bool aDoDeleteSelection) override;
-
-  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) override;
-
-  /**
-   * Extends the selection for given deletion operation
-   * If done, also update aAction to what's actually left to do after the
-   * extension.
-   */
-  nsresult ExtendSelectionForDelete(Selection* aSelection,
-                                    nsIEditor::EDirection* aAction);
-
-  /**
-   * Return true if the data is safe to insert as the source and destination
-   * principals match, or we are in a editor context where this doesn't matter.
-   * Otherwise, the data must be sanitized first.
-   */
-  bool IsSafeToInsertData(nsIDocument* aSourceDoc);
-
-  static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
-                                    int32_t& aCaretStyle);
 
   /**
     * The maximum number of characters allowed.
@@ -229,6 +142,12 @@ public:
    * @ param aString   the string to be set
    */
   nsresult SetText(const nsAString& aString);
+
+  /**
+   * OnInputParagraphSeparator() is called when user tries to separate current
+   * paragraph with Enter key press or something.
+   */
+  nsresult OnInputParagraphSeparator();
 
   /**
    * OnCompositionStart() is called when editor receives eCompositionStart
@@ -253,17 +172,41 @@ public:
    */
   void OnCompositionEnd(WidgetCompositionEvent& aCompositionEndEvent);
 
-protected:
-  virtual ~TextEditor();
+protected: // May be called by friends.
+  /****************************************************************************
+   * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
+   * part of handling edit actions are allowed to call the following protected
+   * methods.  However, those methods won't prepare caches of some objects
+   * which are necessary for them.  So, if you want some following methods
+   * to do that for you, you need to create a wrapper method in public scope
+   * and call it.
+   ****************************************************************************/
 
-  NS_IMETHOD InitRules();
-  void BeginEditorInit();
-  nsresult EndEditorInit();
+  // Overrides of EditorBase
+  virtual nsresult RemoveAttributeOrEquivalent(
+                     Element* aElement,
+                     nsAtom* aAttribute,
+                     bool aSuppressTransaction) override;
+  virtual nsresult SetAttributeOrEquivalent(Element* aElement,
+                                            nsAtom* aAttribute,
+                                            const nsAString& aValue,
+                                            bool aSuppressTransaction) override;
+  using EditorBase::RemoveAttributeOrEquivalent;
+  using EditorBase::SetAttributeOrEquivalent;
 
-  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
-                                         const nsAString& aFormatType,
-                                         uint32_t aFlags,
-                                         const nsACString& aCharset);
+  virtual nsresult InsertFromDrop(dom::DragEvent* aDropEvent) override;
+
+  /**
+   * DeleteSelectionWithTransaction() removes selected content or content
+   * around caret with transactions.
+   *
+   * @param aDirection          How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   */
+  virtual nsresult
+  DeleteSelectionWithTransaction(EDirection aAction,
+                                 EStripWrappers aStripWrappers);
 
   /**
    * InsertBrElementWithTransaction() creates a <br> element and inserts it
@@ -289,10 +232,89 @@ protected:
     EDirection aSelect = eNone);
 
   /**
+   * Extends the selection for given deletion operation
+   * If done, also update aAction to what's actually left to do after the
+   * extension.
+   */
+  nsresult ExtendSelectionForDelete(Selection* aSelection,
+                                    nsIEditor::EDirection* aAction);
+
+  static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
+                                    int32_t& aCaretStyle);
+
+protected: // Called by helper classes.
+  /**
+   * All editor operations which alter the doc should be prefaced
+   * with a call to StartOperation, naming the action and direction.
+   */
+  virtual nsresult StartOperation(EditAction opID,
+                                  nsIEditor::EDirection aDirection) override;
+
+  /**
+   * All editor operations which alter the doc should be followed
+   * with a call to EndOperation.
+   */
+  virtual nsresult EndOperation() override;
+
+  void BeginEditorInit();
+  nsresult EndEditorInit();
+
+protected: // Shouldn't be used by friend classes
+  virtual ~TextEditor();
+
+  /**
+   * Make the given selection span the entire document.
+   */
+  virtual nsresult SelectEntireDocument(Selection* aSelection) override;
+
+  /**
+   * OnInputText() is called when user inputs text with keyboard or something.
+   *
+   * @param aStringToInsert     The string to insert.
+   */
+  nsresult OnInputText(const nsAString& aStringToInsert);
+
+  /**
+   * InsertParagraphSeparatorAsAction() inserts a line break if it's TextEditor
+   * or inserts new paragraph if it's HTMLEditor and it's possible.
+   * Although, this method is implementation of
+   * nsIPlaintextEditor.insertLineBreak(), this treats the input is an edit
+   * action.
+   */
+  nsresult InsertParagraphSeparatorAsAction();
+
+  nsresult InsertTextAt(const nsAString& aStringToInsert,
+                        nsINode* aDestinationNode,
+                        int32_t aDestOffset,
+                        bool aDoDeleteSelection);
+
+  virtual nsresult InsertFromDataTransfer(dom::DataTransfer* aDataTransfer,
+                                          int32_t aIndex,
+                                          nsIDocument* aSourceDoc,
+                                          nsINode* aDestinationNode,
+                                          int32_t aDestOffset,
+                                          bool aDoDeleteSelection) override;
+
+  /**
+   * Return true if the data is safe to insert as the source and destination
+   * principals match, or we are in a editor context where this doesn't matter.
+   * Otherwise, the data must be sanitized first.
+   */
+  bool IsSafeToInsertData(nsIDocument* aSourceDoc);
+
+  virtual nsresult InitRules();
+
+  already_AddRefed<nsIDocumentEncoder> GetAndInitDocEncoder(
+                                         const nsAString& aFormatType,
+                                         uint32_t aFlags,
+                                         const nsACString& aCharset);
+
+  /**
    * Factored methods for handling insertion of data from transferables
    * (drag&drop or clipboard).
    */
-  NS_IMETHOD PrepareTransferable(nsITransferable** transferable);
+  virtual nsresult PrepareTransferable(nsITransferable** transferable);
+
   nsresult InsertTextFromTransferable(nsITransferable* transferable);
 
   /**
@@ -355,7 +377,6 @@ protected:
   int32_t mCaretStyle;
 
   friend class AutoEditInitRulesTrigger;
-  friend class HTMLEditRules;
   friend class TextEditRules;
 };
 

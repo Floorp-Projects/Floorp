@@ -29,7 +29,7 @@
 }
 
 #customization-header {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 1.2em;
   margin: 20px 20px 15px;
 }
@@ -375,7 +375,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   padding: 10px;
   margin-bottom: 5px;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
   border-bottom: 1px solid var(--panel-separator-color);
 }
 
@@ -488,7 +488,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 
 #customization-panelHeader {
   font-size: 1.3em;
-  font-weight: 500;
+  font-weight: 600;
   padding: 2px 12px;
   margin: 0;
 }

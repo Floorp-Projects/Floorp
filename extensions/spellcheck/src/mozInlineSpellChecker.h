@@ -226,7 +226,7 @@ public:
 
   // helper routine to determine if a point is inside of the passed in selection.
   nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
-                              nsIDOMNode *aNode,
+                              nsINode *aNode,
                               int32_t aOffset,
                               nsRange** aRange);
 

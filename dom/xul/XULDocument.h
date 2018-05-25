@@ -180,10 +180,6 @@ public:
 protected:
     virtual ~XULDocument();
 
-    // Returns the associated XUL window if this is a top-level chrome document,
-    // null otherwise.
-    already_AddRefed<nsIXULWindow> GetXULWindowIfToplevelChrome() const;
-
     // Implementation methods
     friend nsresult
     (::NS_NewXULDocument(nsIDocument** aResult));

@@ -90,7 +90,6 @@ function onLoadIFrame()
     getInterface(SpecialPowers.Ci.nsISelectionDisplay).
     QueryInterface(SpecialPowers.Ci.nsISelectionController);
   var utils = SpecialPowers.getDOMWindowUtils(window);
-  const nsIDOMNode = SpecialPowers.Ci.nsIDOMNode;
 
   // move focus to the HTML editor
   const kTest = kTests[gTestIndex];
@@ -110,9 +109,9 @@ function onLoadIFrame()
   var content = frameDoc.body.firstChild;
   ok(content, "body doesn't have contents -- " + kTest.description);
   if (content) {
-    is(content.nodeType, nsIDOMNode.TEXT_NODE,
+    is(content.nodeType, Node.TEXT_NODE,
        "the content of body isn't text node -- " + kTest.description);
-    if (content.nodeType == nsIDOMNode.TEXT_NODE) {
+    if (content.nodeType == Node.TEXT_NODE) {
       is(content.data, "ABC",
          "the content of body text isn't 'ABC' -- " + kTest.description);
       is(frameDoc.body.innerHTML, "ABC",
