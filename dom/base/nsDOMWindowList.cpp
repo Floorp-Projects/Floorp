@@ -26,20 +26,10 @@ nsDOMWindowList::~nsDOMWindowList()
 {
 }
 
-NS_IMPL_ADDREF(nsDOMWindowList)
-NS_IMPL_RELEASE(nsDOMWindowList)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMWindowList)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowCollection)
-   NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
+void
 nsDOMWindowList::SetDocShell(nsIDocShell* aDocShell)
 {
   mDocShellNode = aDocShell; // Weak Reference
-
-  return NS_OK;
 }
 
 void
@@ -71,13 +61,6 @@ nsDOMWindowList::GetLength()
   return uint32_t(length);
 }
 
-NS_IMETHODIMP
-nsDOMWindowList::GetLength(uint32_t* aLength)
-{
-  *aLength = GetLength();
-  return NS_OK;
-}
-
 already_AddRefed<nsPIDOMWindowOuter>
 nsDOMWindowList::IndexedGetter(uint32_t aIndex)
 {
@@ -90,14 +73,6 @@ nsDOMWindowList::IndexedGetter(uint32_t aIndex)
   MOZ_ASSERT(window);
 
   return window.forget();
-}
-
-NS_IMETHODIMP
-nsDOMWindowList::Item(uint32_t aIndex, mozIDOMWindowProxy** aReturn)
-{
-  nsCOMPtr<nsPIDOMWindowOuter> window = IndexedGetter(aIndex);
-  window.forget(aReturn);
-  return NS_OK;
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
@@ -115,12 +90,4 @@ nsDOMWindowList::NamedItem(const nsAString& aName)
 
   nsCOMPtr<nsPIDOMWindowOuter> childWindow(do_GetInterface(item));
   return childWindow.forget();
-}
-
-NS_IMETHODIMP
-nsDOMWindowList::NamedItem(const nsAString& aName, mozIDOMWindowProxy** aReturn)
-{
-  nsCOMPtr<nsPIDOMWindowOuter> item = NamedItem(aName);
-  item.forget(aReturn);
-  return NS_OK;
 }
