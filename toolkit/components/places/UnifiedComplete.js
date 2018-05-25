@@ -241,7 +241,8 @@ const SQL_ADAPTIVE_QUERY =
                             h.visit_count, h.typed, bookmarked,
                             t.open_count,
                             :matchBehavior, :searchBehavior)
-   ORDER BY rank DESC, h.frecency DESC`;
+   ORDER BY rank DESC, h.frecency DESC
+   LIMIT :maxResults`;
 
 // Result row indexes for originQuery()
 const QUERYINDEX_ORIGIN_AUTOFILLED_VALUE = 1;
@@ -2266,6 +2267,7 @@ Search.prototype = {
         matchBehavior: this._matchBehavior,
         searchBehavior: this._behavior,
         userContextId: this._userContextId,
+        maxResults: Prefs.get("maxRichResults")
       }
     ];
   },
