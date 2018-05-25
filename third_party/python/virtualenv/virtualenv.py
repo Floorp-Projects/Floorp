@@ -37,12 +37,12 @@ try:
 except ImportError:
     import configparser as ConfigParser
 
-__version__ = "16.0.0"
+__version__ = "15.2.0"
 virtualenv_version = __version__  # legacy
 
-if sys.version_info < (2, 7):
+if sys.version_info < (2, 6):
     print('ERROR: %s' % sys.exc_info()[1])
-    print('ERROR: this script requires Python 2.7 or greater.')
+    print('ERROR: this script requires Python 2.6 or greater.')
     sys.exit(101)
 
 try:
@@ -931,13 +931,19 @@ def create_environment(home_dir, site_packages=False, clear=False,
     to_install = []
 
     if not no_setuptools:
-        to_install.append('setuptools')
+        if sys.version_info[:2] == (2, 6):
+            to_install.append('setuptools<37')
+        else:
+            to_install.append('setuptools')
 
     if not no_pip:
         to_install.append('pip')
 
     if not no_wheel:
-        to_install.append('wheel')
+        if sys.version_info[:2] == (2, 6):
+            to_install.append("wheel<0.30")
+        else:
+            to_install.append('wheel')
 
     if to_install:
         install_wheel(
