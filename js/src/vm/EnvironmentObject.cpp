@@ -145,7 +145,9 @@ CallObject::createSingleton(JSContext* cx, HandleShape shape)
     MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(cx, &class_, TaggedProto(nullptr)));
+    ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
+    RootedObjectGroup group(cx, ObjectGroup::lazySingletonGroup(cx, realm, &class_,
+                                                                TaggedProto(nullptr)));
     if (!group)
         return nullptr;
 
