@@ -53,7 +53,7 @@ interface ChannelWrapper : EventTarget {
    * Returns the wrapper instance for the given channel. The same wrapper is
    * always returned for a given channel.
    */
-  static ChannelWrapper getRegisteredChannel(unsigned long long aChannelId,
+  static ChannelWrapper? getRegisteredChannel(unsigned long long aChannelId,
                                              WebExtensionPolicy extension,
                                              TabParent? tabParent);
 
