@@ -69,7 +69,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
 
   // List of all key shortcuts triggering installation UI
   // `id` should match tool's id from client/definitions.js
-  let shortcuts = [
+  return [
     // The following keys are also registered in /client/menus.js
     // And should be synced.
 
@@ -169,18 +169,6 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
       modifiers
     },
   ];
-
-  if (isMac) {
-    // Add the extra key command for macOS, so you can open the inspector with cmd+shift+C
-    // like on Chrome DevTools.
-    shortcuts.push({
-      toolId: "inspector",
-      shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
-      modifiers: "accel,shift"
-    });
-  }
-
-  return shortcuts;
 });
 
 function DevToolsStartup() {
