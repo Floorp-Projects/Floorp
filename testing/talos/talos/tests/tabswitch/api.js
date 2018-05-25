@@ -313,13 +313,13 @@ this.tps = class extends ExtensionAPI {
   getAPI(context) {
     return {
       tps: {
-        setup({ frameScriptPath }) {
+        setup({ processScriptPath }) {
           const AboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
                                        .getService(Ci.nsIAboutNewTabService);
           AboutNewTabService.newTabURL = "about:blank";
 
-          const frameScriptURL = context.extension.baseURI.resolve(frameScriptPath);
-          Services.ppmm.loadFrameScript(frameScriptURL, true);
+          const processScriptURL = context.extension.baseURI.resolve(processScriptPath);
+          Services.ppmm.loadProcessScript(processScriptURL, true);
           remotePage = new RemotePages("about:tabswitch");
           remotePage.addMessageListener("tabswitch-do-test", function doTest(msg) {
             test(msg.target.browser.ownerGlobal);
