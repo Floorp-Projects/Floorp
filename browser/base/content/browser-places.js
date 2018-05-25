@@ -127,6 +127,9 @@ var StarUI = {
 
         switch (aEvent.keyCode) {
           case KeyEvent.DOM_VK_ESCAPE:
+            if (this._isNewBookmark) {
+              this._removeBookmarksOnPopupHidden = true;
+            }
             this.panel.hidePopup();
             break;
           case KeyEvent.DOM_VK_RETURN:
@@ -237,18 +240,26 @@ var StarUI = {
     this._element("editBookmarkPanelBottomButtons").hidden = false;
     this._element("editBookmarkPanelContent").hidden = false;
 
-    // The label of the remove button differs if the URI is bookmarked
-    // multiple times.
     this._itemGuids = [];
-
     await PlacesUtils.bookmarks.fetch({url: aUrl},
       bookmark => this._itemGuids.push(bookmark.guid));
 
-    let forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
-    let bookmarksCount = this._itemGuids.length;
-    let label = PluralForm.get(bookmarksCount, forms)
-                          .replace("#1", bookmarksCount);
-    this._element("editBookmarkPanelRemoveButton").label = label;
+    let removeButton = this._element("editBookmarkPanelRemoveButton");
+    if (this._isNewBookmark) {
+      removeButton.label = gNavigatorBundle.getString("editBookmarkPanel.cancel.label");
+      removeButton.setAttribute("accesskey",
+        gNavigatorBundle.getString("editBookmarkPanel.cancel.accesskey"));
+    } else {
+      // The label of the remove button differs if the URI is bookmarked
+      // multiple times.
+      let bookmarksCount = this._itemGuids.length;
+      let forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
+      let label = PluralForm.get(bookmarksCount, forms)
+                            .replace("#1", bookmarksCount);
+      removeButton.label = label;
+      removeButton.setAttribute("accesskey",
+        gNavigatorBundle.getString("editBookmark.removeBookmarks.accesskey"));
+    }
 
     this.beginBatch();
 
