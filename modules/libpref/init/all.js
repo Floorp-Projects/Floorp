@@ -3045,6 +3045,9 @@ pref("layout.idle_period.required_quiescent_frames", 2);
 // end and the start of the next tick to avoid jank.
 pref("layout.idle_period.time_limit", 1);
 
+// Whether -webkit-appearance is aliased to -moz-appearance
+pref("layout.css.webkit-appearance.enabled", false);
+
 // Is support for the Web Animations API enabled?
 // Before enabling this by default, make sure also CSSPseudoElement interface
 // has been spec'ed properly, or we should add a separate pref for
