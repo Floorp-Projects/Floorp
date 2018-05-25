@@ -1559,12 +1559,52 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 }
 
 static void
+StreamCategories(SpliceableJSONWriter& aWriter)
+{
+  // Same order as ProfilingStackFrame::Category.
+  // The list of available color names is:
+  // transparent, grey, purple, yellow, orange, lightblue, green, blue, magenta
+  aWriter.Start();
+  aWriter.StringProperty("name", "Idle");
+  aWriter.StringProperty("color", "transparent");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Other");
+  aWriter.StringProperty("color", "grey");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Layout");
+  aWriter.StringProperty("color", "purple");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "JavaScript");
+  aWriter.StringProperty("color", "yellow");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "GC / CC");
+  aWriter.StringProperty("color", "orange");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Network");
+  aWriter.StringProperty("color", "lightblue");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "Graphics");
+  aWriter.StringProperty("color", "green");
+  aWriter.EndObject();
+  aWriter.Start();
+  aWriter.StringProperty("name", "DOM");
+  aWriter.StringProperty("color", "blue");
+  aWriter.EndObject();
+}
+
+static void
 StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
                          bool aIsShuttingDown)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 10);
+  aWriter.IntProperty("version", 11);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -1581,6 +1621,10 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
   } else {
     aWriter.NullProperty("shutdownTime");
   }
+
+  aWriter.StartArrayProperty("categories");
+  StreamCategories(aWriter);
+  aWriter.EndArray();
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
