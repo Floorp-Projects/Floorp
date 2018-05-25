@@ -2673,7 +2673,7 @@ CompareExchangeJS(MacroAssembler& masm, Scalar::Type arrayType, const Synchroniz
                              temp);
         masm.convertUInt32ToDouble(temp, output.fpu());
     } else {
-        masm.compareExchange(arrayType, sync, mem, oldval, newval, valueTemp, maskTemp, temp,
+        masm.compareExchange(arrayType, sync, mem, oldval, newval, valueTemp, offsetTemp, maskTemp,
                              output.gpr());
     }
 }

@@ -219,6 +219,16 @@ function waitForPause(threadClient) {
   return waitForEvent(threadClient, "paused");
 }
 
+function waitForProperty(dbg, property) {
+  return new Promise(resolve => {
+    Object.defineProperty(dbg, property, {
+      set(newValue) {
+        resolve(newValue);
+      }
+    });
+  });
+}
+
 function setBreakpoint(sourceClient, location) {
   dump("Setting breakpoint.\n");
   return sourceClient.setBreakpoint(location);

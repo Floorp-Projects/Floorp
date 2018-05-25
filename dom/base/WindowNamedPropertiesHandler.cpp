@@ -180,7 +180,7 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
   // The names live on the outer window, which might be null
   nsGlobalWindowOuter* outer = win->GetOuterWindowInternal();
   if (outer) {
-    nsDOMWindowList* childWindows = outer->GetWindowList();
+    nsDOMWindowList* childWindows = outer->GetFrames();
     if (childWindows) {
       uint32_t length = childWindows->GetLength();
       for (uint32_t i = 0; i < length; ++i) {

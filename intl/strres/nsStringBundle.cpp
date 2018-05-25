@@ -64,6 +64,29 @@ nsStringBundle::AsyncPreload()
                           &nsStringBundle::LoadProperties));
 }
 
+size_t
+nsStringBundle::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  if (mProps) {
+    n += mProps->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mOverrideStrings) {
+    n += mOverrideStrings->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return aMallocSizeOf(this) + n;
+}
+
+size_t
+nsStringBundle::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+{
+  if (mRefCnt == 1) {
+    return SizeOfIncludingThis(aMallocSizeOf);
+  } else {
+    return 0;
+  }
+}
+
 nsresult
 nsStringBundle::LoadProperties()
 {
@@ -383,6 +406,31 @@ nsExtensibleStringBundle::~nsExtensibleStringBundle()
 {
 }
 
+size_t
+nsExtensibleStringBundle::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  const uint32_t sz = mBundles.Count();
+  for (uint32_t i = 0; i < sz; ++i) {
+    nsIStringBundle* bundle = mBundles[i];
+    if (bundle) {
+      n += bundle->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
+  n += mBundles.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  return aMallocSizeOf(this) + n;
+}
+
+size_t
+nsExtensibleStringBundle::SizeOfIncludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
+{
+  if (mRefCnt == 1) {
+    return SizeOfIncludingThis(aMallocSizeOf);
+  } else {
+    return 0;
+  }
+}
+
 nsresult
 nsExtensibleStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 {
@@ -490,10 +538,12 @@ nsStringBundleService::nsStringBundleService() :
 NS_IMPL_ISUPPORTS(nsStringBundleService,
                   nsIStringBundleService,
                   nsIObserver,
-                  nsISupportsWeakReference)
+                  nsISupportsWeakReference,
+                  nsIMemoryReporter)
 
 nsStringBundleService::~nsStringBundleService()
 {
+  UnregisterWeakMemoryReporter(this);
   flushBundleCache();
 }
 
@@ -514,7 +564,20 @@ nsStringBundleService::Init()
   // support multiple overrides
   mOverrideStrings = do_GetService(NS_STRINGBUNDLETEXTOVERRIDE_CONTRACTID);
 
+  RegisterWeakMemoryReporter(this);
+
   return NS_OK;
+}
+
+size_t
+nsStringBundleService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = mBundleMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mBundleMap.ConstIter(); !iter.Done(); iter.Next()) {
+    n += iter.Data()->mBundle->SizeOfIncludingThis(aMallocSizeOf);
+    n += iter.Data()->mHashKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
+  return aMallocSizeOf(this) + n;
 }
 
 NS_IMETHODIMP
@@ -570,7 +633,6 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
     cacheEntry->remove();
 
   } else {
-
     // hasn't been cached, so insert it into the hash table
     RefPtr<nsStringBundle> bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
     cacheEntry = insertIntoCache(bundle.forget(), key);

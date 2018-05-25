@@ -212,6 +212,12 @@ nsStringBundleTextOverride::GetStringFromName(const nsACString& aURL,
     return mValues->GetStringProperty(combinedURL, aResult);
 }
 
+size_t
+nsStringBundleTextOverride::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + (mValues ? mValues->SizeOfIncludingThis(aMallocSizeOf) : 0);
+}
+
 NS_IMETHODIMP
 nsStringBundleTextOverride::EnumerateKeysInBundle(const nsACString& aURL,
                                                   nsISimpleEnumerator** aResult)

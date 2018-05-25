@@ -57,7 +57,7 @@ static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::AllocKind::OBJECT2_BACKG
 void
 NativeIterator::trace(JSTracer* trc)
 {
-    TraceNullableEdge(trc, &obj, "obj");
+    TraceNullableEdge(trc, &objectBeingIterated_, "objectBeingIterated_");
 
     // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
     // GC removes any elements from the list, it won't remove this one.
@@ -546,8 +546,8 @@ RegisterEnumerator(ObjectRealm& realm, NativeIterator* ni)
     /* Register non-escaping native enumerators (for-in) with the current context. */
     ni->link(realm.enumerators);
 
-    MOZ_ASSERT(!(ni->flags & JSITER_ACTIVE));
-    ni->flags |= JSITER_ACTIVE;
+    MOZ_ASSERT(!ni->isActive());
+    ni->markActive();
 }
 
 static PropertyIteratorObject*
@@ -658,7 +658,7 @@ NativeIterator::allocateSentinel(JSContext* maybecx)
 NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                                Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
                                uint32_t numGuards, uint32_t guardKey, bool* hadError)
-  : obj(objBeingIterated),
+  : objectBeingIterated_(objBeingIterated),
     iterObj_(propIter),
     // NativeIterator initially acts (before full initialization) as if it
     // contains no guards...
@@ -666,8 +666,8 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
     // ...and no properties.
     propertyCursor_(reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
     propertiesEnd_(propertyCursor_),
-    guard_key(guardKey),
-    flags(0)
+    guardKey_(guardKey),
+    flags_(0)
 {
     MOZ_ASSERT(!*hadError);
 
@@ -729,7 +729,7 @@ NativeIterator::NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> pr
             pobj = pobj->staticPrototype();
         } while (pobj);
 
-        guard_key = key;
+        guardKey_ = key;
         MOZ_ASSERT(i == numGuards);
     }
 
@@ -766,19 +766,11 @@ js::NewEmptyPropertyIterator(JSContext* cx)
 IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
 {
     NativeIterator* ni = obj->getNativeIterator();
-    if (ni->guard_key != lookup.key || ni->guardCount() != lookup.numGuards)
+    if (ni->guardKey() != lookup.key || ni->guardCount() != lookup.numGuards)
         return false;
 
     return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()), lookup.guards,
                     ni->guardCount());
-}
-
-static inline void
-UpdateNativeIterator(NativeIterator* ni, JSObject* obj)
-{
-    // Update the object for which the native iterator is associated, so
-    // SuppressDeletedPropertyHelper will recognize the iterator as a match.
-    ni->obj = obj;
 }
 
 static inline bool
@@ -831,7 +823,7 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
     MOZ_ASSERT(iterobj->compartment() == cx->compartment());
 
     NativeIterator* ni = iterobj->getNativeIterator();
-    if (ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE))
+    if (!ni->isReusable())
         return nullptr;
 
     return iterobj;
@@ -871,7 +863,7 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* itero
 
     IteratorHashPolicy::Lookup lookup(reinterpret_cast<ReceiverGuard*>(ni->guardsBegin()),
                                       ni->guardCount(),
-                                      ni->guard_key);
+                                      ni->guardKey());
 
     ObjectRealm::IteratorCache& cache = ObjectRealm::get(obj).iteratorCache;
     bool ok;
@@ -898,7 +890,7 @@ js::GetIterator(JSContext* cx, HandleObject obj)
     uint32_t numGuards = 0;
     if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
         NativeIterator* ni = iterobj->getNativeIterator();
-        UpdateNativeIterator(ni, obj);
+        ni->changeObjectBeingIterated(*obj);
         RegisterEnumerator(ObjectRealm::get(obj), ni);
         return iterobj;
     }
@@ -1023,18 +1015,6 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
 }
 
 /*** Iterator objects ****************************************************************************/
-
-MOZ_ALWAYS_INLINE void
-NativeIteratorNext(NativeIterator* ni, MutableHandleValue rval)
-{
-    if (ni->propertyCursor_ >= ni->propertiesEnd()) {
-        MOZ_ASSERT(ni->propertyCursor_ == ni->propertiesEnd());
-        rval.setMagic(JS_NO_ITER_VALUE);
-    } else {
-        rval.setString(*ni->currentProperty());
-        ni->incCursor();
-    }
-}
 
 bool
 js::IsPropertyIterator(HandleValue v)
@@ -1179,14 +1159,12 @@ js::CloseIterator(JSObject* obj)
 
         ni->unlink();
 
-        MOZ_ASSERT(ni->flags & JSITER_ACTIVE);
-        ni->flags &= ~JSITER_ACTIVE;
+        MOZ_ASSERT(ni->isActive());
+        ni->markInactive();
 
-        /*
-         * Reset the enumerator; it may still be in the cached iterators
-         * for this thread, and can be reused.
-         */
-        ni->propertyCursor_ = ni->propertiesBegin();
+        // Reset the enumerator; it may still be in the cached iterators for
+        // this thread and can be reused.
+        ni->resetPropertyCursorForReuse();
     }
 }
 
@@ -1253,7 +1231,7 @@ static bool
 SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
                         Handle<JSFlatString*> str)
 {
-    if (ni->obj != obj)
+    if (ni->objectBeingIterated() != obj)
         return true;
 
     // Optimization for the following common case:
@@ -1264,14 +1242,14 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
     //
     // Note that usually both strings will be atoms so we only check for pointer
     // equality here.
-    if (ni->propertyCursor_ > ni->propertiesBegin() && ni->propertyCursor_[-1] == str)
+    if (ni->previousPropertyWas(str))
         return true;
 
     while (true) {
         bool restart = false;
 
         // Check whether id is still to come.
-        GCPtrFlatString* const cursor = ni->propertyCursor_;
+        GCPtrFlatString* const cursor = ni->nextProperty();
         GCPtrFlatString* const end = ni->propertiesEnd();
         for (GCPtrFlatString* idp = cursor; idp < end; ++idp) {
             // Common case: both strings are atoms.
@@ -1304,7 +1282,7 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
 
             // If GetPropertyDescriptor above removed a property from ni, start
             // over.
-            if (end != ni->propertiesEnd() || cursor != ni->propertyCursor_) {
+            if (end != ni->propertiesEnd() || cursor != ni->nextProperty()) {
                 restart = true;
                 break;
             }
@@ -1317,16 +1295,13 @@ SuppressDeletedProperty(JSContext* cx, NativeIterator* ni, HandleObject obj,
             } else {
                 for (GCPtrFlatString* p = idp; p + 1 != end; p++)
                     *p = *(p + 1);
-                ni->propertiesEnd_--;
 
-                // This invokes the pre barrier on this element, since
-                // it's no longer going to be marked, and ensures that
-                // any existing remembered set entry will be dropped.
-                *ni->propertiesEnd_ = nullptr;
+                ni->trimLastProperty();
             }
 
-            // Don't reuse modified native iterators.
-            ni->flags |= JSITER_UNREUSABLE;
+            // Modified NativeIterators omit properties that possibly shouldn't
+            // be omitted, so they can't be reused.
+            ni->markNotReusable();
             return true;
         }
 
@@ -1399,7 +1374,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     // Fast path for native iterators.
     if (MOZ_LIKELY(iterobj->is<PropertyIteratorObject>())) {
         NativeIterator* ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        NativeIteratorNext(ni, rval);
+        rval.set(ni->nextIteratedValueAndAdvance());
         return true;
     }
 
@@ -1418,7 +1393,7 @@ js::IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval)
     {
         AutoRealm ar(cx, obj);
         NativeIterator* ni = obj->as<PropertyIteratorObject>().getNativeIterator();
-        NativeIteratorNext(ni, rval);
+        rval.set(ni->nextIteratedValueAndAdvance());
     }
     return cx->compartment()->wrap(cx, rval);
 }
