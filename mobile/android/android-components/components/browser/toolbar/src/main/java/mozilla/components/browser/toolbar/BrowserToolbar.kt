@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.View
@@ -55,6 +56,14 @@ class BrowserToolbar @JvmOverloads constructor(
         set(value) {
             displayToolbar.iconView.visibility = if (value) View.VISIBLE else View.GONE
         }
+
+    /**
+     * Gets/Sets drawable that will be drawn as background behind the URL (including page actions)
+     * in display mode.
+     */
+    var urlBackgroundDrawable: Drawable?
+        get() = displayToolbar.urlBackgroundDrawable
+        set(value) { displayToolbar.urlBackgroundDrawable = value }
 
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""

@@ -6,6 +6,9 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -115,11 +118,18 @@ internal class DisplayToolbar(
     private val pageActions: MutableList<DisplayAction> = mutableListOf()
     private val navigationActions: MutableList<DisplayAction> = mutableListOf()
 
+    private var urlBackgroundRect = Rect()
+
+    // Background to be drawn behind the URL (including page actions)
+    internal var urlBackgroundDrawable: Drawable? = null
+
     init {
         addView(iconView)
         addView(urlView)
         addView(menuView)
         addView(progressView)
+
+        setWillNotDraw(false)
     }
 
     /**
@@ -282,6 +292,20 @@ internal class DisplayToolbar(
         urlView.layout(urlLeft, 0, urlRight, measuredHeight)
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
+
+        urlBackgroundRect.set(navigationActionsWidth, 0, urlRight + pageActionsWidth, measuredHeight)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        urlBackgroundDrawable?.let { drawable ->
+            canvas.save()
+
+            canvas.translate(urlBackgroundRect.left.toFloat(), urlBackgroundRect.top.toFloat())
+            drawable.setBounds(0, 0, urlBackgroundRect.width(), urlBackgroundRect.height())
+            drawable.draw(canvas)
+
+            canvas.restore()
+        }
     }
 
     companion object {
