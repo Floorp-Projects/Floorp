@@ -1,0 +1,41 @@
+<!doctype html>
+<html reftest-zoom="2" class="reftest-wait">
+<title>CSS Test: srcset intrinsic size isn't confused</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1149357">
+<style>
+.image-container {
+  display: inline;
+}
+.content-container {
+  display: inline-block;
+}
+.flex-container {
+  align-items: center;
+  display: flex;
+}
+</style>
+<script>
+  // reftest-zoom is only applied at onload, so ensure the source-selection
+  // has happened after that
+  function clearWait() {
+    document.documentElement.classList.remove("reftest-wait");
+  }
+  window.addEventListener("load", function() {
+    setTimeout(function() {
+      var img = document.querySelector("img");
+      img.onload = clearWait;
+      img.onerror = clearWait;
+      img.src = img.src;
+    }, 0);
+  });
+</script>
+<div class="flex-container">
+  <div class="image-container">
+    <img srcset="50.png 0.5x, 100.png 1x, 200.png 2x, 300.png 3x, 400.png">
+  </div>
+  <div class="content-container">
+    Should see me right by the side of the image.
+  </div>
+</div>
+</html>

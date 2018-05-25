@@ -971,8 +971,8 @@ Realm::getOrCreateIterResultTemplateObject(JSContext* cx)
 
     // Create a new group for the template.
     Rooted<TaggedProto> proto(cx, templateObject->taggedProto());
-    RootedObjectGroup group(cx, ObjectGroupCompartment::makeGroup(cx, templateObject->getClass(),
-                                                                  proto));
+    RootedObjectGroup group(cx, ObjectGroupRealm::makeGroup(cx, templateObject->getClass(),
+                                                            proto));
     if (!group)
         return iterResultTemplate_; // = nullptr
     templateObject->setGroup(group);

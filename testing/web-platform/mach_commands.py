@@ -358,7 +358,8 @@ class MachCommands(MachCommandBase):
              parser=create_parser_update)
     def update_web_platform_tests(self, **params):
         self.setup()
-        self.virtualenv_manager.install_pip_package('html5lib==0.99')
+        self.virtualenv_manager.install_pip_package('html5lib==1.0.1')
+        self.virtualenv_manager.install_pip_package('ujson')
         self.virtualenv_manager.install_pip_package('requests')
         wpt_updater = self._spawn(WebPlatformTestsUpdater)
         return wpt_updater.run_update(**params)

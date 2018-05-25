@@ -89,7 +89,7 @@ class MOZ_RAII FakeRooted : public RootedBase<T, FakeRooted<T>>
     using ElementType = T;
 
     template <typename CX>
-    explicit FakeRooted(CX* cx) : ptr(JS::GCPolicy<T>::initial()) {}
+    explicit FakeRooted(CX* cx) : ptr(JS::SafelyInitialized<T>()) {}
 
     template <typename CX>
     FakeRooted(CX* cx, T initial) : ptr(initial) {}

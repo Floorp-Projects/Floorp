@@ -14,106 +14,114 @@
           src="../attributes.js"></script>
 
   <script type="application/javascript">
-    function doTest() {
-      // Attribute we're looking for
-      var attr = {
-        "layout-guess": "true"
-      };
+    function isLayoutTable(id) {
+      testAttrs(id, { "layout-guess": "true" }, true);
+    }
+    function isDataTable(id) {
+      testAbsentAttrs(id, { "layout-guess": "true" });
+    }
 
+    function doTest() {
       // table with role of grid
-      testAbsentAttrs("table1", attr);
+      isDataTable("table1");
       // table with role of grid and datatable="0"
-      testAbsentAttrs("table1.1", attr);
+      isDataTable("table1.1");
 
       // table with landmark role
-      testAbsentAttrs("table2", attr);
+      isDataTable("table2");
 
       // table with summary
-      testAbsentAttrs("table3", attr);
+      isDataTable("table3");
 
       // table with caption
-      testAbsentAttrs("table4", attr);
+      isDataTable("table4");
 
       // layout table with empty caption
-      testAttrs("table4.2", attr, true);
+      isLayoutTable("table4.2");
 
       // table with thead element
-      testAbsentAttrs("table5", attr);
+      isDataTable("table5");
 
       // table with tfoot element
-      testAbsentAttrs("table5.1", attr);
+      isDataTable("table5.1");
 
       // table with colgroup or col elements
-      testAbsentAttrs("table5.2", attr);
-      testAbsentAttrs("table5.3", attr);
+      isDataTable("table5.2");
+      isDataTable("table5.3");
 
       // table with th element
-      testAbsentAttrs("table6", attr);
+      isDataTable("table6");
 
       // table with headers attribute
-      testAbsentAttrs("table6.2", attr);
+      isDataTable("table6.2");
 
       // table with scope attribute
-      testAbsentAttrs("table6.2.2", attr);
+      isDataTable("table6.2.2");
 
       // table with abbr attribute
-      testAbsentAttrs("table6.2.3", attr);
+      isDataTable("table6.2.3");
 
       // table with abbr element
-      testAbsentAttrs("table6.3", attr);
+      isDataTable("table6.3");
 
       // table with abbr element having empty text node
-      testAbsentAttrs("table6.4", attr);
+      isDataTable("table6.4");
 
       // table with abbr element and non-empty text node
-      testAttrs("table6.5", attr, true);
+      isLayoutTable("table6.5");
 
       // layout table with nested table
-      testAttrs("table9", attr, true);
+      isLayoutTable("table9");
 
       // layout table with 1 column
-      testAttrs("table10", attr, true);
+      isLayoutTable("table10");
 
       // layout table with 1 row
-      testAttrs("table11", attr, true);
+      isLayoutTable("table11");
 
       // table with 5 columns
-      testAbsentAttrs("table12", attr);
+      isDataTable("table12");
 
       // table with a bordered cell
-      testAbsentAttrs("table13", attr);
+      isDataTable("table13");
 
       // table with alternating row background colors
-      testAbsentAttrs("table14", attr);
+      isDataTable("table14");
 
       // table with 3 columns and 21 rows
-      testAbsentAttrs("table15", attr);
+      isDataTable("table15");
 
       // layout table that has a 100% width
-      testAttrs("table16", attr, true);
+      isLayoutTable("table16");
 
       // layout table that has a 95% width in pixels
-      testAttrs("table17", attr, true);
+      isLayoutTable("table17");
 
       // layout table with less than 10 columns
-      testAttrs("table18", attr, true);
+      isLayoutTable("table18");
 
       // layout table with embedded iframe
-      testAttrs("table19", attr, true);
+      isLayoutTable("table19");
 
       // tree grid, no layout table
-      testAbsentAttrs("table20", attr);
+      isDataTable("table20");
 
       // layout table containing nested data table (having data structures)
-      testAttrs("table21", attr, true);
-      testAttrs("table21.2", attr, true);
-      testAttrs("table21.3", attr, true);
-      testAttrs("table21.4", attr, true);
-      testAttrs("table21.5", attr, true);
-      testAttrs("table21.6", attr, true);
+      isLayoutTable("table21");
+      isLayoutTable("table21.2");
+      isLayoutTable("table21.3");
+      isLayoutTable("table21.4");
+      isLayoutTable("table21.5");
+      isLayoutTable("table21.6");
 
       // layout table having datatable="0" attribute and containing data table structure (tfoot element)
-      testAttrs("table22", attr, true);
+      isLayoutTable("table22");
+
+      // layout display:block table with 1 column
+      isLayoutTable("displayblock_table1");
+
+      // matrix
+      isDataTable("mtable1");
 
       SimpleTest.finish();
     }
@@ -501,5 +509,32 @@
     </tfoot>
   </table>
 
+  <!-- display:block table -->
+  <table id="displayblock_table1" style="display:block">
+    <tr><td>Row1</td></tr>
+    <tr><td>Row2</td></tr>
+  </table>
+
+  <!-- MathML matrix -->
+  <math>
+    <mtable id="mtable1">
+      <mtr>
+        <mtd>
+          <mn>1</mn>
+        </mtd>
+        <mtd>
+          <mn>0</mn>
+        </mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mn>0</mn>
+        </mtd>
+        <mtd>
+          <mn>1</mn>
+        </mtd>
+      </mtr>
+    </mtable>
+  </math>
 </body>
 </html>

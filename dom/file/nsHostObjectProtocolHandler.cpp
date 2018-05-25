@@ -481,7 +481,9 @@ public:
     return NS_OK;
   }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
   using nsINamed::GetName;
+#endif
 
   // nsIAsyncShutdownBlocker interface
 

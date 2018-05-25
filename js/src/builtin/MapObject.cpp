@@ -376,7 +376,7 @@ MapIteratorObject::createResultPair(JSContext* cx)
         return nullptr;
 
     Rooted<TaggedProto> proto(cx, resultPairObj->taggedProto());
-    ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, resultPairObj->getClass(), proto);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultPairObj->getClass(), proto);
     if (!group)
         return nullptr;
     resultPairObj->setGroup(group);
@@ -1204,7 +1204,7 @@ SetIteratorObject::createResult(JSContext* cx)
         return nullptr;
 
     Rooted<TaggedProto> proto(cx, resultObj->taggedProto());
-    ObjectGroup* group = ObjectGroupCompartment::makeGroup(cx, resultObj->getClass(), proto);
+    ObjectGroup* group = ObjectGroupRealm::makeGroup(cx, resultObj->getClass(), proto);
     if (!group)
         return nullptr;
     resultObj->setGroup(group);

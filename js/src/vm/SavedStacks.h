@@ -174,7 +174,7 @@ class SavedStacks {
     void trace(JSTracer* trc);
     uint32_t count();
     void clear();
-    void chooseSamplingProbability(JSCompartment*);
+    void chooseSamplingProbability(JS::Realm* realm);
 
     // Set the sampling random number generator's state to |state0| and
     // |state1|. One or the other must be non-zero. See the comments for

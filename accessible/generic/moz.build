@@ -21,6 +21,7 @@ UNIFIED_SOURCES += [
     'ImageAccessible.cpp',
     'OuterDocAccessible.cpp',
     'RootAccessible.cpp',
+    'TableAccessible.cpp',
     'TableCellAccessible.cpp',
     'TextLeafAccessible.cpp',
 ]

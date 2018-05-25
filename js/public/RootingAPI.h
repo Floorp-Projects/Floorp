@@ -200,6 +200,40 @@ template <typename T> class PersistentRooted;
 JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next);
 JS_FRIEND_API(void) HeapStringPostBarrier(JSString** objp, JSString* prev, JSString* next);
 
+/**
+ * Create a safely-initialized |T|, suitable for use as a default value in
+ * situations requiring a safe but arbitrary |T| value.
+ */
+template<typename T>
+inline T
+SafelyInitialized()
+{
+    // This function wants to presume that |T()| -- which value-initializes a
+    // |T| per C++11 [expr.type.conv]p2 -- will produce a safely-initialized,
+    // safely-usable T that it can return.
+
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(XP_UNIX) && !defined(__clang__))
+
+    // That presumption holds for pointers, where value initialization produces
+    // a null pointer.
+    constexpr bool IsPointer = std::is_pointer<T>::value;
+
+    // For classes and unions we *assume* that if |T|'s default constructor is
+    // non-trivial it'll initialize correctly. (This is unideal, but C++
+    // doesn't offer a type trait indicating whether a class's constructor is
+    // user-defined, which better approximates our desired semantics.)
+    constexpr bool IsNonTriviallyDefaultConstructibleClassOrUnion =
+        (std::is_class<T>::value || std::is_union<T>::value) &&
+        !std::is_trivially_default_constructible<T>::value;
+
+    static_assert(IsPointer || IsNonTriviallyDefaultConstructibleClassOrUnion,
+                  "T() must evaluate to a safely-initialized T");
+
+#endif
+
+    return T();
+}
+
 #ifdef JS_DEBUG
 /**
  * For generational GC, assert that an object is in the tenured generation as
@@ -247,7 +281,7 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>>
     Heap() {
         static_assert(sizeof(T) == sizeof(Heap<T>),
                       "Heap<T> must be binary compatible with T.");
-        init(GCPolicy<T>::initial());
+        init(SafelyInitialized<T>());
     }
     explicit Heap(const T& p) { init(p); }
 
@@ -260,7 +294,7 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>>
     explicit Heap(const Heap<T>& p) { init(p.ptr); }
 
     ~Heap() {
-        post(ptr, GCPolicy<T>::initial());
+        post(ptr, SafelyInitialized<T>());
     }
 
     DECLARE_POINTER_CONSTREF_OPS(T);
@@ -291,7 +325,7 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>>
   private:
     void init(const T& newPtr) {
         ptr = newPtr;
-        post(GCPolicy<T>::initial(), ptr);
+        post(SafelyInitialized<T>(), ptr);
     }
 
     void set(const T& newPtr) {
@@ -950,7 +984,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
 
     template <typename RootingContext>
     explicit Rooted(const RootingContext& cx)
-      : ptr(GCPolicy<T>::initial())
+      : ptr(SafelyInitialized<T>())
     {
         registerWithRootLists(rootLists(cx));
     }
@@ -1219,16 +1253,16 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
   public:
     using ElementType = T;
 
-    PersistentRooted() : ptr(GCPolicy<T>::initial()) {}
+    PersistentRooted() : ptr(SafelyInitialized<T>()) {}
 
     explicit PersistentRooted(RootingContext* cx)
-      : ptr(GCPolicy<T>::initial())
+      : ptr(SafelyInitialized<T>())
     {
         registerWithRootLists(cx);
     }
 
     explicit PersistentRooted(JSContext* cx)
-      : ptr(GCPolicy<T>::initial())
+      : ptr(SafelyInitialized<T>())
     {
         registerWithRootLists(RootingContext::get(cx));
     }
@@ -1248,7 +1282,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
     }
 
     explicit PersistentRooted(JSRuntime* rt)
-      : ptr(GCPolicy<T>::initial())
+      : ptr(SafelyInitialized<T>())
     {
         registerWithRootLists(rt);
     }
@@ -1280,7 +1314,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
     }
 
     void init(JSContext* cx) {
-        init(cx, GCPolicy<T>::initial());
+        init(cx, SafelyInitialized<T>());
     }
 
     template <typename U>
@@ -1291,7 +1325,7 @@ class PersistentRooted : public js::RootedBase<T, PersistentRooted<T>>,
 
     void reset() {
         if (initialized()) {
-            set(GCPolicy<T>::initial());
+            set(SafelyInitialized<T>());
             ListBase::remove();
         }
     }

@@ -198,13 +198,17 @@ union PrefValue {
   {
     if (aType == PrefType::String) {
       free(const_cast<char*>(mStringVal));
-      mStringVal = nullptr;
     }
+
+    // Zero the entire value (regardless of type) via mStringVal.
+    mStringVal = nullptr;
   }
 
-  void Replace(PrefType aOldType, PrefType aNewType, PrefValue aNewValue)
+  void Replace(bool aHasValue, PrefType aOldType, PrefType aNewType, PrefValue aNewValue)
   {
-    Clear(aOldType);
+    if (aHasValue) {
+      Clear(aOldType);
+    }
     Init(aNewType, aNewValue);
   }
 
@@ -597,7 +601,7 @@ public:
       PrefType type = value.FromDomPrefValue(defaultValue.get_PrefValue());
       if (!ValueMatches(PrefValueKind::Default, type, value)) {
         // Type() is PrefType::None if it's a newly added pref. This is ok.
-        mDefaultValue.Replace(Type(), type, value);
+        mDefaultValue.Replace(mHasDefaultValue, Type(), type, value);
         SetType(type);
         mHasDefaultValue = true;
         defaultValueChanged = true;
@@ -612,7 +616,7 @@ public:
       PrefType type = value.FromDomPrefValue(userValue.get_PrefValue());
       if (!ValueMatches(PrefValueKind::User, type, value)) {
         // Type() is PrefType::None if it's a newly added pref. This is ok.
-        mUserValue.Replace(Type(), type, value);
+        mUserValue.Replace(mHasUserValue, Type(), type, value);
         SetType(type);
         mHasUserValue = true;
         userValueChanged = true;
@@ -667,11 +671,7 @@ private:
 public:
   void ClearUserValue()
   {
-    if (Type() == PrefType::String) {
-      free(const_cast<char*>(mUserValue.mStringVal));
-      mUserValue.mStringVal = nullptr;
-    }
-
+    mUserValue.Clear(Type());
     mHasUserValue = false;
     mHasChangedSinceInit = true;
   }
@@ -695,7 +695,7 @@ public:
         SetIsLocked(true);
       }
       if (!ValueMatches(PrefValueKind::Default, aType, aValue)) {
-        mDefaultValue.Replace(Type(), aType, aValue);
+        mDefaultValue.Replace(mHasDefaultValue, Type(), aType, aValue);
         mHasDefaultValue = true;
         if (!aFromInit) {
           mHasChangedSinceInit = true;
@@ -739,7 +739,7 @@ public:
       // Otherwise, should we set the user value? Only if doing so would
       // change the user value.
     } else if (!ValueMatches(PrefValueKind::User, aType, aValue)) {
-      mUserValue.Replace(Type(), aType, aValue);
+      mUserValue.Replace(mHasUserValue, Type(), aType, aValue);
       SetType(aType); // needed because we may have changed the type
       mHasUserValue = true;
       if (!aFromInit) {
