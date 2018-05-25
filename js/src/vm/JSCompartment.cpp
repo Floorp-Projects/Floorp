@@ -1088,7 +1088,7 @@ void
 Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->realm() == this);
-    assertSameCompartment(cx, this, obj);
+    assertSameCompartment(cx, JS::GetCompartmentForRealm(this), obj);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {

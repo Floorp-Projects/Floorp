@@ -447,7 +447,7 @@ ErrorCopier::~ErrorCopier()
 
     // The provenance of Debugger.DebuggeeWouldRun is the topmost locking
     // debugger compartment; it should not be copied around.
-    if (ar->origin() != cx->compartment() &&
+    if (JS::GetCompartmentForRealm(ar->origin()) != cx->compartment() &&
         cx->isExceptionPending() &&
         !cx->isThrowingDebuggeeWouldRun())
     {

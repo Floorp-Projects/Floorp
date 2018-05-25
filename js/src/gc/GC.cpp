@@ -4253,8 +4253,9 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
 
     for (RealmsIter r(rt, WithAtoms); !r.done(); r.next()) {
         r->unmark();
-        r->scheduledForDestruction = false;
-        r->maybeAlive = r->shouldTraceGlobal() || !r->zone()->isGCScheduled();
+        JSCompartment* comp = JS::GetCompartmentForRealm(r);
+        comp->scheduledForDestruction = false;
+        comp->maybeAlive = r->shouldTraceGlobal() || !r->zone()->isGCScheduled();
         if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
             r->zone()->setPreservingCode(true);
     }
@@ -7953,16 +7954,16 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
         }
     }
 
-    ScopedJSDeletePtr<Realm> compartment(cx->new_<Realm>(zone, options));
-    if (!compartment || !compartment->init(cx))
+    ScopedJSDeletePtr<Realm> realm(cx->new_<Realm>(zone, options));
+    if (!realm || !realm->init(cx))
         return nullptr;
 
     // Set up the principals.
-    JS_SetCompartmentPrincipals(compartment, principals);
+    JS_SetCompartmentPrincipals(JS::GetCompartmentForRealm(realm), principals);
 
     AutoLockGC lock(rt);
 
-    if (!zone->compartments().append(compartment.get())) {
+    if (!zone->compartments().append(JS::GetCompartmentForRealm(realm.get()))) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -7982,7 +7983,7 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
     }
 
     zoneHolder.forget();
-    return compartment.forget();
+    return JS::GetCompartmentForRealm(realm.forget());
 }
 
 void
