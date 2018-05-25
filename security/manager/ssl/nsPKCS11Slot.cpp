@@ -185,11 +185,34 @@ nsPKCS11Module::nsPKCS11Module(SECMODModule* module)
   mModule.reset(SECMOD_ReferenceModule(module));
 }
 
+// Convert the UTF8 internal name of the module to how it should appear to the
+// user. In most cases this involves simply passing back the module's name.
+// However, the builtin roots module has a non-localized name internally that we
+// must map to the localized version when we display it to the user.
+static nsresult
+NormalizeModuleNameOut(const char* moduleNameIn, nsACString& moduleNameOut)
+{
+  // Easy case: this isn't the builtin roots module.
+  if (strnlen(moduleNameIn, kRootModuleNameLen + 1) != kRootModuleNameLen ||
+      strncmp(kRootModuleName, moduleNameIn, kRootModuleNameLen) != 0) {
+    moduleNameOut.Assign(moduleNameIn);
+    return NS_OK;
+  }
+
+  nsAutoString localizedRootModuleName;
+  nsresult rv = GetPIPNSSBundleString("RootCertModuleName",
+                                      localizedRootModuleName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  moduleNameOut.Assign(NS_ConvertUTF16toUTF8(localizedRootModuleName));
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsPKCS11Module::GetName(/*out*/ nsACString& name)
 {
-  name = mModule->commonName;
-  return NS_OK;
+  return NormalizeModuleNameOut(mModule->commonName, name);
 }
 
 NS_IMETHODIMP
