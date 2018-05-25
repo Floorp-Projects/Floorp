@@ -92,7 +92,6 @@ DataTransferItemList::Remove(uint32_t aIndex,
   }
 
   if (aIndex >= Length()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
