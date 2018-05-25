@@ -258,6 +258,8 @@
 #include "mozilla/dom/MenuBoxObject.h"
 #include "mozilla/dom/ScrollBoxObject.h"
 #include "mozilla/dom/TreeBoxObject.h"
+#include "nsIXULWindow.h"
+#include "nsIDocShellTreeOwner.h"
 #endif
 #include "nsIPresShellInlines.h"
 
@@ -6550,6 +6552,13 @@ nsIDocument::SetMayStartLayout(bool aMayStartLayout)
 {
   mMayStartLayout = aMayStartLayout;
   if (MayStartLayout()) {
+    // Before starting layout, check whether we're a toplevel chrome
+    // window.  If we are, setup some state so that we don't have to restyle
+    // the whole tree after StartLayout.
+    if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+        // We're the chrome document!
+        win->BeforeStartLayout();
+    }
     ReadyState state = GetReadyStateEnum();
     if (state >= READYSTATE_INTERACTIVE) {
       // DOMContentLoaded has fired already.
@@ -11890,6 +11899,27 @@ nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
 {
   return XPathEvaluator()->Evaluate(aCx, aExpression, aContextNode, aResolver,
                                     aType, aResult, rv);
+}
+
+already_AddRefed<nsIXULWindow>
+nsIDocument::GetXULWindowIfToplevelChrome() const
+{
+  nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
+  if (!item) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  item->GetTreeOwner(getter_AddRefs(owner));
+  nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
+  if (!xulWin) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIDocShell> xulWinShell;
+  xulWin->GetDocShell(getter_AddRefs(xulWinShell));
+  if (!SameCOMIdentity(xulWinShell, item)) {
+    return nullptr;
+  }
+  return xulWin.forget();
 }
 
 nsIDocument*

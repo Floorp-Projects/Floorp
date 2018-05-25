@@ -32,32 +32,11 @@ const char kSampleData[] = R"({
         "testKey": 73
       }
     }
-  },
-  "histograms": {
-    "parent": {
-      "TELEMETRY_TEST_MULTIPRODUCT": {
-        "sum": 6,
-        "counts": [
-          3, 5, 7
-        ]
-      }
-    }
-  },
-  "keyedHistograms": {
-    "content": {
-      "TELEMETRY_TEST_MULTIPRODUCT_KEYED": {
-        "niceKey": {
-          "sum": 10,
-          "counts": [
-            1, 2, 3
-          ]
-        }
-      }
-    }
   }
 })";
 
 const char16_t kPersistedFilename[] = u"gv_measurements.json";
+const char kDataLoadedTopic[] = "internal-telemetry-geckoview-load-complete";
 
 namespace {
 
@@ -161,165 +140,54 @@ CheckPersistenceFileExists(bool& aFileExists)
   ASSERT_EQ(NS_OK, rv) << "nsIFile::Exists must not fail";
 }
 
-void
-CheckJSONEqual(JSContext* aCx, JS::HandleValue aData, JS::HandleValue aDataOther)
+/**
+ * A helper class to wait for the internal "data loaded"
+ * topic.
+ */
+class DataLoadedObserver final : public nsIObserver
 {
-  auto JSONCreator = [](const char16_t* aBuf, uint32_t aLen, void* aData) -> bool
+  ~DataLoadedObserver() = default;
+
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit DataLoadedObserver() :
+    mDataLoaded(false)
   {
-    nsAString* result = static_cast<nsAString*>(aData);
-    result->Append(static_cast<const char16_t*>(aBuf),
-                   static_cast<uint32_t>(aLen));
-    return true;
-  };
+    // The following line can fail to fetch the observer service. However,
+    // since we're test code, we're fine with crashing due to that.
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->AddObserver(this, kDataLoadedTopic, false);
+  }
 
-  // Unfortunately, we dont
-  nsAutoString dataAsString;
-  JS::RootedObject dataObj(aCx, &aData.toObject());
-  ASSERT_TRUE(JS::ToJSONMaybeSafely(aCx, dataObj, JSONCreator, &dataAsString))
-    << "The JS object must be correctly converted to a JSON string";
+  void WaitForNotification()
+  {
+    mozilla::SpinEventLoopUntil([&]() { return mDataLoaded; });
+  }
 
-  nsAutoString otherAsString;
-  JS::RootedObject otherObj(aCx, &aDataOther.toObject());
-  ASSERT_TRUE(JS::ToJSONMaybeSafely(aCx, otherObj, JSONCreator, &otherAsString))
-    << "The JS object must be correctly converted to a JSON string";
+  NS_IMETHOD Observe(nsISupports* aSubject,
+                     const char* aTopic,
+                     const char16_t* aData) override
+  {
+    if (!strcmp(aTopic, kDataLoadedTopic)) {
+      nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+      observerService->RemoveObserver(this, kDataLoadedTopic);
+      mDataLoaded = true;
+    }
 
-  ASSERT_TRUE(dataAsString.Equals(otherAsString))
-    << "The JSON strings must match";
-}
+    return NS_OK;
+  }
 
-void
-TestSerializeScalars(JSONWriter& aWriter)
-{
-  // Report the same data that's in kSampleData for scalars.
-  // We only want to make sure that I/O and parsing works, as telemetry
-  // measurement updates is taken care of by xpcshell tests.
-  aWriter.StartObjectProperty("content");
-  aWriter.IntProperty("telemetry.test.all_processes_uint", 37);
-  aWriter.EndObject();
-}
+private:
+  bool mDataLoaded;
+};
 
-void
-TestSerializeKeyedScalars(JSONWriter& aWriter)
-{
-  // Report the same data that's in kSampleData for keyed scalars.
-  // We only want to make sure that I/O and parsing works, as telemetry
-  // measurement updates is taken care of by xpcshell tests.
-  aWriter.StartObjectProperty("parent");
-  aWriter.StartObjectProperty("telemetry.test.keyed_unsigned_int");
-  aWriter.IntProperty("testKey", 73);
-  aWriter.EndObject();
-  aWriter.EndObject();
-}
-
-void
-TestDeserializePersistedScalars(JSContext* aCx, JS::HandleValue aData)
-{
-  // Get a JS object out of the JSON sample.
-  JS::RootedValue sampleData(aCx);
-  NS_ConvertUTF8toUTF16 utf16Content(kSampleData);
-  ASSERT_TRUE(JS_ParseJSON(aCx, utf16Content.BeginReading(), utf16Content.Length(), &sampleData))
-    << "Failed to create a JS object from the JSON sample";
-
-  // Get sampleData["scalars"].
-  JS::RootedObject sampleObj(aCx, &sampleData.toObject());
-  JS::RootedValue scalarData(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, sampleObj, "scalars", &scalarData) && scalarData.isObject())
-    << "Failed to get sampleData['scalars']";
-
-  CheckJSONEqual(aCx, aData, scalarData);
-}
-
-void
-TestDeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValue aData)
-{
-  // Get a JS object out of the JSON sample.
-  JS::RootedValue sampleData(aCx);
-  NS_ConvertUTF8toUTF16 utf16Content(kSampleData);
-  ASSERT_TRUE(JS_ParseJSON(aCx, utf16Content.BeginReading(), utf16Content.Length(), &sampleData))
-    << "Failed to create a JS object from the JSON sample";
-
-  // Get sampleData["keyedScalars"].
-  JS::RootedObject sampleObj(aCx, &sampleData.toObject());
-  JS::RootedValue keyedScalarData(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, sampleObj, "keyedScalars", &keyedScalarData)
-              && keyedScalarData.isObject()) << "Failed to get sampleData['keyedScalars']";
-
-  CheckJSONEqual(aCx, aData, keyedScalarData);
-}
-
-void
-TestSerializeHistograms(JSONWriter& aWriter)
-{
-  // Report the same data that's in kSampleData for histograms.
-  // We only want to make sure that I/O and parsing works, as telemetry
-  // measurement updates is taken care of by xpcshell tests.
-  aWriter.StartObjectProperty("parent");
-  aWriter.StartObjectProperty("TELEMETRY_TEST_MULTIPRODUCT");
-  aWriter.IntProperty("sum", 6);
-  aWriter.StartArrayProperty("counts");
-  aWriter.IntElement(3);
-  aWriter.IntElement(5);
-  aWriter.IntElement(7);
-  aWriter.EndArray();
-  aWriter.EndObject();
-  aWriter.EndObject();
-}
-
-void
-TestSerializeKeyedHistograms(JSONWriter& aWriter)
-{
-  // Report the same data that's in kSampleData for keyed histograms.
-  // We only want to make sure that I/O and parsing works, as telemetry
-  // measurement updates is taken care of by xpcshell tests.
-  aWriter.StartObjectProperty("content");
-  aWriter.StartObjectProperty("TELEMETRY_TEST_MULTIPRODUCT_KEYED");
-  aWriter.StartObjectProperty("niceKey");
-  aWriter.IntProperty("sum", 10);
-  aWriter.StartArrayProperty("counts");
-  aWriter.IntElement(1);
-  aWriter.IntElement(2);
-  aWriter.IntElement(3);
-  aWriter.EndArray();
-  aWriter.EndObject();
-  aWriter.EndObject();
-  aWriter.EndObject();
-}
-
-void
-TestDeserializeHistograms(JSContext* aCx, JS::HandleValue aData)
-{
-  // Get a JS object out of the JSON sample.
-  JS::RootedValue sampleData(aCx);
-  NS_ConvertUTF8toUTF16 utf16Content(kSampleData);
-  ASSERT_TRUE(JS_ParseJSON(aCx, utf16Content.BeginReading(), utf16Content.Length(), &sampleData))
-    << "Failed to create a JS object from the JSON sample";
-
-  // Get sampleData["histograms"].
-  JS::RootedObject sampleObj(aCx, &sampleData.toObject());
-  JS::RootedValue histogramData(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, sampleObj, "histograms", &histogramData) && histogramData.isObject())
-    << "Failed to get sampleData['histograms']";
-
-  CheckJSONEqual(aCx, aData, histogramData);
-}
-
-void
-TestDeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue aData)
-{
-  // Get a JS object out of the JSON sample.
-  JS::RootedValue sampleData(aCx);
-  NS_ConvertUTF8toUTF16 utf16Content(kSampleData);
-  ASSERT_TRUE(JS_ParseJSON(aCx, utf16Content.BeginReading(), utf16Content.Length(), &sampleData))
-    << "Failed to create a JS object from the JSON sample";
-
-  // Get sampleData["keyedHistograms"].
-  JS::RootedObject sampleObj(aCx, &sampleData.toObject());
-  JS::RootedValue keyedHistogramData(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, sampleObj, "keyedHistograms", &keyedHistogramData)
-              && keyedHistogramData.isObject()) << "Failed to get sampleData['keyedHistograms']";
-
-  CheckJSONEqual(aCx, aData, keyedHistogramData);
-}
+NS_IMPL_ISUPPORTS(
+  DataLoadedObserver,
+  nsIObserver
+)
 
 } // Anonymous
 
@@ -334,28 +202,6 @@ protected:
     MockAndroidDataDir();
   }
 };
-
-/**
- * We can't link TelemetryScalar.cpp to these test files, so mock up
- * the required functions to make the linker not complain.
- */
-namespace TelemetryScalar {
-
-nsresult SerializeScalars(JSONWriter& aWriter) { TestSerializeScalars(aWriter); return NS_OK; }
-nsresult SerializeKeyedScalars(JSONWriter& aWriter) { TestSerializeKeyedScalars(aWriter); return NS_OK; }
-nsresult DeserializePersistedScalars(JSContext* aCx, JS::HandleValue aData) { TestDeserializePersistedScalars(aCx, aData); return NS_OK; }
-nsresult DeserializePersistedKeyedScalars(JSContext* aCx, JS::HandleValue aData) { TestDeserializePersistedKeyedScalars(aCx, aData); return NS_OK; }
-
-} // TelemetryScalar
-
-namespace TelemetryHistogram {
-
-nsresult SerializeHistograms(mozilla::JSONWriter &aWriter) { TestSerializeHistograms(aWriter); return NS_OK; }
-nsresult SerializeKeyedHistograms(mozilla::JSONWriter &aWriter) { TestSerializeKeyedHistograms(aWriter); return NS_OK; }
-nsresult DeserializeHistograms(JSContext* aCx, JS::HandleValue aData) { TestDeserializeHistograms(aCx, aData); return NS_OK; }
-nsresult DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue aData) { TestDeserializeKeyedHistograms(aCx, aData); return NS_OK; }
-
-} // TelemetryHistogram
 
 namespace TelemetryGeckoViewTesting {
 
@@ -418,18 +264,128 @@ TEST_F(TelemetryGeckoViewFixture, ClearPersistenceFiles) {
 }
 
 /**
- * Test that we can correctly persist the data.
+ * Test that the data loaded topic gets notified correctly.
  */
-TEST_F(TelemetryGeckoViewFixture, PersistData) {
+TEST_F(TelemetryGeckoViewFixture, CheckDataLoadedTopic) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
 
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
 
+  // Check that the data loaded topic is notified after attempting the load
+  // if no measurement file exists.
+  RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
+  TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+  TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  // Check that the topic is triggered when the measuements file exists.
+  WritePersistenceFile(nsDependentCString(kSampleData));
+  CheckPersistenceFileExists(fileExists);
+  ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
+
+  // Check that the data loaded topic is triggered when the measurement file exists.
+  loadingFinished = new DataLoadedObserver();
+  TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+  TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  // Cleanup/remove the files.
+  RemovePersistenceFile();
+}
+
+/**
+ * Test that we can correctly persist the scalar data.
+ */
+TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  bool fileExists = false;
+  CheckPersistenceFileExists(fileExists);
+  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+
+  RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
+
   // Init the persistence: this will trigger the measurements to be written
   // to disk off-the-main thread.
   TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+
+  // Set some scalars: we can only test the parent process as we don't support other
+  // processes in gtests.
+  const uint32_t kExpectedUintValue = 37;
+  const uint32_t kExpectedKeyedUintValue = 73;
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_ALL_PROCESSES_UINT, kExpectedUintValue);
+  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
+                       NS_LITERAL_STRING("gv_key"), kExpectedKeyedUintValue);
+
+  // Dispatch the persisting task: we don't wait for the timer to expire
+  // as we need a reliable and reproducible way to kick this off. We ensure
+  // that the task runs by shutting down the persistence: this shuts down the
+  // thread which executes the task as the last action.
+  TelemetryGeckoViewTesting::TestDispatchPersist();
+  TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  CheckPersistenceFileExists(fileExists);
+  ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
+
+  // Clear the in-memory scalars again. They will be restored from the disk.
+  Unused << mTelemetry->ClearScalars();
+
+  // Load the persisted file again.
+  TelemetryGeckoViewPersistence::InitPersistence();
+  TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  // Get a snapshot of the keyed and plain scalars.
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  JS::RootedValue keyedScalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+  GetScalarsSnapshot(true, cx.GetJSContext(), &keyedScalarsSnapshot);
+
+  // Verify that the scalars were correctly persisted and restored.
+  CheckUintScalar("telemetry.test.all_processes_uint", cx.GetJSContext(),
+                  scalarsSnapshot, kExpectedUintValue);
+  CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "gv_key", cx.GetJSContext(),
+                       keyedScalarsSnapshot, kExpectedKeyedUintValue);
+
+  // Cleanup/remove the files.
+  RemovePersistenceFile();
+}
+
+/**
+ * Test that we can correctly persist the histogram data.
+ */
+TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  // Clear the histogram data.
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"), false /* is_keyed */);
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"), true /* is_keyed */);
+
+  bool fileExists = false;
+  CheckPersistenceFileExists(fileExists);
+  ASSERT_FALSE(fileExists) << "No persisted measurements must exist on the disk";
+
+  RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
+
+  // Init the persistence: this will trigger the measurements to be written
+  // to disk off-the-main thread.
+  TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+
+  // Set some histograms: we can only test the parent process as we don't support other
+  // processes in gtests.
+  const uint32_t kExpectedUintValue = 37;
+  const nsTArray<uint32_t> keyedSamples({5, 10, 15});
+  const uint32_t kExpectedKeyedSum = 5 + 10 + 15;
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_MULTIPRODUCT, kExpectedUintValue);
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_KEYED_COUNT, NS_LITERAL_CSTRING("gv_key"),
+                        keyedSamples);
 
   // Dispatch the persisting task: we don't wait for the timer to expire
   // as we need a reliable and reproducible way to kick off this. We ensure
@@ -441,10 +397,51 @@ TEST_F(TelemetryGeckoViewFixture, PersistData) {
   CheckPersistenceFileExists(fileExists);
   ASSERT_TRUE(fileExists) << "The persisted measurements must exist on the disk";
 
-  // Load the persisted file again: this will trigger the TestLoad* functions
-  // that will validate the data.
+  // Clear the in-memory histograms again. They will be restored from the disk.
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_MULTIPRODUCT"), false /* is_keyed */);
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
+                       NS_LITERAL_CSTRING("TELEMETRY_TEST_KEYED_COUNT"), true /* is_keyed */);
+
+
+  // Load the persisted file again.
   TelemetryGeckoViewPersistence::InitPersistence();
   TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  // Get a snapshot of the keyed and plain histograms.
+  JS::RootedValue snapshot(cx.GetJSContext());
+  JS::RootedValue keyedSnapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_MULTIPRODUCT",
+               &snapshot, false /* is_keyed */);
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_KEYED_COUNT",
+               &keyedSnapshot, true /* is_keyed */);
+
+  // Validate the loaded histogram data.
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_MULTIPRODUCT", snapshot, &histogram);
+
+  // Get "sum" property from histogram
+  JS::RootedValue sum(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sum", histogram,  &sum);
+
+  // Check that the "sum" stored in the histogram matches with |kExpectedValue|
+  uint32_t uSum = 0;
+  JS::ToUint32(cx.GetJSContext(), sum, &uSum);
+  ASSERT_EQ(uSum, kExpectedUintValue) << "The histogram is not returning the expected value";
+
+  // Validate the keyed histogram data.
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_KEYED_COUNT", keyedSnapshot, &histogram);
+
+  // Get "testkey" property from histogram and check that it stores the correct
+  // data.
+  JS::RootedValue expectedKeyData(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "gv_key", histogram,  &expectedKeyData);
+  ASSERT_FALSE(expectedKeyData.isUndefined())
+    << "Cannot find the expected key in the keyed histogram data";
+  GetProperty(cx.GetJSContext(), "sum", expectedKeyData,  &sum);
+  JS::ToUint32(cx.GetJSContext(), sum, &uSum);
+  ASSERT_EQ(uSum, kExpectedKeyedSum)
+    << "The histogram is not returning the expected sum for 'gv_key'";
 
   // Cleanup/remove the files.
   RemovePersistenceFile();

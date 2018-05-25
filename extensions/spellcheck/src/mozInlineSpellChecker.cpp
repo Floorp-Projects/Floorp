@@ -917,7 +917,7 @@ mozInlineSpellChecker::SpellCheckRange(nsRange* aRange)
 // mozInlineSpellChecker::GetMisspelledWord
 
 NS_IMETHODIMP
-mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
+mozInlineSpellChecker::GetMisspelledWord(nsINode *aNode, int32_t aOffset,
                                          nsRange** newword)
 {
   if (NS_WARN_IF(!aNode)) {
@@ -933,7 +933,7 @@ mozInlineSpellChecker::GetMisspelledWord(nsIDOMNode *aNode, int32_t aOffset,
 // mozInlineSpellChecker::ReplaceWord
 
 NS_IMETHODIMP
-mozInlineSpellChecker::ReplaceWord(nsIDOMNode *aNode, int32_t aOffset,
+mozInlineSpellChecker::ReplaceWord(nsINode *aNode, int32_t aOffset,
                                    const nsAString &newword)
 {
   if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(newword.IsEmpty())) {
@@ -1616,16 +1616,15 @@ mozInlineSpellChecker::ResumeCheck(UniquePtr<mozInlineSpellStatus>&& aStatus)
 
 nsresult
 mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
-                                          nsIDOMNode *aNode,
+                                          nsINode *aNode,
                                           int32_t aOffset,
                                           nsRange** aRange)
 {
   *aRange = nullptr;
 
   nsTArray<nsRange*> ranges;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsresult rv = aSelection.GetRangesForIntervalArray(node, aOffset,
-                                                     node, aOffset,
+  nsresult rv = aSelection.GetRangesForIntervalArray(aNode, aOffset,
+                                                     aNode, aOffset,
                                                      true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -18,10 +18,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-// This is only used on GeckoView.
 #include "mozilla/JSONWriter.h"
-#endif
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -2521,7 +2518,11 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
   return 0;
 }
 
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PRIVATE: GeckoView specific helpers
+
 namespace base {
 class PersistedSampleSet : public Histogram::SampleSet
 {
@@ -2675,6 +2676,11 @@ internal_ParseHistogramData(JSContext* aCx, JS::HandleId aEntryId,
 
 } // Anonymous namespace
 
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// PUBLIC: GeckoView serialization/deserialization functions.
+
 nsresult
 TelemetryHistogram::SerializeHistograms(mozilla::JSONWriter& aWriter)
 {
@@ -2812,7 +2818,7 @@ TelemetryHistogram::DeserializeHistograms(JSContext* aCx, JS::HandleValue aData)
 
   // Make sure we have enough storage for all the processes.
   PersistedHistogramStorage histogramsToUpdate;
-  if (!histogramsToUpdate.resize(processes.length())) {
+  if (!histogramsToUpdate.resize(static_cast<uint32_t>(ProcessID::Count))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -2968,7 +2974,7 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
 
   // Make sure we have enough storage for all the processes.
   PersistedKeyedHistogramStorage histogramsToUpdate;
-  if (!histogramsToUpdate.resize(processes.length())) {
+  if (!histogramsToUpdate.resize(static_cast<uint32_t>(ProcessID::Count))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -3128,4 +3134,3 @@ TelemetryHistogram::DeserializeKeyedHistograms(JSContext* aCx, JS::HandleValue a
 
   return NS_OK;
 }
-#endif // MOZ_TELEMETRY_GECKOVIEW

@@ -75,6 +75,8 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+const char16_t kNBSP = 160;
+
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool
 IsLinkTag(const nsString& s)
@@ -534,7 +536,7 @@ HTMLEditor::SetFlags(uint32_t aFlags)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::InitRules()
 {
   if (!mRules) {
@@ -852,11 +854,10 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
 }
 
 NS_IMETHODIMP
-HTMLEditor::NodeIsBlock(nsIDOMNode* aNode,
+HTMLEditor::NodeIsBlock(nsINode* aNode,
                         bool* aIsBlock)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  *aIsBlock = IsBlockNode(node);
+  *aIsBlock = IsBlockNode(aNode);
   return NS_OK;
 }
 
@@ -2589,11 +2590,12 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       iter->Init(currange);
       // loop through the content iterator for each content node
       while (!iter->IsDone()) {
-        // Query interface to cast nsIContent to nsIDOMNode
+        // Query interface to cast nsIContent to Element
         //  then get tagType to compare to  aTagName
         // Clone node of each desired type and append it to the aDomFrag
         nsINode* currentNode = iter->GetCurrentNode();
-        selectedElement = do_QueryInterface(currentNode);
+        selectedElement = currentNode && currentNode->IsElement() ?
+          currentNode->AsElement() : nullptr;
         if (selectedElement) {
           // If we already found a node, then we have another element,
           //  thus there's not just one element selected
@@ -2868,7 +2870,7 @@ HTMLEditor::GetLinkedObjects(nsIArray** aNodeList)
 
     // loop through the content iterator for each content node
     while (!iter->IsDone()) {
-      nsCOMPtr<nsIDOMNode> node (do_QueryInterface(iter->GetCurrentNode()));
+      nsCOMPtr<nsINode> node = iter->GetCurrentNode();
       if (node) {
         // Let nsURIRefObject make the hard decisions:
         nsCOMPtr<nsIURIRefObject> refObject;
@@ -3170,8 +3172,7 @@ HTMLEditor::GetEmbeddedObjects(nsIArray** aNodeList)
                                        nsGkAtoms::a) ||
           (element->IsHTMLElement(nsGkAtoms::body) &&
            element->HasAttr(kNameSpaceID_None, nsGkAtoms::background))) {
-        nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(node);
-        nodes->AppendElement(domNode);
+        nodes->AppendElement(node);
        }
      }
      iter->Next();
@@ -3258,13 +3259,12 @@ HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLEditor::DeleteNode(nsIDOMNode* aDOMNode)
+HTMLEditor::DeleteNode(nsINode* aNode)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
-  if (NS_WARN_IF(!node)) {
+  if (NS_WARN_IF(!aNode)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv = DeleteNodeWithTransaction(*node);
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -3671,18 +3671,6 @@ HTMLEditor::GetEnclosingTable(nsINode* aNode)
   }
   return nullptr;
 }
-
-nsIDOMNode*
-HTMLEditor::GetEnclosingTable(nsIDOMNode* aNode)
-{
-  MOZ_ASSERT(aNode, "null node passed to HTMLEditor::GetEnclosingTable");
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node, nullptr);
-  nsCOMPtr<Element> table = GetEnclosingTable(node);
-  nsCOMPtr<nsIDOMNode> ret = do_QueryInterface(table);
-  return ret;
-}
-
 
 /**
  * This method scans the selection for adjacent text nodes

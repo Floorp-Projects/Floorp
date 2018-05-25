@@ -83,16 +83,6 @@ enum
  *  first some helpful functors we will use
  ********************************************************/
 
-static bool IsBlockNode(const nsINode& node)
-{
-  return HTMLEditor::NodeIsBlockStatic(&node);
-}
-
-static bool IsInlineNode(const nsINode& node)
-{
-  return !IsBlockNode(node);
-}
-
 static bool
 IsStyleCachePreservingAction(EditAction action)
 {

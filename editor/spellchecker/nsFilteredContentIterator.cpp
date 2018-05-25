@@ -13,7 +13,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMNode.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
@@ -350,7 +349,7 @@ nsFilteredContentIterator::CheckAdvNode(nsINode* aNode, bool& aDidSkip, eDirecti
     nsCOMPtr<nsINode> currentNode = aNode;
     bool skipIt;
     while (1) {
-      nsresult rv = mFilter->Skip(aNode->AsDOMNode(), &skipIt);
+      nsresult rv = mFilter->Skip(aNode, &skipIt);
       if (NS_SUCCEEDED(rv) && skipIt) {
         aDidSkip = true;
         // Get the next/prev node and then
