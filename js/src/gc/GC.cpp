@@ -5532,8 +5532,8 @@ GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop)
     // table.
     {
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_MISC);
-        for (SweepGroupCompartmentsIter c(rt); !c.done(); c.next())
-            c->sweepDebugEnvironments();
+        for (SweepGroupRealmsIter r(rt); !r.done(); r.next())
+            r->sweepDebugEnvironments();
     }
 
     // Sweep breakpoints. This is done here to be with the other debug sweeping,
@@ -8486,8 +8486,8 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
         r->dtoaCache.checkCacheAfterMovingGC();
         JS::GetCompartmentForRealm(r)->checkWrapperMapAfterMovingGC();
         r->checkScriptMapsAfterMovingGC();
-        if (r->debugEnvs)
-            r->debugEnvs->checkHashTablesAfterMovingGC();
+        if (r->debugEnvs())
+            r->debugEnvs()->checkHashTablesAfterMovingGC();
     }
 }
 #endif
