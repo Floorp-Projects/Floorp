@@ -21,15 +21,13 @@ add_task(async function test_query_with_remove_shortcut() {
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
 
-  let folderId = await PlacesUtils.promiseItemId(folder.guid);
-
   let query = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "",
-    url: `place:folder=${folderId}`,
+    url: `place:parent=${folder.guid}`,
   });
 
-  var root = PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId, false, true).root;
+  var root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid, false, true).root;
 
   var oldCount = root.childCount;
 

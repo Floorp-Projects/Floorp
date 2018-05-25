@@ -17,14 +17,14 @@ DevToolsModules(
     'constants.js',
     'hudservice.js',
     'main.js',
-    'new-console-output-wrapper.js',
-    'new-webconsole.js',
     'panel.js',
     'store.js',
     'types.js',
     'utils.js',
     'webconsole-connection-proxy.js',
+    'webconsole-frame.js',
     'webconsole-l10n.js',
+    'webconsole-output-wrapper.js',
 )
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')

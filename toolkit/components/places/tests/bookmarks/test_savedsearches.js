@@ -8,7 +8,6 @@
 const searchTerm = "about";
 
 var testRoot;
-var testRootId;
 
 add_task(async function setup() {
   // create a folder to hold all the tests
@@ -19,7 +18,6 @@ add_task(async function setup() {
     title: searchTerm,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
   });
-  testRootId = await PlacesUtils.promiseItemId(testRoot.guid);
 });
 
 add_task(async function test_savedsearches_bookmarks() {
@@ -43,7 +41,7 @@ add_task(async function test_savedsearches_bookmarks() {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 0;
     let query = PlacesUtils.history.getNewQuery();
-    query.setFolders([testRootId], 1);
+    query.setParents([testRoot.guid], 1);
     let result = PlacesUtils.history.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -69,7 +67,7 @@ add_task(async function test_savedsearches_bookmarks() {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 1;
     let query = PlacesUtils.history.getNewQuery();
-    query.setFolders([testRootId], 1);
+    query.setParents([testRoot.guid], 1);
     let result = PlacesUtils.history.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -145,7 +143,7 @@ add_task(async function test_savedsearches_history() {
     var options = PlacesUtils.history.getNewQueryOptions();
     options.expandQueries = 1;
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([testRootId], 1);
+    query.setParents([testRoot.guid], 1);
     var result = PlacesUtils.history.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;

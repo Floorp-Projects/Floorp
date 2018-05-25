@@ -19,7 +19,7 @@ const App = createFactory(require("devtools/client/webconsole/components/App"));
 
 let store = null;
 
-function NewConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
+function WebConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   EventEmitter.decorate(this);
 
   this.parentNode = parentNode;
@@ -40,7 +40,7 @@ function NewConsoleOutputWrapper(parentNode, hud, toolbox, owner, document) {
   store = configureStore(this.hud);
 }
 
-NewConsoleOutputWrapper.prototype = {
+WebConsoleOutputWrapper.prototype = {
   init: function() {
     return new Promise((resolve) => {
       const attachRefToHud = (id, node) => {
@@ -432,4 +432,4 @@ NewConsoleOutputWrapper.prototype = {
 };
 
 // Exports from this module
-module.exports = NewConsoleOutputWrapper;
+module.exports = WebConsoleOutputWrapper;

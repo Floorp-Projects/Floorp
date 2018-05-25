@@ -65,13 +65,19 @@
 // The guid of the mobile bookmarks virtual query.
 #define MOBILE_BOOKMARKS_VIRTUAL_GUID "mobile____v"
 
+#define ROOT_GUID "root________"
+#define MENU_ROOT_GUID "menu________"
+#define TOOLBAR_ROOT_GUID "toolbar_____"
+#define UNFILED_ROOT_GUID "unfiled_____"
+#define TAGS_ROOT_GUID "tags________"
+#define MOBILE_ROOT_GUID "mobile______"
+
 class nsIAutoCompleteController;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class nsNavHistory;
 class PlacesDecayFrecencyCallback;
 class PlacesSQLQueryBuilder;
-class QueryKeyValuePair;
 
 // nsNavHistory
 
@@ -634,7 +640,7 @@ protected:
   nsresult RecalculateFrecencyStatsInternal();
 
   // in nsNavHistoryQuery.cpp
-  nsresult TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
+  nsresult TokensToQuery(const nsTArray<mozilla::places::QueryKeyValuePair>& aTokens,
                          nsNavHistoryQuery* aQuery,
                          nsNavHistoryQueryOptions* aOptions);
 

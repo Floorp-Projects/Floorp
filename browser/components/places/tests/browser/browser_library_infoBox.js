@@ -75,7 +75,7 @@ add_task(async function() {
   // open recently bookmarked node
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
-    url: "place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR" +
+    url: "place:" + PlacesUtils.bookmarks.userContentRoots.map(guid => `parent=${guid}`).join("&") +
          "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
          "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
          "&maxResults=10" +

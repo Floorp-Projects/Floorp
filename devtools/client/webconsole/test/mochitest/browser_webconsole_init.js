@@ -14,7 +14,7 @@ add_task(async function() {
   let {ui} = hud;
 
   ok(ui.jsterm, "jsterm exists");
-  ok(ui.newConsoleOutput, "newConsoleOutput exists");
+  ok(ui.consoleOutput, "consoleOutput exists");
 
   let receievedMessages = waitForMessages({
     hud,

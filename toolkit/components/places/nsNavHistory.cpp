@@ -191,8 +191,8 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNavHistory,
 
 namespace {
 
-static int64_t GetSimpleBookmarksQueryFolder(const RefPtr<nsNavHistoryQuery>& aQuery,
-                                             const RefPtr<nsNavHistoryQueryOptions>& aOptions);
+static nsCString GetSimpleBookmarksQueryParent(const RefPtr<nsNavHistoryQuery>& aQuery,
+                                               const RefPtr<nsNavHistoryQueryOptions>& aOptions);
 static void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
                                       nsTArray<nsString>* aTerms);
 
@@ -1041,14 +1041,14 @@ nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery,
   // Create the root node.
   RefPtr<nsNavHistoryContainerResultNode> rootNode;
 
-  int64_t folderId = GetSimpleBookmarksQueryFolder(query, options);
-  if (folderId) {
+  nsCString folderGuid = GetSimpleBookmarksQueryParent(query, options);
+  if (!folderGuid.IsEmpty()) {
     // In the simple case where we're just querying children of a single
     // bookmark folder, we can more efficiently generate results.
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     RefPtr<nsNavHistoryResultNode> tempRootNode;
-    nsresult rv = bookmarks->ResultNodeForContainer(folderId, options,
+    nsresult rv = bookmarks->ResultNodeForContainer(folderGuid, options,
                                                     getter_AddRefs(tempRootNode));
     if (NS_SUCCEEDED(rv)) {
       rootNode = tempRootNode->GetAsContainer();
@@ -1130,7 +1130,7 @@ bool IsOptimizableHistoryQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
   if (aQuery->AnnotationIsNot() || !aQuery->Annotation().IsEmpty())
     return false;
 
-  if (aQuery->Folders().Length() > 0)
+  if (aQuery->Parents().Length() > 0)
     return false;
 
   if (aQuery->Tags().Length() > 0)
@@ -1694,17 +1694,17 @@ PlacesSQLQueryBuilder::SelectAsRoots()
     mAddParams.Put(NS_LITERAL_CSTRING("MobileBookmarksFolderTitle"), mobileTitle);
 
     mobileString = NS_LITERAL_CSTRING(","
-      "(null, 'place:folder=MOBILE_BOOKMARKS', :MobileBookmarksFolderTitle, null, null, null, "
+      "(null, 'place:parent=" MOBILE_ROOT_GUID "', :MobileBookmarksFolderTitle, null, null, null, "
        "null, null, 0, 0, null, null, null, null, '" MOBILE_BOOKMARKS_VIRTUAL_GUID "', null) ");
   }
 
   mQueryString = NS_LITERAL_CSTRING(
     "SELECT * FROM ("
-        "VALUES(null, 'place:folder=TOOLBAR', :BookmarksToolbarFolderTitle, null, null, null, "
+        "VALUES(null, 'place:parent=" TOOLBAR_ROOT_GUID "', :BookmarksToolbarFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'toolbar____v', null), "
-              "(null, 'place:folder=BOOKMARKS_MENU', :BookmarksMenuFolderTitle, null, null, null, "
+              "(null, 'place:parent=" MENU_ROOT_GUID "', :BookmarksMenuFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'menu_______v', null), "
-              "(null, 'place:folder=UNFILED_BOOKMARKS', :OtherBookmarksFolderTitle, null, null, null, "
+              "(null, 'place:parent=" UNFILED_ROOT_GUID "', :OtherBookmarksFolderTitle, null, null, null, "
                "null, null, 0, 0, null, null, null, null, 'unfiled___v', null) ") +
     mobileString + NS_LITERAL_CSTRING(")");
 
@@ -2767,21 +2767,23 @@ nsNavHistory::QueryToSelectClause(const RefPtr<nsNavHistoryQuery>& aQuery,
           .Str(")");
   }
 
-  // folders
-  const nsTArray<int64_t>& folders = aQuery->Folders();
-  if (folders.Length() > 0) {
+  // parents
+  const nsTArray<nsCString>& parents = aQuery->Parents();
+  if (parents.Length() > 0) {
     aOptions->SetQueryType(nsNavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
     clause.Condition("b.parent IN( "
                        "WITH RECURSIVE parents(id) AS ( "
-                         "VALUES ");
-    for (uint32_t i = 0; i < folders.Length(); ++i) {
-      nsPrintfCString param("(:parent%d_)", i);
+                         "SELECT id FROM moz_bookmarks WHERE GUID IN (");
+
+    for (uint32_t i = 0; i < parents.Length(); ++i) {
+      nsPrintfCString param(":parentguid%d_", i);
       clause.Param(param.get());
-      if (i < folders.Length() - 1) {
+      if (i < parents.Length() - 1) {
         clause.Str(",");
       }
     }
-    clause.Str(          "UNION ALL "
+    clause.Str(          ") "
+                         "UNION ALL "
                          "SELECT b2.id "
                          "FROM moz_bookmarks b2 "
                          "JOIN parents p ON b2.parent = p.id "
@@ -2917,11 +2919,11 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageBaseStatement* statement,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // folders
-  const nsTArray<int64_t>& folders = aQuery->Folders();
-  for (uint32_t i = 0; i < folders.Length(); ++i) {
-    nsPrintfCString paramName("parent%d_", i);
-    rv = statement->BindInt64ByName(paramName, folders[i]);
+  // parents
+  const nsTArray<nsCString>& parents = aQuery->Parents();
+  for (uint32_t i = 0; i < parents.Length(); ++i) {
+    nsPrintfCString paramName("parentguid%d_", i);
+    rv = statement->BindUTF8StringByName(paramName, parents[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3350,21 +3352,19 @@ nsNavHistory::QueryRowToResult(int64_t itemId,
   // handle it later.
   if (NS_SUCCEEDED(rv)) {
     // Check if this is a folder shortcut, so we can take a faster path.
-    int64_t targetFolderId = GetSimpleBookmarksQueryFolder(queryObj, optionsObj);
-    if (targetFolderId) {
+    nsCString targetFolderGuid = GetSimpleBookmarksQueryParent(queryObj, optionsObj);
+    if (!targetFolderGuid.IsEmpty()) {
       nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = bookmarks->ResultNodeForContainer(targetFolderId, optionsObj,
+      rv = bookmarks->ResultNodeForContainer(targetFolderGuid, optionsObj,
                                              getter_AddRefs(resultNode));
       // If this failed the shortcut is pointing to nowhere, let the error pass
       // and handle it later.
       if (NS_SUCCEEDED(rv)) {
         // At this point the node is set up like a regular folder node. Here
         // we make the necessary change to make it a folder shortcut.
-        resultNode->GetAsFolder()->mTargetFolderItemId = targetFolderId;
         resultNode->mItemId = itemId;
-        nsAutoCString targetFolderGuid(resultNode->GetAsFolder()->mBookmarkGuid);
         resultNode->mBookmarkGuid = aBookmarkGuid;
         resultNode->GetAsFolder()->mTargetFolderGuid = targetFolderGuid;
 
@@ -3629,7 +3629,7 @@ nsNavHistory::GetMonthYear(const PRExplodedTime& aTime, nsACString& aResult)
 
 namespace {
 
-// GetSimpleBookmarksQueryFolder
+// GetSimpleBookmarksQueryParent
 //
 //    Determines if this is a simple bookmarks query for a
 //    folder with no other constraints. In these common cases, we can more
@@ -3639,33 +3639,33 @@ namespace {
 //    bookmark items, folders and separators.
 //
 //    Returns the folder ID if it is a simple folder query, 0 if not.
-static int64_t
-GetSimpleBookmarksQueryFolder(const RefPtr<nsNavHistoryQuery>& aQuery,
+static nsCString
+GetSimpleBookmarksQueryParent(const RefPtr<nsNavHistoryQuery>& aQuery,
                               const RefPtr<nsNavHistoryQueryOptions>& aOptions)
 {
-  if (aQuery->Folders().Length() != 1)
-    return 0;
+  if (aQuery->Parents().Length() != 1)
+    return EmptyCString();
 
   bool hasIt;
   if (NS_SUCCEEDED(aQuery->GetHasBeginTime(&hasIt)) && hasIt)
-    return 0;
+    return EmptyCString();
   if (NS_SUCCEEDED(aQuery->GetHasEndTime(&hasIt)) && hasIt)
-    return 0;
+    return EmptyCString();
   if (!aQuery->Domain().IsVoid())
-    return 0;
+    return EmptyCString();
   if (aQuery->Uri())
-    return 0;
+    return EmptyCString();
   if (!aQuery->SearchTerms().IsEmpty())
-    return 0;
+    return EmptyCString();
   if (aQuery->Tags().Length() > 0)
-    return 0;
+    return EmptyCString();
   if (aOptions->MaxResults() > 0)
-    return 0;
+    return EmptyCString();
 
   // Don't care about onlyBookmarked flag, since specifying a bookmark
   // folder is inferring onlyBookmarked.
 
-  return aQuery->Folders()[0];
+  return aQuery->Parents()[0];
 }
 
 

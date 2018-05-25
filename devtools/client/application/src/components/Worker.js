@@ -127,7 +127,7 @@ class Worker extends Component {
     const debugLink = a({
       onClick: this.isRunning() ? this.debug : null,
       title: this.isRunning() ? null : "Only running service workers can be debugged",
-      className: `${debugLinkDisabled} worker__debug-link`
+      className: `${debugLinkDisabled} worker__debug-link js-debug-link`
     },
       Strings.GetStringFromName("debug"));
 

@@ -35,7 +35,7 @@ add_task(async function test_getURLsForContainerNode_folder() {
   });
 
   var query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = hs.getNewQueryOptions();
 
   info("Check folder without uri nodes");
@@ -75,7 +75,7 @@ add_task(async function test_getURLsForContainerNode_folder_excludeItems() {
   });
 
   var query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = hs.getNewQueryOptions();
   options.excludeItems = true;
 
@@ -100,7 +100,7 @@ add_task(async function test_getURLsForContainerNode_query() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "inside query",
-    url: "place:folder=BOOKMARKS_MENU&sort=1",
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}&sort=1`,
   });
 
   // Create a folder and a query node inside it, these should not be considered
@@ -118,7 +118,7 @@ add_task(async function test_getURLsForContainerNode_query() {
   });
 
   var query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = hs.getNewQueryOptions();
 
   info("Check query without uri nodes");
@@ -142,7 +142,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeItems() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "inside query",
-    url: "place:folder=BOOKMARKS_MENU&sort=1",
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}&sort=1`,
   });
 
   // Create a folder and a query node inside it, these should not be considered
@@ -160,7 +160,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeItems() {
   });
 
   var query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = hs.getNewQueryOptions();
   options.excludeItems = true;
 
@@ -185,7 +185,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeQueries() {
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     title: "inside query",
-    url: "place:folder=BOOKMARKS_MENU&sort=1",
+    url: `place:parent=${PlacesUtils.bookmarks.menuGuid}&sort=1`,
   });
 
   // Create a folder and a query node inside it, these should not be considered
@@ -203,7 +203,7 @@ add_task(async function test_getURLsForContainerNode_query_excludeQueries() {
   });
 
   var query = hs.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var options = hs.getNewQueryOptions();
   options.expandQueries = false;
 

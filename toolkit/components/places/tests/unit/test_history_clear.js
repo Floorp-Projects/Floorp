@@ -25,7 +25,7 @@ add_task(async function test_history_clear() {
   // add a place: bookmark
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "place:folder=4",
+    url: `place:parent=${PlacesUtils.bookmarks.tagsGuid}`,
     title: "shortcut"
   });
 

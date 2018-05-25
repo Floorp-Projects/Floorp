@@ -228,25 +228,25 @@ WebConsoleConnectionProxy.prototype = {
    * Dispatch a message add on the new frontend and emit an event for tests.
    */
   dispatchMessageAdd: function(packet) {
-    this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
+    this.webConsoleFrame.consoleOutput.dispatchMessageAdd(packet);
   },
 
   /**
    * Batched dispatch of messages.
    */
   dispatchMessagesAdd: function(packets) {
-    this.webConsoleFrame.newConsoleOutput.dispatchMessagesAdd(packets);
+    this.webConsoleFrame.consoleOutput.dispatchMessagesAdd(packets);
   },
 
   /**
    * Dispatch a message event on the new frontend and emit an event for tests.
    */
   dispatchMessageUpdate: function(networkInfo, response) {
-    this.webConsoleFrame.newConsoleOutput.dispatchMessageUpdate(networkInfo, response);
+    this.webConsoleFrame.consoleOutput.dispatchMessageUpdate(networkInfo, response);
   },
 
   dispatchRequestUpdate: function(id, data) {
-    this.webConsoleFrame.newConsoleOutput.dispatchRequestUpdate(id, data);
+    this.webConsoleFrame.consoleOutput.dispatchRequestUpdate(id, data);
   },
 
   /**

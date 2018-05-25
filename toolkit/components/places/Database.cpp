@@ -107,12 +107,6 @@
 #define LMANNO_FEEDURI "livemark/feedURI"
 #define LMANNO_SITEURI "livemark/siteURI"
 
-#define ROOT_GUID "root________"
-#define MENU_ROOT_GUID "menu________"
-#define TOOLBAR_ROOT_GUID "toolbar_____"
-#define UNFILED_ROOT_GUID "unfiled_____"
-#define TAGS_ROOT_GUID "tags________"
-#define MOBILE_ROOT_GUID "mobile______"
 // This is no longer used & obsolete except for during migration.
 // Note: it may still be found in older places databases.
 #define MOBILE_ROOT_ANNO "mobile/bookmarksRoot"
@@ -1301,7 +1295,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 62 uses schema version 49.
+      if (currentSchemaVersion < 50) {
+        rv = MigrateV50Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 62 uses schema version 50.
 
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
@@ -2493,6 +2492,163 @@ Database::MigrateV49Up() {
   Unused << Preferences::ClearUser("places.frecency.stats.sum");
   Unused << Preferences::ClearUser("places.frecency.stats.sumOfSquares");
 
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV50Up() {
+  // Convert the existing queries. We don't have REGEX available, so the simplest
+  // thing to do is to pull the urls out, and process them manually.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, url FROM moz_places "
+    "WHERE url_hash BETWEEN hash('place', 'prefix_lo') AND "
+                           "hash('place', 'prefix_hi') "
+      "AND url LIKE '%folder=%' "
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) return rv;
+
+  AutoTArray<Pair<int64_t, nsCString>, 32> placeURLs;
+
+  bool hasMore = false;
+  nsCString url;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
+    int64_t placeId;
+    rv = stmt->GetInt64(0, &placeId);
+    if (NS_FAILED(rv)) return rv;
+    rv = stmt->GetUTF8String(1, url);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!placeURLs.AppendElement(MakePair(placeId, url))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (placeURLs.IsEmpty()) {
+    return NS_OK;
+  }
+
+  int64_t placeId;
+  for (uint32_t i = 0; i < placeURLs.Length(); ++i) {
+    placeId = placeURLs[i].first();
+    url = placeURLs[i].second();
+
+    rv = ConvertOldStyleQuery(url);
+    // Something bad happened, and we can't convert it, so just continue.
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    nsCOMPtr<mozIStorageStatement> updateStmt;
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_places "
+      "SET url = :url, url_hash = hash(:url) "
+      "WHERE id = :placeId "
+    ), getter_AddRefs(updateStmt));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = URIBinder::Bind(updateStmt, NS_LITERAL_CSTRING("url"), url);
+    if (NS_FAILED(rv)) return rv;
+    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("placeId"), placeId);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = updateStmt->Execute();
+    if (NS_FAILED(rv)) return rv;
+
+    // Update Sync fields for these queries.
+    nsCOMPtr<mozIStorageStatement> syncStmt;
+    rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+      "UPDATE moz_bookmarks SET syncChangeCounter = syncChangeCounter + 1 "
+      "WHERE fk = :placeId "
+    ), getter_AddRefs(syncStmt));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = syncStmt->BindInt64ByName(NS_LITERAL_CSTRING("placeId"), placeId);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = syncStmt->Execute();
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
+
+nsresult
+Database::ConvertOldStyleQuery(nsCString& aURL)
+{
+  AutoTArray<QueryKeyValuePair, 8> tokens;
+  nsresult rv = TokenizeQueryString(aURL, &tokens);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoTArray<QueryKeyValuePair, 8> newTokens;
+  bool invalid = false;
+  nsAutoCString guid;
+
+  for (uint32_t j = 0; j < tokens.Length(); ++j) {
+    const QueryKeyValuePair& kvp = tokens[j];
+
+    if (!kvp.key.EqualsLiteral("folder")) {
+      if (!newTokens.AppendElement(kvp)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      continue;
+    }
+
+    int64_t itemId = kvp.value.ToInteger(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      // We have the folder's ID, now to find its GUID.
+      nsCOMPtr<mozIStorageStatement> stmt;
+      nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT guid FROM moz_bookmarks "
+        "WHERE id = :itemId "
+      ), getter_AddRefs(stmt));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("itemId"), itemId);
+      if (NS_FAILED(rv)) return rv;
+
+      bool hasMore = false;
+      if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
+        rv = stmt->GetUTF8String(0, guid);
+        if (NS_FAILED(rv)) return rv;
+      }
+    } else if (kvp.value.EqualsLiteral("PLACES_ROOT")) {
+      guid = NS_LITERAL_CSTRING(ROOT_GUID);
+    } else if (kvp.value.EqualsLiteral("BOOKMARKS_MENU")) {
+      guid = NS_LITERAL_CSTRING(MENU_ROOT_GUID);
+    } else if (kvp.value.EqualsLiteral("TAGS")) {
+      guid = NS_LITERAL_CSTRING(TAGS_ROOT_GUID);
+    } else if (kvp.value.EqualsLiteral("UNFILED_BOOKMARKS")) {
+      guid = NS_LITERAL_CSTRING(UNFILED_ROOT_GUID);
+    } else if (kvp.value.EqualsLiteral("TOOLBAR")) {
+      guid = NS_LITERAL_CSTRING(TOOLBAR_ROOT_GUID);
+    } else if (kvp.value.EqualsLiteral("MOBILE_BOOKMARKS")) {
+      guid = NS_LITERAL_CSTRING(MOBILE_ROOT_GUID);
+    }
+
+    QueryKeyValuePair* newPair;
+    if (guid.IsEmpty()) {
+      // This is invalid, so we'll change this key/value pair to something else
+      // so that the query remains a valid url.
+      newPair = new QueryKeyValuePair(NS_LITERAL_CSTRING("invalidOldParentId"), kvp.value);
+      invalid = true;
+    } else {
+      newPair = new QueryKeyValuePair(NS_LITERAL_CSTRING("parent"), guid);
+    }
+    if (!newTokens.AppendElement(*newPair)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    delete newPair;
+  }
+
+  if (invalid) {
+    // One or more of the folders don't exist, replace with an empty query.
+    newTokens.AppendElement(QueryKeyValuePair(NS_LITERAL_CSTRING("excludeItems"),
+                                              NS_LITERAL_CSTRING("1")));
+  }
+
+  TokensToQueryString(newTokens, aURL);
   return NS_OK;
 }
 

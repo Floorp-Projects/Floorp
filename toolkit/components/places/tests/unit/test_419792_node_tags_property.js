@@ -14,7 +14,7 @@ add_task(async function test_query_node_tags_property() {
   // get toolbar node
   var options = histsvc.getNewQueryOptions();
   var query = histsvc.getNewQuery();
-  query.setFolders([PlacesUtils.toolbarFolderId], 1);
+  query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
   var result = histsvc.executeQuery(query, options);
   var toolbarNode = result.root;
   toolbarNode.containerOpen = true;

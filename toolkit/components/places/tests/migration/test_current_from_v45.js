@@ -22,6 +22,7 @@ let gTags = [
   // This will point to an invalid folder id.
   { folder: 456789,
     url: "place:type=7&folder=456789&queryType=1",
+    expectedUrl: "place:type=7&invalidOldParentId=456789&queryType=1&excludeItems=1",
     title: "invalid",
     hash: "268505972797836",
   },
@@ -61,7 +62,7 @@ add_task(async function database_is_valid() {
 
 add_task(async function test_queries_converted() {
   for (let tag of gTags) {
-    let url = tag.title == "invalid" ? tag.url : "place:tag=" + tag.title;
+    let url = tag.title == "invalid" ? tag.expectedUrl : "place:tag=" + tag.title;
     let page = await PlacesUtils.history.fetch(tag.guid);
     Assert.equal(page.url.href, url);
   }

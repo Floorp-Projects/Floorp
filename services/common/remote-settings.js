@@ -24,7 +24,8 @@ ChromeUtils.defineModuleGetter(this, "UptakeTelemetry",
                                "resource://services-common/uptake-telemetry.js");
 ChromeUtils.defineModuleGetter(this, "ClientEnvironmentBase",
                                "resource://gre/modules/components-utils/ClientEnvironment.jsm");
-ChromeUtils.defineModuleGetter(this, "FilterExpressions", "resource://normandy/lib/FilterExpressions.jsm");
+ChromeUtils.defineModuleGetter(this, "FilterExpressions",
+                               "resource://gre/modules/components-utils/FilterExpressions.jsm");
 
 const PREF_SETTINGS_SERVER             = "services.settings.server";
 const PREF_SETTINGS_DEFAULT_BUCKET     = "services.settings.default_bucket";

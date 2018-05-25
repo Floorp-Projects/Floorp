@@ -21,37 +21,8 @@
 #include "nsVariant.h"
 
 using namespace mozilla;
+using namespace mozilla::places;
 
-class QueryKeyValuePair
-{
-public:
-
-  // QueryKeyValuePair
-  //
-  //                  01234567890
-  //    input : qwerty&key=value&qwerty
-  //                  ^   ^     ^
-  //          aKeyBegin   |     aPastEnd (may point to null terminator)
-  //                      aEquals
-  //
-  //    Special case: if aKeyBegin == aEquals, then there is only one string
-  //    and no equal sign, so we treat the entire thing as a key with no value
-
-  QueryKeyValuePair(const nsACString& aSource, int32_t aKeyBegin,
-                    int32_t aEquals, int32_t aPastEnd)
-  {
-    if (aEquals == aKeyBegin)
-      aEquals = aPastEnd;
-    key = Substring(aSource, aKeyBegin, aEquals - aKeyBegin);
-    if (aPastEnd - aEquals > 0)
-      value = Substring(aSource, aEquals + 1, aPastEnd - aEquals - 1);
-  }
-  nsCString key;
-  nsCString value;
-};
-
-static nsresult TokenizeQueryString(const nsACString& aQuery,
-                                    nsTArray<QueryKeyValuePair>* aTokens);
 static nsresult ParseQueryBooleanString(const nsCString& aString,
                                         bool* aValue);
 
@@ -110,7 +81,7 @@ static void SetOptionsKeyUint32(const nsCString& aValue,
 #define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
 #define QUERYKEY_DOMAIN "domain"
-#define QUERYKEY_FOLDER "folder"
+#define QUERYKEY_PARENT "parent"
 #define QUERYKEY_NOTANNOTATION "!annotation"
 #define QUERYKEY_ANNOTATION "annotation"
 #define QUERYKEY_URI "uri"
@@ -154,93 +125,6 @@ inline void AppendInt64(nsACString& str, int64_t i)
   tmp.AppendInt(i);
   str.Append(tmp);
 }
-
-namespace PlacesFolderConversion {
-  #define PLACES_ROOT_FOLDER "PLACES_ROOT"
-  #define BOOKMARKS_MENU_FOLDER "BOOKMARKS_MENU"
-  #define TAGS_FOLDER "TAGS"
-  #define UNFILED_BOOKMARKS_FOLDER "UNFILED_BOOKMARKS"
-  #define TOOLBAR_FOLDER "TOOLBAR"
-  #define MOBILE_BOOKMARKS_FOLDER "MOBILE_BOOKMARKS"
-
-  /**
-   * Converts a folder name to a folder id.
-   *
-   * @param aName
-   *        The name of the folder to convert to a folder id.
-   * @returns the folder id if aName is a recognizable name, -1 otherwise.
-   */
-  inline int64_t DecodeFolder(const nsCString &aName)
-  {
-    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bs, false);
-    int64_t folderID = -1;
-
-    if (aName.EqualsLiteral(PLACES_ROOT_FOLDER))
-      (void)bs->GetPlacesRoot(&folderID);
-    else if (aName.EqualsLiteral(BOOKMARKS_MENU_FOLDER))
-      (void)bs->GetBookmarksMenuFolder(&folderID);
-    else if (aName.EqualsLiteral(TAGS_FOLDER))
-      (void)bs->GetTagsFolder(&folderID);
-    else if (aName.EqualsLiteral(UNFILED_BOOKMARKS_FOLDER))
-      (void)bs->GetUnfiledBookmarksFolder(&folderID);
-    else if (aName.EqualsLiteral(TOOLBAR_FOLDER))
-      (void)bs->GetToolbarFolder(&folderID);
-    else if (aName.EqualsLiteral(MOBILE_BOOKMARKS_FOLDER))
-      (void)bs->GetMobileFolder(&folderID);
-
-    return folderID;
-  }
-
-  /**
-   * Converts a folder id to a named constant, or a string representation of the
-   * folder id if there is no named constant for the folder, and appends it to
-   * aQuery.
-   *
-   * @param aQuery
-   *        The string to append the folder string to.  This is generally a
-   *        query string, but could really be anything.
-   * @param aFolderID
-   *        The folder ID to convert to the proper named constant.
-   */
-  inline nsresult AppendFolder(nsCString &aQuery, int64_t aFolderID)
-  {
-    nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_STATE(bs);
-    int64_t folderID = -1;
-
-    if (NS_SUCCEEDED(bs->GetPlacesRoot(&folderID)) &&
-        aFolderID == folderID) {
-      aQuery.AppendLiteral(PLACES_ROOT_FOLDER);
-    }
-    else if (NS_SUCCEEDED(bs->GetBookmarksMenuFolder(&folderID)) &&
-             aFolderID == folderID) {
-      aQuery.AppendLiteral(BOOKMARKS_MENU_FOLDER);
-    }
-    else if (NS_SUCCEEDED(bs->GetTagsFolder(&folderID)) &&
-             aFolderID == folderID) {
-      aQuery.AppendLiteral(TAGS_FOLDER);
-    }
-    else if (NS_SUCCEEDED(bs->GetUnfiledBookmarksFolder(&folderID)) &&
-             aFolderID == folderID) {
-      aQuery.AppendLiteral(UNFILED_BOOKMARKS_FOLDER);
-    }
-    else if (NS_SUCCEEDED(bs->GetToolbarFolder(&folderID)) &&
-             aFolderID == folderID) {
-      aQuery.AppendLiteral(TOOLBAR_FOLDER);
-    }
-    else if (NS_SUCCEEDED(bs->GetMobileFolder(&folderID)) &&
-             aFolderID == folderID) {
-      aQuery.AppendLiteral(MOBILE_BOOKMARKS_FOLDER);
-    }
-    else {
-      // It wasn't one of our named constants, so just convert it to a string.
-      aQuery.AppendInt(aFolderID);
-    }
-
-    return NS_OK;
-  }
-} // namespace PlacesFolderConversion
 
 NS_IMETHODIMP
 nsNavHistory::QueryStringToQuery(const nsACString& aQueryString,
@@ -386,13 +270,12 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
     queryString.Append(escaped);
   }
 
-  // folders
-  const nsTArray<int64_t>& folders = query->Folders();
-  for (uint32_t i = 0; i < folders.Length(); ++i) {
+  // parents
+  const nsTArray<nsCString>& parents = query->Parents();
+  for (uint32_t i = 0; i < parents.Length(); ++i) {
     AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_FOLDER "=");
-    nsresult rv = PlacesFolderConversion::AppendFolder(queryString, folders[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_PARENT "=");
+    queryString += parents[i];
   }
 
   // tags
@@ -502,46 +385,6 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery *aQuery,
 }
 
 
-// TokenizeQueryString
-
-nsresult
-TokenizeQueryString(const nsACString& aQuery,
-                    nsTArray<QueryKeyValuePair>* aTokens)
-{
-  // Strip off the "place:" prefix
-  const uint32_t prefixlen = 6; // = strlen("place:");
-  nsCString query;
-  if (aQuery.Length() >= prefixlen &&
-      Substring(aQuery, 0, prefixlen).EqualsLiteral("place:"))
-    query = Substring(aQuery, prefixlen);
-  else
-    query = aQuery;
-
-  int32_t keyFirstIndex = 0;
-  int32_t equalsIndex = 0;
-  for (uint32_t i = 0; i < query.Length(); i ++) {
-    if (query[i] == '&') {
-      // new clause, save last one
-      if (i - keyFirstIndex > 1) {
-        if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
-                                                       equalsIndex, i)))
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-      keyFirstIndex = equalsIndex = i + 1;
-    } else if (query[i] == '=') {
-      equalsIndex = i;
-    }
-  }
-
-  // handle last pair, if any
-  if (query.Length() - keyFirstIndex > 1) {
-    if (! aTokens->AppendElement(QueryKeyValuePair(query, keyFirstIndex,
-                                                   equalsIndex, query.Length())))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
-}
-
 nsresult
 nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
                             nsNavHistoryQuery* aQuery,
@@ -552,7 +395,7 @@ nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
   if (aTokens.Length() == 0)
     return NS_OK;
 
-  nsTArray<int64_t> folders;
+  nsTArray<nsCString> parents;
   nsTArray<nsString> tags;
   nsTArray<uint32_t> transitions;
   for (uint32_t i = 0; i < aTokens.Length(); i ++) {
@@ -612,20 +455,11 @@ nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
       rv = aQuery->SetDomain(unescapedDomain);
       NS_ENSURE_SUCCESS(rv, rv);
 
-    // folders
-    } else if (kvp.key.EqualsLiteral(QUERYKEY_FOLDER)) {
-      int64_t folder;
-      if (PR_sscanf(kvp.value.get(), "%lld", &folder) == 1) {
-        NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
-      } else {
-        folder = PlacesFolderConversion::DecodeFolder(kvp.value);
-        if (folder != -1)
-          NS_ENSURE_TRUE(folders.AppendElement(folder), NS_ERROR_OUT_OF_MEMORY);
-        else
-          NS_WARNING("folders value in query is invalid, ignoring");
-      }
+    // parent folders (guids)
+    } else if (kvp.key.EqualsLiteral(QUERYKEY_PARENT)) {
+      NS_ENSURE_TRUE(parents.AppendElement(kvp.value), NS_ERROR_OUT_OF_MEMORY);
 
-    // uri
+     // uri
     } else if (kvp.key.EqualsLiteral(QUERYKEY_URI)) {
       nsAutoCString unescapedUri(kvp.value);
       NS_UnescapeURL(unescapedUri); // modifies input
@@ -733,8 +567,10 @@ nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
     }
   }
 
-  if (folders.Length() != 0)
-    aQuery->SetFolders(folders.Elements(), folders.Length());
+  if (parents.Length() != 0) {
+    rv = aQuery->SetParents(parents);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (tags.Length() > 0) {
     rv = aQuery->SetTags(tags);
@@ -799,7 +635,7 @@ nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
     mDomainIsHost(aOther.mDomainIsHost), mDomain(aOther.mDomain),
     mUri(aOther.mUri), mAnnotationIsNot(aOther.mAnnotationIsNot),
     mAnnotation(aOther.mAnnotation),
-    mFolders(aOther.mFolders),
+    mParents(aOther.mParents),
     mTags(aOther.mTags), mTagsAreNot(aOther.mTagsAreNot),
     mTransitions(aOther.mTransitions)
 {
@@ -1131,37 +967,39 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTagsAreNot(bool aTagsAreNot)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetFolders(uint32_t *aCount,
-                                            int64_t **aFolders)
+NS_IMETHODIMP nsNavHistoryQuery::GetParents(uint32_t *aGuidCount,
+                                            char ***aGuids)
 {
-  uint32_t count = mFolders.Length();
-  int64_t *folders = nullptr;
+  uint32_t count = mParents.Length();
+  char **guids = nullptr;
   if (count > 0) {
-    folders = static_cast<int64_t*>
-                         (moz_xmalloc(count * sizeof(int64_t)));
-    NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
+    guids = static_cast<char**>
+                       (moz_xmalloc(count * sizeof(char*)));
+    NS_ENSURE_TRUE(guids, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < count; ++i) {
-      folders[i] = mFolders[i];
+      guids[i] = ToNewCString(mParents[i]);
     }
   }
-  *aCount = count;
-  *aFolders = folders;
+  *aGuidCount = count;
+  *aGuids = guids;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::GetFolderCount(uint32_t *aCount)
+NS_IMETHODIMP nsNavHistoryQuery::GetParentCount(uint32_t *aGuidCount)
 {
-  *aCount = mFolders.Length();
+  *aGuidCount = mParents.Length();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNavHistoryQuery::SetFolders(const int64_t *aFolders,
-                                            uint32_t aFolderCount)
+NS_IMETHODIMP nsNavHistoryQuery::SetParents(const char** aGuids,
+                                            uint32_t aGuidCount)
 {
-  if (!mFolders.ReplaceElementsAt(0, mFolders.Length(),
-                                  aFolders, aFolderCount)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  mParents.Clear();
+  for (size_t i = 0; i < aGuidCount; i++) {
+    if (!mParents.AppendElement(aGuids[i])) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_OK;

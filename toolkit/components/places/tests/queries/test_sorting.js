@@ -44,7 +44,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -115,7 +115,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -213,7 +213,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -318,7 +318,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
 
     // query options
     var options = PlacesUtils.history.getNewQueryOptions();
@@ -416,7 +416,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -504,7 +504,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -600,7 +600,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
@@ -698,7 +698,7 @@ tests.push({
   check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
-    query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
+    query.setParents([PlacesUtils.bookmarks.toolbarGuid], 1);
     query.onlyBookmarked = true;
 
     // query options
