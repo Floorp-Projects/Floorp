@@ -2384,17 +2384,18 @@ WebGLContext::GetVRFrame()
   BeginComposition();
   EndComposition();
 
-  gl::GLScreenBuffer* screen = gl->Screen();
-  if (!screen) {
+  if (IsContextLost())
       return nullptr;
-  }
+
+  gl::GLScreenBuffer* screen = gl->Screen();
+  if (!screen)
+      return nullptr;
 
   RefPtr<SharedSurfaceTextureClient> sharedSurface = screen->Front();
-  if (!sharedSurface) {
+  if (!sharedSurface)
       return nullptr;
-  }
 
-    return sharedSurface.forget();
+  return sharedSurface.forget();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
