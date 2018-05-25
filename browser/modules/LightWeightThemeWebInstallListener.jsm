@@ -2,19 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["LightWeightThemeWebInstallListener"];
+
 var LightWeightThemeWebInstallListener = {
   _previewWindow: null,
 
-  init() {
-    addEventListener("InstallBrowserTheme", this, false, true);
-    addEventListener("PreviewBrowserTheme", this, false, true);
-    addEventListener("ResetBrowserThemePreview", this, false, true);
-  },
-
   handleEvent(event) {
+    let mm = getMessageManagerForContent(event.target.ownerGlobal);
     switch (event.type) {
       case "InstallBrowserTheme": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
+        mm.sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
           baseURI: event.target.baseURI,
           principal: event.target.nodePrincipal,
           themeData: event.target.getAttribute("data-browsertheme"),
@@ -22,7 +19,7 @@ var LightWeightThemeWebInstallListener = {
         break;
       }
       case "PreviewBrowserTheme": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:Preview", {
+        mm.sendAsyncMessage("LightWeightThemeWebInstaller:Preview", {
           baseURI: event.target.baseURI,
           principal: event.target.nodePrincipal,
           themeData: event.target.getAttribute("data-browsertheme"),
@@ -32,13 +29,13 @@ var LightWeightThemeWebInstallListener = {
         break;
       }
       case "pagehide": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview");
+        mm.sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview");
         this._resetPreviewWindow();
         break;
       }
       case "ResetBrowserThemePreview": {
         if (this._previewWindow) {
-          sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview",
+          mm.sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview",
                            {principal: event.target.nodePrincipal});
           this._resetPreviewWindow();
         }
@@ -53,4 +50,10 @@ var LightWeightThemeWebInstallListener = {
   }
 };
 
-LightWeightThemeWebInstallListener.init();
+function getMessageManagerForContent(content) {
+  return content.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDocShell)
+                .sameTypeRootTreeItem
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIContentFrameMessageManager);
+}
