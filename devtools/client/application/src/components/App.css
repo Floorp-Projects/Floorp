@@ -48,13 +48,18 @@ a.disabled:visited {
  *  +---------------------------------------------+
  */
 .application {
-  height: 100%;
-  padding: 0 20px;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  padding: 0 2rem;
+  display: grid;
 }
 
 .application--empty {
-  background-color: var(--grey-30);
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+.application:not(.application--empty) {
+  grid-template-rows: 1fr auto;
 }

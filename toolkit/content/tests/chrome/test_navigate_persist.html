@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1460639
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1460639</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    ChromeUtils.import("resource://gre/modules/Services.jsm");
+    SimpleTest.waitForExplicitFinish();
+
+    function navigateWindowTo(win, url) {
+      return new Promise(resolve => {
+        Services.obs.addObserver(function listener(document) {
+          Services.obs.removeObserver(listener, "document-element-inserted");
+          document.addEventListener("DOMContentLoaded", () => {
+            resolve();
+          }, { once: true } );
+        }, "document-element-inserted");
+        win.location = url;
+      });
+    }
+
+    function resize(win, size) {
+      let resizePromise = new Promise(resolve => {
+        if (win.outerWidth === size && win.outerHeight === size) {
+          resolve();
+        }
+        win.addEventListener("resize", () => {
+          resolve();
+        }, {once: true});
+      });
+      win.resizeTo(size, size);
+      return resizePromise;
+    }
+
+    async function runTest() {
+      // Test that persisted window attributes are loaded when a top level
+      // window is navigated. This mimics the behavior of early first paint by
+      // first loading about:blank and then navigating to window_navigate_persist.html.
+      const PERSIST_SIZE = 200;
+      // First, load the document and resize it so the size is persisted.
+      let win = openDialog("window_navigate_persist.html", "_blank", `chrome,all,dialog=no`);
+      await SimpleTest.promiseFocus(win);
+      await resize(win, PERSIST_SIZE);
+      is(win.outerWidth, PERSIST_SIZE, "Window is resized to desired width");
+      is(win.outerHeight, PERSIST_SIZE, "Window is resized to desired height");
+      win.close();
+
+      // Now mimic early first paint.
+      win = openDialog("about:blank", "_blank", `chrome,all,dialog=no`);
+      await SimpleTest.promiseFocus(win, true);
+      isnot(win.outerWidth, PERSIST_SIZE, "Initial window width is not the persisted size");
+      isnot(win.outerHeight, PERSIST_SIZE, "Initial window height is not the persisted size");
+
+      await navigateWindowTo(win, "window_navigate_persist.html");
+      is(win.outerWidth, PERSIST_SIZE, "Window width is persisted");
+      is(win.outerHeight, PERSIST_SIZE, "Window height is persisted");
+      win.close();
+      SimpleTest.finish();
+    }
+
+  </script>
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1460639">Mozilla Bug 1460639</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

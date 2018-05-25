@@ -45,12 +45,12 @@ namespace mozilla {
 
 using namespace dom;
 
-static bool
-IsEmptyTextNode(HTMLEditor* aThis, nsINode* aNode)
+bool
+HTMLEditor::IsEmptyTextNode(nsINode& aNode)
 {
   bool isEmptyTextNode = false;
-  return EditorBase::IsTextNode(aNode) &&
-         NS_SUCCEEDED(aThis->IsEmptyNode(aNode, &isEmptyTextNode)) &&
+  return EditorBase::IsTextNode(&aNode) &&
+         NS_SUCCEEDED(IsEmptyNode(&aNode, &isEmptyTextNode)) &&
          isEmptyTextNode;
 }
 
@@ -345,7 +345,7 @@ HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
       for (nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
            child;
            child = child->GetNextSibling()) {
-        if (IsEditable(child) && !IsEmptyTextNode(this, child)) {
+        if (IsEditable(child) && !IsEmptyTextNode(*child)) {
           arrayOfNodes.AppendElement(*child);
         }
       }
@@ -1051,7 +1051,7 @@ HTMLEditor::GetInlinePropertyBase(nsAtom& aProperty,
 
       // just ignore any non-editable nodes
       if (content->GetAsText() && (!IsEditable(content) ||
-                                   IsEmptyTextNode(this, content))) {
+                                   IsEmptyTextNode(*content))) {
         continue;
       }
       if (content->GetAsText()) {

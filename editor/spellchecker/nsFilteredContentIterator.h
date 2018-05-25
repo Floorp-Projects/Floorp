@@ -13,7 +13,6 @@
 #include "nscore.h"
 
 class nsAtom;
-class nsIDOMNode;
 class nsINode;
 class nsITextServicesFilter;
 class nsRange;

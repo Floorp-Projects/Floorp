@@ -69,7 +69,7 @@ window._gBrowser = {
 
   ownerDocument: document,
 
-  closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2 },
+  closingTabsEnum: { ALL: 0, OTHER: 1, TO_END: 2, MULTI_SELECTED: 3 },
 
   _visibleTabs: null,
 
@@ -2539,6 +2539,9 @@ window._gBrowser = {
 
         tabsToClose = this.getTabsToTheEndFrom(aTab).length;
         break;
+      case this.closingTabsEnum.MULTI_SELECTED:
+        tabsToClose = this.multiSelectedTabsCount;
+        break;
       default:
         throw new Error("Invalid argument: " + aCloseTabs);
     }
@@ -2598,28 +2601,12 @@ window._gBrowser = {
     return tabsToEnd;
   },
 
-  removeTabsToTheEndFrom(aTab, aParams) {
+  removeTabsToTheEndFrom(aTab) {
     if (!this.warnAboutClosingTabs(this.closingTabsEnum.TO_END, aTab))
       return;
 
-    let removeTab = tab => {
-      // Avoid changing the selected browser several times.
-      if (tab.selected)
-        this.selectedTab = aTab;
-
-      this.removeTab(tab, aParams);
-    };
-
     let tabs = this.getTabsToTheEndFrom(aTab);
-    let tabsWithBeforeUnload = [];
-    for (let i = tabs.length - 1; i >= 0; --i) {
-      let tab = tabs[i];
-      if (this._hasBeforeUnload(tab))
-        tabsWithBeforeUnload.push(tab);
-      else
-        removeTab(tab);
-    }
-    tabsWithBeforeUnload.forEach(removeTab);
+    this.removeCollectionOfTabs(tabs);
   },
 
   removeAllTabsBut(aTab) {
@@ -2627,21 +2614,41 @@ window._gBrowser = {
       return;
     }
 
-    let tabs = this.visibleTabs.reverse();
+    let tabs = this.visibleTabs.filter(tab => tab != aTab && !tab.pinned);
     this.selectedTab = aTab;
+    this.removeCollectionOfTabs(tabs);
+  },
 
+  removeMultiSelectedTabs() {
+    if (!this.warnAboutClosingTabs(this.closingTabsEnum.MULTI_SELECTED)) {
+      return;
+    }
+
+    let selectedTabs = ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
+                                    .filter(tab => tab.isConnected);
+    this.removeCollectionOfTabs(selectedTabs);
+  },
+
+  removeCollectionOfTabs(tabs) {
     let tabsWithBeforeUnload = [];
-    for (let i = tabs.length - 1; i >= 0; --i) {
-      let tab = tabs[i];
-      if (tab != aTab && !tab.pinned) {
-        if (this._hasBeforeUnload(tab))
-          tabsWithBeforeUnload.push(tab);
-        else
-          this.removeTab(tab, { animate: true });
-      }
+    let lastToClose;
+    let aParams = {animation: true};
+    for (let tab of tabs) {
+      if (tab.selected)
+        lastToClose = tab;
+      else if (this._hasBeforeUnload(tab))
+        tabsWithBeforeUnload.push(tab);
+      else
+        this.removeTab(tab, aParams);
     }
     for (let tab of tabsWithBeforeUnload) {
-      this.removeTab(tab, { animate: true });
+      this.removeTab(tab, aParams);
+    }
+
+    // Avoid changing the selected browser several times by removing it,
+    // if appropriate, lastly.
+    if (lastToClose) {
+      this.removeTab(lastToClose, aParams);
     }
   },
 
@@ -3637,7 +3644,7 @@ window._gBrowser = {
       return;
     }
 
-    const tabs = [...this.tabs];
+    const tabs = this._visibleTabs;
     const indexOfTab1 = tabs.indexOf(aTab1);
     const indexOfTab2 = tabs.indexOf(aTab2);
 
@@ -3645,10 +3652,7 @@ window._gBrowser = {
       [indexOfTab1, indexOfTab2] : [indexOfTab2, indexOfTab1];
 
     for (let i = lowerIndex; i <= higherIndex; i++) {
-      let tab = tabs[i];
-      if (!tab.hidden) {
-        this.addToMultiSelectedTabs(tab);
-      }
+      this.addToMultiSelectedTabs(tabs[i]);
     }
   },
 
@@ -3672,7 +3676,7 @@ window._gBrowser = {
 
   get multiSelectedTabsCount() {
     return ChromeUtils.nondeterministicGetWeakMapKeys(this._multiSelectedTabsMap)
-      .filter(tab => tab.isConnected)
+      .filter(tab => tab.isConnected && !tab.closing)
       .length;
   },
 

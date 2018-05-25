@@ -41,7 +41,6 @@
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMNode.h"
 #include "nsIDocumentEncoder.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -328,7 +327,7 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditor::InitRules()
 {
   if (!mRules) {
@@ -800,7 +799,7 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
       }
     } else {
       for (auto& listener : mActionListeners) {
-        listener->DidDeleteNode(deleteNode->AsDOMNode(), rv);
+        listener->DidDeleteNode(deleteNode, rv);
       }
     }
   }
@@ -1824,7 +1823,7 @@ TextEditor::PasteAsQuotation(int32_t aSelectionType)
 
 NS_IMETHODIMP
 TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
-                              nsIDOMNode** aNodeInserted)
+                              nsINode** aNodeInserted)
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -1878,7 +1877,7 @@ NS_IMETHODIMP
 TextEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    const nsAString& aCitation,
                                    bool aInsertHTML,
-                                   nsIDOMNode** aNodeInserted)
+                                   nsINode** aNodeInserted)
 {
   return InsertAsQuotation(aQuotedText, aNodeInserted);
 }

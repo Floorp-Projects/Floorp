@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import resolve_keyed_by, Schema, validate_schema
+from taskgraph.util.scriptworker import get_release_config
 
 from voluptuous import Required
 
@@ -56,5 +57,18 @@ def set_worker_data(config, jobs):
             env, 'PACKAGE_NAME', item_name=job['name'],
             project=config.params['project']
         )
+
+        resolve_keyed_by(
+            env, 'MAJOR_VERSION_NUMBER', item_name=job['name'],
+            project=config.params['project']
+        )
+        if env.get('MAJOR_VERSION_NUMBER'):
+            release_config = get_release_config(config)
+            major_version = release_config['version'].split('.')[0]
+            env['MAJOR_VERSION_NUMBER'] = env['MAJOR_VERSION_NUMBER'].format(
+                major_version=major_version
+            )
+        else:
+            del env['MAJOR_VERSION_NUMBER']
 
         yield job

@@ -38,7 +38,6 @@
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -177,13 +176,12 @@ HTMLEditor::InsertHTMLWithContext(const nsAString& aInputString,
                                   const nsAString& aInfoStr,
                                   const nsAString& aFlavor,
                                   nsIDocument* aSourceDoc,
-                                  nsIDOMNode* aDestNode,
+                                  nsINode* aDestNode,
                                   int32_t aDestOffset,
                                   bool aDeleteSelection)
 {
-  nsCOMPtr<nsINode> destNode = do_QueryInterface(aDestNode);
   return DoInsertHTMLWithContext(aInputString, aContextStr, aInfoStr,
-                                 aFlavor, aSourceDoc, destNode, aDestOffset,
+                                 aFlavor, aSourceDoc, aDestNode, aDestOffset,
                                  aDeleteSelection,
                                  /* trusted input */ true,
                                  /* clear style */ false);
@@ -743,7 +741,7 @@ HTMLEditor::StripFormattingNodes(nsIContent& aNode,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::PrepareTransferable(nsITransferable** aTransferable)
 {
   return NS_OK;
@@ -1741,7 +1739,7 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
     // If no newline found, lineStart is now strEnd and we can finish up,
     // inserting from curHunk to lineStart then returning.
     const nsAString &curHunk = Substring(hunkStart, lineStart);
-    nsCOMPtr<nsIDOMNode> dummyNode;
+    nsCOMPtr<nsINode> dummyNode;
     if (curHunkIsQuoted) {
       rv = InsertAsPlaintextQuotation(curHunk, false,
                                       getter_AddRefs(dummyNode));
@@ -1764,7 +1762,7 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
 
 NS_IMETHODIMP
 HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
-                              nsIDOMNode** aNodeInserted)
+                              nsINode** aNodeInserted)
 {
   if (IsPlaintextEditor()) {
     return InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
@@ -1782,7 +1780,7 @@ HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
 nsresult
 HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                        bool aAddCites,
-                                       nsIDOMNode** aNodeInserted)
+                                       nsINode** aNodeInserted)
 {
   // get selection
   RefPtr<Selection> selection = GetSelection();
@@ -1847,7 +1845,7 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   // don't need to know the inserted node.
 
   if (aNodeInserted && NS_SUCCEEDED(rv)) {
-    *aNodeInserted = GetAsDOMNode(newNode);
+    *aNodeInserted = newNode;
     NS_IF_ADDREF(*aNodeInserted);
   }
 
@@ -1877,7 +1875,7 @@ NS_IMETHODIMP
 HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                    const nsAString& aCitation,
                                    bool aInsertHTML,
-                                   nsIDOMNode** aNodeInserted)
+                                   nsINode** aNodeInserted)
 {
   // Don't let anyone insert html into a "plaintext" editor:
   if (IsPlaintextEditor()) {
@@ -1927,7 +1925,7 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
   }
 
   if (aNodeInserted && NS_SUCCEEDED(rv)) {
-    *aNodeInserted = GetAsDOMNode(newNode);
+    *aNodeInserted = newNode;
     NS_IF_ADDREF(*aNodeInserted);
   }
 

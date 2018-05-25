@@ -3,17 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .worker-list-empty {
-  width: 700px;
-  line-height: 24px;
-  left: 50%;
-  top: 50%;
-  margin-top: -100px;
-  margin-left: -350px;
-  position: absolute;
-  font-size: 13px;
+  max-width: 65rem;
 }
 
-.worker-list-empty__list {
-  list-style: unset;
-  padding: 0 40px;
+.worker-list-empty__tips {
+  margin-inline-start: 2rem;
+}
+
+.worker-list-empty__tips__item {
+  margin-block-start: 0.5rem;
+  margin-block-end: 0.5rem;
 }

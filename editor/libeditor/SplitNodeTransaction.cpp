@@ -85,7 +85,7 @@ SplitNodeTransaction::DoTransaction()
     return NS_ERROR_UNEXPECTED;
   }
   mNewLeftNode = dont_AddRef(clone.forget().take()->AsContent());
-  mEditorBase->MarkNodeDirty(mStartOfRightNode.GetContainerAsDOMNode());
+  mEditorBase->MarkNodeDirty(mStartOfRightNode.GetContainer());
 
   // Get the parent node
   mParent = mStartOfRightNode.GetContainer()->GetParentNode();

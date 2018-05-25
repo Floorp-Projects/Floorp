@@ -3,8 +3,8 @@ import re
 import shutil
 import sys
 
-if sys.version_info[:2] < (2, 6):
-    sys.exit('virtualenv requires Python 2.6 or higher.')
+if sys.version_info[:2] < (2, 7):
+    sys.exit('virtualenv requires Python 2.7 or higher.')
 
 try:
     from setuptools import setup
@@ -103,7 +103,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
@@ -120,4 +119,5 @@ setup(
     py_modules=['virtualenv'],
     packages=['virtualenv_support'],
     package_data={'virtualenv_support': ['*.whl']},
+    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
     **setup_params)
