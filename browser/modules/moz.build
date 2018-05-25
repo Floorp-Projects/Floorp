@@ -79,6 +79,9 @@ with Files("OpenInTabsUtils.jsm"):
 with Files("PageInfoListener.jsm"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
+with Files("PageStyleHandler.jsm"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
 with Files("PermissionUI.jsm"):
    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
@@ -153,6 +156,7 @@ EXTRA_JS_MODULES += [
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PageInfoListener.jsm',
+    'PageStyleHandler.jsm',
     'PermissionUI.jsm',
     'PingCentre.jsm',
     'PluginContent.jsm',
