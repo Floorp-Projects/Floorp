@@ -259,13 +259,24 @@ static inline IntSize
 CollapseSize(const IntSize& aSize, int32_t aSrcStride, int32_t aDstStride)
 {
   if (aSrcStride == aDstStride &&
-      aSrcStride == 4 * aSize.width) {
+      (aSrcStride & 3) == 0 &&
+      aSrcStride / 4 == aSize.width) {
     CheckedInt32 area = CheckedInt32(aSize.width) * CheckedInt32(aSize.height);
     if (area.isValid()) {
       return IntSize(area.value(), 1);
     }
   }
   return aSize;
+}
+
+static inline int32_t
+GetStrideGap(int32_t aWidth, SurfaceFormat aFormat, int32_t aStride)
+{
+  CheckedInt32 used = CheckedInt32(aWidth) * BytesPerPixel(aFormat);
+  if (!used.isValid() || used.value() < 0) {
+    return -1;
+  }
+  return aStride - used.value();
 }
 
 bool
@@ -278,9 +289,12 @@ PremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcForma
   }
   IntSize size = CollapseSize(aSize, aSrcStride, aDstStride);
   // Find gap from end of row to the start of the next row.
-  int32_t srcGap = aSrcStride - BytesPerPixel(aSrcFormat) * aSize.width;
-  int32_t dstGap = aDstStride - BytesPerPixel(aDstFormat) * aSize.width;
+  int32_t srcGap = GetStrideGap(aSize.width, aSrcFormat, aSrcStride);
+  int32_t dstGap = GetStrideGap(aSize.width, aDstFormat, aDstStride);
   MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
+  if (srcGap < 0 || dstGap < 0) {
+    return false;
+  }
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
@@ -404,9 +418,12 @@ UnpremultiplyData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFor
   }
   IntSize size = CollapseSize(aSize, aSrcStride, aDstStride);
   // Find gap from end of row to the start of the next row.
-  int32_t srcGap = aSrcStride - BytesPerPixel(aSrcFormat) * aSize.width;
-  int32_t dstGap = aDstStride - BytesPerPixel(aDstFormat) * aSize.width;
+  int32_t srcGap = GetStrideGap(aSize.width, aSrcFormat, aSrcStride);
+  int32_t dstGap = GetStrideGap(aSize.width, aDstFormat, aDstStride);
   MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
+  if (srcGap < 0 || dstGap < 0) {
+    return false;
+  }
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 
@@ -702,9 +719,12 @@ SwizzleData(const uint8_t* aSrc, int32_t aSrcStride, SurfaceFormat aSrcFormat,
   }
   IntSize size = CollapseSize(aSize, aSrcStride, aDstStride);
   // Find gap from end of row to the start of the next row.
-  int32_t srcGap = aSrcStride - BytesPerPixel(aSrcFormat) * aSize.width;
-  int32_t dstGap = aDstStride - BytesPerPixel(aDstFormat) * aSize.width;
+  int32_t srcGap = GetStrideGap(aSize.width, aSrcFormat, aSrcStride);
+  int32_t dstGap = GetStrideGap(aSize.width, aDstFormat, aDstStride);
   MOZ_ASSERT(srcGap >= 0 && dstGap >= 0);
+  if (srcGap < 0 || dstGap < 0) {
+    return false;
+  }
 
 #define FORMAT_CASE_CALL(...) __VA_ARGS__(aSrc, srcGap, aDst, dstGap, size)
 

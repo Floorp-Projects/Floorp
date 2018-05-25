@@ -157,9 +157,16 @@ SurfaceToPackedBGRA(DataSourceSurface *aSurface)
   }
 
   IntSize size = aSurface->GetSize();
-
-  UniquePtr<uint8_t[]> imageBuffer(
-    new (std::nothrow) uint8_t[size.width * size.height * sizeof(uint32_t)]);
+  if (size.width < 0 || size.width >= INT32_MAX / 4) {
+    return nullptr;
+  }
+  int32_t stride = size.width * 4;
+  CheckedInt<size_t> bufferSize =
+    CheckedInt<size_t>(stride) * CheckedInt<size_t>(size.height);
+  if (!bufferSize.isValid()) {
+    return nullptr;
+  }
+  UniquePtr<uint8_t[]> imageBuffer(new (std::nothrow) uint8_t[bufferSize.value()]);
   if (!imageBuffer) {
     return nullptr;
   }
@@ -170,14 +177,14 @@ SurfaceToPackedBGRA(DataSourceSurface *aSurface)
   }
 
   CopySurfaceDataToPackedArray(map.mData, imageBuffer.get(), size,
-                               map.mStride, 4 * sizeof(uint8_t));
+                               map.mStride, 4);
 
   aSurface->Unmap();
 
   if (format == SurfaceFormat::B8G8R8X8) {
     // Convert BGRX to BGRA by setting a to 255.
-    SwizzleData(imageBuffer.get(), size.width * sizeof(uint32_t), SurfaceFormat::X8R8G8B8_UINT32,
-                imageBuffer.get(), size.width * sizeof(uint32_t), SurfaceFormat::A8R8G8B8_UINT32,
+    SwizzleData(imageBuffer.get(), stride, SurfaceFormat::X8R8G8B8_UINT32,
+                imageBuffer.get(), stride, SurfaceFormat::A8R8G8B8_UINT32,
                 size);
   }
 
@@ -196,8 +203,16 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface)
   }
 
   IntSize size = aSurface->GetSize();
-
-  uint8_t* imageBuffer = new (std::nothrow) uint8_t[size.width * size.height * 3 * sizeof(uint8_t)];
+  if (size.width < 0 || size.width >= INT32_MAX / 3) {
+    return nullptr;
+  }
+  int32_t stride = size.width * 3;
+  CheckedInt<size_t> bufferSize =
+    CheckedInt<size_t>(stride) * CheckedInt<size_t>(size.height);
+  if (!bufferSize.isValid()) {
+    return nullptr;
+  }
+  uint8_t* imageBuffer = new (std::nothrow) uint8_t[bufferSize.value()];
   if (!imageBuffer) {
     return nullptr;
   }
@@ -209,7 +224,7 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface)
   }
 
   SwizzleData(map.mData, map.mStride, SurfaceFormat::B8G8R8X8,
-              imageBuffer, size.width * 3, SurfaceFormat::B8G8R8,
+              imageBuffer, stride, SurfaceFormat::B8G8R8,
               size);
 
   aSurface->Unmap();
