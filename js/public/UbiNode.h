@@ -1056,6 +1056,24 @@ class JS_PUBLIC_API(Concrete<JS::Symbol>) : TracerConcrete<JS::Symbol> {
     static const char16_t concreteTypeName[];
 };
 
+#ifdef ENABLE_BIGINT
+template<>
+class JS_PUBLIC_API(Concrete<JS::BigInt>) : TracerConcrete<JS::BigInt> {
+  protected:
+    explicit Concrete(JS::BigInt* ptr) : TracerConcrete(ptr) {}
+
+  public:
+    static void construct(void* storage, JS::BigInt* ptr) {
+        new (storage) Concrete(ptr);
+    }
+
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+    const char16_t* typeName() const override { return concreteTypeName; }
+    static const char16_t concreteTypeName[];
+};
+#endif
+
 template<>
 class JS_PUBLIC_API(Concrete<JSScript>) : TracerConcreteWithCompartment<JSScript> {
   protected:

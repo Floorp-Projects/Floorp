@@ -50,6 +50,7 @@
 // Expand the given macro D for each public GC pointer.
 #define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
     D(JS::Symbol*) \
+    IF_BIGINT(D(JS::BigInt*),) \
     D(JSAtom*) \
     D(JSFunction*) \
     D(JSObject*) \
@@ -127,6 +128,9 @@ struct GCPointerPolicy
     }
 };
 template <> struct GCPolicy<JS::Symbol*> : public GCPointerPolicy<JS::Symbol*> {};
+#ifdef ENABLE_BIGINT
+template <> struct GCPolicy<JS::BigInt*> : public GCPointerPolicy<JS::BigInt*> {};
+#endif
 template <> struct GCPolicy<JSAtom*> : public GCPointerPolicy<JSAtom*> {};
 template <> struct GCPolicy<JSFunction*> : public GCPointerPolicy<JSFunction*> {};
 template <> struct GCPolicy<JSObject*> : public GCPointerPolicy<JSObject*> {};

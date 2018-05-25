@@ -149,6 +149,7 @@ let BreakpointActor = ActorClassWithSpec(breakpointSpec, {
     let url = originalSourceActor.url;
 
     if (this.threadActor.sources.isBlackBoxed(url)
+        || this.threadActor.skipBreakpoints
         || frame.onStep) {
       return undefined;
     }

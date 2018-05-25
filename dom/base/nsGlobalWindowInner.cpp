@@ -41,7 +41,6 @@
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsDOMWindowList.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
@@ -2814,7 +2813,7 @@ nsGlobalWindowInner::GetClosed(ErrorResult& aError)
   FORWARD_TO_OUTER_OR_THROW(GetClosedOuter, (), aError, false);
 }
 
-already_AddRefed<nsIDOMWindowCollection>
+nsDOMWindowList*
 nsGlobalWindowInner::GetFrames()
 {
   FORWARD_TO_OUTER(GetFrames, (), nullptr);

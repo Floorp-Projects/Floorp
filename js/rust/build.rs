@@ -73,6 +73,10 @@ fn build_jsapi_bindings() {
             .clang_arg("-DJS_DEBUG");
     }
 
+    if cfg!(feature = "bigint") {
+        builder = builder.clang_arg("-DENABLE_BIGINT");
+    }
+
     let include_dir = get_mozjs_include_dir();
     let include_dir = include_dir.to_str()
         .expect("Path to mozjs include dir should be utf-8");
@@ -97,6 +101,10 @@ fn build_jsapi_bindings() {
 
     for func in WHITELIST_FUNCTIONS {
         builder = builder.whitelist_function(func);
+    }
+
+    if cfg!(feature = "bigint") {
+        builder = builder.whitelist_type("JS::BigInt");
     }
 
     for ty in OPAQUE_TYPES {
