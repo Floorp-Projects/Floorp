@@ -156,7 +156,6 @@ public:
   virtual void SelectRow(uint32_t aRowIdx) override;
   virtual void UnselectCol(uint32_t aColIdx) override;
   virtual void UnselectRow(uint32_t aRowIdx) override;
-  virtual bool IsProbablyLayoutTable() override;
   virtual Accessible* AsAccessible() override { return this; }
 
   // Accessible
@@ -198,15 +197,6 @@ protected:
   nsresult RemoveRowsOrColumnsFromSelection(int32_t aIndex,
                                             TableSelection aTarget,
                                             bool aIsOuter);
-
-  /**
-   * Return true if table has an element with the given tag name.
-   *
-   * @param  aTagName     [in] tag name of searched element
-   * @param  aAllowEmpty  [in, optional] points if found element can be empty
-   *                       or contain whitespace text only.
-   */
-  bool HasDescendant(const nsAString& aTagName, bool aAllowEmpty = true);
 
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsString mLayoutHeuristic;

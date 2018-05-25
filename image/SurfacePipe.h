@@ -29,6 +29,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
@@ -170,6 +171,43 @@ public:
   {
     Maybe<WriteState> result;
     while (!(result = DoWritePixelsToRow<PixelType>(Forward<Func>(aFunc)))) { }
+
+    return *result;
+  }
+
+  /**
+   * Write pixels to the surface by calling a lambda which may write as many
+   * pixels as there is remaining to complete the row. It is not completely
+   * memory safe as it trusts the underlying decoder not to overrun the given
+   * buffer, however it is an acceptable tradeoff for performance.
+   *
+   * Writing continues until every pixel in the surface has been written to
+   * (i.e., IsSurfaceFinished() returns true) or the lambda returns a WriteState
+   * which WritePixelBlocks() will return to the caller.
+   *
+   * The template parameter PixelType must be uint8_t (for paletted surfaces) or
+   * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
+   * size passed to ConfigureFilter().
+   *
+   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
+   * which means we can remove the PixelType template parameter from this
+   * method.
+   *
+   * @param aFunc A lambda that functions as a generator, yielding at most the
+   *              maximum number of pixels requested. The lambda must accept a
+   *              pointer argument to the first pixel to write, a maximum
+   *              number of pixels to write as part of the block, and return a
+   *              NextPixel<PixelType> value.
+   *
+   * @return A WriteState value indicating the lambda generator's state.
+   *         WritePixelBlocks() itself will return WriteState::FINISHED if
+   *         writing has finished, regardless of the lambda's internal state.
+   */
+  template <typename PixelType, typename Func>
+  WriteState WritePixelBlocks(Func aFunc)
+  {
+    Maybe<WriteState> result;
+    while (!(result = DoWritePixelBlockToRow<PixelType>(Forward<Func>(aFunc)))) { }
 
     return *result;
   }
@@ -449,6 +487,50 @@ protected:
 private:
 
   /**
+   * An internal method used to implement WritePixelBlocks. This method writes
+   * up to the number of pixels necessary to complete the row and returns Some()
+   * if we either finished the entire surface or the lambda returned a
+   * WriteState indicating that we should return to the caller. If the row was
+   * successfully written without either of those things happening, it returns
+   * Nothing(), allowing WritePixelBlocks() to iterate to fill as many rows as
+   * possible.
+   */
+  template <typename PixelType, typename Func>
+  Maybe<WriteState> DoWritePixelBlockToRow(Func aFunc)
+  {
+    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
+    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
+    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
+
+    if (IsSurfaceFinished()) {
+      return Some(WriteState::FINISHED);  // We're already done.
+    }
+
+    PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
+    int32_t remainder = mInputSize.width - mCol;
+    int32_t written;
+    Maybe<WriteState> result;
+    Tie(written, result) = aFunc(&rowPtr[mCol], remainder);
+    if (written == remainder) {
+      MOZ_ASSERT(result.isNothing());
+      mCol = mInputSize.width;
+      AdvanceRow();  // We've finished the row.
+      return IsSurfaceFinished() ? Some(WriteState::FINISHED)
+                                 : Nothing();
+    }
+
+    MOZ_ASSERT(written >= 0 && written < remainder);
+    MOZ_ASSERT(result.isSome());
+
+    mCol += written;
+    if (*result == WriteState::FINISHED) {
+      ZeroOutRestOfSurface<PixelType>();
+    }
+
+    return result;
+  }
+
+  /**
    * An internal method used to implement both WritePixels() and
    * WritePixelsToRow(). Those methods differ only in their behavior after a row
    * is successfully written - WritePixels() continues to write another row,
@@ -556,6 +638,20 @@ public:
   {
     MOZ_ASSERT(mHead, "Use before configured!");
     return mHead->WritePixels<PixelType>(Forward<Func>(aFunc));
+  }
+
+  /**
+   * A variant of WritePixels() that writes up to a single row of pixels to the
+   * surface in blocks by repeatedly calling a lambda that yields up to the
+   * requested number of pixels.
+   *
+   * @see SurfaceFilter::WritePixelBlocks() for the canonical documentation.
+   */
+  template <typename PixelType, typename Func>
+  WriteState WritePixelBlocks(Func aFunc)
+  {
+    MOZ_ASSERT(mHead, "Use before configured!");
+    return mHead->WritePixelBlocks<PixelType>(Forward<Func>(aFunc));
   }
 
   /**

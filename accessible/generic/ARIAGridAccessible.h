@@ -26,6 +26,7 @@ public:
 
   // Accessible
   virtual a11y::role NativeRole() const override;
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual TableAccessible* AsTable() override { return this; }
 
   // TableAccessible
