@@ -78,7 +78,7 @@ internal class DisplayToolbar(
         setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_globe)
     }
 
-    private val urlView = TextView(context).apply {
+    internal val urlView = TextView(context).apply {
         gravity = Gravity.CENTER_VERTICAL
         textSize = URL_TEXT_SIZE
         setFadingEdgeLength(URL_FADING_EDGE_SIZE_DP)

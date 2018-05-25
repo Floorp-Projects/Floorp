@@ -65,6 +65,17 @@ class BrowserToolbar @JvmOverloads constructor(
         get() = displayToolbar.urlBackgroundDrawable
         set(value) { displayToolbar.urlBackgroundDrawable = value }
 
+    /**
+     * Sets the padding to be applied to the URL text (in display mode).
+     */
+    fun setUrlTextPadding(
+            left: Int = displayToolbar.urlView.paddingLeft,
+            top: Int = displayToolbar.urlView.paddingTop,
+            right: Int = displayToolbar.urlView.paddingRight,
+            bottom: Int = displayToolbar.urlView.paddingBottom) {
+        displayToolbar.urlView.setPadding(left, top, right, bottom)
+    }
+
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
     private var listener: ((String) -> Unit)? = null
