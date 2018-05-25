@@ -39,9 +39,9 @@ const nsStyle##name_ * ComputedStyle::PeekStyle##name_() {  \
 #undef STYLE_STRUCT
 
 // Helper functions for GetStyle* and PeekStyle*
-#define STYLE_STRUCT_INHERITED(name_)                                       \
+#define STYLE_STRUCT(name_)                                                 \
 template<bool aComputeData>                                                 \
-const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                 \
+const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                  \
   const auto kStructID = StyleStructID::name_;                              \
   const bool needToCompute = !HasRequestedStruct(kStructID);                \
   if (!aComputeData && needToCompute) {                                     \
@@ -58,27 +58,8 @@ const nsStyle##name_* ComputedStyle::DoGetStyle##name_() {                 \
   }                                                                         \
   return data;                                                              \
 }
-
-#define STYLE_STRUCT_RESET(name_)                                           \
-template<bool aComputeData>                                                 \
-const nsStyle##name_ * ComputedStyle::DoGetStyle##name_() {                 \
-  const auto kStructID = StyleStructID::name_;                              \
-  const bool needToCompute = !HasRequestedStruct(kStructID);                \
-  if (!aComputeData && needToCompute) {                                     \
-    return nullptr;                                                         \
-  }                                                                         \
-  const nsStyle##name_* data = ComputedData()->GetStyle##name_();           \
-  /* perform any remaining main thread work on the struct */                \
-  if (needToCompute) {                                                      \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext, nullptr);  \
-    /* the ComputedStyle owns the struct */                                 \
-    SetRequestedStruct(kStructID);                                          \
-  }                                                                         \
-  return data;                                                              \
-}
 #include "nsStyleStructList.h"
-#undef STYLE_STRUCT_RESET
-#undef STYLE_STRUCT_INHERITED
+#undef STYLE_STRUCT
 
 void
 ComputedStyle::StartBackgroundImageLoads()
