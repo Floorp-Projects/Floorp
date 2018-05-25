@@ -1012,59 +1012,6 @@ addMessageListener("Bookmarks:GetPageDetails", (message) => {
                      description: PlacesUIUtils.getDescriptionFromDocument(doc) });
 });
 
-var LightWeightThemeWebInstallListener = {
-  _previewWindow: null,
-
-  init() {
-    addEventListener("InstallBrowserTheme", this, false, true);
-    addEventListener("PreviewBrowserTheme", this, false, true);
-    addEventListener("ResetBrowserThemePreview", this, false, true);
-  },
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "InstallBrowserTheme": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
-          baseURI: event.target.baseURI,
-          principal: event.target.nodePrincipal,
-          themeData: event.target.getAttribute("data-browsertheme"),
-        });
-        break;
-      }
-      case "PreviewBrowserTheme": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:Preview", {
-          baseURI: event.target.baseURI,
-          principal: event.target.nodePrincipal,
-          themeData: event.target.getAttribute("data-browsertheme"),
-        });
-        this._previewWindow = event.target.ownerGlobal;
-        this._previewWindow.addEventListener("pagehide", this, true);
-        break;
-      }
-      case "pagehide": {
-        sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview");
-        this._resetPreviewWindow();
-        break;
-      }
-      case "ResetBrowserThemePreview": {
-        if (this._previewWindow) {
-          sendAsyncMessage("LightWeightThemeWebInstaller:ResetPreview",
-                           {principal: event.target.nodePrincipal});
-          this._resetPreviewWindow();
-        }
-        break;
-      }
-    }
-  },
-
-  _resetPreviewWindow() {
-    this._previewWindow.removeEventListener("pagehide", this, true);
-    this._previewWindow = null;
-  }
-};
-
-LightWeightThemeWebInstallListener.init();
-
 let OfflineApps = {
   _docId: 0,
   _docIdMap: new Map(),
