@@ -57,9 +57,19 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     private var state: State = State.DISPLAY
-    private var url: String = ""
     private var searchTerms: String = ""
     private var listener: ((String) -> Unit)? = null
+
+    override var url: String = ""
+        set(value) {
+            // We update the display toolbar immediately. We do not do that for the edit toolbar to not
+            // mess with what the user is entering. Instead we will remember the value and update the
+            // edit toolbar whenever we switch to it.
+            displayToolbar.updateUrl(value)
+
+            field = value
+        }
+
 
     init {
         addView(displayToolbar)
@@ -108,15 +118,6 @@ class BrowserToolbar @JvmOverloads constructor(
             return true
         }
         return false
-    }
-
-    override fun displayUrl(url: String) {
-        // We update the display toolbar immediately. We do not do that for the edit toolbar to not
-        // mess with what the user is entering. Instead we will remember the value and update the
-        // edit toolbar whenever we switch to it.
-        displayToolbar.updateUrl(url)
-
-        this.url = url
     }
 
     override fun setSearchTerms(searchTerms: String) {

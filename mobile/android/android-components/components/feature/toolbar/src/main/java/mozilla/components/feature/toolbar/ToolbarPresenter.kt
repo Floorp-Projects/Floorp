@@ -52,11 +52,11 @@ class ToolbarPresenter(
     }
 
     private fun initializeView() {
-        toolbar.displayUrl(session.url)
+        toolbar.url = session.url
     }
 
     override fun onUrlChanged() {
-        toolbar.displayUrl(session.url)
+        toolbar.url = session.url
         toolbar.setSearchTerms(session.searchTerms)
     }
 

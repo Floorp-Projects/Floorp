@@ -11,11 +11,9 @@ import android.support.annotation.DrawableRes
  */
 interface Toolbar {
     /**
-     * Displays the given URL string as part of this Toolbar.
-     *
-     * @param url the url to display
+     * Sets/Gets the URL to be displayed on the toolbar.
      */
-    fun displayUrl(url: String)
+    var url: String
 
     /**
      * Displays the currently used search terms as part of this Toolbar.

@@ -93,7 +93,7 @@ class BrowserToolbarTest {
         toolbar.displayToolbar = displayToolbar
         toolbar.editToolbar = ediToolbar
 
-        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.url = "https://www.mozilla.org"
 
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
         verify(ediToolbar, never()).updateUrl(ArgumentMatchers.anyString())
@@ -106,7 +106,7 @@ class BrowserToolbarTest {
         val ediToolbar = mock(EditToolbar::class.java)
         toolbar.editToolbar = ediToolbar
 
-        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.url = "https://www.mozilla.org"
         verify(ediToolbar, never()).updateUrl("https://www.mozilla.org")
 
         toolbar.editMode()
@@ -275,13 +275,13 @@ class BrowserToolbarTest {
         toolbar.editToolbar = editToolbar
 
         toolbar.setSearchTerms("mozilla android")
-        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.url = "https://www.mozilla.org"
         toolbar.editMode()
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
         verify(editToolbar).updateUrl("mozilla android")
 
         toolbar.setSearchTerms("")
-        toolbar.displayUrl("https://www.mozilla.org")
+        toolbar.url = "https://www.mozilla.org"
         toolbar.editMode()
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
         verify(editToolbar).updateUrl("https://www.mozilla.org")
