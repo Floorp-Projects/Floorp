@@ -53,6 +53,7 @@ Touch::Touch(EventTarget* aTarget,
   : mIsTouchEventSuppressed(false)
 {
   mTarget = aTarget;
+  mOriginalTarget = aTarget;
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(aPageX, aPageY);
   mScreenPoint = CSSIntPoint(aScreenX, aScreenY);
@@ -92,7 +93,8 @@ Touch::Touch(int32_t aIdentifier,
 }
 
 Touch::Touch(const Touch& aOther)
-  : mTarget(aOther.mTarget)
+  : mOriginalTarget(aOther.mOriginalTarget)
+  , mTarget(aOther.mTarget)
   , mRefPoint(aOther.mRefPoint)
   , mChanged(aOther.mChanged)
   , mIsTouchEventSuppressed(aOther.mIsTouchEventSuppressed)
@@ -120,7 +122,7 @@ Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Touch, mTarget)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Touch, mTarget, mOriginalTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Touch)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -218,8 +220,9 @@ Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent)
 }
 
 void
-Touch::SetTarget(EventTarget* aTarget)
+Touch::SetTouchTarget(EventTarget* aTarget)
 {
+  mOriginalTarget = aTarget;
   mTarget = aTarget;
 }
 
@@ -245,10 +248,10 @@ Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 nsIGlobalObject*
 Touch::GetParentObject()
 {
-  if (!mTarget) {
+  if (!mOriginalTarget) {
     return nullptr;
   }
-  return mTarget->GetOwnerGlobal();
+  return mOriginalTarget->GetOwnerGlobal();
 }
 
 } // namespace dom
