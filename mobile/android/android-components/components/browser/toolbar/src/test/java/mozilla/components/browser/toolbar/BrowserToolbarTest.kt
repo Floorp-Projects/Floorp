@@ -286,4 +286,19 @@ class BrowserToolbarTest {
         verify(displayToolbar).updateUrl("https://www.mozilla.org")
         verify(editToolbar).updateUrl("https://www.mozilla.org")
     }
+
+    @Test
+    fun `add navigation action will be forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = mock(DisplayToolbar::class.java)
+        toolbar.displayToolbar = displayToolbar
+
+        val action = Toolbar.Action(0, "Back") {
+            // Do nothing
+        }
+
+        toolbar.addNavigationAction(action)
+
+        verify(displayToolbar).addNavigationAction(action)
+    }
 }

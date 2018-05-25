@@ -59,6 +59,11 @@ interface Toolbar {
     fun addPageAction(action: Action)
 
     /**
+     * Adds an action to be displayed on the far left side of the URL in display mode.
+     */
+    fun addNavigationAction(action: Action)
+
+    /**
      * An action button to be added to the toolbar.
      */
     data class Action(

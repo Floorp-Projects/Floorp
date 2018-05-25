@@ -113,6 +113,7 @@ internal class DisplayToolbar(
 
     private val browserActions: MutableList<DisplayAction> = mutableListOf()
     private val pageActions: MutableList<DisplayAction> = mutableListOf()
+    private val navigationActions: MutableList<DisplayAction> = mutableListOf()
 
     init {
         addView(iconView)
@@ -171,6 +172,20 @@ internal class DisplayToolbar(
         pageActions.add(displayAction)
     }
 
+    /**
+     * Adds an action to be displayed on the far left side of the toolbar.
+     */
+    fun addNavigationAction(action: Toolbar.Action) {
+        val displayAction = DisplayAction(action)
+
+        createActionView(context, action).let {
+            displayAction.view = it
+            addView(it)
+        }
+
+        navigationActions.add(displayAction)
+    }
+
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // This toolbar is using the full size provided by the parent
@@ -184,23 +199,10 @@ internal class DisplayToolbar(
         iconView.measure(squareSpec, squareSpec)
         menuView.measure(squareSpec, squareSpec)
 
-        // If there are browser actions with a view then use the same square shape for them
-        var browserActionsWidth = 0
-        browserActions
-            .mapNotNull { it.view }
-            .forEach { view ->
-                view.measure(squareSpec, squareSpec)
-                browserActionsWidth += height
-            }
-
-        // Measure page actions with a view
-        var pageActionsWidth = 0
-        pageActions
-            .mapNotNull { it.view }
-            .forEach { view ->
-                view.measure(squareSpec, squareSpec)
-                pageActionsWidth += height
-            }
+        // Measure all actions and use the available height for determining the size (square shape)
+        val navigationActionsWidth = measureActions(navigationActions, size=height)
+        val browserActionsWidth = measureActions(browserActions, size=height)
+        val pageActionsWidth = measureActions(pageActions, size=height)
 
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
@@ -212,45 +214,71 @@ internal class DisplayToolbar(
         progressView.measure(widthMeasureSpec, progressHeightSpec)
     }
 
+    /**
+     * Measures a list of actions and returns the needed width.
+     */
+    private fun measureActions(actions: List<DisplayAction>, size: Int): Int {
+        val sizeSpec = MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY)
+
+        return actions
+            .mapNotNull { it.view }
+            .map { view ->
+                view.measure(sizeSpec, sizeSpec)
+                size
+            }
+            .sum()
+    }
+
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        // First we layout the navigation actions if there are any
+        val navigationActionsWidth = navigationActions
+            .mapNotNull { it.view }
+            .fold(0) { usedWidth, view ->
+                val viewLeft = usedWidth
+                val viewRight = viewLeft + view.measuredWidth
+
+                view.layout(viewLeft, 0, viewRight, measuredHeight)
+
+                usedWidth + view.measuredWidth
+            }
+
         // The icon is always on the left side of the toolbar
-        iconView.layout(0, 0, iconView.measuredWidth, measuredHeight)
+        iconView.layout(navigationActionsWidth, 0, navigationActionsWidth + iconView.measuredWidth, measuredHeight)
 
         // The menu is always on the right side of the toolbar
         val menuWidth = if (menuView.isVisible()) height else 0
         menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
 
         // Now we add browser actions from the left side of the menu to the right (in reversed order)
-        var browserActionWidth = 0
-        browserActions
+        val browserActionWidth = browserActions
             .mapNotNull { it.view }
             .reversed()
-            .forEach { view ->
-                val viewRight = measuredWidth - browserActionWidth - menuWidth
+            .fold(0) { usedWidth, view ->
+                val viewRight = measuredWidth - usedWidth - menuWidth
                 val viewLeft = viewRight - view.measuredWidth
 
                 view.layout(viewLeft, 0, viewRight, measuredHeight)
 
-                browserActionWidth += view.measuredWidth
+                usedWidth + view.measuredWidth
             }
 
         // After browser actions we add page actions from the right to the left (in reversed order)
-        var pageActionsWidth = 0
-        pageActions
+        val pageActionsWidth = pageActions
             .mapNotNull { it.view }
             .reversed()
-            .forEach { view ->
-                val viewRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth
+            .fold(0) { usedWidth, view ->
+                val viewRight = measuredWidth - browserActionWidth - usedWidth - menuWidth
                 val viewLeft = viewRight - view.measuredWidth
 
                 view.layout(viewLeft, 0, viewRight, measuredHeight)
 
-                pageActionsWidth += view.measuredWidth
+                usedWidth + view.measuredWidth
             }
 
+        val iconWidth = if (iconView.isVisible()) iconView.measuredWidth else 0
         val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth
-        val urlLeft = if (iconView.isVisible()) iconView.measuredWidth else 0
+        val urlLeft = navigationActionsWidth + iconWidth
         urlView.layout(urlLeft, 0, urlRight, measuredHeight)
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)

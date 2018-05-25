@@ -258,6 +258,7 @@ class DisplayToolbarTest {
         assertTrue(listenerExecuted)
     }
 
+    @Test
     fun `views for page actions will have a square shape`() {
         val action = Toolbar.Action(0, "Open app") {}
 
@@ -271,6 +272,61 @@ class DisplayToolbarTest {
         displayToolbar.measure(widthSpec, heightSpec)
 
         val view = extractActionView(displayToolbar, "Open app")!!
+
+        assertEquals(56, view.measuredWidth)
+        assertEquals(56, view.measuredHeight)
+    }
+
+    @Test
+    fun `navigation actions will be added as view to the toolbar`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        assertNull(extractActionView(displayToolbar, "Back"))
+        assertNull(extractActionView(displayToolbar, "Forward"))
+
+        displayToolbar.addNavigationAction(Toolbar.Action(0, "Back") {})
+        displayToolbar.addNavigationAction(Toolbar.Action(0, "Forward") {})
+
+        assertNotNull(extractActionView(displayToolbar, "Back"))
+        assertNotNull(extractActionView(displayToolbar, "Forward"))
+    }
+
+    @Test
+    fun `clicking on navigation action will execute listener of the action`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        var listenerExecuted = false
+        val action = Toolbar.Action(0, "Back") {
+            listenerExecuted = true
+        }
+
+        displayToolbar.addNavigationAction(action)
+
+        assertFalse(listenerExecuted)
+
+        extractActionView(displayToolbar, "Back")!!
+            .performClick()
+
+        assertTrue(listenerExecuted)
+    }
+
+    @Test
+    fun `navigation action view will have a square shape`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.addNavigationAction(
+            Toolbar.Action(0, "Back") {})
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+
+        val view = extractActionView(displayToolbar, "Back")!!
 
         assertEquals(56, view.measuredWidth)
         assertEquals(56, view.measuredHeight)

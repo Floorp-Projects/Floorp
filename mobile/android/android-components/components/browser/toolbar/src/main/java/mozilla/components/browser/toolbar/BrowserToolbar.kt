@@ -157,6 +157,14 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Adds an action to be display on the far left side of the toolbar. This area is usually used
+     * on larger devices for navigation actions like "back" and "forward".
+     */
+    override fun addNavigationAction(action: Toolbar.Action) {
+        displayToolbar.addNavigationAction(action)
+    }
+
+    /**
      * Switches to URL editing mode.
      */
     fun editMode() {
