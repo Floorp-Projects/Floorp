@@ -18,6 +18,96 @@ const TEST_DATA = [
     selector: "html",
     expected: [
       {
+        type: "dblclick",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function c(G) {\n" +
+                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
+                 "    F = true,\n" +
+                 "    E = [];\n" +
+                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
+                 "    if (D.test(I.type)) {\n" +
+                 "      var J = n(G.target).closest(I.data)[0];\n" +
+                 "      if (J) {\n" +
+                 "        E.push({\n" +
+                 "          elem: J,\n" +
+                 "          fn: I\n" +
+                 "        })\n" +
+                 "      }\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  n.each(E, function() {\n" +
+                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
+                 "      F = false\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  return F\n" +
+                 "}"
+      },
+      {
+        type: "DOMContentLoaded",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: "function() {\n" +
+                 "  document.removeEventListener(\"DOMContentLoaded\", arguments.callee, false);\n" +
+                 "  n.ready()\n" +
+                 "}"
+      },
+      {
+        type: "dragstart",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function c(G) {\n" +
+                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
+                 "    F = true,\n" +
+                 "    E = [];\n" +
+                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
+                 "    if (D.test(I.type)) {\n" +
+                 "      var J = n(G.target).closest(I.data)[0];\n" +
+                 "      if (J) {\n" +
+                 "        E.push({\n" +
+                 "          elem: J,\n" +
+                 "          fn: I\n" +
+                 "        })\n" +
+                 "      }\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  n.each(E, function() {\n" +
+                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
+                 "      F = false\n" +
+                 "    }\n" +
+                 "  });\n" +
+                 "  return F\n" +
+                 "}"
+      },
+      {
+        type: "live",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
+                 "}"
+      },
+      {
+        type: "live",
+        filename: URL_ROOT + TEST_LIB + ":19",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return E.apply(this, arguments)\n" +
+                 "}"
+      },
+      {
         type: "load",
         filename: URL_ROOT + TEST_LIB + ":19",
         attributes: [
@@ -106,96 +196,6 @@ const TEST_DATA = [
         handler: "function(H) {\n" +
                  "  n(this).unbind(H, D);\n" +
                  "  return (E || G).apply(this, arguments)\n" +
-                 "}"
-      },
-      {
-        type: "dblclick",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function c(G) {\n" +
-                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
-                 "    F = true,\n" +
-                 "    E = [];\n" +
-                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
-                 "    if (D.test(I.type)) {\n" +
-                 "      var J = n(G.target).closest(I.data)[0];\n" +
-                 "      if (J) {\n" +
-                 "        E.push({\n" +
-                 "          elem: J,\n" +
-                 "          fn: I\n" +
-                 "        })\n" +
-                 "      }\n" +
-                 "    }\n" +
-                 "  });\n" +
-                 "  n.each(E, function() {\n" +
-                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
-                 "      F = false\n" +
-                 "    }\n" +
-                 "  });\n" +
-                 "  return F\n" +
-                 "}"
-      },
-      {
-        type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  document.removeEventListener(\"DOMContentLoaded\", arguments.callee, false);\n" +
-                 "  n.ready()\n" +
-                 "}"
-      },
-      {
-        type: "dragstart",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function c(G) {\n" +
-                 "  var D = RegExp(\"(^|\\\\.)\" + G.type + \"(\\\\.|$)\"),\n" +
-                 "    F = true,\n" +
-                 "    E = [];\n" +
-                 "  n.each(n.data(this, \"events\").live || [], function(H, I) {\n" +
-                 "    if (D.test(I.type)) {\n" +
-                 "      var J = n(G.target).closest(I.data)[0];\n" +
-                 "      if (J) {\n" +
-                 "        E.push({\n" +
-                 "          elem: J,\n" +
-                 "          fn: I\n" +
-                 "        })\n" +
-                 "      }\n" +
-                 "    }\n" +
-                 "  });\n" +
-                 "  n.each(E, function() {\n" +
-                 "    if (!G.isImmediatePropagationStopped() && " + "this.fn.call(this.elem, G, this.fn.data) === false) {\n" +
-                 "      F = false\n" +
-                 "    }\n" +
-                 "  });\n" +
-                 "  return F\n" +
-                 "}"
-      },
-      {
-        type: "live",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function() {\n" +
-                 "  return E.apply(this, arguments)\n" +
-                 "}"
-      },
-      {
-        type: "live",
-        filename: URL_ROOT + TEST_LIB + ":19",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function() {\n" +
-                 "  return E.apply(this, arguments)\n" +
                  "}"
       }
     ]

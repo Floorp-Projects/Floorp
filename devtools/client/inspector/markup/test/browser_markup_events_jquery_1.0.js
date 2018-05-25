@@ -18,6 +18,31 @@ const TEST_DATA = [
     selector: "html",
     expected: [
       {
+        type: "DOMContentLoaded",
+        filename: URL_ROOT + TEST_LIB + ":1117",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: "function() {\n" +
+                 "  // Make sure that the DOM is not already loaded\n" +
+                 "  if (!jQuery.isReady) {\n" +
+                 "    // Remember that the DOM is ready\n" +
+                 "    jQuery.isReady = true;\n" +
+                 "\n" +
+                 "    // If there are functions bound, to execute\n" +
+                 "    if (jQuery.readyList) {\n" +
+                 "      // Execute all of them\n" +
+                 "      for (var i = 0; i < jQuery.readyList.length; i++)\n" +
+                 "        jQuery.readyList[i].apply(document);\n" +
+                 "\n" +
+                 "      // Reset the list of functions\n" +
+                 "      jQuery.readyList = null;\n" +
+                 "    }\n" +
+                 "  }\n" +
+                 "}"
+      },
+      {
         type: "load",
         filename: URL_ROOT + TEST_LIB + ":1117",
         attributes: [
@@ -130,31 +155,6 @@ const TEST_DATA = [
                  "  }\n" +
                  "\n" +
                  "  return returnValue;\n" +
-                 "}"
-      },
-      {
-        type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":1117",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  // Make sure that the DOM is not already loaded\n" +
-                 "  if (!jQuery.isReady) {\n" +
-                 "    // Remember that the DOM is ready\n" +
-                 "    jQuery.isReady = true;\n" +
-                 "\n" +
-                 "    // If there are functions bound, to execute\n" +
-                 "    if (jQuery.readyList) {\n" +
-                 "      // Execute all of them\n" +
-                 "      for (var i = 0; i < jQuery.readyList.length; i++)\n" +
-                 "        jQuery.readyList[i].apply(document);\n" +
-                 "\n" +
-                 "      // Reset the list of functions\n" +
-                 "      jQuery.readyList = null;\n" +
-                 "    }\n" +
-                 "  }\n" +
                  "}"
       }
     ]
