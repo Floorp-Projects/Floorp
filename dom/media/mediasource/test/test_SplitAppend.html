@@ -12,32 +12,22 @@
 
 SimpleTest.waitForExplicitFinish();
 
-let updateCount = 0;
+runWithMSE(async (ms, v) => {
+  await once(ms, "sourceopen");
+  const sb = ms.addSourceBuffer("video/webm");
 
-runWithMSE(function(ms, v) {
-  ms.addEventListener("sourceopen", function() {
-    const sb = ms.addSourceBuffer("video/webm");
-
-    fetchWithXHR("seek.webm", function(arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      sb.addEventListener("updateend", function() {
-        updateCount++;
-        if (updateCount == 1) {
-          sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-        } else if (updateCount == 2) {
-          ms.endOfStream();
-        }
-      });
-      v.play();
-    });
-  });
-
-  v.addEventListener("ended", function() {
-    // XXX: Duration should be exactly 4.0, see bug 1065207.
-    ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
-    ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
-    SimpleTest.finish();
-  });
+  const arrayBuffer = await fetchWithXHR("seek.webm");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
+  v.play();
+  await once(sb, "updateend");
+  sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
+  await once(sb, "updateend");
+  ms.endOfStream();
+  await once(v, "ended");
+  // XXX: Duration should be exactly 4.0, see bug 1065207.
+  ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
+  ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
+  SimpleTest.finish();
 });
 
 </script>
