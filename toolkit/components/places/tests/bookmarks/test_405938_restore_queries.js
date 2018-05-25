@@ -82,13 +82,7 @@ var test = {
     let insertedBookmarks = await PlacesUtils.bookmarks.insertTree(bookmarksTree);
 
     // create a query URI with 1 folder (ie: folder shortcut)
-    let folderIdsMap = await PlacesUtils.promiseManyItemIds(this._folderGuids);
-    let folderIds = [];
-    for (let id of folderIdsMap.values()) {
-      folderIds.push(id);
-    }
-
-    this._queryURI1 = `place:folder=${folderIdsMap.get(this._folderGuids[0])}&queryType=1`;
+    this._queryURI1 = `place:parent=${this._folderGuids[0]}&queryType=1`;
     this._queryTitle1 = "query1";
     await PlacesUtils.bookmarks.insert({
       parentGuid: insertedBookmarks[0].guid,
@@ -98,7 +92,7 @@ var test = {
     });
 
     // create a query URI with _count folders
-    this._queryURI2 = `place:folder=${folderIds.join("&folder=")}&queryType=1`;
+    this._queryURI2 = `place:parent=${this._folderGuids.join("&parent=")}&queryType=1`;
     this._queryTitle2 = "query2";
     await PlacesUtils.bookmarks.insert({
       parentGuid: insertedBookmarks[0].guid,
@@ -135,7 +129,7 @@ var test = {
     }
 
     var toolbar =
-      PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId,
+      PlacesUtils.getFolderContents(PlacesUtils.bookmarks.toolbarGuid,
                                     false, true).root;
     Assert.equal(toolbar.childCount, 1);
 

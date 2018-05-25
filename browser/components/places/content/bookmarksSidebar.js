@@ -21,10 +21,7 @@ function searchBookmarks(aSearchString) {
     tree.place = tree.place;
   else
     tree.applyFilter(aSearchString,
-                     [PlacesUtils.bookmarksMenuFolderId,
-                      PlacesUtils.unfiledBookmarksFolderId,
-                      PlacesUtils.toolbarFolderId,
-                      PlacesUtils.mobileFolderId]);
+                     PlacesUtils.bookmarks.userContentRoots);
 }
 
 window.addEventListener("SidebarFocused",

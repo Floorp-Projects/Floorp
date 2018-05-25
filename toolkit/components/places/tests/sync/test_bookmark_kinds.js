@@ -309,7 +309,7 @@ add_task(async function test_queries() {
   await storeRecords(buf, shuffle([{
     id: "toolbar",
     type: "folder",
-    children: ["queryEEEEEEE", "queryFFFFFFF", "queryGGGGGGG"],
+    children: ["queryEEEEEEE", "queryFFFFFFF", "queryGGGGGGG", "queryHHHHHHH"],
   }, {
     // Legacy tag query.
     id: "queryEEEEEEE",
@@ -331,6 +331,12 @@ add_task(async function test_queries() {
     title: "G",
     bmkUri: "place:type=7&folder=111&something=else",
     folderName: "a-tag",
+  }, {
+    // Legacy folder lookup query.
+    id: "queryHHHHHHH",
+    type: "query",
+    title: "H",
+    bmkUri: "place:folder=1",
   }]));
 
   info("Create records to upload");
@@ -363,8 +369,14 @@ add_task(async function test_queries() {
       index: 2,
       title: "G",
       url: "place:tag=a-tag",
+    }, {
+      guid: "queryHHHHHHH",
+      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      index: 3,
+      title: "H",
+      url: "place:folder=1&excludeItems=1",
     }],
-  }, "Should rewrite legacy remote tag queries");
+  }, "Should rewrite legacy remote queries");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

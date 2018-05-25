@@ -665,7 +665,7 @@ add_task(async function test_get_recent_with_tag_and_query() {
   PlacesUtils.tagging.tagURI(NetUtil.newURI("http://example.com/${i}"), ["Test Tag"]);
 
   // Add a query bookmark.
-  let queryURL = `place:folder=${PlacesUtils.bookmarksMenuFolderId}&queryType=1`;
+  let queryURL = `place:parent=${PlacesUtils.bookmarks.menuGuid}&queryType=1`;
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: queryURL,

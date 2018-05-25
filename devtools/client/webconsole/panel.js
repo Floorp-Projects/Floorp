@@ -81,7 +81,7 @@ WebConsolePanel.prototype = {
       })
       .then((webConsole) => {
         this.hud = webConsole;
-        // Pipe 'reloaded' event from NewWebConsoleFrame to WebConsolePanel.
+        // Pipe 'reloaded' event from WebConsoleFrame to WebConsolePanel.
         // These events are listened by the Toolbox.
         this.hud.ui.on("reloaded", () => {
           this.emit("reloaded");

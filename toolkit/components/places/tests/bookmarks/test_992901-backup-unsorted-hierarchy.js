@@ -40,7 +40,7 @@ add_task(async function() {
                                          { replace: true });
 
   info("Checking first level");
-  let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
+  let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid).root;
   let level1 = root.getChild(0);
   Assert.equal(level1.title, "f1");
   info("Checking second level");

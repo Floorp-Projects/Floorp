@@ -956,16 +956,16 @@ interface nsINavHistoryQuery : nsISupports
   /**
    * Limit results to items that are in all of the given folders.
    */
-  void getFolders([optional] out unsigned long count,
-                  [retval,array,size_is(count)] out long long folders);
-  readonly attribute unsigned long folderCount;
+  void getParents([optional] out unsigned long aGuidCount,
+                  [retval,array,size_is(aGuidCount)] out string aGuids);
+  readonly attribute unsigned long parentCount;
 
   /**
    * This is not recursive so results will be returned from the first level of
    * that folder.
    */
-  void setFolders([const,array, size_is(folderCount)] in long long folders,
-                  in unsigned long folderCount);
+  void setParents([array, size_is(aGuidCount)] in string aGuids,
+                  in unsigned long aGuidCount);
 
   /**
    * Creates a new query item with the same parameters of this one.

@@ -8,6 +8,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
@@ -19,6 +20,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
+@ReuseSession(false)
 class SessionLifecycleTest : BaseSessionTest() {
 
     @Test fun open_interleaved() {

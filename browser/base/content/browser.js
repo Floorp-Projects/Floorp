@@ -2209,7 +2209,11 @@ function BrowserGoHome(aEvent) {
   switch (where) {
   case "current":
     loadOneOrMoreURIs(homePage, Services.scriptSecurityManager.getSystemPrincipal());
-    gBrowser.selectedBrowser.focus();
+    if (isBlankPageURL(homePage)) {
+      focusAndSelectUrlBar();
+    } else {
+      gBrowser.selectedBrowser.focus();
+    }
     notifyObservers = true;
     break;
   case "tabshifted":

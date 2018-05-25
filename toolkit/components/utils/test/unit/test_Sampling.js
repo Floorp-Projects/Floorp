@@ -1,6 +1,7 @@
 "use strict";
 
-ChromeUtils.import("resource://normandy/lib/Sampling.jsm", this);
+ChromeUtils.import("resource://gre/modules/components-utils/Sampling.jsm", this);
+
 
 add_task(async function testStableSample() {
   // Absolute samples

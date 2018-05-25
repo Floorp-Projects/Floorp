@@ -11013,22 +11013,29 @@ bool
 nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                             const nsStylePosition* aStylePosition,
                             bool aIsPositioned,
-                            bool aIsVisuallyAtomic) {
-  return (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
-                           aStylePosition->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
+                            bool aIsVisuallyAtomic)
+{
+  return aIsVisuallyAtomic ||
+         (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
+                            aStylePosition->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
          (aStyleDisplay->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
-         aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO ||
-         aIsVisuallyAtomic;
+         aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO;
 }
 
 bool
 nsIFrame::IsStackingContext()
 {
   const nsStyleDisplay* disp = StyleDisplay();
-  bool isPositioned = disp->IsAbsPosContainingBlock(this);
-  bool isVisuallyAtomic = IsVisuallyAtomic(EffectSet::GetEffectSet(this),
-                                           disp, StyleEffects());
-  return IsStackingContext(disp, StylePosition(), isPositioned, isVisuallyAtomic);
+  const bool isVisuallyAtomic = IsVisuallyAtomic(EffectSet::GetEffectSet(this),
+                                                 disp, StyleEffects());
+  if (isVisuallyAtomic) {
+    // If this is changed, the function above should be updated as well.
+    return true;
+  }
+
+  const bool isPositioned = disp->IsAbsPosContainingBlock(this);
+  return IsStackingContext(disp, StylePosition(),
+                           isPositioned, isVisuallyAtomic);
 }
 
 static bool

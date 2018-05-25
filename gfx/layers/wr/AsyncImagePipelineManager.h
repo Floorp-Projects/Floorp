@@ -155,6 +155,7 @@ private:
     }
 
     bool mInitialised;
+    bool mSentDL;
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
