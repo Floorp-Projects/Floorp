@@ -171,7 +171,7 @@ function test()
 
   // Check that DataTransfer's .types has the hack to alias contains()
   // to includes().
-  var dataTransfer = new win.DataTransfer("foo", true);
+  var dataTransfer = new win.DataTransfer();
   is(dataTransfer.types.contains, dataTransfer.types.includes,
      "Should have contains() set up as an alias to includes()");
   // Waive Xrays on the dataTransfer itself, since the .types we get is
