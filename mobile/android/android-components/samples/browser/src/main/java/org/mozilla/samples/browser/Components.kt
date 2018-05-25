@@ -61,11 +61,11 @@ class Components(private val applicationContext: Context) {
     }
 
     private val menuToolbar by lazy {
-        val back = BrowserMenuItemToolbar.Button(
+        val forward = BrowserMenuItemToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
                 iconTintColorResource = R.color.photonBlue90,
                 contentDescription = "Forward") {
-            Toast.makeText(applicationContext, "Forward", Toast.LENGTH_SHORT).show()
+            sessionUseCases.goForward.invoke()
         }
 
         val refresh = BrowserMenuItemToolbar.Button(
@@ -75,6 +75,6 @@ class Components(private val applicationContext: Context) {
             sessionUseCases.reload.invoke()
         }
 
-        BrowserMenuItemToolbar(listOf(back, refresh))
+        BrowserMenuItemToolbar(listOf(forward, refresh))
     }
 }
