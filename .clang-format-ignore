@@ -35,6 +35,8 @@ browser/extensions/mortar/ppapi/.*
 db/sqlite3/src/.*
 devtools/client/sourceeditor/codemirror/.*
 devtools/client/sourceeditor/tern/.*
+editor/libeditor/tests/browserscope/lib/richtext/.*
+editor/libeditor/tests/browserscope/lib/richtext2/.*
 extensions/spellcheck/hunspell/src/.*
 gfx/angle/.*
 gfx/cairo/.*
