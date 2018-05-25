@@ -64,9 +64,9 @@ GetNonAnonymousAncestor(EventTarget* aTarget)
 TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
                               nsIDocument* aLimitToDocument)
 {
-  nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mTarget));
+  nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mOriginalTarget));
   if (node) {
-    nsIDocument* doc = node->GetUncomposedDoc();
+    nsIDocument* doc = node->GetComposedDoc();
     if (doc && (!aLimitToDocument || aLimitToDocument == doc)) {
       nsIPresShell* presShell = doc->GetShell();
       if (presShell) {
@@ -148,7 +148,7 @@ TouchManager::SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame)
         while (targetContent && !targetContent->IsElement()) {
           targetContent = targetContent->GetParent();
         }
-        touch->SetTarget(targetContent);
+        touch->SetTouchTarget(targetContent);
       } else {
         aEvent->mTouches.RemoveElementAt(i);
       }
@@ -158,7 +158,7 @@ TouchManager::SetupTarget(WidgetTouchEvent* aEvent, nsIFrame* aFrame)
       touch->mChanged = false;
       RefPtr<dom::Touch> oldTouch = TouchManager::GetCapturedTouch(id);
       if (oldTouch) {
-        touch->SetTarget(oldTouch->mTarget);
+        touch->SetTouchTarget(oldTouch->mOriginalTarget);
       }
     }
   }
@@ -191,7 +191,7 @@ TouchManager::SuppressInvalidPointsAndGetTargetedFrame(WidgetTouchEvent* aEvent)
       continue;
     }
 
-    MOZ_ASSERT(touch->mTarget);
+    MOZ_ASSERT(touch->mOriginalTarget);
     nsCOMPtr<nsIContent> targetContent = do_QueryInterface(touch->GetTarget());
     nsIFrame* targetFrame = targetContent->GetPrimaryFrame();
     if (targetFrame && !anyTarget) {
@@ -221,7 +221,7 @@ TouchManager::SuppressInvalidPointsAndGetTargetedFrame(WidgetTouchEvent* aEvent)
         while (targetContent && !targetContent->IsElement()) {
           targetContent = targetContent->GetParent();
         }
-        touch->SetTarget(targetContent);
+        touch->SetTouchTarget(targetContent);
       }
     }
     if (targetFrame) {
@@ -263,7 +263,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           touch->mChanged = true;
         }
         touch->mMessage = aEvent->mMessage;
-        TouchInfo info = { touch, GetNonAnonymousAncestor(touch->mTarget),
+        TouchInfo info = { touch, GetNonAnonymousAncestor(touch->mOriginalTarget),
                            true };
         sCaptureTouchList->Put(id, info);
         if (touch->mIsTouchEventSuppressed) {
@@ -300,7 +300,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
           haveChanged = true;
         }
 
-        nsCOMPtr<EventTarget> targetPtr = oldTouch->mTarget;
+        nsCOMPtr<EventTarget> targetPtr = oldTouch->mOriginalTarget;
         if (!targetPtr) {
           touches.RemoveElementAt(i);
           continue;
@@ -309,7 +309,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         if (!targetNode->IsInComposedDoc()) {
           targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
         }
-        touch->SetTarget(targetPtr);
+        touch->SetTouchTarget(targetPtr);
 
         info.mTouch = touch;
         // info.mNonAnonymousTarget is still valid from above
@@ -369,14 +369,14 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         if (!sCaptureTouchList->Get(id, &info)) {
           continue;
         }
-        nsCOMPtr<EventTarget> targetPtr = info.mTouch->mTarget;
+        nsCOMPtr<EventTarget> targetPtr = info.mTouch->mOriginalTarget;
         nsCOMPtr<nsINode> targetNode(do_QueryInterface(targetPtr));
         if (targetNode && !targetNode->IsInComposedDoc()) {
           targetPtr = do_QueryInterface(info.mNonAnonymousTarget);
         }
 
         aCurrentEventContent = do_QueryInterface(targetPtr);
-        touch->SetTarget(targetPtr);
+        touch->SetTouchTarget(targetPtr);
         sCaptureTouchList->Remove(id);
         if (info.mTouch->mIsTouchEventSuppressed) {
           touches.RemoveElementAt(i);
