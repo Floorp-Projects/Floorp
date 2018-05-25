@@ -1413,7 +1413,7 @@ nsBulletFrame::RegisterImageRequest(bool aKnownToBeAnimated)
                                                     &isRequestRegistered);
     }
 
-    isRequestRegistered = mRequestRegistered;
+    mRequestRegistered = isRequestRegistered;
   }
 }
 
@@ -1431,7 +1431,7 @@ nsBulletFrame::DeregisterAndCancelImageRequest()
                                           mImageRequest,
                                           &isRequestRegistered);
 
-    isRequestRegistered = mRequestRegistered;
+    mRequestRegistered = isRequestRegistered;
 
     // Cancel the image request and forget about it.
     mImageRequest->CancelAndForgetObserver(NS_ERROR_FAILURE);

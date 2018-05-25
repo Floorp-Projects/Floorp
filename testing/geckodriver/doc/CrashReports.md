@@ -15,6 +15,8 @@ also means that if Firefox crashed the created minidump files are lost. To
 prevent that a custom profile has to be used instead. The following code
 shows an example by using the Python Selenium bindings on Mac OS:
 
+    import tempfile
+
     from selenium import webdriver
     from selenium.webdriver.firefox.options import Options
 
