@@ -2,8 +2,8 @@
 == chemical-1.html chemical-1-ref.html
 == conservative-range-1.html conservative-range-1-ref.html
 == conservative-range-2.html conservative-range-2-ref.html
-== currency-1.html currency-1-ref.html
-== currency-2.html currency-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == currency-1.html currency-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == currency-2.html currency-2-ref.html
 == datetime-1.html datetime-1-ref.html
 == emoji-1.html emoji-1-ref.html
 == emoji-2.html emoji-2-ref.html

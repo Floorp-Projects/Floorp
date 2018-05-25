@@ -23,8 +23,8 @@ fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidge
 fuzzy-if(gtkWidget,4,200) fuzzy-if(Android,4,300) fuzzy-if(winWidget&&!layersGPUAccelerated,2,100) fuzzy-if(skiaContent,16,100) == preserve3d-5a.html preserve3d-5-ref.html
 == preserve3d-6a.html preserve3d-6-ref.html
 == scale3d-z.html scalez-1-ref.html
-fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget&&stylo,154,644) == scale3d-all.html scale3d-1-ref.html # subpixel AA
-fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget&&stylo,154,644) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget,154,644) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == scale3d-all.html scale3d-1-ref.html # subpixel AA
+fuzzy-if(winWidget,143,689) fuzzy-if(OSX,224,924) fuzzy-if(winWidget,154,644) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
 == scale3d-xz.html scale3d-1-ref.html
 == translatez-1a.html translatez-1-ref.html
 != translatez-1b.html translatez-1-ref.html
@@ -70,8 +70,8 @@ fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixe
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,128,100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),143,100) fuzzy-if(winWidget||OSX<1010,141,100) == preserves3d-nested.html preserves3d-nested-ref.html
-fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
-fuzzy-if(cocoaWidget,128,9) skip-if(Android) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
+fuzzy-if(cocoaWidget,128,9) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
+fuzzy-if(cocoaWidget,128,9) skip-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac, bug 1461311 for Android
 == animate-backface-hidden.html about:blank
 == 1245450-1.html green-rect.html
 fuzzy(1,2000) == opacity-preserve3d-1.html opacity-preserve3d-1-ref.html
