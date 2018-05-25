@@ -172,6 +172,15 @@ enum JSShellExitCode {
     EXITCODE_TIMEOUT            = 6
 };
 
+// Define use of application-specific slots on the shell's global object.
+enum GlobalAppSlot
+{
+    GlobalAppSlotModuleResolveHook,
+    GlobalAppSlotCount
+};
+static_assert(GlobalAppSlotCount <= JSCLASS_GLOBAL_APPLICATION_SLOTS,
+              "Too many applications slots defined for shell global");
+
 /*
  * Note: This limit should match the stack limit set by the browser in
  *       js/xpconnect/src/XPCJSContext.cpp
@@ -610,8 +619,7 @@ ShellContext::ShellContext(JSContext* cx)
     readLineBufPos(0),
     errFilePtr(nullptr),
     outFilePtr(nullptr),
-    offThreadMonitor(mutexid::ShellOffThreadState),
-    moduleResolveHook(cx)
+    offThreadMonitor(mutexid::ShellOffThreadState)
 {}
 
 ShellContext::~ShellContext()
@@ -4279,8 +4287,8 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    ShellContext* sc = GetShellContext(cx);
-    sc->moduleResolveHook = &args[0].toObject().as<JSFunction>();
+    Handle<GlobalObject*> global = cx->global();
+    global->setReservedSlot(GlobalAppSlotModuleResolveHook, args[0]);
 
     args.rval().setUndefined();
     return true;
@@ -4289,18 +4297,20 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
 static JSObject*
 CallModuleResolveHook(JSContext* cx, HandleObject module, HandleString specifier)
 {
-    ShellContext* sc = GetShellContext(cx);
-    if (!sc->moduleResolveHook) {
+    Handle<GlobalObject*> global = cx->global();
+    RootedValue hookValue(cx, global->getReservedSlot(GlobalAppSlotModuleResolveHook));
+    if (hookValue.isUndefined()) {
         JS_ReportErrorASCII(cx, "Module resolve hook not set");
         return nullptr;
     }
+    MOZ_ASSERT(hookValue.toObject().is<JSFunction>());
 
     JS::AutoValueArray<2> args(cx);
     args[0].setObject(*module);
     args[1].setString(specifier);
 
     RootedValue result(cx);
-    if (!JS_CallFunction(cx, nullptr, sc->moduleResolveHook, args, &result))
+    if (!JS_CallFunctionValue(cx, nullptr, hookValue, args, &result))
         return nullptr;
 
     if (!result.isObject() || !result.toObject().is<ModuleObject>()) {
