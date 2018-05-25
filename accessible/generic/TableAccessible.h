@@ -173,7 +173,7 @@ public:
   /**
    * Return true if the table is probably for layout.
    */
-  virtual bool IsProbablyLayoutTable() { return false; }
+  virtual bool IsProbablyLayoutTable();
 
   /**
    * Convert the table to an Accessible*.
