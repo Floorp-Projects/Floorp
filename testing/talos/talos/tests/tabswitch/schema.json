@@ -11,9 +11,9 @@
           "type": "object",
           "name": "setupArgs",
           "properties": {
-            "frameScriptPath": {
+            "processScriptPath": {
               "type": "string",
-              "description": "Relative path for the frame script to load for the test in the initial tab."
+              "description": "Relative path for the process script to load for the test in the initial tab."
             }
           }
         }]
