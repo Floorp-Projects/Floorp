@@ -39,7 +39,6 @@ UNZIP="unzip -q"
 DIFF="$(which diff) -u"
 BASEDIR="${HOME}"
 TOOLSDIR="${HOME}/tools"
-HGTOOL="${TOOLSDIR}/buildfarm/utils/hgtool.py"
 
 SCRIPTDIR="$(realpath "$(dirname "$0")")"
 HG="$(which hg)"
@@ -351,20 +350,11 @@ function clone_build_tools {
     ${CLONE_CMD}
 }
 
-# Clones an hg repo, using hgtool preferentially.
+# Clones an hg repo
 function clone_repo {
   cd "${BASEDIR}"
   if [ ! -d "${REPODIR}" ]; then
-    CLONE_CMD=""
-    if [ -f "${HGTOOL}" ]; then
-      # Need to pass the default branch here to avoid pollution from buildprops.json
-      # when hgtool.py is run in production.
-      CLONE_CMD="${HGTOOL} --branch default"
-    else
-      echo "INFO: hgtool.py not found. Falling back to vanilla hg."
-      CLONE_CMD="${HG} clone"
-    fi
-    CLONE_CMD="${CLONE_CMD} ${HGREPO} ${REPODIR}"
+    CLONE_CMD="${HG} clone ${HGREPO} ${REPODIR}"
     ${CLONE_CMD}
   fi
 

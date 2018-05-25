@@ -48,12 +48,6 @@ COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 # %include taskcluster/docker/recipes/oauth.txt
 COPY topsrcdir/taskcluster/docker/recipes/oauth.txt /builds/worker/
 
-# Add a stubbed out buildprops, which keeps mozharness from choking.
-# Note that this needs to be in the parent of the workspace directory and in
-# the directory where mozharness is run (not its --work-dir).
-# %include taskcluster/docker/recipes/buildprops.json
-COPY topsrcdir/taskcluster/docker/recipes/buildprops.json /builds/worker/
-
 # Reset user/workdir from parent image so we can install software.
 WORKDIR /
 USER root

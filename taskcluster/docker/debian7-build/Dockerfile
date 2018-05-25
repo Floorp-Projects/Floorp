@@ -67,9 +67,3 @@ COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 # mozharness is run (not its --work-dir).  See Bug 1169652.
 # %include taskcluster/docker/recipes/oauth.txt
 COPY topsrcdir/taskcluster/docker/recipes/oauth.txt /builds/worker/
-
-# stubbed out buildprops, which keeps mozharness from choking
-# Note that this needs to be in the parent of the workspace directory and in
-# the directory where mozharness is run (not its --work-dir)
-# %include taskcluster/docker/recipes/buildprops.json
-COPY topsrcdir/taskcluster/docker/recipes/buildprops.json /builds/worker/
