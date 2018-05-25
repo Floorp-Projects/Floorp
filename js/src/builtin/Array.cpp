@@ -3702,7 +3702,8 @@ CreateArrayPrototype(JSContext* cx, JSProtoKey key)
      * arrays in JSON and script literals and allows setDenseArrayElement to
      * be used without updating the indexed type set for such default arrays.
      */
-    if (!JSObject::setNewGroupUnknown(cx, &ArrayObject::class_, arrayProto))
+    ObjectGroupRealm& realm = ObjectGroupRealm::getForNewObject(cx);
+    if (!JSObject::setNewGroupUnknown(cx, realm, &ArrayObject::class_, arrayProto))
         return nullptr;
 
     return arrayProto;

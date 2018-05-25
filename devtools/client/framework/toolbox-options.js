@@ -213,21 +213,17 @@ OptionsPanel.prototype = {
       "tools-not-supported-label");
     let atleastOneToolNotSupported = false;
 
-    const toolbox = this.toolbox;
-
     // Signal tool registering/unregistering globally (for the tools registered
     // globally) and per toolbox (for the tools registered to a single toolbox).
     // This event handler expect this to be binded to the related checkbox element.
-    let onCheckboxClick = function(tool) {
+    let onCheckboxClick = function(telemetry, tool) {
       // Set the kill switch pref boolean to true
       Services.prefs.setBoolPref(tool.visibilityswitch, this.checked);
 
       if (!tool.isWebExtension) {
         gDevTools.emit(this.checked ? "tool-registered" : "tool-unregistered", tool.id);
         // Record which tools were registered and unregistered.
-        this.telemetry.keyedScalarSet("devtools.tool.registered",
-                                      tool.id,
-                                      this.checked);
+        telemetry.keyedScalarSet("devtools.tool.registered", tool.id, this.checked);
       }
     };
 
@@ -253,7 +249,8 @@ OptionsPanel.prototype = {
         checkboxInput.setAttribute("checked", "true");
       }
 
-      checkboxInput.addEventListener("change", onCheckboxClick.bind(checkboxInput, tool));
+      checkboxInput.addEventListener("change",
+        onCheckboxClick.bind(checkboxInput, this.telemetry, tool));
 
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
@@ -287,7 +284,7 @@ OptionsPanel.prototype = {
     }
 
     // Populating the additional tools that came from the installed WebExtension add-ons.
-    for (let {uuid, name, pref} of toolbox.listWebExtensions()) {
+    for (let {uuid, name, pref} of this.toolbox.listWebExtensions()) {
       atleastOneAddon = true;
 
       additionalToolsBox.appendChild(createToolCheckbox({

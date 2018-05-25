@@ -4406,7 +4406,7 @@ CallIRGenerator::tryAttachStringSplit()
         return false;
 
     // Get the object group to use for this location.
-    RootedObjectGroup group(cx_, ObjectGroupCompartment::getStringSplitStringGroup(cx_));
+    RootedObjectGroup group(cx_, ObjectGroupRealm::getStringSplitStringGroup(cx_));
     if (!group)
         return false;
 

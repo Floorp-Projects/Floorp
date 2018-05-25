@@ -180,8 +180,6 @@ struct ShellContext
     // Off-thread parse state.
     js::Monitor offThreadMonitor;
     Vector<OffThreadJob*, 0, SystemAllocPolicy> offThreadJobs;
-
-    JS::PersistentRootedFunction moduleResolveHook;
 };
 
 extern ShellContext*

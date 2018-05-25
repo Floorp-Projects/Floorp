@@ -47,7 +47,7 @@ def capabilities_for_port(webkit_port, binary, binary_args):
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
     executor_kwargs = base_executor_kwargs(test_type, server_config,
-                                           cache_manager, **kwargs)
+                                           cache_manager, run_info_data, **kwargs)
     executor_kwargs["close_after_done"] = True
     capabilities = capabilities_for_port(kwargs["webkit_port"],
                                          kwargs["binary"],

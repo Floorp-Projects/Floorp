@@ -43,10 +43,7 @@ using mozilla::PodArrayZero;
 
 JSCompartment::JSCompartment(Zone* zone)
   : zone_(zone),
-    runtime_(zone->runtimeFromAnyThread()),
-    data(nullptr),
-    regExps(),
-    gcIncomingGrayPointers(nullptr)
+    runtime_(zone->runtimeFromAnyThread())
 {
     runtime_->numCompartments++;
 }
@@ -80,17 +77,17 @@ Realm::~Realm()
     JSRuntime* rt = runtimeFromMainThread();
     if (rt->lcovOutput().isEnabled())
         rt->lcovOutput().writeLCovResult(lcovOutput);
-}
 
-JSCompartment::~JSCompartment()
-{
 #ifdef DEBUG
     // Avoid assertion destroying the unboxed layouts list if the embedding
     // leaked GC things.
     if (!runtime_->gc.shutdownCollectedEverything())
-        unboxedLayouts.clear();
+        objectGroups_.unboxedLayouts.clear();
 #endif
+}
 
+JSCompartment::~JSCompartment()
+{
     runtime_->numCompartments--;
 }
 
@@ -710,8 +707,8 @@ Realm::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime traceOrMa
         return;
 
     /* Mark debug scopes, if present */
-    if (debugEnvs)
-        debugEnvs->trace(trc);
+    if (debugEnvs_)
+        debugEnvs_->trace(trc);
 
     objects_.trace(trc);
 
@@ -757,8 +754,8 @@ ObjectRealm::finishRoots()
 void
 Realm::finishRoots()
 {
-    if (debugEnvs)
-        debugEnvs->finish();
+    if (debugEnvs_)
+        debugEnvs_->finish();
 
     objects_.finishRoots();
 
@@ -792,7 +789,7 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 }
 
 void
-JSCompartment::sweepSavedStacks()
+Realm::sweepSavedStacks()
 {
     savedStacks_.sweep();
 }
@@ -822,7 +819,7 @@ Realm::sweepJitRealm()
 }
 
 void
-JSCompartment::sweepRegExps()
+Realm::sweepRegExps()
 {
     /*
      * JIT code increments activeWarmUpCounter for any RegExpShared used by jit
@@ -833,10 +830,10 @@ JSCompartment::sweepRegExps()
 }
 
 void
-JSCompartment::sweepDebugEnvironments()
+Realm::sweepDebugEnvironments()
 {
-    if (debugEnvs)
-        debugEnvs->sweep();
+    if (debugEnvs_)
+        debugEnvs_->sweep();
 }
 
 void
@@ -933,16 +930,21 @@ JSCompartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc)
 }
 
 void
+Realm::fixupAfterMovingGC()
+{
+    purge();
+    fixupGlobal();
+    objectGroups_.fixupTablesAfterMovingGC();
+    fixupScriptMapsAfterMovingGC();
+}
+
+void
 JSCompartment::fixupAfterMovingGC()
 {
     MOZ_ASSERT(zone()->isGCCompacting());
 
     Realm* realm = JS::GetRealmForCompartment(this);
-
-    realm->purge();
-    realm->fixupGlobal();
-    objectGroups.fixupTablesAfterMovingGC();
-    realm->fixupScriptMapsAfterMovingGC();
+    realm->fixupAfterMovingGC();
 
     // Sweep the wrapper map to update values (wrapper objects) in this
     // compartment that may have been moved.
@@ -1035,7 +1037,7 @@ Realm::purge()
 {
     dtoaCache.purge();
     newProxyCache.purge();
-    objectGroups.purge();
+    objectGroups_.purge();
     objects_.iteratorCache.clearAndShrink();
     arraySpeciesLookup.purge();
 }
@@ -1049,10 +1051,10 @@ Realm::clearTables()
     // a realm that has been used off thread into another realm and zone.
     JS::GetCompartmentForRealm(this)->assertNoCrossCompartmentWrappers();
     MOZ_ASSERT(!jitRealm_);
-    MOZ_ASSERT(!debugEnvs);
+    MOZ_ASSERT(!debugEnvs_);
     MOZ_ASSERT(objects_.enumerators->next() == objects_.enumerators);
 
-    objectGroups.clearTables();
+    objectGroups_.clearTables();
     if (savedStacks_.initialized())
         savedStacks_.clear();
     if (varNames_.initialized())
@@ -1086,7 +1088,7 @@ void
 Realm::setNewObjectMetadata(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->realm() == this);
-    assertSameCompartment(cx, this, obj);
+    assertSameCompartment(cx, JS::GetCompartmentForRealm(this), obj);
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     if (JSObject* metadata = allocationMetadataBuilder_->build(cx, obj, oomUnsafe)) {
@@ -1239,7 +1241,7 @@ Realm::unsetIsDebuggee()
 {
     if (isDebuggee()) {
         debugModeBits_ &= ~DebuggerObservesMask;
-        DebugEnvironments::onCompartmentUnsetIsDebuggee(this);
+        DebugEnvironments::onRealmUnsetIsDebuggee(this);
     }
 }
 
@@ -1371,9 +1373,9 @@ Realm::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     JSCompartment::addSizeOfExcludingThis(mallocSizeOf, crossCompartmentWrappersArg);
 
     *realmObject += mallocSizeOf(this);
-    objectGroups.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
-                                        tiArrayTypeTables, tiObjectTypeTables,
-                                        realmTables);
+    objectGroups_.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
+                                         tiArrayTypeTables, tiObjectTypeTables,
+                                         realmTables);
     wasm.addSizeOfExcludingThis(mallocSizeOf, realmTables);
 
     objects_.addSizeOfExcludingThis(mallocSizeOf,

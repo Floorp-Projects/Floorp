@@ -682,7 +682,7 @@ JS::EnterRealm(JSContext* cx, JSObject* target)
 
     Realm* oldRealm = cx->realm();
     cx->enterRealmOf(target);
-    return JS::GetRealmForCompartment(oldRealm);
+    return JS::GetCompartmentForRealm(oldRealm);
 }
 
 JS_PUBLIC_API(void)
@@ -7796,11 +7796,11 @@ JS::CaptureCurrentStack(JSContext* cx, JS::MutableHandleObject stackp,
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    MOZ_RELEASE_ASSERT(cx->compartment());
+    MOZ_RELEASE_ASSERT(cx->realm());
 
-    JSCompartment* compartment = cx->compartment();
+    Realm* realm = cx->realm();
     Rooted<SavedFrame*> frame(cx);
-    if (!compartment->savedStacks().saveCurrentStack(cx, &frame, mozilla::Move(capture)))
+    if (!realm->savedStacks().saveCurrentStack(cx, &frame, mozilla::Move(capture)))
         return false;
     stackp.set(frame.get());
     return true;
@@ -7813,13 +7813,12 @@ JS::CopyAsyncStack(JSContext* cx, JS::HandleObject asyncStack,
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
-    MOZ_RELEASE_ASSERT(cx->compartment());
+    MOZ_RELEASE_ASSERT(cx->realm());
 
     js::AssertObjectIsSavedFrameOrWrapper(cx, asyncStack);
-    JSCompartment* compartment = cx->compartment();
+    Realm* realm = cx->realm();
     Rooted<SavedFrame*> frame(cx);
-    if (!compartment->savedStacks().copyAsyncStack(cx, asyncStack, asyncCause,
-                                                   &frame, maxFrameCount))
+    if (!realm->savedStacks().copyAsyncStack(cx, asyncStack, asyncCause, &frame, maxFrameCount))
         return false;
     stackp.set(frame.get());
     return true;
