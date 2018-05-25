@@ -83,8 +83,8 @@ BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator)
         TraceLocals(this, trc, 0, nlivefixed);
     }
 
-    if (script->compartment()->debugEnvs)
-        script->compartment()->debugEnvs->traceLiveFrame(trc, this);
+    if (auto* debugEnvs = script->realm()->debugEnvs())
+        debugEnvs->traceLiveFrame(trc, this);
 }
 
 bool

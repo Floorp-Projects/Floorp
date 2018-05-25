@@ -385,8 +385,8 @@ InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc)
         traceValues(trc, 0, nlivefixed);
     }
 
-    if (script->compartment()->debugEnvs)
-        script->compartment()->debugEnvs->traceLiveFrame(trc, this);
+    if (auto* debugEnvs = script->realm()->debugEnvs())
+        debugEnvs->traceLiveFrame(trc, this);
 }
 
 void
