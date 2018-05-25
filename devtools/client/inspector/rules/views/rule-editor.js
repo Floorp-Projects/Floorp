@@ -54,9 +54,6 @@ function RuleEditor(ruleView, rule) {
   this.ruleView = ruleView;
   this.doc = this.ruleView.styleDocument;
   this.toolbox = this.ruleView.inspector.toolbox;
-  // We stash this locally so that we can refer to it from |destroy|
-  // without accidentally reinstantiating the service during shutdown.
-  this.sourceMapURLService = this.toolbox.sourceMapURLService;
   this.rule = rule;
 
   this.isEditable = !rule.isSystem;
@@ -95,9 +92,21 @@ RuleEditor.prototype = {
       // rule and if it isn't an inline rule.
       let sourceLine = this.rule.ruleLine;
       let sourceColumn = this.rule.ruleColumn;
-      this.sourceMapURLService.unsubscribe(url, sourceLine, sourceColumn,
-                                           this._updateLocation);
+
+      if (this._sourceMapURLService) {
+        this._sourceMapURLService.unsubscribe(url, sourceLine, sourceColumn,
+          this._updateLocation);
+      }
     }
+  },
+
+  get sourceMapURLService() {
+    if (!this._sourceMapURLService) {
+      // sourceMapURLService is a lazy getter in the toolbox.
+      this._sourceMapURLService = this.toolbox.sourceMapURLService;
+    }
+
+    return this._sourceMapURLService;
   },
 
   get isSelectorEditable() {
@@ -174,10 +183,11 @@ RuleEditor.prototype = {
           selector = this.ruleView.inspector.selectionCssSelector;
         }
 
+        let isHighlighted = this.ruleView._highlighters &&
+          this.ruleView.highlighters.selectorHighlighterShown === selector;
         let selectorHighlighter = createChild(header, "span", {
           class: "ruleview-selectorhighlighter" +
-                 (this.ruleView.highlighters.selectorHighlighterShown === selector ?
-                  " highlighted" : ""),
+                 (isHighlighted ? " highlighted" : ""),
           title: l10n("rule.selectorHighlighter.tooltip")
         });
         selectorHighlighter.addEventListener("click", () => {

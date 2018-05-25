@@ -1133,12 +1133,17 @@ html .toggle-button.end.vertical svg {
 
 .search-field .summary {
   line-height: 27px;
+  text-align: center;
   padding-right: 10px;
   color: var(--theme-body-color-inactive);
+  align-self: center;
+  padding-top: 1px;
+  white-space: nowrap;
 }
 
 .search-field.big .summary {
-  line-height: 40px;
+  padding: 5px 0 5px 0;
+  line-height: 2rem;
 }
 
 .search-field .search-nav-buttons {

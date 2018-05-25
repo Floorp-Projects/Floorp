@@ -10,6 +10,8 @@ var _url = require("devtools/client/debugger/new/dist/vendors").vendored["url"];
 
 var _lodash = require("devtools/client/shared/vendor/lodash");
 
+var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -111,7 +113,7 @@ function getURL(sourceUrl, debuggeeUrl = "") {
     case "https:":
       return (0, _lodash.merge)(def, {
         path: pathname,
-        group: host,
+        group: (0, _devtoolsModules.getUnicodeHostname)(host),
         filename: filename
       });
   }
