@@ -297,10 +297,6 @@ public:
     mozilla::FontFamilyType
     GetDefaultGeneric(eFontPrefLang aLang);
 
-    // map lang group ==> lang string
-    void GetSampleLangForGroup(nsAtom* aLanguage, nsACString& aLangStr,
-                               bool aCheckEnvironment = true);
-
     // Returns true if the font family whitelist is not empty.
     bool IsFontFamilyWhitelistActive();
 
@@ -491,10 +487,6 @@ protected:
 
     // helper function to map lang to lang group
     nsAtom* GetLangGroup(nsAtom* aLanguage);
-
-    // helper method for finding an appropriate lang string
-    bool TryLangForGroup(const nsACString& aOSLang, nsAtom* aLangGroup,
-                         nsACString& aLang);
 
     static const char* GetGenericName(mozilla::FontFamilyType aGenericType);
 
