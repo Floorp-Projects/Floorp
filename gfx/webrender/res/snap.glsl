@@ -27,10 +27,11 @@ vec2 compute_snap_offset_impl(
     mat4 transform,
     RectWithSize snap_rect,
     RectWithSize reference_rect,
-    vec4 snap_positions) {
+    vec4 snap_positions,
+    vec2 snap_bias) {
 
     /// World offsets applied to the corners of the snap rectangle.
-    vec4 snap_offsets = floor(snap_positions + 0.5) - snap_positions;
+    vec4 snap_offsets = floor(snap_positions + snap_bias.xyxy) - snap_positions;
 
     /// Compute the position of this vertex inside the snap rectangle.
     vec2 normalized_snap_pos = (reference_pos - reference_rect.p0) / reference_rect.size;
@@ -43,7 +44,8 @@ vec2 compute_snap_offset_impl(
 // given local position on the scroll_node and a snap rectangle.
 vec2 compute_snap_offset(vec2 local_pos,
                          mat4 transform,
-                         RectWithSize snap_rect) {
+                         RectWithSize snap_rect,
+                         vec2 snap_bias) {
     vec4 snap_positions = compute_snap_positions(
         transform,
         snap_rect
@@ -54,7 +56,8 @@ vec2 compute_snap_offset(vec2 local_pos,
         transform,
         snap_rect,
         snap_rect,
-        snap_positions
+        snap_positions,
+        snap_bias
     );
 
     return snap_offsets;

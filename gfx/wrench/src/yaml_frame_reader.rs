@@ -230,17 +230,17 @@ impl YamlFrameReader {
     }
 
     pub fn deinit(mut self, wrench: &mut Wrench) {
-        let mut updates = ResourceUpdates::new();
+        let mut txn = Transaction::new();
 
         for (_, font_instance) in self.font_instances.drain() {
-            updates.delete_font_instance(font_instance);
+            txn.delete_font_instance(font_instance);
         }
 
         for (_, font) in self.fonts.drain() {
-            updates.delete_font(font);
+            txn.delete_font(font);
         }
 
-        wrench.api.update_resources(updates);
+        wrench.api.update_resources(txn.resource_updates);
     }
 
     pub fn yaml_path(&self) -> &PathBuf {
@@ -511,9 +511,9 @@ impl YamlFrameReader {
         };
         let tiling = tiling.map(|tile_size| tile_size as u16);
         let image_key = wrench.api.generate_image_key();
-        let mut resources = ResourceUpdates::new();
-        resources.add_image(image_key, descriptor, image_data, tiling);
-        wrench.api.update_resources(resources);
+        let mut txn = Transaction::new();
+        txn.add_image(image_key, descriptor, image_data, tiling);
+        wrench.api.update_resources(txn.resource_updates);
         let val = (
             image_key,
             LayoutSize::new(descriptor.size.width as f32, descriptor.size.height as f32),
@@ -1210,7 +1210,6 @@ impl YamlFrameReader {
             let (glyph_indices, glyph_positions, bounds) = wrench.layout_simple_ascii(
                 font_key,
                 font_instance_key,
-                self.font_render_mode,
                 text,
                 size,
                 origin,

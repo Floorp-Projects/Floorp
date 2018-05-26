@@ -67,8 +67,8 @@ impl App {
     ) {
         // Generate the external image key that will be used to render the output document to the root document.
         self.external_image_key = Some(api.generate_image_key());
-        let mut resources = ResourceUpdates::new();
-        resources.add_image(
+        let mut txn = Transaction::new();
+        txn.add_image(
             self.external_image_key.unwrap(),
             ImageDescriptor::new(100, 100, ImageFormat::BGRA8, true, false),
             ImageData::External(ExternalImageData {
@@ -112,10 +112,8 @@ impl App {
         builder.push_rect(&info, ColorF::new(1.0, 1.0, 0.0, 1.0));
         builder.pop_stacking_context();
 
-        let mut txn = Transaction::new();
         txn.set_root_pipeline(pipeline_id);
         txn.enable_frame_output(document.pipeline_id, true);
-        txn.update_resources(resources);
         txn.set_display_list(
             Epoch(0),
             Some(document.color),
@@ -134,7 +132,7 @@ impl Example for App {
         &mut self,
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
-        _resources: &mut ResourceUpdates,
+        _txn: &mut Transaction,
         framebuffer_size: DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,

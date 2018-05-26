@@ -813,11 +813,11 @@ impl RenderBackend {
                 self.resource_cache
                     .update_resources(updates, &mut profile_counters.resources);
             }
-            ApiMsg::GetGlyphDimensions(instance_key, glyph_keys, tx) => {
-                let mut glyph_dimensions = Vec::with_capacity(glyph_keys.len());
+            ApiMsg::GetGlyphDimensions(instance_key, glyph_indices, tx) => {
+                let mut glyph_dimensions = Vec::with_capacity(glyph_indices.len());
                 if let Some(font) = self.resource_cache.get_font_instance(instance_key) {
-                    for glyph_key in &glyph_keys {
-                        let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, glyph_key);
+                    for glyph_index in &glyph_indices {
+                        let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, *glyph_index);
                         glyph_dimensions.push(glyph_dim);
                     }
                 }

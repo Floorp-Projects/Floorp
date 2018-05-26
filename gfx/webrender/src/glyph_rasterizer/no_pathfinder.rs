@@ -5,14 +5,15 @@
 //! Module only available when pathfinder is deactivated when webrender is
 //! compiled regularly (i.e. any configuration without feature = "pathfinder")
 
-use api::{GlyphKey, ImageData, ImageDescriptor, ImageFormat};
+use api::{ImageData, ImageDescriptor, ImageFormat};
 use device::TextureFilter;
 use euclid::size2;
 use gpu_types::UvRectKind;
 use rayon::prelude::*;
 use std::sync::{Arc, MutexGuard};
 use platform::font::FontContext;
-use glyph_rasterizer::{FontInstance, FontContexts, GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs, GlyphRasterResult};
+use glyph_rasterizer::{FontInstance, FontContexts, GlyphKey};
+use glyph_rasterizer::{GlyphRasterizer, GlyphRasterJob, GlyphRasterJobs, GlyphRasterResult};
 use glyph_cache::{GlyphCache, CachedGlyphInfo, GlyphCacheEntry};
 use texture_cache::{TextureCache, TextureCacheHandle};
 use gpu_cache::GpuCache;
