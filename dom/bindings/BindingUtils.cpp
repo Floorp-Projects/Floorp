@@ -1188,9 +1188,9 @@ CompareIdsAtIndices(const void* aElement1, const void* aElement2, void* aClosure
   const uint16_t index2 = *static_cast<const uint16_t*>(aElement2);
   const PropertyInfo* infos = static_cast<PropertyInfo*>(aClosure);
 
-  MOZ_ASSERT(JSID_BITS(infos[index1].id) != JSID_BITS(infos[index2].id));
+  MOZ_ASSERT(JSID_BITS(infos[index1].Id()) != JSID_BITS(infos[index2].Id()));
 
-  return JSID_BITS(infos[index1].id) < JSID_BITS(infos[index2].id) ? -1 : 1;
+  return JSID_BITS(infos[index1].Id()) < JSID_BITS(infos[index2].Id()) ? -1 : 1;
 }
 
 template <typename SpecT>
@@ -1212,9 +1212,11 @@ InitIdsInternal(JSContext* cx, const Prefable<SpecT>* pref, PropertyInfo* infos,
     // in the "specs" array of the relevant Prefable.
     uint32_t specIndex = 0;
     do {
-      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, &infos->id)) {
+      jsid id;
+      if (!JS::PropertySpecNameToPermanentId(cx, spec->name, &id)) {
         return false;
       }
+      infos->SetId(id);
       infos->type = type;
       infos->prefIndex = prefIndex;
       infos->specIndex = specIndex++;
@@ -1427,10 +1429,10 @@ struct IdToIndexComparator
   explicit IdToIndexComparator(const jsid& aId, const PropertyInfo* aInfos) :
     mId(aId), mInfos(aInfos) {}
   int operator()(const uint16_t aIndex) const {
-    if (JSID_BITS(mId) == JSID_BITS(mInfos[aIndex].id)) {
+    if (JSID_BITS(mId) == JSID_BITS(mInfos[aIndex].Id())) {
       return 0;
     }
-    return JSID_BITS(mId) < JSID_BITS(mInfos[aIndex].id) ? -1 : 1;
+    return JSID_BITS(mId) < JSID_BITS(mInfos[aIndex].Id()) ? -1 : 1;
   }
 };
 
@@ -1886,7 +1888,7 @@ XrayAppendPropertyKeys(JSContext* cx, JS::Handle<JSObject*> obj,
     if (prefIsEnabled) {
       const SpecType* spec = pref->specs;
       do {
-        const jsid& id = infos++->id;
+        const jsid id = infos++->Id();
         if (((flags & JSITER_HIDDEN) ||
              (spec->flags & JSPROP_ENUMERATE)) &&
             ((flags & JSITER_SYMBOLS) || !JSID_IS_SYMBOL(id)) &&
@@ -1922,7 +1924,7 @@ XrayAppendPropertyKeys<ConstantSpec>(JSContext* cx, JS::Handle<JSObject*> obj,
     if (prefIsEnabled) {
       const ConstantSpec* spec = pref->specs;
       do {
-        if (!props.append(infos++->id)) {
+        if (!props.append(infos++->Id())) {
           return false;
         }
       } while ((++spec)->name);
