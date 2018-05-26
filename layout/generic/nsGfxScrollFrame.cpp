@@ -4702,6 +4702,9 @@ ScrollFrameHelper::CreateAnonymousContent(
         break;
       case NS_STYLE_RESIZE_VERTICAL:
         dir.AssignLiteral("bottom");
+        if (!IsScrollbarOnRight()) {
+          mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::flip, EmptyString(), false);
+        }
         break;
       case NS_STYLE_RESIZE_BOTH:
         if (IsScrollbarOnRight()) {

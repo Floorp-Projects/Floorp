@@ -93,10 +93,16 @@ resizer {
 }
 
 /* bottomstart/bottomend is supported in XUL window only */
+resizer[dir="bottom"][flip],
 resizer[dir="bottomleft"],
 resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
 resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
+}
+
+resizer[dir="bottomleft"],
+resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
+resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
   cursor: sw-resize;
 }
 
