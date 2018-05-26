@@ -4445,8 +4445,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     }
 
     // Assign the item to a layer
+    bool treatInactiveItemAsActive = (layerState == LAYER_INACTIVE && !mManager->IsWidgetLayerManager());
     if (layerState == LAYER_ACTIVE_FORCE ||
-        (layerState == LAYER_INACTIVE && !mManager->IsWidgetLayerManager()) ||
+        treatInactiveItemAsActive ||
         (!forceInactive &&
          (layerState == LAYER_ACTIVE_EMPTY ||
           layerState == LAYER_ACTIVE))) {
@@ -4595,7 +4596,48 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       // item->BuildLayer, this will be set to a proper rect.
       nsIntRect layerContentsVisibleRect(0, 0, -1, -1);
       params.mLayerContentsVisibleRect = &layerContentsVisibleRect;
+
+      // If this display item wants to build inactive layers but we are treating
+      // it as active because we are already inside an inactive layer tree,
+      // we need to make sure that the display item's clip is reflected in
+      // FrameLayerBuilder::mInactiveLayerClip (which is normally set in
+      // AddPaintedDisplayItem() when entering an inactive layer tree).
+      // We intersect the display item's clip into any existing inactive layer
+      // clip.
+      const DisplayItemClip* originalInactiveClip = nullptr;
+      DisplayItemClip combinedInactiveClip;
+      bool combineNestedClip = treatInactiveItemAsActive && mLayerBuilder->GetContainingPaintedLayerData();
+      if (combineNestedClip) {
+        originalInactiveClip = mLayerBuilder->GetInactiveLayerClip();
+        if (originalInactiveClip) {
+          combinedInactiveClip = *originalInactiveClip;
+        }
+        DisplayItemClip nestedClip = item->GetClip();
+        if (nestedClip.HasClip()) {
+          nsRect nestedClipRect = nestedClip.NonRoundedIntersection();
+
+          // Transform the nested clip to be relative to the same reference
+          // frame as the existing mInactiveLayerClip, so that we can intersect
+          // them below.
+          nestedClipRect = nsLayoutUtils::TransformFrameRectToAncestor(
+              item->ReferenceFrame(),
+              nestedClipRect,
+              mLayerBuilder->GetContainingPaintedLayerData()->mReferenceFrame);
+
+          nestedClip.SetTo(nestedClipRect);
+          combinedInactiveClip.IntersectWith(nestedClip);
+          mLayerBuilder->SetInactiveLayerClip(&combinedInactiveClip);
+        }
+      }
+
       RefPtr<Layer> ownLayer = item->BuildLayer(mBuilder, mManager, params);
+
+      // If above we combined a nested clip into mInactiveLayerClip, restore
+      // the original inactive layer clip here.
+      if (combineNestedClip) {
+        mLayerBuilder->SetInactiveLayerClip(originalInactiveClip);
+      }
+
       if (!ownLayer) {
         continue;
       }
