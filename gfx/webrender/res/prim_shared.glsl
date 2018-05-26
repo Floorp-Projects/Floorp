@@ -10,6 +10,7 @@
 #define SUBPX_DIR_NONE        0
 #define SUBPX_DIR_HORIZONTAL  1
 #define SUBPX_DIR_VERTICAL    2
+#define SUBPX_DIR_MIXED       3
 
 #define RASTER_LOCAL            0
 #define RASTER_SCREEN           1
@@ -68,8 +69,7 @@ struct Glyph {
 };
 
 Glyph fetch_glyph(int specific_prim_address,
-                  int glyph_index,
-                  int subpx_dir) {
+                  int glyph_index) {
     // Two glyphs are packed in each texel in the GPU cache.
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
@@ -79,24 +79,6 @@ Glyph fetch_glyph(int specific_prim_address,
     // We use "!= 0" instead of "== 1" here in order to work around a driver
     // bug with equality comparisons on integers.
     vec2 glyph = mix(data.xy, data.zw, bvec2(glyph_index % 2 != 0));
-
-    // In subpixel mode, the subpixel offset has already been
-    // accounted for while rasterizing the glyph.
-    switch (subpx_dir) {
-        case SUBPX_DIR_NONE:
-            break;
-        case SUBPX_DIR_HORIZONTAL:
-            // Glyphs positioned [-0.125, 0.125] get a
-            // subpx position of zero. So include that
-            // offset in the glyph position to ensure
-            // we round to the correct whole position.
-            glyph.x = floor(glyph.x + 0.125);
-            break;
-        case SUBPX_DIR_VERTICAL:
-            glyph.y = floor(glyph.y + 0.125);
-            break;
-        default: break;
-    }
 
     return Glyph(glyph);
 }
@@ -231,7 +213,8 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     vec2 snap_offset = compute_snap_offset(
         clamped_local_pos,
         scroll_node.transform,
-        snap_rect
+        snap_rect,
+        vec2(0.5)
     );
 
     // Transform the current vertex to world space.

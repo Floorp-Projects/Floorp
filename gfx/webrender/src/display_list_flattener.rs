@@ -27,7 +27,7 @@ use internal_types::{FastHashMap, FastHashSet};
 use picture::PictureCompositeMode;
 use prim_store::{BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegmentDescriptor, CachedGradient};
 use prim_store::{CachedGradientIndex, EdgeAaSegmentMask, ImageSource};
-use prim_store::{BrushSegment, PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
+use prim_store::{BorderSource, BrushSegment, PictureIndex, PrimitiveContainer, PrimitiveIndex, PrimitiveStore};
 use prim_store::{OpacityBinding, ScrollNodeAndClipChain, TextRunPrimitiveCpu};
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
@@ -1636,8 +1636,7 @@ impl<'a> DisplayListFlattener<'a> {
                         }
 
                         let segment = BrushSegment::new(
-                            rect.origin,
-                            rect.size,
+                            rect,
                             true,
                             EdgeAaSegmentMask::empty(),
                             [
@@ -1741,13 +1740,15 @@ impl<'a> DisplayListFlattener<'a> {
 
                 let prim = PrimitiveContainer::Brush(match border.source {
                     NinePatchBorderSource::Image(image_key) => {
+                        let source = BorderSource::Image(ImageRequest {
+                            key: image_key,
+                            rendering: ImageRendering::Auto,
+                            tile: None,
+                        });
+
                         BrushPrimitive::new(
                             BrushKind::Border {
-                                request: ImageRequest {
-                                    key: image_key,
-                                    rendering: ImageRendering::Auto,
-                                    tile: None,
-                                },
+                                source
                             },
                             Some(descriptor),
                         )
@@ -1966,20 +1967,18 @@ impl<'a> DisplayListFlattener<'a> {
                 *text_color,
                 font_instance.bg_color,
                 render_mode,
-                font_instance.subpx_dir,
                 flags,
                 font_instance.platform_options,
                 font_instance.variations.clone(),
             );
-            TextRunPrimitiveCpu {
-                font: prim_font,
+            TextRunPrimitiveCpu::new(
+                prim_font,
+                run_offset,
                 glyph_range,
-                glyph_gpu_blocks: Vec::new(),
-                glyph_keys: Vec::new(),
-                offset: run_offset,
-                shadow: false,
+                Vec::new(),
+                false,
                 glyph_raster_space,
-            }
+            )
         };
 
         self.add_primitive(
