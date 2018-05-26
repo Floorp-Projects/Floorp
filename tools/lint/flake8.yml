@@ -2,10 +2,15 @@
 flake8:
     description: Python linter
     include:
+        - accessible/
         - browser/
         - build/
         - config/
         - configure.py
+        - js/
+        - memory/
+        - mobile/
+        - mozglue/
         - layout/tools/reftest
         - python/mach
         - python/mach_commands.py
@@ -14,6 +19,7 @@ flake8:
         - python/mozlint
         - python/mozterm
         - python/mozversioncontrol
+        - security/
         - security/manager
         - taskcluster
         - testing/firefox-ui
@@ -26,6 +32,7 @@ flake8:
         - testing/mozharness/configs
         - testing/mozharness/mozfile
         - testing/mozharness/mozharness/mozilla/mar.py
+        - testing/mozharness/mozharness/mozilla/testing/
         - testing/mozharness/mozinfo
         - testing/mozharness/scripts
         - testing/raptor
@@ -36,6 +43,7 @@ flake8:
         - toolkit/components/telemetry
         - toolkit/crashreporter/tools/upload_symbols.py
         - tools/
+        - xpcom/
     # Excludes should be added to topsrcdir/.flake8 due to a bug in flake8 where
     # specifying --exclude causes custom configuration files to be ignored.
     exclude: []
