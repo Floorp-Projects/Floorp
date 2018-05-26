@@ -144,6 +144,7 @@ nsLayoutStatics::Initialize()
   NS_SetStaticAtomsDone();
 
   StartupJSEnvironment();
+  nsJSContext::EnsureStatics();
 
   nsGlobalWindowInner::Init();
   nsGlobalWindowOuter::Init();
