@@ -712,12 +712,12 @@ fails == css-writing-modes/contiguous-floated-table-vrl-002.xht reference/ref-fi
 fails == css-writing-modes/contiguous-floated-table-vrl-004.xht reference/ref-filled-green-100px-square.xht
 fails == css-writing-modes/contiguous-floated-table-vrl-006.xht reference/ref-filled-green-100px-square.xht
 fails == css-writing-modes/contiguous-floated-table-vrl-008.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(webrender&&cocoaWidget,15-15,3-3) == css-writing-modes/different-block-flow-dir-001.xht reference/ref-filled-green-100px-square.xht
+== css-writing-modes/different-block-flow-dir-001.xht reference/ref-filled-green-100px-square.xht
 fuzzy-if(webrender&&cocoaWidget,7-7,2-2) == css-writing-modes/different-block-flow-dir-002.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/direction-vlr-003.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/direction-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/direction-vrl-002.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/direction-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/direction-vlr-003.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/direction-vlr-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/direction-vrl-002.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/direction-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
 == css-writing-modes/flexbox_align-items-stretch-writing-modes.html css-writing-modes/flexbox_align-items-stretch-writing-modes-ref.html
 == css-writing-modes/float-clear-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes/float-clear-vlr-005.xht reference/ref-filled-green-100px-square.xht
@@ -731,14 +731,14 @@ fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) =
 == css-writing-modes/float-contiguous-vlr-005.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vlr-007.xht css-writing-modes/float-contiguous-vlr-007-ref.xht
 == css-writing-modes/float-contiguous-vlr-009.xht css-writing-modes/float-contiguous-vlr-009-ref.xht
-fuzzy-if(OSX||winWidget,135,902) == css-writing-modes/float-contiguous-vlr-011.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,135,902) == css-writing-modes/float-contiguous-vlr-013.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
+fuzzy-if(OSX||winWidget,135,904) == css-writing-modes/float-contiguous-vlr-011.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,135,904) == css-writing-modes/float-contiguous-vlr-013.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
 == css-writing-modes/float-contiguous-vrl-002.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vrl-004.xht css-writing-modes/inline-replaced-vrl-004-ref.xht
 == css-writing-modes/float-contiguous-vrl-006.xht css-writing-modes/float-contiguous-vrl-006-ref.xht
 == css-writing-modes/float-contiguous-vrl-008.xht css-writing-modes/float-contiguous-vrl-008-ref.xht
-fuzzy-if(OSX||winWidget,135,902) == css-writing-modes/float-contiguous-vrl-010.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,135,902) == css-writing-modes/float-contiguous-vrl-012.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
+fuzzy-if(OSX||winWidget,135,904) == css-writing-modes/float-contiguous-vrl-010.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,135,904) == css-writing-modes/float-contiguous-vrl-012.xht css-writing-modes/float-contiguous-vrl-012-ref.xht
 fails == css-writing-modes/float-lft-orthog-htb-in-vlr-002.xht css-writing-modes/float-lft-orthog-htb-in-vlr-002-ref.xht
 fails == css-writing-modes/float-lft-orthog-htb-in-vrl-002.xht css-writing-modes/float-lft-orthog-htb-in-vrl-002-ref.xht
 fails == css-writing-modes/float-lft-orthog-vlr-in-htb-002.xht css-writing-modes/float-lft-orthog-vlr-in-htb-002-ref.xht
@@ -1048,24 +1048,24 @@ fails == css-writing-modes/table-progression-vlr-004.html css-writing-modes/tabl
 fails == css-writing-modes/table-progression-vrl-002.html css-writing-modes/table-progression-002-ref.html
 fails == css-writing-modes/table-progression-vrl-003.html css-writing-modes/table-progression-001-ref.html
 fails == css-writing-modes/table-progression-vrl-004.html css-writing-modes/table-progression-002-ref.html
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-007.xht reference/ref-filled-green-100px-square.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-009.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-011.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-013.xht css-writing-modes/text-align-vlr-009-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-015.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-017.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vlr-019.xht css-writing-modes/direction-vlr-003-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-002.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-006.xht css-writing-modes/direction-vrl-004-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-008.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-010.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-012.xht css-writing-modes/text-align-vrl-008-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-014.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-016.xht css-writing-modes/direction-vrl-002-ref.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) == css-writing-modes/text-align-vrl-018.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-003.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-005.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-007.xht reference/ref-filled-green-100px-square.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-009.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-011.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-013.xht css-writing-modes/text-align-vlr-009-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-015.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-017.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vlr-019.xht css-writing-modes/direction-vlr-003-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-002.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-004.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-006.xht css-writing-modes/direction-vrl-004-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-008.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-010.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-012.xht css-writing-modes/text-align-vrl-008-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-014.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-016.xht css-writing-modes/direction-vrl-002-ref.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) == css-writing-modes/text-align-vrl-018.xht css-writing-modes/direction-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-slr-009.xht css-writing-modes/text-baseline-slr-009-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-srl-008.xht css-writing-modes/text-baseline-vrl-006-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-vlr-003.xht css-writing-modes/text-baseline-vrl-002-ref.xht
@@ -1074,7 +1074,7 @@ fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-vlr-007.xht 
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-vrl-002.xht css-writing-modes/text-baseline-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-vrl-004.xht css-writing-modes/text-baseline-vrl-002-ref.xht
 fuzzy-if(OSX||winWidget,215,780) == css-writing-modes/text-baseline-vrl-006.xht css-writing-modes/text-baseline-vrl-006-ref.xht
-fuzzy-if(OSX,15,16) == css-writing-modes/text-combine-upright-decorations-001.html css-writing-modes/reference/text-combine-upright-decorations-001.html
+fuzzy-if(OSX,23,16) == css-writing-modes/text-combine-upright-decorations-001.html css-writing-modes/reference/text-combine-upright-decorations-001.html
 == css-writing-modes/text-combine-upright-inherit-all-001.html css-writing-modes/reference/text-combine-upright-inherit-all-001.html
 == css-writing-modes/text-combine-upright-inherit-all-002.html css-writing-modes/reference/text-combine-upright-inherit-all-002.html
 == css-writing-modes/text-combine-upright-layout-rules-001.html css-writing-modes/reference/text-combine-upright-layout-rules-001-ref.html
@@ -1159,10 +1159,10 @@ fails == css-writing-modes/wm-propagation-body-011.xht css-writing-modes/wm-prop
 fails == css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-flow-direction-025-ref.xht
 == css-writing-modes/writing-mode-horizontal-001l.html css-writing-modes/reference/writing-mode-horizontal-001l-ref.html
 == css-writing-modes/writing-mode-horizontal-001r.html css-writing-modes/reference/writing-mode-horizontal-001r-ref.html
-fuzzy-if(OSX||winWidget,153,612) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
-fuzzy-if(OSX||winWidget,153,612) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
-fuzzy-if(OSX||winWidget,153,612) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
-fuzzy-if(OSX||winWidget,153,612) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
+fuzzy-if(OSX||winWidget,158,624) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
+fuzzy-if(OSX||winWidget,158,624) == css-writing-modes/writing-mode-vertical-rl-001.xht css-writing-modes/reftest/writing-mode-vertical-rl-001-ref.xht
+fuzzy-if(OSX||winWidget,158,624) == css-writing-modes/writing-mode-vertical-rl-002.xht css-writing-modes/reftest/writing-mode-vertical-rl-002-ref.xht
+fuzzy-if(OSX||winWidget,158,624) == css-writing-modes/writing-mode-vertical-rl-003.htm css-writing-modes/writing-mode-vertical-rl-003-ref.htm
 skip == selectors/any-link-dynamic-001.html selectors/any-link-dynamic-001-ref.html
 needs-focus == selectors/focus-within-001.html selectors/focus-within-001-ref.html
 needs-focus == selectors/focus-within-002.html selectors/focus-within-001-ref.html

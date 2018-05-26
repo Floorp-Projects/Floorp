@@ -90,11 +90,10 @@ fuzzy-if(OSX||winWidget,213,1540) css-writing-modes/block-flow-direction-???-0??
 fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vlr-005.xht
 fuzzy-if(OSX,255,200)  css-writing-modes/box-offsets-rel-pos-vrl-004.xht
 fuzzy-if(OSX||winWidget,114,300)  css-writing-modes/caption-side-v??-00?.xht
-fuzzy-if(webrender&&cocoaWidget,15-15,3-3) css-writing-modes/different-block-flow-dir-001.xht
 fuzzy-if(webrender&&cocoaWidget,7-7,2-2) css-writing-modes/different-block-flow-dir-002.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/central-baseline-alignment-00?.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) css-writing-modes/direction-v??-00?.xht
-fuzzy-if(OSX||winWidget,135,902)  css-writing-modes/float-contiguous-v??-01?.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) css-writing-modes/direction-v??-00?.xht
+fuzzy-if(OSX||winWidget,135,904)  css-writing-modes/float-contiguous-v??-01?.xht
 fuzzy-if(OSX||winWidget,109,300)  css-writing-modes/float-shrink-to-fit-vlr-009.xht
 fuzzy-if(OSX||winWidget,109,300)  css-writing-modes/float-shrink-to-fit-vrl-008.xht
 fuzzy-if(OSX||winWidget,108,300)  css-writing-modes/float-v??-0??.xht
@@ -107,13 +106,13 @@ fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/row-progression-???-0??.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-00?.xht
 fuzzy-if(winWidget,110,1200) fuzzy-if(webrender&&cocoaWidget,1-1,2-2) css-writing-modes/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes/table-column-order-srl-006.xht
-fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-302) css-writing-modes/text-align-v??-0??.xht
+fuzzy-if(OSX||winWidget,75,404) fuzzy-if(webrender&&!gtkWidget,92-108,300-404) css-writing-modes/text-align-v??-0??.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes/text-baseline-???-00?.xht
-fuzzy-if(OSX,15,16) css-writing-modes/text-combine-upright-decorations-001.html
+fuzzy-if(OSX,23,16) css-writing-modes/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes/text-indent-v??-0??.xht
 fuzzy-if(OSX||winWidget,226,960) fails-if(webrender&&cocoaWidget)  css-writing-modes/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes/vertical-alignment-*.xht
-fuzzy-if(OSX||winWidget,153,612)  css-writing-modes/writing-mode-vertical-??-00?.*
+fuzzy-if(OSX||winWidget,158,624)  css-writing-modes/writing-mode-vertical-??-00?.*
 fuzzy(255,960) css-writing-modes/text-combine-upright-value-all-00?.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) css-writing-modes/text-combine-upright-compression-00?.html
 
