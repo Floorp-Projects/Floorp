@@ -8,16 +8,21 @@
 """
 
 from __future__ import print_function
-import re, sys
+import re
+import sys
 
 sep_pat = re.compile(' +')
+
+
 def to_code_list(codes):
     return '[' + ', '.join('0x{0}'.format(x) for x in re.split(sep_pat, codes)) + ']'
+
 
 def convert(dir):
     ver_pat = re.compile('NormalizationTest-([0-9\.]+)\.txt')
     part_pat = re.compile('^@(Part([0-9]+) .+)$')
-    test_pat = re.compile('^([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);$')
+    test_pat = re.compile(
+        '^([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);([0-9A-Fa-f ]+);$')
     ignore_pat = re.compile('^#|^$')
     js_path = 'js/src/tests/non262/String/normalize-generateddata-input.js'
     txt_path = 'intl/icu/source/data/unidata/NormalizationTest.txt'
@@ -62,6 +67,7 @@ def convert(dir):
                 print("Unknown line: {0}".format(line), file=sys.stderr)
             if part_opened:
                 outf.write('\n];\n')
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

@@ -8,6 +8,8 @@ prettyprinters.clear_module_printers(__name__)
 from mozilla.prettyprinters import pretty_printer
 
 # Cache information about the Interpreter types for this objfile.
+
+
 class InterpreterTypeCache(object):
     def __init__(self):
         self.tValue = gdb.lookup_type('JS::Value')
@@ -17,6 +19,7 @@ class InterpreterTypeCache(object):
         self.tBaselineFrame = gdb.lookup_type('js::jit::BaselineFrame')
         self.tRematerializedFrame = gdb.lookup_type('js::jit::RematerializedFrame')
         self.tDebugFrame = gdb.lookup_type('js::wasm::DebugFrame')
+
 
 @pretty_printer('js::InterpreterRegs')
 class InterpreterRegs(object):
@@ -41,6 +44,7 @@ class InterpreterRegs(object):
             opcode = 'bad pc'
         pc = 'pc = {} ({})'.format(pc.cast(self.cache.void_ptr_t), opcode)
         return '{{ {}, {}, {} }}'.format(fp_, sp, pc)
+
 
 @pretty_printer('js::AbstractFramePtr')
 class AbstractFramePtr(object):

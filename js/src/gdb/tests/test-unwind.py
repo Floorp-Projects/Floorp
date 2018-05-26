@@ -2,6 +2,7 @@
 
 import platform
 
+
 def do_unwinder_test():
     # The unwinder is disabled by default for the moment. Turn it on to check
     # that the unwinder works as expected.
@@ -46,6 +47,7 @@ def do_unwinder_test():
     # Had to have found the names of the two JS functions.
     assert_eq(found_inner, True)
     assert_eq(found_outer, True)
+
 
 # Only on the right platforms.
 if platform.machine() == 'x86_64' and platform.system() == 'Linux':

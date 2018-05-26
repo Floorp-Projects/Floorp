@@ -5,6 +5,7 @@
 import re
 import sys
 
+
 def read_reserved_word_list(filename):
     macro_pat = re.compile(r"^\s*macro\(([^,]+), *[^,]+, *[^\)]+\)\s*\\?$")
 
@@ -21,17 +22,21 @@ def read_reserved_word_list(filename):
 
     return reserved_word_list
 
+
 def line(opt, s):
     opt['output'].write('{}{}\n'.format('    ' * opt['indent_level'], s))
+
 
 def indent(opt):
     opt['indent_level'] += 1
 
+
 def dedent(opt):
     opt['indent_level'] -= 1
 
+
 def span_and_count_at(reserved_word_list, column):
-    assert(len(reserved_word_list) != 0);
+    assert(len(reserved_word_list) != 0)
 
     chars_dict = {}
     for index, word in reserved_word_list:
@@ -40,9 +45,10 @@ def span_and_count_at(reserved_word_list, column):
     chars = sorted(chars_dict.keys())
     return chars[-1] - chars[0] + 1, len(chars)
 
+
 def optimal_switch_column(opt, reserved_word_list, columns, unprocessed_columns):
-    assert(len(reserved_word_list) != 0);
-    assert(unprocessed_columns != 0);
+    assert(len(reserved_word_list) != 0)
+    assert(unprocessed_columns != 0)
 
     min_count = 0
     min_span = 0
@@ -71,8 +77,9 @@ def optimal_switch_column(opt, reserved_word_list, columns, unprocessed_columns)
 
     return min_span_index, False
 
+
 def split_list_per_column(reserved_word_list, column):
-    assert(len(reserved_word_list) != 0);
+    assert(len(reserved_word_list) != 0)
 
     column_dict = {}
     for item in reserved_word_list:
@@ -82,9 +89,10 @@ def split_list_per_column(reserved_word_list, column):
 
     return sorted(column_dict.items(), key=lambda (char, word): ord(char))
 
+
 def generate_letter_switch(opt, unprocessed_columns, reserved_word_list,
                            columns=None):
-    assert(len(reserved_word_list) != 0);
+    assert(len(reserved_word_list) != 0)
 
     if not columns:
         columns = range(0, unprocessed_columns)
@@ -115,7 +123,7 @@ def generate_letter_switch(opt, unprocessed_columns, reserved_word_list,
         line(opt, 'JSRW_NO_MATCH()')
         return
 
-    assert(unprocessed_columns != 0);
+    assert(unprocessed_columns != 0)
 
     optimal_column_index, use_if = optimal_switch_column(opt, reserved_word_list,
                                                          columns,
@@ -152,8 +160,9 @@ def generate_letter_switch(opt, unprocessed_columns, reserved_word_list,
 
     line(opt, 'JSRW_NO_MATCH()')
 
+
 def split_list_per_length(reserved_word_list):
-    assert(len(reserved_word_list) != 0);
+    assert(len(reserved_word_list) != 0)
 
     length_dict = {}
     for item in reserved_word_list:
@@ -163,8 +172,9 @@ def split_list_per_length(reserved_word_list):
 
     return sorted(length_dict.items(), key=lambda (length, word): length)
 
+
 def generate_switch(opt, reserved_word_list):
-    assert(len(reserved_word_list) != 0);
+    assert(len(reserved_word_list) != 0)
 
     line(opt, '/*')
     line(opt, ' * Generating switch for the list of {} entries:'.format(len(reserved_word_list)))
@@ -198,6 +208,7 @@ def generate_switch(opt, reserved_word_list):
         line(opt, '}')
     line(opt, 'JSRW_NO_MATCH()')
 
+
 def main(output, reserved_words_h):
     reserved_word_list = read_reserved_word_list(reserved_words_h)
 
@@ -208,6 +219,7 @@ def main(output, reserved_words_h):
         'output': output
     }
     generate_switch(opt, reserved_word_list)
+
 
 if __name__ == '__main__':
     main(sys.stdout, *sys.argv[1:])

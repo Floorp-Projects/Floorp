@@ -41,7 +41,7 @@ assert(value == 'GC Thing')
 
 # Check JSObject inheritance.
 JSObject = test.load_db_entry("src_comp", 'JSObject')[0]
-bases = [ b['Base'] for b in JSObject['CSUBaseClass'] ]
+bases = [b['Base'] for b in JSObject['CSUBaseClass']]
 assert('js::gc::Cell' in bases)
 assert('Bogon' in bases)
 assert(len(bases) == 2)
