@@ -1,0 +1,345 @@
+<html>
+  <head>
+    <title></title>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <script>
+      var tests = [
+        simpleNonShadowTest,
+        nonShadowInputDate,
+        jsDispatchedNonShadowTouchEvents,
+        shadowDOMTest1,
+        shadowDOMTest2,
+        shadowDOMTest3,
+        jsDispatchedShadowTouchEvents,
+        jsDispatchedShadowTouchEvents2
+      ];
+      var host;
+      var host2;
+      var shadowRoot;
+      var shadowRoot2;
+      var winUtils;
+
+      var touchCounter = 0;
+      function createTouchArray(targetList) {
+        var touchArray = [];
+        for (var i = 0; i < targetList.length; ++i) {
+          touchArray.push(new Touch({identifier: ++touchCounter, target: targetList[i]}));
+        }
+        return touchArray;
+      }
+
+      function synthesizeTouches(targets, xOffsets) {
+        if (xOffsets) {
+          opener.is(targets.length, xOffsets.length, "Wrong xOffsets length!");
+        }
+        var touches = [];
+        var xs = [];
+        var ys = [];
+        var rxs = [];
+        var rys = [];
+        var angles = [];
+        var forces = [];
+        for (var i = 0; i < targets.length; ++i) {
+          touches.push(++touchCounter);
+          var rect = targets[i].getBoundingClientRect();
+          if (xOffsets) {
+            xs.push(rect.left + (rect.width / 2) + xOffsets[i]);
+          } else {
+            xs.push(rect.left + (rect.width / 2));
+          }
+          ys.push(rect.top + (rect.height / 2));
+          rxs.push(1);
+          rys.push(1);
+          angles.push(0);
+          forces.push(1);
+        }
+        winUtils.sendTouchEvent("touchstart",
+          touches, xs, ys, rxs, rys, angles, forces, targets.length, 0);
+        winUtils.sendTouchEvent("touchend",
+          touches, xs, ys, rxs, rys, angles, forces, targets.length, 0);
+      }
+
+      function next() {
+        if (!tests.length) {
+          opener.done();
+          window.close();
+        } else {
+          var test = tests.shift();
+          requestAnimationFrame(function() { setTimeout(test); });
+        }
+      }
+
+      function simpleNonShadowTest() {
+        var s1 = document.getElementById("span1");
+        var s2 = document.getElementById("span2");
+        var s3 = document.getElementById("span3");
+        var nonShadow = document.getElementById("nonshadow");
+        var event;
+        nonShadow.ontouchstart = function(e) {
+          event = e;
+          opener.is(e.targetTouches.length, 1, "Should have only one entry in targetTouches.");
+          opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain event.target.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        synthesizeTouches([s1, s2, s3]);
+
+        opener.is(event.targetTouches.length, 1, "Should have only one entry in targetTouches. (2)");
+        opener.is(event.targetTouches[0].target, event.target, "targetTouches should contain event.target. (2)");
+        opener.is(event.touches.length, 3, "touches list should contain all the touch objects. (2)");
+        opener.is(event.changedTouches.length, 3, "changedTouches list should contain all the touch objects. (2)");
+
+        next();
+      }
+
+      function jsDispatchedNonShadowTouchEvents() {
+        var s1 = document.getElementById("span1");
+        var s2 = document.getElementById("span2");
+        var s3 = document.getElementById("span3");
+        var nonShadow = document.getElementById("nonshadow");
+        var didCallListener = false;
+        nonShadow.ontouchstart = function(e) {
+          didCallListener = true;
+          opener.is(e.targetTouches.length, 3, "Should have all the entries in targetTouches.");
+          opener.is(e.targetTouches[0].target, s1, "targetTouches should contain s1 element.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        var touchArray = createTouchArray([s1, s2, s3]);
+        var touchEvent = new TouchEvent("touchstart",
+          {
+            touches: touchArray,
+            targetTouches: touchArray,
+            changedTouches: touchArray
+          });
+        opener.is(touchEvent.targetTouches.length, 3, "Should have 3 entries in targetTouches");
+        nonShadow.dispatchEvent(touchEvent);
+        opener.ok(didCallListener, "Should have called the listener.");
+        opener.is(touchEvent.targetTouches.length, 3, "Should have all the entries in targetTouches. (2)");
+        opener.is(touchEvent.targetTouches[0].target, s1, "targetTouches should contain s1 element. (2)");
+        opener.is(touchEvent.touches.length, 3, "touches list should contain all the touch objects. (2)");
+        opener.is(touchEvent.changedTouches.length, 3, "changedTouches list should contain all the touch objects. (2)");
+
+        nonShadow.ontouchstart = null;
+        next();
+      }
+
+      function nonShadowInputDate() {
+        // This is a test for dispathing several touches to an element with
+        // native anonymous content.
+        var s1 = document.getElementById("span1");
+        var date = document.getElementById("date");
+        var nonShadow = document.getElementById("nonshadow");
+        var hasDateAsTarget = false;
+        var didCallListener = false;
+        nonShadow.ontouchstart = function(e) {
+          didCallListener = true;
+          if (e.targetTouches[0].target == date) {
+            hasDateAsTarget = true;
+            opener.is(e.targetTouches.length, 2, "Should have two entries in targetTouches.");
+            opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain date.");
+            opener.is(e.targetTouches[1].target, e.target, "targetTouches should contain date twice.");
+          }
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+
+        var rect = date.getBoundingClientRect();
+        var quarter = rect.width / 4;
+        synthesizeTouches([date, date, s1], [-quarter, quarter, 0]);
+        opener.ok(didCallListener, "Should have called listener.");
+        opener.ok(hasDateAsTarget, "Should have seen touchstart with date element as the target.")
+        nonShadow.ontouchstart = null;
+        next();
+      }
+
+      function shadowDOMTest1() {
+        var shadowS1 = shadowRoot.getElementById("shadowSpan1");
+
+        // Ensure retargeting works.
+        var hostHandled = false;
+        host.ontouchstart = function(e) {
+          hostHandled = true;
+          opener.is(e.targetTouches.length, 1, "Should have only one entry in targetTouches.");
+          opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain event.target.");
+          opener.is(e.target, host, "Event and touch should have been retargeted.");
+          opener.is(e.touches.length, 1, "touches list should contain one touch object.");
+          opener.is(e.changedTouches.length, 1, "changedTouches list should contain one touch objects.");
+        }
+
+        // Ensure retargeting doesn't happen inside shadow DOM.
+        var shadowHandled = false;
+        shadowS1.ontouchstart = function(e) {
+          shadowHandled = true;
+          opener.is(e.targetTouches.length, 1, "Should have only one entry in targetTouches.");
+          opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain event.target.");
+          opener.is(e.target, shadowS1, "Event and touch should not have been retargeted.");
+          opener.is(e.touches.length, 1, "touches list should contain one touch object.");
+          opener.is(e.changedTouches.length, 1, "changedTouches list should contain one touch objects.");
+        }
+        synthesizeTouches([shadowS1]);
+        opener.ok(hostHandled, "Should have called listener on host.");
+        opener.ok(shadowHandled, "Should have called listener on shadow DOM element.");
+        host.ontouchstart = null;
+        shadowS1.ontouchstart = null;
+
+        next();
+      }
+
+      function shadowDOMTest2() {
+        var shadowS1 = shadowRoot.getElementById("shadowSpan1");
+        var shadowS2 = shadowRoot.getElementById("shadowSpan2");
+        var s1 = document.getElementById("span1");
+
+        var hostHandled = false;
+        host.ontouchstart = function(e) {
+          opener.is(e.target, host, "Event.target should be the host element.");
+          hostHandled = true;
+          opener.is(e.targetTouches.length, 2, "Should have two entries in targetTouches.");
+          opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain event.target.");
+          opener.is(e.targetTouches[1].target, e.target, "targetTouches should contain event.target twice.");
+          opener.is(e.touches.length, 3, "touches list should contain one touch object.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain one touch objects.");
+        }
+
+        synthesizeTouches([shadowS1, shadowS2, s1]);
+        opener.ok(hostHandled, "Should have called listener on host.");
+        host.ontouchstart = null;
+
+        next();
+      }
+
+
+      function shadowDOMTest3() {
+        var shadowS1 = shadowRoot.getElementById("shadowSpan1");
+        var shadowS2 = shadowRoot2.getElementById("shadowSpan2");
+        var s1 = document.getElementById("span1");
+
+        var hostHandled = false;
+        host.ontouchstart = function(e) {
+          opener.is(e.target, host, "Event.target should be the host element.");
+          hostHandled = true;
+          opener.is(e.targetTouches.length, 1, "Should have one entry in targetTouches.");
+          opener.is(e.targetTouches[0].target, e.target, "targetTouches should contain event.target.");
+          opener.is(e.touches.length, 3, "touches list should contain one touch object.");
+          opener.is(e.touches[0].target, host, "Should have retargeted the first Touch object.");
+          opener.is(e.touches[1].target, host2, "Should have retargeted the second Touch object.");
+          opener.is(e.touches[3].target, s1, "Touch object targeted to light DOM should keep its target as is.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain one touch objects.");
+        }
+
+        synthesizeTouches([shadowS1, shadowS2, s1]);
+        opener.ok(hostHandled, "Should have called listener on host.");
+        host.ontouchstart = null;
+
+        next();
+      }
+
+      function jsDispatchedShadowTouchEvents() {
+        var s1 = document.getElementById("span1");
+        var shadowS1 = shadowRoot.getElementById("shadowSpan1");
+        var shadowS2 = shadowRoot.getElementById("shadowSpan2");
+        var hostHandled = false;
+        var shadowHandled = false;
+        host.ontouchstart = function(e) {
+          hostHandled = true;
+          opener.is(e.targetTouches.length, 2, "Should have all the shadow entries in targetTouches.");
+          opener.is(e.targetTouches[0].target, host, "targetTouches shouldn't reveal shadow DOM.");
+          opener.is(e.targetTouches[1].target, host, "targetTouches shouldn't reveal shadow DOM.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        shadowS1.ontouchstart = function(e) {
+          shadowHandled = true;
+          opener.is(e.targetTouches.length, 3, "Should have all the in targetTouches.");
+          opener.is(e.targetTouches[0].target, shadowS1, "targetTouches should contain two shadow elements.");
+          opener.is(e.targetTouches[1].target, shadowS2, "targetTouches should contain two shadow elements.");
+          opener.is(e.targetTouches[2].target, s1, "targetTouches should contain a slight element.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        var touchArray = createTouchArray([shadowS1, shadowS2, s1]);
+        var touchEvent = new TouchEvent("touchstart",
+          {
+            composed: true,
+            touches: touchArray,
+            targetTouches: touchArray,
+            changedTouches: touchArray
+          });
+        opener.is(touchEvent.targetTouches.length, 3, "Should have 3 entries in targetTouches");
+        shadowS1.dispatchEvent(touchEvent);
+        opener.ok(hostHandled, "Should have called listener on host.");
+        opener.ok(shadowHandled, "Should have called listener on shadow DOM element.");
+        host.ontouchstart = null;
+        shadowS1.ontouchstart = null;
+        next();
+      }
+
+      function jsDispatchedShadowTouchEvents2() {
+        var s1 = document.getElementById("span1");
+        var shadowS1 = shadowRoot.getElementById("shadowSpan1");
+        var shadowS2 = shadowRoot2.getElementById("shadowSpan2");
+        var hostHandled = false;
+        var shadowHandled = false;
+        host.ontouchstart = function(e) {
+          hostHandled = true;
+          opener.is(e.targetTouches.length, 1, "Should have one shadow entry in targetTouches.");
+          opener.is(e.targetTouches[0].target, host, "targetTouches shouldn't reveal shadow DOM.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.touches[0].target, host, "Should have retargeted the first Touch object.");
+          opener.is(e.touches[1].target, host2, "Should have retargeted the second Touch object.");
+          opener.is(e.touches[2].target, s1, "Touch object targeted to light DOM should keep its target as is.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        shadowS1.ontouchstart = function(e) {
+          shadowHandled = true;
+          opener.is(e.targetTouches.length, 3, "Should have all the in targetTouches.");
+          opener.is(e.targetTouches[0].target, shadowS1, "targetTouches should contain two shadow elements.");
+          opener.is(e.targetTouches[1].target, shadowS2, "targetTouches should contain two shadow elements.");
+          opener.is(e.targetTouches[2].target, s1, "targetTouches should contain a slight element.");
+          opener.is(e.touches.length, 3, "touches list should contain all the touch objects.");
+          opener.is(e.changedTouches.length, 3, "changedTouches list should contain all the touch objects.");
+        }
+        var touchArray = createTouchArray([shadowS1, shadowS2, s1]);
+        var touchEvent = new TouchEvent("touchstart",
+          {
+            composed: true,
+            touches: touchArray,
+            targetTouches: touchArray,
+            changedTouches: touchArray
+          });
+        opener.is(touchEvent.targetTouches.length, 3, "Should have 3 entries in targetTouches");
+        shadowS1.dispatchEvent(touchEvent);
+        opener.ok(hostHandled, "Should have called listener on host.");
+        opener.ok(shadowHandled, "Should have called listener on shadow DOM element.");
+        host.ontouchstart = null;
+        shadowS1.ontouchstart = null;
+        next();
+      }
+
+      function start() {
+        winUtils = _getDOMWindowUtils(this);
+        host = document.getElementById("host");
+        shadowRoot = host.attachShadow({ mode: "open" });
+        shadowRoot.innerHTML =
+          "<span id='shadowSpan1'>shadowFoo </span><span id='shadowSpan2'>shadowBar </span><span id='shadowSpan3'>shadowBaz </span><slot></slot>";
+
+        host2 = document.getElementById("host2");
+        shadowRoot2 = host2.attachShadow({ mode: "open" });
+        shadowRoot2.innerHTML =
+          "<span id='shadowSpan1'>shadowFoo </span><span id='shadowSpan2'>shadowBar </span><span id='shadowSpan3'>shadowBaz </span><slot></slot>";
+        next();
+      }
+    </script>
+    <style>
+    </style>
+  </head>
+  <body onload="start();">
+    <div id="nonshadow">
+      <span id="span1">foo </span><span id="span2">bar </span><span id="span3"> baz</span>
+      <input type="date" id="date">
+    </div>
+    <div id="host"><span id="assignedNode"> assigned node </span></div>
+    <div id="host2"><span id="assignedNode2"> assigned node 2 </span></div>
+  </body>
+</html>

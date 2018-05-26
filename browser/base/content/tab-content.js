@@ -22,6 +22,8 @@ ChromeUtils.defineModuleGetter(this, "AboutReader",
   "resource://gre/modules/AboutReader.jsm");
 ChromeUtils.defineModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
+ChromeUtils.defineModuleGetter(this, "PageStyleHandler",
+  "resource:///modules/PageStyleHandler.jsm");
 XPCOMUtils.defineLazyGetter(this, "SimpleServiceDiscovery", function() {
   let ssdp = ChromeUtils.import("resource://gre/modules/SimpleServiceDiscovery.jsm", {}).SimpleServiceDiscovery;
   // Register targets
@@ -292,120 +294,9 @@ var ContentSearchMediator = {
 };
 ContentSearchMediator.init(this);
 
-var PageStyleHandler = {
-  init() {
-    addMessageListener("PageStyle:Switch", this);
-    addMessageListener("PageStyle:Disable", this);
-    addEventListener("pageshow", () => this.sendStyleSheetInfo());
-  },
-
-  get markupDocumentViewer() {
-    return docShell.contentViewer;
-  },
-
-  sendStyleSheetInfo() {
-    let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets());
-
-    sendAsyncMessage("PageStyle:StyleSheets", {
-      filteredStyleSheets,
-      authorStyleDisabled: this.markupDocumentViewer.authorStyleDisabled,
-      preferredStyleSheetSet: content.document.preferredStyleSheetSet
-    });
-  },
-
-  getAllStyleSheets(frameset = content) {
-    let selfSheets = Array.slice(frameset.document.styleSheets);
-    let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
-    return selfSheets.concat(...subSheets);
-  },
-
-  receiveMessage(msg) {
-    switch (msg.name) {
-      case "PageStyle:Switch":
-        this.markupDocumentViewer.authorStyleDisabled = false;
-        this._stylesheetSwitchAll(content, msg.data.title);
-        break;
-
-      case "PageStyle:Disable":
-        this.markupDocumentViewer.authorStyleDisabled = true;
-        break;
-    }
-
-    this.sendStyleSheetInfo();
-  },
-
-  _stylesheetSwitchAll(frameset, title) {
-    if (!title || this._stylesheetInFrame(frameset, title)) {
-      this._stylesheetSwitchFrame(frameset, title);
-    }
-
-    for (let i = 0; i < frameset.frames.length; i++) {
-      // Recurse into sub-frames.
-      this._stylesheetSwitchAll(frameset.frames[i], title);
-    }
-  },
-
-  _stylesheetSwitchFrame(frame, title) {
-    var docStyleSheets = frame.document.styleSheets;
-
-    for (let i = 0; i < docStyleSheets.length; ++i) {
-      let docStyleSheet = docStyleSheets[i];
-      if (docStyleSheet.title) {
-        docStyleSheet.disabled = (docStyleSheet.title != title);
-      } else if (docStyleSheet.disabled) {
-        docStyleSheet.disabled = false;
-      }
-    }
-  },
-
-  _stylesheetInFrame(frame, title) {
-    return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
-  },
-
-  _filterStyleSheets(styleSheets) {
-    let result = [];
-
-    for (let currentStyleSheet of styleSheets) {
-      if (!currentStyleSheet.title)
-        continue;
-
-      // Skip any stylesheets that don't match the screen media type.
-      if (currentStyleSheet.media.length > 0) {
-        let mediaQueryList = currentStyleSheet.media.mediaText;
-        if (!content.matchMedia(mediaQueryList).matches) {
-          continue;
-        }
-      }
-
-      let URI;
-      try {
-        if (!currentStyleSheet.ownerNode ||
-            // special-case style nodes, which have no href
-            currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style") {
-          URI = Services.io.newURI(currentStyleSheet.href);
-        }
-      } catch (e) {
-        if (e.result != Cr.NS_ERROR_MALFORMED_URI) {
-          throw e;
-        }
-        continue;
-      }
-
-      // We won't send data URIs all of the way up to the parent, as these
-      // can be arbitrarily large.
-      let sentURI = (!URI || URI.scheme == "data") ? null : URI.spec;
-
-      result.push({
-        title: currentStyleSheet.title,
-        disabled: currentStyleSheet.disabled,
-        href: sentURI,
-      });
-    }
-
-    return result;
-  },
-};
-PageStyleHandler.init();
+addMessageListener("PageStyle:Switch", PageStyleHandler);
+addMessageListener("PageStyle:Disable", PageStyleHandler);
+addEventListener("pageshow", PageStyleHandler);
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.
 var trHandler = null;
@@ -575,177 +466,6 @@ var DOMFullscreenHandler = {
 };
 DOMFullscreenHandler.init();
 
-var RefreshBlocker = {
-  PREF: "accessibility.blockautorefresh",
-
-  // Bug 1247100 - When a refresh is caused by an HTTP header,
-  // onRefreshAttempted will be fired before onLocationChange.
-  // When a refresh is caused by a <meta> tag in the document,
-  // onRefreshAttempted will be fired after onLocationChange.
-  //
-  // We only ever want to send a message to the parent after
-  // onLocationChange has fired, since the parent uses the
-  // onLocationChange update to clear transient notifications.
-  // Sending the message before onLocationChange will result in
-  // us creating the notification, and then clearing it very
-  // soon after.
-  //
-  // To account for both cases (onRefreshAttempted before
-  // onLocationChange, and onRefreshAttempted after onLocationChange),
-  // we'll hold a mapping of DOM Windows that we see get
-  // sent through both onLocationChange and onRefreshAttempted.
-  // When either run, they'll check the WeakMap for the existence
-  // of the DOM Window. If it doesn't exist, it'll add it. If
-  // it finds it, it'll know that it's safe to send the message
-  // to the parent, since we know that both have fired.
-  //
-  // The DOM Window is removed from blockedWindows when we notice
-  // the nsIWebProgress change state to STATE_STOP for the
-  // STATE_IS_WINDOW case.
-  //
-  // DOM Windows are mapped to a JS object that contains the data
-  // to be sent to the parent to show the notification. Since that
-  // data is only known when onRefreshAttempted is fired, it's only
-  // ever stashed in the map if onRefreshAttempted fires first -
-  // otherwise, null is set as the value of the mapping.
-  blockedWindows: new WeakMap(),
-
-  init() {
-    if (Services.prefs.getBoolPref(this.PREF)) {
-      this.enable();
-    }
-
-    Services.prefs.addObserver(this.PREF, this);
-  },
-
-  uninit() {
-    if (Services.prefs.getBoolPref(this.PREF)) {
-      this.disable();
-    }
-
-    Services.prefs.removeObserver(this.PREF, this);
-  },
-
-  observe(subject, topic, data) {
-    if (topic == "nsPref:changed" && data == this.PREF) {
-      if (Services.prefs.getBoolPref(this.PREF)) {
-        this.enable();
-      } else {
-        this.disable();
-      }
-    }
-  },
-
-  enable() {
-    this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-                     .createInstance(Ci.nsIWebProgress);
-    this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
-    this._filter.target = tabEventTarget;
-
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
-
-    addMessageListener("RefreshBlocker:Refresh", this);
-  },
-
-  disable() {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.removeProgressListener(this._filter);
-
-    this._filter.removeProgressListener(this);
-    this._filter = null;
-
-    removeMessageListener("RefreshBlocker:Refresh", this);
-  },
-
-  send(data) {
-    sendAsyncMessage("RefreshBlocker:Blocked", data);
-  },
-
-  /**
-   * Notices when the nsIWebProgress transitions to STATE_STOP for
-   * the STATE_IS_WINDOW case, which will clear any mappings from
-   * blockedWindows.
-   */
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      this.blockedWindows.delete(aWebProgress.DOMWindow);
-    }
-  },
-
-  /**
-   * Notices when the location has changed. If, when running,
-   * onRefreshAttempted has already fired for this DOM Window, will
-   * send the appropriate refresh blocked data to the parent.
-   */
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-    let win = aWebProgress.DOMWindow;
-    if (this.blockedWindows.has(win)) {
-      let data = this.blockedWindows.get(win);
-      if (data) {
-        // We saw onRefreshAttempted before onLocationChange, so
-        // send the message to the parent to show the notification.
-        this.send(data);
-      }
-    } else {
-      this.blockedWindows.set(win, null);
-    }
-  },
-
-  /**
-   * Notices when a refresh / reload was attempted. If, when running,
-   * onLocationChange has not yet run, will stash the appropriate data
-   * into the blockedWindows map to be sent when onLocationChange fires.
-   */
-  onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
-    let win = aWebProgress.DOMWindow;
-    let outerWindowID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils)
-                           .outerWindowID;
-
-    let data = {
-      URI: aURI.spec,
-      delay: aDelay,
-      sameURI: aSameURI,
-      outerWindowID,
-    };
-
-    if (this.blockedWindows.has(win)) {
-      // onLocationChange must have fired before, so we can tell the
-      // parent to show the notification.
-      this.send(data);
-    } else {
-      // onLocationChange hasn't fired yet, so stash the data in the
-      // map so that onLocationChange can send it when it fires.
-      this.blockedWindows.set(win, data);
-    }
-
-    return false;
-  },
-
-  receiveMessage(message) {
-    let data = message.data;
-
-    if (message.name == "RefreshBlocker:Refresh") {
-      let win = Services.wm.getOuterWindowWithId(data.outerWindowID);
-      let refreshURI = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDocShell)
-                          .QueryInterface(Ci.nsIRefreshURI);
-
-      let URI = Services.io.newURI(data.URI);
-
-      refreshURI.forceRefreshURI(URI, null, data.delay, true);
-    }
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIWebProgressListener2, Ci.nsIWebProgressListener, Ci.nsISupportsWeakReference]),
-};
-
-RefreshBlocker.init();
-
 var UserContextIdNotifier = {
   init() {
     addEventListener("DOMWindowCreated", this);
@@ -774,10 +494,6 @@ var UserContextIdNotifier = {
 UserContextIdNotifier.init();
 
 Services.obs.notifyObservers(this, "tab-content-frameloader-created");
-
-addEventListener("unload", () => {
-  RefreshBlocker.uninit();
-});
 
 addMessageListener("AllowScriptsToClose", () => {
   content.QueryInterface(Ci.nsIInterfaceRequestor)

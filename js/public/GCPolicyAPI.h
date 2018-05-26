@@ -69,6 +69,9 @@ namespace JS {
 template <typename T>
 struct StructGCPolicy
 {
+    static_assert(!mozilla::IsPointer<T>::value,
+                  "Pointer type not allowed for StructGCPolicy");
+
     static void trace(JSTracer* trc, T* tp, const char* name) {
         tp->trace(trc);
     }
@@ -105,6 +108,9 @@ template <> struct GCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
 template <typename T>
 struct GCPointerPolicy
 {
+    static_assert(mozilla::IsPointer<T>::value,
+                  "Non-pointer type not allowed for GCPointerPolicy");
+
     static void trace(JSTracer* trc, T* vp, const char* name) {
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
@@ -118,15 +124,11 @@ struct GCPointerPolicy
         return js::gc::IsCellPointerValidOrNull(v);
     }
 };
-template <> struct GCPolicy<JS::Symbol*> : public GCPointerPolicy<JS::Symbol*> {};
-#ifdef ENABLE_BIGINT
-template <> struct GCPolicy<JS::BigInt*> : public GCPointerPolicy<JS::BigInt*> {};
-#endif
-template <> struct GCPolicy<JSAtom*> : public GCPointerPolicy<JSAtom*> {};
-template <> struct GCPolicy<JSFunction*> : public GCPointerPolicy<JSFunction*> {};
-template <> struct GCPolicy<JSObject*> : public GCPointerPolicy<JSObject*> {};
-template <> struct GCPolicy<JSScript*> : public GCPointerPolicy<JSScript*> {};
-template <> struct GCPolicy<JSString*> : public GCPointerPolicy<JSString*> {};
+#define EXPAND_SPECIALIZE_GCPOLICY(Type) \
+    template <> struct GCPolicy<Type> : public GCPointerPolicy<Type> {}; \
+    template <> struct GCPolicy<Type const> : public GCPointerPolicy<Type const> {};
+FOR_EACH_PUBLIC_GC_POINTER_TYPE(EXPAND_SPECIALIZE_GCPOLICY)
+#undef EXPAND_SPECIALIZE_GCPOLICY
 
 template <typename T>
 struct NonGCPointerPolicy

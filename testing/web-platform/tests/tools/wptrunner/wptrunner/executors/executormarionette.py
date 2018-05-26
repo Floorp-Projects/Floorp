@@ -751,9 +751,6 @@ class InternalRefTestImplementation(object):
         self.executor.protocol.marionette._send_message("reftest:setup", data)
 
     def run_test(self, test):
-        viewport_size = test.viewport_size
-        dpi = test.dpi
-
         references = self.get_references(test)
         rv = self.executor.protocol.marionette._send_message("reftest:run",
                                                              {"test": self.executor.test_url(test),

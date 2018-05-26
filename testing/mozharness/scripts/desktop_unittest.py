@@ -6,7 +6,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
 """desktop_unittest.py
-The goal of this is to extract desktop unittesting from buildbot's factory.py
 
 author: Jordan Lund
 """
@@ -28,7 +27,7 @@ from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import INFO
 from mozharness.base.script import PreScriptAction
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.buildbot import TBPL_EXCEPTION
+from mozharness.mozilla.automation import TBPL_EXCEPTION
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.errors import HarnessErrorList
@@ -546,7 +545,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     rejected.append(suite)
                     break
         if rejected:
-            self.buildbot_status(TBPL_EXCEPTION)
+            self.record_status(TBPL_EXCEPTION)
             self.fatal("There are specified suites that are incompatible with "
                        "--artifact try syntax flag: {}".format(', '.join(rejected)),
                        exit_code=self.return_code)
@@ -917,7 +916,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                                                                              summary)
                     parser.append_tinderboxprint_line(suite_name)
 
-                    self.buildbot_status(tbpl_status, level=log_level)
+                    self.record_status(tbpl_status, level=log_level)
                     if len(per_test_args) > 0:
                         self.log_per_test_status(per_test_args[-1], tbpl_status, log_level)
                     else:

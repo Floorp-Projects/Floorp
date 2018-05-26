@@ -7,8 +7,8 @@ import json
 
 from mozharness.base import log
 from mozharness.base.log import OutputParser, WARNING, INFO, ERROR
-from mozharness.mozilla.buildbot import TBPL_WARNING, TBPL_FAILURE
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
+from mozharness.mozilla.automation import TBPL_WARNING, TBPL_FAILURE
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 
 from collections import (

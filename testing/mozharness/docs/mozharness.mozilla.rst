@@ -21,18 +21,10 @@ mozharness.mozilla.blob_upload module
     :undoc-members:
     :show-inheritance:
 
-mozharness.mozilla.buildbot module
+mozharness.mozilla.automation module
 ----------------------------------
 
-.. automodule:: mozharness.mozilla.buildbot
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-mozharness.mozilla.mapper module
---------------------------------
-
-.. automodule:: mozharness.mozilla.mapper
+.. automodule:: mozharness.mozilla.automation
     :members:
     :undoc-members:
     :show-inheritance:

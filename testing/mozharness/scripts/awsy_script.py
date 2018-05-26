@@ -221,7 +221,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
 
         self.log("AWSY exited with return code %s: %s" % (return_code, tbpl_status),
                  level=level)
-        self.buildbot_status(tbpl_status)
+        self.record_status(tbpl_status)
 
 
 if __name__ == '__main__':

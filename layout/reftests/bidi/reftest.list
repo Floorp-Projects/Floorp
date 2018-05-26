@@ -65,16 +65,16 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == 151407-3-rtl.html 151407-3-rtl-ref.html
 == 151407-3-auto.html 151407-3-auto-ref.html
 == 151407-3-foopy.html 151407-3-empty-ref.html
-== 229367-1.html 229367-1-ref.html
-== 229367-2.html 229367-2-ref.html
-== 229367-3.html 229367-3-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-1.html 229367-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-2.html 229367-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 229367-3.html 229367-3-ref.html
 == 258928-1.html 258928-1-ref.html
-== 263359-1.html 263359-1-ref.html
-== 263359-1a.html 263359-1-ref.html
-!= 263359-1b.html 263359-1-ref.html
-== 263359-2.html 263359-2-ref.html
-== 263359-3.html 263359-3-ref.html
-== 263359-4.html 263359-4-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1.html 263359-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-1a.html 263359-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != 263359-1b.html 263359-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-2.html 263359-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-3.html 263359-3-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 263359-4.html 263359-4-ref.html
 random-if(winWidget) fuzzy-if(skiaContent,1,1700) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 fuzzy-if(skiaContent,1,1100) == 267459-2.html 267459-2-ref.html
 == 299065-1.html 299065-1-ref.html
@@ -153,22 +153,22 @@ fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == 869833-1.xul 869833-1-ref.xul
 == 1157726-1.html 1157726-1-ref.html
 == 1161752.html 1161752-ref.html
 == 1161752-5-embed.html 1161752-5-embed-ref.html
-== brackets-1a-ltr.html brackets-1a-ltr-ref.html
-== brackets-1a-rtl.html brackets-1a-rtl-ref.html
-== brackets-1b-ltr.html brackets-1b-ltr-ref.html
-== brackets-1b-rtl.html brackets-1b-rtl-ref.html
-== brackets-1c-ltr.html brackets-1c-ltr-ref.html
-== brackets-1c-rtl.html brackets-1c-rtl-ref.html
-== brackets-2a-ltr.html brackets-2a-ltr-ref.html
-fuzzy-if(Android,254,557) == brackets-2a-rtl.html brackets-2a-rtl-ref.html
-== brackets-2b-ltr.html brackets-2b-ltr-ref.html
-== brackets-2b-rtl.html brackets-2b-rtl-ref.html
-== brackets-2c-ltr.html brackets-2c-ltr-ref.html
-fuzzy-if(Android,254,231) == brackets-2c-rtl.html brackets-2c-rtl-ref.html
-== brackets-3a-ltr.html brackets-3a-ltr-ref.html
-== brackets-3a-rtl.html brackets-3a-rtl-ref.html
-== brackets-3b-ltr.html brackets-3b-ltr-ref.html
-== brackets-3b-rtl.html brackets-3b-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1a-ltr.html brackets-1a-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1a-rtl.html brackets-1a-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1b-ltr.html brackets-1b-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1b-rtl.html brackets-1b-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1c-ltr.html brackets-1c-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-1c-rtl.html brackets-1c-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-ltr.html brackets-2a-ltr-ref.html
+fuzzy-if(Android,254,557) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2a-rtl.html brackets-2a-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-ltr.html brackets-2b-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2b-rtl.html brackets-2b-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2c-ltr.html brackets-2c-ltr-ref.html
+fuzzy-if(Android,254,231) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-2c-rtl.html brackets-2c-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-ltr.html brackets-3a-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-rtl.html brackets-3a-rtl-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-ltr.html brackets-3b-ltr-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-rtl.html brackets-3b-rtl-ref.html
 == 1217833-1.html 1217833-1-ref.html
 == 1217833-2.html 1217833-2-ref.html
 == 1231175-1.html 1231175-1-ref.html

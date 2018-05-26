@@ -23,13 +23,13 @@ import sys
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.repo_manipulation import MercurialRepoManipulationMixin
 from mozharness.mozilla.release import get_previous_version
 
 
 # UpdatesBumper {{{1
-class UpdatesBumper(MercurialScript, BuildbotMixin,
+class UpdatesBumper(MercurialScript, AutomationMixin,
                     MercurialRepoManipulationMixin):
     config_options = [
         [['--hg-user', ], {
@@ -77,7 +77,6 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
                 'submit-to-balrog',
             ],
             config={
-                'buildbot_json_path': 'buildprops.json',
                 'credentials_file': 'oauth.txt',
             },
             require_config_file=require_config_file

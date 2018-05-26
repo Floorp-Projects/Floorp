@@ -79,4 +79,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-simp-chinese-inf
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html
-== counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html

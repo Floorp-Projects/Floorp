@@ -11,7 +11,7 @@ import pytest
 from moztest.selftest.output import get_mozharness_status, filter_action
 
 from mozharness.base.log import INFO, WARNING, ERROR
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
 
 here = os.path.abspath(os.path.dirname(__file__))
 get_mozharness_status = partial(get_mozharness_status, 'reftest')

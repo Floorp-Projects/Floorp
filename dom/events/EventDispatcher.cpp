@@ -134,6 +134,12 @@ public:
   EventTargetChainItem()
     : mItemFlags(0)
   {
+    MOZ_COUNT_CTOR(EventTargetChainItem);
+  }
+
+  ~EventTargetChainItem()
+  {
+    MOZ_COUNT_DTOR(EventTargetChainItem);
   }
 
   static EventTargetChainItem* Create(nsTArray<EventTargetChainItem>& aChain,
@@ -142,7 +148,10 @@ public:
   {
     // The last item which can handle the event must be aChild.
     MOZ_ASSERT(GetLastCanHandleEventTarget(aChain) == aChild);
-    return new (aChain.AppendElement()) EventTargetChainItem(aTarget);
+    MOZ_ASSERT(!aTarget || aTarget == aTarget->GetTargetForEventTargetChain());
+    EventTargetChainItem* etci = aChain.AppendElement();
+    etci->mTarget = aTarget;
+    return etci;
   }
 
   static void DestroyLast(nsTArray<EventTargetChainItem>& aChain,
@@ -209,6 +218,55 @@ public:
   void SetRetargetedRelatedTarget(EventTarget* aTarget)
   {
     mRetargetedRelatedTarget = aTarget;
+  }
+
+  void SetRetargetedTouchTarget(Maybe<nsTArray<RefPtr<EventTarget>>>&& aTargets)
+  {
+    mRetargetedTouchTargets = Move(aTargets);
+  }
+
+  bool HasRetargetTouchTargets()
+  {
+    return mRetargetedTouchTargets.isSome() || mInitialTargetTouches.isSome();
+  }
+
+  void RetargetTouchTargets(WidgetTouchEvent* aTouchEvent, Event* aDOMEvent)
+  {
+    MOZ_ASSERT(HasRetargetTouchTargets());
+    MOZ_ASSERT(aTouchEvent,
+               "mRetargetedTouchTargets should be empty when dispatching non-touch events.");
+
+    WidgetTouchEvent::TouchArray& touches = aTouchEvent->mTouches;
+    MOZ_ASSERT(!touches.Length() ||
+               touches.Length() == mRetargetedTouchTargets->Length());
+    for (uint32_t i = 0; i < touches.Length(); ++i) {
+      touches[i]->mTarget = mRetargetedTouchTargets->ElementAt(i);
+    }
+
+    if (aDOMEvent) {
+      // The number of touch objects in targetTouches list may change depending
+      // on the retargeting.
+      TouchEvent* touchDOMEvent = static_cast<TouchEvent*>(aDOMEvent);
+      TouchList* targetTouches = touchDOMEvent->GetExistingTargetTouches();
+      if (targetTouches) {
+        targetTouches->Clear();
+        if (mInitialTargetTouches.isSome()) {
+          for (uint32_t i = 0; i < mInitialTargetTouches->Length(); ++i) {
+            Touch* touch = mInitialTargetTouches->ElementAt(i);
+            if (touch) {
+              touch->mTarget = touch->mOriginalTarget;
+            }
+            targetTouches->Append(touch);
+          }
+        }
+      }
+    }
+  }
+
+  void SetInitialTargetTouches(Maybe<nsTArray<RefPtr<dom::Touch>>>&&
+                                 aInitialTargetTouches)
+  {
+    mInitialTargetTouches = Move(aInitialTargetTouches);
   }
 
   void SetForceContentDispatch(bool aForce)
@@ -360,8 +418,10 @@ public:
   void PostHandleEvent(EventChainPostVisitor& aVisitor);
 
 private:
-  nsCOMPtr<EventTarget>             mTarget;
-  nsCOMPtr<EventTarget>             mRetargetedRelatedTarget;
+  nsCOMPtr<EventTarget> mTarget;
+  nsCOMPtr<EventTarget> mRetargetedRelatedTarget;
+  Maybe<nsTArray<RefPtr<EventTarget>>> mRetargetedTouchTargets;
+  Maybe<nsTArray<RefPtr<dom::Touch>>> mInitialTargetTouches;
 
   class EventTargetChainFlags
   {
@@ -412,13 +472,6 @@ private:
   }
 };
 
-EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
-  : mTarget(aTarget)
-  , mItemFlags(0)
-{
-  MOZ_ASSERT(!aTarget || mTarget == aTarget->GetTargetForEventTargetChain());
-}
-
 void
 EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {
@@ -431,6 +484,7 @@ EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   SetPreHandleEventOnly(aVisitor.mWantsPreHandleEvent && !aVisitor.mCanHandle);
   SetRootOfClosedTree(aVisitor.mRootOfClosedTree);
   SetRetargetedRelatedTarget(aVisitor.mRetargetedRelatedTarget);
+  SetRetargetedTouchTarget(Move(aVisitor.mRetargetedTouchTargets));
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
 }
@@ -464,6 +518,20 @@ EventTargetChainItem::HandleEventTargetChain(
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->mTarget;
   nsCOMPtr<EventTarget> firstRelatedTarget = aVisitor.mEvent->mRelatedTarget;
+  Maybe<AutoTArray<nsCOMPtr<EventTarget>, 10>> firstTouchTargets;
+  WidgetTouchEvent* touchEvent = nullptr;
+  if (aVisitor.mEvent->mClass == eTouchEventClass) {
+    touchEvent = aVisitor.mEvent->AsTouchEvent();
+    if (!aVisitor.mEvent->mFlags.mInSystemGroup) {
+      firstTouchTargets.emplace();
+      WidgetTouchEvent* touchEvent = aVisitor.mEvent->AsTouchEvent();
+      WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      for (uint32_t i = 0; i < touches.Length(); ++i) {
+        firstTouchTargets->AppendElement(touches[i]->mTarget);
+      }
+    }
+  }
+
   uint32_t chainLength = aChain.Length();
   uint32_t firstCanHandleEventTargetIdx =
     EventTargetChainItem::GetFirstCanHandleEventTargetIdx(aChain);
@@ -517,11 +585,35 @@ EventTargetChainItem::HandleEventTargetChain(
           aVisitor.mEvent->mOriginalRelatedTarget;
       }
     }
+
+    if (item.HasRetargetTouchTargets()) {
+      bool found = false;
+      for (uint32_t j = i; j > 0; --j) {
+        uint32_t childIndex = j - 1;
+        if (aChain[childIndex].HasRetargetTouchTargets()) {
+          found = true;
+          aChain[childIndex].RetargetTouchTargets(touchEvent,
+                                                  aVisitor.mDOMEvent);
+          break;
+        }
+      }
+      if (!found) {
+        WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+        for (uint32_t i = 0; i < touches.Length(); ++i) {
+          touches[i]->mTarget = touches[i]->mOriginalTarget;
+        }
+      }
+    }
   }
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
   EventTargetChainItem& targetItem = aChain[firstCanHandleEventTargetIdx];
+  // Need to explicitly retarget touch targets so that initial targets get set
+  // properly in case nothing else retargeted touches.
+  if (targetItem.HasRetargetTouchTargets()) {
+    targetItem.RetargetTouchTargets(touchEvent, aVisitor.mDOMEvent);
+  }
   if (!aVisitor.mEvent->PropagationStopped() &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
@@ -553,6 +645,10 @@ EventTargetChainItem::HandleEventTargetChain(
       aVisitor.mEvent->mRelatedTarget = relatedTarget;
     }
 
+    if (item.HasRetargetTouchTargets()) {
+      item.RetargetTouchTargets(touchEvent, aVisitor.mDOMEvent);
+    }
+
     if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item.ForceContentDispatch()) &&
@@ -576,6 +672,12 @@ EventTargetChainItem::HandleEventTargetChain(
     // Setting back the original target of the event.
     aVisitor.mEvent->mTarget = aVisitor.mEvent->mOriginalTarget;
     aVisitor.mEvent->mRelatedTarget = aVisitor.mEvent->mOriginalRelatedTarget;
+    if (firstTouchTargets) {
+      WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      for (uint32_t i = 0; i < touches.Length(); ++i) {
+        touches[i]->mTarget = touches[i]->mOriginalTarget;
+      }
+    }
 
     // Special handling if PresShell (or some other caller)
     // used a callback object.
@@ -587,6 +689,13 @@ EventTargetChainItem::HandleEventTargetChain(
     // Setting back the target which was used also for default event group.
     aVisitor.mEvent->mTarget = firstTarget;
     aVisitor.mEvent->mRelatedTarget = firstRelatedTarget;
+    if (firstTouchTargets) {
+      WidgetTouchEvent::TouchArray& touches = touchEvent->mTouches;
+      for (uint32_t i = 0; i < firstTouchTargets->Length(); ++i) {
+        touches[i]->mTarget = firstTouchTargets->ElementAt(i);
+      }
+    }
+
     aVisitor.mEvent->mFlags.mInSystemGroup = true;
     HandleEventTargetChain(aChain,
                            aVisitor,
@@ -888,6 +997,22 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     // Setting the retarget to the |target| simplifies retargeting code.
     nsCOMPtr<EventTarget> t = do_QueryInterface(aEvent->mTarget);
     targetEtci->SetNewTarget(t);
+    // In order to not change the targetTouches array passed to TouchEvents
+    // when dispatching events from JS, we need to store the initial Touch
+    // objects on the list.
+    if (aEvent->mClass == eTouchEventClass && aDOMEvent) {
+      TouchEvent* touchEvent = static_cast<TouchEvent*>(aDOMEvent);
+      TouchList* targetTouches = touchEvent->GetExistingTargetTouches();
+      if (targetTouches) {
+        Maybe<nsTArray<RefPtr<dom::Touch>>> initialTargetTouches;
+        initialTargetTouches.emplace();
+        for (uint32_t i = 0; i < targetTouches->Length(); ++i) {
+          initialTargetTouches->AppendElement(targetTouches->Item(i));
+        }
+        targetEtci->SetInitialTargetTouches(Move(initialTargetTouches));
+        targetTouches->Clear();
+      }
+    }
     EventTargetChainItem* topEtci = targetEtci;
     targetEtci = nullptr;
     while (preVisitor.GetParentTarget()) {

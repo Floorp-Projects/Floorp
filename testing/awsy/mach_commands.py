@@ -5,6 +5,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import argparse
+import logging
 import os
 import sys
 
@@ -19,6 +20,8 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+
+import mozinfo
 
 def setup_awsy_argument_parser():
     from marionette_harness.runtests import MarionetteArguments
@@ -127,7 +130,16 @@ class MachCommands(MachCommandBase):
                 tp5nzip,
                 '-d',
                 page_load_test_dir]}
-            self.run_process(**unzip_args)
+            try:
+                self.run_process(**unzip_args)
+            except Exception as exc:
+                troubleshoot = ''
+                if mozinfo.os == 'win':
+                    troubleshoot = ' Try using --web-root to specify a directory closer to the drive root.'
+
+                self.log(logging.ERROR, 'awsy', {'directory': page_load_test_dir, 'exception': exc},
+                    'Failed to unzip `tp5n.zip` into `{directory}` with `{exception}`.' + troubleshoot)
+                raise exc
 
         # If '--preferences' was not specified supply our default set.
         if not kwargs['prefs_files']:
@@ -139,6 +151,12 @@ class MachCommands(MachCommandBase):
 
             if 'DMD' not in os.environ:
                 os.environ['DMD'] = '1'
+
+            # Work around a startup crash with DMD on windows
+            if mozinfo.os == 'win':
+                kwargs['pref'] = 'security.sandbox.content.level:0'
+                self.log(logging.WARNING, 'awsy', {},
+                    'Forcing \'security.sandbox.content.level\' = 0 because DMD is enabled.')
 
             # Also add the bin dir to the python path so we can use dmd.py
             if bin_dir not in sys.path:
