@@ -1072,17 +1072,6 @@ pub extern "C" fn wr_transaction_set_display_list(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_update_resources(
-    txn: &mut Transaction,
-    resource_updates: &mut ResourceUpdates
-) {
-    if resource_updates.updates.is_empty() {
-        return;
-    }
-    txn.update_resources(mem::replace(resource_updates, ResourceUpdates::new()));
-}
-
-#[no_mangle]
 pub extern "C" fn wr_transaction_set_window_parameters(
     txn: &mut Transaction,
     window_size: &DeviceUintSize,
@@ -1183,12 +1172,12 @@ pub extern "C" fn wr_transaction_scroll_layer(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
 ) {
-    resources.add_image(
+    txn.add_image(
         image_key,
         descriptor.into(),
         ImageData::new(bytes.flush_into_vec()),
@@ -1198,12 +1187,12 @@ pub extern "C" fn wr_resource_updates_add_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_blob_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
 ) {
-    resources.add_image(
+    txn.add_image(
         image_key,
         descriptor.into(),
         ImageData::new_blob_image(bytes.flush_into_vec()),
@@ -1213,14 +1202,14 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_external_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
     buffer_type: WrExternalImageBufferType,
     channel_index: u8
 ) {
-    resources.add_image(
+    txn.add_image(
         image_key,
         descriptor.into(),
         ImageData::External(
@@ -1236,12 +1225,12 @@ pub extern "C" fn wr_resource_updates_add_external_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_update_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
 ) {
-    resources.update_image(
+    txn.update_image(
         key,
         descriptor.into(),
         ImageData::new(bytes.flush_into_vec()),
@@ -1251,14 +1240,14 @@ pub extern "C" fn wr_resource_updates_update_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_update_external_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
     image_type: WrExternalImageBufferType,
     channel_index: u8
 ) {
-    resources.update_image(
+    txn.update_image(
         key,
         descriptor.into(),
         ImageData::External(
@@ -1274,13 +1263,13 @@ pub extern "C" fn wr_resource_updates_update_external_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_update_blob_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     image_key: WrImageKey,
     descriptor: &WrImageDescriptor,
     bytes: &mut WrVecU8,
     dirty_rect: DeviceUintRect,
 ) {
-    resources.update_image(
+    txn.update_image(
         image_key,
         descriptor.into(),
         ImageData::new_blob_image(bytes.flush_into_vec()),
@@ -1290,10 +1279,10 @@ pub extern "C" fn wr_resource_updates_update_blob_image(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_delete_image(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrImageKey
 ) {
-    resources.delete_image(key);
+    txn.delete_image(key);
 }
 
 #[no_mangle]
@@ -1339,12 +1328,12 @@ pub extern "C" fn wr_api_send_external_event(dh: &mut DocumentHandle,
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_raw_font(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrFontKey,
     bytes: &mut WrVecU8,
     index: u32
 ) {
-    resources.add_raw_font(key, bytes.flush_into_vec(), index);
+    txn.add_raw_font(key, bytes.flush_into_vec(), index);
 }
 
 #[no_mangle]
@@ -1414,26 +1403,26 @@ fn read_font_descriptor(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_font_descriptor(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrFontKey,
     bytes: &mut WrVecU8,
     index: u32
 ) {
     let native_font_handle = read_font_descriptor(bytes, index);
-    resources.add_native_font(key, native_font_handle);
+    txn.add_native_font(key, native_font_handle);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_delete_font(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrFontKey
 ) {
-    resources.delete_font(key);
+    txn.delete_font(key);
 }
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_add_font_instance(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrFontInstanceKey,
     font_key: WrFontKey,
     glyph_size: f32,
@@ -1441,7 +1430,7 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
     platform_options: *const FontInstancePlatformOptions,
     variations: &mut WrVecU8,
 ) {
-    resources.add_font_instance(
+    txn.add_font_instance(
         key,
         font_key,
         Au::from_f32_px(glyph_size),
@@ -1453,29 +1442,15 @@ pub extern "C" fn wr_resource_updates_add_font_instance(
 
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_delete_font_instance(
-    resources: &mut ResourceUpdates,
+    txn: &mut Transaction,
     key: WrFontInstanceKey
 ) {
-    resources.delete_font_instance(key);
+    txn.delete_font_instance(key);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_resource_updates_new() -> *mut ResourceUpdates {
-    let updates = Box::new(ResourceUpdates::new());
-    Box::into_raw(updates)
-}
-
-#[no_mangle]
-pub extern "C" fn wr_resource_updates_clear(resources: &mut ResourceUpdates) {
-    resources.updates.clear();
-}
-
-/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
-#[no_mangle]
-pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {
-    unsafe {
-        Box::from_raw(updates);
-    }
+pub extern "C" fn wr_resource_updates_clear(txn: &mut Transaction) {
+    txn.resource_updates.clear();
 }
 
 #[no_mangle]
