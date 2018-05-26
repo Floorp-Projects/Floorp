@@ -77,7 +77,7 @@ class ServiceWorkerPrivate final
 public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef();
   NS_IMETHOD_(MozExternalRefCountType) Release();
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ServiceWorkerPrivate)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ServiceWorkerPrivate)
 
   typedef mozilla::FalseType HasThreadSafeRefCnt;
 
@@ -205,8 +205,8 @@ private:
   already_AddRefed<KeepAliveToken>
   CreateEventKeepAliveToken();
 
-  JSObject*
-  GetOrCreateSandbox(JSContext* aCx);
+  void
+  GetOrCreateSandbox(JSContext* aCx, JS::MutableHandle<JSObject*> aSandbox);
 
   // The info object owns us. It is possible to outlive it for a brief period
   // of time if there are pending waitUntil promises, in which case it
@@ -227,7 +227,7 @@ private:
   // Sandbox global used to re-pack structured clone data before sending
   // to the service worker thread.  Ideally we would remove this and just
   // make StructuredCloneData thread safe enough to pass to the worker thread.
-  RefPtr<JSObjectHolder> mSandbox;
+  JS::Heap<JSObject*> mSandbox;
 
   uint64_t mDebuggerCount;
 

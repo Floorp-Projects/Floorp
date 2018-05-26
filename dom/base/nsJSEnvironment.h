@@ -75,7 +75,7 @@ public:
   };
 
   // Setup all the statics etc - safe to call multiple times after Startup().
-  void EnsureStatics();
+  static void EnsureStatics();
 
   static void GarbageCollectNow(JS::gcreason::Reason reason,
                                 IsIncremental aIncremental = NonIncrementalGC,

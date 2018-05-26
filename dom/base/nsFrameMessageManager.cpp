@@ -157,18 +157,17 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameMessageManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameMessageManager)
 
-nsresult 
-MessageManagerCallback::DoGetRemoteType(nsAString& aRemoteType) const
+void
+MessageManagerCallback::DoGetRemoteType(nsAString& aRemoteType,
+                                        ErrorResult& aError) const
 {
   aRemoteType.Truncate();
   mozilla::dom::ChromeMessageSender* parent = GetProcessMessageManager();
   if (!parent) {
-    return NS_OK;
+    return;
   }
 
-  ErrorResult rv;
-  parent->GetRemoteType(aRemoteType, rv);
-  return rv.StealNSResult();
+  parent->GetRemoteType(aRemoteType, aError);
 }
 
 bool
@@ -408,26 +407,6 @@ nsFrameMessageManager::GetDelayedScripts(JSContext* aCx,
   }
 }
 
-nsresult
-nsFrameMessageManager::GetDelayedScripts(JSContext* aCx,
-                                         JS::MutableHandle<JS::Value> aList)
-{
-  ErrorResult rv;
-  nsTArray<nsTArray<JS::Value>> list;
-  SequenceRooter<nsTArray<JS::Value>> listRooter(aCx, &list);
-  GetDelayedScripts(aCx, list, rv);
-  rv.WouldReportJSException();
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  if (!ToJSValue(aCx, list, aList)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
-
 static bool
 JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData)
 {
@@ -523,6 +502,11 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
                                    nsTArray<JS::Value>& aResult,
                                    ErrorResult& aError)
 {
+  NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
+  NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
+  NS_ASSERTION(!GetParentManager(),
+               "Should not have parent manager in content!");
+
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
     "nsFrameMessageManager::SendMessage", EVENTS, aMessageName);
 
@@ -539,36 +523,17 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
     return;
   }
 
-  SendMessage(aCx, aMessageName, data, aObjects, aPrincipal, aIsSync, aResult,
-              aError);
-}
-
-void
-nsFrameMessageManager::SendMessage(JSContext* aCx,
-                                   const nsAString& aMessageName,
-                                   StructuredCloneData& aData,
-                                   JS::Handle<JSObject*> aObjects,
-                                   nsIPrincipal* aPrincipal,
-                                   bool aIsSync,
-                                   nsTArray<JS::Value>& aResult,
-                                   ErrorResult& aError)
-{
-  NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
-  NS_ASSERTION(!IsBroadcaster(), "Should not call SendSyncMessage in chrome");
-  NS_ASSERTION(!GetParentManager(),
-               "Should not have parent manager in content!");
-
 #ifdef FUZZING
-  if (aData.DataLength() > 0) {
+  if (data.DataLength() > 0) {
     MessageManagerFuzzer::TryMutate(
       aCx,
       aMessageName,
-      &aData,
+      &data,
       JS::UndefinedHandleValue);
   }
 #endif
 
-  if (!AllowMessage(aData.DataLength(), aMessageName)) {
+  if (!AllowMessage(data.DataLength(), aMessageName)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -582,7 +547,7 @@ nsFrameMessageManager::SendMessage(JSContext* aCx,
 
   TimeStamp start = TimeStamp::Now();
   sSendingSyncMessage |= aIsSync;
-  bool ok = mCallback->DoSendBlockingMessage(aCx, aMessageName, aData, aObjects,
+  bool ok = mCallback->DoSendBlockingMessage(aCx, aMessageName, data, aObjects,
                                              aPrincipal, &retval, aIsSync);
   if (aIsSync) {
     sSendingSyncMessage = false;
@@ -1050,7 +1015,7 @@ nsFrameMessageManager::GetRemoteType(nsAString& aRemoteType, ErrorResult& aError
 {
   aRemoteType.Truncate();
   if (mCallback) {
-    aError = mCallback->DoGetRemoteType(aRemoteType);
+    mCallback->DoGetRemoteType(aRemoteType, aError);
   }
 }
 
