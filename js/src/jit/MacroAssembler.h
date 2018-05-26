@@ -2192,6 +2192,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     void debugAssertIsObject(const ValueOperand& val);
     void debugAssertObjHasFixedSlots(Register obj, Register scratch);
 
+    void branchIfNativeIteratorNotReusable(Register ni, Label* notReusable);
+
     using MacroAssemblerSpecific::extractTag;
     Register extractTag(const TypedOrValueRegister& reg, Register scratch) {
         if (reg.hasValue())
