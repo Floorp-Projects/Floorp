@@ -156,6 +156,7 @@ EXTRA_JS_MODULES += [
     'FormValidationHandler.jsm',
     'LaterRun.jsm',
     'LightWeightThemeWebInstallListener.jsm',
+    'NetErrorContent.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PageInfoListener.jsm',
