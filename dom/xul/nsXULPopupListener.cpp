@@ -110,24 +110,6 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
 
   // Get the node that was clicked on.
   EventTarget* target = mouseEvent->GetTarget();
-  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
-
-  if (!targetNode && mIsContext) {
-    // Not a DOM node, see if it's the DOM window (bug 380818).
-    nsCOMPtr<nsPIDOMWindowInner> domWin = do_QueryInterface(target);
-    if (!domWin) {
-      return NS_ERROR_DOM_WRONG_TYPE_ERR;
-    }
-    // Try to use the root node as target node.
-    nsCOMPtr<nsIDocument> doc = domWin->GetDoc();
-
-    if (doc)
-      targetNode = do_QueryInterface(doc->GetRootElement());
-    if (!targetNode) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
   if (!targetContent) {
     return NS_OK;
@@ -142,7 +124,7 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
   }
 
   bool preventDefault = mouseEvent->DefaultPrevented();
-  if (preventDefault && targetNode && mIsContext) {
+  if (preventDefault && mIsContext) {
     // Someone called preventDefault on a context menu.
     // Let's make sure they are allowed to do so.
     bool eventEnabled =
@@ -150,7 +132,7 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
     if (!eventEnabled) {
       // If the target node is for plug-in, we should not open XUL context
       // menu on windowless plug-ins.
-      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(targetNode);
+      nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(targetContent);
       uint32_t type;
       if (olc && NS_SUCCEEDED(olc->GetDisplayedType(&type)) &&
           type == nsIObjectLoadingContent::TYPE_PLUGIN) {
@@ -160,16 +142,10 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
       // The user wants his contextmenus.  Let's make sure that this is a website
       // and not chrome since there could be places in chrome which don't want
       // contextmenus.
-      nsCOMPtr<nsINode> node = do_QueryInterface(targetNode);
-      if (node) {
-        nsCOMPtr<nsIPrincipal> system;
-        nsContentUtils::GetSecurityManager()->
-          GetSystemPrincipal(getter_AddRefs(system));
-        if (node->NodePrincipal() != system) {
-          // This isn't chrome.  Cancel the preventDefault() and
-          // let the event go forth.
-          preventDefault = false;
-        }
+      if (!nsContentUtils::IsSystemPrincipal(targetContent->NodePrincipal())) {
+        // This isn't chrome.  Cancel the preventDefault() and
+        // let the event go forth.
+        preventDefault = false;
       }
     }
   }
@@ -184,10 +160,9 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
   // If a menu item child was clicked on that leads to a popup needing
   // to show, we know (guaranteed) that we're dealing with a menu or
   // submenu of an already-showing popup.  We don't need to do anything at all.
-  if (!mIsContext) {
-    if (targetContent &&
-        targetContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem))
-      return NS_OK;
+  if (!mIsContext &&
+      targetContent->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuitem)) {
+    return NS_OK;
   }
 
   if (mIsContext) {
@@ -196,7 +171,7 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
     bool isTouch = inputSource == MouseEventBinding::MOZ_SOURCE_TOUCH;
     // If the context menu launches on mousedown,
     // we have to fire focus on the content we clicked on
-    FireFocusOnTargetContent(targetNode, isTouch);
+    FireFocusOnTargetContent(targetContent, isTouch);
 #endif
   }
   else {
@@ -208,17 +183,17 @@ nsXULPopupListener::HandleEvent(Event* aEvent)
 
   // Open the popup. LaunchPopup will call StopPropagation and PreventDefault
   // in the right situations.
-  LaunchPopup(mouseEvent, targetContent);
+  LaunchPopup(mouseEvent);
 
   return NS_OK;
 }
 
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
 nsresult
-nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTouch)
+nsXULPopupListener::FireFocusOnTargetContent(nsIContent* aTargetContent,
+                                             bool aIsTouch)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTargetNode);
-  nsCOMPtr<nsIDocument> doc = content->OwnerDoc();
+  nsCOMPtr<nsIDocument> doc = aTargetContent->OwnerDoc();
 
   // strong reference to keep this from going away between events
   // XXXbz between what events?  We don't use this local at all!
@@ -227,7 +202,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTo
     return NS_ERROR_FAILURE;
   }
 
-  nsIFrame* targetFrame = content->GetPrimaryFrame();
+  nsIFrame* targetFrame = aTargetContent->GetPrimaryFrame();
   if (!targetFrame) return NS_ERROR_FAILURE;
 
   const nsStyleUserInterface* ui = targetFrame->StyleUserInterface();
@@ -320,7 +295,7 @@ GetImmediateChild(nsIContent* aContent, nsAtom *aTag)
 // the popup content in the document.
 //
 nsresult
-nsXULPopupListener::LaunchPopup(MouseEvent* aEvent, nsIContent* aTargetContent)
+nsXULPopupListener::LaunchPopup(MouseEvent* aEvent)
 {
   nsresult rv = NS_OK;
 

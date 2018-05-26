@@ -41,8 +41,7 @@ protected:
 
     // open the popup. aEvent is the event that triggered the popup such as
     // a mouse click and aTargetContent is the target of this event.
-    virtual nsresult LaunchPopup(mozilla::dom::MouseEvent* aEvent,
-                                 nsIContent* aTargetContent);
+    virtual nsresult LaunchPopup(mozilla::dom::MouseEvent* aEvent);
 
     // close the popup when the listener goes away
     virtual void ClosePopup();
@@ -50,7 +49,7 @@ protected:
 private:
 #ifndef NS_CONTEXT_MENU_IS_MOUSEUP
     // When a context menu is opened, focus the target of the contextmenu event.
-    nsresult FireFocusOnTargetContent(nsIDOMNode* aTargetNode, bool aIsTouch);
+    nsresult FireFocusOnTargetContent(nsIContent* aTargetContent, bool aIsTouch);
 #endif
 
     // |mElement| is the node to which this listener is attached.
