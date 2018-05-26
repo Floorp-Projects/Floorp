@@ -15,10 +15,10 @@
 
 var EXPORTED_SYMBOLS = ["ExtensionCommon"];
 
-Cu.importGlobalProperties(["fetch"]);
-
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",

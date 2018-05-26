@@ -12,10 +12,11 @@ const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://testing-common/TestUtils.jsm");
 ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
 
-Cu.importGlobalProperties(["InspectorUtils"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 var Tabs = {
   init(libDir) {},

@@ -7,7 +7,7 @@
 
 ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["indexedDB"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
 
 var EXPORTED_SYMBOLS = ["PushDB"];
 

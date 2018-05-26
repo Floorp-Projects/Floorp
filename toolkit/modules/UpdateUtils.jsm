@@ -8,7 +8,7 @@ ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/ctypes.jsm");
-Cu.importGlobalProperties(["fetch"]); /* globals fetch */
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]); /* globals fetch */
 
 ChromeUtils.defineModuleGetter(this, "WindowsRegistry",
                                "resource://gre/modules/WindowsRegistry.jsm");
