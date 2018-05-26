@@ -148,8 +148,6 @@ ToJSValue(JSContext* aCx,
 {
   // Make sure we're called in a compartment
   MOZ_ASSERT(JS::CurrentGlobalOrNull(aCx));
-  // Make sure non-webidl objects don't sneak in here
-  MOZ_ASSERT(aArgument.IsDOMBinding());
 
   return GetOrCreateDOMReflector(aCx, aArgument, aValue);
 }
