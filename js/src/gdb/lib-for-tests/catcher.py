@@ -13,10 +13,12 @@ import os
 import sys
 import traceback
 
+
 def execfile(filename, globs, locs):
     with open(filename) as f:
         code = compile(f.read(), filename, 'exec')
         exec(code, globs, locs)
+
 
 try:
     # testlibdir is set on the GDB command line, via:

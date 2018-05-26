@@ -1,5 +1,6 @@
 import sys
 
+
 class Terminal(object):
     COLOR = {
         'red': '31',

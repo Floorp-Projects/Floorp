@@ -10,4 +10,5 @@ run_fragment('Interpreter.AbstractFramePtr')
 
 assert_pretty('ifptr', 'AbstractFramePtr ((js::InterpreterFrame *) ) = {ptr_ = 146464513}')
 assert_pretty('bfptr', 'AbstractFramePtr ((js::jit::BaselineFrame *) ) = {ptr_ = 3135025122}')
-assert_pretty('rfptr', 'AbstractFramePtr ((js::jit::RematerializedFrame *) ) = {ptr_ = 3669732611}')
+assert_pretty(
+    'rfptr', 'AbstractFramePtr ((js::jit::RematerializedFrame *) ) = {ptr_ = 3669732611}')

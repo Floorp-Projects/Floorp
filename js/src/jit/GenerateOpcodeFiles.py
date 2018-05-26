@@ -23,35 +23,39 @@ HEADER_TEMPLATE = """\
 #endif // %(includeguard)s
 """
 
+
 def get_opcodes(inputs, pat):
-  # Preserve the original order. Use a set to detect duplicates.
-  ops = []
-  ops_set = set()
-  for inputfile in inputs:
-    for line in open(inputfile):
-      match = pat.match(line)
-      if match:
-        op = match.group('name')
-        if op in ops_set:
-          raise Exception("Duplicate opcode {} in {}".format(op, inputfile))
-        ops.append(op)
-        ops_set.add(op)
-  assert len(ops) == len(ops_set)
-  return ops
+    # Preserve the original order. Use a set to detect duplicates.
+    ops = []
+    ops_set = set()
+    for inputfile in inputs:
+        for line in open(inputfile):
+            match = pat.match(line)
+            if match:
+                op = match.group('name')
+                if op in ops_set:
+                    raise Exception("Duplicate opcode {} in {}".format(op, inputfile))
+                ops.append(op)
+                ops_set.add(op)
+    assert len(ops) == len(ops_set)
+    return ops
+
 
 def generate_header(c_out, inputs, pat, includeguard, listname):
-  ops = get_opcodes(inputs, pat)
-  ops_string = '\\\n'.join(['_(' + op + ')' for op in ops])
-  c_out.write(HEADER_TEMPLATE % {
-    'ops': ops_string,
-    'includeguard': includeguard,
-    'listname': listname,
-  })
+    ops = get_opcodes(inputs, pat)
+    ops_string = '\\\n'.join(['_(' + op + ')' for op in ops])
+    c_out.write(HEADER_TEMPLATE % {
+        'ops': ops_string,
+        'includeguard': includeguard,
+        'listname': listname,
+    })
+
 
 def generate_mir_header(c_out, *inputs):
-  pat = re.compile(r"^\s*INSTRUCTION_HEADER(_WITHOUT_TYPEPOLICY)?\((?P<name>\w+)\);?$")
-  generate_header(c_out, inputs, pat, 'jit_MOpcodes_h', 'MIR_OPCODE_LIST')
+    pat = re.compile(r"^\s*INSTRUCTION_HEADER(_WITHOUT_TYPEPOLICY)?\((?P<name>\w+)\);?$")
+    generate_header(c_out, inputs, pat, 'jit_MOpcodes_h', 'MIR_OPCODE_LIST')
+
 
 def generate_lir_header(c_out, *inputs):
-  pat = re.compile(r"^\s*LIR_HEADER\((?P<name>\w+)\);?$")
-  generate_header(c_out, inputs, pat, 'jit_LOpcodes_h', 'LIR_OPCODE_LIST')
+    pat = re.compile(r"^\s*LIR_HEADER\((?P<name>\w+)\);?$")
+    generate_header(c_out, inputs, pat, 'jit_LOpcodes_h', 'LIR_OPCODE_LIST')

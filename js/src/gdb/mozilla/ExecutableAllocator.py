@@ -12,6 +12,8 @@ from mozilla.prettyprinters import pretty_printer, ptr_pretty_printer
 mozilla.prettyprinters.clear_module_printers(__name__)
 
 # Cache information about the JSString type for this objfile.
+
+
 class jsjitExecutableAllocatorCache(object):
     def __init__(self):
         self.d = None
@@ -25,6 +27,7 @@ class jsjitExecutableAllocatorCache(object):
         self.d = {}
         self.d['ExecutableAllocator'] = gdb.lookup_type('js::jit::ExecutableAllocator')
         self.d['ExecutablePool'] = gdb.lookup_type('js::jit::ExecutablePool')
+
 
 @pretty_printer("js::jit::ExecutableAllocator")
 class jsjitExecutableAllocator(object):
@@ -46,23 +49,24 @@ class jsjitExecutableAllocator(object):
             self.entryType = allocator.cache.ExecutablePool.pointer()
             # Emulate the HashSet::Range
             self.table = allocator.value['m_pools']['impl']['table']
-            self.index = 0;
-            HASHNUMBER_BIT_SIZE =  32
+            self.index = 0
+            HASHNUMBER_BIT_SIZE = 32
             self.max = 1 << (HASHNUMBER_BIT_SIZE - allocator.value['m_pools']['impl']['hashShift'])
             if self.table == 0:
                 self.max = 0
 
         def __iter__(self):
-            return self;
+            return self
 
         def __next__(self):
             cur = self.index
             if cur >= self.max:
                 raise StopIteration()
             self.index = self.index + 1
-            if self.table[cur]['keyHash'] > 1: # table[i]->isLive()
+            if self.table[cur]['keyHash'] > 1:  # table[i]->isLive()
                 return self.table[cur]['mem']['u']['mDummy'].cast(self.entryType)
             return self.__next__()
+
 
 @ptr_pretty_printer("js::jit::ExecutablePool")
 class jsjitExecutablePool(mozilla.prettyprinters.Pointer):
