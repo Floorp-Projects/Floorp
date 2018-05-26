@@ -10,8 +10,9 @@ run_fragment('ExecutableAllocator.onepool')
 
 reExecPool = 'ExecutablePool [a-f0-9]{8,}-[a-f0-9]{8,}'
 assert_regexp_pretty('pool', reExecPool)
-assert_regexp_pretty('execAlloc', 'ExecutableAllocator\(\[' +reExecPool+ '\]\)')
+assert_regexp_pretty('execAlloc', 'ExecutableAllocator\(\[' + reExecPool + '\]\)')
 
 run_fragment('ExecutableAllocator.twopools')
 
-assert_regexp_pretty('execAlloc', 'ExecutableAllocator\(\[' + reExecPool + ', ' + reExecPool + '\]\)')
+assert_regexp_pretty(
+    'execAlloc', 'ExecutableAllocator\(\[' + reExecPool + ', ' + reExecPool + '\]\)')

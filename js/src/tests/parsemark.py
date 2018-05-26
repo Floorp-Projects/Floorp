@@ -89,7 +89,7 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
 
 def parsemark(filepaths, fbench, stfu=False):
     """:param fbench: fbench(filename) -> float"""
-    bench_map = {} # {filename: (avg, stddev)}
+    bench_map = {}  # {filename: (avg, stddev)}
     for filepath in filepaths:
         filename = os.path.split(filepath)[-1]
         if not stfu:
@@ -153,10 +153,11 @@ def main():
             print('error: JSON support is missing, cannot compare benchmarks',
                   file=sys.stderr)
             return -1
-    benchfile = lambda filepath: bench(shellpath, filepath,
-                                       options.warmup_runs,
-                                       options.counted_runs,
-                                       stfu=options.stfu)
+
+    def benchfile(filepath): return bench(shellpath, filepath,
+                                          options.warmup_runs,
+                                          options.counted_runs,
+                                          stfu=options.stfu)
     bench_map = parsemark(gen_filepaths(dirpath), benchfile, options.stfu)
     if options.baseline_path:
         compare_bench.compare_immediate(bench_map, options.baseline_path)

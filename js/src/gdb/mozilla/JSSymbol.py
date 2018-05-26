@@ -11,6 +11,7 @@ mozilla.prettyprinters.clear_module_printers(__name__)
 InSymbolRegistry = 0xfffffffe
 UniqueSymbol = 0xffffffff
 
+
 @ptr_pretty_printer("JS::Symbol")
 class JSSymbolPtr(mozilla.prettyprinters.Pointer):
     def __init__(self, value, cache):
@@ -30,4 +31,3 @@ class JSSymbolPtr(mozilla.prettyprinters.Pointer):
             assert desc[0] == '"'
             assert desc[-1] == '"'
             return desc[1:-1]
-

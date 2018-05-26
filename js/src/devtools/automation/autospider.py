@@ -28,6 +28,7 @@ def directories(pathmodule, cwd, fixup=lambda s: s):
                                           pathmodule.join(source, "..", "..")))
     return Dirs(scripts, js_src, source, tooltool)
 
+
 # Some scripts will be called with sh, which cannot use backslashed
 # paths. So for direct subprocess.* invocation, use normal paths from
 # DIR, but when running under the shell, use POSIX style paths.
@@ -104,6 +105,7 @@ MAKEFLAGS = env.get('MAKEFLAGS', '-j6' + ('' if AUTOMATION else ' -s'))
 for d in ('scripts', 'js_src', 'source', 'tooltool'):
     info("DIR.{name} = {dir}".format(name=d, dir=getattr(DIR, d)))
 
+
 def set_vars_from_script(script, vars):
     '''Run a shell script, then dump out chosen environment variables. The build
        system uses shell scripts to do some configuration that we need to
@@ -156,7 +158,8 @@ def ensure_dir_exists(name, clobber=True, creation_marker_filename="CREATED-BY-A
         marker = os.path.join(name, creation_marker_filename)
     if clobber:
         if not AUTOMATION and marker and os.path.exists(name) and not os.path.exists(marker):
-            raise Exception("Refusing to delete objdir %s because it was not created by autospider" % name)
+            raise Exception(
+                "Refusing to delete objdir %s because it was not created by autospider" % name)
         shutil.rmtree(name, ignore_errors=True)
     try:
         os.mkdir(name)
@@ -165,6 +168,7 @@ def ensure_dir_exists(name, clobber=True, creation_marker_filename="CREATED-BY-A
     except OSError:
         if clobber:
             raise
+
 
 with open(os.path.join(DIR.scripts, "variants", args.variant)) as fh:
     variant = json.load(fh)
@@ -301,6 +305,7 @@ def killall():
         proc.kill()
     ACTIVE_PROCESSES.clear()
 
+
 timer = Timer(args.timeout, killall)
 timer.daemon = True
 timer.start()
@@ -329,6 +334,7 @@ def run_command(command, check=False, **kwargs):
     if check and status != 0:
         raise subprocess.CalledProcessError(status, command, output=stderr)
     return stdout, stderr, status
+
 
 # Add in environment variable settings for this variant. Normally used to
 # modify the flags passed to the shell or to set the GC zeal mode.
@@ -381,6 +387,7 @@ def need_updating_configure(configure):
 
     return False
 
+
 if not args.nobuild:
     CONFIGURE_ARGS += ' --enable-nspr-build'
     CONFIGURE_ARGS += ' --prefix={OBJDIR}/dist'.format(OBJDIR=POBJDIR)
@@ -393,7 +400,8 @@ if not args.nobuild:
 
     # Run configure
     if not args.noconf:
-        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') + ' ' + CONFIGURE_ARGS], check=True)
+        run_command(['sh', '-c', posixpath.join(PDIR.js_src, 'configure') +
+                     ' ' + CONFIGURE_ARGS], check=True)
 
     # Run make
     run_command('%s -w %s' % (MAKE, MAKEFLAGS), shell=True, check=True)
@@ -424,6 +432,7 @@ def run_test_command(command, **kwargs):
     _, _, status = run_command(COMMAND_PREFIX + command, check=False, **kwargs)
     return status
 
+
 test_suites = set(['jstests', 'jittest', 'jsapitests', 'checks'])
 
 
@@ -431,6 +440,7 @@ def normalize_tests(tests):
     if 'all' in tests:
         return test_suites
     return tests
+
 
 # Need a platform name to use as a key in variant files.
 if args.platform:

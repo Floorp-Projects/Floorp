@@ -64,8 +64,10 @@ if not cfg.sixgill_plugin:
 
 subprocess.check_call([cfg.js, '-e', 'if (!getBuildConfiguration()["has-ctypes"]) quit(1)'])
 
+
 def binpath(prog):
     return os.path.join(cfg.sixgill_bin, prog)
+
 
 try:
     os.mkdir(os.path.join('t', 'out'))
