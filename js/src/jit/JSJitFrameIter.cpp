@@ -314,7 +314,7 @@ JSJitFrameIter::dumpBaseline() const
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %zu\n",
+    fprintf(stderr, "  file %s line %u\n",
             script()->filename(), script()->lineno());
 
     JSContext* cx = TlsContext.get();
@@ -431,7 +431,7 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
 
     JitSpew(JitSpew_Profiling, "Found bytecode location of depth %d:", depth);
     for (size_t i = 0; i < location.length(); i++) {
-        JitSpew(JitSpew_Profiling, "   %s:%zu - %zu",
+        JitSpew(JitSpew_Profiling, "   %s:%u - %zu",
                 location[i].script->filename(), location[i].script->lineno(),
                 size_t(location[i].pc - location[i].script->code()));
     }
@@ -444,7 +444,7 @@ JSJitFrameIter::verifyReturnAddressUsingNativeToBytecodeMap()
             MOZ_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
             JitSpew(JitSpew_Profiling,
-                    "Match %d: ION %s:%zu(%zu) vs N2B %s:%zu(%zu)",
+                    "Match %d: ION %s:%u(%zu) vs N2B %s:%u(%zu)",
                     (int)idx,
                     inlineFrames.script()->filename(),
                     inlineFrames.script()->lineno(),

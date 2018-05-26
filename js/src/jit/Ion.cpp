@@ -2159,7 +2159,7 @@ IonCompile(JSContext* cx, JSScript* script,
 
     // If possible, compile the script off thread.
     if (options.offThreadCompilationAvailable()) {
-        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%zu"
+        JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%u"
                 ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
 
@@ -2355,7 +2355,7 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
     }
 
     if (!CanIonCompileScript(cx, script)) {
-        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%zu", script->filename(), script->lineno());
+        JitSpew(JitSpew_IonAbort, "Aborted compilation of %s:%u", script->filename(), script->lineno());
         return Method_CantCompile;
     }
 
@@ -2625,7 +2625,7 @@ jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame, jsbytecode
 
     // Ensure that Ion-compiled code is available.
     JitSpew(JitSpew_BaselineOSR,
-            "WarmUpCounter for %s:%zu reached %d at pc %p, trying to switch to Ion!",
+            "WarmUpCounter for %s:%u reached %d at pc %p, trying to switch to Ion!",
             script->filename(), script->lineno(), (int) script->getWarmUpCount(), (void*) pc);
 
     MethodStatus stat;
@@ -2729,7 +2729,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
             else if (frame.isBailoutJS())
                 type = "Bailing";
             JitSpew(JitSpew_IonInvalidate,
-                    "#%zu %s JS frame @ %p, %s:%zu (fun: %p, script: %p, pc %p)",
+                    "#%zu %s JS frame @ %p, %s:%u (fun: %p, script: %p, pc %p)",
                     frameno, type, frame.fp(), frame.script()->maybeForwardedFilename(),
                     frame.script()->lineno(), frame.maybeCallee(), (JSScript*)frame.script(),
                     frame.returnAddressToFp());
@@ -2887,7 +2887,7 @@ jit::Invalidate(TypeZone& types, FreeOp* fop,
         if (!ionScript)
             continue;
 
-        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%zu, IonScript %p",
+        JitSpew(JitSpew_IonInvalidate, " Invalidate %s:%u, IonScript %p",
                 info.script()->filename(), info.script()->lineno(), ionScript);
 
         // Keep the ion script alive during the invalidation and flag this
@@ -2979,7 +2979,7 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
             filename = "<unknown>";
 
         // Construct the descriptive string.
-        UniqueChars buf = JS_smprintf("Invalidate %s:%zu", filename, script->lineno());
+        UniqueChars buf = JS_smprintf("Invalidate %s:%u", filename, script->lineno());
 
         // Ignore the event on allocation failure.
         if (buf) {
@@ -3015,7 +3015,7 @@ jit::FinishInvalidation(FreeOp* fop, JSScript* script)
 void
 jit::ForbidCompilation(JSContext* cx, JSScript* script)
 {
-    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%zu",
+    JitSpew(JitSpew_IonAbort, "Disabling Ion compilation of script %s:%u",
             script->filename(), script->lineno());
 
     CancelOffThreadIonCompile(script);
