@@ -670,7 +670,8 @@ class StringWithSizeType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (size_is_arg_num, length_is_arg_num) = StringWithSizeType._descriptor.unpack_from(map, start)
+        (size_is_arg_num, length_is_arg_num) = StringWithSizeType._descriptor.unpack_from(map,
+                                                                                          start)
         offset += StringWithSizeType._descriptor.size
         return StringWithSizeType(size_is_arg_num, length_is_arg_num, **flags), offset
 
@@ -730,7 +731,9 @@ class WideStringWithSizeType(Type):
         if not flags['pointer']:
             return None, offset
         start = data_pool + offset - 1
-        (size_is_arg_num, length_is_arg_num) = WideStringWithSizeType._descriptor.unpack_from(map, start)
+        (size_is_arg_num, length_is_arg_num) = (
+            WideStringWithSizeType._descriptor.unpack_from(map,
+                                                           start))
         offset += WideStringWithSizeType._descriptor.size
         return WideStringWithSizeType(size_is_arg_num, length_is_arg_num, **flags), offset
 
@@ -1155,10 +1158,11 @@ class Constant(object):
         string_index = cd.add_string(self.name)
 
         # The static cast is needed for disambiguation.
-        return "{%d, %s, XPTConstValue(static_cast<%s>(%d))}" % (string_index,
-                                                                 self.type.code_gen(typelib, cd),
-                                                                 Constant.memberTypeMap[self.type.tag],
-                                                                 self.value)
+        return ("{%d, %s, XPTConstValue(static_cast<%s>(%d))}" %
+                (string_index,
+                 self.type.code_gen(typelib, cd),
+                 Constant.memberTypeMap[self.type.tag],
+                 self.value))
 
     def __repr__(self):
         return "Constant(%s, %s, %d)" % (self.name, str(self.type), self.value)
@@ -1199,7 +1203,8 @@ class Interface(object):
             # make sure it has a valid IID
             if self.iid == Interface.UNRESOLVED_IID:
                 raise DataError(
-                    "Cannot instantiate Interface %s containing methods or constants with an unresolved IID" % self.name)
+                    "Cannot instantiate Interface %s containing methods or constants with an "
+                    "unresolved IID" % self.name)
             self.resolved = True
         # These are only used for writing out the interface
         self._descriptor_offset = 0
@@ -1208,7 +1213,8 @@ class Interface(object):
         self.xpt_filename = None
 
     def __repr__(self):
-        return "Interface('%s', '%s', '%s', methods=%s)" % (self.name, self.iid, self.namespace, self.methods)
+        return ("Interface('%s', '%s', '%s', methods=%s)" %
+                (self.name, self.iid, self.namespace, self.methods))
 
     def __str__(self):
         return "Interface(name='%s', iid='%s')" % (self.name, self.iid)
@@ -1472,7 +1478,8 @@ class Typelib(object):
         xpt.filename = filename
         if expected_size and file_length != expected_size:
             raise FileFormatError(
-                "File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length))
+                "File is of wrong length, got %d bytes, expected %d" %
+                (expected_size, file_length))
         # XXX: by spec this is a zero-based file offset. however,
         # the xpt_xdr code always subtracts 1 from data offsets
         # (because that's what you do in the data pool) so it
@@ -1506,7 +1513,7 @@ class Typelib(object):
     @staticmethod
     def code_gen_iid(iid):
         chunks = iid.split('-')
-        return "{0x%s, 0x%s, 0x%s, {0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x}}" % (
+        return "{0x%s, 0x%s, 0x%s, {0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x}}" % (  # NOQA: E501
             chunks[0], chunks[1], chunks[2],
             int(chunks[3][0:2], 16), int(chunks[3][2:4], 16),
             int(chunks[4][0:2], 16), int(chunks[4][2:4], 16),
@@ -1532,11 +1539,13 @@ class Typelib(object):
                 for n, p in enumerate(m.params):
                     if isinstance(p, InterfaceType) and \
                        p.iface not in self.interfaces:
-                        raise DataError("Interface method %s::%s, parameter %d references interface %s not present in typelib!" % (
-                            i.name, m.name, n, p.iface.name))
+                        raise DataError("Interface method %s::%s, parameter %d references"
+                                        "interface %s not present in typelib!" % (
+                                            i.name, m.name, n, p.iface.name))
                 if isinstance(m.result, InterfaceType) and m.result.iface not in self.interfaces:
-                    raise DataError("Interface method %s::%s, result references interface %s not present in typelib!" % (
-                        i.name, m.name, m.result.iface.name))
+                    raise DataError("Interface method %s::%s, result references interface %s not "
+                                    "present in typelib!" % (
+                                        i.name, m.name, m.result.iface.name))
 
     def writefd(self, fd):
         # write out space for a header + one empty annotation,
@@ -1829,7 +1838,8 @@ def xpt_link(inputs):
             for p in m.params:
                 if isinstance(p.type, InterfaceType):
                     maybe_add_to_worklist(p.type.iface)
-                elif isinstance(p.type, ArrayType) and isinstance(p.type.element_type, InterfaceType):
+                elif (isinstance(p.type, ArrayType) and
+                      isinstance(p.type.element_type, InterfaceType)):
                     maybe_add_to_worklist(p.type.element_type.iface)
 
     interfaces = list(required_interfaces)

@@ -67,9 +67,10 @@ if "MOZILLA_OBJDIR" in os.environ:
                 # now run xpt_dump on it
                 out2 = get_output(xptdump, fullpath)
                 if out != out2:
-                    print "diff %s" % f
-                    for line in difflib.unified_diff(out2.split("\n"), out.split("\n"), lineterm=""):
-                        print line
+                    print("diff %s" % f)
+
+                    for line in difflib.unified_diff(out2.split("\n"), out.split("\n"), lineterm=""):  # NOQA: E501
+                        print(line)
                 self.assert_(out == out2, "xpt_dump output should be identical for %s" % f)
 
 
@@ -313,7 +314,8 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
         self.checkRoundtrip(t)
 
         # add a method with a StringWithSize and WideStringWithSize arguments
-        i.methods.append(xpt.Method("StringWithSizeMethod", xpt.Param(xpt.SimpleType(xpt.Type.Tags.void)),
+        i.methods.append(xpt.Method("StringWithSizeMethod",
+                                    xpt.Param(xpt.SimpleType(xpt.Type.Tags.void)),
                                     params=[
                                         xpt.Param(xpt.StringWithSizeType(
                                             1, 2)),
@@ -323,7 +325,7 @@ class TestTypelibRoundtrip(unittest.TestCase, TypelibCompareMixin):
                                             4, 5)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
                                         xpt.Param(xpt.SimpleType(xpt.Type.Tags.int32)),
-        ]))
+                                    ]))
         self.checkRoundtrip(t)
 
 

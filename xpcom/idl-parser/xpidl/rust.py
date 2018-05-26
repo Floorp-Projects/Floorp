@@ -34,7 +34,6 @@
 # and when possible we should avoid doing so. We don't generate bindings for
 # these methods here currently.
 
-import sys
 import os.path
 import re
 import xpidl

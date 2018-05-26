@@ -29,7 +29,8 @@ modules = OrderedDict()
 # 2) In your module, define a header file which uses one of the
 # NE_ERROR_GENERATExxxxxx macros.  Some examples below:
 #
-#    #define NS_ERROR_MYMODULE_MYERROR1 NS_ERROR_GENERATE(NS_ERROR_SEVERITY_ERROR,NS_ERROR_MODULE_MYMODULE,1)
+#    #define NS_ERROR_MYMODULE_MYERROR1 \
+#        NS_ERROR_GENERATE(NS_ERROR_SEVERITY_ERROR,NS_ERROR_MODULE_MYMODULE,1)
 #    #define NS_ERROR_MYMODULE_MYERROR2 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_MYMODULE,2)
 #    #define NS_ERROR_MYMODULE_MYERROR3 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MYMODULE,3)
 
@@ -652,12 +653,9 @@ with modules["DOM"]:
     errors["NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_SENDING"] = FAILURE(1020)
     errors["NS_ERROR_DOM_INVALID_STATE_XHR_MUST_NOT_BE_LOADING_OR_DONE"] = FAILURE(1021)
     errors["NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSEXML"] = FAILURE(1022)
-    errors["NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT"] = FAILURE(
-        1023)
-    errors["NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC"] = FAILURE(
-        1024)
-    errors["NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC"] = FAILURE(
-        1025)
+    errors["NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT"] = FAILURE(1023)  # NOQA: E501
+    errors["NS_ERROR_DOM_INVALID_STATE_XHR_CHUNKED_RESPONSETYPES_UNSUPPORTED_FOR_SYNC"] = FAILURE(1024)  # NOQA: E501
+    errors["NS_ERROR_DOM_INVALID_ACCESS_XHR_TIMEOUT_AND_RESPONSETYPE_UNSUPPORTED_FOR_SYNC"] = FAILURE(1025)  # NOQA: E501
 
     # When manipulating the bytecode cache with the JS API, some transcoding
     # errors, such as a different bytecode format can cause failures of the
@@ -1048,7 +1046,8 @@ with modules["DOM_PUSH"]:
 # 41: NS_ERROR_MODULE_DOM_MEDIA
 # =======================================================================
 with modules["DOM_MEDIA"]:
-    # HTMLMediaElement API errors from https://html.spec.whatwg.org/multipage/embedded-content.html#media-elements
+    # HTMLMediaElement API errors from
+    # https://html.spec.whatwg.org/multipage/embedded-content.html#media-elements
     errors["NS_ERROR_DOM_MEDIA_ABORT_ERR"] = FAILURE(1)
     errors["NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR"] = FAILURE(2)
     errors["NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR"] = FAILURE(3)
