@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
 });
 
 this.SpecialPowersError = function(aMsg) {
@@ -640,7 +641,11 @@ SpecialPowersObserverAPI.prototype = {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         this._extensions.delete(id);
-        let done = () => this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+        let done = () => {
+          setTimeout(() => {
+            this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+          }, 0);
+        };
         extension.shutdown().then(done, done);
         return undefined;
       }

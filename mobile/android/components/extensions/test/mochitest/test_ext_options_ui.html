@@ -475,6 +475,11 @@ add_task(async function test_options_ui_on_disable_and_enable() {
   info("Click the addon disable button");
   await ContentTask.spawn(aboutAddonsTab.browser, null, clickAddonDisable);
 
+  // This is an unfortunate hack. Please fix.
+  for (let i = 0; i < 10; i++) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+
   // NOTE: Currently after disabling the addon the extension.awaitMessage seems
   // to fail be able to receive events coming from the browser.test.sendMessage API
   // (nevertheless `await extension.unload()` seems to be able to remove the extension),
