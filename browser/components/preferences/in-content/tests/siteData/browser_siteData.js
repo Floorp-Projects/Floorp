@@ -156,17 +156,14 @@ add_task(async function() {
   let cookie1 = cookiesEnum1.getNext().QueryInterface(Ci.nsICookie2);
   let cookie2 = cookiesEnum2.getNext().QueryInterface(Ci.nsICookie2);
 
-  let formatter = new Services.intl.DateTimeFormat(undefined, {
-    dateStyle: "short", timeStyle: "short",
-  });
-
-  let creationDate1 = formatter.format(new Date(cookie1.lastAccessed / 1000));
-  let creationDate2 = formatter.format(new Date(cookie2.lastAccessed / 1000));
+  let relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {style: "short"});
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
   // Open the site data manager and remove one site.
   await openSiteDataSettingsDialog();
+  let creationDate1 = relativeTimeFormat.formatBestUnit(new Date(cookie1.lastAccessed / 1000));
+  let creationDate2 = relativeTimeFormat.formatBestUnit(new Date(cookie2.lastAccessed / 1000));
   let removeDialogOpenPromise = BrowserTestUtils.promiseAlertDialogOpen("accept", REMOVE_DIALOG_URL);
   await ContentTask.spawn(gBrowser.selectedBrowser, {creationDate1, creationDate2}, function(args) {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
@@ -202,6 +199,7 @@ add_task(async function() {
 
   // Open the site data manager and remove another site.
   await openSiteDataSettingsDialog();
+  creationDate1 = relativeTimeFormat.formatBestUnit(new Date(cookie1.lastAccessed / 1000));
   let acceptRemovePromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
   await ContentTask.spawn(gBrowser.selectedBrowser, {creationDate1}, function(args) {
     let frameDoc = content.gSubDialog._topDialog._frame.contentDocument;
