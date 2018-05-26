@@ -301,12 +301,12 @@ iface_nonvirtual = """
 iface_forward = """
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object. */
-#define NS_FORWARD_%(macroname)s(_to) """
+#define NS_FORWARD_%(macroname)s(_to) """  # NOQA: E501
 
 iface_forward_safe = """
 
 /* Use this macro to declare functions that forward the behavior of this interface to another object in a safe way. */
-#define NS_FORWARD_SAFE_%(macroname)s(_to) """
+#define NS_FORWARD_SAFE_%(macroname)s(_to) """  # NOQA: E501
 
 attr_builtin_infallible_tmpl = """\
   inline %(realtype)s%(nativename)s(%(args)s)
@@ -464,7 +464,7 @@ def write_interface(iface, fd):
                 fd.write("\\\n  %s%s; " % (methodAsNative(member, declType), suffix))
         if len(iface.members) == 0:
             fd.write('\\\n  /* no methods! */')
-        elif not member.kind in ('attribute', 'method'):
+        elif member.kind not in ('attribute', 'method'):
             fd.write('\\')
 
     writeDeclaration(fd, iface, True)
@@ -498,7 +498,7 @@ def write_interface(iface, fd):
                                      'paramList': paramlistNames(member)})
         if len(iface.members) == 0:
             fd.write('\\\n  /* no methods! */')
-        elif not member.kind in ('attribute', 'method'):
+        elif member.kind not in ('attribute', 'method'):
             fd.write('\\')
 
     emitTemplate(True,
@@ -510,7 +510,7 @@ def write_interface(iface, fd):
     # sensible default error return.  Instead, the caller will have to
     # implement them.
     emitTemplate(False,
-                 "\\\n  %(asNative)s override { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
+                 "\\\n  %(asNative)s override { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",  # NOQA: E501
                  "\\\n  %(asNative)s override; ")
 
     fd.write('\n\n')
@@ -529,7 +529,7 @@ def main(outputfile):
             os.remove(filename)
 
     # Instantiate the parser.
-    p = xpidl.IDLParser(outputdir=cachedir)
+    xpidl.IDLParser(outputdir=cachedir)
 
 
 if __name__ == '__main__':
