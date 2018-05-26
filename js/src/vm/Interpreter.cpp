@@ -1197,11 +1197,30 @@ UnwindIteratorsForUncatchableException(JSContext* cx, const InterpreterRegs& reg
 {
     // c.f. the regular (catchable) TryNoteIterInterpreter loop in
     // ProcessTryNotes.
+    bool inForOfIterClose = false;
     for (TryNoteIterInterpreter tni(cx, regs); !tni.done(); ++tni) {
         JSTryNote* tn = *tni;
-        if (tn->kind == JSTRY_FOR_IN) {
+        switch (tn->kind) {
+          case JSTRY_FOR_IN: {
+            // See corresponding comment in ProcessTryNotes.
+            if (inForOfIterClose)
+                break;
+
             Value* sp = regs.spForStackDepth(tn->stackDepth);
             UnwindIteratorForUncatchableException(&sp[-1].toObject());
+            break;
+          }
+
+          case JSTRY_FOR_OF_ITERCLOSE:
+            inForOfIterClose = true;
+            break;
+
+          case JSTRY_FOR_OF:
+            inForOfIterClose = false;
+            break;
+
+          default:
+            break;
         }
     }
 }
@@ -1262,6 +1281,12 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             return FinallyContinuation;
 
           case JSTRY_FOR_IN: {
+            // Don't let (extra) values pushed on the stack while closing a
+            // for-of iterator confuse us into thinking we still have to close
+            // an inner for-in iterator.
+            if (inForOfIterClose)
+                break;
+
             /* This is similar to JSOP_ENDITER in the interpreter loop. */
             DebugOnly<jsbytecode*> pc = regs.fp()->script()->main() + tn->start + tn->length;
             MOZ_ASSERT(JSOp(*pc) == JSOP_ENDITER);
@@ -1272,6 +1297,10 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
           }
 
           case JSTRY_DESTRUCTURING_ITERCLOSE: {
+            // See note above.
+            if (inForOfIterClose)
+                break;
+
             // Whether the destructuring iterator is done is at the top of the
             // stack. The iterator object is second from the top.
             MOZ_ASSERT(tn->stackDepth > 1);
