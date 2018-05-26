@@ -111,8 +111,8 @@ impl JsonFrameWriter {
         file.write_all(b"\n").unwrap();
     }
 
-    fn update_resources(&mut self, updates: &ResourceUpdates) {
-        for update in &updates.updates {
+    fn update_resources(&mut self, updates: &[ResourceUpdate]) {
+        for update in updates {
             match *update {
                 ResourceUpdate::AddImage(ref img) => {
                     let stride = img.descriptor.stride.unwrap_or(

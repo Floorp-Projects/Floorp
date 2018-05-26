@@ -4,7 +4,7 @@
 
 //! Module only available when pathfinder is activated
 
-use api::{DeviceIntPoint, DeviceIntSize, DevicePixel, FontRenderMode, FontKey, FontTemplate, GlyphKey, NativeFontHandle};
+use api::{DeviceIntPoint, DeviceIntSize, DevicePixel, FontRenderMode, FontKey, FontTemplate, NativeFontHandle};
 use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use pathfinder_font_renderer;
 use pathfinder_partitioner::mesh::Mesh as PathfinderMesh;
@@ -20,7 +20,7 @@ use internal_types::ResourceCacheError;
 use glyph_cache::{GlyphCache, GlyphCacheEntry, CachedGlyphInfo};
 use std::collections::hash_map::Entry;
 use std::f32;
-use glyph_rasterizer::{FontInstance, GlyphRasterizer, GlyphFormat, FontContexts};
+use glyph_rasterizer::{FontInstance, GlyphRasterizer, GlyphFormat, GlyphKey, FontContexts};
 use texture_cache::TextureCache;
 use gpu_cache::GpuCache;
 use profiler::TextureCacheProfileCounters;
@@ -190,8 +190,9 @@ impl GlyphRasterizer {
                         size: font.size,
                     };
 
+                    // TODO: pathfinder will need to support 2D subpixel offset
                     let pathfinder_subpixel_offset =
-                        pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset as u8);
+                        pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset.0 as u8);
                     let pathfinder_glyph_key =
                         pathfinder_font_renderer::GlyphKey::new(glyph_key.index,
                                                                 pathfinder_subpixel_offset);
@@ -272,9 +273,10 @@ fn request_render_task_from_pathfinder(glyph_key: &GlyphKey,
         size: font.size,
     };
 
+    // TODO: pathfinder will need to support 2D subpixel offset
     let pathfinder_subpixel_offset =
-        pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset as u8);
-    let glyph_subpixel_offset: f64 = glyph_key.subpixel_offset.into();
+        pathfinder_font_renderer::SubpixelOffset(glyph_key.subpixel_offset.0 as u8);
+    let glyph_subpixel_offset: f64 = glyph_key.subpixel_offset.0.into();
     let pathfinder_glyph_key = pathfinder_font_renderer::GlyphKey::new(glyph_key.index,
                                                                        pathfinder_subpixel_offset);
 

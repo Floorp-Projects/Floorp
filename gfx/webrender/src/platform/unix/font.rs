@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, GlyphDimensions, GlyphKey, FontKey, FontRenderMode};
+use api::{ColorU, GlyphDimensions, FontKey, FontRenderMode};
 use api::{FontInstancePlatformOptions, FontLCDFilter, FontHinting};
-use api::{FontInstanceFlags, NativeFontHandle, SubpixelDirection};
+use api::{FontInstanceFlags, NativeFontHandle};
 use freetype::freetype::{FT_BBox, FT_Outline_Translate, FT_Pixel_Mode, FT_Render_Mode};
 use freetype::freetype::{FT_Done_Face, FT_Error, FT_Get_Char_Index, FT_Int32};
 use freetype::freetype::{FT_Done_FreeType, FT_Library_SetLcdFilter, FT_Pos};
@@ -18,7 +18,7 @@ use freetype::freetype::{FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH, FT_LOAD_NO_AUTOHIN
 use freetype::freetype::{FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING, FT_LOAD_VERTICAL_LAYOUT};
 use freetype::freetype::{FT_FACE_FLAG_SCALABLE, FT_FACE_FLAG_FIXED_SIZES};
 use freetype::succeeded;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterResult, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterResult, RasterizedGlyph};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 use internal_types::{FastHashMap, ResourceCacheError};
@@ -253,9 +253,10 @@ impl FontContext {
             (FontHinting::Mono, _) => load_flags = FT_LOAD_TARGET_MONO,
             (FontHinting::Light, _) => load_flags = FT_LOAD_TARGET_LIGHT,
             (FontHinting::LCD, FontRenderMode::Subpixel) => {
-                load_flags = match font.subpx_dir {
-                    SubpixelDirection::Vertical => FT_LOAD_TARGET_LCD_V,
-                    _ => FT_LOAD_TARGET_LCD,
+                load_flags = if font.flags.contains(FontInstanceFlags::LCD_VERTICAL) {
+                    FT_LOAD_TARGET_LCD_V
+                } else {
+                    FT_LOAD_TARGET_LCD
                 };
                 if font.flags.contains(FontInstanceFlags::FORCE_AUTOHINT) {
                     load_flags |= FT_LOAD_FORCE_AUTOHINT;
@@ -375,31 +376,29 @@ impl FontContext {
             }
         }
 
-        // Convert the subpixel offset to floats.
-        let (dx, dy) = font.get_subpx_offset(glyph);
-
         // Apply extra pixel of padding for subpixel AA, due to the filter.
-        let padding = match font.render_mode {
-            FontRenderMode::Subpixel => (self.lcd_extra_pixels * 64) as FT_Pos,
-            FontRenderMode::Alpha |
-            FontRenderMode::Mono => 0 as FT_Pos,
-        };
+        if font.render_mode == FontRenderMode::Subpixel {
+            let padding = (self.lcd_extra_pixels * 64) as FT_Pos;
+            if font.flags.contains(FontInstanceFlags::LCD_VERTICAL) {
+                cbox.yMin -= padding;
+                cbox.yMax += padding;
+            } else {
+                cbox.xMin -= padding;
+                cbox.xMax += padding;
+            }
+        }
 
         // Offset the bounding box by subpixel positioning.
         // Convert to 26.6 fixed point format for FT.
-        match font.subpx_dir {
-            SubpixelDirection::None => {}
-            SubpixelDirection::Horizontal => {
-                let dx = (dx * 64.0 + 0.5) as FT_Long;
-                cbox.xMin += dx - padding;
-                cbox.xMax += dx + padding;
-            }
-            SubpixelDirection::Vertical => {
-                let dy = (dy * 64.0 + 0.5) as FT_Long;
-                cbox.yMin += dy - padding;
-                cbox.yMax += dy + padding;
-            }
-        }
+        let (dx, dy) = font.get_subpx_offset(glyph);
+        let (dx, dy) = (
+            (dx * 64.0 + 0.5) as FT_Pos,
+            -(dy * 64.0 + 0.5) as FT_Pos,
+        );
+        cbox.xMin += dx;
+        cbox.xMax += dx;
+        cbox.yMin += dy;
+        cbox.yMax += dy;
 
         // Outset the box to device pixel boundaries
         cbox.xMin &= !63;
@@ -522,7 +521,7 @@ impl FontContext {
                 // In mono mode the color of the font is irrelevant.
                 font.color = ColorU::new(0xFF, 0xFF, 0xFF, 0xFF);
                 // Subpixel positioning is disabled in mono mode.
-                font.subpx_dir = SubpixelDirection::None;
+                font.disable_subpixel_position();
             }
             FontRenderMode::Alpha | FontRenderMode::Subpixel => {
                 // We don't do any preblending with FreeType currently, so the color is not used.
@@ -539,8 +538,10 @@ impl FontContext {
     ) -> bool {
         // Get the subpixel offsets in FT 26.6 format.
         let (dx, dy) = font.get_subpx_offset(key);
-        let dx = (dx * 64.0 + 0.5) as FT_Long;
-        let dy = (dy * 64.0 + 0.5) as FT_Long;
+        let (dx, dy) = (
+            (dx * 64.0 + 0.5) as FT_Pos,
+            -(dy * 64.0 + 0.5) as FT_Pos,
+        );
 
         // Move the outline curves to be at the origin, taking
         // into account the subpixel positioning.
@@ -565,11 +566,14 @@ impl FontContext {
             };
             unsafe { FT_Library_SetLcdFilter(self.lib, filter) };
         }
-        let render_mode = match (font.render_mode, font.subpx_dir) {
-            (FontRenderMode::Mono, _) => FT_Render_Mode::FT_RENDER_MODE_MONO,
-            (FontRenderMode::Alpha, _) => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
-            (FontRenderMode::Subpixel, SubpixelDirection::Vertical) => FT_Render_Mode::FT_RENDER_MODE_LCD_V,
-            (FontRenderMode::Subpixel, _) => FT_Render_Mode::FT_RENDER_MODE_LCD,
+        let render_mode = match font.render_mode {
+            FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
+            FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
+            FontRenderMode::Subpixel => if font.flags.contains(FontInstanceFlags::LCD_VERTICAL) {
+                FT_Render_Mode::FT_RENDER_MODE_LCD_V
+            } else {
+                FT_Render_Mode::FT_RENDER_MODE_LCD
+            },
         };
         let result = unsafe { FT_Render_Glyph(slot, render_mode) };
         if !succeeded(result) {

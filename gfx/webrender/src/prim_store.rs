@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, BorderRadius, BoxShadowClipMode, BuiltDisplayList, ClipMode, ColorF, ComplexClipRegion};
-use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode, FontRenderMode};
-use api::{FilterOp, GlyphInstance, GlyphKey, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, TileOffset};
+use api::{DeviceIntRect, DeviceIntSize, DevicePixelScale, Epoch, ExtendMode};
+use api::{FilterOp, GlyphInstance, GradientStop, ImageKey, ImageRendering, ItemRange, ItemTag, TileOffset};
 use api::{GlyphRasterSpace, LayoutPoint, LayoutRect, LayoutSize, LayoutToWorldTransform, LayoutVector2D};
 use api::{PipelineId, PremultipliedColorF, PropertyBinding, Shadow, YuvColorSpace, YuvFormat, DeviceIntSideOffsets};
-use border::{BorderCornerInstance, BorderEdgeKind};
+use api::{BorderWidths, LayoutToWorldScale, NormalBorder};
+use app_units::Au;
+use border::{BorderCacheKey, BorderCornerInstance, BorderRenderTaskInfo, BorderEdgeKind};
 use box_shadow::BLUR_SAMPLE_SCALE;
 use clip_scroll_tree::{ClipChainIndex, ClipScrollNodeIndex, CoordinateSystemId};
 use clip_scroll_node::ClipScrollNode;
@@ -15,7 +17,7 @@ use clip::{ClipChain, ClipChainNode, ClipChainNodeIter, ClipChainNodeRef, ClipSo
 use clip::{ClipSourcesHandle, ClipWorkItem};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::PrimitiveRunContext;
-use glyph_rasterizer::{FontInstance, FontTransform};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 use gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest,
                 ToGpuBlocks};
 use gpu_types::{BrushFlags, ClipChainRectIndex};
@@ -256,6 +258,18 @@ pub struct VisibleGradientTile {
 }
 
 #[derive(Debug)]
+pub enum BorderSource {
+    Image(ImageRequest),
+    Border {
+        handle: Option<RenderTaskCacheEntryHandle>,
+        cache_key: BorderCacheKey,
+        task_info: Option<BorderRenderTaskInfo>,
+        border: NormalBorder,
+        widths: BorderWidths,
+    },
+}
+
+#[derive(Debug)]
 pub enum BrushKind {
     Solid {
         color: ColorF,
@@ -307,7 +321,7 @@ pub enum BrushKind {
         visible_tiles: Vec<VisibleGradientTile>,
     },
     Border {
-        request: ImageRequest,
+        source: BorderSource,
     },
 }
 
@@ -353,7 +367,7 @@ bitflags! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BrushSegmentTaskId {
     RenderTaskId(RenderTaskId),
     Opaque,
@@ -369,7 +383,7 @@ impl BrushSegmentTaskId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrushSegment {
     pub local_rect: LayoutRect,
     pub clip_task_id: BrushSegmentTaskId,
@@ -381,15 +395,14 @@ pub struct BrushSegment {
 
 impl BrushSegment {
     pub fn new(
-        origin: LayoutPoint,
-        size: LayoutSize,
+        rect: LayoutRect,
         may_need_clip_mask: bool,
         edge_flags: EdgeAaSegmentMask,
         extra_data: [f32; 4],
         brush_flags: BrushFlags,
     ) -> BrushSegment {
         BrushSegment {
-            local_rect: LayoutRect::new(origin, size),
+            local_rect: rect,
             clip_task_id: BrushSegmentTaskId::Opaque,
             may_need_clip_mask,
             edge_flags,
@@ -761,11 +774,32 @@ pub struct TextRunPrimitiveCpu {
     pub glyph_range: ItemRange<GlyphInstance>,
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
+    pub glyph_transform: (DevicePixelScale, FontTransform),
     pub shadow: bool,
     pub glyph_raster_space: GlyphRasterSpace,
 }
 
 impl TextRunPrimitiveCpu {
+    pub fn new(
+        font: FontInstance,
+        offset: LayoutVector2D,
+        glyph_range: ItemRange<GlyphInstance>,
+        glyph_keys: Vec<GlyphKey>,
+        shadow: bool,
+        glyph_raster_space: GlyphRasterSpace,
+    ) -> Self {
+        TextRunPrimitiveCpu {
+            font,
+            offset,
+            glyph_range,
+            glyph_keys,
+            glyph_gpu_blocks: Vec::new(),
+            glyph_transform: (DevicePixelScale::new(1.0), FontTransform::identity()),
+            shadow,
+            glyph_raster_space,
+        }
+    }
+
     pub fn get_font(
         &self,
         device_pixel_scale: DevicePixelScale,
@@ -777,7 +811,8 @@ impl TextRunPrimitiveCpu {
             if transform.has_perspective_component() ||
                !transform.has_2d_inverse() ||
                self.glyph_raster_space != GlyphRasterSpace::Screen {
-                font.render_mode = font.render_mode.limit_by(FontRenderMode::Alpha);
+                font.disable_subpixel_aa();
+                font.disable_subpixel_position();
             } else {
                 font.transform = FontTransform::from(&transform).quantize();
             }
@@ -794,7 +829,7 @@ impl TextRunPrimitiveCpu {
         frame_building_state: &mut FrameBuildingState,
     ) {
         if !allow_subpixel_aa && self.font.bg_color.a == 0 {
-            self.font.render_mode = self.font.render_mode.limit_by(FontRenderMode::Alpha);
+            self.font.disable_subpixel_aa();
         }
 
         let font = self.get_font(device_pixel_scale, transform);
@@ -803,8 +838,8 @@ impl TextRunPrimitiveCpu {
         // TODO(gw): In the future, remove `glyph_instances`
         //           completely, and just reference the glyphs
         //           directly from the display list.
-        if self.glyph_keys.is_empty() {
-            let subpx_dir = font.subpx_dir.limit_by(font.render_mode);
+        if self.glyph_keys.is_empty() || self.glyph_transform != (device_pixel_scale, font.transform) {
+            let subpx_dir = font.get_subpx_dir();
             let src_glyphs = display_list.get(self.glyph_range);
 
             // TODO(gw): If we support chunks() on AuxIter
@@ -812,7 +847,10 @@ impl TextRunPrimitiveCpu {
             //           be much simpler...
             let mut gpu_block = [0.0; 4];
             for (i, src) in src_glyphs.enumerate() {
-                let key = GlyphKey::new(src.index, src.point, font.render_mode, subpx_dir);
+                let layout_offset = src.point + self.offset;
+                let world_offset = font.transform.transform(&layout_offset);
+                let device_offset = device_pixel_scale.transform_point(&world_offset);
+                let key = GlyphKey::new(src.index, device_offset, subpx_dir);
                 self.glyph_keys.push(key);
 
                 // Two glyphs are packed per GPU block.
@@ -832,6 +870,8 @@ impl TextRunPrimitiveCpu {
             if (self.glyph_keys.len() & 1) != 0 {
                 self.glyph_gpu_blocks.push(gpu_block.into());
             }
+
+            self.glyph_transform = (device_pixel_scale, font.transform);
         }
 
         frame_building_state.resource_cache
@@ -1090,25 +1130,22 @@ impl PrimitiveContainer {
     pub fn create_shadow(&self, shadow: &Shadow) -> PrimitiveContainer {
         match *self {
             PrimitiveContainer::TextRun(ref info) => {
-                let mut render_mode = info.font.render_mode;
-
+                let mut font = FontInstance {
+                    color: shadow.color.into(),
+                    ..info.font.clone()
+                };
                 if shadow.blur_radius > 0.0 {
-                    render_mode = render_mode.limit_by(FontRenderMode::Alpha);
+                    font.disable_subpixel_aa();
                 }
 
-                PrimitiveContainer::TextRun(TextRunPrimitiveCpu {
-                    font: FontInstance {
-                        color: shadow.color.into(),
-                        render_mode,
-                        ..info.font.clone()
-                    },
-                    offset: info.offset + shadow.offset,
-                    glyph_range: info.glyph_range,
-                    glyph_keys: info.glyph_keys.clone(),
-                    glyph_gpu_blocks: Vec::new(),
-                    shadow: true,
-                    glyph_raster_space: info.glyph_raster_space,
-                })
+                PrimitiveContainer::TextRun(TextRunPrimitiveCpu::new(
+                    font,
+                    info.offset + shadow.offset,
+                    info.glyph_range,
+                    info.glyph_keys.clone(),
+                    true,
+                    info.glyph_raster_space,
+                ))
             }
             PrimitiveContainer::Brush(ref brush) => {
                 match brush.kind {
@@ -1401,6 +1438,84 @@ impl PrimitiveStore {
         self.cpu_metadata.len()
     }
 
+    fn build_prim_segments_if_needed(
+        &mut self,
+        prim_index: PrimitiveIndex,
+        pic_state: &mut PictureState,
+        frame_state: &mut FrameBuildingState,
+        frame_context: &FrameBuildingContext,
+    ) {
+        let metadata = &self.cpu_metadata[prim_index.0];
+
+        if metadata.prim_kind != PrimitiveKind::Brush {
+            return;
+        }
+
+        let brush = &mut self.cpu_brushes[metadata.cpu_prim_index.0];
+
+        if let BrushKind::Border { ref mut source, .. } = brush.kind {
+            if let BorderSource::Border {
+                ref border,
+                ref mut cache_key,
+                ref widths,
+                ref mut handle,
+                ref mut task_info,
+                ..
+            } = *source {
+                // TODO(gw): When drawing in screen raster mode, we should also incorporate a
+                //           scale factor from the world transform to get an appropriately
+                //           sized border task.
+                let world_scale = LayoutToWorldScale::new(1.0);
+                let scale = world_scale * frame_context.device_pixel_scale;
+                let scale_au = Au::from_f32_px(scale.0);
+                let needs_update = scale_au != cache_key.scale;
+
+                if needs_update {
+                    cache_key.scale = scale_au;
+
+                    *task_info = Some(BorderRenderTaskInfo::new(
+                        &metadata.local_rect,
+                        border,
+                        widths,
+                        scale,
+                    ));
+                }
+
+                let task_info = task_info.as_ref().unwrap();
+
+                *handle = Some(frame_state.resource_cache.request_render_task(
+                    RenderTaskCacheKey {
+                        size: DeviceIntSize::zero(),
+                        kind: RenderTaskCacheKeyKind::Border(cache_key.clone()),
+                    },
+                    frame_state.gpu_cache,
+                    frame_state.render_tasks,
+                    None,
+                    false,          // todo
+                    |render_tasks| {
+                        let task = RenderTask::new_border(
+                            task_info.size,
+                            task_info.instances.clone(),
+                        );
+
+                        let task_id = render_tasks.add(task);
+
+                        pic_state.tasks.push(task_id);
+
+                        task_id
+                    }
+                ));
+
+                if needs_update {
+                    brush.segment_desc = Some(BrushSegmentDescriptor {
+                        segments: task_info.segments.clone(),
+                        clip_mask_kind: BrushClipMaskKind::Unknown,
+                    });
+                }
+            }
+        }
+    }
+
     fn prepare_prim_for_render_inner(
         &mut self,
         prim_index: PrimitiveIndex,
@@ -1663,21 +1778,29 @@ impl PrimitiveStore {
                             );
                         }
                     }
-                    BrushKind::Border { request, .. } => {
-                        let image_properties = frame_state
-                            .resource_cache
-                            .get_image_properties(request.key);
+                    BrushKind::Border { ref mut source, .. } => {
+                        match *source {
+                            BorderSource::Image(request) => {
+                                let image_properties = frame_state
+                                    .resource_cache
+                                    .get_image_properties(request.key);
 
-                        if let Some(image_properties) = image_properties {
-                            // Update opacity for this primitive to ensure the correct
-                            // batching parameters are used.
-                            metadata.opacity.is_opaque =
-                                image_properties.descriptor.is_opaque;
+                                if let Some(image_properties) = image_properties {
+                                    // Update opacity for this primitive to ensure the correct
+                                    // batching parameters are used.
+                                    metadata.opacity.is_opaque =
+                                        image_properties.descriptor.is_opaque;
 
-                            frame_state.resource_cache.request_image(
-                                request,
-                                frame_state.gpu_cache,
-                            );
+                                    frame_state.resource_cache.request_image(
+                                        request,
+                                        frame_state.gpu_cache,
+                                    );
+                                }
+                            }
+                            BorderSource::Border { .. } => {
+                                // Handled earlier since we need to update the segment
+                                // descriptor *before* update_clip_task() is called.
+                            }
                         }
                     }
                     BrushKind::RadialGradient {
@@ -2004,8 +2127,7 @@ impl PrimitiveStore {
                     segment_builder.build(|segment| {
                         segments.push(
                             BrushSegment::new(
-                                segment.rect.origin,
-                                segment.rect.size,
+                                segment.rect,
                                 segment.has_mask,
                                 segment.edge_flags,
                                 [0.0; 4],
@@ -2389,6 +2511,13 @@ impl PrimitiveStore {
 
             (local_rect, unclipped)
         };
+
+        self.build_prim_segments_if_needed(
+            prim_index,
+            pic_state,
+            frame_state,
+            frame_context,
+        );
 
         if may_need_clip_mask && !self.update_clip_task(
             prim_index,

@@ -4,7 +4,7 @@
 
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntSize};
 use api::{DeviceUintRect, DeviceUintPoint, ExternalImageType, FilterOp, ImageRendering, LayoutRect};
-use api::{DeviceIntPoint, SubpixelDirection, YuvColorSpace, YuvFormat};
+use api::{DeviceIntPoint, YuvColorSpace, YuvFormat};
 use api::{LayoutToWorldTransform, WorldPixel};
 use border::{BorderCornerInstance, BorderCornerSide, BorderEdgeKind};
 use clip::{ClipSource, ClipStore, ClipWorkItem};
@@ -22,7 +22,7 @@ use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{BrushKind, BrushPrimitive, BrushSegmentTaskId, CachedGradient, DeferredResolve};
 use prim_store::{EdgeAaSegmentMask, ImageSource, PictureIndex, PrimitiveIndex, PrimitiveKind};
 use prim_store::{PrimitiveMetadata, PrimitiveRun, PrimitiveStore, VisibleGradientTile};
-use prim_store::CachedGradientIndex;
+use prim_store::{BorderSource, CachedGradientIndex};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKind, RenderTaskTree};
 use renderer::{BlendMode, ImageBufferKind};
 use renderer::{BLOCKS_PER_UV_RECT, ShaderColorMode};
@@ -1153,6 +1153,7 @@ impl AlphaBatchBuilder {
                     ctx.device_pixel_scale,
                     Some(scroll_node.transform),
                 );
+                let subpx_dir = font.get_subpx_dir();
 
                 let glyph_fetch_buffer = &mut self.glyph_fetch_buffer;
                 let batch_list = &mut self.batch_list;
@@ -1170,11 +1171,7 @@ impl AlphaBatchBuilder {
                             glyph_format = glyph_format.ignore_color();
                         }
 
-                        let subpx_dir = match glyph_format {
-                            GlyphFormat::Bitmap |
-                            GlyphFormat::ColorBitmap => SubpixelDirection::None,
-                            _ => text_cpu.font.subpx_dir.limit_by(text_cpu.font.render_mode),
-                        };
+                        let subpx_dir = subpx_dir.limit_by(glyph_format);
 
                         let textures = BatchTextures {
                             colors: [
@@ -1524,13 +1521,25 @@ impl BrushPrimitive {
                     ))
                 }
             }
-            BrushKind::Border { request, .. } => {
-                let cache_item = resolve_image(
-                    request,
-                    resource_cache,
-                    gpu_cache,
-                    deferred_resolves,
-                );
+            BrushKind::Border { ref source, .. } => {
+                let cache_item = match *source {
+                    BorderSource::Image(request) => {
+                        resolve_image(
+                            request,
+                            resource_cache,
+                            gpu_cache,
+                            deferred_resolves,
+                        )
+                    }
+                    BorderSource::Border { ref handle, .. } => {
+                        let rt_handle = handle
+                            .as_ref()
+                            .expect("bug: render task handle not allocated");
+                        let rt_cache_entry = resource_cache
+                            .get_cached_render_task(rt_handle);
+                        resource_cache.get_texture_cache_item(&rt_cache_entry.handle)
+                    }
+                };
 
                 if cache_item.texture_id == SourceTexture::Invalid {
                     None

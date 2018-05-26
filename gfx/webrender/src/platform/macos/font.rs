@@ -4,7 +4,6 @@
 
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
 use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
-use api::{GlyphKey, SubpixelDirection};
 use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
@@ -27,7 +26,7 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, FontTransform};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 #[cfg(feature = "pathfinder")]
 use glyph_rasterizer::NativeFontHandleWrapper;
 #[cfg(not(feature = "pathfinder"))]
@@ -463,7 +462,7 @@ impl FontContext {
                 // In mono mode the color of the font is irrelevant.
                 font.color = ColorU::new(255, 255, 255, 255);
                 // Subpixel positioning is disabled in mono mode.
-                font.subpx_dir = SubpixelDirection::None;
+                font.disable_subpixel_position();
             }
             FontRenderMode::Alpha => {
                 font.color = if font.flags.contains(FontInstanceFlags::FONT_SMOOTHING) {

@@ -4,8 +4,7 @@
 
 #[cfg(feature = "pathfinder")]
 use api::DeviceIntPoint;
-use api::GlyphKey;
-use glyph_rasterizer::{FontInstance, GlyphFormat};
+use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
 use internal_types::FastHashMap;
 use render_task::RenderTaskCache;
 #[cfg(feature = "pathfinder")]
