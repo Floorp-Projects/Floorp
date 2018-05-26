@@ -296,7 +296,7 @@ class Type(object):
         'CString',
         'AString',
         'jsval',
-        )
+    )
 
     def __init__(self, pointer=False, reference=False):
         self.pointer = pointer
@@ -757,6 +757,7 @@ class CachedStringWriter(object):
     A cache that sits in front of a file to avoid adding the same
     string multiple times.
     """
+
     def __init__(self, file, data_pool_offset):
         self.file = file
         self.data_pool_offset = data_pool_offset
@@ -1075,6 +1076,7 @@ class Method(object):
                                        self.encodeflags(),
                                        num_params)
 
+
 class Constant(object):
     """
     A constant value of a specific type defined on an interface.
@@ -1196,7 +1198,8 @@ class Interface(object):
         if self.methods or self.constants:
             # make sure it has a valid IID
             if self.iid == Interface.UNRESOLVED_IID:
-                raise DataError("Cannot instantiate Interface %s containing methods or constants with an unresolved IID" % self.name)
+                raise DataError(
+                    "Cannot instantiate Interface %s containing methods or constants with an unresolved IID" % self.name)
             self.resolved = True
         # These are only used for writing out the interface
         self._descriptor_offset = 0
@@ -1468,7 +1471,8 @@ class Typelib(object):
         xpt = Typelib((major_ver, minor_ver))
         xpt.filename = filename
         if expected_size and file_length != expected_size:
-            raise FileFormatError("File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length))
+            raise FileFormatError(
+                "File is of wrong length, got %d bytes, expected %d" % (expected_size, file_length))
         # XXX: by spec this is a zero-based file offset. however,
         # the xpt_xdr code always subtracts 1 from data offsets
         # (because that's what you do in the data pool) so it
@@ -1522,14 +1526,17 @@ class Typelib(object):
         self.interfaces.sort()
         for i in self.interfaces:
             if i.parent and i.parent not in self.interfaces:
-                raise DataError("Interface %s has parent %s not present in typelib!" % (i.name, i.parent.name))
+                raise DataError("Interface %s has parent %s not present in typelib!" %
+                                (i.name, i.parent.name))
             for m in i.methods:
                 for n, p in enumerate(m.params):
                     if isinstance(p, InterfaceType) and \
                        p.iface not in self.interfaces:
-                        raise DataError("Interface method %s::%s, parameter %d references interface %s not present in typelib!" % (i.name, m.name, n, p.iface.name))
+                        raise DataError("Interface method %s::%s, parameter %d references interface %s not present in typelib!" % (
+                            i.name, m.name, n, p.iface.name))
                 if isinstance(m.result, InterfaceType) and m.result.iface not in self.interfaces:
-                    raise DataError("Interface method %s::%s, result references interface %s not present in typelib!" % (i.name, m.name, m.result.iface.name))
+                    raise DataError("Interface method %s::%s, result references interface %s not present in typelib!" % (
+                        i.name, m.name, m.result.iface.name))
 
     def writefd(self, fd):
         # write out space for a header + one empty annotation,
@@ -1661,7 +1668,7 @@ class Typelib(object):
                             str(m.result.type),
                             m.name,
                             m.params and ", ".join(str(p) for p in m.params) or ""
-                            ))
+                        ))
                 out.write("      Constants:\n")
                 if len(i.constants) == 0:
                     out.write("         No Constants\n")
@@ -1786,7 +1793,7 @@ def xpt_link(inputs):
         elif isinstance(t, ArrayType) and \
             isinstance(t.element_type, InterfaceType) and \
                 t.element_type.iface in merged_interfaces:
-                t.element_type.iface = merged_interfaces[t.element_type.iface]
+            t.element_type.iface = merged_interfaces[t.element_type.iface]
 
     for i in interfaces:
         # Replace parent references
@@ -1830,6 +1837,7 @@ def xpt_link(inputs):
     # Re-sort interfaces (by IID)
     interfaces.sort()
     return Typelib(interfaces=interfaces)
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
