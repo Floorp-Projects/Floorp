@@ -21,6 +21,8 @@ menulist > menupopup {
   --arrowpanel-color: hsl(0,0%,10%);
   --arrowpanel-border-color: hsla(210,4%,10%,.05);
   --arrowpanel-border-radius: 3.5px;
+  --panel-disabled-color: GrayText;
+
   --focus-ring-box-shadow: @focusRingShadow@;
 }
 

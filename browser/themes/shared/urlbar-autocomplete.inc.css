@@ -10,13 +10,9 @@
   --autocomplete-popup-border-color: ThreeDShadow;
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
-  --autocomplete-popup-secondary-color: GrayText;
 }
 
-:root:-moz-lwtheme {
-  --autocomplete-popup-background: #fff;
-  --autocomplete-popup-color: #0c0c0d;
-  --autocomplete-popup-secondary-color: #737373;
+:root[lwt-popup-darktext] {
   --urlbar-popup-url-color: hsl(210, 77%, 47%);
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 }
@@ -64,7 +60,7 @@
 /* Awesomebar popup items */
 
 .ac-separator:not([selected=true]) {
-  color: var(--autocomplete-popup-secondary-color);
+  color: var(--panel-disabled-color);
 }
 
 .ac-url:not([selected=true]) {
