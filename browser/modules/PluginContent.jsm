@@ -11,8 +11,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Timer.jsm");
 ChromeUtils.import("resource://gre/modules/BrowserUtils.jsm");
 
-Cu.importGlobalProperties(["InspectorUtils"]);
-
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   const url = "chrome://browser/locale/browser.properties";
   return Services.strings.createBundle(url);

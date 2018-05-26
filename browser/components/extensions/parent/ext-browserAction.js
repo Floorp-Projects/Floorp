@@ -25,7 +25,7 @@ var {
   StartupCache,
 } = ExtensionParent;
 
-Cu.importGlobalProperties(["InspectorUtils"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 const POPUP_PRELOAD_TIMEOUT_MS = 200;
 const POPUP_OPEN_MS_HISTOGRAM = "WEBEXT_BROWSERACTION_POPUP_OPEN_MS";

@@ -16,8 +16,6 @@ const LOCAL_EME_SOURCES = [{
 
 var EXPORTED_SYMBOLS = [ "ProductAddonChecker" ];
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/Log.jsm");
@@ -25,6 +23,8 @@ ChromeUtils.import("resource://gre/modules/CertUtils.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 /* globals GMPPrefs */
 ChromeUtils.defineModuleGetter(this, "GMPPrefs",

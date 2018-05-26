@@ -13,7 +13,7 @@ var EXPORTED_SYMBOLS = ["Blocklist"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
-Cu.importGlobalProperties(["DOMParser"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");

@@ -11,7 +11,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource:///modules/MigrationUtils.jsm");
 
-Cu.importGlobalProperties(["FileReader"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["FileReader"]);
 
 ChromeUtils.defineModuleGetter(this, "PlacesUtils",
                                "resource://gre/modules/PlacesUtils.jsm");
@@ -35,7 +35,7 @@ const WEB_CREDENTIALS_VAULT_ID = [0x4BF4C442,
                                   0x4ADD80B3,
                                   0x28DB4D70];
 
-Cu.importGlobalProperties(["File"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
 const wintypes = {
   BOOL: ctypes.int,

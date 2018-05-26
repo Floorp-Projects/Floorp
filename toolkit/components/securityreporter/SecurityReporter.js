@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const protocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
                           .getService(Ci.nsIHttpProtocolHandler);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm", {});
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const TLS_ERROR_REPORT_TELEMETRY_SUCCESS = 6;
 const TLS_ERROR_REPORT_TELEMETRY_FAILURE = 7;

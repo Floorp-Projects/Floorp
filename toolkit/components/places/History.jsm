@@ -78,7 +78,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "asyncHistory",
                                    "@mozilla.org/browser/history;1",
                                    "mozIAsyncHistory");
 
-Cu.importGlobalProperties(["URL"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 /**
  * Whenever we update or remove numerous pages, it is preferable
