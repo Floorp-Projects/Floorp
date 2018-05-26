@@ -58,9 +58,10 @@ struct NativeIterator
     // active.  Not serialized by XDR.
     struct Flags
     {
-        static constexpr uint32_t Active = 0x1;
-        static constexpr uint32_t NotReusable = 0x2;
-        static constexpr uint32_t All = Active | NotReusable;
+        static constexpr uint32_t Initialized = 0x1;
+        static constexpr uint32_t Active = 0x2;
+        static constexpr uint32_t HasUnvisitedPropertyDeletion = 0x4;
+        static constexpr uint32_t NotReusable = Active | HasUnvisitedPropertyDeletion;
     };
 
   private:
@@ -131,6 +132,15 @@ struct NativeIterator
                       "HeapReceiverGuards are present, with no padding space "
                       "required for correct alignment");
 
+        // We *could* just check the assertion below if we wanted, but the
+        // incompletely-initialized NativeIterator case matters for so little
+        // code that we prefer not imposing the condition-check on every single
+        // user.
+        MOZ_ASSERT(isInitialized(),
+                   "NativeIterator must be initialized, or else |guardsEnd_| "
+                   "isn't necessarily the start of properties and instead "
+                   "|propertyCursor_| instead is");
+
         return reinterpret_cast<GCPtrFlatString*>(guardsEnd_);
     }
 
@@ -154,12 +164,20 @@ struct NativeIterator
     }
 
     void resetPropertyCursorForReuse() {
+        MOZ_ASSERT(isInitialized());
+
+        // This function is called unconditionally on IteratorClose, so
+        // unvisited properties might have been deleted, so we can't assert
+        // this NativeIterator is reusable.  (Should we not bother resetting
+        // the cursor in that case?)
+
         // Note: JIT code inlines |propertyCursor_| resetting when an iterator
         //       ends: see |CodeGenerator::visitIteratorEnd|.
         propertyCursor_ = propertiesBegin();
     }
 
     bool previousPropertyWas(JS::Handle<JSFlatString*> str) {
+        MOZ_ASSERT(isInitialized());
         return propertyCursor_ > propertiesBegin() && propertyCursor_[-1] == str;
     }
 
@@ -168,6 +186,8 @@ struct NativeIterator
     }
 
     void trimLastProperty() {
+        MOZ_ASSERT(isInitialized());
+
         propertiesEnd_--;
 
         // This invokes the pre barrier on this property, since it's no longer
@@ -189,6 +209,7 @@ struct NativeIterator
     }
 
     void incCursor() {
+        MOZ_ASSERT(isInitialized());
         propertyCursor_++;
     }
 
@@ -196,29 +217,52 @@ struct NativeIterator
         return guardKey_;
     }
 
+    bool isInitialized() const {
+        return flags_ & Flags::Initialized;
+    }
+
+  private:
+    void markInitialized() {
+        MOZ_ASSERT(flags_ == 0);
+        flags_ = Flags::Initialized;
+    }
+
+  public:
     bool isActive() const {
+        MOZ_ASSERT(isInitialized());
+
         return flags_ & Flags::Active;
     }
 
     void markActive() {
+        MOZ_ASSERT(isInitialized());
+
         flags_ |= Flags::Active;
     }
 
     void markInactive() {
+        MOZ_ASSERT(isInitialized());
+
         flags_ &= ~Flags::Active;
     }
 
     bool isReusable() const {
-        // Cached NativeIterators are reusable if they're not active and
-        // aren't marked as not reusable, i.e. if no flags are set.
-        return flags_ == 0;
+        MOZ_ASSERT(isInitialized());
+        return flags_ == Flags::Initialized;
     }
 
-    void markNotReusable() {
-        flags_ |= Flags::NotReusable;
+    void markHasUnvisitedPropertyDeletion() {
+        MOZ_ASSERT(isInitialized());
+
+        flags_ |= Flags::HasUnvisitedPropertyDeletion;
     }
 
     void link(NativeIterator* other) {
+        // The NativeIterator sentinel doesn't have to be linked, because it's
+        // the start of the list.  Anything else added should have been
+        // initialized.
+        MOZ_ASSERT(isInitialized());
+
         /* A NativeIterator cannot appear in the enumerator list twice. */
         MOZ_ASSERT(!next_ && !prev_);
 
@@ -228,6 +272,8 @@ struct NativeIterator
         other->prev_ = this;
     }
     void unlink() {
+        MOZ_ASSERT(isInitialized());
+
         next_->prev_ = prev_;
         prev_->next_ = next_;
         next_ = nullptr;
