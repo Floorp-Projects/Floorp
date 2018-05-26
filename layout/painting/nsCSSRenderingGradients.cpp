@@ -539,6 +539,104 @@ ClampColorStops(nsTArray<ColorStop>& aStops)
 
 namespace mozilla {
 
+static Maybe<double>
+GetSpecifiedGradientPosition(const nsStyleCoord& aCoord,
+                             int32_t aAppUnitsPerPixel,
+                             gfxFloat aLineLength)
+{
+  auto GetCoord = [&](nscoord aCoord) -> double {
+    if (aLineLength < 1e-6) {
+      return 0.0;
+    }
+    return NSAppUnitsToFloatPixels(aCoord, aAppUnitsPerPixel) / aLineLength;
+  };
+
+  switch (aCoord.GetUnit()) {
+    case eStyleUnit_None:
+      return Nothing();
+    case eStyleUnit_Percent:
+      return Some(aCoord.GetPercentValue());
+    case eStyleUnit_Coord:
+      return Some(GetCoord(aCoord.GetCoordValue()));
+    case eStyleUnit_Calc: {
+      const nsStyleCoord::Calc* calc = aCoord.GetCalcValue();
+      return Some(calc->mPercent + GetCoord(calc->mLength));
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown unit in gradient color stop position?");
+      return Nothing();
+  }
+}
+
+static nsTArray<ColorStop>
+ComputeColorStops(const nsStyleGradient& aGradient,
+                  int32_t aAppUnitsPerPixel,
+                  gfxFloat aLineLength)
+{
+  MOZ_ASSERT(aGradient.mStops.Length() >= 2,
+             "The parser should reject gradients with less than two stops");
+
+  nsTArray<ColorStop> stops(aGradient.mStops.Length());
+
+  // If there is a run of stops before stop i that did not have specified
+  // positions, then this is the index of the first stop in that run, otherwise
+  // it's -1.
+  int32_t firstUnsetPosition = -1;
+  for (uint32_t i = 0; i < aGradient.mStops.Length(); ++i) {
+    const nsStyleGradientStop& stop = aGradient.mStops[i];
+    double position;
+
+    Maybe<double> specifiedPosition =
+      GetSpecifiedGradientPosition(stop.mLocation,
+                                   aAppUnitsPerPixel,
+                                   aLineLength);
+
+    if (specifiedPosition) {
+      position = *specifiedPosition;
+    } else if (i == 0) {
+      // First stop defaults to position 0.0
+      position = 0.0;
+    } else if (i == aGradient.mStops.Length() - 1) {
+      // Last stop defaults to position 1.0
+      position = 1.0;
+    } else {
+      // Other stops with no specified position get their position assigned
+      // later by interpolation, see below.
+      // Remember where the run of stops with no specified position starts,
+      // if it starts here.
+      if (firstUnsetPosition < 0) {
+        firstUnsetPosition = i;
+      }
+      stops.AppendElement(ColorStop(0, stop.mIsInterpolationHint,
+                                    Color::FromABGR(stop.mColor)));
+      continue;
+    }
+
+    if (i > 0) {
+      // Prevent decreasing stop positions by advancing this position
+      // to the previous stop position, if necessary
+      double previousPosition = firstUnsetPosition > 0
+        ? stops[firstUnsetPosition - 1].mPosition
+        : stops[i - 1].mPosition;
+      position = std::max(position, previousPosition);
+    }
+    stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
+                                  Color::FromABGR(stop.mColor)));
+    if (firstUnsetPosition > 0) {
+      // Interpolate positions for all stops that didn't have a specified position
+      double p = stops[firstUnsetPosition - 1].mPosition;
+      double d = (stops[i].mPosition - p)/(i - firstUnsetPosition + 1);
+      for (uint32_t j = firstUnsetPosition; j < i; ++j) {
+        p += d;
+        stops[j].mPosition = p;
+      }
+      firstUnsetPosition = -1;
+    }
+  }
+
+  return stops;
+}
+
 nsCSSGradientRenderer
 nsCSSGradientRenderer::Create(nsPresContext* aPresContext,
                              nsStyleGradient* aGradient,
@@ -566,78 +664,9 @@ nsCSSGradientRenderer::Create(nsPresContext* aPresContext,
   gfxFloat lineLength = NS_hypot(lineEnd.x - lineStart.x,
                                   lineEnd.y - lineStart.y);
 
-  MOZ_ASSERT(aGradient->mStops.Length() >= 2,
-             "The parser should reject gradients with less than two stops");
-
   // Build color stop array and compute stop positions
-  nsTArray<ColorStop> stops;
-  // If there is a run of stops before stop i that did not have specified
-  // positions, then this is the index of the first stop in that run, otherwise
-  // it's -1.
-  int32_t firstUnsetPosition = -1;
-  for (uint32_t i = 0; i < aGradient->mStops.Length(); ++i) {
-    const nsStyleGradientStop& stop = aGradient->mStops[i];
-    double position;
-    switch (stop.mLocation.GetUnit()) {
-    case eStyleUnit_None:
-      if (i == 0) {
-        // First stop defaults to position 0.0
-        position = 0.0;
-      } else if (i == aGradient->mStops.Length() - 1) {
-        // Last stop defaults to position 1.0
-        position = 1.0;
-      } else {
-        // Other stops with no specified position get their position assigned
-        // later by interpolation, see below.
-        // Remeber where the run of stops with no specified position starts,
-        // if it starts here.
-        if (firstUnsetPosition < 0) {
-          firstUnsetPosition = i;
-        }
-        stops.AppendElement(ColorStop(0, stop.mIsInterpolationHint,
-                                      Color::FromABGR(stop.mColor)));
-        continue;
-      }
-      break;
-    case eStyleUnit_Percent:
-      position = stop.mLocation.GetPercentValue();
-      break;
-    case eStyleUnit_Coord:
-      position = lineLength < 1e-6 ? 0.0 :
-          stop.mLocation.GetCoordValue() / appUnitsPerDevPixel / lineLength;
-      break;
-    case eStyleUnit_Calc:
-      nsStyleCoord::Calc *calc;
-      calc = stop.mLocation.GetCalcValue();
-      position = calc->mPercent +
-          ((lineLength < 1e-6) ? 0.0 :
-          (NSAppUnitsToFloatPixels(calc->mLength, appUnitsPerDevPixel) / lineLength));
-      break;
-    default:
-      MOZ_ASSERT(false, "Unknown stop position type");
-    }
-
-    if (i > 0) {
-      // Prevent decreasing stop positions by advancing this position
-      // to the previous stop position, if necessary
-      double previousPosition = firstUnsetPosition > 0
-        ? stops[firstUnsetPosition - 1].mPosition
-        : stops[i - 1].mPosition;
-      position = std::max(position, previousPosition);
-    }
-    stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
-                                  Color::FromABGR(stop.mColor)));
-    if (firstUnsetPosition > 0) {
-      // Interpolate positions for all stops that didn't have a specified position
-      double p = stops[firstUnsetPosition - 1].mPosition;
-      double d = (stops[i].mPosition - p)/(i - firstUnsetPosition + 1);
-      for (uint32_t j = firstUnsetPosition; j < i; ++j) {
-        p += d;
-        stops[j].mPosition = p;
-      }
-      firstUnsetPosition = -1;
-    }
-  }
+  nsTArray<ColorStop> stops =
+    ComputeColorStops(*aGradient, appUnitsPerDevPixel, lineLength);
 
   ResolveMidpoints(stops);
 
