@@ -12,9 +12,10 @@
 
 [package]
 name = "serde"
-version = "1.0.37"
+version = "1.0.58"
 authors = ["Erick Tryzelaar <erick.tryzelaar@gmail.com>", "David Tolnay <dtolnay@gmail.com>"]
-include = ["Cargo.toml", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+build = "build.rs"
+include = ["Cargo.toml", "build.rs", "src/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "A generic serialization/deserialization framework"
 homepage = "https://serde.rs"
 documentation = "https://docs.serde.rs/serde/"
@@ -33,7 +34,6 @@ version = "1.0"
 alloc = ["unstable"]
 default = ["std"]
 derive = ["serde_derive"]
-playground = ["serde_derive"]
 rc = []
 std = []
 unstable = []
