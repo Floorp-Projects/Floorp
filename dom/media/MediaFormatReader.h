@@ -576,6 +576,18 @@ private:
       return mTimeThreshold && !mTimeThreshold.ref().mHasSeeked;
     }
 
+    // Return the current TrackInfo in the stream. If the stream content never
+    // changed since AsyncReadMetadata was called then the TrackInfo used is
+    // mOriginalInfo, other it will be mInfo. The later case is only ever true
+    // with MSE or the WebMDemuxer.
+    const TrackInfo* GetCurrentInfo() const
+    {
+      if (mInfo) {
+        return *mInfo;
+      }
+      return mOriginalInfo.get();
+    }
+
     // Used by the MDSM for logging purposes.
     Atomic<size_t> mSizeOfQueue;
     // Used by the MDSM to determine if video decoding is hardware accelerated.
