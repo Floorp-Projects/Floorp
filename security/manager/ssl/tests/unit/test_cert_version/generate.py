@@ -43,6 +43,7 @@ basicConstraintsTypes = {
     'BC-cA': 'extension:basicConstraints:cA,'
 }
 
+
 def writeCertspec(issuer, subject, fields):
     filename = '%s_%s.pem.certspec' % (subject, issuer)
     if issuer == subject:

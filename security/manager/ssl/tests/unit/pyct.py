@@ -18,8 +18,10 @@ import hashlib
 
 import pykey
 
+
 class InvalidKeyError(Exception):
     """Helper exception to handle unknown key types."""
+
     def __init__(self, key):
         self.key = key
 
