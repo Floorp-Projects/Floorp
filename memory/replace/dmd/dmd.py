@@ -45,6 +45,7 @@ allocatorFns = [
     '???',
 ]
 
+
 class Record(object):
     '''A record is an aggregation of heap blocks that have identical stack
     traces. It can also be used to represent the difference between two
@@ -61,10 +62,10 @@ class Record(object):
 
     def isZero(self, args):
         return self.numBlocks == 0 and \
-               self.reqSize == 0 and \
-               self.slopSize == 0 and \
-               self.usableSize == 0 and \
-               len(self.usableSizes) == 0
+            self.reqSize == 0 and \
+            self.slopSize == 0 and \
+            self.usableSize == 0 and \
+            len(self.usableSizes) == 0
 
     def negate(self):
         self.numBlocks = -self.numBlocks
@@ -114,7 +115,7 @@ class Record(object):
     def cmpByUsableSize(r1, r2):
         # Sort by usable size, then by req size.
         return cmp(abs(r1.usableSize), abs(r2.usableSize)) or \
-               Record.cmpByReqSize(r1, r2)
+            Record.cmpByReqSize(r1, r2)
 
     @staticmethod
     def cmpByReqSize(r1, r2):
@@ -130,7 +131,7 @@ class Record(object):
     def cmpByNumBlocks(r1, r2):
         # Sort by block counts, then by usable size.
         return cmp(abs(r1.numBlocks), abs(r2.numBlocks)) or \
-               Record.cmpByUsableSize(r1, r2)
+            Record.cmpByUsableSize(r1, r2)
 
 
 sortByChoices = {
@@ -208,13 +209,16 @@ def fixStackTraces(inputFilename, isZipped, opener):
     sysname = platform.system()
     if bpsyms and os.path.exists(bpsyms):
         import fix_stack_using_bpsyms as fixModule
-        fix = lambda line: fixModule.fixSymbols(line, bpsyms)
+
+        def fix(line): return fixModule.fixSymbols(line, bpsyms)
     elif sysname == 'Linux':
         import fix_linux_stack as fixModule
-        fix = lambda line: fixModule.fixSymbols(line)
+
+        def fix(line): return fixModule.fixSymbols(line)
     elif sysname == 'Darwin':
         import fix_macosx_stack as fixModule
-        fix = lambda line: fixModule.fixSymbols(line)
+
+        def fix(line): return fixModule.fixSymbols(line)
     else:
         fix = None  # there is no fix script for Windows
 
@@ -343,8 +347,8 @@ def getDigestFromFile(args, inputFile):
     if mode in ['live', 'cumulative']:
         liveOrCumulativeRecords = collections.defaultdict(Record)
     elif mode == 'dark-matter':
-        unreportedRecords    = collections.defaultdict(Record)
-        onceReportedRecords  = collections.defaultdict(Record)
+        unreportedRecords = collections.defaultdict(Record)
+        onceReportedRecords = collections.defaultdict(Record)
         twiceReportedRecords = collections.defaultdict(Record)
 
     heapUsableSize = 0
@@ -418,9 +422,9 @@ def getDigestFromFile(args, inputFile):
         heapUsableSize += num * usableSize
         heapBlocks += num
 
-        record.numBlocks  += num
-        record.reqSize    += num * reqSize
-        record.slopSize   += num * slopSize
+        record.numBlocks += num
+        record.reqSize += num * reqSize
+        record.slopSize += num * slopSize
         record.usableSize += num * usableSize
         if record.allocatedAtDesc == None:
             record.allocatedAtDesc = \
@@ -431,7 +435,7 @@ def getDigestFromFile(args, inputFile):
             pass
         elif mode == 'dark-matter':
             if 'reps' in block and record.reportedAtDescs == []:
-                f = lambda k: buildTraceDescription(traceTable, frameTable, k)
+                def f(k): return buildTraceDescription(traceTable, frameTable, k)
                 record.reportedAtDescs = map(f, reportedAtTraceKeys)
         record.usableSizes[usableSize] += num
 
@@ -483,31 +487,31 @@ def diffDigests(args, d1, d2):
     d3['dmdEnvVar'] = (d1['dmdEnvVar'], d2['dmdEnvVar'])
     d3['mode'] = d1['mode']
     d3['heapUsableSize'] = d2['heapUsableSize'] - d1['heapUsableSize']
-    d3['heapBlocks']     = d2['heapBlocks']     - d1['heapBlocks']
+    d3['heapBlocks'] = d2['heapBlocks'] - d1['heapBlocks']
     if d1['mode'] in ['live', 'cumulative']:
         d3['liveOrCumulativeRecords'] = \
             diffRecords(args, d1['liveOrCumulativeRecords'],
-                              d2['liveOrCumulativeRecords'])
+                        d2['liveOrCumulativeRecords'])
     elif d1['mode'] == 'dark-matter':
-        d3['unreportedRecords']    = diffRecords(args, d1['unreportedRecords'],
-                                                       d2['unreportedRecords'])
-        d3['onceReportedRecords']  = diffRecords(args, d1['onceReportedRecords'],
-                                                       d2['onceReportedRecords'])
+        d3['unreportedRecords'] = diffRecords(args, d1['unreportedRecords'],
+                                              d2['unreportedRecords'])
+        d3['onceReportedRecords'] = diffRecords(args, d1['onceReportedRecords'],
+                                                d2['onceReportedRecords'])
         d3['twiceReportedRecords'] = diffRecords(args, d1['twiceReportedRecords'],
-                                                       d2['twiceReportedRecords'])
+                                                 d2['twiceReportedRecords'])
     return d3
 
 
 def printDigest(args, digest):
-    dmdEnvVar       = digest['dmdEnvVar']
-    mode            = digest['mode']
-    heapUsableSize  = digest['heapUsableSize']
-    heapBlocks      = digest['heapBlocks']
+    dmdEnvVar = digest['dmdEnvVar']
+    mode = digest['mode']
+    heapUsableSize = digest['heapUsableSize']
+    heapBlocks = digest['heapBlocks']
     if mode in ['live', 'cumulative']:
         liveOrCumulativeRecords = digest['liveOrCumulativeRecords']
     elif mode == 'dark-matter':
-        unreportedRecords    = digest['unreportedRecords']
-        onceReportedRecords  = digest['onceReportedRecords']
+        unreportedRecords = digest['unreportedRecords']
+        onceReportedRecords = digest['onceReportedRecords']
         twiceReportedRecords = digest['twiceReportedRecords']
 
     separator = '#' + '-' * 65 + '\n'
@@ -542,7 +546,7 @@ def printDigest(args, digest):
 
         # First iteration: get totals, etc.
         for record in sortedRecords:
-            kindBlocks     += record.numBlocks
+            kindBlocks += record.numBlocks
             kindUsableSize += record.usableSize
 
         # Second iteration: print.
@@ -568,8 +572,8 @@ def printDigest(args, digest):
                        number(record.reqSize),
                        number(record.slopSize)))
 
-            abscmp = lambda (usableSize1, _1), (usableSize2, _2): \
-                            cmp(abs(usableSize1), abs(usableSize2))
+            def abscmp((usableSize1, _1), (usableSize2, _2)): return \
+                cmp(abs(usableSize1), abs(usableSize2))
             usableSizes = sorted(record.usableSizes.items(), cmp=abscmp,
                                  reverse=True)
 
@@ -614,7 +618,6 @@ def printDigest(args, digest):
             out('}\n')
 
         return (kindUsableSize, kindBlocks)
-
 
     def printInvocation(n, dmdEnvVar, mode):
         out('Invocation{:} {{'.format(n))
@@ -760,7 +763,6 @@ class ClampStats:
         # of any blocks. These are clamped to null.
         self.nonNullNonBlockPtr = 0
 
-
     def clampedBlockAddr(self, sameAddress):
         if sameAddress:
             self.startBlockPtr += 1
@@ -775,9 +777,12 @@ class ClampStats:
 
     def log(self):
         sys.stderr.write('Results:\n')
-        sys.stderr.write('  Number of pointers already pointing to start of blocks: ' + str(self.startBlockPtr) + '\n')
-        sys.stderr.write('  Number of pointers clamped to start of blocks: ' + str(self.midBlockPtr) + '\n')
-        sys.stderr.write('  Number of non-null pointers not pointing into blocks clamped to null: ' + str(self.nonNullNonBlockPtr) + '\n')
+        sys.stderr.write(
+            '  Number of pointers already pointing to start of blocks: ' + str(self.startBlockPtr) + '\n')
+        sys.stderr.write('  Number of pointers clamped to start of blocks: ' +
+                         str(self.midBlockPtr) + '\n')
+        sys.stderr.write('  Number of non-null pointers not pointing into blocks clamped to null: ' +
+                         str(self.nonNullNonBlockPtr) + '\n')
         sys.stderr.write('  Number of null pointers: ' + str(self.nullPtr) + '\n')
 
 
@@ -887,4 +892,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

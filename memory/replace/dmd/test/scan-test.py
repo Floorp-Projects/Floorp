@@ -35,11 +35,13 @@ This is only for testing. Input files can be gzipped.
 
 def checkScanContents(contents, expected):
     if len(contents) != len(expected):
-        raise Exception("Expected " + str(len(expected)) + " things in contents but found " + str(len(contents)))
+        raise Exception("Expected " + str(len(expected)) +
+                        " things in contents but found " + str(len(contents)))
 
     for i in range(len(expected)):
         if contents[i] != expected[i]:
-            raise Exception("Expected to find " + expected[i] + " at offset " + str(i) + " but found " + contents[i])
+            raise Exception("Expected to find " +
+                            expected[i] + " at offset " + str(i) + " but found " + contents[i])
 
 
 def main():
