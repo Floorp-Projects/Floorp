@@ -33,6 +33,7 @@ progressmeter[mode="undetermined"] {
   --arrowpanel-background: -moz-field;
   --arrowpanel-color: -moz-fieldText;
   --arrowpanel-border-color: ThreeDShadow;
+  --panel-disabled-color: GrayText;
 }
 
 /* ::::: root elements ::::: */
