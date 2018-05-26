@@ -16,6 +16,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 var global = this;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BlockedSiteContent: "resource:///modules/BlockedSiteContent.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
@@ -28,7 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FormSubmitObserver: "resource:///modules/FormSubmitObserver.jsm",
   NetErrorContent: "resource:///modules/NetErrorContent.jsm",
   PageMetadata: "resource://gre/modules/PageMetadata.jsm",
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   ContextMenu: "resource:///modules/ContextMenu.jsm",
 });
@@ -81,31 +81,6 @@ addEventListener("blur", function(event) {
   LoginManagerContent.onUsernameInput(event);
 });
 
-function getSiteBlockedErrorDetails(docShell) {
-  let blockedInfo = {};
-  if (docShell.failedChannel) {
-    let classifiedChannel = docShell.failedChannel.
-                            QueryInterface(Ci.nsIClassifiedChannel);
-    if (classifiedChannel) {
-      let httpChannel = docShell.failedChannel.QueryInterface(Ci.nsIHttpChannel);
-
-      let reportUri = httpChannel.URI.clone();
-
-      // Remove the query to avoid leaking sensitive data
-      if (reportUri instanceof Ci.nsIURL) {
-        reportUri = reportUri.mutate()
-                             .setQuery("")
-                             .finalize();
-      }
-
-      blockedInfo = { list: classifiedChannel.matchedList,
-                      provider: classifiedChannel.matchedProvider,
-                      uri: reportUri.asciiSpec };
-    }
-  }
-  return blockedInfo;
-}
-
 var AboutBlockedSiteListener = {
   init(chromeGlobal) {
     addMessageListener("DeceptiveBlockedDetails", this);
@@ -121,11 +96,7 @@ var AboutBlockedSiteListener = {
       return;
     }
 
-    if (msg.name == "DeceptiveBlockedDetails") {
-      sendAsyncMessage("DeceptiveBlockedDetails:Result", {
-        blockedInfo: getSiteBlockedErrorDetails(docShell),
-      });
-    }
+    BlockedSiteContent.receiveMessage(global, msg);
   },
 
   handleEvent(aEvent) {
@@ -137,77 +108,10 @@ var AboutBlockedSiteListener = {
       return;
     }
 
-    let blockedInfo = getSiteBlockedErrorDetails(docShell);
-    let provider = blockedInfo.provider || "";
-
-    let doc = content.document;
-
-    /**
-    * Set error description link in error details.
-    * For example, the "reported as a deceptive site" link for
-    * blocked phishing pages.
-    */
-    let desc = Services.prefs.getCharPref(
-      "browser.safebrowsing.provider." + provider + ".reportURL", "");
-    if (desc) {
-      doc.getElementById("error_desc_link").setAttribute("href", desc + aEvent.detail.url);
-    }
-
-    // Set other links in error details.
-    switch (aEvent.detail.err) {
-      case "malware":
-        doc.getElementById("report_detection").setAttribute("href",
-          (SafeBrowsing.getReportURL("MalwareMistake", blockedInfo) ||
-           "https://www.stopbadware.org/firefox"));
-        doc.getElementById("learn_more_link").setAttribute("href",
-          "https://www.stopbadware.org/firefox");
-        break;
-      case "unwanted":
-        doc.getElementById("learn_more_link").setAttribute("href",
-          "https://www.google.com/about/unwanted-software-policy.html");
-        break;
-      case "phishing":
-        doc.getElementById("report_detection").setAttribute("href",
-          (SafeBrowsing.getReportURL("PhishMistake", blockedInfo) ||
-           "https://safebrowsing.google.com/safebrowsing/report_error/?tpl=mozilla"));
-        doc.getElementById("learn_more_link").setAttribute("href",
-          "https://www.antiphishing.org//");
-        break;
-    }
-
-    // Set the firefox support url.
-    doc.getElementById("firefox_support").setAttribute("href",
-      Services.urlFormatter.formatURLPref("app.support.baseURL") + "phishing-malware");
-
-    // Show safe browsing details on load if the pref is set to true.
-    let showDetails = Services.prefs.getBoolPref("browser.xul.error_pages.show_safe_browsing_details_on_load");
-    if (showDetails) {
-      let details = content.document.getElementById("errorDescriptionContainer");
-      details.removeAttribute("hidden");
-    }
-
-    // Set safe browsing advisory link.
-    let advisoryUrl = Services.prefs.getCharPref(
-      "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
-    if (!advisoryUrl) {
-      let el = content.document.getElementById("advisoryDesc");
-      el.remove();
-      return;
-    }
-
-    let advisoryLinkText = Services.prefs.getCharPref(
-      "browser.safebrowsing.provider." + provider + ".advisoryName", "");
-    if (!advisoryLinkText) {
-      let el = content.document.getElementById("advisoryDesc");
-      el.remove();
-      return;
-    }
-
-    let anchorEl = content.document.getElementById("advisory_provider");
-    anchorEl.setAttribute("href", advisoryUrl);
-    anchorEl.textContent = advisoryLinkText;
+    BlockedSiteContent.handleEvent(global, aEvent);
   },
 };
+AboutBlockedSiteListener.init(this);
 
 var AboutNetAndCertErrorListener = {
   init(chromeGlobal) {
@@ -262,9 +166,7 @@ var AboutNetAndCertErrorListener = {
     NetErrorContent.handleEvent(global, aEvent);
   },
 };
-
 AboutNetAndCertErrorListener.init(this);
-AboutBlockedSiteListener.init(this);
 
 var ClickEventHandler = {
   init: function init() {
@@ -288,7 +190,7 @@ var ClickEventHandler = {
         NetErrorContent.onCertError(global, originalTarget, ownerDoc.defaultView);
         return;
       } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
-        this.onAboutBlocked(originalTarget, ownerDoc);
+        BlockedSiteContent.onAboutBlocked(global, originalTarget, ownerDoc);
         return;
       } else if (AboutNetAndCertErrorListener.isAboutNetError(ownerDoc)) {
         NetErrorContent.onAboutNetError(global, event, ownerDoc.documentURI);
@@ -364,29 +266,6 @@ var ClickEventHandler = {
     if (event.button == 1) {
       sendAsyncMessage("Content:Click", json);
     }
-  },
-
-  onAboutBlocked(targetElement, ownerDoc) {
-    var reason = "phishing";
-    if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
-      reason = "malware";
-    } else if (/e=unwantedBlocked/.test(ownerDoc.documentURI)) {
-      reason = "unwanted";
-    } else if (/e=harmfulBlocked/.test(ownerDoc.documentURI)) {
-      reason = "harmful";
-    }
-
-    let docShell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIWebNavigation)
-                                      .QueryInterface(Ci.nsIDocShell);
-
-    sendAsyncMessage("Browser:SiteBlockedError", {
-      location: ownerDoc.location.href,
-      reason,
-      elementId: targetElement.getAttribute("id"),
-      isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView),
-      blockedInfo: getSiteBlockedErrorDetails(docShell),
-    });
   },
 
   /**
