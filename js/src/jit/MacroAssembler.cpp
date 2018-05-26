@@ -3785,6 +3785,29 @@ MacroAssembler::debugAssertObjHasFixedSlots(Register obj, Register scratch)
 #endif
 }
 
+void
+MacroAssembler::branchIfNativeIteratorNotReusable(Register ni, Label* notReusable)
+{
+    // See NativeIterator::isReusable.
+    Address flagsAddr(ni, NativeIterator::offsetOfFlags());
+
+#ifdef DEBUG
+    Label niIsInitialized;
+    branchTest32(Assembler::NonZero,
+                 flagsAddr,
+                 Imm32(NativeIterator::Flags::Initialized),
+                 &niIsInitialized);
+    assumeUnreachable("Expected a NativeIterator that's been completely "
+                      "initialized");
+    bind(&niIsInitialized);
+#endif
+
+    branchTest32(Assembler::NonZero,
+                 flagsAddr,
+                 Imm32(NativeIterator::Flags::NotReusable),
+                 notReusable);
+}
+
 template <typename T, size_t N, typename P>
 static bool
 AddPendingReadBarrier(Vector<T*, N, P>& list, T* value)
