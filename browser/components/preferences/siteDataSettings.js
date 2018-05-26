@@ -69,8 +69,10 @@ let gSiteDataSettings = {
     }
 
     // Add "Last Used" column.
-    addColumnItem(site.lastAccessed > 0 ?
-      {raw: this._formatter.format(site.lastAccessed)} : null, "2");
+    let relativeTimeFormat = new Services.intl.RelativeTimeFormat(undefined, {style: "short"});
+    let formattedLastAccessed = site.lastAccessed > 0 ?
+      relativeTimeFormat.formatBestUnit(site.lastAccessed) : null;
+    addColumnItem({raw: formattedLastAccessed }, "2");
 
     item.appendChild(container);
     return item;
