@@ -743,6 +743,9 @@ BrowserGlue.prototype = {
       iconURL: "resource:///chrome/browser/content/browser/defaultthemes/light.icon.svg",
       textcolor: "black",
       accentcolor: "white",
+      popup: "#fff",
+      popup_text: "#0c0c0d",
+      popup_border: "#ccc",
       author: vendorShortName,
     });
     LightweightThemeManager.addBuiltInTheme({
