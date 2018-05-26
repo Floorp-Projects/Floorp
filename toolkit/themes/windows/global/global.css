@@ -23,6 +23,7 @@ menulist > menupopup {
   --arrowpanel-background: -moz-field;
   --arrowpanel-color: -moz-FieldText;
   --arrowpanel-border-color: ThreeDShadow;
+  --panel-disabled-color: GrayText;
 }
 
 @media (-moz-windows-default-theme) {
