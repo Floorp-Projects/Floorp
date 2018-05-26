@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-Cu.importGlobalProperties(["fetch"]);
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.defineModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm", {});
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

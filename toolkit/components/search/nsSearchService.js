@@ -36,7 +36,7 @@ const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
 
-Cu.importGlobalProperties(["DOMParser", "XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
 
 // A text encoder to UTF8, used whenever we commit the cache to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder",

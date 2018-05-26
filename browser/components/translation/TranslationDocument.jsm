@@ -7,7 +7,8 @@
 var EXPORTED_SYMBOLS = [ "TranslationDocument" ];
 
 ChromeUtils.import("resource://services-common/async.js");
-Cu.importGlobalProperties(["DOMParser"]);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
 /**
  * This class represents a document that is being translated,

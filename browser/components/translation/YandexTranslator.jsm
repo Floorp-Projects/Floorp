@@ -11,8 +11,9 @@ ChromeUtils.import("resource://gre/modules/Log.jsm");
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://services-common/async.js");
 ChromeUtils.import("resource://gre/modules/Http.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 // The maximum amount of net data allowed per request on Bing's API.
 const MAX_REQUEST_DATA = 5000; // Documentation says 10000 but anywhere

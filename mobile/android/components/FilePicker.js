@@ -7,7 +7,7 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Messaging.jsm");
 
-Cu.importGlobalProperties(["File"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["File"]);
 
 function FilePicker() {
 }

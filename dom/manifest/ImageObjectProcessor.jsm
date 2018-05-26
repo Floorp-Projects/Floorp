@@ -26,7 +26,9 @@ const {
   classes: Cc
 } = Components;
 
-Cu.importGlobalProperties(['URL']);
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ['URL']);
 const netutil = Cc['@mozilla.org/network/util;1']
   .getService(Ci.nsINetUtil);
 

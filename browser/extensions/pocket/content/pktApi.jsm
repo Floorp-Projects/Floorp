@@ -47,7 +47,7 @@ var EXPORTED_SYMBOLS = ["pktApi"];
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest"]);
 
 var pktApi = (function() {
 

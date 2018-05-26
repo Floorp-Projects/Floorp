@@ -8,8 +8,6 @@ const EXPORTED_SYMBOLS = ["WebRequestUpload"];
 
 /* exported WebRequestUpload */
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -17,6 +15,8 @@ ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   DefaultMap,
 } = ExtensionUtils;
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["TextEncoder"]);
 
 XPCOMUtils.defineLazyServiceGetter(this, "mimeHeader", "@mozilla.org/network/mime-hdrparam;1",
                                    "nsIMIMEHeaderParam");

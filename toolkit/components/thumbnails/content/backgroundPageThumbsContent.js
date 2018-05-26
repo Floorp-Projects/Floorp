@@ -4,11 +4,11 @@
 
 /* eslint-env mozilla/frame-script */
 
-Cu.importGlobalProperties(["Blob", "FileReader"]);
-
 ChromeUtils.import("resource://gre/modules/PageThumbUtils.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["Blob", "FileReader"]);
 
 // Let the page settle for this amount of milliseconds before capturing to allow
 // for any in-page changes or redirects.

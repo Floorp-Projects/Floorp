@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = [
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm", {});
-Cu.importGlobalProperties(["fetch", "indexedDB"]);
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "indexedDB"]);
 
 ChromeUtils.defineModuleGetter(this, "Kinto",
                                "resource://services-common/kinto-offline-client.js");

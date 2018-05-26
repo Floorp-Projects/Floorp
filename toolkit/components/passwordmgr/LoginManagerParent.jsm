@@ -4,9 +4,10 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["URL"]);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 ChromeUtils.defineModuleGetter(this, "AutoCompletePopup",
                                "resource://gre/modules/AutoCompletePopup.jsm");
