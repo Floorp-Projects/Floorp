@@ -28,8 +28,7 @@ const toolkitVariableMap = [
       }
       // Remove the alpha channel
       const {r, g, b} = rgbaChannels;
-      const luminance = _getLuminance(r, g, b);
-      element.setAttribute("lwthemetextcolor", luminance <= 110 ? "dark" : "bright");
+      element.setAttribute("lwthemetextcolor", _isTextColorDark(r, g, b) ? "dark" : "bright");
       return `rgba(${r}, ${g}, ${b})`;
     }
   }],
@@ -37,7 +36,30 @@ const toolkitVariableMap = [
     lwtProperty: "popup"
   }],
   ["--arrowpanel-color", {
-    lwtProperty: "popup_text"
+    lwtProperty: "popup_text",
+    processColor(rgbaChannels, element) {
+      const disabledColorVariable = "--panel-disabled-color";
+
+      if (!rgbaChannels) {
+        element.removeAttribute("lwt-popup-brighttext");
+        element.removeAttribute("lwt-popup-darktext");
+        element.style.removeProperty(disabledColorVariable);
+        return null;
+      }
+
+      let {r, g, b, a} = rgbaChannels;
+
+      if (_isTextColorDark(r, g, b)) {
+        element.removeAttribute("lwt-popup-brighttext");
+        element.setAttribute("lwt-popup-darktext", "true");
+      } else {
+        element.removeAttribute("lwt-popup-darktext");
+        element.setAttribute("lwt-popup-brighttext", "true");
+      }
+
+      element.style.setProperty(disabledColorVariable, `rgba(${r}, ${g}, ${b}, 0.5)`);
+      return `rgba(${r}, ${g}, ${b}, ${a})`;
+    }
   }],
   ["--arrowpanel-border-color", {
     lwtProperty: "popup_border"
@@ -53,8 +75,7 @@ const toolkitVariableMap = [
         return null;
       }
       const {r, g, b, a} = rgbaChannels;
-      const luminance = _getLuminance(r, g, b);
-      if (luminance <= 110) {
+      if (_isTextColorDark(r, g, b)) {
         element.removeAttribute("lwt-toolbar-field-brighttext");
       } else {
         element.setAttribute("lwt-toolbar-field-brighttext", "true");
@@ -263,6 +284,6 @@ function _parseRGBA(aColorString) {
   };
 }
 
-function _getLuminance(r, g, b) {
-  return 0.2125 * r + 0.7154 * g + 0.0721 * b;
+function _isTextColorDark(r, g, b) {
+  return (0.2125 * r + 0.7154 * g + 0.0721 * b) <= 110;
 }
