@@ -22,7 +22,7 @@
 }
 
 :root[lwt-popup-brighttext] {
-  --urlbar-popup-url-color: @lwtPopupBrighttextLinkColor@;
+  --urlbar-popup-url-color: #0a84ff;
   --urlbar-popup-action-color: #30e60b;
 }
 
