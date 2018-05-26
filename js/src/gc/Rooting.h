@@ -7,6 +7,7 @@
 #ifndef gc_Rooting_h
 #define gc_Rooting_h
 
+#include "gc/Policy.h"
 #include "js/GCVector.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"

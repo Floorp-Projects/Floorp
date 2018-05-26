@@ -382,7 +382,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
 
                 tbpl_status, log_level, summary = parser.evaluate_parser(return_code,
                                                                          previous_summary=summary)
-                self.buildbot_status(tbpl_status, level=log_level)
+                self.record_status(tbpl_status, level=log_level)
 
                 if len(per_test_args) > 0:
                     self.log_per_test_status(per_test_args[-1], tbpl_status, log_level)

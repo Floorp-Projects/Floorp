@@ -5,6 +5,10 @@
 /*
  * Handles the validation callback from nsIFormFillController and
  * the display of the help panel on invalid elements.
+ *
+ * FormSubmitObserver implements the nsIFormSubmitObserver interface
+ * to get notifications about invalid forms. See HTMLFormElement
+ * for details.
  */
 
 "use strict";
@@ -40,15 +44,11 @@ FormSubmitObserver.prototype =
                    .QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIContentFrameMessageManager);
 
-    // nsIFormSubmitObserver callback about invalid forms. See HTMLFormElement
-    // for details.
-    Services.obs.addObserver(this, "invalidformsubmit");
     this._tab.addEventListener("pageshow", this);
     this._tab.addEventListener("unload", this);
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "invalidformsubmit");
     this._content.removeEventListener("pageshow", this);
     this._content.removeEventListener("unload", this);
     this._mm = null;
@@ -227,5 +227,5 @@ FormSubmitObserver.prototype =
             (target.ownerDocument && target.ownerDocument == this._content.document));
   },
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIFormSubmitObserver, Ci.nsISupportsWeakReference])
 };

@@ -715,7 +715,7 @@ fuzzy-if(skiaContent,2,5) == 381507-1.html 381507-1-ref.html
 == 382916-1.html 382916-1-ref.html
 == 383035-1.html about:blank
 == 383035-2.html about:blank
-== 383488-1.html 383488-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 383488-1.html 383488-1-ref.html
 == 383551-1.html 383551-1-ref.html
 == 383883-1.html 383883-1-ref.html
 == 383883-2.html 383883-2-ref.html
@@ -754,7 +754,7 @@ test-pref(layout.float-fragments-inside-column.enabled,true) == 386147-1.html 38
 == 386470-1a.html 386470-1-ref.html
 == 386470-1b.html 386470-1-ref.html
 == 386470-1c.html 386470-1-ref.html
-== 386920-1.html 386920-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 386920-1.html 386920-1-ref.html
 == 387201-1.html 387201-1-ref.html
 == 387201-2.html about:blank  # Really an assertion test rather than a rendering test
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
@@ -769,7 +769,7 @@ fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in b
 == 389074-1.html 389074-1-ref.html
 == 389224-1.html 389224-1-ref.html
 == 389224-2.html about:blank
-== 389468-1.html 389468-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 389468-1.html 389468-1-ref.html
 == 389623-1.html 389623-1-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
@@ -1817,7 +1817,7 @@ fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 fuzzy-if(skiaContent,1,80) == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-pref(layout.css.overflow-clip-box.enabled,true) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) == 966992-1.html 966992-1-ref.html
+pref(layout.css.overflow-clip-box.enabled,true) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(50,145) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,3712) == 966992-1.html 966992-1-ref.html
 skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other than the root probably won't work well on android until bug 776030 is fixed
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg

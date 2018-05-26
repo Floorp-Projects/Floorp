@@ -347,7 +347,7 @@ pref(layout.css.control-characters.visible,true) != control-chars-04d.html contr
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
-== segment-break-transformation-1.html segment-break-transformation-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transformation-1.html segment-break-transformation-1-ref.html
 
 # color glyphs, opacity, and RTL runs - bug 1318539
 == color-opacity-rtl-1.html color-opacity-rtl-1-ref.html

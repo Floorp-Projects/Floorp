@@ -2364,6 +2364,151 @@ gfxFcPlatformFontList::CreateFontFamily(const nsAString& aName) const
     return new gfxFontconfigFontFamily(aName);
 }
 
+// mapping of moz lang groups ==> default lang
+struct MozLangGroupData {
+    nsAtom* const& mozLangGroup;
+    const char *defaultLang;
+};
+
+const MozLangGroupData MozLangGroups[] = {
+    { nsGkAtoms::x_western,      "en" },
+    { nsGkAtoms::x_cyrillic,     "ru" },
+    { nsGkAtoms::x_devanagari,   "hi" },
+    { nsGkAtoms::x_tamil,        "ta" },
+    { nsGkAtoms::x_armn,         "hy" },
+    { nsGkAtoms::x_beng,         "bn" },
+    { nsGkAtoms::x_cans,         "iu" },
+    { nsGkAtoms::x_ethi,         "am" },
+    { nsGkAtoms::x_geor,         "ka" },
+    { nsGkAtoms::x_gujr,         "gu" },
+    { nsGkAtoms::x_guru,         "pa" },
+    { nsGkAtoms::x_khmr,         "km" },
+    { nsGkAtoms::x_knda,         "kn" },
+    { nsGkAtoms::x_mlym,         "ml" },
+    { nsGkAtoms::x_orya,         "or" },
+    { nsGkAtoms::x_sinh,         "si" },
+    { nsGkAtoms::x_tamil,        "ta" },
+    { nsGkAtoms::x_telu,         "te" },
+    { nsGkAtoms::x_tibt,         "bo" },
+    { nsGkAtoms::Unicode,        0    }
+};
+
+bool
+gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
+                                       nsAtom* aLangGroup,
+                                       nsACString& aFcLang)
+{
+    // Truncate at '.' or '@' from aOSLang, and convert '_' to '-'.
+    // aOSLang is in the form "language[_territory][.codeset][@modifier]".
+    // fontconfig takes languages in the form "language-territory".
+    // nsLanguageAtomService takes languages in the form language-subtag,
+    // where subtag may be a territory.  fontconfig and nsLanguageAtomService
+    // handle case-conversion for us.
+    const char *pos, *end;
+    aOSLang.BeginReading(pos);
+    aOSLang.EndReading(end);
+    aFcLang.Truncate();
+    while (pos < end) {
+        switch (*pos) {
+            case '.':
+            case '@':
+                end = pos;
+                break;
+            case '_':
+                aFcLang.Append('-');
+                break;
+            default:
+                aFcLang.Append(*pos);
+        }
+        ++pos;
+    }
+
+    // We can safely use mLangService->LookupLanguage if we're on the main
+    // thread, or if we're in a Servo traversal that has locked the cache,
+    // but not if we're on the font enumeration thread used to populate the
+    // Font menu in about:preferences.
+    if (IsInServoTraversalWithoutMainThreadAssertion() || NS_IsMainThread()) {
+        nsAtom *atom = mLangService->LookupLanguage(aFcLang);
+        return atom == aLangGroup;
+    }
+
+    // Off-main-thread/non-servo-traversal version: fall back to
+    // GetUncachedLanguageGroup to avoid unsafe access to the lang-group
+    // mapping cache hashtable.
+    nsAutoCString lowered(aFcLang);
+    ToLowerCase(lowered);
+    RefPtr<nsAtom> lang = NS_Atomize(lowered);
+    RefPtr<nsAtom> group = mLangService->GetUncachedLanguageGroup(lang);
+    return group.get() == aLangGroup;
+}
+
+void
+gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
+                                             nsACString& aLangStr,
+                                             bool aCheckEnvironment)
+{
+    aLangStr.Truncate();
+    if (!aLanguage) {
+        return;
+    }
+
+    // set up lang string
+    const MozLangGroupData *mozLangGroup = nullptr;
+
+    // -- look it up in the list of moz lang groups
+    for (unsigned int i = 0; i < ArrayLength(MozLangGroups); ++i) {
+        if (aLanguage == MozLangGroups[i].mozLangGroup) {
+            mozLangGroup = &MozLangGroups[i];
+            break;
+        }
+    }
+
+    // -- not a mozilla lang group? Just return the BCP47 string
+    //    representation of the lang group
+    if (!mozLangGroup) {
+        // Not a special mozilla language group.
+        // Use aLanguage as a language code.
+        aLanguage->ToUTF8String(aLangStr);
+        return;
+    }
+
+    // -- check the environment for the user's preferred language that
+    //    corresponds to this mozilla lang group.
+    if (aCheckEnvironment) {
+        const char *languages = getenv("LANGUAGE");
+        if (languages) {
+            const char separator = ':';
+
+            for (const char *pos = languages; true; ++pos) {
+                if (*pos == '\0' || *pos == separator) {
+                    if (languages < pos &&
+                        TryLangForGroup(Substring(languages, pos),
+                                        aLanguage, aLangStr)) {
+                        return;
+                    }
+
+                    if (*pos == '\0') {
+                        break;
+                    }
+
+                    languages = pos + 1;
+                }
+            }
+        }
+        const char *ctype = setlocale(LC_CTYPE, nullptr);
+        if (ctype &&
+            TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr)) {
+            return;
+        }
+    }
+
+    if (mozLangGroup->defaultLang) {
+        aLangStr.Assign(mozLangGroup->defaultLang);
+    } else {
+        aLangStr.Truncate();
+    }
+}
+
 #ifdef MOZ_BUNDLED_FONTS
 void
 gfxFcPlatformFontList::ActivateBundledFonts()

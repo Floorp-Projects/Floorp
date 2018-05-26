@@ -232,9 +232,6 @@ class ContextMenu {
     this.global = global;
     this.content = global.content;
 
-    Services.els.addSystemEventListener(global, "contextmenu",
-                                        this._handleContentContextMenu.bind(this), false);
-
     Object.keys(messageListeners).forEach(key =>
       global.addMessageListener(key, messageListeners[key].bind(this))
     );
@@ -487,7 +484,7 @@ class ContextMenu {
     return selectors;
   }
 
-  _handleContentContextMenu(aEvent) {
+  handleEvent(aEvent) {
     let defaultPrevented = aEvent.defaultPrevented;
 
     if (!Services.prefs.getBoolPref("dom.event.contextmenu.enabled")) {
