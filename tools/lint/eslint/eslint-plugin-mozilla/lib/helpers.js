@@ -37,6 +37,7 @@ const callExpressionDefinitions = [
 ];
 
 const callExpressionMultiDefinitions = [
+  "XPCOMUtils.defineLazyGlobalGetters(this,",
   "XPCOMUtils.defineLazyModuleGetters(this,",
   "XPCOMUtils.defineLazyServiceGetters(this,"
 ];
@@ -308,11 +309,18 @@ module.exports = {
     }
 
     if (callExpressionMultiDefinitions.some(expr => source.startsWith(expr)) &&
-        node.expression.arguments[1] &&
-        node.expression.arguments[1].type === "ObjectExpression") {
-      return node.expression.arguments[1].properties
-                 .map(p => ({ name: p.type === "Property" && p.key.name, writable: true, explicit: true }))
-                 .filter(g => g.name);
+        node.expression.arguments[1]) {
+      let arg = node.expression.arguments[1];
+      if (arg.type === "ObjectExpression") {
+        return arg.properties
+                  .map(p => ({ name: p.type === "Property" && p.key.name, writable: true, explicit: true }))
+                  .filter(g => g.name);
+      }
+      if (arg.type === "ArrayExpression") {
+        return arg.elements
+                  .map(p => ({ name: p.type === "Literal" && p.value, writable: true, explicit: true }))
+                  .filter(g => typeof g.name == "string");
+      }
     }
 
     if (node.expression.callee.type == "MemberExpression" &&
