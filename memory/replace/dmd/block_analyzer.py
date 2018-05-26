@@ -61,12 +61,14 @@ allocatorFns = [
 
 # Command line arguments
 
+
 def range_1_24(string):
     value = int(string)
     if value < 1 or value > 24:
         msg = '{:s} is not in the range 1..24'.format(string)
         raise argparse.ArgumentTypeError(msg)
     return value
+
 
 parser = argparse.ArgumentParser(description='Analyze the heap graph to find out things about an object. \
 By default this prints out information about blocks that point to the given block.')
@@ -144,7 +146,8 @@ def show_referrers(args, blocks, stacks, block):
         for r in referrers:
             sys.stdout.write('0x{} size = {} bytes'.format(blocks[r].addr, blocks[r].req_size))
             plural = 's' if len(referrers[r]) > 1 else ''
-            sys.stdout.write(' at byte offset' + plural + ' ' + (', '.join(str(x) for x in referrers[r])))
+            sys.stdout.write(' at byte offset' + plural + ' ' +
+                             (', '.join(str(x) for x in referrers[r])))
             print
             print_trace_segment(args, stacks, blocks[r])
             print
