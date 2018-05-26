@@ -2309,6 +2309,17 @@ class Vendor(MachCommandBase):
         vendor_command = self._spawn(VendorPython)
         vendor_command.vendor(**kwargs)
 
+    @SubCommand('vendor', 'manifest',
+                description='Vendor externally hosted repositories into this '
+                            'repository.')
+    @CommandArgument('files', nargs='+',
+                     help='Manifest files to work on')
+    @CommandArgumentGroup('verify')
+    @CommandArgument('--verify', '-v', action='store_true', group='verify',
+                     required=True, help='Verify manifest')
+    def vendor_manifest(self, files, verify):
+        from mozbuild.vendor_manifest import verify_manifests
+        verify_manifests(files)
 
 @CommandProvider
 class WebRTCGTestCommands(GTestCommands):
