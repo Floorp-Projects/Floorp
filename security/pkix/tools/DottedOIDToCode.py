@@ -24,6 +24,7 @@ import argparse
 import itertools
 import sys
 
+
 def base128(value):
     """
     Given an integral value, returns an array of the base-128 representation
@@ -50,6 +51,7 @@ def base128(value):
 
     return result
 
+
 def dottedOIDToEncodedArray(dottedOID):
     """
     Takes a dotted OID string (e.g. '1.2.840.10045.4.3.4') as input, and
@@ -67,6 +69,7 @@ def dottedOIDToEncodedArray(dottedOID):
     firstByte = (40 * nodes[0]) + nodes[1]
     restBase128 = [base128(x) for x in nodes[2:]]
     return [firstByte] + list(itertools.chain.from_iterable(restBase128))
+
 
 def dottedOIDToCArray(dottedOID, mode):
     """
@@ -86,6 +89,7 @@ def dottedOIDToCArray(dottedOID, mode):
 
     return ", ".join(["0x%.2x" % b for b in bytes])
 
+
 def specNameToCName(specName):
     """
     Given an string containing an ASN.1 name, returns a string that is a valid
@@ -96,6 +100,7 @@ def specNameToCName(specName):
     names with other funny characters.
     """
     return specName.replace("-", "_")
+
 
 def toCode(programName, specName, dottedOID, mode):
     """
@@ -180,11 +185,12 @@ def toCode(programName, specName, dottedOID, mode):
             "  };\n") % (programNameWithOptions, specName, dottedOID, varName,
                          dottedOIDToCArray(dottedOID, mode))
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-                 description="Generate code snippets to handle OIDs in C++",
-                 epilog="example: python %s ecdsa-with-SHA1 1.2.840.10045.4.1"
-                            % sys.argv[0])
+        description="Generate code snippets to handle OIDs in C++",
+        epilog="example: python %s ecdsa-with-SHA1 1.2.840.10045.4.1"
+        % sys.argv[0])
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--tlv", action='store_true',
                        help="Wrap the encoded OID value with the tag and length")

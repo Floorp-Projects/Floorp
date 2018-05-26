@@ -36,6 +36,7 @@ import pycert
 import pykey
 import sys
 
+
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
@@ -133,7 +134,7 @@ class CMS(object):
         rsa['algorithm'] = rfc2459.rsaEncryption
         rsa['parameters'] = univ.Null()
         authenticatedAttributes = self.buildAuthenticatedAttributes(digestValue,
-          implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))
+                                                                    implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))
         authenticatedAttributesTBS = self.buildAuthenticatedAttributes(digestValue)
         signerInfo['authenticatedAttributes'] = authenticatedAttributes
         signerInfo['digestEncryptionAlgorithm'] = rsa
@@ -165,7 +166,7 @@ class CMS(object):
             implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))
         extendedCertificateOrCertificate = rfc2315.ExtendedCertificateOrCertificate()
         certificate = decoder.decode(self.signer.toDER(),
-            asn1Spec=rfc2459.Certificate())[0]
+                                     asn1Spec=rfc2459.Certificate())[0]
         extendedCertificateOrCertificate['certificate'] = certificate
         certificates[0] = extendedCertificateOrCertificate
         signedData['certificates'] = certificates
@@ -174,10 +175,10 @@ class CMS(object):
 
         if len(self.sha1) > 0:
             signerInfos[len(signerInfos)] = self.buildSignerInfo(certificate,
-                pykey.HASH_SHA1, self.sha1)
+                                                                 pykey.HASH_SHA1, self.sha1)
         if len(self.sha256) > 0:
             signerInfos[len(signerInfos)] = self.buildSignerInfo(certificate,
-                pykey.HASH_SHA256, self.sha256)
+                                                                 pykey.HASH_SHA256, self.sha256)
         signedData['signerInfos'] = signerInfos
 
         encoded = encoder.encode(signedData)
