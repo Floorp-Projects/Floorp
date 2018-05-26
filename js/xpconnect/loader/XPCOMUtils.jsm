@@ -90,6 +90,8 @@
 
 var EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
+let global = Cu.getGlobalForObject({});
+
 var XPCOMUtils = {
   /**
    * Generate a QueryInterface implementation. The returned function must be
@@ -225,6 +227,29 @@ var XPCOMUtils = {
         },
         configurable: true,
         enumerable: true
+      });
+    }
+  },
+
+  /**
+   * Defines a getter property on the given object for each of the given
+   * global names as accepted by Cu.importGlobalProperties. These
+   * properties are imported into the shared JSM module global, and then
+   * copied onto the given object, no matter which global the object
+   * belongs to.
+   *
+   * @param {object} aObject
+   *        The object on which to define the properties.
+   * @param {string[]} aNames
+   *        The list of global properties to define.
+   */
+  defineLazyGlobalGetters(aObject, aNames) {
+    for (let name of aNames) {
+      this.defineLazyGetter(aObject, name, () => {
+        if (!(name in global)) {
+          Cu.importGlobalProperties([name]);
+        }
+        return global[name];
       });
     }
   },
