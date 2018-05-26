@@ -565,13 +565,19 @@ add_task(async function testMultipleWindows() {
           expect(details[3], details[2], null, details[0]);
         },
         async expect => {
-          browser.test.log("Close the tab, expect window values.");
-          await browser.tabs.remove(tabs[1]);
-          expect(null, details[2], null, details[0]);
+          browser.test.log("Close the initial tab of the new window.");
+          let [{id}] = await browser.tabs.query({windowId: windows[1], index: 0});
+          await browser.tabs.remove(id);
+          expect(details[3], details[2], null, details[0]);
         },
         async expect => {
-          browser.test.log("Close the new window and go back to the previous one.");
-          await browser.windows.remove(windows[1]);
+          browser.test.log("Move the previous tab to a 3rd window, the 2nd one will close.");
+          await browser.windows.create({tabId: tabs[1]});
+          expect(details[3], null, null, details[0]);
+        },
+        async expect => {
+          browser.test.log("Close the tab, go back to the 1st window.");
+          await browser.tabs.remove(tabs[1]);
           expect(null, details[1], null, details[0]);
         },
         async expect => {
