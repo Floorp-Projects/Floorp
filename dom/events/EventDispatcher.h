@@ -9,7 +9,9 @@
 #define mozilla_EventDispatcher_h_
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Touch.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
@@ -155,6 +157,7 @@ public:
     mParentTarget = nullptr;
     mEventTargetAtParent = nullptr;
     mRetargetedRelatedTarget = nullptr;
+    mRetargetedTouchTargets.reset();
   }
 
   dom::EventTarget* GetParentTarget()
@@ -269,6 +272,13 @@ public:
    * to a new EventTarget.
    */
   dom::EventTarget* mRetargetedRelatedTarget;
+
+  /**
+   * If mEvent is a WidgetTouchEvent and its mTouches needs retargeting,
+   * set the targets to this array. The array should contain one entry per
+   * each object in WidgetTouchEvent::mTouches.
+   */
+  mozilla::Maybe<nsTArray<RefPtr<dom::EventTarget>>> mRetargetedTouchTargets;
 
   /**
    * Set to the value of mEvent->mTarget of the previous scope in case of

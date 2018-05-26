@@ -11304,7 +11304,7 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     // are the event targets for any regions viewport frames may cover.
     return result;
   }
-  uint8_t pointerEvents = StyleUserInterface()->GetEffectivePointerEvents(this);
+  const uint8_t pointerEvents = StyleUserInterface()->GetEffectivePointerEvents(this);
   if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
     return result;
   }
@@ -11336,7 +11336,7 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
   if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this)) {
     touchActionFrame = do_QueryFrame(scrollFrame);
   }
-  uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
+  const uint32_t touchAction = nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
   // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
   // so we can eliminate some combinations of things.
   if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
@@ -11362,10 +11362,10 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
     }
   }
 
-  nsDisplayOwnLayerFlags flags = aBuilder->GetCurrentScrollbarFlags();
-  if (flags != nsDisplayOwnLayerFlags::eNone) {
+  const Maybe<ScrollDirection> scrollDirection = aBuilder->GetCurrentScrollbarDirection();
+  if (scrollDirection.isSome()) {
     if (GetContent()->IsXULElement(nsGkAtoms::thumb)) {
-      bool thumbGetsLayer = aBuilder->GetCurrentScrollbarTarget() !=
+      const bool thumbGetsLayer = aBuilder->GetCurrentScrollbarTarget() !=
           layers::FrameMetrics::NULL_SCROLL_ID;
       if (thumbGetsLayer) {
         result |= CompositorHitTestInfo::eScrollbarThumb;
@@ -11373,13 +11373,11 @@ nsIFrame::GetCompositorHitTestInfo(nsDisplayListBuilder* aBuilder)
         result |= CompositorHitTestInfo::eDispatchToContent;
       }
     }
-    // The only flags that get set in nsDisplayListBuilder::mCurrentScrollbarFlags
-    // are the scrollbar direction flags
-    if (flags == nsDisplayOwnLayerFlags::eVerticalScrollbar) {
+
+    if (*scrollDirection == ScrollDirection::eVertical) {
       result |= CompositorHitTestInfo::eScrollbarVertical;
-    } else {
-      MOZ_ASSERT(flags == nsDisplayOwnLayerFlags::eHorizontalScrollbar);
     }
+
     // includes the ScrollbarFrame, SliderFrame, anything else that
     // might be inside the xul:scrollbar
     result |= CompositorHitTestInfo::eScrollbar;

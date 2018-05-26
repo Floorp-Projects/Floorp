@@ -1,5 +1,5 @@
-== bug535530-1.html bug535530-1-ref.html
-== view-source:bug535530-2.html bug535530-2-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug535530-1.html bug535530-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == view-source:bug535530-2.html bug535530-2-ref.html
 == bug566280-1.html bug566280-1-ref.html
 == bug569229-1.xml bug569229-1-ref.xml
 == bug577418-1.html bug577418-1-ref.html

@@ -10,8 +10,8 @@ import re
 
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.base.log import OutputParser, WARNING, INFO, CRITICAL, ERROR
-from mozharness.mozilla.buildbot import TBPL_WARNING, TBPL_FAILURE, TBPL_RETRY
-from mozharness.mozilla.buildbot import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
+from mozharness.mozilla.automation import TBPL_WARNING, TBPL_FAILURE, TBPL_RETRY
+from mozharness.mozilla.automation import TBPL_SUCCESS, TBPL_WORST_LEVEL_TUPLE
 
 SUITE_CATEGORIES = ['mochitest', 'reftest', 'xpcshell']
 
@@ -224,7 +224,7 @@ class DesktopUnittestOutputParser(OutputParser):
         # parse parse_single_line but at little cost since we are not parsing
         # the log more then once.  I figured this method should stay isolated as
         # it is only here for tbpl highlighted summaries and is not part of
-        # buildbot evaluation or result status IIUC.
+        # result status IIUC.
         summary = tbox_print_summary(self.pass_count,
                                      self.fail_count,
                                      self.known_fail_count,

@@ -94,7 +94,7 @@ mozharness_run_schema = Schema({
     # Only disableable on windows
     Required('use-simple-package'): bool,
 
-    # If false don't pass --branch or --skip-buildbot-actions to mozharness script
+    # If false don't pass --branch mozharness script
     # Only disableable on windows
     Required('use-magic-mh-args'): bool,
 
@@ -278,7 +278,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append('--config ' + cfg.replace('/', '\\'))
     if run['use-magic-mh-args']:
         mh_command.append('--branch ' + config.params['project'])
-        mh_command.append(r'--skip-buildbot-actions')
     mh_command.append(r'--work-dir %cd:Z:=z:%\build')
     for action in run.get('actions', []):
         assert ' ' not in action

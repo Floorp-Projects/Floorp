@@ -37,7 +37,7 @@ jobs:
       shipping-phase: push
       shipping-product: firefox
       treeherder:
-         platform: linux64/opt
+         platform: firefox-release/opt
          kind: test
          symbol: Rel(FV)
          tier: 1
@@ -47,7 +47,7 @@ jobs:
       shipping-phase: push
       shipping-product: devedition
       treeherder:
-         platform: linux64-devedition/opt
+         platform: devedition-release/opt
          kind: test
          symbol: Rel(FV)
          tier: 1

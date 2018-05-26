@@ -21,7 +21,7 @@ from mozharness.base.errors import MakefileErrorList
 from mozharness.base.script import BaseScript
 from mozharness.base.transfer import TransferMixin
 from mozharness.base.vcs.vcsbase import VCSMixin
-from mozharness.mozilla.buildbot import BuildbotMixin
+from mozharness.mozilla.automation import AutomationMixin
 from mozharness.mozilla.building.buildbase import (
     MakeUploadOutputParser,
     get_mozconfig_path,
@@ -64,9 +64,9 @@ runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
 
 
 # DesktopSingleLocale {{{1
-class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
-                          VCSMixin, BaseScript,
-                          BalrogMixin, MarMixin, VirtualenvMixin, TransferMixin):
+class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
+                          VCSMixin, BaseScript, BalrogMixin, MarMixin,
+                          VirtualenvMixin, TransferMixin):
     """Manages desktop repacks"""
     config_options = [[
         ['--balrog-config', ],
@@ -116,7 +116,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         {"action": "store",
          "dest": "revision",
          "type": "string",
-         "help": "Override the gecko revision to use (otherwise use buildbot supplied"
+         "help": "Override the gecko revision to use (otherwise use automation supplied"
                  " value, or en-US revision) "}
     ], [
         ['--user-repo-override', ],
@@ -175,7 +175,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 "summary",
             ],
             'config': {
-                "buildbot_json_path": "buildprops.json",
                 "ignore_locales": ["en-US"],
                 "locales_dir": "browser/locales",
                 "buildid_section": "App",
@@ -253,17 +252,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
                 msg.append(t)
             self.fatal(' '.join(msg))
         self.info('configuration looks ok')
-
-        if not self.buildbot_config:
-            self.warning("Skipping buildbot properties overrides")
-            # Set an empty dict
-            self.buildbot_config = {"properties": {}}
-            return
-        props = self.buildbot_config["properties"]
-        for prop in ['mar_tools_url']:
-            if props.get(prop):
-                self.info("Overriding %s with %s" % (prop, props[prop]))
-                self.config[prop] = props.get(prop)
+        return
 
     def _get_configuration_tokens(self, iterable):
         """gets a list of tokens in iterable"""
@@ -341,26 +330,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         replace_dict['en_us_binary_url'] = config.get('en_us_binary_url')
         # Override en_us_binary_url if packageUrl is passed as a property from
         # the en-US build
-        if self.buildbot_config["properties"].get("packageUrl"):
-            packageUrl = self.buildbot_config["properties"]["packageUrl"]
-            # trim off the filename, the build system wants a directory
-            packageUrl = packageUrl.rsplit('/', 1)[0]
-            self.info("Overriding en_us_binary_url with %s" % packageUrl)
-            replace_dict['en_us_binary_url'] = str(packageUrl)
-        # Override en_us_binary_url if passed as a buildbot property
-        if self.buildbot_config["properties"].get("en_us_binary_url"):
-            self.info("Overriding en_us_binary_url with %s" %
-                      self.buildbot_config["properties"]["en_us_binary_url"])
-            replace_dict['en_us_binary_url'] = \
-                str(self.buildbot_config["properties"]["en_us_binary_url"])
         bootstrap_env = self.query_env(partial_env=config.get("bootstrap_env"),
                                        replace_dict=replace_dict)
-        # Override en_us_installer_binary_url if passed as a buildbot property
-        if self.buildbot_config["properties"].get("en_us_installer_binary_url"):
-            self.info("Overriding en_us_binary_url with %s" %
-                      self.buildbot_config["properties"]["en_us_installer_binary_url"])
-            bootstrap_env['EN_US_INSTALLER_BINARY_URL'] = str(
-                self.buildbot_config["properties"]["en_us_installer_binary_url"])
         for binary in self._mar_binaries():
             # "mar -> MAR" and 'mar.exe -> MAR' (windows)
             name = binary.replace('.exe', '')
@@ -428,8 +399,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         """ Get the gecko revision in this order of precedence
               * cached value
               * command line arg --revision   (development, taskcluster)
-              * buildbot properties           (try with buildbot forced build)
-              * buildbot change               (try with buildbot scheduler)
               * from the en-US build          (m-c & m-a)
 
         This will fail the last case if the build hasn't been pulled yet.
@@ -441,13 +410,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         revision = None
         if config.get("revision"):
             revision = config["revision"]
-        elif 'revision' in self.buildbot_properties:
-            revision = self.buildbot_properties['revision']
-        elif (self.buildbot_config and
-              self.buildbot_config.get('sourcestamp', {}).get('revision')):
-            revision = self.buildbot_config['sourcestamp']['revision']
-        elif self.buildbot_config and self.buildbot_config.get('revision'):
-            revision = self.buildbot_config['revision']
 
         if not revision:
             self.fatal("Can't determine revision!")
@@ -507,12 +469,12 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         """marks current step as failed"""
         self.locales_property[locale] = FAILURE_STR
         prop_key = "%s_failure" % locale
-        prop_value = self.query_buildbot_property(prop_key)
+        prop_value = self.query_property(prop_key)
         if prop_value:
             prop_value = "%s  %s" % (prop_value, message)
         else:
             prop_value = message
-        self.set_buildbot_property(prop_key, prop_value, write_to_file=True)
+        self.set_property(prop_key, prop_value, write_to_file=True)
         BaseScript.add_failure(self, locale, message=message, **kwargs)
 
     def query_failed_locales(self):
@@ -526,9 +488,9 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         locales = self.query_locales()
         for locale in locales:
             self.locales_property.setdefault(locale, SUCCESS_STR)
-        self.set_buildbot_property("locales",
-                                   json.dumps(self.locales_property),
-                                   write_to_file=True)
+        self.set_property("locales",
+                          json.dumps(self.locales_property),
+                          write_to_file=True)
 
     # Actions {{{2
     def pull(self):
@@ -543,7 +505,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         replace_dict = {}
         if config.get("user_repo_override"):
             replace_dict['user_repo_override'] = config['user_repo_override']
-        # this is OK so early because we get it from buildbot, or
+        # this is OK so early because we get it from automation, or
         # the command line for local dev
         replace_dict['revision'] = self._query_revision()
 
@@ -806,7 +768,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
 
     def submit_to_balrog(self):
         """submit to balrog"""
-        self.info("Reading buildbot build properties...")
+        self.info("Reading build properties...")
         # get platform, appName and hashType from configuration
         # common values across different locales
         config = self.config
@@ -814,13 +776,13 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, BuildbotMixin,
         appName = config['appName']
         branch = config['branch']
         # values from configuration
-        self.set_buildbot_property("branch", branch)
-        self.set_buildbot_property("appName", appName)
+        self.set_property("branch", branch)
+        self.set_property("appName", appName)
         # it's hardcoded to sha512 in balrog.py
-        self.set_buildbot_property("platform", platform)
+        self.set_property("platform", platform)
         # values common to the current repacks
-        self.set_buildbot_property("buildid", self._query_buildid())
-        self.set_buildbot_property("appVersion", self.query_version())
+        self.set_property("buildid", self._query_buildid())
+        self.set_property("appVersion", self.query_version())
 
         # YAY
         def balrog_props_wrapper(locale):

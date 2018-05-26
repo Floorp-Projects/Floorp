@@ -57,7 +57,8 @@ public:
 
   void InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent);
 
-  void SetTarget(EventTarget* aTarget);
+  // Note, this sets both mOriginalTarget and mTarget.
+  void SetTouchTarget(EventTarget* aTarget);
 
   bool Equals(Touch* aTouch);
 
@@ -79,6 +80,7 @@ public:
   float RotationAngle(CallerType aCallerType) const;
   float Force(CallerType aCallerType) const;
 
+  nsCOMPtr<EventTarget> mOriginalTarget;
   nsCOMPtr<EventTarget> mTarget;
   LayoutDeviceIntPoint mRefPoint;
   bool mChanged;

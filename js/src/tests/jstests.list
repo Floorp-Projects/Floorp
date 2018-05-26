@@ -473,14 +473,20 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# https://github.com/tc39/test262/issues/1529
-skip script test262/built-ins/Atomics/wake/undefined-index-defaults-to-zero.js
-
-# https://github.com/tc39/test262/issues/1530
-skip script Atomics/wait/waiterlist-order-of-operations-is-fifo.js
-
 # Missing feature tag.
 skip script test262/built-ins/Symbol/matchAll/prop-desc.js
 
 # Test deletes "length" property and then expects the property is still present.
 skip script test262/intl402/NumberFormat/length.js
+
+# https://github.com/tc39/test262/issues/1529
+# https://github.com/tc39/test262/issues/1530
+# https://github.com/tc39/test262/issues/1566
+random script test262/built-ins/Atomics/wait/waiterlist-block-indexedposition-wake.js
+random script test262/built-ins/Atomics/wait/waiterlist-order-of-operations-is-fifo.js
+random script test262/built-ins/Atomics/wake/count-defaults-to-infinity-missing.js
+random script test262/built-ins/Atomics/wake/count-defaults-to-infinity-undefined.js
+random script test262/built-ins/Atomics/wake/wake-all-on-loc.js
+random script test262/built-ins/Atomics/wake/wake-all.js
+random script test262/built-ins/Atomics/wake/wake-in-order.js
+random script test262/built-ins/Atomics/wake/undefined-index-defaults-to-zero.js
