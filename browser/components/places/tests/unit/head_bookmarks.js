@@ -15,10 +15,8 @@ if (commonFile) {
 
 // Put any other stuff relative to this test folder below.
 
-XPCOMUtils.defineLazyGetter(this, "PlacesUIUtils", function() {
-  ChromeUtils.import("resource:///modules/PlacesUIUtils.jsm");
-  return PlacesUIUtils;
-});
+ChromeUtils.defineModuleGetter(this, "PlacesUIUtils",
+                               "resource:///modules/PlacesUIUtils.jsm");
 
 // Needed by some test that relies on having an app registered.
 ChromeUtils.import("resource://testing-common/AppInfo.jsm", this);
