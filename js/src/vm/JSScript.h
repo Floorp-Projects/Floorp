@@ -1295,11 +1295,11 @@ class JSScript : public js::gc::TenuredCell
         return mainOffset_;
     }
 
-    size_t lineno() const {
+    uint32_t lineno() const {
         return lineno_;
     }
 
-    size_t column() const {
+    uint32_t column() const {
         return column_;
     }
 
