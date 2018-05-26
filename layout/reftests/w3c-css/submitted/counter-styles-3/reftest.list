@@ -16,12 +16,12 @@ fails-if(webrender&&cocoaWidget) == system-alphabetic.html system-alphabetic-ref
 == descriptor-prefix.html   descriptor-prefix-ref.html
 == descriptor-suffix.html   descriptor-suffix-ref.html
 == descriptor-range.html    descriptor-range-ref.html
-== descriptor-pad.html      descriptor-pad-ref.html
+fuzzy-if(webrender,22,3) == descriptor-pad.html      descriptor-pad-ref.html
 == descriptor-fallback.html descriptor-fallback-ref.html
 == descriptor-symbols.html  descriptor-symbols-ref.html
 == descriptor-negative-invalid.html descriptor-negative-invalid-ref.html
 == descriptor-prefix-invalid.html   descriptor-prefix-invalid-ref.html
-== descriptor-suffix-invalid.html   descriptor-suffix-invalid-ref.html
+fuzzy-if(webrender,15,8) == descriptor-suffix-invalid.html   descriptor-suffix-invalid-ref.html
 == descriptor-range-invalid.html    descriptor-range-invalid-ref.html
 == descriptor-pad-invalid.html      descriptor-pad-invalid-ref.html
 == descriptor-fallback-invalid.html descriptor-fallback-invalid-ref.html

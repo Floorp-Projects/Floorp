@@ -240,7 +240,8 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
 {
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Alpha;
-  options.subpx_dir = wr::SubpixelDirection::Horizontal;
+  // FIXME: Cairo-FT metrics are not compatible with subpixel positioning.
+  // options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
   options.flags = 0;
   options.bg_color = wr::ToColorU(Color());
 
@@ -272,7 +273,7 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
         case FC_RGBA_VBGR:
             options.render_mode = wr::FontRenderMode::Subpixel;
             if (rgba == FC_RGBA_VRGB || rgba == FC_RGBA_VBGR) {
-                options.subpx_dir = wr::SubpixelDirection::Vertical;
+                options.flags |= wr::FontInstanceFlags::LCD_VERTICAL;
             }
             platformOptions.hinting = wr::FontHinting::LCD;
             if (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR) {
@@ -313,12 +314,8 @@ ScaledFontFontconfig::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* a
     if (FcPatternGetBool(mPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) == FcResultMatch && bitmap) {
       options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
     }
-
-    // FIXME: Cairo-FT metrics are not compatible with subpixel positioning.
-    options.subpx_dir = wr::SubpixelDirection::None;
   } else {
     options.render_mode = wr::FontRenderMode::Mono;
-    options.subpx_dir = wr::SubpixelDirection::None;
     platformOptions.hinting = wr::FontHinting::Mono;
     options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
   }

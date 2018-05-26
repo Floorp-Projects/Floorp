@@ -147,14 +147,6 @@ enum class RepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class SubpixelDirection : uint32_t {
-  None = 0,
-  Horizontal,
-  Vertical,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
 enum class TransformStyle : uint32_t {
   Flat = 0,
   Preserve3D = 1,
@@ -225,9 +217,6 @@ struct LayoutPixel;
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
 struct Renderer;
-
-// The resource updates for a given transaction (they must be applied in the same frame).
-struct ResourceUpdates;
 
 // Offset in number of tiles.
 struct Tiles;
@@ -888,7 +877,6 @@ struct ColorU {
 
 struct FontInstanceOptions {
   FontRenderMode render_mode;
-  SubpixelDirection subpx_dir;
   FontInstanceFlags flags;
   // When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
   // the text will be rendered with bg_color.r/g/b as an opaque estimated
@@ -897,7 +885,6 @@ struct FontInstanceOptions {
 
   bool operator==(const FontInstanceOptions& aOther) const {
     return render_mode == aOther.render_mode &&
-           subpx_dir == aOther.subpx_dir &&
            flags == aOther.flags &&
            bg_color == aOther.bg_color;
   }
