@@ -86,10 +86,10 @@ BaselineCompiler::addPCMappingEntry(bool addIndexEntry)
 MethodStatus
 BaselineCompiler::compile()
 {
-    JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%zu (%p)",
+    JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u (%p)",
             script->filename(), script->lineno(), script);
 
-    JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%zu",
+    JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u",
             script->filename(), script->lineno());
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
@@ -222,7 +222,7 @@ BaselineCompiler::compile()
     baselineScript->setMethod(code);
     baselineScript->setTemplateEnvironment(templateEnv);
 
-    JitSpew(JitSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%zu",
+    JitSpew(JitSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%u",
             (void*) baselineScript.get(), (void*) code->raw(),
             script->filename(), script->lineno());
 
@@ -278,7 +278,7 @@ BaselineCompiler::compile()
     // Always register a native => bytecode mapping entry, since profiler can be
     // turned on with baseline jitcode on stack, and baseline jitcode cannot be invalidated.
     {
-        JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%zu (%p)",
+        JitSpew(JitSpew_Profiling, "Added JitcodeGlobalEntry for baseline script %s:%u (%p)",
                     script->filename(), script->lineno(), baselineScript.get());
 
         // Generate profiling string.

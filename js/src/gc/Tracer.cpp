@@ -441,7 +441,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
           case JS::TraceKind::Script:
           {
             JSScript* script = static_cast<JSScript*>(thing);
-            snprintf(buf, bufsize, " %s:%zu", script->filename(), script->lineno());
+            snprintf(buf, bufsize, " %s:%u", script->filename(), script->lineno());
             break;
           }
 
