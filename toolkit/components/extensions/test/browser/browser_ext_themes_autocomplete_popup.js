@@ -164,8 +164,15 @@ add_task(async function test_popup_url() {
   Assert.equal(root.getAttribute("lwt-popup-brighttext"),
                "",
                "brighttext should not be set!");
+  Assert.equal(root.getAttribute("lwt-popup-darktext"),
+               "true",
+               "darktext should be set!");
 
   await extension.unload();
+
+  Assert.equal(root.hasAttribute("lwt-popup-darktext"),
+               false,
+               "lwt-popup-darktext attribute should be removed");
 
   // Load a manifest with popup_text being bright. Test for bright text properties.
   extension = ExtensionTestUtils.loadExtension({
@@ -216,6 +223,9 @@ add_task(async function test_popup_url() {
   Assert.equal(root.getAttribute("lwt-popup-brighttext"),
                "true",
                "brighttext should be set to true!");
+  Assert.equal(root.getAttribute("lwt-popup-darktext"),
+               "",
+               "darktext should not be set!");
 
   await extension.unload();
 
@@ -224,6 +234,9 @@ add_task(async function test_popup_url() {
   Assert.equal(root.getAttribute("lwt-popup-brighttext"),
                "",
                "brighttext should not be set!");
+  Assert.equal(root.getAttribute("lwt-popup-dakrtext"),
+               "",
+               "darktext should not be set!");
 
   // Calculate what GrayText should be. May differ between platforms.
   let span = document.createElement("span");
