@@ -7,8 +7,6 @@
 
 """Generate a json XPT typelib for an IDL file"""
 
-import os
-import sys
 import xpidl
 import json
 import itertools

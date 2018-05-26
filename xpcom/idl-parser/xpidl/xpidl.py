@@ -266,7 +266,10 @@ class NameMap(object):
 
 
 class RustNoncompat(Exception):
-    """Thie exception is raised when a particular type or function cannot be safely exposed to rust code"""
+    """
+    This exception is raised when a particular type or function cannot be safely exposed to
+    rust code
+    """
 
     def __init__(self, reason):
         self.reason = reason
@@ -667,7 +670,8 @@ class Interface(object):
                 if member.kind is 'method':
                     if has_method:
                         raise IDLError(
-                            "interface '%s' has multiple methods, but marked 'function'" % self.name, self.location)
+                            "interface '%s' has multiple methods, but marked 'function'" %
+                            self.name, self.location)
                     else:
                         has_method = True
 
@@ -679,12 +683,15 @@ class Interface(object):
                                (self.name, self.base), self.location)
 
             if self.attributes.scriptable and not realbase.attributes.scriptable:
-                raise IDLError("interface '%s' is scriptable but derives from non-scriptable '%s'" %
+                raise IDLError("interface '%s' is scriptable but derives from "
+                               "non-scriptable '%s'" %
                                (self.name, self.base), self.location, warning=True)
 
-            if self.attributes.scriptable and realbase.attributes.builtinclass and not self.attributes.builtinclass:
-                raise IDLError("interface '%s' is not builtinclass but derives from builtinclass '%s'" % (
-                    self.name, self.base), self.location)
+            if (self.attributes.scriptable and realbase.attributes.builtinclass and
+                not self.attributes.builtinclass):
+                raise IDLError("interface '%s' is not builtinclass but derives from "
+                               "builtinclass '%s'" %
+                               (self.name, self.base), self.location)
 
             if realbase.implicit_builtinclass:
                 self.implicit_builtinclass = True  # Inherit implicit builtinclass from base
@@ -952,7 +959,10 @@ class Attribute(object):
                 getBuiltinOrNativeTypeName(self.realtype) != '[domstring]'):
             raise IDLError("'Undefined' attribute can only be used on DOMString",
                            self.location)
-        if self.infallible and not self.realtype.kind in ['builtin', 'interface', 'forward', 'webidl']:
+        if self.infallible and self.realtype.kind not in ['builtin',
+                                                          'interface',
+                                                          'forward',
+                                                          'webidl']:
             raise IDLError('[infallible] only works on interfaces, domobjects, and builtin types '
                            '(numbers, booleans, and raw char types)',
                            self.location)
@@ -1120,7 +1130,8 @@ class Param(object):
                 if value is None:
                     raise IDLError("'Null' must specify a parameter", aloc)
                 if value not in ('Empty', 'Null', 'Stringify'):
-                    raise IDLError("'Null' parameter value must be 'Empty', 'Null', or 'Stringify'",
+                    raise IDLError("'Null' parameter value must be 'Empty', 'Null', "
+                                   "or 'Stringify'",
                                    aloc)
                 self.null = value
             elif name == 'Undefined':
@@ -1174,9 +1185,9 @@ class Param(object):
 
         try:
             return self.realtype.nativeType(self.paramtype, **kwargs)
-        except IDLError, e:
+        except IDLError as e:
             raise IDLError(e.message, self.location)
-        except TypeError, e:
+        except TypeError as e:
             raise IDLError("Unexpected parameter attribute", self.location)
 
     def rustType(self):
@@ -1188,9 +1199,9 @@ class Param(object):
 
         try:
             return self.realtype.rustType(self.paramtype, **kwargs)
-        except IDLError, e:
+        except IDLError as e:
             raise IDLError(e.message, self.location)
-        except TypeError, e:
+        except TypeError as e:
             raise IDLError("Unexpected parameter attribute", self.location)
 
     def toIDL(self):
@@ -1274,7 +1285,7 @@ class IDLParser(object):
     t_IID.__doc__ = r'%(c)s{8}-%(c)s{4}-%(c)s{4}-%(c)s{4}-%(c)s{12}' % {'c': hexchar}
 
     def t_IDENTIFIER(self, t):
-        r'(unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long)(?!_?[A-Za-z][A-Za-z_0-9])|_?[A-Za-z][A-Za-z_0-9]*'
+        r'(unsigned\ long\ long|unsigned\ short|unsigned\ long|long\ long)(?!_?[A-Za-z][A-Za-z_0-9])|_?[A-Za-z][A-Za-z_0-9]*'  # NOQA: E501
         t.type = self.keywords.get(t.value, 'IDENTIFIER')
         return t
 
@@ -1416,7 +1427,7 @@ class IDLParser(object):
             doccomments.extend(atts['doccomments'])
         doccomments.extend(p.slice[2].doccomments)
 
-        def l(): return self.getLocation(p, 2)
+        def loc(): return self.getLocation(p, 2)
 
         if body is None:
             # forward-declared interface... must not have attributes!
@@ -1426,14 +1437,14 @@ class IDLParser(object):
 
             if base is not None:
                 raise IDLError("Forward-declared interface must not have a base",
-                               l())
-            p[0] = Forward(name=name, location=l(), doccomments=doccomments)
+                               loc())
+            p[0] = Forward(name=name, location=loc(), doccomments=doccomments)
         else:
             p[0] = Interface(name=name,
                              attlist=attlist,
                              base=base,
                              members=body,
-                             location=l(),
+                             location=loc(),
                              doccomments=doccomments)
 
     def p_ifacebody(self, p):
@@ -1614,7 +1625,8 @@ class IDLParser(object):
     def p_error(self, t):
         if not t:
             raise IDLError(
-                "Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) or both", None)
+                "Syntax Error at end of file. Possibly due to missing semicolon(;), braces(}) "
+                "or both", None)
         else:
             location = Location(self.lexer, t.lineno, t.lexpos)
             raise IDLError("invalid syntax", location)
@@ -1658,5 +1670,5 @@ class IDLParser(object):
 if __name__ == '__main__':
     p = IDLParser()
     for f in sys.argv[1:]:
-        print "Parsing %s" % f
+        print("Parsing %s" % f)
         p.parse(open(f).read(), filename=f)
