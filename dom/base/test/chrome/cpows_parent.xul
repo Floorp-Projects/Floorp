@@ -243,14 +243,18 @@
         // as it's detectable).
         is(savedElement.isEqualNode, savedElement.isEqualNode, "webidl function identity works");
 
-        let walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-                       .createInstance(Ci.inIDeepTreeWalker);
-        const SHOW_ELEMENT = NodeFilter.SHOW_ELEMENT;
-        walker.showAnonymousContent = true;
-        walker.showSubDocuments = false;
+        // We want to test what happens when a CPOW is passed through XPConnect
+        // as an XPCOM interface.  But elements are losing all their XPCOM
+        // interfaces, so let's use an object that will likely stay an XPCOM
+        // one.
+        let docshell = savedElement.ownerDocument.docShell;
+        ok(docshell, "We should have a docshell here!");
+
+        let secureUI = Cc['@mozilla.org/secure_browser_ui;1']
+                         .createInstance(Ci.nsISecureBrowserUI);
 
         try {
-          walker.init(savedElement, SHOW_ELEMENT);
+          secureUI.setDocShell(docshell);
           ok(false, "expected exception passing CPOW to C++");
         } catch (e) {
           is(e.result, Cr.NS_ERROR_XPC_CANT_PASS_CPOW_TO_NATIVE,
