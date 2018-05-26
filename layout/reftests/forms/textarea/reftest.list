@@ -1,5 +1,7 @@
 skip-if(Android) == resize.html resize-ref.html
+skip-if(Android) == resize-vertical.html resize-ref.html
 skip-if(Android) == resize-rtl.html resize-rtl-ref.html
+skip-if(Android) == resize-rtl-vertical.html resize-rtl-ref.html
 # an offset seems to apply to the native resizer on windows so skip this test for now
 skip-if(Android) skip-if(winWidget) fuzzy-if(cocoaWidget,1,33) fuzzy-if(skiaContent&&!winWidget&&!Android,5,10) == resize-background.html resize-background-ref.html
 skip-if(Android) != ltr.html rtl.html
