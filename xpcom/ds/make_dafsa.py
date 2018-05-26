@@ -194,289 +194,291 @@ The bytes in the generated array has the following meaning:
 
 import sys
 
+
 class InputError(Exception):
-  """Exception raised for errors in the input file."""
+    """Exception raised for errors in the input file."""
 
 
 def to_dafsa(words):
-  """Generates a DAFSA from a word list and returns the source node.
+    """Generates a DAFSA from a word list and returns the source node.
 
-  Each word is split into characters so that each character is represented by
-  a unique node. It is assumed the word list is not empty.
-  """
-  if not words:
-    raise InputError('The domain list must not be empty')
-  def ToNodes(word):
-    """Split words into characters"""
-    if not 0x1F < ord(word[0]) < 0x80:
-      raise InputError('Domain names must be printable 7-bit ASCII')
-    if len(word) == 1:
-      return chr(ord(word[0]) & 0x0F), [None]
-    return word[0], [ToNodes(word[1:])]
-  return [ToNodes(word) for word in words]
+    Each word is split into characters so that each character is represented by
+    a unique node. It is assumed the word list is not empty.
+    """
+    if not words:
+        raise InputError('The domain list must not be empty')
+
+    def ToNodes(word):
+        """Split words into characters"""
+        if not 0x1F < ord(word[0]) < 0x80:
+            raise InputError('Domain names must be printable 7-bit ASCII')
+        if len(word) == 1:
+            return chr(ord(word[0]) & 0x0F), [None]
+        return word[0], [ToNodes(word[1:])]
+    return [ToNodes(word) for word in words]
 
 
 def to_words(node):
-  """Generates a word list from all paths starting from an internal node."""
-  if not node:
-    return ['']
-  return [(node[0] + word) for child in node[1] for word in to_words(child)]
+    """Generates a word list from all paths starting from an internal node."""
+    if not node:
+        return ['']
+    return [(node[0] + word) for child in node[1] for word in to_words(child)]
 
 
 def reverse(dafsa):
-  """Generates a new DAFSA that is reversed, so that the old sink node becomes
-  the new source node.
-  """
-  sink = []
-  nodemap = {}
-
-  def dfs(node, parent):
-    """Creates reverse nodes.
-
-    A new reverse node will be created for each old node. The new node will
-    get a reversed label and the parents of the old node as children.
+    """Generates a new DAFSA that is reversed, so that the old sink node becomes
+    the new source node.
     """
-    if not node:
-      sink.append(parent)
-    elif id(node) not in nodemap:
-      nodemap[id(node)] = (node[0][::-1], [parent])
-      for child in node[1]:
-        dfs(child, nodemap[id(node)])
-    else:
-      nodemap[id(node)][1].append(parent)
+    sink = []
+    nodemap = {}
 
-  for node in dafsa:
-    dfs(node, None)
-  return sink
+    def dfs(node, parent):
+        """Creates reverse nodes.
+
+        A new reverse node will be created for each old node. The new node will
+        get a reversed label and the parents of the old node as children.
+        """
+        if not node:
+            sink.append(parent)
+        elif id(node) not in nodemap:
+            nodemap[id(node)] = (node[0][::-1], [parent])
+            for child in node[1]:
+                dfs(child, nodemap[id(node)])
+        else:
+            nodemap[id(node)][1].append(parent)
+
+    for node in dafsa:
+        dfs(node, None)
+    return sink
 
 
 def join_labels(dafsa):
-  """Generates a new DAFSA where internal nodes are merged if there is a one to
-  one connection.
-  """
-  parentcount = { id(None): 2 }
-  nodemap = { id(None): None }
+    """Generates a new DAFSA where internal nodes are merged if there is a one to
+    one connection.
+    """
+    parentcount = {id(None): 2}
+    nodemap = {id(None): None}
 
-  def count_parents(node):
-    """Count incoming references"""
-    if id(node) in parentcount:
-      parentcount[id(node)] += 1
-    else:
-      parentcount[id(node)] = 1
-      for child in node[1]:
-        count_parents(child)
+    def count_parents(node):
+        """Count incoming references"""
+        if id(node) in parentcount:
+            parentcount[id(node)] += 1
+        else:
+            parentcount[id(node)] = 1
+            for child in node[1]:
+                count_parents(child)
 
-  def join(node):
-    """Create new nodes"""
-    if id(node) not in nodemap:
-      children = [join(child) for child in node[1]]
-      if len(children) == 1 and parentcount[id(node[1][0])] == 1:
-        child = children[0]
-        nodemap[id(node)] = (node[0] + child[0], child[1])
-      else:
-        nodemap[id(node)] = (node[0], children)
-    return nodemap[id(node)]
+    def join(node):
+        """Create new nodes"""
+        if id(node) not in nodemap:
+            children = [join(child) for child in node[1]]
+            if len(children) == 1 and parentcount[id(node[1][0])] == 1:
+                child = children[0]
+                nodemap[id(node)] = (node[0] + child[0], child[1])
+            else:
+                nodemap[id(node)] = (node[0], children)
+        return nodemap[id(node)]
 
-  for node in dafsa:
-    count_parents(node)
-  return [join(node) for node in dafsa]
+    for node in dafsa:
+        count_parents(node)
+    return [join(node) for node in dafsa]
 
 
 def join_suffixes(dafsa):
-  """Generates a new DAFSA where nodes that represent the same word lists
-  towards the sink are merged.
-  """
-  nodemap = { frozenset(('',)): None }
-
-  def join(node):
-    """Returns a macthing node. A new node is created if no matching node
-    exists. The graph is accessed in dfs order.
+    """Generates a new DAFSA where nodes that represent the same word lists
+    towards the sink are merged.
     """
-    suffixes = frozenset(to_words(node))
-    if suffixes not in nodemap:
-      nodemap[suffixes] = (node[0], [join(child) for child in node[1]])
-    return nodemap[suffixes]
+    nodemap = {frozenset(('',)): None}
 
-  return [join(node) for node in dafsa]
+    def join(node):
+        """Returns a macthing node. A new node is created if no matching node
+        exists. The graph is accessed in dfs order.
+        """
+        suffixes = frozenset(to_words(node))
+        if suffixes not in nodemap:
+            nodemap[suffixes] = (node[0], [join(child) for child in node[1]])
+        return nodemap[suffixes]
+
+    return [join(node) for node in dafsa]
 
 
 def top_sort(dafsa):
-  """Generates list of nodes in topological sort order."""
-  incoming = {}
+    """Generates list of nodes in topological sort order."""
+    incoming = {}
 
-  def count_incoming(node):
-    """Counts incoming references."""
-    if node:
-      if id(node) not in incoming:
-        incoming[id(node)] = 1
+    def count_incoming(node):
+        """Counts incoming references."""
+        if node:
+            if id(node) not in incoming:
+                incoming[id(node)] = 1
+                for child in node[1]:
+                    count_incoming(child)
+            else:
+                incoming[id(node)] += 1
+
+    for node in dafsa:
+        count_incoming(node)
+
+    for node in dafsa:
+        incoming[id(node)] -= 1
+
+    waiting = [node for node in dafsa if incoming[id(node)] == 0]
+    nodes = []
+
+    while waiting:
+        node = waiting.pop()
+        assert incoming[id(node)] == 0
+        nodes.append(node)
         for child in node[1]:
-          count_incoming(child)
-      else:
-        incoming[id(node)] += 1
-
-  for node in dafsa:
-    count_incoming(node)
-
-  for node in dafsa:
-    incoming[id(node)] -= 1
-
-  waiting = [node for node in dafsa if incoming[id(node)] == 0]
-  nodes = []
-
-  while waiting:
-    node = waiting.pop()
-    assert incoming[id(node)] == 0
-    nodes.append(node)
-    for child in node[1]:
-      if child:
-        incoming[id(child)] -= 1
-        if incoming[id(child)] == 0:
-          waiting.append(child)
-  return nodes
+            if child:
+                incoming[id(child)] -= 1
+                if incoming[id(child)] == 0:
+                    waiting.append(child)
+    return nodes
 
 
 def encode_links(children, offsets, current):
-  """Encodes a list of children as one, two or three byte offsets."""
-  if not children[0]:
-    # This is an <end_label> node and no links follow such nodes
-    assert len(children) == 1
-    return []
-  guess = 3 * len(children)
-  assert children
-  children = sorted(children, key = lambda x: -offsets[id(x)])
-  while True:
-    offset = current + guess
-    buf = []
-    for child in children:
-      last = len(buf)
-      distance = offset - offsets[id(child)]
-      assert distance > 0 and distance < (1 << 21)
+    """Encodes a list of children as one, two or three byte offsets."""
+    if not children[0]:
+        # This is an <end_label> node and no links follow such nodes
+        assert len(children) == 1
+        return []
+    guess = 3 * len(children)
+    assert children
+    children = sorted(children, key=lambda x: -offsets[id(x)])
+    while True:
+        offset = current + guess
+        buf = []
+        for child in children:
+            last = len(buf)
+            distance = offset - offsets[id(child)]
+            assert distance > 0 and distance < (1 << 21)
 
-      if distance < (1 << 6):
-        # A 6-bit offset: "s0xxxxxx"
-        buf.append(distance)
-      elif distance < (1 << 13):
-        # A 13-bit offset: "s10xxxxxxxxxxxxx"
-        buf.append(0x40 | (distance >> 8))
-        buf.append(distance & 0xFF)
-      else:
-        # A 21-bit offset: "s11xxxxxxxxxxxxxxxxxxxxx"
-        buf.append(0x60 | (distance >> 16))
-        buf.append((distance >> 8) & 0xFF)
-        buf.append(distance & 0xFF)
-      # Distance in first link is relative to following record.
-      # Distance in other links are relative to previous link.
-      offset -= distance
-    if len(buf) == guess:
-      break
-    guess = len(buf)
-  # Set most significant bit to mark end of links in this node.
-  buf[last] |= (1 << 7)
-  buf.reverse()
-  return buf
+            if distance < (1 << 6):
+                # A 6-bit offset: "s0xxxxxx"
+                buf.append(distance)
+            elif distance < (1 << 13):
+                # A 13-bit offset: "s10xxxxxxxxxxxxx"
+                buf.append(0x40 | (distance >> 8))
+                buf.append(distance & 0xFF)
+            else:
+                # A 21-bit offset: "s11xxxxxxxxxxxxxxxxxxxxx"
+                buf.append(0x60 | (distance >> 16))
+                buf.append((distance >> 8) & 0xFF)
+                buf.append(distance & 0xFF)
+            # Distance in first link is relative to following record.
+            # Distance in other links are relative to previous link.
+            offset -= distance
+        if len(buf) == guess:
+            break
+        guess = len(buf)
+    # Set most significant bit to mark end of links in this node.
+    buf[last] |= (1 << 7)
+    buf.reverse()
+    return buf
 
 
 def encode_prefix(label):
-  """Encodes a node label as a list of bytes without a trailing high byte.
+    """Encodes a node label as a list of bytes without a trailing high byte.
 
-  This method encodes a node if there is exactly one child  and the
-  child follows immidiately after so that no jump is needed. This label
-  will then be a prefix to the label in the child node.
-  """
-  assert label
-  return [ord(c) for c in reversed(label)]
+    This method encodes a node if there is exactly one child  and the
+    child follows immidiately after so that no jump is needed. This label
+    will then be a prefix to the label in the child node.
+    """
+    assert label
+    return [ord(c) for c in reversed(label)]
 
 
 def encode_label(label):
-  """Encodes a node label as a list of bytes with a trailing high byte >0x80.
-  """
-  buf = encode_prefix(label)
-  # Set most significant bit to mark end of label in this node.
-  buf[0] |= (1 << 7)
-  return buf
+    """Encodes a node label as a list of bytes with a trailing high byte >0x80.
+    """
+    buf = encode_prefix(label)
+    # Set most significant bit to mark end of label in this node.
+    buf[0] |= (1 << 7)
+    return buf
 
 
 def encode(dafsa):
-  """Encodes a DAFSA to a list of bytes"""
-  output = []
-  offsets = {}
+    """Encodes a DAFSA to a list of bytes"""
+    output = []
+    offsets = {}
 
-  for node in reversed(top_sort(dafsa)):
-    if (len(node[1]) == 1 and node[1][0] and
-        (offsets[id(node[1][0])] == len(output))):
-      output.extend(encode_prefix(node[0]))
-    else:
-      output.extend(encode_links(node[1], offsets, len(output)))
-      output.extend(encode_label(node[0]))
-    offsets[id(node)] = len(output)
+    for node in reversed(top_sort(dafsa)):
+        if (len(node[1]) == 1 and node[1][0] and
+                (offsets[id(node[1][0])] == len(output))):
+            output.extend(encode_prefix(node[0]))
+        else:
+            output.extend(encode_links(node[1], offsets, len(output)))
+            output.extend(encode_label(node[0]))
+        offsets[id(node)] = len(output)
 
-  output.extend(encode_links(dafsa, offsets, len(output)))
-  output.reverse()
-  return output
+    output.extend(encode_links(dafsa, offsets, len(output)))
+    output.reverse()
+    return output
 
 
 def to_cxx(data, preamble=None):
-  """Generates C++ code from a list of encoded bytes."""
-  text = '/* This file is generated. DO NOT EDIT!\n\n'
-  text += 'The byte array encodes a dictionary of strings and values. See '
-  text += 'make_dafsa.py for documentation.'
-  text += '*/\n\n'
+    """Generates C++ code from a list of encoded bytes."""
+    text = '/* This file is generated. DO NOT EDIT!\n\n'
+    text += 'The byte array encodes a dictionary of strings and values. See '
+    text += 'make_dafsa.py for documentation.'
+    text += '*/\n\n'
 
-  if preamble:
-    text += preamble
-    text += '\n\n'
+    if preamble:
+        text += preamble
+        text += '\n\n'
 
-  text += 'const unsigned char kDafsa[%s] = {\n' % len(data)
-  for i in range(0, len(data), 12):
-    text += '  '
-    text += ', '.join('0x%02x' % byte for byte in data[i:i + 12])
-    text += ',\n'
-  text += '};\n'
-  return text
+    text += 'const unsigned char kDafsa[%s] = {\n' % len(data)
+    for i in range(0, len(data), 12):
+        text += '  '
+        text += ', '.join('0x%02x' % byte for byte in data[i:i + 12])
+        text += ',\n'
+    text += '};\n'
+    return text
 
 
 def words_to_cxx(words, preamble=None):
-  """Generates C++ code from a word list"""
-  dafsa = to_dafsa(words)
-  for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
-    dafsa = fun(dafsa)
-  return to_cxx(encode(dafsa), preamble)
+    """Generates C++ code from a word list"""
+    dafsa = to_dafsa(words)
+    for fun in (reverse, join_suffixes, reverse, join_suffixes, join_labels):
+        dafsa = fun(dafsa)
+    return to_cxx(encode(dafsa), preamble)
 
 
 def parse_gperf(infile):
-  """Parses gperf file and extract strings and return code"""
-  lines = [line.strip() for line in infile]
+    """Parses gperf file and extract strings and return code"""
+    lines = [line.strip() for line in infile]
 
-  # Extract the preamble.
-  first_delimeter = lines.index('%%')
-  preamble = '\n'.join(lines[0:first_delimeter])
+    # Extract the preamble.
+    first_delimeter = lines.index('%%')
+    preamble = '\n'.join(lines[0:first_delimeter])
 
-  # Extract strings after the first '%%' and before the second '%%'.
-  begin = first_delimeter + 1
-  end = lines.index('%%', begin)
-  lines = lines[begin:end]
-  for line in lines:
-    if line[-3:-1] != ', ':
-      raise InputError('Expected "domainname, <digit>", found "%s"' % line)
-    # Technically the DAFSA format could support return values in range [0-31],
-    # but the values below are the only with a defined meaning.
-    if line[-1] not in '0124':
-      raise InputError('Expected value to be one of {0,1,2,4}, found "%s"' %
-                       line[-1])
-  return (preamble, [line[:-3] + line[-1] for line in lines])
+    # Extract strings after the first '%%' and before the second '%%'.
+    begin = first_delimeter + 1
+    end = lines.index('%%', begin)
+    lines = lines[begin:end]
+    for line in lines:
+        if line[-3:-1] != ', ':
+            raise InputError('Expected "domainname, <digit>", found "%s"' % line)
+        # Technically the DAFSA format could support return values in range [0-31],
+        # but the values below are the only with a defined meaning.
+        if line[-1] not in '0124':
+            raise InputError('Expected value to be one of {0,1,2,4}, found "%s"' %
+                             line[-1])
+    return (preamble, [line[:-3] + line[-1] for line in lines])
 
 
 def main(outfile, infile):
-  with open(infile, 'r') as infile:
-    preamble, words = parse_gperf(infile)
-    outfile.write(words_to_cxx(words, preamble))
-  return 0
+    with open(infile, 'r') as infile:
+        preamble, words = parse_gperf(infile)
+        outfile.write(words_to_cxx(words, preamble))
+    return 0
 
 
 if __name__ == '__main__':
-  if len(sys.argv) != 3:
-    print('usage: %s infile outfile' % sys.argv[0])
-    sys.exit(1)
+    if len(sys.argv) != 3:
+        print('usage: %s infile outfile' % sys.argv[0])
+        sys.exit(1)
 
-  with open(sys.argv[2], 'w') as outfile:
-    sys.exit(main(outfile, sys.argv[1]))
+    with open(sys.argv[2], 'w') as outfile:
+        sys.exit(main(outfile, sys.argv[1]))

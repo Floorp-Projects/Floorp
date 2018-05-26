@@ -65,11 +65,11 @@ def attributeParamlist(a, getter):
     return ", ".join(l)
 
 
-def attributeAsNative(a, getter, declType = 'NS_IMETHOD'):
-        params = {'returntype': attributeReturnType(a, declType),
-                  'binaryname': attributeNativeName(a, getter),
-                  'paramlist': attributeParamlist(a, getter)}
-        return "%(returntype)s %(binaryname)s(%(paramlist)s)" % params
+def attributeAsNative(a, getter, declType='NS_IMETHOD'):
+    params = {'returntype': attributeReturnType(a, declType),
+              'binaryname': attributeNativeName(a, getter),
+              'paramlist': attributeParamlist(a, getter)}
+    return "%(returntype)s %(binaryname)s(%(paramlist)s)" % params
 
 
 def methodNativeName(m):
@@ -92,7 +92,7 @@ def methodReturnType(m, macro):
     return ret
 
 
-def methodAsNative(m, declType = 'NS_IMETHOD'):
+def methodAsNative(m, declType='NS_IMETHOD'):
     return "%s %s(%s)" % (methodReturnType(m, declType),
                           methodNativeName(m),
                           paramlistAsNative(m))
@@ -158,6 +158,7 @@ def paramlistNames(m):
     if len(names) == 0:
         return ''
     return ', '.join(names)
+
 
 header = """/*
  * DO NOT EDIT.  THIS FILE IS GENERATED FROM %(filename)s
@@ -337,6 +338,7 @@ def write_interface(iface, fd):
 
     # Confirm that no names of methods will overload in this interface
     names = set()
+
     def record_name(name):
         if name in names:
             raise Exception("Unexpected overloaded virtual method %s in interface %s"
@@ -383,7 +385,7 @@ def write_interface(iface, fd):
             if a.realtype.kind != 'builtin':
                 assert realtype.endswith(' *'), "bad infallible type"
                 tmpl = attr_refcnt_infallible_tmpl
-                realtype = realtype[:-2] # strip trailing pointer
+                realtype = realtype[:-2]  # strip trailing pointer
 
             fd.write(tmpl % {'realtype': realtype,
                              'nativename': attributeNativeName(a, getter=True),
@@ -453,7 +455,8 @@ def write_interface(iface, fd):
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
                 if member.infallible:
-                    fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
+                    fd.write("\\\n  using %s::%s; " %
+                             (iface.name, attributeNativeName(member, True)))
                 fd.write("\\\n  %s%s; " % (attributeAsNative(member, True, declType), suffix))
                 if not member.readonly:
                     fd.write("\\\n  %s%s; " % (attributeAsNative(member, False, declType), suffix))
@@ -464,9 +467,9 @@ def write_interface(iface, fd):
         elif not member.kind in ('attribute', 'method'):
             fd.write('\\')
 
-    writeDeclaration(fd, iface, True);
+    writeDeclaration(fd, iface, True)
     fd.write(iface_nonvirtual % names)
-    writeDeclaration(fd, iface, False);
+    writeDeclaration(fd, iface, False)
     fd.write(iface_forward % names)
 
     def emitTemplate(forward_infallible, tmpl, tmpl_notxpcom=None):
@@ -475,7 +478,8 @@ def write_interface(iface, fd):
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
                 if forward_infallible and member.infallible:
-                    fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
+                    fd.write("\\\n  using %s::%s; " %
+                             (iface.name, attributeNativeName(member, True)))
                 fd.write(tmpl % {'asNative': attributeAsNative(member, True),
                                  'nativeName': attributeNativeName(member, True),
                                  'paramList': attributeParamNames(member)})
@@ -526,6 +530,7 @@ def main(outputfile):
 
     # Instantiate the parser.
     p = xpidl.IDLParser(outputdir=cachedir)
+
 
 if __name__ == '__main__':
     main(None)
