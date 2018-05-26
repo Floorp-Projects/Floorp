@@ -137,13 +137,11 @@ TransactionBuilder::TransactionBuilder(bool aUseSceneBuilderThread)
   : mUseSceneBuilderThread(gfxPrefs::WebRenderAsyncSceneBuild() && aUseSceneBuilderThread)
 {
   mTxn = wr_transaction_new(mUseSceneBuilderThread);
-  mResourceUpdates = wr_resource_updates_new();
 }
 
 TransactionBuilder::~TransactionBuilder()
 {
   wr_transaction_delete(mTxn);
-  wr_resource_updates_delete(mResourceUpdates);
 }
 
 void
@@ -350,7 +348,6 @@ WebRenderAPI::~WebRenderAPI()
 void
 WebRenderAPI::SendTransaction(TransactionBuilder& aTxn)
 {
-  wr_transaction_update_resources(aTxn.Raw(), aTxn.RawUpdates());
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
@@ -548,14 +545,14 @@ WebRenderAPI::Capture()
 void
 TransactionBuilder::Clear()
 {
-  wr_resource_updates_clear(mResourceUpdates);
+  wr_resource_updates_clear(mTxn);
 }
 
 void
 TransactionBuilder::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                              wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_add_image(mResourceUpdates,
+  wr_resource_updates_add_image(mTxn,
                                 key,
                                 &aDescriptor,
                                 &aBytes.inner);
@@ -565,7 +562,7 @@ void
 TransactionBuilder::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
                                  wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_add_blob_image(mResourceUpdates,
+  wr_resource_updates_add_blob_image(mTxn,
                                      key,
                                      &aDescriptor,
                                      &aBytes.inner);
@@ -578,7 +575,7 @@ TransactionBuilder::AddExternalImage(ImageKey key,
                                      wr::WrExternalImageBufferType aBufferType,
                                      uint8_t aChannelIndex)
 {
-  wr_resource_updates_add_external_image(mResourceUpdates,
+  wr_resource_updates_add_external_image(mTxn,
                                          key,
                                          &aDescriptor,
                                          aExtID,
@@ -602,7 +599,7 @@ TransactionBuilder::UpdateImageBuffer(ImageKey aKey,
                                       const ImageDescriptor& aDescriptor,
                                       wr::Vec<uint8_t>& aBytes)
 {
-  wr_resource_updates_update_image(mResourceUpdates,
+  wr_resource_updates_update_image(mTxn,
                                    aKey,
                                    &aDescriptor,
                                    &aBytes.inner);
@@ -614,7 +611,7 @@ TransactionBuilder::UpdateBlobImage(ImageKey aKey,
                                     wr::Vec<uint8_t>& aBytes,
                                     const wr::DeviceUintRect& aDirtyRect)
 {
-  wr_resource_updates_update_blob_image(mResourceUpdates,
+  wr_resource_updates_update_blob_image(mTxn,
                                         aKey,
                                         &aDescriptor,
                                         &aBytes.inner,
@@ -628,7 +625,7 @@ TransactionBuilder::UpdateExternalImage(ImageKey aKey,
                                         wr::WrExternalImageBufferType aBufferType,
                                         uint8_t aChannelIndex)
 {
-  wr_resource_updates_update_external_image(mResourceUpdates,
+  wr_resource_updates_update_external_image(mTxn,
                                             aKey,
                                             &aDescriptor,
                                             aExtID,
@@ -639,25 +636,25 @@ TransactionBuilder::UpdateExternalImage(ImageKey aKey,
 void
 TransactionBuilder::DeleteImage(ImageKey aKey)
 {
-  wr_resource_updates_delete_image(mResourceUpdates, aKey);
+  wr_resource_updates_delete_image(mTxn, aKey);
 }
 
 void
 TransactionBuilder::AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_raw_font(mResourceUpdates, aKey, &aBytes.inner, aIndex);
+  wr_resource_updates_add_raw_font(mTxn, aKey, &aBytes.inner, aIndex);
 }
 
 void
 TransactionBuilder::AddFontDescriptor(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_font_descriptor(mResourceUpdates, aKey, &aBytes.inner, aIndex);
+  wr_resource_updates_add_font_descriptor(mTxn, aKey, &aBytes.inner, aIndex);
 }
 
 void
 TransactionBuilder::DeleteFont(wr::FontKey aKey)
 {
-  wr_resource_updates_delete_font(mResourceUpdates, aKey);
+  wr_resource_updates_delete_font(mTxn, aKey);
 }
 
 void
@@ -668,7 +665,7 @@ TransactionBuilder::AddFontInstance(wr::FontInstanceKey aKey,
                                     const wr::FontInstancePlatformOptions* aPlatformOptions,
                                     wr::Vec<uint8_t>& aVariations)
 {
-  wr_resource_updates_add_font_instance(mResourceUpdates, aKey, aFontKey, aGlyphSize,
+  wr_resource_updates_add_font_instance(mTxn, aKey, aFontKey, aGlyphSize,
                                         aOptions, aPlatformOptions,
                                         &aVariations.inner);
 }
@@ -676,7 +673,7 @@ TransactionBuilder::AddFontInstance(wr::FontInstanceKey aKey,
 void
 TransactionBuilder::DeleteFontInstance(wr::FontInstanceKey aKey)
 {
-  wr_resource_updates_delete_font_instance(mResourceUpdates, aKey);
+  wr_resource_updates_delete_font_instance(mTxn, aKey);
 }
 
 class FrameStartTime : public RendererEvent

@@ -139,11 +139,9 @@ public:
 
   bool UseSceneBuilderThread() const { return mUseSceneBuilderThread; }
   Transaction* Raw() { return mTxn; }
-  wr::ResourceUpdates* RawUpdates() { return mResourceUpdates; }
 protected:
   bool mUseSceneBuilderThread;
   Transaction* mTxn;
-  wr::ResourceUpdates* mResourceUpdates;
 };
 
 class TransactionWrapper
