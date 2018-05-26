@@ -11,7 +11,7 @@ const POPUP_SELECTED_TEXT_COLOR = "#09b9a6";
 
 const POPUP_URL_COLOR_DARK = "#1c78d4";
 const POPUP_ACTION_COLOR_DARK = "#008f8a";
-const POPUP_URL_COLOR_BRIGHT = "#0a84ff";
+const POPUP_URL_COLOR_BRIGHT = "#45a1ff";
 const POPUP_ACTION_COLOR_BRIGHT = "#30e60b";
 
 const SEARCH_TERM = "urlbar-reflows-" + Date.now();
