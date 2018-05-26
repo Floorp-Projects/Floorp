@@ -609,7 +609,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   text-align: center;
   text-shadow: none;
   max-width: 15em;
-  color: GrayText;
+  color: var(--panel-disabled-color);
 }
 
 /* The boxes with "instructions" get extra top and bottom padding for space
@@ -651,7 +651,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .PanelUI-remotetabs-notabsforclient-label {
-  color: GrayText;
+  color: var(--panel-disabled-color);
   /* This margin is to line this label up with the labels in toolbarbuttons. */
   margin-left: 28px;
 }
@@ -707,7 +707,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #PanelUI-remotetabs-tabslist > label[itemtype="client"] {
-  color: GrayText;
+  color: var(--panel-disabled-color);
 }
 
 /* Collapse the non-active vboxes in the remotetabs deck to use only the
@@ -863,7 +863,7 @@ panelview .toolbarbutton-1,
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
   float: right;
-  opacity: 0.5;
+  color: var(--panel-disabled-color);
 }
 
 .PanelUI-subView .subviewbutton-nav::after {
@@ -994,7 +994,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 }
 
 .subview-subheader {
-  color: GrayText;
+  color: var(--panel-disabled-color);
 }
 
 .subview-subheader,
@@ -1137,7 +1137,7 @@ menuitem.panel-subview-footer@menuStateActive@,
   -moz-box-pack: end;
   margin-inline-start: 10px;
   margin-inline-end: auto;
-  color: GrayText;
+  color: var(--panel-disabled-color);
 }
 
 #PanelUI-remotetabs-tabslist > toolbarbutton[itemtype="tab"],
@@ -1379,7 +1379,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #PanelUI-panic-actionlist-main-label {
-  color: GrayText;
+  color: var(--panel-disabled-color);
   font-size: 0.9em;
 }
 
@@ -1548,7 +1548,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewbutton.download > .toolbarbutton-text > .status-text {
-  color: GrayText;
+  color: var(--panel-disabled-color);
   font-size: .9em;
 }
 
