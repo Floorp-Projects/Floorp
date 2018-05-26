@@ -94,7 +94,8 @@ parser.add_argument('-f', '--max-frames', type=range_1_24, default=8,
                     help='maximum number of frames to consider in each trace')
 
 parser.add_argument('-c', '--chain-reports', action='store_true',
-                    help='if only one block is found to hold onto the object, report the next one, too')
+                    help='if only one block is found to hold onto the object, report '
+                    'the next one, too')
 
 
 ####
@@ -122,7 +123,7 @@ def print_trace_segment(args, stacks, block):
 
     for l in traceTable[block.alloc_stack]:
         # The 5: is to remove the bogus leading "#00: " from the stack frame.
-        print ' ', frameTable[l][5:args.max_stack_frame_length]
+        print(' ', frameTable[l][5:args.max_stack_frame_length])
 
 
 def show_referrers(args, blocks, stacks, block):
@@ -171,7 +172,7 @@ def show_referrers(args, blocks, stacks, block):
             break
 
     if not anyFound:
-        print 'No referrers found.'
+        print('No referrers found.')
 
 
 def show_block_info(args, blocks, stacks, block):
@@ -225,8 +226,6 @@ def loadGraph(options):
     if j['version'] != outputVersion:
         raise Exception("'version' property isn't '{:d}'".format(outputVersion))
 
-    invocation = j['invocation']
-
     block_list = j['blockList']
     blocks = {}
 
@@ -248,9 +247,9 @@ def analyzeLogs():
 
     block = int(options.block, 16)
 
-    if not block in blocks:
-        print 'Object', block, 'not found in traces.'
-        print 'It could still be the target of some nodes.'
+    if block not in blocks:
+        print('Object', block, 'not found in traces.')
+        print('It could still be the target of some nodes.')
         return
 
     if options.info:

@@ -82,7 +82,7 @@ def split_log_line(line):
         else:
             tid = pid
         return pid, tid, func, args, result
-    except:
+    except Exception:
         raise Ignored('Malformed input')
 
 

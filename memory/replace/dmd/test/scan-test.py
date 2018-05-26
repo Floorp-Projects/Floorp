@@ -25,7 +25,8 @@ This is only for testing. Input files can be gzipped.
     p = argparse.ArgumentParser(description=description)
 
     p.add_argument('--clamp-contents', action='store_true',
-                   help='expect that the contents of the JSON input file have had their addresses clamped')
+                   help='expect that the contents of the JSON input file have had '
+                   'their addresses clamped')
 
     p.add_argument('input_file',
                    help='a file produced by DMD')
