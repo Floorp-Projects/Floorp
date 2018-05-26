@@ -30,11 +30,14 @@ from cryptography.x509.oid import NameOID
 
 assert sys.version_info >= (3, 2), "Requires Python 3.2 or later"
 
+
 def hex_string_for_struct(bytes):
     return ["0x{:02X}".format(x) for x in bytes]
 
+
 def hex_string_human_readable(bytes):
     return ["{:02X}".format(x) for x in bytes]
+
 
 def nameOIDtoString(oid):
     if oid == NameOID.COUNTRY_NAME:
@@ -48,6 +51,7 @@ def nameOIDtoString(oid):
     if oid == NameOID.ORGANIZATIONAL_UNIT_NAME:
         return "OU"
     raise Exception("Unknown OID: {}".format(oid))
+
 
 def print_block(pemData, identifierType="DN", crtshId=None):
     substrate = pem.readPemFromFile(io.StringIO(pemData.decode("utf-8")))
