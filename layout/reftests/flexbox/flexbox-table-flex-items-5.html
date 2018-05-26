@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    CSS Test: Testing that tables with "table-layout:fixed" can shrink
+    from their default flex base size to fit their flex container.
+  </title>
+  <style>
+    .container {
+      display: flex;
+      width: 300px;
+      border: 1px solid black;
+      margin-bottom: 5px;
+    }
+    .forceMaxContent > * {
+      width: -moz-max-content;
+      width: max-content;
+    }
+    .container > * {
+      margin: 5px;
+    }
+    table {
+      width: 100%;
+      height: 30px;
+      table-layout: fixed;
+      background: lightgray;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div>
+      <table><td></td></table>
+    </div>
+    <div>
+      <table><td></td></table>
+    </div>
+  </div>
+  <div class="container forceMaxContent">
+    <div>
+      <table><td></td></table>
+    </div>
+    <div>
+      <table><td></td></table>
+    </div>
+  </div>
+</body>
+</html>

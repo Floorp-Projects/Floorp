@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    CSS Reference Case
+  </title>
+  <style>
+    .container {
+      display: flex;
+      width: 300px;
+      border: 1px solid black;
+      margin-bottom: 5px;
+    }
+    .container > * {
+      margin: 5px;
+      background: lightgray;
+      flex: 1 400px; /* Bigger than flex container; should cooperatively shrink to fit. */
+      height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div>
+      <table><td></td></table>
+    </div>
+    <div>
+      <table><td></td></table>
+    </div>
+  </div>
+  <div class="container">
+    <div>
+      <table><td></td></table>
+    </div>
+    <div>
+      <table><td></td></table>
+    </div>
+  </div>
+</body>
+</html>
