@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="400"
+      class="reftest-wait">
+<head>
+
+<style>
+
+body {
+  margin: 0;
+  height: 4000px;
+  overflow:hidden;
+}
+
+div {
+  left: 200px;
+  top: 200px;
+  width: 200px;
+  height: 200px;
+}
+
+.scrolled {
+  position: absolute;
+  z-index: 1;
+}
+
+.fixed {
+  position: fixed;
+  background-color: red;
+}
+
+</style>
+</head>
+<body>
+
+<div style="opacity:0.5">
+  <div class="scrolled" style="top: 200px; background-color: green"></div>
+  <div class="scrolled" style="top: 600px; background-color:blue" id="scrolled"></div>
+  <div class="fixed" style="top: 200px"></div>
+  <div class="fixed" id="fixed" style="top: 200px; width: 100px; height: 100px; z-index: 2; background-color: orange"></div>
+</div>
+
+</body>
+
+<script>
+function doTest() {
+  document.getElementById("fixed").style.backgroundColor = "red";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>
