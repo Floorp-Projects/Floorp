@@ -14,10 +14,10 @@ fails-if(Android) skip-if(winWidget) == emptytextbox-2.xul emptytextbox-ref.xul 
 # Therefore, the equlity tests below should be marked as failing.
 != number-1.xul number-ref.xul
 != number-2.xul number-ref.xul
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-3.xul number-ref.xul # bug 783658
+fuzzy-if(webrender,205,7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-3.xul number-ref.xul # bug 783658
 != number-4.xul number-ref.xul
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-5.xul number-ref.xul # bug 783658
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
+fuzzy-if(webrender,205,7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-5.xul number-ref.xul # bug 783658
+fuzzy-if(webrender,255,7) fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
 fails-if(Android) skip-if(winWidget) == passwd-1.xul passwd-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(winWidget) == passwd-2.xul passwd-ref.xul # Windows: bug 1239170
 != passwd-3.xul passwd-ref.xul

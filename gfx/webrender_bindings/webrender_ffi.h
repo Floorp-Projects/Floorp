@@ -74,6 +74,7 @@ struct FontInstanceFlags {
     TRANSPOSE         = 1 << 4,
     FLIP_X            = 1 << 5,
     FLIP_Y            = 1 << 6,
+    SUBPIXEL_POSITION = 1 << 7,
 
     FORCE_GDI         = 1 << 16,
 
@@ -81,7 +82,8 @@ struct FontInstanceFlags {
 
     FORCE_AUTOHINT    = 1 << 16,
     NO_AUTOHINT       = 1 << 17,
-    VERTICAL_LAYOUT   = 1 << 18
+    VERTICAL_LAYOUT   = 1 << 18,
+    LCD_VERTICAL      = 1 << 19
   };
 };
 

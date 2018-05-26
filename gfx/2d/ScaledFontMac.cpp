@@ -444,8 +444,7 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
 
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Subpixel;
-  options.subpx_dir = wr::SubpixelDirection::Horizontal;
-  options.flags = 0;
+  options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
   if (mUseFontSmoothing) {
     options.flags |= wr::FontInstanceFlags::FONT_SMOOTHING;
   }

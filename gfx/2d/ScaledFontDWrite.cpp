@@ -463,8 +463,7 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
 {
   wr::FontInstanceOptions options;
   options.render_mode = wr::ToFontRenderMode(GetDefaultAAMode());
-  options.subpx_dir = wr::SubpixelDirection::Horizontal;
-  options.flags = 0;
+  options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
   if (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) {
     options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
