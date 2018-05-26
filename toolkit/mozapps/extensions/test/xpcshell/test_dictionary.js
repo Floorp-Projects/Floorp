@@ -137,7 +137,6 @@ add_task(async function test_1() {
   do_check_not_in_crash_annotation(ID_DICT, "1.0");
 
   await new Promise(resolve => {
-    let addon = install.addon;
     prepare_test({
       [ID_DICT]: [
         ["onInstalling", false],
@@ -436,7 +435,6 @@ add_task(async function test_23() {
                    AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
       do_check_not_in_crash_annotation(ID_DICT, "1.0");
 
-      let addon = install.addon;
       prepare_test({
         [ID_DICT]: [
           ["onInstalling", false],
