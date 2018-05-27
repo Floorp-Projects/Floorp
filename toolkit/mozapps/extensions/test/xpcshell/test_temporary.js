@@ -8,6 +8,29 @@ const ID = "bootstrap1@tests.mozilla.org";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
+const ADDONS = {
+  test_bootstrap1_1: {
+    "install.rdf": {
+      "id": ID,
+      "name": "Test Bootstrap 1",
+    },
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+  },
+  test_bootstrap1_2: {
+    "install.rdf": {
+      "id": "bootstrap1@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Test Bootstrap 1",
+    },
+    "bootstrap.js": BOOTSTRAP_MONITOR_BOOTSTRAP_JS
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+}
+
 function waitForBootstrapEvent(expectedEvent, addonId) {
   return new Promise(resolve => {
     function listener(msg, {method, params, reason}) {
@@ -69,7 +92,7 @@ add_task(async function() {
     }
   });
 
-  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);
 
   Assert.ok(extInstallCalled);
   Assert.ok(installingCalled);
@@ -118,7 +141,7 @@ add_task(async function() {
 // Install a temporary add-on over the top of an existing add-on.
 // Restart and make sure the existing add-on comes back.
 add_task(async function() {
-  let {addon} = await promiseInstallFile(do_get_addon("test_bootstrap1_2"), true);
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_2);
 
   Monitor.checkInstalled(ID, "2.0");
   Monitor.checkStarted(ID, "2.0");
@@ -148,12 +171,6 @@ add_task(async function() {
         "install.rdf": AddonTestUtils.createInstallRDF({
           id: ID,
           version: newversion,
-          bootstrap: true,
-          targetApplications: [{
-            id: "xpcshell@tests.mozilla.org",
-            minVersion: "1",
-            maxVersion: "1"
-          }],
           name: "Test Bootstrap 1 (temporary)",
         }),
         "bootstrap.js": bootstrapJS,
@@ -660,7 +677,7 @@ add_task(async function() {
 // Install a temporary add-on over the top of an existing disabled add-on.
 // After restart, the existing add-on should continue to be installed and disabled.
 add_task(async function() {
-  let {addon} = await promiseInstallFile(do_get_addon("test_bootstrap1_1"), true);
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_1);
 
   Monitor.checkInstalled(ID, "1.0");
   Monitor.checkStarted(ID, "1.0");
@@ -738,7 +755,7 @@ add_task(async function() {
 // Installing a temporary add-on when there is already a temporary
 // add-on should fail.
 add_task(async function() {
-  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);
 
   let addon = await promiseAddonByID(ID);
 
@@ -756,7 +773,7 @@ add_task(async function() {
     signedState: mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED,
   });
 
-  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);
 
   Monitor.checkInstalled(ID, "1.0");
   Monitor.checkStarted(ID, "1.0");
@@ -769,7 +786,7 @@ add_task(async function() {
 
 // Check that a temporary add-on is marked as such.
 add_task(async function() {
-  await AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap1_1"));
+  await AddonManager.installTemporaryAddon(XPIS.test_bootstrap1_1);
   const addon = await promiseAddonByID(ID);
 
   checkAddon(ID, addon, {
@@ -781,7 +798,7 @@ add_task(async function() {
 
 // Check that a permanent add-on is not marked as temporarily installed.
 add_task(async function() {
-  let {addon} = await promiseInstallFile(do_get_addon("test_bootstrap1_1"), true);
+  let {addon} = await AddonTestUtils.promiseInstallXPI(ADDONS.test_bootstrap1_1);
 
   checkAddon(ID, addon, {
     temporarilyInstalled: false,
