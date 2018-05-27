@@ -6,13 +6,25 @@
 // There are two cases - with a filename it returns an nsIFileURL to the filename
 // and with no parameters, it returns an nsIFileURL to the root of the addon
 
+const ADDONS = {
+  test_getresource: {
+    "install.rdf": {
+      "id": "addon1@tests.mozilla.org",
+      "name": "Test 1",
+    },
+    "icon.png": "Dummy icon file",
+    "subdir/subfile.txt": "Dummy file in subdirectory"
+  },
+};
+
 async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
   await promiseStartupManager();
 
-  let aInstall = await AddonManager.getInstallForFile(do_get_addon("test_getresource"));
+  let xpi = AddonTestUtils.createTempXPIFile(ADDONS.test_getresource);
+  let aInstall = await AddonManager.getInstallForFile(xpi);
   Assert.equal(aInstall.addon.getResourceURI().spec, aInstall.sourceURI.spec);
 
   Assert.equal(aInstall.addon.getResourceURI("icon.png").spec,

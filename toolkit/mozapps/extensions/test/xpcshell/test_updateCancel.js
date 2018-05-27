@@ -50,7 +50,6 @@ function dataHandler(aRequest, aResponse) {
   httpReceived.resolve([aRequest, aResponse]);
 }
 var testserver = new HttpServer();
-testserver.registerDirectory("/addons/", do_get_file("addons"));
 testserver.registerPathHandler("/data/test_update.json", dataHandler);
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;

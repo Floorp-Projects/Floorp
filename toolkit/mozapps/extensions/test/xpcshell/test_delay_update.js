@@ -25,7 +25,37 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 // Create and configure the HTTP server.
 var testserver = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
 testserver.registerDirectory("/data/", do_get_file("data"));
-testserver.registerDirectory("/addons/", do_get_file("addons"));
+
+
+const ADDONS = {
+  test_delay_update_complete_v2: {
+    "install.rdf": {
+      "id": "test_delay_update_complete@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Test Delay Update Complete",
+    },
+  },
+  test_delay_update_defer_v2: {
+    "install.rdf": {
+      "id": "test_delay_update_defer@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Test Delay Update Defer",
+    },
+  },
+  test_delay_update_ignore_v2: {
+    "install.rdf": {
+      "id": "test_delay_update_ignore@tests.mozilla.org",
+      "version": "2.0",
+      "name": "Test Delay Update Ignore",
+    },
+  },
+};
+
+const XPIS = {};
+for (let [name, files] of Object.entries(ADDONS)) {
+  XPIS[name] = AddonTestUtils.createTempXPIFile(files);
+  testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+}
 
 async function createIgnoreAddon() {
   await promiseWriteInstallRDFToXPI({
