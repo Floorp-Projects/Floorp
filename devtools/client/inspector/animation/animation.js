@@ -291,15 +291,12 @@ class AnimationInspector {
   }
 
   async onAnimationsMutation(changes) {
-    const animations = [...this.state.animations];
-
-    // Update other animations as well since the currentTime would be proceeded.
-    // Because the scrubber position is related the currentTime.
-    await this.updateAnimations(animations);
+    let animations = [...this.state.animations];
+    const addedAnimations = [];
 
     for (const {type, player: animation} of changes) {
       if (type === "added") {
-        animations.push(animation);
+        addedAnimations.push(animation);
         animation.on("changed", this.onAnimationStateChanged);
       } else if (type === "removed") {
         const index = animations.indexOf(animation);
@@ -308,7 +305,16 @@ class AnimationInspector {
       }
     }
 
-    this.updateState(animations);
+    // Update existing other animations as well since the currentTime would be proceeded
+    // sice the scrubber position is related the currentTime.
+    // Also, don't update the state of removed animations since React components
+    // may refer to the same instance still.
+    await this.updateAnimations(animations);
+
+    // Get rid of animations that were removed during async updateAnimations().
+    animations = animations.filter(animation => !!animation.state.type);
+
+    this.updateState(animations.concat(addedAnimations));
   }
 
   onElementPickerStarted() {
