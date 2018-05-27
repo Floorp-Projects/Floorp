@@ -524,7 +524,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon {
   animation: syncRotate 0.8s linear infinite;
-  fill: #0a84ff;
+  fill: var(--toolbarbutton-icon-fill-attention);
 }
 
 #appMenu-fxa-status {
