@@ -1162,6 +1162,37 @@ var delayedStartupPromise = new Promise(resolve => {
 var gBrowserInit = {
   delayedStartupFinished: false,
 
+  _tabToAdopt: undefined,
+
+  getTabToAdopt() {
+    if (this._tabToAdopt !== undefined) {
+      return this._tabToAdopt;
+    }
+
+    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
+      this._tabToAdopt = window.arguments[0];
+
+      // Clear the reference of the tab being adopted from the arguments.
+      window.arguments[0] = null;
+    } else {
+      // There was no tab to adopt in the arguments, set _tabToAdopt to null
+      // to avoid checking it again.
+      this._tabToAdopt = null;
+    }
+
+    return this._tabToAdopt;
+  },
+
+  _clearTabToAdopt() {
+    this._tabToAdopt = null;
+  },
+
+  // Used to check if the new window is still adopting an existing tab as its first tab
+  // (e.g. from the WebExtensions internals).
+  isAdoptingTab() {
+    return !!this.getTabToAdopt();
+  },
+
   onBeforeInitialXULLayout() {
     // Set a sane starting width/height for all resolutions on new profiles.
     if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
@@ -1225,8 +1256,8 @@ var gBrowserInit = {
     let remoteType;
     let sameProcessAsFrameLoader;
 
-    let tabArgument = window.arguments && window.arguments[0];
-    if (tabArgument instanceof XULElement) {
+    let tabArgument = this.getTabToAdopt();
+    if (tabArgument) {
       // The window's first argument is a tab if and only if we are swapping tabs.
       // We must set the browser's usercontextid before updateBrowserRemoteness(),
       // so that the newly created remote tab child has the correct usercontextid.
@@ -1337,21 +1368,21 @@ var gBrowserInit = {
 
     // If we are given a tab to swap in, take care of it before first paint to
     // avoid an about:blank flash.
-    let tabToOpen = window.arguments && window.arguments[0];
-    if (tabToOpen instanceof XULElement) {
-      // Clear the reference to the tab from the arguments array.
-      window.arguments[0] = null;
-
+    let tabToAdopt = this.getTabToAdopt();
+    if (tabToAdopt) {
       // Stop the about:blank load
       gBrowser.stop();
       // make sure it has a docshell
       gBrowser.docShell;
 
       try {
-        gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
+        gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToAdopt);
       } catch (e) {
         Cu.reportError(e);
       }
+
+      // Clear the reference to the tab once its adoption has been completed.
+      this._clearTabToAdopt();
     }
 
     // Wait until chrome is painted before executing code not critical to making the window visible

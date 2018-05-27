@@ -123,7 +123,9 @@ class WebNavigationEventManager extends EventManager {
         // Do not send a webNavigation event when the data.browser is related to a tab from a
         // new window opened to adopt an existent tab (See Bug 1443221 for a rationale).
         const chromeWin = data.browser.ownerGlobal;
-        if (chromeWin && chromeWin.arguments && chromeWin.arguments[0] instanceof chromeWin.XULElement &&
+
+        if (chromeWin && chromeWin.gBrowser &&
+            chromeWin.gBrowserInit.isAdoptingTab() &&
             chromeWin.gBrowser.selectedBrowser === data.browser) {
           return;
         }

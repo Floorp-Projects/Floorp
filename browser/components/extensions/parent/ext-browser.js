@@ -439,17 +439,14 @@ class TabTracker extends TabTrackerBase {
    * @private
    */
   _handleWindowOpen(window) {
-    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
-      // If the first window argument is a XUL element, it means the
-      // window is about to adopt a tab from another window to replace its
-      // initial tab.
-      //
+    const tabToAdopt = window.gBrowserInit.getTabToAdopt();
+    if (tabToAdopt) {
       // Note that this event handler depends on running before the
       // delayed startup code in browser.js, which is currently triggered
       // by the first MozAfterPaint event. That code handles finally
       // adopting the tab, and clears it from the arguments list in the
       // process, so if we run later than it, we're too late.
-      let nativeTab = window.arguments[0];
+      let nativeTab = tabToAdopt;
       let adoptedBy = window.gBrowser.tabs[0];
 
       this.adoptedTabs.set(nativeTab, adoptedBy);
@@ -745,7 +742,11 @@ class Tab extends TabBase {
       lastAccessed: tabData.state ? tabData.state.lastAccessed : tabData.lastAccessed,
     };
 
-    if (extension.tabManager.hasTabPermission(tabData)) {
+    // tabData is a representation of a tab, as stored in the session data,
+    // and given that is not a real nativeTab, we only need to check if the extension
+    // has the "tabs" permission (because tabData represents a closed tab, and so we
+    // already know that it can't be the activeTab).
+    if (extension.hasPermission("tabs")) {
       let entries = tabData.state ? tabData.state.entries : tabData.entries;
       let lastTabIndex = tabData.state ? tabData.state.index : tabData.index;
       // We need to take lastTabIndex - 1 because the index in the tab data is
@@ -893,6 +894,13 @@ class Window extends WindowBase {
   }
 
   * getTabs() {
+    // A new window is being opened and it is adopting an existing tab, we return
+    // an empty iterator here because there should be no other tabs to return during
+    // that duration (See Bug 1458918 for a rationale).
+    if (this.window.gBrowserInit.isAdoptingTab()) {
+      return;
+    }
+
     let {tabManager} = this.extension;
 
     for (let nativeTab of this.window.gBrowser.tabs) {
@@ -902,6 +910,13 @@ class Window extends WindowBase {
 
   get activeTab() {
     let {tabManager} = this.extension;
+
+    // A new window is being opened and it is adopting a tab, and we do not create
+    // a TabWrapper for the tab being adopted because it will go away once the tab
+    // adoption has been completed (See Bug 1458918 for rationale).
+    if (this.window.gBrowserInit.isAdoptingTab()) {
+      return null;
+    }
 
     return tabManager.getWrapper(this.window.gBrowser.selectedTab);
   }

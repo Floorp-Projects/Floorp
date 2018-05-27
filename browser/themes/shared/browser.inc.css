@@ -8,6 +8,7 @@
 %filter substitution
 %define navbarTabsShadowSize 1px
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
+%define lwtPopupBrighttextLinkColor #45a1ff
 
 :root {
   /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
@@ -24,7 +25,7 @@
 
 /* Increase contrast of UI links on dark themes */
 :root[lwt-popup-brighttext] panel .text-link {
-  color: #45a1ff;
+  color: @lwtPopupBrighttextLinkColor@;
 }
 
 /* Toolbar / content area border */

@@ -1643,7 +1643,7 @@ public:
   // Sets this matrix to a rotation matrix about a
   // vector [x,y,z] by angle theta. The vector is normalized
   // to a unit vector.
-  // https://www.w3.org/TR/css3-3d-transforms/#Rotate3dDefined
+  // https://drafts.csswg.org/css-transforms-2/#Rotate3dDefined
   void SetRotateAxisAngle(double aX, double aY, double aZ, double aTheta)
   {
     Point3D vector(aX, aY, aZ);
