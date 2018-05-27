@@ -53,7 +53,6 @@ var ExtensionsUI = {
     await Services.wm.getMostRecentWindow("navigator:browser").delayedStartupPromise;
 
     this._checkForSideloaded();
-    this._checkNewDistroAddons();
   },
 
   async _checkForSideloaded() {
@@ -95,60 +94,6 @@ var ExtensionsUI = {
     }
   },
 
-  async _checkNewDistroAddons() {
-    let newDistroAddons = AddonManagerPrivate.getNewDistroAddons();
-    if (!newDistroAddons) {
-      return;
-    }
-
-    for (let id of newDistroAddons) {
-      let addon = await AddonManager.getAddonByID(id);
-
-      let win = Services.wm.getMostRecentWindow("navigator:browser");
-      if (!win) {
-        return;
-      }
-
-      let {gBrowser} = win;
-      let browser = gBrowser.selectedBrowser;
-
-      // The common case here is that we enter this code right after startup
-      // in a brand new profile so we haven't yet loaded a page.  That state is
-      // surprisingly difficult to detect but wait until we've actually loaded
-      // a page.
-      if (browser.currentURI.spec == "about:blank" ||
-          browser.webProgress.isLoadingDocument) {
-        await new Promise(resolve => {
-          let listener = {
-            onLocationChange(browser_, webProgress, ...ignored) {
-              if (webProgress.isTopLevel && browser_ == browser) {
-                gBrowser.removeTabsProgressListener(listener);
-                resolve();
-              }
-            },
-          };
-          gBrowser.addTabsProgressListener(listener);
-        });
-      }
-
-      // If we're at about:newtab and the url bar gets focus, that will
-      // prevent a doorhanger from displaying.
-      // Our elegant solution is to ... take focus away from the url bar.
-      win.gURLBar.blur();
-
-      let strings = this._buildStrings({
-        addon,
-        permissions: addon.userPermissions,
-      });
-      let accepted = await this.showPermissionsPrompt(browser, strings,
-                                                      addon.iconURL);
-      if (accepted) {
-        addon.userDisabled = false;
-      }
-    }
-  },
-
-
   _updateNotifications() {
     if (this.sideloaded.size + this.updates.size == 0) {
       AppMenuNotifications.removeNotification("addon-alert");
@@ -177,8 +122,11 @@ var ExtensionsUI = {
       type: "sideload",
     });
     this.showAddonsManager(browser, strings, addon.iconURL, "sideload")
-        .then(answer => {
-          addon.userDisabled = !answer;
+        .then(async answer => {
+          if (answer) {
+            await addon.enable();
+          }
+          this.emit("sideload-response");
         });
   },
 

@@ -149,7 +149,7 @@ async function run_test_4() {
 // Tests that after uninstalling a restart doesn't re-install the extension
 async function run_test_5() {
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
-  a1.uninstall();
+  await a1.uninstall();
 
   await promiseRestartManager();
 
@@ -184,7 +184,7 @@ async function run_test_7() {
   Assert.ok(a1.isActive);
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-  a1.uninstall();
+  await a1.uninstall();
   executeSoon(run_test_8);
 }
 
@@ -204,6 +204,6 @@ async function run_test_8() {
   Assert.ok(a1.isActive);
   Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-  a1.uninstall();
+  await a1.uninstall();
   executeSoon(do_test_finished);
 }

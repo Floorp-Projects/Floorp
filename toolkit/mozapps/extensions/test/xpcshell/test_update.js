@@ -270,7 +270,7 @@ add_task(async function test_1() {
   ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
   end_test();
-  a1.uninstall();
+  await a1.uninstall();
 });
 
 // Check that an update check finds compatibility updates and applies them
@@ -297,7 +297,7 @@ add_task(async function test_3() {
   ok(a2.isActive);
   ok(a2.isCompatible);
   ok(!a2.appDisabled);
-  a2.uninstall();
+  await a2.uninstall();
 });
 
 // Checks that we see no compatibility information when there is none.
@@ -342,7 +342,7 @@ add_task(async function test_5() {
   ok(!a3.isCompatible);
   ok(a3.appDisabled);
 
-  a3.uninstall();
+  await a3.uninstall();
   end_test();
 });
 
@@ -392,7 +392,7 @@ add_task(async function test_6() {
   equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
   end_test();
-  a1.uninstall();
+  await a1.uninstall();
 });
 
 const PARAMS = "?" + [
@@ -624,7 +624,7 @@ add_task(async function test_8() {
 
     if (options.initialState) {
       let addon = await AddonManager.getAddonByID(id);
-      Object.assign(addon, options.initialState);
+      await setInitialState(addon, options.initialState);
     }
   }
 
@@ -677,7 +677,7 @@ add_task(async function test_8() {
   }
 
   for (let [, addon] of await getAddons(PARAM_IDS)) {
-    addon.uninstall();
+    await addon.uninstall();
   }
 
   await mockBlocklist.unregister();
@@ -728,7 +728,7 @@ add_task(async function test_12() {
   ok(a4.isActive);
   ok(a4.isCompatible);
 
-  a4.uninstall();
+  await a4.uninstall();
 });
 
 // Tests that a compatibility update is passed to the listener when there is
@@ -772,7 +772,7 @@ add_task(async function test_13() {
   ok(a7.isCompatible);
   ok(!a7.appDisabled);
 
-  a7.uninstall();
+  await a7.uninstall();
 });
 
 // Test that background update checks doesn't update an add-on that isn't
@@ -863,11 +863,11 @@ add_task(async function test_14() {
                                                 "addon8@tests.mozilla.org"]);
   notEqual(a1, null);
   equal(a1.version, "2.0");
-  a1.uninstall();
+  await a1.uninstall();
 
   notEqual(a8, null);
   equal(a8.version, "1.0");
-  a8.uninstall();
+  await a8.uninstall();
 });
 
 add_task(async function test_16() {
@@ -887,7 +887,7 @@ add_task(async function test_16() {
   notEqual(a2.syncGUID, null);
   equal(oldGUID, a2.syncGUID);
 
-  a2.uninstall();
+  await a2.uninstall();
 });
 
 // Test that the update check correctly observes the
@@ -932,7 +932,7 @@ add_task(async function test_17() {
   AddonManager.removeInstallListener(listener);
 
   let a9 = await AddonManager.getAddonByID("addon9@tests.mozilla.org");
-  a9.uninstall();
+  await a9.uninstall();
 });
 
 // Tests that compatibility updates are applied to addons when the updated
@@ -958,7 +958,7 @@ add_task(async function test_18() {
   ok(result.compatibilityUpdate, "Should have seen a compatibility update");
   ok(!result.updateAvailable, "Should not have seen a version update");
 
-  a10.uninstall();
+  await a10.uninstall();
 });
 
 // Test that the update check correctly observes when an addon opts-in to
@@ -984,7 +984,7 @@ add_task(async function test_19() {
   ok(!result.compatibilityUpdate, "Should not have seen a compatibility update");
   ok(!result.updateAvailable, "Should not have seen a version update");
 
-  a11.uninstall();
+  await a11.uninstall();
 });
 
 // Test that the update succeeds when the update.rdf URN contains a type prefix
@@ -1034,14 +1034,14 @@ add_task(async function test_20() {
   equal(a12.type, "extension");
 
   end_test();
-  a12.uninstall();
+  await a12.uninstall();
 });
 
 add_task(async function cleanup() {
   let addons = await AddonManager.getAddonsByTypes(["extension"]);
 
   for (let addon of addons)
-    addon.uninstall();
+    await addon.uninstall();
 });
 
 // Test that background update checks work for lightweight themes

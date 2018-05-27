@@ -118,7 +118,7 @@ async function run_test_1() {
 async function run_test_2() {
   let p = await AddonManager.getAddonByID(gPluginIDs[0]);
   Assert.ok(!p.userDisabled);
-  p.userDisabled = true;
+  await p.disable();
   Assert.ok(PLUGINS[0].disabled);
   Assert.ok(PLUGINS[1].disabled);
 

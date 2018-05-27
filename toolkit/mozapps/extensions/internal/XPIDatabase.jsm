@@ -28,6 +28,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  PermissionsUtils: "resource://gre/modules/PermissionsUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
   Blocklist: "resource://gre/modules/Blocklist.jsm",
@@ -35,6 +36,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UpdateChecker: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInstall: "resource://gre/modules/addons/XPIInstall.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
+  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
   verifyBundleSignedState: "resource://gre/modules/addons/XPIInstall.jsm",
 });
 
@@ -44,25 +46,15 @@ const {nsIBlocklistService} = Ci;
 /* globals
  *         BOOTSTRAP_REASONS,
  *         DB_SCHEMA,
- *         SIGNED_TYPES,
- *         XPIProvider,
  *         XPIStates,
- *         descriptorToPath,
- *         isTheme,
  *         isWebExtension,
- *         recordAddonTelemetry,
  */
 
 for (let sym of [
   "BOOTSTRAP_REASONS",
   "DB_SCHEMA",
-  "SIGNED_TYPES",
-  "XPIProvider",
   "XPIStates",
-  "descriptorToPath",
-  "isTheme",
   "isWebExtension",
-  "recordAddonTelemetry",
 ]) {
   XPCOMUtils.defineLazyGetter(this, sym, () => XPIInternal[sym]);
 }
@@ -73,9 +65,6 @@ const LOGGER_ID = "addons.xpi-utils";
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
                                        "initWithPath");
 
-const ZipReader = Components.Constructor("@mozilla.org/libjar/zip-reader;1",
-                                         "nsIZipReader", "open");
-
 // Create a new logger for use by the Addons XPI Provider Utils
 // (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
@@ -83,13 +72,10 @@ var logger = Log.repository.getLogger(LOGGER_ID);
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_JSON_DB                    = "extensions.json";
 
-// The last version of DB_SCHEMA implemented in SQLITE
-const LAST_SQLITE_DB_SCHEMA           = 14;
-
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
-const PREF_EM_EXTENSION_FORMAT        = "extensions.";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
+const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
@@ -116,10 +102,6 @@ const COMPATIBLE_BY_DEFAULT_TYPES = {
   "webextension-dictionary": true,
 };
 
-// Properties that exist in the extension manifest
-const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
-const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
-
 // Properties to save in JSON file
 const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "updateURL", "optionsURL",
@@ -133,10 +115,27 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "version", "type",
                           "targetPlatforms", "signedState",
                           "seen", "dependencies", "hasEmbeddedWebExtension",
                           "userPermissions", "icons", "iconURL", "icon64URL",
-                          "blocklistState", "blocklistURL", "startupData"];
+                          "blocklistState", "blocklistURL", "startupData",
+                          "previewImage"];
 
 const LEGACY_TYPES = new Set([
   "extension",
+]);
+
+// Some add-on types that we track internally are presented as other types
+// externally
+const TYPE_ALIASES = {
+  "webextension": "extension",
+  "webextension-dictionary": "dictionary",
+  "webextension-langpack": "locale",
+  "webextension-theme": "theme",
+};
+
+const SIGNED_TYPES = new Set([
+  "extension",
+  "webextension",
+  "webextension-langpack",
+  "webextension-theme",
 ]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
@@ -198,6 +197,46 @@ async function getRepositoryAddon(aAddon) {
 }
 
 /**
+ * Helper function that determines whether an addon of a certain type is a
+ * theme.
+ *
+ * @param {string} type
+ *        The add-on type to check.
+ * @returns {boolean}
+ */
+function isTheme(type) {
+  return type == "theme" || TYPE_ALIASES[type] == "theme";
+}
+
+/**
+ * Converts a list of API types to a list of API types and any aliases for those
+ * types.
+ *
+ * @param {Array<string>?} aTypes
+ *        An array of types or null for all types
+ * @returns {Set<string>?}
+ *        An set of types or null for all types
+ */
+function getAllAliasesForTypes(aTypes) {
+  if (!aTypes)
+    return null;
+
+  let types = new Set(aTypes);
+  for (let [alias, type] of Object.entries(TYPE_ALIASES)) {
+    // Add any alias for the internal type
+    if (types.has(type)) {
+      types.add(alias);
+    } else {
+      // If this internal type was explicitly requested and its external
+      // type wasn't, ignore it.
+      types.delete(alias);
+    }
+  }
+
+  return types;
+}
+
+/**
  * Copies properties from one object to another. If no target object is passed
  * a new object will be created and returned.
  *
@@ -234,8 +273,6 @@ let AddonWrapper;
  */
 class AddonInternal {
   constructor(addonData) {
-    this._hasResourceCache = new Map();
-
     this._wrapper = null;
     this._selectedLocale = null;
     this.active = false;
@@ -264,10 +301,6 @@ class AddonInternal {
     this.hasEmbeddedWebExtension = false;
 
     if (addonData) {
-      if (addonData.descriptor && !addonData.path) {
-        addonData.path = descriptorToPath(addonData.descriptor);
-      }
-
       copyProperties(addonData, PROP_JSON_FIELDS, this);
       this.location = addonData.location;
 
@@ -535,6 +568,26 @@ class AddonInternal {
     }
   }
 
+  async setUserDisabled(val) {
+    if (val == (this.userDisabled || this.softDisabled)) {
+      return;
+    }
+
+    if (this.inDatabase) {
+      // hidden and system add-ons should not be user disabled,
+      // as there is no UI to re-enable them.
+      if (this.hidden) {
+        throw new Error(`Cannot disable hidden add-on ${this.id}`);
+      }
+      await XPIDatabase.updateAddonDisabledState(this, val);
+    } else {
+      this.userDisabled = val;
+      // When enabling remove the softDisabled flag
+      if (!val)
+        this.softDisabled = false;
+    }
+  }
+
   applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
     let wasCompatible = this.isCompatible;
 
@@ -653,7 +706,7 @@ AddonWrapper = class {
   }
 
   get type() {
-    return XPIInternal.getExternalType(addonFor(this).type);
+    return XPIDatabase.getExternalType(addonFor(this).type);
   }
 
   get isWebExtension() {
@@ -743,14 +796,6 @@ AddonWrapper = class {
       for (let size in addon.icons) {
         icons[size] = this.getResourceURI(addon.icons[size]).spec;
       }
-    } else {
-      // legacy add-on that did not update its icon data yet
-      if (this.hasResource("icon.png")) {
-        icons[32] = icons[48] = this.getResourceURI("icon.png").spec;
-      }
-      if (this.hasResource("icon64.png")) {
-        icons[64] = this.getResourceURI("icon64.png").spec;
-      }
     }
 
     let canUseIconURLs = this.isActive;
@@ -776,8 +821,8 @@ AddonWrapper = class {
         return repositoryScreenshots;
     }
 
-    if (isTheme(addon.type) && this.hasResource("preview.png")) {
-      let url = this.getResourceURI("preview.png").spec;
+    if (addon.previewImage) {
+      let url = this.getResourceURI(addon.previewImage).spec;
       return [new AddonManagerPrivate.AddonScreenshot(url)];
     }
 
@@ -908,27 +953,13 @@ AddonWrapper = class {
     let addon = addonFor(this);
     return addon.softDisabled || addon.userDisabled;
   }
-  set userDisabled(val) {
-    let addon = addonFor(this);
-    if (val == this.userDisabled) {
-      return val;
-    }
 
-    if (addon.inDatabase) {
-      // hidden and system add-ons should not be user disabled,
-      // as there is no UI to re-enable them.
-      if (this.hidden) {
-        throw new Error(`Cannot disable hidden add-on ${addon.id}`);
-      }
-      XPIDatabase.updateAddonDisabledState(addon, val);
-    } else {
-      addon.userDisabled = val;
-      // When enabling remove the softDisabled flag
-      if (!val)
-        addon.softDisabled = false;
-    }
+  enable() {
+    return addonFor(this).setUserDisabled(false);
+  }
 
-    return val;
+  disable() {
+    return addonFor(this).setUserDisabled(true);
   }
 
   set softDisabled(val) {
@@ -953,11 +984,7 @@ AddonWrapper = class {
   }
 
   get hidden() {
-    let addon = addonFor(this);
-    if (addon.location.isTemporary)
-      return false;
-
-    return addon.location.isSystem;
+    return addonFor(this).hidden;
   }
 
   get isSystem() {
@@ -980,9 +1007,9 @@ AddonWrapper = class {
     return addonFor(this).isCompatibleWith(aAppVersion, aPlatformVersion);
   }
 
-  uninstall(alwaysAllowUndo) {
+  async uninstall(alwaysAllowUndo) {
     let addon = addonFor(this);
-    XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
+    return XPIInstall.uninstallAddon(addon, alwaysAllowUndo);
   }
 
   cancelUninstall() {
@@ -1004,71 +1031,27 @@ AddonWrapper = class {
     return false;
   }
 
-  hasResource(aPath) {
-    let addon = addonFor(this);
-    if (addon._hasResourceCache.has(aPath))
-      return addon._hasResourceCache.get(aPath);
-
-    let bundle = addon._sourceBundle.clone();
-
-    // Bundle may not exist any more if the addon has just been uninstalled,
-    // but explicitly first checking .exists() results in unneeded file I/O.
-    try {
-      var isDir = bundle.isDirectory();
-    } catch (e) {
-      addon._hasResourceCache.set(aPath, false);
-      return false;
-    }
-
-    if (isDir) {
-      if (aPath)
-        aPath.split("/").forEach(part => bundle.append(part));
-      let result = bundle.exists();
-      addon._hasResourceCache.set(aPath, result);
-      return result;
-    }
-
-    let zipReader;
-    try {
-      zipReader = new ZipReader(bundle);
-      let result = zipReader.hasEntry(aPath);
-      addon._hasResourceCache.set(aPath, result);
-      return result;
-    } catch (e) {
-      addon._hasResourceCache.set(aPath, false);
-      return false;
-    } finally {
-      if (zipReader)
-        zipReader.close();
-    }
-  }
-
   /**
    * Reloads the add-on.
    *
    * For temporarily installed add-ons, this uninstalls and re-installs the
    * add-on. Otherwise, the addon is disabled and then re-enabled, and the cache
    * is flushed.
-   *
-   * @returns {Promise}
    */
-  reload() {
-    return new Promise((resolve) => {
-      const addon = addonFor(this);
+  async reload() {
+    const addon = addonFor(this);
 
-      logger.debug(`reloading add-on ${addon.id}`);
+    logger.debug(`reloading add-on ${addon.id}`);
 
-      if (!this.temporarilyInstalled) {
-        let addonFile = addon.getResourceURI;
-        XPIDatabase.updateAddonDisabledState(addon, true);
-        Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-        XPIDatabase.updateAddonDisabledState(addon, false);
-        resolve();
-      } else {
-        // This function supports re-installing an existing add-on.
-        resolve(AddonManager.installTemporaryAddon(addon._sourceBundle));
-      }
-    });
+    if (!this.temporarilyInstalled) {
+      let addonFile = addon.getResourceURI;
+      await XPIDatabase.updateAddonDisabledState(addon, true);
+      Services.obs.notifyObservers(addonFile, "flush-cache-entry");
+      await XPIDatabase.updateAddonDisabledState(addon, false);
+    } else {
+      // This function supports re-installing an existing add-on.
+      await AddonManager.installTemporaryAddon(addon._sourceBundle);
+    }
   }
 
   /**
@@ -1095,8 +1078,8 @@ function chooseValue(aAddon, aObj, aProp) {
   let repositoryAddon = aAddon._repositoryAddon;
   let objValue = aObj[aProp];
 
-  if (repositoryAddon && (aProp in repositoryAddon) &&
-      (objValue === undefined || objValue === null)) {
+  if (repositoryAddon && aProp in repositoryAddon &&
+      (aProp === "creator" || objValue == null)) {
     return [repositoryAddon[aProp], true];
   }
 
@@ -1161,64 +1144,24 @@ function defineAddonWrapperProperty(name, getter) {
   });
 });
 
-function getLocalizedPref(pref) {
-  if (Services.prefs.getPrefType(pref) != Ci.nsIPrefBranch.PREF_INVALID)
-    return Services.prefs.getComplexValue(pref, Ci.nsIPrefLocalizedString).data;
-  return null;
-}
-
-PROP_LOCALE_SINGLE.forEach(function(aProp) {
+["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    // Override XPI creator if repository creator is defined
-    if (aProp == "creator" &&
-        addon._repositoryAddon && addon._repositoryAddon.creator) {
-      return addon._repositoryAddon.creator;
-    }
 
-    let result = null;
+    let [result, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
 
-    if (addon.active) {
-      try {
-        let value = getLocalizedPref(`${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp}`);
-        if (value)
-          result = value;
-      } catch (e) {
-      }
-    }
-
-    if (result == null)
-      [result] = chooseValue(addon, addon.selectedLocale, aProp);
-
-    if (aProp == "creator")
-      return result ? new AddonManagerPrivate.AddonAuthor(result) : null;
+    if (result && !usedRepository && aProp == "creator")
+      return new AddonManagerPrivate.AddonAuthor(result);
 
     return result;
   });
 });
 
-PROP_LOCALE_MULTI.forEach(function(aProp) {
+["developers", "translators", "contributors"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
-    let results = null;
-    let usedRepository = false;
 
-    if (addon.active) {
-      let pref = `${PREF_EM_EXTENSION_FORMAT}${addon.id}.${aProp.slice(0, -1)}`;
-      let list = Services.prefs.getChildList(pref, {});
-      if (list.length > 0) {
-        list.sort();
-        results = [];
-        for (let childPref of list) {
-          let value = getLocalizedPref(childPref);
-          if (value)
-            results.push(value);
-        }
-      }
-    }
-
-    if (results == null)
-      [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
+    let [results, usedRepository] = chooseValue(addon, addon.selectedLocale, aProp);
 
     if (results && !usedRepository) {
       results = results.map(function(aResult) {
@@ -1383,13 +1326,19 @@ this.XPIDatabase = {
    *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   syncLoadDB(aRebuildOnError) {
-    logger.warn(new Error("Synchronously loading the add-ons database"));
+    let err = new Error("Synchronously loading the add-ons database");
+    logger.debug(err);
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_sync_stack", Log.stackTrace(err));
     try {
       this.syncLoadingDB = true;
       XPIInternal.awaitPromise(this.asyncLoadDB(aRebuildOnError));
     } finally {
       this.syncLoadingDB = false;
     }
+  },
+
+  _recordStartupError(reason) {
+    AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", reason);
   },
 
   /**
@@ -1401,27 +1350,21 @@ this.XPIDatabase = {
    *        If true, synchronously reconstruct the database from installed add-ons
    */
   async parseDB(aData, aRebuildOnError) {
-    let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
+      let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
       let inputAddons = JSON.parse(aData);
 
       if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
-        parseTimer.done();
-
-        // Content of JSON file is bad, need to rebuild from scratch
-        logger.error("bad JSON file contents");
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "badJSON");
-
-        this.timeRebuildDatabase("XPIDB_rebuildBadJSON_MS", aRebuildOnError);
-        return;
+        let error = new Error("Bad JSON file contents");
+        error.rebuildReason = "XPIDB_rebuildBadJSON_MS";
+        throw error;
       }
 
       if (inputAddons.schemaVersion != DB_SCHEMA) {
         // For now, we assume compatibility for JSON data with a
         // mismatched schema version, though we throw away any fields we
         // don't know about (bug 902956)
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError",
-                                                `schemaMismatch-${inputAddons.schemaVersion}`);
+        this._recordStartupError(`schemaMismatch-${inputAddons.schemaVersion}`);
         logger.debug(`JSON schema mismatch: expected ${DB_SCHEMA}, actual ${inputAddons.schemaVersion}`);
       }
 
@@ -1432,9 +1375,6 @@ this.XPIDatabase = {
       let addonDB = new Map();
       await forEach(inputAddons.addons, loadedAddon => {
         try {
-          if (!loadedAddon.path) {
-            loadedAddon.path = descriptorToPath(loadedAddon.descriptor);
-          }
           loadedAddon._sourceBundle = new nsIFile(loadedAddon.path);
         } catch (e) {
           // We can fail here when the path is invalid, usually from the
@@ -1456,61 +1396,17 @@ this.XPIDatabase = {
       logger.debug("Successfully read XPI database");
       this.initialized = true;
     } catch (e) {
-      // If we catch and log a SyntaxError from the JSON
-      // parser, the xpcshell test harness fails the test for us: bug 870828
-      parseTimer.done();
-
       if (e.name == "SyntaxError") {
         logger.error("Syntax error parsing saved XPI JSON data");
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "syntax");
+        this._recordStartupError("syntax");
       } else {
         logger.error("Failed to load XPI JSON data from profile", e);
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "other");
+        this._recordStartupError("other");
       }
 
-      this.timeRebuildDatabase("XPIDB_rebuildReadFailed_MS", aRebuildOnError);
+      this.timeRebuildDatabase(e.rebuildReason || "XPIDB_rebuildReadFailed_MS",
+                               aRebuildOnError);
     }
-  },
-
-  timeRebuildDatabase(timerName, rebuildOnError) {
-    AddonManagerPrivate.recordTiming(timerName, () => {
-      this.rebuildDatabase(rebuildOnError);
-    });
-  },
-
-  /**
-   * Upgrade database from earlier (sqlite or RDF) version if available
-   *
-   * @param {boolean} aRebuildOnError
-   *        If true, synchronously reconstruct the database from installed add-ons
-   */
-  upgradeDB(aRebuildOnError) {
-    let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA, 0);
-    if (schemaVersion > LAST_SQLITE_DB_SCHEMA) {
-      // we've upgraded before but the JSON file is gone, fall through
-      // and rebuild from scratch
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "dbMissing");
-    }
-
-    this.timeRebuildDatabase("XPIDB_upgradeDB_MS", aRebuildOnError);
-  },
-
-  /**
-   * Reconstruct when the DB file exists but is unreadable
-   * (for example because read permission is denied)
-   *
-   * @param {Error} aError
-   *        The error that triggered the rebuild.
-   * @param {boolean} aRebuildOnError
-   *        If true, synchronously reconstruct the database from installed add-ons
-   */
-  rebuildUnreadableDB(aError, aRebuildOnError) {
-    logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`, aError);
-    // Remember the error message until we try and write at least once, so
-    // we know at shutdown time that there was a problem
-    this._loadError = aError;
-
-    this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
   },
 
   async maybeIdleDispatch() {
@@ -1538,43 +1434,43 @@ this.XPIDatabase = {
       return this._dbPromise;
     }
 
-    logger.debug("Starting async load of XPI database " + this.jsonFile.path);
-    AddonManagerPrivate.recordSimpleMeasure("XPIDB_async_load", XPIProvider.runPhase);
-    let readOptions = {
-      outExecutionDuration: 0
-    };
+    logger.debug(`Starting async load of XPI database ${this.jsonFile.path}`);
     this._dbPromise = (async () => {
       try {
-        let byteArray = await OS.File.read(this.jsonFile.path, null, readOptions);
-
-        logger.debug(`Async JSON file read took ${readOptions.outExecutionDuration} MS`);
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
-                                                readOptions.outExecutionDuration);
+        let byteArray = await OS.File.read(this.jsonFile.path, null);
 
         logger.debug("Finished async read of XPI database, parsing...");
         await this.maybeIdleDispatch();
-        let text = AddonManagerPrivate.recordTiming(
-          "XPIDB_decode_MS",
-          () => new TextDecoder().decode(byteArray));
+        let text = new TextDecoder().decode(byteArray);
 
         await this.maybeIdleDispatch();
         await this.parseDB(text, true);
       } catch (error) {
         if (error.becauseNoSuchFile) {
-          this.upgradeDB(aRebuildOnError);
+          if (Services.prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
+            this._recordStartupError("dbMissing");
+          }
         } else {
-          // it's there but unreadable
-          this.rebuildUnreadableDB(error, aRebuildOnError);
+          logger.warn(`Extensions database ${this.jsonFile.path} exists but is not readable; rebuilding`,
+                      error);
+          this._loadError = error;
         }
+        this.timeRebuildDatabase("XPIDB_rebuildUnreadableDB_MS", aRebuildOnError);
       }
       return this.addonDB;
     })();
 
     this._dbPromise.then(() => {
-      Services.obs.notifyObservers(this.addonDB, "xpi-database-loaded");
+      Services.obs.notifyObservers(null, "xpi-database-loaded");
     });
 
     return this._dbPromise;
+  },
+
+  timeRebuildDatabase(timerName, rebuildOnError) {
+    AddonManagerPrivate.recordTiming(timerName, () => {
+      return this.rebuildDatabase(rebuildOnError);
+    });
   },
 
   /**
@@ -1675,7 +1571,7 @@ this.XPIDatabase = {
                                                  ["signedState"]);
         }
 
-        let disabled = this.updateAddonDisabledState(addon);
+        let disabled = await this.updateAddonDisabledState(addon);
         if (disabled !== undefined)
           changes[disabled ? "disabled" : "enabled"].push(addon.id);
       }
@@ -1686,6 +1582,15 @@ this.XPIDatabase = {
     } catch (err) {
       logger.error("XPI_verifySignature: " + err);
     }
+  },
+
+  /**
+   * Imports the xpinstall permissions from preferences into the permissions
+   * manager for the user to change later.
+   */
+  importPermissions() {
+    PermissionsUtils.importFromPrefs(PREF_XPI_PERMISSIONS_BRANCH,
+                                     XPIInternal.XPI_PERMISSION);
   },
 
   /**
@@ -1718,6 +1623,23 @@ this.XPIDatabase = {
       }
     }
   },
+
+  /**
+   * Converts an internal add-on type to the type presented through the API.
+   *
+   * @param {string} aType
+   *        The internal add-on type
+   * @returns {string}
+   *        An external add-on type
+   */
+  getExternalType(aType) {
+    if (aType in TYPE_ALIASES)
+      return TYPE_ALIASES[aType];
+    return aType;
+  },
+
+  isTheme,
+  SIGNED_TYPES,
 
   /**
    * Asynchronously list all addons that match the filter function
@@ -1807,14 +1729,13 @@ this.XPIDatabase = {
   /**
    * Asynchronously gets the visible add-ons, optionally restricting by type.
    *
-   * @param {Array<string>?} aTypes
+   * @param {Set<string>?} aTypes
    *        An array of types to include or null to include all types
    * @returns {Promise<Array<AddonInternal>>}
    */
   getVisibleAddons(aTypes) {
     return this.getAddonList(aAddon => (aAddon.visible &&
-                                        (!aTypes || (aTypes.length == 0) ||
-                                         (aTypes.indexOf(aAddon.type) > -1))));
+                                        (!aTypes || aTypes.has(aAddon.type))));
   },
 
   /**
@@ -1832,7 +1753,6 @@ this.XPIDatabase = {
       logger.warn(`Synchronous load of XPI database due to ` +
                   `getAddonsByType([${aTypes.join(", ")}]) ` +
                   `Stack: ${Error().stack}`);
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
 
@@ -1842,7 +1762,7 @@ this.XPIDatabase = {
   /**
    * Asynchronously gets all add-ons with pending operations.
    *
-   * @param {Array<string>?} aTypes
+   * @param {Set<string>?} aTypes
    *        The types of add-ons to retrieve or null to get all types
    * @returns {Promise<Array<AddonInternal>>}
    */
@@ -1850,18 +1770,7 @@ this.XPIDatabase = {
     return this.getAddonList(
         aAddon => (aAddon.visible &&
                    aAddon.pendingUninstall &&
-                   (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))));
-  },
-
-  /**
-   * Asynchronously get an add-on by its Sync GUID.
-   *
-   * @param {string} aGUID
-   *        Sync GUID of add-on to fetch
-   * @returns {Promise<AddonInternal?>}
-   */
-  getAddonBySyncGUID(aGUID) {
-    return this.getAddon(aAddon => aAddon.syncGUID == aGUID);
+                   (!aTypes || aTypes.has(aAddon.type))));
   },
 
   /**
@@ -1879,6 +1788,61 @@ this.XPIDatabase = {
     return _filterDB(this.addonDB, aAddon => true);
   },
 
+  /**
+   * Called to get an Addon with a particular ID.
+   *
+   * @param {string} aId
+   *        The ID of the add-on to retrieve
+   * @returns {Addon?}
+   */
+  async getAddonByID(aId) {
+    let aAddon = await this.getVisibleAddonForID(aId);
+    return aAddon ? aAddon.wrapper : null;
+  },
+
+  /**
+   * Synchronously returns the Addon object for the add-on with the
+   * given ID.
+   *
+   * *DO NOT USE THIS IF YOU CAN AT ALL AVOID IT*
+   *
+   * This will always return null if the add-on database has not been
+   * loaded, and the resulting Addon object may not yet include a
+   * reference to its corresponding repository add-on object.
+   *
+   * @param {string} aId
+   *        The ID of the add-on to return.
+   * @returns {DBAddonInternal?}
+   *        The Addon object, if available.
+   */
+  syncGetAddonByID(aId) {
+    let aAddon = this.syncGetVisibleAddonForID(aId);
+    return aAddon ? aAddon.wrapper : null;
+  },
+
+  /**
+   * Obtain an Addon having the specified Sync GUID.
+   *
+   * @param {string} aGUID
+   *        String GUID of add-on to retrieve
+   * @returns {Addon?}
+   */
+  async getAddonBySyncGUID(aGUID) {
+    let addon = await this.getAddon(aAddon => aAddon.syncGUID == aGUID);
+    return addon ? addon.wrapper : null;
+  },
+
+  /**
+   * Called to get Addons of a particular type.
+   *
+   * @param {Array<string>?} aTypes
+   *        An array of types to fetch. Can be null to get all types.
+   * @returns {Addon[]}
+   */
+  async getAddonsByTypes(aTypes) {
+    let addons = await this.getVisibleAddons(getAllAliasesForTypes(aTypes));
+    return addons.map(a => a.wrapper);
+  },
 
   /**
    * Returns true if signing is required for the given add-on type.
@@ -2001,12 +1965,6 @@ this.XPIDatabase = {
    *        the AddonInternal that was added to the database
    */
   addToDatabase(aAddon, aPath) {
-    if (!this.addonDB) {
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_addMetadata",
-          XPIProvider.runPhase);
-      this.syncLoadDB(false);
-    }
-
     aAddon.addedToDatabase();
     aAddon.path = aPath;
     this.addonDB.set(aAddon._key, aAddon);
@@ -2178,13 +2136,6 @@ this.XPIDatabase = {
    * Synchronously calculates and updates all the active flags in the database.
    */
   updateActiveAddons() {
-    if (!this.addonDB) {
-      logger.warn("updateActiveAddons called when DB isn't loaded");
-      // force the DB to load
-      AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_updateActive",
-          XPIProvider.runPhase);
-      this.syncLoadDB(true);
-    }
     logger.debug("Updating add-on states");
     for (let [, addon] of this.addonDB) {
       let newActive = (addon.visible && !addon.disabled && !addon.pendingUninstall);
@@ -2193,6 +2144,8 @@ this.XPIDatabase = {
         this.saveChanges();
       }
     }
+
+    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
   },
 
   /**
@@ -2211,14 +2164,14 @@ this.XPIDatabase = {
    * @param {boolean?} [aBecauseSelecting]
    *        True if we're disabling this add-on because we're selecting
    *        another.
-   * @returns {boolean?}
+   * @returns {Promise<boolean?>}
    *       A tri-state indicating the action taken for the add-on:
    *           - undefined: The add-on did not change state
-   *           - true: The add-on because disabled
+   *           - true: The add-on became disabled
    *           - false: The add-on became enabled
    * @throws if addon is not a AddonInternal
    */
-  updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
+  async updateAddonDisabledState(aAddon, aUserDisabled, aSoftDisabled, aBecauseSelecting) {
     if (!(aAddon.inDatabase))
       throw new Error("Can only update addon states for installed addons.");
     if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
@@ -2291,10 +2244,10 @@ this.XPIDatabase = {
 
       let bootstrap = XPIInternal.BootstrapScope.get(aAddon);
       if (isDisabled) {
-        bootstrap.disable();
+        await bootstrap.disable();
         AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
       } else {
-        bootstrap.startup(BOOTSTRAP_REASONS.ADDON_ENABLE);
+        await bootstrap.startup(BOOTSTRAP_REASONS.ADDON_ENABLE);
         AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
       }
     }
@@ -2313,22 +2266,41 @@ this.XPIDatabase = {
   },
 
   /**
-   * Record a bit of per-addon telemetry.
-   *
-   * Yes, this description is extremely helpful. How dare you question its
-   * utility?
+   * Update the appDisabled property for all add-ons.
+   */
+  updateAddonAppDisabledStates() {
+    for (let addon of this.getAddons()) {
+      this.updateAddonDisabledState(addon);
+    }
+  },
+
+  /**
+   * Update the repositoryAddon property for all add-ons.
+   */
+  async updateAddonRepositoryData() {
+    let addons = await this.getVisibleAddons(null);
+    logger.debug("updateAddonRepositoryData found " + addons.length + " visible add-ons");
+
+    await Promise.all(addons.map(addon =>
+      AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
+        if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
+          logger.debug("updateAddonRepositoryData got info for " + addon.id);
+          addon._repositoryAddon = aRepoAddon;
+          this.updateAddonDisabledState(addon);
+        }
+      })));
+  },
+
+  /**
+   * Adds the add-on's name and creator to the telemetry payload.
    *
    * @param {AddonInternal} aAddon
    *        The addon to record
    */
   recordAddonTelemetry(aAddon) {
     let locale = aAddon.defaultLocale;
-    if (locale) {
-      if (locale.name)
-        XPIProvider.setTelemetry(aAddon.id, "name", locale.name);
-      if (locale.creator)
-        XPIProvider.setTelemetry(aAddon.id, "creator", locale.creator);
-    }
+    XPIProvider.addTelemetry(aAddon.id, {name: locale.name,
+                                         creator: locale.creator});
   },
 };
 
@@ -2679,13 +2651,6 @@ this.XPIDatabaseReconcile = {
 
     let installLocation = oldAddon.location;
 
-    if (xpiState.mtime < oldAddon.updateDate) {
-      XPIProvider.setTelemetry(oldAddon.id, "olderFile", {
-        mtime: xpiState.mtime,
-        oldtime: oldAddon.updateDate
-      });
-    }
-
     // Update the add-on's database metadata from on-disk metadata if:
     //
     //  a) The add-on was staged for install in the last session,
@@ -2821,14 +2786,19 @@ this.XPIDatabaseReconcile = {
       }
     }
 
+    let promises = [];
     for (let [id, addon] of currentVisible) {
       // If we have a stored manifest for the add-on, it came from the
       // startup data cache, and supersedes any previous XPIStates entry.
       let xpiState = (!findManifest(addon.location, id) &&
                       addonStates.get(addon));
 
-      this.applyStartupChange(addon, previousVisible.get(id), xpiState);
+      promises.push(this.applyStartupChange(addon, previousVisible.get(id), xpiState));
       previousVisible.delete(id);
+    }
+
+    if (promises.some(p => p)) {
+      XPIInternal.awaitPromise(Promise.all(promises));
     }
 
     for (let [id, addon] of previousVisible) {
@@ -2890,8 +2860,12 @@ this.XPIDatabaseReconcile = {
    *        The add-on as it existed in the previous session.
    * @param {XPIState?} xpiState
    *        The XPIState entry for this add-on, if one exists.
+   * @returns {Promise?}
+   *        If an update was performed, returns a promise which resolves
+   *        when the appropriate bootstrap methods have been called.
    */
   applyStartupChange(currentAddon, previousAddon, xpiState) {
+    let promise;
     let {id} = currentAddon;
 
     let isActive = !currentAddon.disabled;
@@ -2904,7 +2878,7 @@ this.XPIDatabaseReconcile = {
         if (previousAddon.location &&
             previousAddon._sourceBundle.exists() &&
             !previousAddon._sourceBundle.equals(currentAddon._sourceBundle)) {
-          XPIInternal.BootstrapScope.get(previousAddon).update(
+          promise = XPIInternal.BootstrapScope.get(previousAddon).update(
             currentAddon);
         } else {
           let reason = XPIInstall.newVersionReason(previousAddon.version, currentAddon.version);
@@ -2941,5 +2915,6 @@ this.XPIDatabaseReconcile = {
 
     XPIDatabase.makeAddonVisible(currentAddon);
     currentAddon.active = isActive;
+    return promise;
   },
 };

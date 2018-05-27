@@ -168,7 +168,7 @@ add_task(async function test_track_user_disable() {
   });
 
   _("Disabling add-on");
-  addon.userDisabled = true;
+  await addon.disable();
   _("Disabling started...");
   await disabledPromise;
   await reconciler.queueCaller.promiseCallsComplete();
@@ -188,13 +188,13 @@ add_task(async function test_track_enable() {
   reconciler.startListening();
 
   let addon = await installAddon(XPIS.test_bootstrap1_1, reconciler);
-  addon.userDisabled = true;
+  await addon.disable();
   await Async.promiseYield();
 
   Assert.equal(0, tracker.score);
 
   tracker.start();
-  addon.userDisabled = false;
+  await addon.enable();
   await Async.promiseYield();
   await reconciler.queueCaller.promiseCallsComplete();
 

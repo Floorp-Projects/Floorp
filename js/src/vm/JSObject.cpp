@@ -3437,7 +3437,7 @@ dumpValue(const Value& v, js::GenericPrinter& out)
         }
         if (fun->hasScript()) {
             JSScript* script = fun->nonLazyScript();
-            out.printf(" (%s:%zu)",
+            out.printf(" (%s:%u)",
                     script->filename() ? script->filename() : "", script->lineno());
         }
         out.printf(" at %p>", (void*) fun);
@@ -3717,7 +3717,7 @@ js::DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out, InterpreterFram
         }
         out.putChar('\n');
 
-        out.printf("file %s line %zu\n",
+        out.printf("file %s line %u\n",
                 i.script()->filename(), i.script()->lineno());
 
         if (jsbytecode* pc = i.pc()) {

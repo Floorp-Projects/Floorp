@@ -43,7 +43,7 @@ add_task(async function() {
   Assert.equal(addon.type, "extension");
 
   // normal add-ons can be disabled by the user.
-  addon.userDisabled = true;
+  await addon.disable();
 
   Assert.notEqual(addon, null);
   Assert.equal(addon.version, "1.0");
@@ -54,7 +54,7 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.equal(addon.type, "extension");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseShutdownManager();
 });
@@ -90,7 +90,7 @@ add_task(async function() {
 
   // system add-ons cannot be disabled by the user.
   try {
-    addon.userDisabled = true;
+    await addon.disable();
     do_throw("Expected addon.userDisabled on a hidden add-on to throw!");
   } catch (e) {
     Assert.equal(e.message, `Cannot disable hidden add-on ${SYSTEM_ID}`);

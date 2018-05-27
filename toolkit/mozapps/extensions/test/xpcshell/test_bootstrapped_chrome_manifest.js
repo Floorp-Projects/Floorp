@@ -48,10 +48,10 @@ add_task(async function test() {
   // Tests that chrome.manifest is registered when the addon is installed.
   checkActive(true);
 
-  addon.userDisabled = true;
+  await addon.disable();
   checkActive(false);
 
-  addon.userDisabled = false;
+  await addon.enable();
   checkActive(true);
 
   await promiseShutdownManager();

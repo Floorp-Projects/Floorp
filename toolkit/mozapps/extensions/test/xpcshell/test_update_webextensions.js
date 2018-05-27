@@ -36,17 +36,12 @@ function serveManifest(request, response) {
   response.write(manifest.data);
 }
 
-function promiseInstallWebExtension(aData) {
+async function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
-  let startupPromise = promiseWebExtensionStartup();
-
-  return promiseInstallAllFiles([addonFile]).then(() => {
-    return startupPromise;
-  }).then(() => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-    return promiseAddonByID(aData.id);
-  });
+  let {addon} = await promiseInstallFile(addonFile);
+  Services.obs.notifyObservers(addonFile, "flush-cache-entry");
+  return addon;
 }
 
 var checkUpdates = async function(aData, aReason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
@@ -156,7 +151,7 @@ add_task(async function checkUpdateMetadata() {
   ok(update.addon.isCompatibleWith("48", "48"), "compatible max");
   ok(!update.addon.isCompatibleWith("49", "49"), "not compatible max");
 
-  update.addon.uninstall();
+  await update.addon.uninstall();
 });
 
 
@@ -176,15 +171,12 @@ add_task(async function checkUpdateToWebExt() {
 
   equal(update.addon.version, "1.0", "add-on version");
 
-  await Promise.all([
-    promiseCompleteAllInstalls([update.updateAvailable]),
-    promiseWebExtensionStartup(),
-  ]);
+  await update.updateAvailable.install();
 
   let addon = await promiseAddonByID(update.addon.id);
   equal(addon.version, "1.2", "new add-on version");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 
@@ -218,7 +210,7 @@ add_task(async function checkUpdateToRDF() {
   let addon = await promiseAddonByID(update.addon.id);
   equal(addon.version, "1.0", "new add-on version");
 
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 

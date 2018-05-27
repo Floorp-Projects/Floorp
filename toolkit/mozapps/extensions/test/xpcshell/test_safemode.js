@@ -71,7 +71,7 @@ async function run_test_1() {
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.ok(!hasFlag(a1.operationsRequiringRestart,
                      AddonManager.OP_NEEDS_RESTART_DISABLE));
-  a1.userDisabled = true;
+  await a1.disable();
   Assert.ok(!a1.isActive);
   Assert.equal(a1.aboutURL, null);
   Assert.equal(a1.optionsURL, null);
@@ -96,7 +96,7 @@ async function run_test_2() {
   });
 
   let a1 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
-  a1.userDisabled = false;
+  await a1.enable();
   Assert.ok(!a1.isActive);
   Assert.equal(a1.aboutURL, null);
   Assert.equal(a1.optionsURL, null);

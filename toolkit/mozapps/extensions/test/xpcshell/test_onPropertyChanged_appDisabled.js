@@ -26,7 +26,7 @@ async function run_test() {
 
   let aAddon = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   Assert.notEqual(aAddon, null);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
   executeSoon(run_test_1);
 }
 

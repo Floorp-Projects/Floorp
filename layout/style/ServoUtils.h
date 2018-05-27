@@ -33,14 +33,6 @@ inline bool IsInServoTraversal()
   MOZ_ASSERT(sInServoTraversal || NS_IsMainThread());
   return sInServoTraversal;
 }
-
-inline bool IsInServoTraversalWithoutMainThreadAssertion()
-{
-  // This is for cases when we _only_ want to query whether we're in Servo
-  // traversal, without asserting in the case of other non-main-thread callers.
-  // Use this only if the calling code is safe to use off the main thread.
-  return sInServoTraversal;
-}
 } // namespace mozilla
 
 #define MOZ_DECL_STYLO_CONVERT_METHODS_SERVO(servotype_) \

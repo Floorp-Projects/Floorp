@@ -15,10 +15,6 @@ UNIFIED_SOURCES += [
     'suggestmgr.cxx',
 ]
 
-# This variable is referenced in mozilla-config.h.in.  Make sure to change
-# that file too if you need to change this variable.
-DEFINES['HUNSPELL_STATIC'] = True
-
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
@@ -29,6 +25,9 @@ LOCAL_INCLUDES += [
 AllowCompilerWarnings()
 
 include('/ipc/chromium/chromium-config.mozbuild')
+include('../glue/common.mozbuild')
+
+HunspellIncludes()
 
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += [

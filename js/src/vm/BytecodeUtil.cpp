@@ -209,11 +209,11 @@ js::DumpCompartmentPCCounts(JSContext* cx)
         if (!sprinter.init())
             return false;
 
-        fprintf(stdout, "--- SCRIPT %s:%zu ---\n", script->filename(), script->lineno());
+        fprintf(stdout, "--- SCRIPT %s:%u ---\n", script->filename(), script->lineno());
         if (!DumpPCCounts(cx, script, &sprinter))
             return false;
         fputs(sprinter.string(), stdout);
-        fprintf(stdout, "--- END SCRIPT %s:%zu ---\n", script->filename(), script->lineno());
+        fprintf(stdout, "--- END SCRIPT %s:%u ---\n", script->filename(), script->lineno());
     }
 
     return true;

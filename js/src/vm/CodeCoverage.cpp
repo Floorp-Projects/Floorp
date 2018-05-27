@@ -150,7 +150,7 @@ LCovSource::writeScript(JSScript* script)
         return false;
 
     numFunctionsFound_++;
-    outFN_.printf("FN:%zu,", script->lineno());
+    outFN_.printf("FN:%u,", script->lineno());
     if (!writeScriptName(outFN_, script))
         return false;
     outFN_.put("\n", 1);

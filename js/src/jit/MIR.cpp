@@ -1166,7 +1166,7 @@ MConstant::printOpcode(GenericPrinter& out) const
             }
             if (fun->hasScript()) {
                 JSScript* script = fun->nonLazyScript();
-                out.printf(" (%s:%zu)",
+                out.printf(" (%s:%u)",
                         script->filename() ? script->filename() : "", script->lineno());
             }
             out.printf(" at %p", (void*) fun);

@@ -2105,7 +2105,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                     fun->native(), constructing ? "yes" : "no", isSpread ? "yes" : "no");
         } else {
             JitSpew(JitSpew_BaselineIC,
-                    "  Generating Call_Scripted stub (fun=%p, %s:%zu, cons=%s, spread=%s)",
+                    "  Generating Call_Scripted stub (fun=%p, %s:%u, cons=%s, spread=%s)",
                     fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno(),
                     constructing ? "yes" : "no", isSpread ? "yes" : "no");
         }

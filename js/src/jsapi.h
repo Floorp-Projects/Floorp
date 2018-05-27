@@ -1046,7 +1046,7 @@ JS_RefreshCrossCompartmentWrappers(JSContext* cx, JS::Handle<JSObject*> obj);
  *
  *   void foo(JSContext* cx, JSObject* obj) {
  *     // in 'oldRealm'
- *     JSCompartment* oldRealm = JS::EnterRealm(cx, obj);
+ *     JS::Realm* oldRealm = JS::EnterRealm(cx, obj);
  *     // in the realm of 'obj'
  *     JS::LeaveRealm(cx, oldRealm);
  *     // back in 'oldRealm'
@@ -1089,10 +1089,10 @@ namespace JS {
 
 /** NB: This API is infallible; a nullptr return value does not indicate error.
  *
- * Entering a compartment roots the compartment and its global object until the
- * matching JS::LeaveRealm() call.
+ * Entering a realm roots the realm and its global object until the matching
+ * JS::LeaveRealm() call.
  */
-extern JS_PUBLIC_API(JSCompartment*)
+extern JS_PUBLIC_API(JS::Realm*)
 EnterRealm(JSContext* cx, JSObject* target);
 
 extern JS_PUBLIC_API(void)

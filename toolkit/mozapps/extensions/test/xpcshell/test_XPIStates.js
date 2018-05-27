@@ -90,7 +90,7 @@ add_task(async function detect_touches() {
          ]);
 
   info("Disable test add-ons");
-  pd.userDisabled = true;
+  await pd.disable();
 
   let XS = getXS();
 
@@ -125,7 +125,7 @@ add_task(async function uninstall_bootstrap() {
          "packed-enabled@tests.mozilla.org",
          "packed-disabled@tests.mozilla.org",
          ]);
-  pe.uninstall();
+  await pe.uninstall();
 
   let xpiState = await getXSJSON();
   Assert.equal(false, "packed-enabled@tests.mozilla.org" in xpiState["app-profile"].addons);
@@ -145,5 +145,5 @@ add_task(async function install_bootstrap() {
   Assert.ok(!!xState);
   Assert.ok(xState.enabled);
   Assert.equal(xState.mtime, newAddon.updateDate.getTime());
-  newAddon.uninstall();
+  await newAddon.uninstall();
 });
