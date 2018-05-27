@@ -229,7 +229,7 @@
 
 #identity-popup-security-descriptions > description {
   margin-top: 6px;
-  color: Graytext;
+  color: var(--panel-disabled-color);
 }
 
 #identity-popup-securityView-body {
@@ -268,7 +268,7 @@
 
 #identity-popup-content-verifier ~ description {
   margin-top: 1em;
-  color: Graytext;
+  color: var(--panel-disabled-color);
 }
 
 description#identity-popup-content-verified-by,
@@ -379,7 +379,7 @@ description#identity-popup-content-verifier,
 .identity-popup-permission-state-label {
   margin-inline-end: 5px;
   text-align: end;
-  color: graytext;
+  color: var(--panel-disabled-color);
 }
 
 .identity-popup-permission-remove-button {
