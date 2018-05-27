@@ -897,14 +897,14 @@ notification[value="translation"] {
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
   -moz-image-region: auto;
 }
 
 #menu_unsortedBookmarks,
 #BMB_unsortedBookmarks,
 #panelMenu_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png");
+  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.svg");
   -moz-image-region: auto;
 }
 
@@ -1101,4 +1101,3 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   padding-top: .9167em;
   padding-bottom: .9167em;
 }
-
