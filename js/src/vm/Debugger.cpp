@@ -2395,8 +2395,7 @@ class MOZ_RAII ExecutionObservableRealms : public Debugger::ExecutionObservableS
         // AbstractFramePtr can't refer to non-remateralized Ion frames or
         // non-debuggee wasm frames, so if iter refers to one such, we know we
         // don't match.
-        return iter.hasUsableAbstractFramePtr() &&
-               realms_.has(JS::GetRealmForCompartment(iter.compartment()));
+        return iter.hasUsableAbstractFramePtr() && realms_.has(iter.realm());
     }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -3745,7 +3744,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
         for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
             if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
+            r->compartment()->scheduledForDestruction = false;
             GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -4962,7 +4961,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
+            r->compartment()->scheduledForDestruction = false;
 
             GlobalObject* global = r->maybeGlobal();
 

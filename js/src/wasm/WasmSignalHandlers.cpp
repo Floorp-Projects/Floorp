@@ -954,7 +954,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!IsHeapAccessAddress(*instance, faultingAddress))
         return false;
 
-    MOZ_ASSERT(activation->compartment() == JS::GetCompartmentForRealm(instance->realm()));
+    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
 
     return HandleOutOfBounds(context, pc, faultingAddress, moduleSegment, *instance, activation, ppc);
 }
@@ -1061,7 +1061,7 @@ HandleMachException(JSContext* cx, const ExceptionRequest& request)
         return false;
 
     JitActivation* activation = cx->activation()->asJit();
-    MOZ_ASSERT(activation->compartment() == JS::GetCompartmentForRealm(instance->realm()));
+    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
 
     if (request.body.exception == EXC_BAD_INSTRUCTION) {
         Trap trap;
@@ -1283,7 +1283,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
 
     JitActivation* activation = TlsContext.get()->activation()->asJit();
-    MOZ_ASSERT(activation->compartment() == JS::GetCompartmentForRealm(instance->realm()));
+    MOZ_ASSERT(activation->compartment() == instance->realm()->compartment());
 
     if (signum == kWasmTrapSignal) {
         // Wasm traps for MIPS raise only integer overflow fp exception.
