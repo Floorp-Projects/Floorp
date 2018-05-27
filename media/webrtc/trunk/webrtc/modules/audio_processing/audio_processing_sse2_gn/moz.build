@@ -123,6 +123,7 @@ if CONFIG["OS_TARGET"] == "NetBSD":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
+        "-msse2",
         "-msse2"
     ]
 
