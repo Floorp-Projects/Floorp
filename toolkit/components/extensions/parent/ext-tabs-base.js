@@ -1013,7 +1013,9 @@ class WindowBase {
    *        @readonly
    */
   get title() {
-    if (this.activeTab.hasTabPermission) {
+    // activeTab may be null when a new window is adopting an existing tab as its first tab
+    // (See Bug 1458918 for rationale).
+    if (this.activeTab && this.activeTab.hasTabPermission) {
       return this._title;
     }
   }
@@ -1771,6 +1773,14 @@ class TabManagerBase {
    * properties of the given native tab. In practice, this means that it has
    * either requested the "tabs" permission or has activeTab permissions for the
    * given tab.
+   *
+   * NOTE: Never use this method on an object that is not a native tab
+   * for the current platform: this method implicitly generates a wrapper
+   * for the passed nativeTab parameter and the platform-specific tabTracker
+   * instance is likely to store it in a map which is cleared only when the
+   * tab is closed (and so, if nativeTab is not a real native tab, it will
+   * never be cleared from the platform-specific tabTracker instance),
+   * See Bug 1458918 for a rationale.
    *
    * @param {NativeTab} nativeTab
    *        The native tab for which to check permissions.

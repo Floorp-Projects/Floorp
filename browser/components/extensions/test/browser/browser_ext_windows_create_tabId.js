@@ -2,6 +2,18 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+function assertNoLeaksInTabTracker() {
+  // Check that no tabs have been leaked by the internal tabTracker helper class.
+  const {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm", {});
+  const {tabTracker} = ExtensionParent.apiManager.global;
+
+  for (const [tabId, nativeTab] of tabTracker._tabIds) {
+    if (!nativeTab.ownerGlobal) {
+      ok(false, `A tab with tabId ${tabId} has been leaked in the tabTracker ("${nativeTab.title}")`);
+    }
+  }
+}
+
 add_task(async function testWindowCreate() {
   async function background() {
     let promiseTabAttached = () => {
@@ -137,6 +149,8 @@ add_task(async function testWindowCreate() {
   await extension.startup();
   await extension.awaitFinish("window-create");
   await extension.unload();
+
+  assertNoLeaksInTabTracker();
 });
 
 add_task(async function testWebNavigationOnWindowCreateTabId() {
@@ -222,4 +236,80 @@ add_task(async function testWebNavigationOnWindowCreateTabId() {
 
   await extension.awaitFinish("webNavigation-on-window-create-tabId");
   await extension.unload();
+
+  assertNoLeaksInTabTracker();
+});
+
+add_task(async function testGetLastFocusedDoesNotLeakDuringTabAdoption() {
+  async function background() {
+    const allTabs = await browser.tabs.query({});
+
+    browser.test.onMessage.addListener(async (msg, testTabURL) => {
+      if (msg !== "testTabURL") {
+        return;
+      }
+
+      let tab = allTabs.filter(tab => tab.url === testTabURL).pop();
+
+      // Keep calling getLastFocused while browser.windows.create is creating
+      // a new window to adopt the test tab, so that the test recreates
+      // conditions similar to the extension that has been triggered this leak
+      // (See Bug 1458918 for a rationale).
+      // The while loop is explicited exited right before the notifyPass
+      // (but unloading the extension will stop it in any case).
+      let stopGetLastFocusedLoop = false;
+      Promise.resolve().then(async () => {
+        while (!stopGetLastFocusedLoop) {
+          browser.windows.getLastFocused({populate: true});
+          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      });
+
+      // Create a new window which adopt an existent tab and wait the tab to
+      // be fully attached to the new window.
+      await Promise.all([
+        new Promise(resolve => {
+          const listener = () => {
+            browser.tabs.onAttached.removeListener(listener);
+            resolve();
+          };
+          browser.tabs.onAttached.addListener(listener);
+        }),
+        browser.windows.create({tabId: tab.id}),
+      ]);
+
+      // Check that getLastFocused populate the tabs property once the tab adoption
+      // has been completed.
+      const lastFocusedPopulate = await browser.windows.getLastFocused({populate: true});
+      browser.test.assertEq(1, lastFocusedPopulate.tabs.length,
+                            "Got the expected number of tabs from windows.getLastFocused");
+
+      // Remove the test tab.
+      await browser.tabs.remove(tab.id);
+
+      stopGetLastFocusedLoop = true;
+
+      browser.test.notifyPass("tab-adopted");
+    });
+  }
+
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs", "webNavigation"],
+    },
+    background,
+  });
+
+  await extension.startup();
+
+  extension.sendMessage("testTabURL", "http://example.com/");
+
+  await extension.awaitFinish("tab-adopted");
+
+  await extension.unload();
+
+  assertNoLeaksInTabTracker();
 });
