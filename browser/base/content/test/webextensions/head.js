@@ -352,7 +352,7 @@ async function testInstallMethod(installFn, telemetryBase) {
     } else {
       ok(result, "Installation completed");
       isnot(addon, null, "Extension is installed");
-      addon.uninstall();
+      await addon.uninstall();
     }
 
     BrowserTestUtils.removeTab(tab);

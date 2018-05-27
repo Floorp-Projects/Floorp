@@ -91,8 +91,8 @@ js::AutoAtomsRealm::AutoAtomsRealm(JSContext* cx,
   : AutoRealm(cx, cx->atomsRealm(lock), lock)
 {}
 
-js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JSCompartment* target)
-  : AutoRealm(cx, JS::GetRealmForCompartment(target))
+js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JS::Realm* target)
+  : AutoRealm(cx, target)
 {}
 
 inline bool

@@ -2574,7 +2574,7 @@ TypeZone::processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles)
 void
 TypeZone::addPendingRecompile(JSContext* cx, const RecompileInfo& info)
 {
-    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%zu",
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%u",
               info.script(), info.script()->filename(), info.script()->lineno());
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -4417,10 +4417,10 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStat
 
     if (auto* layout = maybeUnboxedLayout(sweep)) {
         // Remove unboxed layouts that are about to be finalized from the
-        // compartment wide list while we are still on the main thread.
+        // realm wide list while we are still on the main thread.
         ObjectGroup* group = this;
         if (IsAboutToBeFinalizedUnbarriered(&group))
-            layout->detachFromCompartment();
+            layout->detachFromRealm();
 
         if (layout->newScript())
             layout->newScript()->sweep();
@@ -4700,7 +4700,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
         fprintf(stderr, "Eval");
     else
         fprintf(stderr, "Main");
-    fprintf(stderr, " %#" PRIxPTR " %s:%zu ",
+    fprintf(stderr, " %#" PRIxPTR " %s:%u ",
             uintptr_t(script.get()), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {

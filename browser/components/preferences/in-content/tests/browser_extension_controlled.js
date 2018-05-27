@@ -101,8 +101,9 @@ add_task(async function testExtensionControlledHomepage() {
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Install an extension that will set the homepage.
+  let promise = waitForMessageShown("browserHomePageExtensionContent");
   await installAddon("set_homepage.xpi");
-  await waitForMessageShown("browserHomePageExtensionContent");
+  await promise;
 
   // The homepage has been set by the extension, the user is notified and it isn't editable.
   let controlledLabel = controlledContent.querySelector("description");
@@ -141,10 +142,11 @@ add_task(async function testExtensionControlledHomepage() {
   // Enable the extension so we get the UNINSTALL event, which is needed by
   // ExtensionPreferencesManager to clean up properly.
   // FIXME: See https://bugzilla.mozilla.org/show_bug.cgi?id=1408226.
-  addon.userDisabled = false;
-  await waitForMessageShown("browserHomePageExtensionContent");
+  promise = waitForMessageShown("browserHomePageExtensionContent");
+  await addon.enable();
+  await promise;
   // Do the uninstall now that the enable code has been run.
-  addon.uninstall();
+  await addon.uninstall();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -203,8 +205,9 @@ add_task(async function testPrefLockedHomepage() {
   ok(originalHomepage != extensionHomepage, "The extension will change the homepage");
 
   // Install an extension that sets the homepage to MDN.
+  let promise = waitForMessageShown(controlledContent.id);
   await installAddon("set_homepage.xpi");
-  await waitForMessageShown(controlledContent.id);
+  await promise;
 
   // Check that everything is still disabled, homepage didn't change.
   is(getHomepage(), extensionHomepage, "The reported homepage is set by the extension");
@@ -249,8 +252,9 @@ add_task(async function testPrefLockedHomepage() {
 
   // Uninstall the add-on.
   let addon = await AddonManager.getAddonByID("@set_homepage");
-  addon.uninstall();
-  await waitForEnableMessage(controlledContent.id);
+  promise = waitForEnableMessage(controlledContent.id);
+  await addon.uninstall();
+  await promise;
 
   // Check that everything is now enabled again.
   is(getHomepage(), originalHomepage, "The reported homepage is reset to original value");
@@ -306,9 +310,9 @@ add_task(async function testExtensionControlledNewTab() {
   is(controlledContent.hidden, true, "The extension controlled row is hidden");
 
   // Install an extension that will set the new tab page.
+  let promise = waitForMessageShown("browserNewTabExtensionContent");
   await installAddon("set_newtab.xpi");
-
-  await waitForMessageShown("browserNewTabExtensionContent");
+  await promise;
 
   // The new tab page has been set by the extension and the user is notified.
   let controlledLabel = controlledContent.querySelector("description");
@@ -343,7 +347,7 @@ add_task(async function testExtensionControlledNewTab() {
   // Cleanup the tab and add-on.
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let addon = await AddonManager.getAddonByID("@set_newtab");
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function testExtensionControlledDefaultSearch() {
@@ -586,7 +590,7 @@ add_task(async function testExtensionControlledTrackingProtection() {
 
   async function reEnableExtension(addon) {
     let controlledMessageShown = waitForMessageShown(CONTROLLED_LABEL_ID[uiType]);
-    addon.userDisabled = false;
+    await addon.enable();
     await controlledMessageShown;
   }
 
@@ -757,7 +761,7 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   async function reEnableExtension(addon) {
     let messageChanged = connectionSettingsMessagePromise(mainDoc, true);
-    addon.userDisabled = false;
+    await addon.enable();
     await messageChanged;
   }
 

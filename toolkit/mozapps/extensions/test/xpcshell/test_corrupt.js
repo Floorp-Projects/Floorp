@@ -226,7 +226,7 @@ add_task(async function setup() {
   let addons = await getAddons(IDS);
   for (let [id, addon] of Object.entries(ADDONS)) {
     if (addon.initialState) {
-      Object.assign(addons.get(id), addon.initialState);
+      await setInitialState(addons.get(id), addon.initialState);
     }
     if (addon.findUpdates) {
       await promiseUpdates(addons.get(id));

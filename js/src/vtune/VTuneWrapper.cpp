@@ -133,7 +133,7 @@ MarkScript(const js::jit::JitCode* code, const JSScript* script, const char* mod
     // Line numbers begin at 1, but columns begin at 0.
     // Text editors start at 1,1 so fixup is performed to match.
     char namebuf[512];
-    SprintfLiteral(namebuf, "%s:%zu:%zu",
+    SprintfLiteral(namebuf, "%s:%u:%u",
                    script->filename(), script->lineno(), script->column() + 1);
 
     method.method_name = &namebuf[0];

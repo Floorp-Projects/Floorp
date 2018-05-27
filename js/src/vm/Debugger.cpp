@@ -375,7 +375,7 @@ class MOZ_RAII js::EnterDebuggeeNoExecute
                 }
                 const char* filename = script->filename() ? script->filename() : "(none)";
                 char linenoStr[15];
-                SprintfLiteral(linenoStr, "%zu", script->lineno());
+                SprintfLiteral(linenoStr, "%u", script->lineno());
                 unsigned flags = warning ? JSREPORT_WARNING : JSREPORT_ERROR;
                 // FIXME: filename should be UTF-8 (bug 987069).
                 return JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr,
@@ -2395,8 +2395,7 @@ class MOZ_RAII ExecutionObservableRealms : public Debugger::ExecutionObservableS
         // AbstractFramePtr can't refer to non-remateralized Ion frames or
         // non-debuggee wasm frames, so if iter refers to one such, we know we
         // don't match.
-        return iter.hasUsableAbstractFramePtr() &&
-               realms_.has(JS::GetRealmForCompartment(iter.compartment()));
+        return iter.hasUsableAbstractFramePtr() && realms_.has(iter.realm());
     }
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -3745,7 +3744,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext* cx, unsigned argc, Value* vp)
         for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
             if (r == dbg->object->realm() || r->creationOptions().invisibleToDebugger())
                 continue;
-            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
+            r->compartment()->scheduledForDestruction = false;
             GlobalObject* global = r->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -4962,7 +4961,7 @@ Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp)
             if (r->creationOptions().invisibleToDebugger())
                 continue;
 
-            JS::GetCompartmentForRealm(r)->scheduledForDestruction = false;
+            r->compartment()->scheduledForDestruction = false;
 
             GlobalObject* global = r->maybeGlobal();
 
@@ -5416,7 +5415,7 @@ struct DebuggerScriptGetStartLineMatcher
     using ReturnType = uint32_t;
 
     ReturnType match(HandleScript script) {
-        return uint32_t(script->lineno());
+        return script->lineno();
     }
     ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
         return 1;

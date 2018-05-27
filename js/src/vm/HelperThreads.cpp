@@ -219,7 +219,7 @@ GetSelectorRuntime(const CompilationSelector& selector)
     struct Matcher
     {
         JSRuntime* match(JSScript* script)    { return script->runtimeFromMainThread(); }
-        JSRuntime* match(JSCompartment* comp) { return comp->runtimeFromMainThread(); }
+        JSRuntime* match(Realm* realm)        { return realm->runtimeFromMainThread(); }
         JSRuntime* match(Zone* zone)          { return zone->runtimeFromMainThread(); }
         JSRuntime* match(ZonesInState zbs)    { return zbs.runtime; }
         JSRuntime* match(JSRuntime* runtime)  { return runtime; }
@@ -236,7 +236,7 @@ JitDataStructuresExist(const CompilationSelector& selector)
     struct Matcher
     {
         bool match(JSScript* script)    { return !!script->realm()->jitRealm(); }
-        bool match(JSCompartment* comp) { return !!JS::GetRealmForCompartment(comp)->jitRealm(); }
+        bool match(Realm* realm)        { return !!realm->jitRealm(); }
         bool match(Zone* zone)          { return !!zone->jitZone(); }
         bool match(ZonesInState zbs)    { return zbs.runtime->hasJitRuntime(); }
         bool match(JSRuntime* runtime)  { return runtime->hasJitRuntime(); }
@@ -255,7 +255,7 @@ IonBuilderMatches(const CompilationSelector& selector, jit::IonBuilder* builder)
         jit::IonBuilder* builder_;
 
         bool match(JSScript* script)    { return script == builder_->script(); }
-        bool match(JSCompartment* comp) { return comp == builder_->script()->compartment(); }
+        bool match(Realm* realm)        { return realm == builder_->script()->realm(); }
         bool match(Zone* zone)          { return zone == builder_->script()->zone(); }
         bool match(JSRuntime* runtime)  { return runtime == builder_->script()->runtimeFromAnyThread(); }
         bool match(AllCompilations all) { return true; }
@@ -343,36 +343,36 @@ js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardL
 
 #ifdef DEBUG
 bool
-js::HasOffThreadIonCompile(JSCompartment* comp)
+js::HasOffThreadIonCompile(Realm* realm)
 {
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().threads || JS::GetRealmForCompartment(comp)->isAtomsRealm())
+    if (!HelperThreadState().threads || realm->isAtomsRealm())
         return false;
 
     GlobalHelperThreadState::IonBuilderVector& worklist = HelperThreadState().ionWorklist(lock);
     for (size_t i = 0; i < worklist.length(); i++) {
         jit::IonBuilder* builder = worklist[i];
-        if (builder->script()->compartment() == comp)
+        if (builder->script()->realm() == realm)
             return true;
     }
 
     for (auto& helper : *HelperThreadState().threads) {
-        if (helper.ionBuilder() && helper.ionBuilder()->script()->compartment() == comp)
+        if (helper.ionBuilder() && helper.ionBuilder()->script()->realm() == realm)
             return true;
     }
 
     GlobalHelperThreadState::IonBuilderVector& finished = HelperThreadState().ionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
         jit::IonBuilder* builder = finished[i];
-        if (builder->script()->compartment() == comp)
+        if (builder->script()->realm() == realm)
             return true;
     }
 
-    JSRuntime* rt = comp->runtimeFromMainThread();
+    JSRuntime* rt = realm->runtimeFromMainThread();
     jit::IonBuilder* builder = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
     while (builder) {
-        if (builder->script()->compartment() == comp)
+        if (builder->script()->realm() == realm)
             return true;
         builder = builder->getNext();
     }
@@ -1652,7 +1652,7 @@ bool
 GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
                                          JS::OffThreadToken* token, F&& finishCallback)
 {
-    MOZ_ASSERT(cx->compartment());
+    MOZ_ASSERT(cx->realm());
 
     ScopedJSDeletePtr<ParseTask> parseTask(removeFinishedParseTask(kind, token));
 
@@ -1663,7 +1663,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* cx, ParseTaskKind kind,
         return false;
     }
 
-    mergeParseTaskCompartment(cx, parseTask, cx->compartment());
+    mergeParseTaskRealm(cx, parseTask, cx->realm());
 
     bool ok = finishCallback(parseTask);
 
@@ -1828,18 +1828,17 @@ GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
 }
 
 void
-GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask,
-                                                   JSCompartment* dest)
+GlobalHelperThreadState::mergeParseTaskRealm(JSContext* cx, ParseTask* parseTask, Realm* dest)
 {
     // After we call LeaveParseTaskZone() it's not safe to GC until we have
-    // finished merging the contents of the parse task's compartment into the
-    // destination compartment.
+    // finished merging the contents of the parse task's realm into the
+    // destination realm.
     JS::AutoAssertNoGC nogc(cx);
 
     LeaveParseTaskZone(cx->runtime(), parseTask);
 
-    // Move the parsed script and all its contents into the desired compartment.
-    gc::MergeCompartments(parseTask->parseGlobal->compartment(), dest);
+    // Move the parsed script and all its contents into the desired realm.
+    gc::MergeRealms(parseTask->parseGlobal->realm(), dest);
 }
 
 void

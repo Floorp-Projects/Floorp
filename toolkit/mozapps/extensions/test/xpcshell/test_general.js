@@ -26,9 +26,6 @@ async function run_test_1() {
   let addons = await AddonManager.getAddonsByTypes(null);
   Assert.equal(gCount, addons.length);
 
-  let pendingAddons = await AddonManager.getAddonsWithOperationsByTypes(null);
-  Assert.equal(0, pendingAddons.length);
-
   executeSoon(run_test_2);
 }
 

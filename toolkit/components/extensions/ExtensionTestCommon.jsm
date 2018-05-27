@@ -66,11 +66,14 @@ class MockExtension {
     this.addon = null;
 
     let promiseEvent = eventName => new Promise(resolve => {
-      let onstartup = (msg, extension) => {
-        if (this.addon && extension.id == this.addon.id) {
-          apiManager.off(eventName, onstartup);
+      let onstartup = async (msg, extension) => {
+        this.maybeSetID(extension.rootURI, extension.id);
+        if (!this.id && this.addonPromise) {
+          await this.addonPromise;
+        }
 
-          this.id = extension.id;
+        if (extension.id == this.id) {
+          apiManager.off(eventName, onstartup);
           this._extension = extension;
           resolve(extension);
         }
@@ -81,6 +84,14 @@ class MockExtension {
     this._extension = null;
     this._extensionPromise = promiseEvent("startup");
     this._readyPromise = promiseEvent("ready");
+  }
+
+  maybeSetID(uri, id) {
+    if (!this.id && uri instanceof Ci.nsIJARURI &&
+        uri.JARFile.QueryInterface(Ci.nsIFileURL)
+           .file.equals(this.file)) {
+      this.id = id;
+    }
   }
 
   testMessage(...args) {
@@ -106,12 +117,17 @@ class MockExtension {
         return this._readyPromise;
       });
     } else if (this.installType == "permanent") {
+      this.addonPromise = new Promise(resolve => {
+        this.resolveAddon = resolve;
+      });
       return new Promise(async (resolve, reject) => {
         let install = await AddonManager.getInstallForFile(this.file);
         let listener = {
           onInstallFailed: reject,
           onInstallEnded: (install, newAddon) => {
             this.addon = newAddon;
+            this.id = newAddon.id;
+            this.resolveAddon(newAddon);
             resolve(this._readyPromise);
           },
         };

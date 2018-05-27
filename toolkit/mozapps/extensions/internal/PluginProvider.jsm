@@ -123,16 +123,6 @@ var PluginProvider = {
   },
 
   /**
-   * Called to get Addons that have pending operations.
-   *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types
-   */
-  async getAddonsWithOperationsByTypes(aTypes) {
-    return [];
-  },
-
-  /**
    * Called to get the current AddonInstalls, optionally restricting by type.
    *
    * @param  aTypes
@@ -361,6 +351,13 @@ PluginWrapper.prototype = {
     }
 
     return val;
+  },
+
+  async enable() {
+    this.userDisabled = false;
+  },
+  async disable() {
+    this.userDisabled = true;
   },
 
   get blocklistState() {

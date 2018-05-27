@@ -27,7 +27,7 @@ async function installAddon(fixtureName, addonID) {
 }
 
 async function tearDownAddon(addon) {
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
 }
 
@@ -70,10 +70,7 @@ add_task(async function test_reloading_a_temp_addon() {
     AddonManager.addAddonListener(listener);
   });
 
-  await Promise.all([
-    addon.reload(),
-    promiseWebExtensionStartup(),
-  ]);
+  await addon.reload();
   await onReload;
 
   // Make sure reload() doesn't trigger uninstall events.
@@ -104,10 +101,7 @@ add_task(async function test_can_reload_permanent_addon() {
     }
   });
 
-  await Promise.all([
-    addon.reload(),
-    promiseWebExtensionStartup(),
-  ]);
+  await addon.reload();
 
   Assert.ok(disabledCalled);
   Assert.ok(enabledCalled);
@@ -139,7 +133,6 @@ add_task(async function test_reload_to_invalid_version_fails() {
 
   let addonDir = await promiseWriteWebManifestForExtension(manifest, tempdir, "invalid_version");
   await AddonManager.installTemporaryAddon(addonDir);
-  await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(addonId);
   notEqual(addon, null);

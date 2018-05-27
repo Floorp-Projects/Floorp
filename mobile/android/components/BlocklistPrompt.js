@@ -47,7 +47,7 @@ BlocklistPrompt.prototype = {
       if (aAddons[i].item instanceof Ci.nsIPluginTag)
         aAddons[i].item.disabled = true;
       else
-        aAddons[i].item.userDisabled = true;
+        aAddons[i].item.disable();
     }
   },
   classID: Components.ID("{4e6ea350-b09a-11df-94e2-0800200c9a66}"),

@@ -29,7 +29,7 @@ function trackEvents(wrapper) {
 // Test that a non-blocking listener during startup does not immediately
 // start the background page, but the event is queued until the background
 // page is started.
-add_task(async function() {
+add_task(async function test_1() {
   await promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -77,7 +77,7 @@ add_task(async function() {
 // Tests that filters are handled properly: if we have a blocking listener
 // with a filter, a request that does not match the filter does not get
 // suspended and does not start the background page.
-add_task(async function() {
+add_task(async function test_2() {
   await promiseStartupManager();
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -126,7 +126,7 @@ add_task(async function() {
 // Test that a block listener that uses filterResponseData() works
 // properly (i.e., that the delayed call to registerTraceableChannel
 // works properly).
-add_task(async function() {
+add_task(async function test_3() {
   const DATA = `<!DOCTYPE html>
 <html>
 <body>

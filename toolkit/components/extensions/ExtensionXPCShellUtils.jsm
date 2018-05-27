@@ -344,7 +344,7 @@ class ExtensionWrapper {
     this.state = "unloading";
 
     if (this.addon) {
-      this.addon.uninstall();
+      await this.addon.uninstall();
     } else {
       await this.extension.shutdown();
     }
@@ -733,12 +733,16 @@ var ExtensionTestUtils = {
     if (data.useAddonManager) {
       let xpiFile = Extension.generateXPI(data);
 
-      return new AOMExtensionWrapper(this.currentScope, xpiFile, data.useAddonManager);
+      return this.loadExtensionXPI(xpiFile, data.useAddonManager);
     }
 
     let extension = Extension.generate(data);
 
     return new ExtensionWrapper(this.currentScope, extension);
+  },
+
+  loadExtensionXPI(xpiFile, useAddonManager = "temporary") {
+    return new AOMExtensionWrapper(this.currentScope, xpiFile, useAddonManager);
   },
 
   get remoteContentScripts() {

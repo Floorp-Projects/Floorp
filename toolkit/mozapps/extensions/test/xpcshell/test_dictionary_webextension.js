@@ -9,6 +9,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "spellCheck",
 add_task(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "61", "61");
 
+  // Initialize the URLPreloader so that we can load the built-in
+  // add-ons list, which contains the list of built-in dictionaries.
+  AddonTestUtils.initializeURLPreloader();
+
   await promiseStartupManager();
 });
 
@@ -67,8 +71,8 @@ add_task(async function test_validation() {
     },
   });
 
-  addon.uninstall();
-  addon2.uninstall();
+  await addon.uninstall();
+  await addon2.uninstall();
 });
 
 const WORD = "Flehgragh";
@@ -98,7 +102,7 @@ SFX A   0       en         [^elr]
   ok(spellCheck.check(WORD), "Word should pass check while add-on load is loaded");
   ok(spellCheck.check("nativen"), "Words should have correct affixes");
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await new Promise(executeSoon);
 

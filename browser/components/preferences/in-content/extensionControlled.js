@@ -242,7 +242,7 @@ function makeDisableControllingExtension(type, settingName) {
   return async function disableExtension() {
     let {id} = await getControllingExtensionInfo(type, settingName);
     let addon = await AddonManager.getAddonByID(id);
-    addon.userDisabled = true;
+    await addon.disable();
   };
 }
 

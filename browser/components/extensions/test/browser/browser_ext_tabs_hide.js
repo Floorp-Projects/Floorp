@@ -113,6 +113,7 @@ add_task(function test_doorhanger_disable() {
     document.getAnonymousElementByAttribute(
       popupnotification, "anonid", "secondarybutton").click();
     await popupHidden;
+    await new Promise(executeSoon);
 
     is(gBrowser.visibleTabs.length, 3, "There are 3 visible tabs again");
     is(addon.userDisabled, true, "The extension is now disabled");

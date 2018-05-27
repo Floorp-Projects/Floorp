@@ -1097,14 +1097,14 @@ add_task(async function test_addonsWatch_InterestingChange() {
 
   checkpointPromise = registerCheckpointPromise(2);
   let addon = await AddonManager.getAddonByID(ADDON_ID);
-  addon.userDisabled = true;
+  await addon.disable();
   await checkpointPromise;
   assertCheckpoint(2);
   Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
 
   checkpointPromise = registerCheckpointPromise(3);
   let startupPromise = AddonTestUtils.promiseWebExtensionStartup(ADDON_ID);
-  addon.userDisabled = false;
+  await addon.enable();
   await checkpointPromise;
   assertCheckpoint(3);
   Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
@@ -1360,7 +1360,7 @@ add_task(async function test_addonsAndPlugins() {
 
   // Uninstall the addon.
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_signedAddon() {
@@ -1407,7 +1407,7 @@ add_task(async function test_signedAddon() {
 
   AddonTestUtils.useRealCertChecks = false;
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_addonsFieldsLimit() {
@@ -1438,7 +1438,7 @@ add_task(async function test_addonsFieldsLimit() {
                "The description string must have been limited");
 
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_collectionWithbrokenAddonData() {
@@ -1521,7 +1521,7 @@ add_task(async function test_collectionWithbrokenAddonData() {
 
   // Uninstall the valid addon.
   await addon.startupPromise;
-  addon.uninstall();
+  await addon.uninstall();
 });
 
 add_task(async function test_defaultSearchEngine() {

@@ -39,7 +39,7 @@ struct jsid
 
     constexpr jsid() : asBits(JSID_TYPE_VOID) {}
 
-    static constexpr jsid fromRawBits(size_t bits) {
+    static constexpr MOZ_ALWAYS_INLINE jsid fromRawBits(size_t bits) {
         jsid id;
         id.asBits = bits;
         return id;

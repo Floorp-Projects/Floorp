@@ -26,7 +26,7 @@ add_task(async function test_working() {
     Assert.notEqual(addon, null);
     Assert.ok(addon.signedState > AddonManager.SIGNEDSTATE_MISSING);
 
-    addon.uninstall();
+    await addon.uninstall();
   }
 });
 

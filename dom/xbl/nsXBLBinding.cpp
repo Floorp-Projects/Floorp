@@ -963,7 +963,17 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   NS_ENSURE_TRUE(xblScope, NS_ERROR_UNEXPECTED);
 
   JS::Rooted<JSObject*> parent_proto(cx);
-  if (!JS_GetPrototype(cx, obj, &parent_proto)) {
+  {
+    JS::RootedObject wrapped(cx, obj);
+    JSAutoRealm ar(cx, xblScope);
+    if (!JS_WrapObject(cx, &wrapped)) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!JS_GetPrototype(cx, wrapped, &parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  if (!JS_WrapObject(cx, &parent_proto)) {
     return NS_ERROR_FAILURE;
   }
 

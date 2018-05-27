@@ -9,6 +9,7 @@ Replace localized parts of a packaged directory with data from a langpack
 directory.
 '''
 
+import json
 import os
 import mozpack.path as mozpath
 from mozpack.packager.formats import (
@@ -23,6 +24,7 @@ from mozpack.packager import (
 )
 from mozpack.files import (
     ComposedFinder,
+    GeneratedFile,
     ManifestFile,
 )
 from mozpack.copier import (
@@ -160,6 +162,7 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
     # Create a new package, with non localized bits coming from the original
     # package, and localized bits coming from the langpack.
     packager = SimplePackager(formatter)
+    built_in_addons = None
     for p, f in app_finder:
         if is_manifest(p):
             # Remove localized manifest entries.
@@ -177,7 +180,8 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             if base:
                 subpath = mozpath.relpath(p, base)
                 path = mozpath.normpath(mozpath.join(paths[base],
-                                                               subpath))
+                                                     subpath))
+
         if path:
             files = [f for p, f in l10n_finder.find(path)]
             if not len(files):
@@ -189,6 +193,8 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
                                  os.path.join(finderBase, path))
             else:
                 packager.add(path, files[0])
+        elif p.endswith('built_in_addons.json'):
+            built_in_addons = (p, f)
         else:
             packager.add(p, f)
 
@@ -209,12 +215,24 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
 
     packager.close()
 
+    dictionaries = {}
     # Add any remaining non chrome files.
     for pattern in non_chrome:
         for base in bases:
             for p, f in l10n_finder.find(mozpath.join(base, pattern)):
                 if not formatter.contains(p):
+                    if p.startswith('dictionaries/') and p.endswith('.dic'):
+                        base, ext = os.path.splitext(os.path.basename(p))
+                        dictionaries[base] = p
+
                     formatter.add(p, f)
+
+    # Update the built-in add-ons manifest with the new list of dictionaries
+    # from the langpack.
+    if built_in_addons:
+        data = json.load(built_in_addons[1].open())
+        data['dictionaries'] = dictionaries
+        formatter.add(built_in_addons[0], GeneratedFile(json.dumps(data)))
 
     # Resources in `localization` directories are packaged from the source and then
     # if localized versions are present in the l10n dir, we package them as well
