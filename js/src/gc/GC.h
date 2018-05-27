@@ -122,9 +122,8 @@ extern void
 IterateScripts(JSContext* cx, JSCompartment* compartment,
                void* data, IterateScriptCallback scriptCallback);
 
-JSCompartment*
-NewCompartment(JSContext* cx, JSPrincipals* principals,
-               const JS::RealmOptions& options);
+JS::Realm*
+NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& options);
 
 namespace gc {
 
@@ -132,10 +131,10 @@ void FinishGC(JSContext* cx);
 
 /*
  * Merge all contents of source into target. This can only be used if source is
- * the only compartment in its zone.
+ * the only realm in its zone.
  */
 void
-MergeCompartments(JSCompartment* source, JSCompartment* target);
+MergeRealms(JS::Realm* source, JS::Realm* target);
 
 enum VerifierType {
     PreBarrierVerifier

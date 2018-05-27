@@ -632,7 +632,7 @@ void
 JitRealm::sweep(JS::Realm* realm)
 {
     // Any outstanding compilations should have been cancelled by the GC.
-    MOZ_ASSERT(!HasOffThreadIonCompile(JS::GetCompartmentForRealm(realm)));
+    MOZ_ASSERT(!HasOffThreadIonCompile(realm));
 
     stubCodes_->sweep();
 
@@ -2843,8 +2843,8 @@ jit::InvalidateAll(FreeOp* fop, Zone* zone)
 {
     // The caller should previously have cancelled off thread compilation.
 #ifdef DEBUG
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        MOZ_ASSERT(!HasOffThreadIonCompile(comp));
+    for (RealmsInZoneIter realm(zone); !realm.done(); realm.next())
+        MOZ_ASSERT(!HasOffThreadIonCompile(realm));
 #endif
     if (zone->isAtomsZone())
         return;

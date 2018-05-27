@@ -4417,10 +4417,10 @@ ObjectGroup::sweep(const AutoSweepObjectGroup& sweep, AutoClearTypeInferenceStat
 
     if (auto* layout = maybeUnboxedLayout(sweep)) {
         // Remove unboxed layouts that are about to be finalized from the
-        // compartment wide list while we are still on the main thread.
+        // realm wide list while we are still on the main thread.
         ObjectGroup* group = this;
         if (IsAboutToBeFinalizedUnbarriered(&group))
-            layout->detachFromCompartment();
+            layout->detachFromRealm();
 
         if (layout->newScript())
             layout->newScript()->sweep();

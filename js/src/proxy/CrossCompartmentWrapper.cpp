@@ -613,6 +613,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     MOZ_ASSERT(!JS_IsDeadWrapper(origTarget),
                "We don't want a dead proxy in the wrapper map");
     Value origv = ObjectValue(*origTarget);
+    Realm* wrealm = wobj->realm();
     JSCompartment* wcompartment = wobj->compartment();
 
     AutoDisableProxyCheck adpc;
@@ -637,7 +638,7 @@ js::RemapWrapper(JSContext* cx, JSObject* wobjArg, JSObject* newTargetArg)
     // wrapper, |wobj|, since it's been nuked anyway. The wrap() function has
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
-    AutoRealmUnchecked ar(cx, wcompartment);
+    AutoRealmUnchecked ar(cx, wrealm);
     if (!wcompartment->rewrap(cx, &tobj, wobj))
         MOZ_CRASH();
 
