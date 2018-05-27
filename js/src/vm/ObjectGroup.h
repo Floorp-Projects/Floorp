@@ -32,7 +32,7 @@ class CompilerConstraintList;
 class ObjectGroupRealm;
 
 namespace gc {
-void MergeCompartments(JSCompartment* source, JSCompartment* target);
+void MergeRealms(JS::Realm* source, JS::Realm* target);
 } // namespace gc
 
 /*

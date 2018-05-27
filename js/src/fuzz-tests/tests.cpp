@@ -87,12 +87,8 @@ jsfuzz_init(JSContext** cx, JS::PersistentRootedObject* global)
 }
 
 static void
-jsfuzz_uninit(JSContext* cx, JSCompartment* oldCompartment)
+jsfuzz_uninit(JSContext* cx)
 {
-    if (oldCompartment) {
-        JS::LeaveRealm(cx, JS::GetRealmForCompartment(oldCompartment));
-        oldCompartment = nullptr;
-    }
     if (cx) {
         JS_EndRequest(cx);
         JS_DestroyContext(cx);
@@ -143,7 +139,7 @@ main(int argc, char* argv[])
     testingFunc(nullptr, 0);
 #endif
 
-    jsfuzz_uninit(gCx, nullptr);
+    jsfuzz_uninit(gCx);
 
     JS_ShutDown();
 

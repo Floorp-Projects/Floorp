@@ -506,13 +506,13 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT_IF(cx->realm(), !cx->realm()->isAtomsRealm());
 
-    JSCompartment* compartment = NewCompartment(cx, principals, options);
-    if (!compartment)
+    Realm* realm = NewRealm(cx, principals, options);
+    if (!realm)
         return nullptr;
 
     Rooted<GlobalObject*> global(cx);
     {
-        AutoRealmUnchecked ar(cx, compartment);
+        AutoRealmUnchecked ar(cx, realm);
         global = GlobalObject::createInternal(cx, clasp);
         if (!global)
             return nullptr;

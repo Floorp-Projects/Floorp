@@ -495,7 +495,7 @@ class GCRuntime
     void joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
                   AutoLockHelperThreadState& locked);
 
-    void mergeCompartments(JSCompartment* source, JSCompartment* target);
+    void mergeRealms(JS::Realm* source, JS::Realm* target);
 
   private:
     enum IncrementalResult

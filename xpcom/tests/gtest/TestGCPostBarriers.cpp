@@ -100,7 +100,7 @@ CreateGlobalAndRunTest(JSContext* cx)
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
   ASSERT_TRUE(global != nullptr);
 
-  JS::Realm* oldRealm = JS::GetRealmForCompartment(JS::EnterRealm(cx, global));
+  JS::Realm* oldRealm = JS::EnterRealm(cx, global);
 
   typedef Heap<JSObject*> ElementT;
 

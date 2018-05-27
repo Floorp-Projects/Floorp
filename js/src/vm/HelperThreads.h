@@ -305,7 +305,7 @@ class GlobalHelperThreadState
 
     void cancelParseTask(JSRuntime* rt, ParseTaskKind kind, JS::OffThreadToken* token);
 
-    void mergeParseTaskCompartment(JSContext* cx, ParseTask* parseTask, JSCompartment* dest);
+    void mergeParseTaskRealm(JSContext* cx, ParseTask* parseTask, JS::Realm* dest);
 
     void trace(JSTracer* trc, js::gc::AutoTraceSession& session);
 
@@ -529,7 +529,7 @@ struct ZonesInState { JSRuntime* runtime; JS::Zone::GCState state; };
 struct CompilationsUsingNursery { JSRuntime* runtime; };
 
 using CompilationSelector = mozilla::Variant<JSScript*,
-                                             JSCompartment*,
+                                             JS::Realm*,
                                              Zone*,
                                              ZonesInState,
                                              JSRuntime*,
@@ -549,9 +549,9 @@ CancelOffThreadIonCompile(JSScript* script)
 }
 
 inline void
-CancelOffThreadIonCompile(JSCompartment* comp)
+CancelOffThreadIonCompile(JS::Realm* realm)
 {
-    CancelOffThreadIonCompile(CompilationSelector(comp), true);
+    CancelOffThreadIonCompile(CompilationSelector(realm), true);
 }
 
 inline void
@@ -580,7 +580,7 @@ CancelOffThreadIonCompilesUsingNurseryPointers(JSRuntime* runtime)
 
 #ifdef DEBUG
 bool
-HasOffThreadIonCompile(JSCompartment* comp);
+HasOffThreadIonCompile(JS::Realm* realm);
 #endif
 
 /* Cancel all scheduled, in progress or finished parses for runtime. */
