@@ -760,4 +760,4 @@ def main(output, inputPath):
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
 if __name__ == '__main__':
-    print Certificate(sys.stdin).toPEM()
+    print(Certificate(sys.stdin).toPEM())
