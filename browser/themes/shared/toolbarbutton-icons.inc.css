@@ -6,6 +6,7 @@
   --toolbarbutton-icon-fill-opacity: 1;
 }
 
+:root[lwt-popup-brighttext] panel,
 toolbar[brighttext] {
   --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, #45a1ff);
 }
