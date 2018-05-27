@@ -178,7 +178,6 @@ if CONFIG["OS_TARGET"] == "NetBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_NS_FLOAT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -186,7 +185,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_NS_FLOAT"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
 
@@ -279,6 +277,17 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
     DEFINES["WEBRTC_NS_FIXED"] = True
 
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
@@ -291,17 +300,63 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and no
 
     DEFINES["WEBRTC_NS_FLOAT"] = True
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
 
     CXXFLAGS += [
         "-msse2"
     ]
 
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
         "-msse2"
     ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
@@ -334,6 +389,17 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and 
     DEFINES["WEBRTC_HAS_NEON"] = True
     DEFINES["WEBRTC_NS_FIXED"] = True
 
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "FreeBSD":
 
     CXXFLAGS += [
@@ -346,16 +412,62 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CO
 
     DEFINES["WEBRTC_NS_FLOAT"] = True
 
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
 
     CXXFLAGS += [
         "-msse2"
     ]
 
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "NetBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["HOST_CPU_ARCH"] == "aarch64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
+if CONFIG["CPU_ARCH"] == "arm" and CONFIG["HOST_CPU_ARCH"] == "arm" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    CXXFLAGS += [
+        "-mfpu=neon"
+    ]
+
+    DEFINES["WEBRTC_ARCH_ARM"] = True
+    DEFINES["WEBRTC_ARCH_ARM_V7"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
+    DEFINES["WEBRTC_NS_FIXED"] = True
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["HOST_CPU_ARCH"] == "x86" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     CXXFLAGS += [
         "-msse2"
     ]
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["HOST_CPU_ARCH"] == "x86_64" and CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["WEBRTC_NS_FLOAT"] = True
 
 Library("audio_processing_gn")
