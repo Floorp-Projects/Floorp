@@ -339,6 +339,7 @@ private:
   size_t SizeOfQueue(TrackType aTrack);
 
   RefPtr<PDMFactory> mPlatform;
+  RefPtr<PDMFactory> mEncryptedPlatform;
 
   enum class DrainState
   {
@@ -586,6 +587,10 @@ private:
         return *mInfo;
       }
       return mOriginalInfo.get();
+    }
+    bool IsEncrypted() const
+    {
+      return GetCurrentInfo()->mCrypto.mValid;
     }
 
     // Used by the MDSM for logging purposes.
