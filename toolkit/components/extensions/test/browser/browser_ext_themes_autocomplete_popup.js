@@ -234,7 +234,7 @@ add_task(async function test_popup_url() {
   Assert.equal(root.getAttribute("lwt-popup-brighttext"),
                "",
                "brighttext should not be set!");
-  Assert.equal(root.getAttribute("lwt-popup-dakrtext"),
+  Assert.equal(root.getAttribute("lwt-popup-darktext"),
                "",
                "darktext should not be set!");
 
