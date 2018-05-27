@@ -1333,8 +1333,9 @@ GetUndisplayedCharactersBeforeFrame(nsTextFrame* aFrame)
   TextNodeCorrespondence* correspondence =
     static_cast<TextNodeCorrespondence*>(value);
   if (!correspondence) {
-    NS_NOTREACHED("expected a TextNodeCorrespondenceProperty on nsTextFrame "
-                  "used for SVG text");
+    // FIXME bug 903785
+    NS_ERROR("expected a TextNodeCorrespondenceProperty on nsTextFrame "
+             "used for SVG text");
     return 0;
   }
   return correspondence->mUndisplayedCharacters;
