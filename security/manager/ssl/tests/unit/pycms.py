@@ -133,8 +133,10 @@ class CMS(object):
         rsa = rfc2459.AlgorithmIdentifier()
         rsa['algorithm'] = rfc2459.rsaEncryption
         rsa['parameters'] = univ.Null()
-        authenticatedAttributes = self.buildAuthenticatedAttributes(digestValue,
-                                                                    implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, 0))
+        authenticatedAttributes = (
+            self.buildAuthenticatedAttributes(digestValue,
+                                              implicitTag=tag.Tag(tag.tagClassContext,
+                                                                  tag.tagFormatConstructed, 0)))
         authenticatedAttributesTBS = self.buildAuthenticatedAttributes(digestValue)
         signerInfo['authenticatedAttributes'] = authenticatedAttributes
         signerInfo['digestEncryptionAlgorithm'] = rsa
@@ -202,4 +204,4 @@ class CMS(object):
 # When run as a standalone program, this will read a specification from
 # stdin and output the certificate as PEM to stdout.
 if __name__ == '__main__':
-    print CMS(sys.stdin).toPEM()
+    print(CMS(sys.stdin).toPEM())
