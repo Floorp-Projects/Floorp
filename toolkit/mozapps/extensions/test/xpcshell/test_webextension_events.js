@@ -58,22 +58,16 @@ add_task(async function() {
   });
 
   await expectEvents({update: true, uninstall: false}, () =>
-    Promise.all([
-      AddonManager.installTemporaryAddon(v3),
-      promiseWebExtensionStartup(),
-    ]));
+    AddonManager.installTemporaryAddon(v3));
 
   // Uninstall the temporary addon, this causes version 2.0 still installed
   // in the profile to be revealed.  Again, this results in an update event.
   let addon = await promiseAddonByID(id);
   await expectEvents({update: true, uninstall: false},
-                     () => { addon.uninstall(); });
+                     () => addon.uninstall());
 
   // Re-install version 3.0 as a temporary addon
-  await Promise.all([
-    AddonManager.installTemporaryAddon(v3),
-    promiseWebExtensionStartup(),
-  ]);
+  await AddonManager.installTemporaryAddon(v3);
 
   // Now shut down the addons manager, this should cause the temporary
   // addon to be uninstalled which reveals 2.0 from the profile.
@@ -88,5 +82,5 @@ add_task(async function() {
   // When we uninstall from the profile, the addon is now gone, we should
   // get an uninstall events.
   await expectEvents({update: false, uninstall: true},
-                     () => { addon.uninstall(); });
+                     () => addon.uninstall());
 });

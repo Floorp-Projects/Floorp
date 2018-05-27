@@ -171,6 +171,8 @@ add_task(async function delay_updates_complete() {
   Assert.ok(addon_allowed.isActive);
   Assert.equal(addon_allowed.type, "extension");
 
+  await new Promise(executeSoon);
+
   if (stageDir.exists()) {
     do_throw("Staging directory should not exist for formerly-postponed extension");
   }

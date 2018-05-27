@@ -909,21 +909,6 @@ MockProvider.prototype = {
   },
 
   /**
-   * Called to get Addons that have pending operations.
-   *
-   * @param  aTypes
-   *         An array of types to fetch. Can be null to get all types
-   */
-  async getAddonsWithOperationsByTypes(aTypes, aCallback) {
-    var addons = this.addons.filter(function(aAddon) {
-      if (aTypes && aTypes.length > 0 && !aTypes.includes(aAddon.type))
-        return false;
-      return aAddon.pendingOperations != 0;
-    });
-    return addons;
-  },
-
-  /**
    * Called to get the current AddonInstalls, optionally restricting by type.
    *
    * @param  aTypes
@@ -1104,6 +1089,13 @@ MockAddon.prototype = {
     this._updateActiveState(currentActive, newActive);
 
     return val;
+  },
+
+  async enable() {
+    this.userDisabled = false;
+  },
+  async disable() {
+    this.userDisabled = true;
   },
 
   get permissions() {

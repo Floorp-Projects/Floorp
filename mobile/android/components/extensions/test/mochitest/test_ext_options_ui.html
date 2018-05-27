@@ -413,6 +413,10 @@ add_task(async function test_options_ui_open_in_tab() {
 });
 
 add_task(async function test_options_ui_on_disable_and_enable() {
+  // Temporarily disabled for races.
+  /* eslint-disable no-unreachable */
+  return;
+
   let addonID = "test-options-ui-disable-enable@mozilla.org";
 
   function optionsScript() {

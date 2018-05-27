@@ -901,6 +901,17 @@ FrameIter::compartment() const
     MOZ_CRASH("Unexpected state");
 }
 
+Realm*
+FrameIter::realm() const
+{
+    MOZ_ASSERT(!done());
+
+    if (hasScript())
+        return script()->realm();
+
+    return wasmInstance()->realm();
+}
+
 bool
 FrameIter::isEvalFrame() const
 {
@@ -1622,9 +1633,9 @@ jit::JitActivation::getRematerializedFrame(JSContext* cx, const JSJitFrameIter& 
         MaybeReadFallback recover(cx, this, &iter);
 
         // Frames are often rematerialized with the cx inside a Debugger's
-        // compartment. To recover slots and to create CallObjects, we need to
-        // be in the activation's compartment.
-        AutoRealmUnchecked ar(cx, compartment_);
+        // realm. To recover slots and to create CallObjects, we need to
+        // be in the script's realm.
+        AutoRealmUnchecked ar(cx, iter.script()->realm());
 
         if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, recover, frames))
             return nullptr;

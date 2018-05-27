@@ -61,7 +61,7 @@ add_task(async function() {
 
     Assert.ok(proxyFile.exists());
 
-    addon.uninstall();
+    await addon.uninstall();
   }
   unpackedAddon.remove(true);
 

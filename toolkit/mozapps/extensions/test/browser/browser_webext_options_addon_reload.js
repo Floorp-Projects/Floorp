@@ -64,7 +64,7 @@ add_task(async function test_options_on_addon_reload() {
 
   await extension.startup();
 
-  info("Wait the options_ui page XUL browser to be created");
+  info("Wait for the options_ui page XUL browser to be created");
   await onceOptionsBrowserInserted;
 
   const aboutAddonsDocument = gBrowser.selectedBrowser.contentDocument;
@@ -91,7 +91,7 @@ add_task(async function test_options_on_addon_reload() {
 
     await addon.reload();
 
-    info("Wait the new options_ui page XUL browser to be created");
+    info("Wait for the new options_ui page XUL browser to be created");
     await onceOptionsReloaded;
 
     let optionsBrowsers = aboutAddonsDocument.querySelectorAll("#addon-options");

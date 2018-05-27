@@ -38,17 +38,6 @@
 #endif
 
 /*
- * Force-include hunspell_alloc_hooks.h and hunspell_fopen_hooks.h for hunspell,
- * so that we don't need to modify them directly.
- *
- * HUNSPELL_STATIC is defined in extensions/spellcheck/hunspell/src/moz.build
- */
-#if defined(HUNSPELL_STATIC)
-#include "hunspell_alloc_hooks.h"
-#include "hunspell_fopen_hooks.h"
-#endif
-
-/*
  * Force-include sdkdecls.h for building the chromium sandbox code.
  *
  * CHROMIUM_SANDBOX_BUILD is defined in security/sandbox/moz.build.

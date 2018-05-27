@@ -94,7 +94,8 @@ add_task(async function test_disable() {
     });
   }
 
-  // Create an array of extensions to install.
+  await promiseStartupManager();
+
   let testExtensions = [
     ExtensionTestUtils.loadExtension({
       background,
@@ -123,8 +124,6 @@ add_task(async function test_disable() {
     }),
   ];
 
-  await promiseStartupManager();
-
   for (let extension of testExtensions) {
     await extension.startup();
   }
@@ -145,7 +144,7 @@ add_task(async function test_disable() {
   // Disable the newest extension.
   let disabledPromise = awaitPrefChange(PREF_TO_WATCH);
   let newAddon = await AddonManager.getAddonByID(NEW_ID);
-  newAddon.userDisabled = true;
+  await newAddon.disable();
   await disabledPromise;
 
   // Verify the prefs have been set to match the "true" setting.
@@ -154,7 +153,7 @@ add_task(async function test_disable() {
   // Disable the older extension.
   disabledPromise = awaitPrefChange(PREF_TO_WATCH);
   let oldAddon = await AddonManager.getAddonByID(OLD_ID);
-  oldAddon.userDisabled = true;
+  await oldAddon.disable();
   await disabledPromise;
 
   // Verify the prefs have reverted back to their initial values.
@@ -164,7 +163,7 @@ add_task(async function test_disable() {
 
   // Re-enable the newest extension.
   let enabledPromise = awaitEvent("ready");
-  newAddon.userDisabled = false;
+  await newAddon.enable();
   await enabledPromise;
 
   // Verify the prefs have been set to match the "false" setting.
@@ -172,7 +171,7 @@ add_task(async function test_disable() {
 
   // Re-enable the older extension.
   enabledPromise = awaitEvent("ready");
-  oldAddon.userDisabled = false;
+  await oldAddon.enable();
   await enabledPromise;
 
   // Verify the prefs have remained set to match the "false" setting.

@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   InstallRDF: "resource://gre/modules/addons/RDFManifestConverter.jsm",
   XPIDatabase: "resource://gre/modules/addons/XPIDatabase.jsm",
   XPIInternal: "resource://gre/modules/addons/XPIProvider.jsm",
-  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
@@ -79,7 +78,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 const hasOwnProperty = Function.call.bind(Object.prototype.hasOwnProperty);
 
-const PREF_DISTRO_ADDONS_PERMS        = "extensions.distroAddons.promptForPermissions";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
@@ -88,26 +86,28 @@ const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 
-/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, SIGNED_TYPES, TOOLKIT_ID, XPI_PERMISSION, XPIStates, getExternalType, isTheme, isWebExtension, iterDirectory */
+const TOOLKIT_ID                      = "toolkit@mozilla.org";
+
+/* globals BOOTSTRAP_REASONS, KEY_APP_SYSTEM_ADDONS, KEY_APP_SYSTEM_DEFAULTS, PREF_BRANCH_INSTALLED_ADDON, PREF_SYSTEM_ADDON_SET, TEMPORARY_ADDON_SUFFIX, XPI_PERMISSION, XPIStates, isWebExtension, iterDirectory */
 const XPI_INTERNAL_SYMBOLS = [
   "BOOTSTRAP_REASONS",
   "KEY_APP_SYSTEM_ADDONS",
   "KEY_APP_SYSTEM_DEFAULTS",
   "PREF_BRANCH_INSTALLED_ADDON",
   "PREF_SYSTEM_ADDON_SET",
-  "SIGNED_TYPES",
   "TEMPORARY_ADDON_SUFFIX",
-  "TOOLKIT_ID",
   "XPI_PERMISSION",
   "XPIStates",
-  "getExternalType",
-  "isTheme",
   "isWebExtension",
   "iterDirectory",
 ];
 
 for (let name of XPI_INTERNAL_SYMBOLS) {
   XPCOMUtils.defineLazyGetter(this, name, () => XPIInternal[name]);
+}
+
+function isTheme(type) {
+  return XPIDatabase.isTheme(type);
 }
 
 /**
@@ -154,7 +154,6 @@ const PREF_EM_UPDATE_BACKGROUND_URL   = "extensions.update.background.url";
 const PREF_EM_UPDATE_URL              = "extensions.update.url";
 const PREF_XPI_SIGNATURES_DEV_ROOT    = "xpinstall.signatures.dev-root";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
-const FILE_WEB_MANIFEST               = "manifest.json";
 
 const KEY_PROFILEDIR                  = "ProfD";
 const KEY_TEMPDIR                     = "TmpD";
@@ -419,11 +418,13 @@ function waitForAllPromises(promises) {
  *
  * @param {nsIURI} aUri
  *        A |file:| or |jar:| URL for the manifest
+ * @param {Package} aPackage
+ *        The install package for the add-on
  * @returns {AddonInternal}
  * @throws if the install manifest in the stream is corrupt or could not
  *         be read
  */
-async function loadManifestFromWebManifest(aUri) {
+async function loadManifestFromWebManifest(aUri, aPackage) {
   // We're passed the URI for the manifest file. Get the URI for its
   // parent directory.
   let uri = Services.io.newURI("./", null, aUri);
@@ -466,6 +467,10 @@ async function loadManifestFromWebManifest(aUri) {
   addon.aboutURL = null;
   addon.dependencies = Object.freeze(Array.from(extension.dependencies));
   addon.startupData = extension.startupData;
+
+  if (isTheme(addon.type) && await aPackage.hasResource("preview.png")) {
+    addon.previewImage = "preview.png";
+  }
 
   if (manifest.options_ui) {
     // Store just the relative path here, the AddonWrapper getURL
@@ -656,7 +661,7 @@ async function loadManifestFromRDF(aUri, aData, aPackage) {
 
     if (addon.hasEmbeddedWebExtension) {
       let uri = Services.io.newURI("webextension/manifest.json", null, aUri);
-      let embeddedAddon = await loadManifestFromWebManifest(uri);
+      let embeddedAddon = await loadManifestFromWebManifest(uri, aPackage);
       if (embeddedAddon.optionsURL) {
         if (addon.optionsType || addon.optionsURL)
           logger.warn(`Addon ${addon.id} specifies optionsType or optionsURL ` +
@@ -799,13 +804,12 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
 
   let entry = await aPackage.getManifestFile();
   if (!entry) {
-    throw new Error("File " + aPackage.filePath + " does not contain a valid " +
-                    "install manifest");
+    throw new Error(`File ${aPackage.filePath} does not contain a valid manifest`);
   }
 
-  let isWebExtension = entry == FILE_WEB_MANIFEST;
+  let isWebExtension = entry == "manifest.json";
   let addon = isWebExtension ?
-              await loadManifestFromWebManifest(aPackage.rootURI) :
+              await loadManifestFromWebManifest(aPackage.rootURI, aPackage) :
               await loadFromRDF(aPackage.getURI("install.rdf"));
 
   addon._sourceBundle = aPackage.file;
@@ -887,7 +891,7 @@ function flushChromeCaches() {
 function getTemporaryFile() {
   let file = FileUtils.getDir(KEY_TEMPDIR, []);
   let random = Math.round(Math.random() * 36 ** 3).toString(36);
-  file.append("tmp-" + random + ".xpi");
+  file.append(`tmp-${random}.xpi`);
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   return file;
 }
@@ -962,7 +966,7 @@ function shouldVerifySignedState(aAddon) {
 
   // Otherwise only check signatures if signing is enabled and the add-on is one
   // of the signed types.
-  return AddonSettings.ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
+  return AddonSettings.ADDON_SIGNING && XPIDatabase.SIGNED_TYPES.has(aAddon.type);
 }
 
 /**
@@ -1329,6 +1333,8 @@ class AddonInstall {
     this.promptHandler = options.promptHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
+    this._startupPromise = null;
+
     this._installPromise = new Promise(resolve => {
       this._resolveInstallPromise = resolve;
     });
@@ -1428,7 +1434,7 @@ class AddonInstall {
       logger.debug("Cancelling install of " + this.addon.id);
       let xpi = getFile(`${this.addon.id}.xpi`, this.location.installer.getStagingDir());
       flushJarCache(xpi);
-      this.location.installer.cleanStagingDir([this.addon.id, this.addon.id + ".xpi"]);
+      this.location.installer.cleanStagingDir([`${this.addon.id}.xpi`]);
       this.state = AddonManager.STATE_CANCELLED;
       XPIInstall.installs.delete(this);
 
@@ -1719,14 +1725,14 @@ class AddonInstall {
       // The install is completed so it should be removed from the active list
       XPIInstall.installs.delete(this);
 
-      let install = () => {
+      let install = async () => {
         if (this.existingAddon && this.existingAddon.active && !isUpgrade) {
           XPIDatabase.updateAddonActive(this.existingAddon, false);
         }
 
         // Install the new add-on into its final location
         let existingAddonID = this.existingAddon ? this.existingAddon.id : null;
-        let file = this.location.installer.installAddon({
+        let file = await this.location.installer.installAddon({
           id: this.addon.id,
           source: stagedAddon,
           existingAddonID
@@ -1760,21 +1766,25 @@ class AddonInstall {
         logger.debug(`Install of ${this.sourceURI.spec} completed.`);
         this.state = AddonManager.STATE_INSTALLED;
         this._callInstallListeners("onInstallEnded", this.addon.wrapper);
+
+        XPIDatabase.recordAddonTelemetry(this.addon);
+
+        // Notify providers that a new theme has been enabled.
+        if (isTheme(this.addon.type) && this.addon.active)
+          AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type);
       };
 
-      if (this.existingAddon) {
-        XPIInternal.BootstrapScope.get(this.existingAddon).update(
-          this.addon, !this.addon.disabled, install);
-      } else {
-        install();
-        XPIInternal.BootstrapScope.get(this.addon).install(undefined, true);
-      }
+      this._startupPromise = (async () => {
+        if (this.existingAddon) {
+          await XPIInternal.BootstrapScope.get(this.existingAddon).update(
+            this.addon, !this.addon.disabled, install);
+        } else {
+          await install();
+          await XPIInternal.BootstrapScope.get(this.addon).install(undefined, true);
+        }
+      })();
 
-      XPIDatabase.recordAddonTelemetry(this.addon);
-
-      // Notify providers that a new theme has been enabled.
-      if (isTheme(this.addon.type) && this.addon.active)
-        AddonManagerPrivate.notifyAddonChanged(this.addon.id, this.addon.type);
+      await this._startupPromise;
     })().catch((e) => {
       logger.warn(`Failed to install ${this.file.path} from ${this.sourceURI.spec} to ${stagedAddon.path}`, e);
 
@@ -1806,7 +1816,7 @@ class AddonInstall {
    */
   async stageInstall(restartRequired, stagedAddon, isUpgrade) {
     logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
-    stagedAddon.leafName = this.addon.id + ".xpi";
+    stagedAddon.leafName = `${this.addon.id}.xpi`;
 
     await OS.File.copy(this.file.path, stagedAddon.path);
 
@@ -1896,7 +1906,9 @@ class AddonInstall {
         this._resolveInstallPromise(rej);
         break;
       case "onInstallEnded":
-        this._resolveInstallPromise(args[0]);
+        this._resolveInstallPromise(
+          Promise.resolve(this._startupPromise)
+            .then(() => args[0]));
         break;
     }
     return AddonManagerPrivate.callInstallListeners(event, this.listeners, this.wrapper,
@@ -2449,7 +2461,7 @@ AddonInstallWrapper.prototype = {
   },
 
   get type() {
-    return getExternalType(installFor(this).type);
+    return XPIDatabase.getExternalType(installFor(this).type);
   },
 
   get iconURL() {
@@ -2524,7 +2536,7 @@ var UpdateChecker = function(aAddon, aListener, aReason, aAppVersion, aPlatformV
 
   this.addon = aAddon;
   aAddon._updateCheck = this;
-  XPIProvider.doing(this);
+  XPIInstall.doing(this);
   this.listener = aListener;
   this.appVersion = aAppVersion;
   this.platformVersion = aPlatformVersion;
@@ -2585,7 +2597,7 @@ UpdateChecker.prototype = {
    *        The list of update details for the add-on
    */
   async onUpdateCheckComplete(aUpdates) {
-    XPIProvider.done(this.addon._updateCheck);
+    XPIInstall.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
 
@@ -2682,7 +2694,7 @@ UpdateChecker.prototype = {
    *        An error status
    */
   onUpdateCheckError(aError) {
-    XPIProvider.done(this.addon._updateCheck);
+    XPIInstall.done(this.addon._updateCheck);
     this.addon._updateCheck = null;
     this.callListener("onNoCompatibilityUpdateAvailable", this.addon.wrapper);
     this.callListener("onNoUpdateAvailable", this.addon.wrapper);
@@ -3378,6 +3390,34 @@ var XPIInstall = {
   recursiveRemove,
   syncLoadManifestFromFile,
 
+  // Keep track of in-progress operations that support cancel()
+  _inProgress: [],
+
+  doing(aCancellable) {
+    this._inProgress.push(aCancellable);
+  },
+
+  done(aCancellable) {
+    let i = this._inProgress.indexOf(aCancellable);
+    if (i != -1) {
+      this._inProgress.splice(i, 1);
+      return true;
+    }
+    return false;
+  },
+
+  cancelAll() {
+    // Cancelling one may alter _inProgress, so don't use a simple iterator
+    while (this._inProgress.length > 0) {
+      let c = this._inProgress.shift();
+      try {
+        c.cancel();
+      } catch (e) {
+        logger.warn("Cancel failed", e);
+      }
+    }
+  },
+
   /**
    * @param {string} id
    *        The expected ID of the add-on.
@@ -3414,13 +3454,6 @@ var XPIInstall = {
 
     // Install the add-on
     addon._sourceBundle = location.installer.installAddon({ id, source: file, action: "copy" });
-    if (Services.prefs.getBoolPref(PREF_DISTRO_ADDONS_PERMS, false)) {
-      addon.userDisabled = true;
-      if (!XPIProvider.newDistroAddons) {
-        XPIProvider.newDistroAddons = new Set();
-      }
-      XPIProvider.newDistroAddons.add(id);
-    }
 
     XPIStates.addAddon(addon);
     logger.debug(`Installed distribution add-on ${id}`);
@@ -3679,7 +3712,7 @@ var XPIInstall = {
         (uri.schemeIs("chrome") || uri.schemeIs("file")))
       return true;
 
-    XPIProvider.importPermissions();
+    XPIDatabase.importPermissions();
 
     let permission = Services.perms.testPermissionFromPrincipal(aInstallingPrincipal, XPI_PERMISSION);
     if (permission == Ci.nsIPermissionManager.DENY_ACTION)
@@ -3760,7 +3793,7 @@ var XPIInstall = {
     let results = [...this.installs];
     if (aTypes) {
       results = results.filter(install => {
-        return aTypes.includes(getExternalType(install.type));
+        return aTypes.includes(XPIDatabase.getExternalType(install.type));
       });
     }
 
@@ -3783,7 +3816,7 @@ var XPIInstall = {
   async installTemporaryAddon(aFile) {
     let installLocation = XPIInternal.TemporaryInstallLocation;
 
-    if (aFile.exists() && aFile.isFile()) {
+    if (XPIInternal.isXPI(aFile.leafName)) {
       flushJarCache(aFile);
     }
     let addon = await loadManifestFromFile(aFile, installLocation);
@@ -3826,24 +3859,28 @@ var XPIInstall = {
       XPIStates.save();
     };
 
+    let promise;
     if (oldAddon) {
       logger.warn(`Addon with ID ${oldAddon.id} already installed, ` +
                   "older version will be disabled");
 
       addon.installDate = oldAddon.installDate;
 
-      XPIInternal.BootstrapScope.get(oldAddon).update(
+      promise = XPIInternal.BootstrapScope.get(oldAddon).update(
         addon, true, install);
     } else {
       addon.installDate = Date.now();
 
       install();
       let bootstrap = XPIInternal.BootstrapScope.get(addon);
-      bootstrap.install(undefined, true, {temporarilyInstalled: true});
+      promise = bootstrap.install(undefined, true, {temporarilyInstalled: true});
     }
 
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
+
+    await promise;
+
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,
@@ -3880,8 +3917,6 @@ var XPIInstall = {
 
     if (aForcePending && aAddon.pendingUninstall)
       throw new Error("Add-on is already marked to be uninstalled");
-
-    aAddon._hasResourceCache.clear();
 
     if (aAddon._updateCheck) {
       logger.debug(`Cancel in-progress update check for ${aAddon.id}`);
@@ -3955,12 +3990,12 @@ var XPIInstall = {
       };
 
       if (existing) {
-        bootstrap.update(existing, !existing.disabled, uninstall);
+        await bootstrap.update(existing, !existing.disabled, uninstall);
 
         AddonManagerPrivate.callAddonListeners("onInstalled", existing.wrapper);
       } else {
         aAddon.location.removeAddon(aAddon.id);
-        bootstrap.uninstall();
+        await bootstrap.uninstall();
         uninstall();
       }
     } else if (aAddon.active) {

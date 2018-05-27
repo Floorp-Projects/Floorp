@@ -227,7 +227,11 @@ this.management = class extends ExtensionAPI {
           if (addon.isSystem) {
             throw new ExtensionError("setEnabled cannot be used with a system addon");
           }
-          addon.userDisabled = !enabled;
+          if (enabled) {
+            await addon.enable();
+          } else {
+            await addon.disable();
+          }
         },
 
         onDisabled: new EventManager({

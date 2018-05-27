@@ -904,6 +904,10 @@ class JS::Realm : private JSCompartment
                                 size_t* privateData,
                                 size_t* scriptCountsMapArg);
 
+    JSCompartment* compartment() {
+        return this;
+    }
+
     JS::Zone* zone() {
         return zone_;
     }
@@ -1384,7 +1388,7 @@ class AutoAtomsRealm : protected AutoRealm
 class AutoRealmUnchecked : protected AutoRealm
 {
   public:
-    inline AutoRealmUnchecked(JSContext* cx, JSCompartment* target);
+    inline AutoRealmUnchecked(JSContext* cx, JS::Realm* target);
 };
 
 /*

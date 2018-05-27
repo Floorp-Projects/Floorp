@@ -172,7 +172,7 @@ RematerializedFrame::dump()
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %zu offset %zu\n",
+    fprintf(stderr, "  file %s line %u offset %zu\n",
             script()->filename(), script()->lineno(),
             script()->pcToOffset(pc()));
 

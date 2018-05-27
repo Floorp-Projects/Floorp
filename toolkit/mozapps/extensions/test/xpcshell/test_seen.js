@@ -49,7 +49,7 @@ add_task(async function() {
   Assert.ok(!addon.foreignInstall);
   Assert.ok(addon.seen);
 
-  addon.uninstall();
+  await addon.uninstall();
 
   await promiseShutdownManager();
 });
@@ -128,7 +128,7 @@ add_task(async function() {
   Assert.ok(addon.foreignInstall);
   Assert.ok(!addon.seen);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
 });
 
@@ -168,7 +168,7 @@ add_task(async function() {
   Assert.ok(addon.foreignInstall);
   Assert.ok(!addon.seen);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
 });
 
@@ -208,7 +208,7 @@ add_task(async function() {
   Assert.ok(addon.foreignInstall);
   Assert.ok(addon.seen);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
 });
 
@@ -250,6 +250,6 @@ add_task(async function() {
   Assert.ok(addon.foreignInstall);
   Assert.ok(addon.seen);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
 });

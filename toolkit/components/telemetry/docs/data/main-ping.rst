@@ -623,12 +623,9 @@ Structure:
     "addonDetails": {
       "XPI": {
         "adbhelper@mozilla.org": {
-          "scan_items": 24,
-          "scan_MS": 3,
           "location": "app-profile",
           "name": "ADB Helper",
           "creator": "Mozilla & Android Open Source Project",
-          "startup_MS": 30
         },
         ...
       },

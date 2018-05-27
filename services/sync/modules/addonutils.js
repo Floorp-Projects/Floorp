@@ -93,7 +93,7 @@ AddonUtilsInternal.prototype = {
             if ("enabled" in options && !options.enabled) {
               log.info("Marking add-on as disabled for install: " +
                        install.name);
-              install.addon.userDisabled = true;
+              install.addon.disable();
             }
           },
           onInstallEnded(install, addon) {
@@ -352,7 +352,11 @@ AddonUtilsInternal.prototype = {
     }
 
     this._log.info("Updating userDisabled flag: " + addon.id + " -> " + value);
-    addon.userDisabled = !!value;
+    if (value) {
+      addon.disable();
+    } else {
+      addon.enable();
+    }
   },
 
 };

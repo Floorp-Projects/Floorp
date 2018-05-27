@@ -5357,7 +5357,7 @@ CodeGenerator::maybeCreateScriptCounts()
                 JSScript* innerScript = block->info().script();
                 description = (char*) js_calloc(200);
                 if (description) {
-                    snprintf(description, 200, "%s:%zu",
+                    snprintf(description, 200, "%s:%u",
                              innerScript->filename(), innerScript->lineno());
                 }
             }
@@ -10145,7 +10145,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
 bool
 CodeGenerator::generate()
 {
-    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%zu",
+    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u",
             gen->info().script()->filename(),
             gen->info().script()->lineno());
 

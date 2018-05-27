@@ -487,7 +487,7 @@ add_task(async function() {
   info("Checking that onPropertyChanges for appDisabled updates the UI");
 
   let [aAddon] = await promiseAddonsByIDs(["addon2@tests.mozilla.org"]);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
   aAddon.isCompatible = true;
   aAddon.appDisabled = false;
 

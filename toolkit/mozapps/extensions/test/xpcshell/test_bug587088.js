@@ -146,7 +146,7 @@ add_task(async function test_1() {
   let a1_4 = await AddonManager.getAddonByID("addon1@tests.mozilla.org");
   check_addon(a1_4, "2.0");
 
-  a1_4.uninstall();
+  await a1_4.uninstall();
 });
 
 // Test that a failed uninstall gets rolled back
@@ -168,7 +168,7 @@ add_task(async function test_2() {
                 createInstance(Ci.nsIFileInputStream);
   fstream.init(uri.QueryInterface(Ci.nsIFileURL).file, -1, 0, 0);
 
-  a1.uninstall();
+  await a1.uninstall();
 
   check_addon_uninstalling(a1);
 

@@ -25,7 +25,7 @@ JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
     if (script)
-        formatProperty("name", "%s:%zu", script->filename(), script->lineno());
+        formatProperty("name", "%s:%u", script->filename(), script->lineno());
     else
         property("name", "wasm compilation");
     beginListProperty("passes");

@@ -137,7 +137,7 @@ add_test(async function() {
   is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
   let aAddon = await AddonManager.getAddonByID(ID);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
 
   ok(!aAddon.isActive, "Add-on should be inactive");
   ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
@@ -173,7 +173,7 @@ add_test(async function() {
   isnot(button, null, "Should have a remove button");
   ok(!button.disabled, "Button should not be disabled");
 
-  aAddon.userDisabled = false;
+  await aAddon.enable();
   ok(aAddon.isActive, "Add-on should be active");
 
   run_next_test();
@@ -248,7 +248,7 @@ add_test(async function() {
   is(gCategoryUtilities.selectedCategory, "extension", "View should have changed to extension");
 
   let aAddon = await AddonManager.getAddonByID(ID);
-  aAddon.userDisabled = true;
+  await aAddon.disable();
 
   ok(!aAddon.isActive, "Add-on should be inactive");
   ok(!(aAddon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_UNINSTALL), "Add-on should not require a restart to uninstall");
@@ -294,7 +294,7 @@ add_test(async function() {
   isnot(button, null, "Should have a remove button");
   ok(!button.disabled, "Button should not be disabled");
 
-  aAddon.userDisabled = false;
+  await aAddon.enable();
   ok(aAddon.isActive, "Add-on should be active");
 
   run_next_test();

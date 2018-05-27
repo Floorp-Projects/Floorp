@@ -305,7 +305,7 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 }
 
 void
-UnboxedLayout::detachFromCompartment()
+UnboxedLayout::detachFromRealm()
 {
     if (isInList())
         remove();

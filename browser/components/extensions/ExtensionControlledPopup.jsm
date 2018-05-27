@@ -218,7 +218,6 @@ class ExtensionControlledPopup {
     // Setup the command handler.
     let handleCommand = async (event) => {
       panel.hidePopup();
-
       if (event.originalTarget.getAttribute("anonid") == "button") {
         // Main action is to keep changes.
         await this.setConfirmation(extensionId);
@@ -227,7 +226,7 @@ class ExtensionControlledPopup {
         if (this.beforeDisableAddon) {
           await this.beforeDisableAddon(this, win);
         }
-        addon.userDisabled = true;
+        await addon.disable();
       }
 
       // If the page this is appearing on is the New Tab page then the URL bar may

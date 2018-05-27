@@ -59,5 +59,5 @@ add_task(async function test_update_new_id() {
                        function(err) { return err.code == AddonManager.ERROR_INCORRECT_ID; },
                        "Upgrade to a different ID fails");
 
-  addon.uninstall();
+  await addon.uninstall();
 });

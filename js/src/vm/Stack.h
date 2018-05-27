@@ -2045,6 +2045,7 @@ class FrameIter
 
     FrameIter& operator++();
 
+    JS::Realm* realm() const;
     JSCompartment* compartment() const;
     Activation* activation() const { return data_.activations_.activation(); }
 

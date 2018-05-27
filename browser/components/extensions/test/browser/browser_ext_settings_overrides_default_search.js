@@ -194,13 +194,13 @@ add_task(async function test_user_change_with_disabling() {
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
   let addon = await AddonManager.getAddonByID(EXTENSION1_ID);
-  addon.userDisabled = true;
+  await addon.disable();
   await disabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
 
   let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
-  addon.userDisabled = false;
+  await addon.enable();
   await enabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
@@ -254,7 +254,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
   let addon1 = await AddonManager.getAddonByID(EXTENSION1_ID);
-  addon1.userDisabled = true;
+  await addon1.disable();
   await disabledPromise;
 
   is(Services.search.currentEngine.name, defaultEngineName, `Default engine is ${defaultEngineName}`);
@@ -264,7 +264,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
 
   let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
-  addon1.userDisabled = false;
+  await addon1.enable();
   await enabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
@@ -326,13 +326,13 @@ add_task(async function test_two_addons_with_first_disabled() {
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
   let addon1 = await AddonManager.getAddonByID(EXTENSION1_ID);
-  addon1.userDisabled = true;
+  await addon1.disable();
   await disabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
 
   let enabledPromise = awaitEvent("ready", EXTENSION1_ID);
-  addon1.userDisabled = false;
+  await addon1.enable();
   await enabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");
@@ -394,13 +394,13 @@ add_task(async function test_two_addons_with_second_disabled() {
 
   let disabledPromise = awaitEvent("shutdown", EXTENSION2_ID);
   let addon2 = await AddonManager.getAddonByID(EXTENSION2_ID);
-  addon2.userDisabled = true;
+  await addon2.disable();
   await disabledPromise;
 
   is(Services.search.currentEngine.name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
   let enabledPromise = awaitEvent("ready", EXTENSION2_ID);
-  addon2.userDisabled = false;
+  await addon2.enable();
   await enabledPromise;
 
   is(Services.search.currentEngine.name, "Twitter", "Default engine is Twitter");

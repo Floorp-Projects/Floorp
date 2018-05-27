@@ -89,7 +89,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
   Assert.equal(getActiveVersion(), -1);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
@@ -111,7 +111,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
   Assert.equal(getActiveVersion(), -1);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
@@ -132,7 +132,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
   Assert.equal(getActiveVersion(), -1);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
@@ -177,7 +177,7 @@ add_task(async function() {
   Assert.equal(ids.length, 1);
   Assert.equal(ids[0], ID);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
@@ -198,7 +198,7 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
@@ -219,7 +219,7 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
@@ -239,7 +239,7 @@ add_task(async function() {
   Assert.ok(!addon.isActive);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
@@ -280,7 +280,7 @@ add_task(async function() {
   Assert.equal(ids.length, 1);
   Assert.equal(ids[0], ID);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
@@ -346,7 +346,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
   Assert.equal(getActiveVersion(), 2);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
@@ -370,7 +370,7 @@ add_task(async function() {
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
   Assert.equal(getActiveVersion(), 2);
 
-  addon.uninstall();
+  await addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 

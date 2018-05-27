@@ -157,7 +157,6 @@ var { AddonManager, AddonManagerInternal, AddonManagerPrivate } = AMscope;
 
 const promiseAddonByID = AddonManager.getAddonByID;
 const promiseAddonsByIDs = AddonManager.getAddonsByIDs;
-const promiseAddonsWithOperationsByTypes = AddonManager.getAddonsWithOperationsByTypes;
 
 var gPort = null;
 var gUrlToFileMap = {};
@@ -358,6 +357,11 @@ function isNightlyChannel() {
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
 
+
+async function restartWithLocales(locales) {
+  Services.locale.setRequestedLocales(locales);
+  await promiseRestartManager();
+}
 
 /**
  * Returns a map of Addon objects for installed add-ons with the given
@@ -1069,7 +1073,7 @@ function check_test_completed(aArgs) {
 function ensure_test_completed() {
   for (let i in gExpectedEvents) {
     if (gExpectedEvents[i].length > 0)
-      do_throw(`Didn't see all the expected events for ${i}: Still expecting ${gExpectedEvents[i].map(([k]) => k)}`);
+      do_throw(`Didn't see all the expected events for ${i}: Still expecting ${gExpectedEvents[i]}`);
   }
   gExpectedEvents = {};
   if (gExpectedInstalls)
@@ -1109,17 +1113,11 @@ const EXTENSIONS_DB = "extensions.json";
 var gExtensionsJSON = gProfD.clone();
 gExtensionsJSON.append(EXTENSIONS_DB);
 
-function promiseInstallWebExtension(aData) {
+async function promiseInstallWebExtension(aData) {
   let addonFile = createTempWebExtensionFile(aData);
 
-  let promise = promiseWebExtensionStartup();
-  return promiseInstallAllFiles([addonFile]).then(installs => {
-    Services.obs.notifyObservers(addonFile, "flush-cache-entry");
-    // Since themes are disabled by default, it won't start up.
-    if (aData.manifest.theme)
-      return installs[0].addon;
-    return promise.then(() => installs[0].addon);
-  });
+  let {addon} = await promiseInstallFile(addonFile);
+  return addon;
 }
 
 // By default use strict compatibility
@@ -1620,4 +1618,12 @@ function mockPluginHost(plugins) {
   };
 
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
+}
+
+async function setInitialState(addon, initialState) {
+  if (initialState.userDisabled) {
+    await addon.disable();
+  } else if (initialState.userDisabled === false) {
+    await addon.enable();
+  }
 }

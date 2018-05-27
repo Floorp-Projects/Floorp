@@ -2791,11 +2791,9 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     options.creationOptions().setNewZone();
     options.behaviors().setDiscardSource(true);
 
-    JSCompartment* compartment = NewCompartment(cx, nullptr, options);
-    if (!compartment)
+    Realm* realm = NewRealm(cx, nullptr, options);
+    if (!realm)
         return nullptr;
-
-    JS::Realm* realm = JS::GetRealmForCompartment(compartment);
 
     static const ClassOps shgClassOps = {
         nullptr, nullptr, nullptr, nullptr,
@@ -2809,7 +2807,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         &shgClassOps
     };
 
-    AutoRealmUnchecked ar(cx, compartment);
+    AutoRealmUnchecked ar(cx, realm);
     Rooted<GlobalObject*> shg(cx, GlobalObject::createInternal(cx, &shgClass));
     if (!shg)
         return nullptr;

@@ -14,6 +14,8 @@
  * limitations under the License.
 */
 
+const kC0DEFEFE = new Uint8Array([0xC0, 0xDE, 0xFE, 0xFE]);
+
 (function testJSAPI() {
 
 const WasmPage = 64 * 1024;
@@ -91,6 +93,17 @@ const moduleBinaryWithMemSectionAndMemImport = (() => {
     return builder.toBuffer();
 })();
 
+const exportingModuleIdentityFn = (() => {
+    let builder = new WasmModuleBuilder();
+
+    builder
+        .addFunction('id', kSig_i_i)
+        .addBody([kExprGetLocal, 0, kExprEnd])
+        .exportFunc();
+
+    return builder.toBuffer();
+})();
+
 let Module;
 let Instance;
 let CompileError;
@@ -103,6 +116,16 @@ let mem1;
 let Table;
 let tbl1;
 let tableProto;
+let Global;
+let globalProto;
+let globalI32;
+let globalI64;
+let globalF32;
+let globalF64;
+let globalI32Mut;
+let globalI64Mut;
+let globalF32Mut;
+let globalF64Mut;
 
 let emptyModule;
 let exportingModule;
@@ -200,7 +223,7 @@ test(() => {
     assertThrows(() => new Module(new Uint8Array()), CompileError);
     assertThrows(() => new Module(new ArrayBuffer()), CompileError);
     assert_equals(new Module(emptyModuleBinary) instanceof Module, true);
-    assert_equals(new Module(emptyModuleBinary.buffer) instanceof Module, true);
+    assert_equals(new Module(new Uint8Array(emptyModuleBinary)) instanceof Module, true);
 }, "'WebAssembly.Module' constructor function");
 
 test(() => {
@@ -398,6 +421,7 @@ test(() => {
     assert_equals(f.length, 0);
     assert_equals('name' in f, true);
     assert_equals(Function.prototype.call.call(f), 42);
+    assert_equals('prototype' in f, false);
     assertThrows(() => new f(), TypeError);
 }, "Exported WebAssembly functions");
 
@@ -418,10 +442,6 @@ test(() => {
     assertThrows(() => Memory(), TypeError);
     assertThrows(() => new Memory(1), TypeError);
     assertThrows(() => new Memory({initial:{valueOf() { throw new Error("here")}}}), Error);
-    assertThrows(() => new Memory({}), RangeError);
-    assertThrows(() => new Memory({initial:NaN}), RangeError);
-    assertThrows(() => new Memory({initial:undefined}), RangeError);
-    assertThrows(() => new Memory({initial:"abc"}), RangeError);
     assertThrows(() => new Memory({initial:-1}), RangeError);
     assertThrows(() => new Memory({initial:Math.pow(2,32)}), RangeError);
     assertThrows(() => new Memory({initial:1, maximum: Math.pow(2,32)/Math.pow(2,14) }), RangeError);
@@ -484,27 +504,30 @@ test(() => {
     assert_equals(memGrow.length, 1);
     assertThrows(() => memGrow.call(), TypeError);
     assertThrows(() => memGrow.call({}), TypeError);
-    assertThrows(() => memGrow.call(mem1), RangeError);
-    assertThrows(() => memGrow.call(mem1, NaN), RangeError);
-    assertThrows(() => memGrow.call(mem1, undefined), RangeError);
-    assertThrows(() => memGrow.call(mem1, "abc"), RangeError);
     assertThrows(() => memGrow.call(mem1, -1), RangeError);
     assertThrows(() => memGrow.call(mem1, Math.pow(2,32)), RangeError);
     var mem = new Memory({initial:1, maximum:2});
     var buf = mem.buffer;
     assert_equals(buf.byteLength, WasmPage);
     assert_equals(mem.grow(0), 1);
-    assert_equals(buf !== mem.buffer, true);
+    assert_not_equals(buf, mem.buffer)
     assert_equals(buf.byteLength, 0);
     buf = mem.buffer;
     assert_equals(buf.byteLength, WasmPage);
     assert_equals(mem.grow(1), 1);
-    assert_equals(buf !== mem.buffer, true);
+    assert_not_equals(buf, mem.buffer)
     assert_equals(buf.byteLength, 0);
     buf = mem.buffer;
     assert_equals(buf.byteLength, 2 * WasmPage);
     assertThrows(() => mem.grow(1), Error);
     assert_equals(buf, mem.buffer);
+    mem = new Memory({initial:0, maximum:1});
+    buf = mem.buffer;
+    assert_equals(buf.byteLength, 0);
+    assert_equals(mem.grow(0), 0);
+    assert_not_equals(buf, mem.buffer)
+    assert_equals(buf.byteLength, 0);
+    assert_equals(mem.buffer.byteLength, 0);
 }, "'WebAssembly.Memory.prototype.grow' method");
 
 test(() => {
@@ -527,10 +550,6 @@ test(() => {
     assertThrows(() => new Table({initial:1, element:"any"}), TypeError);
     assertThrows(() => new Table({initial:1, element:{valueOf() { return "anyfunc" }}}), TypeError);
     assertThrows(() => new Table({initial:{valueOf() { throw new Error("here")}}, element:"anyfunc"}), Error);
-    assertThrows(() => new Table({element:"anyfunc"}), RangeError);
-    assertThrows(() => new Table({initial:NaN, element:"anyfunc"}), RangeError);
-    assertThrows(() => new Table({initial:undefined, element:"anyfunc"}), RangeError);
-    assertThrows(() => new Table({initial:"abc", element:"anyfunc"}), RangeError);
     assertThrows(() => new Table({initial:-1, element:"anyfunc"}), RangeError);
     assertThrows(() => new Table({initial:Math.pow(2,32), element:"anyfunc"}), RangeError);
     assertThrows(() => new Table({initial:2, maximum:1, element:"anyfunc"}), RangeError);
@@ -598,10 +617,6 @@ test(() => {
     assert_equals(get.call(tbl1, 0), null);
     assert_equals(get.call(tbl1, 1), null);
     assert_equals(get.call(tbl1, 1.5), null);
-    assertThrows(() => get.call(tbl1), RangeError);
-    assertThrows(() => get.call(tbl1, NaN), RangeError);
-    assertThrows(() => get.call(tbl1, undefined), RangeError);
-    assertThrows(() => get.call(tbl1, "abc"), RangeError);
     assertThrows(() => get.call(tbl1, 2), RangeError);
     assertThrows(() => get.call(tbl1, 2.5), RangeError);
     assertThrows(() => get.call(tbl1, -1), RangeError);
@@ -623,9 +638,6 @@ test(() => {
     assertThrows(() => set.call(), TypeError);
     assertThrows(() => set.call({}), TypeError);
     assertThrows(() => set.call(tbl1, 0), TypeError);
-    assertThrows(() => set.call(tbl1, NaN, null), RangeError);
-    assertThrows(() => set.call(tbl1, undefined, null), RangeError);
-    assertThrows(() => set.call(tbl1, "abc", null), RangeError);
     assertThrows(() => set.call(tbl1, 2, null), RangeError);
     assertThrows(() => set.call(tbl1, -1, null), RangeError);
     assertThrows(() => set.call(tbl1, Math.pow(2,33), null), RangeError);
@@ -651,10 +663,6 @@ test(() => {
     assert_equals(tblGrow.length, 1);
     assertThrows(() => tblGrow.call(), TypeError);
     assertThrows(() => tblGrow.call({}), TypeError);
-    assertThrows(() => tblGrow.call(tbl1), RangeError);
-    assertThrows(() => tblGrow.call(tbl1, NaN), RangeError);
-    assertThrows(() => tblGrow.call(tbl1, undefined), RangeError);
-    assertThrows(() => tblGrow.call(tbl1, "abc"), RangeError);
     assertThrows(() => tblGrow.call(tbl1, -1), RangeError);
     assertThrows(() => tblGrow.call(tbl1, Math.pow(2,32)), RangeError);
     var tbl = new Table({element:"anyfunc", initial:1, maximum:2});
@@ -667,13 +675,282 @@ test(() => {
 }, "'WebAssembly.Table.prototype.grow' method");
 
 test(() => {
+    const globalDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Global');
+    assert_equals(typeof globalDesc.value, "function");
+    assert_equals(globalDesc.writable, true);
+    assert_equals(globalDesc.enumerable, false);
+    assert_equals(globalDesc.configurable, true);
+    Global = WebAssembly.Global;
+}, "'WebAssembly.Global' data property");
+
+test(() => {
+    const globalDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'Global');
+    assert_equals(Global, globalDesc.value);
+    assert_equals(Global.length, 1);
+    assert_equals(Global.name, "Global");
+    assertThrows(() => Global(), TypeError);
+    assertThrows(() => new Global(1), TypeError);
+    assertThrows(() => new Global({}), TypeError);
+    assertThrows(() => new Global({value: 'foo'}), TypeError);
+    assertThrows(() => new Global({value: 'i64'}), TypeError);
+    assert_equals(new Global({value:'i32'}) instanceof Global, true);
+    assert_equals(new Global({value:'f32'}) instanceof Global, true);
+    assert_equals(new Global({value:'f64'}) instanceof Global, true);
+    assert_equals(new Global({value:'i32', mutable: false}) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: false}) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: false}) instanceof Global, true);
+    assert_equals(new Global({value:'i32', mutable: true}) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: true}) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: true}) instanceof Global, true);
+    assert_equals(new Global({value:'i32'}, 0x132) instanceof Global, true);
+    assert_equals(new Global({value:'f32'}, 0xf32) instanceof Global, true);
+    assert_equals(new Global({value:'f64'}, 0xf64) instanceof Global, true);
+    assert_equals(new Global({value:'i32', mutable: false}, 0x132) instanceof Global, true);
+    assert_equals(new Global({value:'f32', mutable: false}, 0xf32) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: false}, 0xf64) instanceof Global, true);
+    assert_equals(new Global({value:'i32', mutable: true}, 0x132) instanceof Global, true);
+    assert_equals(new Global({value:'f32', mutable: true}, 0xf32) instanceof Global, true);
+    assert_equals(new Global({value:'f64', mutable: true}, 0xf64) instanceof Global, true);
+}, "'WebAssembly.Global' constructor function");
+
+test(() => {
+    const globalProtoDesc = Object.getOwnPropertyDescriptor(Global, 'prototype');
+    assert_equals(typeof globalProtoDesc.value, "object");
+    assert_equals(globalProtoDesc.writable, false);
+    assert_equals(globalProtoDesc.enumerable, false);
+    assert_equals(globalProtoDesc.configurable, false);
+}, "'WebAssembly.Global.prototype' data property");
+
+test(() => {
+    const globalProtoDesc = Object.getOwnPropertyDescriptor(Global, 'prototype');
+    globalProto = Global.prototype;
+    assert_equals(globalProto, globalProtoDesc.value);
+    assert_equals(String(globalProto), "[object WebAssembly.Global]");
+    assert_equals(Object.getPrototypeOf(globalProto), Object.prototype);
+}, "'WebAssembly.Global.prototype' object");
+
+test(() => {
+    globalI32 = new Global({value: 'i32'}, 0x132);
+    globalF32 = new Global({value: 'f32'}, 0xf32);
+    globalF64 = new Global({value: 'f64'}, 0xf64);
+    globalI32Mut = new Global({value: 'i32', mutable: true}, 0x132);
+    globalF32Mut = new Global({value: 'f32', mutable: true}, 0xf32);
+    globalF64Mut = new Global({value: 'f64', mutable: true}, 0xf64);
+    assert_equals(typeof globalI32, "object");
+    assert_equals(String(globalI32), "[object WebAssembly.Global]");
+    assert_equals(Object.getPrototypeOf(globalI32), globalProto);
+}, "'WebAssembly.Global' instance objects");
+
+test(() => {
+    let builder = new WasmModuleBuilder();
+    builder.addGlobal(kWasmI32).exportAs('i32');
+    builder.addGlobal(kWasmI64).exportAs('i64');
+    builder.addGlobal(kWasmF32).exportAs('f32');
+    builder.addGlobal(kWasmF64).exportAs('f64');
+    builder.addGlobal(kWasmI32, true).exportAs('i32mut');
+    builder.addGlobal(kWasmI64, true).exportAs('i64mut');
+    builder.addGlobal(kWasmF32, true).exportAs('f32mut');
+    builder.addGlobal(kWasmF64, true).exportAs('f64mut');
+    let module = new WebAssembly.Module(builder.toBuffer());
+    let instance = new WebAssembly.Instance(module);
+
+    assert_true(instance.exports.i32 instanceof WebAssembly.Global);
+    assert_true(instance.exports.i64 instanceof WebAssembly.Global);
+    assert_true(instance.exports.f32 instanceof WebAssembly.Global);
+    assert_true(instance.exports.f64 instanceof WebAssembly.Global);
+    assert_true(instance.exports.i32mut instanceof WebAssembly.Global);
+    assert_true(instance.exports.i64mut instanceof WebAssembly.Global);
+    assert_true(instance.exports.f32mut instanceof WebAssembly.Global);
+    assert_true(instance.exports.f64mut instanceof WebAssembly.Global);
+
+    // Can't set value of immutable globals.
+    assertThrows(() => instance.exports.i32.value = 0, TypeError);
+    assertThrows(() => instance.exports.i64.value = 0, TypeError);
+    assertThrows(() => instance.exports.f32.value = 0, TypeError);
+    assertThrows(() => instance.exports.f64.value = 0, TypeError);
+
+    instance.exports.i32mut.value = 13579;
+    instance.exports.f32mut.value = 24680;
+    instance.exports.f64mut.value = 124816;
+
+    globalI64 = instance.exports.i64;
+    globalI64Mut = instance.exports.i64mut;
+}, "Export 'WebAssembly.Global'");
+
+test(() => {
+    const lengthDesc = Object.getOwnPropertyDescriptor(globalProto, 'value');
+    assert_equals(typeof lengthDesc.get, "function");
+    assert_equals(typeof lengthDesc.set, "function");
+    assert_equals(lengthDesc.enumerable, true);
+    assert_equals(lengthDesc.configurable, true);
+}, "'WebAssembly.Global.prototype.value' accessor data property");
+
+test(() => {
+    const valueDesc = Object.getOwnPropertyDescriptor(globalProto, 'value');
+    const valueGetter = valueDesc.get;
+    assert_equals(valueGetter.length, 0);
+    assertThrows(() => valueGetter.call(), TypeError);
+    assertThrows(() => valueGetter.call({}), TypeError);
+
+    assert_equals(typeof valueGetter.call(globalI32), "number");
+    assertThrows(() => valueGetter.call(globalI64), TypeError);
+    assert_equals(typeof valueGetter.call(globalF32), "number");
+    assert_equals(typeof valueGetter.call(globalF64), "number");
+    assert_equals(typeof valueGetter.call(globalI32Mut), "number");
+    assertThrows(() => valueGetter.call(globalI64Mut), TypeError);
+    assert_equals(typeof valueGetter.call(globalF32Mut), "number");
+    assert_equals(typeof valueGetter.call(globalF64Mut), "number");
+
+    assert_equals(valueGetter.call(globalI32), 0x132);
+    assert_equals(valueGetter.call(globalF32), 0xf32);
+    assert_equals(valueGetter.call(globalF64), 0xf64);
+    assert_equals(valueGetter.call(globalI32Mut), 0x132);
+    assert_equals(valueGetter.call(globalF32Mut), 0xf32);
+    assert_equals(valueGetter.call(globalF64Mut), 0xf64);
+}, "'WebAssembly.Global.prototype.value' getter");
+
+test(() => {
+    const valueDesc = Object.getOwnPropertyDescriptor(globalProto, 'value');
+    const valueSetter = valueDesc.set;
+    assert_equals(valueSetter.length, 1);
+    assertThrows(() => valueSetter.call(), TypeError);
+    assertThrows(() => valueSetter.call({}), TypeError);
+
+    assertThrows(() => valueSetter.call(globalI32, 1234), TypeError);
+    assertThrows(() => valueSetter.call(globalI64, 1234), TypeError);
+    assertThrows(() => valueSetter.call(globalF32, 1234), TypeError);
+    assertThrows(() => valueSetter.call(globalF64, 1234), TypeError);
+
+    valueSetter.call(globalI32Mut, 1234);
+    assertThrows(() => valueSetter.call(globalI64Mut, 1234), TypeError);
+    valueSetter.call(globalF32Mut, 5678);
+    valueSetter.call(globalF64Mut, 9012);
+
+    assert_equals(globalI32Mut.value, 1234);
+    assert_equals(globalF32Mut.value, 5678);
+    assert_equals(globalF64Mut.value, 9012);
+}, "'WebAssembly.Global.prototype.value' setter");
+
+test(() => {
+    const valueOfDesc = Object.getOwnPropertyDescriptor(globalProto, 'valueOf');
+    assert_equals(typeof valueOfDesc.value, "function");
+    assert_equals(valueOfDesc.enumerable, false);
+    assert_equals(valueOfDesc.configurable, true);
+}, "'WebAssembly.Global.prototype.valueOf' data property");
+
+test(() => {
+    const valueOfDesc = Object.getOwnPropertyDescriptor(globalProto, 'valueOf');
+    const valueOf = valueOfDesc.value;
+    assert_equals(valueOf.length, 0);
+    assertThrows(() => valueOf.call(), TypeError);
+    assertThrows(() => valueOf.call({}), TypeError);
+
+    assert_equals(valueOf.call(globalI32), 0x132);
+    assertThrows(() => valueOf.call(globalI64), TypeError);
+    assert_equals(valueOf.call(globalF32), 0xf32);
+    assert_equals(valueOf.call(globalF64), 0xf64);
+    assert_equals(valueOf.call(globalI32Mut), 1234);
+    assertThrows(() => valueOf.call(globalI64Mut), TypeError);
+    assert_equals(valueOf.call(globalF32Mut), 5678);
+    assert_equals(valueOf.call(globalF64Mut), 9012);
+}, "'WebAssembly.Global.prototype.valueOf' method");
+
+test(() => {
+    assert_equals(new Global({value: 'i32'}).value, 0);
+    assert_equals(new Global({value: 'f32'}).value, 0);
+    assert_equals(new Global({value: 'f64'}).value, 0);
+}, "'WebAssembly.Global' default value is 0");
+
+test(() => {
+    let builder = new WasmModuleBuilder();
+    builder.addImportedGlobal('', 'i32', kWasmI32);
+    builder.addImportedGlobal('', 'i64', kWasmI64);
+    builder.addImportedGlobal('', 'f32', kWasmF32);
+    builder.addImportedGlobal('', 'f64', kWasmF64);
+    builder.addImportedGlobal('', 'i32mut', kWasmI32, true);
+    builder.addImportedGlobal('', 'i64mut', kWasmI64, true);
+    builder.addImportedGlobal('', 'f32mut', kWasmF32, true);
+    builder.addImportedGlobal('', 'f64mut', kWasmF64, true);
+    let module = new WebAssembly.Module(builder.toBuffer());
+    let instance = new WebAssembly.Instance(module, {
+        '': {
+          i32: globalI32,
+          i64: globalI64,
+          f32: globalF32,
+          f64: globalF64,
+          i32mut: globalI32Mut,
+          i64mut: globalI64Mut,
+          f32mut: globalF32Mut,
+          f64mut: globalF64Mut
+        }
+    });
+}, "Import 'WebAssembly.Global'");
+
+test(() => {
+    let assertInstanceError = (type, mutable, imports) => {
+      assertThrows(() => {
+        let builder = new WasmModuleBuilder();
+        builder.addImportedGlobal('', 'g', type, mutable);
+        let module = new WebAssembly.Module(builder.toBuffer());
+        let instance = new WebAssembly.Instance(module, imports);
+      }, LinkError);
+    };
+
+    const immutable = false, mutable = true;
+
+    // Type mismatch.
+    assertInstanceError(kWasmI32, immutable, {'': {g: globalI64}});
+    assertInstanceError(kWasmI32, immutable, {'': {g: globalF32}});
+    assertInstanceError(kWasmI32, immutable, {'': {g: globalF64}});
+    assertInstanceError(kWasmI64, immutable, {'': {g: globalI32}});
+    assertInstanceError(kWasmI64, immutable, {'': {g: globalF32}});
+    assertInstanceError(kWasmI64, immutable, {'': {g: globalF64}});
+    assertInstanceError(kWasmF32, immutable, {'': {g: globalI32}});
+    assertInstanceError(kWasmF32, immutable, {'': {g: globalI64}});
+    assertInstanceError(kWasmF32, immutable, {'': {g: globalF64}});
+    assertInstanceError(kWasmF64, immutable, {'': {g: globalI32}});
+    assertInstanceError(kWasmF64, immutable, {'': {g: globalI64}});
+    assertInstanceError(kWasmF64, immutable, {'': {g: globalF32}});
+
+    assertInstanceError(kWasmI32, mutable, {'': {g: globalI64Mut}});
+    assertInstanceError(kWasmI32, mutable, {'': {g: globalF32Mut}});
+    assertInstanceError(kWasmI32, mutable, {'': {g: globalF64Mut}});
+    assertInstanceError(kWasmI64, mutable, {'': {g: globalI32Mut}});
+    assertInstanceError(kWasmI64, mutable, {'': {g: globalF32Mut}});
+    assertInstanceError(kWasmI64, mutable, {'': {g: globalF64Mut}});
+    assertInstanceError(kWasmF32, mutable, {'': {g: globalI32Mut}});
+    assertInstanceError(kWasmF32, mutable, {'': {g: globalI64Mut}});
+    assertInstanceError(kWasmF32, mutable, {'': {g: globalF64Mut}});
+    assertInstanceError(kWasmF64, mutable, {'': {g: globalI32Mut}});
+    assertInstanceError(kWasmF64, mutable, {'': {g: globalI64Mut}});
+    assertInstanceError(kWasmF64, mutable, {'': {g: globalF32Mut}});
+
+    // Mutable mismatch.
+    assertInstanceError(kWasmI32, immutable, {'': {g: globalI32Mut}});
+    assertInstanceError(kWasmI64, immutable, {'': {g: globalI64Mut}});
+    assertInstanceError(kWasmF32, immutable, {'': {g: globalF32Mut}});
+    assertInstanceError(kWasmF64, immutable, {'': {g: globalF64Mut}});
+
+    assertInstanceError(kWasmI32, mutable, {'': {g: globalI32}});
+    assertInstanceError(kWasmI64, mutable, {'': {g: globalI64}});
+    assertInstanceError(kWasmF32, mutable, {'': {g: globalF32}});
+    assertInstanceError(kWasmF64, mutable, {'': {g: globalF64}});
+
+    // Can't import Number as mutable.
+    assertInstanceError(kWasmI32, mutable, {'': {g: 1}});
+    assertInstanceError(kWasmI64, mutable, {'': {g: 1}});
+    assertInstanceError(kWasmF32, mutable, {'': {g: 1}});
+    assertInstanceError(kWasmF64, mutable, {'': {g: 1}});
+}, "Import 'WebAssembly.Global' type mismatch");
+
+test(() => {
     assertThrows(() => WebAssembly.validate(), TypeError);
     assertThrows(() => WebAssembly.validate("hi"), TypeError);
     assert_true(WebAssembly.validate(emptyModuleBinary));
     assert_true(WebAssembly.validate(complexImportingModuleBinary));
     assert_false(WebAssembly.validate(moduleBinaryImporting2Memories));
     assert_false(WebAssembly.validate(moduleBinaryWithMemSectionAndMemImport));
-}, "'WebAssembly.validate' method"),
+}, "'WebAssembly.validate' method");
 
 test(() => {
     const compileDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'compile');
@@ -712,8 +989,7 @@ assertCompileError([1], TypeError);
 assertCompileError([{}], TypeError);
 assertCompileError([new Uint8Array()], CompileError);
 assertCompileError([new ArrayBuffer()], CompileError);
-assertCompileError([new Uint8Array("hi!")], CompileError);
-assertCompileError([new ArrayBuffer("hi!")], CompileError);
+assertCompileError([kC0DEFEFE], CompileError);
 
 num_tests = 1;
 function assertCompileSuccess(bytes) {
@@ -726,7 +1002,7 @@ function assertCompileSuccess(bytes) {
 }
 
 assertCompileSuccess(emptyModuleBinary);
-assertCompileSuccess(emptyModuleBinary.buffer);
+assertCompileSuccess(new Uint8Array(emptyModuleBinary));
 
 test(() => {
     const instantiateDesc = Object.getOwnPropertyDescriptor(WebAssembly, 'instantiate');
@@ -742,7 +1018,6 @@ test(() => {
     assert_equals(instantiate, instantiateDesc.value);
     assert_equals(instantiate.length, 1);
     assert_equals(instantiate.name, "instantiate");
-    var instantiateErrorTests = 1;
     function assertInstantiateError(args, err) {
         promise_test(() => {
             return instantiate(...args)
@@ -751,9 +1026,8 @@ test(() => {
                 })
                 .catch(error => {
                     assert_equals(error instanceof err, true);
-                    assert_equals(Boolean(error.stack.match("jsapi.js")), true);
                 })
-        }, `unexpected success in assertInstantiateError ${instantiateErrorTests++}`);
+        }, 'unexpected success in assertInstantiateError');
     }
     var scratch_memory = new WebAssembly.Memory({initial:1});
     var scratch_table = new WebAssembly.Table({element:"anyfunc", initial:1, maximum:1});
@@ -763,8 +1037,7 @@ test(() => {
     assertInstantiateError([{}], TypeError);
     assertInstantiateError([new Uint8Array()], CompileError);
     assertInstantiateError([new ArrayBuffer()], CompileError);
-    assertInstantiateError([new Uint8Array("hi!")], CompileError);
-    assertInstantiateError([new ArrayBuffer("hi!")], CompileError);
+    assertInstantiateError([kC0DEFEFE], CompileError);
     assertInstantiateError([importingModule], TypeError);
     assertInstantiateError([importingModule, null], TypeError);
     assertInstantiateError([importingModuleBinary, null], TypeError);
@@ -779,7 +1052,6 @@ test(() => {
     assertInstantiateError([complexImportingModuleBinary, {}], TypeError);
     assertInstantiateError([complexImportingModuleBinary, {"c": {"d": scratch_memory}}], TypeError);
 
-    var instantiateSuccessTests = 1;
     function assertInstantiateSuccess(module, imports) {
         promise_test(()=> {
             return instantiate(module, imports)
@@ -798,19 +1070,119 @@ test(() => {
                         assert_equals(desc.enumerable, true);
                         assert_equals(desc.configurable, true);
                     }
-                })}, `unexpected failure in assertInstantiateSuccess ${instantiateSuccessTests++}`);
+                })}, 'unexpected failure in assertInstantiateSuccess');
     }
     assertInstantiateSuccess(emptyModule);
     assertInstantiateSuccess(emptyModuleBinary);
-    assertInstantiateSuccess(emptyModuleBinary.buffer);
+    assertInstantiateSuccess(new Uint8Array(emptyModuleBinary));
     assertInstantiateSuccess(importingModule, {"":{f:()=>{}}});
     assertInstantiateSuccess(importingModuleBinary, {"":{f:()=>{}}});
-    assertInstantiateSuccess(importingModuleBinary.buffer, {"":{f:()=>{}}});
+    assertInstantiateSuccess(new Uint8Array(importingModuleBinary), {"":{f:()=>{}}});
     assertInstantiateSuccess(complexImportingModuleBinary, {
         a:{b:()=>{}},
         c:{d:scratch_memory},
         e:{f:scratch_table},
         g:{'⚡':1}});
 }, "'WebAssembly.instantiate' function");
+
+const complexReExportingModuleBinary = (() => {
+    let builder = new WasmModuleBuilder();
+
+    let fIndex = builder.addImport('a', 'f', kSig_i_i);
+    let gIndex = builder.addImport('a', 'g', kSig_i_v);
+    builder.addImportedMemory('c', 'd');
+    builder.addImportedTable('e', 'f');
+
+    builder.addExport('x', fIndex)
+    builder.addExport('y', gIndex)
+    builder.addExportOfKind('z', kExternalMemory, 0)
+    builder.addExportOfKind('w', kExternalTable, 0)
+
+    return builder.toBuffer();
+})();
+
+const complexTableReExportingModuleBinary = (() => {
+    let builder = new WasmModuleBuilder();
+
+    builder.addImport('a', '_', kSig_v_v);
+    let gIndex = builder.addImport('a', 'g', kSig_i_v);
+    let fIndex = builder.addImport('a', 'f', kSig_i_i);
+    let hIndex = builder
+        .addFunction('h', kSig_i_v)
+        .addBody([
+            kExprI32Const,
+            46,
+            kExprEnd
+        ]).index;
+
+    builder.setFunctionTableLength(3);
+    builder.appendToTable([fIndex, gIndex, hIndex]);
+    builder.addExportOfKind('tab', kExternalTable, 0);
+
+    return builder.toBuffer();
+})();
+
+
+test(() => {
+  let module = new WebAssembly.Module(complexReExportingModuleBinary);
+  let memory = new WebAssembly.Memory({initial: 0});
+  let table = new WebAssembly.Table({initial: 0, element: 'anyfunc'});
+  let imports = {
+    a: { f(x) { return x+1; }, g: exportingInstance.exports.f },
+    c: { d: memory },
+    e: { f: table },
+  };
+  let instance = reExportingInstance =
+      new WebAssembly.Instance(module, imports);
+
+  assert_equals(instance.exports.x.name, "0");
+  assert_false(instance.exports.x === imports.a.f);
+
+  // Previously exported Wasm functions are re-exported with the same value
+  assert_equals(instance.exports.y, exportingInstance.exports.f);
+  assert_equals(instance.exports.y.name, "0");
+
+  // Re-exported Memory and Table objects have the same value
+  assert_equals(instance.exports.z, memory);
+  assert_equals(instance.exports.w, table);
+
+  // Importing the same JS function object results in a distinct exported
+  // function object, whereas previously exported Wasm functions are
+  // re-exported with the same identity.
+  let instance2 = new WebAssembly.Instance(module, imports);
+  assert_false(instance.exports.x === instance2.exports.x);
+  assert_equals(instance.exports.y, instance2.exports.y);
+}, "Exported values have cached JS objects");
+
+test(() => {
+  let module = new WebAssembly.Module(complexTableReExportingModuleBinary);
+  let instance = new WebAssembly.Instance(module,
+      { a: { _() { }, f: reExportingInstance.exports.x,
+             g: exportingInstance.exports.f } });
+  let table = instance.exports.tab;
+
+  // The functions that were put in come right back out
+  assert_equals(table.get(0), reExportingInstance.exports.x);
+  assert_equals(table.get(1), exportingInstance.exports.f);
+
+  // The original function indices are reflected in the name
+  assert_equals(table.get(0).name, "0");
+  assert_equals(table.get(1).name, "0");
+  assert_equals(table.get(2).name, "3");
+
+  // All of the functions work
+  assert_equals(table.get(0)(5), 6);
+  assert_equals(table.get(1)(), 42);
+  assert_equals(table.get(2)(), 46);
+}, "Tables export cached");
+
+test(() => {
+  let module = new WebAssembly.Module(exportingModuleIdentityFn );
+  let instance = new WebAssembly.Instance(module);
+
+  let value = 2 ** 31;
+  let output = instance.exports.id(value);
+  assert_equals(output, - (2 ** 31));
+}, "WebAssembly integers are converted to JavaScript as if by ToInt32");
 
 })();

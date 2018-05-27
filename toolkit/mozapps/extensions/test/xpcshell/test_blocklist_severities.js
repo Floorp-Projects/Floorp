@@ -212,8 +212,8 @@ add_task(async function test_1() {
   // initialised the plugins as
 
   // Put the add-ons into the base state
-  addons[0].userDisabled = true;
-  addons[4].userDisabled = false;
+  await addons[0].disable();
+  await addons[4].enable();
 
   await promiseRestartManager();
   await checkInitialState();
@@ -276,8 +276,8 @@ add_task(async function test_1() {
   equal(await check_plugin_state(PLUGINS[4]), "false,false");
 
   // Back to starting state
-  addons[2].userDisabled = false;
-  addons[5].userDisabled = false;
+  await addons[2].enable();
+  await addons[5].enable();
   PLUGINS[2].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   PLUGINS[5].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
@@ -370,7 +370,7 @@ add_task(async function test_pt3() {
 
 add_task(async function test_pt4() {
   let addon = await AddonManager.getAddonByID(ADDONS[4].id);
-  addon.userDisabled = false;
+  await addon.enable();
   PLUGINS[4].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
 
   await promiseRestartManager();

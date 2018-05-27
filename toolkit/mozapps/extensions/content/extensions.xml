@@ -1312,7 +1312,7 @@
 
             // We must set userDisabled to true first, this will call
             // _updateState which will clear any pending attribute set.
-            this.mAddon.userDisabled = true;
+            this.mAddon.disable();
 
             // This won't update any other add-on manager views (bug 582002)
             this.setAttribute("pending", "uninstall");
@@ -1565,7 +1565,7 @@
           if (this.isPending("uninstall"))
             this.mAddon.cancelUninstall();
           else if (this.getAttribute("wasDisabled") != "true")
-            this.mAddon.userDisabled = false;
+            this.mAddon.enable();
 
           this.removeAttribute("pending");
         ]]></body>
@@ -1579,8 +1579,12 @@
             return;
 
           // Make sure any newly installed add-on has the correct disabled state
-          if (this.hasAttribute("wasDisabled"))
-            aAddon.userDisabled = this.getAttribute("wasDisabled") == "true";
+          if (this.hasAttribute("wasDisabled")) {
+            if (this.getAttribute("wasDisabled") == "true")
+              aAddon.disable();
+            else
+              aAddon.enable();
+          }
 
           this.mAddon = aAddon;
 
@@ -1592,8 +1596,12 @@
         <parameter name="aInstall"/>
         <body><![CDATA[
           // Make sure any newly installed add-on has the correct disabled state
-          if (this.hasAttribute("wasDisabled"))
-            aInstall.addon.userDisabled = this.getAttribute("wasDisabled") == "true";
+          if (this.hasAttribute("wasDisabled")) {
+            if (this.getAttribute("wasDisabled") == "true")
+              aInstall.addon.disable();
+            else
+              aInstall.addon.enable();
+          }
         ]]></body>
       </method>
 

@@ -238,7 +238,7 @@ add_task(async function test_disable() {
 
   let disabledPromise = awaitEvent("shutdown", ID);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  addon.userDisabled = true;
+  await addon.disable();
   await Promise.all([disabledPromise, prefPromise]);
 
   is(getHomePageURL(), defaultHomePage,
@@ -246,7 +246,7 @@ add_task(async function test_disable() {
 
   let enabledPromise = awaitEvent("ready", ID);
   prefPromise = promisePrefChangeObserved(HOMEPAGE_URL_PREF);
-  addon.userDisabled = false;
+  await addon.enable();
   await Promise.all([enabledPromise, prefPromise]);
 
   is(getHomePageURL(), HOME_URI_1,

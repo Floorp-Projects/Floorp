@@ -1147,7 +1147,7 @@ var gViewController = {
                   addon: aAddon,
                   icon: aAddon.iconURL,
                   permissions: perms,
-                  resolve() { aAddon.userDisabled = false; },
+                  resolve() { aAddon.enable(); },
                   reject() {},
                 },
               },
@@ -1156,7 +1156,7 @@ var gViewController = {
             return;
           }
         }
-        aAddon.userDisabled = false;
+        aAddon.enable();
       },
       getTooltip(aAddon) {
         if (!aAddon)
@@ -1174,7 +1174,7 @@ var gViewController = {
                 hasPermission(aAddon, "disable"));
       },
       doCommand(aAddon) {
-        aAddon.userDisabled = true;
+        aAddon.disable();
       },
       getTooltip(aAddon) {
         if (!aAddon)

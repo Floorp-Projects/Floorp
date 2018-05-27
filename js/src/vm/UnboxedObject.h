@@ -124,7 +124,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         constructorCode_.init(nullptr);
     }
 
-    void detachFromCompartment();
+    void detachFromRealm();
 
     const PropertyVector& properties() const {
         return properties_;

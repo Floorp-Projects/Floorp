@@ -142,7 +142,7 @@ add_task(async function test_2() {
  Assert.ok(isExtensionInBootstrappedList(userDir, a2.id));
  Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
- a2.userDisabled = true;
+ await a2.disable();
  Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 0);
 
  await promiseShutdownManager();
