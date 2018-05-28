@@ -52,6 +52,11 @@ class NegativePath extends PureComponent {
     });
 
     const simulatedAnimation = simulateAnimation(frames, effectTiming, true);
+
+    if (!simulatedAnimation) {
+      return null;
+    }
+
     const simulatedElement = simulatedAnimation.effect.target;
     const win = simulatedElement.ownerGlobal;
 
