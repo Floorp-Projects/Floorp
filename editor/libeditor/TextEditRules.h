@@ -555,7 +555,7 @@ public:
   bool entireList;
   const nsAString* bulletType;
 
-  // EditSubAction::align
+  // EditSubAction::eSetOrClearAlignment
   const nsAString* alignType;
 
   // EditSubAction::makeBasicBlock
