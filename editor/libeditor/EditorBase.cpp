@@ -29,10 +29,10 @@
 #include "TextEditUtils.h"              // for TextEditUtils
 #include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "mozilla/ComputedStyle.h"      // for ComputedStyle
-#include "mozilla/EditAction.h"         // for EditAction
+#include "mozilla/EditAction.h"         // for EditSubAction
 #include "mozilla/EditorDOMPoint.h"     // for EditorDOMPoint
 #include "mozilla/EditorSpellCheck.h"   // for EditorSpellCheck
-#include "mozilla/EditorUtils.h"        // for AutoRules, etc.
+#include "mozilla/EditorUtils.h"        // for various helper classes.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
 #include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/IMEContentObserver.h" // for IMEContentObserver
@@ -160,7 +160,7 @@ EditorBase::EditorBase()
   , mFlags(0)
   , mUpdateCount(0)
   , mPlaceholderBatch(0)
-  , mAction(EditAction::none)
+  , mTopLevelEditSubAction(EditSubAction::none)
   , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
@@ -168,7 +168,7 @@ EditorBase::EditorBase()
   , mDidPreDestroy(false)
   , mDidPostCreate(false)
   , mDispatchInputEvent(true)
-  , mIsInEditAction(false)
+  , mIsInEditSubAction(false)
   , mHidingCaret(false)
   , mSpellCheckerDictionaryUpdated(true)
   , mIsHTMLEditorClass(false)
@@ -258,7 +258,7 @@ EditorBase::Init(nsIDocument& aDocument,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
-  MOZ_ASSERT(mAction == EditAction::none,
+  MOZ_ASSERT(mTopLevelEditSubAction == EditSubAction::none,
              "Initializing during an edit action is an error");
 
   // First only set flags, but other stuff shouldn't be initialized now.
@@ -1356,7 +1356,9 @@ EditorBase::CreateNodeWithTransaction(
   //     we need to redesign mRangeUpdater as avoiding using indices.
   Unused << aPointToInsert.Offset();
 
-  AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::createNode,
+                                      nsIEditor::eNext);
 
   RefPtr<Element> newElement;
 
@@ -1432,7 +1434,9 @@ EditorBase::InsertNodeWithTransaction(
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
-  AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::insertNode,
+                                      nsIEditor::eNext);
 
   RefPtr<InsertNodeTransaction> transaction =
     InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
@@ -1494,7 +1498,9 @@ EditorBase::SplitNodeWithTransaction(
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
-  AutoRules beginRulesSniffing(this, EditAction::splitNode, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::splitNode,
+                                      nsIEditor::eNext);
 
   // XXX Unfortunately, storing offset of the split point in
   //     SplitNodeTransaction is necessary for now.  We should fix this
@@ -1559,8 +1565,9 @@ EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
-  AutoRules beginRulesSniffing(this, EditAction::joinNode,
-                               nsIEditor::ePrevious);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::joinNode,
+                                      nsIEditor::ePrevious);
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
@@ -1627,8 +1634,9 @@ EditorBase::DeleteNode(nsINode* aNode)
 nsresult
 EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
 {
-  AutoRules beginRulesSniffing(this, EditAction::createNode,
-                               nsIEditor::ePrevious);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::createNode,
+                                      nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {
     Selection* selection = GetSelection();
@@ -2115,7 +2123,7 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
 {
   switch (aNotification) {
     case eNotifyEditorObserversOfEnd:
-      mIsInEditAction = false;
+      mIsInEditSubAction = false;
 
       if (mTextInputListener) {
         RefPtr<TextInputListener> listener = mTextInputListener;
@@ -2142,11 +2150,11 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       FireInputEvent();
       break;
     case eNotifyEditorObserversOfBefore:
-      if (NS_WARN_IF(mIsInEditAction)) {
+      if (NS_WARN_IF(mIsInEditSubAction)) {
         break;
       }
 
-      mIsInEditAction = true;
+      mIsInEditSubAction = true;
 
       if (mIMEContentObserver) {
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
@@ -2154,7 +2162,7 @@ EditorBase::NotifyEditorObservers(NotificationForEditorObservers aNotification)
       }
       break;
     case eNotifyEditorObserversOfCancel:
-      mIsInEditAction = false;
+      mIsInEditSubAction = false;
 
       if (mIMEContentObserver) {
         RefPtr<IMEContentObserver> observer = mIMEContentObserver;
@@ -2410,29 +2418,20 @@ EditorBase::GetRootElement(Element** aRootElement)
   return NS_OK;
 }
 
-/**
- * All editor operations which alter the doc should be prefaced
- * with a call to StartOperation, naming the action and direction.
- */
-nsresult
-EditorBase::StartOperation(EditAction opID,
-                           nsIEditor::EDirection aDirection)
+void
+EditorBase::OnStartToHandleTopLevelEditSubAction(
+              EditSubAction aEditSubAction,
+              nsIEditor::EDirection aDirection)
 {
-  mAction = opID;
+  mTopLevelEditSubAction = aEditSubAction;
   mDirection = aDirection;
-  return NS_OK;
 }
 
-/**
- * All editor operations which alter the doc should be followed
- * with a call to EndOperation.
- */
-nsresult
-EditorBase::EndOperation()
+void
+EditorBase::OnEndHandlingTopLevelEditSubAction()
 {
-  mAction = EditAction::none;
+  mTopLevelEditSubAction = EditSubAction::none;
   mDirection = eNone;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2914,8 +2913,9 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
 {
   const uint32_t length = aCharData.Length();
 
-  AutoRules beginRulesSniffing(this, EditAction::setText,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::setText,
+                                      nsIEditor::eNext);
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty() && length) {
@@ -2987,8 +2987,9 @@ EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
     return NS_ERROR_FAILURE;
   }
 
-  AutoRules beginRulesSniffing(this, EditAction::deleteText,
-                               nsIEditor::ePrevious);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::deleteText,
+                                      nsIEditor::ePrevious);
 
   // Let listeners know what's up
   if (!mActionListeners.IsEmpty()) {
@@ -4579,7 +4580,7 @@ EditorBase::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
 }
 
 nsresult
-EditorBase::HandleInlineSpellCheck(EditAction action,
+EditorBase::HandleInlineSpellCheck(EditSubAction aEditSubAction,
                                    Selection& aSelection,
                                    nsINode* previousSelectedNode,
                                    uint32_t previousSelectedOffset,
@@ -4592,7 +4593,7 @@ EditorBase::HandleInlineSpellCheck(EditAction action,
     return NS_OK;
   }
   return mInlineSpellChecker->SpellCheckAfterEditorChange(
-                                action, aSelection,
+                                aEditSubAction, aSelection,
                                 previousSelectedNode, previousSelectedOffset,
                                 aStartContainer, aStartOffset, aEndContainer,
                                 aEndOffset);

@@ -156,7 +156,7 @@ HTMLEditor::HTMLEditor()
 HTMLEditor::~HTMLEditor()
 {
   if (mRules && mRules->AsHTMLEditRules()) {
-    mRules->AsHTMLEditRules()->EndListeningToEditActions();
+    mRules->AsHTMLEditRules()->EndListeningToEditSubActions();
   }
 
   mTypeInState = nullptr;
@@ -1154,7 +1154,9 @@ nsresult
 HTMLEditor::InsertBrElementAtSelectionWithTransaction()
 {
   // calling it text insertion to trigger moz br treatment by rules
-  AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::insertText,
+                                      nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -1221,14 +1223,18 @@ NS_IMETHODIMP
 HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 {
   // don't do any post processing, rules get confused
-  AutoRules beginRulesSniffing(this, EditAction::ignore, nsIEditor::eNone);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::ignore,
+                                      nsIEditor::eNone);
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   CommitComposition();
 
-  // Do not use AutoRules -- rules code won't let us insert in <head>.  Use
-  // the head node as a parent and delete/insert directly.
+  // Do not use AutoTopLevelEditSubActionNotifier -- rules code won't let us
+  // insert in <head>.  Use the head node as a parent and delete/insert
+  // directly.
+  // XXX We're using AutoTopLevelEditSubActionNotifier above...
   nsCOMPtr<nsIDocument> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1554,8 +1560,9 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
 
   CommitComposition();
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::insertElement,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::insertElement,
+                                      nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
   if (!selection) {
@@ -1564,8 +1571,9 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
 
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
-  RulesInfo ruleInfo(EditAction::insertElement);
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -1637,7 +1645,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
       }
     }
   }
-  rv = rules->DidDoAction(selection, &ruleInfo, rv);
+  rv = rules->DidDoAction(selection, subActionInfo, rv);
   return rv;
 }
 
@@ -2010,17 +2018,20 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
   bool cancel, handled;
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::makeList, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::makeList,
+                                      nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  RulesInfo ruleInfo(EditAction::makeList);
-  ruleInfo.blockType = &aListType;
-  ruleInfo.entireList = entireList;
-  ruleInfo.bulletType = &aBulletType;
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(EditSubAction::makeList);
+  subActionInfo.blockType = &aListType;
+  subActionInfo.entireList = entireList;
+  subActionInfo.bulletType = &aBulletType;
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2086,7 +2097,7 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
     }
   }
 
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 NS_IMETHODIMP
@@ -2102,26 +2113,29 @@ HTMLEditor::RemoveList(const nsAString& aListType)
   bool cancel, handled;
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::removeList, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::removeList,
+                                      nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  RulesInfo ruleInfo(EditAction::removeList);
+  EditSubActionInfo subActionInfo(EditSubAction::removeList);
   if (aListType.LowerCaseEqualsLiteral("ol")) {
-    ruleInfo.bOrdered = true;
+    subActionInfo.bOrdered = true;
   } else {
-    ruleInfo.bOrdered = false;
+    subActionInfo.bOrdered = false;
   }
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
   // no default behavior for this yet.  what would it mean?
 
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 nsresult
@@ -2140,8 +2154,9 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
   bool cancel, handled;
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::makeDefListItem,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::makeDefListItem,
+                                      nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2149,9 +2164,10 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
     return NS_ERROR_FAILURE;
   }
   nsDependentAtomString tagName(&aTagName);
-  RulesInfo ruleInfo(EditAction::makeDefListItem);
-  ruleInfo.blockType = &tagName;
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(EditSubAction::makeDefListItem);
+  subActionInfo.blockType = &tagName;
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2160,7 +2176,7 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
     // todo: no default for now.  we count on rules to handle it.
   }
 
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 nsresult
@@ -2179,16 +2195,18 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
   bool cancel, handled;
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::makeBasicBlock,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::makeBasicBlock,
+                                      nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsDependentAtomString tagName(&aTagName);
-  RulesInfo ruleInfo(EditAction::makeBasicBlock);
-  ruleInfo.blockType = &tagName;
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(EditSubAction::makeBasicBlock);
+  subActionInfo.blockType = &tagName;
+  nsresult rv =
+   rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2249,7 +2267,7 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
     }
   }
 
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 NS_IMETHODIMP
@@ -2263,19 +2281,21 @@ HTMLEditor::Indent(const nsAString& aIndent)
   RefPtr<TextEditRules> rules(mRules);
 
   bool cancel, handled;
-  EditAction opID = EditAction::indent;
+  EditSubAction editSubAction = EditSubAction::indent;
   if (aIndent.LowerCaseEqualsLiteral("outdent")) {
-    opID = EditAction::outdent;
+    editSubAction = EditSubAction::outdent;
   }
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, editSubAction, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  RulesInfo ruleInfo(opID);
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(editSubAction);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
@@ -2350,7 +2370,7 @@ HTMLEditor::Indent(const nsAString& aIndent)
       return error.StealNSResult();
     }
   }
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 //TODO: IMPLEMENT ALIGNMENT!
@@ -2362,21 +2382,24 @@ HTMLEditor::Align(const nsAString& aAlignType)
   RefPtr<TextEditRules> rules(mRules);
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoRules beginRulesSniffing(this, EditAction::align, nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::align,
+                                      nsIEditor::eNext);
 
   bool cancel, handled;
 
   // Find out if the selection is collapsed:
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  RulesInfo ruleInfo(EditAction::align);
-  ruleInfo.alignType = &aAlignType;
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  EditSubActionInfo subActionInfo(EditSubAction::align);
+  subActionInfo.alignType = &aAlignType;
+  nsresult rv =
+   rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;
   }
 
-  return rules->DidDoAction(selection, &ruleInfo, rv);
+  return rules->DidDoAction(selection, subActionInfo, rv);
 }
 
 already_AddRefed<Element>
@@ -3361,7 +3384,7 @@ HTMLEditor::DoContentInserted(nsIContent* aChild,
                         &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
-  else if (!mAction && container->IsEditable()) {
+  else if (!mTopLevelEditSubAction && container->IsEditable()) {
     if (IsMozEditorBogusNode(aChild)) {
       // Ignore insertion of the bogus node
       return;
@@ -3404,7 +3427,7 @@ HTMLEditor::ContentRemoved(nsIContent* aChild,
                         this,
                         &HTMLEditor::NotifyRootChanged));
   // We don't need to handle our own modifications
-  } else if (!mAction && aChild->GetParentNode()->IsEditable()) {
+  } else if (!mTopLevelEditSubAction && aChild->GetParentNode()->IsEditable()) {
     if (aChild && IsMozEditorBogusNode(aChild)) {
       // Ignore removal of the bogus node
       return;
@@ -3470,38 +3493,41 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
   return NS_OK;
 }
 
-/**
- * All editor operations which alter the doc should be prefaced
- * with a call to StartOperation, naming the action and direction.
- */
-nsresult
-HTMLEditor::StartOperation(EditAction opID,
-                           nsIEditor::EDirection aDirection)
+void
+HTMLEditor::OnStartToHandleTopLevelEditSubAction(
+              EditSubAction aEditSubAction,
+              nsIEditor::EDirection aDirection)
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  EditorBase::StartOperation(opID, aDirection);  // will set mAction, mDirection
-  if (rules) {
-    return rules->BeforeEdit(mAction, mDirection);
+  EditorBase::OnStartToHandleTopLevelEditSubAction(aEditSubAction, aDirection);
+  if (!rules) {
+    return;
   }
-  return NS_OK;
+
+  MOZ_ASSERT(mTopLevelEditSubAction == aEditSubAction);
+  MOZ_ASSERT(mDirection == aDirection);
+  DebugOnly<nsresult> rv =
+    rules->BeforeEdit(mTopLevelEditSubAction, mDirection);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+    "HTMLEditRules::BeforeEdit() failed to handle something");
 }
 
-/**
- * All editor operations which alter the doc should be followed
- * with a call to EndOperation.
- */
-nsresult
-HTMLEditor::EndOperation()
+void
+HTMLEditor::OnEndHandlingTopLevelEditSubAction()
 {
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
   // post processing
-  nsresult rv = rules ? rules->AfterEdit(mAction, mDirection) : NS_OK;
-  EditorBase::EndOperation();  // will clear mAction, mDirection
-  return rv;
+  DebugOnly<nsresult> rv =
+    rules ? rules->AfterEdit(mTopLevelEditSubAction, mDirection) : NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+    "HTMLEditRules::AfterEdit() failed to handle something");
+  EditorBase::OnEndHandlingTopLevelEditSubAction();
+  MOZ_ASSERT(!mTopLevelEditSubAction);
+  MOZ_ASSERT(mDirection == eNone);
 }
 
 bool
@@ -4343,15 +4369,19 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   bool isCollapsed = selection->IsCollapsed();
 
   AutoPlaceholderBatch batchIt(this);
-  AutoRules beginRulesSniffing(this, EditAction::insertElement,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::insertElement,
+                                      nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
   bool cancel, handled;
-  RulesInfo ruleInfo(EditAction::setTextProperty);
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(rv, rv);
+  EditSubActionInfo subActionInfo(EditSubAction::setTextProperty);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (!cancel && !handled) {
     // Loop through the ranges in the selection
     for (uint32_t i = 0; i < selection->RangeCount(); i++) {
@@ -4472,7 +4502,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   }
   if (!cancel) {
     // Post-process
-    rv = rules->DidDoAction(selection, &ruleInfo, rv);
+    rv = rules->DidDoAction(selection, subActionInfo, rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
