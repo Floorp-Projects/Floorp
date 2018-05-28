@@ -1357,7 +1357,7 @@ EditorBase::CreateNodeWithTransaction(
   Unused << aPointToInsert.Offset();
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::createNode,
+                                      *this, EditSubAction::eCreateNode,
                                       nsIEditor::eNext);
 
   RefPtr<Element> newElement;
@@ -1435,7 +1435,7 @@ EditorBase::InsertNodeWithTransaction(
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   RefPtr<InsertNodeTransaction> transaction =
@@ -1635,7 +1635,7 @@ nsresult
 EditorBase::DeleteNodeWithTransaction(nsINode& aNode)
 {
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::createNode,
+                                      *this, EditSubAction::eCreateNode,
                                       nsIEditor::ePrevious);
 
   if (mRules && mRules->AsHTMLEditRules()) {

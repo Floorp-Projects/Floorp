@@ -376,7 +376,7 @@ HTMLEditor::InsertTableColumn(int32_t aNumber,
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   // Use column after current cell if requested
@@ -511,7 +511,7 @@ HTMLEditor::InsertTableRow(int32_t aNumber,
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   if (aAfter) {
@@ -1679,7 +1679,7 @@ HTMLEditor::SplitTableCell()
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   // We reset selection
@@ -1914,7 +1914,7 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
   // Prevent auto insertion of BR in new cell created by
   // ReplaceContainerAndCloneAttributesWithTransaction().
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   // Save current selection to restore when done.
@@ -2484,7 +2484,7 @@ HTMLEditor::NormalizeTable(Element* aTable)
   AutoPlaceholderBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertNode,
+                                      *this, EditSubAction::eInsertNode,
                                       nsIEditor::eNext);
 
   RefPtr<Element> cell;
