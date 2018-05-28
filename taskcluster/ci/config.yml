@@ -83,13 +83,9 @@ try:
     # as different "platforms".  These do *not* automatically ride along with "-p
     # all"
     ridealong-builds:
-        'android-api-16':
-            - 'android-api-16-l10n'
         'linux':
-            - 'linux-l10n'
             - 'sm-arm-sim-linux32'
         'linux64':
-            - 'linux64-l10n'
             - 'sm-plain-linux64'
             - 'sm-nojit-linux64'
             - 'sm-nonunified-linux64'
