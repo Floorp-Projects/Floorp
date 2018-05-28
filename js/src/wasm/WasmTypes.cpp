@@ -81,9 +81,10 @@ Val::writePayload(uint8_t* dst) const
       case ValType::B32x4:
         memcpy(dst, &u, jit::Simd128DataSize);
         return;
+      case ValType::Ref:
       case ValType::AnyRef:
         // TODO
-        MOZ_CRASH("writing imported value of AnyRef in global NYI");
+        MOZ_CRASH("writing imported value of Ref/AnyRef in global NYI");
     }
 }
 
@@ -204,6 +205,7 @@ IsImmediateType(ValType vt)
       case ValType::B8x16:
       case ValType::B16x8:
       case ValType::B32x4:
+      case ValType::Ref:
         return false;
     }
     MOZ_CRASH("bad ValType");
@@ -231,6 +233,7 @@ EncodeImmediateType(ValType vt)
       case ValType::B8x16:
       case ValType::B16x8:
       case ValType::B32x4:
+      case ValType::Ref:
         break;
     }
     MOZ_CRASH("bad ValType");
@@ -700,7 +703,7 @@ DebugFrame::updateReturnJSValue()
 {
     hasCachedReturnJSValue_ = true;
     ExprType returnType = instance()->debug().debugGetResultType(funcIndex());
-    switch (returnType) {
+    switch (returnType.code()) {
       case ExprType::Void:
           cachedReturnJSValue_.setUndefined();
           break;
@@ -717,6 +720,7 @@ DebugFrame::updateReturnJSValue()
       case ExprType::F64:
           cachedReturnJSValue_.setDouble(JS::CanonicalizeNaN(resultF64_));
           break;
+      case ExprType::Ref:
       case ExprType::AnyRef:
           cachedReturnJSValue_ = ObjectOrNullValue(*(JSObject**)&resultRef_);
           break;
