@@ -1155,7 +1155,9 @@ class BootstrapScope {
   uninstall(data, reason) {
     AsyncShutdown.profileChangeTeardown.addBlocker(
       `Uninstalling add-on: ${data.id}`,
-      Management.emit("uninstall", {id: data.id}));
+      Management.emit("uninstall", {id: data.id}).then(() => {
+        Management.emit("uninstall-complete", {id: data.id});
+      }));
   }
 
   update(data, reason) {
