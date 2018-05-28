@@ -135,17 +135,14 @@ pub trait TDocument: Sized + Copy + Clone {
     fn quirks_mode(&self) -> QuirksMode;
 
     /// Get a list of elements with a given ID in this document, sorted by
-    /// tree position.
+    /// document position.
     ///
     /// Can return an error to signal that this list is not available, or also
     /// return an empty slice.
-    fn elements_with_id<'a>(
+    fn elements_with_id(
         &self,
         _id: &Atom,
-    ) -> Result<&'a [<Self::ConcreteNode as TNode>::ConcreteElement], ()>
-    where
-        Self: 'a,
-    {
+    ) -> Result<&[<Self::ConcreteNode as TNode>::ConcreteElement], ()> {
         Err(())
     }
 }
@@ -345,21 +342,6 @@ pub trait TShadowRoot: Sized + Copy + Clone + PartialEq {
     fn style_data<'a>(&self) -> &'a CascadeData
     where
         Self: 'a;
-
-    /// Get a list of elements with a given ID in this shadow root, sorted by
-    /// tree position.
-    ///
-    /// Can return an error to signal that this list is not available, or also
-    /// return an empty slice.
-    fn elements_with_id<'a>(
-        &self,
-        _id: &Atom,
-    ) -> Result<&'a [<Self::ConcreteNode as TNode>::ConcreteElement], ()>
-    where
-        Self: 'a,
-    {
-        Err(())
-    }
 }
 
 /// The element trait, the main abstraction the style crate acts over.
