@@ -266,13 +266,21 @@ class Encoder
     }
     MOZ_MUST_USE bool writeValType(ValType type) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        MOZ_ASSERT(size_t(type.bitsUnsafe()) < size_t(TypeCode::Limit));
-        return writeFixedU8(uint8_t(type.bitsUnsafe()));
+        MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
+        if (type.isRef()) {
+            return writeFixedU8(uint8_t(TypeCode::Ref)) &&
+                   writeVarU32(type.refTypeIndex());
+        }
+        return writeFixedU8(uint8_t(type.code()));
     }
     MOZ_MUST_USE bool writeBlockType(ExprType type) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        MOZ_ASSERT(size_t(type) < size_t(TypeCode::Limit));
-        return writeFixedU8(uint8_t(type));
+        MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
+        if (type.isRef()) {
+            return writeFixedU8(uint8_t(ExprType::Ref)) &&
+                   writeVarU32(type.refTypeIndex());
+        }
+        return writeFixedU8(uint8_t(type.code()));
     }
     MOZ_MUST_USE bool writeOp(Op op) {
         static_assert(size_t(Op::Limit) == 256, "fits");
@@ -544,13 +552,29 @@ class Decoder
     MOZ_MUST_USE bool readVarS64(int64_t* out) {
         return readVarS<int64_t>(out);
     }
-    MOZ_MUST_USE bool readValType(uint8_t* type) {
+    MOZ_MUST_USE bool readValType(uint8_t* code, uint32_t* refTypeIndex) {
         static_assert(uint8_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        return readFixedU8(type);
+        if (!readFixedU8(code))
+            return false;
+        if (*code == uint8_t(TypeCode::Ref)) {
+            if (!readVarU32(refTypeIndex))
+                return false;
+        } else {
+            *refTypeIndex = NoRefTypeIndex;
+        }
+        return true;
     }
-    MOZ_MUST_USE bool readBlockType(uint8_t* type) {
+    MOZ_MUST_USE bool readBlockType(uint8_t* code, uint32_t* refTypeIndex) {
         static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-        return readFixedU8(type);
+        if (!readFixedU8(code))
+            return false;
+        if (*code == uint8_t(TypeCode::Ref)) {
+            if (!readVarU32(refTypeIndex))
+                return false;
+        } else {
+            *refTypeIndex = NoRefTypeIndex;
+        }
+        return true;
     }
     MOZ_MUST_USE bool readOp(OpBytes* op) {
         static_assert(size_t(Op::Limit) == 256, "fits");
@@ -668,9 +692,6 @@ class Decoder
         MOZ_ALWAYS_TRUE(readVarS64(&i64));
         return i64;
     }
-    ValType uncheckedReadValType() {
-        return ValType::fromTypeCode(uncheckedReadFixedU8());
-    }
     Op uncheckedReadOp() {
         static_assert(size_t(Op::Limit) == 256, "fits");
         uint8_t u8 = uncheckedReadFixedU8();
@@ -706,8 +727,17 @@ class Decoder
 MOZ_MUST_USE bool
 EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
 
+// This performs no validation; the local entries must already have been
+// validated by an earlier pass.
+
 MOZ_MUST_USE bool
-DecodeLocalEntries(Decoder& d, ModuleKind kind, HasGcTypes gcTypesEnabled, ValTypeVector* locals);
+DecodeValidatedLocalEntries(Decoder& d, ValTypeVector* locals);
+
+// This validates the entries.
+
+MOZ_MUST_USE bool
+DecodeLocalEntries(Decoder& d, ModuleKind kind, const TypeDefVector& types,
+                   HasGcTypes gcTypesEnabled, ValTypeVector* locals);
 
 // Returns whether the given [begin, end) prefix of a module's bytecode starts a
 // code section and, if so, returns the SectionRange of that code section.

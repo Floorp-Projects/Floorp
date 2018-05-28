@@ -83,6 +83,15 @@ wasmEvalText(`
  (type $s (struct)))
 `)
 
+// Multiply defined structures.
+
+assertErrorMessage(() => wasmEvalText(`
+(module
+ (type $s (struct (field $x i32)))
+ (type $s (struct (field $y i32))))
+`),
+SyntaxError, /duplicate type name/);
+
 // Bogus type definition syntax.
 
 assertErrorMessage(() => wasmEvalText(`
