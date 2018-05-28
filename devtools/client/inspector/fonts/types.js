@@ -49,9 +49,6 @@ const fontVariationInstance = exports.fontVariationInstance = {
  * A single font.
  */
 const font = exports.font = {
-  // Font family name
-  CSSFamilyName: PropTypes.string,
-
   // The format of the font
   format: PropTypes.string,
 
