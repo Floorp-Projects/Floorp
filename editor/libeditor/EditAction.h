@@ -39,7 +39,8 @@ enum class EditSubAction : int32_t
   // eJoinNodes indicates to join 2 nodes.
   eJoinNodes,
 
-  deleteText = 1003,
+  // eDeleteText indicates to delete some characters form a text node.
+  eDeleteText,
 
   // Text edit commands
   insertText = 2000,
