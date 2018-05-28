@@ -65,6 +65,9 @@ enum class TypeCode
     // A reference to any type.
     AnyRef                               = 0x6f,
 
+    // Type constructor for reference types.
+    Ref                                  = 0x6e,
+
     // Type constructor for function types
     Func                                 = 0x60,  // SLEB128(-0x20)
 

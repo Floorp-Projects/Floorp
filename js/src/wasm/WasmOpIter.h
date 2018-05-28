@@ -39,50 +39,119 @@ enum class LabelKind : uint8_t
 
 // The type of values on the operand stack during validation. The Any type
 // represents the type of a value produced by an unconditional branch.
-enum class StackType
+
+class StackType
 {
-    I32    = uint8_t(ValType::I32),
-    I64    = uint8_t(ValType::I64),
-    F32    = uint8_t(ValType::F32),
-    F64    = uint8_t(ValType::F64),
+    PackedTypeCode tc_;
 
-    I8x16  = uint8_t(ValType::I8x16),
-    I16x8  = uint8_t(ValType::I16x8),
-    I32x4  = uint8_t(ValType::I32x4),
-    F32x4  = uint8_t(ValType::F32x4),
-    B8x16  = uint8_t(ValType::B8x16),
-    B16x8  = uint8_t(ValType::B16x8),
-    B32x4  = uint8_t(ValType::B32x4),
+#ifdef DEBUG
+    bool isValidCode() {
+        switch (UnpackTypeCodeType(tc_)) {
+          case TypeCode::I32:
+          case TypeCode::I64:
+          case TypeCode::F32:
+          case TypeCode::F64:
+          case TypeCode::I8x16:
+          case TypeCode::I16x8:
+          case TypeCode::I32x4:
+          case TypeCode::F32x4:
+          case TypeCode::B8x16:
+          case TypeCode::B16x8:
+          case TypeCode::B32x4:
+          case TypeCode::AnyRef:
+          case TypeCode::Ref:
+          case TypeCode::Limit:
+            return true;
+          default:
+            return false;
+        }
+    }
+#endif
 
-    AnyRef = uint8_t(ValType::AnyRef),
+  public:
+    enum Code {
+        I32    = uint8_t(ValType::I32),
+        I64    = uint8_t(ValType::I64),
+        F32    = uint8_t(ValType::F32),
+        F64    = uint8_t(ValType::F64),
 
-    Any    = uint8_t(TypeCode::Limit),
+        I8x16  = uint8_t(ValType::I8x16),
+        I16x8  = uint8_t(ValType::I16x8),
+        I32x4  = uint8_t(ValType::I32x4),
+        F32x4  = uint8_t(ValType::F32x4),
+        B8x16  = uint8_t(ValType::B8x16),
+        B16x8  = uint8_t(ValType::B16x8),
+        B32x4  = uint8_t(ValType::B32x4),
+
+        AnyRef = uint8_t(ValType::AnyRef),
+        Ref    = uint8_t(ValType::Ref),
+
+        Any    = uint8_t(TypeCode::Limit),
+    };
+
+    StackType() : tc_(InvalidPackedTypeCode()) {}
+
+    MOZ_IMPLICIT StackType(Code c)
+      : tc_(PackTypeCode(TypeCode(c)))
+    {
+        MOZ_ASSERT(isValidCode());
+    }
+
+    explicit StackType(const ValType& t)
+      : tc_(t.packed())
+    {}
+
+    PackedTypeCode packed() const {
+        return tc_;
+    }
+
+    Code code() const {
+        return Code(UnpackTypeCodeType(tc_));
+    }
+
+    uint32_t refTypeIndex() const {
+        return UnpackTypeCodeIndex(tc_);
+    }
+
+    bool isRef() const {
+        return UnpackTypeCodeType(tc_) == TypeCode::Ref;
+    }
+
+    bool isRefOrAnyRef() const {
+        TypeCode tc = UnpackTypeCodeType(tc_);
+        return tc == TypeCode::Ref || tc == TypeCode::AnyRef;
+    }
+
+    bool operator ==(const StackType& that) const {
+        return tc_ == that.tc_;
+    }
+
+    bool operator !=(const StackType& that) const {
+        return tc_ != that.tc_;
+    }
+
+    bool operator ==(Code that) const {
+        MOZ_ASSERT(that != Code::Ref);
+        return code() == that;
+    }
+
+    bool operator !=(Code that) const {
+        return !(*this == that);
+    }
 };
-
-static inline StackType
-ToStackType(ValType type)
-{
-    return StackType(type.bitsUnsafe());
-}
 
 static inline ValType
 NonAnyToValType(StackType type)
 {
     MOZ_ASSERT(type != StackType::Any);
-    return ValType::fromTypeCode(uint32_t(type));
-}
-
-static inline bool
-IsRefType(StackType st)
-{
-    return IsRefType(NonAnyToValType(st));
+    return ValType(type.packed());
 }
 
 static inline bool
 IsSubtypeOf(StackType one, StackType two)
 {
-    MOZ_ASSERT(IsRefType(one));
-    MOZ_ASSERT(IsRefType(two));
+    MOZ_ASSERT(one.isRefOrAnyRef());
+    MOZ_ASSERT(two.isRefOrAnyRef());
     return one == two || two == StackType::AnyRef;
 }
 
@@ -104,8 +173,8 @@ Unify(HasGcTypes gcTypesEnabled, StackType observed, StackType expected, StackTy
         return true;
     }
 
-    if (gcTypesEnabled == HasGcTypes::True && IsRefType(observed) && IsRefType(expected) &&
-        IsSubtypeOf(observed, expected))
+    if (gcTypesEnabled == HasGcTypes::True && observed.isRefOrAnyRef() &&
+        expected.isRefOrAnyRef() && IsSubtypeOf(observed, expected))
     {
         *result = expected;
         return true;
@@ -132,7 +201,7 @@ Join(HasGcTypes gcTypesEnabled, StackType one, StackType two, StackType* result)
         return true;
     }
 
-    if (gcTypesEnabled == HasGcTypes::True && IsRefType(one) && IsRefType(two)) {
+    if (gcTypesEnabled == HasGcTypes::True && one.isRefOrAnyRef() && two.isRefOrAnyRef()) {
         if (IsSubtypeOf(two, one)) {
             *result = one;
             return true;
@@ -316,18 +385,18 @@ class TypeAndValue
     Value value_;
 
   public:
-    TypeAndValue() : type_(StackType(TypeCode::Limit)), value_() {}
+    TypeAndValue() : type_(StackType::Any), value_() {}
     explicit TypeAndValue(StackType type)
       : type_(type), value_()
     {}
     explicit TypeAndValue(ValType type)
-      : type_(ToStackType(type)), value_()
+      : type_(StackType(type)), value_()
     {}
     TypeAndValue(StackType type, Value value)
       : type_(type), value_(value)
     {}
     TypeAndValue(ValType type, Value value)
-      : type_(ToStackType(type)), value_(value)
+      : type_(StackType(type)), value_(value)
     {}
     StackType type() const {
         return type_;
@@ -350,11 +419,11 @@ class TypeAndValue<Nothing>
     StackType type_;
 
   public:
-    TypeAndValue() : type_(StackType(TypeCode::Limit)) {}
+    TypeAndValue() : type_(StackType::Any) {}
     explicit TypeAndValue(StackType type) : type_(type) {}
-    explicit TypeAndValue(ValType type) : type_(ToStackType(type)) {}
+    explicit TypeAndValue(ValType type) : type_(StackType(type)) {}
     TypeAndValue(StackType type, Nothing value) : type_(type) {}
-    TypeAndValue(ValType type, Nothing value) : type_(ToStackType(type)) {}
+    TypeAndValue(ValType type, Nothing value) : type_(StackType(type)) {}
 
     StackType type() const { return type_; }
     StackType& typeRef() { return type_; }
@@ -458,7 +527,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool popAnyType(StackType* type, Value* value);
     MOZ_MUST_USE bool typeMismatch(StackType actual, StackType expected);
     MOZ_MUST_USE bool popWithType(StackType expectedType, Value* value);
-    MOZ_MUST_USE bool popWithType(ValType valType, Value* value) { return popWithType(ToStackType(valType), value); }
+    MOZ_MUST_USE bool popWithType(ValType valType, Value* value) { return popWithType(StackType(valType), value); }
     MOZ_MUST_USE bool popWithType(ExprType expectedType, Value* value);
     MOZ_MUST_USE bool topWithType(ExprType expectedType, Value* value);
     MOZ_MUST_USE bool topWithType(ValType valType, Value* value);
@@ -485,7 +554,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
         valueStack_.infallibleEmplaceBack(t);
     }
     void infalliblePush(ValType t) {
-        valueStack_.infallibleEmplaceBack(ToStackType(t));
+        valueStack_.infallibleEmplaceBack(StackType(t));
     }
     void infalliblePush(TypeAndValue<Value> tv) {
         valueStack_.infallibleAppend(tv);
@@ -598,7 +667,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readB8x16Const(I8x16* i8x16);
     MOZ_MUST_USE bool readB16x8Const(I16x8* i16x8);
     MOZ_MUST_USE bool readB32x4Const(I32x4* i32x4);
-    MOZ_MUST_USE bool readRefNull();
+    MOZ_MUST_USE bool readRefNull(ValType* type);
     MOZ_MUST_USE bool readCall(uint32_t* calleeIndex, ValueVector* argValues);
     MOZ_MUST_USE bool readCallIndirect(uint32_t* funcTypeIndex, Value* callee, ValueVector* argValues);
     MOZ_MUST_USE bool readOldCallDirect(uint32_t numFuncImports, uint32_t* funcIndex,
@@ -850,10 +919,10 @@ OpIter<Policy>::topWithType(ValType expectedType, Value* value)
 
     TypeAndValue<Value>& tv = valueStack_.back();
 
-    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), ToStackType(expectedType),
+    if (MOZ_UNLIKELY(!Unify(env_.gcTypesEnabled, tv.type(), StackType(expectedType),
                             &tv.typeRef())))
     {
-        return typeMismatch(tv.type(), ToStackType(expectedType));
+        return typeMismatch(tv.type(), StackType(expectedType));
     }
 
     *value = tv.value();
@@ -912,12 +981,13 @@ template <typename Policy>
 inline bool
 OpIter<Policy>::readBlockType(ExprType* type)
 {
-    uint8_t unchecked;
-    if (!d_.readBlockType(&unchecked))
+    uint8_t uncheckedCode;
+    uint32_t uncheckedRefTypeIndex;
+    if (!d_.readBlockType(&uncheckedCode, &uncheckedRefTypeIndex))
         return fail("unable to read block signature");
 
     bool known = false;
-    switch (unchecked) {
+    switch (uncheckedCode) {
       case uint8_t(ExprType::Void):
       case uint8_t(ExprType::I32):
       case uint8_t(ExprType::I64):
@@ -932,6 +1002,9 @@ OpIter<Policy>::readBlockType(ExprType* type)
       case uint8_t(ExprType::B32x4):
         known = true;
         break;
+      case uint8_t(ExprType::Ref):
+        known = env_.gcTypesEnabled == HasGcTypes::True;
+        break;
       case uint8_t(ExprType::AnyRef):
         known = env_.gcTypesEnabled == HasGcTypes::True;
         break;
@@ -942,7 +1015,7 @@ OpIter<Policy>::readBlockType(ExprType* type)
     if (!known)
         return fail("invalid inline block type");
 
-    *type = ExprType(unchecked);
+    *type = ExprType(ExprType::Code(uncheckedCode), uncheckedRefTypeIndex);
     return true;
 }
 
@@ -1675,13 +1748,21 @@ OpIter<Policy>::readB32x4Const(I32x4* i32x4)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readRefNull()
+OpIter<Policy>::readRefNull(ValType* type)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::RefNull);
-    uint8_t valType;
-    if (!d_.readValType(&valType) || valType != uint8_t(ValType::AnyRef))
+    uint8_t code;
+    uint32_t refTypeIndex;
+    if (!d_.readValType(&code, &refTypeIndex))
         return fail("unknown nullref type");
-    return push(StackType::AnyRef);
+    if (code == uint8_t(TypeCode::Ref)) {
+        if (refTypeIndex > MaxTypes)
+            return fail("invalid nullref type");
+    } else if (code != uint8_t(TypeCode::AnyRef)) {
+        return fail("unknown nullref type");
+    }
+    *type = ValType(ValType::Code(code), refTypeIndex);
+    return push(StackType(*type));
 }
 
 template <typename Policy>
