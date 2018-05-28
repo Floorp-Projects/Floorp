@@ -64,9 +64,10 @@ struct matrix matrix_invert(struct matrix mat)
 
 	if (det == 0) {
 		dest_mat.invalid = true;
-	} else {
-		dest_mat.invalid = false;
+		return dest_mat;
 	}
+
+	dest_mat.invalid = false;
 
 	det = 1/det;
 
