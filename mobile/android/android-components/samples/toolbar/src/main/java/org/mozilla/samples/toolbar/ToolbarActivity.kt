@@ -186,7 +186,10 @@ class ToolbarActivity : AppCompatActivity() {
                 right = toolbar.dp(16)
         )
 
-        toolbar.urlBackgroundDrawable = getDrawable(R.drawable.sample_url_background)
+        toolbar.urlBoxBackgroundDrawable = getDrawable(R.drawable.sample_url_background)
+        toolbar.urlBoxMargin = toolbar.dp(16)
+
+        toolbar.browserActionMargin = toolbar.dp(16)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add navigation actions
@@ -202,16 +205,22 @@ class ToolbarActivity : AppCompatActivity() {
 
         val back = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_back,
-                "Back") {
+                "Back",
+                visible = ::canGoBack) {
+            goBack()
             simulateReload()
+            toolbar.invalidateActions()
         }
 
         toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-                "Forward") {
+                "Forward",
+                visible = ::canGoForward) {
+            goForward()
             simulateReload()
+            toolbar.invalidateActions()
         }
 
         toolbar.addNavigationAction(forward)
@@ -245,10 +254,39 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addBrowserAction(turbo)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
+        // Add a fixed size element for spacing and a branding image
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val space = Toolbar.ActionSpace(toolbar.dp(128))
+
+        toolbar.addBrowserAction(space)
+
+        val brand = Toolbar.ActionImage(R.drawable.brand)
+
+        toolbar.addBrowserAction(brand)
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
         // Display a URL
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.url = "https://www.nytimes.com/video"
+    }
+
+    // For testing purposes
+    private var forward = true
+    private var back = true
+
+    private fun canGoForward(): Boolean = forward
+    private fun canGoBack(): Boolean = back
+
+    private fun goBack() {
+        back = !(forward && back)
+        forward = true
+    }
+
+    private fun goForward() {
+        forward = !(back && forward)
+        back = true
     }
 
     private fun simulateReload() {
