@@ -127,7 +127,7 @@ mozInlineSpellStatus::InitForEditorChange(
     return NS_ERROR_FAILURE;
   }
 
-  bool deleted = aEditSubAction == EditSubAction::deleteSelection;
+  bool deleted = aEditSubAction == EditSubAction::eDeleteSelectedContent;
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     // IME may remove the previous node if it cancels composition when
     // there is no text around the composition.
