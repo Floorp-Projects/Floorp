@@ -1194,7 +1194,8 @@ HTMLEditor::RemoveAllInlineProperties()
 {
   AutoPlaceholderBatch batchIt(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::resetTextProperties,
+                                      *this,
+                                      EditSubAction::eRemoveAllTextProperties,
                                       nsIEditor::eNext);
 
   nsresult rv = RemoveInlineProperty(nullptr, nullptr);
