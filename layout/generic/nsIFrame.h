@@ -780,6 +780,7 @@ public:
   void SetComputedStyle(ComputedStyle* aStyle)
   {
     if (aStyle != mComputedStyle) {
+      MOZ_DIAGNOSTIC_ASSERT(PresShell() == aStyle->PresContextForFrame()->PresShell());
       RefPtr<ComputedStyle> oldComputedStyle = mComputedStyle.forget();
       mComputedStyle = aStyle;
       DidSetComputedStyle(oldComputedStyle);
@@ -795,6 +796,7 @@ public:
   void SetComputedStyleWithoutNotification(ComputedStyle* aStyle)
   {
     if (aStyle != mComputedStyle) {
+      MOZ_DIAGNOSTIC_ASSERT(PresShell() == aStyle->PresContextForFrame()->PresShell());
       mComputedStyle = aStyle;
     }
   }
