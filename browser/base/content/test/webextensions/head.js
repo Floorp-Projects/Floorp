@@ -474,7 +474,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
   await checkPromise;
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  addon.uninstall();
+  await addon.uninstall();
   await SpecialPowers.popPrefEnv();
 }
 
@@ -501,7 +501,7 @@ add_task(async function() {
     for (let addon of await AddonManager.getAllAddons()) {
       if (!existingAddons.has(addon.id)) {
         ok(false, `Addon ${addon.id} was left installed at the end of the test`);
-        addon.uninstall();
+        await addon.uninstall();
       }
     }
   });
