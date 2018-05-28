@@ -551,7 +551,7 @@ public:
   // EditSubAction::removeList
   bool bOrdered;
 
-  // EditSubAction::makeList
+  // EditSubAction::eCreateOrChangeList
   bool entireList;
   const nsAString* bulletType;
 

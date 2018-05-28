@@ -2022,14 +2022,14 @@ HTMLEditor::MakeOrChangeList(const nsAString& aListType,
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::makeList,
+                                      *this, EditSubAction::eCreateOrChangeList,
                                       nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  EditSubActionInfo subActionInfo(EditSubAction::makeList);
+  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeList);
   subActionInfo.blockType = &aListType;
   subActionInfo.entireList = entireList;
   subActionInfo.bulletType = &aBulletType;
