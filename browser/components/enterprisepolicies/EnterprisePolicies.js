@@ -424,23 +424,11 @@ class GPOPoliciesProvider {
     this._policies = null;
 
     let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(Ci.nsIWindowsRegKey);
+
     // Machine policies override user policies, so we read
     // user policies first and then replace them if necessary.
-    wrk.open(wrk.ROOT_KEY_CURRENT_USER,
-             "SOFTWARE\\Policies",
-             wrk.ACCESS_READ);
-    if (wrk.hasChild("Mozilla\\Firefox")) {
-      this._readData(wrk);
-    }
-    wrk.close();
-
-    wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
-             "SOFTWARE\\Policies",
-             wrk.ACCESS_READ);
-    if (wrk.hasChild("Mozilla\\Firefox")) {
-      this._readData(wrk);
-    }
-    wrk.close();
+    this._readData(wrk, wrk.ROOT_KEY_CURRENT_USER);
+    this._readData(wrk, wrk.ROOT_KEY_LOCAL_MACHINE);
   }
 
   get hasPolicies() {
@@ -455,8 +443,13 @@ class GPOPoliciesProvider {
     return this._failed;
   }
 
-  _readData(wrk) {
-    this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
+  _readData(wrk, root) {
+    wrk.open(root, "SOFTWARE\\Policies", wrk.ACCESS_READ);
+    if (wrk.hasChild("Mozilla\\Firefox")) {
+      let isMachineRoot = (root == wrk.ROOT_KEY_LOCAL_MACHINE);
+      this._policies = WindowsGPOParser.readPolicies(wrk, this._policies, isMachineRoot);
+    }
+    wrk.close();
   }
 }
 
