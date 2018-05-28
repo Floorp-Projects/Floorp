@@ -702,9 +702,9 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillIndent(aCancel, aHandled);
     case EditSubAction::eOutdent:
       return WillOutdent(aCancel, aHandled);
-    case EditSubAction::setAbsolutePosition:
+    case EditSubAction::eSetPositionToAbsolute:
       return WillAbsolutePosition(aCancel, aHandled);
-    case EditSubAction::removeAbsolutePosition:
+    case EditSubAction::eSetPositionToStatic:
       return WillRemoveAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetOrClearAlignment:
       return WillAlign(*aInfo.alignType, aCancel, aHandled);
@@ -768,7 +768,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
     case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
       return DidMakeBasicBlock();
-    case EditSubAction::setAbsolutePosition: {
+    case EditSubAction::eSetPositionToAbsolute: {
       nsresult rv = DidMakeBasicBlock();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -7558,7 +7558,7 @@ HTMLEditRules::GetNodesForOperation(
   // need to make sure we don't act on table elements
   else if (aEditSubAction == EditSubAction::eOutdent ||
            aEditSubAction == EditSubAction::eIndent ||
-           aEditSubAction == EditSubAction::setAbsolutePosition) {
+           aEditSubAction == EditSubAction::eSetPositionToAbsolute) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsTableElementButNotTable(node)) {
@@ -7587,7 +7587,7 @@ HTMLEditRules::GetNodesForOperation(
   if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
       aEditSubAction == EditSubAction::eCreateOrChangeList ||
       aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-      aEditSubAction == EditSubAction::setAbsolutePosition ||
+      aEditSubAction == EditSubAction::eSetPositionToAbsolute ||
       aEditSubAction == EditSubAction::eIndent ||
       aEditSubAction == EditSubAction::eOutdent) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
@@ -11071,12 +11071,12 @@ HTMLEditRules::PrepareToMakeElementAbsolutePosition(
   // in the range.
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, EditSubAction::setAbsolutePosition);
+  GetPromotedRanges(arrayOfRanges, EditSubAction::eSetPositionToAbsolute);
 
   // Use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                                     EditSubAction::setAbsolutePosition,
+                                     EditSubAction::eSetPositionToAbsolute,
                                      TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

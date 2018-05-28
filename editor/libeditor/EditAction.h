@@ -109,8 +109,11 @@ enum class EditSubAction : int32_t
   // source and insert into the DOM tree.  So, this is similar to innerHTML.
   eInsertHTMLSource,
 
-  setAbsolutePosition,
-  removeAbsolutePosition,
+  // eSetPositionToAbsolute and eSetPositionToStatic indicate to set position
+  // property to absolute or static.
+  eSetPositionToAbsolute,
+  eSetPositionToStatic,
+
   decreaseZIndex,
   increaseZIndex,
 };
