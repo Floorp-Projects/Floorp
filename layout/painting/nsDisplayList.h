@@ -6541,7 +6541,6 @@ public:
                            bool* aSnap) const override;
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
                                    bool* aSnap) const override;
-  virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder *aBuilder) const override;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
