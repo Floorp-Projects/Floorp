@@ -948,7 +948,7 @@ TextEditor::InsertTextAsAction(const nsAString& aStringToInsert)
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  EditSubAction editSubAction = EditSubAction::insertText;
+  EditSubAction editSubAction = EditSubAction::eInsertText;
   if (ShouldHandleIMEComposition()) {
     editSubAction = EditSubAction::insertIMEText;
   }
@@ -1865,7 +1865,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertText,
+                                      *this, EditSubAction::eInsertText,
                                       nsIEditor::eNext);
 
   // give rules a chance to handle or cancel

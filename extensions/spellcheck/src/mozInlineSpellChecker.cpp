@@ -174,8 +174,9 @@ mozInlineSpellStatus::InitForEditorChange(
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this nullptr.
-  if (aEditSubAction == EditSubAction::insertText)
+  if (aEditSubAction == EditSubAction::eInsertText) {
     mCreatedRange = mRange;
+  }
 
   // if we were given a range, we need to expand our range to encompass it
   if (aStartNode && aEndNode) {
