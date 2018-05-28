@@ -12,7 +12,7 @@ use device::{FrameId, Texture};
 #[cfg(feature = "pathfinder")]
 use euclid::{TypedPoint2D, TypedVector2D};
 use gpu_cache::{GpuCache};
-use gpu_types::{BlurDirection, BlurInstance};
+use gpu_types::{BorderInstance, BlurDirection, BlurInstance};
 use gpu_types::{ClipScrollNodeData, ZBufferIdGenerator};
 use internal_types::{FastHashMap, SavedTargetIndex, SourceTexture};
 #[cfg(feature = "pathfinder")]
@@ -23,7 +23,7 @@ use profiler::FrameProfileCounters;
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTaskTree};
 use resource_cache::ResourceCache;
-use std::{cmp, usize, f32, i32};
+use std::{cmp, usize, f32, i32, mem};
 use texture_allocator::GuillotineAllocator;
 #[cfg(feature = "pathfinder")]
 use webrender_api::{DevicePixel, FontRenderMode};
@@ -433,6 +433,7 @@ impl RenderTarget for ColorRenderTarget {
                 }
             }
             RenderTaskKind::ClipRegion(..) |
+            RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -565,6 +566,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
+            RenderTaskKind::Border(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -627,6 +629,8 @@ pub struct TextureCacheRenderTarget {
     pub horizontal_blurs: Vec<BlurInstance>,
     pub blits: Vec<BlitJob>,
     pub glyphs: Vec<GlyphJob>,
+    pub border_segments: Vec<BorderInstance>,
+    pub clears: Vec<DeviceIntRect>,
 }
 
 impl TextureCacheRenderTarget {
@@ -636,6 +640,8 @@ impl TextureCacheRenderTarget {
             horizontal_blurs: vec![],
             blits: vec![],
             glyphs: vec![],
+            border_segments: vec![],
+            clears: vec![],
         }
     }
 
@@ -677,6 +683,20 @@ impl TextureCacheRenderTarget {
                         });
                     }
                 }
+            }
+            RenderTaskKind::Border(ref mut task_info) => {
+                self.clears.push(target_rect.0);
+
+                // TODO(gw): It may be better to store the task origin in
+                //           the render task data instead of per instance.
+                let task_origin = target_rect.0.origin.to_f32();
+                for instance in &mut task_info.instances {
+                    instance.task_origin = task_origin;
+                }
+
+                let instances = mem::replace(&mut task_info.instances, Vec::new());
+
+                self.border_segments.extend(instances);
             }
             RenderTaskKind::Glyph(ref mut task_info) => {
                 self.add_glyph_task(task_info, target_rect.0)

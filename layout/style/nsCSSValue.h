@@ -379,7 +379,6 @@ enum nsCSSUnit {
   eCSSUnit_Calc_Divided = 35,     // (nsCSSValue::Array*) / within calc
 
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
-  eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_GridTemplateAreas   = 44,   // (GridTemplateAreasValue*)
                                        // for grid-template-areas
 
@@ -618,10 +617,8 @@ public:
 
   nsIURI* GetURLValue() const
   {
-    MOZ_ASSERT(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
-               "not a URL value");
-    return mUnit == eCSSUnit_URL ?
-      mValue.mURL->GetURI() : mValue.mImage->GetURI();
+    MOZ_ASSERT(mUnit == eCSSUnit_URL, "not a URL value");
+    return mValue.mURL->GetURI();
   }
 
   nsCSSValueSharedList* GetSharedListValue() const
@@ -675,12 +672,6 @@ public:
     return mValue.mURL;
   }
 
-  mozilla::css::ImageValue* GetImageStructValue() const
-  {
-    MOZ_ASSERT(mUnit == eCSSUnit_Image, "not an Image value");
-    return mValue.mImage;
-  }
-
   mozilla::css::GridTemplateAreasValue* GetGridTemplateAreas() const
   {
     MOZ_ASSERT(mUnit == eCSSUnit_GridTemplateAreas,
@@ -731,7 +722,6 @@ public:
   void SetIntegerCoordValue(nscoord aCoord);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
-  void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetFontFamilyListValue(already_AddRefed<mozilla::SharedFontList> aFontListValue);
   void SetFontStretch(mozilla::FontStretch aStretch);
@@ -804,7 +794,6 @@ protected:
     nsAtom* MOZ_OWNING_REF mAtom;
     Array* MOZ_OWNING_REF mArray;
     mozilla::css::URLValue* MOZ_OWNING_REF mURL;
-    mozilla::css::ImageValue* MOZ_OWNING_REF mImage;
     mozilla::css::GridTemplateAreasValue* MOZ_OWNING_REF mGridTemplateAreas;
     nsCSSValuePair_heap* MOZ_OWNING_REF mPair;
     nsCSSValueList_heap* MOZ_OWNING_REF mList;

@@ -51,6 +51,7 @@ CppUnitTests([
     'TestSHA1',
     'TestSmallPointerArray',
     'TestSplayTree',
+    'TestSPSCQueue',
     'TestTemplateLib',
     'TestTextUtils',
     'TestThreadSafeWeakPtr',

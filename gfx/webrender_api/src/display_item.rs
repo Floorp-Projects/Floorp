@@ -372,7 +372,7 @@ pub struct BorderSide {
 }
 
 #[repr(u32)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, Hash, Eq)]
 pub enum BorderStyle {
     None = 0,
     Solid = 1,

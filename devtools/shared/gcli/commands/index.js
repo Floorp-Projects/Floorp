@@ -54,26 +54,10 @@ exports.baseModules = [
  * modules that are *not* owned by a tool.
  */
 exports.devtoolsModules = [
-  "devtools/shared/gcli/commands/addon",
-  "devtools/shared/gcli/commands/appcache",
-  "devtools/shared/gcli/commands/calllog",
-  "devtools/shared/gcli/commands/cmd",
-  "devtools/shared/gcli/commands/cookie",
-  "devtools/shared/gcli/commands/csscoverage",
-  "devtools/shared/gcli/commands/folder",
-  "devtools/shared/gcli/commands/highlight",
-  "devtools/shared/gcli/commands/inject",
-  "devtools/shared/gcli/commands/jsb",
-  "devtools/shared/gcli/commands/listen",
   "devtools/shared/gcli/commands/measure",
-  "devtools/shared/gcli/commands/media",
-  "devtools/shared/gcli/commands/pagemod",
   "devtools/shared/gcli/commands/paintflashing",
-  "devtools/shared/gcli/commands/qsa",
-  "devtools/shared/gcli/commands/restart",
   "devtools/shared/gcli/commands/rulers",
   "devtools/shared/gcli/commands/screenshot",
-  "devtools/shared/gcli/commands/security",
 ];
 
 /**
@@ -111,9 +95,6 @@ exports.addAllItemsByModule = function(system) {
   system.addItemsByModule(exports.devtoolsModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsToolModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsButtonModules, { delayedLoad: true });
-
-  const { mozDirLoader } = require("devtools/shared/gcli/commands/cmd");
-  system.addItemsByModule("mozcmd", { delayedLoad: true, loader: mozDirLoader });
 };
 
 /**

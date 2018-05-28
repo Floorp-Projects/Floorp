@@ -2096,27 +2096,7 @@ private:
 };
 
 nsStyleImageRequest::nsStyleImageRequest(Mode aModeFlags,
-                                         imgRequestProxy* aRequestProxy,
-                                         css::ImageValue* aImageValue,
-                                         ImageTracker* aImageTracker)
-  : mRequestProxy(aRequestProxy)
-  , mImageValue(aImageValue)
-  , mImageTracker(aImageTracker)
-  , mModeFlags(aModeFlags)
-  , mResolved(true)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aImageValue);
-  MOZ_ASSERT(!!(aModeFlags & Mode::Track) == !!aImageTracker);
-
-  if (mRequestProxy) {
-    MaybeTrackAndLock();
-  }
-}
-
-nsStyleImageRequest::nsStyleImageRequest(
-    Mode aModeFlags,
-    mozilla::css::ImageValue* aImageValue)
+                                         css::ImageValue* aImageValue)
   : mImageValue(aImageValue)
   , mModeFlags(aModeFlags)
   , mResolved(false)
@@ -2195,11 +2175,12 @@ nsStyleImageRequest::Resolve(
   } else {
     mDocGroup = doc->GetDocGroup();
     mImageValue->Initialize(doc);
-
-    nsCSSValue value;
-    value.SetImageValue(mImageValue);
-    mRequestProxy = value.GetPossiblyStaticImageValue(aPresContext->Document(),
-                                                      aPresContext);
+    imgRequestProxy* request = mImageValue->mRequests.GetWeak(doc);
+    if (aPresContext->IsDynamic()) {
+      mRequestProxy = request;
+    } else if (request) {
+      request->GetStaticRequest(doc, getter_AddRefs(mRequestProxy));
+    }
   }
 
   if (!mRequestProxy) {

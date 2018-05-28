@@ -22,9 +22,24 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.37")]
-#![cfg_attr(feature = "cargo-clippy", allow(enum_variant_names, redundant_field_names,
-                                            too_many_arguments, used_underscore_binding))]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.58")]
+#![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
+// Whitelisted clippy lints
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        enum_variant_names, redundant_field_names, too_many_arguments, used_underscore_binding,
+        cyclomatic_complexity
+    )
+)]
+// Whitelisted clippy_pedantic lints
+#![cfg_attr(
+    feature = "cargo-clippy",
+    allow(
+        items_after_statements, doc_markdown, stutter, similar_names, use_self, single_match_else,
+        enum_glob_use, match_same_arms, filter_map, cast_possible_truncation
+    )
+)]
 // The `quote!` macro requires deep recursion.
 #![recursion_limit = "512"]
 
@@ -33,29 +48,23 @@ extern crate quote;
 #[macro_use]
 extern crate syn;
 
-extern crate serde_derive_internals as internals;
-
 extern crate proc_macro;
 extern crate proc_macro2;
 
+mod internals;
+
 use proc_macro::TokenStream;
 use syn::DeriveInput;
-
-// Quote's default is def_site but it appears call_site is likely to stabilize
-// before def_site. Thus we try to use only call_site.
-macro_rules! quote {
-    ($($tt:tt)*) => {
-        quote_spanned!($crate::proc_macro2::Span::call_site()=> $($tt)*)
-    }
-}
 
 #[macro_use]
 mod bound;
 #[macro_use]
 mod fragment;
 
-mod ser;
 mod de;
+mod pretend;
+mod ser;
+mod try;
 
 #[proc_macro_derive(Serialize, attributes(serde))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {

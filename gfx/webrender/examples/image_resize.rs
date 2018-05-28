@@ -23,13 +23,13 @@ impl Example for App {
         &mut self,
         _api: &RenderApi,
         builder: &mut DisplayListBuilder,
-        resources: &mut ResourceUpdates,
+        txn: &mut Transaction,
         _framebuffer_size: DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         let (image_descriptor, image_data) = image_helper::make_checkerboard(32, 32);
-        resources.add_image(
+        txn.add_image(
             self.image_key,
             image_descriptor,
             image_data,
@@ -99,15 +99,14 @@ impl Example for App {
                     }
                 }
 
-                let mut updates = ResourceUpdates::new();
-                updates.update_image(
+                let mut txn = Transaction::new();
+                txn.update_image(
                     self.image_key,
                     ImageDescriptor::new(64, 64, ImageFormat::BGRA8, true, false),
                     ImageData::new(image_data),
                     None,
                 );
                 let mut txn = Transaction::new();
-                txn.update_resources(updates);
                 txn.generate_frame();
                 api.send_transaction(document_id, txn);
             }

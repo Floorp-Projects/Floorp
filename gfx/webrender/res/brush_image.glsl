@@ -48,7 +48,7 @@ vec2 transform_point_snapped(
     RectWithSize local_rect,
     mat4 transform
 ) {
-    vec2 snap_offset = compute_snap_offset(local_pos, transform, local_rect);
+    vec2 snap_offset = compute_snap_offset(local_pos, transform, local_rect, vec2(0.5));
     vec4 world_pos = transform * vec4(local_pos, 0.0, 1.0);
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
 

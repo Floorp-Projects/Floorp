@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, channel};
-use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, ResourceUpdates};
+use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
 
 // This example shows how to implement a very basic BlobImageRenderer that can only render
 // a checkerboard pattern.
@@ -224,13 +224,13 @@ impl Example for App {
         &mut self,
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
-        resources: &mut ResourceUpdates,
+        txn: &mut Transaction,
         _framebuffer_size: api::DeviceUintSize,
         _pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
         let blob_img1 = api.generate_image_key();
-        resources.add_image(
+        txn.add_image(
             blob_img1,
             api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true, false),
             api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 50, 150, 255))),
@@ -238,7 +238,7 @@ impl Example for App {
         );
 
         let blob_img2 = api.generate_image_key();
-        resources.add_image(
+        txn.add_image(
             blob_img2,
             api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true, false),
             api::ImageData::new_blob_image(serialize_blob(api::ColorU::new(50, 150, 50, 255))),

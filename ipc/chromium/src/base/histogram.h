@@ -48,10 +48,11 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #include "base/time.h"
 #include "base/lock.h"
+
+#include "nsTArray.h"
 
 namespace base {
 
@@ -70,7 +71,7 @@ class Histogram {
   // Initialize maximum number of buckets in histograms as 16,384.
   static const size_t kBucketCount_MAX;
 
-  typedef std::vector<Count> Counts;
+  typedef nsTArray<Count> Counts;
   typedef const Sample* Ranges;
 
   // These enums are used to facilitate deserialization of renderer histograms
@@ -152,7 +153,7 @@ class Histogram {
        return redundant_count_;
     }
     size_t size() const {
-       return counts_.size();
+       return counts_.Length();
     }
 
    protected:
