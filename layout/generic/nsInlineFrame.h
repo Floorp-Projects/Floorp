@@ -173,18 +173,12 @@ private:
     : nsInlineFrame(aStyle, kClassID)
   {}
 
-  // Helper method for DrainSelfOverflowList() to deal with lazy parenting
-  // (which we only do for nsInlineFrame, not nsFirstLineFrame).
-  enum DrainFlags {
-    eDontReparentFrames = 1, // skip reparenting the overflow list frames
-    eInFirstLine = 2, // the request is for an inline descendant of a nsFirstLineFrame
-  };
   /**
    * Move any frames on our overflow list to the end of our principal list.
-   * @param aFlags one or more of the above DrainFlags
+   * @param aInFirstLine whether we're in a first-line frame.
    * @return true if there were any overflow frames
    */
-  bool DrainSelfOverflowListInternal(DrainFlags aFlags);
+  bool DrainSelfOverflowListInternal(bool aInFirstLine);
 protected:
   nscoord mBaseline;
 };
