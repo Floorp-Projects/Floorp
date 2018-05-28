@@ -76,6 +76,12 @@ function isAvailable() {
 }
 
 function startup(data) {
+  // We have to do this before actually determining if we're enabled, since
+  // there are scripts inside of the core browser code that depend on the
+  // FormAutofill JSMs being registered.
+  resProto.setSubstitution(RESOURCE_HOST,
+                           Services.io.newURI("chrome/res/", null, data.resourceURI));
+
   if (!isAvailable()) {
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
     // reset the sync related prefs incase the feature was previously available
@@ -85,9 +91,6 @@ function startup(data) {
     Services.telemetry.scalarSet("formautofill.availability", false);
     return;
   }
-
-  resProto.setSubstitution(RESOURCE_HOST,
-                           Services.io.newURI("chrome/res/", null, data.resourceURI));
 
   if (data.hasOwnProperty("instanceID") && data.instanceID) {
     if (AddonManagerPrivate.isDBLoaded()) {
