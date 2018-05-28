@@ -102,13 +102,13 @@ class FontMeta extends PureComponent {
 
   render() {
     const {
-      name,
+      CSSFamilyName,
       URI,
     } = this.props.font;
 
     return createElement(Fragment,
       null,
-      this.renderFontName(name),
+      this.renderFontName(CSSFamilyName),
       this.renderFontOrigin(URI)
     );
   }
