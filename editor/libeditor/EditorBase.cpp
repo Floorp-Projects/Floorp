@@ -2914,7 +2914,7 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   const uint32_t length = aCharData.Length();
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::setText,
+                                      *this, EditSubAction::eSetText,
                                       nsIEditor::eNext);
 
   // Let listeners know what's up

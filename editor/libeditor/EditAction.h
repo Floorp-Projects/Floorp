@@ -62,7 +62,8 @@ enum class EditSubAction : int32_t
   // or something requested format.
   eComputeTextToOutput,
 
-  setText,
+  // eSetText indicates to set editor value to new value.
+  eSetText,
 
   // HTML editor only actions
   insertBreak = 3000,
