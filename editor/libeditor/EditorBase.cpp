@@ -160,7 +160,7 @@ EditorBase::EditorBase()
   , mFlags(0)
   , mUpdateCount(0)
   , mPlaceholderBatch(0)
-  , mTopLevelEditSubAction(EditSubAction::none)
+  , mTopLevelEditSubAction(EditSubAction::eNone)
   , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
@@ -258,7 +258,7 @@ EditorBase::Init(nsIDocument& aDocument,
                  uint32_t aFlags,
                  const nsAString& aValue)
 {
-  MOZ_ASSERT(mTopLevelEditSubAction == EditSubAction::none,
+  MOZ_ASSERT(mTopLevelEditSubAction == EditSubAction::eNone,
              "Initializing during an edit action is an error");
 
   // First only set flags, but other stuff shouldn't be initialized now.
@@ -2430,7 +2430,7 @@ EditorBase::OnStartToHandleTopLevelEditSubAction(
 void
 EditorBase::OnEndHandlingTopLevelEditSubAction()
 {
-  mTopLevelEditSubAction = EditSubAction::none;
+  mTopLevelEditSubAction = EditSubAction::eNone;
   mDirection = eNone;
 }
 

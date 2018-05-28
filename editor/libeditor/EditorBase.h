@@ -1588,7 +1588,7 @@ protected: // Called by helper classes.
 
   /**
    * OnStartToHandleTopLevelEditSubAction() is called when
-   * mTopLevelEditSubAction is EditSubAction::none and somebody starts to
+   * mTopLevelEditSubAction is EditSubAction::eNone and somebody starts to
    * handle aEditSubAction.
    *
    * @param aEditSubAction      Top level edit sub action which will be
