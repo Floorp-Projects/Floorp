@@ -86,7 +86,9 @@ enum class EditSubAction : int32_t
   // move its descendants to where the block was.
   eCreateOrRemoveBlock,
 
-  removeList,
+  // eRemoveList removes specific type of list but keep its content.
+  eRemoveList,
+
   makeDefListItem,
   insertElement,
   insertQuotation,
