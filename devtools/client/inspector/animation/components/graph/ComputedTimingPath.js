@@ -50,7 +50,13 @@ class ComputedTimingPath extends TimingPath {
         easing: keyframe.easing
       };
     });
+
     const simulatedAnimation = simulateAnimation(frames, effectTiming, true);
+
+    if (!simulatedAnimation) {
+      return null;
+    }
+
     const simulatedElement = simulatedAnimation.effect.target;
     const win = simulatedElement.ownerGlobal;
     const endTime = simulatedAnimation.effect.getComputedTiming().endTime;
