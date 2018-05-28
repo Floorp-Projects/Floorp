@@ -93,14 +93,15 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
   CommitComposition();
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::loadHTML,
+                                      *this,
+                                      EditSubAction::eInsertHTMLSource,
                                       nsIEditor::eNext);
 
   // Get selection
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  EditSubActionInfo subActionInfo(EditSubAction::loadHTML);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertHTMLSource);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -213,7 +214,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   CommitComposition();
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::htmlPaste,
+                                      *this, EditSubAction::ePasteHTMLContent,
                                       nsIEditor::eNext);
 
   // Get selection
