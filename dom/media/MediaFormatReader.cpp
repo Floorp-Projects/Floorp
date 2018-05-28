@@ -1534,10 +1534,8 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
 
   mCDMProxy = aProxy;
 
-  if (!mCDMProxy) {
-    // Release old PDMFactory which contains an EMEDecoderModule.
-    mEncryptedPlatform = nullptr;
-  }
+  // Release old PDMFactory which contains an EMEDecoderModule.
+  mEncryptedPlatform = nullptr;
 
   if (!mInitDone || mSetCDMForTracks.isEmpty() || !mCDMProxy) {
     // 1) MFR is not initialized yet or
