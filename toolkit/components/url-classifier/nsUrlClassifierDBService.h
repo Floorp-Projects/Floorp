@@ -146,10 +146,6 @@ private:
   // Close db connection and join the background thread if it exists.
   nsresult Shutdown();
 
-  // Check if the key is on a known-clean host.
-  nsresult CheckClean(const nsACString &lookupKey,
-                      bool *clean);
-
   nsresult ReadTablesFromPrefs();
 
   RefPtr<nsUrlClassifierDBServiceWorker> mWorker;
