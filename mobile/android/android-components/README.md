@@ -22,69 +22,69 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 High-level components for building browser(-like) apps.
 
-* 🔵 **Domains** Localized and customizable domain lists for auto-completion in browsers.
+* 🔵 [**Domains**](components/browser/domains/README.md) Localized and customizable domain lists for auto-completion in browsers.
 
-* 🔴 **Engine-Gecko** - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
+* 🔴 [**Engine-Gecko**](components/browser/engine-gecko/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView).
 
-* 🔴 **Engine-System** - *Engine* implementation based on the system's WebView.
+* 🔴 [**Engine-System**](components/browser/engine-system/README.md) - *Engine* implementation based on the system's WebView.
 
-* ⚪ **Erropages** - Responsive browser error pages for Android apps.
+* ⚪ [**Erropages**](components/browser/errorpages/README.md) - Responsive browser error pages for Android apps.
 
-* 🔴 **Menu** - A generic menu with customizable items primarily for browser toolbars.
+* 🔴 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
-* 🔵 **Search** - Search plugins and companion code to load, parse and use them.
+* 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
 
-* 🔴 **Session** - A generic representation of a browser session.
+* 🔴 [**Session**](components/browser/session/README.md) - A generic representation of a browser session.
 
-* 🔴 **Toolbar** - A customizable toolbar for browsers.
+* 🔴 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
 ## Concept
 
 _API contracts and abstraction layers for browser components._
 
-* 🔴 **Engine** - Abstraction layer that allows hiding the actual browser engine implementation.
+* 🔴 [**Engine**](components/concept/engine/README.md) - Abstraction layer that allows hiding the actual browser engine implementation.
 
-* 🔴 **Session-Storage** - Abstraction layer and contracts for hiding the actual session storage implementation.
+* 🔴 [**Session-Storage**](components/concept/session-storage/README.md) - Abstraction layer and contracts for hiding the actual session storage implementation.
 
-* 🔴 **Toolbar** - Abstract definition of a browser toolbar component.
+* 🔴 [**Toolbar**](components/concept/toolbar/README.md) - Abstract definition of a browser toolbar component.
 
 ## Feature
 
 _Combined components to implement feature-specific use cases._
 
-* 🔴 **Search** - A component that connects an (concept) engine implementation with the browser search module.
+* 🔴 [**Search**](components/feature/search/README.md) - A component that connects an (concept) engine implementation with the browser search module.
 
-* 🔴 **Session** - A component that connects an (concept) engine implementation with the browser session module.
+* 🔴 [**Session**](components/feature/session/README.md) - A component that connects an (concept) engine implementation with the browser session module.
 
-* 🔴 **Toolbar** - A component that connects a (concept) toolbar implementation with the browser session module.
+* 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
 ## UI
 
 _Generic low-level UI components for building apps._
 
-* 🔵 **Autocomplete** - A set of components to provide autocomplete functionality.
+* 🔵 [**Autocomplete**](components/ui/autocomplete/README.md) - A set of components to provide autocomplete functionality.
 
-* 🔵 **Colors** - The standard set of [Photon](https://design.firefox.com/photon/) colors.
+* 🔵 [**Colors**](components/ui/colors/README.md) - The standard set of [Photon](https://design.firefox.com/photon/) colors.
 
-* 🔵 **Fonts** - The standard set of fonts used by Mozilla Android products.
+* 🔵 [**Fonts**](components/ui/fonts/README.md) - The standard set of fonts used by Mozilla Android products.
 
-* 🔵 **Icons** - A collection of often used browser icons.
+* 🔵 [**Icons**](components/ui/icons/README.md) - A collection of often used browser icons.
 
-* 🔵 **Progress** - An animated progress bar following the Photon Design System. 
+* 🔵 [**Progress**](components/ui/progress/README.md) - An animated progress bar following the Photon Design System. 
 
 ## Service
 
 _Components and libraries to interact with backend services._
 
-* 🔵 **Telemetry** - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
+* 🔵 [**Telemetry**](components/service/telemetry/README.md) - A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
 ## Support
 
 _Supporting components with generic helper code._
 
-* 🔵 **Ktx** - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
+* 🔵 [**Ktx**](components/support/ktx/README.md) - A set of Kotlin extensions on top of the Android framework and Kotlin standard library.
 
-* 🔵 **Utils** - Generic utility classes to be shared between projects.
+* 🔵 [**Utils**](components/support/utils/README.md) - Generic utility classes to be shared between projects.
 
 # License
 

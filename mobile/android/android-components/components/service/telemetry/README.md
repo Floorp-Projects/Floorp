@@ -1,8 +1,4 @@
-[![Build Status](https://travis-ci.org/mozilla-mobile/telemetry-android.svg?branch=master)](https://travis-ci.org/mozilla-mobile/telemetry-android) 
-[![Coverage Status](https://coveralls.io/repos/github/mozilla-mobile/telemetry-android/badge.svg?branch=master)](https://coveralls.io/github/mozilla-mobile/telemetry-android?branch=master)
-
-telemetry-android
-=================
+# [Android Components](../../../README.md) > Service > Telemetry
 
 A generic library for sending telemetry pings from Android applications to Mozilla's telemetry service.
 
@@ -10,15 +6,16 @@ A generic library for sending telemetry pings from Android applications to Mozil
 
 The goal of this library is to provide a generic set of components to support a variety of telemetry use cases. It tries to not be opinionated about dependency injection frameworks or http clients. The only dependency is ``support-annotations`` to ensure code quality.
 
-## Getting involved
+## Usage
 
-We encourage you to participate in this open source project. We love Pull Requests, Bug Reports, ideas, (security) code reviews or any kind of positive contribution. Please read the [Community Participation Guidelines](https://www.mozilla.org/en-US/about/governance/policies/participation/).
+### Setting up the dependency
 
-* Issues: [https://github.com/mozilla-mobile/android-components/issues](https://github.com/mozilla-mobile/android-components/issues)
+Use gradle to download the library from JCenter:
 
-* IRC: [#mobile (irc.mozilla.org)](https://wiki.mozilla.org/IRC)
+```Groovy
+implementation "org.mozilla.components:telemetry:{latest-version}
+```
 
-* Mailing list: [mobile-firefox-dev](https://mail.mozilla.org/listinfo/mobile-firefox-dev)
 
 ## License
 
