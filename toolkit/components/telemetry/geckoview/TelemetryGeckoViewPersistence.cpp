@@ -363,6 +363,8 @@ PersistenceThreadPersist()
       }));
   });
 
+  TelemetryScalar::Add(mozilla::Telemetry::ScalarID::TELEMETRY_PERSISTENCE_TIMER_HIT_COUNT, 1);
+
   nsCOMPtr<nsIFile> persistenceFile;
   if (NS_FAILED(GetPersistenceFile(persistenceFile))) {
     ANDROID_LOG("PersistenceThreadPersist - Failed to get the persistence file.");
