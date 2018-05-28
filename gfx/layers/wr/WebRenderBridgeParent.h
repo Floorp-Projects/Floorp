@@ -108,6 +108,7 @@ public:
   mozilla::ipc::IPCResult RecvClearCachedResources() override;
   mozilla::ipc::IPCResult RecvScheduleComposite() override;
   mozilla::ipc::IPCResult RecvCapture() override;
+  mozilla::ipc::IPCResult RecvSyncWithCompositor() override;
 
   mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                      nsTArray<ScrollableLayerGuid>&& aTargets) override;
@@ -236,6 +237,10 @@ private:
   void SetAPZSampleTime();
 
   wr::Epoch GetNextWrEpoch();
+
+  void FlushSceneBuilds();
+  void FlushFrameGeneration();
+  void FlushFramePresentation();
 
 private:
   struct PendingTransactionId {
