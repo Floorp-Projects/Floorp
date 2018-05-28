@@ -732,9 +732,9 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "WillInsert() failed");
       return NS_OK;
     }
-    case EditSubAction::decreaseZIndex:
+    case EditSubAction::eDecreaseZIndex:
       return WillRelativeChangeZIndex(-1, aCancel, aHandled);
-    case EditSubAction::increaseZIndex:
+    case EditSubAction::eIncreaseZIndex:
       return WillRelativeChangeZIndex(1, aCancel, aHandled);
     default:
       return TextEditRules::WillDoAction(&SelectionRef(), aInfo,
