@@ -1,0 +1,14 @@
+{
+  "name": "mozilla-hybrid-content-telemetry",
+  "version": "1.0.0",
+  "description": "The content library for Mozilla's Hybrid Content Telemetry.",
+  "main": "HybridContentTelemetry-lib.js",
+  "author": "Alessio Placitelli <aplacitelli@mozilla.com>",
+  "contributors": [
+    "Chris Hutten-Czapski <chutten@mozilla.com>",
+    "Georg Fritzsche <gfritzsche@mozilla.com>",
+    "Jan-Erik Rediger <jrediger@mozilla.com>"
+  ],
+  "license": "MPL-2.0",
+  "homepage": "https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/hybrid-content.html"
+}
