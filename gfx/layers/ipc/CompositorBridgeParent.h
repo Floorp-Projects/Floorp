@@ -269,8 +269,7 @@ public:
                               const wr::Epoch& aEpoch,
                               TimeStamp& aCompositeStart,
                               TimeStamp& aCompositeEnd);
-  void NotifyPipelineRemoved(const wr::PipelineId& aPipelineId);
-
+  RefPtr<AsyncImagePipelineManager> GetAsyncImagePipelineManager() const;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
