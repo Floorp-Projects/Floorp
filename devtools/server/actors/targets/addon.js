@@ -87,6 +87,7 @@ AddonTargetActor.prototype = {
       name: this._addon.name,
       url: this.url,
       iconURL: this._addon.iconURL,
+      isSystem: this._addon.isSystem,
       debuggable: this._addon.isDebuggable,
       temporarilyInstalled: this._addon.temporarilyInstalled,
       type: this._addon.type,
