@@ -640,11 +640,9 @@ SpecialPowersObserverAPI.prototype = {
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         this._extensions.delete(id);
-        let {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", null);
-        let done = () => {
-          setTimeout(() => {
-            this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
-          }, 0);
+        let done = async () => {
+          await extension._uninstallPromise;
+          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
         };
         extension.shutdown().then(done, done);
         return undefined;

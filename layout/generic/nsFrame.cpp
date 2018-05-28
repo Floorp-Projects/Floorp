@@ -612,6 +612,7 @@ nsFrame::Init(nsIContent*       aContent,
 
   mContent = aContent;
   mParent = aParent;
+  MOZ_DIAGNOSTIC_ASSERT(!mParent || PresShell() == mParent->PresShell());
 
   if (aPrevInFlow) {
     mWritingMode = aPrevInFlow->GetWritingMode();
@@ -10914,6 +10915,7 @@ nsIFrame::SetParent(nsContainerFrame* aParent)
 
   // Note that the current mParent may already be destroyed at this point.
   mParent = aParent;
+  MOZ_DIAGNOSTIC_ASSERT(!mParent || PresShell() == mParent->PresShell());
   if (::IsXULBoxWrapped(this)) {
     ::InitBoxMetrics(this, true);
   } else {
