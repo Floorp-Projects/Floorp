@@ -58,9 +58,33 @@ struct NativeIterator
     // active.  Not serialized by XDR.
     struct Flags
     {
+        // This flag is set when all guards and properties associated with this
+        // NativeIterator have been initialized, such that |guardsEnd_|, in
+        // addition to being the end of guards, is also the beginning of
+        // properties.
+        //
+        // This flag is only *not* set when a NativeIterator is in the process
+        // of being constructed.  At such time |guardsEnd_| accounts only for
+        // guards that have been initialized -- potentially none of them.
+        // Instead, |propertyCursor_| is initialized to the ultimate/actual
+        // start of properties and must be used instead of |propertiesBegin()|,
+        // which asserts that this flag is present to guard against misuse.
         static constexpr uint32_t Initialized = 0x1;
+
+        // This flag indicates that this NativeIterator is currently being used
+        // to enumerate an object's properties and has not yet been closed.
         static constexpr uint32_t Active = 0x2;
+
+        // This flag indicates that the object being enumerated by this
+        // |NativeIterator| had a property deleted from it before it was
+        // visited, forcing the properties array in this to be mutated to
+        // remove it.
         static constexpr uint32_t HasUnvisitedPropertyDeletion = 0x4;
+
+        // If any of these bits are set on a |NativeIterator|, it isn't
+        // currently reusable.  (An active |NativeIterator| can't be stolen
+        // *right now*; a |NativeIterator| that's had its properties mutated
+        // can never be reused, because it would give incorrect results.)
         static constexpr uint32_t NotReusable = Active | HasUnvisitedPropertyDeletion;
     };
 
@@ -248,6 +272,12 @@ struct NativeIterator
 
     bool isReusable() const {
         MOZ_ASSERT(isInitialized());
+
+        // Cached NativeIterators are reusable if they're not currently active
+        // and their properties array hasn't been mutated, i.e. if only
+        // |Flags::Initialized| is set.  Using |Flags::NotReusable| to test
+        // would also work, but this formulation is safer against memory
+        // corruption.
         return flags_ == Flags::Initialized;
     }
 
