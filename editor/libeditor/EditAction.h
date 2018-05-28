@@ -65,8 +65,10 @@ enum class EditSubAction : int32_t
   // eSetText indicates to set editor value to new value.
   eSetText,
 
-  // HTML editor only actions
-  insertBreak = 3000,
+  // eInsertParagraphSeparator indicates to insert paragraph separator, <br> or
+  // \n at least to break current line.
+  eInsertParagraphSeparator,
+
   makeList,
   indent,
   outdent,

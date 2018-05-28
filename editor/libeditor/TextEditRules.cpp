@@ -327,7 +327,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
 
   // my kingdom for dynamic cast
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::insertBreak:
+    case EditSubAction::eInsertParagraphSeparator:
       UndefineCaretBidiLevel();
       return WillInsertBreak(aCancel, aHandled, aInfo.maxLength);
     case EditSubAction::eInsertText:

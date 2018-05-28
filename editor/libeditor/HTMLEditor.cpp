@@ -1155,7 +1155,8 @@ HTMLEditor::InsertBrElementAtSelectionWithTransaction()
 {
   // calling it text insertion to trigger moz br treatment by rules
   // XXX Why do we use EditSubAction::eInsertText here?  Looks like
-  //     EditSubAction::insertBreak or EditSubAction::eInsertNode is better.
+  //     EditSubAction::eInsertParagraphSeparator or EditSubAction::eInsertNode
+  //     is better.
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this, EditSubAction::eInsertText,
                                       nsIEditor::eNext);
