@@ -395,10 +395,10 @@ WebRenderBridgeChild::GetLayersIPCActor()
 void
 WebRenderBridgeChild::SyncWithCompositor()
 {
-  auto compositorBridge = GetCompositorBridgeChild();
-  if (compositorBridge && compositorBridge->IPCOpen()) {
-    compositorBridge->SendSyncWithCompositor();
+  if (!IPCOpen()) {
+    return;
   }
+  SendSyncWithCompositor();
 }
 
 void

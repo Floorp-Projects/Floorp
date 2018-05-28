@@ -57,6 +57,11 @@ parent:
   // Save the frame capture to disk
   async Capture();
 
+  // Replacement for PCompositorBridge::SyncWithCompositor, but for WR. We need
+  // it on PWebRenderBridge because it associated with a particular top-level
+  // window, and PCompositorBridge doesn't allow doing that in a secure manner.
+  sync SyncWithCompositor();
+
   // These correspond exactly to the equivalent APIs in PLayerTransaction -
   // see those for documentation.
   async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
