@@ -4377,8 +4377,10 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
+  // XXX Although, this method may set background color of ancestor block
+  //     element, using EditSubAction::eSetTextProperty.
   bool cancel, handled;
-  EditSubActionInfo subActionInfo(EditSubAction::setTextProperty);
+  EditSubActionInfo subActionInfo(EditSubAction::eSetTextProperty);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {
