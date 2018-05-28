@@ -91,7 +91,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eOutdent ||
          aEditSubAction == EditSubAction::eSetOrClearAlignment ||
          aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
-         aEditSubAction == EditSubAction::removeList ||
+         aEditSubAction == EditSubAction::eRemoveList ||
          aEditSubAction == EditSubAction::makeDefListItem ||
          aEditSubAction == EditSubAction::insertElement ||
          aEditSubAction == EditSubAction::insertQuotation;
@@ -710,7 +710,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillAlign(*aInfo.alignType, aCancel, aHandled);
     case EditSubAction::eCreateOrRemoveBlock:
       return WillMakeBasicBlock(*aInfo.blockType, aCancel, aHandled);
-    case EditSubAction::removeList: {
+    case EditSubAction::eRemoveList: {
       nsresult rv = WillRemoveList(aCancel, aHandled);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED) ||
           NS_WARN_IF(!CanHandleEditAction())) {
