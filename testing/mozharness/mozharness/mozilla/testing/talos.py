@@ -602,6 +602,15 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             requirements=[os.path.join(self.talos_path,
                                        'requirements.txt')]
         )
+        # if running locally and gecko profiing is on, we will be using the
+        # view-gecko-profile tool which has its own requirements too
+        if self.gecko_profile and self.run_local:
+            tools = os.path.join(self.config['repo_path'], 'testing', 'tools')
+            view_gecko_profile_req = os.path.join(tools,
+                                              'view_gecko_profile',
+                                              'requirements.txt')
+            self.info("installing requirements for the view-gecko-profile tool")
+            self.install_module(requirements=[view_gecko_profile_req])
 
     def _validate_treeherder_data(self, parser):
         # late import is required, because install is done in create_virtualenv

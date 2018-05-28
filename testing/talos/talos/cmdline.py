@@ -91,7 +91,10 @@ def create_parser(mach_interface=False):
             help="(Deprecated - Use --geckoProfileEntries instead.) How "
                  "many samples to take with the profiler")
     add_arg('--geckoProfile', action="store_true", dest="gecko_profile",
-            help="Profile the run and output the results in $MOZ_UPLOAD_DIR.")
+            help="Profile the run and output the results in $MOZ_UPLOAD_DIR. "
+                 "After talos is finished, perf-html.io will be launched in Firefox so you "
+                 "can analyze the local profiles. To disable auto-launching of perf-html.io "
+                 "set the TALOS_DISABLE_PROFILE_LAUNCH=1 env var.")
     add_arg('--geckoProfileInterval', dest='gecko_profile_interval', type=float,
             help="How frequently to take samples (ms)")
     add_arg('--geckoProfileEntries', dest="gecko_profile_entries", type=int,
