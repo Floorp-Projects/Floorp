@@ -350,7 +350,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
       return WillSetTextProperty(aCancel, aHandled);
     case EditSubAction::eRemoveTextProperty:
       return WillRemoveTextProperty(aCancel, aHandled);
-    case EditSubAction::outputText:
+    case EditSubAction::eComputeTextToOutput:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
                             aCancel, aHandled);
     case EditSubAction::insertElement:
