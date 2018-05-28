@@ -340,7 +340,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   }
 
   // give rules a chance to handle or cancel
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1598,7 +1598,7 @@ HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -1804,7 +1804,7 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                       nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
@@ -1911,7 +1911,7 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                       nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
