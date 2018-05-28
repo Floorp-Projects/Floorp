@@ -1501,10 +1501,10 @@ TextEditor::Undo(uint32_t aCount)
   nsresult rv;
   {
     AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                        *this, EditSubAction::undo,
+                                        *this, EditSubAction::eUndo,
                                         nsIEditor::eNone);
 
-    EditSubActionInfo subActionInfo(EditSubAction::undo);
+    EditSubActionInfo subActionInfo(EditSubAction::eUndo);
     RefPtr<Selection> selection = GetSelection();
     bool cancel, handled;
     rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
@@ -1556,10 +1556,10 @@ TextEditor::Redo(uint32_t aCount)
   nsresult rv;
   {
     AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                        *this, EditSubAction::redo,
+                                        *this, EditSubAction::eRedo,
                                         nsIEditor::eNone);
 
-    EditSubActionInfo subActionInfo(EditSubAction::redo);
+    EditSubActionInfo subActionInfo(EditSubAction::eRedo);
     RefPtr<Selection> selection = GetSelection();
     bool cancel, handled;
     rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
