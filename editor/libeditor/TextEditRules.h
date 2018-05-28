@@ -541,7 +541,7 @@ public:
   const nsAString* outputFormat;
   int32_t maxLength;
 
-  // EditSubAction::outputText
+  // EditSubAction::eComputeTextToOutput
   uint32_t flags;
 
   // EditSubAction::eDeleteSelectedContent

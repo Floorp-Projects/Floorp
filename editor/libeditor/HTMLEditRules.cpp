@@ -644,7 +644,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
-  if (aInfo.mEditSubAction == EditSubAction::outputText ||
+  if (aInfo.mEditSubAction == EditSubAction::eComputeTextToOutput ||
       aInfo.mEditSubAction == EditSubAction::eUndo ||
       aInfo.mEditSubAction == EditSubAction::eRedo) {
     return TextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
