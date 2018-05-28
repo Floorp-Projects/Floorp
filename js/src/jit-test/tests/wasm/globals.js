@@ -106,14 +106,6 @@ module = wasmEvalText(`(module
 }).exports;
 assertEq(module.f, module.tbl.get(1));
 
-// Import/export rules.
-if (typeof WebAssembly.Global === "undefined") {
-    wasmFailValidateText(`(module (import "globals" "x" (global (mut i32))))`,
-             /can't import.* mutable globals in the MVP/);
-    wasmFailValidateText(`(module (global (mut i32) (i32.const 42)) (export "" global 0))`,
-             /can't .*export mutable globals in the MVP/);
-}
-
 // Import/export semantics.
 module = wasmEvalText(`(module
  (import $g "globals" "x" (global i32))
@@ -123,12 +115,9 @@ module = wasmEvalText(`(module
 )`, { globals: {x: 42} }).exports;
 
 assertEq(module.getter(), 42);
-// Adapt to ongoing experiment with WebAssembly.Global.
+
 // assertEq() will not trigger @@toPrimitive, so we must have a cast here.
-if (typeof WebAssembly.Global === "function")
-    assertEq(Number(module.value), 42);
-else
-    assertEq(module.value, 42);
+assertEq(Number(module.value), 42);
 
 // Can only import numbers (no implicit coercions).
 module = new Module(wasmTextToBinary(`(module
@@ -183,14 +172,8 @@ module = wasmEvalText(`(module
  (export "defined" global 1)
 )`, { globals: {x: 42} }).exports;
 
-// See comment earlier about WebAssembly.Global
-if (typeof WebAssembly.Global === "function") {
-    assertEq(Number(module.imported), 42);
-    assertEq(Number(module.defined), 1337);
-} else {
-    assertEq(module.imported, 42);
-    assertEq(module.defined, 1337);
-}
+assertEq(Number(module.imported), 42);
+assertEq(Number(module.defined), 1337);
 
 // Initializer expressions can reference an imported immutable global.
 wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (get_global 0)))`, /must reference a global immutable import/);
@@ -227,20 +210,12 @@ function testInitExpr(type, initialValue, nextValue, coercion, assertFunc = asse
 
     assertFunc(module.get0(), coercion(initialValue));
     assertFunc(module.get1(), coercion(initialValue));
-    // See comment earlier about WebAssembly.Global
-    if (typeof WebAssembly.Global === "function")
-        assertFunc(Number(module.global_imm), coercion(initialValue));
-    else
-        assertFunc(module.global_imm, coercion(initialValue));
+    assertFunc(Number(module.global_imm), coercion(initialValue));
 
     assertEq(module.set1(coercion(nextValue)), undefined);
     assertFunc(module.get1(), coercion(nextValue));
     assertFunc(module.get0(), coercion(initialValue));
-    // See comment earlier about WebAssembly.Global
-    if (typeof WebAssembly.Global === "function")
-        assertFunc(Number(module.global_imm), coercion(initialValue));
-    else
-        assertFunc(module.global_imm, coercion(initialValue));
+    assertFunc(Number(module.global_imm), coercion(initialValue));
 
     assertFunc(module.get_cst(), coercion(initialValue));
 }
@@ -267,18 +242,7 @@ assertErrorMessage(() => wasmEvalText(`(module
                    LinkError,
                    /cannot pass i64 to or from JS/);
 
-if (typeof WebAssembly.Global === "undefined") {
-
-    // Cannot export int64 at all.
-
-    assertErrorMessage(() => wasmEvalText(`(module
-                                            (global i64 (i64.const 42))
-                                            (export "" global 0))`),
-                       LinkError,
-                       /cannot pass i64 to or from JS/);
-
-} else {
-
+{
     // We can import and export i64 globals as cells.  They cannot be created
     // from JS because there's no way to specify a non-zero initial value; that
     // restriction is tested later.  But we can export one from a module and
@@ -343,10 +307,8 @@ wasmAssert(`(module
     assertEq(dv.getUint32(0, true), 0x7fc00000);
 }
 
-// WebAssembly.Global experiment
-
-if (typeof WebAssembly.Global === "function") {
-
+// WebAssembly.Global
+{
     const Global = WebAssembly.Global;
 
     // These types should work:

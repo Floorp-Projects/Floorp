@@ -1250,11 +1250,6 @@ GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable)
         return d.fail("unexpected variable type in global import/export");
     }
 
-#if !(defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER))
-    if (isMutable)
-        return d.fail("can't import/export mutable globals in the MVP");
-#endif
-
     return true;
 }
 
