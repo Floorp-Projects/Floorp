@@ -98,8 +98,8 @@ class RemoteAutomation(Automation):
                 print("TEST-UNEXPECTED-FAIL | %s | application ran for longer than "
                       "allowed maximum time" % (self.lastTestSeen))
         if status == 2:
-            print("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with"
-                  "no output"
+            print("TEST-UNEXPECTED-FAIL | %s | application timed out after %d "
+                  "seconds with no output"
                   % (self.lastTestSeen, int(timeout)))
 
         return status
