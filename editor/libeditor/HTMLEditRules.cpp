@@ -371,7 +371,7 @@ HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
 
     // Remember current inline styles for deletion and normal insertion ops
     if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::insertIMEText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::deleteSelection ||
         IsStyleCachePreservingSubAction(aEditSubAction)) {
       nsCOMPtr<nsINode> selNode =
@@ -518,7 +518,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
 
     // merge any adjacent text nodes
     if (aEditSubAction != EditSubAction::eInsertText &&
-        aEditSubAction != EditSubAction::insertIMEText) {
+        aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
       nsresult rv = HTMLEditorRef().CollapseAdjacentTextNodes(mDocChangeRange);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -536,7 +536,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
 
     // attempt to transform any unneeded nbsp's into spaces after doing various operations
     if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::insertIMEText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::deleteSelection ||
         aEditSubAction == EditSubAction::insertBreak ||
         aEditSubAction == EditSubAction::htmlPaste ||
@@ -572,7 +572,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
 
     // adjust selection for insert text, html paste, and delete actions
     if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::insertIMEText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::deleteSelection ||
         aEditSubAction == EditSubAction::insertBreak ||
         aEditSubAction == EditSubAction::htmlPaste ||
@@ -585,7 +585,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
 
     // check for any styles which were removed inappropriately
     if (aEditSubAction == EditSubAction::eInsertText ||
-        aEditSubAction == EditSubAction::insertIMEText ||
+        aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::deleteSelection ||
         IsStyleCachePreservingSubAction(aEditSubAction)) {
       HTMLEditorRef().mTypeInState->UpdateSelState(&SelectionRef());
@@ -681,7 +681,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
-    case EditSubAction::insertIMEText:
+    case EditSubAction::eInsertTextComingFromIME:
       UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString,
@@ -758,7 +758,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
     case EditSubAction::insertBreak:
-    case EditSubAction::insertIMEText:
+    case EditSubAction::eInsertTextComingFromIME:
       return NS_OK;
     case EditSubAction::deleteSelection:
       return DidDeleteSelection();
@@ -1415,7 +1415,7 @@ HTMLEditRules::WillInsert(bool* aCancel)
 
   if (mDidDeleteSelection &&
       (mTopLevelEditSubAction == EditSubAction::eInsertText ||
-       mTopLevelEditSubAction == EditSubAction::insertIMEText ||
+       mTopLevelEditSubAction == EditSubAction::eInsertTextComingFromIME ||
        mTopLevelEditSubAction == EditSubAction::deleteSelection)) {
     nsresult rv = ReapplyCachedStyles();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1499,7 +1499,7 @@ HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
     return NS_ERROR_FAILURE;
   }
 
-  if (aEditSubAction == EditSubAction::insertIMEText) {
+  if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     // Right now the WSRunObject code bails on empty strings, but IME needs
     // the InsertTextWithTransaction() call to still happen since empty strings
     // are meaningful there.
@@ -7131,7 +7131,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   // we do one thing for text actions, something else entirely for other
   // actions
   if (aEditSubAction == EditSubAction::eInsertText ||
-      aEditSubAction == EditSubAction::insertIMEText ||
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
       aEditSubAction == EditSubAction::insertBreak ||
       aEditSubAction == EditSubAction::eDeleteText) {
     bool isSpace, isNBSP;
@@ -7380,7 +7380,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   }
 
   if (aEditSubAction == EditSubAction::eInsertText ||
-      aEditSubAction == EditSubAction::insertIMEText ||
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
       aEditSubAction == EditSubAction::insertBreak ||
       aEditSubAction == EditSubAction::eDeleteText) {
      if (!startNode->IsContent() ||
