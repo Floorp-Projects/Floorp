@@ -1289,25 +1289,21 @@ impl Animate for ComputedTransformOperation {
             ) => {
                 Ok(TransformOperation::Scale(
                     animate_multiplicative_factor(*fx, *tx, procedure)?,
-                    Some(animate_multiplicative_factor(fy.unwrap_or(*fx), ty.unwrap_or(*tx), procedure)?),
+                    Some(animate_multiplicative_factor(
+                        fy.unwrap_or(*fx),
+                        ty.unwrap_or(*tx),
+                        procedure
+                    )?),
                 ))
             },
             (
                 &TransformOperation::Rotate3D(fx, fy, fz, fa),
                 &TransformOperation::Rotate3D(tx, ty, tz, ta),
             ) => {
-                let (fx, fy, fz, fa) = transform::get_normalized_vector_and_angle(fx, fy, fz, fa);
-                let (tx, ty, tz, ta) = transform::get_normalized_vector_and_angle(tx, ty, tz, ta);
-                if (fx, fy, fz) == (tx, ty, tz) {
-                    let ia = fa.animate(&ta, procedure)?;
-                    Ok(TransformOperation::Rotate3D(fx, fy, fz, ia))
-                } else {
-                    let matrix_f = rotate_to_matrix(fx, fy, fz, fa);
-                    let matrix_t = rotate_to_matrix(tx, ty, tz, ta);
-                    Ok(TransformOperation::Matrix3D(
-                        matrix_f.animate(&matrix_t, procedure)?,
-                    ))
-                }
+                let animated = Rotate::Rotate3D(fx, fy, fz, fa)
+                    .animate(&Rotate::Rotate3D(tx, ty, tz, ta), procedure)?;
+                let (fx, fy, fz, fa) = ComputedRotate::resolve(&animated);
+                Ok(TransformOperation::Rotate3D(fx, fy, fz, fa))
             },
             (
                 &TransformOperation::RotateX(fa),
@@ -1371,6 +1367,9 @@ impl Animate for ComputedTransformOperation {
             _ if self.is_scale() && other.is_scale() => {
                 self.to_scale_3d().animate(&other.to_scale_3d(), procedure)
             }
+            _ if self.is_rotate() && other.is_rotate() => {
+                self.to_rotate_3d().animate(&other.to_rotate_3d(), procedure)
+            }
             _ => Err(()),
         }
     }
@@ -1403,37 +1402,9 @@ fn is_matched_operation(first: &ComputedTransformOperation, second: &ComputedTra
         // we animate scale and translate operations against each other
         (a, b) if a.is_translate() && b.is_translate() => true,
         (a, b) if a.is_scale() && b.is_scale() => true,
+        (a, b) if a.is_rotate() && b.is_rotate() => true,
         // InterpolateMatrix and AccumulateMatrix are for mismatched transform.
         _ => false
-    }
-}
-
-/// <https://www.w3.org/TR/css-transforms-1/#Rotate3dDefined>
-fn rotate_to_matrix(x: f32, y: f32, z: f32, a: Angle) -> Matrix3D {
-    let half_rad = a.radians() / 2.0;
-    let sc = (half_rad).sin() * (half_rad).cos();
-    let sq = (half_rad).sin().powi(2);
-
-    Matrix3D {
-        m11: 1.0 - 2.0 * (y * y + z * z) * sq,
-        m12: 2.0 * (x * y * sq + z * sc),
-        m13: 2.0 * (x * z * sq - y * sc),
-        m14: 0.0,
-
-        m21: 2.0 * (x * y * sq - z * sc),
-        m22: 1.0 - 2.0 * (x * x + z * z) * sq,
-        m23: 2.0 * (y * z * sq + x * sc),
-        m24: 0.0,
-
-        m31: 2.0 * (x * z * sq + y * sc),
-        m32: 2.0 * (y * z * sq - x * sc),
-        m33: 1.0 - 2.0 * (x * x + y * y) * sq,
-        m34: 0.0,
-
-        m41: 0.0,
-        m42: 0.0,
-        m43: 0.0,
-        m44: 1.0
     }
 }
 
@@ -1532,10 +1503,10 @@ impl Animate for MatrixDecomposed2D {
         let matrix = self.matrix.animate(&other.matrix, procedure)?;
 
         Ok(MatrixDecomposed2D {
-            translate: translate,
-            scale: scale,
-            angle: angle,
-            matrix: matrix,
+            translate,
+            scale,
+            angle,
+            matrix,
         })
     }
 }
@@ -1849,12 +1820,16 @@ impl Animate for Quaternion {
         use std::f64;
 
         let (this_weight, other_weight) = procedure.weights();
-        debug_assert!((this_weight + other_weight - 1.0f64).abs() <= f64::EPSILON ||
-                      other_weight == 1.0f64 || other_weight == 0.0f64,
-                      "animate should only be used for interpolating or accumulating transforms");
+        debug_assert!(
+            (this_weight + other_weight - 1.0f64).abs() <= f64::EPSILON ||
+            other_weight == 1.0f64 || other_weight == 0.0f64,
+            "animate should only be used for interpolating or accumulating transforms"
+        );
 
-        // We take a specialized code path for accumulation (where other_weight is 1)
-        if other_weight == 1.0 {
+        // We take a specialized code path for accumulation (where other_weight
+        // is 1).
+        if let Procedure::Accumulate { .. } = procedure {
+            debug_assert_eq!(other_weight, 1.0);
             if this_weight == 0.0 {
                 return Ok(*other);
             }
@@ -1885,32 +1860,39 @@ impl Animate for Quaternion {
             ));
         }
 
-        let mut product = self.0 * other.0 +
-                          self.1 * other.1 +
-                          self.2 * other.2 +
-                          self.3 * other.3;
+        // Straight from gfxQuaternion::Slerp.
+        //
+        // Dot product, clamped between -1 and 1.
+        let dot =
+            (self.0 * other.0 +
+             self.1 * other.1 +
+             self.2 * other.2 +
+             self.3 * other.3)
+            .min(1.0).max(-1.0);
 
-        // Clamp product to -1.0 <= product <= 1.0
-        product = product.min(1.0);
-        product = product.max(-1.0);
-
-        if product == 1.0 {
+        if dot == 1.0 {
             return Ok(*self);
         }
 
-        let theta = product.acos();
-        let w = (other_weight * theta).sin() * 1.0 / (1.0 - product * product).sqrt();
+        let theta = dot.acos();
+        let rsintheta = 1.0 / (1.0 - dot * dot).sqrt();
 
-        let mut a = *self;
-        let mut b = *other;
-        let mut result = Quaternion(0., 0., 0., 0.,);
+        let right_weight = (other_weight * theta).sin() * rsintheta;
+        let left_weight = (other_weight * theta).cos() - dot * right_weight;
+
+        let mut left = *self;
+        let mut right = *other;
         % for i in range(4):
-            a.${i} *= (other_weight * theta).cos() - product * w;
-            b.${i} *= w;
-            result.${i} = a.${i} + b.${i};
+            left.${i} *= left_weight;
+            right.${i} *= right_weight;
         % endfor
 
-        Ok(result)
+        Ok(Quaternion(
+            left.0 + right.0,
+            left.1 + right.1,
+            left.2 + right.2,
+            left.3 + right.3,
+        ))
     }
 }
 
@@ -1926,7 +1908,8 @@ impl ComputeSquaredDistance for Quaternion {
 }
 
 /// Decompose a 3D matrix.
-/// <https://drafts.csswg.org/css-transforms/#decomposing-a-3d-matrix>
+/// https://drafts.csswg.org/css-transforms-2/#decomposing-a-3d-matrix
+/// http://www.realtimerendering.com/resources/GraphicsGems/gemsii/unmatrix.c
 fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     // Normalize the matrix.
     if matrix.m44 == 0.0 {
@@ -1934,6 +1917,8 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     }
 
     let scaling_factor = matrix.m44;
+
+    // Normalize the matrix.
     % for i in range(1, 5):
         % for j in range(1, 5):
             matrix.m${i}${j} /= scaling_factor;
@@ -1944,9 +1929,9 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     // an easy way to test for singularity of the upper 3x3 component.
     let mut perspective_matrix = matrix;
 
-    % for i in range(1, 4):
-        perspective_matrix.m${i}4 = 0.0;
-    % endfor
+    perspective_matrix.m14 = 0.0;
+    perspective_matrix.m24 = 0.0;
+    perspective_matrix.m34 = 0.0;
     perspective_matrix.m44 = 1.0;
 
     if perspective_matrix.determinant() == 0.0 {
@@ -1962,37 +1947,18 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
             matrix.m44
         ];
 
-        perspective_matrix = perspective_matrix.inverse().unwrap();
-
-        // Transpose perspective_matrix
-        perspective_matrix = Matrix3D {
-            % for i in range(1, 5):
-                % for j in range(1, 5):
-                    m${i}${j}: perspective_matrix.m${j}${i},
-                % endfor
-            % endfor
-        };
-
-        // Multiply right_hand_side with perspective_matrix
-        let mut tmp: [f32; 4] = [0.0; 4];
-        % for i in range(1, 5):
-            tmp[${i - 1}] = (right_hand_side[0] * perspective_matrix.m1${i}) +
-                            (right_hand_side[1] * perspective_matrix.m2${i}) +
-                            (right_hand_side[2] * perspective_matrix.m3${i}) +
-                            (right_hand_side[3] * perspective_matrix.m4${i});
-        % endfor
-
-        Perspective(tmp[0], tmp[1], tmp[2], tmp[3])
+        perspective_matrix = perspective_matrix.inverse().unwrap().transpose();
+        let perspective = perspective_matrix.pre_mul_point4(&right_hand_side);
+        // NOTE(emilio): Even though the reference algorithm clears the
+        // fourth column here (matrix.m14..matrix.m44), they're not used below
+        // so it's not really needed.
+        Perspective(perspective[0], perspective[1], perspective[2], perspective[3])
     } else {
         Perspective(0.0, 0.0, 0.0, 1.0)
     };
 
-    // Next take care of translation
-    let translate = Translate3D (
-        matrix.m41,
-        matrix.m42,
-        matrix.m43
-    );
+    // Next take care of translation (easy).
+    let translate = Translate3D(matrix.m41, matrix.m42, matrix.m43);
 
     // Now get scale and shear. 'row' is a 3 element array of 3 component vectors
     let mut row: [[f32; 3]; 3] = [[0.0; 3]; 3];
@@ -2033,8 +1999,7 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     // At this point, the matrix (in rows) is orthonormal.
     // Check for a coordinate system flip.  If the determinant
     // is -1, then negate the matrix and the scaling factors.
-    let pdum3 = cross(row[1], row[2]);
-    if dot(row[0], pdum3) < 0.0 {
+    if dot(row[0], cross(row[1], row[2])) < 0.0 {
         % for i in range(3):
             scale.${i} *= -1.0;
             row[${i}][0] *= -1.0;
@@ -2043,8 +2008,8 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
         % endfor
     }
 
-    // Now, get the rotations out
-    let mut quaternion = Quaternion (
+    // Now, get the rotations out.
+    let mut quaternion = Quaternion(
         0.5 * ((1.0 + row[0][0] - row[1][1] - row[2][2]).max(0.0) as f64).sqrt(),
         0.5 * ((1.0 - row[0][0] + row[1][1] - row[2][2]).max(0.0) as f64).sqrt(),
         0.5 * ((1.0 - row[0][0] - row[1][1] + row[2][2]).max(0.0) as f64).sqrt(),
@@ -2062,11 +2027,11 @@ fn decompose_3d_matrix(mut matrix: Matrix3D) -> Result<MatrixDecomposed3D, ()> {
     }
 
     Ok(MatrixDecomposed3D {
-        translate: translate,
-        scale: scale,
-        skew: skew,
-        perspective: perspective,
-        quaternion: quaternion
+        translate,
+        scale,
+        skew,
+        perspective,
+        quaternion,
     })
 }
 
@@ -2189,57 +2154,61 @@ impl From<MatrixDecomposed3D> for Matrix3D {
         % endfor
 
         // Apply translation
-        % for i in range(1, 4):
+        % for i in range(1, 5):
             % for j in range(1, 4):
                 matrix.m4${i} += decomposed.translate.${j - 1} * matrix.m${j}${i};
             % endfor
         % endfor
 
         // Apply rotation
-        let x = decomposed.quaternion.0;
-        let y = decomposed.quaternion.1;
-        let z = decomposed.quaternion.2;
-        let w = decomposed.quaternion.3;
+        {
+            let x = decomposed.quaternion.0;
+            let y = decomposed.quaternion.1;
+            let z = decomposed.quaternion.2;
+            let w = decomposed.quaternion.3;
 
-        // Construct a composite rotation matrix from the quaternion values
-        // rotationMatrix is a identity 4x4 matrix initially
-        let mut rotation_matrix = Matrix3D::identity();
-        rotation_matrix.m11 = 1.0 - 2.0 * (y * y + z * z) as f32;
-        rotation_matrix.m12 = 2.0 * (x * y + z * w) as f32;
-        rotation_matrix.m13 = 2.0 * (x * z - y * w) as f32;
-        rotation_matrix.m21 = 2.0 * (x * y - z * w) as f32;
-        rotation_matrix.m22 = 1.0 - 2.0 * (x * x + z * z) as f32;
-        rotation_matrix.m23 = 2.0 * (y * z + x * w) as f32;
-        rotation_matrix.m31 = 2.0 * (x * z + y * w) as f32;
-        rotation_matrix.m32 = 2.0 * (y * z - x * w) as f32;
-        rotation_matrix.m33 = 1.0 - 2.0 * (x * x + y * y) as f32;
+            // Construct a composite rotation matrix from the quaternion values
+            // rotationMatrix is a identity 4x4 matrix initially
+            let mut rotation_matrix = Matrix3D::identity();
+            rotation_matrix.m11 = 1.0 - 2.0 * (y * y + z * z) as f32;
+            rotation_matrix.m12 = 2.0 * (x * y + z * w) as f32;
+            rotation_matrix.m13 = 2.0 * (x * z - y * w) as f32;
+            rotation_matrix.m21 = 2.0 * (x * y - z * w) as f32;
+            rotation_matrix.m22 = 1.0 - 2.0 * (x * x + z * z) as f32;
+            rotation_matrix.m23 = 2.0 * (y * z + x * w) as f32;
+            rotation_matrix.m31 = 2.0 * (x * z + y * w) as f32;
+            rotation_matrix.m32 = 2.0 * (y * z - x * w) as f32;
+            rotation_matrix.m33 = 1.0 - 2.0 * (x * x + y * y) as f32;
 
-        matrix = multiply(rotation_matrix, matrix);
+            matrix = multiply(rotation_matrix, matrix);
+        }
 
         // Apply skew
-        let mut temp = Matrix3D::identity();
-        if decomposed.skew.2 != 0.0 {
-            temp.m32 = decomposed.skew.2;
-            matrix = multiply(temp, matrix);
-        }
+        {
+            let mut temp = Matrix3D::identity();
+            if decomposed.skew.2 != 0.0 {
+                temp.m32 = decomposed.skew.2;
+                matrix = multiply(temp, matrix);
+                temp.m32 = 0.0;
+            }
 
-        if decomposed.skew.1 != 0.0 {
-            temp.m32 = 0.0;
-            temp.m31 = decomposed.skew.1;
-            matrix = multiply(temp, matrix);
-        }
+            if decomposed.skew.1 != 0.0 {
+                temp.m31 = decomposed.skew.1;
+                matrix = multiply(temp, matrix);
+                temp.m31 = 0.0;
+            }
 
-        if decomposed.skew.0 != 0.0 {
-            temp.m31 = 0.0;
-            temp.m21 = decomposed.skew.0;
-            matrix = multiply(temp, matrix);
+            if decomposed.skew.0 != 0.0 {
+                temp.m21 = decomposed.skew.0;
+                matrix = multiply(temp, matrix);
+            }
         }
 
         // Apply scale
         % for i in range(1, 4):
-            % for j in range(1, 4):
-                matrix.m${i}${j} *= decomposed.scale.${i - 1};
-            % endfor
+        % for j in range(1, 5):
+        matrix.m${i}${j} *= decomposed.scale.${i - 1};
+        % endfor
         % endfor
 
         matrix
@@ -2248,16 +2217,17 @@ impl From<MatrixDecomposed3D> for Matrix3D {
 
 // Multiplication of two 4x4 matrices.
 fn multiply(a: Matrix3D, b: Matrix3D) -> Matrix3D {
-    let mut a_clone = a;
+    Matrix3D {
     % for i in range(1, 5):
-        % for j in range(1, 5):
-            a_clone.m${i}${j} = (a.m${i}1 * b.m1${j}) +
-                               (a.m${i}2 * b.m2${j}) +
-                               (a.m${i}3 * b.m3${j}) +
-                               (a.m${i}4 * b.m4${j});
-        % endfor
+    % for j in range(1, 5):
+        m${i}${j}:
+            a.m${i}1 * b.m1${j} +
+            a.m${i}2 * b.m2${j} +
+            a.m${i}3 * b.m3${j} +
+            a.m${i}4 * b.m4${j},
     % endfor
-    a_clone
+    % endfor
+    }
 }
 
 impl Matrix3D {
@@ -2295,11 +2265,22 @@ impl Matrix3D {
         self.m11 * self.m22 * self.m33 * self.m44
     }
 
-    fn inverse(&self) -> Option<Matrix3D> {
+    /// Transpose a matrix.
+    fn transpose(&self) -> Self {
+        Self {
+            % for i in range(1, 5):
+            % for j in range(1, 5):
+            m${i}${j}: self.m${j}${i},
+            % endfor
+            % endfor
+        }
+    }
+
+    fn inverse(&self) -> Result<Matrix3D, ()> {
         let mut det = self.determinant();
 
         if det == 0.0 {
-            return None;
+            return Err(());
         }
 
         det = 1.0 / det;
@@ -2370,7 +2351,19 @@ impl Matrix3D {
              self.m12*self.m21*self.m33 + self.m11*self.m22*self.m33),
         };
 
-        Some(x)
+        Ok(x)
+    }
+
+    /// Multiplies `pin * self`.
+    fn pre_mul_point4(&self, pin: &[f32; 4]) -> [f32; 4] {
+        [
+        % for i in range(1, 5):
+            pin[0] * self.m1${i} +
+            pin[1] * self.m2${i} +
+            pin[2] * self.m3${i} +
+            pin[3] * self.m4${i},
+        % endfor
+        ]
     }
 }
 
@@ -2490,6 +2483,8 @@ impl Animate for ComputedScale {
         let from = ComputedScale::resolve(self);
         let to = ComputedScale::resolve(other);
 
+        // FIXME(emilio, bug 1464791): why does this do something different than
+        // Scale3D / TransformOperation::Scale3D?
         if procedure == Procedure::Add {
             // scale(x1,y1,z1)*scale(x2,y2,z2) = scale(x1*x2, y1*y2, z1*z2)
             return Ok(Scale::Scale3D(from.0 * to.0, from.1 * to.1, from.2 * to.2));
@@ -2733,6 +2728,9 @@ impl ComputeSquaredDistance for ComputedTransformOperation {
             }
             _ if self.is_scale() && other.is_scale() => {
                 self.to_scale_3d().compute_squared_distance(&other.to_scale_3d())
+            }
+            _ if self.is_rotate() && other.is_rotate() => {
+                self.to_rotate_3d().compute_squared_distance(&other.to_rotate_3d())
             }
             _ => Err(()),
         }

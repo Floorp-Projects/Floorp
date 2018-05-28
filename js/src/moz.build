@@ -702,13 +702,6 @@ if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_WASM_THREAD_OPS'] = True
     DEFINES['ENABLE_WASM_GC'] = True
 
-# An experiment we want to run on Nightly and early Beta: Can we change the JS
-# representation of an exported global from the global's value to an instance
-# of WebAssembly.Global without breaking existing wasm content?
-#
-# Additionally guarded by EARLY_BETA_OR_EARLIER in the code.
-DEFINES['ENABLE_WASM_GLOBAL'] = True
-
 if CONFIG['JS_BUILD_BINAST']:
     # Using SOURCES, as UNIFIED_SOURCES causes mysterious bugs on 32-bit platforms.
     # These parts of BinAST are designed only to test evolutions of the

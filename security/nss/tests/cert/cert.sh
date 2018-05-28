@@ -2475,6 +2475,31 @@ EOF
   RETEXPECTED=0
 }
 
+cert_test_orphan_key_reuse()
+{
+  CU_ACTION="Create orphan key in serverdir"
+  certu -G -f "${R_PWFILE}" -z ${R_NOISE_FILE} -d ${PROFILEDIR}
+  # Let's get the key ID of the first orphan key.
+  # The output of certutil -K (list keys) isn't well formatted.
+  # The initial <key-number> part may or may not contain white space, which
+  # makes the use of awk to filter the column unreliable.
+  # To fix that, we remove the initial <number> field using sed, then select the
+  # column that contains the key ID.
+  ORPHAN=`${BINDIR}/certutil -d ${PROFILEDIR} -K -f ${R_PWFILE} | \
+          sed 's/^<.*>//g' | grep -w orphan | head -1 | awk '{print $2}'`
+  CU_ACTION="Create cert request for orphan key"
+  certu -R -f "${R_PWFILE}" -k ${ORPHAN} -s "CN=orphan" -d ${PROFILEDIR} \
+        -o ${SERVERDIR}/orphan.req
+  # Ensure that creating the request really works by listing it, and check
+  # if listing was successful.
+  ${BINDIR}/pp -t certificate-request -i ${SERVERDIR}/orphan.req
+  RET=$?
+  if [ "$RET" -ne 0 ]; then
+    html_failed "Listing cert request for orphan key ($RET)"
+    cert_log "ERROR: Listing cert request for orphan key failed $RET"
+  fi
+}
+
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -2494,6 +2519,7 @@ cert_all_CA
 cert_test_implicit_db_init
 cert_extended_ssl
 cert_ssl
+cert_test_orphan_key_reuse
 cert_smime_client
 IS_FIPS_DISABLED=`certutil --build-flags |grep -cw NSS_FIPS_DISABLED`
 if [ $IS_FIPS_DISABLED -ne 0 ]; then
