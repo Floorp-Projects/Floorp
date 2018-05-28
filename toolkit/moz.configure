@@ -1219,3 +1219,20 @@ def proxy_bypass_protection(_):
 
 set_config('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
 set_define('MOZ_PROXY_BYPASS_PROTECTION', proxy_bypass_protection)
+
+# Addon signing
+# ==============================================================
+
+option('--with-unsigned-addon-scopes',
+       nargs='+', choices=('app', 'system'),
+       help='Addon scopes where signature is not required')
+
+@depends('--with-unsigned-addon-scopes')
+def unsigned_addon_scopes(scopes):
+    return namespace(
+        app='app' in scopes or None,
+        system='system' in scopes or None,
+    )
+
+set_config('MOZ_UNSIGNED_APP_SCOPE', unsigned_addon_scopes.app)
+set_config('MOZ_UNSIGNED_SYSTEM_SCOPE', unsigned_addon_scopes.system)
