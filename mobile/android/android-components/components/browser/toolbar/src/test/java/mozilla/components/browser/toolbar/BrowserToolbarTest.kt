@@ -8,7 +8,6 @@ import android.view.View
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.edit.EditToolbar
-import mozilla.components.concept.toolbar.Toolbar
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -240,7 +239,7 @@ class BrowserToolbarTest {
 
         toolbar.displayToolbar = displayToolbar
 
-        val action = Toolbar.Action(0, "Hello") {
+        val action = BrowserToolbar.Button(0, "Hello") {
             // Do nothing
         }
 
@@ -257,7 +256,7 @@ class BrowserToolbarTest {
 
         toolbar.displayToolbar = displayToolbar
 
-        val action = Toolbar.Action(0, "World") {
+        val action = BrowserToolbar.Button(0, "World") {
             // Do nothing
         }
 
@@ -293,7 +292,7 @@ class BrowserToolbarTest {
         val displayToolbar = mock(DisplayToolbar::class.java)
         toolbar.displayToolbar = displayToolbar
 
-        val action = Toolbar.Action(0, "Back") {
+        val action = BrowserToolbar.Button(0, "Back") {
             // Do nothing
         }
 

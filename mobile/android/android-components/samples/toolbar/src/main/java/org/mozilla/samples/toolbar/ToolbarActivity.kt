@@ -69,10 +69,10 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a "reload" browser action that simulates reloading the current page
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val reload = Toolbar.Action(
+        val reload = BrowserToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             "Reload") {
-            simulateReload(toolbar)
+            simulateReload()
         }
         toolbar.addBrowserAction(reload)
 
@@ -113,13 +113,13 @@ class ToolbarActivity : AppCompatActivity() {
         val forward = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             "Forward") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         val reload = BrowserMenuItemToolbar.Button(
             mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             "Reload") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         val menuToolbar = BrowserMenuItemToolbar(listOf(forward, reload))
@@ -192,26 +192,26 @@ class ToolbarActivity : AppCompatActivity() {
         // Add navigation actions
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val grid = Toolbar.Action(
+        val grid = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_grid,
                 "Grid") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addNavigationAction(grid)
 
-        val back = Toolbar.Action(
+        val back = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_back,
                 "Back") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addNavigationAction(back)
 
-        val forward = Toolbar.Action(
+        val forward = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
                 "Forward") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addNavigationAction(forward)
@@ -220,26 +220,26 @@ class ToolbarActivity : AppCompatActivity() {
         // Add a page action for reload and two browser actions
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val reload = Toolbar.Action(
+        val reload = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
                 "Reload") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addPageAction(reload)
 
-        val pin = Toolbar.Action(
+        val pin = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
                 "Pin") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addBrowserAction(pin)
 
-        val turbo = Toolbar.Action(
+        val turbo = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
                 "Turbo") {
-            simulateReload(toolbar)
+            simulateReload()
         }
 
         toolbar.addBrowserAction(turbo)
@@ -251,7 +251,7 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.url = "https://www.nytimes.com/video"
     }
 
-    private fun simulateReload(toolbar: BrowserToolbar) {
+    private fun simulateReload() {
         launch(UI) {
             for (progress in 0..100 step 10) {
                 toolbar.displayProgress(progress)

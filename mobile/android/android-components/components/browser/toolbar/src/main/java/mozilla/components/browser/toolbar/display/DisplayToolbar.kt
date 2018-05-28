@@ -150,22 +150,16 @@ internal class DisplayToolbar(
 
     /**
      * Adds an action to be displayed on the right side of the toolbar.
-     *
-     * If there is not enough room to show all icons then some icons may be moved to an overflow
-     * menu.
      */
     fun addBrowserAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        browserActions.add(displayAction)
-
-        if (browserActions.size <= MAX_VISIBLE_ACTION_ITEMS) {
-            val view = createActionView(context, action)
-
-            displayAction.view = view
-
-            addView(view)
+        action.createView(this).let {
+            displayAction.view = it
+            addView(it)
         }
+
+        browserActions.add(displayAction)
     }
 
     /**
@@ -174,7 +168,7 @@ internal class DisplayToolbar(
     fun addPageAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        createActionView(context, action).let {
+        action.createView(this).let {
             displayAction.view = it
             addView(it)
         }
@@ -188,7 +182,7 @@ internal class DisplayToolbar(
     fun addNavigationAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        createActionView(context, action).let {
+        action.createView(this).let {
             displayAction.view = it
             addView(it)
         }
@@ -216,7 +210,7 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
-        val urlWidth = width - height - browserActionsWidth - pageActionsWidth - menuWidth
+        val urlWidth = width - height - browserActionsWidth - pageActionsWidth - menuWidth - navigationActionsWidth
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
 
@@ -311,29 +305,9 @@ internal class DisplayToolbar(
     companion object {
         private const val ICON_PADDING_DP = 16
         private const val MENU_PADDING_DP = 16
-        private const val ACTION_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
         private const val URL_FADING_EDGE_SIZE_DP = 24
         private const val PROGRESS_BAR_HEIGHT_DP = 3
-        private const val MAX_VISIBLE_ACTION_ITEMS = 2
-
-        fun createActionView(context: Context, action: Toolbar.Action) = ImageButton(context).apply {
-            val padding = dp(ACTION_PADDING_DP)
-            setPadding(padding, padding, padding, padding)
-
-            setImageResource(action.imageResource)
-            contentDescription = action.contentDescription
-
-            val outValue = TypedValue()
-            context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true)
-
-            setBackgroundResource(outValue.resourceId)
-
-            setOnClickListener { action.listener.invoke() }
-        }
     }
 }
 

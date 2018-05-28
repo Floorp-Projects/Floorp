@@ -5,6 +5,10 @@
 package mozilla.components.concept.toolbar
 
 import android.support.annotation.DrawableRes
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageButton
 
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
@@ -64,11 +68,40 @@ interface Toolbar {
     fun addNavigationAction(action: Action)
 
     /**
+     * Generic interface for actions to be added to the toolbar.
+     */
+    interface Action {
+        val visible: () -> Boolean
+            get() = { true }
+
+        fun createView(parent: ViewGroup): View
+
+        fun bind(view: View)
+    }
+
+    /**
      * An action button to be added to the toolbar.
      */
-    data class Action(
-        @DrawableRes val imageResource: Int,
-        val contentDescription: String,
-        val listener: () -> Unit
-    )
+    open class ActionButton(
+        @DrawableRes private val imageResource: Int,
+        private val contentDescription: String,
+        override val visible: () -> Boolean = { true },
+        private val listener: () -> Unit
+    ) : Action {
+        override fun createView(parent: ViewGroup): View = ImageButton(parent.context).also {
+            it.setImageResource(imageResource)
+            it.contentDescription = contentDescription
+            it.setOnClickListener { listener.invoke() }
+
+            val outValue = TypedValue()
+            parent.context.theme.resolveAttribute(
+                    android.R.attr.selectableItemBackgroundBorderless,
+                    outValue,
+                    true)
+
+            it.setBackgroundResource(outValue.resourceId)
+        }
+
+        override fun bind(view: View) = Unit
+    }
 }

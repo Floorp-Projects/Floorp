@@ -232,7 +232,24 @@ class BrowserToolbar @JvmOverloads constructor(
         EDIT
     }
 
+    class Button(
+        imageResource: Int,
+        contentDescription: String,
+        visible: () -> Boolean = { true },
+        listener: () -> Unit
+    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, listener) {
+        override fun createView(parent: ViewGroup): View {
+            val view = super.createView(parent)
+
+            val padding = view.dp(ACTION_PADDING_DP)
+            view.setPadding(padding, padding, padding, padding)
+
+            return view
+        }
+    }
+
     companion object {
+        private const val ACTION_PADDING_DP = 16
         private const val DEFAULT_TOOLBAR_HEIGHT_DP = 56
     }
 }
