@@ -18,53 +18,6 @@
  * learning.
  */
 
-function AutoCompleteInput(aSearches) {
-  this.searches = aSearches;
-}
-AutoCompleteInput.prototype = {
-  constructor: AutoCompleteInput,
-
-  get minResultsForPopup() {
-    return 0;
-  },
-  get timeout() {
-    return 10;
-  },
-  get searchParam() {
-    return "";
-  },
-  get textValue() {
-    return "";
-  },
-  get disableAutoComplete() {
-    return false;
-  },
-  get completeDefaultIndex() {
-    return false;
-  },
-
-  get searchCount() {
-    return this.searches.length;
-  },
-  getSearchAt(aIndex) {
-    return this.searches[aIndex];
-  },
-
-  onSearchBegin() {},
-  onSearchComplete() {},
-
-  get popupOpen() {
-    return false;
-  },
-  popup: {
-    set selectedIndex(aIndex) {},
-    invalidate() {},
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompletePopup])
-  },
-
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIAutoCompleteInput])
-};
-
 /**
  * Checks that autocomplete results are ordered correctly.
  */
@@ -80,8 +33,10 @@ function ensure_results(expected, searchTerm, callback) {
 
   input.onSearchComplete = function() {
     Assert.equal(controller.searchStatus,
-                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-    Assert.equal(controller.matchCount, expected.length);
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH,
+                 "The search should be complete");
+    Assert.equal(controller.matchCount, expected.length,
+                 "All the expected results should have been found");
     for (let i = 0; i < controller.matchCount; i++) {
       print("Testing for '" + expected[i].uri.spec + "' got '" + controller.getValueAt(i) + "'");
       Assert.equal(controller.getValueAt(i), expected[i].uri.spec);
@@ -368,6 +323,21 @@ var tests = [
     await task_setCountRank(uri1, c1, c1, s2, "tag");
     await task_setCountRank(uri2, c1, c2, s2);
   },
+  // Test that many results are all shown if no other results are available.
+  async function() {
+    print("Test 14 -  many results");
+    let n = 10;
+    observer.results = Array(n).fill(0).map(
+      (e, i) => makeResult(Services.io.newURI("http://site.tld/" + i))
+    );
+    observer.search = s2;
+    observer.runCount = n * (n + 1) / 2;
+    let c = n;
+    for (let result of observer.results) {
+      task_setCountRank(result.uri, c, c, s2);
+      c--;
+    }
+  },
 ];
 
 /**
@@ -376,7 +346,12 @@ var tests = [
 add_task(async function test_adaptive() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
+
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesUtils.history.clear();
+  });
+
   for (let test of tests) {
     // Cleanup.
     await PlacesUtils.bookmarks.eraseEverything();
