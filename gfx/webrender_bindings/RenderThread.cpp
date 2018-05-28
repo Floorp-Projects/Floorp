@@ -241,7 +241,7 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 }
 
 static void
-NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
+NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 wr::WrPipelineInfo aInfo,
                 TimeStamp aStart,
                 TimeStamp aEnd)
