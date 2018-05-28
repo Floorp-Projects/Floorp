@@ -52,8 +52,12 @@ enum class EditSubAction : int32_t
   // eDeleteSelectedContent indicates to remove selected content.
   eDeleteSelectedContent,
 
-  setTextProperty,
-  removeTextProperty,
+  // eSetTextProperty indicates to set a style from text.
+  eSetTextProperty,
+
+  // eRemoveTextProperty indicates to remove a style from text.
+  eRemoveTextProperty,
+
   outputText,
   setText,
 
