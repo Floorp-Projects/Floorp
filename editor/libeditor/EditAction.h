@@ -24,8 +24,12 @@ enum class EditSubAction : int32_t
   eUndo,
   eRedo,
 
-  insertNode,
-  createNode,
+  // eInsertNode indicates to insert a new node into the DOM tree.
+  eInsertNode,
+
+  // eCreateNode indicates to create a new node and insert it into the DOM tree.
+  eCreateNode,
+
   deleteNode,
   splitNode,
   joinNode,
