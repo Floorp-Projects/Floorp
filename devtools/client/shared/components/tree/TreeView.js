@@ -269,6 +269,12 @@ define(function(require, exports, module) {
         case "ArrowLeft":
           if (row && row.props.member.open) {
             this.toggle(this.state.selected);
+          } else {
+            let parentRow = this.rows.slice(0, index).reverse().find(
+              r => r.props.member.level < row.props.member.level);
+            if (parentRow) {
+              this.selectRow(parentRow);
+            }
           }
           break;
         case "ArrowDown":
