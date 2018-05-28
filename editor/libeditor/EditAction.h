@@ -33,8 +33,11 @@ enum class EditSubAction : int32_t
   // eDeleteNode indicates to remove a node from the DOM tree.
   eDeleteNode,
 
-  splitNode,
-  joinNode,
+  // eSplitNode indicates to split a node to 2 nodes.
+  eSplitNode,
+
+  // eJoinNodes indicates to join 2 nodes.
+  eJoinNodes,
 
   deleteText = 1003,
 

@@ -1499,7 +1499,7 @@ EditorBase::SplitNodeWithTransaction(
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::splitNode,
+                                      *this, EditSubAction::eSplitNode,
                                       nsIEditor::eNext);
 
   // XXX Unfortunately, storing offset of the split point in
@@ -1566,7 +1566,7 @@ EditorBase::JoinNodesWithTransaction(nsINode& aLeftNode,
   MOZ_ASSERT(parent);
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::joinNode,
+                                      *this, EditSubAction::eJoinNodes,
                                       nsIEditor::ePrevious);
 
   // Remember some values; later used for saved selection updating.
