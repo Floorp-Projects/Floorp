@@ -2157,9 +2157,10 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
   bool cancel, handled;
 
   AutoPlaceholderBatch beginBatching(this);
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::makeDefListItem,
-                                      nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier
+    maybeTopLevelEditSubAction(*this,
+                               EditSubAction::eCreateOrChangeDefinitionList,
+                               nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2167,7 +2168,7 @@ HTMLEditor::MakeDefinitionListItemWithTransaction(nsAtom& aTagName)
     return NS_ERROR_FAILURE;
   }
   nsDependentAtomString tagName(&aTagName);
-  EditSubActionInfo subActionInfo(EditSubAction::makeDefListItem);
+  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrChangeDefinitionList);
   subActionInfo.blockType = &tagName;
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
