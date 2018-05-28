@@ -8079,6 +8079,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.webkit-appearance.enabled")) {
+  gCSSProperties["-webkit-appearance"] = {
+    domProp: "WebkitAppearance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    alias_for: "-moz-appearance",
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
   gCSSProperties["background"].other_values.push(
     "-moz-radial-gradient(10% bottom, #ffffff, black) scroll no-repeat",
