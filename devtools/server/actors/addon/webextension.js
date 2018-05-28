@@ -79,6 +79,7 @@ const WebExtensionActor = protocol.ActorClassWithSpec(webExtensionSpec, {
       name: this.addon.name,
       url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
       iconURL: this.addon.iconURL,
+      isSystem: this.addon.isSystem,
       debuggable: this.addon.isDebuggable,
       temporarilyInstalled: this.addon.temporarilyInstalled,
       type: this.addon.type,
