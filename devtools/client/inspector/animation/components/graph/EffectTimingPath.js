@@ -36,6 +36,11 @@ class EffectTimingPath extends TimingPath {
     });
 
     const simulatedAnimation = simulateAnimation(null, effectTiming, false);
+
+    if (!simulatedAnimation) {
+      return null;
+    }
+
     const endTime = simulatedAnimation.effect.getComputedTiming().endTime;
 
     const getValueFunc = time => {

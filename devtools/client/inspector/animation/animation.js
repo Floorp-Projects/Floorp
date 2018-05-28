@@ -532,6 +532,11 @@ class AnimationInspector {
    *         https://drafts.csswg.org/web-animations/#the-animation-interface
    */
   simulateAnimation(keyframes, effectTiming, isElementNeeded) {
+    // Don't simulate animation if the animation inspector is already destroyed.
+    if (!this.win) {
+      return null;
+    }
+
     let targetEl = null;
 
     if (isElementNeeded) {
@@ -642,6 +647,11 @@ class AnimationInspector {
   }
 
   updateState(animations) {
+    // Animation inspector already destroyed
+    if (!this.inspector) {
+      return;
+    }
+
     this.stopAnimationsCurrentTimeTimer();
 
     this.inspector.store.dispatch(updateAnimations(animations));
