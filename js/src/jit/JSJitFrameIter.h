@@ -533,13 +533,13 @@ class SnapshotIterator
         return recover_.moreInstructions();
     }
 
-  protected:
     // Register a vector used for storing the results of the evaluation of
     // recover instructions. This vector should be registered before the
     // beginning of the iteration. This function is in charge of allocating
     // enough space for all instructions results, and return false iff it fails.
     MOZ_MUST_USE bool initInstructionResults(MaybeReadFallback& fallback);
 
+  protected:
     // This function is used internally for computing the result of the recover
     // instructions.
     MOZ_MUST_USE bool computeInstructionResults(JSContext* cx, RInstructionResults* results) const;
