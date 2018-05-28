@@ -1,0 +1,83 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test trees have the correct scroll position when they are resized.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style>
+   .tree {
+       height: 50px;
+       overflow: auto;
+       display: block;
+   }
+  </style>
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+
+"use strict";
+
+window.onload = async function() {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const { createFactory } = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } =
+      browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
+    const Tree = createFactory(
+      browserRequire("devtools/client/shared/components/VirtualizedTree"));
+    const ITEM_HEIGHT = 10;
+
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+
+    function renderTree(props) {
+      const treeProps = {
+        ...TEST_TREE_INTERFACE,
+        itemHeight: ITEM_HEIGHT,
+        onFocus: item => renderTree({ focused: item }),
+        ...props
+      };
+      return ReactDOM.render(Tree(treeProps), document.body);
+    }
+
+    const tree = renderTree({ focused: "L" });
+    const treeEl = tree.refs.tree;
+
+    is(tree.state.scroll, 0, "Scroll position should be 0 by default");
+    is(treeEl.scrollTop, 0, "Tree scrollTop should be 0 by default");
+
+    info(`Focus on the next node and scroll by ${ITEM_HEIGHT}`);
+    Simulate.keyDown(treeEl, { key: "ArrowDown" });
+    await forceRender(tree);
+
+    is(tree.state.scroll, ITEM_HEIGHT, `Scroll position should now be ${ITEM_HEIGHT}`);
+    is(treeEl.scrollTop, ITEM_HEIGHT,
+      `Tree scrollTop should now be ${ITEM_HEIGHT}`);
+
+    info("Simulate window resize along with scroll back to top");
+    treeEl.scrollTo({ left: 0, top: 0 });
+    window.dispatchEvent(new Event("resize"));
+    await forceRender(tree);
+
+    is(tree.state.scroll, ITEM_HEIGHT,
+      `Scroll position should remain at ${ITEM_HEIGHT}`);
+    is(treeEl.scrollTop, ITEM_HEIGHT,
+      `Tree scrollTop should remain at ${ITEM_HEIGHT}`);
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+};
+</script>
+</pre>
+</body>
+</html>
