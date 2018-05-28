@@ -77,8 +77,8 @@ class ClientEnvironment extends ClientEnvironmentBase {
  * where the JEXL expression evaluates into a falsy value.
  */
 async function jexlFilterFunc(entry, environment) {
-  const { filters } = entry;
-  if (!filters) {
+  const { filter_expression } = entry;
+  if (!filter_expression) {
     return entry;
   }
   let result;
@@ -86,7 +86,7 @@ async function jexlFilterFunc(entry, environment) {
     const context = {
       environment
     };
-    result = await FilterExpressions.eval(filters, context);
+    result = await FilterExpressions.eval(filter_expression, context);
   } catch (e) {
     Cu.reportError(e);
   }

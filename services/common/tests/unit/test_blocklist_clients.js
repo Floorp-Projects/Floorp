@@ -245,21 +245,21 @@ add_task(async function test_sync_event_data_is_filtered_for_target() {
 });
 add_task(clear_state);
 
-add_task(async function test_entries_are_filtered_when_jexl_filters_is_present() {
+add_task(async function test_entries_are_filtered_when_jexl_filter_expression_is_present() {
   const records = [{
       willMatch: true,
     }, {
       willMatch: true,
-      filters: null
+      filter_expression: null
     }, {
       willMatch: true,
-      filters: "1 == 1"
+      filter_expression: "1 == 1"
     }, {
       willMatch: false,
-      filters: "1 == 2"
+      filter_expression: "1 == 2"
     }, {
       willMatch: true,
-      filters: "1 == 1",
+      filter_expression: "1 == 1",
       versionRange: [{
         targetApplication: [{
           guid: "some-guid"
@@ -267,7 +267,7 @@ add_task(async function test_entries_are_filtered_when_jexl_filters_is_present()
       }]
     }, {
       willMatch: false,  // jexl prevails over versionRange.
-      filters: "1 == 2",
+      filter_expression: "1 == 2",
       versionRange: [{
         targetApplication: [{
           guid: "xpcshell@tests.mozilla.org",

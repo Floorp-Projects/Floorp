@@ -109,7 +109,7 @@ From the client API standpoint, this is completely transparent: the ``.get()`` m
 
 .. note::
 
-    The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filters),
+    The remote settings targets follow the same approach as the :ref:`Normandy recipe client <components/normandy>` (ie. JEXL filter expressions),
 
 
 Uptake Telemetry
