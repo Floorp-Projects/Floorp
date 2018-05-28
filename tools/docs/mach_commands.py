@@ -147,7 +147,7 @@ class Documentation(MachCommandBase):
         if not project:
             project = conf.project.replace(' ', '_')
 
-        self._project = project,
+        self._project = project
         self._version = getattr(conf, 'version', None)
 
     @property
