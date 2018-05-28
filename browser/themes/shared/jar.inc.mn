@@ -27,6 +27,7 @@
   skin/classic/browser/controlcenter/extension.svg             (../shared/controlcenter/extension.svg)
   skin/classic/browser/controlcenter/permissions.svg           (../shared/controlcenter/permissions.svg)
   skin/classic/browser/controlcenter/tracking-protection.svg   (../shared/controlcenter/tracking-protection.svg)
+  skin/classic/browser/controlcenter/tracking-protection-disabled.svg   (../shared/controlcenter/tracking-protection-disabled.svg)
   skin/classic/browser/controlcenter/warning-gray.svg          (../shared/controlcenter/warning-gray.svg)
   skin/classic/browser/controlcenter/warning-yellow.svg        (../shared/controlcenter/warning-yellow.svg)
   skin/classic/browser/customizableui/empty-overflow-panel.png     (../shared/customizableui/empty-overflow-panel.png)

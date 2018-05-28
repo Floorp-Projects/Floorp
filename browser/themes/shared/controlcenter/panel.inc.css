@@ -291,12 +291,12 @@ description#identity-popup-content-verifier,
 /* TRACKING PROTECTION */
 
 #tracking-protection-content {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg#enabled");
+  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
 #tracking-protection-content[enabled="false"],
 #tracking-protection-content[state="loaded-tracking-content"] {
-  background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg#disabled");
+  background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
 }
 
 /* Show the "on" label by default, except when TP is disabled or there's a local exception. */
