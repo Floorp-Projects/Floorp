@@ -7133,7 +7133,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   if (aEditSubAction == EditSubAction::insertText ||
       aEditSubAction == EditSubAction::insertIMEText ||
       aEditSubAction == EditSubAction::insertBreak ||
-      aEditSubAction == EditSubAction::deleteText) {
+      aEditSubAction == EditSubAction::eDeleteText) {
     bool isSpace, isNBSP;
     nsCOMPtr<nsIContent> content =
       aNode.IsContent() ? aNode.AsContent() : nullptr;
@@ -7382,7 +7382,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
   if (aEditSubAction == EditSubAction::insertText ||
       aEditSubAction == EditSubAction::insertIMEText ||
       aEditSubAction == EditSubAction::insertBreak ||
-      aEditSubAction == EditSubAction::deleteText) {
+      aEditSubAction == EditSubAction::eDeleteText) {
      if (!startNode->IsContent() ||
          !endNode->IsContent()) {
        // GetPromotedPoint cannot promote node when action type is text
