@@ -239,7 +239,6 @@ class RobocopTestRunner(MochitestDesktop):
 
         self.options.extensionsToExclude.extend([
             'mochikit@mozilla.org',
-            'indexedDB-test@mozilla.org.xpi',
         ])
 
         manifest = MochitestDesktop.buildProfile(self, self.options)

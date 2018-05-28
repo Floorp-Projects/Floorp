@@ -6,7 +6,6 @@ add_task(async function() {
   const IGNORE = [
     "special-powers@mozilla.org",
     "mochikit@mozilla.org",
-    "workerbootstrap-test@mozilla.org",
   ];
 
   let exceptions = Services.prefs.getCharPref("extensions.legacy.exceptions");

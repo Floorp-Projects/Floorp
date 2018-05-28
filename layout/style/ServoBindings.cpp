@@ -350,18 +350,15 @@ Gecko_CalcStyleDifference(ComputedStyleBorrowed aOldStyle,
   MOZ_ASSERT(aNewStyle);
 
   uint32_t equalStructs;
-  nsChangeHint result = const_cast<mozilla::ComputedStyle*>(aOldStyle)->
-    CalcStyleDifference(
-      const_cast<mozilla::ComputedStyle*>(aNewStyle),
-      &equalStructs);
+  nsChangeHint result = const_cast<ComputedStyle*>(aOldStyle)->
+    CalcStyleDifference(const_cast<ComputedStyle*>(aNewStyle), &equalStructs);
 
-  *aAnyStyleStructChanged = equalStructs != NS_STYLE_INHERIT_MASK;
+  *aAnyStyleStructChanged =
+    equalStructs != StyleStructConstants::kAllStructsMask;
 
-  const uint32_t kInheritStructsMask =
-    NS_STYLE_INHERIT_MASK & ~NS_STYLE_RESET_STRUCT_MASK;
-
+  const auto kInheritedStructsMask = StyleStructConstants::kInheritedStructsMask;
   *aOnlyResetStructsChanged =
-    (equalStructs & kInheritStructsMask) == kInheritStructsMask;
+    (equalStructs & kInheritedStructsMask) == kInheritedStructsMask;
 
   return result;
 }
@@ -2892,12 +2889,21 @@ Gecko_ContentList_AppendAll(
 }
 
 const nsTArray<Element*>*
-Gecko_GetElementsWithId(const nsIDocument* aDocument, nsAtom* aId)
+Gecko_Document_GetElementsWithId(const nsIDocument* aDoc, nsAtom* aId)
 {
-  MOZ_ASSERT(aDocument);
+  MOZ_ASSERT(aDoc);
   MOZ_ASSERT(aId);
 
-  return aDocument->GetAllElementsForId(nsDependentAtomString(aId));
+  return aDoc->GetAllElementsForId(nsDependentAtomString(aId));
+}
+
+const nsTArray<Element*>*
+Gecko_ShadowRoot_GetElementsWithId(const ShadowRoot* aShadowRoot, nsAtom* aId)
+{
+  MOZ_ASSERT(aShadowRoot);
+  MOZ_ASSERT(aId);
+
+  return aShadowRoot->GetAllElementsForId(nsDependentAtomString(aId));
 }
 
 bool

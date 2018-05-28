@@ -21,52 +21,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 
-// Includes nsStyleStructID.
 #include "nsStyleStructFwd.h"
-
-// Bits for each struct.
-// NS_STYLE_INHERIT_BIT defined in nsStyleStructFwd.h
-#define NS_STYLE_INHERIT_MASK              0x0007fffff
-
-// Bits for inherited structs.
-#define NS_STYLE_INHERITED_STRUCT_MASK \
-  ((nsStyleStructID_size_t(1) << nsStyleStructID_Inherited_Count) - 1)
-// Bits for reset structs.
-#define NS_STYLE_RESET_STRUCT_MASK \
-  (((nsStyleStructID_size_t(1) << nsStyleStructID_Reset_Count) - 1) \
-   << nsStyleStructID_Inherited_Count)
-
-// Additional bits for ComputedStyle's mBits:
-// (free bit)                              0x000800000
-// See ComputedStyle::HasTextDecorationLines
-#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x001000000
-// See ComputedStyle::HasPseudoElementData.
-#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA   0x002000000
-// See ComputedStyle::RelevantLinkIsVisited
-#define NS_STYLE_RELEVANT_LINK_VISITED     0x004000000
-// See ComputedStyle::IsStyleIfVisited
-#define NS_STYLE_IS_STYLE_IF_VISITED       0x008000000
-// See ComputedStyle::HasChildThatUsesGrandancestorStyle
-#define NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE 0x010000000
-// See ComputedStyle::IsShared
-#define NS_STYLE_IS_SHARED                 0x020000000
-// See ComputedStyle::AssertStructsNotUsedElsewhere
-// (This bit is currently only used in #ifdef DEBUG code.)
-#define NS_STYLE_IS_GOING_AWAY             0x040000000
-// See ComputedStyle::ShouldSuppressLineBreak
-#define NS_STYLE_SUPPRESS_LINEBREAK        0x080000000
-// See ComputedStyle::IsInDisplayNoneSubtree
-#define NS_STYLE_IN_DISPLAY_NONE_SUBTREE   0x100000000
-// See ComputedStyle::FindChildWithRules
-#define NS_STYLE_INELIGIBLE_FOR_SHARING    0x200000000
-// See ComputedStyle::HasChildThatUsesResetStyle
-#define NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE 0x400000000
-// See ComputedStyle::IsTextCombined
-#define NS_STYLE_IS_TEXT_COMBINED          0x800000000
-// Whether a ComputedStyle is a Gecko or Servo context
-#define NS_STYLE_CONTEXT_IS_GECKO          0x1000000000
-// See ComputedStyle::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_SHIFT        37
 
 class nsAtom;
 enum nsChangeHint : uint32_t;
@@ -108,8 +63,20 @@ class ComputedStyle;
  * FIXME(emilio): This comment is somewhat outdated now.
  */
 
+enum class ComputedStyleBit : uint8_t
+{
+  HasTextDecorationLines = 1 << 0,
+  HasPseudoElementData = 1 << 1,
+  SuppressLineBreak = 1 << 2,
+  IsTextCombined = 1 << 3,
+  RelevantLinkVisited = 1 << 4,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ComputedStyleBit)
+
 class ComputedStyle
 {
+  using Bit = ComputedStyleBit;
 public:
   ComputedStyle(nsPresContext* aPresContext,
                 nsAtom* aPseudoTag,
@@ -159,9 +126,9 @@ public:
   }
 
   nsAtom* GetPseudo() const { return mPseudoTag; }
-  mozilla::CSSPseudoElementType GetPseudoType() const {
-    return static_cast<mozilla::CSSPseudoElementType>(
-             mBits >> NS_STYLE_CONTEXT_TYPE_SHIFT);
+  mozilla::CSSPseudoElementType GetPseudoType() const
+  {
+    return mPseudoType;
   }
 
   bool IsInheritingAnonBox() const {
@@ -186,13 +153,14 @@ public:
 
   bool IsPseudoElement() const { return mPseudoTag && !IsAnonBox(); }
 
-
   // Does this ComputedStyle or any of its ancestors have text
   // decoration lines?
   // Differs from nsStyleTextReset::HasTextDecorationLines, which tests
   // only the data for a single context.
   bool HasTextDecorationLines() const
-    { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
+  {
+    return bool(mBits & Bit::HasTextDecorationLines);
+  }
 
   // Whether any line break inside should be suppressed? If this returns
   // true, the line should not be broken inside, which means inlines act
@@ -202,64 +170,32 @@ public:
   // NOTE: for nsTextFrame, use nsTextFrame::ShouldSuppressLineBreak()
   // instead of this method.
   bool ShouldSuppressLineBreak() const
-    { return !!(mBits & NS_STYLE_SUPPRESS_LINEBREAK); }
-
-  // Does this ComputedStyle or any of its ancestors have display:none set?
-  bool IsInDisplayNoneSubtree() const
-    { return !!(mBits & NS_STYLE_IN_DISPLAY_NONE_SUBTREE); }
+  {
+    return bool(mBits & Bit::SuppressLineBreak);
+  }
 
   // Is this horizontal-in-vertical (tate-chu-yoko) text? This flag is
   // only set on ComputedStyles whose pseudo is nsCSSAnonBoxes::mozText.
   bool IsTextCombined() const
-    { return !!(mBits & NS_STYLE_IS_TEXT_COMBINED); }
+  {
+    return bool(mBits & Bit::IsTextCombined);
+  }
 
   // Does this ComputedStyle represent the style for a pseudo-element or
   // inherit data from such a ComputedStyle?  Whether this returns true
   // is equivalent to whether it or any of its ancestors returns
   // non-null for IsPseudoElement().
   bool HasPseudoElementData() const
-    { return !!(mBits & NS_STYLE_HAS_PSEUDO_ELEMENT_DATA); }
-
-  bool HasChildThatUsesResetStyle() const
-    { return mBits & NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE; }
+  {
+    return bool(mBits & Bit::HasPseudoElementData);
+  }
 
   // Is the only link whose visitedness is allowed to influence the
   // style of the node this ComputedStyle is for (which is that element
   // or its nearest ancestor that is a link) visited?
   bool RelevantLinkVisited() const
-    { return !!(mBits & NS_STYLE_RELEVANT_LINK_VISITED); }
-
-  // Is this a ComputedStyle for a link?
-  inline bool IsLinkContext() const;
-
-  // Is this ComputedStyle the GetStyleIfVisited() for some other style
-  // context?
-  bool IsStyleIfVisited() const
-    { return !!(mBits & NS_STYLE_IS_STYLE_IF_VISITED); }
-
-  // Tells this ComputedStyle that it should return true from
-  // IsStyleIfVisited.
-  void SetIsStyleIfVisited()
-    { mBits |= NS_STYLE_IS_STYLE_IF_VISITED; }
-
-  // Does any descendant of this ComputedStyle have any style values
-  // that were computed based on this ComputedStyle's ancestors?
-  bool HasChildThatUsesGrandancestorStyle() const
-    { return !!(mBits & NS_STYLE_CHILD_USES_GRANDANCESTOR_STYLE); }
-
-  // Is this ComputedStyle shared with a sibling or cousin?
-  // (See nsStyleSet::GetContext.)
-  bool IsShared() const
-    { return !!(mBits & NS_STYLE_IS_SHARED); }
-
-  /**
-   * Returns whether this ComputedStyle has cached style data for a
-   * given style struct and it does NOT own that struct.  This can
-   * happen because it was inherited from the parent ComputedStyle, or
-   * because it was stored conditionally on the rule node.
-   */
-  bool HasCachedDependentStyleData(nsStyleStructID aSID) {
-    return mBits & GetBitForSID(aSID);
+  {
+    return bool(mBits & Bit::RelevantLinkVisited);
   }
 
   ComputedStyle* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
@@ -298,8 +234,6 @@ public:
 
     mCachedInheritingStyles.Insert(aStyle);
   }
-
-  void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
   /**
    * Define typesafe getter functions for each style struct by
@@ -377,20 +311,17 @@ public:
    * Combine the R, G, and B components of whichever of aColors should
    * be used based on aLinkIsVisited with the A component of aColors[0].
    */
-  static nscolor CombineVisitedColors(nscolor *aColors,
-                                      bool aLinkIsVisited);
+  static nscolor CombineVisitedColors(nscolor* aColors, bool aLinkIsVisited);
 
   /**
    * Start the background image loads for this ComputedStyle.
    */
   inline void StartBackgroundImageLoads();
 
-  static uint32_t GetBitForSID(const nsStyleStructID aSID) { return 1 << aSID; }
-
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
-  static const char* StructName(nsStyleStructID aSID);
-  static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
+  static const char* StructName(StyleStructID aSID);
+  static Maybe<StyleStructID> LookupStruct(const nsACString& aName);
 #endif
 
   /**
@@ -405,13 +336,23 @@ public:
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const;
 
 protected:
+  bool HasRequestedStruct(StyleStructID aID) const
+  {
+    return mRequestedStructs & StyleStructConstants::BitFor(aID);
+  }
+
+  void SetRequestedStruct(StyleStructID aID)
+  {
+    mRequestedStructs |= StyleStructConstants::BitFor(aID);
+  }
+
   // Needs to be friend so that it can call the destructor without making it
   // public.
   friend void ::Gecko_ComputedStyle_Destroy(ComputedStyle*);
 
   ~ComputedStyle() = default;
 
-  nsPresContext* mPresContext;
+  nsPresContext* const mPresContext;
 
   ServoComputedData mSource;
 
@@ -432,14 +373,12 @@ protected:
 
   // If this ComputedStyle is for a pseudo-element or anonymous box,
   // the relevant atom.
-  RefPtr<nsAtom> mPseudoTag;
+  const RefPtr<nsAtom> mPseudoTag;
 
-  // mBits stores a number of things:
-  //  - It records (using the style struct bits) which structs have
-  //    been requested on this ComputedStyle.
-  //  - It also stores the additional bits listed at the top of
-  //    nsStyleStruct.h.
-  uint64_t                mBits;
+  // A bitfield with the structs that have been requested so far.
+  uint32_t mRequestedStructs = 0;
+  const Bit mBits;
+  const CSSPseudoElementType mPseudoType;
 };
 
 } // namespace mozilla
