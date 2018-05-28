@@ -165,6 +165,18 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Declare that the actions (navigation actions, browser actions, page actions) have changed and
+     * should be updated if needed.
+     *
+     * The toolbar will call the <code>visible</code> lambda of every action to determine whether a
+     * view for this action should be added or removed. Additionally <code>bind</code> will be
+     * called on every visible action to update its view.
+     */
+    fun invalidateActions() {
+        displayToolbar.invalidateActions()
+    }
+
+    /**
      * Adds an action to be displayed on the right side of the toolbar (outside of the URL bounding
      * box) in display mode.
      *

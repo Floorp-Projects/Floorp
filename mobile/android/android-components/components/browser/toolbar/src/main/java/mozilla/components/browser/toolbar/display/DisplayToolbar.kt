@@ -160,9 +160,11 @@ internal class DisplayToolbar(
     fun addBrowserAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        action.createView(this).let {
-            displayAction.view = it
-            addView(it)
+        if (action.visible()) {
+            action.createView(this).let {
+                displayAction.view = it
+                addView(it)
+            }
         }
 
         browserActions.add(displayAction)
@@ -174,9 +176,11 @@ internal class DisplayToolbar(
     fun addPageAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        action.createView(this).let {
-            displayAction.view = it
-            addView(it)
+        if (action.visible()) {
+            action.createView(this).let {
+                displayAction.view = it
+                addView(it)
+            }
         }
 
         pageActions.add(displayAction)
@@ -188,12 +192,40 @@ internal class DisplayToolbar(
     fun addNavigationAction(action: Toolbar.Action) {
         val displayAction = DisplayAction(action)
 
-        action.createView(this).let {
-            displayAction.view = it
-            addView(it)
+        if (action.visible()) {
+            action.createView(this).let {
+                displayAction.view = it
+                addView(it)
+            }
         }
 
         navigationActions.add(displayAction)
+    }
+
+    /**
+     * Declare that the actions (navigation actions, browser actions, page actions) have changed and
+     * should be updated if needed.
+     */
+    fun invalidateActions() {
+        for (action in navigationActions + pageActions + browserActions) {
+            val visible = action.actual.visible()
+
+            if (!visible && action.view != null) {
+                // Action should not be visible anymore. Remove view.
+                removeView(action.view)
+                action.view = null
+            } else if (visible && action.view == null) {
+                // Action should be visible. Add view for it.
+                action.actual.createView(this).let {
+                    action.view = it
+                    addView(it)
+                }
+            }
+
+            action.view?.let { action.actual.bind(it) }
+        }
+
+        requestLayout()
     }
 
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
