@@ -45,7 +45,10 @@ enum class EditSubAction : int32_t
   // eInsertText indicates to insert some characters.
   eInsertText,
 
-  insertIMEText,
+  // eInsertTextComingFromIME indicates to insert or update composition string
+  // with new text which is new composition string or commit string.
+  eInsertTextComingFromIME,
+
   deleteSelection,
   setTextProperty,
   removeTextProperty,

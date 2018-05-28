@@ -128,7 +128,7 @@ mozInlineSpellStatus::InitForEditorChange(
   }
 
   bool deleted = aEditSubAction == EditSubAction::deleteSelection;
-  if (aEditSubAction == EditSubAction::insertIMEText) {
+  if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     // IME may remove the previous node if it cancels composition when
     // there is no text around the composition.
     deleted = !aPreviousNode->IsInComposedDoc();

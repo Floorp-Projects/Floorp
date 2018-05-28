@@ -331,7 +331,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
       UndefineCaretBidiLevel();
       return WillInsertBreak(aCancel, aHandled, aInfo.maxLength);
     case EditSubAction::eInsertText:
-    case EditSubAction::insertIMEText:
+    case EditSubAction::eInsertTextComingFromIME:
       UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString,
@@ -681,7 +681,8 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (inString->IsEmpty() && aEditSubAction != EditSubAction::insertIMEText) {
+  if (inString->IsEmpty() &&
+      aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
     // HACK: this is a fix for bug 19395
     // I can't outlaw all empty insertions
     // because IME transaction depend on them
@@ -707,7 +708,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
   // If we're exceeding the maxlength when composing IME, we need to clean up
   // the composing text, so we shouldn't return early.
   if (truncated && outString->IsEmpty() &&
-      aEditSubAction != EditSubAction::insertIMEText) {
+      aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
     *aCancel = true;
     return NS_OK;
   }
@@ -743,7 +744,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
   // this has the side effect of changing all the characters in aOutString
   // to the replacement character
   if (IsPasswordEditor() &&
-      aEditSubAction == EditSubAction::insertIMEText) {
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     RemoveIMETextFromPWBuf(start, outString);
   }
 
@@ -810,7 +811,7 @@ TextEditRules::WillInsertText(EditSubAction aEditSubAction,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aEditSubAction == EditSubAction::insertIMEText) {
+  if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
     // Find better insertion point to insert text.
     EditorRawDOMPoint betterInsertionPoint =
       TextEditorRef().FindBetterInsertionPoint(atStartOfSelection);
