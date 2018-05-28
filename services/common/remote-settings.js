@@ -188,8 +188,8 @@ class RemoteSettingsClient {
     this.filterFunc = filterFunc;
     this._lastCheckTimePref = lastCheckTimePref;
 
-    this._callbacks = new Map();
-    this._callbacks.set("sync", []);
+    this._listeners = new Map();
+    this._listeners.set("sync", []);
 
     this._kinto = null;
   }
@@ -208,11 +208,36 @@ class RemoteSettingsClient {
     return this._lastCheckTimePref || `services.settings.${this.bucketName}.${this.collectionName}.last_check`;
   }
 
+  /**
+   * Event emitter: will execute the registered listeners in the order and
+   * sequentially.
+   *
+   * Note: we don't use `toolkit/modules/EventEmitter` because we want to throw
+   * an error when a listener fails to execute.
+   *
+   * @param {string} event    the event name
+   * @param {Object} payload  the event payload to call the listeners with
+   */
+  async emit(event, payload) {
+    const callbacks = this._listeners.get("sync");
+    let firstError;
+    for (const cb of callbacks) {
+      try {
+        await cb(payload);
+      } catch (e) {
+        firstError = e;
+      }
+    }
+    if (firstError) {
+      throw firstError;
+    }
+  }
+
   on(event, callback) {
-    if (!this._callbacks.has(event)) {
+    if (!this._listeners.has(event)) {
       throw new Error(`Unknown event type ${event}`);
     }
-    this._callbacks.get(event).push(callback);
+    this._listeners.get(event).push(callback);
   }
 
   /**
@@ -409,14 +434,9 @@ class RemoteSettingsClient {
         // Read local collection of records (also filtered).
         const { data: allData } = await collection.list();
         const current = await this._filterEntries(allData);
-        // Fire the event: execute callbacks in order and sequentially.
-        // If one fails everything fails.
-        const event = { data: { current, created, updated, deleted } };
-        const callbacks = this._callbacks.get("sync");
+        const payload = { data: { current, created, updated, deleted } };
         try {
-          for (const cb of callbacks) {
-            await cb(event);
-          }
+          await this.emit("sync", payload);
         } catch (e) {
           reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
           throw e;
