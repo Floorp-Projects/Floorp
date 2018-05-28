@@ -119,6 +119,9 @@ interface Toolbar {
         override fun bind(view: View) = Unit
     }
 
+    /**
+     * An action that just shows a static, non-clickable image.
+     */
     open class ActionImage(
         @DrawableRes private val imageResource: Int,
         private val contentDescription: String? = null

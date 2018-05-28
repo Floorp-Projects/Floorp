@@ -258,7 +258,7 @@ class BrowserToolbar @JvmOverloads constructor(
         EDIT
     }
 
-    class Button(
+    open class Button(
         imageResource: Int,
         contentDescription: String,
         visible: () -> Boolean = { true },

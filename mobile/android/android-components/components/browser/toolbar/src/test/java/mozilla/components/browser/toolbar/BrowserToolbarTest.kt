@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.toolbar
 
+import android.graphics.drawable.Drawable
 import android.view.View
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -168,6 +169,19 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `toolbar will use provided height with EXACTLY measure spec`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(800, View.MeasureSpec.EXACTLY)
+
+        toolbar.measure(widthSpec, heightSpec)
+
+        assertEquals(1024, toolbar.measuredWidth)
+        assertEquals(800, toolbar.measuredHeight)
+    }
+
+    @Test
     fun `display and edit toolbar will use full size of browser toolbar`() {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
 
@@ -299,5 +313,56 @@ class BrowserToolbarTest {
         toolbar.addNavigationAction(action)
 
         verify(displayToolbar).addNavigationAction(action)
+    }
+
+    @Test
+    fun `invalidate actions is forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = mock(DisplayToolbar::class.java)
+        toolbar.displayToolbar = displayToolbar
+
+        verify(displayToolbar, never()).invalidateActions()
+
+        toolbar.invalidateActions()
+
+        verify(displayToolbar).invalidateActions()
+    }
+
+    @Test
+    fun `search terms (if set) are forwarded to edit toolbar instead of URL`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+
+        val ediToolbar = mock(EditToolbar::class.java)
+        toolbar.editToolbar = ediToolbar
+
+        toolbar.url = "https://www.mozilla.org"
+        toolbar.setSearchTerms("Mozilla Firefox")
+
+        verify(ediToolbar, never()).updateUrl("https://www.mozilla.org")
+        verify(ediToolbar, never()).updateUrl("Mozilla Firefox")
+
+        toolbar.editMode()
+
+        verify(ediToolbar, never()).updateUrl("https://www.mozilla.org")
+        verify(ediToolbar).updateUrl("Mozilla Firefox")
+    }
+
+    @Test
+    fun `urlBoxBackgroundDrawable, browserActionMargin and urlBoxMargin are forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = toolbar.displayToolbar
+
+        assertNull(displayToolbar.urlBoxBackgroundDrawable)
+        assertEquals(displayToolbar.browserActionMargin, 0)
+        assertEquals(displayToolbar.urlBoxMargin, 0)
+
+        val drawable = mock(Drawable::class.java)
+        toolbar.urlBoxBackgroundDrawable = drawable
+        toolbar.browserActionMargin = 42
+        toolbar.urlBoxMargin = 23
+
+        assertEquals(drawable, displayToolbar.urlBoxBackgroundDrawable)
+        assertEquals(42, displayToolbar.browserActionMargin)
+        assertEquals(23, displayToolbar.urlBoxMargin)
     }
 }

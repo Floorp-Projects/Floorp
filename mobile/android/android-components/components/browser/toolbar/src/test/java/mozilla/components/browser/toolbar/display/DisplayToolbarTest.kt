@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar.display
 
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
@@ -23,6 +24,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -313,6 +315,138 @@ class DisplayToolbarTest {
 
         assertEquals(56, view.measuredWidth)
         assertEquals(56, view.measuredHeight)
+    }
+
+    @Test
+    fun `view of not visible navigation action gets removed after invalidating`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        var shouldActionBeDisplayed = true
+
+        val action = BrowserToolbar.Button(
+            0,
+            "Back",
+            visible = { shouldActionBeDisplayed }
+        ) { /* Do nothing */ }
+
+        displayToolbar.addNavigationAction(action)
+
+        assertNotNull(extractActionView(displayToolbar, "Back"))
+
+        shouldActionBeDisplayed = false
+        displayToolbar.invalidateActions()
+
+        assertNull(extractActionView(displayToolbar, "Back"))
+
+        shouldActionBeDisplayed = true
+        displayToolbar.invalidateActions()
+
+        assertNotNull(extractActionView(displayToolbar, "Back"))
+    }
+
+    @Test
+    fun `toolbar should call bind with view argument on action after invalidating`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val action = spy(BrowserToolbar.Button(0, "Reload") {})
+
+        displayToolbar.addPageAction(action)
+
+        val view = extractActionView(displayToolbar, "Reload")
+
+        verify(action, never()).bind(view!!)
+
+        displayToolbar.invalidateActions()
+
+        verify(action).bind(view)
+    }
+
+    @Test
+    fun `page action will not be added if visible lambda of action returns false`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val visibleAction = BrowserToolbar.Button(0, "Reload") {}
+        val invisibleAction = BrowserToolbar.Button(
+            0,
+            "Reader Mode",
+            visible = { false }) {}
+
+        displayToolbar.addPageAction(visibleAction)
+        displayToolbar.addPageAction(invisibleAction)
+
+        assertNotNull(extractActionView(displayToolbar, "Reload"))
+        assertNull(extractActionView(displayToolbar, "Reader Mode"))
+    }
+
+    @Test
+    fun `browser action will not be added if visible lambda of action returns false`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val visibleAction = BrowserToolbar.Button(0, "Tabs") {}
+        val invisibleAction = BrowserToolbar.Button(
+                0,
+                "Settings",
+                visible = { false }) {}
+
+        displayToolbar.addBrowserAction(visibleAction)
+        displayToolbar.addBrowserAction(invisibleAction)
+
+        assertNotNull(extractActionView(displayToolbar, "Tabs"))
+        assertNull(extractActionView(displayToolbar, "Settings"))
+    }
+
+    @Test
+    fun `navigation action will not be added if visible lambda of action returns false`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val visibleAction = BrowserToolbar.Button(0, "Forward") {}
+        val invisibleAction = BrowserToolbar.Button(
+                0,
+                "Back",
+                visible = { false }) {}
+
+        displayToolbar.addNavigationAction(visibleAction)
+        displayToolbar.addNavigationAction(invisibleAction)
+
+        assertNotNull(extractActionView(displayToolbar, "Forward"))
+        assertNull(extractActionView(displayToolbar, "Back"))
+    }
+
+    @Test
+    fun `toolbar will honor minimum width of action view`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        val normalAction = BrowserToolbar.Button(0, "Forward") {}
+        val backAction = object : BrowserToolbar.Button(0, "Back", listener = {}) {
+            override fun createView(parent: ViewGroup): View {
+                return super.createView(parent).apply {
+                    minimumWidth = 500
+                }
+            }
+        }
+
+        displayToolbar.addNavigationAction(normalAction)
+        displayToolbar.addNavigationAction(backAction)
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(56, View.MeasureSpec.EXACTLY)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val forwardView = extractActionView(displayToolbar, "Forward")!!
+        val backView = extractActionView(displayToolbar, "Back")!!
+
+        assertEquals(56, forwardView.measuredWidth)
+        assertEquals(56, forwardView.measuredHeight)
+
+        assertEquals(500, backView.measuredWidth)
+        assertEquals(56, backView.measuredHeight)
     }
 
     companion object {
