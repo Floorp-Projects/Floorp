@@ -114,8 +114,10 @@ enum class EditSubAction : int32_t
   eSetPositionToAbsolute,
   eSetPositionToStatic,
 
-  decreaseZIndex,
-  increaseZIndex,
+  // eDecreaseZIndex and eIncreaseZIndex indicate to decrease and increase
+  // z-index value.
+  eDecreaseZIndex,
+  eIncreaseZIndex,
 };
 
 } // namespace mozilla
