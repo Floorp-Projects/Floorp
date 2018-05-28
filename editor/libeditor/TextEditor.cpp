@@ -1874,7 +1874,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                       nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (NS_WARN_IF(NS_FAILED(rv))) {

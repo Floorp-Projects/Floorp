@@ -86,7 +86,7 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
 
   AutoPlaceholderBatch batchIt(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertElement,
+                                      *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);

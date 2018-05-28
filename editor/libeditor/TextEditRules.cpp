@@ -353,7 +353,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
     case EditSubAction::eComputeTextToOutput:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
                             aCancel, aHandled);
-    case EditSubAction::insertElement:
+    case EditSubAction::eInsertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
       return WillInsert(aCancel);

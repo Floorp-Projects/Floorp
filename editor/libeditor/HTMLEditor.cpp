@@ -1564,7 +1564,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
   CommitComposition();
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertElement,
+                                      *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
@@ -1574,7 +1574,7 @@ HTMLEditor::InsertElementAtSelection(Element* aElement,
 
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
-  EditSubActionInfo subActionInfo(EditSubAction::insertElement);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertElement);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
@@ -4375,7 +4375,7 @@ HTMLEditor::SetCSSBackgroundColorWithTransaction(const nsAString& aColor)
 
   AutoPlaceholderBatch batchIt(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertElement,
+                                      *this, EditSubAction::eInsertElement,
                                       nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
