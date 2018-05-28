@@ -78,7 +78,10 @@ enum class EditSubAction : int32_t
   eIndent,
   eOutdent,
 
-  align,
+  // eSetOrClearAlignment aligns content or clears alignment with align
+  // attribute or text-align.
+  eSetOrClearAlignment,
+
   makeBasicBlock,
   removeList,
   makeDefListItem,
