@@ -724,7 +724,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
   AutoPlaceholderBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   RefPtr<Element> firstCell;
@@ -910,7 +910,7 @@ HTMLEditor::DeleteTableCellContents()
   AutoPlaceholderBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
   //Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(this);
@@ -949,7 +949,7 @@ HTMLEditor::DeleteCellContents(Element* aCell)
 {
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   while (nsCOMPtr<nsINode> child = aCell->GetLastChild()) {
@@ -991,7 +991,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
   AutoPlaceholderBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   // Test if deletion is controlled by selected cells
@@ -1156,7 +1156,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   AutoPlaceholderBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   RefPtr<Element> firstCell;
@@ -1237,7 +1237,7 @@ HTMLEditor::DeleteRow(Element* aTable,
 
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(*
-                                      this, EditSubAction::deleteNode,
+                                      this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   // The list of cells we will change rowspan in
@@ -2157,7 +2157,7 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     // All cell contents are merged. Delete the empty cells we accumulated
     // Prevent rules testing until we're done
     AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                        *this, EditSubAction::deleteNode,
+                                        *this, EditSubAction::eDeleteNode,
                                         nsIEditor::eNext);
 
     for (uint32_t i = 0, n = deleteList.Length(); i < n; i++) {
@@ -2273,7 +2273,7 @@ HTMLEditor::MergeCells(RefPtr<Element> aTargetCell,
 
   // Prevent rules testing until we're done
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteNode,
+                                      *this, EditSubAction::eDeleteNode,
                                       nsIEditor::eNext);
 
   // Don't need to merge if cell is empty

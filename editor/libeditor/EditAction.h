@@ -30,7 +30,9 @@ enum class EditSubAction : int32_t
   // eCreateNode indicates to create a new node and insert it into the DOM tree.
   eCreateNode,
 
-  deleteNode,
+  // eDeleteNode indicates to remove a node from the DOM tree.
+  eDeleteNode,
+
   splitNode,
   joinNode,
 
