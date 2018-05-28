@@ -83,7 +83,13 @@ class ComputedStylePath extends PureComponent {
       duration,
       fill: "forwards",
     };
+
     const simulatedAnimation = simulateAnimation(keyframes, effect, true);
+
+    if (!simulatedAnimation) {
+      return null;
+    }
+
     const simulatedElement = simulatedAnimation.effect.target;
     const win = simulatedElement.ownerGlobal;
     const threshold = getPreferredProgressThresholdByKeyframes(keyframes);
@@ -181,7 +187,13 @@ class ComputedStylePath extends PureComponent {
     for (let i = 0; i < keyframes.length - 1; i++) {
       const startKeyframe = keyframes[i];
       const endKeyframe = keyframes[i + 1];
-      segments.push(...this.getPathSegments(startKeyframe, endKeyframe));
+      const keyframesSegments = this.getPathSegments(startKeyframe, endKeyframe);
+
+      if (!keyframesSegments) {
+        return null;
+      }
+
+      segments.push(...keyframesSegments);
     }
 
     return [
