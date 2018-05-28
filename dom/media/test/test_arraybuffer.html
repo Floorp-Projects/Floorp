@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1462967
+-->
+<head>
+  <title>Test for Bug 1457661</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1457661">Mozilla Bug 1457661</a>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+// Test for Bug 1457661; Ensure that readyState properly move to 4 when using arrayBuffer obtained from XMLHttpRequest
+
+var manager = new MediaTestManager;
+
+function getBlob(url, callback) {
+  const req = new XMLHttpRequest();
+  req.addEventListener("load", function() {
+    callback(req.response);
+  });
+  req.open("GET", url, true);
+  req.responseType = "arraybuffer";
+  req.send();
+}
+
+function startTest(test, token) {
+  manager.started(token);
+  // Fetch the media resource using XHR so we can be sure the entire
+  // resource is loaded before we test buffered ranges. This ensures
+  // we have deterministic behaviour.
+  getBlob(test.name, function(arr) {
+    const v = document.createElement("video");
+    const events = [ "suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                     "waiting", "pause", "durationchange", "seeking", "seeked" ];
+    function logEvent(e) {
+      info(test.name + ": got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      v.addEventListener(e, logEvent);
+    });
+    once(v, "stalled", function(e) {
+      // Resource fetch algorithm in local mode should never fire stalled event.
+      // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-resource
+      ok(false, test.name + ": got stalled");
+      removeNodeAndSource(v);
+      manager.finished(token);
+    });
+    once(v, "canplaythrough", function(e) {
+      ok(true, test.name + ": got canplaythrough");
+      is(v.readyState, v.HAVE_ENOUGH_DATA, test.name + ": readyState is HAVE_ENOUGH_DATA");
+      removeNodeAndSource(v);
+      manager.finished(token);
+    });
+    const blob = new Blob([arr], {type:test.type});
+    const blobUrl = URL.createObjectURL(blob);
+
+    document.body.appendChild(v);
+    v.preload = "auto";
+    v.src = blobUrl;
+    v.load();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+// Note: No need to set media test prefs, since we're using XHR to fetch
+// media data.
+manager.runTests(gSmallTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
