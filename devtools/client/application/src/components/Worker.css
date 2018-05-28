@@ -73,8 +73,3 @@
 .worker__data__updated {
   color: var(--theme-body-color-alt);
 }
-
-.worker__unregister-button {
-  /* TODO: remove this once/if we have proper capitalization in the strings file */
-  text-transform: capitalize;
-}
