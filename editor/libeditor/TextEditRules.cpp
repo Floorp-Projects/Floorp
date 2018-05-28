@@ -346,9 +346,9 @@ TextEditRules::WillDoAction(Selection* aSelection,
       return WillUndo(aCancel, aHandled);
     case EditSubAction::eRedo:
       return WillRedo(aCancel, aHandled);
-    case EditSubAction::setTextProperty:
+    case EditSubAction::eSetTextProperty:
       return WillSetTextProperty(aCancel, aHandled);
-    case EditSubAction::removeTextProperty:
+    case EditSubAction::eRemoveTextProperty:
       return WillRemoveTextProperty(aCancel, aHandled);
     case EditSubAction::outputText:
       return WillOutputText(aInfo.outputFormat, aInfo.outString, aInfo.flags,
