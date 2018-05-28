@@ -73,8 +73,11 @@ enum class EditSubAction : int32_t
   // type.
   eCreateOrChangeList,
 
-  indent,
-  outdent,
+  // eIndent and eOutdent indicates to indent or outdent the target with
+  // using <blockquote>, <ul>, <ol> or just margin of start edge.
+  eIndent,
+  eOutdent,
+
   align,
   makeBasicBlock,
   removeList,
