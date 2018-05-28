@@ -1025,7 +1025,6 @@ ExtractGlobalValue(const ValVector& globalImportValues, uint32_t globalIndex, co
     MOZ_CRASH("Not a global value");
 }
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
 static bool
 EnsureGlobalObject(JSContext* cx, const ValVector& globalImportValues, size_t globalIndex,
                    const GlobalDesc& global, WasmGlobalObjectVector& globalObjs)
@@ -1046,13 +1045,11 @@ EnsureGlobalObject(JSContext* cx, const ValVector& globalImportValues, size_t gl
     globalObjs[globalIndex] = go;
     return true;
 }
-#endif
 
 bool
 Module::instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
                            WasmGlobalObjectVector& globalObjs) const
 {
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     // If there are exported globals that aren't in globalObjs because they
     // originate in this module or because they were immutable imports that came
     // in as primitive values then we must create cells in the globalObjs for
@@ -1074,7 +1071,7 @@ Module::instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
     // primitive value; these globals are always immutable.  Assert that we do
     // not need to create any additional Global objects for such imports.
 
-# ifdef DEBUG
+#ifdef DEBUG
     size_t numGlobalImports = 0;
     for (const Import& import : imports_) {
         if (import.kind != DefinitionKind::Global)
@@ -1087,7 +1084,6 @@ Module::instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
     }
     MOZ_ASSERT_IF(!metadata().isAsmJS(),
                   numGlobalImports == globals.length() || !globals[numGlobalImports].isImport());
-# endif
 #endif
     return true;
 }
@@ -1122,22 +1118,7 @@ GetGlobalExport(JSContext* cx,
                 const WasmGlobalObjectVector& globalObjs,
                 MutableHandleValue jsval)
 {
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     jsval.setObject(*globalObjs[globalIndex]);
-#else
-    const GlobalDesc& global = globals[globalIndex];
-
-    MOZ_ASSERT(!global.isMutable(), "Mutable variables can't be exported.");
-
-    Val val = ExtractGlobalValue(globalImportValues, globalIndex, global);
-    if (val.type() == ValType::I64) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
-        return false;
-    }
-
-    jsval.set(ToJSValue(val));
-#endif
-
     return true;
 }
 
