@@ -852,6 +852,62 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<Web
   }
 }
 
+void
+WebRenderBridgeParent::FlushSceneBuilds()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  if (gfxPrefs::WebRenderAsyncSceneBuild()) {
+    // If we are sending transactions through the scene builder thread, we need
+    // to block until all the inflight transactions have been processed. This
+    // flush message blocks until all previously sent scenes have been built
+    // and received by the render backend thread.
+    mApi->FlushSceneBuilder();
+    // The post-swap hook for async-scene-building calls the
+    // ScheduleRenderOnCompositorThread function from the scene builder thread,
+    // which then triggers a call to ScheduleGenerateFrame() on the compositor
+    // thread. But since *this* function is running on the compositor thread,
+    // that scheduling will not happen until this call stack unwinds (or we
+    // could spin a nested event loop, but that's more messy). Instead, we
+    // simulate it ourselves by calling ScheduleGenerateFrame() directly.
+    // In the case where async scene building is disabled, the
+    // ScheduleGenerateFrame() call in RecvSetDisplayList() serves this purpose.
+    // Note also that the post-swap hook will run and do another
+    // ScheduleGenerateFrame() after we unwind here, so we will end up with an
+    // extra render/composite that is probably avoidable, but in practice we
+    // shouldn't be calling this function all that much in production so this
+    // is probably fine. If it becomes an issue we can add more state tracking
+    // machinery to optimize it away.
+    ScheduleGenerateFrame();
+  }
+}
+
+void
+WebRenderBridgeParent::FlushFrameGeneration()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(mWidget); // This function is only useful on the root WRBP
+
+  // This forces a new GenerateFrame transaction to be sent to the render
+  // backend thread, if one is pending. This doesn't block on any other threads.
+  mForceRendering = true;
+  mCompositorScheduler->FlushPendingComposite();
+  mForceRendering = false;
+}
+
+void
+WebRenderBridgeParent::FlushFramePresentation()
+{
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+
+  // This sends a message to the render backend thread to send a message
+  // to the renderer thread, and waits for that message to be processed. So
+  // this effectively blocks on the render backend and renderer threads,
+  // following the same codepath that WebRender takes to render and composite
+  // a frame.
+  mApi->WaitFlushed();
+}
+
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 {
@@ -1116,6 +1172,23 @@ WebRenderBridgeParent::RecvCapture()
   if (!mDestroyed) {
     mApi->Capture();
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvSyncWithCompositor()
+{
+  FlushSceneBuilds();
+  if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {
+    root->FlushFrameGeneration();
+  }
+  FlushFramePresentation();
+  // Finally, we force the AsyncImagePipelineManager to handle all the
+  // pipeline updates produced in the last step, so that it frees any
+  // unneeded textures. Then we can return from this sync IPC call knowing
+  // that we've done everything we can to flush stuff on the compositor.
+  mAsyncImageManager->ProcessPipelineUpdates();
+
   return IPC_OK();
 }
 
@@ -1456,11 +1529,9 @@ WebRenderBridgeParent::FlushRendering()
     return;
   }
 
-  mForceRendering = true;
-  mCompositorScheduler->FlushPendingComposite();
-  // Always meed to wait flushed, since WebRender might have ongoing tasks.
-  mApi->WaitFlushed();
-  mForceRendering = false;
+  // XXX: do we need to flush any scene building here?
+  FlushFrameGeneration();
+  FlushFramePresentation();
 }
 
 void
