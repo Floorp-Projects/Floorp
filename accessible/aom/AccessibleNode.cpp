@@ -18,7 +18,21 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(AccessibleNode)
+bool
+AccessibleNode::IsAOMEnabled(JSContext* aCx, JSObject* /*unused*/)
+{
+  static bool sPrefCached = false;
+  static bool sPrefCacheValue = false;
+
+  if (!sPrefCached) {
+    sPrefCached = true;
+    Preferences::AddBoolVarCache(&sPrefCacheValue, "accessibility.AOM.enabled");
+  }
+
+  return nsContentUtils::IsSystemCaller(aCx) || sPrefCacheValue;
+}
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AccessibleNode, mIntl, mDOMNode, mStates)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AccessibleNode)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
