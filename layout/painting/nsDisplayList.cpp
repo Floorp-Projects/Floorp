@@ -9038,29 +9038,6 @@ nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   return result;
 }
 
-/* The transform is uniform if it fills the entire bounding rect and the
- * wrapped list is uniform.  See GetOpaqueRegion for discussion of why this
- * works.
- */
-Maybe<nscolor>
-nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder) const
-{
-  nsRect untransformedVisible;
-  if (!UntransformBuildingRect(aBuilder, &untransformedVisible)) {
-    return Nothing();
-  }
-  const Matrix4x4Flagged& matrix = GetTransform();
-
-  Matrix matrix2d;
-  if (matrix.Is2D(&matrix2d) &&
-      matrix2d.PreservesAxisAlignedRectangles() &&
-      mStoredList.GetBuildingRect().Contains(untransformedVisible)) {
-    return mStoredList.IsUniform(aBuilder);
-  }
-
-  return Nothing();
-}
-
 /* TransformRect takes in as parameters a rectangle (in app space) and returns
  * the smallest rectangle (in app space) containing the transformed image of
  * that rectangle.  That is, it takes the four corners of the rectangle,
