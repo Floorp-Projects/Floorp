@@ -468,7 +468,8 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
-  if (aEditSubAction == EditSubAction::ignore) {
+  if (aEditSubAction == EditSubAction::eReplaceHeadWithHTMLSource ||
+      aEditSubAction == EditSubAction::eCreateBogusNode) {
     return NS_OK;
   }
 

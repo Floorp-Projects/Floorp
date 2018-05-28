@@ -1226,9 +1226,10 @@ NS_IMETHODIMP
 HTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 {
   // don't do any post processing, rules get confused
-  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::ignore,
-                                      nsIEditor::eNone);
+  AutoTopLevelEditSubActionNotifier
+    maybeTopLevelEditSubAction(*this,
+                               EditSubAction::eReplaceHeadWithHTMLSource,
+                               nsIEditor::eNone);
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
