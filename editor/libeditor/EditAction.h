@@ -99,8 +99,13 @@ enum class EditSubAction : int32_t
   // eInsertQuotation indicates to insert an element and make it "quoted text".
   eInsertQuotation,
 
-  htmlPaste = 3012,
-  loadHTML,
+  // ePasteHTMLContent indicates to paste HTML content in clipboard.
+  ePasteHTMLContent,
+
+  // eInsertHTMLSource indicates to create a document fragment from given HTML
+  // source and insert into the DOM tree.  So, this is similar to innerHTML.
+  eInsertHTMLSource,
+
   resetTextProperties,
   setAbsolutePosition,
   removeAbsolutePosition,
