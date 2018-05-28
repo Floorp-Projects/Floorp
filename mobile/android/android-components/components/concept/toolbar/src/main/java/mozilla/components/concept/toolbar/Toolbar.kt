@@ -9,6 +9,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
@@ -113,6 +114,27 @@ interface Toolbar {
     ) : Action {
         override fun createView(parent: ViewGroup): View = View(parent.context).apply {
             minimumWidth = desiredWidth
+        }
+
+        override fun bind(view: View) = Unit
+    }
+
+    open class ActionImage(
+        @DrawableRes private val imageResource: Int,
+        private val contentDescription: String? = null
+    ) : Action {
+        override fun createView(parent: ViewGroup): View = ImageView(parent.context).also {
+            val drawable = parent.context.resources.getDrawable(imageResource, parent.context.theme)
+            it.minimumWidth = drawable.intrinsicWidth
+
+            it.setImageDrawable(drawable)
+
+            it.contentDescription = contentDescription
+            it.importantForAccessibility = if (contentDescription.isNullOrEmpty()) {
+                View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            } else {
+                View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            }
         }
 
         override fun bind(view: View) = Unit
