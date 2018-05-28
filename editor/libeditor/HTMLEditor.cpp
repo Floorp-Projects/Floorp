@@ -2117,14 +2117,14 @@ HTMLEditor::RemoveList(const nsAString& aListType)
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::removeList,
+                                      *this, EditSubAction::eRemoveList,
                                       nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  EditSubActionInfo subActionInfo(EditSubAction::removeList);
+  EditSubActionInfo subActionInfo(EditSubAction::eRemoveList);
   if (aListType.LowerCaseEqualsLiteral("ol")) {
     subActionInfo.bOrdered = true;
   } else {

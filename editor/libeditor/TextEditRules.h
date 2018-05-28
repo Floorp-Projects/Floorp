@@ -548,7 +548,7 @@ public:
   nsIEditor::EDirection collapsedAction;
   nsIEditor::EStripWrappers stripWrappers;
 
-  // EditSubAction::removeList
+  // EditSubAction::eRemoveList
   bool bOrdered;
 
   // EditSubAction::eCreateOrChangeList
