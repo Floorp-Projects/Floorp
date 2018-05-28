@@ -69,7 +69,10 @@ enum class EditSubAction : int32_t
   // \n at least to break current line.
   eInsertParagraphSeparator,
 
-  makeList,
+  // eCreateOrChangeList indicates to create new list or change existing list
+  // type.
+  eCreateOrChangeList,
+
   indent,
   outdent,
   align,
