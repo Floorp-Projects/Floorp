@@ -266,8 +266,9 @@ add_task(async function testPrefLockedHomepage() {
   });
 
   // Lock the prefs without an extension.
+  let mutationsDone = waitForAllMutations();
   lockPrefs();
-  await waitForAllMutations();
+  await mutationsDone;
 
   // Check that everything is now disabled.
   is(getHomepage(), lockedHomepage, "The reported homepage is set by the pref");

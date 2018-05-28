@@ -106,6 +106,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
   HybridContentTelemetry: "resource://gre/modules/HybridContentTelemetry.jsm",
   Integration: "resource://gre/modules/Integration.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
@@ -402,8 +403,7 @@ BrowserGlue.prototype = {
       newTabSetting = 3;
     }
 
-    const homePageURL = Services.prefs.getComplexValue("browser.startup.homepage",
-                                                       Ci.nsIPrefLocalizedString).data;
+    const homePageURL = HomePage.get();
     if (homePageURL === "about:home") {
       homePageSetting = 0;
     } else if (homePageURL === "about:blank") {
