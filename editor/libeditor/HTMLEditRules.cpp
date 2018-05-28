@@ -94,7 +94,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eRemoveList ||
          aEditSubAction == EditSubAction::eCreateOrChangeDefinitionList ||
          aEditSubAction == EditSubAction::eInsertElement ||
-         aEditSubAction == EditSubAction::insertQuotation;
+         aEditSubAction == EditSubAction::eInsertQuotation;
 }
 
 static nsAtom&
