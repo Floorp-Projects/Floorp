@@ -498,9 +498,9 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
     // Note we only want to do this if the overall operation was deletion,
-    // not if deletion was done along the way for EditSubAction::loadHTML,
-    // EditSubAction::eInsertText, etc.  That's why this is here rather than
-    // DidDeleteSelection().
+    // not if deletion was done along the way for
+    // EditSubAction::eInsertHTMLSource, EditSubAction::eInsertText, etc.
+    // That's why this is here rather than DidDeleteSelection().
     if (aEditSubAction == EditSubAction::eDeleteSelectedContent &&
         mDidRangedDelete) {
       nsresult rv = InsertBRIfNeeded();
@@ -540,8 +540,8 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
-        aEditSubAction == EditSubAction::htmlPaste ||
-        aEditSubAction == EditSubAction::loadHTML) {
+        aEditSubAction == EditSubAction::ePasteHTMLContent ||
+        aEditSubAction == EditSubAction::eInsertHTMLSource) {
       rv = AdjustWhitespace();
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -576,8 +576,8 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
-        aEditSubAction == EditSubAction::htmlPaste ||
-        aEditSubAction == EditSubAction::loadHTML) {
+        aEditSubAction == EditSubAction::ePasteHTMLContent ||
+        aEditSubAction == EditSubAction::eInsertHTMLSource) {
       rv = AdjustSelection(aDirection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -687,7 +687,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString,
                             aInfo.maxLength);
-    case EditSubAction::loadHTML:
+    case EditSubAction::eInsertHTMLSource:
       return WillLoadHTML();
     case EditSubAction::eInsertParagraphSeparator:
       UndefineCaretBidiLevel();
