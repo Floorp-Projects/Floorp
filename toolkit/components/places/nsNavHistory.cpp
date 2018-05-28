@@ -110,6 +110,8 @@ using namespace mozilla::places;
 // This is a 'hidden' pref for the purposes of unit tests.
 #define PREF_FREC_DECAY_RATE     "places.frecency.decayRate"
 #define PREF_FREC_DECAY_RATE_DEF 0.975f
+// An adaptive history entry is removed if unused for these many days.
+#define ADAPTIVE_HISTORY_EXPIRE_DAYS 90
 
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
@@ -2521,7 +2523,12 @@ nsNavHistory::DecayFrecency()
   nsresult rv = FixInvalidFrecencies();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE, PREF_FREC_DECAY_RATE_DEF);
+  float decayRate = Preferences::GetFloat(PREF_FREC_DECAY_RATE,
+                                          PREF_FREC_DECAY_RATE_DEF);
+  if (decayRate > 1.0f) {
+    MOZ_ASSERT(false, "The frecency decay rate should not be greater than 1.0");
+    decayRate = PREF_FREC_DECAY_RATE_DEF;
+  }
 
   // Globally decay places frecency rankings to estimate reduced frecency
   // values of pages that haven't been visited for a while, i.e., they do
@@ -2534,7 +2541,6 @@ nsNavHistory::DecayFrecency()
     "WHERE frecency > 0"
   );
   NS_ENSURE_STATE(decayFrecency);
-
   rv = decayFrecency->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
                                        static_cast<double>(decayRate));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2542,15 +2548,22 @@ nsNavHistory::DecayFrecency()
   // Decay potentially unused adaptive entries (e.g. those that are at 1)
   // to allow better chances for new entries that will start at 1.
   nsCOMPtr<mozIStorageAsyncStatement> decayAdaptive = mDB->GetAsyncStatement(
-    "UPDATE moz_inputhistory SET use_count = use_count * .975"
+    "UPDATE moz_inputhistory SET use_count = use_count * :decay_rate"
   );
   NS_ENSURE_STATE(decayAdaptive);
+  rv = decayAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("decay_rate"),
+                                       static_cast<double>(decayRate));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Delete any adaptive entries that won't help in ordering anymore.
   nsCOMPtr<mozIStorageAsyncStatement> deleteAdaptive = mDB->GetAsyncStatement(
-    "DELETE FROM moz_inputhistory WHERE use_count < .01"
+    "DELETE FROM moz_inputhistory WHERE use_count < :use_count"
   );
   NS_ENSURE_STATE(deleteAdaptive);
+  rv = deleteAdaptive->BindDoubleByName(NS_LITERAL_CSTRING("use_count"),
+                                        std::pow(static_cast<double>(decayRate),
+                                                 ADAPTIVE_HISTORY_EXPIRE_DAYS));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
   if (!conn) {
@@ -2563,8 +2576,7 @@ nsNavHistory::DecayFrecency()
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
   RefPtr<PlacesDecayFrecencyCallback> cb = new PlacesDecayFrecencyCallback();
-  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), cb,
-                                     getter_AddRefs(ps));
+  rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), cb, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecayFrecencyPendingCount++;
