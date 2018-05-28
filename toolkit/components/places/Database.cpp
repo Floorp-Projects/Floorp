@@ -1531,8 +1531,6 @@ Database::EnsureBookmarkRoots(const int32_t startPosition)
         "UPDATE moz_bookmarks SET syncStatus = :sync_status WHERE id = :id"
       ), getter_AddRefs(mobileRootSyncStatusStmt));
       if (NS_FAILED(rv)) return rv;
-      mozStorageStatementScoper mobileRootSyncStatusScoper(
-        mobileRootSyncStatusStmt);
 
       rv = mobileRootSyncStatusStmt->BindInt32ByName(
         NS_LITERAL_CSTRING("sync_status"),
@@ -1673,7 +1671,6 @@ Database::MigrateV32Up() {
         "FROM moz_places WHERE LENGTH(url) > :maxlen AND foreign_count = 0"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
-    mozStorageStatementScoper scoper(stmt);
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("maxlen"), MaxUrlLength());
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->Execute();
@@ -1686,7 +1683,6 @@ Database::MigrateV32Up() {
       "DELETE FROM moz_places WHERE LENGTH(url) > :maxlen AND foreign_count = 0"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
-    mozStorageStatementScoper scoper(stmt);
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("maxlen"), MaxUrlLength());
     NS_ENSURE_SUCCESS(rv, rv);
     rv = stmt->Execute();
@@ -1824,7 +1820,6 @@ Database::MigrateV35Up() {
       "SELECT id FROM moz_bookmarks WHERE parent = 0"
     ), getter_AddRefs(checkRootsStmt));
     NS_ENSURE_SUCCESS(rv, rv);
-    mozStorageStatementScoper scoper(checkRootsStmt);
     bool hasResult = false;
     rv = checkRootsStmt->ExecuteStep(&hasResult);
     if (NS_SUCCEEDED(rv) && !hasResult) {
@@ -1861,7 +1856,6 @@ Database::MigrateV35Up() {
       "WHERE parent = :folder_id"
     ), getter_AddRefs(moveStmt));
     if (NS_FAILED(rv)) return rv;
-    mozStorageStatementScoper moveScoper(moveStmt);
 
     rv = moveStmt->BindInt64ByName(NS_LITERAL_CSTRING("root_id"),
                                    mobileRootId);
@@ -2076,7 +2070,6 @@ Database::MigrateV42Up() {
       "PRAGMA favicons.auto_vacuum"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
-    mozStorageStatementScoper scoper(stmt);
     bool hasResult = false;
     if (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
       vacuum = stmt->AsInt32(0);
@@ -2342,8 +2335,8 @@ Database::MigrateV48Up() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
   rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "INSERT OR IGNORE INTO moz_origins (prefix, host, frecency) " \
-    "SELECT get_prefix(url), get_host_and_port(url), -1 " \
+    "INSERT OR IGNORE INTO moz_origins (prefix, host, frecency) "
+    "SELECT get_prefix(url), get_host_and_port(url), -1 "
     "FROM moz_places; "
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2354,7 +2347,7 @@ Database::MigrateV48Up() {
   ), getter_AddRefs(stmt));
   if (NS_FAILED(rv)) {
     rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-      "ALTER TABLE moz_places " \
+      "ALTER TABLE moz_places "
       "ADD COLUMN origin_id INTEGER REFERENCES moz_origins(id); "
     ));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2362,10 +2355,10 @@ Database::MigrateV48Up() {
   rv = mMainConn->ExecuteSimpleSQL(CREATE_IDX_MOZ_PLACES_ORIGIN_ID);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE moz_places " \
+    "UPDATE moz_places "
     "SET origin_id = ( "
-      "SELECT id FROM moz_origins " \
-      "WHERE prefix = get_prefix(url) AND host = get_host_and_port(url) " \
+      "SELECT id FROM moz_origins "
+      "WHERE prefix = get_prefix(url) AND host = get_host_and_port(url) "
     "); "
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2414,41 +2407,33 @@ MigrateV48FrecenciesRunnable::Run()
     return NS_OK;
   }
 
+  // We do the work in chunks, or the wal journal may grow too much.
+  nsCOMPtr<mozIStorageStatement> updateStmt;
+  nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE moz_origins "
+    "SET frecency = ( "
+      "SELECT MAX(frecency) "
+      "FROM moz_places "
+      "WHERE moz_places.origin_id = moz_origins.id "
+    ") "
+    "WHERE rowid IN ( "
+      "SELECT rowid "
+      "FROM moz_origins "
+      "WHERE frecency = -1 "
+      "LIMIT 400 "
+    ") "
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<mozIStorageStatement> selectStmt;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id FROM moz_origins " \
-    "WHERE frecency = -1 " \
-    "ORDER BY id ASC " \
-    "LIMIT 200; "
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id FROM moz_origins WHERE frecency = -1 "
   ), getter_AddRefs(selectStmt));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> updateStmt;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "UPDATE moz_origins " \
-    "SET frecency = ( " \
-      "SELECT MAX(frecency) " \
-      "FROM moz_places " \
-      "WHERE moz_places.origin_id = moz_origins.id " \
-    ") " \
-    "WHERE id = :id; "
-  ), getter_AddRefs(updateStmt));
+  bool hasResult = false;
+  rv = selectStmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  mozStorageStatementScoper updateScoper(updateStmt);
-
-  // We should do the work in chunks, or the wal journal may grow too much.
-  bool hasResult;
-  uint8_t count = 0;
-  for (; NS_SUCCEEDED(selectStmt->ExecuteStep(&hasResult)) && hasResult; ++count) {
-    int64_t id = selectStmt->AsInt64(0);
-    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), id);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = updateStmt->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (count == 200) {
+  if (hasResult) {
     // There are more results to handle. Re-dispatch to the same thread for the
     // next chunk.
     return NS_DispatchToCurrentThread(this);
@@ -2665,7 +2650,6 @@ Database::GetItemsWithAnno(const nsACString& aAnnoName, int32_t aItemType,
           "b.type = :item_type"
   ), getter_AddRefs(stmt));
   if (NS_FAILED(rv)) return rv;
-  mozStorageStatementScoper scoper(stmt);
 
   rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("anno_name"), aAnnoName);
   if (NS_FAILED(rv)) return rv;
@@ -2692,7 +2676,6 @@ Database::DeleteBookmarkItem(int32_t aItemId)
     "DELETE FROM moz_bookmarks WHERE id = :item_id"
   ), getter_AddRefs(deleteStmt));
   if (NS_FAILED(rv)) return rv;
-  mozStorageStatementScoper deleteScoper(deleteStmt);
 
   rv = deleteStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
                                    aItemId);
@@ -2707,7 +2690,6 @@ Database::DeleteBookmarkItem(int32_t aItemId)
     "DELETE FROM moz_items_annos WHERE item_id = :item_id"
   ), getter_AddRefs(removeAnnosStmt));
   if (NS_FAILED(rv)) return rv;
-  mozStorageStatementScoper removeAnnosScoper(removeAnnosStmt);
 
   rv = removeAnnosStmt->BindInt64ByName(NS_LITERAL_CSTRING("item_id"),
                                         aItemId);
@@ -2735,7 +2717,6 @@ Database::CreateMobileRoot()
     "FROM moz_bookmarks b WHERE b.parent = 0"
   ), getter_AddRefs(createStmt));
   if (NS_FAILED(rv)) return -1;
-  mozStorageStatementScoper createScoper(createStmt);
 
   rv = createStmt->BindInt32ByName(NS_LITERAL_CSTRING("item_type"),
                                    nsINavBookmarksService::TYPE_FOLDER);
@@ -2760,7 +2741,6 @@ Database::CreateMobileRoot()
     "SELECT id FROM moz_bookmarks WHERE guid = :guid"
   ), getter_AddRefs(findIdStmt));
   if (NS_FAILED(rv)) return -1;
-  mozStorageStatementScoper findIdScoper(findIdStmt);
 
   rv = findIdStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"),
                                         NS_LITERAL_CSTRING(MOBILE_ROOT_GUID));
