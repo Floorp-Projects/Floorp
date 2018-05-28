@@ -11,3 +11,5 @@ include $(topsrcdir)/config/rules.mk
 .PHONY: gtestxul
 gtestxul:
 	$(MAKE) -C $(DEPTH) toolkit/library/gtest/target LINK_GTEST_DURING_COMPILE=1
+
+DUMP_SYMBOLS_FLAGS = --count-ctors

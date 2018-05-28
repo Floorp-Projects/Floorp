@@ -492,12 +492,12 @@ class Dumper:
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
         pass
 
-    def Process(self, file_to_process):
+    def Process(self, file_to_process, count_ctors=False):
         """Process the given file."""
         if self.ShouldProcess(os.path.abspath(file_to_process)):
-            self.ProcessFile(file_to_process)
+            self.ProcessFile(file_to_process, count_ctors=count_ctors)
 
-    def ProcessFile(self, file, dsymbundle=None):
+    def ProcessFile(self, file, dsymbundle=None, count_ctors=False):
         """Dump symbols from these files into a symbol file, stored
         in the proper directory structure in  |symbol_path|; processing is performed
         asynchronously, and Finish must be called to wait for it complete and cleanup.
@@ -509,7 +509,8 @@ class Dumper:
         # the tinderbox vcs path will be assigned further down
         vcs_root = os.environ.get('MOZ_SOURCE_REPO')
         for arch_num, arch in enumerate(self.archs):
-            self.ProcessFileWork(file, arch_num, arch, vcs_root, dsymbundle)
+            self.ProcessFileWork(file, arch_num, arch, vcs_root, dsymbundle,
+                                 count_ctors=count_ctors)
 
     def dump_syms_cmdline(self, file, arch, dsymbundle=None):
         '''
@@ -518,7 +519,9 @@ class Dumper:
         # The Mac dumper overrides this.
         return [self.dump_syms, file]
 
-    def ProcessFileWork(self, file, arch_num, arch, vcs_root, dsymbundle=None):
+    def ProcessFileWork(self, file, arch_num, arch, vcs_root, dsymbundle=None,
+                        count_ctors=False):
+        ctors = 0
         t_start = time.time()
         print("Processing file: %s" % file, file=sys.stderr)
 
@@ -582,6 +585,16 @@ class Dumper:
                             code_id, code_file = bits[2:]
                         f.write(line)
                     else:
+                        if count_ctors and line.startswith("FUNC "):
+                            # Static initializers, as created by clang and gcc
+                            # have symbols that start with "_GLOBAL_sub"
+                            if '_GLOBAL__sub_' in line:
+                                ctors += 1
+                            # MSVC creates `dynamic initializer for '...'`
+                            # symbols.
+                            elif "`dynamic initializer for '" in line:
+                                ctors += 1
+
                         # pass through all other lines unchanged
                         f.write(line)
                 f.close()
@@ -604,6 +617,24 @@ class Dumper:
 
         if dsymbundle:
             shutil.rmtree(dsymbundle)
+
+        if count_ctors:
+            import json
+
+            perfherder_data = {
+                "framework": {"name": "build_metrics"},
+                "suites": [{
+                    "name": "compiler_metrics",
+                    "subtests": [{
+                        "name": "num_static_constructors",
+                        "value": ctors,
+                        "alertChangeType": "absolute",
+                        "alertThreshold": 3
+                    }]}
+                ]
+            }
+            print('PERFHERDER_DATA: %s' % json.dumps(perfherder_data),
+                  file=sys.stderr)
 
         elapsed = time.time() - t_start
         print('Finished processing %s in %.2fs' % (file, elapsed),
@@ -768,13 +799,14 @@ class Dumper_Mac(Dumper):
             return self.RunFileCommand(file).startswith("Mach-O")
         return False
 
-    def ProcessFile(self, file):
+    def ProcessFile(self, file, count_ctors=False):
         print("Starting Mac pre-processing on file: %s" % file,
               file=sys.stderr)
         dsymbundle = self.GenerateDSYM(file)
         if dsymbundle:
             # kick off new jobs per-arch with our new list of files
-            Dumper.ProcessFile(self, file, dsymbundle=dsymbundle)
+            Dumper.ProcessFile(self, file, dsymbundle=dsymbundle,
+                               count_ctors=count_ctors)
 
     def dump_syms_cmdline(self, file, arch, dsymbundle=None):
         '''
@@ -863,6 +895,9 @@ def main():
 to canonical locations in the source repository. Specify
 <install manifest filename>,<install destination> as a comma-separated pair.
 """)
+    parser.add_option("--count-ctors",
+                      action="store_true", dest="count_ctors", default=False,
+                      help="Count static initializers")
     (options, args) = parser.parse_args()
 
     #check to see if the pdbstr.exe exists
@@ -897,7 +932,7 @@ to canonical locations in the source repository. Specify
                                        s3_bucket=bucket,
                                        file_mapping=file_mapping)
 
-    dumper.Process(args[2])
+    dumper.Process(args[2], options.count_ctors)
 
 # run main if run directly
 if __name__ == "__main__":
