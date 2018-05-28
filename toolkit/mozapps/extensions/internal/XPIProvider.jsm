@@ -2616,25 +2616,6 @@ var XPIProvider = {
     XPIStates.save();
   },
 
-  /**
-   * Returns an Addon corresponding to an instance ID.
-   *
-   * @param {Symbol} aInstanceID
-   *        An Addon Instance ID
-   *
-   * @returns {AddonInternal?}
-   *
-   * @throws if the aInstanceID argument is not valid.
-   */
-   getAddonByInstanceID(aInstanceID) {
-     let id = this.getAddonIDByInstanceID(aInstanceID);
-     if (id) {
-       return XPIDatabase.syncGetAddonByID(id);
-     }
-
-     return null;
-   },
-
    getAddonIDByInstanceID(aInstanceID) {
      if (!aInstanceID || typeof aInstanceID != "symbol")
        throw Components.Exception("aInstanceID must be a Symbol()",
