@@ -2199,14 +2199,15 @@ HTMLEditor::InsertBasicBlockWithTransaction(nsAtom& aTagName)
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::makeBasicBlock,
+                                      *this,
+                                      EditSubAction::eCreateOrRemoveBlock,
                                       nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsDependentAtomString tagName(&aTagName);
-  EditSubActionInfo subActionInfo(EditSubAction::makeBasicBlock);
+  EditSubActionInfo subActionInfo(EditSubAction::eCreateOrRemoveBlock);
   subActionInfo.blockType = &tagName;
   nsresult rv =
    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);

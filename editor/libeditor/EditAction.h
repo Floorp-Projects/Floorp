@@ -82,7 +82,10 @@ enum class EditSubAction : int32_t
   // attribute or text-align.
   eSetOrClearAlignment,
 
-  makeBasicBlock,
+  // eCreateOrRemoveBlock creates new block or removes existing block and
+  // move its descendants to where the block was.
+  eCreateOrRemoveBlock,
+
   removeList,
   makeDefListItem,
   insertElement,

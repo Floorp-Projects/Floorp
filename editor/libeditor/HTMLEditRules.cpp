@@ -90,7 +90,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eIndent ||
          aEditSubAction == EditSubAction::eOutdent ||
          aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-         aEditSubAction == EditSubAction::makeBasicBlock ||
+         aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
          aEditSubAction == EditSubAction::removeList ||
          aEditSubAction == EditSubAction::makeDefListItem ||
          aEditSubAction == EditSubAction::insertElement ||
@@ -708,7 +708,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillRemoveAbsolutePosition(aCancel, aHandled);
     case EditSubAction::eSetOrClearAlignment:
       return WillAlign(*aInfo.alignType, aCancel, aHandled);
-    case EditSubAction::makeBasicBlock:
+    case EditSubAction::eCreateOrRemoveBlock:
       return WillMakeBasicBlock(*aInfo.blockType, aCancel, aHandled);
     case EditSubAction::removeList: {
       nsresult rv = WillRemoveList(aCancel, aHandled);
@@ -763,7 +763,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
-    case EditSubAction::makeBasicBlock:
+    case EditSubAction::eCreateOrRemoveBlock:
     case EditSubAction::eIndent:
     case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
@@ -4613,7 +4613,7 @@ HTMLEditRules::MakeBasicBlock(nsAtom& blockType)
 
   // Contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
-  rv = GetNodesFromSelection(EditSubAction::makeBasicBlock, arrayOfNodes,
+  rv = GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock, arrayOfNodes,
                              TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -7221,7 +7221,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
         aEditSubAction == EditSubAction::eIndent ||
         aEditSubAction == EditSubAction::eOutdent ||
         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-        aEditSubAction == EditSubAction::makeBasicBlock;
+        aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
       if (!HTMLEditorRef().IsDescendantOfEditorRoot(
                              point.GetContainer()->GetParentNode()) &&
           (blockLevelAction ||
@@ -7255,7 +7255,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   //     This might be different from "block-extend" of execCommand spec.
   //     However, the spec is really unclear.
   // XXX Probably, scanning only editable nodes is wrong for
-  //     EditSubAction::makeBasicBlock because it might be better to wrap
+  //     EditSubAction::eCreateOrRemoveBlock because it might be better to wrap
   //     existing inline elements even if it's non-editable.  For example,
   //     following examples with insertParagraph causes different result:
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b></div>
@@ -7535,7 +7535,7 @@ HTMLEditRules::GetNodesForOperation(
 
   // Certain operations should not act on li's and td's, but rather inside
   // them.  Alter the list as needed.
-  if (aEditSubAction == EditSubAction::makeBasicBlock) {
+  if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       if (HTMLEditUtils::IsListItem(node)) {
@@ -7584,7 +7584,7 @@ HTMLEditRules::GetNodesForOperation(
 
   // Post-process the list to break up inline containers that contain br's, but
   // only for operations that might care, like making lists or paragraphs
-  if (aEditSubAction == EditSubAction::makeBasicBlock ||
+  if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
       aEditSubAction == EditSubAction::eCreateOrChangeList ||
       aEditSubAction == EditSubAction::eSetOrClearAlignment ||
       aEditSubAction == EditSubAction::setAbsolutePosition ||
@@ -7766,7 +7766,7 @@ HTMLEditRules::GetParagraphFormatNodes(
 
   // Contruct a list of nodes to act on.
   nsresult rv =
-   GetNodesFromSelection(EditSubAction::makeBasicBlock,
+   GetNodesFromSelection(EditSubAction::eCreateOrRemoveBlock,
                          outArrayOfNodes, TouchContent::no);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

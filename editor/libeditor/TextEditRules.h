@@ -558,7 +558,7 @@ public:
   // EditSubAction::eSetOrClearAlignment
   const nsAString* alignType;
 
-  // EditSubAction::makeBasicBlock
+  // EditSubAction::eCreateOrRemoveBlock
   const nsAString* blockType;
 };
 
