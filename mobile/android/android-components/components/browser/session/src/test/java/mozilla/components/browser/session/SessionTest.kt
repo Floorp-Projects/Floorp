@@ -124,23 +124,6 @@ class SessionTest {
     }
 
     @Test
-    fun `Session returns initial URL`() {
-        val session = Session("https://www.mozilla.org")
-
-        assertEquals("https://www.mozilla.org", session.url)
-    }
-
-    @Test
-    fun `Session always has an ID`() {
-        var session = Session("https://www.mozilla.org")
-        assertNotNull(session.id)
-
-        session = Session("https://www.mozilla.org", "s1")
-        assertNotNull(session.id)
-        assertEquals("s1", session.id)
-    }
-
-    @Test
     fun `observer is notified when search terms are set`() {
         val observer = mock(Session.Observer::class.java)
 
@@ -153,6 +136,37 @@ class SessionTest {
         assertEquals("mozilla android", session.searchTerms)
         verify(observer, times(1)).onSearch()
         verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `observer is notified when security info is set`() {
+        val observer = mock(Session.Observer::class.java)
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        session.securityInfo = Session.SecurityInfo(true, "mozilla.org", "issuer")
+
+        assertEquals(Session.SecurityInfo(true, "mozilla.org", "issuer"), session.securityInfo)
+        verify(observer, times(1)).onSecurityChanged()
+        verifyNoMoreInteractions(observer)
+    }
+
+    @Test
+    fun `session returns initial URL`() {
+        val session = Session("https://www.mozilla.org")
+
+        assertEquals("https://www.mozilla.org", session.url)
+    }
+
+    @Test
+    fun `session always has an ID`() {
+        var session = Session("https://www.mozilla.org")
+        assertNotNull(session.id)
+
+        session = Session("https://www.mozilla.org", "s1")
+        assertNotNull(session.id)
+        assertEquals("s1", session.id)
     }
 
     @Test

@@ -23,9 +23,20 @@ class Session(
         fun onLoadingStateChanged()
         fun onNavigationStateChanged()
         fun onSearch()
+        fun onSecurityChanged()
     }
 
     private val observers = mutableListOf<Observer>()
+
+    /**
+     * A value type holding security information for a Session.
+     *
+     * @property secure true if the session is currently pointed to a URL with
+     * a valid SSL certificate, otherwise false.
+     * @property host domain for which the SSL certificate was issued.
+     * @property issuer name of the certificate authority who issued the SSL certificate.
+     */
+    data class SecurityInfo(val secure: Boolean = false, val host: String = "", val issuer: String = "")
 
     /**
      * The currently loading or loaded URL.
@@ -67,6 +78,14 @@ class Session(
      */
     var searchTerms: String by Delegates.observable("") {
         _, _, new -> notifyObservers ({ if (!new.isEmpty()) onSearch() })
+    }
+
+    /**
+     * Security information indicating whether or not the current session is
+     * for a secure URL, as well as the host and SSL certificate authority, if applicable.
+     */
+    var securityInfo: SecurityInfo by Delegates.observable(SecurityInfo()) {
+        _, old, new -> notifyObservers (old, new, { onSecurityChanged() })
     }
 
     /**

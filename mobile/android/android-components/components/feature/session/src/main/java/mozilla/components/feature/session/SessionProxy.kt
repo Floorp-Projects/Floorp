@@ -37,4 +37,8 @@ class SessionProxy(
         canGoBack?.let { session.canGoBack = canGoBack }
         canGoForward?.let { session.canGoForward = canGoForward }
     }
+
+    override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+        session.securityInfo = Session.SecurityInfo(secure, host ?: "", issuer ?: "")
+    }
 }

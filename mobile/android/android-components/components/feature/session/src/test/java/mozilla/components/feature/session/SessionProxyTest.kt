@@ -40,4 +40,30 @@ class SessionProxyTest {
         assertEquals(true, session.canGoForward)
         assertEquals(true, session.canGoBack)
     }
+
+    @Test
+    fun testSessionProxyObservesSecurityChanges() {
+        val session = Session("")
+        val engineSession = object : EngineSession() {
+            override fun goBack() { }
+            override fun goForward() { }
+            override fun reload() { }
+            override fun loadUrl(url: String) {
+                if (url.startsWith("https://")) {
+                    notifyObservers { onSecurityChange(true, "host", "issuer") }
+                } else {
+                    notifyObservers { onSecurityChange(false) }
+                }
+            }
+        }
+
+        // SessionProxy registers as an engine session observer
+        SessionProxy(session, engineSession)
+
+        engineSession.loadUrl("http://mozilla.org")
+        assertEquals(Session.SecurityInfo(false), session.securityInfo)
+
+        engineSession.loadUrl("https://mozilla.org")
+        assertEquals(Session.SecurityInfo(true, "host", "issuer"), session.securityInfo)
+    }
 }

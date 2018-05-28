@@ -27,6 +27,7 @@ class SystemEngineSessionTest {
             override fun onLocationChange(url: String) { }
             override fun onProgress(progress: Int) { observedProgress = progress }
             override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) { }
+            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {}
         })
 
         engineView.currentWebView.webChromeClient.onProgressChanged(null, 100)

@@ -96,7 +96,15 @@ class GeckoEngineSession(
         override fun onSecurityChange(
             session: GeckoSession?,
             securityInfo: GeckoSession.ProgressDelegate.SecurityInformation?
-        ) { }
+        ) {
+            notifyObservers {
+                if (securityInfo != null) {
+                    onSecurityChange(securityInfo.isSecure, securityInfo.host, securityInfo.issuerOrganization)
+                } else {
+                    onSecurityChange(false)
+                }
+            }
+        }
 
         override fun onPageStart(session: GeckoSession?, url: String?) {
             notifyObservers {

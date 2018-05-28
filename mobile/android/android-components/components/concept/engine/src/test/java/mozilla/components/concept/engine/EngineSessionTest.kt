@@ -24,12 +24,14 @@ class EngineSessionTest {
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
+        session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onLocationChange("https://www.firefox.com")
         verify(observer).onProgress(25)
         verify(observer).onProgress(100)
         verify(observer).onLoadingStateChange(true)
+        verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verifyNoMoreInteractions(observer)
     }
 
@@ -43,18 +45,23 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
+        session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
 
         session.unregister(observer)
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
+        session.notifyInternalObservers { onSecurityChange(false, "", "") }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
+        verify(observer).onLoadingStateChange(true)
+        verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
-        verify(observer).onLoadingStateChange(true)
+        verify(observer, never()).onLoadingStateChange(false)
+        verify(observer, never()).onSecurityChange(false, "", "")
         verifyNoMoreInteractions(observer)
     }
 
@@ -68,18 +75,24 @@ class EngineSessionTest {
         session.notifyInternalObservers { onLocationChange("https://www.mozilla.org") }
         session.notifyInternalObservers { onProgress(25) }
         session.notifyInternalObservers { onLoadingStateChange(true) }
+        session.notifyInternalObservers { onSecurityChange(true, "mozilla.org", "issuer") }
 
         session.close()
 
         session.notifyInternalObservers { onLocationChange("https://www.firefox.com") }
         session.notifyInternalObservers { onProgress(100) }
         session.notifyInternalObservers { onLoadingStateChange(false) }
+        session.notifyInternalObservers { onSecurityChange(false, "", "") }
 
         verify(observer).onLocationChange("https://www.mozilla.org")
         verify(observer).onProgress(25)
+        verify(observer).onLoadingStateChange(true)
+        verify(observer).onSecurityChange(true, "mozilla.org", "issuer")
+
         verify(observer, never()).onLocationChange("https://www.firefox.com")
         verify(observer, never()).onProgress(100)
-        verify(observer).onLoadingStateChange(true)
+        verify(observer, never()).onLoadingStateChange(false)
+        verify(observer, never()).onSecurityChange(false, "", "")
         verifyNoMoreInteractions(observer)
     }
 }

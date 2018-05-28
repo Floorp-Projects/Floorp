@@ -71,4 +71,6 @@ class ToolbarPresenter(
     override fun onLoadingStateChanged() { }
 
     override fun onNavigationStateChanged() { /* TODO */ }
+
+    override fun onSecurityChanged() { /* TODO */ }
 }

@@ -20,6 +20,7 @@ abstract class EngineSession {
         fun onProgress(progress: Int)
         fun onLoadingStateChange(loading: Boolean)
         fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)
+        fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)
     }
 
     private val observers = mutableListOf<Observer>()

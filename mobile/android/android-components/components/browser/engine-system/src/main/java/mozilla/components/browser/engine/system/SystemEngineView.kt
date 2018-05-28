@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
 import java.lang.ref.WeakReference
+import java.net.URI
 
 /**
  * WebView-based implementation of EngineView.
@@ -60,10 +61,13 @@ class SystemEngineView @JvmOverloads constructor(
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 url?.let {
+                    val cert = view?.certificate
+
                     session?.internalNotifyObservers {
                         onLocationChange(it)
                         onLoadingStateChange(false)
                         onNavigationStateChange(webView.canGoBack(), webView.canGoForward())
+                        onSecurityChange(cert != null, cert?.let { URI(url).host }, cert?.issuedBy?.oName)
                     }
                 }
             }

@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.BundleEventListener
 import org.mozilla.gecko.util.EventCallback
 import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoSession
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -35,21 +36,36 @@ class GeckoEngineSessionTest {
         val engineSession = GeckoEngineSession(mock(GeckoRuntime::class.java))
 
         var observedProgress = 0
-        var observerLoadingState = false
+        var observedLoadingState = false
+        var observedSecurityChange = false
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadingStateChange(loading: Boolean) { observerLoadingState = loading }
+            override fun onLoadingStateChange(loading: Boolean) { observedLoadingState = loading }
             override fun onLocationChange(url: String) { }
             override fun onProgress(progress: Int) { observedProgress = progress }
             override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) { }
+            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) {
+                // We cannot assert on actual parameters as SecurityInfo's fields can't be set
+                // from the outside and its constructor isn't accessible either.
+                observedSecurityChange = true
+            }
         })
 
         engineSession.geckoSession.progressDelegate.onPageStart(null, "http://mozilla.org")
         assertEquals(PROGRESS_START, observedProgress)
-        assertEquals(true, observerLoadingState)
+        assertEquals(true, observedLoadingState)
 
         engineSession.geckoSession.progressDelegate.onPageStop(null, true)
         assertEquals(PROGRESS_STOP, observedProgress)
-        assertEquals(false, observerLoadingState)
+        assertEquals(false, observedLoadingState)
+
+        val securityInfo = mock(GeckoSession.ProgressDelegate.SecurityInformation::class.java)
+        engineSession.geckoSession.progressDelegate.onSecurityChange(null, securityInfo)
+        assertTrue(observedSecurityChange)
+
+        observedSecurityChange = false
+
+        engineSession.geckoSession.progressDelegate.onSecurityChange(null, null)
+        assertTrue(observedSecurityChange)
     }
 
     @Test
@@ -63,6 +79,7 @@ class GeckoEngineSessionTest {
             override fun onLoadingStateChange(loading: Boolean) {}
             override fun onLocationChange(url: String) { observedUrl = url }
             override fun onProgress(progress: Int) { }
+            override fun onSecurityChange(secure: Boolean, host: String?, issuer: String?) { }
             override fun onNavigationStateChange(canGoBack: Boolean?, canGoForward: Boolean?) {
                 canGoBack?.let { observedCanGoBack = canGoBack }
                 canGoForward?.let { observedCanGoForward = canGoForward }
