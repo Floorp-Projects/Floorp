@@ -227,7 +227,13 @@ internal class DisplayToolbar(
         return actions
             .mapNotNull { it.view }
             .map { view ->
-                view.measure(sizeSpec, sizeSpec)
+                val widthSpec = if (view.minimumWidth > size) {
+                    MeasureSpec.makeMeasureSpec(view.minimumWidth, MeasureSpec.EXACTLY)
+                } else {
+                    sizeSpec
+                }
+
+                view.measure(widthSpec, sizeSpec)
                 size
             }
             .sum()

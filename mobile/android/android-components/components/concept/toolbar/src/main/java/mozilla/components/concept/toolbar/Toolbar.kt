@@ -104,4 +104,17 @@ interface Toolbar {
 
         override fun bind(view: View) = Unit
     }
+
+    /**
+     * An "empty" action with a desired width to be used as "placeholder".
+     */
+    open class ActionSpace(
+        private val desiredWidth: Int
+    ) : Action {
+        override fun createView(parent: ViewGroup): View = View(parent.context).apply {
+            minimumWidth = desiredWidth
+        }
+
+        override fun bind(view: View) = Unit
+    }
 }
