@@ -474,7 +474,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
             prop_value = "%s  %s" % (prop_value, message)
         else:
             prop_value = message
-        self.set_property(prop_key, prop_value, write_to_file=True)
+        self.set_property(prop_key, prop_value)
         BaseScript.add_failure(self, locale, message=message, **kwargs)
 
     def query_failed_locales(self):
@@ -488,9 +488,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, AutomationMixin,
         locales = self.query_locales()
         for locale in locales:
             self.locales_property.setdefault(locale, SUCCESS_STR)
-        self.set_property("locales",
-                          json.dumps(self.locales_property),
-                          write_to_file=True)
+        self.set_property("locales", json.dumps(self.locales_property))
 
     # Actions {{{2
     def pull(self):
