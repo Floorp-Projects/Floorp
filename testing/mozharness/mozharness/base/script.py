@@ -1383,7 +1383,11 @@ class ScriptMixin(PlatformMixin):
                 self.info("Using partial env: %s" % pprint.pformat(partial_env))
                 env = self.query_env(partial_env=partial_env)
         else:
-            self.info("Using env: %s" % pprint.pformat(env))
+            if hasattr(self, 'previous_env') and env == self.previous_env:
+                self.info("Using env: (same as previous command)")
+            else:
+                self.info("Using env: %s" % pprint.pformat(env))
+                self.previous_env = env
 
         if output_parser is None:
             parser = OutputParser(config=self.config, log_obj=self.log_obj,
