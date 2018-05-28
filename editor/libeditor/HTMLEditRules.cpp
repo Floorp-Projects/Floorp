@@ -93,7 +93,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
          aEditSubAction == EditSubAction::eRemoveList ||
          aEditSubAction == EditSubAction::eCreateOrChangeDefinitionList ||
-         aEditSubAction == EditSubAction::insertElement ||
+         aEditSubAction == EditSubAction::eInsertElement ||
          aEditSubAction == EditSubAction::insertQuotation;
 }
 
@@ -724,7 +724,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     case EditSubAction::eCreateOrChangeDefinitionList:
       return WillMakeDefListItem(aInfo.blockType,
                                  aInfo.entireList, aCancel, aHandled);
-    case EditSubAction::insertElement: {
+    case EditSubAction::eInsertElement: {
       nsresult rv = WillInsert(aCancel);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
