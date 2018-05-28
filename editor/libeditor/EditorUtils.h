@@ -529,35 +529,41 @@ public:
 };
 
 /***************************************************************************
- * stack based helper class for StartOperation()/EndOperation() sandwich
+ * AutoTopLevelEditSubActionNotifier notifies editor of start to handle
+ * top level edit sub-action and end handling top level edit sub-action.
  */
-class MOZ_RAII AutoRules final
+class MOZ_RAII AutoTopLevelEditSubActionNotifier final
 {
 public:
-  AutoRules(EditorBase* aEditorBase, EditAction aAction,
-            nsIEditor::EDirection aDirection
-            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoTopLevelEditSubActionNotifier(EditorBase& aEditorBase,
+                                    EditSubAction aEditSubAction,
+                                    nsIEditor::EDirection aDirection
+                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mEditorBase(aEditorBase)
     , mDoNothing(false)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    // mAction will already be set if this is nested call
-    if (mEditorBase && !mEditorBase->mAction) {
-      mEditorBase->StartOperation(aAction, aDirection);
+    // mTopLevelEditSubAction will already be set if this is nested call
+    // XXX Looks like that this is not aware of unexpected nested edit action
+    //     handling via selectionchange event listener or mutation event
+    //     listener.
+    if (!mEditorBase.mTopLevelEditSubAction) {
+      mEditorBase.OnStartToHandleTopLevelEditSubAction(aEditSubAction,
+                                                       aDirection);
     } else {
       mDoNothing = true; // nested calls will end up here
     }
   }
 
-  ~AutoRules()
+  ~AutoTopLevelEditSubActionNotifier()
   {
-    if (mEditorBase && !mDoNothing) {
-      mEditorBase->EndOperation();
+    if (!mDoNothing) {
+      mEditorBase.OnEndHandlingTopLevelEditSubAction();
     }
   }
 
 protected:
-  EditorBase* mEditorBase;
+  EditorBase& mEditorBase;
   bool mDoNothing;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

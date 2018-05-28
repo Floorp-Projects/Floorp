@@ -2015,7 +2015,7 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // called yet, we need to notify it here because editor may be destroyed
   // before EditAction() is called if selection listener causes flushing layout.
   if (mTextListener && mTextEditor && mEditorInitialized &&
-      mTextEditor->IsInEditAction()) {
+      mTextEditor->IsInEditSubAction()) {
     mTextListener->OnEditActionHandled();
   }
 

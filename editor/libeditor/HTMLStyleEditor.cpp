@@ -85,16 +85,20 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
   }
 
   AutoPlaceholderBatch batchIt(this);
-  AutoRules beginRulesSniffing(this, EditAction::insertElement,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::insertElement,
+                                      nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
   bool cancel, handled;
-  RulesInfo ruleInfo(EditAction::setTextProperty);
+  EditSubActionInfo subActionInfo(EditSubAction::setTextProperty);
   // Protect the edit rules object from dying
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (!cancel && !handled) {
     // Loop through the ranges in the selection
     AutoRangeArray arrayOfRanges(selection);
@@ -175,7 +179,7 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
   }
   if (!cancel) {
     // Post-process
-    return rules->DidDoAction(selection, &ruleInfo, rv);
+    return rules->DidDoAction(selection, subActionInfo, rv);
   }
   return NS_OK;
 }
@@ -1189,8 +1193,9 @@ NS_IMETHODIMP
 HTMLEditor::RemoveAllInlineProperties()
 {
   AutoPlaceholderBatch batchIt(this);
-  AutoRules beginRulesSniffing(this, EditAction::resetTextProperties,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::resetTextProperties,
+                                      nsIEditor::eNext);
 
   nsresult rv = RemoveInlineProperty(nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1234,17 +1239,21 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
   }
 
   AutoPlaceholderBatch batchIt(this);
-  AutoRules beginRulesSniffing(this, EditAction::removeTextProperty,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::removeTextProperty,
+                                      nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
   bool cancel, handled;
-  RulesInfo ruleInfo(EditAction::removeTextProperty);
+  EditSubActionInfo subActionInfo(EditSubAction::removeTextProperty);
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv =
+    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   if (!cancel && !handled) {
     // Loop through the ranges in the selection
     // Since ranges might be modified by SplitStyleAboveRange, we need hold
@@ -1339,7 +1348,7 @@ HTMLEditor::RemoveInlineProperty(nsAtom* aProperty,
   }
   if (!cancel) {
     // Post-process
-    rv = rules->DidDoAction(selection, &ruleInfo, rv);
+    rv = rules->DidDoAction(selection, subActionInfo, rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -1391,8 +1400,9 @@ HTMLEditor::RelativeFontChange(FontSize aDir)
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
   AutoPlaceholderBatch batchIt(this);
-  AutoRules beginRulesSniffing(this, EditAction::setTextProperty,
-                               nsIEditor::eNext);
+  AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
+                                      *this, EditSubAction::setTextProperty,
+                                      nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
