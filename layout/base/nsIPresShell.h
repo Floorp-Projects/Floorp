@@ -1617,15 +1617,15 @@ protected:
   bool DetermineFontSizeInflationState();
 
   void RecordAlloc(void* aPtr) {
-#ifdef DEBUG
-    MOZ_ASSERT(!mAllocatedPointers.Contains(aPtr));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(!mAllocatedPointers.Contains(aPtr));
     mAllocatedPointers.PutEntry(aPtr);
 #endif
   }
 
   void RecordFree(void* aPtr) {
-#ifdef DEBUG
-    MOZ_ASSERT(mAllocatedPointers.Contains(aPtr));
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    MOZ_DIAGNOSTIC_ASSERT(mAllocatedPointers.Contains(aPtr));
     mAllocatedPointers.RemoveEntry(aPtr);
 #endif
   }
@@ -1717,7 +1717,9 @@ protected:
 
 #ifdef DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
+#endif
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // We track allocated pointers in a debug-only hashtable to assert against
   // missing/double frees.
   nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;

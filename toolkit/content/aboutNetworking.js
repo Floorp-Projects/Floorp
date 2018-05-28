@@ -12,6 +12,8 @@ const gDashboard = Cc["@mozilla.org/network/dashboard;1"]
                      .getService(Ci.nsIDashboard);
 const gDirServ = Cc["@mozilla.org/file/directory_service;1"]
                    .getService(Ci.nsIDirectoryServiceProvider);
+const gNetLinkSvc = Cc["@mozilla.org/network/network-link-service;1"]
+                      .getService(Ci.nsINetworkLinkService);
 
 const gRequestNetworkingData = {
   "http": gDashboard.requestHttpConnections,
@@ -127,6 +129,14 @@ function displayWebsockets(data) {
 
 function displayRcwnStats(data) {
   let status = Services.prefs.getBoolPref("network.http.rcwn.enabled");
+  let linkType = gNetLinkSvc.linkType;
+  if (!(linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
+        linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
+        linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB ||
+        linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI)) {
+    status = false;
+  }
+
   let cacheWon = data.rcwnCacheWonCount;
   let netWon = data.rcwnNetWonCount;
   let total = data.totalNetworkRequests;
