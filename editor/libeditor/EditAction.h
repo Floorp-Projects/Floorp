@@ -16,7 +16,9 @@ enum class EditSubAction : int32_t
 {
   ignore = -1,
 
-  none = 0,
+  // eNone indicates not edit sub-action is being handled.  This is useful
+  // of initial value of member variables.
+  eNone = 0,
   undo,
   redo,
   insertNode,
@@ -61,7 +63,7 @@ enum class EditSubAction : int32_t
 
 inline bool operator!(const mozilla::EditSubAction& aEditSubAction)
 {
-  return aEditSubAction == mozilla::EditSubAction::none;
+  return aEditSubAction == mozilla::EditSubAction::eNone;
 }
 
 #endif // #ifdef mozilla_EditAction_h

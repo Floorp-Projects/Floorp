@@ -72,7 +72,7 @@ TextEditRules::TextEditRules()
   , mDidExplicitlySetInterline(false)
   , mDeleteBidiImmediately(false)
   , mIsHTMLEditRules(false)
-  , mTopLevelEditSubAction(EditSubAction::none)
+  , mTopLevelEditSubAction(EditSubAction::eNone)
   , mLastStart(0)
   , mLastLength(0)
 {
@@ -93,7 +93,7 @@ TextEditRules::InitFields()
   mLockRulesSniffing = false;
   mDidExplicitlySetInterline = false;
   mDeleteBidiImmediately = false;
-  mTopLevelEditSubAction = EditSubAction::none;
+  mTopLevelEditSubAction = EditSubAction::eNone;
   mTimer = nullptr;
   mLastStart = 0;
   mLastLength = 0;
