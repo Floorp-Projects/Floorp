@@ -87,8 +87,8 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
   return aEditSubAction == EditSubAction::eDeleteSelectedContent ||
          aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
          aEditSubAction == EditSubAction::eCreateOrChangeList ||
-         aEditSubAction == EditSubAction::indent ||
-         aEditSubAction == EditSubAction::outdent ||
+         aEditSubAction == EditSubAction::eIndent ||
+         aEditSubAction == EditSubAction::eOutdent ||
          aEditSubAction == EditSubAction::align ||
          aEditSubAction == EditSubAction::makeBasicBlock ||
          aEditSubAction == EditSubAction::removeList ||
@@ -698,9 +698,9 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     case EditSubAction::eCreateOrChangeList:
       return WillMakeList(aInfo.blockType, aInfo.entireList,
                           aInfo.bulletType, aCancel, aHandled);
-    case EditSubAction::indent:
+    case EditSubAction::eIndent:
       return WillIndent(aCancel, aHandled);
-    case EditSubAction::outdent:
+    case EditSubAction::eOutdent:
       return WillOutdent(aCancel, aHandled);
     case EditSubAction::setAbsolutePosition:
       return WillAbsolutePosition(aCancel, aHandled);
@@ -764,8 +764,8 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
     case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
     case EditSubAction::makeBasicBlock:
-    case EditSubAction::indent:
-    case EditSubAction::outdent:
+    case EditSubAction::eIndent:
+    case EditSubAction::eOutdent:
     case EditSubAction::align:
       return DidMakeBasicBlock();
     case EditSubAction::setAbsolutePosition: {
@@ -1127,7 +1127,7 @@ HTMLEditRules::GetIndentState(bool* aCanIndent,
   // contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesFromSelection(EditSubAction::indent, arrayOfNodes,
+    GetNodesFromSelection(EditSubAction::eIndent, arrayOfNodes,
                           TouchContent::no);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4888,7 +4888,7 @@ HTMLEditRules::IndentAroundSelectionWithCSS()
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
     nsresult rv =
-      GetNodesFromSelection(EditSubAction::indent, arrayOfNodes,
+      GetNodesFromSelection(EditSubAction::eIndent, arrayOfNodes,
                             TouchContent::yes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -5171,12 +5171,12 @@ HTMLEditRules::IndentAroundSelectionWithHTML()
   // whose children are all in the range
 
   nsTArray<RefPtr<nsRange>> arrayOfRanges;
-  GetPromotedRanges(arrayOfRanges, EditSubAction::indent);
+  GetPromotedRanges(arrayOfRanges, EditSubAction::eIndent);
 
   // use these ranges to contruct a list of nodes to act on.
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditSubAction::indent,
+    GetNodesForOperation(arrayOfRanges, arrayOfNodes, EditSubAction::eIndent,
                          TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5553,7 +5553,7 @@ HTMLEditRules::OutdentAroundSelection()
   // in the range
   nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
   nsresult rv =
-    GetNodesFromSelection(EditSubAction::outdent, arrayOfNodes,
+    GetNodesFromSelection(EditSubAction::eOutdent, arrayOfNodes,
                           TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return SplitRangeOffFromNodeResult(rv);
@@ -7206,7 +7206,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       // aWhere == kEnd case.  as long as they are in one or the other it will
       // work.  special case for outdent: don't keep looking up if we have
       // found a blockquote element to act on
-      if (aEditSubAction == EditSubAction::outdent &&
+      if (aEditSubAction == EditSubAction::eOutdent &&
           point.IsContainerHTMLElement(nsGkAtoms::blockquote)) {
         break;
       }
@@ -7215,8 +7215,8 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       // before walking up to a parent because we need to return the parent
       // object, so the parent itself might not be in the editable area, but
       // it's OK if we're not performing a block-level action.
-      bool blockLevelAction = aEditSubAction == EditSubAction::indent ||
-                              aEditSubAction == EditSubAction::outdent ||
+      bool blockLevelAction = aEditSubAction == EditSubAction::eIndent ||
+                              aEditSubAction == EditSubAction::eOutdent ||
                               aEditSubAction == EditSubAction::align ||
                               aEditSubAction == EditSubAction::makeBasicBlock;
       if (!HTMLEditorRef().IsDescendantOfEditorRoot(
@@ -7553,8 +7553,8 @@ HTMLEditRules::GetNodesForOperation(
   }
   // Indent/outdent already do something special for list items, but we still
   // need to make sure we don't act on table elements
-  else if (aEditSubAction == EditSubAction::outdent ||
-           aEditSubAction == EditSubAction::indent ||
+  else if (aEditSubAction == EditSubAction::eOutdent ||
+           aEditSubAction == EditSubAction::eIndent ||
            aEditSubAction == EditSubAction::setAbsolutePosition) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
@@ -7566,7 +7566,7 @@ HTMLEditRules::GetNodesForOperation(
     }
   }
   // Outdent should look inside of divs.
-  if (aEditSubAction == EditSubAction::outdent &&
+  if (aEditSubAction == EditSubAction::eOutdent &&
       !HTMLEditorRef().IsCSSEnabled()) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
@@ -7585,8 +7585,8 @@ HTMLEditRules::GetNodesForOperation(
       aEditSubAction == EditSubAction::eCreateOrChangeList ||
       aEditSubAction == EditSubAction::align ||
       aEditSubAction == EditSubAction::setAbsolutePosition ||
-      aEditSubAction == EditSubAction::indent ||
-      aEditSubAction == EditSubAction::outdent) {
+      aEditSubAction == EditSubAction::eIndent ||
+      aEditSubAction == EditSubAction::eOutdent) {
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
       OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
       // XXX Why do we run this loop even when aTouchContent is "no"?

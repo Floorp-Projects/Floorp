@@ -2284,19 +2284,18 @@ HTMLEditor::Indent(const nsAString& aIndent)
   RefPtr<TextEditRules> rules(mRules);
 
   bool cancel, handled;
-  EditSubAction editSubAction = EditSubAction::indent;
-  if (aIndent.LowerCaseEqualsLiteral("outdent")) {
-    editSubAction = EditSubAction::outdent;
-  }
+  EditSubAction indentOrOutdent =
+    aIndent.LowerCaseEqualsLiteral("outdent") ? EditSubAction::eOutdent :
+                                                EditSubAction::eIndent;
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, editSubAction, nsIEditor::eNext);
+                                      *this, indentOrOutdent, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  EditSubActionInfo subActionInfo(editSubAction);
+  EditSubActionInfo subActionInfo(indentOrOutdent);
   nsresult rv =
     rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
