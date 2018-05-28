@@ -4399,18 +4399,23 @@ AssertNoBitsPropagatedFrom(nsINode* aRoot)
 #endif
 }
 
-// Sets |aBits| on aElement and all of its flattened-tree ancestors up to and
-// including aStopAt or the root element (whichever is encountered first).
+// Sets `aBits` on `aElement` and all of its flattened-tree ancestors up to and
+// including aStopAt or the root element (whichever is encountered first), and
+// as long as `aBitsToStopAt` isn't found anywhere in the chain.
 static inline Element*
-PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt)
+PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt, uint32_t aBitsToStopAt)
 {
   Element* curr = aElement;
-  while (curr && !curr->HasAllFlags(aBits)) {
+  while (curr && !curr->HasAllFlags(aBitsToStopAt)) {
     curr->SetFlags(aBits);
     if (curr == aStopAt) {
       break;
     }
     curr = curr->GetFlattenedTreeParentElementForStyle();
+  }
+
+  if (aBitsToStopAt != aBits && curr) {
+    curr->SetFlags(aBits);
   }
 
   return curr;
@@ -4523,7 +4528,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
   // propagating bits as we go.
   const bool reachedDocRoot =
     !parent->IsElement() ||
-    !PropagateBits(parent->AsElement(), aBits, existingRoot);
+    !PropagateBits(parent->AsElement(), aBits, existingRoot, aBits);
 
   uint32_t existingBits = doc->GetServoRestyleRootDirtyBits();
   if (!reachedDocRoot || existingRoot == doc) {
@@ -4535,7 +4540,9 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     // now need to find the nearest common ancestor, so climb up from the
     // existing root, extending bits along the way.
     Element* rootParent = existingRoot->GetFlattenedTreeParentElementForStyle();
-    if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement)) {
+    // We can stop at the first occurrence of `aBits` in order to find the
+    // common ancestor.
+    if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement, aBits)) {
       MOZ_ASSERT(commonAncestor == aElement ||
                  commonAncestor == nsContentUtils::GetCommonFlattenedTreeAncestorForStyle(aElement, rootParent));
 
@@ -4547,6 +4554,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
         MOZ_ASSERT(curr->HasAllFlags(aBits));
         curr->UnsetFlags(aBits);
       }
+      AssertNoBitsPropagatedFrom(commonAncestor);
     } else {
       // We didn't find a common ancestor element. That means we're descended
       // from two different document style roots, so the common ancestor is the
@@ -4585,7 +4593,8 @@ Element::NoteDirtySubtreeForServo()
         existingRoot->AsElement(), this)) {
     PropagateBits(existingRoot->AsElement()->GetFlattenedTreeParentElementForStyle(),
                   existingBits,
-                  this);
+                  this,
+                  existingBits);
 
     doc->ClearServoRestyleRoot();
   }

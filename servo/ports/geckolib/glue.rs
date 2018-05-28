@@ -3097,28 +3097,25 @@ pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ComputedStyleBorrowed) -> u64 {
+pub extern "C" fn Servo_ComputedValues_GetStyleBits(values: ComputedStyleBorrowed) -> u8 {
     use style::properties::computed_value_flags::ComputedValueFlags;
     // FIXME(emilio): We could do this more efficiently I'm quite sure.
     let flags = values.flags;
     let mut result = 0;
     if flags.contains(ComputedValueFlags::IS_RELEVANT_LINK_VISITED) {
-        result |= structs::NS_STYLE_RELEVANT_LINK_VISITED as u64;
+        result |= structs::ComputedStyleBit_RelevantLinkVisited;
     }
     if flags.contains(ComputedValueFlags::HAS_TEXT_DECORATION_LINES) {
-        result |= structs::NS_STYLE_HAS_TEXT_DECORATION_LINES as u64;
+        result |= structs::ComputedStyleBit_HasTextDecorationLines;
     }
     if flags.contains(ComputedValueFlags::SHOULD_SUPPRESS_LINEBREAK) {
-        result |= structs::NS_STYLE_SUPPRESS_LINEBREAK as u64;
+        result |= structs::ComputedStyleBit_SuppressLineBreak;
     }
     if flags.contains(ComputedValueFlags::IS_TEXT_COMBINED) {
-        result |= structs::NS_STYLE_IS_TEXT_COMBINED as u64;
+        result |= structs::ComputedStyleBit_IsTextCombined;
     }
     if flags.contains(ComputedValueFlags::IS_IN_PSEUDO_ELEMENT_SUBTREE) {
-        result |= structs::NS_STYLE_HAS_PSEUDO_ELEMENT_DATA as u64;
-    }
-    if flags.contains(ComputedValueFlags::IS_IN_DISPLAY_NONE_SUBTREE) {
-        result |= structs::NS_STYLE_IN_DISPLAY_NONE_SUBTREE as u64;
+        result |= structs::ComputedStyleBit_HasPseudoElementData;
     }
     result
 }

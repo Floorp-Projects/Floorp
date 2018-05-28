@@ -60,7 +60,6 @@
     'shvfy.c',
     'sysrand.c',
     'tlsprfalg.c',
-    'verified/FStar.c',
   ],
   'conditions': [
     [ 'OS=="linux" or OS=="android"', {
@@ -219,6 +218,9 @@
           ],
         }],
       ],
+    }],
+    [ 'have_int128_support==0', {
+        'sources': [ 'verified/FStar.c' ],
     }],
   ],
  'ldflags': [

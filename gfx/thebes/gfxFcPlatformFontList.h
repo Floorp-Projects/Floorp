@@ -328,8 +328,11 @@ public:
     }
 
     // map lang group ==> lang string
+    // When aForFontEnumerationThread is true, this method will avoid using
+    // LanguageService::LookupLanguage, because it is not safe for off-main-
+    // thread use (except by stylo traversal, which does the necessary locking)
     void GetSampleLangForGroup(nsAtom* aLanguage, nsACString& aLangStr,
-                               bool aCheckEnvironment = true);
+                               bool aForFontEnumerationThread = false);
 
     static FT_Library GetFTLibrary();
 
@@ -371,7 +374,7 @@ protected:
 
     // helper method for finding an appropriate lang string
     bool TryLangForGroup(const nsACString& aOSLang, nsAtom* aLangGroup,
-                         nsACString& aLang);
+                         nsACString& aLang, bool aForFontEnumerationThread);
 
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();

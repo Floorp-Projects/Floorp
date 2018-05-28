@@ -582,6 +582,15 @@ class XPIStateLocation extends Map {
     this.staged = {};
     this.changed = false;
 
+    // The profile extensions directory is whitelisted for access by the
+    // content process sandbox if, and only if it already exists. Since
+    // we want it to be available for newly-installed extensions even if
+    // no profile extensions were present at startup, make sure it
+    // exists now.
+    if (name === KEY_APP_PROFILE) {
+      OS.File.makeDir(this.path, {ignoreExisting: true});
+    }
+
     if (saved) {
       this.restore(saved);
     }
