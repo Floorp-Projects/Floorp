@@ -220,7 +220,7 @@ TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
   }
   mActionNesting++;
 
-  if (aEditSubAction == EditSubAction::setText) {
+  if (aEditSubAction == EditSubAction::eSetText) {
     // setText replaces all text, so mCachedSelectionNode might be invalid on
     // AfterEdit.
     // Since this will be used as start position of spellchecker, we should
@@ -336,7 +336,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
                             aInfo.inString, aInfo.outString,
                             aInfo.maxLength);
-    case EditSubAction::setText:
+    case EditSubAction::eSetText:
       UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString,
                          aInfo.maxLength);

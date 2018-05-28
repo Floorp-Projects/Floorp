@@ -1105,7 +1105,7 @@ TextEditor::SetText(const nsAString& aString)
   // delete placeholder txns merge.
   AutoPlaceholderBatch batch(this, nullptr);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::setText,
+                                      *this, EditSubAction::eSetText,
                                       nsIEditor::eNext);
 
   // pre-process
@@ -1113,7 +1113,7 @@ TextEditor::SetText(const nsAString& aString)
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_NULL_POINTER;
   }
-  EditSubActionInfo subActionInfo(EditSubAction::setText);
+  EditSubActionInfo subActionInfo(EditSubAction::eSetText);
   subActionInfo.inString = &aString;
   subActionInfo.maxLength = mMaxTextLength;
 
