@@ -19,8 +19,11 @@ enum class EditSubAction : int32_t
   // eNone indicates not edit sub-action is being handled.  This is useful
   // of initial value of member variables.
   eNone = 0,
-  undo,
-  redo,
+
+  // eUndo and eRedo indicate entire actions of undo/redo operation.
+  eUndo,
+  eRedo,
+
   insertNode,
   createNode,
   deleteNode,

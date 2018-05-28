@@ -342,9 +342,9 @@ TextEditRules::WillDoAction(Selection* aSelection,
                          aInfo.maxLength);
     case EditSubAction::deleteSelection:
       return WillDeleteSelection(aInfo.collapsedAction, aCancel, aHandled);
-    case EditSubAction::undo:
+    case EditSubAction::eUndo:
       return WillUndo(aCancel, aHandled);
-    case EditSubAction::redo:
+    case EditSubAction::eRedo:
       return WillRedo(aCancel, aHandled);
     case EditSubAction::setTextProperty:
       return WillSetTextProperty(aCancel, aHandled);
@@ -383,9 +383,9 @@ TextEditRules::DidDoAction(Selection* aSelection,
   switch (aInfo.mEditSubAction) {
     case EditSubAction::deleteSelection:
       return DidDeleteSelection();
-    case EditSubAction::undo:
+    case EditSubAction::eUndo:
       return DidUndo(aResult);
-    case EditSubAction::redo:
+    case EditSubAction::eRedo:
       return DidRedo(aResult);
     default:
       // Don't fail on transactions we don't handle here!
