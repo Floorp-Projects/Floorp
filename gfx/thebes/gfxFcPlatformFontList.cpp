@@ -2429,8 +2429,7 @@ gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
 
 void
 gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
-                                             nsACString& aLangStr,
-                                             bool aCheckEnvironment)
+                                             nsACString& aLangStr)
 {
     aLangStr.Truncate();
     if (!aLanguage) {
@@ -2459,32 +2458,30 @@ gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
 
     // -- check the environment for the user's preferred language that
     //    corresponds to this mozilla lang group.
-    if (aCheckEnvironment) {
-        const char *languages = getenv("LANGUAGE");
-        if (languages) {
-            const char separator = ':';
+    const char *languages = getenv("LANGUAGE");
+    if (languages) {
+        const char separator = ':';
 
-            for (const char *pos = languages; true; ++pos) {
-                if (*pos == '\0' || *pos == separator) {
-                    if (languages < pos &&
-                        TryLangForGroup(Substring(languages, pos),
-                                        aLanguage, aLangStr)) {
-                        return;
-                    }
-
-                    if (*pos == '\0') {
-                        break;
-                    }
-
-                    languages = pos + 1;
+        for (const char *pos = languages; true; ++pos) {
+            if (*pos == '\0' || *pos == separator) {
+                if (languages < pos &&
+                    TryLangForGroup(Substring(languages, pos),
+                                    aLanguage, aLangStr)) {
+                    return;
                 }
+
+                if (*pos == '\0') {
+                    break;
+                }
+
+                languages = pos + 1;
             }
         }
-        const char *ctype = setlocale(LC_CTYPE, nullptr);
-        if (ctype &&
-            TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr)) {
-            return;
-        }
+    }
+    const char *ctype = setlocale(LC_CTYPE, nullptr);
+    if (ctype &&
+        TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr)) {
+        return;
     }
 
     if (mozLangGroup->defaultLang) {

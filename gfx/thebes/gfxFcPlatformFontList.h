@@ -328,8 +328,7 @@ public:
     }
 
     // map lang group ==> lang string
-    void GetSampleLangForGroup(nsAtom* aLanguage, nsACString& aLangStr,
-                               bool aCheckEnvironment = true);
+    void GetSampleLangForGroup(nsAtom* aLanguage, nsACString& aLangStr);
 
     static FT_Library GetFTLibrary();
 
