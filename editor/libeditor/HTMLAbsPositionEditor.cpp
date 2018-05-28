@@ -53,8 +53,8 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       aEnabled ?
-                                        EditSubAction::setAbsolutePosition :
-                                        EditSubAction::removeAbsolutePosition,
+                                        EditSubAction::eSetPositionToAbsolute :
+                                        EditSubAction::eSetPositionToStatic,
                                       nsIEditor::eNext);
 
   // the line below does not match the code; should it be removed?
@@ -63,8 +63,8 @@ HTMLEditor::SetSelectionToAbsoluteOrStatic(bool aEnabled)
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   EditSubActionInfo subActionInfo(
-                      aEnabled ? EditSubAction::setAbsolutePosition :
-                                 EditSubAction::removeAbsolutePosition);
+                      aEnabled ? EditSubAction::eSetPositionToAbsolute :
+                                 EditSubAction::eSetPositionToStatic);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
