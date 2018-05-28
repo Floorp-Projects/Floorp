@@ -1501,7 +1501,8 @@ bool
 MediaFormatReader::IsDecoderWaitingForCDM(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
-  return IsEncrypted() && mSetCDMForTracks.contains(aTrack) && !mCDMProxy;
+  return GetDecoderData(aTrack).IsEncrypted() &&
+         mSetCDMForTracks.contains(aTrack) && !mCDMProxy;
 }
 
 RefPtr<SetCDMPromise>
