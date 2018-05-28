@@ -2525,7 +2525,7 @@ nsLayoutUtils::PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin, floa
 // We want to this return true for the scroll frame, but not the
 // scrolled frame (which has the same content).
 bool
-nsLayoutUtils::FrameHasDisplayPort(nsIFrame* aFrame, nsIFrame* aScrolledFrame)
+nsLayoutUtils::FrameHasDisplayPort(nsIFrame* aFrame, const nsIFrame* aScrolledFrame)
 {
   if (!aFrame->GetContent() || !HasDisplayPort(aFrame->GetContent())) {
     return false;
@@ -2541,7 +2541,7 @@ nsLayoutUtils::FrameHasDisplayPort(nsIFrame* aFrame, nsIFrame* aScrolledFrame)
 }
 
 Matrix4x4Flagged
-nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
+nsLayoutUtils::GetTransformToAncestor(const nsIFrame *aFrame,
                                       const nsIFrame *aAncestor,
                                       uint32_t aFlags,
                                       nsIFrame** aOutAncestor)
@@ -2864,7 +2864,7 @@ TransformGfxPointFromAncestor(nsIFrame *aFrame,
 }
 
 static Rect
-TransformGfxRectToAncestor(nsIFrame *aFrame,
+TransformGfxRectToAncestor(const nsIFrame *aFrame,
                            const Rect &aRect,
                            const nsIFrame *aAncestor,
                            bool* aPreservesAxisAlignedRectangles = nullptr,
@@ -2904,7 +2904,7 @@ TransformGfxRectToAncestor(nsIFrame *aFrame,
 }
 
 static SVGTextFrame*
-GetContainingSVGTextFrame(nsIFrame* aFrame)
+GetContainingSVGTextFrame(const nsIFrame* aFrame)
 {
   if (!nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
     return nullptr;
@@ -2941,7 +2941,7 @@ nsLayoutUtils::TransformAncestorPointToFrame(nsIFrame* aFrame,
 }
 
 nsRect
-nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
+nsLayoutUtils::TransformFrameRectToAncestor(const nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             const nsIFrame* aAncestor,
                                             bool* aPreservesAxisAlignedRectangles /* = nullptr */,
@@ -7279,13 +7279,13 @@ nsLayoutUtils::GetFrameTransparency(nsIFrame* aBackgroundFrame,
   return eTransparencyOpaque;
 }
 
-static bool IsPopupFrame(nsIFrame* aFrame)
+static bool IsPopupFrame(const nsIFrame* aFrame)
 {
   // aFrame is a popup it's the list control frame dropdown for a combobox.
   LayoutFrameType frameType = aFrame->Type();
   if (!nsLayoutUtils::IsContentSelectEnabled() &&
       frameType == LayoutFrameType::ListControl) {
-    nsListControlFrame* lcf = static_cast<nsListControlFrame*>(aFrame);
+    const nsListControlFrame* lcf = static_cast<const nsListControlFrame*>(aFrame);
     return lcf->IsInDropDownMode();
   }
 
@@ -7294,7 +7294,7 @@ static bool IsPopupFrame(nsIFrame* aFrame)
 }
 
 /* static */ bool
-nsLayoutUtils::IsPopup(nsIFrame* aFrame)
+nsLayoutUtils::IsPopup(const nsIFrame* aFrame)
 {
   // Optimization: the frame can't possibly be a popup if it has no view.
   if (!aFrame->HasView()) {
