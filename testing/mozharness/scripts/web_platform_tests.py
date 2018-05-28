@@ -335,7 +335,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin):
             if suite:
                 test_types = [suite]
 
-            summary = None
+            summary = {}
             executed_too_many_tests = False
             for per_test_args in self.query_args(suite):
                 # Make sure baseline code coverage tests are never
