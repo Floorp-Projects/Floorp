@@ -12,7 +12,7 @@ namespace mozilla {
 // spellCheckAfterEditorChange is defined to take it as a long.
 // TODO: Make each name eFoo and investigate whether the numeric values
 //       still have some meaning.
-enum class EditAction : int32_t
+enum class EditSubAction : int32_t
 {
   ignore = -1,
 
@@ -59,9 +59,9 @@ enum class EditAction : int32_t
 
 } // namespace mozilla
 
-inline bool operator!(const mozilla::EditAction& aOp)
+inline bool operator!(const mozilla::EditSubAction& aEditSubAction)
 {
-  return aOp == mozilla::EditAction::none;
+  return aEditSubAction == mozilla::EditSubAction::none;
 }
 
 #endif // #ifdef mozilla_EditAction_h
