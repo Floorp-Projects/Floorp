@@ -350,6 +350,7 @@ void DwarfCUToModule::GenericDIEHandler::ProcessAttributeString(
     case dwarf2reader::DW_AT_name:
       name_attribute_ = AddStringToPool(data);
       break;
+    case dwarf2reader::DW_AT_linkage_name:
     case dwarf2reader::DW_AT_MIPS_linkage_name: {
       char* demangled = NULL;
       int status = -1;
