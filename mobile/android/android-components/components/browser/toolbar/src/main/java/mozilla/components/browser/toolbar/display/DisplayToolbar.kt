@@ -31,7 +31,7 @@ import mozilla.components.ui.progress.AnimatedProgressBar
  *   +-------------+------+-----------------------+----------+------+
  *   | navigation  | icon | url       [ page    ] | browser  | menu |
  *   |   actions   |      |           [ actions ] | actions  |      |
- *   +-------------+------+----------------------------------+------+
+ *   +-------------+------+-----------------------+----------+------+
  *
  * Navigation actions (optional):
  *     A dynamic list of clickable icons usually used for navigation on larger devices
@@ -280,7 +280,12 @@ internal class DisplayToolbar(
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        // First we layout the navigation actions if there are any
+        // First we layout the navigation actions if there are any:
+        //   +-------------+------------------------------------------------+
+        //   | navigation  |                                                |
+        //   |   actions   |                                                |
+        //   +-------------+------------------------------------------------+
+
         val navigationActionsWidth = navigationActions
             .mapNotNull { it.view }
             .fold(0) { usedWidth, view ->
@@ -292,14 +297,30 @@ internal class DisplayToolbar(
                 usedWidth + view.measuredWidth
             }
 
-        // The icon is always on the left side of the toolbar
+        // The icon is always on the far left side of the toolbar. We cam lay it out even if it's
+        // not going to be displayed:
+        //   +-------------+------+-----------------------------------------+
+        //   | navigation  | icon |                                         |
+        //   |   actions   |      |                                         |
+        //   +-------------+------+-----------------------------------------+
+
         iconView.layout(navigationActionsWidth, 0, navigationActionsWidth + iconView.measuredWidth, measuredHeight)
 
-        // The menu is always on the right side of the toolbar
+        // The menu is always on the far right side of the toolbar:
+        //   +-------------+------+----------------------------------+------+
+        //   | navigation  | icon |                                  | menu |
+        //   |   actions   |      |                                  |      |
+        //   +-------------+------+----------------------------------+------+
+
         val menuWidth = if (menuView.isVisible()) height else 0
         menuView.layout(measuredWidth - menuView.measuredWidth, 0, measuredWidth, measuredHeight)
 
-        // Now we add browser actions from the left side of the menu to the right (in reversed order)
+        // Now we add browser actions from the left side of the menu to the right (in reversed order):
+        //   +-------------+------+-----------------------+----------+------+
+        //   | navigation  | icon |                       | browser  | menu |
+        //   |   actions   |      |                       | actions  |      |
+        //   +-------------+------+-----------------------+----------+------+
+
         val browserActionWidth = browserActions
             .mapNotNull { it.view }
             .reversed()
@@ -315,6 +336,11 @@ internal class DisplayToolbar(
             }
 
         // After browser actions we add page actions from the right to the left (in reversed order)
+        //   +-------------+------+-----------------------+----------+------+
+        //   | navigation  | icon |           [ page    ] | browser  | menu |
+        //   |   actions   |      |           [ actions ] | actions  |      |
+        //   +-------------+------+-----------------------+----------+------+
+
         val pageActionsWidth = pageActions
             .mapNotNull { it.view }
             .reversed()
@@ -327,12 +353,23 @@ internal class DisplayToolbar(
                 usedWidth + view.measuredWidth
             }
 
+        // Finally the URL uses whatever space is left:
+        //   +-------------+------+-----------------------+----------+------+
+        //   | navigation  | icon | url       [ page    ] | browser  | menu |
+        //   |   actions   |      |           [ actions ] | actions  |      |
+        //   +-------------+------+-----------------------+----------+------+
+
         val iconWidth = if (iconView.isVisible()) iconView.measuredWidth else 0
         val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth - urlBoxMargin
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
         urlView.layout(urlLeft, 0, urlRight, measuredHeight)
 
+        // The progress bar is going to be drawn at the bottom of the toolbar:
+
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
+
+        // We calculate the size of the URL + page actions ("URL box") so that we can draw a custom
+        // background behind them:
 
         urlBackgroundRect.set(
                 navigationActionsWidth + urlBoxMargin,
