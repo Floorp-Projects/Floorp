@@ -48,13 +48,6 @@ AutoplayPolicy::IsMediaElementAllowedToPlay(NotNull<HTMLMediaElement*> aElement)
     return true;
   }
 
-  // Media has already loaded metadata and doesn't contain audio track
-  if (aElement->IsVideo() &&
-      aElement->ReadyState() >= HTMLMediaElementBinding::HAVE_METADATA &&
-      !aElement->HasAudio()) {
-    return true;
-  }
-
   // Whitelisted.
   if (nsContentUtils::IsExactSitePermAllow(
         aElement->NodePrincipal(), "autoplay-media")) {

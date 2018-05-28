@@ -4044,12 +4044,7 @@ HTMLMediaElement::PlayInternal(ErrorResult& aRv)
   // 4.8.12.8 - Step 1:
   // If the media element is not allowed to play, return a promise rejected
   // with a "NotAllowedError" DOMException and abort these steps.
-  // Note: IsAllowedToPlay() needs to know whether there is an audio track
-  // in the resource, and for that we need to be at readyState HAVE_METADATA
-  // or above. So only reject here if we're at readyState HAVE_METADATA. If
-  // we're below that, we'll we delay fulfilling the play promise until we've
-  // reached readyState >= HAVE_METADATA below.
-  if (mReadyState >= HAVE_METADATA && !IsAllowedToPlay()) {
+  if (!IsAllowedToPlay()) {
     // NOTE: for promise-based-play, will return a rejected promise here.
     LOG(LogLevel::Debug,
         ("%p Play() promise rejected because not allowed to play.", this));
