@@ -187,8 +187,8 @@ protected:
    * This method may actually inserts text into the editor.  Therefore, this
    * might cause destroying the editor.
    *
-   * @param aEditSubAction      Must be EditSubAction::insertIMEText or
-   *                            EditSubAction::eInsertText.
+   * @param aEditSubAction      Must be EditSubAction::eInsertTextComingFromIME
+   *                            or EditSubAction::eInsertText.
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    * @param inString            String to be inserted.
