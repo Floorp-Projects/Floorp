@@ -19,21 +19,27 @@ FileMediaResource::EnsureSizeInitialized()
 {
   mLock.AssertCurrentThreadOwns();
   NS_ASSERTION(mInput, "Must have file input stream");
-  if (mSizeInitialized) {
+  if (mSizeInitialized && mNotifyDataEndedProcessed) {
     return;
   }
+
+  if (!mSizeInitialized) {
+    // Get the file size and inform the decoder.
+    uint64_t size;
+    nsresult res = mInput->Available(&size);
+    if (NS_SUCCEEDED(res) && size <= INT64_MAX) {
+      mSize = (int64_t)size;
+    }
+  }
   mSizeInitialized = true;
-  // Get the file size and inform the decoder.
-  uint64_t size;
-  nsresult res = mInput->Available(&size);
-  if (NS_SUCCEEDED(res) && size <= INT64_MAX) {
-    mSize = (int64_t)size;
+  if (!mNotifyDataEndedProcessed && mSize >= 0) {
     mCallback->AbstractMainThread()->Dispatch(
       NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
                                   mCallback.get(),
                                   &MediaResourceCallback::NotifyDataEnded,
                                   NS_OK));
   }
+  mNotifyDataEndedProcessed = true;
 }
 
 nsresult
