@@ -146,16 +146,16 @@ HTMLEditor::AddZIndex(int32_t aChange)
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
                                       *this,
                                       aChange < 0 ?
-                                        EditSubAction::decreaseZIndex :
-                                        EditSubAction::increaseZIndex,
+                                        EditSubAction::eDecreaseZIndex :
+                                        EditSubAction::eIncreaseZIndex,
                                       nsIEditor::eNext);
 
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::decreaseZIndex :
-                                                EditSubAction::increaseZIndex);
+  EditSubActionInfo subActionInfo(aChange < 0 ? EditSubAction::eDecreaseZIndex :
+                                                EditSubAction::eIncreaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
