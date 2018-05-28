@@ -186,7 +186,6 @@
     </broadcaster>
     <broadcaster id="reportPhishingBroadcaster" disabled="true"/>
     <broadcaster id="reportPhishingErrorBroadcaster" disabled="true"/>
-    <broadcaster id="trackingProtectionBroadcaster" enabled="false"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
