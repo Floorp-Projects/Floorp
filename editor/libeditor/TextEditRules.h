@@ -544,7 +544,7 @@ public:
   // EditSubAction::outputText
   uint32_t flags;
 
-  // EditSubAction::deleteSelection
+  // EditSubAction::eDeleteSelectedContent
   nsIEditor::EDirection collapsedAction;
   nsIEditor::EStripWrappers stripWrappers;
 

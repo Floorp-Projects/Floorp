@@ -669,7 +669,8 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
   // delete placeholder txns merge.
   AutoPlaceholderBatch batch(this, nsGkAtoms::DeleteTxnName);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteSelection,
+                                      *this,
+                                      EditSubAction::eDeleteSelectedContent,
                                       aDirection);
 
   // pre-process
@@ -703,7 +704,7 @@ TextEditor::DeleteSelectionAsAction(EDirection aDirection,
     }
   }
 
-  EditSubActionInfo subActionInfo(EditSubAction::deleteSelection);
+  EditSubActionInfo subActionInfo(EditSubAction::eDeleteSelectedContent);
   subActionInfo.collapsedAction = aDirection;
   subActionInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
@@ -750,7 +751,8 @@ TextEditor::DeleteSelectionWithTransaction(EDirection aDirection,
   RefPtr<CharacterData> deleteCharData =
     CharacterData::FromNodeOrNull(deleteNode);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::deleteSelection,
+                                      *this,
+                                      EditSubAction::eDeleteSelectedContent,
                                       aDirection);
 
   if (mRules && mRules->AsHTMLEditRules()) {

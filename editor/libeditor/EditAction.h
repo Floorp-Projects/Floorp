@@ -49,7 +49,9 @@ enum class EditSubAction : int32_t
   // with new text which is new composition string or commit string.
   eInsertTextComingFromIME,
 
-  deleteSelection,
+  // eDeleteSelectedContent indicates to remove selected content.
+  eDeleteSelectedContent,
+
   setTextProperty,
   removeTextProperty,
   outputText,
