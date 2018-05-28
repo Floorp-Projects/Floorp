@@ -15,7 +15,6 @@ linux64/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - builds/releng_sub_linux_configs/enable_count_ctors.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -103,7 +102,6 @@ linux64/pgo:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
-            - builds/releng_sub_linux_configs/enable_count_ctors.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -312,7 +310,6 @@ linux/opt:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - builds/releng_sub_linux_configs/enable_count_ctors.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -371,7 +368,6 @@ linux/pgo:
         config:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_32_builds.py
-            - builds/releng_sub_linux_configs/enable_count_ctors.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
