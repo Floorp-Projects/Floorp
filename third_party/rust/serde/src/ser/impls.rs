@@ -374,19 +374,39 @@ deref_impl!(<'a, T: ?Sized> Serialize for Cow<'a, T> where T: Serialize + ToOwne
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(feature = "unstable")]
-#[allow(deprecated)]
-impl<T> Serialize for NonZero<T>
+/// This impl requires the [`"rc"`] Cargo feature of Serde.
+///
+/// [`"rc"`]: https://serde.rs/feature-flags.html#-features-rc
+#[cfg(all(feature = "rc", any(feature = "std", feature = "alloc")))]
+impl<T: ?Sized> Serialize for RcWeak<T>
 where
-    T: Serialize + Zeroable + Clone,
+    T: Serialize,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        self.clone().get().serialize(serializer)
+        self.upgrade().serialize(serializer)
     }
 }
+
+/// This impl requires the [`"rc"`] Cargo feature of Serde.
+///
+/// [`"rc"`]: https://serde.rs/feature-flags.html#-features-rc
+#[cfg(all(feature = "rc", any(feature = "std", feature = "alloc")))]
+impl<T: ?Sized> Serialize for ArcWeak<T>
+where
+    T: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.upgrade().serialize(serializer)
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 macro_rules! nonzero_integers {
     ( $( $T: ident, )+ ) => {

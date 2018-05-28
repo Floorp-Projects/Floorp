@@ -92,6 +92,8 @@ pub type DevicePixelScale = TypedScale<f32, WorldPixel, DevicePixel>;
 /// Scaling ratio from layout to world. Used for cases where we know the layout
 /// is in world space, or specifically want to treat it this way.
 pub type LayoutToWorldScale = TypedScale<f32, LayoutPixel, WorldPixel>;
+/// A complete scaling ratio from layout space to device pixel space.
+pub type LayoutToDeviceScale = TypedScale<f32, LayoutPixel, DevicePixel>;
 
 pub type LayoutTransform = TypedTransform3D<f32, LayoutPixel, LayoutPixel>;
 pub type LayoutToScrollTransform = TypedTransform3D<f32, LayoutPixel, ScrollLayerPixel>;

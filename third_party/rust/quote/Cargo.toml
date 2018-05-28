@@ -12,7 +12,7 @@
 
 [package]
 name = "quote"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["Cargo.toml", "src/**/*.rs", "tests/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Quasi-quoting macro quote!(...)"

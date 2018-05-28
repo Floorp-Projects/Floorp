@@ -1238,6 +1238,20 @@ telemetry:
     record_in_processes:
       - 'all'
 
+  profile_directory_scans:
+    bug_numbers:
+      - 1458574
+    description: >
+      The number of times a profile directory scan was initiated in ProfileAge.jsm
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - jrediger@mozilla.com
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'all'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:

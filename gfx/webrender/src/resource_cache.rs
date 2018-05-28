@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AddFont, BlobImageResources, ResourceUpdate, ResourceUpdates};
+use api::{AddFont, BlobImageResources, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageError, BlobImageRenderer, BlobImageRequest};
 use api::{ClearCache, ColorF, DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
-use api::{Epoch, FontInstanceKey, FontKey, FontTemplate};
+use api::{Epoch, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType};
 use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
-use api::{GlyphDimensions, GlyphKey, IdNamespace};
+use api::{GlyphDimensions, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize};
 use app_units::Au;
@@ -23,7 +23,7 @@ use euclid::size2;
 use glyph_cache::GlyphCache;
 #[cfg(not(feature = "pathfinder"))]
 use glyph_cache::GlyphCacheEntry;
-use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterizer, GlyphRequest};
+use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use gpu_types::UvRectKind;
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
@@ -174,7 +174,7 @@ where
     K: Clone + Hash + Eq + Debug,
     U: Default,
 {
-    pub fn new() -> ResourceClassCache<K, V, U> {
+    pub fn new() -> Self {
         ResourceClassCache {
             resources: FastHashMap::default(),
             user_data: Default::default(),
@@ -282,7 +282,7 @@ impl BlobImageResources for Resources {
     }
 }
 
-pub type GlyphDimensionsCache = FastHashMap<GlyphRequest, Option<GlyphDimensions>>;
+pub type GlyphDimensionsCache = FastHashMap<(FontInstance, GlyphIndex), Option<GlyphDimensions>>;
 
 pub struct ResourceCache {
     cached_glyphs: GlyphCache,
@@ -371,14 +371,14 @@ impl ResourceCache {
 
     pub fn update_resources(
         &mut self,
-        updates: ResourceUpdates,
+        updates: Vec<ResourceUpdate>,
         profile_counters: &mut ResourceProfileCounters,
     ) {
         // TODO, there is potential for optimization here, by processing updates in
         // bulk rather than one by one (for example by sorting allocations by size or
         // in a way that reduces fragmentation in the atlas).
 
-        for update in updates.updates {
+        for update in updates {
             match update {
                 ResourceUpdate::AddImage(img) => {
                     if let ImageData::Raw(ref bytes) = img.data {
@@ -449,7 +449,6 @@ impl ResourceCache {
     ) {
         let FontInstanceOptions {
             render_mode,
-            subpx_dir,
             flags,
             bg_color,
             ..
@@ -460,7 +459,6 @@ impl ResourceCache {
             ColorF::new(0.0, 0.0, 0.0, 1.0),
             bg_color,
             render_mode,
-            subpx_dir,
             flags,
             platform_options,
             variations,
@@ -510,16 +508,14 @@ impl ResourceCache {
                 tiling,
             );
         }
+        let dirty_rect = Some(descriptor.full_rect());
 
         let resource = ImageResource {
             descriptor,
             data,
             epoch: Epoch(0),
             tiling,
-            dirty_rect: Some(DeviceUintRect::new(
-                DeviceUintPoint::zero(),
-                descriptor.size,
-            )),
+            dirty_rect,
         };
 
         self.resources.image_templates.insert(image_key, resource);
@@ -636,9 +632,14 @@ impl ResourceCache {
         let needs_upload = self.texture_cache
             .request(&entry.as_ref().unwrap().texture_cache_handle, gpu_cache);
 
-        if !needs_upload && !needs_update {
-            return;
-        }
+        let dirty_rect = if needs_upload {
+            // the texture cache entry has been evicted, treat it as all dirty
+            Some(template.descriptor.full_rect())
+        } else if needs_update {
+            template.dirty_rect
+        } else {
+            return
+        };
 
         // We can start a worker thread rasterizing right now, if:
         //  - The image is a blob.
@@ -658,7 +659,7 @@ impl ResourceCache {
                             tile_offset.y as f32 * tile_size as f32,
                         );
 
-                        if let Some(dirty) = template.dirty_rect {
+                        if let Some(dirty) = dirty_rect {
                             if intersect_for_tile(dirty, actual_size, tile_size, tile_offset).is_none() {
                                 // don't bother requesting unchanged tiles
                                 return
@@ -678,7 +679,7 @@ impl ResourceCache {
                         offset,
                         format: template.descriptor.format,
                     },
-                    template.dirty_rect,
+                    dirty_rect,
                 );
             }
         }
@@ -812,15 +813,13 @@ impl ResourceCache {
     pub fn get_glyph_dimensions(
         &mut self,
         font: &FontInstance,
-        key: &GlyphKey,
+        glyph_index: GlyphIndex,
     ) -> Option<GlyphDimensions> {
-        let key = GlyphRequest::new(font, key);
-
-        match self.cached_glyph_dimensions.entry(key.clone()) {
+        match self.cached_glyph_dimensions.entry((font.clone(), glyph_index)) {
             Occupied(entry) => *entry.get(),
             Vacant(entry) => *entry.insert(
                 self.glyph_rasterizer
-                    .get_glyph_dimensions(&key.font, &key.key),
+                    .get_glyph_dimensions(font, glyph_index),
             ),
         }
     }

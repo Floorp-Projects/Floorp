@@ -325,7 +325,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     return;
   }
 
-  bool    lazilySetParentPointer = false;
+  bool lazilySetParentPointer = false;
 
    // Check for an overflow list with our prev-in-flow
   nsInlineFrame* prevInFlow = (nsInlineFrame*)GetPrevInFlow();
@@ -380,12 +380,7 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    DrainFlags flags =
-      lazilySetParentPointer ? eDontReparentFrames : DrainFlags(0);
-    if (aReflowInput.mLineLayout->GetInFirstLine()) {
-      flags = DrainFlags(flags | eInFirstLine);
-    }
-    DrainSelfOverflowListInternal(flags);
+    DrainSelfOverflowListInternal(aReflowInput.mLineLayout->GetInFirstLine());
   }
 
   // Set our own reflow state (additional state above and beyond aReflowInput).
@@ -436,30 +431,27 @@ nsInlineFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 bool
-nsInlineFrame::DrainSelfOverflowListInternal(DrainFlags aFlags)
+nsInlineFrame::DrainSelfOverflowListInternal(bool aInFirstLine)
 {
   AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
-  if (overflowFrames) {
-    // The frames on our own overflowlist may have been pushed by a
-    // previous lazilySetParentPointer Reflow so we need to ensure the
-    // correct parent pointer.  This is sometimes skipped by Reflow.
-    if (!(aFlags & eDontReparentFrames)) {
-      nsIFrame* firstChild = overflowFrames->FirstChild();
-      const bool doReparentSC = (aFlags & eInFirstLine);
-      RestyleManager* restyleManager = PresContext()->RestyleManager();
-      for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
-        f->SetParent(this);
-        if (doReparentSC) {
-          restyleManager->ReparentComputedStyleForFirstLine(f);
-          nsLayoutUtils::MarkDescendantsDirty(f);
-        }
-      }
-    }
-    bool result = !overflowFrames->IsEmpty();
-    mFrames.AppendFrames(nullptr, *overflowFrames);
-    return result;
+  if (!overflowFrames || overflowFrames->IsEmpty()) {
+    return false;
   }
-  return false;
+
+  // The frames on our own overflowlist may have been pushed by a
+  // previous lazilySetParentPointer Reflow so we need to ensure the
+  // correct parent pointer.  This is sometimes skipped by Reflow.
+  nsIFrame* firstChild = overflowFrames->FirstChild();
+  RestyleManager* restyleManager = PresContext()->RestyleManager();
+  for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
+    f->SetParent(this);
+    if (MOZ_UNLIKELY(aInFirstLine)) {
+      restyleManager->ReparentComputedStyleForFirstLine(f);
+      nsLayoutUtils::MarkDescendantsDirty(f);
+    }
+  }
+  mFrames.AppendFrames(nullptr, *overflowFrames);
+  return true;
 }
 
 /* virtual */ bool
@@ -468,14 +460,14 @@ nsInlineFrame::DrainSelfOverflowList()
   nsIFrame* lineContainer = nsLayoutUtils::FindNearestBlockAncestor(this);
   // Add the eInFirstLine flag if we have a ::first-line ancestor frame.
   // No need to look further than the nearest line container though.
-  DrainFlags flags = DrainFlags(0);
+  bool inFirstLine = false;
   for (nsIFrame* p = GetParent(); p != lineContainer; p = p->GetParent()) {
     if (p->IsLineFrame()) {
-      flags = DrainFlags(flags | eInFirstLine);
+      inFirstLine = true;
       break;
     }
   }
-  return DrainSelfOverflowListInternal(flags);
+  return DrainSelfOverflowListInternal(inFirstLine);
 }
 
 /* virtual */ bool
