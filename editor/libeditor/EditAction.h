@@ -96,7 +96,8 @@ enum class EditSubAction : int32_t
   // eInsertElement indicates to insert an element.
   eInsertElement,
 
-  insertQuotation,
+  // eInsertQuotation indicates to insert an element and make it "quoted text".
+  eInsertQuotation,
 
   htmlPaste = 3012,
   loadHTML,
