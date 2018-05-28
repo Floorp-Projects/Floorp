@@ -139,3 +139,15 @@ function getOtherFontsEls(viewDoc) {
 function getName(fontEl) {
   return fontEl.querySelector(".font-name").textContent;
 }
+
+/**
+ * Given a font element, return its family name.
+ *
+ * @param  {DOMNode} fontEl
+ *         The font element.
+ * @return {String}
+ *         The name of the font family as shown in the UI.
+ */
+function getFamilyName(fontEl) {
+  return fontEl.querySelector(".font-family-name").textContent;
+}
