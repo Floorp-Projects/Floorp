@@ -58,6 +58,9 @@ enum class EditSubAction : int32_t
   // eRemoveTextProperty indicates to remove a style from text.
   eRemoveTextProperty,
 
+  // eRemoveAllTextProperties indicate to remove all styles from text.
+  eRemoveAllTextProperties,
+
   // eComputeTextToOutput indicates to compute the editor value as plain text
   // or something requested format.
   eComputeTextToOutput,
@@ -106,7 +109,6 @@ enum class EditSubAction : int32_t
   // source and insert into the DOM tree.  So, this is similar to innerHTML.
   eInsertHTMLSource,
 
-  resetTextProperties,
   setAbsolutePosition,
   removeAbsolutePosition,
   decreaseZIndex,
