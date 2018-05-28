@@ -403,6 +403,7 @@ fn create_prim_shader(
         VertexArrayKind::DashAndDot => desc::BORDER_CORNER_DASH_AND_DOT,
         VertexArrayKind::VectorStencil => desc::VECTOR_STENCIL,
         VertexArrayKind::VectorCover => desc::VECTOR_COVER,
+        VertexArrayKind::Border => desc::BORDER,
     };
 
     let program = device.create_program(name, &prefix, &vertex_descriptor);
@@ -464,6 +465,7 @@ pub struct Shaders {
     // of these shaders are then used by the primitive shaders.
     pub cs_blur_a8: LazilyCompiledShader,
     pub cs_blur_rgba8: LazilyCompiledShader,
+    pub cs_border_segment: LazilyCompiledShader,
 
     // Brush shaders
     brush_solid: BrushShader,
@@ -711,6 +713,14 @@ impl Shaders {
              options.precache_shaders,
         )?;
 
+        let cs_border_segment = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::Border),
+            "cs_border_segment",
+             &[],
+             device,
+             options.precache_shaders,
+        )?;
+
         let ps_split_composite = LazilyCompiledShader::new(
             ShaderKind::Primitive,
             "ps_split_composite",
@@ -726,6 +736,7 @@ impl Shaders {
         Ok(Shaders {
             cs_blur_a8,
             cs_blur_rgba8,
+            cs_border_segment,
             brush_solid,
             brush_image,
             brush_blend,
@@ -844,6 +855,7 @@ impl Shaders {
         }
         self.ps_border_corner.deinit(device);
         self.ps_border_edge.deinit(device);
+        self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
     }
 }

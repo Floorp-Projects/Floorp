@@ -2,7 +2,7 @@ use super::Tokens;
 
 use std::borrow::Cow;
 
-use proc_macro2::{Literal, Span, Term, TokenStream, TokenTree};
+use proc_macro2::{Group, Literal, Op, Span, Term, TokenStream, TokenTree};
 
 /// Types that can be interpolated inside a [`quote!`] invocation.
 ///
@@ -142,7 +142,19 @@ impl ToTokens for bool {
     }
 }
 
+impl ToTokens for Group {
+    fn to_tokens(&self, tokens: &mut Tokens) {
+        tokens.append(self.clone());
+    }
+}
+
 impl ToTokens for Term {
+    fn to_tokens(&self, tokens: &mut Tokens) {
+        tokens.append(self.clone());
+    }
+}
+
+impl ToTokens for Op {
     fn to_tokens(&self, tokens: &mut Tokens) {
         tokens.append(self.clone());
     }

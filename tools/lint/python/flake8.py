@@ -6,6 +6,7 @@ import json
 import os
 import platform
 import signal
+import subprocess
 import sys
 from collections import defaultdict
 
@@ -125,6 +126,15 @@ def lint(paths, config, **lintargs):
                     '"column":%(col)s,"rule":"%(code)s","message":"%(text)s"}',
     ]
 
+    fix_cmdargs = [
+        os.path.join(bindir, 'autopep8'),
+        '--global-config', os.path.join(lintargs['root'], '.flake8'),
+        '--in-place', '--recursive',
+    ]
+
+    if 'exclude' in lintargs:
+        fix_cmdargs.extend(['--exclude', ','.join(lintargs['exclude'])])
+
     # Run any paths with a .flake8 file in the directory separately so
     # it gets picked up. This means only .flake8 files that live in
     # directories that are explicitly included will be considered.
@@ -135,8 +145,10 @@ def lint(paths, config, **lintargs):
         paths_by_config[os.pathsep.join(configs) if configs else 'default'].append(path)
 
     for configs, paths in paths_by_config.items():
-        cmd = cmdargs[:]
+        if lintargs.get('fix'):
+            subprocess.call(fix_cmdargs + paths)
 
+        cmd = cmdargs[:]
         if configs != 'default':
             configs = reversed(configs.split(os.pathsep))
             cmd.extend(['--append-config={}'.format(c) for c in configs])

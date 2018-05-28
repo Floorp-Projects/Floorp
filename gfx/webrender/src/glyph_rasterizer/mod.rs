@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ColorU};
+use api::{ColorF, ColorU, DevicePoint};
 use api::{FontInstanceFlags, FontInstancePlatformOptions};
 use api::{FontKey, FontRenderMode, FontTemplate, FontVariation};
-use api::{GlyphDimensions, GlyphKey, LayoutToWorldTransform, SubpixelDirection};
+use api::{GlyphIndex, GlyphDimensions};
+use api::{LayoutPoint, LayoutToWorldTransform, WorldPoint};
 use app_units::Au;
+use euclid::approxeq::ApproxEq;
 use internal_types::ResourceCacheError;
 use platform::font::FontContext;
 use rayon::ThreadPool;
@@ -127,7 +129,27 @@ impl FontTransform {
     }
 
     pub fn flip_y(&self) -> Self {
-        FontTransform::new(self.scale_x, -self.skew_y, self.skew_y, -self.scale_y)
+        FontTransform::new(self.scale_x, -self.skew_x, self.skew_y, -self.scale_y)
+    }
+
+    pub fn transform(&self, point: &LayoutPoint) -> WorldPoint {
+        WorldPoint::new(
+            self.scale_x * point.x + self.skew_x * point.y,
+            self.skew_y * point.x + self.scale_y * point.y,
+        )
+    }
+
+    pub fn get_subpx_dir(&self) -> SubpixelDirection {
+        if self.skew_y.approx_eq(&0.0) {
+            // The X axis is not projected onto the Y axis
+            SubpixelDirection::Horizontal
+        } else if self.scale_x.approx_eq(&0.0) {
+            // The X axis has been swapped with the Y axis
+            SubpixelDirection::Vertical
+        } else {
+            // Use subpixel precision on all axes
+            SubpixelDirection::Mixed
+        }
     }
 }
 
@@ -151,7 +173,6 @@ pub struct FontInstance {
     pub color: ColorU,
     pub bg_color: ColorU,
     pub render_mode: FontRenderMode,
-    pub subpx_dir: SubpixelDirection,
     pub flags: FontInstanceFlags,
     pub platform_options: Option<FontInstancePlatformOptions>,
     pub variations: Vec<FontVariation>,
@@ -165,7 +186,6 @@ impl FontInstance {
         color: ColorF,
         bg_color: ColorU,
         render_mode: FontRenderMode,
-        subpx_dir: SubpixelDirection,
         flags: FontInstanceFlags,
         platform_options: Option<FontInstancePlatformOptions>,
         variations: Vec<FontVariation>,
@@ -180,7 +200,6 @@ impl FontInstance {
             color: color.into(),
             bg_color,
             render_mode,
-            subpx_dir,
             flags,
             platform_options,
             variations,
@@ -196,12 +215,38 @@ impl FontInstance {
         if self.transform.is_identity() { GlyphFormat::Subpixel } else { GlyphFormat::TransformedSubpixel }
     }
 
+    pub fn disable_subpixel_aa(&mut self) {
+        self.render_mode = self.render_mode.limit_by(FontRenderMode::Alpha);
+    }
+
+    pub fn disable_subpixel_position(&mut self) {
+        self.flags.remove(FontInstanceFlags::SUBPIXEL_POSITION);
+    }
+
+    pub fn use_subpixel_position(&self) -> bool {
+        self.flags.contains(FontInstanceFlags::SUBPIXEL_POSITION) &&
+        self.render_mode != FontRenderMode::Mono
+    }
+
+    pub fn get_subpx_dir(&self) -> SubpixelDirection {
+        if self.use_subpixel_position() {
+            let mut subpx_dir = self.transform.get_subpx_dir();
+            if self.flags.contains(FontInstanceFlags::TRANSPOSE) {
+                subpx_dir = subpx_dir.swap_xy();
+            }
+            subpx_dir
+        } else {
+            SubpixelDirection::None
+        }
+    }
+
     #[allow(dead_code)]
     pub fn get_subpx_offset(&self, glyph: &GlyphKey) -> (f64, f64) {
-        match self.subpx_dir {
-            SubpixelDirection::None => (0.0, 0.0),
-            SubpixelDirection::Horizontal => (glyph.subpixel_offset.into(), 0.0),
-            SubpixelDirection::Vertical => (0.0, glyph.subpixel_offset.into()),
+        if self.use_subpixel_position() {
+            let (dx, dy) = glyph.subpixel_offset;
+            (dx.into(), dy.into())
+        } else {
+            (0.0, 0.0)
         }
     }
 
@@ -223,6 +268,111 @@ impl FontInstance {
             (bold_offset * x_scale).max(1.0).round() as usize
         } else {
             0
+        }
+    }
+}
+
+#[repr(u32)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+pub enum SubpixelDirection {
+    None = 0,
+    Horizontal,
+    Vertical,
+    Mixed,
+}
+
+impl SubpixelDirection {
+    // Limit the subpixel direction to what is supported by the glyph format.
+    pub fn limit_by(self, glyph_format: GlyphFormat) -> Self {
+        match glyph_format {
+            GlyphFormat::Bitmap |
+            GlyphFormat::ColorBitmap => SubpixelDirection::None,
+            _ => self,
+        }
+    }
+
+    pub fn swap_xy(self) -> Self {
+        match self {
+            SubpixelDirection::None | SubpixelDirection::Mixed => self,
+            SubpixelDirection::Horizontal => SubpixelDirection::Vertical,
+            SubpixelDirection::Vertical => SubpixelDirection::Horizontal,
+        }
+    }
+}
+
+#[repr(u8)]
+#[derive(Hash, Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum SubpixelOffset {
+    Zero = 0,
+    Quarter = 1,
+    Half = 2,
+    ThreeQuarters = 3,
+}
+
+impl SubpixelOffset {
+    // Skia quantizes subpixel offsets into 1/4 increments.
+    // Given the absolute position, return the quantized increment
+    fn quantize(pos: f32) -> Self {
+        // Following the conventions of Gecko and Skia, we want
+        // to quantize the subpixel position, such that abs(pos) gives:
+        // [0.0, 0.125) -> Zero
+        // [0.125, 0.375) -> Quarter
+        // [0.375, 0.625) -> Half
+        // [0.625, 0.875) -> ThreeQuarters,
+        // [0.875, 1.0) -> Zero
+        // The unit tests below check for this.
+        let apos = ((pos - pos.floor()) * 8.0) as i32;
+
+        match apos {
+            0 | 7 => SubpixelOffset::Zero,
+            1...2 => SubpixelOffset::Quarter,
+            3...4 => SubpixelOffset::Half,
+            5...6 => SubpixelOffset::ThreeQuarters,
+            _ => unreachable!("bug: unexpected quantized result"),
+        }
+    }
+}
+
+impl Into<f64> for SubpixelOffset {
+    fn into(self) -> f64 {
+        match self {
+            SubpixelOffset::Zero => 0.0,
+            SubpixelOffset::Quarter => 0.25,
+            SubpixelOffset::Half => 0.5,
+            SubpixelOffset::ThreeQuarters => 0.75,
+        }
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct GlyphKey {
+    pub index: u32,
+    pub subpixel_offset: (SubpixelOffset, SubpixelOffset),
+}
+
+impl GlyphKey {
+    pub fn new(
+        index: u32,
+        point: DevicePoint,
+        subpx_dir: SubpixelDirection,
+    ) -> GlyphKey {
+        let (dx, dy) = match subpx_dir {
+            SubpixelDirection::None => (0.0, 0.0),
+            SubpixelDirection::Horizontal => (point.x, 0.0),
+            SubpixelDirection::Vertical => (0.0, point.y),
+            SubpixelDirection::Mixed => (point.x, point.y),
+        };
+
+        GlyphKey {
+            index,
+            subpixel_offset: (
+                SubpixelOffset::quantize(dx),
+                SubpixelOffset::quantize(dy),
+            ),
         }
     }
 }
@@ -395,11 +545,17 @@ impl GlyphRasterizer {
     pub fn get_glyph_dimensions(
         &mut self,
         font: &FontInstance,
-        glyph_key: &GlyphKey,
+        glyph_index: GlyphIndex,
     ) -> Option<GlyphDimensions> {
+        let glyph_key = GlyphKey::new(
+            glyph_index,
+            DevicePoint::zero(),
+            SubpixelDirection::None,
+        );
+
         self.font_contexts
             .lock_shared_context()
-            .get_glyph_dimensions(font, glyph_key)
+            .get_glyph_dimensions(font, &glyph_key)
     }
 
     pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
@@ -454,23 +610,6 @@ impl AddFont for FontContext {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GlyphRequest {
-    pub key: GlyphKey,
-    pub font: FontInstance,
-}
-
-impl GlyphRequest {
-    pub fn new(font: &FontInstance, key: &GlyphKey) -> Self {
-        GlyphRequest {
-            key: key.clone(),
-            font: font.clone(),
-        }
-    }
-}
-
 #[allow(dead_code)]
 pub(in glyph_rasterizer) struct GlyphRasterJob {
     key: GlyphKey,
@@ -511,13 +650,13 @@ mod test_glyph_rasterizer {
         use api::DeviceIntSize;
         use render_task::{RenderTaskCache, RenderTaskTree};
         use profiler::TextureCacheProfileCounters;
-        use api::{FontKey, FontTemplate, FontRenderMode, GlyphKey,
-                  IdNamespace, LayoutPoint, ColorF, ColorU, SubpixelDirection};
+        use api::{FontKey, FontTemplate, FontRenderMode,
+                  IdNamespace, ColorF, ColorU, DevicePoint};
         use render_backend::FrameId;
         use app_units::Au;
         use thread_profiler::register_thread_with_profiler;
         use std::sync::Arc;
-        use glyph_rasterizer::{GlyphRasterizer, FontInstance};
+        use glyph_rasterizer::{FontInstance, GlyphKey, GlyphRasterizer};
 
         let worker = ThreadPoolBuilder::new()
             .thread_name(|idx|{ format!("WRWorker#{}", idx) })
@@ -550,19 +689,18 @@ mod test_glyph_rasterizer {
             ColorF::new(0.0, 0.0, 0.0, 1.0),
             ColorU::new(0, 0, 0, 0),
             FontRenderMode::Subpixel,
-            SubpixelDirection::Horizontal,
             Default::default(),
             None,
             Vec::new(),
         );
+        let subpx_dir = font.get_subpx_dir();
 
         let mut glyph_keys = Vec::with_capacity(200);
         for i in 0 .. 200 {
             glyph_keys.push(GlyphKey::new(
                 i,
-                LayoutPoint::zero(),
-                font.render_mode,
-                font.subpx_dir,
+                DevicePoint::zero(),
+                subpx_dir,
             ));
         }
 
@@ -589,5 +727,49 @@ mod test_glyph_rasterizer {
             &mut render_task_tree,
             &mut TextureCacheProfileCounters::new(),
         );
+    }
+
+    #[test]
+    fn test_subpx_quantize() {
+        use glyph_rasterizer::SubpixelOffset;
+
+        assert_eq!(SubpixelOffset::quantize(0.0), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(-0.0), SubpixelOffset::Zero);
+
+        assert_eq!(SubpixelOffset::quantize(0.1), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.01), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.05), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.12), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.124), SubpixelOffset::Zero);
+
+        assert_eq!(SubpixelOffset::quantize(0.125), SubpixelOffset::Quarter);
+        assert_eq!(SubpixelOffset::quantize(0.2), SubpixelOffset::Quarter);
+        assert_eq!(SubpixelOffset::quantize(0.25), SubpixelOffset::Quarter);
+        assert_eq!(SubpixelOffset::quantize(0.33), SubpixelOffset::Quarter);
+        assert_eq!(SubpixelOffset::quantize(0.374), SubpixelOffset::Quarter);
+
+        assert_eq!(SubpixelOffset::quantize(0.375), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(0.4), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(0.5), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(0.58), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(0.624), SubpixelOffset::Half);
+
+        assert_eq!(SubpixelOffset::quantize(0.625), SubpixelOffset::ThreeQuarters);
+        assert_eq!(SubpixelOffset::quantize(0.67), SubpixelOffset::ThreeQuarters);
+        assert_eq!(SubpixelOffset::quantize(0.7), SubpixelOffset::ThreeQuarters);
+        assert_eq!(SubpixelOffset::quantize(0.78), SubpixelOffset::ThreeQuarters);
+        assert_eq!(SubpixelOffset::quantize(0.874), SubpixelOffset::ThreeQuarters);
+
+        assert_eq!(SubpixelOffset::quantize(0.875), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.89), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.91), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.967), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(0.999), SubpixelOffset::Zero);
+
+        assert_eq!(SubpixelOffset::quantize(-1.0), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(1.0), SubpixelOffset::Zero);
+        assert_eq!(SubpixelOffset::quantize(1.5), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(-1.625), SubpixelOffset::Half);
+        assert_eq!(SubpixelOffset::quantize(-4.33), SubpixelOffset::ThreeQuarters);
     }
 }

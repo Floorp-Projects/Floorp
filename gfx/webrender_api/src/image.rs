@@ -6,7 +6,8 @@ extern crate serde_bytes;
 
 use font::{FontInstanceKey, FontKey, FontTemplate};
 use std::sync::Arc;
-use {DevicePoint, DeviceUintRect, DeviceUintSize, IdNamespace, TileOffset, TileSize};
+use {DevicePoint, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use {IdNamespace, TileOffset, TileSize};
 use euclid::size2;
 
 #[repr(C)]
@@ -105,6 +106,13 @@ impl ImageDescriptor {
 
     pub fn compute_total_size(&self) -> u32 {
         self.compute_stride() * self.size.height
+    }
+
+    pub fn full_rect(&self) -> DeviceUintRect {
+        DeviceUintRect::new(
+            DeviceUintPoint::zero(),
+            self.size,
+        )
     }
 }
 

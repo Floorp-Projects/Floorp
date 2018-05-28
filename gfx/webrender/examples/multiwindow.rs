@@ -102,17 +102,15 @@ impl Window {
 
         let epoch = Epoch(0);
         let pipeline_id = PipelineId(0, 0);
-        let mut resources = ResourceUpdates::new();
+        let mut txn = Transaction::new();
 
         let font_key = api.generate_font_key();
         let font_bytes = load_file("../wrench/reftests/text/FreeSans.ttf");
-        resources.add_raw_font(font_key, font_bytes, 0);
+        txn.add_raw_font(font_key, font_bytes, 0);
 
         let font_instance_key = api.generate_font_instance_key();
-        resources.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None, Vec::new());
+        txn.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None, Vec::new());
 
-        let mut txn = Transaction::new();
-        txn.update_resources(resources);
         api.send_transaction(document_id, txn);
 
         Window {

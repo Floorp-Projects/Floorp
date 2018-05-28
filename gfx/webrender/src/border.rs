@@ -2,16 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ClipMode, ColorF, LayoutPoint};
-use api::{LayoutPrimitiveInfo, LayoutRect, LayoutSize, NormalBorder};
+use api::{BorderRadius, BorderSide, BorderStyle, BorderWidths, ColorF, LayoutPoint};
+use api::{ColorU, DeviceRect, DeviceSize, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
+use api::{DevicePoint, DeviceIntSize, LayoutRect, LayoutSize, NormalBorder};
+use app_units::Au;
 use clip::ClipSource;
 use ellipse::Ellipse;
 use display_list_flattener::DisplayListFlattener;
-use gpu_types::BrushFlags;
+use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use gpu_cache::GpuDataRequest;
-use prim_store::{BorderPrimitiveCpu, BrushClipMaskKind, BrushSegment, BrushSegmentDescriptor};
-use prim_store::{EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
-use util::{lerp, pack_as_float};
+use prim_store::{BorderPrimitiveCpu, BrushClipMaskKind, BrushKind, BrushPrimitive, BrushSegment, BrushSegmentDescriptor};
+use prim_store::{BorderSource, EdgeAaSegmentMask, PrimitiveContainer, ScrollNodeAndClipChain};
+use util::{lerp, pack_as_float, RectHelpers};
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -34,6 +36,96 @@ enum BorderCorner {
     TopRight,
     BottomLeft,
     BottomRight,
+}
+
+trait AuSizeConverter {
+    fn to_au(&self) -> LayoutSizeAu;
+}
+
+impl AuSizeConverter for LayoutSize {
+    fn to_au(&self) -> LayoutSizeAu {
+        LayoutSizeAu::new(
+            Au::from_f32_px(self.width),
+            Au::from_f32_px(self.height),
+        )
+    }
+}
+
+// TODO(gw): Perhaps there is a better way to store
+//           the border cache key than duplicating
+//           all the border structs with hashable
+//           variants...
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BorderRadiusAu {
+    pub top_left: LayoutSizeAu,
+    pub top_right: LayoutSizeAu,
+    pub bottom_left: LayoutSizeAu,
+    pub bottom_right: LayoutSizeAu,
+}
+
+impl From<BorderRadius> for BorderRadiusAu {
+    fn from(radius: BorderRadius) -> BorderRadiusAu {
+        BorderRadiusAu {
+            top_left: radius.top_left.to_au(),
+            top_right: radius.top_right.to_au(),
+            bottom_right: radius.bottom_right.to_au(),
+            bottom_left: radius.bottom_left.to_au(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BorderWidthsAu {
+    pub left: Au,
+    pub top: Au,
+    pub right: Au,
+    pub bottom: Au,
+}
+
+impl From<BorderWidths> for BorderWidthsAu {
+    fn from(widths: BorderWidths) -> Self {
+        BorderWidthsAu {
+            left: Au::from_f32_px(widths.left),
+            top: Au::from_f32_px(widths.top),
+            right: Au::from_f32_px(widths.right),
+            bottom: Au::from_f32_px(widths.bottom),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BorderSideAu {
+    pub color: ColorU,
+    pub style: BorderStyle,
+}
+
+impl From<BorderSide> for BorderSideAu {
+    fn from(side: BorderSide) -> Self {
+        BorderSideAu {
+            color: side.color.into(),
+            style: side.style,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct BorderCacheKey {
+    pub left: BorderSideAu,
+    pub right: BorderSideAu,
+    pub top: BorderSideAu,
+    pub bottom: BorderSideAu,
+    pub radius: BorderRadiusAu,
+    pub widths: BorderWidthsAu,
+    pub scale: Au,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -374,60 +466,54 @@ impl<'a> DisplayListFlattener<'a> {
         let top = &border.top;
         let bottom = &border.bottom;
 
-        let constant_color = left.color;
-        let is_simple_border = [left, top, right, bottom].iter().all(|edge| {
-            edge.style == BorderStyle::Solid &&
-            edge.color == constant_color
+        let brush_border_supported = [left, top, right, bottom].iter().all(|edge| {
+            match edge.style {
+                BorderStyle::Solid |
+                BorderStyle::Hidden |
+                BorderStyle::None |
+                BorderStyle::Inset |
+                BorderStyle::Outset => {
+                    true
+                }
+
+                BorderStyle::Double |
+                BorderStyle::Dotted |
+                BorderStyle::Dashed |
+                BorderStyle::Groove |
+                BorderStyle::Ridge => {
+                    false
+                }
+            }
         });
 
-        if is_simple_border {
-            let extra_clips = vec![
-                ClipSource::new_rounded_rect(
-                    info.rect,
-                    border.radius,
-                    ClipMode::Clip,
-                ),
-                ClipSource::new_rounded_rect(
-                    LayoutRect::new(
-                        LayoutPoint::new(
-                            info.rect.origin.x + widths.left,
-                            info.rect.origin.y + widths.top,
-                        ),
-                        LayoutSize::new(
-                            info.rect.size.width - widths.left - widths.right,
-                            info.rect.size.height - widths.top - widths.bottom,
-                        ),
-                    ),
-                    BorderRadius {
-                        top_left: LayoutSize::new(
-                            (border.radius.top_left.width - widths.left).max(0.0),
-                            (border.radius.top_left.height - widths.top).max(0.0),
-                        ),
-                        top_right: LayoutSize::new(
-                            (border.radius.top_right.width - widths.right).max(0.0),
-                            (border.radius.top_right.height - widths.top).max(0.0),
-                        ),
-                        bottom_left: LayoutSize::new(
-                            (border.radius.bottom_left.width - widths.left).max(0.0),
-                            (border.radius.bottom_left.height - widths.bottom).max(0.0),
-                        ),
-                        bottom_right: LayoutSize::new(
-                            (border.radius.bottom_right.width - widths.right).max(0.0),
-                            (border.radius.bottom_right.height - widths.bottom).max(0.0),
-                        ),
+        if brush_border_supported {
+            let prim = BrushPrimitive::new(
+                BrushKind::Border {
+                    source: BorderSource::Border {
+                        border,
+                        widths: *widths,
+                        cache_key: BorderCacheKey {
+                            left: border.left.into(),
+                            top: border.top.into(),
+                            right: border.right.into(),
+                            bottom: border.bottom.into(),
+                            widths: (*widths).into(),
+                            radius: border.radius.into(),
+                            scale: Au::from_f32_px(0.0),
+                        },
+                        task_info: None,
+                        handle: None,
                     },
-                    ClipMode::ClipOut,
-                ),
-            ];
-
-            self.add_solid_rectangle(
-                clip_and_scroll,
-                info,
-                border.top.color,
+                },
                 None,
-                extra_clips,
             );
 
+            self.add_primitive(
+                clip_and_scroll,
+                info,
+                Vec::new(),
+                PrimitiveContainer::Brush(prim),
+            );
             return;
         }
 
@@ -505,8 +591,7 @@ impl<'a> DisplayListFlattener<'a> {
             let p3 = info.rect.bottom_right();
 
             let segment = |x0, y0, x1, y1| BrushSegment::new(
-                LayoutPoint::new(x0, y0),
-                LayoutSize::new(x1-x0, y1-y0),
+                LayoutRect::from_floats(x0, y0, x1, y1),
                 true,
                 EdgeAaSegmentMask::all(), // Note: this doesn't seem right, needs revision
                 [0.0; 4],
@@ -928,4 +1013,435 @@ impl DotInfo {
     fn new(arc_pos: f32, diameter: f32) -> DotInfo {
         DotInfo { arc_pos, diameter }
     }
+}
+
+#[derive(Debug)]
+pub struct BorderRenderTaskInfo {
+    pub instances: Vec<BorderInstance>,
+    pub segments: Vec<BrushSegment>,
+    pub size: DeviceIntSize,
+}
+
+impl BorderRenderTaskInfo {
+    pub fn new(
+        rect: &LayoutRect,
+        border: &NormalBorder,
+        widths: &BorderWidths,
+        scale: LayoutToDeviceScale,
+    ) -> Self {
+        let mut instances = Vec::new();
+        let mut segments = Vec::new();
+
+        let dp_width_top = (widths.top * scale.0).ceil();
+        let dp_width_bottom = (widths.bottom * scale.0).ceil();
+        let dp_width_left = (widths.left * scale.0).ceil();
+        let dp_width_right = (widths.right * scale.0).ceil();
+
+        let dp_corner_tl = (border.radius.top_left * scale).ceil();
+        let dp_corner_tr = (border.radius.top_right * scale).ceil();
+        let dp_corner_bl = (border.radius.bottom_left * scale).ceil();
+        let dp_corner_br = (border.radius.bottom_right * scale).ceil();
+
+        let dp_size_tl = DeviceSize::new(
+            dp_corner_tl.width.max(dp_width_left),
+            dp_corner_tl.height.max(dp_width_top),
+        );
+        let dp_size_tr = DeviceSize::new(
+            dp_corner_tr.width.max(dp_width_right),
+            dp_corner_tr.height.max(dp_width_top),
+        );
+        let dp_size_br = DeviceSize::new(
+            dp_corner_br.width.max(dp_width_right),
+            dp_corner_br.height.max(dp_width_bottom),
+        );
+        let dp_size_bl = DeviceSize::new(
+            dp_corner_bl.width.max(dp_width_left),
+            dp_corner_bl.height.max(dp_width_bottom),
+        );
+
+        let local_size_tl = LayoutSize::new(
+            border.radius.top_left.width.max(widths.left),
+            border.radius.top_left.height.max(widths.top),
+        );
+        let local_size_tr = LayoutSize::new(
+            border.radius.top_right.width.max(widths.right),
+            border.radius.top_right.height.max(widths.top),
+        );
+        let local_size_br = LayoutSize::new(
+            border.radius.bottom_right.width.max(widths.right),
+            border.radius.bottom_right.height.max(widths.bottom),
+        );
+        let local_size_bl = LayoutSize::new(
+            border.radius.bottom_left.width.max(widths.left),
+            border.radius.bottom_left.height.max(widths.bottom),
+        );
+
+        // TODO(gw): The inner and outer widths don't matter for simple
+        //           border types. Once we push dashing and dotted styles
+        //           through border brushes, we need to calculate an
+        //           appropriate length here.
+        let width_inner = 16.0;
+        let height_inner = 16.0;
+
+        let size = DeviceSize::new(
+            dp_size_tl.width.max(dp_size_bl.width) + width_inner + dp_size_tr.width.max(dp_size_br.width),
+            dp_size_tl.height.max(dp_size_tr.height) + height_inner + dp_size_bl.height.max(dp_size_br.height),
+        );
+
+        // These modulate colors are not part of the specification. They
+        // are derived from the Gecko source code and experimentation, and
+        // used to modulate the colors in order to generate colors for
+        // the inset/outset and groove/ridge border styles.
+        let left_color = border.left.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
+        let top_color = border.top.border_color(1.0, 2.0 / 3.0, 0.3, 0.7);
+        let right_color = border.right.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
+        let bottom_color = border.bottom.border_color(2.0 / 3.0, 1.0, 0.7, 0.3);
+
+        add_edge_segment(
+            LayoutRect::from_floats(
+                rect.origin.x,
+                rect.origin.y + local_size_tl.height,
+                rect.origin.x + widths.left,
+                rect.origin.y + rect.size.height - local_size_bl.height,
+            ),
+            DeviceRect::from_floats(
+                0.0,
+                dp_size_tl.height,
+                dp_width_left,
+                size.height - dp_size_bl.height,
+            ),
+            border.left.style,
+            left_color,
+            BorderSegment::Left,
+            EdgeAaSegmentMask::LEFT | EdgeAaSegmentMask::RIGHT,
+            &mut instances,
+            BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_Y,
+            &mut segments,
+        );
+
+        add_edge_segment(
+            LayoutRect::from_floats(
+                rect.origin.x + local_size_tl.width,
+                rect.origin.y,
+                rect.origin.x + rect.size.width - local_size_tr.width,
+                rect.origin.y + widths.top,
+            ),
+            DeviceRect::from_floats(
+                dp_size_tl.width,
+                0.0,
+                size.width - dp_size_tr.width,
+                dp_width_top,
+            ),
+            border.top.style,
+            top_color,
+            BorderSegment::Top,
+            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::BOTTOM,
+            &mut instances,
+            BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_X,
+            &mut segments,
+        );
+
+        add_edge_segment(
+            LayoutRect::from_floats(
+                rect.origin.x + rect.size.width - widths.right,
+                rect.origin.y + local_size_tr.height,
+                rect.origin.x + rect.size.width,
+                rect.origin.y + rect.size.height - local_size_br.height,
+            ),
+            DeviceRect::from_floats(
+                size.width - dp_width_right,
+                dp_size_tr.height,
+                size.width,
+                size.height - dp_size_br.height,
+            ),
+            border.right.style,
+            right_color,
+            BorderSegment::Right,
+            EdgeAaSegmentMask::RIGHT | EdgeAaSegmentMask::LEFT,
+            &mut instances,
+            BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_Y,
+            &mut segments,
+        );
+
+        add_edge_segment(
+            LayoutRect::from_floats(
+                rect.origin.x + local_size_bl.width,
+                rect.origin.y + rect.size.height - widths.bottom,
+                rect.origin.x + rect.size.width - local_size_br.width,
+                rect.origin.y + rect.size.height,
+            ),
+            DeviceRect::from_floats(
+                dp_size_bl.width,
+                size.height - dp_width_bottom,
+                size.width - dp_size_br.width,
+                size.height,
+            ),
+            border.bottom.style,
+            bottom_color,
+            BorderSegment::Bottom,
+            EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::TOP,
+            &mut instances,
+            BrushFlags::SEGMENT_RELATIVE | BrushFlags::SEGMENT_REPEAT_X,
+            &mut segments,
+        );
+
+        add_corner_segment(
+            LayoutRect::from_floats(
+                rect.origin.x,
+                rect.origin.y,
+                rect.origin.x + local_size_tl.width,
+                rect.origin.y + local_size_tl.height,
+            ),
+            DeviceRect::from_floats(
+                0.0,
+                0.0,
+                dp_size_tl.width,
+                dp_size_tl.height,
+            ),
+            border.left.style,
+            left_color,
+            border.top.style,
+            top_color,
+            DeviceSize::new(dp_width_left, dp_width_top),
+            dp_corner_tl,
+            BorderSegment::TopLeft,
+            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::LEFT,
+            &mut instances,
+            &mut segments,
+        );
+
+        add_corner_segment(
+            LayoutRect::from_floats(
+                rect.origin.x + rect.size.width - local_size_tr.width,
+                rect.origin.y,
+                rect.origin.x + rect.size.width,
+                rect.origin.y + local_size_tr.height,
+            ),
+            DeviceRect::from_floats(
+                size.width - dp_size_tr.width,
+                0.0,
+                size.width,
+                dp_size_tr.height,
+            ),
+            border.top.style,
+            top_color,
+            border.right.style,
+            right_color,
+            DeviceSize::new(dp_width_right, dp_width_top),
+            dp_corner_tr,
+            BorderSegment::TopRight,
+            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::RIGHT,
+            &mut instances,
+            &mut segments,
+        );
+
+        add_corner_segment(
+            LayoutRect::from_floats(
+                rect.origin.x + rect.size.width - local_size_br.width,
+                rect.origin.y + rect.size.height - local_size_br.height,
+                rect.origin.x + rect.size.width,
+                rect.origin.y + rect.size.height,
+            ),
+            DeviceRect::from_floats(
+                size.width - dp_size_br.width,
+                size.height - dp_size_br.height,
+                size.width,
+                size.height,
+            ),
+            border.right.style,
+            right_color,
+            border.bottom.style,
+            bottom_color,
+            DeviceSize::new(dp_width_right, dp_width_bottom),
+            dp_corner_br,
+            BorderSegment::BottomRight,
+            EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::RIGHT,
+            &mut instances,
+            &mut segments,
+        );
+
+        add_corner_segment(
+            LayoutRect::from_floats(
+                rect.origin.x,
+                rect.origin.y + rect.size.height - local_size_bl.height,
+                rect.origin.x + local_size_bl.width,
+                rect.origin.y + rect.size.height,
+            ),
+            DeviceRect::from_floats(
+                0.0,
+                size.height - dp_size_bl.height,
+                dp_size_bl.width,
+                size.height,
+            ),
+            border.bottom.style,
+            bottom_color,
+            border.left.style,
+            left_color,
+            DeviceSize::new(dp_width_left, dp_width_bottom),
+            dp_corner_bl,
+            BorderSegment::BottomLeft,
+            EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::LEFT,
+            &mut instances,
+            &mut segments,
+        );
+
+        BorderRenderTaskInfo {
+            segments,
+            instances,
+            size: size.to_i32(),
+        }
+    }
+}
+
+fn add_brush_segment(
+    image_rect: LayoutRect,
+    task_rect: DeviceRect,
+    brush_flags: BrushFlags,
+    edge_flags: EdgeAaSegmentMask,
+    brush_segments: &mut Vec<BrushSegment>,
+) {
+    brush_segments.push(
+        BrushSegment::new(
+            image_rect,
+            true,
+            edge_flags,
+            [
+                task_rect.origin.x,
+                task_rect.origin.y,
+                task_rect.origin.x + task_rect.size.width,
+                task_rect.origin.y + task_rect.size.height,
+            ],
+            brush_flags,
+        )
+    );
+}
+
+fn add_segment(
+    task_rect: DeviceRect,
+    style0: BorderStyle,
+    style1: BorderStyle,
+    color0: ColorF,
+    color1: ColorF,
+    segment: BorderSegment,
+    instances: &mut Vec<BorderInstance>,
+    widths: DeviceSize,
+    radius: DeviceSize,
+) {
+    let flags = (segment as i32) |
+                ((style0 as i32) << 8) |
+                ((style1 as i32) << 16);
+
+    let base_instance = BorderInstance {
+        task_origin: DevicePoint::zero(),
+        local_rect: task_rect,
+        flags,
+        color0: color0.premultiplied(),
+        color1: color1.premultiplied(),
+        widths,
+        radius,
+    };
+
+    instances.push(base_instance);
+}
+
+fn add_corner_segment(
+    image_rect: LayoutRect,
+    task_rect: DeviceRect,
+    mut style0: BorderStyle,
+    color0: ColorF,
+    mut style1: BorderStyle,
+    color1: ColorF,
+    widths: DeviceSize,
+    radius: DeviceSize,
+    segment: BorderSegment,
+    edge_flags: EdgeAaSegmentMask,
+    instances: &mut Vec<BorderInstance>,
+    brush_segments: &mut Vec<BrushSegment>,
+) {
+    // TODO(gw): This will need to be a bit more involved when
+    //           we support other border types here. For example,
+    //           groove / ridge borders will always need to
+    //           use two instances.
+
+    if color0.a <= 0.0 && color1.a <= 0.0 {
+        return;
+    }
+
+    if widths.width <= 0.0 && widths.height <= 0.0 {
+        return;
+    }
+
+    let style0_hidden = style0 == BorderStyle::Hidden || style0 == BorderStyle::None;
+    let style1_hidden = style1 == BorderStyle::Hidden || style1 == BorderStyle::None;
+
+    if style0_hidden && style1_hidden {
+        return;
+    }
+
+    if style0_hidden {
+        style0 = style1;
+    }
+    if style1_hidden {
+        style1 = style0;
+    }
+
+    add_segment(
+        task_rect,
+        style0,
+        style1,
+        color0,
+        color1,
+        segment,
+        instances,
+        widths,
+        radius,
+    );
+
+    add_brush_segment(
+        image_rect,
+        task_rect,
+        BrushFlags::SEGMENT_RELATIVE,
+        edge_flags,
+        brush_segments,
+    );
+}
+
+fn add_edge_segment(
+    image_rect: LayoutRect,
+    task_rect: DeviceRect,
+    style: BorderStyle,
+    color: ColorF,
+    segment: BorderSegment,
+    edge_flags: EdgeAaSegmentMask,
+    instances: &mut Vec<BorderInstance>,
+    brush_flags: BrushFlags,
+    brush_segments: &mut Vec<BrushSegment>,
+) {
+    if color.a <= 0.0 {
+        return;
+    }
+
+    if style == BorderStyle::Hidden || style == BorderStyle::None {
+        return;
+    }
+
+    add_segment(
+        task_rect,
+        style,
+        style,
+        color,
+        color,
+        segment,
+        instances,
+        DeviceSize::zero(),
+        DeviceSize::zero(),
+    );
+
+    add_brush_segment(
+        image_rect,
+        task_rect,
+        brush_flags,
+        edge_flags,
+        brush_segments,
+    );
 }

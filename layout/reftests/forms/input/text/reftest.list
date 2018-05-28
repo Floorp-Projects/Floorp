@@ -1,5 +1,5 @@
 == bounds-1.html bounds-1-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,151,111) == size-1.html size-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,151,111) fuzzy-if(webrender,65,3) == size-1.html size-1-ref.html
 == size-2.html size-2-ref.html
 == baseline-1.html baseline-1-ref.html
 == centering-1.xul centering-1-ref.xul

@@ -8275,7 +8275,7 @@
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "alert_emails": ["jya@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "60",
     "kind": "boolean",
     "bug_numbers": [1231169],
@@ -8290,7 +8290,7 @@
   },
   "MEDIA_OGG_LOADED_IS_CHAINED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "70",
     "kind": "boolean",
     "description": "Whether while playing Ogg audio/video we encountered a chained Ogg. Reported on every audio or video element that loads an Ogg file.",
@@ -8298,23 +8298,23 @@
   },
   "MEDIA_HLS_CANPLAY_REQUESTED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for an HTTP Live Streaming media type (or generic m3u playlist).",
     "bug_numbers": [1262659]
   },
   "MEDIA_HLS_DECODER_SUCCESS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "giles@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "boolean",
     "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
     "bug_numbers": [1262659]
   },
   "MEDIA_EME_SECURE_CONTEXT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "63",
     "kind": "boolean",
     "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
@@ -8330,7 +8330,7 @@
   },
   "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com", "jacheng@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "bug_numbers": [1368596],
     "expires_in_version": "63",
     "kind": "enumerated",
@@ -8397,8 +8397,8 @@
   },
   "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "53",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 10,
     "description": "Does the WMF video decoder return success but null output? 0 = playback successful, 1 = excessive null output but able to decode some frames, 2 = excessive null output and gave up, 3 = null output but recovered, 4 = non-excessive null output without being able to decode frames.",
@@ -8406,15 +8406,15 @@
   },
   "AUDIO_MFT_OUTPUT_NULL_SAMPLES": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "53",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "count",
     "description": "How many times the audio MFT decoder returns success but output nothing.",
     "bug_numbers": [1176071]
   },
   "VIDEO_CAN_CREATE_AAC_DECODER": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "68",
     "kind": "boolean",
     "description": "Whether at startup we report we can playback MP4 (AAC) audio. This is single value is recorded at every startup.",
@@ -8422,7 +8422,7 @@
   },
   "VIDEO_CAN_CREATE_H264_DECODER": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "68",
     "kind": "boolean",
     "description": "Whether at startup we report we can playback MP4 (H.264) video. This is single value is recorded at every startup.",
@@ -8430,30 +8430,33 @@
   },
   "VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "50",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 128,
     "description": "The H.264 constraint set flag as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, with the addition of 0 for unknown values."
   },
   "VIDEO_CANPLAYTYPE_H264_LEVEL": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "50",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 51,
     "description": "The H.264 level (level_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
   },
   "VIDEO_CANPLAYTYPE_H264_PROFILE": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "50",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 244,
     "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
   },
   "DECODER_DOCTOR_INFOBAR_STATS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["gsquelart@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com","gsquelart@mozilla.com"],
     "bug_numbers": [1271483, 1337566],
-    "expires_in_version": "59",
+    "expires_in_version": "63",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 8,
@@ -8461,28 +8464,32 @@
   },
   "VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 128,
     "description": "A bit pattern to collect H.264 constraint set flag from the decoded SPS. Bits 0 through 5 represent constraint_set0_flag through constraint_set5_flag, respectively."
   },
   "VIDEO_DECODED_H264_SPS_LEVEL": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 51,
     "description": "The H.264 level (level_idc) as extracted from the decoded SPS, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
   },
   "VIDEO_DECODED_H264_SPS_PROFILE": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 244,
     "description": "The H.264 profile number (profile_idc) as extracted from the decoded SPS."
   },
   "VIDEO_H264_SPS_MAX_NUM_REF_FRAMES": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 17,
     "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
@@ -11310,8 +11317,8 @@
   },
   "VIDEO_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Total time spent playing video in milliseconds. This reports the total play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -11320,8 +11327,8 @@
   },
   "VIDEO_HIDDEN_PLAY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Total time spent playing video while element is hidden, in milliseconds. This reports the total hidden play time for an HTML Media Element whenever it is suspended or resumed, such as when the page is unloaded, or when the mute status changes when the AudioChannelAPI pref is set.",
     "kind": "exponential",
     "high": 7200000,
@@ -11330,8 +11337,8 @@
   },
   "VIDEO_HIDDEN_PLAY_TIME_PERCENTAGE" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Percentage of total time spent playing video while element is hidden. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -11341,8 +11348,8 @@
   },
   "VIDEO_INFERRED_DECODE_SUSPEND_PERCENTAGE" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
@@ -11352,8 +11359,8 @@
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -11363,8 +11370,8 @@
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
@@ -11374,8 +11381,8 @@
   },
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
@@ -11385,8 +11392,8 @@
   },
   "VIDEO_AS_CONTENT_SOURCE" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
-    "expires_in_version": "58",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Usage of a {visible / invisible} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_VISIBLE, 1 = ALL_INVISIBLE, 2 = drawImage_VISIBLE, 3 = drawImage_INVISIBLE, 4 = createPattern_VISIBLE, 5 = createPattern_INVISIBLE, 6 = createImageBitmap_VISIBLE, 7 = createImageBitmap_INVISIBLE, 8 = captureStream_VISIBLE, 9 = captureStream_INVISIBLE)",
     "kind": "enumerated",
     "n_values": 12,
@@ -11394,8 +11401,8 @@
   },
   "VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com", "kaku@mozilla.com"],
-    "expires_in_version": "58",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "description": "Usage of an invisible {in tree / not in tree} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_IN_TREE, 1 = ALL_NOT_IN_TREE, 2 = drawImage_IN_TREE, 3 = drawImage_NOT_IN_TREE, 4 = createPattern_IN_TREE, 5 = createPattern_NOT_IN_TREE, 6 = createImageBitmap_IN_TREE, 7 = createImageBitmap_NOT_IN_TREE, 8 = captureStream_IN_TREE, 9 = captureStream_NOT_IN_TREE)",
     "kind": "enumerated",
     "n_values": 12,
@@ -11403,8 +11410,8 @@
   },
   "VIDEO_UNLOAD_STATE": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "enumerated",
     "n_values": 5,
     "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
@@ -11412,8 +11419,8 @@
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["ajones@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "bug_numbers": [1230265],
     "kind": "linear",
     "high": 1000,
@@ -11424,7 +11431,7 @@
   "MEDIA_PLAY_PROMISE_RESOLUTION": {
     "record_in_processes": ["main", "content"],
     "bug_numbers": [1453176],
-    "alert_emails": ["cpearce@mozilla.com", "drno@ohlmeier.org"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "72",
     "kind": "categorical",
     "labels": ["Resolved", "NotAllowedErr", "SrcNotSupportedErr", "PauseAbortErr", "AbortErr", "UnknownErr"],
@@ -11432,7 +11439,7 @@
   },
   "MEDIA_CODEC_USED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "expires_in_version": "never",
     "keyed": true,
     "kind": "count",
@@ -12097,8 +12104,8 @@
   },
   "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 60,
@@ -12107,8 +12114,8 @@
   },
   "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 60,
@@ -12389,16 +12396,16 @@
   },
   "VIDEO_FASTSEEK_USED": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@mozilla.com"],
+    "expires_in_version": "63",
     "bug_numbers": [1245982],
     "kind": "count",
     "description": "Uses of HTMLMediaElement.fastSeek"
   },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
-    "expires_in_version": "55",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
@@ -12438,9 +12445,9 @@
   },
   "IPC_SYNC_MAIN_LATENCY_MS": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["cpearce@mozilla.com"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
     "bug_numbers": [1333489],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "exponential",
     "low": 32,
     "high": 750,
@@ -13592,8 +13599,8 @@
   },
   "VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS": {
     "record_in_processes": ["content"],
-    "alert_emails": ["ajones@mozilla.com", "bwu@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "releaseChannelCollection": "opt-out",
     "keyed": true,
     "kind": "enumerated",
@@ -13603,8 +13610,8 @@
   },
   "VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_GPU_CRASHED_MS" : {
     "record_in_processes": ["content"],
-    "alert_emails": ["ajones@mozilla.com", "bwu@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 64000,
@@ -13614,8 +13621,8 @@
   },
   "VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_MFR_NOTIFIED_MS" : {
     "record_in_processes": ["content"],
-    "alert_emails": ["ajones@mozilla.com", "bwu@mozilla.com", "tkuo@mozilla.com"],
-    "expires_in_version": "60",
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 64000,
@@ -13707,6 +13714,16 @@
     "kind": "boolean",
     "keyed": true,
     "description": "Permission requests (showing a permission prompt) by whether they were requested from code handling a user input event."
+  },
+  "PROFILE_DIRECTORY_FILE_AGE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["jrediger@mozilla.com", "telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1458574],
+    "expires_in_version": "65",
+    "high": 1500,
+    "n_buckets": 20,
+    "kind": "exponential",
+    "description": "Age of files scanned in profile directory in days when determining initial profile age."
   },
   "HTMLEDITORS_WITH_RESIZERS": {
     "record_in_processes": ["content"],

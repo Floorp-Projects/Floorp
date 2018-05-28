@@ -147,14 +147,6 @@ enum class RepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class SubpixelDirection : uint32_t {
-  None = 0,
-  Horizontal,
-  Vertical,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
 enum class TransformStyle : uint32_t {
   Flat = 0,
   Preserve3D = 1,
@@ -225,9 +217,6 @@ struct LayoutPixel;
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
 struct Renderer;
-
-// The resource updates for a given transaction (they must be applied in the same frame).
-struct ResourceUpdates;
 
 // Offset in number of tiles.
 struct Tiles;
@@ -888,7 +877,6 @@ struct ColorU {
 
 struct FontInstanceOptions {
   FontRenderMode render_mode;
-  SubpixelDirection subpx_dir;
   FontInstanceFlags flags;
   // When bg_color.a is != 0 and render_mode is FontRenderMode::Subpixel,
   // the text will be rendered with bg_color.r/g/b as an opaque estimated
@@ -897,7 +885,6 @@ struct FontInstanceOptions {
 
   bool operator==(const FontInstanceOptions& aOther) const {
     return render_mode == aOther.render_mode &&
-           subpx_dir == aOther.subpx_dir &&
            flags == aOther.flags &&
            bg_color == aOther.bg_color;
   }
@@ -1479,14 +1466,14 @@ void wr_renderer_update_program_cache(Renderer *aRenderer,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_blob_image(ResourceUpdates *aResources,
+void wr_resource_updates_add_blob_image(Transaction *aTxn,
                                         WrImageKey aImageKey,
                                         const WrImageDescriptor *aDescriptor,
                                         WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_external_image(ResourceUpdates *aResources,
+void wr_resource_updates_add_external_image(Transaction *aTxn,
                                             WrImageKey aImageKey,
                                             const WrImageDescriptor *aDescriptor,
                                             WrExternalImageId aExternalImageId,
@@ -1495,14 +1482,14 @@ void wr_resource_updates_add_external_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_font_descriptor(ResourceUpdates *aResources,
+void wr_resource_updates_add_font_descriptor(Transaction *aTxn,
                                              WrFontKey aKey,
                                              WrVecU8 *aBytes,
                                              uint32_t aIndex)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
+void wr_resource_updates_add_font_instance(Transaction *aTxn,
                                            WrFontInstanceKey aKey,
                                            WrFontKey aFontKey,
                                            float aGlyphSize,
@@ -1512,48 +1499,40 @@ void wr_resource_updates_add_font_instance(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_image(ResourceUpdates *aResources,
+void wr_resource_updates_add_image(Transaction *aTxn,
                                    WrImageKey aImageKey,
                                    const WrImageDescriptor *aDescriptor,
                                    WrVecU8 *aBytes)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_add_raw_font(ResourceUpdates *aResources,
+void wr_resource_updates_add_raw_font(Transaction *aTxn,
                                       WrFontKey aKey,
                                       WrVecU8 *aBytes,
                                       uint32_t aIndex)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_clear(ResourceUpdates *aResources)
+void wr_resource_updates_clear(Transaction *aTxn)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_delete(ResourceUpdates *aUpdates)
-WR_DESTRUCTOR_SAFE_FUNC;
-
-WR_INLINE
-void wr_resource_updates_delete_font(ResourceUpdates *aResources,
+void wr_resource_updates_delete_font(Transaction *aTxn,
                                      WrFontKey aKey)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_delete_font_instance(ResourceUpdates *aResources,
+void wr_resource_updates_delete_font_instance(Transaction *aTxn,
                                               WrFontInstanceKey aKey)
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_delete_image(ResourceUpdates *aResources,
+void wr_resource_updates_delete_image(Transaction *aTxn,
                                       WrImageKey aKey)
 WR_FUNC;
 
 WR_INLINE
-ResourceUpdates *wr_resource_updates_new()
-WR_FUNC;
-
-WR_INLINE
-void wr_resource_updates_update_blob_image(ResourceUpdates *aResources,
+void wr_resource_updates_update_blob_image(Transaction *aTxn,
                                            WrImageKey aImageKey,
                                            const WrImageDescriptor *aDescriptor,
                                            WrVecU8 *aBytes,
@@ -1561,7 +1540,7 @@ void wr_resource_updates_update_blob_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_update_external_image(ResourceUpdates *aResources,
+void wr_resource_updates_update_external_image(Transaction *aTxn,
                                                WrImageKey aKey,
                                                const WrImageDescriptor *aDescriptor,
                                                WrExternalImageId aExternalImageId,
@@ -1570,7 +1549,7 @@ void wr_resource_updates_update_external_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
-void wr_resource_updates_update_image(ResourceUpdates *aResources,
+void wr_resource_updates_update_image(Transaction *aTxn,
                                       WrImageKey aKey,
                                       const WrImageDescriptor *aDescriptor,
                                       WrVecU8 *aBytes)
@@ -1681,11 +1660,6 @@ WR_INLINE
 void wr_transaction_update_epoch(Transaction *aTxn,
                                  WrPipelineId aPipelineId,
                                  WrEpoch aEpoch)
-WR_FUNC;
-
-WR_INLINE
-void wr_transaction_update_resources(Transaction *aTxn,
-                                     ResourceUpdates *aResourceUpdates)
 WR_FUNC;
 
 WR_INLINE

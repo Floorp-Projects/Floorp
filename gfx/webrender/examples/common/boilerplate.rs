@@ -71,7 +71,7 @@ pub trait Example {
         &mut self,
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
-        resources: &mut ResourceUpdates,
+        txn: &mut Transaction,
         framebuffer_size: DeviceUintSize,
         pipeline_id: PipelineId,
         document_id: DocumentId,
@@ -169,17 +169,16 @@ pub fn main_wrapper<E: Example>(
     let pipeline_id = PipelineId(0, 0);
     let layout_size = framebuffer_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
     let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
-    let mut resources = ResourceUpdates::new();
+    let mut txn = Transaction::new();
 
     example.render(
         &api,
         &mut builder,
-        &mut resources,
+        &mut txn,
         framebuffer_size,
         pipeline_id,
         document_id,
     );
-    let mut txn = Transaction::new();
     txn.set_display_list(
         epoch,
         None,
@@ -187,7 +186,6 @@ pub fn main_wrapper<E: Example>(
         builder.finalize(),
         true,
     );
-    txn.update_resources(resources);
     txn.set_root_pipeline(pipeline_id);
     txn.generate_frame();
     api.send_transaction(document_id, txn);
@@ -251,12 +249,11 @@ pub fn main_wrapper<E: Example>(
 
         if custom_event {
             let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
-            let mut resources = ResourceUpdates::new();
 
             example.render(
                 &api,
                 &mut builder,
-                &mut resources,
+                &mut txn,
                 framebuffer_size,
                 pipeline_id,
                 document_id,
@@ -268,7 +265,6 @@ pub fn main_wrapper<E: Example>(
                 builder.finalize(),
                 true,
             );
-            txn.update_resources(resources);
             txn.generate_frame();
         }
         api.send_transaction(document_id, txn);
