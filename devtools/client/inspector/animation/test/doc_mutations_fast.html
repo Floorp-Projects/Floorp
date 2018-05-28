@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    div {
+      background-color: lime;
+      height: 20px;
+      opacity: 1;
+      transition: 0.5s opacity;
+    }
+
+    .transition {
+      opacity: 0;
+    }
+    </style>
+  </head>
+  <body>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+
+    <script>
+    "use strict";
+
+    // This function is called from test.
+    // eslint-disable-next-line
+    async function startFastMutations() {
+      const targets = document.querySelectorAll("div");
+
+      for (let i = 0; i < 10; i++) {
+        for (const target of targets) {
+          target.classList.toggle("transition");
+          await wait(15);
+        }
+      }
+    }
+
+    async function wait(ms) {
+      return new Promise(resolve => {
+        setTimeout(resolve, ms);
+      });
+    }
+    </script>
+  </body>
+</html>
