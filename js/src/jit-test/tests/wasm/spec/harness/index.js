@@ -224,16 +224,11 @@ function get(instance, name) {
     if (instance.isError())
         return instance;
 
-    // Experimental API change.  We try to export WebAssembly.Global instances,
-    // not primitive values.  In that case the Number() cast is necessary here
-    // to convert the Global to a value: the harness examines types carefully
-    // and will not trigger the @@toPrimitive hook on Global, unlike most user
-    // code.
-
-    if (typeof WebAssembly.Global === "function")
-        return ValueResult(Number(instance.value.exports[name]));
-
-    return ValueResult(instance.value.exports[name]);
+    // We export WebAssembly.Global instances, not primitive values.  The
+    // Number() cast is necessary to convert the Global to a value: the
+    // harness examines types carefully and will not trigger the
+    // @@toPrimitive hook on Global, unlike most user code.
+    return ValueResult(Number(instance.value.exports[name]));
 }
 
 function exports(name, instance) {
