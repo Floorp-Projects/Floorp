@@ -1235,6 +1235,9 @@ nsContentSink::ScrollToRef()
 void
 nsContentSink::StartLayout(bool aIgnorePendingSheets)
 {
+  AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("nsContentSink::StartLayout", LAYOUT,
+                                        mDocumentURI->GetSpecOrDefault());
+
   if (mLayoutStarted) {
     // Nothing to do here
     return;
