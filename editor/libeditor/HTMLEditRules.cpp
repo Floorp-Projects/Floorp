@@ -89,7 +89,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eCreateOrChangeList ||
          aEditSubAction == EditSubAction::eIndent ||
          aEditSubAction == EditSubAction::eOutdent ||
-         aEditSubAction == EditSubAction::align ||
+         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
          aEditSubAction == EditSubAction::makeBasicBlock ||
          aEditSubAction == EditSubAction::removeList ||
          aEditSubAction == EditSubAction::makeDefListItem ||
@@ -706,7 +706,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       return WillAbsolutePosition(aCancel, aHandled);
     case EditSubAction::removeAbsolutePosition:
       return WillRemoveAbsolutePosition(aCancel, aHandled);
-    case EditSubAction::align:
+    case EditSubAction::eSetOrClearAlignment:
       return WillAlign(*aInfo.alignType, aCancel, aHandled);
     case EditSubAction::makeBasicBlock:
       return WillMakeBasicBlock(*aInfo.blockType, aCancel, aHandled);
@@ -766,7 +766,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
     case EditSubAction::makeBasicBlock:
     case EditSubAction::eIndent:
     case EditSubAction::eOutdent:
-    case EditSubAction::align:
+    case EditSubAction::eSetOrClearAlignment:
       return DidMakeBasicBlock();
     case EditSubAction::setAbsolutePosition: {
       nsresult rv = DidMakeBasicBlock();
@@ -979,12 +979,13 @@ HTMLEditRules::GetAlignment(bool* aMixed,
     }
   } else {
     nsTArray<RefPtr<nsRange>> arrayOfRanges;
-    GetPromotedRanges(arrayOfRanges, EditSubAction::align);
+    GetPromotedRanges(arrayOfRanges, EditSubAction::eSetOrClearAlignment);
 
     // Use these ranges to construct a list of nodes to act on.
     nsTArray<OwningNonNull<nsINode>> arrayOfNodes;
     nsresult rv = GetNodesForOperation(arrayOfRanges, arrayOfNodes,
-                                       EditSubAction::align, TouchContent::no);
+                                       EditSubAction::eSetOrClearAlignment,
+                                       TouchContent::no);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -6192,7 +6193,8 @@ HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType)
   // in the range
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   nsresult rv =
-    GetNodesFromSelection(EditSubAction::align, nodeArray, TouchContent::yes);
+    GetNodesFromSelection(EditSubAction::eSetOrClearAlignment, nodeArray,
+                          TouchContent::yes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -7215,10 +7217,11 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       // before walking up to a parent because we need to return the parent
       // object, so the parent itself might not be in the editable area, but
       // it's OK if we're not performing a block-level action.
-      bool blockLevelAction = aEditSubAction == EditSubAction::eIndent ||
-                              aEditSubAction == EditSubAction::eOutdent ||
-                              aEditSubAction == EditSubAction::align ||
-                              aEditSubAction == EditSubAction::makeBasicBlock;
+      bool blockLevelAction =
+        aEditSubAction == EditSubAction::eIndent ||
+        aEditSubAction == EditSubAction::eOutdent ||
+        aEditSubAction == EditSubAction::eSetOrClearAlignment ||
+        aEditSubAction == EditSubAction::makeBasicBlock;
       if (!HTMLEditorRef().IsDescendantOfEditorRoot(
                              point.GetContainer()->GetParentNode()) &&
           (blockLevelAction ||
@@ -7583,7 +7586,7 @@ HTMLEditRules::GetNodesForOperation(
   // only for operations that might care, like making lists or paragraphs
   if (aEditSubAction == EditSubAction::makeBasicBlock ||
       aEditSubAction == EditSubAction::eCreateOrChangeList ||
-      aEditSubAction == EditSubAction::align ||
+      aEditSubAction == EditSubAction::eSetOrClearAlignment ||
       aEditSubAction == EditSubAction::setAbsolutePosition ||
       aEditSubAction == EditSubAction::eIndent ||
       aEditSubAction == EditSubAction::eOutdent) {

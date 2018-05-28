@@ -2385,7 +2385,8 @@ HTMLEditor::Align(const nsAString& aAlignType)
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::align,
+                                      *this,
+                                      EditSubAction::eSetOrClearAlignment,
                                       nsIEditor::eNext);
 
   bool cancel, handled;
@@ -2393,7 +2394,7 @@ HTMLEditor::Align(const nsAString& aAlignType)
   // Find out if the selection is collapsed:
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  EditSubActionInfo subActionInfo(EditSubAction::align);
+  EditSubActionInfo subActionInfo(EditSubAction::eSetOrClearAlignment);
   subActionInfo.alignType = &aAlignType;
   nsresult rv =
    rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
