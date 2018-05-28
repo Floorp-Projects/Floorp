@@ -370,7 +370,7 @@ HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     }
 
     // Remember current inline styles for deletion and normal insertion ops
-    if (aEditSubAction == EditSubAction::insertText ||
+    if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::insertIMEText ||
         aEditSubAction == EditSubAction::deleteSelection ||
         IsStyleCachePreservingSubAction(aEditSubAction)) {
@@ -499,7 +499,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     // a place to put caret.
     // Note we only want to do this if the overall operation was deletion,
     // not if deletion was done along the way for EditSubAction::loadHTML,
-    // EditSubAction::insertText, etc.  That's why this is here rather than
+    // EditSubAction::eInsertText, etc.  That's why this is here rather than
     // DidDeleteSelection().
     if (aEditSubAction == EditSubAction::deleteSelection && mDidRangedDelete) {
       nsresult rv = InsertBRIfNeeded();
@@ -517,7 +517,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
       "Failed to insert <br> elements to empty list items and table cells");
 
     // merge any adjacent text nodes
-    if (aEditSubAction != EditSubAction::insertText &&
+    if (aEditSubAction != EditSubAction::eInsertText &&
         aEditSubAction != EditSubAction::insertIMEText) {
       nsresult rv = HTMLEditorRef().CollapseAdjacentTextNodes(mDocChangeRange);
       if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -535,7 +535,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     }
 
     // attempt to transform any unneeded nbsp's into spaces after doing various operations
-    if (aEditSubAction == EditSubAction::insertText ||
+    if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::insertIMEText ||
         aEditSubAction == EditSubAction::deleteSelection ||
         aEditSubAction == EditSubAction::insertBreak ||
@@ -571,7 +571,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     }
 
     // adjust selection for insert text, html paste, and delete actions
-    if (aEditSubAction == EditSubAction::insertText ||
+    if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::insertIMEText ||
         aEditSubAction == EditSubAction::deleteSelection ||
         aEditSubAction == EditSubAction::insertBreak ||
@@ -584,7 +584,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     }
 
     // check for any styles which were removed inappropriately
-    if (aEditSubAction == EditSubAction::insertText ||
+    if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::insertIMEText ||
         aEditSubAction == EditSubAction::deleteSelection ||
         IsStyleCachePreservingSubAction(aEditSubAction)) {
@@ -680,7 +680,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   }
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::insertText:
+    case EditSubAction::eInsertText:
     case EditSubAction::insertIMEText:
       UndefineCaretBidiLevel();
       return WillInsertText(aInfo.mEditSubAction, aCancel, aHandled,
@@ -756,7 +756,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   AutoSafeEditorData setData(*this, *mHTMLEditor, *aSelection);
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::insertText:
+    case EditSubAction::eInsertText:
     case EditSubAction::insertBreak:
     case EditSubAction::insertIMEText:
       return NS_OK;
@@ -1414,7 +1414,7 @@ HTMLEditRules::WillInsert(bool* aCancel)
   }
 
   if (mDidDeleteSelection &&
-      (mTopLevelEditSubAction == EditSubAction::insertText ||
+      (mTopLevelEditSubAction == EditSubAction::eInsertText ||
        mTopLevelEditSubAction == EditSubAction::insertIMEText ||
        mTopLevelEditSubAction == EditSubAction::deleteSelection)) {
     nsresult rv = ReapplyCachedStyles();
@@ -7130,7 +7130,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
 
   // we do one thing for text actions, something else entirely for other
   // actions
-  if (aEditSubAction == EditSubAction::insertText ||
+  if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::insertIMEText ||
       aEditSubAction == EditSubAction::insertBreak ||
       aEditSubAction == EditSubAction::eDeleteText) {
@@ -7379,7 +7379,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
     }
   }
 
-  if (aEditSubAction == EditSubAction::insertText ||
+  if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::insertIMEText ||
       aEditSubAction == EditSubAction::insertBreak ||
       aEditSubAction == EditSubAction::eDeleteText) {

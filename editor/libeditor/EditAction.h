@@ -42,8 +42,9 @@ enum class EditSubAction : int32_t
   // eDeleteText indicates to delete some characters form a text node.
   eDeleteText,
 
-  // Text edit commands
-  insertText = 2000,
+  // eInsertText indicates to insert some characters.
+  eInsertText,
+
   insertIMEText,
   deleteSelection,
   setTextProperty,
