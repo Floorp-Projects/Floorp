@@ -848,7 +848,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
 
-                summary = None
+                summary = {}
                 executed_too_many_tests = False
                 for per_test_args in self.query_args(suite):
                     # Make sure baseline code coverage tests are never

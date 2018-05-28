@@ -68,7 +68,7 @@ class StructuredOutputParser(OutputParser):
         try:
             candidate_data = json.loads(line)
             if (isinstance(candidate_data, dict) and
-                'action' in candidate_data and candidate_data['action'] in self.log_actions):
+               'action' in candidate_data and candidate_data['action'] in self.log_actions):
                 data = candidate_data
         except ValueError:
             pass
@@ -124,27 +124,37 @@ class StructuredOutputParser(OutputParser):
             1) Remove previous data from the new summary to only look at new data
             2) Build a joined summary to include the previous + new data
         """
+        RunSummary = namedtuple("RunSummary",
+                                ("unexpected_statuses",
+                                 "expected_statuses",
+                                 "log_level_counts",
+                                 "action_counts"))
+        if previous_summary == {}:
+            previous_summary = RunSummary(defaultdict(int),
+                                          defaultdict(int),
+                                          defaultdict(int),
+                                          defaultdict(int))
         if previous_summary:
-            RunSummary = namedtuple("RunSummary",
-                                    ("unexpected_statuses",
-                                     "expected_statuses",
-                                     "log_level_counts",
-                                     "action_counts"))
-
             self.tbpl_status = TBPL_SUCCESS
-
             joined_summary = summary
 
             # Remove previously known status messages
-            summary = RunSummary(self._subtract_tuples(previous_summary.unexpected_statuses, summary.unexpected_statuses),
-                                 self._subtract_tuples(previous_summary.expected_statuses, summary.expected_statuses),
-                                 summary.log_level_counts,
+            if 'ERROR' in summary.log_level_counts:
+                summary.log_level_counts['ERROR'] -= self.handler.no_tests_run_count
+
+            summary = RunSummary(self._subtract_tuples(previous_summary.unexpected_statuses,
+                                                       summary.unexpected_statuses),
+                                 self._subtract_tuples(previous_summary.expected_statuses,
+                                                       summary.expected_statuses),
+                                 self._subtract_tuples(previous_summary.log_level_counts,
+                                                       summary.log_level_counts),
                                  summary.action_counts)
 
-            # If we have previous data to ignore, cache it so we don't parse the log multiple times
+            # If we have previous data to ignore,
+            # cache it so we don't parse the log multiple times
             self.summary = summary
         else:
-           joined_summary = summary
+            joined_summary = summary
 
         fail_pair = TBPL_WARNING, WARNING
         error_pair = TBPL_FAILURE, ERROR

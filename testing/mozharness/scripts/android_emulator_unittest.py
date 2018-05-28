@@ -774,7 +774,7 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
             env['MINIDUMP_SAVE_PATH'] = self.query_abs_dirs()['abs_blob_upload_dir']
             env['RUST_BACKTRACE'] = 'full'
 
-            summary = None
+            summary = {}
             for per_test_args in self.query_args(per_test_suite):
                 if (datetime.datetime.now() - self.start_time) > max_per_test_time:
                     # Running tests has run out of time. That is okay! Stop running
