@@ -1252,6 +1252,24 @@ telemetry:
     record_in_processes:
       - 'all'
 
+  # While the following probe could be restricted to GeckoView, we can't
+  # turn the product filter on as we don't run GeckoView test coverage on
+  # GeckoView.
+  persistence_timer_hit_count:
+    bug_numbers:
+      - 1463152
+    description: >
+      How many times the GeckoView Telemetry persistence timer was hit during
+      the current subsession.
+    expires: "65"
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+      - aplacitelli@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
