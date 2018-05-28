@@ -89,7 +89,10 @@ enum class EditSubAction : int32_t
   // eRemoveList removes specific type of list but keep its content.
   eRemoveList,
 
-  makeDefListItem,
+  // eCreateOrChangeDefinitionList indicates to create new definition list or
+  // change existing list to a definition list.
+  eCreateOrChangeDefinitionList,
+
   insertElement,
   insertQuotation,
 
