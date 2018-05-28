@@ -340,7 +340,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
       UndefineCaretBidiLevel();
       return WillSetText(aCancel, aHandled, aInfo.inString,
                          aInfo.maxLength);
-    case EditSubAction::deleteSelection:
+    case EditSubAction::eDeleteSelectedContent:
       return WillDeleteSelection(aInfo.collapsedAction, aCancel, aHandled);
     case EditSubAction::eUndo:
       return WillUndo(aCancel, aHandled);
@@ -381,7 +381,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
   AutoTransactionsConserveSelection dontChangeMySelection(&TextEditorRef());
 
   switch (aInfo.mEditSubAction) {
-    case EditSubAction::deleteSelection:
+    case EditSubAction::eDeleteSelectedContent:
       return DidDeleteSelection();
     case EditSubAction::eUndo:
       return DidUndo(aResult);
