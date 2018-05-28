@@ -296,7 +296,8 @@ PreprocessValue(JSContext* cx, HandleObject holder, KeyType key, MutableHandleVa
         }
 #ifdef ENABLE_BIGINT
         else if (cls == ESClass::BigInt) {
-            vp.setBigInt(obj->as<BigIntObject>().unbox());
+            if (!Unbox(cx, obj, vp))
+                return false;
         }
 #endif
     }
