@@ -85,7 +85,7 @@ static bool
 IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
 {
   return aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-         aEditSubAction == EditSubAction::insertBreak ||
+         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
          aEditSubAction == EditSubAction::makeList ||
          aEditSubAction == EditSubAction::indent ||
          aEditSubAction == EditSubAction::outdent ||
@@ -539,7 +539,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-        aEditSubAction == EditSubAction::insertBreak ||
+        aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
         aEditSubAction == EditSubAction::htmlPaste ||
         aEditSubAction == EditSubAction::loadHTML) {
       rv = AdjustWhitespace();
@@ -575,7 +575,7 @@ HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
     if (aEditSubAction == EditSubAction::eInsertText ||
         aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
         aEditSubAction == EditSubAction::eDeleteSelectedContent ||
-        aEditSubAction == EditSubAction::insertBreak ||
+        aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
         aEditSubAction == EditSubAction::htmlPaste ||
         aEditSubAction == EditSubAction::loadHTML) {
       rv = AdjustSelection(aDirection);
@@ -689,7 +689,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
                             aInfo.maxLength);
     case EditSubAction::loadHTML:
       return WillLoadHTML();
-    case EditSubAction::insertBreak:
+    case EditSubAction::eInsertParagraphSeparator:
       UndefineCaretBidiLevel();
       return WillInsertBreak(aCancel, aHandled);
     case EditSubAction::eDeleteSelectedContent:
@@ -758,7 +758,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
 
   switch (aInfo.mEditSubAction) {
     case EditSubAction::eInsertText:
-    case EditSubAction::insertBreak:
+    case EditSubAction::eInsertParagraphSeparator:
     case EditSubAction::eInsertTextComingFromIME:
       return NS_OK;
     case EditSubAction::eDeleteSelectedContent:
@@ -7133,7 +7133,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   // actions
   if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-      aEditSubAction == EditSubAction::insertBreak ||
+      aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
       aEditSubAction == EditSubAction::eDeleteText) {
     bool isSpace, isNBSP;
     nsCOMPtr<nsIContent> content =
@@ -7382,7 +7382,7 @@ HTMLEditRules::PromoteRange(nsRange& aRange,
 
   if (aEditSubAction == EditSubAction::eInsertText ||
       aEditSubAction == EditSubAction::eInsertTextComingFromIME ||
-      aEditSubAction == EditSubAction::insertBreak ||
+      aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
       aEditSubAction == EditSubAction::eDeleteText) {
      if (!startNode->IsContent() ||
          !endNode->IsContent()) {

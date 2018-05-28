@@ -1009,7 +1009,8 @@ TextEditor::InsertParagraphSeparatorAsAction()
 
   AutoPlaceholderBatch beginBatching(this);
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-                                      *this, EditSubAction::insertBreak,
+                                      *this,
+                                      EditSubAction::eInsertParagraphSeparator,
                                       nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
@@ -1017,7 +1018,7 @@ TextEditor::InsertParagraphSeparatorAsAction()
     return NS_ERROR_FAILURE;
   }
 
-  EditSubActionInfo subActionInfo(EditSubAction::insertBreak);
+  EditSubActionInfo subActionInfo(EditSubAction::eInsertParagraphSeparator);
   subActionInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(selection, subActionInfo, &cancel, &handled);
