@@ -14,11 +14,9 @@ namespace mozilla {
 //       still have some meaning.
 enum class EditSubAction : int32_t
 {
-  ignore = -1,
-
   // eNone indicates not edit sub-action is being handled.  This is useful
   // of initial value of member variables.
-  eNone = 0,
+  eNone,
 
   // eUndo and eRedo indicate entire actions of undo/redo operation.
   eUndo,
@@ -109,7 +107,11 @@ enum class EditSubAction : int32_t
   // source and insert into the DOM tree.  So, this is similar to innerHTML.
   eInsertHTMLSource,
 
-  // eSetPositionToAbsolute and eSetPositionToStatic indicate to set position
+  // eReplaceHeadWithHTMLSource indicates to create a document fragment from
+  // given HTML source and replace content of <head> with it.
+  eReplaceHeadWithHTMLSource,
+
+  // eSetPositionToAbsolute and eSetPositionToStatic indicates to set position
   // property to absolute or static.
   eSetPositionToAbsolute,
   eSetPositionToStatic,
@@ -118,6 +120,9 @@ enum class EditSubAction : int32_t
   // z-index value.
   eDecreaseZIndex,
   eIncreaseZIndex,
+
+  // eCreateBogusNode indicates to create a bogus <br> node.
+  eCreateBogusNode,
 };
 
 } // namespace mozilla
