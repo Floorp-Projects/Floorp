@@ -34,7 +34,7 @@ jobs:
             max-run-time: 36000
         run:
             using: mozharness
-            actions: [clobber build]
+            actions: [build]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_sub_linux_configs/64_searchfox_and_debug.py
@@ -58,7 +58,7 @@ jobs:
                 TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
         run:
             using: mozharness
-            actions: [clobber get-secrets build update]
+            actions: [get-secrets build update]
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_mac_64_cross_builds.py
