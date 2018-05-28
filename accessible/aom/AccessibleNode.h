@@ -47,7 +47,7 @@ public:
            JS::MutableHandle<JS::Value> aValue,
            ErrorResult& aRv);
 
-  a11y::Accessible* Internal() const { return mIntl; }
+  static bool IsAOMEnabled(JSContext*, JSObject*);
 
 protected:
   AccessibleNode(const AccessibleNode& aCopy) = delete;
