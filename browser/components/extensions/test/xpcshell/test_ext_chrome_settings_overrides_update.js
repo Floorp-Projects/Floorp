@@ -3,6 +3,7 @@
 "use strict";
 
 ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+ChromeUtils.import("resource:///modules/HomePage.jsm");
 
 const {
   createAppInfo,
@@ -25,15 +26,10 @@ add_task(async function test_overrides_update_removal() {
 
   const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 
-  const getHomePageURL = () => {
-    return Services.prefs.getComplexValue(
-      HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
-  };
-
   function promisePrefChanged(value) {
     return new Promise((resolve, reject) => {
       Services.prefs.addObserver(HOMEPAGE_URL_PREF, function observer() {
-        if (getHomePageURL().endsWith(value)) {
+        if (HomePage.get().endsWith(value)) {
           Services.prefs.removeObserver(HOMEPAGE_URL_PREF, observer);
           resolve();
         }
@@ -64,7 +60,7 @@ add_task(async function test_overrides_update_removal() {
   };
   let extension = ExtensionTestUtils.loadExtension(extensionInfo);
 
-  let defaultHomepageURL = getHomePageURL();
+  let defaultHomepageURL = HomePage.get();
   let defaultEngineName = Services.search.currentEngine.name;
 
   let prefPromise = promisePrefChanged(HOMEPAGE_URI);
@@ -72,7 +68,7 @@ add_task(async function test_overrides_update_removal() {
   await prefPromise;
 
   equal(extension.version, "1.0", "The installed addon has the expected version.");
-  ok(getHomePageURL().endsWith(HOMEPAGE_URI),
+  ok(HomePage.get().endsWith(HOMEPAGE_URI),
      "Home page url is overridden by the extension.");
   equal(Services.search.currentEngine.name,
         "DuckDuckGo",
@@ -92,7 +88,7 @@ add_task(async function test_overrides_update_removal() {
   await prefPromise;
 
   equal(extension.version, "2.0", "The updated addon has the expected version.");
-  equal(getHomePageURL(),
+  equal(HomePage.get(),
         defaultHomepageURL,
         "Home page url reverted to the default after update.");
   equal(Services.search.currentEngine.name,

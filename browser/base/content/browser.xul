@@ -766,7 +766,7 @@
                        key="goHome"
                        onclick="BrowserGoHome(event);"
                        cui-areatype="toolbar"
-                       aboutHomeOverrideTooltip="&homeButton.defaultPage.tooltip;"/>
+                       tooltiptext="&homeButton.defaultPage.tooltip;"/>
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"

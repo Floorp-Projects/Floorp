@@ -30,6 +30,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   LanguagePrompt: "resource://gre/modules/LanguagePrompt.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
   LightweightThemeConsumer: "resource://gre/modules/LightweightThemeConsumer.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   Log: "resource://gre/modules/Log.jsm",
@@ -1472,11 +1473,6 @@ var gBrowserInit = {
     BrowserSearch.delayedStartupInit();
     AutoShowBookmarksToolbar.init();
 
-    Services.prefs.addObserver(gHomeButton.prefDomain, gHomeButton);
-
-    var homeButton = document.getElementById("home-button");
-    gHomeButton.updateTooltip(homeButton);
-
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
       safeMode.label = safeMode.getAttribute("stoplabel");
@@ -1923,12 +1919,6 @@ var gBrowserInit = {
       window.messageManager.removeMessageListener("Browser:URIFixup", gKeywordURIFixup);
       window.messageManager.removeMessageListener("Browser:LoadURI", RedirectLoad);
 
-      try {
-        Services.prefs.removeObserver(gHomeButton.prefDomain, gHomeButton);
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
         MenuTouchModeObserver.uninit();
       }
@@ -2236,7 +2226,7 @@ function BrowserGoHome(aEvent) {
       aEvent.button == 2) // right-click: do nothing
     return;
 
-  var homePage = gHomeButton.getHomePage();
+  var homePage = HomePage.get();
   var where = whereToOpenLink(aEvent, false, true);
   var urls;
   var notifyObservers;
@@ -3313,19 +3303,13 @@ function goBackFromErrorPage() {
  * infected, so we can get them somewhere safe.
  */
 function getDefaultHomePage() {
-  // Get the start page from the *default* pref branch, not the user's
-  var prefs = Services.prefs.getDefaultBranch(null);
-  var url = BROWSER_NEW_TAB_URL;
+  let url = BROWSER_NEW_TAB_URL;
   if (PrivateBrowsingUtils.isWindowPrivate(window))
     return url;
-  try {
-    url = prefs.getComplexValue("browser.startup.homepage",
-                                Ci.nsIPrefLocalizedString).data;
-    // If url is a pipe-delimited set of pages, just take the first one.
-    if (url.includes("|"))
-      url = url.split("|")[0];
-  } catch (e) {
-    Cu.reportError("Couldn't get homepage pref: " + e);
+  url = HomePage.getDefault();
+  // If url is a pipe-delimited set of pages, just take the first one.
+  if (url.includes("|")) {
+    url = url.split("|")[0];
   }
   return url;
 }
@@ -3668,7 +3652,7 @@ function openHomeDialog(aURL) {
 
   if (pressedVal == 0) {
     try {
-      Services.prefs.setStringPref("browser.startup.homepage", aURL);
+      HomePage.set(aURL);
     } catch (ex) {
       dump("Failed to set the home page.\n" + ex + "\n");
     }
@@ -4437,7 +4421,7 @@ function OpenBrowserWindow(options) {
   win.addEventListener("MozAfterPaint", () => {
     TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
     if (Services.prefs.getIntPref("browser.startup.page") == 1
-        && defaultArgs == handler.startPage) {
+        && defaultArgs == HomePage.get()) {
       // A notification for when a user has triggered their homepage. This is used
       // to display a doorhanger explaining that an extension has modified the
       // homepage, if necessary.
@@ -5934,47 +5918,6 @@ var gUIDensity = {
 
     TabsInTitlebar.update();
     gBrowser.tabContainer.uiDensityChanged();
-  },
-};
-
-var gHomeButton = {
-  prefDomain: "browser.startup.homepage",
-  observe(aSubject, aTopic, aPrefName) {
-    if (aTopic != "nsPref:changed" || aPrefName != this.prefDomain)
-      return;
-
-    this.updateTooltip();
-  },
-
-  updateTooltip(homeButton) {
-    if (!homeButton)
-      homeButton = document.getElementById("home-button");
-    if (homeButton) {
-      var homePage = this.getHomePage();
-      homePage = homePage.replace(/\|/g, ", ");
-      if (["about:home", "about:newtab"].includes(homePage.toLowerCase()))
-        homeButton.setAttribute("tooltiptext", homeButton.getAttribute("aboutHomeOverrideTooltip"));
-      else
-        homeButton.setAttribute("tooltiptext", homePage);
-    }
-  },
-
-  getHomePage() {
-    var url;
-    try {
-      url = Services.prefs.getComplexValue(this.prefDomain,
-                                  Ci.nsIPrefLocalizedString).data;
-    } catch (e) {
-    }
-
-    // use this if we can't find the pref
-    if (!url) {
-      var configBundle = Services.strings
-                                 .createBundle("chrome://branding/locale/browserconfig.properties");
-      url = configBundle.GetStringFromName(this.prefDomain);
-    }
-
-    return url;
   },
 };
 

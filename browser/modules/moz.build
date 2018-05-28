@@ -157,6 +157,7 @@ EXTRA_JS_MODULES += [
     'Feeds.jsm',
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
+    'HomePage.jsm',
     'LaterRun.jsm',
     'LightweightThemeChildListener.jsm',
     'LightWeightThemeWebInstallListener.jsm',

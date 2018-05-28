@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "HomePage",
+                               "resource:///modules/HomePage.jsm");
+
 registerCleanupFunction(function restore_pref_values() {
   // These two prefs are set as user prefs in case the "Locked"
   // option from this policy was not used. In this case, it won't
@@ -11,7 +14,7 @@ registerCleanupFunction(function restore_pref_values() {
 });
 
 async function check_homepage({expectedURL, expectedPageVal = 1, locked = false}) {
-  is(gHomeButton.getHomePage(),
+  is(HomePage.get(),
      expectedURL, "Homepage URL should match expected");
   is(Services.prefs.getIntPref("browser.startup.page", -1), expectedPageVal,
      "Pref page value should match expected");
