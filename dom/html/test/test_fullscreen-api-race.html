@@ -45,10 +45,18 @@ addLoadEvent(function () {
 
 const OPEN_WINDOW_FUNCS = [
   function openNewTab() {
-    return window.open("about:blank");
+    return new Promise(resolve => {
+      var win = window.open("about:blank");
+      resolve(win);
+    });
   },
   function openNewWindow() {
-    return window.open("about:blank", "", "width=300,height=200");
+    return new Promise(resolve => {
+      var win = window.open("about:blank", "", "width=300,height=200");
+      win.addEventListener("MozAfterPaint", () => {
+        resolve(win);
+      }, { once: true });
+    });
   }
 ];
 
@@ -105,10 +113,12 @@ function* testGenerator() {
 }
 
 function runTest(test) {
-  var win = test.openWinFunc();
-  return new Promise(resolve => {
-    SimpleTest.waitForFocus(resolve, win, true);
-  }).then(() => {
+  var winPromise = test.openWinFunc();
+  return winPromise.then((win) => {
+    return new Promise(resolve => {
+      SimpleTest.waitForFocus(() => resolve(win), win, true);
+    });
+  }).then((win) => {
     return new Promise((resolve, reject) => {
       var retried = false;
       function listener(evt) {
@@ -125,7 +135,7 @@ function runTest(test) {
         is(evt.type, "fullscreenchange", "Should get fullscreenchange");
         ok(win.document.fullscreenElement, "Should have entered fullscreen");
         ok(win.fullScreen, "The window should be in fullscreen");
-        test.actionFunc(win).then(resolve);
+        test.actionFunc(win).then(() => resolve(win));
       }
       if (win.fullScreen) {
         todo(false, "Should not open in fullscreen mode");
@@ -138,7 +148,7 @@ function runTest(test) {
       win.addEventListener("fullscreenerror", listener);
       win.document.documentElement.requestFullscreen();
     });
-  }).then(() => {
+  }).then((win) => {
     ok(win.closed, "The window should have been closed");
   });
 }
