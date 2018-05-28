@@ -84,8 +84,6 @@ public:
    */
   nsresult ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates);
 
-  nsresult CacheCompletions(const CacheResultArray& aResults);
-  uint32_t GetHashKey(void) { return mHashKey; }
   /*
    * Get a bunch of extra prefixes to query for completion
    * and mask the real entry being requested

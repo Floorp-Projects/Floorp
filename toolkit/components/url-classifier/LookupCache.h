@@ -82,7 +82,6 @@ public:
   // True as long as this lookup is complete and hasn't expired.
   bool mConfirmed;
 
-  // TODO : Is this necessary
   bool mProtocolV2;
 };
 
