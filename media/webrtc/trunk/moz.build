@@ -143,12 +143,8 @@ if CONFIG["OS_TARGET"] == "NetBSD":
 if CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
-        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
-        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_gn",
         "/media/webrtc/trunk/webrtc/modules/desktop_capture/primitives_gn",
-        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn",
         "/media/webrtc/trunk/webrtc/system_wrappers/cpu_features_linux_gn",
         "/media/webrtc/trunk/webrtc/video_engine/video_engine_gn"
     ]
@@ -183,6 +179,24 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "FreeBSD":
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_c_gn",
         "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_neon_gn",
         "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_neon_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/media/webrtc/trunk/webrtc/common_audio/common_audio_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/audio_processing/audio_processing_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/media/webrtc/trunk/webrtc/modules/video_processing/video_processing_sse2_gn"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
