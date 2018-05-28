@@ -92,7 +92,7 @@ IsStyleCachePreservingSubAction(EditSubAction aEditSubAction)
          aEditSubAction == EditSubAction::eSetOrClearAlignment ||
          aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
          aEditSubAction == EditSubAction::eRemoveList ||
-         aEditSubAction == EditSubAction::makeDefListItem ||
+         aEditSubAction == EditSubAction::eCreateOrChangeDefinitionList ||
          aEditSubAction == EditSubAction::insertElement ||
          aEditSubAction == EditSubAction::insertQuotation;
 }
@@ -721,7 +721,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
       }
       return NS_OK;
     }
-    case EditSubAction::makeDefListItem:
+    case EditSubAction::eCreateOrChangeDefinitionList:
       return WillMakeDefListItem(aInfo.blockType,
                                  aInfo.entireList, aCancel, aHandled);
     case EditSubAction::insertElement: {
