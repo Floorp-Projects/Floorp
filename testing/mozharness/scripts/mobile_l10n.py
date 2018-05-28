@@ -343,7 +343,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
             prop_value = "%s  %s" % (prop_value, message)
         else:
             prop_value = message
-        self.set_property(prop_key, prop_value, write_to_file=True)
+        self.set_property(prop_key, prop_value)
         MercurialScript.add_failure(self, locale, message=message, **kwargs)
 
     def summary(self):
@@ -352,8 +352,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
         locales = self.query_locales()
         for locale in locales:
             self.locales_property.setdefault(locale, "Success")
-        self.set_property("locales", json.dumps(self.locales_property),
-                          write_to_file=True)
+        self.set_property("locales", json.dumps(self.locales_property))
 
     # Actions {{{2
     def pull(self):
@@ -557,7 +556,7 @@ class MobileSingleLocale(LocalesMixin, ReleaseMixin,
             'dest': dirs['abs_tools_dir'],
         }]
         rev = self.vcs_checkout(**repos[0])
-        self.set_property("tools_revision", rev, write_to_file=True)
+        self.set_property("tools_revision", rev)
 
     def query_apkfile_path(self, locale):
 
