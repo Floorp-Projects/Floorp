@@ -58,7 +58,10 @@ enum class EditSubAction : int32_t
   // eRemoveTextProperty indicates to remove a style from text.
   eRemoveTextProperty,
 
-  outputText,
+  // eComputeTextToOutput indicates to compute the editor value as plain text
+  // or something requested format.
+  eComputeTextToOutput,
+
   setText,
 
   // HTML editor only actions
