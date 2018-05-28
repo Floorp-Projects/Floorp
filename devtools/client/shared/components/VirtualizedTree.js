@@ -259,6 +259,7 @@ class Tree extends Component {
     this._autoExpand = this._autoExpand.bind(this);
     this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
     this._updateHeight = this._updateHeight.bind(this);
+    this._onResize = this._onResize.bind(this);
     this._dfs = this._dfs.bind(this);
     this._dfsFromRoots = this._dfsFromRoots.bind(this);
     this._focus = this._focus.bind(this);
@@ -267,7 +268,7 @@ class Tree extends Component {
   }
 
   componentDidMount() {
-    window.addEventListener("resize", this._updateHeight);
+    window.addEventListener("resize", this._onResize);
     this._autoExpand();
     this._updateHeight();
   }
@@ -287,7 +288,7 @@ class Tree extends Component {
   }
 
   componentWillUnmount() {
-    window.removeEventListener("resize", this._updateHeight);
+    window.removeEventListener("resize", this._onResize);
   }
 
   _autoExpand() {
@@ -449,6 +450,20 @@ class Tree extends Component {
     if (this.props.onFocus) {
       this.props.onFocus(item);
     }
+  }
+
+  /**
+   * Update state height and tree's scrollTop if necessary.
+   */
+  _onResize() {
+    // When tree size changes without direct user action, scroll top cat get re-set to 0
+    // (for example, when tree height changes via CSS rule change). We need to ensure that
+    // the tree's scrollTop is in sync with the scroll state.
+    if (this.state.scroll !== this.refs.tree.scrollTop) {
+      this.refs.tree.scrollTo({ left: 0, top: this.state.scroll });
+    }
+
+    this._updateHeight();
   }
 
   /**
