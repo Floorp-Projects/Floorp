@@ -58,12 +58,26 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
-     * Gets/Sets drawable that will be drawn as background behind the URL (including page actions)
-     * in display mode.
+     * Gets/Sets drawable that will be drawn as background behind the URL box (surrounding URL and
+     * page actions) in display mode.
      */
-    var urlBackgroundDrawable: Drawable?
-        get() = displayToolbar.urlBackgroundDrawable
-        set(value) { displayToolbar.urlBackgroundDrawable = value }
+    var urlBoxBackgroundDrawable: Drawable?
+        get() = displayToolbar.urlBoxBackgroundDrawable
+        set(value) { displayToolbar.urlBoxBackgroundDrawable = value }
+
+    /**
+     * Gets/Sets the margin to be used between browser actions.
+     */
+    var browserActionMargin: Int
+        get() = displayToolbar.browserActionMargin
+        set(value) { displayToolbar.browserActionMargin = value }
+
+    /**
+     * Gets/Sets horizontal margin of the URL box (surrounding URL and page actions) in display mode.
+     */
+    var urlBoxMargin: Int
+        get() = displayToolbar.urlBoxMargin
+        set(value) { displayToolbar.urlBoxMargin = value }
 
     /**
      * Sets the padding to be applied to the URL text (in display mode).

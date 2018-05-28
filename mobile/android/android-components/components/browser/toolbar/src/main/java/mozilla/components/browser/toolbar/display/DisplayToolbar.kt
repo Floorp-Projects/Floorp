@@ -120,8 +120,14 @@ internal class DisplayToolbar(
 
     private var urlBackgroundRect = Rect()
 
-    // Background to be drawn behind the URL (including page actions)
-    internal var urlBackgroundDrawable: Drawable? = null
+    // Margin between browser actions.
+    internal var browserActionMargin = 0
+
+    // Horizontal margin of URL Box (surrounding URL and page actions).
+    internal var urlBoxMargin = 0
+
+    // Background to be drawn behind the URL box (URL + page actions).
+    internal var urlBoxBackgroundDrawable: Drawable? = null
 
     init {
         addView(iconView)
@@ -210,7 +216,8 @@ internal class DisplayToolbar(
 
         // The url uses whatever space is left. Substract the icon and (optionally) the menu
         val menuWidth = if (menuView.isVisible()) height else 0
-        val urlWidth = width - height - browserActionsWidth - pageActionsWidth - menuWidth - navigationActionsWidth
+        val urlWidth = width - browserActionsWidth - pageActionsWidth
+                - menuWidth - navigationActionsWidth - 2 * urlBoxMargin
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
         urlView.measure(urlWidthSpec, heightMeasureSpec)
 
@@ -265,12 +272,14 @@ internal class DisplayToolbar(
             .mapNotNull { it.view }
             .reversed()
             .fold(0) { usedWidth, view ->
-                val viewRight = measuredWidth - usedWidth - menuWidth
+                val margin = if (usedWidth > 0) browserActionMargin else 0
+
+                val viewRight = measuredWidth - usedWidth - menuWidth - margin
                 val viewLeft = viewRight - view.measuredWidth
 
                 view.layout(viewLeft, 0, viewRight, measuredHeight)
 
-                usedWidth + view.measuredWidth
+                usedWidth + view.measuredWidth + margin
             }
 
         // After browser actions we add page actions from the right to the left (in reversed order)
@@ -278,7 +287,7 @@ internal class DisplayToolbar(
             .mapNotNull { it.view }
             .reversed()
             .fold(0) { usedWidth, view ->
-                val viewRight = measuredWidth - browserActionWidth - usedWidth - menuWidth
+                val viewRight = measuredWidth - browserActionWidth - usedWidth - menuWidth - urlBoxMargin
                 val viewLeft = viewRight - view.measuredWidth
 
                 view.layout(viewLeft, 0, viewRight, measuredHeight)
@@ -287,17 +296,21 @@ internal class DisplayToolbar(
             }
 
         val iconWidth = if (iconView.isVisible()) iconView.measuredWidth else 0
-        val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth
-        val urlLeft = navigationActionsWidth + iconWidth
+        val urlRight = measuredWidth - browserActionWidth - pageActionsWidth - menuWidth - urlBoxMargin
+        val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
         urlView.layout(urlLeft, 0, urlRight, measuredHeight)
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
 
-        urlBackgroundRect.set(navigationActionsWidth, 0, urlRight + pageActionsWidth, measuredHeight)
+        urlBackgroundRect.set(
+                navigationActionsWidth + urlBoxMargin,
+                0,
+                urlRight + pageActionsWidth,
+                measuredHeight)
     }
 
     override fun onDraw(canvas: Canvas) {
-        urlBackgroundDrawable?.let { drawable ->
+        urlBoxBackgroundDrawable?.let { drawable ->
             canvas.save()
 
             canvas.translate(urlBackgroundRect.left.toFloat(), urlBackgroundRect.top.toFloat())
