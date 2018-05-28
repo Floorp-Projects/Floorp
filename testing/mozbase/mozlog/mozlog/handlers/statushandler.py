@@ -30,12 +30,16 @@ class StatusHandler(object):
         self.action_counts = defaultdict(int)
         # The count of messages logged at each log level
         self.log_level_counts = defaultdict(int)
+        # The count of "No tests run" error messages seen
+        self.no_tests_run_count = 0
 
     def __call__(self, data):
         action = data['action']
         self.action_counts[action] += 1
 
         if action == 'log':
+            if data['level'] == 'ERROR' and data['message'] == 'No tests ran':
+                self.no_tests_run_count += 1
             self.log_level_counts[data['level']] += 1
 
         if action in ('test_status', 'test_end'):

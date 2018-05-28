@@ -708,8 +708,15 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aContentList,
                                  const RawGeckoElement** aElements,
                                  size_t aLength);
 
-const nsTArray<mozilla::dom::Element*>* Gecko_GetElementsWithId(
+// FIXME(emilio): These two below should be a single function that takes a
+// `const DocumentOrShadowRoot*`, but that doesn't make MSVC builds happy for a
+// reason I haven't really dug into.
+const nsTArray<mozilla::dom::Element*>* Gecko_Document_GetElementsWithId(
     const nsIDocument* aDocument,
+    nsAtom* aId);
+
+const nsTArray<mozilla::dom::Element*>* Gecko_ShadowRoot_GetElementsWithId(
+    const mozilla::dom::ShadowRoot* aDocument,
     nsAtom* aId);
 
 // Check the value of the given bool preference. The pref name needs to

@@ -1759,7 +1759,8 @@ GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsAtom *aLangGroup)
     // add the lang to the pattern
     nsAutoCString fcLang;
     gfxFcPlatformFontList* pfl = gfxFcPlatformFontList::PlatformFontList();
-    pfl->GetSampleLangForGroup(aLangGroup, fcLang);
+    pfl->GetSampleLangForGroup(aLangGroup, fcLang,
+                               /*aForFontEnumerationThread*/ true);
     if (!fcLang.IsEmpty()) {
         FcPatternAddString(pat, FC_LANG, ToFcChar8Ptr(fcLang.get()));
     }
@@ -2396,7 +2397,8 @@ const MozLangGroupData MozLangGroups[] = {
 bool
 gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
                                        nsAtom* aLangGroup,
-                                       nsACString& aFcLang)
+                                       nsACString& aFcLang,
+                                       bool aForFontEnumerationThread)
 {
     // Truncate at '.' or '@' from aOSLang, and convert '_' to '-'.
     // aOSLang is in the form "language[_territory][.codeset][@modifier]".
@@ -2423,14 +2425,26 @@ gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
         ++pos;
     }
 
-    nsAtom *atom = mLangService->LookupLanguage(aFcLang);
-    return atom == aLangGroup;
+    if (!aForFontEnumerationThread) {
+        nsAtom *atom = mLangService->LookupLanguage(aFcLang);
+        return atom == aLangGroup;
+    }
+
+    // If we were called by the font enumeration thread, we can't use
+    // mLangService->LookupLanguage because it is not thread-safe.
+    // Use GetUncachedLanguageGroup to avoid unsafe access to the lang-group
+    // mapping cache hashtable.
+    nsAutoCString lowered(aFcLang);
+    ToLowerCase(lowered);
+    RefPtr<nsAtom> lang = NS_Atomize(lowered);
+    RefPtr<nsAtom> group = mLangService->GetUncachedLanguageGroup(lang);
+    return group.get() == aLangGroup;
 }
 
 void
 gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
                                              nsACString& aLangStr,
-                                             bool aCheckEnvironment)
+                                             bool aForFontEnumerationThread)
 {
     aLangStr.Truncate();
     if (!aLanguage) {
@@ -2459,32 +2473,32 @@ gfxFcPlatformFontList::GetSampleLangForGroup(nsAtom* aLanguage,
 
     // -- check the environment for the user's preferred language that
     //    corresponds to this mozilla lang group.
-    if (aCheckEnvironment) {
-        const char *languages = getenv("LANGUAGE");
-        if (languages) {
-            const char separator = ':';
+    const char *languages = getenv("LANGUAGE");
+    if (languages) {
+        const char separator = ':';
 
-            for (const char *pos = languages; true; ++pos) {
-                if (*pos == '\0' || *pos == separator) {
-                    if (languages < pos &&
-                        TryLangForGroup(Substring(languages, pos),
-                                        aLanguage, aLangStr)) {
-                        return;
-                    }
-
-                    if (*pos == '\0') {
-                        break;
-                    }
-
-                    languages = pos + 1;
+        for (const char *pos = languages; true; ++pos) {
+            if (*pos == '\0' || *pos == separator) {
+                if (languages < pos &&
+                    TryLangForGroup(Substring(languages, pos),
+                                    aLanguage, aLangStr,
+                                    aForFontEnumerationThread)) {
+                    return;
                 }
+
+                if (*pos == '\0') {
+                    break;
+                }
+
+                languages = pos + 1;
             }
         }
-        const char *ctype = setlocale(LC_CTYPE, nullptr);
-        if (ctype &&
-            TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr)) {
-            return;
-        }
+    }
+    const char *ctype = setlocale(LC_CTYPE, nullptr);
+    if (ctype &&
+        TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr,
+                        aForFontEnumerationThread)) {
+        return;
     }
 
     if (mozLangGroup->defaultLang) {

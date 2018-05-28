@@ -246,7 +246,6 @@ GetImports(JSContext* cx,
             const GlobalDesc& global = globals[index];
             MOZ_ASSERT(global.importIndex() == index);
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
             if (v.isObject() && v.toObject().is<WasmGlobalObject>()) {
                 RootedWasmGlobalObject obj(cx, &v.toObject().as<WasmGlobalObject>());
 
@@ -266,19 +265,16 @@ GetImports(JSContext* cx,
                 globalObjs[index] = obj;
                 val = obj->val();
             } else
-#endif
             if (v.isNumber()) {
                 if (global.type() == ValType::I64) {
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
                     return false;
                 }
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
                 if (global.isMutable()) {
                     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_MUT_LINK);
                     return false;
                 }
-#endif
 
                 if (!ToWebAssemblyValue(cx, global.type(), v, &val))
                     return false;
@@ -1066,12 +1062,10 @@ WasmInstanceObject::create(JSContext* cx,
 
     uint32_t indirectGlobals = 0;
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     for (uint32_t i = 0; i < globalObjs.length(); i++) {
         if (globalObjs[i] && globals[i].isIndirect())
             indirectGlobals++;
     }
-#endif
 
     Rooted<UniquePtr<WasmGlobalObjectVector>> indirectGlobalObjs(cx,
         js::MakeUnique<WasmGlobalObjectVector>());
@@ -1080,7 +1074,6 @@ WasmInstanceObject::create(JSContext* cx,
         return nullptr;
     }
 
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     {
         uint32_t next = 0;
         for (uint32_t i = 0; i < globalObjs.length(); i++) {
@@ -1088,7 +1081,6 @@ WasmInstanceObject::create(JSContext* cx,
                 (*indirectGlobalObjs)[next++] = globalObjs[i];
         }
     }
-#endif
 
     AutoSetNewObjectMetadata metadata(cx);
     RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
@@ -3202,9 +3194,7 @@ js::InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
 
     RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx), tableProto(cx);
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     RootedObject globalProto(cx);
-#endif
     if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto))
         return nullptr;
     if (!InitConstructor<WasmInstanceObject>(cx, wasm, "Instance", &instanceProto))
@@ -3213,10 +3203,8 @@ js::InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global)
         return nullptr;
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
         return nullptr;
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     if (!InitConstructor<WasmGlobalObject>(cx, wasm, "Global", &globalProto))
         return nullptr;
-#endif
     if (!InitErrorClass(cx, wasm, "CompileError", JSEXN_WASMCOMPILEERROR))
         return nullptr;
     if (!InitErrorClass(cx, wasm, "LinkError", JSEXN_WASMLINKERROR))
@@ -3236,9 +3224,7 @@ js::InitWebAssemblyClass(JSContext* cx, Handle<GlobalObject*> global)
     global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
     global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
     global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
-#if defined(ENABLE_WASM_GLOBAL) && defined(EARLY_BETA_OR_EARLIER)
     global->setPrototype(JSProto_WasmGlobal, ObjectValue(*globalProto));
-#endif
     global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
 
     MOZ_ASSERT(global->isStandardClassResolved(JSProto_WebAssembly));

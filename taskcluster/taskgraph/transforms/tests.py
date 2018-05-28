@@ -788,7 +788,8 @@ def split_chunks(config, tests):
     them and assigning 'this-chunk' appropriately and updating the treeherder
     symbol."""
     for test in tests:
-        if test['suite'].startswith('test-verify'):
+        if test['suite'].startswith('test-verify') or \
+           test['suite'].startswith('test-coverage'):
             env = config.params.get('try_task_config', {}) or {}
             env = env.get('templates', {}).get('env', {})
             test['chunks'] = perfile_number_of_chunks(env.get('MOZHARNESS_TEST_PATHS', ''),
