@@ -45,6 +45,8 @@ typedef pixman_fixed_16_16_t    pixman_fixed_t;
 #define pixman_fixed_to_int(f)          ((int) ((f) >> 16))
 #define pixman_int_to_fixed(i)          ((pixman_fixed_t) ((i) << 16))
 #define pixman_double_to_fixed(d)       ((pixman_fixed_t) ((d) * 65536.0))
+#define PIXMAN_FIXED_INT_MAX 32767
+#define PIXMAN_FIXED_INT_MIN -32768
 typedef struct pixman_vector pixman_vector_t;
 
 typedef int pixman_bool_t;
@@ -463,6 +465,12 @@ ssse3_bilinear_cover_iter_init (pixman_iter_t *iter)
     int width = iter->width;
     bilinear_info_t *info;
     pixman_vector_t v;
+
+    if (iter->x > PIXMAN_FIXED_INT_MAX ||
+        iter->x < PIXMAN_FIXED_INT_MIN ||
+        iter->y > PIXMAN_FIXED_INT_MAX ||
+        iter->y < PIXMAN_FIXED_INT_MIN)
+      goto fail;
 
     /* Reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed (iter->x) + pixman_fixed_1 / 2;
