@@ -57,14 +57,20 @@
             class="identity-popup-section"
             when-connection="not-secure secure secure-ev secure-cert-user-overridden file">
         <vbox id="tracking-protection-content" flex="1">
-          <label id="tracking-protection-label-on"
-                 class="identity-popup-headline"
-                 crop="end"
-                 value="&trackingProtection.on;" />
-          <label id="tracking-protection-label-off"
-                 class="identity-popup-headline"
-                 crop="end"
-                 value="&trackingProtection.off;" />
+          <hbox class="identity-popup-preferences-button-container">
+            <label id="tracking-protection-label-on"
+                   class="identity-popup-headline"
+                   crop="end"
+                   value="&trackingProtection.on;" />
+            <label id="tracking-protection-label-off"
+                   class="identity-popup-headline"
+                   crop="end"
+                   value="&trackingProtection.off;" />
+            <toolbarbutton id="tracking-protection-preferences-button"
+                           class="identity-popup-preferences-button subviewbutton"
+                           tooltiptext="&trackingProtection.tooltip;"
+                           oncommand="TrackingProtection.openPreferences('identityPopup-TP-preferencesButton');" />
+          </hbox>
 
           <description id="tracking-blocked"
                        crop="end">&trackingProtection.detectedBlocked3;</description>
