@@ -5,6 +5,7 @@
 "use strict";
 
 const { getStr } = require("../utils/l10n");
+const { parseFontVariationAxes } = require("../utils/font-utils");
 
 const {
   APPLY_FONT_VARIATION_INSTANCE,
@@ -70,22 +71,7 @@ let reducers = {
   },
 
   [UPDATE_EDITOR_STATE](state, { fonts, properties }) {
-    let axes = {};
-
-    if (properties["font-variation-settings"] !== "normal") {
-      // Parse font-variation-settings CSS declaration into an object
-      // with axis tags as keys and axis values as values.
-      axes = properties["font-variation-settings"]
-        .split(",")
-        .reduce((acc, pair) => {
-          // Tags are always in quotes. Split by quote and filter excessive whitespace.
-          pair = pair.split(/["']/).filter(part => part.trim() !== "");
-          const tag = pair[0].trim();
-          const value = pair[1].trim();
-          acc[tag] = value;
-          return acc;
-        }, {});
-    }
+    let axes = parseFontVariationAxes(properties["font-variation-settings"]);
 
     // If not defined in font-variation-settings, setup "wght" axis with the value of
     // "font-weight" if it is numeric and not a keyword.
