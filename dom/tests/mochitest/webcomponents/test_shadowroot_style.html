@@ -13,10 +13,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
 
-if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
-  SimpleTest.expectAssertions(3, 3); // GeckoRestyleManager stuff.
-}
-
 SimpleTest.waitForExplicitFinish();
 
 var content = '<div class="tall" id="bodydiv"></div>' +

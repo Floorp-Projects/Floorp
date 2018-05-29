@@ -1,8 +1,0 @@
-<!DOCTYPE html>
-<iframe></iframe>
-<script>
-let iframe = document.querySelector("iframe");
-iframe.contentDocument.writeln("<style></style>");
-iframe.contentDocument.close();
-opener.finish(window, iframe.contentWindow);
-</script>
