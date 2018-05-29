@@ -263,14 +263,16 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param imageResource The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param background A custom (stateful) background drawable resource to be used.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class Button(
         imageResource: Int,
         contentDescription: String,
         visible: () -> Boolean = { true },
+        @DrawableRes background: Int? = null,
         listener: () -> Unit
-    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, listener) {
+    ) : Toolbar.ActionButton(imageResource, contentDescription, visible, background, listener) {
         override fun createView(parent: ViewGroup): View {
             val view = super.createView(parent)
 

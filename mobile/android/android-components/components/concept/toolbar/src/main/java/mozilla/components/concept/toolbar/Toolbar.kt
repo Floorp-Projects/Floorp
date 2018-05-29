@@ -87,12 +87,14 @@ interface Toolbar {
      * @param imageResource The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param background A custom (stateful) background drawable resource to be used.
      * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class ActionButton(
         @DrawableRes private val imageResource: Int,
         private val contentDescription: String,
         override val visible: () -> Boolean = { true },
+        @DrawableRes private val background: Int? = null,
         private val listener: () -> Unit
     ) : Action {
         override fun createView(parent: ViewGroup): View = ImageButton(parent.context).also {
@@ -100,13 +102,16 @@ interface Toolbar {
             it.contentDescription = contentDescription
             it.setOnClickListener { listener.invoke() }
 
-            val outValue = TypedValue()
-            parent.context.theme.resolveAttribute(
-                    android.R.attr.selectableItemBackgroundBorderless,
-                    outValue,
-                    true)
-
-            it.setBackgroundResource(outValue.resourceId)
+            if (background == null) {
+                val outValue = TypedValue()
+                parent.context.theme.resolveAttribute(
+                        android.R.attr.selectableItemBackgroundBorderless,
+                        outValue,
+                        true)
+                it.setBackgroundResource(outValue.resourceId)
+            } else {
+                it.setBackgroundResource(background)
+            }
         }
 
         override fun bind(view: View) = Unit
