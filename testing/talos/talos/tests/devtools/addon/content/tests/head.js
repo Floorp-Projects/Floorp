@@ -8,8 +8,6 @@
  * This helper contains the public API that can be used by DAMP tests.
  */
 
-// eslint-disable-next-line mozilla/no-define-cc-etc
-const { Ci } = require("chrome");
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { TargetFactory } = require("devtools/client/framework/target");
@@ -77,19 +75,7 @@ async function waitForPendingPaints(toolbox) {
   let panel = toolbox.getCurrentPanel();
   // All panels have its own way of exposing their window object...
   let window = panel.panelWin || panel._frameWindow || panel.panelWindow;
-
-  let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-  window.performance.mark("pending paints.start");
-  while (utils.isMozAfterPaintPending) {
-    await new Promise(done => {
-      window.addEventListener("MozAfterPaint", function listener() {
-        window.performance.mark("pending paint");
-        done();
-      }, { once: true });
-    });
-  }
-  window.performance.measure("pending paints", "pending paints.start");
+  return damp.waitForPendingPaints(window);
 }
 
 const openToolbox = async function(tool = "webconsole", onLoad) {
