@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getSelectedSourceText = exports.getSelectedSource = exports.getSelectedLocation = exports.getSourcesForTabs = exports.getSourceTabs = exports.getTabs = exports.getSources = exports.RelativeSourceRecordClass = exports.SourceRecordClass = undefined;
 exports.initialSourcesState = initialSourcesState;
+exports.createSourceRecord = createSourceRecord;
 exports.removeSourceFromTabList = removeSourceFromTabList;
 exports.removeSourcesFromTabList = removeSourcesFromTabList;
 exports.getBlackBoxList = getBlackBoxList;
@@ -67,6 +68,10 @@ const SourceRecordClass = exports.SourceRecordClass = new I.Record(sourceRecordP
 const RelativeSourceRecordClass = exports.RelativeSourceRecordClass = new I.Record(_objectSpread({}, sourceRecordProperties, {
   relativeUrl: undefined
 }));
+
+function createSourceRecord(source) {
+  return new SourceRecordClass(source);
+}
 
 function update(state = initialSourcesState(), action) {
   let location = null;
@@ -222,7 +227,7 @@ function updateSource(state, source) {
     return state.setIn(["sources", source.id], updatedSource);
   }
 
-  return state.setIn(["sources", source.id], new SourceRecordClass(source));
+  return state.setIn(["sources", source.id], createSourceRecord(source));
 }
 
 function removeSourceFromTabList(tabs, url) {

@@ -3,16 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.findScopeByName = exports.getASTLocation = exports.createEditor = undefined;
-
-var _createEditor = require("./create-editor");
-
-Object.defineProperty(exports, "createEditor", {
-  enumerable: true,
-  get: function () {
-    return _createEditor.createEditor;
-  }
-});
+exports.findScopeByName = exports.getASTLocation = undefined;
 
 var _astBreakpointLocation = require("./astBreakpointLocation");
 

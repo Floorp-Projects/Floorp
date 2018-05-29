@@ -41,7 +41,7 @@ async function loadSource(source, {
   const id = source.get("id");
 
   if ((0, _devtoolsSourceMap.isOriginalId)(id)) {
-    return await sourceMaps.getOriginalSourceText(source.toJS());
+    return sourceMaps.getOriginalSourceText(source.toJS());
   }
 
   const response = await client.sourceContents(id);
