@@ -356,8 +356,6 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
 
   if (frameNum == 1) {
     MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
-    aPreviousFrame->SetRawAccessOnly();
-
     // If we dispose of the first frame by clearing it, then the first frame's
     // refresh area is all of itself.
     // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR).
@@ -370,8 +368,6 @@ Decoder::AllocateFrameInternal(const gfx::IntSize& aOutputSize,
   }
 
   if (frameNum > 0) {
-    ref->SetRawAccessOnly();
-
     // Some GIFs are huge but only have a small area that they animate. We only
     // need to refresh that small area when frame 0 comes around again.
     mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, frame->GetRect());
