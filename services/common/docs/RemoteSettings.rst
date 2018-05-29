@@ -68,9 +68,6 @@ The ``sync`` event allows to be notified when the remote settings are changed on
       }
     });
 
-.. important::
-    If one of the event handler fails, the others handlers for the same remote settings collection won't be executed.
-
 .. note::
     Currently, the update of remote settings is triggered by the `nsBlocklistService <https://dxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/nsBlocklistService.js>`_ (~ every 24H).
 

@@ -275,6 +275,7 @@ add_task(async function test_corrupted_pending_pings() {
 
   // Try to load a pending ping which isn't there anymore.
   await Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
+                       /PingReadError/,
                        "Telemetry must fail loading a ping which isn't there");
 
   h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
@@ -290,6 +291,7 @@ add_task(async function test_corrupted_pending_pings() {
 
   // Try to load the ping with the corrupted JSON content.
   await Assert.rejects(TelemetryStorage.loadPendingPing(pendingPingId),
+                       /PingParseError/,
                        "Telemetry must fail loading a corrupted ping");
 
   h = Telemetry.getHistogramById("TELEMETRY_PENDING_LOAD_FAILURE_READ").snapshot();
@@ -402,6 +404,7 @@ add_task(async function test_pendingPingsQuota() {
     // Check that the pruned pings are not on disk anymore.
     for (let prunedPingId of expectedPrunedPings) {
       await Assert.rejects(TelemetryStorage.loadPendingPing(prunedPingId),
+                           /TelemetryStorage.loadPendingPing - no ping with id/,
                            "Ping " + prunedPingId + " should have been pruned.");
       const pingPath = getSavePathForPingId(prunedPingId);
       Assert.ok(!(await OS.File.exists(pingPath)), "The ping should not be on the disk anymore.");
@@ -509,6 +512,7 @@ add_task(async function test_pendingPingsQuota() {
 
   // Try to manually load the oversized ping.
   await Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+                       /loadPendingPing - exceeded the maximum ping size/,
                        "The oversized ping should have been pruned.");
   Assert.ok(!(await OS.File.exists(getSavePathForPingId(OVERSIZED_PING_ID))),
             "The ping should not be on the disk anymore.");

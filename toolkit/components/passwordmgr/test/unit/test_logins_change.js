@@ -298,7 +298,7 @@ add_task(function test_modifyLogin_nsIProperyBag()
   // Specifying a null property for a required value should throw.
   Assert.throws(() => Services.logins.modifyLogin(loginInfo, newPropertyBag({
     usernameField: null,
-  })));
+  })), /No matching logins/);
 
   // The login can be changed to have a different type and hostname.
   Services.logins.modifyLogin(updatedLoginInfo, differentLoginProperties);

@@ -23,6 +23,7 @@ function checkArgs(context, node, name) {
   if (!("regex" in node.arguments[1]) &&
       node.arguments[1].type !== "FunctionExpression" &&
       node.arguments[1].type !== "ArrowFunctionExpression" &&
+      node.arguments[1].type !== "MemberExpression" &&
       (node.arguments[1].type !== "Identifier" ||
        node.arguments[1].name === "undefined")) {
     context.report({

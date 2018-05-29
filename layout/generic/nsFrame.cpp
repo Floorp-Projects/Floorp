@@ -1013,6 +1013,10 @@ nsIFrame::MarkNeedsDisplayItemRebuild()
   }
 
   if (Type() == LayoutFrameType::Placeholder) {
+    nsIFrame* oof = static_cast<nsPlaceholderFrame*>(this)->GetOutOfFlowFrame();
+    if (oof) {
+      oof->MarkNeedsDisplayItemRebuild();
+    }
     // Do not mark placeholder frames modified.
     return;
   }

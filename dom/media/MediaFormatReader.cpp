@@ -801,12 +801,15 @@ MediaResult
 MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
 {
   auto& ownerData = aData.mOwnerData;
+  auto& decoder = mOwner->GetDecoderData(aData.mTrack);
+  auto& platform =
+    decoder.IsEncrypted() ? mOwner->mEncryptedPlatform : mOwner->mPlatform;
 
-  if (!mOwner->mPlatform) {
-    mOwner->mPlatform = new PDMFactory();
-    if (mOwner->IsEncrypted()) {
+  if (!platform) {
+    platform = new PDMFactory();
+    if (decoder.IsEncrypted()) {
       MOZ_ASSERT(mOwner->mCDMProxy);
-      mOwner->mPlatform->SetCDMProxy(mOwner->mCDMProxy);
+      platform->SetCDMProxy(mOwner->mCDMProxy);
     }
   }
 
@@ -818,10 +821,8 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
 
   switch (aData.mTrack) {
     case TrackInfo::kAudioTrack: {
-      aData.mDecoder = mOwner->mPlatform->CreateDecoder({
-        ownerData.mInfo
-        ? *ownerData.mInfo->GetAsAudioInfo()
-        : *ownerData.mOriginalInfo->GetAsAudioInfo(),
+      aData.mDecoder = platform->CreateDecoder({
+        *ownerData.GetCurrentInfo()->GetAsAudioInfo(),
         ownerData.mTaskQueue,
         mOwner->mCrashHelper,
         CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
@@ -835,9 +836,8 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData)
     case TrackType::kVideoTrack: {
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
-      aData.mDecoder = mOwner->mPlatform->CreateDecoder(
-        { ownerData.mInfo ? *ownerData.mInfo->GetAsVideoInfo()
-                          : *ownerData.mOriginalInfo->GetAsVideoInfo(),
+      aData.mDecoder = platform->CreateDecoder(
+        { *ownerData.GetCurrentInfo()->GetAsVideoInfo(),
           ownerData.mTaskQueue,
           mOwner->mKnowsCompositor,
           mOwner->GetImageContainer(),
@@ -1431,6 +1431,7 @@ MediaFormatReader::TearDownDecoders()
 
   mDecoderFactory = nullptr;
   mPlatform = nullptr;
+  mEncryptedPlatform = nullptr;
   mVideoFrameContainer = nullptr;
 
   ReleaseResources();
@@ -1500,7 +1501,8 @@ bool
 MediaFormatReader::IsDecoderWaitingForCDM(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
-  return IsEncrypted() && mSetCDMForTracks.contains(aTrack) && !mCDMProxy;
+  return GetDecoderData(aTrack).IsEncrypted() &&
+         mSetCDMForTracks.contains(aTrack) && !mCDMProxy;
 }
 
 RefPtr<SetCDMPromise>
@@ -1533,10 +1535,8 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
 
   mCDMProxy = aProxy;
 
-  if (IsEncrypted() && !mCDMProxy) {
-    // Release old PDMFactory which contains an EMEDecoderModule.
-    mPlatform = nullptr;
-  }
+  // Release old PDMFactory which contains an EMEDecoderModule.
+  mEncryptedPlatform = nullptr;
 
   if (!mInitDone || mSetCDMForTracks.isEmpty() || !mCDMProxy) {
     // 1) MFR is not initialized yet or
@@ -1755,8 +1755,8 @@ MediaFormatReader::MaybeResolveMetadataPromise()
 bool
 MediaFormatReader::IsEncrypted() const
 {
-  return (HasAudio() && mInfo.mAudio.mCrypto.mValid) ||
-         (HasVideo() && mInfo.mVideo.mCrypto.mValid);
+  return (HasAudio() && mAudio.GetCurrentInfo()->mCrypto.mValid) ||
+         (HasVideo() && mVideo.GetCurrentInfo()->mCrypto.mValid);
 }
 
 void
@@ -2409,11 +2409,13 @@ MediaFormatReader::HandleDemuxedSamples(
   if (info && decoder.mLastStreamSourceID != info->GetID()) {
     nsTArray<RefPtr<MediaRawData>> samples;
     if (decoder.mDecoder) {
-      bool recyclable = StaticPrefs::MediaDecoderRecycleEnabled() &&
-                        decoder.mDecoder->SupportDecoderRecycling();
+      bool recyclable =
+        StaticPrefs::MediaDecoderRecycleEnabled() &&
+        decoder.mDecoder->SupportDecoderRecycling() &&
+        (*info)->mCrypto.mValid == decoder.GetCurrentInfo()->mCrypto.mValid;
       if (!recyclable && decoder.mTimeThreshold.isNothing() &&
           (decoder.mNextStreamSourceID.isNothing() ||
-            decoder.mNextStreamSourceID.ref() != info->GetID())) {
+           decoder.mNextStreamSourceID.ref() != info->GetID())) {
         LOG("%s stream id has changed from:%d to:%d, draining decoder.",
             TrackTypeToStr(aTrack),
             decoder.mLastStreamSourceID,
@@ -3517,29 +3519,33 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
   nsAutoCString audioType("none");
   nsAutoCString videoType("none");
 
-  if (HasAudio()) {
+  AudioInfo audioInfo = mAudio.GetCurrentInfo()
+                          ? *mAudio.GetCurrentInfo()->GetAsAudioInfo()
+                          : AudioInfo();
+  if (HasAudio())
+  {
     MutexAutoLock lock(mAudio.mMutex);
     audioDecoderName = mAudio.mDecoder
                        ? mAudio.mDecoder->GetDescriptionName()
                        : mAudio.mDescription;
-    audioType = mAudio.mInfo ? mAudio.mInfo->mMimeType : mInfo.mAudio.mMimeType;
+    audioType = audioInfo.mMimeType;
   }
+  VideoInfo videoInfo = mVideo.GetCurrentInfo()
+                          ? *mVideo.GetCurrentInfo()->GetAsVideoInfo()
+                          : VideoInfo();
   if (HasVideo()) {
     MutexAutoLock mon(mVideo.mMutex);
     videoDecoderName = mVideo.mDecoder
                        ? mVideo.mDecoder->GetDescriptionName()
                        : mVideo.mDescription;
-    videoType = mVideo.mInfo ? mVideo.mInfo->mMimeType : mInfo.mVideo.mMimeType;
+    videoType = videoInfo.mMimeType;
   }
 
   result +=
     nsPrintfCString("Audio Decoder(%s, %u channels @ %0.1fkHz): %s\n",
                     audioType.get(),
-                    mAudio.mInfo ? mAudio.mInfo->GetAsAudioInfo()->mChannels
-                                 : mInfo.mAudio.mChannels,
-                    (mAudio.mInfo ? mAudio.mInfo->GetAsAudioInfo()->mRate
-                                  : mInfo.mAudio.mRate) /
-                      1000.0f,
+                    audioInfo.mChannels,
+                    audioInfo.mRate / 1000.0f,
                     audioDecoderName.get());
   result += nsPrintfCString("Audio Frames Decoded: %" PRIu64 "\n",
                             mAudio.mNumSamplesOutputTotal);
@@ -3567,12 +3573,6 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
-
-  VideoInfo videoInfo = mVideo.mInfo
-                        ? *mVideo.mInfo->GetAsVideoInfo()
-                        : mVideo.mOriginalInfo
-                          ? *mVideo.mOriginalInfo->GetAsVideoInfo()
-                          : VideoInfo();
 
   result += nsPrintfCString(
     "Video Decoder(%s, %dx%d @ %0.2f): %s\n",

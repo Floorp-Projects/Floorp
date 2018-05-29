@@ -293,9 +293,9 @@ class TCPConnection {
       assert.session(this.driver);
     }
 
-    let rv = await fn.bind(this.driver)(cmd, resp);
+    let rv = await fn.bind(this.driver)(cmd);
 
-    if (typeof rv != "undefined") {
+    if (rv != null) {
       if (rv instanceof WebElement || typeof rv != "object") {
         resp.body = {value: rv};
       } else {

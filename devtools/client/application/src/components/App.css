@@ -23,14 +23,14 @@ a {
 a,
 a:hover,
 a:visited {
-  color: var(--blue-60) !important;
+  color: var(--theme-highlight-blue) !important;
   cursor: pointer;
 }
 
 a.disabled,
 a.disabled:hover,
 a.disabled:visited {
-  color: var(--grey-30) !important;
+  opacity: 0.5 !important;
   cursor: default;
 }
 
@@ -51,13 +51,12 @@ a.disabled:visited {
   height: 100vh;
   padding: 0 2rem;
   display: grid;
+  -moz-user-select: none;
 }
 
 .application--empty {
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
-  line-height: 1.25;
 }
 
 .application:not(.application--empty) {

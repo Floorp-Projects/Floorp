@@ -306,7 +306,8 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
       // - In e10s: only active registrations are available.
       // - In non-e10s: registrations always have at least one worker, if the worker is
       // active, the registration is active.
-      active: isE10s ? true : !!activeWorker
+      active: isE10s ? true : !!activeWorker,
+      lastUpdateTime: registration.lastUpdateTime,
     };
   },
 

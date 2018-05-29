@@ -9,6 +9,7 @@
  *  | Service worker scope       | Unregister_btn |
  *  +---+----------+-------------+----------------|
  *  |     "Source" | script_name debug_link       |
+    |              | "Updated" update_time        |
  *  |--------------+-------------+----------------|
  *  |     "Status" | status start_link            |
  *  +---+----------+-------------+----------------|
@@ -31,7 +32,7 @@
 }
 
 .worker:not(:last-child) {
-  border-bottom: 1px solid var(--grey-30);
+  border-bottom: 1px solid var(--theme-body-color-alt);
 }
 
 .worker__header {
@@ -49,6 +50,16 @@
   white-space: nowrap;
 }
 
+.worker__scope,
+.worker__source-url {
+  -moz-user-select: text;
+}
+
+.worker__meta-name {
+  color: var(--grey-50);
+  padding-inline-start: 4.5rem;
+}
+
 .worker__data {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -59,9 +70,8 @@
   margin: 0;
 }
 
-.worker__meta-name {
-  color: var(--grey-50);
-  padding-inline-start: 4.5rem;
+.worker__data__updated {
+  color: var(--theme-body-color-alt);
 }
 
 .worker__unregister-button {

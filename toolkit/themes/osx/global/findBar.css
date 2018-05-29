@@ -3,60 +3,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 %include shared.inc
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+%include ../../shared/findBar.inc.css
 
 findbar {
   background: @scopeBarBackground@;
   border-top: @scopeBarSeparatorBorder@;
-  min-width: 1px;
-  transition-property: margin-bottom, opacity, visibility;
-  transition-duration: 150ms, 150ms, 0s;
-  transition-timing-function: ease-in-out, ease-in-out, linear;
-}
-
-findbar[hidden] {
-  /* Override display:none to make the transition work. */
-  display: -moz-box;
-  visibility: collapse;
-  margin-bottom: -1em;
-  opacity: 0;
-  transition-delay: 0s, 0s, 150ms;
-}
-
-findbar[noanim] {
-  transition-duration: 0s !important;
-  transition-delay: 0s !important;
-}
-
-findbar:-moz-lwtheme {
-  -moz-appearance: none;
-  background-color: var(--toolbar-bgcolor);
-  background-image: none;
-  border-style: none;
-  color: var(--toolbar-color, var(--chrome-color, -moz-DialogText));
 }
 
 .findbar-container {
   padding-inline-start: 2px;
-  padding-top: 4px;
-  padding-bottom: 4px;
 }
 
 label.findbar-find-fast {
   color: @scopeBarTitleColor@;
   margin: 0;
   margin-inline-start: 12px;
-  text-shadow: @loweredShadow@;
 }
 
 label.findbar-find-fast:-moz-lwtheme,
 .findbar-find-status:-moz-lwtheme {
   color: inherit;
-  text-shadow: inherit;
 }
 
 .findbar-closebutton {
   margin-inline-start: 4px;
+  margin-inline-end: 0;
   padding-inline-start: 0;
   padding-inline-end: 8px;
   border: none;
@@ -64,208 +35,59 @@ label.findbar-find-fast:-moz-lwtheme,
   -moz-box-ordinal-group: 0;
 }
 
-.findbar-find-next,
-.findbar-find-previous,
-.findbar-highlight,
-.findbar-case-sensitive,
-.findbar-entire-word {
-  -moz-appearance: none;
-  border-radius: 10000px;
-  border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ @roundButtonBorderColor@;
+.findbar-find-next:not(:-moz-lwtheme),
+.findbar-find-previous:not(:-moz-lwtheme),
+.findbar-button {
+  border-style: @roundButtonBorderStyle@;
+  border-color: @roundButtonBorderColor@;
   color: @roundButtonColor@;
   background: @roundButtonBackground@;
-  box-shadow: @roundButtonShadow@;
-  margin: 0;
+}
+
+.findbar-button {
+  -moz-appearance: none;
+  border-width: @roundButtonBorderWidth@;
+  margin-inline-end: 5px;
+  padding: 2px 9px;
+  border-radius: 10000px;
 }
 
 .findbar-find-next:-moz-lwtheme,
 .findbar-find-previous:-moz-lwtheme {
-  background-image: linear-gradient(rgba(255,255,255,.6) 1px, rgba(255,255,255,.4) 1px, rgba(255,255,255,.1));
+  border-color: var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
 }
 
-@media (-moz-mac-yosemite-theme) {
-  .findbar-find-previous,
-  .findbar-find-next {
-    border-radius: 3px;
-    box-shadow: none;
-  }
-}
-
-.findbar-highlight,
-.findbar-case-sensitive,
-.findbar-entire-word {
-  margin-inline-end: 5px;
-  padding: 2px 9px;
-}
-
-.findbar-highlight {
-  margin-inline-start: 8px;
-}
-
-.findbar-container > toolbarbutton:-moz-focusring,
-.findbar-find-next:-moz-focusring,
-.findbar-find-previous:-moz-focusring {
-  position: relative;
-  box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
-}
-
-.findbar-container > toolbarbutton[disabled] {
-  color: GrayText !important;
-}
-
-.findbar-find-next:not([disabled]):hover:active,
-.findbar-find-previous:not([disabled]):hover:active,
-.findbar-highlight:not([disabled]):hover:active,
-.findbar-case-sensitive:not([disabled]):hover:active,
-.findbar-entire-word:not([disabled]):hover:active,
-.findbar-highlight:not([disabled])[checked="true"],
-.findbar-case-sensitive:not([disabled])[checked="true"],
-.findbar-entire-word:not([disabled])[checked="true"] {
-  text-shadow: @loweredShadow@;
+.findbar-find-next:not(:-moz-lwtheme):not([disabled]):hover:active,
+.findbar-find-previous:not(:-moz-lwtheme):not([disabled]):hover:active,
+.findbar-button:not([disabled]):hover:active,
+.findbar-button:not([disabled])[checked="true"] {
   background: @roundButtonPressedBackground@;
   box-shadow: @roundButtonPressedShadow@;
 }
 
-.findbar-find-next:hover:active:-moz-focusring,
-.findbar-find-previous:hover:active:-moz-focusring {
-  text-shadow: @loweredShadow@;
-  background: @roundButtonPressedBackground@;
-  box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
+@media (-moz-mac-yosemite-theme: 0) {
+  .findbar-textbox,
+  .findbar-find-next {
+    border-radius: 10000px;
+  }
 }
-
-/* Search field */
 
 .findbar-textbox {
-  position: relative;
-  -moz-appearance: none;
   border: @roundButtonBorderWidth@ @roundButtonBorderStyle@ var(--lwt-toolbar-field-border-color, @roundButtonBorderColor@);
-  border-radius: 10000px 0 0 10000px;
-  box-shadow: @roundButtonShadow@;
-  background: url("chrome://global/skin/icons/search-textbox.svg") -moz-Field no-repeat 5px center;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  background-image: url("chrome://global/skin/icons/search-textbox.svg");
+  background-repeat: no-repeat;
+  background-position: 5px center;
   margin: 0;
-  padding: 2px 8px;
   padding-inline-start: 19px;
-}
-
-.findbar-textbox:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-background-color, -moz-Field);
-  color: var(--lwt-toolbar-field-color, -moz-FieldText);
-}
-
-.findbar-textbox:-moz-locale-dir(rtl) {
-  border-radius: 0 10000px 10000px 0;
-  background-position-x: calc(100% - 5px);
-}
-
-@media (-moz-mac-yosemite-theme) {
-  .findbar-textbox {
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-    box-shadow: none;
-  }
-
-  .findbar-textbox:-moz-locale-dir(rtl) {
-    border-radius: 0 3px 3px 0;
-  }
-}
-
-.findbar-textbox:not([focused="true"]):-moz-lwtheme {
-  opacity: 0.9;
 }
 
 .findbar-textbox[focused="true"] {
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-.findbar-textbox[flash="true"] {
-  background-color: #F7E379;
-}
-
-.findbar-textbox[status="notfound"] {
-  background-color: #FD919B;
-  color: #FFF;
-}
-
-.findbar-textbox.minimal {
-  border-radius: 10000px;
-  margin-inline-start: 5px;
-}
-
-/* Find previous/next buttons */
-
-.findbar-find-previous,
-.findbar-find-next {
-  margin-inline-start: 0;
-  padding: 3px 6px 1px;
-}
-
-.findbar-find-previous > .toolbarbutton-icon,
-.findbar-find-next > .toolbarbutton-icon {
-  margin: 0;
-}
-
-.findbar-find-previous {
-  border-left: none;
-  border-right: none;
-  margin-inline-end: 0;
-  list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
-  -moz-context-properties: fill;
-  fill: -moz-dialogtext;
-  border-radius: 0;
-}
-
-.findbar-find-next {
-  list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
-  -moz-context-properties: fill;
-  fill: -moz-dialogtext;
-  padding-inline-end: 7px;
-}
-
-.findbar-find-next:-moz-lwtheme,
-.findbar-find-previous:-moz-lwtheme {
-  border-color: var(--lwt-toolbar-field-border-color);
-}
-
-.findbar-find-previous[disabled] {
-  fill: GrayText;
-}
-
-.findbar-find-next[disabled] {
-  fill: GrayText;
-}
-
-.findbar-find-next:-moz-locale-dir(ltr) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-.findbar-find-next:-moz-locale-dir(rtl) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Status description */
-
-.find-status-icon {
-  display: none;
-}
-
-.find-status-icon[status="pending"] {
-  display: block;
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .find-status-icon[status="pending"] {
-    width: 16px;
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
-
-.findbar-find-status,
-.found-matches {
-  color: rgba(0,0,0,.5);
-  margin: 0 !important;
-  margin-inline-start: 12px !important;
-  text-shadow: 0 1px rgba(255,255,255,.4);
+.findbar-textbox:-moz-locale-dir(rtl) {
+  background-position-x: right 5px;
 }
