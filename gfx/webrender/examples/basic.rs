@@ -7,13 +7,14 @@ extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
+extern crate winit;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::vec2;
-use glutin::TouchPhase;
+use winit::TouchPhase;
 use std::collections::HashMap;
 use webrender::api::*;
 
@@ -85,7 +86,7 @@ impl TouchState {
         }
     }
 
-    fn handle_event(&mut self, touch: glutin::Touch) -> TouchResult {
+    fn handle_event(&mut self, touch: winit::Touch) -> TouchResult {
         match touch.phase {
             TouchPhase::Started => {
                 debug_assert!(!self.active_touches.contains_key(&touch.id));
@@ -274,10 +275,10 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: glutin::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(&mut self, event: winit::WindowEvent, api: &RenderApi, document_id: DocumentId) -> bool {
         let mut txn = Transaction::new();
         match event {
-            glutin::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
+            winit::WindowEvent::Touch(touch) => match self.touch_state.handle_event(touch) {
                 TouchResult::Pan(pan) => {
                     txn.set_pan(pan);
                 }

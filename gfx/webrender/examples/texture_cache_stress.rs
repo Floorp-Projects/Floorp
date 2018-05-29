@@ -5,6 +5,7 @@
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
+extern crate winit;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
@@ -187,14 +188,14 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        event: glutin::WindowEvent,
+        event: winit::WindowEvent,
         api: &RenderApi,
         _document_id: DocumentId,
     ) -> bool {
         match event {
-            glutin::WindowEvent::KeyboardInput {
-                input: glutin::KeyboardInput {
-                    state: glutin::ElementState::Pressed,
+            winit::WindowEvent::KeyboardInput {
+                input: winit::KeyboardInput {
+                    state: winit::ElementState::Pressed,
                     virtual_keycode: Some(key),
                     ..
                 },
@@ -203,7 +204,7 @@ impl Example for App {
                 let mut txn = Transaction::new();
 
                 match key {
-                    glutin::VirtualKeyCode::S => {
+                    winit::VirtualKeyCode::S => {
                         self.stress_keys.clear();
 
                         for _ in 0 .. 16 {
@@ -225,10 +226,10 @@ impl Example for App {
                             }
                         }
                     }
-                    glutin::VirtualKeyCode::D => if let Some(image_key) = self.image_key.take() {
+                    winit::VirtualKeyCode::D => if let Some(image_key) = self.image_key.take() {
                         txn.delete_image(image_key);
                     },
-                    glutin::VirtualKeyCode::U => if let Some(image_key) = self.image_key {
+                    winit::VirtualKeyCode::U => if let Some(image_key) = self.image_key {
                         let size = 128;
                         self.image_generator.generate_image(size);
 
@@ -239,7 +240,7 @@ impl Example for App {
                             None,
                         );
                     },
-                    glutin::VirtualKeyCode::E => {
+                    winit::VirtualKeyCode::E => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }
@@ -262,7 +263,7 @@ impl Example for App {
 
                         self.image_key = Some(image_key);
                     }
-                    glutin::VirtualKeyCode::R => {
+                    winit::VirtualKeyCode::R => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }
