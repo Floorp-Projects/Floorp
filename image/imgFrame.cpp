@@ -865,26 +865,6 @@ imgFrame::GetSourceSurfaceInternal()
   return CreateLockedSurface(mRawSurface, mFrameRect.Size(), mFormat);
 }
 
-AnimationData
-imgFrame::GetAnimationData() const
-{
-  MonitorAutoLock lock(mMonitor);
-  MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
-
-  uint8_t* data;
-  if (mPalettedImageData) {
-    data = mPalettedImageData;
-  } else {
-    uint32_t length;
-    GetImageDataInternal(&data, &length);
-  }
-
-  bool hasAlpha = mFormat == SurfaceFormat::B8G8R8A8;
-
-  return AnimationData(data, PaletteDataLength(), mTimeout, GetRect(),
-                       mBlendMethod, Some(mBlendRect), mDisposalMethod, hasAlpha);
-}
-
 void
 imgFrame::Abort()
 {
