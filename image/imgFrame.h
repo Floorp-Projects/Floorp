@@ -15,7 +15,6 @@
 #include "gfxDrawable.h"
 #include "imgIContainer.h"
 #include "MainThreadUtils.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace image {
@@ -338,20 +337,16 @@ public:
   {
     MOZ_ASSERT(aFrame);
     MonitorAutoLock lock(aFrame->mMonitor);
+    MOZ_ASSERT(!aFrame->GetIsPaletted(), "Paletted must use RawAccessFrameRef");
 
-    // Paletted images won't have a surface so there is no strong reference
-    // to hold on to. Since Draw() and GetSourceSurface() calls will not work
-    // in that case, we should be using RawAccessFrameRef exclusively instead.
-    // See FrameAnimator::GetRawFrame for an example of this behaviour.
     if (aFrame->mRawSurface) {
-      mRef = new DataSourceSurface::ScopedMap(aFrame->mRawSurface,
-                                              DataSourceSurface::READ_WRITE);
+      mRef.emplace(aFrame->mRawSurface, DataSourceSurface::READ);
       if (!mRef->IsMapped()) {
         mFrame = nullptr;
-        mRef = nullptr;
+        mRef.reset();
       }
     } else {
-      MOZ_ASSERT(aFrame->mOptSurface || aFrame->GetIsPaletted());
+      MOZ_ASSERT(aFrame->mOptSurface);
     }
   }
 
@@ -388,14 +383,15 @@ public:
   void reset()
   {
     mFrame = nullptr;
-    mRef = nullptr;
+    mRef.reset();
   }
 
 private:
   DrawableFrameRef(const DrawableFrameRef& aOther) = delete;
+  DrawableFrameRef& operator=(const DrawableFrameRef& aOther) = delete;
 
   RefPtr<imgFrame> mFrame;
-  nsAutoPtr<DataSourceSurface::ScopedMap> mRef;
+  Maybe<DataSourceSurface::ScopedMap> mRef;
 };
 
 /**

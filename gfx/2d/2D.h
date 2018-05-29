@@ -473,13 +473,35 @@ public:
    *
    * Use IsMapped() to verify whether Map() succeeded or not.
    */
-  class ScopedMap {
+  class ScopedMap final {
   public:
     explicit ScopedMap(DataSourceSurface* aSurface, MapType aType)
       : mSurface(aSurface)
       , mIsMapped(aSurface->Map(aType, &mMap)) {}
 
-    virtual ~ScopedMap()
+    ScopedMap(ScopedMap&& aOther)
+      : mSurface(Move(aOther.mSurface))
+      , mMap(aOther.mMap)
+      , mIsMapped(aOther.mIsMapped)
+    {
+      aOther.mMap.mData = nullptr;
+      aOther.mIsMapped = false;
+    }
+
+    ScopedMap& operator=(ScopedMap&& aOther)
+    {
+      if (mIsMapped) {
+        mSurface->Unmap();
+      }
+      mSurface = Move(aOther.mSurface);
+      mMap = aOther.mMap;
+      mIsMapped = aOther.mIsMapped;
+      aOther.mMap.mData = nullptr;
+      aOther.mIsMapped = false;
+      return *this;
+    }
+
+    ~ScopedMap()
     {
       if (mIsMapped) {
         mSurface->Unmap();
@@ -507,6 +529,9 @@ public:
     bool IsMapped() const { return mIsMapped; }
 
   private:
+    ScopedMap(const ScopedMap& aOther) = delete;
+    ScopedMap& operator=(const ScopedMap& aOther) = delete;
+
     RefPtr<DataSourceSurface> mSurface;
     MappedSurface mMap;
     bool mIsMapped;
