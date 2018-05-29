@@ -266,10 +266,6 @@ pref("devtools.netmonitor.persistlog", false);
 // any timestamps.
 pref("devtools.webconsole.timestampMessages", false);
 
-// Web Console automatic multiline mode: |true| if you want incomplete statements
-// to automatically trigger multiline editing (equivalent to shift + enter).
-pref("devtools.webconsole.autoMultiline", true);
-
 // Enable the webconsole sidebar toggle in Nightly builds.
 #if defined(NIGHTLY_BUILD)
 pref("devtools.webconsole.sidebarToggle", true);
