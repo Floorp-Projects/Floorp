@@ -161,29 +161,49 @@ public:
 class VirtualKey
 {
 public:
-  //  0 - Normal
-  //  1 - Shift
-  //  2 - Control
-  //  3 - Control + Shift
-  //  4 - Alt
-  //  5 - Alt + Shift
-  //  6 - Alt + Control (AltGr)
-  //  7 - Alt + Control + Shift (AltGr + Shift)
-  //  8 - CapsLock
-  //  9 - CapsLock + Shift
-  // 10 - CapsLock + Control
-  // 11 - CapsLock + Control + Shift
-  // 12 - CapsLock + Alt
-  // 13 - CapsLock + Alt + Shift
-  // 14 - CapsLock + Alt + Control (CapsLock + AltGr)
-  // 15 - CapsLock + Alt + Control + Shift (CapsLock + AltGr + Shift)
+  enum ShiftStateIndex : uint8_t
+  {
+    //  0 - Normal
+    eNormal = 0,
+    //  1 - Shift
+    eShift,
+    //  2 - Control
+    eControl,
+    //  3 - Control + Shift
+    eControlShift,
+    //  4 - Alt
+    eAlt,
+    //  5 - Alt + Shift
+    eAltShift,
+    //  6 - Alt + Control (AltGr)
+    eAltGr,
+    //  7 - Alt + Control + Shift (AltGr + Shift)
+    eAltGrShift,
+    //  8 - CapsLock
+    eWithCapsLock,
+    //  9 - CapsLock + Shift
+    eShiftWithCapsLock,
+    // 10 - CapsLock + Control
+    eControlWithCapsLock,
+    // 11 - CapsLock + Control + Shift
+    eControlShiftWithCapsLock,
+    // 12 - CapsLock + Alt
+    eAltWithCapsLock,
+    // 13 - CapsLock + Alt + Shift
+    eAltShiftWithCapsLock,
+    // 14 - CapsLock + Alt + Control (CapsLock + AltGr)
+    eAltGrWithCapsLock,
+    // 15 - CapsLock + Alt + Control + Shift (CapsLock + AltGr + Shift)
+    eAltGrShiftWithCapsLock,
+  };
 
   enum ShiftStateFlag
   {
     STATE_SHIFT    = 0x01,
     STATE_CONTROL  = 0x02,
     STATE_ALT      = 0x04,
-    STATE_CAPSLOCK = 0x08
+    STATE_CAPSLOCK = 0x08,
+    STATE_CONTROL_ALT = STATE_CONTROL | STATE_ALT,
   };
 
   typedef uint8_t ShiftState;
@@ -195,6 +215,10 @@ public:
     return ModifiersToShiftState(aModKeyState.GetModifiers());
   }
   static Modifiers ShiftStateToModifiers(ShiftState aShiftState);
+  static bool IsAltGrIndex(uint8_t aIndex)
+  {
+    return (aIndex & STATE_CONTROL_ALT) == STATE_CONTROL_ALT;
+  }
 
 private:
   union KeyShiftState
@@ -228,6 +252,41 @@ public:
   bool IsDeadKey(ShiftState aShiftState) const
   {
     return (mIsDeadKey & (1 << aShiftState)) != 0;
+  }
+
+  /**
+   * IsChangedByAltGr() is useful to check if a key with AltGr produces
+   * different character(s) from the key without AltGr.
+   * Note that this is designed for checking if a keyboard layout has AltGr
+   * key.  So, this result may not exactly correct for the key since it's
+   * okay to fails in some edge cases when we check all keys which produce
+   * character(s) in a layout.
+   */
+  bool IsChangedByAltGr(ShiftState aShiftState) const
+  {
+    MOZ_ASSERT(IsAltGrIndex(aShiftState));
+    MOZ_ASSERT(IsDeadKey(aShiftState) ||
+               mShiftStates[aShiftState].Normal.Chars[0]);
+    const ShiftState kShiftStateWithoutAltGr =
+      aShiftState - ShiftStateIndex::eAltGr;
+    if (IsDeadKey(aShiftState) != IsDeadKey(kShiftStateWithoutAltGr)) {
+      return false;
+    }
+    if (IsDeadKey(aShiftState)) {
+      return mShiftStates[aShiftState].DeadKey.DeadChar !=
+               mShiftStates[kShiftStateWithoutAltGr].DeadKey.DeadChar;
+    }
+    for(size_t i = 0; i < 4; i++) {
+      if (mShiftStates[aShiftState].Normal.Chars[i] !=
+            mShiftStates[kShiftStateWithoutAltGr].Normal.Chars[i]) {
+        return true;
+      }
+      if (!mShiftStates[aShiftState].Normal.Chars[i] &&
+          !mShiftStates[kShiftStateWithoutAltGr].Normal.Chars[i]) {
+        return false;
+      }
+    }
+    return false;
   }
 
   void AttachDeadKeyTable(ShiftState aShiftState,
@@ -727,6 +786,12 @@ public:
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
 
   /**
+   * HasAltGr() returns true if the keyboard layout's AltRight key is AltGr
+   * key.
+   */
+  bool HasAltGr() const { return mHasAltGr; }
+
+  /**
    * IsDeadKey() returns true if aVirtualKey is a dead key with aModKeyState.
    * This method isn't stateful.
    */
@@ -866,6 +931,7 @@ private:
 
   bool mIsOverridden;
   bool mIsPendingToRestoreKeyboardLayout;
+  bool mHasAltGr;
 
   static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
