@@ -7,9 +7,6 @@ package mozilla.components.browser.toolbar.display
 import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Rect
-import android.graphics.drawable.Drawable
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -119,16 +116,25 @@ internal class DisplayToolbar(
     private val pageActions: MutableList<DisplayAction> = mutableListOf()
     private val navigationActions: MutableList<DisplayAction> = mutableListOf()
 
-    private var urlBackgroundRect = Rect()
-
     // Margin between browser actions.
     internal var browserActionMargin = 0
 
     // Horizontal margin of URL Box (surrounding URL and page actions).
     internal var urlBoxMargin = 0
 
-    // Background to be drawn behind the URL box (URL + page actions).
-    internal var urlBoxBackgroundDrawable: Drawable? = null
+    // An optional view to be drawn behind the URL and page actions.
+    internal var urlBoxView: View? = null
+        set(value) {
+            // Remove previous view from ViewGroup
+            if (field != null) {
+                removeView(field)
+            }
+            // Add new view to ViewGroup (at position 0 to be drawn *before* the URL and page actions)
+            if (value != null) {
+                addView(value, 0)
+            }
+            field = value
+        }
 
     init {
         addView(iconView)
@@ -136,7 +142,6 @@ internal class DisplayToolbar(
         addView(menuView)
         addView(progressView)
 
-        setWillNotDraw(false)
         layoutTransition = LayoutTransition()
     }
 
@@ -236,6 +241,8 @@ internal class DisplayToolbar(
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
+        val fixedHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+
         setMeasuredDimension(width, height)
 
         // The icon and menu fill the whole height and have a square shape
@@ -253,10 +260,15 @@ internal class DisplayToolbar(
         val urlWidth = width - browserActionsWidth - pageActionsWidth
                 - menuWidth - navigationActionsWidth - 2 * urlBoxMargin
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
-        urlView.measure(urlWidthSpec, heightMeasureSpec)
+        urlView.measure(urlWidthSpec, fixedHeightSpec)
 
         val progressHeightSpec = MeasureSpec.makeMeasureSpec(dp(PROGRESS_BAR_HEIGHT_DP), MeasureSpec.EXACTLY)
         progressView.measure(widthMeasureSpec, progressHeightSpec)
+
+        urlBoxView?.let {
+            val urlBoxWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth + pageActionsWidth, MeasureSpec.EXACTLY)
+            it.measure(urlBoxWidthSpec, fixedHeightSpec)
+        }
     }
 
     /**
@@ -370,26 +382,9 @@ internal class DisplayToolbar(
 
         progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
 
-        // We calculate the size of the URL + page actions ("URL box") so that we can draw a custom
-        // background behind them:
+        // The URL box view (if exists) is positioned behind the url and page actions:
 
-        urlBackgroundRect.set(
-                navigationActionsWidth + urlBoxMargin,
-                0,
-                urlRight + pageActionsWidth,
-                measuredHeight)
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        urlBoxBackgroundDrawable?.let { drawable ->
-            canvas.save()
-
-            canvas.translate(urlBackgroundRect.left.toFloat(), urlBackgroundRect.top.toFloat())
-            drawable.setBounds(0, 0, urlBackgroundRect.width(), urlBackgroundRect.height())
-            drawable.draw(canvas)
-
-            canvas.restore()
-        }
+        urlBoxView?.layout(urlLeft, 0, urlRight + pageActionsWidth, measuredHeight)
     }
 
     companion object {

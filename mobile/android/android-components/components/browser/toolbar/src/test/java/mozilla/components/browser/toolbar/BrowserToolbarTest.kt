@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.toolbar
 
-import android.graphics.drawable.Drawable
 import android.view.View
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
@@ -352,16 +351,16 @@ class BrowserToolbarTest {
         val toolbar = BrowserToolbar(RuntimeEnvironment.application)
         val displayToolbar = toolbar.displayToolbar
 
-        assertNull(displayToolbar.urlBoxBackgroundDrawable)
+        assertNull(displayToolbar.urlBoxView)
         assertEquals(displayToolbar.browserActionMargin, 0)
         assertEquals(displayToolbar.urlBoxMargin, 0)
 
-        val drawable = mock(Drawable::class.java)
-        toolbar.urlBoxBackgroundDrawable = drawable
+        val view = mock(View::class.java)
+        toolbar.urlBoxView = view
         toolbar.browserActionMargin = 42
         toolbar.urlBoxMargin = 23
 
-        assertEquals(drawable, displayToolbar.urlBoxBackgroundDrawable)
+        assertEquals(view, displayToolbar.urlBoxView)
         assertEquals(42, displayToolbar.browserActionMargin)
         assertEquals(23, displayToolbar.urlBoxMargin)
     }

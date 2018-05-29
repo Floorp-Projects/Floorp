@@ -5,7 +5,6 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.View
@@ -58,12 +57,11 @@ class BrowserToolbar @JvmOverloads constructor(
         }
 
     /**
-     * Gets/Sets drawable that will be drawn as background behind the URL box (surrounding URL and
-     * page actions) in display mode.
+     * Gets/Sets a custom view that will be drawn as behind the URL and page actions in display mode.
      */
-    var urlBoxBackgroundDrawable: Drawable?
-        get() = displayToolbar.urlBoxBackgroundDrawable
-        set(value) { displayToolbar.urlBoxBackgroundDrawable = value }
+    var urlBoxView: View?
+        get() = displayToolbar.urlBoxView
+        set(value) { displayToolbar.urlBoxView = value }
 
     /**
      * Gets/Sets the margin to be used between browser actions.

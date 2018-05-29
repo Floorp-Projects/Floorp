@@ -449,6 +449,50 @@ class DisplayToolbarTest {
         assertEquals(56, backView.measuredHeight)
     }
 
+    @Test
+    fun `url box view will be added and removed from display layout`() {
+        val view = TextView(RuntimeEnvironment.application)
+
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        view assertNotIn displayToolbar
+
+        displayToolbar.urlBoxView = view
+
+        view assertIn displayToolbar
+
+        displayToolbar.urlBoxView = null
+
+        view assertNotIn displayToolbar
+    }
+
+    @Test
+    fun `url box size matches url + page actions size`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.addPageAction(BrowserToolbar.Button(0, "Reload") {})
+        displayToolbar.addPageAction(BrowserToolbar.Button(0, "Reader Mode") {})
+
+        val view = TextView(RuntimeEnvironment.application)
+        displayToolbar.urlBoxView = view
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(1024, View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+
+        displayToolbar.measure(widthSpec, heightSpec)
+
+        val urlView = extractUrlView(displayToolbar)
+        val reloadView = extractActionView(displayToolbar, "Reload")!!
+        val readerView = extractActionView(displayToolbar, "Reader Mode")!!
+
+        assertTrue(view.measuredWidth > 0)
+
+        assertEquals(view.measuredWidth, urlView.measuredWidth + reloadView.measuredWidth + readerView.measuredWidth)
+        assertEquals(200, view.measuredHeight)
+    }
+
     companion object {
         private fun extractUrlView(displayToolbar: DisplayToolbar): TextView {
             var textView: TextView? = null
@@ -516,6 +560,29 @@ class DisplayToolbarTest {
             }
 
             return actionView
+        }
+    }
+}
+
+infix fun View.assertIn(group: ViewGroup) {
+    var found = false
+
+    group.forEach {
+        if (this == it) {
+            println("Checking $this == $it")
+            found = true
+        }
+    }
+
+    if (!found) {
+        throw AssertionError("View not found in ViewGroup")
+    }
+}
+
+infix fun View.assertNotIn(group: ViewGroup) {
+    group.forEach {
+        if (this == it) {
+            throw AssertionError("View should not be in ViewGroup")
         }
     }
 }
