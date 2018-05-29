@@ -29,7 +29,7 @@ WithDownscalingFilter(const IntSize& aInputSize,
   WithFilterPipeline(decoder, Forward<Func>(aFunc),
                      DownscalingConfig { aInputSize,
                                          SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, aOutputSize,
+                     SurfaceConfig { decoder, aOutputSize,
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -43,7 +43,7 @@ AssertConfiguringDownscalingFilterFails(const IntSize& aInputSize,
   AssertConfiguringPipelineFails(decoder,
                                  DownscalingConfig { aInputSize,
                                                      SurfaceFormat::B8G8R8A8 },
-                                 SurfaceConfig { decoder, 0, aOutputSize,
+                                 SurfaceConfig { decoder, aOutputSize,
                                                  SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -224,7 +224,7 @@ TEST(ImageDownscalingFilter, ConfiguringPalettedDownscaleFails)
   AssertConfiguringPipelineFails(decoder,
                                  DownscalingConfig { IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8 },
-                                 PalettedSurfaceConfig { decoder, 0, IntSize(20, 20),
+                                 PalettedSurfaceConfig { decoder, IntSize(20, 20),
                                                          IntRect(0, 0, 20, 20),
                                                          SurfaceFormat::B8G8R8A8, 8,
                                                          false });

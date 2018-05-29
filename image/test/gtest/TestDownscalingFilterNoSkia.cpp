@@ -52,6 +52,6 @@ TEST(ImageDownscalingFilter, NoSkia)
   AssertConfiguringPipelineFails(decoder,
                                  DownscalingConfig { IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8 },
-                                 SurfaceConfig { decoder, 0, IntSize(50, 50),
+                                 SurfaceConfig { decoder, IntSize(50, 50),
                                                  SurfaceFormat::B8G8R8A8, false });
 }
