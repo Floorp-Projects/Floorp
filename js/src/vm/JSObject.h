@@ -480,11 +480,6 @@ class JSObject : public js::gc::Cell
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp* fop);
 
   public:
-    static bool reportReadOnly(JSContext* cx, jsid id, unsigned report = JSREPORT_ERROR);
-    static bool reportNotConfigurable(JSContext* cx, jsid id, unsigned report = JSREPORT_ERROR);
-    static bool reportNotExtensible(JSContext* cx, js::HandleObject obj,
-                                    unsigned report = JSREPORT_ERROR);
-
     static bool nonNativeSetProperty(JSContext* cx, js::HandleObject obj, js::HandleId id,
                                      js::HandleValue v, js::HandleValue receiver,
                                      JS::ObjectOpResult& result);
