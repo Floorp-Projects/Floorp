@@ -34,6 +34,9 @@ haz_run_schema = Schema({
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
     Required('secrets', default=False): Any(bool, [basestring]),
+
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 
@@ -62,11 +65,11 @@ def docker_worker_hazard(config, job, taskdesc):
 
     # build-haz-linux.sh needs this otherwise it assumes the checkout is in
     # the workspace.
-    env['GECKO_DIR'] = '/builds/worker/checkouts/gecko'
+    env['GECKO_DIR'] = '{workdir}/checkouts/gecko'.format(**run)
 
     worker['command'] = [
-        '/builds/worker/bin/run-task',
-        '--vcs-checkout', '/builds/worker/checkouts/gecko',
+        '{workdir}/bin/run-task'.format(**run),
+        '--vcs-checkout', '{workdir}/checkouts/gecko'.format(**run),
         '--',
         '/bin/bash', '-c', run['command']
     ]
