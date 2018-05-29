@@ -31,8 +31,6 @@ function simpleTest() {
   ok(!callbackCalled, "Callback should not be called.");
   let el = document.createElement("x-html-obj-elem");
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el), XObjElement.prototype, "Created element is not upgraded.");
-  document.body.appendChild(el);
   is(Object.getPrototypeOf(el), XObjElement.prototype, "Created element should have the prototype of the custom type.");
 }
 
@@ -54,8 +52,6 @@ function multipleDefinitionTest() {
   ok(!callbackCalled, "Callback should not be called.");
   let el1 = document.createElement("x-html-obj-elem1");
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el1), XObjElement1.prototype, "Created element is not upgraded.");
-  document.body.appendChild(el1);
   is(Object.getPrototypeOf(el1), XObjElement1.prototype, "Created element should have the prototype of the custom type.");
   let el2 = document.createElement("x-html-obj-elem2");
   is(Object.getPrototypeOf(el2), XObjElement2.prototype, "Created element should have the prototype of the custom type.");
@@ -101,8 +97,6 @@ function simpleExtendedTest() {
   ok(!callbackCalled, "Callback should not be called.");
   let el = document.createElement("button", { is: "x-extended-button"});
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el), ExtendButton.prototype, "Created element is not upgraded.");
-  document.body.appendChild(el);
   is(Object.getPrototypeOf(el), ExtendButton.prototype, "Created element should have the prototype of the extended type.");
   is(el.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
 }
@@ -123,8 +117,6 @@ function simpleInnerHTMLTest() {
   p.innerHTML = "<x-html-obj-elem5></x-html-obj-elem5>";
   let el = p.firstChild;
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element is not upgraded.");
-  document.body.appendChild(p);
   is(Object.getPrototypeOf(el), XObjElement4.prototype, "Created element should have the prototype of the custom type.");
 }
 
@@ -146,9 +138,6 @@ function twoElementInnerHTMLTest() {
   let el1 = p.firstChild;
   let el2 = p.lastChild;
   ok(callbackCalled, "Callback should be called.");
-  isnot(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element is not upgraded.");
-  isnot(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element is not upgraded.");
-  document.body.appendChild(p);
   is(Object.getPrototypeOf(el1), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
   is(Object.getPrototypeOf(el2), XObjElement5.prototype, "Created element should have the prototype of the custom type.");
 }

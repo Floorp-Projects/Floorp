@@ -20,6 +20,17 @@ const TEST_DATA = [
     selector: "html",
     expected: [
       {
+        type: "DOMContentLoaded",
+        filename: URL_ROOT + TEST_LIB + ":2",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: "function() {\n" +
+                 "  c.removeEventListener(\"DOMContentLoaded\", C, !1), e.ready()\n" +
+                 "}"
+      },
+      {
         type: "load",
         filename: TEST_URL + ":27",
         attributes: [
@@ -94,17 +105,6 @@ const TEST_DATA = [
                  "    if (a !== !0 && --e.readyWait > 0) return;\n" +
                  "    B.fireWith(c, [e]), e.fn.trigger && e(c).trigger(\"ready\").unbind(\"ready\")\n" +
                  "  }\n" +
-                 "}"
-      },
-      {
-        type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":2",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  c.removeEventListener(\"DOMContentLoaded\", C, !1), e.ready()\n" +
                  "}"
       }
     ]

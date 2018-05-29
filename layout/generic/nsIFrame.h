@@ -356,6 +356,10 @@ public:
   bool FirstLetterComplete() const { return mFirstLetterComplete; }
   void SetFirstLetterComplete() { mFirstLetterComplete = true; }
 
+#ifdef DEBUG
+  nsCString ToString() const;
+#endif
+
 private:
   StyleClear mBreakType;
   InlineBreak mInlineBreak;
