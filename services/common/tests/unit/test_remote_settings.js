@@ -16,6 +16,8 @@ async function clear_state() {
   // Clear local DB.
   const collection = await client.openCollection();
   await collection.clear();
+  // Reset event listeners.
+  client._listeners.set("sync", []);
 }
 
 
@@ -138,6 +140,26 @@ add_task(async function test_sync_event_provides_information_about_records() {
   equal(eventData.updated.length, 0);
   equal(eventData.deleted.length, 1);
   equal(eventData.deleted[0].website, "https://www.other.org/signin");
+});
+add_task(clear_state);
+
+add_task(async function test_all_listeners_are_executed_if_one_fails() {
+  const serverTime = Date.now();
+
+  let count = 0;
+  client.on("sync", () => { count += 1; });
+  client.on("sync", () => { throw new Error("boom"); });
+  client.on("sync", () => { count += 2; });
+
+  let error;
+  try {
+    await client.maybeSync(2000, serverTime);
+  } catch (e) {
+    error = e;
+  }
+
+  equal(count, 3);
+  equal(error.message, "boom");
 });
 add_task(clear_state);
 

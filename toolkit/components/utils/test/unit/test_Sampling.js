@@ -25,7 +25,8 @@ add_task(async function testBucketSample() {
 
 add_task(async function testRatioSample() {
   // Invalid input
-  Assert.rejects(Sampling.ratioSample("test", []), "ratioSample rejects for a list with no ratios");
+  await Assert.rejects(Sampling.ratioSample("test", []), /ratios must be at least 1 element long/,
+                       "ratioSample rejects for a list with no ratios");
 
   // Absolute samples
   equal(await Sampling.ratioSample("test", [1]), 0, "ratioSample returns 0 for a list with only 1 ratio");

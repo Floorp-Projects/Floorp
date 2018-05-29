@@ -266,6 +266,7 @@ add_task(async function test_discardedForSizePending() {
   await TelemetryStorage.savePendingPing(OVERSIZED_PING);
   // Try to manually load the oversized ping.
   await Assert.rejects(TelemetryStorage.loadPendingPing(OVERSIZED_PING_ID),
+    /loadPendingPing - exceeded the maximum ping size/,
     "The oversized ping should have been pruned.");
 
   let ping = await PingServer.promiseNextPing();

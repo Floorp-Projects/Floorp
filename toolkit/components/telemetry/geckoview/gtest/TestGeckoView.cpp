@@ -446,3 +446,32 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
   // Cleanup/remove the files.
   RemovePersistenceFile();
 }
+
+/**
+ * Test GeckoView timer telemetry is correctly recorded.
+ */
+TEST_F(TelemetryGeckoViewFixture, TimerHitCountProbe) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  Unused << mTelemetry->ClearScalars();
+
+  // Init the persistence and wait for loading to complete.
+  RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
+  TelemetryGeckoViewPersistence::InitPersistence();
+  loadingFinished->WaitForNotification();
+  // Simulate hitting the timer twice.
+  TelemetryGeckoViewTesting::TestDispatchPersist();
+  TelemetryGeckoViewTesting::TestDispatchPersist();
+  TelemetryGeckoViewPersistence::DeInitPersistence();
+
+  // Get a snapshot of the keyed and plain scalars.
+  JS::RootedValue scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
+
+  // Verify that the scalars were correctly persisted and restored.
+  CheckUintScalar("telemetry.persistence_timer_hit_count", cx.GetJSContext(),
+                  scalarsSnapshot, 2);
+
+  // Cleanup/remove the files.
+  RemovePersistenceFile();
+}

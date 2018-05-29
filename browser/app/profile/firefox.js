@@ -1528,11 +1528,7 @@ pref("browser.tabs.remote.warmup.enabled", false);
 
 // Caches tab layers to improve perceived performance
 // of tab switches.
-#if defined(NIGHTLY_BUILD)
-pref("browser.tabs.remote.tabCacheSize", 5);
-#else
 pref("browser.tabs.remote.tabCacheSize", 0);
-#endif
 
 pref("browser.tabs.remote.warmup.maxTabs", 3);
 pref("browser.tabs.remote.warmup.unloadDelayMs", 2000);

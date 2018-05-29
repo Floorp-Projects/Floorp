@@ -41,7 +41,7 @@ class WorkerListEmpty extends Component {
     return article(
       { className: "worker-list-empty" },
       h1(
-        {},
+        { className: "worker-list-empty__title" },
         "You need to register a Service Worker to inspect it here.",
         a(
           { className: "external-link", onClick: () => this.openDocumentation() },
@@ -54,9 +54,9 @@ class WorkerListEmpty extends Component {
         `here are some things you can try:`,
       ),
       ul(
-        { className: "worker-list-empty__tips"},
+        { className: "worker-list-empty__tips" },
         li(
-          { className: "worker-list-empty__tips__item"},
+          { className: "worker-list-empty__tips__item" },
           "Look for errors in the Console.",
           a(
             { className: "link", onClick: () => this.switchToConsole() },
@@ -64,7 +64,7 @@ class WorkerListEmpty extends Component {
           )
         ),
         li(
-          { className: "worker-list-empty__tips__item"},
+          { className: "worker-list-empty__tips__item" },
           "Step through you Service Worker registration and look for exceptions.",
           a(
             { className: "link", onClick: () => this.switchToDebugger()},
@@ -72,7 +72,7 @@ class WorkerListEmpty extends Component {
           )
         ),
         li(
-          { className: "worker-list-empty__tips__item"},
+          { className: "worker-list-empty__tips__item" },
           "Inspect Service Workers from other domains.",
           a(
             { className: "external-link", onClick: () => this.openAboutDebugging() },

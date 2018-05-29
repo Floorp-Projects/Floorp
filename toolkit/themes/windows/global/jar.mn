@@ -18,7 +18,7 @@ toolkit.jar:
   skin/classic/global/textbox.css
   skin/classic/global/colorpicker.css
   skin/classic/global/commonDialog.css
-  skin/classic/global/findBar.css
+* skin/classic/global/findBar.css
 * skin/classic/global/global.css
   skin/classic/global/listbox.css
   skin/classic/global/netError.css
@@ -45,7 +45,6 @@ toolkit.jar:
   skin/classic/global/icons/Error.png                      (icons/Error.png)
   skin/classic/global/icons/collapse.png                   (icons/collapse.png)
   skin/classic/global/icons/expand.png                     (icons/expand.png)
-  skin/classic/global/icons/folder-item.png                (icons/folder-item.png)
   skin/classic/global/icons/Landscape.png                  (icons/Landscape.png)
   skin/classic/global/icons/Portrait.png                   (icons/Portrait.png)
   skin/classic/global/icons/Print-preview.png              (icons/Print-preview.png)

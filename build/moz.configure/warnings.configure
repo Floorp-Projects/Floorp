@@ -106,6 +106,10 @@ check_and_add_gcc_warning('-Wno-error=multistatement-macros')
 # on nsTAutoStringN: https://bugs.llvm.org/show_bug.cgi?id=37249
 check_and_add_gcc_warning('-Wno-error=return-std-move')
 
+# Disable the -Werror for -Wclass-memaccess as we have a long
+# tail of issues to fix
+check_and_add_gcc_warning('-Wno-error=class-memaccess')
+
 # catches format/argument mismatches with printf
 c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
     '-Wformat', when=depends(target)(lambda t: t.kernel != 'WINNT'))

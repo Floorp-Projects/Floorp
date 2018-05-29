@@ -58,8 +58,7 @@ module.exports = {
       "devtools/client/inspector/extensions/test/head_devtools_inspector_sidebar.js",
       "storage/test/unit/**",
       "testing/marionette/test/unit/**",
-      "toolkit/components/**",
-      "toolkit/modules/tests/xpcshell/**",
+      "toolkit/components/extensions/**",
       "toolkit/mozapps/extensions/test/xpcshell/**"
     ],
     "rules": {

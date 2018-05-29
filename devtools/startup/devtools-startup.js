@@ -591,7 +591,7 @@ DevToolsStartup.prototype = {
       // gDevTools.showToolbox, the complete time it takes to open the toolbox.
       // i.e. especially take `initDevTools` into account.
       let startTime = Cu.now();
-      let require = this.initDevTools("KeyShortcut");
+      let require = this.initDevTools("KeyShortcut", key);
       let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
       gDevToolsBrowser.onKeyShortcut(window, key, startTime);
     }
@@ -619,14 +619,14 @@ DevToolsStartup.prototype = {
     return k;
   },
 
-  initDevTools: function(reason) {
+  initDevTools: function(reason, key = "") {
     // If an entry point is fired and tools are not enabled open the installation page
     if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
       this.openInstallPage(reason);
       return null;
     }
 
-    this.sendEntryPointTelemetry(reason);
+    this.sendEntryPointTelemetry(reason, key);
 
     this.initialized = true;
     let { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
@@ -839,10 +839,28 @@ DevToolsStartup.prototype = {
     }
   },
 
-  sendEntryPointTelemetry(reason) {
+  sendEntryPointTelemetry(reason, key = "") {
     if (!reason) {
       return;
     }
+
+    let keys = "";
+
+    if (reason === "KeyShortcut") {
+      let { modifiers, shortcut } = key;
+
+      modifiers = modifiers.replace(",", "+");
+
+      if (shortcut.startsWith("VK_")) {
+        shortcut = shortcut.substr(3);
+      }
+
+      keys = `${modifiers}+${shortcut}`;
+    }
+
+    this.telemetry.addEventProperty(
+      "devtools.main", "open", "tools", null, "shortcut", keys
+    );
 
     this.telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "entrypoint", reason
