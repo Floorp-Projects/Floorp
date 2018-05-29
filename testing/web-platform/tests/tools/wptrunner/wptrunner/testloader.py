@@ -597,6 +597,10 @@ class TestSource(object):
     def make_queue(cls, tests, **kwargs):
         pass
 
+    @classmethod
+    def group_metadata(self, state):
+        return {"scope": "/"}
+
     def group(self):
         if not self.current_group or len(self.current_group) == 0:
             try:
@@ -620,7 +624,8 @@ class GroupedSource(TestSource):
 
         for test in tests:
             if cls.new_group(state, test, **kwargs):
-                groups.append((deque(), {}))
+                group_metadata = cls.group_metadata(state)
+                groups.append((deque(), group_metadata))
 
             group, metadata = groups[-1]
             group.append(test)
@@ -637,7 +642,7 @@ class SingleTestSource(TestSource):
         test_queue = Queue()
         processes = kwargs["processes"]
         queues = [deque([]) for _ in xrange(processes)]
-        metadatas = [{} for _ in xrange(processes)]
+        metadatas = [cls.group_metadata(None) for _ in xrange(processes)]
         for test in tests:
             idx = hash(test.id) % processes
             group = queues[idx]
@@ -661,3 +666,7 @@ class PathGroupedSource(GroupedSource):
         rv = path != state.get("prev_path")
         state["prev_path"] = path
         return rv
+
+    @classmethod
+    def group_metadata(cls, state):
+        return {"scope": "/%s" % "/".join(state["prev_path"])}
