@@ -63,12 +63,12 @@ treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_downloads__v) {
-  list-style-image: url("chrome://browser/skin/places/downloads.png");
+  list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
 }
 
 treechildren::-moz-tree-image(title, query, tagContainer),
 treechildren::-moz-tree-image(query, OrganizerQuery_tags_______v) {
-  list-style-image: url("chrome://browser/skin/places/tag.png");
+  list-style-image: url("chrome://browser/skin/places/tag.svg");
 }
 
 /* calendar icon for folders grouping items by date */
