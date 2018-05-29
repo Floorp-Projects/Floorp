@@ -1415,9 +1415,6 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
     nr_stun_attr_info *attr_info;
     Data *password;
 
-    if (!msg)
-        ABORT(R_BAD_ARGS);
-
     r_log(NR_LOG_STUN, LOG_DEBUG, "Parsing STUN message of %d bytes", msg->length);
 
     if (!TAILQ_EMPTY(&msg->attributes))
