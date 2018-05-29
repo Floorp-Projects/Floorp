@@ -5,6 +5,7 @@
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
+extern crate winit;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;
@@ -176,7 +177,7 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        _event: glutin::WindowEvent,
+        _event: winit::WindowEvent,
         _api: &RenderApi,
         _document_id: DocumentId,
     ) -> bool {
