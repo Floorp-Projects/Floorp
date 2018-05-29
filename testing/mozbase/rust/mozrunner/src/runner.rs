@@ -379,6 +379,7 @@ pub mod platform {
         if let Some(path) = find_binary("firefox-bin") {
             return Some(path);
         }
+
         let home = env::home_dir();
         for &(prefix_home, trial_path) in [
             (
@@ -388,15 +389,16 @@ pub mod platform {
             (true, "Applications/Firefox.app/Contents/MacOS/firefox-bin"),
         ].iter()
         {
-            let path = match (home.as_ref(), prefix_home) {
+            let path = match (home, prefix_home) {
                 (Some(ref home_dir), true) => home_dir.join(trial_path),
                 (None, true) => continue,
-                (_, false) => PathBuf::from(trial_path),
+                (_, false) => trial_path.to_path_buf(),
             };
             if path.exists() {
                 return Some(path);
             }
         }
+
         None
     }
 
@@ -429,16 +431,16 @@ pub mod platform {
     fn firefox_registry_path() -> Result<Option<PathBuf>, Error> {
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
         for subtree_key in ["SOFTWARE", "SOFTWARE\\WOW6432Node"].iter() {
-            let subtree = try!(hklm.open_subkey_with_flags(subtree_key, KEY_READ));
+            let subtree = hklm.open_subkey_with_flags(subtree_key, KEY_READ)?;
             let mozilla_org = match subtree.open_subkey_with_flags("mozilla.org\\Mozilla", KEY_READ) {
                 Ok(val) => val,
-                Err(_) => continue
+                Err(_) => continue,
             };
-            let current_version: String = try!(mozilla_org.get_value("CurrentVersion"));
-            let mozilla = try!(subtree.open_subkey_with_flags("Mozilla", KEY_READ));
+            let current_version: String = mozilla_org.get_value("CurrentVersion")?;
+            let mozilla = subtree.open_subkey_with_flags("Mozilla", KEY_READ)?;
             for key_res in mozilla.enum_keys() {
-                let key = try!(key_res);
-                let section_data = try!(mozilla.open_subkey_with_flags(&key, KEY_READ));
+                let key = key_res?;
+                let section_data = mozilla.open_subkey_with_flags(&key, KEY_READ)?;
                 let version: Result<String, _> = section_data.get_value("GeckoVer");
                 if let Ok(ver) = version {
                     if ver == current_version {
