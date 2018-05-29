@@ -557,15 +557,15 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
     RefPtr<DataSourceSurface> srcSource = aSource->GetSurface(aDest)->GetDataSurface();
     DataSourceSurface::ScopedMap mapSrc(srcSource, DataSourceSurface::READ);
 
-    ssse3_scale_data((uint32_t*)mapSrc.GetData(), srcSource->GetSize().width, srcSource->GetSize().height,
-                     mapSrc.GetStride()/4,
-                     ((uint32_t*)dstData) + fillRect.X() + (dstStride / 4) * fillRect.Y(), dstRect.Width(), dstRect.Height(),
-                     dstStride / 4,
-                     offset.x, offset.y,
-                     fillRect.Width(), fillRect.Height());
+    bool success = ssse3_scale_data((uint32_t*)mapSrc.GetData(), srcSource->GetSize().width, srcSource->GetSize().height,
+                                    mapSrc.GetStride()/4,
+                                    ((uint32_t*)dstData) + fillRect.X() + (dstStride / 4) * fillRect.Y(), dstRect.Width(), dstRect.Height(),
+                                    dstStride / 4,
+                                    offset.x, offset.y,
+                                    fillRect.Width(), fillRect.Height());
 
     aDest->ReleaseBits(dstData);
-    return true;
+    return success;
   } else
 #endif // MOZILLA_SSE_HAVE_CPUID_DETECTION
     return false;

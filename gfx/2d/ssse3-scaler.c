@@ -37,6 +37,7 @@
 #include <tmmintrin.h>
 #include <stdint.h>
 #include <assert.h>
+#include "ssse3-scaler.h"
 
 typedef int32_t                 pixman_fixed_16_16_t;
 typedef pixman_fixed_16_16_t    pixman_fixed_t;
@@ -505,7 +506,7 @@ fail:
 /* scale the src from src_width/height to dest_width/height drawn
  * into the rectangle x,y width,height
  * src_stride and dst_stride are 4 byte units */
-void ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stride,
+bool ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stride,
                       uint32_t *dest, int dest_width, int dest_height,
                       int dest_stride,
                       int x, int y,
@@ -551,6 +552,10 @@ void ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stri
     iter.data = NULL;
 
     ssse3_bilinear_cover_iter_init(&iter);
+
+    if (!iter.fini)
+      return false;
+
     if (iter.data) {
         for (int iy = 0; iy < height; iy++) {
             ssse3_fetch_bilinear_cover(&iter, NULL);
@@ -558,4 +563,5 @@ void ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stri
         }
         ssse3_bilinear_cover_iter_fini(&iter);
     }
+    return true;
 }
