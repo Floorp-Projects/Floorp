@@ -74,7 +74,7 @@ function focusInChild() {
     var id;
     if (event.target instanceof Ci.nsIDOMWindow)
       id = getWindowDocId(event.originalTarget) + "-window";
-    else if (event.target instanceof Ci.nsIDOMDocument)
+    else if (event.target.nodeType == event.target.DOCUMENT_NODE)
       id = getWindowDocId(event.originalTarget) + "-document";
     else
       id = event.originalTarget.id;

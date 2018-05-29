@@ -737,6 +737,10 @@ public:
       return mHasVariationFontSupport;
     }
 
+    bool HasNativeColrFontSupport() const {
+      return mHasNativeColrFontSupport;
+    }
+
     // you probably want to use gfxVars::UseWebRender() instead of this
     static bool WebRenderPrefEnabled();
     // you probably want to use gfxVars::UseWebRender() instead of this
@@ -829,6 +833,10 @@ protected:
 
     // Whether the platform supports rendering OpenType font variations
     bool    mHasVariationFontSupport;
+
+    // Whether the platform font APIs have native support for COLR fonts.
+    // Set to true during initialization on platforms that implement this.
+    bool    mHasNativeColrFontSupport = false;
 
     // max character limit for words in word cache
     int32_t mWordCacheCharLimit;

@@ -1,4 +1,4 @@
 == cell-align-stopped-at-table-1-standards.html cell-align-stopped-at-table-1-standards-ref.html
 == cell-align-stopped-at-table-1-quirks.html cell-align-stopped-at-table-1-quirks-ref.html
-== bug1379306-2.html bug1379306-2-ref.html
-== bug1379306-3.html bug1379306-3-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1379306-2.html bug1379306-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1379306-3.html bug1379306-3-ref.html # Bug 1392106

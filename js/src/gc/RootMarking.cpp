@@ -48,13 +48,27 @@ struct ConcreteTraceable {
     void trace(JSTracer*) {}
 };
 
-template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
+template <typename T>
+static inline void
+TraceStackOrPersistentRoot(JSTracer* trc, T* thingp, const char* name)
+{
+    TraceNullableRoot(trc, thingp, name);
+}
+
+template <>
+inline void
+TraceStackOrPersistentRoot(JSTracer* trc, ConcreteTraceable* thingp, const char* name)
+{
+    js::DispatchWrapper<ConcreteTraceable>::TraceWrapped(trc, thingp, name);
+}
+
+template <typename T>
 static inline void
 TraceExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* name)
 {
     while (rooter) {
         T* addr = reinterpret_cast<JS::Rooted<T>*>(rooter)->address();
-        TraceFn(trc, addr, name);
+        TraceStackOrPersistentRoot(trc, addr, name);
         rooter = rooter->previous();
     }
 }
@@ -68,8 +82,7 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
     TraceExactStackRootList<jsid>(trc, stackRoots[JS::RootKind::Id], "exact-id");
     TraceExactStackRootList<Value>(trc, stackRoots[JS::RootKind::Value], "exact-value");
-    TraceExactStackRootList<ConcreteTraceable,
-                           js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(
+    TraceExactStackRootList<ConcreteTraceable>(
         trc, stackRoots[JS::RootKind::Traceable], "Traceable");
 }
 
@@ -85,13 +98,13 @@ TraceExactStackRoots(JSContext* cx, JSTracer* trc)
     cx->traceStackRoots(trc);
 }
 
-template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
+template <typename T>
 static inline void
 TracePersistentRootedList(JSTracer* trc, mozilla::LinkedList<PersistentRooted<void*>>& list,
                          const char* name)
 {
     for (PersistentRooted<void*>* r : list)
-        TraceFn(trc, reinterpret_cast<PersistentRooted<T>*>(r)->address(), name);
+        TraceStackOrPersistentRoot(trc, reinterpret_cast<PersistentRooted<T>*>(r)->address(), name);
 }
 
 void
@@ -103,9 +116,8 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
     TracePersistentRootedList<jsid>(trc, heapRoots.ref()[JS::RootKind::Id], "persistent-id");
     TracePersistentRootedList<Value>(trc, heapRoots.ref()[JS::RootKind::Value], "persistent-value");
-    TracePersistentRootedList<ConcreteTraceable,
-                             js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(trc,
-            heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
+    TracePersistentRootedList<ConcreteTraceable>(
+        trc, heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
 }
 
 static void
@@ -477,9 +489,6 @@ js::IsBufferGrayRootsTracer(JSTracer* trc)
 }
 #endif
 
-// A canary value used to check the gray buffer contents are valid.
-static Cell* const GrayBufferCanary = reinterpret_cast<Cell*>(0x47726179); // "Gray"
-
 void
 js::gc::GCRuntime::bufferGrayRoots()
 {
@@ -492,12 +501,6 @@ js::gc::GCRuntime::bufferGrayRoots()
     BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&grayBufferer, grayRootTracer.data);
-
-    // Push a canary value onto the end of the list.
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!zone->gcGrayRoots().empty() && !zone->gcGrayRoots().append(GrayBufferCanary))
-            grayBufferer.setFailed();
-    }
 
     // Propagate the failure flag from the marker to the runtime.
     if (grayBufferer.failed()) {
@@ -544,13 +547,21 @@ GCRuntime::markBufferedGrayRoots(JS::Zone* zone)
     if (roots.empty())
         return;
 
-    // Check for canary value but don't remove it.
-    MOZ_RELEASE_ASSERT(roots.length() > 1);
-    MOZ_RELEASE_ASSERT(roots.back() == GrayBufferCanary);
-
-    for (size_t i = 0; i < roots.length() - 1; i++) {
+    for (size_t i = 0; i < roots.length(); i++) {
         Cell* cell = roots[i];
+
+        // Bug 1203273: Check for bad pointers on OSX and output diagnostics.
+#if defined(XP_DARWIN) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+        auto addr = uintptr_t(cell);
+        if (addr < ChunkSize || addr % CellAlignBytes != 0) {
+            MOZ_CRASH_UNSAFE_PRINTF(
+                "Bad GC thing pointer in gray root buffer: %p at index %zu of %zu, address %p",
+                cell, i, roots.length(), &roots[i]);
+        }
+#else
         MOZ_ASSERT(IsCellPointerValid(cell));
+#endif
+
         TraceManuallyBarrieredGenericPointerEdge(&marker, &cell, "buffered gray root");
     }
 }

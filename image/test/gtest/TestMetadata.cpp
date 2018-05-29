@@ -255,6 +255,6 @@ TEST_F(ImageDecoderMetadata, NoFrameDelayGIFFullDecode)
   EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
   EXPECT_TRUE(bool(result.Surface()));
 
-  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
-  EXPECT_TRUE(bool(result.Surface()));
+  RawAccessFrameRef partialFrame = result.Surface().RawAccessRef(1);
+  EXPECT_TRUE(bool(partialFrame));
 }

@@ -359,7 +359,7 @@ function find_(container, strategy, selector, searchFn,
       // DOMElement, which will refer to :root in case of a DOMDocument.
       case element.Strategy.Anon:
       case element.Strategy.AnonAttribute:
-        if (rootNode instanceof Ci.nsIDOMDocument) {
+        if (rootNode.nodeType == rootNode.DOCUMENT_NODE) {
           startNode = rootNode.documentElement;
         }
         break;

@@ -177,7 +177,7 @@ function getParsedDocument(aPath) {
 
 function processParsedDocument(doc) {
   Assert.ok(doc.documentElement.localName != "parsererror");
-  Assert.ok(doc instanceof Ci.nsIDOMDocument);
+  Assert.equal(ChromeUtils.getClassName(doc), "XMLDocument");
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
@@ -447,7 +447,7 @@ function do_miscellaneous_tests(doc) {
 
   // Requested by smaug:  A range involving a comment as a document child.
   doc = parser.parseFromString("<!-- foo --><foo/>", "application/xml");
-  Assert.ok(doc instanceof Ci.nsIDOMDocument);
+  Assert.equal(ChromeUtils.getClassName(doc), "XMLDocument");
   Assert.equal(doc.childNodes.length, 2);
   baseRange = doc.createRange();
   baseRange.setStart(doc.firstChild, 1);

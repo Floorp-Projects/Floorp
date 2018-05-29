@@ -47,8 +47,7 @@ function isDirectory(url) {
   return (parts.length === 0 || url.path.slice(-1) === "/" || nodeHasChildren(url)) && url.name != "(index)";
 }
 
-function getExtension(source) {
-  const url = source.get ? source.get("url") : source.url;
+function getExtension(url = "") {
   const parsedUrl = (0, _url.parse)(url).pathname;
 
   if (!parsedUrl) {
@@ -59,7 +58,7 @@ function getExtension(source) {
 }
 
 function isNotJavaScript(source) {
-  return ["css", "svg", "png"].includes(getExtension(source));
+  return ["css", "svg", "png"].includes(getExtension(source.url));
 }
 
 function isInvalidUrl(url, source) {

@@ -1,8 +1,8 @@
-== bug1375518.html bug1375518-ref.html
-== bug1375518-2.html bug1375518-ref.html
-== bug1375518-3.html bug1375518-ref.html
-== bug1375518-4.html bug1375518-4-ref.html
-== bug1375518-5.html bug1375518-5-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518.html bug1375518-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-2.html bug1375518-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-3.html bug1375518-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-4.html bug1375518-4-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == bug1375518-5.html bug1375518-5-ref.html # Bug 1392106
 == bug1379306.html bug1379306-ref.html
 == bug1394226.html bug1394226-ref.html
 != bug1394226.html bug1394226-notref.html

@@ -162,17 +162,17 @@ function isSymbolsLoading(state, source) {
   return symbols.hasOwnProperty("loading");
 }
 
-function isEmptyLineInSource(state, line, selectedSource) {
-  const emptyLines = getEmptyLines(state, selectedSource);
+function isEmptyLineInSource(state, line, selectedSourceId) {
+  const emptyLines = getEmptyLines(state, selectedSourceId);
   return emptyLines && emptyLines.includes(line);
 }
 
-function getEmptyLines(state, source) {
-  if (!source) {
+function getEmptyLines(state, sourceId) {
+  if (!sourceId) {
     return null;
   }
 
-  return state.ast.emptyLines.get(source.id);
+  return state.ast.emptyLines.get(sourceId);
 }
 
 function getPausePoints(state, sourceId) {

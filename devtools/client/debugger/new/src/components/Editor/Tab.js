@@ -18,6 +18,8 @@ var _SourceIcon2 = _interopRequireDefault(_SourceIcon);
 
 var _Button = require("../shared/Button/index");
 
+var _text = require("../../utils/text");
+
 var _actions = require("../../actions/index");
 
 var _actions2 = _interopRequireDefault(_actions);
@@ -175,7 +177,7 @@ class Tab extends _react.PureComponent {
       shouldHide: icon => ["file", "javascript"].includes(icon)
     }), _react2.default.createElement("div", {
       className: "filename"
-    }, (0, _devtoolsModules.getUnicodeUrlPath)(filename)), _react2.default.createElement(_Button.CloseButton, {
+    }, (0, _text.truncateMiddleText)((0, _devtoolsModules.getUnicodeUrlPath)(filename), 30)), _react2.default.createElement(_Button.CloseButton, {
       handleClick: onClickClose,
       tooltip: L10N.getStr("sourceTabs.closeTabButtonTooltip")
     }));

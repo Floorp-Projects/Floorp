@@ -48,7 +48,7 @@ fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-ref.ht
 != text-font-lang.html text-font-lang-notref.html
 
 == text-measure.html text-measure-ref.html
-== text-small-caps-1.html text-small-caps-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-small-caps-1.html text-small-caps-1-ref.html # Bug 1392106
 
 random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
 

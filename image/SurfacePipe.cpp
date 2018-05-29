@@ -75,10 +75,11 @@ SurfaceSink::Configure(const SurfaceConfig& aConfig)
   // XXX(seth): Once every Decoder subclass uses SurfacePipe, we probably want
   // to allocate the frame directly here and get rid of Decoder::AllocateFrame
   // altogether.
-  nsresult rv = aConfig.mDecoder->AllocateFrame(aConfig.mFrameNum,
-                                                surfaceSize,
+  nsresult rv = aConfig.mDecoder->AllocateFrame(surfaceSize,
                                                 frameRect,
-                                                aConfig.mFormat);
+                                                aConfig.mFormat,
+                                                /* aPaletteDepth */ 0,
+                                                aConfig.mAnimParams);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -127,11 +128,11 @@ PalettedSurfaceSink::Configure(const PalettedSurfaceConfig& aConfig)
   // XXX(seth): Once every Decoder subclass uses SurfacePipe, we probably want
   // to allocate the frame directly here and get rid of Decoder::AllocateFrame
   // altogether.
-  nsresult rv = aConfig.mDecoder->AllocateFrame(aConfig.mFrameNum,
-                                                aConfig.mOutputSize,
+  nsresult rv = aConfig.mDecoder->AllocateFrame(aConfig.mOutputSize,
                                                 aConfig.mFrameRect,
                                                 aConfig.mFormat,
-                                                aConfig.mPaletteDepth);
+                                                aConfig.mPaletteDepth,
+                                                aConfig.mAnimParams);
   if (NS_FAILED(rv)) {
     return rv;
   }

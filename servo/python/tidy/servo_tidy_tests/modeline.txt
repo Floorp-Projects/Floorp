@@ -1,5 +1,0 @@
-# vim: set noexpandtab:
-// vi: et:
-/* ex: et:
-anything -*-Lisp-*-
- -*- mode: Lisp -*-
