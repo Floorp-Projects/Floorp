@@ -94,6 +94,13 @@ struct RustSdpAttributeRtpmap {
   uint32_t channels;
 };
 
+struct RustSdpAttributeRtcpFb {
+  uint32_t payloadType;
+  uint32_t feedbackType;
+  StringView parameter;
+  StringView extra;
+};
+
 struct RustSdpAttributeFmtp {
   uint8_t payloadType;
   StringView codecName;
@@ -258,6 +265,11 @@ nsresult sdp_get_groups(const RustAttributeList* aList, size_t listSize,
 
 nsresult sdp_get_rtcp(const RustAttributeList* aList,
                       RustSdpAttributeRtcp* ret);
+
+
+size_t sdp_get_rtcpfb_count(const RustAttributeList* aList);
+void sdp_get_rtcpfbs(const RustAttributeList* aList, size_t listSize,
+                     RustSdpAttributeRtcpFb* ret);
 
 size_t sdp_get_imageattr_count(const RustAttributeList* aList);
 void sdp_get_imageattrs(const RustAttributeList* aList, size_t listSize,
