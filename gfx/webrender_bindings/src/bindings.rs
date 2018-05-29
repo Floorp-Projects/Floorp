@@ -729,6 +729,10 @@ impl SceneBuilderHooks for APZCallbacks {
         unsafe { wr_schedule_render(self.window_id) }
     }
 
+    fn post_resource_update(&self) {
+        unsafe { wr_schedule_render(self.window_id) }
+    }
+
     fn poke(&self) {
         unsafe { apz_run_updater(self.window_id) }
     }
