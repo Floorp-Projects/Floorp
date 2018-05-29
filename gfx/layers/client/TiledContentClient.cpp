@@ -483,45 +483,49 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
                                         std::vector<CapturedTiledPaintState::Copy>* aCopies,
                                         std::vector<RefPtr<TextureClient>>* aClients)
 {
-  if (mBackBuffer && mFrontBuffer) {
-    gfx::IntSize tileSize = mFrontBuffer->GetSize();
-    const IntRect tileRect = IntRect(0, 0, tileSize.width, tileSize.height);
+  if (!mBackBuffer || !mFrontBuffer) {
+    return;
+  }
 
-    if (aDirtyRegion.Contains(tileRect)) {
-      // The dirty region means that we no longer need the front buffer, so
-      // discard it.
-      DiscardFrontBuffer();
-    } else {
-      // Region that needs copying.
-      nsIntRegion regionToCopy = mInvalidBack;
+  gfx::IntSize tileSize = mFrontBuffer->GetSize();
+  const IntRect tileRect = IntRect(0, 0, tileSize.width, tileSize.height);
 
-      regionToCopy.Sub(regionToCopy, aDirtyRegion);
-      regionToCopy.And(regionToCopy, aVisibleRegion);
+  if (aDirtyRegion.Contains(tileRect)) {
+    // The dirty region means that we no longer need the front buffer, so
+    // discard it.
+    DiscardFrontBuffer();
+    return;
+  }
 
-      aAddPaintedRegion = regionToCopy;
+  // Region that needs copying.
+  nsIntRegion regionToCopy = mInvalidBack;
 
-      if (regionToCopy.IsEmpty()) {
-        // Just redraw it all.
-        return;
-      }
+  regionToCopy.Sub(regionToCopy, aDirtyRegion);
+  regionToCopy.And(regionToCopy, aVisibleRegion);
 
-      // Copy the bounding rect of regionToCopy. As tiles are quite small, it
-      // is unlikely that we'd save much by copying each individual rect of the
-      // region, but we can reevaluate this if it becomes an issue.
-      const IntRect rectToCopy = regionToCopy.GetBounds();
-      gfx::IntRect gfxRectToCopy(rectToCopy.X(), rectToCopy.Y(), rectToCopy.Width(), rectToCopy.Height());
-      if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags, aCopies, aClients)) {
-        if (mBackBufferOnWhite) {
-          MOZ_ASSERT(mFrontBufferOnWhite);
-          if (CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, gfxRectToCopy, aFlags, aCopies, aClients)) {
-            mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
-          }
-        } else {
-          mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
-        }
-      }
+  aAddPaintedRegion = regionToCopy;
+
+  if (regionToCopy.IsEmpty()) {
+    // Just redraw it all.
+    return;
+  }
+
+  // Copy the bounding rect of regionToCopy. As tiles are quite small, it
+  // is unlikely that we'd save much by copying each individual rect of the
+  // region, but we can reevaluate this if it becomes an issue.
+  const IntRect rectToCopy = regionToCopy.GetBounds();
+  if (!CopyFrontToBack(mFrontBuffer, mBackBuffer, rectToCopy, aFlags, aCopies, aClients)) {
+    return;
+  }
+
+  if (mBackBufferOnWhite) {
+    MOZ_ASSERT(mFrontBufferOnWhite);
+    if (!CopyFrontToBack(mFrontBufferOnWhite, mBackBufferOnWhite, rectToCopy, aFlags, aCopies, aClients)) {
+      return;
     }
   }
+
+  mInvalidBack.Sub(mInvalidBack, aVisibleRegion);
 }
 
 void
