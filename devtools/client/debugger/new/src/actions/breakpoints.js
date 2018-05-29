@@ -417,7 +417,7 @@ function toggleBreakpoint(line, column) {
       line,
       column
     });
-    const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource);
+    const isEmptyLine = (0, _ast.isEmptyLineInSource)(state, line, selectedSource.id);
 
     if (!bp && isEmptyLine || bp && bp.loading) {
       return;
@@ -434,8 +434,8 @@ function toggleBreakpoint(line, column) {
     }
 
     return dispatch(addBreakpoint({
-      sourceId: selectedSource.get("id"),
-      sourceUrl: selectedSource.get("url"),
+      sourceId: selectedSource.id,
+      sourceUrl: selectedSource.url,
       line: line,
       column: column
     }));

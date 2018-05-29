@@ -536,10 +536,6 @@ class BytecodeEmitter::EmitterScope : public Nestable<BytecodeEmitter::EmitterSc
         return nextFrameSlot_;
     }
 
-    uint32_t numFrameSlots() const {
-        return frameSlotEnd() - frameSlotStart();
-    }
-
     EmitterScope* enclosingInFrame() const {
         return Nestable<EmitterScope>::enclosing();
     }
@@ -2400,13 +2396,6 @@ bool
 BytecodeEmitter::init()
 {
     return atomIndices.acquire(cx);
-}
-
-template <typename Predicate /* (NestableControl*) -> bool */>
-BytecodeEmitter::NestableControl*
-BytecodeEmitter::findInnermostNestableControl(Predicate predicate) const
-{
-    return NestableControl::findNearest(innermostNestableControl, predicate);
 }
 
 template <typename T>
@@ -5156,54 +5145,6 @@ BytecodeEmitter::emitFunctionScript(ParseNode* body)
 
     tellDebuggerAboutCompiledScript(cx);
 
-    return true;
-}
-
-template <typename NameEmitter>
-bool
-BytecodeEmitter::emitDestructuringDeclsWithEmitter(ParseNode* pattern, NameEmitter emitName)
-{
-    if (pattern->isKind(ParseNodeKind::Array)) {
-        for (ParseNode* element = pattern->pn_head; element; element = element->pn_next) {
-            if (element->isKind(ParseNodeKind::Elision))
-                continue;
-            ParseNode* target = element;
-            if (element->isKind(ParseNodeKind::Spread)) {
-                target = element->pn_kid;
-            }
-            if (target->isKind(ParseNodeKind::Assign))
-                target = target->pn_left;
-            if (target->isKind(ParseNodeKind::Name)) {
-                if (!emitName(this, target))
-                    return false;
-            } else {
-                if (!emitDestructuringDeclsWithEmitter(target, emitName))
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    MOZ_ASSERT(pattern->isKind(ParseNodeKind::Object));
-    for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
-        MOZ_ASSERT(member->isKind(ParseNodeKind::MutateProto) ||
-                   member->isKind(ParseNodeKind::Colon) ||
-                   member->isKind(ParseNodeKind::Shorthand));
-
-        ParseNode* target = member->isKind(ParseNodeKind::MutateProto)
-                            ? member->pn_kid
-                            : member->pn_right;
-
-        if (target->isKind(ParseNodeKind::Assign))
-            target = target->pn_left;
-        if (target->isKind(ParseNodeKind::Name)) {
-            if (!emitName(this, target))
-                return false;
-        } else {
-            if (!emitDestructuringDeclsWithEmitter(target, emitName))
-                return false;
-        }
-    }
     return true;
 }
 
@@ -11420,16 +11361,6 @@ CGObjectList::add(ObjectBox* objbox)
     return length++;
 }
 
-unsigned
-CGObjectList::indexOf(JSObject* obj)
-{
-    MOZ_ASSERT(length > 0);
-    unsigned index = length - 1;
-    for (ObjectBox* box = lastbox; box->object != obj; box = box->emitLink)
-        index--;
-    return index;
-}
-
 void
 CGObjectList::finish(ObjectArray* array)
 {
@@ -11445,16 +11376,6 @@ CGObjectList::finish(ObjectArray* array)
         *cursor = objbox->object;
     } while ((objbox = objbox->emitLink) != nullptr);
     MOZ_ASSERT(cursor == array->vector);
-}
-
-ObjectBox*
-CGObjectList::find(uint32_t index)
-{
-    MOZ_ASSERT(index < length);
-    ObjectBox* box = lastbox;
-    for (unsigned n = length - 1; n > index; n--)
-        box = box->emitLink;
-    return box;
 }
 
 void

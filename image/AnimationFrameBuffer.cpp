@@ -176,18 +176,18 @@ AnimationFrameBuffer::MarkComplete()
   return mPending > 0;
 }
 
-DrawableFrameRef
+imgFrame*
 AnimationFrameBuffer::Get(size_t aFrame)
 {
   // We should not have asked for a frame if we never inserted.
   if (mFrames.IsEmpty()) {
     MOZ_ASSERT_UNREACHABLE("Calling Get() when we have no frames");
-    return DrawableFrameRef();
+    return nullptr;
   }
 
   // If we don't have that frame, return an empty frame ref.
   if (aFrame >= mFrames.Length()) {
-    return DrawableFrameRef();
+    return nullptr;
   }
 
   // We've got the requested frame because we are not discarding frames. While
@@ -195,13 +195,13 @@ AnimationFrameBuffer::Get(size_t aFrame)
   // we want them, it is possible the decoder is behind.
   if (!mFrames[aFrame]) {
     MOZ_ASSERT(MayDiscard());
-    return DrawableFrameRef();
+    return nullptr;
   }
 
   // If we are advancing on behalf of the animation, we don't expect it to be
   // getting any frames (besides the first) until we get the desired frame.
   MOZ_ASSERT(aFrame == 0 || mAdvance == 0);
-  return mFrames[aFrame]->DrawableRef();
+  return mFrames[aFrame].get();
 }
 
 bool

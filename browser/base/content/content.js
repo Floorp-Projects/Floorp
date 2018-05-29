@@ -588,12 +588,8 @@ var AboutNetAndCertErrorListener = {
   },
 
   handleEvent(aEvent) {
-    let doc;
-    if (aEvent.originalTarget instanceof Ci.nsIDOMDocument) {
-      doc = aEvent.originalTarget;
-    } else {
-      doc = aEvent.originalTarget.ownerDocument;
-    }
+    // Documents have a null ownerDocument.
+    let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
 
     if (!this.isAboutNetError(doc) && !this.isAboutCertError(doc)) {
       return;

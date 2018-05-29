@@ -1005,7 +1005,7 @@ function do_load_manifest(path) {
  * @param aPath File path to the document.
  * @param aType Content type to use in DOMParser.
  *
- * @return nsIDOMDocument from the file.
+ * @return Document from the file.
  */
 function do_parse_document(aPath, aType) {
   switch (aType) {

@@ -467,8 +467,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_FIRST)
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
     EXPECT_TRUE(bool(result.Surface()));
 
-    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
-    EXPECT_TRUE(bool(result.Surface()));
+    RawAccessFrameRef partialFrame = result.Surface().RawAccessRef(1);
+    EXPECT_TRUE(bool(partialFrame));
   }
 
   // Ensure that the static version is still around.
@@ -553,8 +553,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
     EXPECT_TRUE(bool(result.Surface()));
 
-    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
-    EXPECT_TRUE(bool(result.Surface()));
+    RawAccessFrameRef partialFrame = result.Surface().RawAccessRef(1);
+    EXPECT_TRUE(bool(partialFrame));
   }
 
   // Ensure that we didn't decode the static version of the image.
@@ -596,8 +596,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithFRAME_CURRENT)
     EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
     EXPECT_TRUE(bool(result.Surface()));
 
-    EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
-    EXPECT_TRUE(bool(result.Surface()));
+    RawAccessFrameRef partialFrame = result.Surface().RawAccessRef(1);
+    EXPECT_TRUE(bool(partialFrame));
   }
 }
 
@@ -665,8 +665,8 @@ TEST_F(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
   EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(0)));
   EXPECT_TRUE(bool(result.Surface()));
 
-  EXPECT_TRUE(NS_SUCCEEDED(result.Surface().Seek(1)));
-  EXPECT_TRUE(bool(result.Surface()));
+  RawAccessFrameRef partialFrame = result.Surface().RawAccessRef(1);
+  EXPECT_TRUE(bool(partialFrame));
 }
 
 TEST_F(ImageDecoders, TruncatedSmallGIFSingleChunk)

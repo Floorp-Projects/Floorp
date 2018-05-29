@@ -15,7 +15,7 @@
 #include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/TokenStream.h"
 #include "gc/Zone.h"
-
+#include "js/Result.h"
 
 namespace js {
 namespace frontend {

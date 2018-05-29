@@ -19,6 +19,7 @@
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
 
+#include "js/Result.h"
 #include "vm/RegExpObject.h"
 
 #include "frontend/ParseContext-inl.h"
@@ -69,8 +70,6 @@
 //
 // They should be treated lazily (whenever we open a subscope), like bindings.
 
-using namespace mozilla;
-
 namespace js {
 namespace frontend {
 
@@ -114,7 +113,8 @@ BinASTParser<Tok>::parseAux(const uint8_t* start, const size_t length)
     ParseNode* result(nullptr);
     MOZ_TRY_VAR(result, parseProgram());
 
-    Maybe<GlobalScope::Data*> bindings = NewGlobalScopeData(cx_, varScope, alloc_, parseContext_);
+    mozilla::Maybe<GlobalScope::Data*> bindings = NewGlobalScopeData(cx_, varScope, alloc_,
+                                                                     parseContext_);
     if (!bindings)
         return cx_->alreadyReportedError();
     globalsc.bindings = *bindings;
@@ -500,7 +500,7 @@ BinASTParserBase::hasUsedName(HandlePropertyName name)
 }
 
 void
-TraceBinParser(JSTracer* trc, AutoGCRooter* parser)
+TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser)
 {
     static_cast<BinASTParserBase*>(parser)->trace(trc);
 }

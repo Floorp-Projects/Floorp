@@ -21103,8 +21103,8 @@ exports.PostScriptCompiler = PostScriptCompiler;
 "use strict";
 
 
-var pdfjsVersion = '2.0.506';
-var pdfjsBuild = 'b7a3a5e7';
+var pdfjsVersion = '2.0.517';
+var pdfjsBuild = '7cd6c0fb';
 var pdfjsCoreWorker = __w_pdfjs_require__(20);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
@@ -21305,7 +21305,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.0.506';
+    let workerVersion = '2.0.517';
     if (apiVersion !== null && apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -36238,10 +36238,9 @@ var Type1Parser = function Type1ParserClosure() {
               var glyph = this.getToken();
               length = this.readInt();
               this.getToken();
-              data = stream.makeSubStream(stream.pos, length);
+              data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData['lenIV'];
-              encoded = this.readCharStrings(data.getBytes(), lenIV);
-              stream.skip(length);
+              encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
               if (token === 'noaccess') {
@@ -36260,10 +36259,9 @@ var Type1Parser = function Type1ParserClosure() {
               var index = this.readInt();
               length = this.readInt();
               this.getToken();
-              data = stream.makeSubStream(stream.pos, length);
+              data = length > 0 ? stream.getBytes(length) : new Uint8Array(0);
               lenIV = program.properties.privateData['lenIV'];
-              encoded = this.readCharStrings(data.getBytes(), lenIV);
-              stream.skip(length);
+              encoded = this.readCharStrings(data, lenIV);
               this.nextChar();
               token = this.getToken();
               if (token === 'noaccess') {

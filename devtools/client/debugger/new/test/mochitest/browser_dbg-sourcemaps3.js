@@ -40,7 +40,7 @@ add_task(async function() {
   is(getScopeLabel(dbg, 2), "na");
   is(getScopeLabel(dbg, 3), "nb");
 
-  is(getScopeLabel(dbg, 4), "Block");
+  is(getScopeLabel(dbg, 4), "Function Body");
 
   await toggleScopeNode(dbg, 4);
 

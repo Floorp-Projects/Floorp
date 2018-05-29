@@ -1,1 +1,0 @@
-/* Incorrect license here */

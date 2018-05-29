@@ -466,5 +466,5 @@ function getSourceClassnames(source, sourceMetaData) {
     return "blackBox";
   }
 
-  return sourceTypes[(0, _sourcesTree.getExtension)(source)] || defaultClassName;
+  return sourceTypes[(0, _sourcesTree.getExtension)(source.url)] || defaultClassName;
 }

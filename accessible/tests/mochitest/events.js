@@ -1062,7 +1062,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
 
   this.invoke = function synthClick_invoke() {
     var targetNode = this.DOMNode;
-    if (targetNode instanceof nsIDOMDocument) {
+    if (targetNode.nodeType == targetNode.DOCUMENT_NODE) {
       targetNode =
         this.DOMNode.body ? this.DOMNode.body : this.DOMNode.documentElement;
     }
