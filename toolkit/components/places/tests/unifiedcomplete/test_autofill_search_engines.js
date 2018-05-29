@@ -162,6 +162,13 @@ add_task(async function searchEngines() {
       matches: [],
     });
 
+    await check_autocomplete({
+      search: "example/",
+      autofilled: "example/",
+      completed: "example/",
+      matches: [],
+    });
+
     Services.search.removeEngine(engine);
   }
 
