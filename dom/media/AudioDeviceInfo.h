@@ -41,6 +41,7 @@ public:
   uint32_t MaxChannels() const;
   uint32_t Type() const;
   uint32_t State() const;
+  bool Preferred() const;
 private:
   virtual ~AudioDeviceInfo() = default;
 

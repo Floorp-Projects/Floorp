@@ -101,6 +101,11 @@ uint32_t AudioDeviceInfo::State() const
   return mState;
 }
 
+bool AudioDeviceInfo::Preferred() const
+{
+  return mPreferred;
+}
+
 /* readonly attribute DOMString name; */
 NS_IMETHODIMP
 AudioDeviceInfo::GetName(nsAString& aName)
