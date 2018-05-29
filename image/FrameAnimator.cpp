@@ -306,13 +306,14 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
   // the appropriate notification on the main thread. Make sure we stay in sync
   // with AnimationState.
   MOZ_ASSERT(nextFrameIndex < aState.KnownFrameCount());
-  RawAccessFrameRef nextFrame = GetRawFrame(aFrames, nextFrameIndex);
+  RawAccessFrameRef nextFrame = aFrames.RawAccessRef(nextFrameIndex);
 
   // We should always check to see if we have the next frame even if we have
   // previously finished decoding. If we needed to redecode (e.g. due to a draw
   // failure) we would have discarded all the old frames and may not yet have
-  // the new ones.
-  if (!nextFrame || !nextFrame->IsFinished()) {
+  // the new ones. DrawableSurface::RawAccessRef promises to only return
+  // finished frames.
+  if (!nextFrame) {
     // Uh oh, the frame we want to show is currently being decoded (partial).
     // Similar to the above case, we could be blocked by network or decoding,
     // and so we should advance our current time rather than risk jumping
@@ -330,7 +331,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
     ret.mDirtyRect = aState.FirstFrameRefreshArea();
   } else {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
-    RawAccessFrameRef currentFrame = GetRawFrame(aFrames, currentFrameIndex);
+    RawAccessFrameRef currentFrame = aFrames.RawAccessRef(currentFrameIndex);
 
     // Change frame
     if (!DoBlend(currentFrame, nextFrame, nextFrameIndex, &ret.mDirtyRect)) {
@@ -555,7 +556,7 @@ FrameAnimator::GetTimeoutForFrame(AnimationState& aState,
                                   DrawableSurface& aFrames,
                                   uint32_t aFrameNum) const
 {
-  RawAccessFrameRef frame = GetRawFrame(aFrames, aFrameNum);
+  RawAccessFrameRef frame = aFrames.RawAccessRef(aFrameNum);
   if (frame) {
     return Some(frame->GetTimeout());
   }
@@ -609,19 +610,6 @@ FrameAnimator::CollectSizeOfCompositingSurfaces(
                                        aCounters,
                                        aMallocSizeOf);
   }
-}
-
-RawAccessFrameRef
-FrameAnimator::GetRawFrame(DrawableSurface& aFrames, uint32_t aFrameNum) const
-{
-  // Seek to the frame we want. If seeking fails, it means we couldn't get the
-  // frame we're looking for, so we bail here to avoid returning the wrong frame
-  // to the caller.
-  if (NS_FAILED(aFrames.Seek(aFrameNum))) {
-    return RawAccessFrameRef();  // Not available yet.
-  }
-
-  return aFrames->RawAccessRef();
 }
 
 //******************************************************************************

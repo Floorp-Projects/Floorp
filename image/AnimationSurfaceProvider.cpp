@@ -134,7 +134,30 @@ AnimationSurfaceProvider::DrawableRef(size_t aFrame)
     return DrawableFrameRef();
   }
 
-  return mFrames.Get(aFrame);
+  imgFrame* frame = mFrames.Get(aFrame);
+  if (!frame) {
+    return DrawableFrameRef();
+  }
+
+  return frame->DrawableRef();
+}
+
+RawAccessFrameRef
+AnimationSurfaceProvider::RawAccessRef(size_t aFrame)
+{
+  MutexAutoLock lock(mFramesMutex);
+
+  if (Availability().IsPlaceholder()) {
+    MOZ_ASSERT_UNREACHABLE("Calling RawAccessRef() on a placeholder");
+    return RawAccessFrameRef();
+  }
+
+  imgFrame* frame = mFrames.Get(aFrame);
+  if (!frame) {
+    return RawAccessFrameRef();
+  }
+
+  return frame->RawAccessRef(/* aOnlyFinished */ true);
 }
 
 bool

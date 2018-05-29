@@ -350,12 +350,6 @@ private: // methods
                              DrawableSurface& aFrames,
                              TimeStamp aTime);
 
-  /**
-   * Get the @aIndex-th frame in the frame index, ignoring results of blending.
-   */
-  RawAccessFrameRef GetRawFrame(DrawableSurface& aFrames,
-                                uint32_t aFrameNum) const;
-
   /// @return the given frame's timeout if it is available
   Maybe<FrameTimeout> GetTimeoutForFrame(AnimationState& aState,
                                          DrawableSurface& aFrames,
