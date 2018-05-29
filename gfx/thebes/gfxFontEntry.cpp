@@ -1016,6 +1016,7 @@ void
 gfxFontEntry::SetupVariationRanges()
 {
     if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
+        !StaticPrefs::layout_css_font_variations_enabled() ||
         !HasVariations() || IsUserFont()) {
         return;
     }
