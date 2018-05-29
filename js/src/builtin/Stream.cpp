@@ -270,17 +270,15 @@ PromiseRejectedWithPendingError(JSContext* cx) {
     return PromiseObject::unforgeableReject(cx, exn);
 }
 
-static bool
-ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType,
-                   HandleValue arg)
+static void
+ReportArgTypeError(JSContext* cx, const char* funName, const char* expectedType, HandleValue arg)
 {
     UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, arg, nullptr);
     if (!bytes)
-        return false;
+        return;
 
-    return JS_ReportErrorFlagsAndNumberLatin1(cx, JSREPORT_ERROR, GetErrorMessage,
-                                              nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                                              funName, expectedType, bytes.get());
+    JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, funName,
+                               expectedType, bytes.get());
 }
 
 static MOZ_MUST_USE bool
