@@ -307,8 +307,8 @@ static MOZ_MUST_USE bool
 RejectNonGenericMethod(JSContext* cx, const CallArgs& args,
                        const char* className, const char* methodName)
 {
-    ReportValueError3(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
-                      nullptr, className, methodName);
+    ReportValueError(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
+                     nullptr, className, methodName);
 
     return ReturnPromiseRejectedWithPendingError(cx, args);
 }
@@ -803,8 +803,8 @@ ReadableStream_cancel(JSContext* cx, unsigned argc, Value* vp)
     // Step 1: If ! IsReadableStream(this) is false, return a promise rejected
     //         with a TypeError exception.
     if (!Is<ReadableStream>(args.thisv())) {
-        ReportValueError3(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
-                          nullptr, "cancel", "");
+        ReportValueError(cx, JSMSG_INCOMPATIBLE_PROTO, JSDVG_SEARCH_STACK, args.thisv(),
+                         nullptr, "cancel", "");
         return ReturnPromiseRejectedWithPendingError(cx, args);
     }
 
