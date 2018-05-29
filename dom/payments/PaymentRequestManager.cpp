@@ -478,13 +478,18 @@ PaymentRequestManager::AbortPayment(PaymentRequest* aRequest, bool aDeferredShow
 
 nsresult
 PaymentRequestManager::CompletePayment(PaymentRequest* aRequest,
-                                       const PaymentComplete& aComplete)
+                                       const PaymentComplete& aComplete,
+                                       bool aTimedOut)
 {
   nsString completeStatusString(NS_LITERAL_STRING("unknown"));
-  uint8_t completeIndex = static_cast<uint8_t>(aComplete);
-  if (completeIndex < ArrayLength(PaymentCompleteValues::strings)) {
-    completeStatusString.AssignASCII(
-      PaymentCompleteValues::strings[completeIndex].value);
+  if (aTimedOut) {
+    completeStatusString.AssignLiteral("timeout");
+  } else {
+    uint8_t completeIndex = static_cast<uint8_t>(aComplete);
+    if (completeIndex < ArrayLength(PaymentCompleteValues::strings)) {
+      completeStatusString.AssignASCII(
+        PaymentCompleteValues::strings[completeIndex].value);
+    }
   }
 
   nsAutoString requestId;
