@@ -636,13 +636,13 @@
 /* Tab separators */
 
 .titlebar-placeholder[type="pre-tabs"] {
-  border-inline-end: 1px solid;
+  border-inline-end: 1px solid var(--lwt-background-tab-separator-color, currentColor);
   opacity: 0.2;
 }
 
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
-  border-left: 1px solid;
+  border-left: 1px solid var(--lwt-background-tab-separator-color, currentColor);
   margin-top: 5px;
   margin-bottom: 4px;
   opacity: 0.3;
