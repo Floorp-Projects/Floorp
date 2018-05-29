@@ -1,14 +1,14 @@
 == text-combine-upright-break-inside-001.html text-combine-upright-break-inside-001-ref.html
 == text-combine-upright-break-inside-001a.html text-combine-upright-break-inside-001-ref.html
-== text-combine-upright-compression-001.html text-combine-upright-compression-001-ref.html
-== text-combine-upright-compression-002.html text-combine-upright-compression-002-ref.html
-== text-combine-upright-compression-003.html text-combine-upright-compression-003-ref.html
-== text-combine-upright-compression-004.html text-combine-upright-compression-004-ref.html
-== text-combine-upright-compression-005.html text-combine-upright-compression-005-ref.html
-== text-combine-upright-compression-005a.html text-combine-upright-compression-005-ref.html
-== text-combine-upright-compression-006.html text-combine-upright-compression-006-ref.html
-== text-combine-upright-compression-006a.html text-combine-upright-compression-006-ref.html
-== text-combine-upright-compression-007.html text-combine-upright-compression-007-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-001.html text-combine-upright-compression-001-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-002.html text-combine-upright-compression-002-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-003.html text-combine-upright-compression-003-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-004.html text-combine-upright-compression-004-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-005.html text-combine-upright-compression-005-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-005a.html text-combine-upright-compression-005-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-006.html text-combine-upright-compression-006-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-006a.html text-combine-upright-compression-006-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == text-combine-upright-compression-007.html text-combine-upright-compression-007-ref.html # Bug 1392106
 
 == text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001-ref.html
 
