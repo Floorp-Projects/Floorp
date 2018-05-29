@@ -944,7 +944,7 @@ function getLinkifiedElements(text, cropLimit, openLink) {
           draggable: false,
           onClick: openLink ? e => {
             e.preventDefault();
-            openLink(token);
+            openLink(token, e);
           } : null
         }, linkText));
       }
