@@ -442,7 +442,7 @@ function commit_blocklist_files {
 # Copies new remote settings dump files in place, and commits them.
 function commit_remote_settings_files {
   cd "${BASEDIR}"
-  cp -a "${REMOTE_SETTINGS_OUTPUT}/*" "${REPODIR}${REMOTE_SETTINGS_DIR}"
+  cp -a "${REMOTE_SETTINGS_OUTPUT}"/* "${REPODIR}${REMOTE_SETTINGS_DIR}"
 
   COMMIT_MESSAGE="No bug, Automated remote settings update"
   if [ -n "${TASK_ID}" ]; then
