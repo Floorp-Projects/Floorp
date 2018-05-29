@@ -349,7 +349,7 @@ partial interface Document {
   [Throws, Func="IsChromeOrXBL", NeedsSubjectPrincipal]
   void loadBindingDocument(DOMString documentURL);
 
-  // nsIDOMDocumentTouch
+  // Touch bits
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
   [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]

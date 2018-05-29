@@ -81,7 +81,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMStorage.h"
 #include "nsIDOMWindow.h"
@@ -552,12 +551,6 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
               aIID.Equals(NS_GET_IID(nsIDOMWindow))) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
     return mScriptGlobal->QueryInterface(aIID, aSink);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMDocument)) &&
-             NS_SUCCEEDED(EnsureContentViewer())) {
-    nsCOMPtr<nsIDOMDocument> doc =
-      do_QueryInterface(mContentViewer->GetDocument());
-    doc.forget(aSink);
-    return *aSink ? NS_OK : NS_NOINTERFACE;
   } else if (aIID.Equals(NS_GET_IID(nsIDocument)) &&
              NS_SUCCEEDED(EnsureContentViewer())) {
     nsCOMPtr<nsIDocument> doc = mContentViewer->GetDocument();
