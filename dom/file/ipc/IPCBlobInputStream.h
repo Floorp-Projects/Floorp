@@ -20,6 +20,22 @@ namespace dom {
 
 class IPCBlobInputStreamChild;
 
+#define IPCBLOBINPUTSTREAM_IID \
+  { 0xbcfa38fc, 0x8b7f, 0x4d79, \
+    { 0xbe, 0x3a, 0x1e, 0x7b, 0xbe, 0x52, 0x38, 0xcd } }
+
+class nsIIPCBlobInputStream : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(IPCBLOBINPUTSTREAM_IID)
+
+  virtual nsIInputStream*
+  GetInternalStream() const = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCBlobInputStream,
+                              IPCBLOBINPUTSTREAM_IID)
+
 class IPCBlobInputStream final : public nsIAsyncInputStream
                                , public nsIInputStreamCallback
                                , public nsICloneableInputStreamWithRange
@@ -27,6 +43,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream
                                , public nsIAsyncFileMetadata
                                , public nsIInputStreamLength
                                , public nsIAsyncInputStreamLength
+                               , public nsIIPCBlobInputStream
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -48,6 +65,21 @@ public:
 
   void
   LengthReady(int64_t aLength);
+
+  // nsIIPCBlobInputStream
+  nsIInputStream*
+  GetInternalStream() const override
+  {
+    if (mRemoteStream) {
+     return mRemoteStream;
+    }
+
+    if (mAsyncRemoteStream) {
+      return mAsyncRemoteStream;
+    }
+
+    return nullptr;
+  }
 
 private:
   ~IPCBlobInputStream();

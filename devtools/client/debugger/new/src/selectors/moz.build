@@ -9,6 +9,7 @@ DIRS += [
 
 DevToolsModules(
     'breakpointAtLocation.js',
+    'breakpointSources.js',
     'getCallStackFrames.js',
     'getRelativeSources.js',
     'inComponent.js',

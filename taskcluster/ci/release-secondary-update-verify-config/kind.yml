@@ -28,6 +28,7 @@ job-defaults:
       sparse-profile: mozharness
    extra:
       app-name: browser
+      branch-prefix: mozilla
       product: firefox
       archive-prefix:
          by-project:

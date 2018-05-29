@@ -89,10 +89,26 @@ SerializeInputStreamParent(nsIInputStream* aInputStream, uint64_t aSize,
   // Parent to Child we always send a IPCBlobInputStream.
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  nsCOMPtr<nsIInputStream> stream = aInputStream;
+
+  // In case this is a IPCBlobInputStream, we don't want to create a loop:
+  // IPCBlobInputStreamParent -> IPCBlobInputStream ->
+  // IPCBlobInputStreamParent. Let's use the underlying inputStream instead.
+  nsCOMPtr<nsIIPCBlobInputStream> ipcBlobInputStream =
+    do_QueryInterface(aInputStream);
+  if (ipcBlobInputStream) {
+    stream = ipcBlobInputStream->GetInternalStream();
+    // If we don't have an underlying stream, it's better to terminate here
+    // instead of sending an 'empty' IPCBlobInputStream actor on the other side,
+    // unable to be used.
+    if (NS_WARN_IF(!stream)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
   nsresult rv;
   RefPtr<IPCBlobInputStreamParent> parentActor =
-    IPCBlobInputStreamParent::Create(aInputStream, aSize, aChildID, &rv,
-                                     aManager);
+    IPCBlobInputStreamParent::Create(stream, aSize, aChildID, &rv, aManager);
   if (!parentActor) {
     return rv;
   }

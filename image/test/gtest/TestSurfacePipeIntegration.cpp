@@ -149,7 +149,7 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe)
 
   auto sink = MakeUnique<SurfaceSink>();
   nsresult rv =
-    sink->Configure(SurfaceConfig { decoder, 0, IntSize(100, 100),
+    sink->Configure(SurfaceConfig { decoder, IntSize(100, 100),
                                     SurfaceFormat::B8G8R8A8, false });
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
@@ -243,7 +243,7 @@ TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe)
 
   auto sink = MakeUnique<PalettedSurfaceSink>();
   nsresult rv =
-    sink->Configure(PalettedSurfaceConfig { decoder, 0, IntSize(100, 100),
+    sink->Configure(PalettedSurfaceConfig { decoder, IntSize(100, 100),
                                             IntRect(0, 0, 100, 100),
                                             SurfaceFormat::B8G8R8A8,
                                             8, false });
@@ -345,7 +345,7 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels)
                      DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
                      DownscalingConfig { IntSize(100, 100),
                                          SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(25, 25),
+                     SurfaceConfig { decoder, IntSize(25, 25),
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -401,7 +401,7 @@ TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixe
                      RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
                      DownscalingConfig { IntSize(100, 100),
                                          SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
+                     SurfaceConfig { decoder, IntSize(20, 20),
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -435,7 +435,7 @@ TEST_F(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
                      RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
                      DownscalingConfig { IntSize(100, 100),
                                          SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
+                     SurfaceConfig { decoder, IntSize(20, 20),
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -459,7 +459,7 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
   WithFilterPipeline(decoder, test,
                      DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
                      RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     SurfaceConfig { decoder, 0, IntSize(100, 100),
+                     SurfaceConfig { decoder, IntSize(100, 100),
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -482,7 +482,7 @@ TEST_F(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixe
                      RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
                      DownscalingConfig { IntSize(100, 100),
                                          SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
+                     SurfaceConfig { decoder, IntSize(20, 20),
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -497,7 +497,7 @@ TEST_F(ImageSurfacePipeIntegration, ConfiguringPalettedRemoveFrameRectDownscaleF
                                  RemoveFrameRectConfig { IntRect(0, 0, 50, 50) },
                                  DownscalingConfig { IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8 },
-                                 PalettedSurfaceConfig { decoder, 0, IntSize(100, 100),
+                                 PalettedSurfaceConfig { decoder, IntSize(100, 100),
                                                          IntRect(0, 0, 50, 50),
                                                          SurfaceFormat::B8G8R8A8, 8,
                                                          false });
@@ -514,7 +514,7 @@ TEST_F(ImageSurfacePipeIntegration, ConfiguringPalettedDeinterlaceDownscaleFails
                                  DeinterlacingConfig<uint8_t> { /* mProgressiveDisplay = */ true},
                                  DownscalingConfig { IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8 },
-                                 PalettedSurfaceConfig { decoder, 0, IntSize(100, 100),
+                                 PalettedSurfaceConfig { decoder, IntSize(100, 100),
                                                          IntRect(0, 0, 20, 20),
                                                          SurfaceFormat::B8G8R8A8, 8,
                                                          false });
@@ -535,6 +535,6 @@ TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails)
                                  DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true},
                                  DownscalingConfig { IntSize(60000, 60000),
                                                      SurfaceFormat::B8G8R8A8 },
-                                 SurfaceConfig { decoder, 0, IntSize(600, 600),
+                                 SurfaceConfig { decoder, IntSize(600, 600),
                                                  SurfaceFormat::B8G8R8A8, false });
 }

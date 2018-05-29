@@ -8,7 +8,7 @@ function run_test () {
 
 var tests = [
   [ test1, "Unable to parse basic XML document" ],
-  [ test2, "ParseXML doesn't return nsIDOMDocument" ],
+  [ test2, "ParseXML doesn't return Document" ],
   [ test3, "ParseXML return value's documentElement is not Element" ],
   [ test4, "" ],
   [ test5, "" ],
@@ -21,7 +21,7 @@ function test1() {
 }
 
 function test2() {
-  return (ParseXML("<root/>") instanceof nsIDOMDocument);
+  return (ChromeUtils.getClassName(ParseXML("<root/>")) === "XMLDocument");
 }
 
 function test3() {

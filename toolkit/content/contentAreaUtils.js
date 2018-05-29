@@ -180,9 +180,9 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
 }
 
 // Saves a document; aDocument can be an nsIWebBrowserPersistDocument
-// (see saveBrowser, above) or an nsIDOMDocument.
+// (see saveBrowser, above) or a Document.
 //
-// aDocument can also be a CPOW for a remote nsIDOMDocument, in which
+// aDocument can also be a CPOW for a remote Document, in which
 // case "save as" modes that serialize the document's DOM are
 // unavailable.  This is a temporary measure for the "Save Frame As"
 // command (bug 1141337) and pre-e10s add-ons.
@@ -197,7 +197,7 @@ function saveDocument(aDocument, aSkipPrompt) {
     // nsIWebBrowserPersistDocument exposes these directly.
     contentDisposition = aDocument.contentDisposition;
     cacheKey = aDocument.cacheKey;
-  } else if (aDocument instanceof Ci.nsIDOMDocument) {
+  } else if (aDocument.nodeType == 9 /* DOCUMENT_NODE */) {
     // Otherwise it's an actual nsDocument (and possibly a CPOW).
     // We want to use cached data because the document is currently visible.
     let ifreq =
@@ -406,7 +406,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
 
     let isPrivate = aIsContentWindowPrivate;
     if (isPrivate === undefined) {
-      isPrivate = aInitiatingDocument instanceof Ci.nsIDOMDocument
+      isPrivate = aInitiatingDocument.nodeType == 9 /* DOCUMENT_NODE */
         ? PrivateBrowsingUtils.isContentWindowPrivate(aInitiatingDocument.defaultView)
         : aInitiatingDocument.isPrivate;
     }

@@ -3,7 +3,7 @@ HTTP == 404-data.html 404-data-ref.html
 HTTP == 404-data-with-type.html 404-data-with-type-ref.html
 == page-as-data.html page-as-data-ref.html
 == page-as-data-with-type.html page-as-data-with-type-ref.html
-== connection-refused.html connection-refused-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == connection-refused.html connection-refused-ref.html # Bug 1392106
 == image.html image-ref.html
 == image-with-type.html image-with-type-ref.html
 fails-if(Android) == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff-ref.html

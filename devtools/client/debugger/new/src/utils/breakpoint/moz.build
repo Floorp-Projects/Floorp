@@ -9,6 +9,5 @@ DIRS += [
 
 DevToolsModules(
     'astBreakpointLocation.js',
-    'create-editor.js',
     'index.js',
 )

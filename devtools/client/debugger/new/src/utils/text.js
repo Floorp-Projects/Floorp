@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.formatKeyShortcut = undefined;
+exports.truncateMiddleText = exports.formatKeyShortcut = undefined;
 
 var _devtoolsModules = require("devtools/client/debugger/new/dist/vendors").vendored["devtools-modules"];
 
@@ -40,5 +40,26 @@ function formatKeyShortcut(shortcut) {
 
   return shortcut.replace(/CommandOrControl\+|CmdOrCtrl\+/g, `${L10N.getStr("ctrl")} `).replace(/Shift\+/g, "Shift ");
 }
+/**
+ * Truncates the received text to the maxLength in the format:
+ * Original: 'this is a very long text and ends here'
+ * Truncated: 'this is a ver...and ends here'
+ * @param {String} sourceText - Source text
+ * @param {Number} maxLength - Max allowed length
+ * @memberof utils/text
+ * @static
+ */
+
+
+function truncateMiddleText(sourceText, maxLength) {
+  let truncatedText = sourceText;
+
+  if (sourceText.length > maxLength) {
+    truncatedText = `${sourceText.substring(0, Math.round(maxLength / 2) - 2)}...${sourceText.substring(sourceText.length - Math.round(maxLength / 2 - 1))}`;
+  }
+
+  return truncatedText;
+}
 
 exports.formatKeyShortcut = formatKeyShortcut;
+exports.truncateMiddleText = truncateMiddleText;

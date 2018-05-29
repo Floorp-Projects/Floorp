@@ -2480,6 +2480,13 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
   LogCallingScriptLocation(this);
 
+  if (!mLoadGroup && !mCallbacks) {
+    // If no one called SetLoadGroup or SetNotificationCallbacks, the private
+    // state has not been updated on PrivateBrowsingChannel (which we derive from)
+    // Hence, we have to call UpdatePrivateBrowsing() here
+    UpdatePrivateBrowsing();
+  }
+
 #ifdef DEBUG
   AssertPrivateBrowsingId();
 #endif

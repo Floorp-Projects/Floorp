@@ -70,7 +70,7 @@ public:
   { }
 
   template <typename... Rest>
-  nsresult Configure(const DeinterlacingConfig<PixelType>& aConfig, Rest... aRest)
+  nsresult Configure(const DeinterlacingConfig<PixelType>& aConfig, const Rest&... aRest)
   {
     nsresult rv = mNext.Configure(aRest...);
     if (NS_FAILED(rv)) {
@@ -360,7 +360,7 @@ public:
   { }
 
   template <typename... Rest>
-  nsresult Configure(const RemoveFrameRectConfig& aConfig, Rest... aRest)
+  nsresult Configure(const RemoveFrameRectConfig& aConfig, const Rest&... aRest)
   {
     nsresult rv = mNext.Configure(aRest...);
     if (NS_FAILED(rv)) {
@@ -590,7 +590,7 @@ public:
   { }
 
   template <typename... Rest>
-  nsresult Configure(const ADAM7InterpolatingConfig& aConfig, Rest... aRest)
+  nsresult Configure(const ADAM7InterpolatingConfig& aConfig, const Rest&... aRest)
   {
     nsresult rv = mNext.Configure(aRest...);
     if (NS_FAILED(rv)) {

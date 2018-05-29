@@ -89,7 +89,7 @@ function toParsedScopes(children, sourceId) {
     return {
       start: scope.loc.start,
       end: scope.loc.end,
-      type: scope.type === "module" ? "block" : scope.type,
+      type: scope.type === "module" || scope.type === "function-body" ? "block" : scope.type,
       displayName: scope.displayName,
       bindings: scope.bindings,
       children: toParsedScopes(scope.children, sourceId)
@@ -190,10 +190,20 @@ function isLetOrConst(node) {
 }
 
 function hasLexicalDeclaration(node, parent) {
+  const nodes = [];
+
+  if (t.isSwitchStatement(node)) {
+    for (const caseNode of node.cases) {
+      nodes.push(...caseNode.consequent);
+    }
+  } else {
+    nodes.push(...node.body);
+  }
+
   const isFunctionBody = t.isFunction(parent, {
     body: node
   });
-  return node.body.some(child => isLexicalVariable(child) || !isFunctionBody && child.type === "FunctionDeclaration" || child.type === "ClassDeclaration");
+  return nodes.some(child => isLexicalVariable(child) || t.isClassDeclaration(child) || !isFunctionBody && t.isFunctionDeclaration(child));
 }
 
 function isLexicalVariable(node) {
@@ -257,19 +267,27 @@ const scopeCollectionVisitor = {
         // This ignores Annex B function declaration hoisting, which
         // is probably a fine assumption.
         state.declarationBindingIds.add(node.id);
-        const fnScope = getVarScope(scope);
-        scope.bindings[node.id.name] = {
-          type: fnScope === scope ? "var" : "let",
-          refs: [{
-            type: "fn-decl",
-            start: fromBabelLocation(node.id.loc.start, state.sourceId),
-            end: fromBabelLocation(node.id.loc.end, state.sourceId),
-            declaration: {
-              start: fromBabelLocation(node.loc.start, state.sourceId),
-              end: fromBabelLocation(node.loc.end, state.sourceId)
-            }
-          }]
-        };
+        const refs = [{
+          type: "fn-decl",
+          start: fromBabelLocation(node.id.loc.start, state.sourceId),
+          end: fromBabelLocation(node.id.loc.end, state.sourceId),
+          declaration: {
+            start: fromBabelLocation(node.loc.start, state.sourceId),
+            end: fromBabelLocation(node.loc.end, state.sourceId)
+          }
+        }];
+
+        if (scope.type === "block") {
+          scope.bindings[node.id.name] = {
+            type: "let",
+            refs
+          };
+        } else {
+          getVarScope(scope).bindings[node.id.name] = {
+            type: "var",
+            refs
+          };
+        }
       }
 
       scope = pushTempScope(state, "function", (0, _getFunctionName2.default)(node, parentNode), {
@@ -289,6 +307,13 @@ const scopeCollectionVisitor = {
           type: "implicit",
           refs: []
         };
+      }
+
+      if (t.isBlockStatement(node.body) && hasLexicalDeclaration(node.body, node)) {
+        scope = pushTempScope(state, "function-body", "Function Body", {
+          start: fromBabelLocation(node.body.loc.start, state.sourceId),
+          end: fromBabelLocation(node.body.loc.end, state.sourceId)
+        });
       }
     } else if (t.isClass(node)) {
       if (t.isIdentifier(node.id)) {
@@ -359,7 +384,8 @@ const scopeCollectionVisitor = {
         end: fromBabelLocation(node.loc.end, state.sourceId)
       });
       parseDeclarator(node.param, scope, "var", "catch", node, state);
-    } else if (t.isBlockStatement(node) && hasLexicalDeclaration(node, parentNode)) {
+    } else if (t.isBlockStatement(node) && // Function body's are handled in the function logic above.
+    !t.isFunction(parentNode) && hasLexicalDeclaration(node, parentNode)) {
       // Debugger will create new lexical environment for the block.
       pushTempScope(state, "block", "Block", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
@@ -489,7 +515,7 @@ const scopeCollectionVisitor = {
         type: "implicit",
         refs: []
       };
-    } else if (t.isSwitchStatement(node) && node.cases.some(caseNode => caseNode.consequent.some(child => isLexicalVariable(child)))) {
+    } else if (t.isSwitchStatement(node) && hasLexicalDeclaration(node, parentNode)) {
       pushTempScope(state, "block", "Switch", {
         start: fromBabelLocation(node.loc.start, state.sourceId),
         end: fromBabelLocation(node.loc.end, state.sourceId)

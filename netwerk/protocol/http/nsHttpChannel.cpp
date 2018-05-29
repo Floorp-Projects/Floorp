@@ -5962,6 +5962,13 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
     }
 
+    if (!mLoadGroup && !mCallbacks) {
+        // If no one called SetLoadGroup or SetNotificationCallbacks, the private
+        // state has not been updated on PrivateBrowsingChannel (which we derive from)
+        // Hence, we have to call UpdatePrivateBrowsing() here
+        UpdatePrivateBrowsing();
+    }
+
     if (WaitingForTailUnblock()) {
         // This channel is marked as Tail and is part of a request context
         // that has positive number of non-tailed requestst, hence this channel

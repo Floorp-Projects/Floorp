@@ -28,7 +28,7 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _prefs = require("../../utils/prefs");
 
-var _Breakpoints = require("./Breakpoints");
+var _Breakpoints = require("./Breakpoints/index");
 
 var _Breakpoints2 = _interopRequireDefault(_Breakpoints);
 
