@@ -536,7 +536,7 @@ toolbar[brighttext] {
 }
 
 .bookmark-item[query][tagContainer] {
-  list-style-image: url("chrome://browser/skin/places/tag.svg");
+  list-style-image: url("chrome://browser/skin/places/tag.png");
   -moz-image-region: auto;
 }
 
@@ -548,3 +548,11 @@ toolbar[brighttext] {
 .bookmark-item[query][hostContainer] {
   list-style-image: url("chrome://browser/skin/places/folder.svg");
 }
+
+%ifdef XP_MACOSX
+@media (min-resolution: 2dppx) {
+  .bookmark-item[query][tagContainer] {
+    list-style-image: url("chrome://browser/skin/places/tag@2x.png");
+  }
+}
+%endif
