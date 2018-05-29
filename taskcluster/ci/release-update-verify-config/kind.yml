@@ -27,6 +27,7 @@ job-defaults:
       sparse-profile: mozharness
    extra:
       app-name: browser
+      branch-prefix: mozilla
       archive-prefix:
          by-project:
             birch: "http://ftp.stage.mozaws.net/pub"

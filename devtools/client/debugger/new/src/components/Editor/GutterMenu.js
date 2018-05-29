@@ -169,7 +169,7 @@ const mapStateToProps = state => {
     breakpoints: (0, _selectors.getVisibleBreakpoints)(state),
     isPaused: (0, _selectors.isPaused)(state),
     contextMenu: (0, _selectors.getContextMenu)(state),
-    emptyLines: (0, _selectors.getEmptyLines)(state, selectedSource.toJS())
+    emptyLines: (0, _selectors.getEmptyLines)(state, selectedSource.id)
   };
 };
 

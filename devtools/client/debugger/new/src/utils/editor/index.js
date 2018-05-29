@@ -65,6 +65,7 @@ Object.keys(_createEditor).forEach(function (key) {
 });
 exports.setEditor = setEditor;
 exports.getEditor = getEditor;
+exports.getCodeMirror = getCodeMirror;
 exports.removeEditor = removeEditor;
 exports.shouldShowPrettyPrint = shouldShowPrettyPrint;
 exports.shouldShowFooter = shouldShowFooter;
@@ -101,6 +102,10 @@ function setEditor(_editor) {
 
 function getEditor() {
   return editor;
+}
+
+function getCodeMirror() {
+  return editor && editor.codeMirror;
 }
 
 function removeEditor() {

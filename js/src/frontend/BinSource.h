@@ -84,7 +84,7 @@ class BinASTParserBase: private JS::AutoGCRooter
     JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
     // Needs access to AutoGCRooter.
-    friend void TraceBinParser(JSTracer* trc, AutoGCRooter* parser);
+    friend void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
   protected:
     JSContext* cx_;
@@ -290,7 +290,7 @@ class BinASTParser : public BinASTParserBase, public ErrorReporter, public BCEPa
     }
 
   private: // Implement ErrorReporter
-    Maybe<Tokenizer> tokenizer_;
+    mozilla::Maybe<Tokenizer> tokenizer_;
     VariableDeclarationKind variableDeclarationKind_;
 
     friend class BinParseContext;

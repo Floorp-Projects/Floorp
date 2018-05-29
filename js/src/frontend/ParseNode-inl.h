@@ -22,13 +22,6 @@ ParseNode::name() const
     return atom->asPropertyName();
 }
 
-inline JSAtom*
-ParseNode::atom() const
-{
-    MOZ_ASSERT(isKind(ParseNodeKind::String));
-    return pn_atom;
-}
-
 } /* namespace frontend */
 } /* namespace js */
 

@@ -1,7 +1,5 @@
-commit fbccd8eeffd21cfb6fee97493d347ae078f59d5c
+commit a8f7012587250b32ffb43a3cbd8da8a9f9d1565e
 Author: Rick Waldron <waldron.rick@gmail.com>
-Date:   Fri May 18 12:35:06 2018 -0400
+Date:   Tue May 22 15:47:50 2018 -0400
 
-    Intl: PluralRules, NumberFormat, Number & getCanonicalLocales to use verifyProperty
-    
-    There's a lot of work like this to do, but not enough time in the day to reach it all.
+    Array.prototype.flatten => Array.prototype.flat (#1569)

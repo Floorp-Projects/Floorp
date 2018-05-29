@@ -4791,7 +4791,7 @@ pref("layers.enable-tiles", true);
 #else
 pref("layers.enable-tiles", false);
 #endif
-#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+#if defined(XP_WIN)
 pref("layers.enable-tiles-if-skia-pomtp", true);
 #else
 pref("layers.enable-tiles-if-skia-pomtp", false);

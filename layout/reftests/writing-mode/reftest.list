@@ -12,7 +12,7 @@ fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android,4,8704) == 1083848-3-inlin
 == 1088025-1.html 1088025-1-ref.html
 == 1089388-1.html 1089388-1-ref.html
 == 1089388-2.html 1089388-2-ref.html
-== 1090159-1.html 1090159-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1090159-1.html 1090159-1-ref.html # Bug 1392106
 == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
 == 1090168-2.html 1090168-2-ref.html
@@ -31,7 +31,7 @@ fails == 1102175-1a.html 1102175-1-ref.html
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
 fuzzy(116,94) fuzzy-if(winWidget,135,124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
@@ -138,7 +138,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1156021-text-indent-percent.html 1156021-text-indent-percent-ref.html
 == 1157752-upright-bidi.html 1157752-upright-bidi-ref.html
 == 1157758-1-vertical-arabic.html 1157758-1-vertical-arabic-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html # Bug 1392106
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
 skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637

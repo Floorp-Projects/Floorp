@@ -28,7 +28,7 @@ fails-if(cocoaWidget) == lineheight-metrics-1.html lineheight-metrics-1-ref.html
 == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == long-1.html long-ref.html # Bug 1392106
 fuzzy-if(Android,255,325) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
@@ -150,7 +150,7 @@ random-if(cocoaWidget) random-if(gtkWidget) == zwnj-01.xhtml zwnj-01-ref.xhtml #
 != zwnj-01.html zwnj-01-notref.html
 == initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
-== 444656.html 444656-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 444656.html 444656-ref.html # Bug 1392106
 == 449555-1.html 449555-1-ref.html
 == 467722.html 467722-ref.html
 fuzzy-if(skiaContent,1,600) == 475092-sub.html 475092-ref.html
@@ -347,7 +347,7 @@ pref(layout.css.control-characters.visible,true) != control-chars-04d.html contr
 
 # handling of highly negative letter-spacing and intrinsic width
 == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transformation-1.html segment-break-transformation-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == segment-break-transformation-1.html segment-break-transformation-1-ref.html # Bug 1392106
 
 # color glyphs, opacity, and RTL runs - bug 1318539
 == color-opacity-rtl-1.html color-opacity-rtl-1-ref.html

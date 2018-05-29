@@ -16,4 +16,5 @@ DevToolsModules(
     'locColumn.js',
     'mappingContains.js',
     'positionCmp.js',
+    'rangeMetadata.js',
 )

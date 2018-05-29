@@ -44,7 +44,6 @@ const nsIAccessibleValue = Ci.nsIAccessibleValue;
 
 const nsIObserverService = Ci.nsIObserverService;
 
-const nsIDOMDocument = Ci.nsIDOMDocument;
 const nsIDOMNode = Ci.nsIDOMNode;
 const nsIDOMWindow = Ci.nsIDOMWindow;
 

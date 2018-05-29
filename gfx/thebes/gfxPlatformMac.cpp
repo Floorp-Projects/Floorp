@@ -82,6 +82,10 @@ gfxPlatformMac::gfxPlatformMac()
     InitBackendPrefs(GetBackendPrefs());
 
     MacIOSurfaceLib::LoadLibrary();
+
+    if (nsCocoaFeatures::OnHighSierraOrLater()) {
+        mHasNativeColrFontSupport = true;
+    }
 }
 
 gfxPlatformMac::~gfxPlatformMac()
