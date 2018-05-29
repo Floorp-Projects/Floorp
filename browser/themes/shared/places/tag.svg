@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
+  <path fill-opacity=".1" d="M1 1h6l8 8-6 6-8-8V1zm3 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+  <path d="M1 1v6l8 8 6-6-8-8H1zm0-1h6a1 1 0 0 1 .707.293l8 8a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414 0l-8-8A1 1 0 0 1 0 7V1a1 1 0 0 1 1-1zm3 5a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+  <path fill-opacity=".4" d="M8.146 6.854a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1-.708.708l-3-3zm-2 2a.5.5 0 1 1 .708-.708l2 2a.5.5 0 0 1-.708.708l-2-2z"/>
+</svg>
