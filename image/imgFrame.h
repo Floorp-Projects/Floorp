@@ -103,18 +103,6 @@ public:
    */
   RawAccessFrameRef RawAccessRef(bool aOnlyFinished = false);
 
-  /**
-   * Make this imgFrame permanently available for raw access.
-   *
-   * This is irrevocable, and should be avoided whenever possible, since it
-   * prevents this imgFrame from being optimized and makes it impossible for its
-   * volatile buffer to be freed.
-   *
-   * It is an error to call this without already holding a RawAccessFrameRef to
-   * this imgFrame.
-   */
-  void SetRawAccessOnly();
-
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
             SamplingFilter aSamplingFilter, uint32_t aImageFlags,
             float aOpacity);
