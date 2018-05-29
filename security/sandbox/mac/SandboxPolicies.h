@@ -344,6 +344,14 @@ static const char contentSandboxRules[] = R"SANDBOX_LITERAL(
     ; automatically issued by the font server in response to font
     ; API calls.
     (extension "com.apple.app-sandbox.read"))
+  ; Fonts may continue to work without explicitly allowing these
+  ; services because, at present, connections are made to the services
+  ; before the sandbox is enabled as a side-effect of some API calls.
+  (allow mach-lookup
+    (global-name "com.apple.fonts")
+    (global-name "com.apple.FontObjectsServer"))
+  (if (<= macosMinorVersion 11)
+    (allow mach-lookup (global-name "com.apple.FontServer")))
 
   ; Fonts
   ; Workaround for sandbox extensions not being automatically
@@ -617,8 +625,6 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
       (global-name "com.apple.audio.audiohald")
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.cfnetwork.AuthBrokerAgent")
-      (global-name "com.apple.FontObjectsServer")
-      (global-name "com.apple.fonts")
       (global-name "com.apple.lsd.mapdb")
       (global-name "com.apple.pasteboard.1") ; Allows paste into input field
       (global-name "com.apple.dock.server")
@@ -648,6 +654,14 @@ static const char flashPluginSandboxRules[] = R"SANDBOX_LITERAL(
     ; automatically issued by the font server in response to font
     ; API calls.
     (extension "com.apple.app-sandbox.read"))
+  ; Fonts may continue to work without explicitly allowing these
+  ; services because, at present, connections are made to the services
+  ; before the sandbox is enabled as a side-effect of some API calls.
+  (allow mach-lookup
+    (global-name "com.apple.fonts")
+    (global-name "com.apple.FontObjectsServer"))
+  (if (<= macosMinorVersion 11)
+    (allow mach-lookup (global-name "com.apple.FontServer")))
 
   ; Fonts
   ; Workaround for sandbox extensions not being automatically
