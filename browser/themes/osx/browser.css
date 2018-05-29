@@ -198,13 +198,24 @@
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png");
 }
 
 #menu_unsortedBookmarks,
 #BMB_unsortedBookmarks,
 #panelMenu_unsortedBookmarks {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg");
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #bookmarksToolbarFolderMenu,
+  #BMB_bookmarksToolbar {
+    list-style-image: url("chrome://browser/skin/places/bookmarksToolbar@2x.png");
+  }
+
+  #BMB_unsortedBookmarks {
+    list-style-image: url("chrome://browser/skin/places/unfiledBookmarks@2x.png");
+  }
 }
 
 %include ../shared/toolbarbuttons.inc.css

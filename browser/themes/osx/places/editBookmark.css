@@ -18,9 +18,13 @@
 }
 
 .folder-icon {
-  list-style-image: url("chrome://browser/skin/places/folder.svg") !important;
-  -moz-context-properties: fill;
-  fill: currentColor;
+  list-style-image: url("chrome://global/skin/tree/folder.png") !important;
+}
+
+@media (min-resolution: 2dppx) {
+  .folder-icon {
+    list-style-image: url("chrome://global/skin/tree/folder@2x.png") !important;
+  }
 }
 
 .menulist-icon {
@@ -65,15 +69,27 @@
 
 #editBMPanel_folderMenuList[selectedIndex="0"],
 #editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg") !important;
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
 }
 
 #editBMPanel_folderMenuList[selectedIndex="1"],
 #editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg") !important;
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
 }
 
 #editBMPanel_folderMenuList[selectedIndex="2"],
 #editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg") !important;
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.png") !important;  
+}
+
+@media (min-resolution: 2dppx) {
+  #editBMPanel_folderMenuList[selectedIndex="0"],
+  #editBMPanel_toolbarFolderItem {
+    list-style-image: url("chrome://browser/skin/places/bookmarksToolbar@2x.png") !important;
+  }
+
+  #editBMPanel_folderMenuList[selectedIndex="2"],
+  #editBMPanel_unfiledRootItem {
+    list-style-image: url("chrome://browser/skin/places/unfiledBookmarks@2x.png") !important;
+  }
 }
