@@ -31,19 +31,9 @@
  * that use property_database.js.
  */
 
-const gServoOnlyProperties = [
-  'rotate',
-  'scale',
-  'translate',
-];
-
 for (var idx in gLonghandProperties) {
   var prop = gLonghandProperties[idx];
   if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
-    continue;
-  }
-  if (!SpecialPowers.DOMWindowUtils.isStyledByServo &&
-      gServoOnlyProperties.includes(prop.name)) {
     continue;
   }
   var present = prop.name in gCSSProperties;
