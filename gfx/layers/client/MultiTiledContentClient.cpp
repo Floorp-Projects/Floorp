@@ -326,7 +326,6 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     }
 
     bool edgePaddingEnabled = gfxPrefs::TileEdgePaddingEnabled();
-
     for (uint32_t i = 0; i < mRetainedTiles.Length(); ++i) {
       TileClient& tile = mRetainedTiles[i];
 
