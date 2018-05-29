@@ -1636,7 +1636,8 @@ public:
     MediaEnginePrefs& aPrefs,
     const ipc::PrincipalInfo& aPrincipalInfo,
     bool aIsChrome,
-    MediaManager::SourceSet* aSourceSet)
+    MediaManager::SourceSet* aSourceSet,
+    bool aShouldFocusSource)
     : Runnable("GetUserMediaTask")
     , mConstraints(aConstraints)
     , mOnSuccess(aOnSuccess)
@@ -1647,6 +1648,7 @@ public:
     , mPrefs(aPrefs)
     , mPrincipalInfo(aPrincipalInfo)
     , mIsChrome(aIsChrome)
+    , mShouldFocusSource(aShouldFocusSource)
     , mDeviceChosen(false)
     , mSourceSet(aSourceSet)
     , mManager(MediaManager::GetInstance())
@@ -1719,9 +1721,12 @@ public:
         }
       } else {
         if (!mIsChrome) {
-          rv = mVideoDevice->FocusOnSelectedSource();
-          if (NS_FAILED(rv)) {
-            LOG(("FocusOnSelectedSource failed"));
+          if (mShouldFocusSource) {
+            rv = mVideoDevice->FocusOnSelectedSource();
+
+            if (NS_FAILED(rv)) {
+              LOG(("FocusOnSelectedSource failed"));
+            }
           }
         }
       }
@@ -1833,6 +1838,7 @@ private:
   MediaEnginePrefs mPrefs;
   ipc::PrincipalInfo mPrincipalInfo;
   bool mIsChrome;
+  bool mShouldFocusSource;
 
   bool mDeviceChosen;
 public:
@@ -2889,6 +2895,9 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
         }
       }
 
+      bool focusSource;
+      focusSource = mozilla::Preferences::GetBool("media.getusermedia.window.focus_source.enabled", true);
+
       // Pass callbacks and listeners along to GetUserMediaTask.
       RefPtr<GetUserMediaTask> task (new GetUserMediaTask(c,
                                                           onSuccess,
@@ -2899,7 +2908,8 @@ MediaManager::GetUserMedia(nsPIDOMWindowInner* aWindow,
                                                           prefs,
                                                           principalInfo,
                                                           isChrome,
-                                                          devices->release()));
+                                                          devices->release(),
+                                                          focusSource));
       // Store the task w/callbacks.
       self->mActiveCallbacks.Put(callID, task.forget());
 
