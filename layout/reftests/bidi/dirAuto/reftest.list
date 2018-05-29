@@ -1,9 +1,9 @@
 == bdi-auto-dir-default.html bdi-auto-dir-default-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-dir-L.html dir_auto-contained-dir-L-ref.html # Bug 1392106
 == dir_auto-set-contained-dir-R.html dir_auto-contained-dir-R-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-set-contained-invalid-dir-L.html dir_auto-contained-dir-L-ref.html # Bug 1392106
 == dir_auto-set-contained-invalid-dir-R.html dir_auto-contained-dir-R-ref.html
-== dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L-ref.html # Bug 1392106
 == dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R-ref.html
 == dynamicDirAuto-setLTR-Auto1.html dynamicDirAuto-refLTR-LTR.html
 == dynamicDirAuto-setLTR-Auto2.html dynamicDirAuto-refLTR-LTR.html
@@ -109,10 +109,10 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azur
 == dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-refRTL-RTL.html
 == dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-refRTL-RTL.html
-== 839886-1.html 839886-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 839886-1.html 839886-1-ref.html # Bug 1392106
 == 859093-1.html 859093-1-ref.html
 == 889742-1.html 889742-1-ref.html
-== 1103348-1.html 1103348-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1103348-1.html 1103348-1-ref.html # Bug 1392106
 == 1169267-delete-add-1a.html 1169267-delete-add-1-ref.html
 == 1169267-delete-add-1b.html 1169267-delete-add-1-ref.html
 == 1169267-delete-add-2a.html 1169267-delete-add-2-ref.html

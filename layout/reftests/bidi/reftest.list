@@ -109,8 +109,8 @@ fuzzy-if(webrender,122,1) == 562169-1a.html 562169-1-ref.html
 == 588739-2.html 588739-ref.html
 == 588739-3.html 588739-ref.html
 == 612843-1.html 612843-1-ref.html
-== 613149-1a.html 613149-1-ref.html
-== 613149-1b.html 613149-1-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1a.html 613149-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 613149-1b.html 613149-1-ref.html # Bug 1392106
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,36,2) == 613149-2a.html 613149-2-ref.html
 fuzzy-if(Android,24,1) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,36,2) == 613149-2b.html 613149-2-ref.html
 == 613157-1.html 613157-1-ref.html
