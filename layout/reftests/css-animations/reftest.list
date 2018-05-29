@@ -1,7 +1,7 @@
 == screen-animations.html screen-animations-ref.html
 != screen-animations.html screen-animations-notref.html
-skip-if(stylo) fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-paged tests. Bug 1374154 for stylo
-skip-if(stylo) fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-paged tests. Bug 1374154 for stylo
+fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-paged tests.
+fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-paged tests.
 == animate-opacity.html animate-opacity-ref.html
 == animate-preserves3d.html animate-preserves3d-ref.html
 == animation-initially-out-of-view-with-delay.html animation-initially-out-of-view-with-delay-ref.html
