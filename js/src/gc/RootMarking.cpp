@@ -48,13 +48,27 @@ struct ConcreteTraceable {
     void trace(JSTracer*) {}
 };
 
-template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
+template <typename T>
+static inline void
+TraceStackOrPersistentRoot(JSTracer* trc, T* thingp, const char* name)
+{
+    TraceNullableRoot(trc, thingp, name);
+}
+
+template <>
+inline void
+TraceStackOrPersistentRoot(JSTracer* trc, ConcreteTraceable* thingp, const char* name)
+{
+    js::DispatchWrapper<ConcreteTraceable>::TraceWrapped(trc, thingp, name);
+}
+
+template <typename T>
 static inline void
 TraceExactStackRootList(JSTracer* trc, JS::Rooted<void*>* rooter, const char* name)
 {
     while (rooter) {
         T* addr = reinterpret_cast<JS::Rooted<T>*>(rooter)->address();
-        TraceFn(trc, addr, name);
+        TraceStackOrPersistentRoot(trc, addr, name);
         rooter = rooter->previous();
     }
 }
@@ -68,8 +82,7 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
     TraceExactStackRootList<jsid>(trc, stackRoots[JS::RootKind::Id], "exact-id");
     TraceExactStackRootList<Value>(trc, stackRoots[JS::RootKind::Value], "exact-value");
-    TraceExactStackRootList<ConcreteTraceable,
-                           js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(
+    TraceExactStackRootList<ConcreteTraceable>(
         trc, stackRoots[JS::RootKind::Traceable], "Traceable");
 }
 
@@ -85,13 +98,13 @@ TraceExactStackRoots(JSContext* cx, JSTracer* trc)
     cx->traceStackRoots(trc);
 }
 
-template <typename T, TraceFunction<T> TraceFn = TraceNullableRoot>
+template <typename T>
 static inline void
 TracePersistentRootedList(JSTracer* trc, mozilla::LinkedList<PersistentRooted<void*>>& list,
                          const char* name)
 {
     for (PersistentRooted<void*>* r : list)
-        TraceFn(trc, reinterpret_cast<PersistentRooted<T>*>(r)->address(), name);
+        TraceStackOrPersistentRoot(trc, reinterpret_cast<PersistentRooted<T>*>(r)->address(), name);
 }
 
 void
@@ -103,9 +116,8 @@ JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
 #undef TRACE_ROOTS
     TracePersistentRootedList<jsid>(trc, heapRoots.ref()[JS::RootKind::Id], "persistent-id");
     TracePersistentRootedList<Value>(trc, heapRoots.ref()[JS::RootKind::Value], "persistent-value");
-    TracePersistentRootedList<ConcreteTraceable,
-                             js::DispatchWrapper<ConcreteTraceable>::TraceWrapped>(trc,
-            heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
+    TracePersistentRootedList<ConcreteTraceable>(
+        trc, heapRoots.ref()[JS::RootKind::Traceable], "persistent-traceable");
 }
 
 static void
