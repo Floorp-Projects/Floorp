@@ -1490,6 +1490,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mErrorSink->mError)
   for (uint32_t i = 0; i < tmp->mOutputStreams.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mStream)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputStreams[i].mPreCreatedTracks)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlayed);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTextTrackManager)
@@ -3536,6 +3537,7 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
       RefPtr<MediaStreamTrack> track =
         out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO,
                                      trackSource);
+      out->mPreCreatedTracks.AppendElement(track);
       out->mStream->AddTrackInternal(track);
       LOG(LogLevel::Debug,
           ("Created audio track %d for captured decoder", audioTrackId));
@@ -3547,6 +3549,7 @@ HTMLMediaElement::CaptureStreamInternal(StreamCaptureBehavior aFinishBehavior,
       RefPtr<MediaStreamTrack> track =
         out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
                                      trackSource);
+      out->mPreCreatedTracks.AppendElement(track);
       out->mStream->AddTrackInternal(track);
       LOG(LogLevel::Debug,
           ("Created video track %d for captured decoder", videoTrackId));
@@ -7729,6 +7732,21 @@ HTMLMediaElement::RemoveMediaTracks()
   }
 
   mMediaTracksConstructed = false;
+
+  for (OutputMediaStream& ms : mOutputStreams) {
+    if (!ms.mCapturingDecoder) {
+      continue;
+    }
+    for (RefPtr<MediaStreamTrack>& t : ms.mPreCreatedTracks) {
+      if (t->Ended()) {
+        continue;
+      }
+      mAbstractMainThread->Dispatch(NewRunnableMethod(
+        "dom::HTMLMediaElement::RemoveMediaTracks",
+        t, &MediaStreamTrack::OverrideEnded));
+    }
+    ms.mPreCreatedTracks.Clear();
+  }
 }
 
 class MediaElementGMPCrashHelper : public GMPCrashHelper
