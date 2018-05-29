@@ -11,9 +11,13 @@ do_get_profile();
 
 add_task(async function() {
   ChromeUtils.import("resource:///modules/Sanitizer.jsm");
+
+  Services.prefs.setBoolPref(Sanitizer.PREF_NEWTAB_SEGREGATION, false);
+
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN);
     Services.prefs.clearUserPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "formdata");
+    Services.prefs.clearUserPref(Sanitizer.PREF_NEWTAB_SEGREGATION);
   });
   Services.prefs.setBoolPref(Sanitizer.PREF_SANITIZE_ON_SHUTDOWN, true);
   Services.prefs.setBoolPref(Sanitizer.PREF_SHUTDOWN_BRANCH + "formdata", true);
