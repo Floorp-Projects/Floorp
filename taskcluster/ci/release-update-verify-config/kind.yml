@@ -57,6 +57,7 @@ job-defaults:
             maple: beta
             mozilla-beta: beta
             mozilla-release: nonbeta
+            mozilla-esr60: esr
             default: null
       last-watershed:
          by-project:
@@ -111,6 +112,7 @@ jobs:
                mozilla-beta: "beta-localtest"
                mozilla-release: "release-localtest"
                mozilla-esr52: "esr-localtest"
+               mozilla-esr60: "esr-localtest"
                default: "default"
          mar-channel-id-override:
             by-project:
@@ -139,6 +141,7 @@ jobs:
                mozilla-beta: "beta-localtest"
                mozilla-release: "release-localtest"
                mozilla-esr52: "esr-localtest"
+               mozilla-esr60: "esr-localtest"
                default: "default"
          mar-channel-id-override:
             by-project:
@@ -167,6 +170,7 @@ jobs:
                mozilla-beta: "beta-localtest"
                mozilla-release: "release-localtest"
                mozilla-esr52: "esr-localtest"
+               mozilla-esr60: "esr-localtest"
                default: "default"
          mar-channel-id-override:
             by-project:
@@ -195,6 +199,7 @@ jobs:
                mozilla-beta: "beta-localtest"
                mozilla-release: "release-localtest"
                mozilla-esr52: "esr-localtest"
+               mozilla-esr60: "esr-localtest"
                default: "default"
          mar-channel-id-override:
             by-project:
@@ -223,6 +228,7 @@ jobs:
                mozilla-beta: "beta-localtest"
                mozilla-release: "release-localtest"
                mozilla-esr52: "esr-localtest"
+               mozilla-esr60: "esr-localtest"
                default: "default"
          mar-channel-id-override:
             by-project:
