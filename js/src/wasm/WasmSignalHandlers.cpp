@@ -1393,6 +1393,11 @@ ProcessHasSignalHandlers()
         return sHaveSignalHandlers;
     sTriedInstallSignalHandlers = true;
 
+#if defined (JS_CODEGEN_NONE)
+    // If there is no JIT, then there should be no Wasm signal handlers.
+    return false;
+#endif
+
 #if defined(ANDROID) && defined(MOZ_LINKER)
     // Signal handling is broken on some android systems.
     if (IsSignalHandlingBroken())
