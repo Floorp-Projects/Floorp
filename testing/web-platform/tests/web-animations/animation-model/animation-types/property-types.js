@@ -1192,6 +1192,30 @@ const transformListType = {
     test(t => {
       const idlName = propertyToIDL(property);
       const target = createTestElement(t, setup);
+      target.style[idlName] = 'rotate(45deg) translateX(100px)';
+      const animation = target.animate({ [idlName]: ['rotate(-90deg)',
+                                                     'rotate(90deg)'] },
+                                       { duration: 1000, fill: 'both',
+                                         composite: 'add' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: [ Math.cos(-Math.PI / 4),
+                                   Math.sin(-Math.PI / 4),
+                                  -Math.sin(-Math.PI / 4),
+                                   Math.cos(-Math.PI / 4),
+                                   100 * Math.cos(Math.PI / 4),
+                                   100 * Math.sin(Math.PI / 4) ] },
+         { time: 1000, expected: [ Math.cos(Math.PI * 3 / 4),
+                                   Math.sin(Math.PI * 3 / 4),
+                                  -Math.sin(Math.PI * 3 / 4),
+                                   Math.cos(Math.PI * 3 / 4),
+                                   100 * Math.cos(Math.PI / 4),
+                                   100 * Math.sin(Math.PI / 4) ] }]);
+    }, `${property}: rotate on rotate and translate`);
+
+    test(t => {
+      const idlName = propertyToIDL(property);
+      const target = createTestElement(t, setup);
       target.style[idlName] = 'matrix(0, 1, -1, 0, 0, 0)';
       const animation =               // Same matrices as above.
         target.animate({ [idlName]: [ 'matrix(1, 0, 0, 1, 100, 0)',
