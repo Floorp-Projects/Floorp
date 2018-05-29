@@ -3246,7 +3246,7 @@ js::PrimitiveToObject(JSContext* cx, const Value& v)
 
 /*
  * Invokes the ES5 ToObject algorithm on vp, returning the result. If vp might
- * already be an object, use ToObject. reportCantConvert controls how null and
+ * already be an object, use ToObject. reportScanStack controls how null and
  * undefined errors are reported.
  *
  * Callers must handle the already-object case.
@@ -3259,7 +3259,7 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
 
     if (val.isNullOrUndefined()) {
         if (reportScanStack) {
-            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, nullptr);
+            ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val);
         } else {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                                       val.isNull() ? "null" : "undefined", "object");
