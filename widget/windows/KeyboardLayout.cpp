@@ -266,10 +266,10 @@ GetKeyLocationName(uint32_t aLocation)
 }
 
 static const nsCString
-GetCharacterCodeName(char16_t* aChars, uint32_t aLength)
+GetCharacterCodeName(const char16_t* aChars, uint32_t aLength)
 {
   if (!aLength) {
-    return NS_LITERAL_CSTRING("");
+    return EmptyCString();
   }
   nsAutoCString result;
   for (uint32_t i = 0; i < aLength; ++i) {
@@ -279,6 +279,25 @@ GetCharacterCodeName(char16_t* aChars, uint32_t aLength)
       result.AssignLiteral("\"");
     }
     result.Append(GetCharacterCodeName(aChars[i]));
+  }
+  result.AppendLiteral("\"");
+  return result;
+}
+
+static const nsCString
+GetCharacterCodeName(const UniCharsAndModifiers& aUniCharsAndModifiers)
+{
+  if (aUniCharsAndModifiers.IsEmpty()) {
+    return EmptyCString();
+  }
+  nsAutoCString result;
+  for (uint32_t i = 0; i < aUniCharsAndModifiers.Length(); i++) {
+    if (!result.IsEmpty()) {
+      result.AppendLiteral(", ");
+    } else {
+      result.AssignLiteral("\"");
+    }
+    result.Append(GetCharacterCodeName(aUniCharsAndModifiers.CharAt(i)));
   }
   result.AppendLiteral("\"");
   return result;
@@ -1037,18 +1056,17 @@ VirtualKey::GetUniChars(ShiftState aShiftState) const
 {
   UniCharsAndModifiers result = GetNativeUniChars(aShiftState);
 
-  const ShiftState STATE_ALT_CONTROL = (STATE_ALT | STATE_CONTROL);
-  if (!(aShiftState & STATE_ALT_CONTROL)) {
+  if (!(aShiftState & STATE_CONTROL_ALT)) {
     return result;
   }
 
   if (result.IsEmpty()) {
-    result = GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL);
+    result = GetNativeUniChars(aShiftState & ~STATE_CONTROL_ALT);
     result.FillModifiers(ShiftStateToModifiers(aShiftState));
     return result;
   }
 
-  if ((aShiftState & STATE_ALT_CONTROL) == STATE_ALT_CONTROL) {
+  if (IsAltGrIndex(aShiftState)) {
     // Even if the shifted chars and the unshifted chars are same, we
     // should consume the Alt key state and the Ctrl key state when
     // AltGr key is pressed. Because if we don't consume them, the input
@@ -1061,7 +1079,7 @@ VirtualKey::GetUniChars(ShiftState aShiftState) const
   }
 
   UniCharsAndModifiers unmodifiedReslt =
-    GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL);
+    GetNativeUniChars(aShiftState & ~STATE_CONTROL_ALT);
   if (!result.UniCharsEqual(unmodifiedReslt)) {
     // Otherwise, we should consume the Alt key state and the Ctrl key state
     // only when the shifted chars and unshifted chars are different.
@@ -3756,6 +3774,7 @@ KeyboardLayout::KeyboardLayout()
   : mKeyboardLayout(0)
   , mIsOverridden(false)
   , mIsPendingToRestoreKeyboardLayout(false)
+  , mHasAltGr(false)
 {
   mDeadKeyTableListHead = nullptr;
   // A dead key sequence should be made from up to 5 keys.  Therefore, 4 is
@@ -4261,6 +4280,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   }
 
   mKeyboardLayout = aLayout;
+  mHasAltGr = false;
 
   MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Info,
     ("KeyboardLayout::LoadLayout(aLayout=0x%08X (%s))",
@@ -4288,6 +4308,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
   for (VirtualKey::ShiftState shiftState = 0; shiftState < 16; shiftState++) {
     VirtualKey::FillKbdState(kbdState, shiftState);
+    bool isAltGr = VirtualKey::IsAltGrIndex(shiftState);
     for (uint32_t virtualKey = 0; virtualKey < 256; virtualKey++) {
       int32_t vki = GetKeyIndex(virtualKey);
       if (vki < 0) {
@@ -4325,6 +4346,23 @@ KeyboardLayout::LoadLayout(HKL aLayout)
            kVirtualKeyName[virtualKey], vki,
            GetShiftStateName(shiftState).get(),
            GetCharacterCodeName(uniChars, ret).get(), ret));
+      }
+
+      // If the key inputs at least one character with AltGr modifier,
+      // check if AltGr changes inputting character.  If it does, mark
+      // this keyboard layout has AltGr modifier actually.
+      if (!mHasAltGr && ret > 0 && isAltGr &&
+          mVirtualKeys[vki].IsChangedByAltGr(shiftState)) {
+        mHasAltGr = true;
+        MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Info,
+          ("  Found a key (%s) changed by AltGr: %s -> %s (%s) (ret=%d)",
+           kVirtualKeyName[virtualKey],
+           GetCharacterCodeName(
+             mVirtualKeys[vki].GetNativeUniChars(
+               shiftState - VirtualKey::ShiftStateIndex::eAltGr)).get(),
+           GetCharacterCodeName(
+             mVirtualKeys[vki].GetNativeUniChars(shiftState)).get(),
+           GetShiftStateName(shiftState).get(), ret));
       }
     }
   }
@@ -4374,6 +4412,10 @@ KeyboardLayout::LoadLayout(HKL aLayout)
       }
     }
   }
+
+  MOZ_LOG(sKeyboardLayoutLogger, LogLevel::Info,
+    ("  AltGr key is %s in %s",
+     mHasAltGr ? "found" : "not found", GetLayoutName(aLayout).get()));
 }
 
 inline int32_t
