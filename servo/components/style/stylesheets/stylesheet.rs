@@ -368,8 +368,7 @@ impl Stylesheet {
             context,
             error_context,
             state: State::Start,
-            dom_error: None,
-            insert_rule_context: None,
+            had_hierarchy_error: false,
             namespaces,
         };
 
