@@ -75,6 +75,9 @@ class ExpectedManifest(ManifestItem):
         self.modified = False
         self.boolean_properties = boolean_properties
         self.property_order = property_order
+        self.update_properties = {
+            "lsan": LsanUpdate(self),
+        }
 
     def append(self, child):
         ManifestItem.append(self, child)
@@ -105,6 +108,19 @@ class ExpectedManifest(ManifestItem):
     def url(self):
         return urlparse.urljoin(self.url_base,
                                 "/".join(self.test_path.split(os.path.sep)))
+
+    def set_lsan(self, run_info, result):
+        """Set the result of the test in a particular run
+
+        :param run_info: Dictionary of run_info parameters corresponding
+                         to this run
+        :param result: Lsan violations detected"""
+
+        self.update_properties["lsan"].set(run_info, result)
+
+    def coalesce_properties(self, stability):
+        for prop_update in self.update_properties.itervalues():
+            prop_update.coalesce(stability)
 
 
 class TestNode(ManifestItem):
@@ -473,6 +489,44 @@ class MinAssertsUpdate(PropertyUpdate):
                       itertools.chain.from_iterable(results for _, results in self.updated))
         new_value = min(values)
         return True, new_value
+
+
+class LsanUpdate(PropertyUpdate):
+    property_name = "lsan-allowed"
+    cls_default_value = None
+
+    def get_value(self, result):
+        # IF we have an allowed_match that matched, return None
+        # This value is ignored later (because it matches the default)
+        # We do that because then if we allow a failure in foo/__dir__.ini
+        # we don't want to update foo/bar/__dir__.ini with the same rule
+        if result[1]:
+            return None
+        # Otherwise return the topmost stack frame
+        # TODO: there is probably some improvement to be made by looking for a "better" stack frame
+        return result[0][0]
+
+    def update_value(self, old_value, new_value):
+        if isinstance(new_value, (str, unicode)):
+            new_value = {new_value}
+        else:
+            new_value = set(new_value)
+        if old_value is None:
+            old_value = set()
+        old_value = set(old_value)
+        return sorted((old_value | new_value) - {None})
+
+    def update_default(self):
+        current_default = None
+        if self.property_name in self.node._data:
+            current_default = [item for item in
+                               self.node._data[self.property_name]
+                               if item.condition_node is None]
+        if current_default:
+            current_default = current_default[0].value
+        new_values = [item.value for item in self.new]
+        new_value = self.update_value(current_default, new_values)
+        return True, new_value if new_value else None
 
 
 def group_conditionals(values, property_order=None, boolean_properties=None):
