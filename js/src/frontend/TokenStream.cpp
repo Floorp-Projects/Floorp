@@ -637,10 +637,6 @@ SourceUnits<CharT>::findEOLMax(size_t start, size_t max)
         if (n >= max)
             break;
         n++;
-
-        // This stops at U+2028 LINE SEPARATOR or U+2029 PARAGRAPH SEPARATOR in
-        // string and template literals.  These code points do affect line and
-        // column coordinates, even as they encode their literal values.
         if (isRawEOLChar(*p++))
             break;
     }
@@ -2413,15 +2409,13 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                 }
                 break;
             }
-        } else if (c == '\r' || c == '\n') {
+        } else if (SourceUnits::isRawEOLChar(c)) {
             if (!parsingTemplate) {
-                // String literals don't allow ASCII line breaks.
                 ungetCharIgnoreEOL(c);
                 const char delimiters[] = { untilChar, untilChar, '\0' };
                 error(JSMSG_EOL_BEFORE_END_OF_STRING, delimiters);
                 return false;
             }
-
             if (c == '\r') {
                 c = '\n';
 
@@ -2430,15 +2424,6 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getStringOrTemplateToken(char untilC
                     sourceUnits.matchCodeUnit('\n');
             }
 
-            if (!updateLineInfoForEOL())
-                return false;
-
-            anyCharsAccess().updateFlagsForEOL();
-        } else if (c == unicode::LINE_SEPARATOR || c == unicode::PARA_SEPARATOR) {
-            // U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR encode
-            // their literal values in template literals and (as of fairly
-            // recently) string literals, but they still count as line
-            // terminators when computing line/column coordinates.
             if (!updateLineInfoForEOL())
                 return false;
 

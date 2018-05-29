@@ -1,3 +1,4 @@
+// |reftest| skip -- json-superset is not supported
 // Copyright (C) 2018 Richard Gibson. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
