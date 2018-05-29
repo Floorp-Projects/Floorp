@@ -6,6 +6,7 @@ extern crate gleam;
 extern crate glutin;
 extern crate rayon;
 extern crate webrender;
+extern crate winit;
 
 #[path = "common/boilerplate.rs"]
 mod boilerplate;

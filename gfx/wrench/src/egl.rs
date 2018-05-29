@@ -54,7 +54,7 @@ impl Context {
         let display = unsafe { egl::GetDisplay(ptr::null_mut()) };
 
         if display.is_null() {
-            return Err(CreationError::OsError("Could not create EGL display object".to_string()));
+            return Err(CreationError::PlatformSpecific("Could not create EGL display object".to_string()));
         }
 
         let egl_version = unsafe {
