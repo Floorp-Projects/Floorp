@@ -6,7 +6,7 @@ import {GlobalOverrider} from "test/unit/utils";
 import injector from "inject!lib/HighlightsFeed.jsm";
 import {Screenshots} from "lib/Screenshots.jsm";
 
-const FAKE_LINKS = new Array(9).fill(null).map((v, i) => ({url: `http://www.site${i}.com`}));
+const FAKE_LINKS = new Array(20).fill(null).map((v, i) => ({url: `http://www.site${i}.com`}));
 const FAKE_IMAGE = "data123";
 
 describe("Highlights Feed", () => {

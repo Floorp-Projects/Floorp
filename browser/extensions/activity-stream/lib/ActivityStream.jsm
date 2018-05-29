@@ -139,9 +139,17 @@ const PREFS_CONFIG = new Map([
     title: "Boolean flag that decides whether or not to show saved recent Downloads in highlights.",
     value: true
   }],
+  ["section.highlights.rows", {
+    title: "Number of rows of Highlights to display",
+    value: 2
+  }],
   ["section.topstories.showDisclaimer", {
     title: "Boolean flag that decides whether or not to show the topstories disclaimer.",
     value: true
+  }],
+  ["section.topstories.rows", {
+    title: "Number of rows of Top Stories to display",
+    value: 1
   }],
   ["tippyTop.service.endpoint", {
     title: "Tippy Top service manifest url",

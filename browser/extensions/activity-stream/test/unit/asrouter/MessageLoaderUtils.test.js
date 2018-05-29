@@ -39,13 +39,53 @@ describe("MessageLoaderUtils", () => {
       assert.propertyVal(message, "provider", "provider123");
       assert.propertyVal(message, "provider_url", "https://foo.com");
     });
-    it("should return an empty array if the request results in an error", async () => {
+    describe("remote provider HTTP codes", () => {
+      const testMessage = {id: "foo"};
       const provider = {id: "provider123", type: "remote", url: "https://foo.com"};
-      fetchStub.rejects(new Error("something went wrong"));
+      const respJson = {messages: [testMessage]};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+      function assertReturnsCorrectMessages(actual) {
+        assert.isArray(actual.messages);
+        // Does the message have the right properties?
+        const [message] = actual.messages;
+        assert.propertyVal(message, "id", testMessage.id);
+        assert.propertyVal(message, "provider", provider.id);
+        assert.propertyVal(message, "provider_url", provider.url);
+      }
 
-      assert.deepEqual(result.messages, []);
+      it("should return messages for 200 response", async () => {
+        fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson)});
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider));
+      });
+
+      it("should return messages for a 302 response with json", async () => {
+        fetchStub.resolves({ok: false, status: 302, json: () => Promise.resolve(respJson)});
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider));
+      });
+
+      it("should return an empty array for a 204 response", async () => {
+        fetchStub.resolves({ok: true, status: 204, json: () => ""});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        assert.deepEqual(result.messages, []);
+      });
+
+      it("should return an empty array for a 500 response", async () => {
+        fetchStub.resolves({ok: false, status: 500, json: () => ""});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        assert.deepEqual(result.messages, []);
+      });
+
+      it("should return an empty array if json doesn't parse properly", async () => {
+        fetchStub.resolves({ok: false, status: 200, json: () => ""});
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        assert.deepEqual(result.messages, []);
+      });
+
+      it("should return an empty array if the request rejects", async () => {
+        fetchStub.rejects(new Error("something went wrong"));
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider);
+        assert.deepEqual(result.messages, []);
+      });
     });
     it("should return an empty array for a remote provider with a blank URL without attempting a request", async () => {
       const provider = {id: "provider123", type: "remote", url: ""};
