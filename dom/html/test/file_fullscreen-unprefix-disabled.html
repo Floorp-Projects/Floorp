@@ -5,6 +5,7 @@
   <title>Test for Bug 1268749</title>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
 </head>
 <body>
 <script>
@@ -17,7 +18,7 @@ function begin() {
   }, () => {
     gWindow = window.open("file_fullscreen-unprefix-disabled-inner.html",
                           "", "width=500,height=500");
-    gWindow.addEventListener("load", () => {
+    waitForLoadAndPaint(gWindow, () => {
       gWindow.focus();
       SimpleTest.waitForFocus(() => gWindow.begin(), gWindow);
     });

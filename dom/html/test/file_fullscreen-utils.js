@@ -80,3 +80,17 @@ function addFullscreenErrorContinuation(callback, inDoc) {
   doc.addEventListener("fullscreenerror", listener);
 }
 
+// Waits until the window has both the load event and a MozAfterPaint called on
+// it, and then invokes the callback
+function waitForLoadAndPaint(win, callback) {
+  win.addEventListener("MozAfterPaint", function() {
+    // The load event may have fired before the MozAfterPaint, in which case
+    // listening for it now will hang. Instead we check the readyState to see if
+    // it already fired, and if so, invoke the callback right away.
+    if (win.document.readyState == 'complete') {
+      callback();
+    } else {
+      win.addEventListener("load", callback, {once: true});
+    }
+  }, { once: true });
+}
