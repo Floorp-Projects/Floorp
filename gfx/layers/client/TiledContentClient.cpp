@@ -584,6 +584,59 @@ TileClient::DiscardBackBuffer()
   }
 }
 
+bool
+TileClient::CopyFromBuffer(RefPtr<TextureClient> aBuffer,
+                           RefPtr<TextureClient> aBufferOnWhite,
+                           nsIntPoint aBufferOrigin,
+                           nsIntPoint aTileOrigin,
+                           const nsIntRegion& aRegion,
+                           TilePaintFlags aFlags,
+                           std::vector<CapturedTiledPaintState::Copy>* aCopies)
+{
+  if (aRegion.IsEmpty()) {
+    return true;
+  }
+
+  bool asyncPaint = !!(aFlags & TilePaintFlags::Async);
+  auto CopyBuffer = [&aRegion, asyncPaint, &aCopies] (auto aSrc, auto aSrcOrigin, auto aDest, auto aDestOrigin) {
+    MOZ_ASSERT(aDest->IsLocked());
+
+    OpenMode asyncFlags = asyncPaint ? OpenMode::OPEN_ASYNC
+                                     : OpenMode::OPEN_NONE;
+    TextureClientAutoLock lock(aSrc, OpenMode::OPEN_READ | asyncFlags);
+    if (!lock.Succeeded()) {
+      return false;
+    }
+
+    RefPtr<gfx::DrawTarget> srcTarget = aSrc->BorrowDrawTarget();
+    RefPtr<gfx::DrawTarget> destTarget = aDest->BorrowDrawTarget();
+    if (!srcTarget || !destTarget) {
+      return false;
+    }
+
+    for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const gfx::IntRect src = iter.Get() - aSrcOrigin;
+      const gfx::IntPoint dest = iter.Get().TopLeft() - aDestOrigin;
+
+      auto copy = CapturedTiledPaintState::Copy{
+        srcTarget, destTarget, src, dest
+      };
+
+      if (asyncPaint) {
+        aCopies->push_back(copy);
+      } else {
+        copy.CopyBuffer();
+      }
+    }
+    return true;
+  };
+
+  return CopyBuffer(aBuffer, aBufferOrigin, mBackBuffer, aTileOrigin) &&
+    (!aBufferOnWhite ||
+     !mBackBufferOnWhite ||
+     CopyBuffer(aBufferOnWhite, aBufferOrigin, mBackBufferOnWhite, aTileOrigin));
+}
+
 static already_AddRefed<TextureClient>
 CreateBackBufferTexture(TextureClient* aCurrentTexture,
                         CompositableClient& aCompositable,
