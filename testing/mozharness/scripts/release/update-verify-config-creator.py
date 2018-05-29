@@ -211,7 +211,6 @@ class UpdateVerifyConfigCreator(BaseScript):
         releases = json.load(ret)["releases"]
         for release_name, release_info in reversed(sorted(releases.items())):
             product, version = release_name.split("-", 1)
-            version = version.rstrip("esr")
             tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
             # Product details has a "category" for releases that we can use to
             # determine the repo path. This will fail if any previous releases

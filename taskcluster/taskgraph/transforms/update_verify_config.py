@@ -20,13 +20,15 @@ transforms = TransformSequence()
 # In the rare event that we do ship a point
 # release to beta, we need to either:
 # 1) update these regexes to match that specific version
-# 2) pass a second include version that matches that specifivc version
+# 2) pass a second include version that matches that specific version
 INCLUDE_VERSION_REGEXES = {
     "beta": r"'^(\d+\.\d+(b\d+)?)$'",
     "nonbeta": r"'^\d+\.\d+(\.\d+)?$'",
     # Same as beta, except excludes 58.0b1 due to issues with it not being able
     # to update to latest
     "devedition_hack": r"'^((?!58\.0b1$)\d+\.\d+(b\d+)?)$'",
+    # Same as nonbeta, except for the esr suffix
+    "esr": r"'^\d+\.\d+(\.\d+)?esr$'",
 }
 
 MAR_CHANNEL_ID_OVERRIDE_REGEXES = {
