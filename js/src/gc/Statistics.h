@@ -269,8 +269,8 @@ struct Statistics
   private:
     JSRuntime* runtime;
 
-    /* File pointer used for MOZ_GCTIMER output. */
-    FILE* fp;
+    /* File used for MOZ_GCTIMER output. */
+    FILE* gcTimerFile;
 
     ZoneGCStats zoneStats;
 
