@@ -12,7 +12,6 @@ const nsIProperties        = I.nsIProperties;
 const nsIFileInputStream   = I.nsIFileInputStream;
 const nsIInputStream       = I.nsIInputStream;
 
-const nsIDOMDocument       = I.nsIDOMDocument;
 const nsIDOMNode           = I.nsIDOMNode;
 
 Cu.importGlobalProperties(["DOMParser", "Element", "XMLSerializer"]);
