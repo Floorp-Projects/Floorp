@@ -3,7 +3,6 @@ import shutil
 import tempfile
 import uuid
 
-from mozlog import reader
 from mozlog import structuredlog
 
 import expected
@@ -18,11 +17,9 @@ manifestitem = None
 logger = structuredlog.StructuredLogger("web-platform-tests")
 
 try:
-    import ujson
+    import ujson as json
 except ImportError:
-    pass
-else:
-    reader.json = ujson
+    import json
 
 
 def load_test_manifests(serve_root, test_paths):
@@ -167,6 +164,7 @@ def update_from_logs(manifests, *log_filenames, **kwargs):
 
     for manifest_expected in expected_map.itervalues():
         for tree in manifest_expected.itervalues():
+            tree.coalesce_properties(stability=stability)
             for test in tree.iterchildren():
                 for subtest in test.iterchildren():
                     subtest.coalesce_properties(stability=stability)
@@ -238,7 +236,8 @@ class ExpectedUpdater(object):
                            "test_start": self.test_start,
                            "test_status": self.test_status,
                            "test_end": self.test_end,
-                           "assertion_count": self.assertion_count}
+                           "assertion_count": self.assertion_count,
+                           "lsan_leak": self.lsan_leak}
         self.tests_visited = {}
 
         self.test_cache = {}
@@ -251,8 +250,12 @@ class ExpectedUpdater(object):
 
     def update_from_log(self, log_file):
         self.run_info = None
-        log_reader = reader.read(log_file)
-        reader.each_log(log_reader, self.action_map)
+        action_map = self.action_map
+        for line in log_file:
+            data = json.loads(line)
+            action = data["action"]
+            if action in action_map:
+                action_map[action](data)
 
     def suite_start(self, data):
         self.run_info = data["run_info"]
@@ -314,6 +317,16 @@ class ExpectedUpdater(object):
 
         test.set_asserts(self.run_info, data["count"])
 
+    def lsan_leak(self, data):
+        dir_path = data.get("scope", "/")
+        dir_id = os.path.join(dir_path, "__dir__").replace(os.path.sep, "/")
+        if dir_id.startswith("/"):
+            dir_id = dir_id[1:]
+        test_manifest, obj = self.id_path_map[dir_id]
+        expected_node = self.expected_tree[test_manifest][obj]
+
+        expected_node.set_lsan(self.run_info, (data["frames"], data.get("allowed_match")))
+
 
 def create_test_tree(metadata_path, test_manifest, property_order=None,
                      boolean_properties=None):
@@ -326,21 +339,58 @@ def create_test_tree(metadata_path, test_manifest, property_order=None,
                  item.item_type is not None]
     include_types = set(all_types) - exclude_types
     for _, test_path, tests in test_manifest.itertypes(*include_types):
-        expected_data = load_expected(test_manifest, metadata_path, test_path, tests,
-                                      property_order=property_order,
-                                      boolean_properties=boolean_properties)
-        if expected_data is None:
-            expected_data = create_expected(test_manifest,
-                                            test_path,
-                                            tests,
-                                            property_order=property_order,
-                                            boolean_properties=boolean_properties)
-
+        expected_data = load_or_create_expected(test_manifest, metadata_path, test_path, tests,
+                                                property_order, boolean_properties)
         for test in tests:
             id_test_map[test.id] = (test_manifest, test)
             expected_map[test] = expected_data
 
+        dir_path = os.path.split(test_path)[0].replace(os.path.sep, "/")
+        while True:
+            if dir_path:
+                dir_id = dir_path + "/__dir__"
+            else:
+                dir_id = "__dir__"
+            dir_id = (test_manifest.url_base + dir_id).lstrip("/")
+            if dir_id not in id_test_map:
+                dir_object = DirObject(dir_id, dir_path)
+                expected_data = load_or_create_expected(test_manifest,
+                                                        metadata_path,
+                                                        dir_id,
+                                                        [],
+                                                        property_order,
+                                                        boolean_properties)
+
+                id_test_map[dir_id] = (test_manifest, dir_object)
+                expected_map[dir_object] = expected_data
+            if not dir_path:
+                break
+            dir_path = dir_path.rsplit("/", 1)[0] if "/" in dir_path else ""
+
     return expected_map, id_test_map
+
+
+class DirObject(object):
+    def __init__(self, id, path):
+        self.id = id
+        self.path = path
+
+    def __hash__(self):
+        return hash(self.id)
+
+
+def load_or_create_expected(test_manifest, metadata_path, test_path, tests, property_order=None,
+                            boolean_properties=None):
+    expected_data = load_expected(test_manifest, metadata_path, test_path, tests,
+                                  property_order=property_order,
+                                  boolean_properties=boolean_properties)
+    if expected_data is None:
+        expected_data = create_expected(test_manifest,
+                                        test_path,
+                                        tests,
+                                        property_order=property_order,
+                                        boolean_properties=boolean_properties)
+    return expected_data
 
 
 def create_expected(test_manifest, test_path, tests, property_order=None,
