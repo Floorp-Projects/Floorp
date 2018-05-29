@@ -3041,6 +3041,9 @@ public:
                                   uint32_t aNameSpaceID,
                                   nsAtom* aTypeAtom);
 
+  static void RegisterCallbackUpgradeElement(Element* aElement,
+                                             nsAtom* aTypeName);
+
   static void RegisterUnresolvedElement(Element* aElement, nsAtom* aTypeName);
   static void UnregisterUnresolvedElement(Element* aElement);
 

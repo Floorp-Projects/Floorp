@@ -2521,10 +2521,6 @@ public:
     return sSVGTransformBoxEnabled;
   }
 
-  static bool TextCombineUprightDigitsEnabled() {
-    return sTextCombineUprightDigitsEnabled;
-  }
-
   static uint32_t IdlePeriodDeadlineLimit() {
     return sIdlePeriodDeadlineLimit;
   }
@@ -3131,7 +3127,6 @@ private:
   static bool sInvalidationDebuggingIsEnabled;
   static bool sInterruptibleReflowEnabled;
   static bool sSVGTransformBoxEnabled;
-  static bool sTextCombineUprightDigitsEnabled;
   static uint32_t sIdlePeriodDeadlineLimit;
   static uint32_t sQuiescentFramesBeforeIdlePeriod;
 

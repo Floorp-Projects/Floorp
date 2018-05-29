@@ -31,6 +31,7 @@
 #include "nsIContentInlines.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsAtom.h"
@@ -280,6 +281,16 @@ std::ostream& operator<<(std::ostream& aStream,
           << "FirstLetter=" << (aStatus.FirstLetterComplete() ? 'Y' : 'N')
           << "]";
   return aStream;
+}
+
+nsCString
+nsReflowStatus::ToString() const
+{
+  nsCString result;
+  std::stringstream ss;
+  ss << *this;
+  result.Append(ss.str().c_str());
+  return result;
 }
 
 static bool gShowFrameBorders = false;
@@ -12687,25 +12698,13 @@ ReflowInput::DisplayInitFrameTypeExit(nsIFrame* aFrame,
     if (aFrame->IsFloating())
       printf(" float");
 
-    // This array must exactly match the StyleDisplay enum.
-    const char *const displayTypes[] = {
-      "none", "block", "inline", "inline-block", "list-item", "table",
-      "inline-table", "table-row-group", "table-column", "table-column",
-      "table-column-group", "table-header-group", "table-footer-group",
-      "table-row", "table-cell", "table-caption", "flex", "inline-flex",
-      "grid", "inline-grid", "ruby", "ruby-base", "ruby-base-container",
-      "ruby-text", "ruby-text-container", "contents", "-webkit-box",
-      "-webkit-inline-box", "box", "inline-box",
-#ifdef MOZ_XUL
-      "grid", "inline-grid", "grid-group", "grid-line", "stack",
-      "inline-stack", "deck", "groupbox", "popup",
-#endif
-    };
-    const uint32_t display = static_cast<uint32_t>(disp->mDisplay);
-    if (display >= ArrayLength(displayTypes))
-      printf(" display=%u", display);
+    const nsCSSKeyword displayVal =
+      nsCSSProps::ValueToKeywordEnum(disp->mDisplay,
+                                     nsCSSProps::kDisplayKTable);
+    if (displayVal == eCSSKeyword_UNKNOWN)
+      printf(" display=%u", static_cast<uint32_t>(disp->mDisplay));
     else
-      printf(" display=%s", displayTypes[display]);
+      printf(" display=%s", nsCSSKeywords::GetStringValue(displayVal).get());
 
     // This array must exactly match the NS_CSS_FRAME_TYPE constants.
     const char *const cssFrameTypes[] = {

@@ -140,12 +140,6 @@ public:
 
   virtual void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) = 0;
 
-  virtual void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
-                                      const wr::Epoch& aEpoch,
-                                      TimeStamp& aCompositeStart,
-                                      TimeStamp& aCompositeEnd) { MOZ_ASSERT_UNREACHABLE("WebRender only"); }
-  virtual void NotifyPipelineRemoved(const wr::PipelineId& aPipelineId) { MOZ_ASSERT_UNREACHABLE("WebRender only"); }
-
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override;
   void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
@@ -174,8 +168,6 @@ public:
   virtual bool IsRemote() const {
     return false;
   }
-
-  virtual void NotifyWebRenderError(wr::WebRenderError aError) {}
 
 protected:
   ~CompositorBridgeParentBase() override;
@@ -272,7 +264,12 @@ public:
 
   bool IsSameProcess() const override;
 
-  void NotifyWebRenderError(wr::WebRenderError aError) override;
+  void NotifyWebRenderError(wr::WebRenderError aError);
+  void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
+                              const wr::Epoch& aEpoch,
+                              TimeStamp& aCompositeStart,
+                              TimeStamp& aCompositeEnd);
+  RefPtr<AsyncImagePipelineManager> GetAsyncImagePipelineManager() const;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
@@ -580,12 +577,6 @@ protected:
 
   void DidComposite(LayersId aId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd) override;
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
-
-  void NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
-                              const wr::Epoch& aEpoch,
-                              TimeStamp& aCompositeStart,
-                              TimeStamp& aCompositeEnd) override;
-  void NotifyPipelineRemoved(const wr::PipelineId& aPipelineId) override;
 
   void NotifyDidComposite(TransactionId aTransactionId, TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 

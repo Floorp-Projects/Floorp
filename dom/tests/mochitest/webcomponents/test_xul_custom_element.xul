@@ -78,6 +78,11 @@
     customElements.define("test-popup-extend",
       TestPopupExtendElement, { extends: "popup" });
 
+    class TestCustomElement3 extends XULElement { }
+
+    customElements.setElementCreationCallback(
+      "test-custom-element-3", () => customElements.define("test-custom-element-3", TestCustomElement3));
+
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
     function basicCustomElementCreate() {
@@ -312,6 +317,31 @@
       }
     }
 
+    function testSetElementCreationballbackInDocument() {
+      let element = document.getElementById("element8");
+      ok(element instanceof TestCustomElement3, "Should be an instance of TestCustomElement3");
+    }
+
+    function setElementCreationCallbackCreate() {
+      class TestCustomElement4 extends XULElement {}
+      customElements.setElementCreationCallback(
+        "test-custom-element-4", () => customElements.define("test-custom-element-4", TestCustomElement4));
+
+      let element = document.createElementNS(XUL_NS, "test-custom-element-4");
+      ok(element instanceof TestCustomElement4, "Should be an instance of TestCustomElement4");
+
+      class TestCustomElement5 extends XULElement {}
+      customElements.setElementCreationCallback(
+        "test-custom-element-5", () => {
+          ok(true, "test-custom-element-5 callback called");
+          customElements.define("test-custom-element-5", TestCustomElement5);
+        });
+
+      document.querySelector("#content").appendChild(parseXULToFragment(`<test-custom-element-5 />`));
+      let element1 = document.querySelector("#content").lastChild;
+      ok(element1 instanceof TestCustomElement5, "Should be an instance of TestCustomElement5");
+    }
+
     function runTest() {
       basicCustomElementCreate();
       parserBasicElementUpgrade();
@@ -332,6 +362,9 @@
 
       nonCustomElementCreate();
 
+      testSetElementCreationballbackInDocument();
+      setElementCreationCallbackCreate();
+
       SimpleTest.finish();
     }
   ]]>
@@ -344,6 +377,7 @@
       <testwithoutdash id="element5" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
       <axulelement id="element6" is="test-built-in-element" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
       <popup id="element7" is="test-popup-extend" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+      <test-custom-element-3 id="element8" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"></test-custom-element-3>
     </div>
     <pre id="test"></pre>
   </body>

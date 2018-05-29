@@ -2141,23 +2141,11 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
 }
 
 void
-CompositorBridgeParent::NotifyPipelineRemoved(const wr::PipelineId& aPipelineId)
-{
-  if (mAsyncImageManager) {
-    mAsyncImageManager->PipelineRemoved(aPipelineId);
-  }
-}
-
-void
 CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId,
                                                const wr::Epoch& aEpoch,
                                                TimeStamp& aCompositeStart,
                                                TimeStamp& aCompositeEnd)
 {
-  if (mAsyncImageManager) {
-    mAsyncImageManager->PipelineRendered(aPipelineId, aEpoch);
-  }
-
   if (!mWrBridge) {
     return;
   }
@@ -2193,6 +2181,12 @@ CompositorBridgeParent::NotifyPipelineRendered(const wr::PipelineId& aPipelineId
       }
     }
   });
+}
+
+RefPtr<AsyncImagePipelineManager>
+CompositorBridgeParent::GetAsyncImagePipelineManager() const
+{
+  return mAsyncImageManager;
 }
 
 void

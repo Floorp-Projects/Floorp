@@ -518,8 +518,7 @@ var transformTests = [
     expected: 'matrix(1, 0, ' + 3 * 0.75 + ', 1, 0, 0)',
     round_error_ok: true },
   { start: 'skewX(0)', end: 'skewX(-45deg) translate(0)',
-    expected: 'matrix(1, 0, -0.25, 1, 0, 0)',
-    round_error_ok: true },
+    expected_uncomputed: 'skewX(-11.25deg) translate(0)' },
   // matrix : rotate
   { start: 'rotate(-30deg)', end: 'matrix(0, 1, -1, 0, 0, 0)',
     expected: 'matrix(1, 0, 0, 1, 0, 0)',
@@ -528,11 +527,9 @@ var transformTests = [
     end: 'translateX(0) rotate(-90deg)',
     expected: computeMatrix('rotate(-45deg)'),
     round_error_ok: true },
-  // matrix decomposition of skewY
+  // extended shorter transform list
   { start: 'skewY(60deg)', end: 'skewY(-60deg) translateX(0)',
-    /* rotate(30deg) skewX(60deg)/2 scale(2, 0.5) */
-    expected: computeMatrix('rotate(30deg) skewX(' + Math.atan(Math.tan(Math.PI * 60/180) / 2) + 'rad) scale(2, 0.5)'),
-    round_error_ok: true },
+    expected_uncomputed: 'skewY(30deg) translateX(0)' },
 
 
   // matrix decomposition
@@ -630,24 +627,24 @@ var transformTests = [
     expected: computeMatrix('rotate(22.5deg) matrix(1, 0, ' + 0.5 * 0.25 + ', 1, 0, 0) scaleX(0.5)'),
     round_error_ok: true },
 
-  // lists vs. matrix decomposition
+  // lists
   { start: 'translate(10px) skewY(45deg)',
     end: 'translate(30px) skewY(-45deg)',
     expected_uncomputed: 'translate(15px) skewY(22.5deg)' },
   { start: 'skewY(45deg) rotate(90deg)',
     end: 'skewY(-45deg) rotate(90deg)',
     expected_uncomputed: 'skewY(22.5deg) rotate(90deg)' },
-  { start: 'skewY(45deg) rotate(90deg) translate(0)',
-    end: 'skewY(-45deg) rotate(90deg)',
-    expected: 'matrix(0, 1, -1, -0.5, 0, 0)',
-    round_error_ok: true },
   { start: 'skewX(45deg) rotate(90deg)',
     end: 'skewX(-45deg) rotate(90deg)',
     expected_uncomputed: 'skewX(22.5deg) rotate(90deg)' },
+
+  // extended lists
+  { start: 'skewY(45deg) rotate(90deg) translate(0)',
+    end: 'skewY(-45deg) rotate(90deg)',
+    expected_uncomputed: 'skewY(22.5deg) rotate(90deg) translate(0)' },
   { start: 'skewX(-60deg) rotate(90deg) translate(0)',
     end: 'skewX(60deg) rotate(90deg)',
-    expected: computeMatrix('rotate(120deg) skewX(' + Math.atan(Math.tan(Math.PI * 60/180) / 2) + 'rad) scale(2, 0.5)'),
-    round_error_ok: true },
+    expected_uncomputed: 'skewX(-30deg) rotate(90deg) translate(0)' },
 ];
 
 // Even if the default reference-box of shape-outside is margin-box, which is

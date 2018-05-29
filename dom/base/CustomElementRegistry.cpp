@@ -312,10 +312,26 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run()
   MOZ_ASSERT(NS_SUCCEEDED(er.StealNSResult()),
     "chrome JavaScript error in the callback.");
 
-  MOZ_ASSERT(mRegistry->mCustomDefinitions.GetWeak(mAtom),
-    "Callback should define the definition of type.");
+  CustomElementDefinition* definition =
+    mRegistry->mCustomDefinitions.GetWeak(mAtom);
+  MOZ_ASSERT(definition, "Callback should define the definition of type.");
   MOZ_ASSERT(!mRegistry->mElementCreationCallbacks.GetWeak(mAtom),
     "Callback should be removed.");
+
+  nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> elements;
+  mRegistry->mElementCreationCallbacksUpgradeCandidatesMap.Remove(mAtom, &elements);
+  MOZ_ASSERT(elements, "There should be a list");
+
+  for (auto iter = elements->Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
+    if (!elem) {
+      continue;
+    }
+
+    CustomElementRegistry::Upgrade(elem, definition, er);
+    MOZ_ASSERT(NS_SUCCEEDED(er.StealNSResult()),
+      "chrome JavaScript error in custom element construction.");
+  }
 
   return NS_OK;
 }
@@ -330,10 +346,12 @@ CustomElementRegistry::LookupCustomElementDefinition(nsAtom* aNameAtom,
     RefPtr<CustomElementCreationCallback> callback;
     mElementCreationCallbacks.Get(aTypeAtom, getter_AddRefs(callback));
     if (callback) {
+      mElementCreationCallbacks.Remove(aTypeAtom);
+      mElementCreationCallbacksUpgradeCandidatesMap.LookupOrAdd(aTypeAtom);
       RefPtr<Runnable> runnable =
         new RunCustomElementCreationCallback(this, aTypeAtom, callback);
       nsContentUtils::AddScriptRunner(runnable);
-      mElementCreationCallbacks.Remove(aTypeAtom);
+      data = mCustomDefinitions.GetWeak(aTypeAtom);
     }
   }
 
