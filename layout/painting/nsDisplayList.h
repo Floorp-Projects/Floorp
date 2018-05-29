@@ -6433,12 +6433,9 @@ class nsDisplayTransform: public nsDisplayItem
   class StoreList : public nsDisplayWrapList {
   public:
     StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-              nsDisplayList* aList) :
-      nsDisplayWrapList(aBuilder, aFrame, aList, true) {}
-    StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-              nsDisplayItem* aItem) :
-      nsDisplayWrapList(aBuilder, aFrame, aItem, true) {}
-    virtual ~StoreList() {}
+              nsDisplayList* aList)
+      : nsDisplayWrapList(aBuilder, aFrame, aList, true) {}
+    virtual ~StoreList() = default;
 
     virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {
       // For extending 3d rendering context, the bounds would be
@@ -6480,9 +6477,6 @@ public:
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayList *aList, const nsRect& aChildrenBuildingRect,
                      uint32_t aIndex = 0, bool aAllowAsyncAnimation = false);
-  nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
-                     nsDisplayItem *aItem, const nsRect& aChildrenBuildingRect,
-                     uint32_t aIndex = 0);
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                      nsDisplayList *aList, const nsRect& aChildrenBuildingRect,
                      ComputeTransformFunction aTransformGetter, uint32_t aIndex = 0);
