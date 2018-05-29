@@ -25,7 +25,6 @@ function logResults(data) {
 
     window.setTimeout(function() {
       TalosPowersContent.goQuitApplication();
-      window.close();
     }, 0);
   } else {
     alert(data[0].split("__start_report")[1].split("__end_report")[0]);
