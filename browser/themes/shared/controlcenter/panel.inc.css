@@ -133,6 +133,23 @@
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
+/* PREFERENCES BUTTON */
+
+.identity-popup-preferences-button-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.identity-popup-preferences-button {
+  list-style-image: url(chrome://browser/skin/settings.svg);
+  padding: 5px 8px !important;
+  margin-bottom: 2px !important;
+}
+
+.identity-popup-preferences-button > .toolbarbutton-text {
+  display: none;
+}
+
 /* CONTENT */
 
 .identity-popup-permission-label,
@@ -294,6 +311,12 @@ description#identity-popup-content-verifier,
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
 }
 
+/* Don't show the TP preferences button when TP is off since the main action already
+ * opens about:preferences in that case */
+#tracking-protection-content[enabled="false"][state] .identity-popup-preferences-button {
+  display: none;
+}
+
 #tracking-protection-content[enabled="false"],
 #tracking-protection-content[state="loaded-tracking-content"] {
   background-image: url("chrome://browser/skin/controlcenter/tracking-protection-disabled.svg");
@@ -301,14 +324,14 @@ description#identity-popup-content-verifier,
 
 /* Show the "on" label by default, except when TP is disabled or there's a local exception. */
 #tracking-protection-label-off,
-#tracking-protection-content[enabled="false"] > #tracking-protection-label-on,
-#tracking-protection-content[state="loaded-tracking-content"] > #tracking-protection-label-on {
+#tracking-protection-content[enabled="false"] #tracking-protection-label-on,
+#tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-on {
   display: none;
 }
 
 #tracking-protection-label-on,
-#tracking-protection-content[enabled="false"] > #tracking-protection-label-off,
-#tracking-protection-content[state="loaded-tracking-content"] > #tracking-protection-label-off {
+#tracking-protection-content[enabled="false"] #tracking-protection-label-off,
+#tracking-protection-content[state="loaded-tracking-content"] #tracking-protection-label-off {
   display: -moz-box;
 }
 
