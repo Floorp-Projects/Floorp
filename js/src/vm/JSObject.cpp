@@ -4137,6 +4137,10 @@ js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp)
         vp.set(obj->as<DateObject>().UTCTime());
     else if (obj->is<SymbolObject>())
         vp.setSymbol(obj->as<SymbolObject>().unbox());
+#ifdef ENABLE_BIGINT
+    else if (obj->is<BigIntObject>())
+        vp.setBigInt(obj->as<BigIntObject>().unbox());
+#endif
     else
         vp.setUndefined();
 
