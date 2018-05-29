@@ -7,6 +7,8 @@ ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "BrowserWindowTracker",
+  "resource:///modules/BrowserWindowTracker.jsm");
 
 Cu.importGlobalProperties(["TextEncoder"]);
 
@@ -212,17 +214,35 @@ TalosPowersService.prototype = {
     }
   },
 
-  forceQuit(messageData) {
+  async forceQuit(messageData) {
     if (messageData && messageData.waitForSafeBrowsing) {
       let SafeBrowsing = ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
 
-      let whenDone = () => {
-        this.forceQuit();
-      };
-      SafeBrowsing.addMozEntriesFinishedPromise.then(whenDone, whenDone);
       // Speed things up in case nobody else called this:
       SafeBrowsing.init();
-      return;
+
+      try {
+        await SafeBrowsing.addMozEntriesFinishedPromise;
+      } catch (e) {
+        // We don't care if things go wrong here - let's just shut down.
+      }
+    }
+
+    // Check to see if the top-most browser window still needs to fire its
+    // idle tasks notification. If so, we'll wait for it before shutting
+    // down, since some caching that can influence future runs in this profile
+    // keys off of that notification.
+    let topWin = BrowserWindowTracker.getTopWindow();
+    if (topWin &&
+        topWin.gBrowserInit &&
+        !topWin.gBrowserInit.idleTasksFinished) {
+      await new Promise(resolve => {
+        let obs = (subject, topic, data) => {
+          Services.obs.removeObserver(obs, "browser-idle-startup-tasks-finished");
+          resolve();
+        };
+        Services.obs.addObserver(obs, "browser-idle-startup-tasks-finished");
+      });
     }
 
     let enumerator = Services.wm.getEnumerator(null);
