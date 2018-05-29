@@ -907,6 +907,29 @@ template<> template<>
 struct HSRExAReqInfo::FixedValue<4> { static const DWORD_PTR value; };
 const DWORD_PTR HSRExAReqInfo::FixedValue<4>::value = 0;
 
+/* HttpEndRequestA */
+
+typedef SslFunctionBroker<ID_HttpEndRequestA,
+  decltype(HttpEndRequestA)> HttpEndRequestAFB;
+
+template<>
+ShouldHookFunc* const
+HttpEndRequestAFB::BaseType::mShouldHook = &CheckQuirks<QUIRK_FLASH_HOOK_SSL>;
+
+typedef RequestInfo<ID_HttpEndRequestA> HERAReqInfo;
+
+template<> template<>
+struct HERAReqInfo::FixedValue<1> { static const LPINTERNET_BUFFERSA value; };
+const LPINTERNET_BUFFERSA HERAReqInfo::FixedValue<1>::value = nullptr;
+
+template<> template<>
+struct HERAReqInfo::FixedValue<2> { static const DWORD value; };
+const DWORD HERAReqInfo::FixedValue<2>::value = 0;
+
+template<> template<>
+struct HERAReqInfo::FixedValue<3> { static const DWORD_PTR value; };
+const DWORD_PTR HERAReqInfo::FixedValue<3>::value = 0;
+
 /* InternetQueryOptionA */
 
 typedef SslFunctionBroker<ID_InternetQueryOptionA,
@@ -1310,6 +1333,9 @@ AddBrokeredFunctionHooks(FunctionHookArray& aHooks)
   aHooks[ID_HttpSendRequestExA] =
     FUN_HOOK(new HttpSendRequestExAFB("wininet.dll", "HttpSendRequestExA",
                                       &HttpSendRequestExA));
+  aHooks[ID_HttpEndRequestA] =
+    FUN_HOOK(new HttpEndRequestAFB("wininet.dll", "HttpEndRequestA",
+      &HttpEndRequestA));
   aHooks[ID_InternetQueryOptionA] =
     FUN_HOOK(new InternetQueryOptionAFB("wininet.dll", "InternetQueryOptionA",
                                         &InternetQueryOptionA));
