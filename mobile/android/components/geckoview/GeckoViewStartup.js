@@ -57,6 +57,13 @@ GeckoViewStartup.prototype = {
 
           Services.mm.loadFrameScript(
               "chrome://geckoview/content/GeckoViewPromptContent.js", true);
+
+          GeckoViewUtils.addLazyGetter(this, "ContentCrashHandler", {
+            module: "resource://gre/modules/ContentCrashHandler.jsm",
+            observers: [
+              "ipc:content-shutdown",
+            ]
+          });
         }
         break;
       }
