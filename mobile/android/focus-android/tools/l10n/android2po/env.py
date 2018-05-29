@@ -122,6 +122,18 @@ MISSING_LOCALES = {
         'plural_rule': 'bg',
         'team': 'anp <LL@li.org>\n'
     },
+    'tsz': {
+        'name': 'Purépecha',
+        'local_name': 'p\'urhepecha',
+        'plural_rule': 'de',
+        'team': 'anp <LL@li.org>\n'
+    },
+    'ixl': {
+        'name': 'Ixil',
+        'local_name': 'ixil',
+        'plural_rule': 'de',
+        'team': 'anp <LL@li.org>\n'
+    }
 }
 
 
