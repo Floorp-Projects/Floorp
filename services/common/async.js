@@ -163,9 +163,10 @@ class AsyncQueueCaller {
     this._queue = (async () => {
       await this._queue;
       try {
-        await func();
+        return await func();
       } catch (e) {
         this._log.error(e);
+        return false;
       }
     })();
   }
