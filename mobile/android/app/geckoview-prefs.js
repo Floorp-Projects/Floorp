@@ -13,3 +13,5 @@ pref("dom.ipc.processPrelaunch.enabled", false);
 
 // Tell Telemetry that we're in GeckoView mode.
 pref("toolkit.telemetry.isGeckoViewMode", true);
+// Disable the Telemetry Event Ping
+pref("toolkit.telemetry.eventping.enabled", false);

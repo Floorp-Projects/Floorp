@@ -72,6 +72,9 @@ var TelemetryEventPing = {
   },
 
   startup() {
+    if (!Services.prefs.getBoolPref(Utils.Preferences.EventPingEnabled, true)) {
+      return;
+    }
     Services.obs.addObserver(this, EVENT_LIMIT_REACHED_TOPIC);
     Services.obs.addObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
 
