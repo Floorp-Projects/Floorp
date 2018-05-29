@@ -1,0 +1,21 @@
+r332095 | dmajor | 2018-05-11 10:31:14 -0400 (Fri, 11 May 2018) | 9 lines
+
+[winasan] Update GetInstructionSize for Win10 1803
+
+In Windows version 1803, the first instruction of ntdll!strchr is:
+8a01 mov al,byte ptr [rcx]
+
+This is the only needed change for this version as far as I can tell.
+
+Differential Revision: https://reviews.llvm.org/D46458
+
+--- a/compiler-rt/lib/interception/interception_win.cc
++++ b/compiler-rt/lib/interception/interception_win.cc
+@@ -453,6 +453,7 @@
+   }
+
+   switch (*(u16*)(address)) {
++    case 0x018A:  // 8A 01 : mov al, byte ptr [ecx]
+     case 0xFF8B:  // 8B FF : mov edi, edi
+     case 0xEC8B:  // 8B EC : mov ebp, esp
+     case 0xc889:  // 89 C8 : mov eax, ecx
