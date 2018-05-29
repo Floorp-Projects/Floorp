@@ -658,6 +658,10 @@ class AnimationInspector {
 
     if (hasRunningAnimation(animations)) {
       this.startAnimationsCurrentTimeTimer();
+    } else {
+      // Even no running animations, update the current time once
+      // so as to show the state.
+      this.onCurrentTimeTimerUpdated(this.state.timeScale.getCurrentTime());
     }
   }
 }
