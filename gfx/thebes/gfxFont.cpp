@@ -2038,6 +2038,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
         }
 
         if (fontParams.haveColorGlyphs &&
+            !gfxPlatform::GetPlatform()->HasNativeColrFontSupport() &&
             RenderColorGlyph(runParams.dt, runParams.context,
                              fontParams.scaledFont,
                              fontParams.drawOptions,
