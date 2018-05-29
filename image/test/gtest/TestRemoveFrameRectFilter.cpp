@@ -28,7 +28,7 @@ WithRemoveFrameRectFilter(const IntSize& aSize,
 
   WithFilterPipeline(decoder, Forward<Func>(aFunc),
                      RemoveFrameRectConfig { aFrameRect },
-                     SurfaceConfig { decoder, 0, aSize,
+                     SurfaceConfig { decoder, aSize,
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -41,7 +41,7 @@ AssertConfiguringRemoveFrameRectFilterFails(const IntSize& aSize,
 
   AssertConfiguringPipelineFails(decoder,
                                  RemoveFrameRectConfig { aFrameRect },
-                                 SurfaceConfig { decoder, 0, aSize,
+                                 SurfaceConfig { decoder, aSize,
                                                  SurfaceFormat::B8G8R8A8, false });
 }
 
@@ -320,7 +320,7 @@ TEST(ImageRemoveFrameRectFilter, ConfiguringPalettedRemoveFrameRectFails)
   // should fail.
   AssertConfiguringPipelineFails(decoder,
                                  RemoveFrameRectConfig { IntRect(0, 0, 50, 50) },
-                                 PalettedSurfaceConfig { decoder, 0, IntSize(100, 100),
+                                 PalettedSurfaceConfig { decoder, IntSize(100, 100),
                                                          IntRect(0, 0, 50, 50),
                                                          SurfaceFormat::B8G8R8A8, 8,
                                                          false });

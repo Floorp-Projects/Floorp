@@ -70,8 +70,6 @@ public:
    *
    * @param aDecoder The decoder whose current frame the SurfacePipe will write
    *                 to.
-   * @param aFrameNum Which frame the SurfacePipe will write to. This will be 0
-   *                  for non-animated images.
    * @param aInputSize The original size of the image.
    * @param aOutputSize The size the SurfacePipe should output. Must be the same
    *                    as @aInputSize or smaller. If smaller, the image will be
@@ -79,6 +77,7 @@ public:
    * @param aFrameRect The portion of the image that actually contains data.
    * @param aFormat The surface format of the image; generally B8G8R8A8 or
    *                B8G8R8X8.
+   * @param aAnimParams Extra parameters used by animated images.
    * @param aFlags Flags enabling or disabling various functionality for the
    *               SurfacePipe; see the SurfacePipeFlags documentation for more
    *               information.
@@ -89,11 +88,11 @@ public:
    */
   static Maybe<SurfacePipe>
   CreateSurfacePipe(Decoder* aDecoder,
-                    uint32_t aFrameNum,
                     const nsIntSize& aInputSize,
                     const nsIntSize& aOutputSize,
                     const nsIntRect& aFrameRect,
                     gfx::SurfaceFormat aFormat,
+                    const Maybe<AnimationParams>& aAnimParams,
                     SurfacePipeFlags aFlags)
   {
     const bool deinterlace = bool(aFlags & SurfacePipeFlags::DEINTERLACE);
@@ -125,8 +124,8 @@ public:
     ADAM7InterpolatingConfig interpolatingConfig;
     RemoveFrameRectConfig removeFrameRectConfig { aFrameRect };
     DownscalingConfig downscalingConfig { aInputSize, aFormat };
-    SurfaceConfig surfaceConfig { aDecoder, aFrameNum, aOutputSize,
-                                  aFormat, flipVertically };
+    SurfaceConfig surfaceConfig { aDecoder, aOutputSize, aFormat,
+                                  flipVertically, aAnimParams };
 
     Maybe<SurfacePipe> pipe;
 
@@ -181,13 +180,12 @@ public:
    *
    * @param aDecoder The decoder whose current frame the SurfacePipe will write
    *                 to.
-   * @param aFrameNum Which frame the SurfacePipe will write to. This will be 0
-   *                  for non-animated images.
    * @param aInputSize The original size of the image.
    * @param aFrameRect The portion of the image that actually contains data.
    * @param aFormat The surface format of the image; generally B8G8R8A8 or
    *                B8G8R8X8.
    * @param aPaletteDepth The palette depth of the image.
+   * @param aAnimParams Extra parameters used by animated images.
    * @param aFlags Flags enabling or disabling various functionality for the
    *               SurfacePipe; see the SurfacePipeFlags documentation for more
    *               information.
@@ -198,11 +196,11 @@ public:
    */
   static Maybe<SurfacePipe>
   CreatePalettedSurfacePipe(Decoder* aDecoder,
-                            uint32_t aFrameNum,
                             const nsIntSize& aInputSize,
                             const nsIntRect& aFrameRect,
                             gfx::SurfaceFormat aFormat,
                             uint8_t aPaletteDepth,
+                            const Maybe<AnimationParams>& aAnimParams,
                             SurfacePipeFlags aFlags)
   {
     const bool deinterlace = bool(aFlags & SurfacePipeFlags::DEINTERLACE);
@@ -211,9 +209,9 @@ public:
 
     // Construct configurations for the SurfaceFilters.
     DeinterlacingConfig<uint8_t> deinterlacingConfig { progressiveDisplay };
-    PalettedSurfaceConfig palettedSurfaceConfig { aDecoder, aFrameNum, aInputSize,
-                                                  aFrameRect, aFormat, aPaletteDepth,
-                                                  flipVertically };
+    PalettedSurfaceConfig palettedSurfaceConfig { aDecoder, aInputSize, aFrameRect,
+                                                  aFormat, aPaletteDepth,
+                                                  flipVertically, aAnimParams };
 
     Maybe<SurfacePipe> pipe;
 
@@ -229,7 +227,7 @@ public:
 private:
   template <typename... Configs>
   static Maybe<SurfacePipe>
-  MakePipe(Configs... aConfigs)
+  MakePipe(const Configs&... aConfigs)
   {
     auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
     nsresult rv = pipe->Configure(aConfigs...);
