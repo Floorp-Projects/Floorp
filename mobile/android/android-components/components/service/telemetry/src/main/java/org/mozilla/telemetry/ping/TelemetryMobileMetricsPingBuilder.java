@@ -28,8 +28,6 @@ public class TelemetryMobileMetricsPingBuilder extends TelemetryPingBuilder {
     public static final String TYPE = "mobile-metrics";
     private static final int VERSION = 1;
 
-    private MetricsMeasurement metricsMeasurement;
-
     public TelemetryMobileMetricsPingBuilder(JSONObject snapshots, TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
 
@@ -43,11 +41,7 @@ public class TelemetryMobileMetricsPingBuilder extends TelemetryPingBuilder {
         addMeasurement(new OperatingSystemVersionMeasurement());
         addMeasurement(new CreatedTimestampMeasurement());
         addMeasurement(new TimezoneOffsetMeasurement());
-        addMeasurement(metricsMeasurement = new MetricsMeasurement(snapshots));
-    }
-
-    public MetricsMeasurement getMetricsMeasurement() {
-        return metricsMeasurement;
+        addMeasurement(new MetricsMeasurement(snapshots));
     }
 
     @Override

@@ -47,7 +47,7 @@ public class TelemetryMobileMetricsPingBuilderTest {
         assertEquals("Android", results.get("os"));
 
         assertTrue(results.containsKey("osversion"));
-        assertEquals("27", results.get("osversion")); // API 16 is the default used by this Robolectric version
+        assertEquals("27", results.get("osversion"));
 
         assertTrue(results.containsKey("device"));
         assertFalse(TextUtils.isEmpty((String) results.get("device")));
@@ -56,7 +56,7 @@ public class TelemetryMobileMetricsPingBuilderTest {
 
         assertTrue(results.containsKey("tz"));
 
-        assertTrue(results.containsKey("arch")); // TODO does roboelectric have a default?
+        assertTrue(results.containsKey("arch")); 
 
         assertTrue(results.containsKey("profileDate"));
 
