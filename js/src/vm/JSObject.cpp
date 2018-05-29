@@ -3086,10 +3086,10 @@ ReportCantConvert(JSContext* cx, unsigned errorNumber, HandleObject obj, JSType 
     }
 
     RootedValue val(cx, ObjectValue(*obj));
-    ReportValueError2(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
-                      hint == JSTYPE_UNDEFINED
-                      ? "primitive type"
-                      : hint == JSTYPE_STRING ? "string" : "number");
+    ReportValueError(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
+                     hint == JSTYPE_UNDEFINED
+                     ? "primitive type"
+                     : hint == JSTYPE_STRING ? "string" : "number");
     return false;
 }
 

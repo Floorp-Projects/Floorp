@@ -950,18 +950,14 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
                           int spindex, HandleValue v, HandleString fallback,
                           const char* arg1, const char* arg2)
 {
-    UniqueChars bytes;
-    bool ok;
-
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
-    bytes = DecompileValueGenerator(cx, spindex, v, fallback);
+    UniqueChars bytes = DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return false;
 
-    ok = JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr, errorNumber,
-                                            bytes.get(), arg1, arg2);
-    return ok;
+    return JS_ReportErrorFlagsAndNumberLatin1(cx, flags, GetErrorMessage, nullptr, errorNumber,
+                                              bytes.get(), arg1, arg2);
 }
 
 JSObject*
