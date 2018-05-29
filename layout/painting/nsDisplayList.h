@@ -6816,7 +6816,7 @@ private:
                                                        const nsRect* aBoundsOverride);
 
   StoreList mStoredList;
-  mutable Matrix4x4Flagged mTransform;
+  mutable mozilla::Maybe<Matrix4x4Flagged> mTransform;
   // Accumulated transform of ancestors on the preserves-3d chain.
   Matrix4x4 mTransformPreserves3D;
   ComputeTransformFunction mTransformGetter;
