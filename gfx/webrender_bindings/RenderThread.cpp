@@ -9,6 +9,7 @@
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
 #include "mtransport/runnable_utils.h"
+#include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
@@ -241,7 +242,7 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 }
 
 static void
-NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
+NotifyDidRender(layers::CompositorBridgeParent* aBridge,
                 wr::WrPipelineInfo aInfo,
                 TimeStamp aStart,
                 TimeStamp aEnd)
@@ -252,9 +253,6 @@ NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
         aInfo.epochs.data[i].epoch,
         aStart,
         aEnd);
-  }
-  for (uintptr_t i = 0; i < aInfo.removed_pipelines.length; i++) {
-    aBridge->NotifyPipelineRemoved(aInfo.removed_pipelines.data[i]);
   }
 
   wr_pipeline_info_delete(aInfo);
@@ -284,6 +282,16 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId, bool aReadback)
   TimeStamp end = TimeStamp::Now();
 
   auto info = renderer->FlushPipelineInfo();
+  RefPtr<layers::AsyncImagePipelineManager> pipelineMgr =
+      renderer->GetCompositorBridge()->GetAsyncImagePipelineManager();
+  // pipelineMgr should always be non-null here because it is only nulled out
+  // after the WebRenderAPI instance for the CompositorBridgeParent is
+  // destroyed, and that destruction blocks until the renderer thread has
+  // removed the relevant renderer. And after that happens we should never reach
+  // this code at all; it would bail out at the mRenderers.find check above.
+  MOZ_ASSERT(pipelineMgr);
+  pipelineMgr->NotifyPipelinesUpdated(info);
+
   layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
     "NotifyDidRenderRunnable",
     &NotifyDidRender,

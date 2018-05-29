@@ -607,11 +607,25 @@ function HistoryMenu(aPopupShowingEvent) {
   // Defining the prototype inheritance in the prototype itself would cause
   // browser.js to halt on "PlacesMenu is not defined" error.
   this.__proto__.__proto__ = PlacesMenu.prototype;
+  Object.keys(this._elements).forEach(name => {
+    this[name] = document.getElementById(this._elements[name]);
+  });
+  this._hiddenTabsPopup = new TabsPopup({
+    filterFn: (tab) => tab.hidden,
+    popup: this.hiddenTabsMenu.firstChild,
+  });
   PlacesMenu.call(this, aPopupShowingEvent,
                   "place:sort=4&maxResults=15");
 }
 
 HistoryMenu.prototype = {
+  _elements: {
+    undoTabMenu: "historyUndoMenu",
+    hiddenTabsMenu: "hiddenTabsMenu",
+    undoWindowMenu: "historyUndoWindowMenu",
+    syncTabsMenuitem: "sync-tabs-menuitem",
+  },
+
   _getClosedTabCount() {
     // SessionStore doesn't track the hidden window, so just return zero then.
     if (window == Services.appShell.hiddenDOMWindow) {
@@ -621,23 +635,28 @@ HistoryMenu.prototype = {
     return SessionStore.getClosedTabCount(window);
   },
 
+  toggleHiddenTabs() {
+    if (gBrowser.visibleTabs.length < gBrowser.tabs.length) {
+      this.hiddenTabsMenu.removeAttribute("hidden");
+    } else {
+      this.hiddenTabsMenu.setAttribute("hidden", "true");
+    }
+  },
+
   toggleRecentlyClosedTabs: function HM_toggleRecentlyClosedTabs() {
     // enable/disable the Recently Closed Tabs sub menu
-    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
-
     // no restorable tabs, so disable menu
     if (this._getClosedTabCount() == 0)
-      undoMenu.setAttribute("disabled", true);
+      this.undoTabMenu.setAttribute("disabled", true);
     else
-      undoMenu.removeAttribute("disabled");
+      this.undoTabMenu.removeAttribute("disabled");
   },
 
   /**
    * Populate when the history menu is opened
    */
   populateUndoSubmenu: function PHM_populateUndoSubmenu() {
-    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedTabsMenu")[0];
-    var undoPopup = undoMenu.firstChild;
+    var undoPopup = this.undoTabMenu.firstChild;
 
     // remove existing menu items
     while (undoPopup.hasChildNodes())
@@ -645,12 +664,12 @@ HistoryMenu.prototype = {
 
     // no restorable tabs, so make sure menu is disabled, and return
     if (this._getClosedTabCount() == 0) {
-      undoMenu.setAttribute("disabled", true);
+      this.undoTabMenu.setAttribute("disabled", true);
       return;
     }
 
     // enable menu
-    undoMenu.removeAttribute("disabled");
+    this.undoTabMenu.removeAttribute("disabled");
 
     // populate menu
     let tabsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment(window, "menuitem");
@@ -659,21 +678,18 @@ HistoryMenu.prototype = {
 
   toggleRecentlyClosedWindows: function PHM_toggleRecentlyClosedWindows() {
     // enable/disable the Recently Closed Windows sub menu
-    var undoMenu = this._rootElt.getElementsByClassName("recentlyClosedWindowsMenu")[0];
-
     // no restorable windows, so disable menu
     if (SessionStore.getClosedWindowCount() == 0)
-      undoMenu.setAttribute("disabled", true);
+      this.undoWindowMenu.setAttribute("disabled", true);
     else
-      undoMenu.removeAttribute("disabled");
+      this.undoWindowMenu.removeAttribute("disabled");
   },
 
   /**
    * Populate when the history menu is opened
    */
   populateUndoWindowSubmenu: function PHM_populateUndoWindowSubmenu() {
-    let undoMenu = this._rootElt.getElementsByClassName("recentlyClosedWindowsMenu")[0];
-    let undoPopup = undoMenu.firstChild;
+    let undoPopup = this.undoWindowMenu.firstChild;
 
     // remove existing menu items
     while (undoPopup.hasChildNodes())
@@ -681,12 +697,12 @@ HistoryMenu.prototype = {
 
     // no restorable windows, so make sure menu is disabled, and return
     if (SessionStore.getClosedWindowCount() == 0) {
-      undoMenu.setAttribute("disabled", true);
+      this.undoWindowMenu.setAttribute("disabled", true);
       return;
     }
 
     // enable menu
-    undoMenu.removeAttribute("disabled");
+    this.undoWindowMenu.removeAttribute("disabled");
 
     // populate menu
     let windowsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(window, "menuitem");
@@ -696,16 +712,15 @@ HistoryMenu.prototype = {
   toggleTabsFromOtherComputers: function PHM_toggleTabsFromOtherComputers() {
     // Enable/disable the Tabs From Other Computers menu. Some of the menus handled
     // by HistoryMenu do not have this menuitem.
-    let menuitem = this._rootElt.getElementsByClassName("syncTabsMenuItem")[0];
-    if (!menuitem)
+    if (!this.syncTabsMenuitem)
       return;
 
     if (!PlacesUIUtils.shouldShowTabsFromOtherComputersMenuitem()) {
-      menuitem.setAttribute("hidden", true);
+      this.syncTabsMenuitem.setAttribute("hidden", true);
       return;
     }
 
-    menuitem.setAttribute("hidden", false);
+    this.syncTabsMenuitem.setAttribute("hidden", false);
   },
 
   _onPopupShowing: function HM__onPopupShowing(aEvent) {
@@ -715,6 +730,7 @@ HistoryMenu.prototype = {
     if (aEvent.target != aEvent.currentTarget)
       return;
 
+    this.toggleHiddenTabs();
     this.toggleRecentlyClosedTabs();
     this.toggleRecentlyClosedWindows();
     this.toggleTabsFromOtherComputers();

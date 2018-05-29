@@ -408,7 +408,7 @@ enum class StyleContent : uint8_t {
 // See nsStyleDisplay
 //
 // NOTE: Order is important! If you change it, make sure to take a look at
-// the FrameConstructorDataByDisplay stuff (both the XUL and non-XUL version),
+// the FrameConstructionDataByDisplay stuff (both the XUL and non-XUL version),
 // and ensure it's still correct!
 enum class StyleDisplay : uint8_t {
   None = 0,
@@ -899,9 +899,6 @@ enum class StyleWhiteSpace : uint8_t {
 // See nsStyleText
 #define NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE        0
 #define NS_STYLE_TEXT_COMBINE_UPRIGHT_ALL         1
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_2    2
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_3    3
-#define NS_STYLE_TEXT_COMBINE_UPRIGHT_DIGITS_4    4
 
 // See nsStyleText
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0

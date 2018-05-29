@@ -4643,6 +4643,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   bool defaultPrevented =
     (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
 
+  if (!mGeckoChild) {
+    return;
+  }
+
   // Check to see if we are double-clicking in draggable parts of the window.
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
       !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y)) {

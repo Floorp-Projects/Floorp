@@ -27,7 +27,8 @@ using layers::Stringify;
 class NewRenderer : public RendererEvent
 {
 public:
-  NewRenderer(wr::DocumentHandle** aDocHandle, layers::CompositorBridgeParentBase* aBridge,
+  NewRenderer(wr::DocumentHandle** aDocHandle,
+              layers::CompositorBridgeParent* aBridge,
               uint32_t* aMaxTextureSize,
               bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
@@ -101,7 +102,7 @@ private:
   wr::DocumentHandle** mDocHandle;
   uint32_t* mMaxTextureSize;
   bool* mUseANGLE;
-  layers::CompositorBridgeParentBase* mBridge;
+  layers::CompositorBridgeParent* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
   LayoutDeviceIntSize mSize;

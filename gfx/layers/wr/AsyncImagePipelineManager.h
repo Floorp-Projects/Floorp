@@ -49,8 +49,15 @@ public:
 
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, WebRenderTextureHost* aTexture);
   void HoldExternalImage(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch, const wr::ExternalImageId& aImageId);
-  void PipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
-  void PipelineRemoved(const wr::PipelineId& aPipelineId);
+
+  // This is called from the Renderer thread to notify this class about the
+  // pipelines in the most recently completed render. A copy of the update
+  // information is put into mUpdatesQueue.
+  void NotifyPipelinesUpdated(wr::WrPipelineInfo aInfo);
+
+  // This is run on the compositor thread to process mUpdatesQueue. We make
+  // this a public entry point because we need to invoke it from other places.
+  void ProcessPipelineUpdates();
 
   TimeStamp GetCompositionTime() const {
     return mCompositionTime;
@@ -97,6 +104,8 @@ public:
   bool GetAndResetWillGenerateFrame();
 
 private:
+  void ProcessPipelineRendered(const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch);
+  void ProcessPipelineRemoved(const wr::PipelineId& aPipelineId);
 
   wr::Epoch GetNextImageEpoch();
   uint32_t GetNextResourceId() { return ++mResourceId; }
@@ -197,6 +206,15 @@ private:
   TimeStamp mCompositeUntilTime;
 
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
+
+  // The lock that protects mUpdatesQueue
+  Mutex mUpdatesLock;
+  // Queue to store rendered pipeline epoch information. This is populated from
+  // the Renderer thread after a render, and is read from the compositor thread
+  // to free resources (e.g. textures) that are no longer needed. Each entry
+  // in the queue is a pair that holds the pipeline id and Some(x) for
+  // a render of epoch x, or Nothing() for a removed pipeline.
+  std::queue<std::pair<wr::PipelineId, Maybe<wr::Epoch>>> mUpdatesQueue;
 };
 
 } // namespace layers

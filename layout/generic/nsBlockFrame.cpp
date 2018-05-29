@@ -4163,7 +4163,7 @@ nsBlockFrame::ReflowInlineFrame(BlockReflowInput& aState,
 
 #ifdef REALLY_NOISY_REFLOW
   nsFrame::ListTag(stdout, aFrame);
-  printf(": status=%x\n", frameReflowStatus);
+  printf(": status=%s\n", frameReflowStatus.ToString().get());
 #endif
 
 #if defined(REFLOW_STATUS_COVERAGE)

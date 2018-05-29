@@ -18,6 +18,38 @@ const TEST_DATA = [
     selector: "html",
     expected: [
       {
+        type: "dblclick",
+        filename: URL_ROOT + TEST_LIB + ":31",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return a.apply(d || this, arguments)\n" +
+                 "}"
+      },
+      {
+        type: "DOMContentLoaded",
+        filename: URL_ROOT + TEST_LIB + ":32",
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: "function() {\n" +
+                 "  s.removeEventListener(\"DOMContentLoaded\", M, false);\n" +
+                 "  c.ready()\n" +
+                 "}"
+      },
+      {
+        type: "dragstart",
+        filename: URL_ROOT + TEST_LIB + ":31",
+        attributes: [
+          "jQuery"
+        ],
+        handler: "function() {\n" +
+                 "  return a.apply(d || this, arguments)\n" +
+                 "}"
+      },
+      {
         type: "load",
         filename: TEST_URL + ":27",
         attributes: [
@@ -95,38 +127,6 @@ const TEST_DATA = [
                  "    }\n" +
                  "    c.fn.triggerHandler && c(s).triggerHandler(\"ready\")\n" +
                  "  }\n" +
-                 "}"
-      },
-      {
-        type: "dblclick",
-        filename: URL_ROOT + TEST_LIB + ":31",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function() {\n" +
-                 "  return a.apply(d || this, arguments)\n" +
-                 "}"
-      },
-      {
-        type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":32",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: "function() {\n" +
-                 "  s.removeEventListener(\"DOMContentLoaded\", M, false);\n" +
-                 "  c.ready()\n" +
-                 "}"
-      },
-      {
-        type: "dragstart",
-        filename: URL_ROOT + TEST_LIB + ":31",
-        attributes: [
-          "jQuery"
-        ],
-        handler: "function() {\n" +
-                 "  return a.apply(d || this, arguments)\n" +
                  "}"
       }
     ]

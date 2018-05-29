@@ -23,7 +23,7 @@ class GLContext;
 }
 
 namespace layers {
-class CompositorBridgeParentBase;
+class CompositorBridgeParent;
 class SyncObjectHost;
 }
 
@@ -72,7 +72,7 @@ public:
               UniquePtr<RenderCompositor> aCompositor,
               wr::WindowId aWindowId,
               wr::Renderer* aRenderer,
-              layers::CompositorBridgeParentBase* aBridge);
+              layers::CompositorBridgeParent* aBridge);
 
   /// This can be called on the render thread only.
   void Pause();
@@ -82,7 +82,7 @@ public:
 
   layers::SyncObjectHost* GetSyncObject() const;
 
-  layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
+  layers::CompositorBridgeParent* GetCompositorBridge() { return mBridge; }
 
   wr::WrPipelineInfo FlushPipelineInfo();
 
@@ -98,7 +98,7 @@ protected:
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
   wr::Renderer* mRenderer;
-  layers::CompositorBridgeParentBase* mBridge;
+  layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
   wr::DebugFlags mDebugFlags;
