@@ -1,4 +1,4 @@
-52622
+52631
 0/nm
 0th/pt
 1/n1
@@ -5769,6 +5769,7 @@ I'm
 I've
 I/M
 IA
+IANAL
 IBM/M
 ICBM/SM
 ICC
@@ -7522,6 +7523,7 @@ MBA/M
 MC
 MCI/M
 MD/M
+MDF
 MDT
 ME
 MEGO/S
@@ -10717,6 +10719,7 @@ SRO
 SS
 SSA
 SSE/M
+SSN
 SSS
 SST
 SSW/M
@@ -31799,6 +31802,7 @@ itemization/M
 itemize/GDS
 iterate/AXGNVDS
 iteration/AM
+iteratively
 iterator/S
 itinerant/SM
 itinerary/SM
@@ -32786,6 +32790,7 @@ lawnmower/SM
 lawrencium/M
 lawsuit/MS
 lawyer/SM
+lawyerly
 lax/TRYP
 laxative/MS
 laxity/M
@@ -36818,7 +36823,7 @@ northwest/ZMR
 northwester/MY
 northwestern
 northwestward/S
-nose/MGDS
+nose/MGDSJ
 nosebag/S
 nosebleed/MS
 nosecone/SM
@@ -38903,6 +38908,7 @@ perforation/M
 perforce
 perform/SDRZG
 performance/SM
+performant
 performative
 performed/U
 performer/M
@@ -40288,6 +40294,7 @@ precautionary
 precede/DSG
 precedence/M
 precedent/SM
+precedential
 precept/SM
 preceptor/SM
 precinct/MS
@@ -42532,6 +42539,7 @@ resuscitation/M
 resuscitator/SM
 retailer/MS
 retain/SDRZG
+retainage/S
 retainer/M
 retake/G
 retaliate/DSGNVX
@@ -48713,7 +48721,7 @@ thunderstorm/SM
 thunderstruck
 thundery
 thunk/S
-thus
+thus/Y
 thwack/ZGSMDR
 thwacker/M
 thwart/GSMD
@@ -51620,7 +51628,7 @@ weightlifter/MS
 weightlifting/M
 weighty/PTR
 weir/MS
-weird/PTRY
+weird/PTRYDG
 weirdie/MS
 weirdness/M
 weirdo/MS
@@ -51929,6 +51937,7 @@ williwaw/MS
 willow/SM
 willowy
 willpower/M
+willy-nilly
 willy/S
 wilt/MDSG
 wily/RTP
