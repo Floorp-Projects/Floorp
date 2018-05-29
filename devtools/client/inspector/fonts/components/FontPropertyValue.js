@@ -44,6 +44,11 @@ class FontPropertyValue extends PureComponent {
   }
 
   render() {
+    // Guard against bad axis data.
+    if (this.props.min === this.props.max) {
+      return null;
+    }
+
     const defaults = {
       min: this.props.min,
       max: this.props.max,
