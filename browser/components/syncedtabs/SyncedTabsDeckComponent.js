@@ -79,12 +79,6 @@ SyncedTabsDeckComponent.prototype = {
     // if this engine is disabled and refresh the UI one last time.
     Services.obs.addObserver(this, "weave:service:ready");
 
-    // Add intl.uidirection support for HTML sidebar
-    XPCOMUtils.defineLazyPreferenceGetter(this, "dirPref", "intl.uidirection", -1,
-      (pref, oldVal, newVal) => { this.updateDir(newVal); }
-    );
-    this.updateDir();
-
     // Go ahead and trigger sync
     this._SyncedTabs.syncTabs()
                     .catch(Cu.reportError);
@@ -122,11 +116,6 @@ SyncedTabsDeckComponent.prototype = {
       case FxAccountsCommon.ONLOGIN_NOTIFICATION:
       case "weave:service:login:change":
         this.updatePanel();
-        break;
-      case "nsPref:changed":
-        if (data == "intl.uidirection") {
-          this.updateDir();
-        }
         break;
       default:
         break;
@@ -167,21 +156,6 @@ SyncedTabsDeckComponent.prototype = {
       Cu.reportError(err);
       return this.PANELS.NOT_AUTHED_INFO;
     });
-  },
-
-  updateDir(pref) {
-    console.log("Called updateDir lmao");
-    console.log(`called pref: <${pref}>, config pref: <${this.dirPref}>`);
-    pref = pref || this.dirPref;
-
-    // If the HTML document doesn't exist, we can't update the window
-    if (!this._window.document) return;
-
-    if (pref > 0 || (pref < 0 && Services.locale.isAppLocaleRTL)) {
-      this._window.document.body.dir = "rtl";
-    } else {
-      this._window.document.body.dir = "ltr";
-    }
   },
 
   updatePanel() {
