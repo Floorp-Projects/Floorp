@@ -23,7 +23,6 @@ loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
-const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
 
 function gSequenceId() {
   return gSequenceId.n++;
@@ -201,16 +200,13 @@ class JSTerm extends Component {
           viewportMargin: Infinity,
           extraKeys: {
             "Enter": (e, cm) => {
-              let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
-              if (e.shiftKey
-                || (
-                  !Debugger.isCompilableUnit(this.getInputValue())
-                  && autoMultiline
-                )
-              ) {
+              if (!this.autocompletePopup.isOpen && (
+                e.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
+              )) {
                 // shift return or incomplete statement
                 return "CodeMirror.Pass";
               }
+
               this.execute();
               return null;
             },
@@ -685,9 +681,9 @@ class JSTerm extends Component {
       }
       return;
     } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-      let autoMultiline = Services.prefs.getBoolPref(PREF_AUTO_MULTILINE);
-      if (event.shiftKey ||
-          (!Debugger.isCompilableUnit(inputNode.value) && autoMultiline)) {
+      if (!this.autocompletePopup.isOpen && (
+        event.shiftKey || !Debugger.isCompilableUnit(this.getInputValue())
+      )) {
         // shift return or incomplete statement
         return;
       }
