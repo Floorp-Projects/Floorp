@@ -8513,6 +8513,20 @@ nsDisplayTransform::GetTransform() const
   return *mTransform;
 }
 
+const Matrix4x4Flagged&
+nsDisplayTransform::GetInverseTransform() const
+{
+  if (mInverseTransform) {
+    return *mInverseTransform;
+  }
+
+  MOZ_ASSERT(!GetTransform().IsSingular());
+
+  mInverseTransform.emplace(GetTransform().Inverse());
+
+  return *mInverseTransform;
+}
+
 Matrix4x4
 nsDisplayTransform::GetTransformForRendering(LayoutDevicePoint* aOutOrigin)
 {
@@ -9087,9 +9101,9 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
                                          const nsRect& aRect,
                                          nsRect *aOutRect) const
 {
-  const Matrix4x4Flagged& matrix = GetTransform();
-  if (matrix.IsSingular())
+  if (GetTransform().IsSingular()) {
     return false;
+  }
 
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
@@ -9106,7 +9120,7 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
                             NSAppUnitsToFloatPixels(childBounds.height, factor));
 
   /* We want to untransform the matrix, so invert the transformation first! */
-  result = matrix.Inverse().ProjectRectBounds(result, childGfxBounds);
+  result = GetInverseTransform().ProjectRectBounds(result, childGfxBounds);
 
   *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
 
