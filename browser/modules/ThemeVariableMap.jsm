@@ -27,9 +27,6 @@ const ThemeVariableMap = [
     lwtProperty: "tab_line",
     optionalElementID: "tabbrowser-tabs"
   }],
-  ["--lwt-background-tab-separator-color", {
-    lwtProperty: "tab_background_separator",
-  }],
   ["--toolbar-bgcolor", {
     lwtProperty: "toolbarColor"
   }],

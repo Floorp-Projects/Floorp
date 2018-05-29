@@ -148,7 +148,6 @@ class Theme {
         case "icons_attention":
           this.lwtStyles.icon_attention_color = cssColor;
           break;
-        case "tab_background_separator":
         case "tab_loading":
         case "tab_text":
         case "tab_line":
