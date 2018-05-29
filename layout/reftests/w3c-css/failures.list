@@ -165,8 +165,6 @@ fails css-writing-modes/line-box-height-vrl-010.xht
 fails css-writing-modes/line-box-height-vrl-012.xht
 
 # Bug 1258635 - text-combine-upright: digits
-# Using skip because there are mismatch tests which would unexpectedly
-# pass with "fails-if(!stylo)".
 skip css-writing-modes/full-width-003.html
 skip css-writing-modes/text-combine-upright-value-digits?-001.html
 skip css-writing-modes/text-combine-upright-value-digits?-002.html
@@ -185,7 +183,6 @@ css-writing-modes/text-combine-upright-layout-rules-001.html
 #### CSS Multi-column 1 ##############################################
 
 # Fuzzy annotations for multicol tests are due to AA differences.
-# fails-if(!stylo) annotations need to be triaged later. (Bug 1299006)
 fails-if(winWidget||OSX) css-multicol/multicol-block-no-clip-001.xht
 fails-if(winWidget||OSX) css-multicol/multicol-block-no-clip-002.xht
 fails css-multicol/multicol-br-inside-avoidcolumn-001.xht
