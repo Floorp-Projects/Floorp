@@ -25,7 +25,7 @@ ChromeUtils.defineModuleGetter(this, "PageThumbs",
 ChromeUtils.defineModuleGetter(this, "DownloadsManager",
   "resource://activity-stream/lib/DownloadsManager.jsm");
 
-const HIGHLIGHTS_MAX_LENGTH = 9;
+const HIGHLIGHTS_MAX_LENGTH = 16;
 const MANY_EXTRA_LENGTH = HIGHLIGHTS_MAX_LENGTH * 5 + TOP_SITES_DEFAULT_ROWS * TOP_SITES_MAX_SITES_PER_ROW;
 const SECTION_ID = "highlights";
 const SYNC_BOOKMARKS_FINISHED_EVENT = "weave:engine:sync:applied";

@@ -51,7 +51,7 @@ window.gActivityStreamStrings = {
   "prefs_highlights_options_download_label": "Cele mai recente descărcări",
   "prefs_highlights_options_pocket_label": "Pagini salvate în Pocket",
   "prefs_snippets_description": "Știri de la Mozilla și Firefox",
-  "settings_pane_button_label": "Particularizează pagina de filă nouă",
+  "settings_pane_button_label": "Personalizează pagina pentru filă nouă",
   "settings_pane_topsites_header": "Site-uri de top",
   "settings_pane_highlights_header": "Evidențieri",
   "settings_pane_highlights_options_bookmarks": "Marcaje",
@@ -100,18 +100,5 @@ window.gActivityStreamStrings = {
   "firstrun_terms_of_service": "Terms of Service",
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "Continue",
-  "firstrun_skip_login": "Skip this step",
-  "prefs_restore_defaults_button": "Restaurează valorile implicite",
-  "settings_pane_header": "Preferințe pentru filă nouă",
-  "settings_pane_body2": "Alege ceea ce vezi pe această pagină.",
-  "settings_pane_search_header": "Caută",
-  "settings_pane_search_body": "Caută pe web din noua filă.",
-  "settings_pane_topsites_body": "Accesează site-urile pe care le vizitezi mai des.",
-  "settings_pane_topsites_options_showmore": "Arată două rânduri",
-  "settings_pane_highlights_body2": "Regăsește lucrurile interesante pe care le-ai vizitat sau marcat recent.",
-  "settings_pane_highlights_options_visited": "Site-uri vizitate",
-  "settings_pane_snippets_body": "Citește actualizări scurte de la Mozilla despre Firefox, cultura internetului și meme-ul ocazional aleatoriu.",
-  "settings_pane_done_button": "Gata",
-  "settings_pane_topstories_options_sponsored": "Arată articolele sponsorizate",
-  "pocket_description": "Descoperă conținut de calitate pe care l-ai putea rata, cu ajutorul Pocket, acum parte din Mozilla."
+  "firstrun_skip_login": "Skip this step"
 };

@@ -42,7 +42,8 @@ const BUILT_IN_SECTIONS = {
     },
     privacyNoticeURL: "https://www.mozilla.org/privacy/firefox/#suggest-relevant-content",
     compactCards: false,
-    maxRows: 1,
+    rowsPref: "section.topstories.rows",
+    maxRows: 4,
     availableLinkMenuOptions: ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     emptyState: {
       message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
@@ -75,7 +76,8 @@ const BUILT_IN_SECTIONS = {
     icon: "highlights",
     title: {id: "header_highlights"},
     compactCards: true,
-    maxRows: 2,
+    rowsPref: "section.highlights.rows",
+    maxRows: 4,
     emptyState: {
       message: {id: "highlights_empty_state"},
       icon: "highlights"

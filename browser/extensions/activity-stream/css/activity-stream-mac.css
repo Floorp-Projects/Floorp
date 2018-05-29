@@ -1323,7 +1323,8 @@ main {
     overflow: hidden;
     padding-bottom: 4px;
     text-overflow: ellipsis;
-    text-transform: uppercase; }
+    text-transform: uppercase;
+    white-space: nowrap; }
   .card-outer .card-host-name.alternate {
     display: none; }
   .card-outer .card-title {
@@ -1343,10 +1344,9 @@ main {
     color: var(--newtab-text-tertiary-color);
     display: flex;
     font-size: 11px;
-    left: 0;
+    offset-inline-start: 0;
     padding: 9px 16px 9px 14px;
-    position: absolute;
-    right: 0; }
+    position: absolute; }
   .card-outer .card-context-icon {
     fill: var(--newtab-icon-tertiary-color);
     height: 22px;
@@ -1404,12 +1404,13 @@ main {
   .compact-cards .card-outer .card-context {
     background-color: var(--newtab-card-background-color);
     border-radius: 16px;
+    clip-path: inset(0 0 4px);
     height: 32px;
     width: 32px;
     padding: 8px;
     top: 92px;
-    left: auto;
-    offset-inline-end: 12px; }
+    offset-inline-end: 12px;
+    offset-inline-start: auto; }
     .compact-cards .card-outer .card-context::after {
       border: 1px solid var(--newtab-card-hairline-color);
       border-bottom: 0;
@@ -1828,7 +1829,7 @@ main {
     @media (max-width: 850px) {
       .onboardingMessage .onboardingMessageImage {
         height: 75px;
-        width: 160px;
+        min-width: 80px;
         background-size: 80px; } }
     .onboardingMessage .onboardingMessageImage.addons {
       background-image: url("resource://activity-stream/data/content/assets/illustration-addons@2x.png"); }
@@ -1836,6 +1837,8 @@ main {
       background-image: url("resource://activity-stream/data/content/assets/illustration-privatebrowsing@2x.png"); }
     .onboardingMessage .onboardingMessageImage.screenshots {
       background-image: url("resource://activity-stream/data/content/assets/illustration-screenshots@2x.png"); }
+    .onboardingMessage .onboardingMessageImage.gift {
+      background-image: url("resource://activity-stream/data/content/assets/illustration-gift@2x.png"); }
   .onboardingMessage .onboardingContent {
     height: 175px; }
     .onboardingMessage .onboardingContent > span > h3 {
