@@ -1018,6 +1018,9 @@ nsFind::Find(const char16_t* aPatText, nsRange* aSearchRange,
         // End any pending match:
         matchAnchorNode = nullptr;
         matchAnchorOffset = 0;
+        c = 0;
+        prevChar = 0;
+        prevCharInMatch = 0;
         pindex = (mFindBackward ? patLen : 0);
         inWhitespace = false;
       }
