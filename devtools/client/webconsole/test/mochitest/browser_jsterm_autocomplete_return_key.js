@@ -24,12 +24,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 </head>
 <body>bug 585991 - test pressing return with open popup</body>`;
 
-// We should turn off auto-multiline editing during these tests
-const PREF_AUTO_MULTILINE = "devtools.webconsole.autoMultiline";
-
 add_task(async function() {
-  Services.prefs.setBoolPref(PREF_AUTO_MULTILINE, false);
-
   let { jsterm } = await openNewTabAndConsole(TEST_URI);
   const {
     autocompletePopup: popup,
@@ -74,6 +69,4 @@ add_task(async function() {
   is(jsterm.getInputValue(), "window.foobar.item3",
     "completion was successful after KEY_Enter");
   ok(!completeNode.value, "completeNode is empty");
-
-  Services.prefs.clearUserPref(PREF_AUTO_MULTILINE);
 });
