@@ -405,8 +405,9 @@ NS_IMETHODIMP
 nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
                          const char16_t *aData)
 {
-  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+  if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
+  }
 
   return NS_OK;
 }
