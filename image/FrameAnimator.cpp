@@ -501,6 +501,13 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
 {
   aState.mCompositedFrameRequested = true;
 
+  // If we have a composited version of this frame, return that.
+  if (!aState.mCompositedFrameInvalid && mLastCompositedFrameIndex >= 0 &&
+      (uint32_t(mLastCompositedFrameIndex) == aState.mCurrentAnimationFrameIndex)) {
+    return LookupResult(DrawableSurface(mCompositingFrame->DrawableRef()),
+                        MatchType::EXACT);
+  }
+
   LookupResult result =
     SurfaceCache::Lookup(ImageKey(mImage),
                          RasterSurfaceKey(mSize,
@@ -515,13 +522,6 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
       return result;
     }
     return LookupResult(MatchType::PENDING);
-  }
-
-  // If we have a composited version of this frame, return that.
-  if (mLastCompositedFrameIndex >= 0 &&
-      (uint32_t(mLastCompositedFrameIndex) == aState.mCurrentAnimationFrameIndex)) {
-    return LookupResult(DrawableSurface(mCompositingFrame->DrawableRef()),
-                        MatchType::EXACT);
   }
 
   // Otherwise return the raw frame. DoBlend is required to ensure that we only
