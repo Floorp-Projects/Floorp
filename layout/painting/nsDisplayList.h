@@ -6598,6 +6598,8 @@ public:
    * nsDisplayPerspective created for that.
    */
   const Matrix4x4Flagged& GetTransform() const;
+  const Matrix4x4Flagged& GetInverseTransform() const;
+
   Matrix4x4 GetTransformForRendering(mozilla::LayoutDevicePoint* aOutOrigin = nullptr);
 
   /**
@@ -6817,6 +6819,7 @@ private:
 
   StoreList mStoredList;
   mutable mozilla::Maybe<Matrix4x4Flagged> mTransform;
+  mutable mozilla::Maybe<Matrix4x4Flagged> mInverseTransform;
   // Accumulated transform of ancestors on the preserves-3d chain.
   Matrix4x4 mTransformPreserves3D;
   ComputeTransformFunction mTransformGetter;
