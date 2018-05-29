@@ -43,21 +43,19 @@ using mozilla::TimeStamp;
 
 constexpr uintptr_t CanaryMagicValue = 0xDEADB15D;
 
-struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTaskHelper<FreeMallocedBuffersTask>
+struct js::Nursery::FreeMallocedBuffersTask : public GCParallelTask
 {
-    explicit FreeMallocedBuffersTask(FreeOp* fop)
-      : GCParallelTaskHelper(fop->runtime()),
-        fop_(fop) {}
+    explicit FreeMallocedBuffersTask(FreeOp* fop) : GCParallelTask(fop->runtime()), fop_(fop) {}
     bool init() { return buffers_.init(); }
     void transferBuffersToFree(MallocedBuffersSet& buffersToFree,
                                const AutoLockHelperThreadState& lock);
-    ~FreeMallocedBuffersTask() { join(); }
-
-    void run();
+    ~FreeMallocedBuffersTask() override { join(); }
 
   private:
     FreeOp* fop_;
     MallocedBuffersSet buffers_;
+
+    virtual void run() override;
 };
 
 #ifdef JS_GC_ZEAL
