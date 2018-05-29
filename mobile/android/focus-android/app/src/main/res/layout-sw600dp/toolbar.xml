@@ -55,14 +55,13 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="10dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_lock"
-        android:visibility="gone"
-        tools:visibility="visible"
-        android:contentDescription="@string/content_description_lock" />
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:contentDescription="@string/site_security_icon_content_description"
+        android:focusable="true"
+        android:scaleType="fitCenter" />
 
     <!-- lint: We need to use singleLine=true for the fading edge to work (which is officially deprecated,
          but still needed), hence we ignore deprecated warnings here.. -->
