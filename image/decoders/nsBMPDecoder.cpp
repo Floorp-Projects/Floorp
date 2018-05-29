@@ -685,8 +685,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   }
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, OutputSize(),
-                              FullOutputFrame(),
+  nsresult rv = AllocateFrame(OutputSize(), FullOutputFrame(),
                               mMayHaveTransparency ? SurfaceFormat::B8G8R8A8
                                                    : SurfaceFormat::B8G8R8X8);
   if (NS_FAILED(rv)) {
