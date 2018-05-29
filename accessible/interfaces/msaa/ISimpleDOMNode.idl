@@ -42,7 +42,7 @@ cpp_quote("//")
 cpp_quote("// computedStyle(  ")
 cpp_quote("//  /* [in]  */ unsigned short maxStyleProperties,")
 cpp_quote("//  /* [out] */ unsigned short *numStyleProperties, ")
-cpp_quote("//  /* [in]  */ boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes")
+cpp_quote("//  /* [in]  */ boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes")
 cpp_quote("//  /* [out] */ BSTR *styleProperties, ")
 cpp_quote("//  /* [out] */ BSTR *styleValues);")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
@@ -52,7 +52,7 @@ cpp_quote("//  useAlternateView=TRUE: properties for media types set w/ nsIDOMSi
 cpp_quote("//")
 cpp_quote("// computedStyleForProperties(  ")
 cpp_quote("//  /* [in] */  unsigned short numStyleProperties, ")
-cpp_quote("//  /* [in] */  boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes")
+cpp_quote("//  /* [in] */  boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes")
 cpp_quote("//  /* [in] */  BSTR *styleProperties, ")
 cpp_quote("//  /* [out] */ BSTR *styleValues);")
 cpp_quote("// ---------------------------------------------------------------------------------------------------=")
@@ -141,7 +141,7 @@ interface ISimpleDOMNode : IUnknown
 
   [propget] HRESULT computedStyle(  
     [in] unsigned short maxStyleProperties,
-    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes
+    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
     [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleProperties, 
     [out, size_is(maxStyleProperties), length_is(*numStyleProperties)] BSTR *styleValues,
     [out, retval] unsigned short *numStyleProperties
@@ -149,7 +149,7 @@ interface ISimpleDOMNode : IUnknown
 
   [propget] HRESULT computedStyleForProperties(  
     [in] unsigned short numStyleProperties, 
-    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in nsIDOMDocument::set_alternateViewMediaTypes
+    [in] boolean useAlternateView,  // If TRUE, returns properites for media as set in Document's set_alternateViewMediaTypes
     [in, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleProperties, 
     [out, retval, size_is(numStyleProperties), length_is(numStyleProperties)] BSTR *styleValues
   );
