@@ -9,12 +9,12 @@ DIRS += [
 
 DevToolsModules(
     'breakpointAtLocation.js',
+    'breakpointSources.js',
     'getCallStackFrames.js',
     'getRelativeSources.js',
     'inComponent.js',
     'index.js',
     'isSelectedFrameVisible.js',
-    'mappedBreakpoints.js',
     'visibleBreakpoints.js',
     'visibleSelectedFrame.js',
 )
