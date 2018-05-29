@@ -69,6 +69,9 @@ def filter_beta_release_tasks(task, parameters, ignore_kinds=None, allow_l10n=Fa
             'macosx64',
             'win32', 'win64',
             ):
+        if task.attributes['kind'] == 'l10n':
+            # This is on-change l10n
+            return True
         if task.attributes['build_type'] == 'opt' and \
            task.attributes.get('unittest_suite') != 'talos' and \
            task.attributes.get('unittest_suite') != 'raptor':
