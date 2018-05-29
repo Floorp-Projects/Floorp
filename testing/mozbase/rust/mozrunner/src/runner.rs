@@ -2,7 +2,6 @@ use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
 use std::collections::HashMap;
 use std::convert::From;
-use std::env;
 use std::error::Error;
 use std::ffi::{OsStr, OsString};
 use std::fmt;
@@ -339,21 +338,9 @@ where
     }
 }
 
-fn find_binary(name: &str) -> Option<PathBuf> {
-    env::var("PATH").ok().and_then(|path_env| {
-        for mut path in env::split_paths(&*path_env) {
-            path.push(name);
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
-    })
-}
-
 #[cfg(target_os = "linux")]
 pub mod platform {
-    use super::find_binary;
+    use path::find_binary;
     use std::path::PathBuf;
 
     /// Searches the system path for `firefox`.
@@ -368,7 +355,7 @@ pub mod platform {
 
 #[cfg(target_os = "macos")]
 pub mod platform {
-    use super::find_binary;
+    use path::{find_binary, is_binary};
     use std::env;
     use std::path::PathBuf;
 
@@ -394,7 +381,7 @@ pub mod platform {
                 (None, true) => continue,
                 (_, false) => trial_path.to_path_buf(),
             };
-            if path.exists() {
+            if is_binary(path) {
                 return Some(path);
             }
         }
@@ -409,7 +396,7 @@ pub mod platform {
 
 #[cfg(target_os = "windows")]
 pub mod platform {
-    use super::find_binary;
+    use path::{find_binary, is_binary};
     use std::io::Error;
     use std::path::PathBuf;
     use winreg::RegKey;
@@ -419,9 +406,8 @@ pub mod platform {
     ///
     /// It _does not_ currently check the `HKEY_CURRENT_USER` tree.
     pub fn firefox_default_path() -> Option<PathBuf> {
-        let opt_path = firefox_registry_path().unwrap_or(None);
-        if let Some(path) = opt_path {
-            if path.exists() {
+        if let Ok(Some(path)) = firefox_registry_path() {
+            if is_binary(&path) {
                 return Some(path);
             }
         };
@@ -447,9 +433,12 @@ pub mod platform {
                         let mut bin_key = key.to_owned();
                         bin_key.push_str("\\bin");
                         if let Ok(bin_subtree) = mozilla.open_subkey_with_flags(bin_key, KEY_READ) {
-                            let path: Result<String, _> = bin_subtree.get_value("PathToExe");
-                            if let Ok(path) = path {
-                                return Ok(Some(PathBuf::from(path)));
+                            let path_to_exe: Result<String, _> = bin_subtree.get_value("PathToExe");
+                            if let Ok(path_to_exe) = path_to_exe {
+                                let path = PathBuf::from(path_to_exe);
+                                if is_binary(&path) {
+                                    return Ok(Some(path));
+                                }
                             }
                         }
                     }
