@@ -82,6 +82,8 @@ test_description_schema = {str(k): v for k, v in test_description_schema.schema.
 mozharness_test_run_schema = Schema({
     Required('using'): 'mozharness-test',
     Required('test'): test_description_schema,
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 
@@ -93,6 +95,7 @@ def test_packages_url(taskdesc):
 @run_job_using('docker-engine', 'mozharness-test', schema=mozharness_test_run_schema)
 @run_job_using('docker-worker', 'mozharness-test', schema=mozharness_test_run_schema)
 def mozharness_test_on_docker(config, job, taskdesc):
+    run = job['run']
     test = taskdesc['run']['test']
     mozharness = test['mozharness']
     worker = taskdesc['worker']
@@ -107,9 +110,9 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     artifacts = [
         # (artifact name prefix, in-image path)
-        ("public/logs/", "/builds/worker/workspace/build/upload/logs/"),
-        ("public/test", "/builds/worker/artifacts/"),
-        ("public/test_info/", "/builds/worker/workspace/build/blobber_upload_dir/"),
+        ("public/logs/", "{workdir}/workspace/build/upload/logs/".format(**run)),
+        ("public/test", "{workdir}/artifacts/".format(**run)),
+        ("public/test_info/", "{workdir}/workspace/build/blobber_upload_dir/".format(**run)),
     ]
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
@@ -118,7 +121,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     worker['artifacts'] = [{
         'name': prefix,
-        'path': os.path.join('/builds/worker/workspace', path),
+        'path': os.path.join('{workdir}/workspace'.format(**run), path),
         'type': 'directory',
     } for (prefix, path) in artifacts]
 
@@ -126,7 +129,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-test-workspace'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/builds/worker/workspace",
+        'mount-point': "{workdir}/workspace".format(**run),
     }]
 
     env = worker['env'] = {
@@ -161,7 +164,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     # assemble the command line
     command = [
-        '/builds/worker/bin/run-task',
+        '{workdir}/bin/run-task'.format(**run),
     ]
 
     # Support vcs checkouts regardless of whether the task runs from
@@ -171,14 +174,14 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
     if test['checkout']:
-        command.extend(['--vcs-checkout', '/builds/worker/checkouts/gecko'])
-        env['MOZHARNESS_PATH'] = '/builds/worker/checkouts/gecko/testing/mozharness'
+        command.extend(['--vcs-checkout', '{workdir}/checkouts/gecko'.format(**run)])
+        env['MOZHARNESS_PATH'] = '{workdir}/checkouts/gecko/testing/mozharness'.format(**run)
     else:
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}
 
     command.extend([
         '--',
-        '/builds/worker/bin/test-linux.sh',
+        '{workdir}/bin/test-linux.sh'.format(**run),
     ])
 
     command.extend([

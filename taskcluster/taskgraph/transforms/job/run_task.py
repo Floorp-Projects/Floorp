@@ -19,7 +19,7 @@ run_task_schema = Schema({
     # tend to hide their caches.  This cache is never added for level-1 jobs.
     Required('cache-dotcache'): bool,
 
-    # if true (the default), perform a checkout in /builds/worker/checkouts/gecko
+    # if true (the default), perform a checkout in {workdir}/checkouts/gecko
     Required('checkout'): bool,
 
     # The sparse checkout profile to use. Value is the filename relative to the
@@ -42,6 +42,9 @@ run_task_schema = Schema({
     # checkout arguments.  If a list, it will be passed directly; otherwise
     # it will be included in a single argument to `bash -cx`.
     Required('command'): Any([basestring], basestring),
+
+    # Base work directory used to set up the task.
+    Required('workdir'): basestring,
 })
 
 
@@ -61,7 +64,7 @@ def add_checkout_to_command(run, command):
     if not run['checkout']:
         return
 
-    command.append('--vcs-checkout=/builds/worker/checkouts/gecko')
+    command.append('--vcs-checkout={workdir}/checkouts/gecko'.format(**run))
 
     if run['sparse-profile']:
         command.append('--sparse-profile=build/sparse-profiles/%s' %
@@ -87,7 +90,7 @@ def docker_worker_run_task(config, job, taskdesc):
         worker['caches'].append({
             'type': 'persistent',
             'name': 'level-{level}-{project}-dotcache'.format(**config.params),
-            'mount-point': '/builds/worker/.cache',
+            'mount-point': '{workdir}/.cache'.format(**run),
             'skip-untrusted': True,
         })
 
@@ -98,10 +101,10 @@ def docker_worker_run_task(config, job, taskdesc):
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
-    command = ['/builds/worker/bin/run-task']
+    command = ['{workdir}/bin/run-task'.format(**run)]
     add_checkout_to_command(run, command)
     if run['comm-checkout']:
-        command.append('--comm-checkout=/builds/worker/checkouts/gecko/comm')
+        command.append('--comm-checkout={workdir}/checkouts/gecko/comm'.format(**run))
     command.append('--fetch-hgfingerprint')
     command.append('--')
     command.extend(run_command)
