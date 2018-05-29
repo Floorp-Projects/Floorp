@@ -468,7 +468,7 @@ def vcs_checkout(source_repo, dest, store_path,
 
 
 def main(args):
-    print_line(b'setup', b'run-task started\n')
+    print_line(b'setup', b'run-task started in %s\n' % os.getcwd().encode('utf-8'))
     running_as_root = IS_POSIX and os.getuid() == 0
 
     # Arguments up to '--' are ours. After are for the main task
