@@ -1304,9 +1304,8 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
         if (!ToNumber(cx, args[0], &maxDouble))
             return false;
         if (mozilla::IsNaN(maxDouble) || maxDouble < 0 || maxDouble > UINT32_MAX) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                  JSDVG_SEARCH_STACK, args[0], nullptr,
-                                  "not a valid maximum frame count", NULL);
+            ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0], nullptr,
+                             "not a valid maximum frame count");
             return false;
         }
         uint32_t max = uint32_t(maxDouble);
@@ -1317,9 +1316,8 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
     RootedObject compartmentObject(cx);
     if (args.length() >= 2) {
         if (!args[1].isObject()) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                  JSDVG_SEARCH_STACK, args[0], nullptr,
-                                  "not an object", NULL);
+            ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0], nullptr,
+                             "not an object");
             return false;
         }
         compartmentObject = UncheckedUnwrap(&args[1].toObject());
@@ -3593,16 +3591,14 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
     // test is all about object identity, and ToString doesn't preserve that.
     // Non-GCThing endpoints don't make much sense.
     if (!args[0].isObject() && !args[0].isString() && !args[0].isSymbol()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[0], nullptr,
-                              "not an object, string, or symbol", NULL);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0], nullptr,
+                         "not an object, string, or symbol");
         return false;
     }
 
     if (!args[1].isObject() && !args[1].isString() && !args[1].isSymbol()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[0], nullptr,
-                              "not an object, string, or symbol", NULL);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0], nullptr,
+                         "not an object, string, or symbol");
         return false;
     }
 
@@ -3698,25 +3694,22 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
     // test is all about object identity, and ToString doesn't preserve that.
     // Non-GCThing endpoints don't make much sense.
     if (!args[0].isObject() && !args[0].isString() && !args[0].isSymbol()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[0], nullptr,
-                              "not an object, string, or symbol", nullptr);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[0], nullptr,
+                         "not an object, string, or symbol");
         return false;
     }
 
     if (!args[1].isObject() || !args[1].toObject().is<ArrayObject>()) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[1], nullptr,
-                              "not an array object", nullptr);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[1], nullptr,
+                         "not an array object");
         return false;
     }
 
     RootedArrayObject objs(cx, &args[1].toObject().as<ArrayObject>());
     size_t length = objs->getDenseInitializedLength();
     if (length == 0) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[1], nullptr,
-                              "not a dense array object with one or more elements", nullptr);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[1], nullptr,
+                         "not a dense array object with one or more elements");
         return false;
     }
 
@@ -3732,9 +3725,8 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
     if (!JS::ToInt32(cx, args[2], &maxNumPaths))
         return false;
     if (maxNumPaths <= 0) {
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                              JSDVG_SEARCH_STACK, args[2], nullptr,
-                              "not greater than 0", nullptr);
+        ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK, args[2], nullptr,
+                         "not greater than 0");
         return false;
     }
 
