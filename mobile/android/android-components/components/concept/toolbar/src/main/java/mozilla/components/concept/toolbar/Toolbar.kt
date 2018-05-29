@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import java.lang.ref.WeakReference
 
 /**
  * Interface to be implemented by components that provide browser toolbar functionality.
@@ -82,6 +83,11 @@ interface Toolbar {
 
     /**
      * An action button to be added to the toolbar.
+     *
+     * @param imageResource The drawable to be shown.
+     * @param contentDescription The content description to use.
+     * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param listener Callback that will be invoked whenever the button is pressed
      */
     open class ActionButton(
         @DrawableRes private val imageResource: Int,
@@ -107,7 +113,81 @@ interface Toolbar {
     }
 
     /**
+     * An action button with two states, selected and unselected. When the button is pressed, the
+     * state changes automatically.
+     *
+     * @param imageResource The drawable to be shown if the button is in unselected state.
+     * @param imageResourceSelected The drawable to be shown if the button is in selected state.
+     * @param contentDescription The content description to use if the button is in unselected state.
+     * @param contentDescriptionSelected The content description to use if the button is in selected state.
+     * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param selected Sets whether this button should be selected initially.
+     * @param background A custom (stateful) background drawable resource to be used.
+     * @param listener Callback that will be invoked whenever the checked state changes.
+     */
+    open class ActionToggleButton(
+        @DrawableRes private val imageResource: Int,
+        @DrawableRes private val imageResourceSelected: Int,
+        private val contentDescription: String,
+        private val contentDescriptionSelected: String,
+        override val visible: () -> Boolean = { true },
+        private var selected: Boolean = false,
+        @DrawableRes private val background: Int? = null,
+        private val listener: (Boolean) -> Unit
+    ) : Action {
+        private var view: WeakReference<ImageButton>? = null
+
+        override fun createView(parent: ViewGroup): View = ImageButton(parent.context).also {
+            view = WeakReference(it)
+
+            it.setOnClickListener { toggle() }
+            it.isSelected = selected
+
+            updateViewState()
+
+            if (background == null) {
+                val outValue = TypedValue()
+                parent.context.theme.resolveAttribute(
+                        android.R.attr.selectableItemBackgroundBorderless,
+                        outValue,
+                        true)
+
+                it.setBackgroundResource(outValue.resourceId)
+            } else {
+                it.setBackgroundResource(background)
+            }
+        }
+
+        fun toggle() {
+            selected = !selected
+            updateViewState()
+
+            listener.invoke(selected)
+        }
+
+        fun isSelected() = selected
+
+        private fun updateViewState() {
+            view?.get()?.let {
+                it.isSelected = selected
+
+                if (selected) {
+                    it.setImageResource(imageResourceSelected)
+                    it.contentDescription = contentDescriptionSelected
+                } else {
+                    it.setImageResource(imageResource)
+                    it.contentDescription = contentDescription
+                }
+            }
+        }
+
+        override fun bind(view: View) = Unit
+    }
+
+    /**
      * An "empty" action with a desired width to be used as "placeholder".
+     *
+     * @param desiredWidth The desired width in density independent pixels for this action.
      */
     open class ActionSpace(
         private val desiredWidth: Int
@@ -121,6 +201,11 @@ interface Toolbar {
 
     /**
      * An action that just shows a static, non-clickable image.
+     *
+     * @param imageResource The drawable to be shown.
+     * @param contentDescription Optional content description to be used. If no content description
+     *                           is provided then this view will be treated as not important for
+     *                           accessibility.
      */
     open class ActionImage(
         @DrawableRes private val imageResource: Int,

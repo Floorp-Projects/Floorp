@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
+import android.support.annotation.DrawableRes
 import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.View
@@ -256,6 +257,14 @@ class BrowserToolbar @JvmOverloads constructor(
         EDIT
     }
 
+    /**
+     * An action button to be added to the toolbar.
+     *
+     * @param imageResource The drawable to be shown.
+     * @param contentDescription The content description to use.
+     * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param listener Callback that will be invoked whenever the button is pressed
+     */
     open class Button(
         imageResource: Int,
         contentDescription: String,
@@ -269,6 +278,46 @@ class BrowserToolbar @JvmOverloads constructor(
             view.setPadding(padding, padding, padding, padding)
 
             return view
+        }
+    }
+
+    /**
+     * An action button with two states, selected and unselected. When the button is pressed, the
+     * state changes automatically.
+     *
+     * @param imageResource The drawable to be shown if the button is in unselected state.
+     * @param imageResourceSelected The drawable to be shown if the button is in selected state.
+     * @param contentDescription The content description to use if the button is in unselected state.
+     * @param contentDescriptionSelected The content description to use if the button is in selected state.
+     * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param selected Sets whether this button should be selected initially.
+     * @param background A custom (stateful) background drawable resource to be used.
+     * @param listener Callback that will be invoked whenever the checked state changes.
+     */
+    open class ToggleButton(
+        @DrawableRes imageResource: Int,
+        @DrawableRes imageResourceSelected: Int,
+        contentDescription: String,
+        contentDescriptionSelected: String,
+        visible: () -> Boolean = { true },
+        selected: Boolean = false,
+        @DrawableRes background: Int? = null,
+        listener: (Boolean) -> Unit
+    ) : Toolbar.ActionToggleButton(
+        imageResource,
+        imageResourceSelected,
+        contentDescription,
+        contentDescriptionSelected,
+        visible,
+        selected,
+        background,
+        listener
+    ) {
+        override fun createView(parent: ViewGroup): View {
+            return super.createView(parent).apply {
+                val padding = dp(ACTION_PADDING_DP)
+                setPadding(padding, padding, padding, padding)
+            }
         }
     }
 
