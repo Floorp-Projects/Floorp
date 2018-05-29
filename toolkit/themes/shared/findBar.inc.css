@@ -74,13 +74,13 @@ findbar[noanim] {
 }
 
 .findbar-textbox[status="notfound"] {
-  background-color: #f66;
-  color: white;
+  background-color: rgba(255,0,57,.3);
+  color: inherit;
 }
 
 .findbar-textbox[flash="true"] {
-  background-color: yellow;
-  color: black;
+  background-color: rgba(255,233,0,.3);
+  color: inherit;
 }
 
 .findbar-textbox.minimal {
@@ -91,7 +91,8 @@ findbar[noanim] {
 .findbar-find-next {
   margin-inline-start: 0;
   -moz-appearance: none;
-  background: linear-gradient(rgba(255,255,255,.8) 1px, rgba(255,255,255,.4) 1px, rgba(255,255,255,.1));
+  background: linear-gradient(rgba(255,255,255,.3), rgba(255,255,255,.1));
+  background-clip: padding-box;
   border: 1px solid ThreeDShadow;
   padding: 2px 5px;
   line-height: 1em;
