@@ -12,6 +12,7 @@
 #include "frontend/BinToken.h"
 #include "frontend/BinTokenReaderBase.h"
 
+#include "js/Result.h"
 #include "js/TypeDecls.h"
 
 #if !defined(NIGHTLY_BUILD)
@@ -20,9 +21,6 @@
 
 namespace js {
 namespace frontend {
-
-using namespace mozilla;
-using namespace JS;
 
 /**
  * A token reader for a simple, alternative serialization format for BinAST.
@@ -135,7 +133,7 @@ class MOZ_STACK_CLASS BinTokenReaderTester: public BinTokenReaderBase
     /**
      * Read a single `BinVariant | null` value.
      */
-    MOZ_MUST_USE JS::Result<Maybe<BinVariant>> readMaybeVariant();
+    MOZ_MUST_USE JS::Result<mozilla::Maybe<BinVariant>> readMaybeVariant();
     MOZ_MUST_USE JS::Result<BinVariant> readVariant();
 
     /**
