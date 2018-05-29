@@ -477,9 +477,6 @@ js::IsBufferGrayRootsTracer(JSTracer* trc)
 }
 #endif
 
-// A canary value used to check the gray buffer contents are valid.
-static Cell* const GrayBufferCanary = reinterpret_cast<Cell*>(0x47726179); // "Gray"
-
 void
 js::gc::GCRuntime::bufferGrayRoots()
 {
@@ -492,12 +489,6 @@ js::gc::GCRuntime::bufferGrayRoots()
     BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&grayBufferer, grayRootTracer.data);
-
-    // Push a canary value onto the end of the list.
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        if (!zone->gcGrayRoots().empty() && !zone->gcGrayRoots().append(GrayBufferCanary))
-            grayBufferer.setFailed();
-    }
 
     // Propagate the failure flag from the marker to the runtime.
     if (grayBufferer.failed()) {
@@ -544,13 +535,21 @@ GCRuntime::markBufferedGrayRoots(JS::Zone* zone)
     if (roots.empty())
         return;
 
-    // Check for canary value but don't remove it.
-    MOZ_RELEASE_ASSERT(roots.length() > 1);
-    MOZ_RELEASE_ASSERT(roots.back() == GrayBufferCanary);
-
-    for (size_t i = 0; i < roots.length() - 1; i++) {
+    for (size_t i = 0; i < roots.length(); i++) {
         Cell* cell = roots[i];
+
+        // Bug 1203273: Check for bad pointers on OSX and output diagnostics.
+#if defined(XP_DARWIN) && defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
+        auto addr = uintptr_t(cell);
+        if (addr < ChunkSize || addr % CellAlignBytes != 0) {
+            MOZ_CRASH_UNSAFE_PRINTF(
+                "Bad GC thing pointer in gray root buffer: %p at index %zu of %zu, address %p",
+                cell, i, roots.length(), &roots[i]);
+        }
+#else
         MOZ_ASSERT(IsCellPointerValid(cell));
+#endif
+
         TraceManuallyBarrieredGenericPointerEdge(&marker, &cell, "buffered gray root");
     }
 }
