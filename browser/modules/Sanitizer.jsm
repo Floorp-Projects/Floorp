@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   OfflineAppCacheHelper: "resource://gre/modules/offlineAppCache.jsm",
-  ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "sas",
@@ -73,12 +72,6 @@ var Sanitizer = {
   PREF_TIMESPAN: "privacy.sanitize.timeSpan",
 
   /**
-   * Pref to newTab segregation. If true, on shutdown, the private container
-   * used in about:newtab is cleaned up.  Exposed because used in tests.
-   */
-  PREF_NEWTAB_SEGREGATION: "privacy.usercontext.about_newtab_segregation.enabled",
-
-  /**
    * Time span constants corresponding to values of the privacy.sanitize.timeSpan
    * pref.  Used to determine how much history to clear, for various items
    */
@@ -97,11 +90,6 @@ var Sanitizer = {
    * sanitizations on startup.
    */
   shouldSanitizeOnShutdown: false,
-
-  /**
-   * Whether we should sanitize the private container for about:newtab.
-   */
-  shouldSanitizeNewTabContainer: false,
 
   /**
    * Shows a sanitization dialog to the user.
@@ -156,17 +144,6 @@ var Sanitizer = {
       () => sanitizeOnShutdown(progress),
       {fetchState: () => ({ progress })}
     );
-
-    this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(this.PREF_NEWTAB_SEGREGATION, false);
-    if (this.shouldSanitizeNewTabContainer) {
-      addPendingSanitization("newtab-container", [], {});
-    }
-
-    let i = pendingSanitizations.findIndex(s => s.id == "newtab-container");
-    if (i) {
-      pendingSanitizations.splice(i, 1);
-      sanitizeNewTabSegregation();
-    }
 
     // Finally, run the sanitizations that were left pending, because we crashed
     // before completing them.
@@ -294,12 +271,6 @@ var Sanitizer = {
         if (this.shouldSanitizeOnShutdown) {
           let itemsToClear = getItemsToClearFromPrefBranch(Sanitizer.PREF_SHUTDOWN_BRANCH);
           addPendingSanitization("shutdown", itemsToClear, {});
-        }
-      } else if (data == this.PREF_NEWTAB_SEGREGATION) {
-        this.shouldSanitizeNewTabContainer = Services.prefs.getBoolPref(this.PREF_NEWTAB_SEGREGATION, false);
-        removePendingSanitization("newtab-container");
-        if (this.shouldSanitizeNewTabContainer) {
-          addPendingSanitization("newtab-container", [], {});
         }
       }
     }
@@ -1019,11 +990,6 @@ async function sanitizeOnShutdown(progress) {
     }
   }
 
-  if (Sanitizer.shouldSanitizeNewTabContainer) {
-    sanitizeNewTabSegregation();
-    removePendingSanitization("newtab-container");
-  }
-
   if (Sanitizer.shouldSanitizeOnShutdown) {
     // We didn't crash during shutdown sanitization, so annotate it to avoid
     // sanitizing again on startup.
@@ -1093,14 +1059,6 @@ async function sanitizeSessionPrincipal(principal) {
     }).catch(() => {}),
     ServiceWorkerCleanUp.removeFromPrincipal(principal).catch(() => {}),
   ]);
-}
-
-function sanitizeNewTabSegregation() {
-  let identity = ContextualIdentityService.getPrivateIdentity("userContextIdInternal.thumbnail");
-  if (identity) {
-    Services.obs.notifyObservers(null, "clear-origin-attributes-data",
-                                 JSON.stringify({ userContextId: identity.userContextId }));
-  }
 }
 
 /**
