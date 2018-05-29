@@ -3,11 +3,12 @@ job-defaults:
     require-build: true
     worker-type:
         by-platform:
-            linux64.*: aws-provisioner-v1/gecko-t-linux-xlarge
+            linux64.*: releng-hardware/gecko-t-linux-talos
     worker:
         by-platform:
             linux64.*:
-                docker-image: {in-tree: "desktop1604-test"}
+                env:
+                    SHELL: /bin/bash
                 max-run-time: 1800
     treeherder:
         kind: test
@@ -17,6 +18,7 @@ job-defaults:
         use-artifacts:
             build:
                 - target.jsshell.zip
+        workdir: /home/cltbld
     run-on-projects: ['mozilla-central', 'try']
 
 bench-ares6:
@@ -28,7 +30,7 @@ bench-ares6:
             cd $USE_ARTIFACT_PATH/build &&
             unzip -q -d jsshell target.jsshell.zip &&
             export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
-            cd /builds/worker/checkouts/gecko &&
+            cd $GECKO_PATH &&
             ./mach jsshell-bench --binary $JSSHELL --perfherder ares6
 
 bench-sixspeed:
@@ -40,5 +42,5 @@ bench-sixspeed:
             cd $USE_ARTIFACT_PATH/build &&
             unzip -q -d jsshell target.jsshell.zip &&
             export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
-            cd /builds/worker/checkouts/gecko &&
+            cd $GECKO_PATH &&
             ./mach jsshell-bench --binary $JSSHELL --perfherder six-speed
