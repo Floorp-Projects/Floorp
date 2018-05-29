@@ -203,8 +203,8 @@ ListFloats(FILE* out, const char* aPrefix, const nsFloatCacheList& aFloats)
   }
 }
 
-const char*
-nsLineBox::BreakTypeToString(StyleClear aBreakType) const
+/* static */ const char*
+nsLineBox::BreakTypeToString(StyleClear aBreakType)
 {
   switch (aBreakType) {
     case StyleClear::None: return "nobr";

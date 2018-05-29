@@ -574,7 +574,7 @@ public:
                                     int32_t* aFrameIndexInLine);
 
 #ifdef DEBUG_FRAME_DUMP
-  const char* BreakTypeToString(StyleClear aBreakType) const;
+  static const char* BreakTypeToString(StyleClear aBreakType);
   char* StateToString(char* aBuf, int32_t aBufSize) const;
 
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
