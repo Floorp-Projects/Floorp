@@ -863,6 +863,9 @@ nsContextMenu.prototype = {
 
   // Open clicked-in frame in the same window.
   showOnlyThisFrame() {
+    urlSecurityCheck(gContextMenuContentData.docLocation,
+                     this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     let referrer = gContextMenuContentData.referrer;
     openWebLinkIn(gContextMenuContentData.docLocation, "current", {
       disallowInheritPrincipal: true,
@@ -921,6 +924,9 @@ nsContextMenu.prototype = {
   },
 
   viewImageDesc(e) {
+    urlSecurityCheck(this.imageDescURL,
+                     this.principal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink(this.imageDescURL, e, { disallowInheritPrincipal: true,
                                        referrerURI: gContextMenuContentData.documentURIObject,
                                        triggeringPrincipal: this.principal,
@@ -933,6 +939,10 @@ nsContextMenu.prototype = {
   },
 
   reloadImage() {
+    urlSecurityCheck(this.mediaURL,
+                     this.principal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
     this.browser.messageManager.sendAsyncMessage("ContextMenu:ReloadImage",
                                                  null, { target: this.target });
   },
@@ -961,10 +971,13 @@ nsContextMenu.prototype = {
                                  triggeringPrincipal: systemPrincipal});
       }, Cu.reportError);
     } else {
+      urlSecurityCheck(this.mediaURL,
+                       this.principal,
+                       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
       openUILink(this.mediaURL, e, { disallowInheritPrincipal: true,
                                      referrerURI,
                                      forceAllowDataURI: true,
-                                     triggeringPrincipal: this.browser.contentPrincipal
+                                     triggeringPrincipal: this.principal,
       });
     }
   },
@@ -1005,9 +1018,13 @@ nsContextMenu.prototype = {
 
   // Change current window to the URL of the background image.
   viewBGImage(e) {
+    urlSecurityCheck(this.bgImageURL,
+                     this.principal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
     openUILink(this.bgImageURL, e, { disallowInheritPrincipal: true,
                                      referrerURI: gContextMenuContentData.documentURIObject,
-                                     triggeringPrincipal: this.browser.contentPrincipal
+                                     triggeringPrincipal: this.principal,
     });
   },
 
