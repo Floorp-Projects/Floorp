@@ -212,40 +212,30 @@ AnimationState::LoopLength() const
 // FrameAnimator implementation.
 ///////////////////////////////////////////////////////////////////////////////
 
-Maybe<TimeStamp>
+TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime(AnimationState& aState,
-                                         DrawableSurface& aFrames) const
+                                         FrameTimeout aCurrentTimeout) const
 {
-  TimeStamp currentFrameTime = aState.mCurrentAnimationFrameTime;
-  Maybe<FrameTimeout> timeout =
-    GetTimeoutForFrame(aState, aFrames, aState.mCurrentAnimationFrameIndex);
-
-  if (timeout.isNothing()) {
-    MOZ_ASSERT(aState.GetHasRequestedDecode() && !aState.GetIsCurrentlyDecoded());
-    return Nothing();
-  }
-
-  if (*timeout == FrameTimeout::Forever()) {
+  if (aCurrentTimeout == FrameTimeout::Forever()) {
     // We need to return a sentinel value in this case, because our logic
     // doesn't work correctly if we have an infinitely long timeout. We use one
     // year in the future as the sentinel because it works with the loop in
     // RequestRefresh() below.
     // XXX(seth): It'd be preferable to make our logic work correctly with
     // infinitely long timeouts.
-    return Some(TimeStamp::NowLoRes() +
-                TimeDuration::FromMilliseconds(31536000.0));
+    return TimeStamp::NowLoRes() +
+           TimeDuration::FromMilliseconds(31536000.0);
   }
 
   TimeDuration durationOfTimeout =
-    TimeDuration::FromMilliseconds(double(timeout->AsMilliseconds()));
-  TimeStamp currentFrameEndTime = currentFrameTime + durationOfTimeout;
-
-  return Some(currentFrameEndTime);
+    TimeDuration::FromMilliseconds(double(aCurrentTimeout.AsMilliseconds()));
+  return aState.mCurrentAnimationFrameTime + durationOfTimeout;
 }
 
 RefreshResult
 FrameAnimator::AdvanceFrame(AnimationState& aState,
                             DrawableSurface& aFrames,
+                            RawAccessFrameRef& aCurrentFrame,
                             TimeStamp aTime)
 {
   NS_ASSERTION(aTime <= TimeStamp::Now(),
@@ -331,18 +321,17 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
     ret.mDirtyRect = aState.FirstFrameRefreshArea();
   } else {
     MOZ_ASSERT(nextFrameIndex == currentFrameIndex + 1);
-    RawAccessFrameRef currentFrame = aFrames.RawAccessRef(currentFrameIndex);
 
     // Change frame
-    if (!DoBlend(currentFrame, nextFrame, nextFrameIndex, &ret.mDirtyRect)) {
+    if (!DoBlend(aCurrentFrame, nextFrame, nextFrameIndex, &ret.mDirtyRect)) {
       // something went wrong, move on to next
       NS_WARNING("FrameAnimator::AdvanceFrame(): Compositing of frame failed");
       nextFrame->SetCompositingFailed(true);
-      Maybe<TimeStamp> currentFrameEndTime = GetCurrentImgFrameEndTime(aState, aFrames);
-      MOZ_ASSERT(currentFrameEndTime.isSome());
-      aState.mCurrentAnimationFrameTime = *currentFrameEndTime;
+      aState.mCurrentAnimationFrameTime =
+        GetCurrentImgFrameEndTime(aState, aCurrentFrame->GetTimeout());
       aState.mCurrentAnimationFrameIndex = nextFrameIndex;
       aState.mCompositedFrameRequested = false;
+      aCurrentFrame = Move(nextFrame);
       aFrames.Advance(nextFrameIndex);
 
       return ret;
@@ -351,9 +340,8 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
     nextFrame->SetCompositingFailed(false);
   }
 
-  Maybe<TimeStamp> currentFrameEndTime = GetCurrentImgFrameEndTime(aState, aFrames);
-  MOZ_ASSERT(currentFrameEndTime.isSome());
-  aState.mCurrentAnimationFrameTime = *currentFrameEndTime;
+  aState.mCurrentAnimationFrameTime =
+    GetCurrentImgFrameEndTime(aState, aCurrentFrame->GetTimeout());
 
   // If we can get closer to the current time by a multiple of the image's loop
   // time, we should. We can only do this if we're done decoding; otherwise, we
@@ -390,6 +378,7 @@ FrameAnimator::AdvanceFrame(AnimationState& aState,
   // Set currentAnimationFrameIndex at the last possible moment
   aState.mCurrentAnimationFrameIndex = nextFrameIndex;
   aState.mCompositedFrameRequested = false;
+  aCurrentFrame = Move(nextFrame);
   aFrames.Advance(nextFrameIndex);
 
   // If we're here, we successfully advanced the frame.
@@ -449,11 +438,12 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
     return ret;
   }
 
+  RawAccessFrameRef currentFrame =
+    result.Surface().RawAccessRef(aState.mCurrentAnimationFrameIndex);
+
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
-  Maybe<TimeStamp> currentFrameEndTime =
-    GetCurrentImgFrameEndTime(aState, result.Surface());
-  if (currentFrameEndTime.isNothing()) {
+  if (!currentFrame) {
     MOZ_ASSERT(gfxPrefs::ImageMemAnimatedDiscardable());
     MOZ_ASSERT(aState.GetHasRequestedDecode() && !aState.GetIsCurrentlyDecoded());
     MOZ_ASSERT(aState.mCompositedFrameInvalid);
@@ -463,6 +453,9 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
     return ret;
   }
 
+  TimeStamp currentFrameEndTime =
+    GetCurrentImgFrameEndTime(aState, currentFrame->GetTimeout());
+
   // If nothing has accessed the composited frame since the last time we
   // advanced, then there is no point in continuing to advance the animation.
   // This has the effect of freezing the animation while not in view.
@@ -471,28 +464,29 @@ FrameAnimator::RequestRefresh(AnimationState& aState,
     return ret;
   }
 
-  while (*currentFrameEndTime <= aTime) {
-    TimeStamp oldFrameEndTime = *currentFrameEndTime;
+  while (currentFrameEndTime <= aTime) {
+    TimeStamp oldFrameEndTime = currentFrameEndTime;
 
-    RefreshResult frameRes = AdvanceFrame(aState, result.Surface(), aTime);
+    RefreshResult frameRes = AdvanceFrame(aState, result.Surface(),
+                                          currentFrame, aTime);
 
     // Accumulate our result for returning to callers.
     ret.Accumulate(frameRes);
 
-    currentFrameEndTime = GetCurrentImgFrameEndTime(aState, result.Surface());
-    // AdvanceFrame can't advance to a frame that doesn't exist yet.
-    MOZ_ASSERT(currentFrameEndTime.isSome());
+    // currentFrame was updated by AdvanceFrame so it is still current.
+    currentFrameEndTime =
+      GetCurrentImgFrameEndTime(aState, currentFrame->GetTimeout());
 
     // If we didn't advance a frame, and our frame end time didn't change,
     // then we need to break out of this loop & wait for the frame(s)
     // to finish downloading.
-    if (!frameRes.mFrameAdvanced && (*currentFrameEndTime == oldFrameEndTime)) {
+    if (!frameRes.mFrameAdvanced && currentFrameEndTime == oldFrameEndTime) {
       break;
     }
   }
 
   // Advanced to the correct frame, the composited frame is now valid to be drawn.
-  if (*currentFrameEndTime > aTime) {
+  if (currentFrameEndTime > aTime) {
     aState.mCompositedFrameInvalid = false;
     ret.mDirtyRect = IntRect(IntPoint(0,0), mSize);
   }
@@ -549,20 +543,6 @@ FrameAnimator::GetCompositedFrame(AnimationState& aState)
              "About to return a paletted frame");
 
   return result;
-}
-
-Maybe<FrameTimeout>
-FrameAnimator::GetTimeoutForFrame(AnimationState& aState,
-                                  DrawableSurface& aFrames,
-                                  uint32_t aFrameNum) const
-{
-  RawAccessFrameRef frame = aFrames.RawAccessRef(aFrameNum);
-  if (frame) {
-    return Some(frame->GetTimeout());
-  }
-
-  MOZ_ASSERT(aState.mHasRequestedDecode && !aState.mIsCurrentlyDecoded);
-  return Nothing();
 }
 
 static void
