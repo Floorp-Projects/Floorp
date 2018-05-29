@@ -116,6 +116,14 @@ VARCACHE_PREF(
 // Note, this is not currently safe to use for normal browsing yet.
 PREF("dom.serviceWorkers.parent_intercept", bool, false)
 
+// Time in milliseconds for PaymentResponse to wait for
+// the Web page to call complete().
+VARCACHE_PREF(
+  "dom.payments.response.timeout",
+   dom_payments_response_timeout,
+  uint32_t, 5000
+)
+
 //---------------------------------------------------------------------------
 // Clear-Site-Data prefs
 //---------------------------------------------------------------------------
