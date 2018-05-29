@@ -6,7 +6,8 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { a, button, dd, dl, dt, header, li, section, span } = require("devtools/client/shared/vendor/react-dom-factories");
+const { a, br, button, dd, dl, dt, header, li, section, span, time } =
+  require("devtools/client/shared/vendor/react-dom-factories");
 const Services = require("Services");
 const { getUnicodeUrl, getUnicodeUrlPath } = require("devtools/client/shared/unicode-url");
 
@@ -123,7 +124,8 @@ class Worker extends Component {
         Strings.GetStringFromName("unregister"))
       : null;
 
-    const debugLinkDisabled = this.isRunning() ? "" : "worker__debug-link--disabled";
+    const debugLinkDisabled = this.isRunning() ? "" : "disabled";
+
     const debugLink = a({
       onClick: this.isRunning() ? this.debug : null,
       title: this.isRunning() ? null : "Only running service workers can be debugged",
@@ -134,6 +136,13 @@ class Worker extends Component {
     const startLink = !this.isRunning() ?
       a({ onClick: this.start, className: "worker__start-link" },
         Strings.GetStringFromName("start"))
+      : null;
+
+    const lastUpdated = worker.lastUpdateTime
+      ? span({ className: "worker__data__updated" },
+          "Updated ",
+          time({ className: "js-sw-updated"},
+            new Date(worker.lastUpdateTime / 1000).toLocaleString()))
       : null;
 
     return li({ className: "worker js-sw-container" },
@@ -149,9 +158,11 @@ class Worker extends Component {
         { className: "worker__data" },
         dt({ className: "worker__meta-name" }, "Source"),
         dd({},
-            span({ title: worker.scope, className: "js-source-url" },
+            span({ title: worker.scope, className: "worker__source-url js-source-url" },
               this.formatSource(worker.url)),
-            debugLink),
+            debugLink,
+            lastUpdated ? br({}) : null,
+            lastUpdated ? lastUpdated : null),
         dt({ className: "worker__meta-name" }, "Status"),
         dd({},
           Strings.GetStringFromName(status).toLowerCase(),

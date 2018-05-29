@@ -41,7 +41,8 @@ var tests = [
 
 add_task(async function test() {
   // The pref should not exist by default.
-  Assert.throws(() => getInterval());
+  Assert.throws(() => getInterval(),
+    /NS_ERROR_UNEXPECTED/);
 
   // Force the component, so it will start observing preferences.
   force_expiration_start();

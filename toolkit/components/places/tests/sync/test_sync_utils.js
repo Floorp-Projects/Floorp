@@ -450,9 +450,11 @@ add_task(async function test_dedupe() {
 
   await Assert.rejects(
     PlacesSyncUtils.bookmarks.dedupe(makeGuid(), makeGuid(), makeGuid()),
+    /does not exist/,
     "Should reject attempts to de-dupe nonexistent items"
   );
   await Assert.rejects(PlacesSyncUtils.bookmarks.dedupe("menu", makeGuid(), "places"),
+    /Cannot de-dupe local root/,
     "Should reject attempts to de-dupe local roots");
 
   info("De-dupe with same remote parent");
@@ -474,6 +476,7 @@ add_task(async function test_dedupe() {
     ok(!(await PlacesUtils.bookmarks.fetch(mozBmk.recordId)),
       "Bookmark with old local sync ID should not exist");
     await Assert.rejects(PlacesUtils.promiseItemId(mozBmk.recordId),
+      /no item found for the given GUID/,
       "Should invalidate GUID cache entry for old local sync ID");
 
     let newMozBmk = await PlacesUtils.bookmarks.fetch(newRemoteRecordId);
@@ -1049,7 +1052,7 @@ add_task(async function test_update_move_root() {
   await Assert.rejects(PlacesSyncUtils.bookmarks.update({
     recordId: "menu",
     parentRecordId: "toolbar",
-  }));
+  }), /Cannot move Places root/);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -1219,7 +1222,8 @@ add_task(async function test_update_livemark() {
       await Assert.rejects(PlacesSyncUtils.bookmarks.update({
         recordId: livemark.guid,
         feed: site + "/feed/2",
-      }), "Reinserting livemark with changed feed URL requires full record");
+      }), /reinsert: Invalid value for property 'feed'/,
+          "Reinserting livemark with changed feed URL requires full record");
 
       let newLivemark = await PlacesSyncUtils.bookmarks.update({
         kind: "livemark",
@@ -1245,7 +1249,8 @@ add_task(async function test_update_livemark() {
       await Assert.rejects(PlacesSyncUtils.bookmarks.update({
         recordId: livemark.guid,
         site,
-      }), "Reinserting livemark with new site URL requires full record");
+      }), /reinsert: Invalid value for property 'site'/,
+          "Reinserting livemark with new site URL requires full record");
 
       let newLivemark = await PlacesSyncUtils.bookmarks.update({
         kind: "livemark",
@@ -1276,7 +1281,8 @@ add_task(async function test_update_livemark() {
       await Assert.rejects(PlacesSyncUtils.bookmarks.update({
         recordId: livemark.guid,
         site: null,
-      }), "Reinserting livemark witout site URL requires full record");
+      }), /reinsert: Invalid value for property 'site'/,
+          "Reinserting livemark witout site URL requires full record");
 
       let newLivemark = await PlacesSyncUtils.bookmarks.update({
         kind: "livemark",
@@ -1304,7 +1310,8 @@ add_task(async function test_update_livemark() {
       await Assert.rejects(PlacesSyncUtils.bookmarks.update({
         recordId: livemark.guid,
         site: site + "/new",
-      }), "Reinserting livemark with changed site URL requires full record");
+      }), /reinsert: Invalid value for property 'site'/,
+          "Reinserting livemark with changed site URL requires full record");
 
       let newLivemark = await PlacesSyncUtils.bookmarks.update({
         kind: "livemark",

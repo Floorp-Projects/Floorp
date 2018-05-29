@@ -716,13 +716,11 @@ Toolbox.prototype = {
 
     // Log current theme. The question we want to answer is:
     // "What proportion of users use which themes?"
-    let currentTheme = Services.prefs.getCharPref("devtools.theme");
+    const currentTheme = Services.prefs.getCharPref("devtools.theme");
     this.telemetry.keyedScalarAdd(CURRENT_THEME_SCALAR, currentTheme, 1);
 
-    this.telemetry.preparePendingEvent(
-      "devtools.main", "open", "tools", null,
-      ["entrypoint", "first_panel", "host", "splitconsole", "width"]
-    );
+    this.telemetry.preparePendingEvent("devtools.main", "open", "tools", null,
+      ["entrypoint", "first_panel", "host", "shortcut", "splitconsole", "width"]);
     this.telemetry.addEventProperty(
       "devtools.main", "open", "tools", null, "host", this._getTelemetryHostString()
     );

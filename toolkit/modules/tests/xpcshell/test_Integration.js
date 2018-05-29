@@ -206,7 +206,7 @@ add_task(async function test_xpcom_throws() {
 
   // This calls QueryInterface because it looks for nsISupportsWeakReference.
   Assert.throws(() => Services.obs.addObserver(combined, "test-topic", true),
-                "NS_NOINTERFACE");
+                /NS_NOINTERFACE/);
 });
 
 /**

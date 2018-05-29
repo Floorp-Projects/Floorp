@@ -262,6 +262,10 @@ var ExtensionSearchHandler = Object.freeze({
       throw new Error(`The keyword provided is not registered: "${keyword}"`);
     }
 
+    if (!gActiveInputSession) {
+      throw new Error("There is no active input session");
+    }
+
     if (gActiveInputSession && gActiveInputSession.keyword != keyword) {
       throw new Error("A different input session is already ongoing");
     }

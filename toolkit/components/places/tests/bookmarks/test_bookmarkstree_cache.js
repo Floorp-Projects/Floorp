@@ -14,5 +14,6 @@ add_task(async function boookmarks_tree_cache() {
 
   PlacesUtils.bookmarks.removeItem(id);
 
-  await Assert.rejects(PlacesUtils.promiseItemGuid(id));
+  await Assert.rejects(PlacesUtils.promiseItemGuid(id),
+    /no item found for the given itemId/);
 });

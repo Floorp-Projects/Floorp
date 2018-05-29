@@ -81,7 +81,7 @@ add_task(async function test_insert_error_cases() {
           date: futureDate,
         }
       ]}),
-    `TypeError: date: ${futureDate} is not a valid date`,
+    /cannot be a future date/,
     "passing a visit object with a future date to History.insert should throw a TypeError"
   );
   Assert.throws(

@@ -59,7 +59,7 @@ var ContentTaskUtils = {
 
         if (conditionPassed) {
           clearInterval(intervalID);
-          resolve();
+          resolve(conditionPassed);
         }
         tries++;
       }, interval);

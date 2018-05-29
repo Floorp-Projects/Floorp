@@ -75,8 +75,8 @@ class TestContext(MarionetteTestCase):
         return self.marionette._send_message("setContext", {"value": value})
 
     def test_set_context(self):
-        self.assertEqual(self.set_context("content"), {})
-        self.assertEqual(self.set_context("chrome"), {})
+        self.assertEqual(self.set_context("content"), {"value": None})
+        self.assertEqual(self.set_context("chrome"), {"value": None})
 
         for typ in [True, 42, [], {}, None]:
             with self.assertRaises(errors.InvalidArgumentException):

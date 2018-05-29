@@ -133,6 +133,9 @@ private:
   // when mSizeInitialized is true if we tried and failed to get the size
   // of the file.
   bool mSizeInitialized;
+  // Set to true if NotifyDataEnded callback has been processed (which only
+  // occurs if resource size is known)
+  bool mNotifyDataEndedProcessed = false;
 };
 
 } // namespace mozilla

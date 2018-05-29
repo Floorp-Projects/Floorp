@@ -195,3 +195,45 @@ add_task(async function test_dynamicBuiltinEventsDisabledByDefault() {
                      "Should have recorded the expected event data.");
   }
 });
+
+add_task(async function test_dynamicBuiltinDontOverwriteStaticData() {
+  Telemetry.clearEvents();
+  Telemetry.canRecordExtended = true;
+
+  const TEST_STATIC_EVENT_NAME = "telemetry.test";
+  const TEST_EVENT_NAME = "telemetry.test.nooverwrite";
+
+  // Register some dynamic builtin test events.
+  Telemetry.registerBuiltinEvents(TEST_EVENT_NAME, {
+    "dynamic": {
+      methods: ["dynamic"],
+      objects: ["builtin", "anotherone"],
+    }
+  });
+
+  // First enable the categories we're using
+  Telemetry.setEventRecordingEnabled(TEST_STATIC_EVENT_NAME, true);
+  Telemetry.setEventRecordingEnabled(TEST_EVENT_NAME, true);
+
+  // Now record some dynamic-builtin and static events
+  Telemetry.recordEvent(TEST_EVENT_NAME, "dynamic", "builtin");
+  Telemetry.recordEvent(TEST_STATIC_EVENT_NAME, "test1", "object1");
+  Telemetry.recordEvent(TEST_EVENT_NAME, "dynamic", "anotherone");
+
+  let snapshot =
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
+
+  // All events should now be recorded in the right order
+  let expected = [
+    [TEST_EVENT_NAME, "dynamic", "builtin"],
+    [TEST_STATIC_EVENT_NAME, "test1", "object1"],
+    [TEST_EVENT_NAME, "dynamic", "anotherone"],
+  ];
+  let events = snapshot.parent;
+  Assert.equal(events.length, expected.length, "Should have recorded the right amount of events.");
+  for (let i = 0; i < expected.length; ++i) {
+    Assert.deepEqual(events[i].slice(1), expected[i],
+                     "Should have recorded the expected event data.");
+  }
+});

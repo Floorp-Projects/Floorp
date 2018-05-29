@@ -196,7 +196,7 @@ telemetry.test.second:
 devtools.main:
   open:
     objects: ["tools"]
-    bug_numbers: [1416024]
+    bug_numbers: [1416024, 1456984]
     notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
     record_in_processes: ["main"]
     description: User opens devtools toolbox.
@@ -208,6 +208,7 @@ devtools.main:
       host: "Toolbox host (positioning): bottom, side, window or other."
       splitconsole: Indicates whether the split console was open.
       width: Toolbox width rounded up to the nearest 50px.
+      shortcut: The key combination pressed. Used only in the case that entrypoint === KeyShortcut.
   close:
     objects: ["tools"]
     bug_numbers: [1453312]
@@ -270,3 +271,14 @@ devtools.main:
     extra_keys:
       host: "Toolbox host (positioning): bottom, side, window or other."
       width: Toolbox width rounded up to the nearest 50px.
+  edit_html:
+    objects: ["inspector"]
+    bug_numbers: [1463080]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    record_in_processes: ["main"]
+    description: User is editing HTML via the context menu item in the markup view.
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      made_changes: Indicates whether changes were made.
+      time_open: The amount of time in ms that the HTML editor was open.

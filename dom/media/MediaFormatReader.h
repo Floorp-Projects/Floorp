@@ -339,6 +339,7 @@ private:
   size_t SizeOfQueue(TrackType aTrack);
 
   RefPtr<PDMFactory> mPlatform;
+  RefPtr<PDMFactory> mEncryptedPlatform;
 
   enum class DrainState
   {
@@ -574,6 +575,22 @@ private:
     bool HasInternalSeekPending() const
     {
       return mTimeThreshold && !mTimeThreshold.ref().mHasSeeked;
+    }
+
+    // Return the current TrackInfo in the stream. If the stream content never
+    // changed since AsyncReadMetadata was called then the TrackInfo used is
+    // mOriginalInfo, other it will be mInfo. The later case is only ever true
+    // with MSE or the WebMDemuxer.
+    const TrackInfo* GetCurrentInfo() const
+    {
+      if (mInfo) {
+        return *mInfo;
+      }
+      return mOriginalInfo.get();
+    }
+    bool IsEncrypted() const
+    {
+      return GetCurrentInfo()->mCrypto.mValid;
     }
 
     // Used by the MDSM for logging purposes.

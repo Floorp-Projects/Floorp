@@ -200,44 +200,6 @@ class Command extends Message {
 }
 Command.Type = 0;
 
-const validator = {
-  exclusionary: {
-    "capabilities": ["error", "value"],
-    "error": ["value", "sessionId", "capabilities"],
-    "sessionId": ["error", "value"],
-    "value": ["error", "sessionId", "capabilities"],
-  },
-
-  set(obj, prop, val) {
-    let tests = this.exclusionary[prop];
-    if (tests) {
-      for (let t of tests) {
-        if (obj.hasOwnProperty(t)) {
-          throw new TypeError(`${t} set, cannot set ${prop}`);
-        }
-      }
-    }
-
-    obj[prop] = val;
-    return true;
-  },
-};
-
-/**
- * The response body is exposed as an argument to commands.
- * Commands can set fields on the body through defining properties.
- *
- * Setting properties invokes a validator that performs tests for
- * mutually exclusionary fields on the input against the existing data
- * in the body.
- *
- * For example setting the <code>error</code> property on
- * the body when <code>value</code>, <code>sessionId</code>, or
- * <code>capabilities</code> have been set previously will cause
- * an error.
- */
-const ResponseBody = () => new Proxy({}, validator);
-
 /**
  * @callback ResponseCallback
  *
@@ -272,7 +234,7 @@ class Response extends Message {
     this.respHandler_ = assert.callable(respHandler);
 
     this.error = null;
-    this.body = ResponseBody();
+    this.body = {value: null};
 
     this.origin = Message.Origin.Server;
     this.sent = false;

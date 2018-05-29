@@ -54,7 +54,8 @@ use capabilities::{FirefoxCapabilities, FirefoxOptions};
 use logging;
 use prefs;
 
-// Bind host to IPv4 only because Marionette only listens on that interface
+// localhost may be routed to the IPv6 stack on certain systems,
+// and nsIServerSocket in Marionette only supports IPv4
 const DEFAULT_HOST: &'static str = "127.0.0.1";
 
 const CHROME_ELEMENT_KEY: &'static str = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
@@ -423,7 +424,7 @@ impl MarionetteHandler {
             logging::set_max_level(l);
         }
 
-        let port = self.settings.port.unwrap_or(try!(get_free_port()));
+        let port = self.settings.port.unwrap_or(get_free_port()?);
         if !self.settings.connect_existing {
             try!(self.start_browser(port, options));
         }
@@ -1102,7 +1103,7 @@ impl MarionetteCommand {
             GetWindowHandles => (Some("WebDriver:GetWindowHandles"), None),
             GetWindowRect => (Some("WebDriver:GetWindowRect"), None),
             GoBack => (Some("WebDriver:Back"), None),
-            GoForward => (Some("WebDriver::Forward"), None),
+            GoForward => (Some("WebDriver:Forward"), None),
             IsDisplayed(ref x) => (
                 Some("WebDriver:IsElementDisplayed"),
                 Some(x.to_marionette()),
@@ -1319,7 +1320,7 @@ impl Into<WebDriverError> for MarionetteError {
 }
 
 fn get_free_port() -> IoResult<u16> {
-    TcpListener::bind(&("localhost", 0))
+    TcpListener::bind((DEFAULT_HOST, 0))
         .and_then(|stream| stream.local_addr())
         .map(|x| x.port())
 }

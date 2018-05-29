@@ -547,12 +547,11 @@ class BuildOptionParser(object):
             # name
             sys.exit("Whoops!\n'--custom-build-variant' was passed but an "
                      "appropriate config file could not be determined. Tried "
-                     "using: '%s' but it was either not:\n\t-- a valid "
-                     "shortname: %s \n\t-- a valid path in %s \n\t-- a "
-                     "valid variant for the given platform and bits." % (
+                     "using: '%s' but it was not:"
+                     "\n\t-- a valid shortname: %s "
+                     "\n\t-- a valid variant for the given platform and bits." % (
                          prospective_cfg_path,
-                         str(cls.build_variants.keys()),
-                         str(cls.config_file_search_path)))
+                         str(cls.build_variants.keys())))
         parser.values.config_files.append(valid_variant_cfg_path)
         setattr(parser.values, option.dest, value)  # the pool
 
