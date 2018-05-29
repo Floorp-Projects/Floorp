@@ -180,23 +180,31 @@ class FirefoxBrowser(Browser):
             self.init_timeout = self.init_timeout * timeout_multiplier
 
         self.asan = asan
+        self.lsan_allowed = None
         self.leak_check = leak_check
         self.leak_report_file = None
         self.lsan_handler = None
-        if self.asan:
-            self.lsan_handler = mozleak.LSANLeaks(logger)
         self.stylo_threads = stylo_threads
         self.chaos_mode_flags = chaos_mode_flags
 
     def settings(self, test):
-        if self.asan:
-            self.lsan_handler.set_allowed(test.lsan_allowed)
-        return {"check_leaks": self.leak_check and not test.leaks}
+        self.lsan_allowed = test.lsan_allowed
+        return {"check_leaks": self.leak_check and not test.leaks,
+                "lsan_allowed": test.lsan_allowed}
 
-    def start(self, **kwargs):
+    def start(self, group_metadata=None, **kwargs):
+        if group_metadata is None:
+            group_metadata = {}
+
         if self.marionette_port is None:
             self.marionette_port = get_free_port(2828, exclude=self.used_ports)
             self.used_ports.add(self.marionette_port)
+
+        if self.asan:
+            print "Setting up LSAN"
+            self.lsan_handler = mozleak.LSANLeaks(self.logger,
+                                                  scope=group_metadata.get("scope", "/"),
+                                                  allowed=self.lsan_allowed)
 
         env = test_environment(xrePath=os.path.dirname(self.binary),
                                debugger=self.debug_info is not None,
