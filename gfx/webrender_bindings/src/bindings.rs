@@ -827,7 +827,7 @@ pub struct WrProgramCache(Rc<ProgramCache>);
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_program_cache_new() -> *mut WrProgramCache {
-    let program_cache = ProgramCache::new();
+    let program_cache = ProgramCache::new(None);
     Box::into_raw(Box::new(WrProgramCache(program_cache)))
 }
 
