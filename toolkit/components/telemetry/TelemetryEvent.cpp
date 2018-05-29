@@ -493,6 +493,12 @@ RecordEvent(const StaticMutexAutoLock& lock, ProcessID processType,
     return RecordEventResult::Ok;
   }
 
+  static bool sEventPingEnabled =
+    mozilla::Preferences::GetBool("toolkit.telemetry.eventping.enabled", true);
+  if (!sEventPingEnabled) {
+    return RecordEventResult::Ok;
+  }
+
   EventRecordArray* eventRecords =
     GetEventRecordsForProcess(lock, processType, *eventKey);
   eventRecords->AppendElement(EventRecord(timestamp, *eventKey, value, extra));
