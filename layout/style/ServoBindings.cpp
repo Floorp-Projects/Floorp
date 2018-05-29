@@ -748,14 +748,17 @@ Gecko_GetProgressFromComputedTiming(RawGeckoComputedTimingBorrowed aComputedTimi
 
 double
 Gecko_GetPositionInSegment(RawGeckoAnimationPropertySegmentBorrowed aSegment,
-                          double aProgress,
-                          ComputedTimingFunction::BeforeFlag aBeforeFlag)
+                           double aProgress,
+                           ComputedTimingFunction::BeforeFlag aBeforeFlag)
 {
   MOZ_ASSERT(aSegment->mFromKey < aSegment->mToKey,
              "The segment from key should be less than to key");
 
-  double positionInSegment =
-    (aProgress - aSegment->mFromKey) / (aSegment->mToKey - aSegment->mFromKey);
+  double positionInSegment = (aProgress - aSegment->mFromKey) /
+                             // To avoid floating precision inaccuracies, make
+                             // sure we calculate both the numerator and
+                             // denominator using double precision.
+                             (double(aSegment->mToKey) - aSegment->mFromKey);
 
   return ComputedTimingFunction::GetPortion(aSegment->mTimingFunction,
                                             positionInSegment,
