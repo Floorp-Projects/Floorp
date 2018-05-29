@@ -231,8 +231,8 @@ class FirefoxBrowser(Browser):
         if self.test_type == "reftest":
             self.profile.set_preferences({"layout.interruptible-reflow.enabled": False})
 
-        if self.leak_check and kwargs.get("check_leaks", True):
-            self.leak_report_file = os.path.join(self.profile.profile, "runtests_leaks.log")
+        if self.leak_check:
+            self.leak_report_file = os.path.join(self.profile.profile, "runtests_leaks_%s.log" % os.getpid())
             if os.path.exists(self.leak_report_file):
                 os.remove(self.leak_report_file)
             env["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
@@ -311,6 +311,7 @@ class FirefoxBrowser(Browser):
             except OSError:
                 # This can happen on Windows if the process is already dead
                 pass
+        self.process_leaks()
         self.logger.debug("stopped")
 
     def process_leaks(self):
@@ -360,9 +361,8 @@ class FirefoxBrowser(Browser):
             return self.runner.is_running()
         return False
 
-    def cleanup(self):
-        self.stop()
-        self.process_leaks()
+    def cleanup(self, force=False):
+        self.stop(force)
 
     def executor_browser(self):
         assert self.marionette_port is not None
