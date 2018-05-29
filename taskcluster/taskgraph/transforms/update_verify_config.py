@@ -58,8 +58,6 @@ def add_command(config, tasks):
         task["description"] = "generate update verify config for {}".format(
             task["attributes"]["build_platform"]
         )
-        from pprint import pprint
-        pprint(task['extra'])
 
         command = [
             "cd", "/builds/worker/checkouts/gecko", "&&"
