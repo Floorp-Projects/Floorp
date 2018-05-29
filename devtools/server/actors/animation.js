@@ -616,6 +616,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     this.allAnimationsPaused = false;
     this.tabActor.on("will-navigate", this.onWillNavigate);
     this.tabActor.on("navigate", this.onNavigate);
+
+    this.animationCreatedTimeMap = new Map();
   },
 
   destroy: function() {
@@ -625,6 +627,9 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
 
     this.stopAnimationPlayerUpdates();
     this.tabActor = this.observer = this.actors = this.walker = null;
+
+    this.animationCreatedTimeMap.clear();
+    this.animationCreatedTimeMap = null;
   },
 
   /**
@@ -650,15 +655,13 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
    * /devtools/server/actors/inspector
    */
   getAnimationPlayersForNode: function(nodeActor) {
-    let animations = nodeActor.rawNode.getAnimations({subtree: true});
+    this.updateAllAnimationsCreatedTime();
 
-    const createdTimeMap = new Map();
+    let animations = nodeActor.rawNode.getAnimations({subtree: true});
 
     // Destroy previously stored actors
     if (this.actors) {
       for (const actor of this.actors) {
-        // Take the createdTime over new actors.
-        createdTimeMap.set(actor.player, actor.createdTime);
         actor.destroy();
       }
     }
@@ -666,13 +669,7 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     this.actors = [];
 
     for (const animation of animations) {
-      let createdTime = createdTimeMap.get(animation);
-
-      if (typeof createdTime === "undefined") {
-        // If no previous actor, set startTime or currentTime of timeline as created time.
-        createdTime = animation.startTime || animation.timeline.currentTime;
-      }
-
+      const createdTime = this.getCreatedTime(animation);
       const actor = AnimationPlayerActor(this, animation, createdTime);
       this.actors.push(actor);
     }
@@ -748,7 +745,8 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
           this.actors.splice(index, 1);
         }
 
-        const createdTime = player.startTime || player.timeline.currentTime;
+        this.updateAnimationCreatedTime(player);
+        const createdTime = this.getCreatedTime(player);
         const actor = AnimationPlayerActor(this, player, createdTime);
         this.actors.push(actor);
         eventData.push({
@@ -953,5 +951,46 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     // Play animation in a synchronous fashion by setting the start time directly.
     const currentTime = player.currentTime || 0;
     player.startTime = player.timeline.currentTime - currentTime / player.playbackRate;
+  },
+
+  /**
+   * Return created fime of given animaiton.
+   *
+   * @param {Object} animation
+   */
+  getCreatedTime(animation) {
+    return this.animationCreatedTimeMap.get(animation);
+  },
+
+  /**
+   * Update all animation created time map.
+   */
+  updateAllAnimationsCreatedTime() {
+    const currentAnimations = this.getAllAnimations(this.tabActor.window.document);
+
+    // Remove invalid animations.
+    for (const previousAnimation of this.animationCreatedTimeMap.keys()) {
+      if (!currentAnimations.includes(previousAnimation)) {
+        this.animationCreatedTimeMap.delete(previousAnimation);
+      }
+    }
+
+    for (const animation of currentAnimations) {
+      this.updateAnimationCreatedTime(animation);
+    }
+  },
+
+  /**
+   * Update animation created time map.
+   *
+   * @param {Object} animation
+   */
+  updateAnimationCreatedTime(animation) {
+    if (!this.animationCreatedTimeMap.has(animation)) {
+      const createdTime =
+        animation.startTime ||
+        animation.timeline.currentTime - animation.currentTime / animation.playbackRate;
+      this.animationCreatedTimeMap.set(animation, createdTime);
+    }
   },
 });
