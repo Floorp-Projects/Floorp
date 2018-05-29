@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import kotlinx.android.synthetic.main.activity_toolbar.*
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
@@ -64,6 +65,26 @@ class ToolbarActivity : AppCompatActivity() {
 
         val background = ContextCompat.getDrawable(this, R.drawable.focus_background)
         toolbar.background = background
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Add "back" and "forward" navigation actions
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val back = BrowserToolbar.Button(
+            mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+            "Back") {
+            simulateReload()
+        }
+
+        toolbar.addNavigationAction(back)
+
+        val forward = BrowserToolbar.Button(
+                mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+                "Forward") {
+            simulateReload()
+        }
+
+        toolbar.addNavigationAction(forward)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add a "reload" browser action that simulates reloading the current page
@@ -204,8 +225,9 @@ class ToolbarActivity : AppCompatActivity() {
 
         val grid = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_grid,
-                "Grid") {
-            simulateReload(urlBoxProgress)
+                "Grid",
+                background = R.drawable.button_background) {
+            // Do nothing
         }
 
         toolbar.addNavigationAction(grid)
@@ -213,7 +235,8 @@ class ToolbarActivity : AppCompatActivity() {
         val back = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_back,
                 "Back",
-                visible = ::canGoBack) {
+                visible = ::canGoBack,
+                background = R.drawable.button_background) {
             goBack()
             simulateReload(urlBoxProgress)
             toolbar.invalidateActions()
@@ -224,7 +247,8 @@ class ToolbarActivity : AppCompatActivity() {
         val forward = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
                 "Forward",
-                visible = ::canGoForward) {
+                visible = ::canGoForward,
+                background = R.drawable.button_background) {
             goForward()
             simulateReload(urlBoxProgress)
             toolbar.invalidateActions()
@@ -233,29 +257,44 @@ class ToolbarActivity : AppCompatActivity() {
         toolbar.addNavigationAction(forward)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // Add a page action for reload and two browser actions
+        // Add a custom page action for reload and two browser actions
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val reload = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-                "Reload") {
-            simulateReload(urlBoxProgress)
+        val reload = ReloadPageAction(
+            reloadImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            reloadContentDescription = "Reload",
+            stopImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            stopContentDescription = "Stop",
+            isLoading = { loading },
+            background = R.drawable.pageaction_background
+        ) {
+            if (loading) {
+                job?.cancel()
+            } else {
+                simulateReload(urlBoxProgress)
+            }
         }
 
         toolbar.addPageAction(reload)
 
-        val pin = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
-                "Pin") {
-            simulateReload(urlBoxProgress)
+        val pin = BrowserToolbar.ToggleButton(
+            imageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
+            imageResourceSelected = mozilla.components.ui.icons.R.drawable.mozac_ic_pin_filled,
+            contentDescription = "Pin",
+            contentDescriptionSelected = "Unpin",
+            background = R.drawable.toggle_background) {
+            // Do nothing
         }
 
         toolbar.addBrowserAction(pin)
 
-        val turbo = BrowserToolbar.Button(
-                mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
-                "Turbo") {
-            simulateReload(urlBoxProgress)
+        val turbo = BrowserToolbar.ToggleButton(
+            imageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
+            imageResourceSelected = mozilla.components.ui.icons.R.drawable.mozac_ic_rocket_filled,
+            contentDescription = "Turbo: Off",
+            contentDescriptionSelected = "Turbo: On",
+            background = R.drawable.toggle_background) {
+            // Do nothing
         }
 
         toolbar.addBrowserAction(turbo)
@@ -296,17 +335,47 @@ class ToolbarActivity : AppCompatActivity() {
         back = true
     }
 
+    private var job: Job? = null
+
+    private var loading: Boolean = false
+
     private fun simulateReload(view: UrlBoxProgressView? = null) {
-        launch(UI) {
-            for (progress in 0..100 step 10) {
+        job?.cancel()
+
+        loading = true
+
+        job = launch(UI) {
+            try {
+                loop@ for (progress in 0..100 step 5) {
+                    if (!isActive) {
+                        break@loop
+                    }
+
+                    if (view == null) {
+                        toolbar.displayProgress(progress)
+                    } else {
+                        view.progress = progress
+                    }
+
+                    delay(progress * 5)
+                }
+            } catch (t: Throwable) {
                 if (view == null) {
-                    toolbar.displayProgress(progress)
+                    toolbar.displayProgress(0)
                 } else {
-                    view.progress = progress
+                    view.progress = 0
                 }
 
-                delay(progress * 10)
+                throw t
+            } finally {
+                loading = false
+
+                // Update toolbar buttons to reflect loading state
+                toolbar.invalidateActions()
             }
         }
+
+        // Update toolbar buttons to reflect loading state
+        toolbar.invalidateActions()
     }
 }
