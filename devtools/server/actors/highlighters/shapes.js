@@ -1377,7 +1377,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
             rotatePoint, center } = this.transformedBoundingBox;
 
       const points = [
-        { pointName: "translate", x: center[0], y: center[1], cursor: "move" },
+        { pointName: "translate", x: center[0], y: center[1], cursor: hoverCursor },
         { pointName: "scale-se", x: se[0], y: se[1], anchor: "nw" },
         { pointName: "scale-ne", x: ne[0], y: ne[1], anchor: "sw" },
         { pointName: "scale-sw", x: sw[0], y: sw[1], anchor: "ne" },
