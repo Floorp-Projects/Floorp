@@ -206,14 +206,31 @@ MediaEngineWebRTC::EnumerateMicrophoneDevices(uint64_t aWindowId,
       MOZ_ASSERT(devices[i]->Type() == CUBEB_DEVICE_TYPE_INPUT);
       RefPtr<MediaEngineSource> source =
         new MediaEngineWebRTCMicrophoneSource(
-          devices[i],
-          devices[i]->Name(),
-          // Lie and provide the name as UUID
-          NS_LossyConvertUTF16toASCII(devices[i]->Name()),
-          devices[i]->MaxChannels(),
-          mDelayAgnostic,
-          mExtendedFilter);
-      aDevices->AppendElement(source);
+            devices[i],
+            devices[i]->Name(),
+            // Lie and provide the name as UUID
+            NS_ConvertUTF16toUTF8(devices[i]->Name()),
+            devices[i]->MaxChannels(),
+            mDelayAgnostic,
+            mExtendedFilter);
+      RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
+                                     source,
+                                     source->GetName(),
+                                     NS_ConvertUTF8toUTF16(source->GetUUID()));
+      if (devices[i]->Preferred()) {
+#ifdef DEBUG
+        if (!foundPreferredDevice) {
+          foundPreferredDevice = true;
+        } else {
+          MOZ_ASSERT(!foundPreferredDevice,
+              "Found more than one preferred audio input device"
+              "while enumerating");
+        }
+#endif
+        aDevices->InsertElementAt(0, device);
+      } else {
+        aDevices->AppendElement(device);
+      }
     }
   }
 }
@@ -225,16 +242,15 @@ MediaEngineWebRTC::EnumerateSpeakerDevices(uint64_t aWindowId,
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   CubebUtils::GetDeviceCollection(devices, CubebUtils::Output);
   for (auto& device : devices) {
-    MOZ_ASSERT(device->GetDeviceID().isSome());
     if (device->State() == CUBEB_DEVICE_STATE_ENABLED) {
       MOZ_ASSERT(device->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
-      nsString uuid(device->FriendlyName());
+      nsString uuid(device->Name());
       // If, for example, input and output are in the same device, uuid
       // would be the same for both which ends up to create the same
       // deviceIDs (in JS).
       uuid.Append(NS_LITERAL_STRING("_Speaker"));
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
-                                device->FriendlyName(),
+                                device->Name(),
                                 dom::MediaDeviceKind::Audiooutput,
                                 uuid));
     }
