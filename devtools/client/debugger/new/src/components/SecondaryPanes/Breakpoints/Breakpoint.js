@@ -138,16 +138,16 @@ class Breakpoint extends _react.PureComponent {
 
   highlightText() {
     const text = this.getBreakpointText();
-    const sourceEditor = (0, _editor.getEditor)();
+    const codeMirror = (0, _editor.getCodeMirror)();
 
-    if (!text || !sourceEditor || !sourceEditor.editor) {
+    if (!text || !codeMirror) {
       return {
         __html: ""
       };
     }
 
     const node = document.createElement("div");
-    sourceEditor.editor.constructor.runMode(text, "application/javascript", node);
+    codeMirror.constructor.runMode(text, "application/javascript", node);
     return {
       __html: node.innerHTML
     };
