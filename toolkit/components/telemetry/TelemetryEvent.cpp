@@ -546,10 +546,14 @@ RegisterEvents(const StaticMutexAutoLock& lock, const nsACString& category,
   for (uint32_t i = 0, len = eventInfos.Length(); i < len; ++i) {
     const nsCString& eventName = UniqueEventName(eventInfos[i]);
 
-    // Re-registering events can happen when add-ons update, so we don't print warnings.
-    // We don't support changing their definition, but the expiry might have changed.
+    // Re-registering events can happen for two reasons and we don't print warnings:
+    //
+    // * When add-ons update.
+    //   We don't support changing their definition, but the expiry might have changed.
+    // * When dynamic builtins ("build faster") events are registered.
+    //   The dynamic definition takes precedence then.
     EventKey* existing = nullptr;
-    if (gEventNameIDMap.Get(eventName, &existing)) {
+    if (!aBuiltin && gEventNameIDMap.Get(eventName, &existing)) {
       if (eventExpired[i]) {
         existing->id = kExpiredEventId;
       }
