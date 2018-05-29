@@ -8021,7 +8021,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        uint32_t aIndex)
   : nsDisplayItem(aBuilder, aFrame)
   , mStoredList(aBuilder, aFrame, aList)
-  , mTransform(aTransform)
+  , mTransform(Some(aTransform))
   , mTransformGetter(nullptr)
   , mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot)
   , mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot)
@@ -8484,26 +8484,33 @@ static bool IsFrameVisible(nsIFrame* aFrame, const Matrix4x4& aMatrix)
 const Matrix4x4Flagged&
 nsDisplayTransform::GetTransform() const
 {
-  if (mTransform.IsIdentity()) {
-    float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+  if (mTransform) {
+    return *mTransform;
+  }
+
+  float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  if (mTransformGetter) {
+    mTransform.emplace(mTransformGetter(mFrame, scale));
     Point3D newOrigin =
       Point3D(NSAppUnitsToFloatPixels(mToReferenceFrame.x, scale),
               NSAppUnitsToFloatPixels(mToReferenceFrame.y, scale),
               0.0f);
-    if (mTransformGetter) {
-      mTransform = mTransformGetter(mFrame, scale);
-      mTransform.ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
-    } else if (!mIsTransformSeparator) {
-      DebugOnly<bool> isReference =
-        mFrame->IsTransformed() ||
-        mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
-      MOZ_ASSERT(isReference);
-      mTransform =
-        GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                    scale, INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN);
-    }
+    mTransform->ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
+  } else if (!mIsTransformSeparator) {
+    DebugOnly<bool> isReference =
+      mFrame->IsTransformed() ||
+      mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
+    MOZ_ASSERT(isReference);
+    mTransform.emplace(
+      GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
+                                  scale, INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN));
+  } else {
+    // Use identity matrix
+    mTransform.emplace();
   }
-  return mTransform;
+
+  return *mTransform;
 }
 
 Matrix4x4
