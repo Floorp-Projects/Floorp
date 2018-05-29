@@ -27,6 +27,7 @@ UNSUPPORTED_FEATURES = set([
                             "regexp-named-groups",
                             "regexp-unicode-property-escapes",
                             "numeric-separator-literal",
+                            "json-superset",
                             "Intl.Locale",
                             "String.prototype.matchAll",
                             "Symbol.matchAll",
