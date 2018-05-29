@@ -184,16 +184,14 @@ class SummaryGraphPath extends Component {
 
   render() {
     const { durationPerPixel, keyframesList } = this.state;
+    const { animation, simulateAnimation, timeScale } = this.props;
 
-    if (!durationPerPixel) {
+    if (!durationPerPixel || !animation.state.type) {
+      // Undefined animation.state.type means that the animation had been removed already.
+      // Even if the animation was removed, we still need the empty svg since the
+      // component might be re-used.
       return dom.svg();
     }
-
-    const {
-      animation,
-      simulateAnimation,
-      timeScale,
-    } = this.props;
 
     const { createdTime, playbackRate } = animation.state;
 
