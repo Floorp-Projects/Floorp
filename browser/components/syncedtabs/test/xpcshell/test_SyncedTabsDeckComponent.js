@@ -94,7 +94,7 @@ add_task(async function testObserver() {
   sinon.stub(listStore, "getData");
 
   let component = new SyncedTabsDeckComponent({
-    window: mockWindow,
+    mockWindow,
     deckStore,
     listStore,
     listComponent,
@@ -104,12 +104,10 @@ add_task(async function testObserver() {
 
   sinon.spy(component, "observe");
   sinon.stub(component, "updatePanel");
-  sinon.spy(component, "updateDir");
 
   component.init();
   SyncedTabs.syncTabs.restore();
   Assert.ok(component.updatePanel.called, "triggers panel update during init");
-  Assert.ok(component.updateDir.called, "triggers UI direction update during init");
 
   Services.obs.notifyObservers(null, SyncedTabs.TOPIC_TABS_CHANGED);
 
@@ -130,11 +128,6 @@ add_task(async function testObserver() {
   Assert.ok(component.observe.calledWith(null, "weave:service:login:change"),
     "component is notified of login change");
   Assert.equal(component.updatePanel.callCount, 4, "triggers panel update again");
-
-  Services.prefs.setIntPref("intl.uidirection", 1);
-
-  Assert.ok(component.updateDir.calledTwice, "triggers UI direction update");
-  Assert.ok(component.updateDir.calledWith(1), "updates UI direction to RTL");
 });
 
 add_task(async function testPanelStatus() {
