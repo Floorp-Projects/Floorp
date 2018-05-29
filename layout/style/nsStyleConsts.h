@@ -408,7 +408,7 @@ enum class StyleContent : uint8_t {
 // See nsStyleDisplay
 //
 // NOTE: Order is important! If you change it, make sure to take a look at
-// the FrameConstructorDataByDisplay stuff (both the XUL and non-XUL version),
+// the FrameConstructionDataByDisplay stuff (both the XUL and non-XUL version),
 // and ensure it's still correct!
 enum class StyleDisplay : uint8_t {
   None = 0,
