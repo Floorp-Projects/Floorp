@@ -25,6 +25,13 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gChromeReg: ["@mozilla.org/chrome/chrome-registry;1", "nsIChromeRegistry"],
 });
 
+const BROWSER_SEARCH_PREF = "browser.search.";
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "resetStatus", BROWSER_SEARCH_PREF + "reset.status", "");
+XPCOMUtils.defineLazyGetter(this, "resetEnabled", () => {
+  return Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled");
+});
+
 const BinaryInputStream = Components.Constructor(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -124,8 +131,6 @@ const MOZSEARCH_LOCALNAME = "SearchPlugin";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 const URLTYPE_SEARCH_HTML  = "text/html";
 const URLTYPE_OPENSEARCH   = "application/opensearchdescription+xml";
-
-const BROWSER_SEARCH_PREF = "browser.search.";
 
 const USER_DEFINED = "searchTerms";
 
@@ -2329,8 +2334,8 @@ Engine.prototype = {
 
     let resetPending;
     if (aResponseType == URLTYPE_SEARCH_HTML &&
-        ((resetPending = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "reset.status", "") == "pending") ||
-         Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled")) &&
+        ((resetPending = resetStatus == "pending") ||
+         resetEnabled) &&
         this.name == Services.search.currentEngine.name &&
         !this._isDefault &&
         this.name != Services.search.originalDefaultEngine.name &&
