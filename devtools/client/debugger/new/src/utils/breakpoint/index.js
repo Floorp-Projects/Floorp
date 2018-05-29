@@ -3,16 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.findScopeByName = exports.getASTLocation = exports.createEditor = undefined;
-
-var _createEditor = require("./create-editor");
-
-Object.defineProperty(exports, "createEditor", {
-  enumerable: true,
-  get: function () {
-    return _createEditor.createEditor;
-  }
-});
+exports.findScopeByName = exports.getASTLocation = undefined;
 
 var _astBreakpointLocation = require("./astBreakpointLocation");
 
@@ -31,6 +22,7 @@ Object.defineProperty(exports, "findScopeByName", {
 exports.firstString = firstString;
 exports.locationMoved = locationMoved;
 exports.makeLocationId = makeLocationId;
+exports.getLocationWithoutColumn = getLocationWithoutColumn;
 exports.makePendingLocationId = makePendingLocationId;
 exports.assertBreakpoint = assertBreakpoint;
 exports.assertPendingBreakpoint = assertPendingBreakpoint;
@@ -75,6 +67,14 @@ function makeLocationId(location) {
   } = location;
   const columnString = column || "";
   return `${sourceId}:${line}:${columnString}`;
+}
+
+function getLocationWithoutColumn(location) {
+  const {
+    sourceId,
+    line
+  } = location;
+  return `${sourceId}:${line}`;
 }
 
 function makePendingLocationId(location) {

@@ -1,2 +1,0 @@
-class Lint(object):
-    pass

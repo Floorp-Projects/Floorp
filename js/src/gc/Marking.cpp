@@ -82,9 +82,9 @@ using mozilla::PodCopy;
 //   |TraceEdge|    |TraceRoot|    |TraceManuallyBarrieredEdge|  ...  |TraceRange|   ... etc.   //
 //   '---------'    '---------'    '--------------------------'       '----------'              //
 //        \              \                        /                        /                    //
-//         \              \  .----------------.  /                        /                     //
-//          o------------->o-|DispatchToTracer|-o<-----------------------o                      //
-//                           '----------------'                                                 //
+//         \              \  .-----------------. /                        /                     //
+//          o------------->o-|TraceEdgeInternal|-o<----------------------o                      //
+//                           '-----------------'                                                //
 //                              /          \                                                    //
 //                             /            \                                                   //
 //                       .---------.   .----------.         .-----------------.                 //
@@ -372,60 +372,19 @@ AssertShouldMarkInZone(JS::Symbol* sym)
 #endif
 }
 
-static void
-AssertRootMarkingPhase(JSTracer* trc)
+#ifdef DEBUG
+void
+js::gc::AssertRootMarkingPhase(JSTracer* trc)
 {
     MOZ_ASSERT_IF(trc->isMarkingTracer(),
                   trc->runtime()->gc.state() == State::NotActive ||
                   trc->runtime()->gc.state() == State::MarkRoots);
 }
+#endif
 
 
 /*** Tracing Interface ***************************************************************************/
 
-// The second parameter to BaseGCType is derived automatically based on T. The
-// relation here is that for any T, the TraceKind will automatically,
-// statically select the correct Cell layout for marking. Below, we instantiate
-// each override with a declaration of the most derived layout type.
-//
-// The use of TraceKind::Null for the case where the type is not matched
-// generates a compile error as no template instantiated for that kind.
-//
-// Usage:
-//   BaseGCType<T>::type
-//
-// Examples:
-//   BaseGCType<JSFunction>::type => JSObject
-//   BaseGCType<UnownedBaseShape>::type => BaseShape
-//   etc.
-template <typename T, JS::TraceKind =
-#define EXPAND_MATCH_TYPE(name, type, _) \
-          IsBaseOf<type, T>::value ? JS::TraceKind::name :
-JS_FOR_EACH_TRACEKIND(EXPAND_MATCH_TYPE)
-#undef EXPAND_MATCH_TYPE
-          JS::TraceKind::Null>
-
-struct BaseGCType;
-#define IMPL_BASE_GC_TYPE(name, type_, _) \
-    template <typename T> struct BaseGCType<T, JS::TraceKind:: name> { typedef type_ type; };
-JS_FOR_EACH_TRACEKIND(IMPL_BASE_GC_TYPE);
-#undef IMPL_BASE_GC_TYPE
-
-// Our barrier templates are parameterized on the pointer types so that we can
-// share the definitions with Value and jsid. Thus, we need to strip the
-// pointer before sending the type to BaseGCType and re-add it on the other
-// side. As such:
-template <typename T> struct PtrBaseGCType { typedef T type; };
-template <typename T> struct PtrBaseGCType<T*> { typedef typename BaseGCType<T>::type* type; };
-
-template <typename T>
-typename PtrBaseGCType<T>::type*
-ConvertToBase(T* thingp)
-{
-    return reinterpret_cast<typename PtrBaseGCType<T>::type*>(thingp);
-}
-
-template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T> void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T> void DoMarking(GCMarker* gcmarker, const T& thing);
@@ -433,101 +392,18 @@ template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T** thingp);
 template <typename T> void NoteWeakEdge(GCMarker* gcmarker, T* thingp);
 
 template <typename T>
-void
-js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
-{
-    DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
-}
-
-template <typename T>
-void
-js::TraceEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
-}
-
-template <typename T>
-void
-js::TraceNullableEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
-{
-    if (InternalBarrierMethods<T>::isMarkable(thingp->get()))
-        DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
-}
-
-template <typename T>
-void
-js::TraceNullableEdge(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    if (InternalBarrierMethods<T>::isMarkable(thingp->unbarrieredGet()))
-        DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
-}
-
-template <typename T>
 JS_PUBLIC_API(void)
 js::gc::TraceExternalEdge(JSTracer* trc, T* thingp, const char* name)
 {
     MOZ_ASSERT(InternalBarrierMethods<T>::isMarkable(*thingp));
-    DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-void
-js::TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
-{
-    DispatchToTracer(trc, ConvertToBase(thingp), name);
+    TraceEdgeInternal(trc, ConvertToBase(thingp), name);
 }
 
 template <typename T>
 JS_PUBLIC_API(void)
 js::UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
 {
-    DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-void
-js::TraceWeakEdge(JSTracer* trc, WeakRef<T>* thingp, const char* name)
-{
-    if (!trc->isMarkingTracer()) {
-        // Non-marking tracers can select whether or not they see weak edges.
-        if (trc->traceWeakEdges())
-            DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
-        return;
-    }
-
-    NoteWeakEdge(GCMarker::fromTracer(trc),
-                 ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
-}
-
-template <typename T>
-void
-js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
-{
-    AssertRootMarkingPhase(trc);
-    DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-void
-js::TraceRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    TraceRoot(trc, thingp->unsafeGet(), name);
-}
-
-template <typename T>
-void
-js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
-{
-    AssertRootMarkingPhase(trc);
-    if (InternalBarrierMethods<T>::isMarkable(*thingp))
-        DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-void
-js::TraceNullableRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    TraceNullableRoot(trc, thingp->unsafeGet(), name);
+    TraceEdgeInternal(trc, ConvertToBase(thingp), name);
 }
 
 template <typename T>
@@ -538,48 +414,7 @@ JS::UnsafeTraceRoot(JSTracer* trc, T* thingp, const char* name)
     js::TraceNullableRoot(trc, thingp, name);
 }
 
-template <typename T>
-void
-js::TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char* name)
-{
-    JS::AutoTracingIndex index(trc);
-    for (auto i : IntegerRange(len)) {
-        if (InternalBarrierMethods<T>::isMarkable(vec[i].get()))
-            DispatchToTracer(trc, ConvertToBase(vec[i].unsafeUnbarrieredForTracing()), name);
-        ++index;
-    }
-}
-
-template <typename T>
-void
-js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
-{
-    AssertRootMarkingPhase(trc);
-    JS::AutoTracingIndex index(trc);
-    for (auto i : IntegerRange(len)) {
-        if (InternalBarrierMethods<T>::isMarkable(vec[i]))
-            DispatchToTracer(trc, ConvertToBase(&vec[i]), name);
-        ++index;
-    }
-}
-
-// Instantiate a copy of the Tracing templates for each derived type.
-#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
-    template void js::TraceEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
-    template void js::TraceEdge<type>(JSTracer*, ReadBarriered<type>*, const char*); \
-    template void js::TraceNullableEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
-    template void js::TraceNullableEdge<type>(JSTracer*, ReadBarriered<type>*, const char*); \
-    template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
-    template void js::TraceWeakEdge<type>(JSTracer*, WeakRef<type>*, const char*); \
-    template void js::TraceRoot<type>(JSTracer*, type*, const char*); \
-    template void js::TraceRoot<type>(JSTracer*, ReadBarriered<type>*, const char*); \
-    template void js::TraceNullableRoot<type>(JSTracer*, type*, const char*); \
-    template void js::TraceNullableRoot<type>(JSTracer*, ReadBarriered<type>*, const char*); \
-    template void js::TraceRange<type>(JSTracer*, size_t, WriteBarrieredBase<type>*, const char*); \
-    template void js::TraceRootRange<type>(JSTracer*, size_t, type*, const char*);
-FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
-#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
-
+// Instantiate a copy of the Tracing templates for each public GC pointer type.
 #define INSTANTIATE_PUBLIC_TRACE_FUNCTIONS(type) \
     template JS_PUBLIC_API(void) JS::UnsafeTraceRoot<type>(JSTracer*, type*, const char*); \
     template JS_PUBLIC_API(void) js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
@@ -589,29 +424,46 @@ FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 #undef INSTANTIATE_PUBLIC_TRACE_FUNCTIONS
 
+namespace js {
+namespace gc {
+
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type) \
+    template void TraceEdgeInternal<type>(JSTracer*, type*, const char*); \
+    template void TraceWeakEdgeInternal<type>(JSTracer*, type*, const char*); \
+    template void TraceRangeInternal<type>(JSTracer*, size_t len, type*, const char*);
+
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+    INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type*)
+
+JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND)
+FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_TRACE_FUNCTIONS)
+
+#undef INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND
+#undef INSTANTIATE_INTERNAL_TRACE_FUNCTIONS
+
+} // namespace gc
+} // namespace js
+
 template <typename T>
 void
 js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer* trc, JSObject* src, T* dst,
                                                const char* name)
 {
     if (ShouldTraceCrossCompartment(trc, src, *dst))
-        DispatchToTracer(trc, dst, name);
+        TraceEdgeInternal(trc, dst, name);
 }
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(JSTracer*, JSObject*,
                                                                         JSObject**, const char*);
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(JSTracer*, JSObject*,
                                                                         JSScript**, const char*);
 
-template <typename T>
 void
-js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<T>* dst,
+js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<Value>* dst,
                               const char* name)
 {
     if (ShouldTraceCrossCompartment(trc, src, dst->get()))
-        DispatchToTracer(trc, dst->unsafeUnbarrieredForTracing(), name);
+        TraceEdgeInternal(trc, dst->unsafeUnbarrieredForTracing(), name);
 }
-template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*,
-                                                   WriteBarrieredBase<Value>*, const char*);
 
 template <typename T>
 void
@@ -676,7 +528,7 @@ js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp, const
 // a sufficiently smart C++ compiler may be able to devirtualize some paths.
 template <typename T>
 void
-DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
+js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name)
 {
 #define IS_SAME_TYPE_OR(name, type, _) mozilla::IsSame<type*, T>::value ||
     static_assert(
@@ -692,6 +544,32 @@ DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
         return static_cast<TenuringTracer*>(trc)->traverse(thingp);
     MOZ_ASSERT(trc->isCallbackTracer());
     DoCallback(trc->asCallbackTracer(), thingp, name);
+}
+
+template <typename T>
+void
+js::gc::TraceWeakEdgeInternal(JSTracer* trc, T* thingp, const char* name)
+{
+    if (!trc->isMarkingTracer()) {
+        // Non-marking tracers can select whether or not they see weak edges.
+        if (trc->traceWeakEdges())
+            TraceEdgeInternal(trc, thingp, name);
+        return;
+    }
+
+    NoteWeakEdge(GCMarker::fromTracer(trc), thingp);
+}
+
+template <typename T>
+void
+js::gc::TraceRangeInternal(JSTracer* trc, size_t len, T* vec, const char* name)
+{
+    JS::AutoTracingIndex index(trc);
+    for (auto i : IntegerRange(len)) {
+        if (InternalBarrierMethods<T>::isMarkable(vec[i]))
+            TraceEdgeInternal(trc, &vec[i], name);
+        ++index;
+    }
 }
 
 
@@ -3361,27 +3239,25 @@ IsMarkedInternalCommon(T* thingp)
 }
 
 template <typename T>
-static bool
-IsMarkedInternal(JSRuntime* rt, T** thingp)
+struct MightBeNurseryAllocated
+{
+    static const bool value = mozilla::IsBaseOf<JSObject, T>::value ||
+                              mozilla::IsBaseOf<JSString, T>::value;
+};
+
+template <typename T>
+bool
+js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp)
 {
     if (IsOwnedByOtherRuntime(rt, *thingp))
         return true;
 
-    return IsMarkedInternalCommon(thingp);
-}
-
-template <>
-/* static */ bool
-IsMarkedInternal(JSRuntime* rt, JSObject** thingp)
-{
-    if (IsOwnedByOtherRuntime(rt, *thingp))
-        return true;
-
-    if (IsInsideNursery(*thingp)) {
+    if (MightBeNurseryAllocated<T>::value && IsInsideNursery(*thingp)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
         Cell** cellp = reinterpret_cast<Cell**>(thingp);
         return Nursery::getForwardedPointer(cellp);
     }
+
     return IsMarkedInternalCommon(thingp);
 }
 
@@ -3394,8 +3270,8 @@ struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
 };
 
 template <typename T>
-static bool
-IsMarkedInternal(JSRuntime* rt, T* thingp)
+bool
+js::gc::IsMarkedInternal(JSRuntime* rt, T* thingp)
 {
     bool rv = true;
     *thingp = DispatchTyped(IsMarkedFunctor<T>(), *thingp, rt, &rv);
@@ -3411,8 +3287,8 @@ js::gc::IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured)
 }
 
 template <typename T>
-static bool
-IsAboutToBeFinalizedInternal(T** thingp)
+bool
+js::gc::IsAboutToBeFinalizedInternal(T** thingp)
 {
     CheckIsMarkedThing(thingp);
     T* thing = *thingp;
@@ -3447,8 +3323,8 @@ struct IsAboutToBeFinalizedInternalFunctor : public IdentityDefaultAdaptor<S> {
 };
 
 template <typename T>
-static bool
-IsAboutToBeFinalizedInternal(T* thingp)
+bool
+js::gc::IsAboutToBeFinalizedInternal(T* thingp)
 {
     bool rv = false;
     *thingp = DispatchTyped(IsAboutToBeFinalizedInternalFunctor<T>(), *thingp, &rv);
@@ -3457,41 +3333,6 @@ IsAboutToBeFinalizedInternal(T* thingp)
 
 namespace js {
 namespace gc {
-
-template <typename T>
-bool
-IsMarkedUnbarriered(JSRuntime* rt, T* thingp)
-{
-    return IsMarkedInternal(rt, ConvertToBase(thingp));
-}
-
-template <typename T>
-bool
-IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp)
-{
-    return IsMarkedInternal(rt, ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
-}
-
-template <typename T>
-bool
-IsAboutToBeFinalizedUnbarriered(T* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
-}
-
-template <typename T>
-bool
-IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
-}
-
-template <typename T>
-bool
-IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
-{
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
-}
 
 template <typename T>
 JS_PUBLIC_API(bool)
@@ -3507,20 +3348,25 @@ EdgeNeedsSweepUnbarrieredSlow(T* thingp)
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
 }
 
-// Instantiate a copy of the Tracing templates for each derived type.
-#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
-    template bool IsMarkedUnbarriered<type>(JSRuntime*, type*);                \
-    template bool IsMarked<type>(JSRuntime*, WriteBarrieredBase<type>*); \
-    template bool IsAboutToBeFinalizedUnbarriered<type>(type*); \
-    template bool IsAboutToBeFinalized<type>(WriteBarrieredBase<type>*); \
-    template bool IsAboutToBeFinalized<type>(ReadBarrieredBase<type>*);
+// Instantiate a copy of the Tracing templates for each public GC type.
 #define INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS(type) \
     template JS_PUBLIC_API(bool) EdgeNeedsSweep<type>(JS::Heap<type>*); \
     template JS_PUBLIC_API(bool) EdgeNeedsSweepUnbarrieredSlow<type>(type*);
-FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
-#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
+
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type) \
+    template bool IsMarkedInternal(JSRuntime* rt, type* thing); \
+    template bool IsAboutToBeFinalizedInternal(type* thingp);
+
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+    INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type*)
+
+JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)
+FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS)
+
+#undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND
+#undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS
 
 } /* namespace gc */
 } /* namespace js */

@@ -116,7 +116,7 @@ BrowserCLH.prototype = {
 
       case "chrome-document-interactive":
       case "content-document-interactive": {
-        let contentWin = subject.QueryInterface(Ci.nsIDOMDocument).defaultView;
+        let contentWin = subject.defaultView;
         let win = GeckoViewUtils.getChromeWindow(contentWin);
         let dispatcher = GeckoViewUtils.getDispatcherForWindow(win);
         if (!win || !dispatcher || win !== contentWin) {

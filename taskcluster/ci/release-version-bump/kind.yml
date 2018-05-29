@@ -16,7 +16,13 @@ job-defaults:
     description: Release Promotion version bump/tag
     run-on-projects: []
     shipping-phase: ship
-    worker-type: scriptworker-prov-v1/treescript-v1
+    worker-type:
+        by-project:
+            mozilla-(beta|release|esr.*): scriptworker-prov-v1/treescript-v1
+            maple: scriptworker-prov-v1/treescript-v1
+            birch: scriptworker-prov-v1/treescript-v1
+            jamun: scriptworker-prov-v1/treescript-v1
+            default: scriptworker-prov-v1/treescript-dev
     worker:
         implementation: treescript
         tag: true

@@ -4,13 +4,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
+    'Breakpoints',
     'Frames',
 ]
 
 DevToolsModules(
-    'Breakpoint.js',
-    'Breakpoints.js',
-    'BreakpointsContextMenu.js',
     'CommandBar.js',
     'EventListeners.js',
     'Expressions.js',

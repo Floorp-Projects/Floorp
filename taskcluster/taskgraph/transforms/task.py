@@ -31,6 +31,7 @@ from taskgraph.util.schema import (
 from taskgraph.util.scriptworker import (
     BALROG_ACTIONS,
     get_release_config,
+    add_scope_prefix,
 )
 from voluptuous import Any, Required, Optional, Extra
 from taskgraph import GECKO, MAX_DEPENDENCIES
@@ -547,6 +548,7 @@ task_description_schema = Schema({
         Required('tag'): bool,
         Required('bump'): bool,
         Optional('bump-files'): [basestring],
+        Optional('repo-param-prefix'): basestring,
         Required('force-dry-run', default=True): bool,
         Required('push', default=False): bool
     }),
@@ -597,7 +599,15 @@ TREEHERDER_ROUTE_ROOT = 'tc-treeherder'
 
 
 def get_branch_rev(config):
-    return config.params['{}head_rev'.format(config.graph_config['project-repo-param-prefix'])]
+    return config.params['{}head_rev'.format(
+        config.graph_config['project-repo-param-prefix']
+    )]
+
+
+def get_branch_repo(config):
+    return config.params['{}head_repository'.format(
+        config.graph_config['project-repo-param-prefix'],
+    )]
 
 
 COALESCE_KEY = '{project}.{job-identifier}'
@@ -1129,10 +1139,10 @@ def build_treescript_payload(config, task, task_def):
         ]
         tag_info = {
             'tags': tag_names,
-            'revision': config.params['head_rev']
+            'revision': config.params['{}head_rev'.format(worker.get('repo-param-prefix', ''))],
         }
         task_def['payload']['tag_info'] = tag_info
-        task_def['scopes'].append('project:releng:treescript:action:tagging')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:tagging'))
 
     if worker['bump']:
         if not worker['bump-files']:
@@ -1142,10 +1152,10 @@ def build_treescript_payload(config, task, task_def):
         bump_info['next_version'] = release_config['next_version']
         bump_info['files'] = worker['bump-files']
         task_def['payload']['version_bump_info'] = bump_info
-        task_def['scopes'].append('project:releng:treescript:action:version_bump')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:version_bump'))
 
     if worker['push']:
-        task_def['scopes'].append('project:releng:treescript:action:push')
+        task_def['scopes'].append(add_scope_prefix(config, 'treescript:action:push'))
 
     if worker.get('force-dry-run'):
         task_def['payload']['dry_run'] = True

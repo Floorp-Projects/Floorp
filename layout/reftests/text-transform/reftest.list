@@ -21,19 +21,19 @@ random-if(winWidget) == small-caps-1.html small-caps-1-ref.html # fails if defau
 fuzzy-if(cocoaWidget,250,15) == all-upper.html all-upper-ref.html # bug 1140292
 fuzzy-if(cocoaWidget,250,15) fuzzy-if(skiaContent,1,1800) == all-lower.html all-lower-ref.html # bug 1140292
 fuzzy-if(skiaContent,1,80) == all-title.html all-title-ref.html
-== smtp-upper.html smtp-upper-ref.html
-== smtp-lower.html smtp-lower-ref.html
-== smtp-title.html smtp-title-ref.html
-== turkish-casing-1.html turkish-casing-1-ref.html
-!= small-caps-turkish-1.html small-caps-turkish-1-notref.html
-== greek-uppercase-1a.html greek-uppercase-1-ref.html
-== greek-uppercase-1b.html greek-uppercase-1-ref.html
-== greek-uppercase-2.html greek-uppercase-2-ref.html
-== greek-uppercase-3.html greek-uppercase-3-ref.html
-== greek-small-caps-1.html greek-small-caps-1-ref.html
-== irish-uppercase-1.html irish-uppercase-1-ref.html
-== irish-lowercase-1a.html irish-lowercase-1-ref.html
-== irish-lowercase-1b.html irish-lowercase-1-ref.html
-== fullwidth-1.html fullwidth-1-ref.html
-== fullwidth-2.html fullwidth-2-ref.html
-== fullwidth-all.html fullwidth-all-ref.html
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-upper.html smtp-upper-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-lower.html smtp-lower-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == smtp-title.html smtp-title-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == turkish-casing-1.html turkish-casing-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != small-caps-turkish-1.html small-caps-turkish-1-notref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-1a.html greek-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-1b.html greek-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-2.html greek-uppercase-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-uppercase-3.html greek-uppercase-3-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == greek-small-caps-1.html greek-small-caps-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-uppercase-1.html irish-uppercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-lowercase-1a.html irish-lowercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == irish-lowercase-1b.html irish-lowercase-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-1.html fullwidth-1-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-2.html fullwidth-2-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == fullwidth-all.html fullwidth-all-ref.html # Bug 1392106

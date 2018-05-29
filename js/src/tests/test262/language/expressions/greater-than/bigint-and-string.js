@@ -26,6 +26,15 @@ assert.sameValue(-1n > '1', false, 'The result of (-1n > "1") is false');
 assert.sameValue('-1' > 1n, false, 'The result of ("-1" > 1n) is false');
 assert.sameValue(-1n > '-1', false, 'The result of (-1n > "-1") is false');
 assert.sameValue('-1' > -1n, false, 'The result of ("-1" > -1n) is false');
+assert.sameValue('0x10' > 15n, true, 'The result of ("0x10" > 15n) is true');
+assert.sameValue('0x10' > 16n, false, 'The result of ("0x10" > 16n) is false');
+assert.sameValue('0x10' > 17n, false, 'The result of ("0x10" > 17n) is false');
+assert.sameValue('0o10' > 7n, true, 'The result of ("0o10" > 7n) is true');
+assert.sameValue('0o10' > 8n, false, 'The result of ("0o10" > 8n) is false');
+assert.sameValue('0o10' > 9n, false, 'The result of ("0o10" > 9n) is false');
+assert.sameValue('0b10' > 1n, true, 'The result of ("0b10" > 1n) is true');
+assert.sameValue('0b10' > 2n, false, 'The result of ("0b10" > 2n) is false');
+assert.sameValue('0b10' > 3n, false, 'The result of ("0b10" > 3n) is false');
 
 assert.sameValue(
   9007199254740993n > '9007199254740992',
@@ -50,4 +59,5 @@ assert.sameValue(
   true,
   'The result of ("-9007199254740992" > -9007199254740993n) is true'
 );
+
 reportCompare(0, 0);

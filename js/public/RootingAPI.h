@@ -719,6 +719,10 @@ struct BarrierMethods<JSString*>
     static void postBarrier(JSString** vp, JSString* prev, JSString* next) {
         JS::HeapStringPostBarrier(vp, prev, next);
     }
+    static void exposeToJS(JSString* v) {
+        if (v)
+            js::gc::ExposeGCThingToActiveJS(JS::GCCellPtr(v));
+    }
 };
 
 // Provide hash codes for Cell kinds that may be relocated and, thus, not have
