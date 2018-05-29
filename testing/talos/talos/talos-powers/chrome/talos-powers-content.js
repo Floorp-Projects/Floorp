@@ -8,104 +8,6 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function canQuitApplication() {
-  try {
-    var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-      .createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
-
-    // Something aborted the quit process.
-    if (cancelQuit.data) {
-      return false;
-    }
-  } catch (ex) {
-  }
-  Services.obs.notifyObservers(null, "quit-application-granted");
-  return true;
-}
-
-function goQuitApplication(waitForSafeBrowsing) {
-  if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-    // If we're running in a remote browser, emit an event for a
-    // frame script to pick up to quit the whole browser.
-    var event = new content.CustomEvent("TalosQuitApplication", {bubbles: true, detail: {waitForSafeBrowsing}});
-    content.document.dispatchEvent(event);
-    return false;
-  }
-
-  if (waitForSafeBrowsing) {
-    var SafeBrowsing = ChromeUtils.import("resource://gre/modules/SafeBrowsing.jsm", {}).SafeBrowsing;
-
-    var whenDone = () => {
-      goQuitApplication(false);
-    };
-
-    SafeBrowsing.addMozEntriesFinishedPromise.then(whenDone, whenDone);
-    // Speed things up in case nobody else called this:
-    SafeBrowsing.init();
-    return false;
-  }
-
-  if (!canQuitApplication()) {
-    return false;
-  }
-
-  const kAppStartup = "@mozilla.org/toolkit/app-startup;1";
-  const kAppShell   = "@mozilla.org/appshell/appShellService;1";
-  var appService;
-
-  if (kAppStartup in Cc) {
-    appService = Services.startup;
-  } else if (kAppShell in Cc) {
-    appService = Services.appShell;
-  } else {
-    throw "goQuitApplication: no AppStartup/appShell";
-  }
-
-  var windowManager = Cc["@mozilla.org/appshell/window-mediator;1"].getService();
-
-  var windowManagerInterface = windowManager.
-    QueryInterface(Ci.nsIWindowMediator);
-
-  var enumerator = windowManagerInterface.getEnumerator(null);
-
-  while (enumerator.hasMoreElements()) {
-    var domWindow = enumerator.getNext();
-    if (("tryToClose" in domWindow) && !domWindow.tryToClose()) {
-      return false;
-    }
-    domWindow.close();
-  }
-
-  try {
-    appService.quit(appService.eForceQuit);
-  } catch (ex) {
-    throw ("goQuitApplication: " + ex);
-  }
-
-  return true;
-}
-
-
-/**
- * Content that wants to quit the whole session should
- * fire the TalosQuitApplication custom event. This will
- * attempt to force-quit the browser.
- */
-addEventListener("TalosQuitApplication", event => {
-  // If we're loaded in a low-priority background process, like
-  // the background page thumbnailer, then we shouldn't be allowed
-  // to quit the whole application. This is a workaround until
-  // bug 1164459 is fixed.
-  let priority = docShell.QueryInterface(Ci.nsIDocumentLoader)
-                         .loadGroup
-                         .QueryInterface(Ci.nsISupportsPriority)
-                         .priority;
-  if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
-    sendAsyncMessage("Talos:ForceQuit", event.detail);
-  }
-});
-
 addEventListener("TalosContentProfilerCommand", (e) => {
   let name = e.detail.name;
   let data = e.detail.data;
@@ -164,8 +66,23 @@ addEventListener("TalosPowersContentGetStartupInfo", (e) => {
   });
 });
 
+/**
+ * Content that wants to quit the whole session should
+ * fire the TalosPowersGoQuitApplication custom event. This will
+ * attempt to force-quit the browser.
+ */
 addEventListener("TalosPowersGoQuitApplication", (e) => {
-  goQuitApplication(e.detail);
+  // If we're loaded in a low-priority background process, like
+  // the background page thumbnailer, then we shouldn't be allowed
+  // to quit the whole application. This is a workaround until
+  // bug 1164459 is fixed.
+  let priority = docShell.QueryInterface(Ci.nsIDocumentLoader)
+                         .loadGroup
+                         .QueryInterface(Ci.nsISupportsPriority)
+                         .priority;
+  if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
+    sendAsyncMessage("Talos:ForceQuit", e.detail);
+  }
 });
 
 /* *
