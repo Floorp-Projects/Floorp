@@ -53,9 +53,9 @@ public:
 ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
                                          uint16_t aOutputCount)
   : AudioNode(aContext,
-              6,
-              ChannelCountMode::Explicit,
-              ChannelInterpretation::Discrete)
+              2,
+              ChannelCountMode::Max,
+              ChannelInterpretation::Speakers)
   , mOutputCount(aOutputCount)
 {
   mStream = AudioNodeStream::Create(aContext,
