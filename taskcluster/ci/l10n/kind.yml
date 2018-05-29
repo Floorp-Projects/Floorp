@@ -85,7 +85,7 @@ job-template:
          win.*: aws-provisioner-v1/gecko-{level}-b-win2012
    treeherder:
       symbol: L10n
-      tier: 3
+      tier: 1
       platform:
          by-build-platform:
             linux64: linux64/opt
