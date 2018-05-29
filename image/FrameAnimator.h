@@ -370,10 +370,10 @@ private: // methods
   Maybe<TimeStamp> GetCurrentImgFrameEndTime(AnimationState& aState,
                                              DrawableSurface& aFrames) const;
 
-  bool DoBlend(DrawableSurface& aFrames,
-               gfx::IntRect* aDirtyRect,
-               uint32_t aPrevFrameIndex,
-               uint32_t aNextFrameIndex);
+  bool DoBlend(const RawAccessFrameRef& aPrevFrame,
+               const RawAccessFrameRef& aNextFrame,
+               uint32_t aNextFrameIndex,
+               gfx::IntRect* aDirtyRect);
 
   /** Clears an area of <aFrame> with transparent black.
    *
@@ -413,7 +413,7 @@ private: // methods
                               uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
                               uint8_t* aDstPixels, const gfx::IntRect& aDstRect,
                               BlendMethod aBlendMethod,
-                              const Maybe<gfx::IntRect>& aBlendRect);
+                              const gfx::IntRect& aBlendRect);
 
 private: // data
   //! A weak pointer to our owning image.
