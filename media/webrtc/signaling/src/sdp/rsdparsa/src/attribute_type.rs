@@ -6,6 +6,13 @@ use SdpType;
 use error::SdpParserInternalError;
 use network::{parse_nettype, parse_addrtype, parse_unicast_addr};
 
+
+#[derive(Clone)]
+pub enum SdpAttributePayloadType {
+    PayloadType(u8),
+    Wildcard, // Wildcard means "*",
+}
+
 #[derive(Clone)]
 pub enum SdpAttributeCandidateTransport {
     Udp,
@@ -183,10 +190,22 @@ impl SdpAttributeRtcp {
 }
 
 #[derive(Clone)]
+pub enum SdpAttributeRtcpFbType {
+    Ack = 0,
+    Ccm = 2, // This is explicitly 2 to make the conversion to the
+             // enum used in the glue-code possible. The glue code has "app"
+             // in the place of 1
+    Nack,
+    TrrInt,
+    Remb
+}
+
+#[derive(Clone)]
 pub struct SdpAttributeRtcpFb {
-    pub payload_type: u32,
-    // TODO parse this and use an enum instead?
-    pub feedback_type: String,
+    pub payload_type: SdpAttributePayloadType,
+    pub feedback_type: SdpAttributeRtcpFbType,
+    pub parameter: String,
+    pub extra: String,
 }
 
 #[derive(Clone)]
@@ -570,6 +589,14 @@ fn string_or_empty(to_parse: &str) -> Result<String, SdpParserInternalError> {
     }
 }
 
+fn parse_payload_type(to_parse: &str) -> Result<SdpAttributePayloadType, SdpParserInternalError>
+{
+    Ok(match to_parse {
+             "*" => SdpAttributePayloadType::Wildcard,
+             _ => SdpAttributePayloadType::PayloadType(to_parse.parse::<u8>()?)
+         })
+}
+
 fn parse_sctp_port(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
     let port = to_parse.parse()?;
     if port > 65535 {
@@ -941,17 +968,106 @@ fn parse_rtcp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
 }
 
 fn parse_rtcp_fb(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
-    let tokens: Vec<&str> = to_parse.splitn(2, ' ').collect();
+    let tokens: Vec<&str> = to_parse.splitn(4,' ').collect();
+
+    // Parse this in advance to use it later in the parameter switch
+    let feedback_type = match tokens.get(1) {
+        Some(x) => match x.as_ref(){
+            "ack" => SdpAttributeRtcpFbType::Ack,
+            "ccm" => SdpAttributeRtcpFbType::Ccm,
+            "nack" => SdpAttributeRtcpFbType::Nack,
+            "trr-int" => SdpAttributeRtcpFbType::TrrInt,
+            "goog-remb" => SdpAttributeRtcpFbType::Remb,
+            _ => {
+                return Err(SdpParserInternalError::Unsupported(
+                    format!("Unknown rtcpfb feedback type: {:?}",x).to_string()
+                ))
+            }
+        },
+        None => {
+            return Err(SdpParserInternalError::Generic(
+                           "Error parsing rtcpfb: no feedback type".to_string(),
+                       ))
+        }
+    };
+
+    // Parse this in advance to make the initilization block below better readable
+    let parameter = match &feedback_type {
+        &SdpAttributeRtcpFbType::Ack => match tokens.get(2) {
+            Some(x) => match x.as_ref() {
+                "rpsi" | "app"  => x.to_string(),
+                _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown rtcpfb ack parameter: {:?}",x).to_string()
+                    ))
+                },
+            }
+            None => {
+                return Err(SdpParserInternalError::Unsupported(
+                    format!("The rtcpfb ack feeback type needs a parameter:").to_string()
+                ))
+            }
+        },
+        &SdpAttributeRtcpFbType::Ccm => match tokens.get(2) {
+            Some(x) => match x.as_ref() {
+                "fir" | "tmmbr" | "tstr" | "vbcm"  => x.to_string(),
+                _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown rtcpfb ccm parameter: {:?}",x).to_string()
+                    ))
+                },
+            }
+            None => "".to_string(),
+        },
+        &SdpAttributeRtcpFbType::Nack => match tokens.get(2) {
+            Some(x) => match x.as_ref() {
+                "sli" | "pli" | "rpsi" | "app"  => x.to_string(),
+                _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown rtcpfb nack parameter: {:?}",x).to_string()
+                    ))
+                },
+            }
+            None => "".to_string(),
+        },
+        &SdpAttributeRtcpFbType::TrrInt => match tokens.get(2) {
+            Some(x) => match x {
+                _ if x.parse::<u32>().is_ok() => x.to_string(),
+                _ => {
+                    return Err(SdpParserInternalError::Generic(
+                        format!("Unknown rtcpfb trr-int parameter: {:?}",x).to_string()
+                    ))
+                },
+            }
+            None => {
+                    return Err(SdpParserInternalError::Generic(
+                        format!("The rtcpfb trr-int feedback type needs a parameter").to_string()
+                    ))
+            }
+        },
+        &SdpAttributeRtcpFbType::Remb => match tokens.get(2) {
+            Some(x) => match x {
+                _ => {
+                    return Err(SdpParserInternalError::Unsupported(
+                        format!("Unknown rtcpfb remb parameter: {:?}",x).to_string()
+                    ))
+                },
+            }
+            None => "".to_string(),
+        }
+    };
+
+
     Ok(SdpAttribute::Rtcpfb(SdpAttributeRtcpFb {
-                                // TODO limit this to dymaic PTs
-                                payload_type: tokens[0].parse::<u32>()?,
-                                feedback_type: match tokens.get(1) {
+                                payload_type: parse_payload_type(tokens[0])?,
+
+                                feedback_type: feedback_type,
+
+                                parameter: parameter,
+
+                                extra: match tokens.get(3) {
                                     Some(x) => x.to_string(),
-                                    None => {
-                                        return Err(SdpParserInternalError::Generic(
-                                                       "Error parsing rtcpfb".to_string(),
-                                                   ))
-                                    }
+                                    None => "".to_string(),
                                 },
                             }))
 }

@@ -3049,14 +3049,12 @@ const std::string kBasicAudioVideoDataOffer =
 "a=setup:actpass" CRLF;
 
 TEST_P(NewSdpTest, BasicAudioVideoDataSdpParse) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size()) <<
     "Got parse errors: " << GetParseErrors();
 }
 
 TEST_P(NewSdpTest, CheckApplicationParameters) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3087,7 +3085,6 @@ TEST_P(NewSdpTest, CheckApplicationParameters) {
 }
 
 TEST_P(NewSdpTest, CheckExtmap) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";
@@ -3123,7 +3120,6 @@ TEST_P(NewSdpTest, CheckExtmap) {
 }
 
 TEST_P(NewSdpTest, CheckRtcpFb) {
-  SKIP_TEST_WITH_RUST_PARSER; // See Bug 1432922
   ParseSdp(kBasicAudioVideoDataOffer);
   ASSERT_TRUE(!!mSdp);
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount()) << "Wrong number of media sections";

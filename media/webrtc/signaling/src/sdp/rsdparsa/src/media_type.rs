@@ -360,6 +360,8 @@ pub fn parse_media_vector(lines: &[SdpLine]) -> Result<Vec<SdpMedia>, SdpParserE
                        })
         }
     };
+
+
     for line in lines.iter().skip(1) {
         match line.sdp_type {
             SdpType::Connection(ref c) => {
@@ -408,7 +410,9 @@ pub fn parse_media_vector(lines: &[SdpLine]) -> Result<Vec<SdpMedia>, SdpParserE
             SdpType::Key(_) => (),
         };
     }
+
     media_sections.push(sdp_media);
+
     Ok(media_sections)
 }
 // TODO add unit tests for parse_media_vector
