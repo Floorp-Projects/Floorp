@@ -92,6 +92,7 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
         'GECKO_BASE_REPOSITORY': config.params['base_repository'],
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
+        'GECKO_PATH': '{workdir}/checkouts/gecko'.format(**job['run']),
         'HG_STORE_PATH': '{workdir}/checkouts/hg-store'.format(**job['run']),
     })
 
