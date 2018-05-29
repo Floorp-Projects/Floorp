@@ -51,7 +51,6 @@ function willNavigate(event) {
     await sourceMaps.clearSourceMaps();
     (0, _wasm.clearWasmStates)();
     (0, _editor.clearDocuments)();
-    (0, _editor.removeEditor)();
     (0, _parser.clearSymbols)();
     (0, _parser.clearASTs)();
     (0, _parser.clearScopes)();

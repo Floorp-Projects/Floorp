@@ -966,8 +966,8 @@ this.tabs = class extends ExtensionAPI {
               let browser = event.originalTarget;
 
               // For non-remote browsers, this event is dispatched on the document
-              // rather than on the <browser>.
-              if (browser instanceof Ci.nsIDOMDocument) {
+              // rather than on the <browser>.  But either way we have a node here.
+              if (browser.nodeType == browser.DOCUMENT_NODE) {
                 browser = browser.docShell.chromeEventHandler;
               }
 

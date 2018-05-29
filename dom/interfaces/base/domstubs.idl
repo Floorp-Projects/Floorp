@@ -16,7 +16,6 @@ typedef double DOMHighResTimeStamp;
 typedef unsigned long long nsViewID;
 
 // Core
-interface nsIDOMDocument;
 interface nsIDOMNode;
 
 // Needed for raises() in our IDL

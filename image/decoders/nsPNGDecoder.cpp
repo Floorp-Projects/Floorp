@@ -203,6 +203,25 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   MOZ_ASSERT_IF(Size() != OutputSize(),
                 transparency != TransparencyType::eFrameRect);
 
+  Maybe<AnimationParams> animParams;
+#ifdef PNG_APNG_SUPPORTED
+  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
+    mAnimInfo = AnimFrameInfo(mPNG, mInfo);
+
+    if (mAnimInfo.mDispose == DisposalMethod::CLEAR) {
+      // We may have to display the background under this image during
+      // animation playback, so we regard it as transparent.
+      PostHasTransparency();
+    }
+
+    animParams.emplace(AnimationParams {
+      aFrameInfo.mFrameRect,
+      FrameTimeout::FromRawMilliseconds(mAnimInfo.mTimeout),
+      mNumFrames, mAnimInfo.mBlend, mAnimInfo.mDispose
+    });
+  }
+#endif
+
   // If this image is interlaced, we can display better quality intermediate
   // results to the user by post processing them with ADAM7InterpolatingFilter.
   SurfacePipeFlags pipeFlags = aFrameInfo.mIsInterlaced
@@ -215,9 +234,9 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
   }
 
   Maybe<SurfacePipe> pipe =
-    SurfacePipeFactory::CreateSurfacePipe(this, mNumFrames, Size(),
-                                          OutputSize(), aFrameInfo.mFrameRect,
-                                          mFormat, pipeFlags);
+    SurfacePipeFactory::CreateSurfacePipe(this, Size(), OutputSize(),
+                                          aFrameInfo.mFrameRect, mFormat,
+                                          animParams, pipeFlags);
 
   if (!pipe) {
     mPipe = SurfacePipe();
@@ -233,18 +252,6 @@ nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo)
          ("PNGDecoderAccounting: nsPNGDecoder::CreateFrame -- created "
           "image frame with %dx%d pixels for decoder %p",
           mFrameRect.Width(), mFrameRect.Height(), this));
-
-#ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
-    mAnimInfo = AnimFrameInfo(mPNG, mInfo);
-
-    if (mAnimInfo.mDispose == DisposalMethod::CLEAR) {
-      // We may have to display the background under this image during
-      // animation playback, so we regard it as transparent.
-      PostHasTransparency();
-    }
-  }
-#endif
 
   return NS_OK;
 }
@@ -263,9 +270,7 @@ nsPNGDecoder::EndImageFrame()
                   ? Opacity::FULLY_OPAQUE
                   : Opacity::SOME_TRANSPARENCY;
 
-  PostFrameStop(opacity, mAnimInfo.mDispose,
-                FrameTimeout::FromRawMilliseconds(mAnimInfo.mTimeout),
-                mAnimInfo.mBlend, Some(mFrameRect));
+  PostFrameStop(opacity);
 }
 
 nsresult

@@ -1,4 +1,0 @@
-match_block_trailing_comma = true
-binop_separator = "Back"
-# Turn off import reordering, since the new algorithm clashes with tidy.
-reorder_imports = false

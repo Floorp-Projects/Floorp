@@ -55,13 +55,9 @@ function testEvalHackNotJSON() {
     arr = eval("[]; var z; [1, 2, 3, \"abc\u1200\"]");
     assertEq(JSON.stringify(arr), '[1,2,3,"abc\u1200"]');
 
-    try {
-	eval("[1, 2, 3, \"abc\u2028\"]");
-	throw new Error("U+2028 shouldn't eval");
-    } catch (e) {
-	assertEq(e instanceof SyntaxError, true,
-		 "should have thrown a SyntaxError, instead got " + e);
-    }
+    var arr = eval("[1, 2, 3, \"abc\u2028\"]");
+    assertEq(arr.length, 4);
+    assertEq(arr[3], "abc\u2028");
 }
 testEvalHackNotJSON();
 

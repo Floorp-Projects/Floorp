@@ -2308,10 +2308,8 @@ IonCacheIRCompiler::emitGuardAndGetIterator()
     masm.movePtr(ImmGCPtr(iterobj), output);
     masm.loadObjPrivate(output, JSObject::ITER_CLASS_NFIXED_SLOTS, niScratch);
 
-    // Ensure the |active| and |unreusable| bits are not set.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(niScratch, NativeIterator::offsetOfFlags()),
-                      Imm32(NativeIterator::Flags::All), failure->label());
+    // Ensure the iterator is reusable: see NativeIterator::isReusable.
+    masm.branchIfNativeIteratorNotReusable(niScratch, failure->label());
 
     // Pre-write barrier for store to 'objectBeingIterated_'.
     Address iterObjAddr(niScratch, NativeIterator::offsetOfObjectBeingIterated());

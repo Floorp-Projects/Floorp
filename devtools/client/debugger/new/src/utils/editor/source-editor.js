@@ -38,6 +38,8 @@ require("codemirror/addon/fold/indent-fold/index");
 
 require("codemirror/addon/fold/foldgutter/index");
 
+require("codemirror/addon/runmode/runmode/index");
+
 require("codemirror/addon/selection/active-line/index");
 
 require("codemirror/addon/edit/matchbrackets/index");

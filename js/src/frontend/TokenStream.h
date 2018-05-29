@@ -561,8 +561,6 @@ class TokenStreamAnyChars
         return currentToken().type == type;
     }
 
-    bool getMutedErrors() const { return mutedErrors; }
-
     MOZ_MUST_USE bool checkOptions();
 
   private:
@@ -585,14 +583,6 @@ class TokenStreamAnyChars
 
         MOZ_ASSERT(TokenKindIsPossibleIdentifierName(currentToken().type));
         return false;
-    }
-
-    PropertyName* nextName() const {
-        if (nextToken().type != TokenKind::Name)
-            return nextToken().name();
-
-        MOZ_ASSERT(TokenKindIsPossibleIdentifierName(nextToken().type));
-        return reservedWordToPropertyName(nextToken().type);
     }
 
     bool isCurrentTokenAssignment() const {
@@ -774,10 +764,6 @@ class TokenStreamAnyChars
     };
 
     SourceCoords srcCoords;
-
-    JSAtomState& names() const {
-        return cx->names();
-    }
 
     JSContext* context() const {
         return cx;
@@ -1738,13 +1724,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
             MOZ_ASSERT(sourceUnits.hasRawChars());
             mozilla::DebugOnly<int32_t> c = getCharIgnoreEOL();
             MOZ_ASSERT(!SourceUnits::isRawEOLChar(c));
-        }
-    }
-
-    void skipCharsIgnoreEOL(uint8_t n) {
-        while (n-- > 0) {
-            MOZ_ASSERT(sourceUnits.hasRawChars());
-            getCharIgnoreEOL();
         }
     }
 };

@@ -241,7 +241,7 @@ already_AddRefed<Decoder> CreateTrivialDecoder();
  * @param aConfigs The configuration for the pipeline.
  */
 template <typename Func, typename... Configs>
-void WithFilterPipeline(Decoder* aDecoder, Func aFunc, Configs... aConfigs)
+void WithFilterPipeline(Decoder* aDecoder, Func aFunc, const Configs&... aConfigs)
 {
   auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
   nsresult rv = pipe->Configure(aConfigs...);
@@ -264,7 +264,7 @@ void WithFilterPipeline(Decoder* aDecoder, Func aFunc, Configs... aConfigs)
  * @param aConfigs The configuration for the pipeline.
  */
 template <typename... Configs>
-void AssertConfiguringPipelineFails(Decoder* aDecoder, Configs... aConfigs)
+void AssertConfiguringPipelineFails(Decoder* aDecoder, const Configs&... aConfigs)
 {
   auto pipe = MakeUnique<typename detail::FilterPipeline<Configs...>::Type>();
   nsresult rv = pipe->Configure(aConfigs...);

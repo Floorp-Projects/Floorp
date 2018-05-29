@@ -55,31 +55,66 @@ PushArena(GCMarker* gcmarker, Arena* arena);
 
 /*** Liveness ***/
 
-// Report whether a thing has been marked.  Things which are in zones that are
-// not currently being collected or are owned by another runtime are always
-// reported as being marked.
+// The IsMarkedInternal and IsAboutToBeFinalizedInternal function templates are
+// used to implement the IsMarked and IsAboutToBeFinalized set of functions.
+// These internal functions are instantiated for the base GC types and should
+// not be called directly.
+//
+// Note that there are two function templates declared for each, not one
+// template and a specialization. This is necessary so that pointer arguments
+// (e.g. JSObject**) and tagged value arguments (e.g. JS::Value*) are routed to
+// separate implementations.
+
 template <typename T>
-bool
-IsMarkedUnbarriered(JSRuntime* rt, T* thingp);
+bool IsMarkedInternal(JSRuntime* rt, T* thing);
+template <typename T>
+bool IsMarkedInternal(JSRuntime* rt, T** thing);
+
+template <typename T>
+bool IsAboutToBeFinalizedInternal(T* thingp);
+template <typename T>
+bool IsAboutToBeFinalizedInternal(T** thingp);
 
 // Report whether a thing has been marked.  Things which are in zones that are
 // not currently being collected or are owned by another runtime are always
 // reported as being marked.
 template <typename T>
-bool
-IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp);
+inline bool
+IsMarkedUnbarriered(JSRuntime* rt, T* thingp)
+{
+    return IsMarkedInternal(rt, ConvertToBase(thingp));
+}
+
+// Report whether a thing has been marked.  Things which are in zones that are
+// not currently being collected or are owned by another runtime are always
+// reported as being marked.
+template <typename T>
+inline bool
+IsMarked(JSRuntime* rt, WriteBarrieredBase<T>* thingp)
+{
+    return IsMarkedInternal(rt, ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+}
 
 template <typename T>
-bool
-IsAboutToBeFinalizedUnbarriered(T* thingp);
+inline bool
+IsAboutToBeFinalizedUnbarriered(T* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
+}
 
 template <typename T>
-bool
-IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp);
+inline bool
+IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+}
 
 template <typename T>
-bool
-IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp);
+inline bool
+IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
+}
 
 bool
 IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);

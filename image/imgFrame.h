@@ -11,11 +11,10 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
-#include "FrameTimeout.h"
+#include "AnimationParams.h"
 #include "gfxDrawable.h"
 #include "imgIContainer.h"
 #include "MainThreadUtils.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace image {
@@ -24,61 +23,9 @@ class ImageRegion;
 class DrawableFrameRef;
 class RawAccessFrameRef;
 
-enum class BlendMethod : int8_t {
-  // All color components of the frame, including alpha, overwrite the current
-  // contents of the frame's output buffer region.
-  SOURCE,
-
-  // The frame should be composited onto the output buffer based on its alpha,
-  // using a simple OVER operation.
-  OVER
-};
-
-enum class DisposalMethod : int8_t {
-  CLEAR_ALL = -1,  // Clear the whole image, revealing what's underneath.
-  NOT_SPECIFIED,   // Leave the frame and let the new frame draw on top.
-  KEEP,            // Leave the frame and let the new frame draw on top.
-  CLEAR,           // Clear the frame's area, revealing what's underneath.
-  RESTORE_PREVIOUS // Restore the previous (composited) frame.
-};
-
 enum class Opacity : uint8_t {
   FULLY_OPAQUE,
   SOME_TRANSPARENCY
-};
-
-/**
- * AnimationData contains all of the information necessary for using an imgFrame
- * as part of an animation.
- *
- * It includes pointers to the raw image data of the underlying imgFrame, but
- * does not own that data. A RawAccessFrameRef for the underlying imgFrame must
- * outlive the AnimationData for it to remain valid.
- */
-struct AnimationData
-{
-  AnimationData(uint8_t* aRawData, uint32_t aPaletteDataLength,
-                FrameTimeout aTimeout, const nsIntRect& aRect,
-                BlendMethod aBlendMethod, const Maybe<gfx::IntRect>& aBlendRect,
-                DisposalMethod aDisposalMethod, bool aHasAlpha)
-    : mRawData(aRawData)
-    , mPaletteDataLength(aPaletteDataLength)
-    , mTimeout(aTimeout)
-    , mRect(aRect)
-    , mBlendMethod(aBlendMethod)
-    , mBlendRect(aBlendRect)
-    , mDisposalMethod(aDisposalMethod)
-    , mHasAlpha(aHasAlpha)
-  { }
-
-  uint8_t* mRawData;
-  uint32_t mPaletteDataLength;
-  FrameTimeout mTimeout;
-  nsIntRect mRect;
-  BlendMethod mBlendMethod;
-  Maybe<gfx::IntRect> mBlendRect;
-  DisposalMethod mDisposalMethod;
-  bool mHasAlpha;
 };
 
 class imgFrame
@@ -112,13 +59,17 @@ public:
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0,
                           bool aNonPremult = false,
-                          bool aIsAnimated = false);
+                          const Maybe<AnimationParams>& aAnimParams = Nothing());
 
   nsresult InitForAnimator(const nsIntSize& aSize,
                            SurfaceFormat aFormat)
   {
-    return InitForDecoder(aSize, nsIntRect(0, 0, aSize.width, aSize.height),
-                          aFormat, 0, false, true);
+    nsIntRect frameRect(0, 0, aSize.width, aSize.height);
+    AnimationParams animParams { frameRect, FrameTimeout::Forever(),
+                                 /* aFrameNum */ 1, BlendMethod::OVER,
+                                 DisposalMethod::NOT_SPECIFIED };
+    return InitForDecoder(aSize, frameRect,
+                          aFormat, 0, false, Some(animParams));
   }
 
 
@@ -143,19 +94,14 @@ public:
                             gfx::BackendType aBackend);
 
   DrawableFrameRef DrawableRef();
-  RawAccessFrameRef RawAccessRef();
 
   /**
-   * Make this imgFrame permanently available for raw access.
+   * Create a RawAccessFrameRef for the frame.
    *
-   * This is irrevocable, and should be avoided whenever possible, since it
-   * prevents this imgFrame from being optimized and makes it impossible for its
-   * volatile buffer to be freed.
-   *
-   * It is an error to call this without already holding a RawAccessFrameRef to
-   * this imgFrame.
+   * @param aOnlyFinished If true, only return a valid RawAccessFrameRef if
+   *                      imgFrame::Finish has been called.
    */
-  void SetRawAccessOnly();
+  RawAccessFrameRef RawAccessRef(bool aOnlyFinished = false);
 
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
             SamplingFilter aSamplingFilter, uint32_t aImageFlags,
@@ -170,24 +116,10 @@ public:
    * RawAccessFrameRef pointing to an imgFrame.
    *
    * @param aFrameOpacity    Whether this imgFrame is opaque.
-   * @param aDisposalMethod  For animation frames, how this imgFrame is cleared
-   *                         from the compositing frame before the next frame is
-   *                         displayed.
-   * @param aTimeout         For animation frames, the timeout before the next
-   *                         frame is displayed.
-   * @param aBlendMethod     For animation frames, a blending method to be used
-   *                         when compositing this frame.
-   * @param aBlendRect       For animation frames, if present, the subrect in
-   *                         which @aBlendMethod applies. Outside of this
-   *                         subrect, BlendMethod::OVER is always used.
    * @param aFinalize        Finalize the underlying surface (e.g. so that it
    *                         may be marked as read only if possible).
    */
   void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
-              DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
-              FrameTimeout aTimeout = FrameTimeout::FromRawMilliseconds(0),
-              BlendMethod aBlendMethod = BlendMethod::OVER,
-              const Maybe<IntRect>& aBlendRect = Nothing(),
               bool aFinalize = true);
 
   /**
@@ -227,9 +159,15 @@ public:
    */
   uint32_t GetBytesPerPixel() const { return GetIsPaletted() ? 1 : 4; }
 
-  IntSize GetImageSize() const { return mImageSize; }
-  IntRect GetRect() const { return mFrameRect; }
+  const IntSize& GetImageSize() const { return mImageSize; }
+  const IntRect& GetRect() const { return mFrameRect; }
   IntSize GetSize() const { return mFrameRect.Size(); }
+  const IntRect& GetBlendRect() const { return mBlendRect; }
+  IntRect GetBoundedBlendRect() const { return mBlendRect.Intersect(mFrameRect); }
+  FrameTimeout GetTimeout() const { return mTimeout; }
+  BlendMethod GetBlendMethod() const { return mBlendMethod; }
+  DisposalMethod GetDisposalMethod() const { return mDisposalMethod; }
+  bool FormatHasAlpha() const { return mFormat == SurfaceFormat::B8G8R8A8; }
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
@@ -237,8 +175,6 @@ public:
   void GetPaletteData(uint32_t** aPalette, uint32_t* length) const;
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
-
-  AnimationData GetAnimationData() const;
 
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
@@ -256,7 +192,15 @@ private: // methods
 
   ~imgFrame();
 
-  nsresult LockImageData();
+  /**
+   * Used when the caller desires raw access to the underlying frame buffer.
+   * If the locking succeeds, the data pointer to the start of the buffer is
+   * returned, else it returns nullptr.
+   *
+   * @param aOnlyFinished If true, only attempt to lock if imgFrame::Finish has
+   *                      been called.
+   */
+  uint8_t* LockImageData(bool aOnlyFinished);
   nsresult UnlockImageData();
   nsresult Optimize(gfx::DrawTarget* aTarget);
 
@@ -327,14 +271,6 @@ private: // data
   //! Number of RawAccessFrameRefs currently alive for this imgFrame.
   int32_t mLockCount;
 
-  //! The timeout for this frame.
-  FrameTimeout mTimeout;
-
-  DisposalMethod mDisposalMethod;
-  BlendMethod    mBlendMethod;
-  Maybe<IntRect> mBlendRect;
-  SurfaceFormat  mFormat;
-
   bool mAborted;
   bool mFinished;
   bool mOptimizable;
@@ -346,6 +282,14 @@ private: // data
 
   IntSize      mImageSize;
   IntRect      mFrameRect;
+  IntRect      mBlendRect;
+
+  //! The timeout for this frame.
+  FrameTimeout mTimeout;
+
+  DisposalMethod mDisposalMethod;
+  BlendMethod    mBlendMethod;
+  SurfaceFormat  mFormat;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
@@ -381,20 +325,16 @@ public:
   {
     MOZ_ASSERT(aFrame);
     MonitorAutoLock lock(aFrame->mMonitor);
+    MOZ_ASSERT(!aFrame->GetIsPaletted(), "Paletted must use RawAccessFrameRef");
 
-    // Paletted images won't have a surface so there is no strong reference
-    // to hold on to. Since Draw() and GetSourceSurface() calls will not work
-    // in that case, we should be using RawAccessFrameRef exclusively instead.
-    // See FrameAnimator::GetRawFrame for an example of this behaviour.
     if (aFrame->mRawSurface) {
-      mRef = new DataSourceSurface::ScopedMap(aFrame->mRawSurface,
-                                              DataSourceSurface::READ_WRITE);
+      mRef.emplace(aFrame->mRawSurface, DataSourceSurface::READ);
       if (!mRef->IsMapped()) {
         mFrame = nullptr;
-        mRef = nullptr;
+        mRef.reset();
       }
     } else {
-      MOZ_ASSERT(aFrame->mOptSurface || aFrame->GetIsPaletted());
+      MOZ_ASSERT(aFrame->mOptSurface);
     }
   }
 
@@ -431,14 +371,15 @@ public:
   void reset()
   {
     mFrame = nullptr;
-    mRef = nullptr;
+    mRef.reset();
   }
 
 private:
   DrawableFrameRef(const DrawableFrameRef& aOther) = delete;
+  DrawableFrameRef& operator=(const DrawableFrameRef& aOther) = delete;
 
   RefPtr<imgFrame> mFrame;
-  nsAutoPtr<DataSourceSurface::ScopedMap> mRef;
+  Maybe<DataSourceSurface::ScopedMap> mRef;
 };
 
 /**
@@ -459,22 +400,27 @@ private:
 class RawAccessFrameRef final
 {
 public:
-  RawAccessFrameRef() { }
+  RawAccessFrameRef() : mData(nullptr) { }
 
-  explicit RawAccessFrameRef(imgFrame* aFrame)
+  explicit RawAccessFrameRef(imgFrame* aFrame,
+                             bool aOnlyFinished)
     : mFrame(aFrame)
+    , mData(nullptr)
   {
     MOZ_ASSERT(mFrame, "Need a frame");
 
-    if (NS_FAILED(mFrame->LockImageData())) {
-      mFrame->UnlockImageData();
+    mData = mFrame->LockImageData(aOnlyFinished);
+    if (!mData) {
       mFrame = nullptr;
     }
   }
 
   RawAccessFrameRef(RawAccessFrameRef&& aOther)
     : mFrame(aOther.mFrame.forget())
-  { }
+    , mData(aOther.mData)
+  {
+    aOther.mData = nullptr;
+  }
 
   ~RawAccessFrameRef()
   {
@@ -492,6 +438,8 @@ public:
     }
 
     mFrame = aOther.mFrame.forget();
+    mData = aOther.mData;
+    aOther.mData = nullptr;
 
     return *this;
   }
@@ -519,12 +467,18 @@ public:
       mFrame->UnlockImageData();
     }
     mFrame = nullptr;
+    mData = nullptr;
   }
+
+  uint8_t* Data() const { return mData; }
+  uint32_t PaletteDataLength() const { return mFrame->PaletteDataLength(); }
 
 private:
   RawAccessFrameRef(const RawAccessFrameRef& aOther) = delete;
+  RawAccessFrameRef& operator=(const RawAccessFrameRef& aOther) = delete;
 
   RefPtr<imgFrame> mFrame;
+  uint8_t* mData;
 };
 
 } // namespace image

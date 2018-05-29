@@ -110,17 +110,17 @@ fuzzy-if(Android,242,81) == multiple-chunks-directions-and-anchor-multiple-dx.sv
 == simple-multiline-pc.svg simple-multiline-pc-ref.svg
 == simple-multiline-anchor-end.svg simple-multiline-anchor-end-ref.svg
 
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-a.svg textpath-a-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-end.svg textpath-anchor-end-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-invalid-parent.svg textpath-invalid-parent-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline.svg textpath-multiline-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline-2.svg textpath-multiline-2-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after.svg textpath-after-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.svg textpath-reset-position-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,15) == textpath.svg textpath-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-a.svg textpath-a-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-middle.svg textpath-anchor-middle-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-anchor-end.svg textpath-anchor-end-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-invalid-parent.svg textpath-invalid-parent-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline.svg textpath-multiline-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-multiline-2.svg textpath-multiline-2-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after.svg textpath-after-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-after-anchor-end.svg textpath-after-anchor-end-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-reset-position.svg textpath-reset-position-ref.svg # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-inherit-position.svg textpath-inherit-position-ref.svg # Bug 1392106
 
 == textLength.svg textLength-ref.svg
 fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2-ref.svg
@@ -143,7 +143,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == ignore-position.svg ignore-position-ref.svg
 == ignore-margin.svg ignore-prop-ref.svg
 == ignore-padding.svg ignore-prop-ref.svg
-== ignore-vertical-align.svg ignore-vertical-align-ref.svg
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == ignore-vertical-align.svg ignore-vertical-align-ref.svg # Bug 1392106
 == ignore-overflow-scroll.svg ignore-prop-ref.svg
 == ignore-text-align.svg ignore-prop-ref.svg
 == ignore-text-align-2.svg ignore-text-align-2-ref.svg
@@ -189,7 +189,7 @@ fuzzy-if(cocoaWidget,1,6) fuzzy-if(skiaContent,65,313) == pattern-content.svg pa
 fuzzy-if(skiaContent&&winWidget,126,336) == filter-applied.svg filter-applied-ref.svg
 
 # vertical text
-fuzzy-if(skiaContent,1,80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg
+fuzzy-if(skiaContent,1,80) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == textpath-vertical-dx.svg textpath-vertical-dx-ref.svg # Bug 1392106
 
 # selection
 needs-focus == deselectAll.svg deselectAll-ref.svg

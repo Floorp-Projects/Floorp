@@ -1133,8 +1133,8 @@ function ArrayFlatMap(mapperFunction/*, thisArg*/) {
 }
 
 // https://tc39.github.io/proposal-flatMap/
-// January 16, 2018
-function ArrayFlatten(/* depth */) {
+// May 23, 2018
+function ArrayFlat(/* depth */) {
      // Step 1.
     var O = ToObject(this);
 

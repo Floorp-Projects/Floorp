@@ -18,7 +18,8 @@ def handle_keyed_by(config, tasks):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
         'worker.push',
-        'worker.bump-files'
+        'worker.bump-files',
+        'worker-type',
     ]
     for task in tasks:
         for field in fields:
