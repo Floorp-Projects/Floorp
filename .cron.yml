@@ -115,3 +115,6 @@ jobs:
               mozilla-central:
                   - {weekday: 'Monday', hour: 10, minute: 0}
                   - {weekday: 'Thursday', hour: 10, minute: 0}
+              mozilla-esr60:
+                  - {weekday: 'Monday', hour: 10, minute: 0}
+                  - {weekday: 'Thursday', hour: 10, minute: 0}
