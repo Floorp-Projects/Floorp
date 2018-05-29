@@ -209,6 +209,7 @@ Register new events from add-ons.
 
 For events recorded from add-ons, registration happens at runtime. Any new events must first be registered through this function before they can be recorded.
 The registered categories will automatically be enabled for recording.
+If a dynamic event uses the same category as a static event, the category will also be enabled upon registration.
 
 After registration, the events can be recorded through the ``recordEvent()`` function. They will be submitted in the main pings payload under ``processes.dynamic.events``.
 
