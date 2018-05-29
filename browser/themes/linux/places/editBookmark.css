@@ -17,7 +17,9 @@
 }
 
 .folder-icon {
-  list-style-image: url("moz-icon://stock/gtk-directory?size=menu") !important;
+  list-style-image: url("chrome://browser/skin/places/folder.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 
@@ -60,15 +62,15 @@
 /* Bookmark panel dropdown menu items */
 #editBMPanel_folderMenuList[selectedIndex="0"],
 #editBMPanel_toolbarFolderItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.png") !important;  
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg") !important;
 }
 
 #editBMPanel_folderMenuList[selectedIndex="1"],
 #editBMPanel_bmRootItem {
-  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.png") !important;  
+  list-style-image: url("chrome://browser/skin/places/bookmarksMenu.svg") !important;
 }
 
 #editBMPanel_folderMenuList[selectedIndex="2"],
 #editBMPanel_unfiledRootItem {
-  list-style-image: url("chrome://browser/skin/places/unsortedBookmarks.png") !important;  
+  list-style-image: url("chrome://browser/skin/places/unfiledBookmarks.svg") !important;
 }
