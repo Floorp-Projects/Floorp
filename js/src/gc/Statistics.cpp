@@ -695,7 +695,7 @@ Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes, JSONPrinter& 
 
 Statistics::Statistics(JSRuntime* rt)
   : runtime(rt),
-    fp(nullptr),
+    gcTimerFile(nullptr),
     nonincrementalReason_(gc::AbortReason::None),
     preBytes(0),
     thresholdTriggered(false),
@@ -737,14 +737,14 @@ Statistics::Statistics(JSRuntime* rt)
     const char* env = getenv("MOZ_GCTIMER");
     if (env) {
         if (strcmp(env, "none") == 0) {
-            fp = nullptr;
+            gcTimerFile = nullptr;
         } else if (strcmp(env, "stdout") == 0) {
-            fp = stdout;
+            gcTimerFile = stdout;
         } else if (strcmp(env, "stderr") == 0) {
-            fp = stderr;
+            gcTimerFile = stderr;
         } else {
-            fp = fopen(env, "a");
-            if (!fp)
+            gcTimerFile = fopen(env, "a");
+            if (!gcTimerFile)
                 MOZ_CRASH("Failed to open MOZ_GCTIMER log file.");
         }
     }
@@ -763,8 +763,8 @@ Statistics::Statistics(JSRuntime* rt)
 
 Statistics::~Statistics()
 {
-    if (fp && fp != stdout && fp != stderr)
-        fclose(fp);
+    if (gcTimerFile && gcTimerFile != stdout && gcTimerFile != stderr)
+        fclose(gcTimerFile);
 }
 
 /* static */ bool
@@ -918,16 +918,16 @@ void
 Statistics::printStats()
 {
     if (aborted) {
-        fprintf(fp, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
+        fprintf(gcTimerFile, "OOM during GC statistics collection. The report is unavailable for this GC.\n");
     } else {
         UniqueChars msg = formatDetailedMessage();
         if (msg) {
             double secSinceStart =
                 (slices_[0].start - TimeStamp::ProcessCreation()).ToSeconds();
-            fprintf(fp, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
+            fprintf(gcTimerFile, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
         }
     }
-    fflush(fp);
+    fflush(gcTimerFile);
 }
 
 void
@@ -1086,7 +1086,7 @@ Statistics::endSlice()
 
     bool last = !runtime->gc.isIncrementalGCInProgress();
     if (last) {
-        if (fp)
+        if (gcTimerFile)
             printStats();
 
         if (!aborted)
