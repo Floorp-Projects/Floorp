@@ -176,7 +176,7 @@ class ToolbarActivity : AppCompatActivity() {
                 toolbar.dp(24))
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // Hide the site security icon and set background to be drawn behind URL (+ page actions)
+        // Hide the site security icon and set padding around the URL
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         toolbar.displaySiteSecurityIcon = false
@@ -186,10 +186,17 @@ class ToolbarActivity : AppCompatActivity() {
                 right = toolbar.dp(16)
         )
 
-        toolbar.urlBoxBackgroundDrawable = getDrawable(R.drawable.sample_url_background)
-        toolbar.urlBoxMargin = toolbar.dp(16)
-
         toolbar.browserActionMargin = toolbar.dp(16)
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Add a custom "URL box" (url + page actions) background view that also acts as a custom
+        // progress bar.
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val urlBoxProgress = UrlBoxProgressView(this)
+
+        toolbar.urlBoxView = urlBoxProgress
+        toolbar.urlBoxMargin = toolbar.dp(16)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         // Add navigation actions
@@ -198,7 +205,7 @@ class ToolbarActivity : AppCompatActivity() {
         val grid = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_grid,
                 "Grid") {
-            simulateReload()
+            simulateReload(urlBoxProgress)
         }
 
         toolbar.addNavigationAction(grid)
@@ -208,7 +215,7 @@ class ToolbarActivity : AppCompatActivity() {
                 "Back",
                 visible = ::canGoBack) {
             goBack()
-            simulateReload()
+            simulateReload(urlBoxProgress)
             toolbar.invalidateActions()
         }
 
@@ -219,7 +226,7 @@ class ToolbarActivity : AppCompatActivity() {
                 "Forward",
                 visible = ::canGoForward) {
             goForward()
-            simulateReload()
+            simulateReload(urlBoxProgress)
             toolbar.invalidateActions()
         }
 
@@ -232,7 +239,7 @@ class ToolbarActivity : AppCompatActivity() {
         val reload = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
                 "Reload") {
-            simulateReload()
+            simulateReload(urlBoxProgress)
         }
 
         toolbar.addPageAction(reload)
@@ -240,7 +247,7 @@ class ToolbarActivity : AppCompatActivity() {
         val pin = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_pin,
                 "Pin") {
-            simulateReload()
+            simulateReload(urlBoxProgress)
         }
 
         toolbar.addBrowserAction(pin)
@@ -248,7 +255,7 @@ class ToolbarActivity : AppCompatActivity() {
         val turbo = BrowserToolbar.Button(
                 mozilla.components.ui.icons.R.drawable.mozac_ic_rocket,
                 "Turbo") {
-            simulateReload()
+            simulateReload(urlBoxProgress)
         }
 
         toolbar.addBrowserAction(turbo)
@@ -289,10 +296,14 @@ class ToolbarActivity : AppCompatActivity() {
         back = true
     }
 
-    private fun simulateReload() {
+    private fun simulateReload(view: UrlBoxProgressView? = null) {
         launch(UI) {
             for (progress in 0..100 step 10) {
-                toolbar.displayProgress(progress)
+                if (view == null) {
+                    toolbar.displayProgress(progress)
+                } else {
+                    view.progress = progress
+                }
 
                 delay(progress * 10)
             }
