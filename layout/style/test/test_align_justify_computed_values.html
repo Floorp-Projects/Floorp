@@ -169,16 +169,14 @@ function main() {
   elem.style.alignItems = "end";
   is(getComputedAlignSelf(child), 'auto', "align-self:auto value persists for block child");
   is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
-  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    elem.style.alignItems = "left";
-    is(getComputedAlignItems(elem), 'end', "align-items:left is an invalid declaration");
-    is(getComputedAlignSelf(child), 'auto', "align-self:auto persists for block child");
-    is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
-    elem.style.alignItems = "right";
-    is(getComputedAlignItems(elem), 'end', "align-items:right is an invalid declaration");
-    is(getComputedAlignSelf(child), 'auto', "align-self:auto value persists for block child");
-    is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
-  }
+  elem.style.alignItems = "left";
+  is(getComputedAlignItems(elem), 'end', "align-items:left is an invalid declaration");
+  is(getComputedAlignSelf(child), 'auto', "align-self:auto persists for block child");
+  is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
+  elem.style.alignItems = "right";
+  is(getComputedAlignItems(elem), 'end', "align-items:right is an invalid declaration");
+  is(getComputedAlignSelf(child), 'auto', "align-self:auto value persists for block child");
+  is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for block container abs.pos. child");
 
   //// Flexbox tests
   function testFlexAlignItemsSelf(elem) {
@@ -190,10 +188,8 @@ function main() {
     elem.style.alignItems = "flex-end";
     is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for flex container child");
     is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for flex container abs.pos. child");
-    if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-      elem.style.alignItems = "left";
-      is(getComputedAlignItems(elem), 'flex-end', "align-items:left is an invalid declaration");
-    }
+    elem.style.alignItems = "left";
+    is(getComputedAlignItems(elem), 'flex-end', "align-items:left is an invalid declaration");
     elem.style.alignItems = "";
   }
   testFlexAlignItemsSelf(document.getElementById("flexContainer"));
@@ -210,16 +206,14 @@ function main() {
     is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for grid container child");
     is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for grid container abs.pos. child");
 
-    if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-      elem.style.alignItems = "left";
-      is(getComputedAlignItems(elem), 'end', "align-items:left is an invalid declaration");
-      is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for grid container child");
-      is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for grid container abs.pos. child");
-      elem.style.alignItems = "right";
-      is(getComputedAlignItems(elem), 'end', "align-items:right is an invalid declaration");
-      is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for grid container child");
-      is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for grid container abs.pos. child");
-    }
+    elem.style.alignItems = "left";
+    is(getComputedAlignItems(elem), 'end', "align-items:left is an invalid declaration");
+    is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for grid container child");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for grid container abs.pos. child");
+    elem.style.alignItems = "right";
+    is(getComputedAlignItems(elem), 'end', "align-items:right is an invalid declaration");
+    is(getComputedAlignSelf(item), 'auto', "align-self:auto value persists for grid container child");
+    is(getComputedAlignSelf(abs), 'auto', "align-self:auto value persists for grid container abs.pos. child");
 
     item.style.alignSelf = "";
     abs.style.alignSelf = "";
@@ -343,14 +337,12 @@ function main() {
   elem.style.alignContent = "end";
   is(getComputedAlignContent(child), 'normal', "default align-content isn't affected by parent align-content value for in-flow child");
   is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    elem.style.alignContent = "left";
-    is(getComputedAlignContent(elem), 'end', "align-content:left isn't a valid declaration");
-    is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-    elem.style.alignContent = "right";
-    is(getComputedAlignContent(elem), 'end', "align-content:right isn't a valid declaration");
-    is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
-  }
+  elem.style.alignContent = "left";
+  is(getComputedAlignContent(elem), 'end', "align-content:left isn't a valid declaration");
+  is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
+  elem.style.alignContent = "right";
+  is(getComputedAlignContent(elem), 'end', "align-content:right isn't a valid declaration");
+  is(getComputedAlignContent(abs), 'normal', "default align-content isn't affected by parent align-content value for block container abs.pos. child");
   elem.style.alignContent = "";
 
   //// Flexbox tests

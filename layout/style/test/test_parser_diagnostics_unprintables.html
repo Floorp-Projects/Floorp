@@ -18,8 +18,6 @@
 // That's not the point of the test, though; the point is only that
 // *that text* is properly escaped.
 
-const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-
 SpecialPowers.wrap(document).docShell.cssErrorReportingEnabled = true;
 
 // There is one "pattern" for each code path through the error reporter
@@ -43,22 +41,10 @@ let patterns = [
   // _AtKeyword
   { i: "x{@<t>: }",        o: "declaration but found \u2018@<i>\u2019." },
   // _String
-  { i: "x{ '<t>'}" ,       o: isStylo ? 'declaration but found \u2018"<s>"\u2019.'
-                                      : "declaration but found \u2018'<s>'\u2019." },
+  { i: "x{ '<t>'}" ,       o: 'declaration but found \u2018"<s>"\u2019.' },
   // _Bad_String
-  { i: "x{ '<t>\n}",       o: isStylo ? 'declaration but found \u2018"<s>\u2019.'
-                                      : "declaration but found \u2018'<s>\u2019." },
+  { i: "x{ '<t>\n}",       o: 'declaration but found \u2018"<s>\u2019.' },
 ];
-
-// Stylo's CSS parser only reports the 'url(' token, not the actual bad URL.
-if (!isStylo) {
-  patterns.push(
-    // _URL
-    { i: "x{ url('<t>')}",   o: "declaration but found \u2018url('<s>')\u2019." })
-  patterns.push(
-    // _Bad_URL
-    { i: "x{ url('<t>'.)}" , o: "declaration but found \u2018url('<s>'\u2019." });
-}
 
 // Blocks of characters to test, and how they should be escaped when
 // they appear in identifiers and string constants.
@@ -101,7 +87,7 @@ const substitutions = [
   // ASCII printables that must be escaped in identifiers.
   // Most of these should not be escaped in strings.
   { t: "\\!\\\"\\#\\$",   i: "\\!\\\"\\#\\$",   s: "!\\\"#$" },
-  { t: "\\%\\&\\'\\(",    i: "\\%\\&\\'\\(",    s: isStylo ? "%&'(" : "%&\\'(" },
+  { t: "\\%\\&\\'\\(",    i: "\\%\\&\\'\\(",    s: "%&'(" },
   { t: "\\)\\*\\+\\,",    i: "\\)\\*\\+\\,",    s: ")*+," },
   { t: "\\.\\/\\:\\;",    i: "\\.\\/\\:\\;",    s: "./:;" },
   { t: "\\<\\=\\>\\?",    i: "\\<\\=\\>\\?",    s: "<=>?", },

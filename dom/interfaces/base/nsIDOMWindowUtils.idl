@@ -1909,13 +1909,6 @@ interface nsIDOMWindowUtils : nsISupports {
   void ensureDirtyRootFrame();
 
   /**
-   * Whether the current document is styled by Servo's style engine.
-   *
-   * Always true, pending removal.
-   */
-  readonly attribute boolean isStyledByServo;
-
-  /**
    * Capture the contents of the current WebRender frame and
    * save them to a folder relative to the current working directory.
    */
