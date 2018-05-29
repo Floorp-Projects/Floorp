@@ -6,9 +6,9 @@ load 83804-1.gif
 load 89341-1.gif
 load 463696.bmp
 load 570451.png
-# Bug 1390704 - Skip on stylo+debug because it triggers a quadratic behavior that makes it take
+# Bug 1390704 - Skip on debug because it triggers a quadratic behavior that makes it take
 # so much time that it can trip on the reftest timeout of 5 minutes.
-skip-if(Android||(stylo&&isDebugBuild)) load 694165-1.xhtml
+skip-if(Android||isDebugBuild) load 694165-1.xhtml
 load 681190.html
 load 732319-1.html
 load 844403-1.html
