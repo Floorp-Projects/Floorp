@@ -356,6 +356,7 @@ pub mod platform {
     use super::find_binary;
     use std::path::PathBuf;
 
+    /// Searches the system path for `firefox`.
     pub fn firefox_default_path() -> Option<PathBuf> {
         find_binary("firefox")
     }
@@ -371,6 +372,9 @@ pub mod platform {
     use std::env;
     use std::path::PathBuf;
 
+    /// Searches the system path for `firefox-bin`, then looks for
+    /// `Applications/Firefox.app/Contents/MacOS/firefox-bin` under both `/`
+    /// (system root) and the user home directory.
     pub fn firefox_default_path() -> Option<PathBuf> {
         if let Some(path) = find_binary("firefox-bin") {
             return Some(path);
@@ -409,6 +413,9 @@ pub mod platform {
     use winreg::RegKey;
     use winreg::enums::*;
 
+    /// Searches the Windows registry, then the system path for `firefox.exe`.
+    ///
+    /// It _does not_ currently check the `HKEY_CURRENT_USER` tree.
     pub fn firefox_default_path() -> Option<PathBuf> {
         let opt_path = firefox_registry_path().unwrap_or(None);
         if let Some(path) = opt_path {
@@ -459,6 +466,8 @@ pub mod platform {
 pub mod platform {
     use std::path::PathBuf;
 
+    /// Returns `None` for all other operating systems than Linux, macOS, and
+    /// Windows.
     pub fn firefox_default_path() -> Option<PathBuf> {
         None
     }
