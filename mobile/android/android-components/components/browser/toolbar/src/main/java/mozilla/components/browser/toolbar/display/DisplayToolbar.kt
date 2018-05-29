@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.toolbar.display
 
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -136,6 +137,7 @@ internal class DisplayToolbar(
         addView(progressView)
 
         setWillNotDraw(false)
+        layoutTransition = LayoutTransition()
     }
 
     /**
