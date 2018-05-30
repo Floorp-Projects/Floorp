@@ -1284,6 +1284,7 @@ window._gBrowser = {
                                                   [brandShortName]);
       isContentTitle = true;
     } else {
+      // See if we can use the URI as the title.
       if (browser.currentURI.displaySpec) {
         try {
           title = this.mURIFixup.createExposableURI(browser.currentURI).displaySpec;
@@ -1293,25 +1294,24 @@ window._gBrowser = {
       }
 
       if (title && !isBlankPageURL(title)) {
-        // At this point, we now have a URI.
-        // Let's try to unescape it using a character set
-        // in case the URI is not ASCII.
-        try {
-          // If it's a long data: URI that uses base64 encoding, truncate to
-          // a reasonable length rather than trying to display the entire thing.
-          // We can't shorten arbitrary URIs like this, as bidi etc might mean
-          // we need the trailing characters for display. But a base64-encoded
-          // data-URI is plain ASCII, so this is OK for tab-title display.
-          // (See bug 1408854.)
-          if (title.length > 500 && title.match(/^data:[^,]+;base64,/)) {
-            title = title.substring(0, 500) + "\u2026";
-          } else {
-            var characterSet = browser.characterSet;
+        // If it's a long data: URI that uses base64 encoding, truncate to a
+        // reasonable length rather than trying to display the entire thing,
+        // which can be slow.
+        // We can't shorten arbitrary URIs like this, as bidi etc might mean
+        // we need the trailing characters for display. But a base64-encoded
+        // data-URI is plain ASCII, so this is OK for tab-title display.
+        // (See bug 1408854.)
+        if (title.length > 500 && title.match(/^data:[^,]+;base64,/)) {
+          title = title.substring(0, 500) + "\u2026";
+        } else {
+          // Try to unescape not-ASCII URIs using the current character set.
+          try {
+            let characterSet = browser.characterSet;
             title = Services.textToSubURI.unEscapeNonAsciiURI(characterSet, title);
-          }
-        } catch (ex) { /* Do nothing. */ }
+          } catch (ex) { /* Do nothing. */ }
+        }
       } else {
-        // Still no title? Fall back to our untitled string.
+        // No suitable URI? Fall back to our untitled string.
         title = this.tabContainer.emptyTabTitle;
       }
     }
