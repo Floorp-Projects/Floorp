@@ -192,8 +192,6 @@ add_test(function test_getGethashUrl() {
 });
 
 function run_test() {
-  throwOnUpdateErrors();
-
   // Setup primary testing server.
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
@@ -304,12 +302,14 @@ function run_test() {
 // A trick to force updating tables. However, before calling this, we have to
 // call disableAllUpdates() first to clean up the updateCheckers in listmanager.
 function forceTableUpdate() {
+  throwOnUpdateErrors();
   Services.prefs.setCharPref(PREF_NEXTUPDATETIME, "1");
   Services.prefs.setCharPref(PREF_NEXTUPDATETIME_V4, "1");
   gListManager.maybeToggleUpdateChecking();
 }
 
 function disableAllUpdates() {
+  stopThrowingOnUpdateErrors();
   TEST_TABLE_DATA_LIST.forEach(t => gListManager.disableUpdate(t.tableName));
   gListManager.disableUpdate(TEST_TABLE_DATA_V4.tableName);
 }
