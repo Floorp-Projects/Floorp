@@ -89,12 +89,12 @@ class CompileZone
 
 class JitRealm;
 
-class CompileCompartment
+class CompileRealm
 {
-    JSCompartment* compartment();
+    JS::Realm* realm();
 
   public:
-    static CompileCompartment* get(JSCompartment* comp);
+    static CompileRealm* get(JS::Realm* realm);
 
     CompileZone* zone();
     CompileRuntime* runtime();
