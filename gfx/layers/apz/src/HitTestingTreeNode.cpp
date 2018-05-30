@@ -37,10 +37,11 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
 }
 
 void
-HitTestingTreeNode::RecycleWith(AsyncPanZoomController* aApzc,
+HitTestingTreeNode::RecycleWith(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                AsyncPanZoomController* aApzc,
                                 LayersId aLayersId)
 {
-  MOZ_ASSERT(!mIsPrimaryApzcHolder);
+  MOZ_ASSERT(IsRecyclable(aProofOfTreeLock));
   Destroy(); // clear out tree pointers
   mApzc = aApzc;
   mLayersId = aLayersId;
@@ -67,8 +68,12 @@ HitTestingTreeNode::Destroy()
     }
     mApzc = nullptr;
   }
+}
 
-  mLayersId = LayersId{0};
+bool
+HitTestingTreeNode::IsRecyclable(const RecursiveMutexAutoLock& aProofOfTreeLock)
+{
+  return !IsPrimaryHolder();
 }
 
 void

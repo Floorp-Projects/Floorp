@@ -57,8 +57,17 @@ private:
 public:
   HitTestingTreeNode(AsyncPanZoomController* aApzc, bool aIsPrimaryHolder,
                      LayersId aLayersId);
-  void RecycleWith(AsyncPanZoomController* aApzc, LayersId aLayersId);
+  void RecycleWith(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                   AsyncPanZoomController* aApzc,
+                   LayersId aLayersId);
+  // Clears the tree pointers on the node, thereby breaking RefPtr cycles. This
+  // can trigger free'ing of this and other HitTestingTreeNode instances.
   void Destroy();
+
+  // Returns true if and only if the node is available for recycling as part
+  // of a hit-testing tree update. Note that this node can have Destroy() called
+  // on it whether or not it is recyclable.
+  bool IsRecyclable(const RecursiveMutexAutoLock& aProofOfTreeLock);
 
   /* Tree construction methods */
 
