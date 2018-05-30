@@ -144,7 +144,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       (mFloats[floatCount-1].mLeftBEnd <= blockStart &&
        mFloats[floatCount-1].mRightBEnd <= blockStart)) {
     return nsFlowAreaRect(aWM, aContentArea.IStart(aWM), aBCoord,
-                          aContentArea.ISize(aWM), aBSize, false);
+                          aContentArea.ISize(aWM), aBSize,
+                          nsFlowAreaRectFlags::NO_FLAGS);
   }
 
   nscoord blockEnd;
@@ -170,6 +171,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
   // Walk backwards through the floats until we either hit the front of
   // the list or we're above |blockStart|.
   bool haveFloats = false;
+  bool mayWiden = false;
   for (uint32_t i = floatCount; i > 0; --i) {
     const FloatInfo &fi = mFloats[i-1];
     if (fi.mLeftBEnd <= blockStart && fi.mRightBEnd <= blockStart) {
@@ -218,6 +220,10 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
           // callers want and disagrees for other callers, so we should
           // probably provide better information at some point.
           haveFloats = true;
+
+          // Our area may widen in the block direction if this float may
+          // narrow in the block direction.
+          mayWiden = mayWiden || fi.MayNarrowInBlockDirection(aShapeType);
         }
       } else {
         // A right float
@@ -227,6 +233,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
           lineRight = lineLeftEdge;
           // See above.
           haveFloats = true;
+          mayWiden = mayWiden || fi.MayNarrowInBlockDirection(aShapeType);
         }
       }
 
@@ -245,8 +252,12 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
                         : mLineLeft - lineRight +
                           LogicalSize(aWM, aContainerSize).ISize(aWM);
 
+  nsFlowAreaRectFlags flags =
+    (haveFloats ? nsFlowAreaRectFlags::HAS_FLOATS : nsFlowAreaRectFlags::NO_FLAGS) |
+    (mayWiden ? nsFlowAreaRectFlags::MAY_WIDEN : nsFlowAreaRectFlags::NO_FLAGS);
+
   return nsFlowAreaRect(aWM, inlineStart, blockStart - mBlockStart,
-                        lineRight - lineLeft, blockSize, haveFloats);
+                        lineRight - lineLeft, blockSize, flags);
 }
 
 void

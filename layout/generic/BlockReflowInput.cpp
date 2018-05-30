@@ -225,7 +225,7 @@ BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
 {
 #ifdef REALLY_NOISY_REFLOW
   printf("CBAS frame=%p has floats %d\n",
-         aFrame, aFloatAvailableSpace.mHasFloats);
+         aFrame, aFloatAvailableSpace.HasFloats());
 #endif
   WritingMode wm = mReflowInput.GetWritingMode();
   aResult.BStart(wm) = mBCoord;
@@ -253,7 +253,7 @@ BlockReflowInput::ComputeBlockAvailSpace(nsIFrame* aFrame,
                  !aBlockAvoidsFloats,
                "unexpected replaced width");
   if (!aBlockAvoidsFloats) {
-    if (aFloatAvailableSpace.mHasFloats) {
+    if (aFloatAvailableSpace.HasFloats()) {
       // Use the float-edge property to determine how the child block
       // will interact with the float.
       const nsStyleBorder* borderStyle = aFrame->StyleBorder();
@@ -301,7 +301,7 @@ bool
 BlockReflowInput::ReplacedBlockFitsInAvailSpace(nsIFrame* aReplacedBlock,
                             const nsFlowAreaRect& aFloatAvailableSpace) const
 {
-  if (!aFloatAvailableSpace.mHasFloats) {
+  if (!aFloatAvailableSpace.HasFloats()) {
     // If there aren't any floats here, then we always fit.
     // We check this before calling ISizeToClearPastFloats, which is
     // somewhat expensive.
@@ -355,7 +355,7 @@ BlockReflowInput::GetFloatAvailableSpaceWithState(
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("%s: band=%d,%d,%d,%d hasfloats=%d\n", __func__,
            result.mRect.IStart(wm), result.mRect.BStart(wm),
-           result.mRect.ISize(wm), result.mRect.BSize(wm), result.mHasFloats);
+           result.mRect.ISize(wm), result.mRect.BSize(wm), result.HasFloats());
   }
 #endif
   return result;
@@ -390,7 +390,7 @@ BlockReflowInput::GetFloatAvailableSpaceForBSize(
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("%s: space=%d,%d,%d,%d hasfloats=%d\n", __func__,
            result.mRect.IStart(wm), result.mRect.BStart(wm),
-           result.mRect.ISize(wm), result.mRect.BSize(wm), result.mHasFloats);
+           result.mRect.ISize(wm), result.mRect.BSize(wm), result.HasFloats());
   }
 #endif
   return result;
@@ -669,7 +669,7 @@ BlockReflowInput::CanPlaceFloat(nscoord aFloatISize,
   // its inline size fits in the space remaining after prior floats have
   // been placed.
   // FIXME: We should allow overflow by up to half a pixel here (bug 21193).
-  return !aFloatAvailableSpace.mHasFloats ||
+  return !aFloatAvailableSpace.HasFloats() ||
     aFloatAvailableSpace.mRect.ISize(mReflowInput.GetWritingMode()) >=
       aFloatISize;
 }
