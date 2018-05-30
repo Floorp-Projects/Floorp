@@ -334,11 +334,10 @@ HyperTextAccessible::TransformOffset(Accessible* aDescendant,
  */
 static nsIContent* GetElementAsContentOf(nsINode* aNode)
 {
-  if (aNode->IsElement()) {
-    return aNode->AsContent();
+  if (Element* element = Element::FromNode(aNode)) {
+    return element;
   }
-  nsIContent* parent = aNode->GetParent();
-  return parent && parent->IsElement() ? parent : nullptr;
+  return aNode->GetParentElement();
 }
 
 bool

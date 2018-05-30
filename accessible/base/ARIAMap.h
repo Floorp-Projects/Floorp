@@ -290,7 +290,7 @@ class AttrIterator
 {
 public:
   explicit AttrIterator(nsIContent* aContent)
-    : mElement(aContent->IsElement() ? aContent->AsElement() : nullptr)
+    : mElement(Element::FromNode(aContent))
     , mAttrIdx(0)
   {
     mAttrCount = mElement ? mElement->GetAttrCount() : 0;

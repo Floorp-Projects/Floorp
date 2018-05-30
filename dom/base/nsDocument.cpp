@@ -3803,14 +3803,15 @@ AssertNoStaleServoDataIn(const nsINode& aSubtreeRoot)
   for (const nsINode* node = &aSubtreeRoot;
        node;
        node = node->GetNextNode(&aSubtreeRoot)) {
-    if (!node->IsElement()) {
+    Element* element = Element::FromNode(node);
+    if (!element) {
       continue;
     }
-    MOZ_ASSERT(!node->AsElement()->HasServoData());
-    if (auto* shadow = node->AsElement()->GetShadowRoot()) {
+    MOZ_ASSERT(!element->HasServoData());
+    if (auto* shadow = element->GetShadowRoot()) {
       AssertNoStaleServoDataIn(*shadow);
     }
-    if (nsXBLBinding* binding = node->AsElement()->GetXBLBinding()) {
+    if (nsXBLBinding* binding = element->GetXBLBinding()) {
       if (nsXBLBinding* bindingWithContent = binding->GetBindingWithContent()) {
         nsIContent* content = bindingWithContent->GetAnonymousContent();
         MOZ_ASSERT(!content->AsElement()->HasServoData());
@@ -4144,10 +4145,9 @@ nsIDocument::GetRootElementInternal() const
   // are likely to appear before the root element.
   uint32_t i;
   for (i = mChildren.ChildCount(); i > 0; --i) {
-    nsIContent* child = mChildren.ChildAt(i - 1);
-    if (child->IsElement()) {
-      const_cast<nsIDocument*>(this)->mCachedRootElement = child->AsElement();
-      return child->AsElement();
+    if (Element* element = Element::FromNode(mChildren.ChildAt(i - 1))) {
+      const_cast<nsIDocument*>(this)->mCachedRootElement = element;
+      return element;
     }
   }
 
@@ -5553,7 +5553,7 @@ nsIDocument::GetAnonRootIfInAnonymousContentContainer(nsINode* aNode) const
   nsINode* parent = aNode->GetParentNode();
   while (parent && parent->IsInNativeAnonymousSubtree()) {
     if (parent == customContainer) {
-      return child->IsElement() ? child->AsElement() : nullptr;
+      return Element::FromNode(child);
     }
     child = parent;
     parent = child->GetParentNode();
@@ -6124,14 +6124,13 @@ nsIDocument::GetAnonymousElementByAttribute(nsIContent* aElement,
   bool universalMatch = aAttrValue.EqualsLiteral("*");
 
   for (uint32_t i = 0; i < length; ++i) {
-    nsIContent* current = nodeList->Item(i);
-    if (!current->IsElement()) {
+    Element* current = Element::FromNode(nodeList->Item(i));
+    if (!current) {
       continue;
     }
 
     Element* matchedElm =
-      GetElementByAttribute(current->AsElement(), aAttrName, aAttrValue,
-                            universalMatch);
+      GetElementByAttribute(current, aAttrName, aAttrValue, universalMatch);
     if (matchedElm)
       return matchedElm;
   }
@@ -6933,12 +6932,10 @@ nsIDocument::GetCompatMode(nsString& aCompatMode) const
 }
 
 void
-nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
+nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode)
 {
-  if (aNode->IsElement()) {
-    Element *element = aNode->AsElement();
-    const nsDOMAttributeMap *map = element->GetAttributeMap();
-    if (map) {
+  if (Element* element = Element::FromNode(aNode)) {
+    if (const nsDOMAttributeMap* map = element->GetAttributeMap()) {
       while (true) {
         nsCOMPtr<nsIAttribute> attr;
         {
@@ -7062,8 +7059,8 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
         // have a binding applied. Remove the binding from the element now
         // that it's getting adopted into a new document.
         // TODO Fully tear down the binding.
-        if (adoptedNode->IsElement()) {
-          adoptedNode->AsElement()->SetXBLBinding(nullptr);
+        if (Element* element = Element::FromNode(adoptedNode)) {
+          element->SetXBLBinding(nullptr);
         }
       }
 

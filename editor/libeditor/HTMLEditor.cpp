@@ -2593,9 +2593,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
         // Query interface to cast nsIContent to Element
         //  then get tagType to compare to  aTagName
         // Clone node of each desired type and append it to the aDomFrag
-        nsINode* currentNode = iter->GetCurrentNode();
-        selectedElement = currentNode && currentNode->IsElement() ?
-          currentNode->AsElement() : nullptr;
+        selectedElement = Element::FromNodeOrNull(iter->GetCurrentNode());
         if (selectedElement) {
           // If we already found a node, then we have another element,
           //  thus there's not just one element selected
@@ -2604,7 +2602,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
             break;
           }
 
-          domTagName = currentNode->NodeName();
+          domTagName = selectedElement->NodeName();
           ToLowerCase(domTagName);
 
           if (anyTag) {

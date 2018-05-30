@@ -398,8 +398,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
     nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
     if (fm) {
       if (tcFrame) {
-        RefPtr<Element> newFocusedElement =
-          content->IsElement() ? content->AsElement() : nullptr;
+        RefPtr<Element> newFocusedElement = Element::FromNode(content);
         fm->SetFocus(newFocusedElement, nsIFocusManager::FLAG_NOSCROLL);
       } else {
         RefPtr<Element> result;
