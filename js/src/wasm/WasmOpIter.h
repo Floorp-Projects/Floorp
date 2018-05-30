@@ -2243,6 +2243,9 @@ OpIter<Policy>::readMemCopy(Value* dest, Value* src, Value* len)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::MemCopy);
 
+    if (!env_.usesMemory())
+        return fail("can't touch memory without memory");
+
     if (!popWithType(ValType::I32, len))
         return false;
 
@@ -2260,6 +2263,9 @@ inline bool
 OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::MemFill);
+
+    if (!env_.usesMemory())
+        return fail("can't touch memory without memory");
 
     if (!popWithType(ValType::I32, len))
         return false;
