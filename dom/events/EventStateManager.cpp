@@ -2157,11 +2157,10 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
     }
 #endif
 
-    dragService->InvokeDragSessionWithImage(dragTarget->AsDOMNode(),
+    dragService->InvokeDragSessionWithImage(dragTarget,
                                             aPrincipalURISpec, transArray,
                                             region, action,
-                                            dragImage ? dragImage->AsDOMNode() :
-                                                        nullptr,
+                                            dragImage,
                                             imageX, imageY, event,
                                             dataTransfer);
   }

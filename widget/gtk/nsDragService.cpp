@@ -309,7 +309,7 @@ GetGtkWindow(nsIDocument *aDocument)
 // nsIDragService
 
 NS_IMETHODIMP
-nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+nsDragService::InvokeDragSession(nsINode *aDOMNode,
                                  const nsACString& aPrincipalURISpec,
                                  nsIArray * aArrayTransferables,
                                  nsIScriptableRegion * aRegion,

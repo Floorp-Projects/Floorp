@@ -1160,7 +1160,7 @@ public:
    * function in a similar manner as RenderSelection.
    */
   virtual already_AddRefed<mozilla::gfx::SourceSurface>
-  RenderNode(nsIDOMNode* aNode,
+  RenderNode(nsINode* aNode,
              nsIntRegion* aRegion,
              const mozilla::LayoutDeviceIntPoint aPoint,
              mozilla::LayoutDeviceIntRect* aScreenRect,

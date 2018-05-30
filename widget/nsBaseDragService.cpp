@@ -18,7 +18,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsViewManager.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsPresContext.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
@@ -163,11 +163,9 @@ nsBaseDragService::GetSourceDocument(nsIDocument** aSourceDocument)
 // nullptr if the drag began outside of our application.
 //
 NS_IMETHODIMP
-nsBaseDragService::GetSourceNode(nsIDOMNode** aSourceNode)
+nsBaseDragService::GetSourceNode(nsINode** aSourceNode)
 {
-  *aSourceNode = mSourceNode.get();
-  NS_IF_ADDREF(*aSourceNode);
-
+  *aSourceNode = do_AddRef(mSourceNode).take();
   return NS_OK;
 }
 
@@ -232,7 +230,7 @@ nsBaseDragService::SetDataTransfer(DataTransfer* aDataTransfer)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
-nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
+nsBaseDragService::InvokeDragSession(nsINode *aDOMNode,
                                      const nsACString& aPrincipalURISpec,
                                      nsIArray* aTransferableArray,
                                      nsIScriptableRegion* aDragRgn,
@@ -246,8 +244,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
   // stash the document of the dom node
-  nsCOMPtr<nsINode> node = do_QueryInterface(aDOMNode);
-  mSourceDocument = node->OwnerDoc();
+  mSourceDocument = aDOMNode->OwnerDoc();
   mTriggeringPrincipalURISpec.Assign(aPrincipalURISpec);
   mSourceNode = aDOMNode;
   mContentPolicyType = aContentPolicyType;
@@ -272,12 +269,12 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 }
 
 NS_IMETHODIMP
-nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
+nsBaseDragService::InvokeDragSessionWithImage(nsINode* aDOMNode,
                                               const nsACString& aPrincipalURISpec,
                                               nsIArray* aTransferableArray,
                                               nsIScriptableRegion* aRegion,
                                               uint32_t aActionType,
-                                              nsIDOMNode* aImage,
+                                              nsINode* aImage,
                                               int32_t aImageX, int32_t aImageY,
                                               DragEvent* aDragEvent,
                                               DataTransfer* aDataTransfer)
@@ -337,8 +334,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(Selection* aSelection,
   // just get the focused node from the selection
   // XXXndeakin this should actually be the deepest node that contains both
   // endpoints of the selection
-  nsCOMPtr<nsIDOMNode> node = aSelection->GetFocusNode() ?
-    aSelection->GetFocusNode()->AsDOMNode() : nullptr;
+  nsCOMPtr<nsINode> node = aSelection->GetFocusNode();
 
   nsresult rv = InvokeDragSession(node, aPrincipalURISpec,
                                   aTransferableArray,
@@ -549,7 +545,7 @@ nsBaseDragService::DragMoved(int32_t aX, int32_t aY)
 }
 
 static nsIPresShell*
-GetPresShellForContent(nsIDOMNode* aDOMNode)
+GetPresShellForContent(nsINode* aDOMNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
   if (!content)
@@ -566,7 +562,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
 }
 
 nsresult
-nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
+nsBaseDragService::DrawDrag(nsINode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             CSSIntPoint aScreenPosition,
                             LayoutDeviceIntRect* aScreenDragRect,
@@ -582,7 +578,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                            1, 1);
 
   // if a drag image was specified, use that, otherwise, use the source node
-  nsCOMPtr<nsIDOMNode> dragNode = mImage ? mImage.get() : aDOMNode;
+  nsCOMPtr<nsINode> dragNode = mImage ? mImage.get() : aDOMNode;
 
   // get the presshell for the node being dragged. If the drag image is not in
   // a document or has no frame, get the presshell from the source drag node
@@ -841,7 +837,7 @@ nsBaseDragService::UpdateDragEffect()
 }
 
 NS_IMETHODIMP
-nsBaseDragService::UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY)
+nsBaseDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY)
 {
   // Don't change the image if this is a drag from another source or if there
   // is a drag popup.
