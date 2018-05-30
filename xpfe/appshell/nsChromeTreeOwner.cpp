@@ -22,7 +22,6 @@
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMNode.h"
 #include "nsIXULBrowserWindow.h"
 #include "mozilla/dom/Element.h"
 
