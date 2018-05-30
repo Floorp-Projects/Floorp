@@ -336,7 +336,7 @@ class ContextMenu {
     let depth = 1;
     while (node && depth > 0) {
       // See if this node is text.
-      if (node.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+      if (node.nodeType == node.TEXT_NODE) {
         // Add this text to our collection.
         text += " " + node.data;
       } else if (node instanceof this.content.HTMLImageElement) {
@@ -535,7 +535,7 @@ class ContextMenu {
     // Media related cache info parent needs for saving
     let contentType = null;
     let contentDisposition = null;
-    if (aEvent.composedTarget.nodeType == Ci.nsIDOMNode.ELEMENT_NODE &&
+    if (aEvent.composedTarget.nodeType == aEvent.composedTarget.ELEMENT_NODE &&
         aEvent.composedTarget instanceof Ci.nsIImageLoadingContent &&
         aEvent.composedTarget.currentURI) {
       disableSetDesktopBg = this._disableSetDesktopBackground(aEvent.composedTarget);
@@ -711,7 +711,7 @@ class ContextMenu {
 
     context.shouldDisplay = true;
 
-    if (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ||
+    if (node.nodeType == node.DOCUMENT_NODE ||
         // Don't display for XUL element unless <label class="text-link">
         (node.namespaceURI == XUL_NS && !this._isXULTextLinkLabel(node))) {
       context.shouldDisplay = false;
@@ -791,7 +791,7 @@ class ContextMenu {
   _setContextForNodesNoChildren(editFlags) {
     const context = this.context;
 
-    if (context.target.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+    if (context.target.nodeType == context.target.TEXT_NODE) {
       // For text nodes, look at the parent node to determine the spellcheck attribute.
       context.canSpellCheck = context.target.parentNode &&
                               this._isSpellCheckEnabled(context.target);
@@ -800,7 +800,7 @@ class ContextMenu {
 
     // We only deal with TEXT_NODE and ELEMENT_NODE in this function, so return
     // early if we don't have one.
-    if (context.target.nodeType != Ci.nsIDOMNode.ELEMENT_NODE) {
+    if (context.target.nodeType != context.target.ELEMENT_NODE) {
       return;
     }
 
@@ -931,7 +931,7 @@ class ContextMenu {
     let elem = context.target;
 
     while (elem) {
-      if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
+      if (elem.nodeType == elem.ELEMENT_NODE) {
         // Link?
         const XLINK_NS = "http://www.w3.org/1999/xlink";
 
@@ -997,7 +997,7 @@ class ContextMenu {
     // See if the user clicked on MathML
     const MathML_NS = "http://www.w3.org/1998/Math/MathML";
 
-    if ((context.target.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
+    if ((context.target.nodeType == context.target.TEXT_NODE &&
          context.target.parentNode.namespaceURI == MathML_NS) ||
          (context.target.namespaceURI == MathML_NS)) {
       context.onMathML = true;
