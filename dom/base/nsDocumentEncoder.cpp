@@ -294,15 +294,7 @@ nsDocumentEncoder::SetRange(nsRange* aRange)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
-{
-  mNodeIsContainer = false;
-  mNode = do_QueryInterface(aNode);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentEncoder::SetNativeNode(nsINode* aNode)
+nsDocumentEncoder::SetNode(nsINode* aNode)
 {
   mNodeIsContainer = false;
   mNode = aNode;
@@ -310,15 +302,7 @@ nsDocumentEncoder::SetNativeNode(nsINode* aNode)
 }
 
 NS_IMETHODIMP
-nsDocumentEncoder::SetContainerNode(nsIDOMNode *aContainer)
-{
-  mNodeIsContainer = true;
-  mNode = do_QueryInterface(aContainer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentEncoder::SetNativeContainerNode(nsINode* aContainer)
+nsDocumentEncoder::SetContainerNode(nsINode* aContainer)
 {
   mNodeIsContainer = true;
   mNode = aContainer;
@@ -372,10 +356,8 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
     aOriginalNode = aNode;
     if (mNodeFixup) {
       bool dummy;
-      nsCOMPtr<nsIDOMNode> domNodeIn = do_QueryInterface(aNode);
-      nsCOMPtr<nsIDOMNode> domNodeOut;
-      mNodeFixup->FixupNode(domNodeIn, &dummy, getter_AddRefs(domNodeOut));
-      fixedNodeKungfuDeathGrip = do_QueryInterface(domNodeOut);
+      mNodeFixup->FixupNode(aNode, &dummy,
+                            getter_AddRefs(fixedNodeKungfuDeathGrip));
       node = fixedNodeKungfuDeathGrip;
     }
   }
@@ -471,10 +453,8 @@ nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
   // Keep the node from FixupNode alive.
   nsCOMPtr<nsINode> fixedNodeKungfuDeathGrip;
   if (mNodeFixup) {
-    nsCOMPtr<nsIDOMNode> domNodeIn = do_QueryInterface(aNode);
-    nsCOMPtr<nsIDOMNode> domNodeOut;
-    mNodeFixup->FixupNode(domNodeIn, &serializeClonedChildren, getter_AddRefs(domNodeOut));
-    fixedNodeKungfuDeathGrip = do_QueryInterface(domNodeOut);
+    mNodeFixup->FixupNode(aNode, &serializeClonedChildren,
+                          getter_AddRefs(fixedNodeKungfuDeathGrip));
     maybeFixedNode = fixedNodeKungfuDeathGrip;
   }
 
