@@ -179,8 +179,11 @@ VRManagerChild::UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates)
   nsTArray<uint32_t> disconnectedDisplays;
   nsTArray<uint32_t> connectedDisplays;
 
+  nsTArray<RefPtr<VRDisplayClient>> prevDisplays;
+  prevDisplays = mDisplays;
+
   // Check if any displays have been disconnected
-  for (auto& display : mDisplays) {
+  for (auto& display : prevDisplays) {
     bool found = false;
     for (auto& displayUpdate : aDisplayUpdates) {
       if (display->GetDisplayInfo().GetDisplayID() == displayUpdate.GetDisplayID()) {
@@ -199,7 +202,7 @@ VRManagerChild::UpdateDisplayInfo(nsTArray<VRDisplayInfo>& aDisplayUpdates)
   nsTArray<RefPtr<VRDisplayClient>> displays;
   for (VRDisplayInfo& displayUpdate : aDisplayUpdates) {
     bool isNewDisplay = true;
-    for (auto& display : mDisplays) {
+    for (auto& display : prevDisplays) {
       const VRDisplayInfo& prevInfo = display->GetDisplayInfo();
       if (prevInfo.GetDisplayID() == displayUpdate.GetDisplayID()) {
         if (displayUpdate.GetIsConnected() && !prevInfo.GetIsConnected()) {
@@ -629,7 +632,9 @@ mozilla::ipc::IPCResult
 VRManagerChild::RecvDispatchSubmitFrameResult(const uint32_t& aDisplayID,
                                               const VRSubmitFrameResultInfo& aResult)
 {
-   for (auto& display : mDisplays) {
+  nsTArray<RefPtr<VRDisplayClient>> displays;
+  displays = mDisplays;
+  for (auto& display : displays) {
     if (display->GetDisplayInfo().GetDisplayID() == aDisplayID) {
       display->UpdateSubmitFrameResult(aResult);
     }
