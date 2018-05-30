@@ -95,6 +95,7 @@ protected:
   virtual mozilla::ipc::IPCResult RecvPredOnPredictDNS(const URIParams& aURI) override;
 
   virtual mozilla::ipc::IPCResult RecvSpeculativeConnectRequest() override;
+  virtual mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type) override;
 };
 
 /**

@@ -30,3 +30,15 @@ bench-ares6:
             export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
             cd /builds/worker/checkouts/gecko &&
             ./mach jsshell-bench --binary $JSSHELL --perfherder ares6
+
+bench-sixspeed:
+    description: Six-Speed JavaScript shell benchmark suite
+    treeherder:
+        symbol: js-bench(6speed)
+    run:
+        command: >
+            cd $USE_ARTIFACT_PATH/build &&
+            unzip -q -d jsshell target.jsshell.zip &&
+            export JSSHELL=$USE_ARTIFACT_PATH/build/jsshell/js &&
+            cd /builds/worker/checkouts/gecko &&
+            ./mach jsshell-bench --binary $JSSHELL --perfherder six-speed

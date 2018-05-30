@@ -43,7 +43,7 @@ struct MinimalFunc : MinimalAlloc
       : options(),
         info(0),
         graph(&alloc),
-        mir(static_cast<CompileCompartment*>(nullptr), options, &alloc, &graph,
+        mir(static_cast<CompileRealm*>(nullptr), options, &alloc, &graph,
             &info, static_cast<const OptimizationInfo*>(nullptr)),
         numParams(0)
     { }

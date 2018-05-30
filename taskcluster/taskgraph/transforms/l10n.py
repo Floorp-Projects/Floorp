@@ -20,6 +20,7 @@ from taskgraph.util.schema import (
     resolve_keyed_by,
     Schema,
 )
+from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.taskcluster import get_artifact_prefix
 from taskgraph.util.treeherder import add_suffix
 from taskgraph.transforms.job import job_description_schema
@@ -197,18 +198,10 @@ def _remove_locales(locales, to_remove=None):
 def setup_name(config, jobs):
     for job in jobs:
         dep = job['dependent-task']
-        if dep.attributes.get('nightly'):
-            # Set the name to the same as the dep task, without kind name.
-            # Label will get set automatically with this kinds name.
-            job['name'] = job.get('name',
-                                  dep.task['metadata']['name'][
-                                    len(dep.kind) + 1:])
-        else:
-            # Set to match legacy use at the moment (to support documented try
-            # syntax). Set the name to same as dep task + '-l10n' but without the
-            # kind name attached, since that gets added when label is generated
-            name, jobtype = dep.task['metadata']['name'][len(dep.kind) + 1:].split('/')
-            job['name'] = "{}-l10n/{}".format(name, jobtype)
+        # Set the name to the same as the dep task, without kind name.
+        # Label will get set automatically with this kinds name.
+        job['name'] = job.get('name',
+                              dep.task['metadata']['name'][len(dep.kind) + 1:])
         yield job
 
 
@@ -216,20 +209,11 @@ def setup_name(config, jobs):
 def copy_in_useful_magic(config, jobs):
     for job in jobs:
         dep = job['dependent-task']
-        attributes = job.setdefault('attributes', {})
+        attributes = copy_attributes_from_dependent_job(dep)
+        attributes.update(job.get('attributes', {}))
         # build-platform is needed on `job` for by-build-platform
-        job['build-platform'] = dep.attributes.get("build_platform")
-        attributes['build_type'] = dep.attributes.get("build_type")
-        if dep.attributes.get('artifact_prefix'):
-            attributes['artifact_prefix'] = dep.attributes['artifact_prefix']
-        if dep.attributes.get("nightly"):
-            attributes['nightly'] = dep.attributes.get("nightly")
-        else:
-            # set build_platform to have l10n as well, to match older l10n setup
-            # for now
-            job['build-platform'] = "{}-l10n".format(job['build-platform'])
-
-        attributes['build_platform'] = job['build-platform']
+        job['build-platform'] = attributes.get("build_platform")
+        job['attributes'] = attributes
         yield job
 
 
@@ -245,9 +229,6 @@ def validate_early(config, jobs):
 def setup_nightly_dependency(config, jobs):
     """ Sets up a task dependency to the signing job this relates to """
     for job in jobs:
-        if not job['attributes'].get('nightly'):
-            yield job
-            continue  # do not add a dep unless we're a nightly
         job['dependencies'] = {'unsigned-build': job['dependent-task'].label}
         if job['attributes']['build_platform'].startswith('win') or \
                 job['attributes']['build_platform'].startswith('linux'):
@@ -403,6 +384,16 @@ def validate_again(config, jobs):
     for job in jobs:
         validate_schema(l10n_description_schema, job,
                         "In job {!r}:".format(job.get('name', 'unknown')))
+        yield job
+
+
+@transforms.add
+def stub_installer(config, jobs):
+    for job in jobs:
+        job.setdefault('attributes', {})
+        job.setdefault('env', {})
+        if job["attributes"].get('stub-installer'):
+            job['env'].update({"USE_STUB_INSTALLER": "1"})
         yield job
 
 

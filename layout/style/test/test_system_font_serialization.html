@@ -57,13 +57,6 @@ e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font");
 is(e.style.cssText, "font: menu;", "serialize system font alone");
 is(e.style.font, "menu", "font getter returns value");
 
-// Servo doesn't support parsing -moz-use-system-font
-if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
-  e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font !important");
-  is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font !important;", "serialize system font and subproperty that is important");
-  is(e.style.font, "", "font getter returns nothing");
-}
-
 e.setAttribute("style", "font: inherit; font-family: Helvetica;");
 EXPECTED_DECLS = [
   "font-family: Helvetica;",

@@ -25,7 +25,7 @@ load 431705-1.xul
 load 432561-1.html
 load 437170-1.html
 load 437532-1.html
-skip-if(Android&&stylo&&isDebugBuild) load 439184-1.html # Bug 1411522
+skip-if(Android&&isDebugBuild) load 439184-1.html # Bug 1411522
 load 444237-1.html
 load 444848-1.html
 load 447776-1.html

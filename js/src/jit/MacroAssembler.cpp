@@ -823,9 +823,9 @@ MacroAssembler::checkAllocatorState(Label* fail)
              fail);
 #endif
 
-    // Don't execute the inline path if the compartment has an object metadata callback,
+    // Don't execute the inline path if the realm has an object metadata callback,
     // as the metadata to use for the object may vary between executions of the op.
-    if (GetJitContext()->compartment->hasAllocationMetadataBuilder())
+    if (GetJitContext()->realm->hasAllocationMetadataBuilder())
         jump(fail);
 }
 
@@ -859,7 +859,7 @@ MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocK
 
     // No explicit check for nursery.isEnabled() is needed, as the comparison
     // with the nursery's end will always fail in such cases.
-    CompileZone* zone = GetJitContext()->compartment->zone();
+    CompileZone* zone = GetJitContext()->realm->zone();
     int thingSize = int(gc::Arena::thingSize(allocKind));
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
@@ -878,7 +878,7 @@ MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocK
 void
 MacroAssembler::freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label* fail)
 {
-    CompileZone* zone = GetJitContext()->compartment->zone();
+    CompileZone* zone = GetJitContext()->realm->zone();
     int thingSize = int(gc::Arena::thingSize(allocKind));
 
     Label fallback;
@@ -932,7 +932,7 @@ MacroAssembler::callMallocStub(size_t nbytes, Register result, Label* fail)
         push(regNBytes);
 
     move32(Imm32(nbytes), regNBytes);
-    movePtr(ImmPtr(GetJitContext()->compartment->zone()), regZone);
+    movePtr(ImmPtr(GetJitContext()->realm->zone()), regZone);
     call(GetJitContext()->runtime->jitRuntime()->mallocStub());
     if (regReturn != result)
         movePtr(regReturn, result);
@@ -1041,7 +1041,7 @@ MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocK
     // No explicit check for nursery.isEnabled() is needed, as the comparison
     // with the nursery's end will always fail in such cases.
 
-    CompileZone* zone = GetJitContext()->compartment->zone();
+    CompileZone* zone = GetJitContext()->realm->zone();
     int thingSize = int(gc::Arena::thingSize(allocKind));
     int totalSize = js::Nursery::stringHeaderSize() + thingSize;
     MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
@@ -2917,7 +2917,8 @@ MacroAssembler::Push(jsid id, Register scratchReg)
         if (JSID_IS_STRING(id)) {
             JSString* str = JSID_TO_STRING(id);
             MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-            MOZ_ASSERT(JSID_TYPE_STRING == 0x0);
+            static_assert(JSID_TYPE_STRING == 0,
+                          "need to orPtr JSID_TYPE_STRING tag if it's not 0");
             Push(ImmGCPtr(str));
         } else {
             MOZ_ASSERT(JSID_IS_SYMBOL(id));

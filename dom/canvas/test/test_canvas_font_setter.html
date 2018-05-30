@@ -30,9 +30,10 @@ cx.font = "inherit";
 is(cx.font, "bold 12px serif", "inherit should be ignored");
 cx.font = "boold 18px sans-serif";
 is(cx.font, "bold 12px serif", "syntax error should be ignored");
-let systemFontCheck = SpecialPowers.DOMWindowUtils.isStyledByServo ? is : todo_is;
+
+// FIXME(emilio): This disagrees with the WPT test: 2dcontext/text-styles/2d.text.font.parse.system.html
 cx.font = "menu";
-systemFontCheck(cx.font, "menu", "system fonts should work");
+is(cx.font, "menu", "system fonts should work");
 
 function textmeas() {
   return cx.measureText("hello").width;

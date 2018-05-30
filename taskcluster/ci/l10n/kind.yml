@@ -19,17 +19,19 @@ only-for-build-platforms:
    - linux64/opt
    - linux/opt
    - android-api-16/opt
-   # - macosx64/opt
+   - macosx64/opt
+   - win32/opt
+   - win64/opt
 
 job-template:
    description:
       by-build-platform:
          default: Localization
-         android-api-16-l10n: Single Locale Repack
+         android-api-16: Single Locale Repack
    locales-file:
       by-build-platform:
-         default: browser/locales/l10n-changesets.json
-         android-api-16-l10n: mobile/locales/l10n-changesets.json
+         default: browser/locales/l10n-onchange-changesets.json
+         android-api-16: mobile/locales/l10n-onchange-changesets.json
    ignore-locales:
       by-build-platform:
          # OSX has a special locale for japanese
@@ -38,65 +40,124 @@ job-template:
    run-time:
       by-build-platform:
          default: 36000
-         android-api-16-l10n: 18000
+         android-api-16: 18000
    docker-image:
       by-build-platform:
-         android-api-16-l10n:
+         android-api-16:
             in-tree: android-build
          default: null
    secrets:
       by-build-platform:
          default: false
-         android-api-16-l10n: true
+         android-api-16: true
    toolchains:
       by-build-platform:
          default: []
          macosx64:
             - linux64-libdmg
             - linux64-hfsplus
-         android-api-16-l10n:
+         android-api-16:
             - android-gradle-dependencies
             - android-sdk-linux
    tooltool:
       by-build-platform:
-         default: public
-         android-api-16-l10n: internal
-         macosx64-nightly: internal
+         default: internal
+         linux.*: public
+   index:
+      type: l10n
+      product:
+         by-build-platform:
+            default: firefox
+            android-api-16: mobile
+      job-name:
+         by-build-platform:
+            linux: linux-opt
+            linux64: linux64-opt
+            macosx64: macosx64-opt
+            win32: win32-opt
+            win64: win64-opt
+            android-api-16: android-api-16-opt
+   run-on-projects: ['all']
    worker-type:
       by-build-platform:
          default: aws-provisioner-v1/gecko-{level}-b-linux
-         android: aws-provisioner-v1/gecko-{level}-b-android
+         android-api-16: aws-provisioner-v1/gecko-{level}-b-android
+         win.*: aws-provisioner-v1/gecko-{level}-b-win2012
    treeherder:
       symbol: L10n
-      tier: 3
+      tier: 1
       platform:
          by-build-platform:
-            linux64-l10n: linux64/opt
-            linux-l10n: linux32/opt
+            linux64: linux64/opt
+            linux: linux32/opt
             macosx64: osx-cross/opt
-            android-api-16-l10n: android-4-0-armv7-api16/opt
+            win32: windows2012-32/opt
+            win64: windows2012-64/opt
+            android-api-16: android-4-0-armv7-api16/opt
+   env:
+      by-build-platform:
+         linux.*:   # linux64 and 32 get same treatment here
+            EN_US_PACKAGE_NAME: target.tar.bz2
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/{artifact_prefix}
+            MAR_TOOLS_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+         macosx64:
+            EN_US_PACKAGE_NAME: target.dmg
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<repackage>/artifacts/{artifact_prefix}
+            MAR_TOOLS_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+         win.*:
+            EN_US_PACKAGE_NAME: target.zip
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/{artifact_prefix}
+            EN_US_INSTALLER_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<repackage-signed>/artifacts/{artifact_prefix}
+            MAR_TOOLS_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}/host/bin
+         android-api-16:
+            EN_US_PACKAGE_NAME: target.apk
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/{artifact_prefix}
    mozharness:
       config:
          by-build-platform:
-            linux-l10n:
+            linux:
                - single_locale/{project}.py
                - single_locale/linux32.py
                - single_locale/tc_common.py
                - single_locale/tc_linux32.py
-            linux64-l10n:
+               - single_locale/onchange.py
+            linux64:
                - single_locale/{project}.py
                - single_locale/linux64.py
                - single_locale/tc_common.py
                - single_locale/tc_linux64.py
+               - single_locale/onchange.py
             macosx64:
                - single_locale/{project}.py
                - single_locale/macosx64.py
                - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
-            android-api-16-l10n:
+               - single_locale/onchange.py
+            win32:
+               - single_locale/{project}.py
+               - single_locale/win32.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win32.py
+               - single_locale/onchange.py
+            win64:
+               - single_locale/{project}.py
+               - single_locale/win64.py
+               - single_locale/tc_common.py
+               - single_locale/tc_win64.py
+               - single_locale/onchange.py
+            android-api-16:
                - single_locale/{project}_android-api-16.py
                - single_locale/tc_common.py
                - single_locale/tc_android-api-16.py
+               - single_locale/onchange.py
       # no default, so we fail on new entries
       options:
          - revision=$GECKO_HEAD_REV
@@ -104,18 +165,19 @@ job-template:
          - this-chunk=1
       actions:
          by-build-platform:
-            default: [clone-locales list-locales setup repack summary]
-            android-api-16-l10n: [get-secrets
-                                  clone-locales list-locales setup repack
-                                  upload-repacks summary]
+            default: ['clone-locales', 'list-locales', 'setup', 'repack',
+                      'summary']
+            android-api-16: ['get-secrets',
+                             'clone-locales', 'list-locales', 'setup', 'repack',
+                             'upload-repacks', 'summary']
       script:
          by-build-platform:
             default: mozharness/scripts/desktop_l10n.py
-            android-api-16-l10n: mozharness/scripts/mobile_l10n.py
+            android-api-16: mozharness/scripts/mobile_l10n.py
    when:
       files-changed:
-         - browser/locales/l10n-changesets.json
-         - mobile/locales/l10n-changesets.json
+         - browser/locales/l10n-onchange-changesets.json
+         - mobile/locales/l10n-onchange-changesets.json
          - testing/mozharness/configs/single_locale/**
          - testing/mozharness/mozharness/mozilla/l10n/locales.py
          - testing/mozharness/scripts/desktop_l10n.py

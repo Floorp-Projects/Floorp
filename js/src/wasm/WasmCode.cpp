@@ -556,7 +556,7 @@ LazyStubSegment::create(const CodeTier& codeTier, size_t length)
 bool
 LazyStubSegment::hasSpace(size_t bytes) const
 {
-    MOZ_ASSERT(bytes % MPROTECT_PAGE_SIZE == 0);
+    MOZ_ASSERT(AlignBytesNeeded(bytes) == bytes);
     return bytes <= length() &&
            usedBytes_ <= length() - bytes;
 }

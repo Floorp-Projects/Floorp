@@ -80,6 +80,7 @@ class Benchmark(object):
                     'shouldAlert': self.should_alert,
                     'subtests': [],
                     'units': self.units,
+                    'value': None
                 },
             ],
         }
@@ -158,8 +159,49 @@ class Ares6(Benchmark):
             self.suite['value'] = self.last_summary
 
 
+class SixSpeed(Benchmark):
+    name = 'six-speed'
+    path = os.path.join('third_party', 'webkit', 'PerformanceTests', 'six-speed')
+    units = 'ms'
+
+    @property
+    def command(self):
+        cmd = super(SixSpeed, self).command
+        return cmd + ['test.js']
+
+    def reset(self):
+        super(SixSpeed, self).reset()
+
+        # Scores are of the form:
+        # {<bench_name>: {<score_name>: [<values>]}}
+        self.scores = defaultdict(lambda: defaultdict(list))
+
+    def process_line(self, output):
+        m = re.search("(.+): (\d+)", output)
+        if not m:
+            return
+        subtest = m.group(1)
+        score = m.group(2)
+        if subtest not in self.scores[self.name]:
+            self.scores[self.name][subtest] = []
+        self.scores[self.name][subtest].append(int(score))
+
+
+    def collect_results(self):
+        bench_total = 0
+        # NOTE: for this benchmark we run the test once, so we have a single value array
+        for bench, scores in self.scores.items():
+            for score, values in scores.items():
+                test_name = "{}-{}".format(self.name, score)
+                total = sum(values) / len(values)
+                self.suite['subtests'].append({'name': test_name, 'value': total})
+                bench_total += int(sum(values))
+        self.suite['value'] = bench_total
+
+
 all_benchmarks = {
     'ares6': Ares6,
+    'six-speed': SixSpeed,
 }
 
 

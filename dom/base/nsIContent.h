@@ -202,7 +202,7 @@ public:
   void SetIsNativeAnonymousRoot()
   {
     SetFlags(NODE_IS_ANONYMOUS_ROOT | NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE |
-             NODE_IS_NATIVE_ANONYMOUS_ROOT | NODE_IS_NATIVE_ANONYMOUS);
+             NODE_IS_NATIVE_ANONYMOUS_ROOT);
   }
 
   /**
@@ -740,14 +740,6 @@ public:
     }
 
     return false;
-  }
-
-  // Returns true if this element is native-anonymous scrollbar content.
-  bool IsNativeScrollbarContent() const {
-    return IsNativeAnonymous() &&
-           IsAnyOfXULElements(nsGkAtoms::scrollbar,
-                              nsGkAtoms::resizer,
-                              nsGkAtoms::scrollcorner);
   }
 
   // Overloaded from nsINode

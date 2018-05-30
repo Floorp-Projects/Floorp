@@ -78,7 +78,7 @@ uint64_t rust_u2f_mgr_sign(rust_u2f_manager* mgr,
                            const rust_u2f_app_ids* app_ids,
                            const rust_u2f_key_handles* khs);
 
-uint64_t rust_u2f_mgr_cancel(rust_u2f_manager* mgr);
+void rust_u2f_mgr_cancel(rust_u2f_manager* mgr);
 
 
 /// U2FAppIds functions.

@@ -2577,7 +2577,7 @@ IonBuilder::inlineObjectToString(CallInfo& callInfo)
         return InliningStatus_NotInlined;
 
     // Make sure there's no Symbol.toStringTag property.
-    jsid toStringTag = SYMBOL_TO_JSID(compartment->runtime()->wellKnownSymbols().toStringTag);
+    jsid toStringTag = SYMBOL_TO_JSID(realm->runtime()->wellKnownSymbols().toStringTag);
     bool res;
     MOZ_TRY_VAR(res, testNotDefinedProperty(arg, toStringTag));
     if (!res)

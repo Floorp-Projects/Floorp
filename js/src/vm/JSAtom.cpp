@@ -585,7 +585,7 @@ js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp)
     if (!atom)
         return false;
 
-    idp.set(JSID_FROM_BITS((size_t)atom));
+    idp.set(JSID_FROM_BITS((size_t)atom | JSID_TYPE_STRING));
     return true;
 }
 

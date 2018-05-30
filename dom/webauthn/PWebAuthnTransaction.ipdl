@@ -16,6 +16,8 @@
 
 include protocol PBackground;
 
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -46,37 +48,63 @@ union WebAuthnExtensionResult {
   WebAuthnExtensionResultAppId;
 };
 
-struct WebAuthnMakeCredentialInfo {
-  nsString Origin;
-  uint8_t[] RpIdHash;
-  uint8_t[] ClientDataHash;
-  uint32_t TimeoutMS;
-  WebAuthnScopedCredential[] ExcludeList;
+struct WebAuthnMakeCredentialExtraInfo {
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
   bool RequestDirectAttestation;
 };
 
+union WebAuthnMaybeMakeCredentialExtraInfo {
+  WebAuthnMakeCredentialExtraInfo;
+  null_t;
+};
+
+struct WebAuthnMakeCredentialInfo {
+  nsString Origin;
+  nsString RpId;
+  uint8_t[] Challenge;
+  nsCString ClientDataJSON;
+  uint32_t TimeoutMS;
+  WebAuthnScopedCredential[] ExcludeList;
+  WebAuthnMaybeMakeCredentialExtraInfo Extra;
+};
+
 struct WebAuthnMakeCredentialResult {
-  uint8_t[] RegBuffer;
-  bool DirectAttestationPermitted;
+  nsCString ClientDataJSON;
+  uint8_t[] AttestationObject;
+  uint8_t[] KeyHandle;
+  /* Might be empty if the token implementation doesn't support CTAP1. */
+  uint8_t[] RegistrationData;
+};
+
+struct WebAuthnGetAssertionExtraInfo {
+  WebAuthnExtension[] Extensions;
+  bool RequireUserVerification;
+};
+
+union WebAuthnMaybeGetAssertionExtraInfo {
+  WebAuthnGetAssertionExtraInfo;
+  null_t;
 };
 
 struct WebAuthnGetAssertionInfo {
   nsString Origin;
-  uint8_t[] RpIdHash;
-  uint8_t[] ClientDataHash;
+  nsString RpId;
+  uint8_t[] Challenge;
+  nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] AllowList;
-  bool RequireUserVerification;
-  WebAuthnExtension[] Extensions;
+  WebAuthnMaybeGetAssertionExtraInfo Extra;
 };
 
 struct WebAuthnGetAssertionResult {
-  uint8_t[] RpIdHash;
-  uint8_t[] CredentialID;
-  uint8_t[] SigBuffer;
+  nsCString ClientDataJSON;
+  uint8_t[] KeyHandle;
+  uint8_t[] Signature;
+  uint8_t[] AuthenticatorData;
   WebAuthnExtensionResult[] Extensions;
+  /* Might be empty if the token implementation doesn't support CTAP1. */
+  uint8_t[] SignatureData;
 };
 
 async protocol PWebAuthnTransaction {

@@ -22,7 +22,7 @@
       <html:a class="text-link" data-l10n-name="url" target="_blank"></html:a>
     </label>
   </vbox>
-  <vbox class="no-results-container" align="center">
-    <image></image>
+  <vbox class="no-results-container no-results-image-container" align="center">
+    <image class="no-results-image"></image>
   </vbox>
 </groupbox>

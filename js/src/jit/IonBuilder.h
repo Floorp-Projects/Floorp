@@ -45,7 +45,7 @@ class IonBuilder
 {
 
   public:
-    IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
+    IonBuilder(JSContext* analysisContext, CompileRealm* realm,
                const JitCompileOptions& options, TempAllocator* temp,
                MIRGraph* graph, CompilerConstraintList* constraints,
                BaselineInspector* inspector, CompileInfo* info,
@@ -968,7 +968,7 @@ class IonBuilder
         return callerBuilder_ != nullptr;
     }
 
-    const JSAtomState& names() { return compartment->runtime()->names(); }
+    const JSAtomState& names() { return realm->runtime()->names(); }
 
     bool hadActionableAbort() const {
         MOZ_ASSERT(!actionableAbortScript_ ||
