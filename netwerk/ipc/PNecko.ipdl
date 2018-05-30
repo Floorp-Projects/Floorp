@@ -147,6 +147,10 @@ child:
 
   async SpeculativeConnectRequest();
 
+  // Using high priority to deliver this notification possibly sooner than we
+  // enter poll() on the child process with infinite timeout.
+  prio(high) async NetworkChangeNotification(nsCString type);
+
   async PTransportProvider();
 
 both:

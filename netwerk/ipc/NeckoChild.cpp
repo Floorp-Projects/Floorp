@@ -32,6 +32,7 @@
 #include "nsIOService.h"
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
+#include "nsINetworkLinkService.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsNetUtil.h"
 
@@ -446,6 +447,17 @@ NeckoChild::RecvSpeculativeConnectRequest()
   if (obsService) {
     obsService->NotifyObservers(nullptr, "speculative-connect-request",
                                 nullptr);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+NeckoChild::RecvNetworkChangeNotification(nsCString const& type)
+{
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(nullptr, NS_NETWORK_LINK_TOPIC,
+                                NS_ConvertUTF8toUTF16(type).get());
   }
   return IPC_OK();
 }

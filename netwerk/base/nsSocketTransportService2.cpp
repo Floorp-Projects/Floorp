@@ -51,6 +51,8 @@ static Atomic<PRThread*, Relaxed> gSocketThread;
 #define SOCKET_LIMIT_MIN      50U
 #define INTERVAL_PREF "network.activity.intervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
+#define POLL_BUSY_WAIT_PERIOD "network.sts.poll_busy_wait_period"
+#define POLL_BUSY_WAIT_PERIOD_TIMEOUT "network.sts.poll_busy_wait_period_timeout"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
 #define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN "network.sts.max_time_for_pr_close_during_shutdown"
 #define POLLABLE_EVENT_TIMEOUT "network.sts.pollable_event_timeout"
@@ -141,6 +143,9 @@ nsSocketTransportService::nsSocketTransportService()
     , mMaxTimePerPollIter(100)
     , mTelemetryEnabledPref(false)
     , mMaxTimeForPrClosePref(PR_SecondsToInterval(5))
+    , mLastNetworkLinkChangeTime(0)
+    , mNetworkLinkChangeBusyWaitPeriod(PR_SecondsToInterval(50))
+    , mNetworkLinkChangeBusyWaitTimeout(PR_SecondsToInterval(7))
     , mSleepPhase(false)
     , mProbedMaxCount(false)
 #if defined(XP_WIN)
@@ -541,6 +546,16 @@ nsSocketTransportService::Poll(TimeDuration *pollDuration,
             pendingEvents ? PR_INTERVAL_NO_WAIT : PR_MillisecondsToInterval(25);
     }
 
+    if ((ts - mLastNetworkLinkChangeTime) < mNetworkLinkChangeBusyWaitPeriod) {
+        // Being here means we are few seconds after a network change has
+        // been detected.
+        PRIntervalTime to = mNetworkLinkChangeBusyWaitTimeout;
+        if (to) {
+            pollTimeout = std::min(to, pollTimeout);
+            SOCKET_LOG(("  timeout shorthened after network change event"));
+        }
+    }
+
     TimeStamp pollStart;
     if (mTelemetryEnabledPref) {
         pollStart = TimeStamp::NowLoRes();
@@ -619,6 +634,7 @@ nsSocketTransportService::Init()
         obsSvc->AddObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC, true);
         obsSvc->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
         obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
+        obsSvc->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
     mInitialized = true;
@@ -687,6 +703,7 @@ nsSocketTransportService::ShutdownThread()
         obsSvc->RemoveObserver(this, NS_WIDGET_SLEEP_OBSERVER_TOPIC);
         obsSvc->RemoveObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC);
         obsSvc->RemoveObserver(this, "xpcom-shutdown-threads");
+        obsSvc->RemoveObserver(this, NS_NETWORK_LINK_TOPIC);
     }
 
     if (mAfterWakeUpTimer) {
@@ -1336,6 +1353,18 @@ nsSocketTransportService::UpdatePrefs()
             mMaxTimePerPollIter = maxTimePref;
         }
 
+        int32_t pollBusyWaitPeriod;
+        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD, &pollBusyWaitPeriod);
+        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriod > 0) {
+            mNetworkLinkChangeBusyWaitPeriod = PR_SecondsToInterval(pollBusyWaitPeriod);
+        }
+
+        int32_t pollBusyWaitPeriodTimeout;
+        rv = tmpPrefService->GetIntPref(POLL_BUSY_WAIT_PERIOD_TIMEOUT, &pollBusyWaitPeriodTimeout);
+        if (NS_SUCCEEDED(rv) && pollBusyWaitPeriodTimeout > 0) {
+            mNetworkLinkChangeBusyWaitTimeout = PR_SecondsToInterval(pollBusyWaitPeriodTimeout);
+        }
+
         bool telemetryPref = false;
         rv = tmpPrefService->GetBoolPref(TELEMETRY_PREF,
                                          &telemetryPref);
@@ -1409,6 +1438,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
                                   const char *topic,
                                   const char16_t *data)
 {
+    SOCKET_LOG(("nsSocketTransportService::Observe topic=%s", topic));
+
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         UpdatePrefs();
         return NS_OK;
@@ -1458,6 +1489,8 @@ nsSocketTransportService::Observe(nsISupports *subject,
         }
     } else if (!strcmp(topic, "xpcom-shutdown-threads")) {
         ShutdownThread();
+    } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
+        mLastNetworkLinkChangeTime = PR_IntervalNow();
     }
 
     return NS_OK;
