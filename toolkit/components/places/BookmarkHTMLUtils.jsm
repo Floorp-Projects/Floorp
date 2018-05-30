@@ -777,10 +777,10 @@ BookmarkImporter.prototype = {
     let next;
     for (;;) {
       switch (current.nodeType) {
-        case Ci.nsIDOMNode.ELEMENT_NODE:
+        case current.ELEMENT_NODE:
           this._openContainer(current);
           break;
-        case Ci.nsIDOMNode.TEXT_NODE:
+        case current.TEXT_NODE:
           this._appendText(current.data);
           break;
       }
@@ -789,7 +789,7 @@ BookmarkImporter.prototype = {
         continue;
       }
       for (;;) {
-        if (current.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
+        if (current.nodeType == current.ELEMENT_NODE) {
           this._closeContainer(current);
         }
         if (current == aDoc) {
