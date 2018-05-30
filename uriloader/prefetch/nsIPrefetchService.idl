@@ -6,8 +6,9 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIURI;
-interface nsIDOMNode;
 interface nsISimpleEnumerator;
+
+webidl Node;
 
 [scriptable, uuid(422a1807-4e7f-463d-b8d7-ca2ceb9b5d53)]
 interface nsIPrefetchService : nsISupports
@@ -23,7 +24,7 @@ interface nsIPrefetchService : nsISupports
      */
     void prefetchURI(in nsIURI aURI,
                      in nsIURI aReferrerURI,
-                     in nsIDOMNode aSource,
+                     in Node aSource,
                      in boolean aExplicit);
 
     /**
@@ -37,7 +38,7 @@ interface nsIPrefetchService : nsISupports
      */
     void preloadURI(in nsIURI aURI,
                     in nsIURI aReferrerURI,
-                    in nsIDOMNode aSource,
+                    in Node aSource,
                     in nsContentPolicyType aPolicyType);
 
     /**
@@ -46,7 +47,7 @@ interface nsIPrefetchService : nsISupports
     boolean hasMoreElements();
 
     /**
-     * Cancel prefetch or preload for a nsIDomNode.
+     * Cancel prefetch or preload for a Node.
      */
-    void cancelPrefetchPreloadURI(in nsIURI aURI, in nsIDOMNode aSource);
+    void cancelPrefetchPreloadURI(in nsIURI aURI, in Node aSource);
 };
