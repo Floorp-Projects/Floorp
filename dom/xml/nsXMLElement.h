@@ -28,8 +28,6 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                          bool aPreallocateChildren) const override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) override;
 

@@ -413,8 +413,6 @@ public:
       mBindingParent = aBindingParent;
     }
 
-    virtual nsIDOMNode* AsDOMNode() override { return this; }
-
     virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
     typedef mozilla::dom::DOMString DOMString;

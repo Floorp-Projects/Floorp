@@ -36,8 +36,6 @@ public:
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   void AppendInsertedChild(nsIContent* aChild, bool aNotify)
   {
     // Appending an inserted child causes the inserted

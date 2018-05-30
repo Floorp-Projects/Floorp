@@ -306,7 +306,6 @@ public:
   }
 
   virtual void ClearAnyCachedPath() {}
-  nsIDOMNode* AsDOMNode() final { return this; }
   virtual bool IsTransformable() { return false; }
 
   // WebIDL

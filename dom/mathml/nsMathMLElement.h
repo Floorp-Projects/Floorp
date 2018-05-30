@@ -90,8 +90,6 @@ public:
   virtual void GetLinkTarget(nsAString& aTarget) override;
   virtual already_AddRefed<nsIURI> GetHrefURI() const override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   virtual void NodeInfoChanged(nsIDocument* aOldDoc) override
   {
     ClearHasPendingLinkUpdate();

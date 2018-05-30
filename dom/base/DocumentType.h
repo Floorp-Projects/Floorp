@@ -59,8 +59,6 @@ public:
     CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                   bool aCloneText) const override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   // WebIDL API
   void GetName(nsAString& aName) const;
   void GetPublicId(nsAString& aPublicId) const;
