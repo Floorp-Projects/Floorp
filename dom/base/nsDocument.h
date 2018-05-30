@@ -246,8 +246,6 @@ public:
   virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
 protected:
   friend class nsNodeUtils;
 

@@ -65,8 +65,6 @@ public:
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers) override
