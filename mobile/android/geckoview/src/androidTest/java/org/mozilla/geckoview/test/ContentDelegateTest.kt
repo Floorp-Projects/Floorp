@@ -7,11 +7,14 @@ package org.mozilla.geckoview.test
 import org.mozilla.geckoview.GeckoResponse
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ReuseSession
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -57,4 +60,53 @@ class ContentDelegateTest : BaseSessionTest() {
         })
     }
 
+    @IgnoreCrash
+    @ReuseSession(false)
+    @Test fun crashContent() {
+        // This test doesn't make sense without multiprocess
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+
+        sessionRule.session.loadUri(CONTENT_CRASH_URL)
+
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onCrash(session: GeckoSession) {
+                assertThat("Session should be closed after a crash", session.isOpen, equalTo(false))
+
+                // Recover immediately
+                session.open()
+                session.loadTestPath(HELLO_HTML_PATH)
+            }
+        });
+
+        sessionRule.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(object: Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page should load successfully", success, equalTo(true))
+            }
+        })
+    }
+
+    @IgnoreCrash
+    @ReuseSession(false)
+    @Test fun crashContentMultipleSessions() {
+        // This test doesn't make sense without multiprocess
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+
+        // We need to make sure all sessions in a given content process
+        // receive onCrash(). If we add multiple content processes, this
+        // test will need fixed to ensure the test sessions go into the
+        // same one.
+        sessionRule.createOpenSession()
+        sessionRule.session.loadUri(CONTENT_CRASH_URL)
+
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 2)
+            override fun onCrash(session: GeckoSession) {
+                assertThat("Session should be closed after a crash", session.isOpen, equalTo(false))
+            }
+        });
+    }
 }

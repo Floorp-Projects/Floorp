@@ -37,6 +37,9 @@ class Callbacks private constructor() {
 
         override fun onExternalResponse(session: GeckoSession, response: GeckoSession.WebResponseInfo) {
         }
+
+        override fun onCrash(session: GeckoSession) {
+        }
     }
 
     interface NavigationDelegate : GeckoSession.NavigationDelegate {

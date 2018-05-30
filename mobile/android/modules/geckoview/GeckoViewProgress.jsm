@@ -194,6 +194,7 @@ class GeckoViewProgress extends GeckoViewModule {
       .createInstance(Ci.nsIWebProgress);
     this.progressFilter.addProgressListener(this, flags);
     this.browser.addProgressListener(this.progressFilter, flags);
+    Services.obs.addObserver(this, "oop-frameloader-crashed");
   }
 
   onDisable() {
@@ -203,6 +204,8 @@ class GeckoViewProgress extends GeckoViewModule {
       this.progressFilter.removeProgressListener(this);
       this.browser.removeProgressListener(this.progressFilter);
     }
+
+    Services.obs.removeObserver(this, "oop-frameloader-crashed");
   }
 
   onSettingsUpdate() {
@@ -225,6 +228,7 @@ class GeckoViewProgress extends GeckoViewModule {
     debug `onStateChange: uri=${uriSpec}`;
 
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+      this._inProgress = true;
       const message = {
         type: "GeckoView:PageStart",
         uri: uriSpec,
@@ -233,6 +237,7 @@ class GeckoViewProgress extends GeckoViewModule {
       this.eventDispatcher.sendRequest(message);
     } else if ((aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) &&
                !aWebProgress.isLoadingDocument) {
+      this._inProgress = false;
       let message = {
         type: "GeckoView:PageStop",
         success: !aStatus
@@ -274,6 +279,25 @@ class GeckoViewProgress extends GeckoViewModule {
         type: "GeckoView:PageStop",
         success: false
       });
+    }
+  }
+
+  // nsIObserver event handler
+  observe(aSubject, aTopic, aData) {
+    debug `observe: topic=${aTopic}`;
+
+    switch (aTopic) {
+      case "oop-frameloader-crashed": {
+        const browser = aSubject.ownerElement;
+        if (!browser || browser != this.browser || !this._inProgress) {
+          return;
+        }
+
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:PageStop",
+          success: false
+        });
+      }
     }
   }
 }
