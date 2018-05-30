@@ -209,6 +209,13 @@ public class GeckoViewActivity extends Activity {
         @Override
         public void onExternalResponse(GeckoSession session, GeckoSession.WebResponseInfo request) {
         }
+
+        @Override
+        public void onCrash(GeckoSession session) {
+            Log.e(LOGTAG, "Crashed, reopening session");
+            session.open(sGeckoRuntime);
+            session.loadUri(DEFAULT_URL);
+        }
     }
 
     private class MyGeckoViewProgress implements GeckoSession.ProgressDelegate {

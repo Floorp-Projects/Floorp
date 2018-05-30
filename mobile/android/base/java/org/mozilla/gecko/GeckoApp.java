@@ -900,6 +900,12 @@ public abstract class GeckoApp extends GeckoActivity
 
     @Override
     public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
+        // Won't happen, as we don't use the GeckoView download support in Fennec
+    }
+
+    @Override
+    public void onCrash(final GeckoSession session) {
+        // Won't happen, as we don't use e10s in Fennec
     }
 
     protected void setFullScreen(final boolean fullscreen) {
