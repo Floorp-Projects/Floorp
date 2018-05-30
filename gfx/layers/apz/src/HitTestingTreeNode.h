@@ -48,6 +48,13 @@ class AsyncPanZoomController;
  * Accessing the compositor layer tree can only be done on the compositor
  * thread, and so it is simpler to make a copy of the hit-testing related
  * properties into a separate tree.
+ *
+ * The tree pointers on the node (mLastChild, etc.) can only be manipulated
+ * while holding the APZ tree lock. Any code that wishes to use a
+ * HitTestingTreeNode outside of holding the tree lock should do so by using
+ * the HitTestingTreeNodeAutoLock wrapper, which prevents the node from
+ * being recycled (and also holds a RefPtr to the node to prevent it from
+ * getting freed).
  */
 class HitTestingTreeNode {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HitTestingTreeNode);
@@ -137,6 +144,12 @@ public:
   void Dump(const char* aPrefix = "") const;
 
 private:
+  friend class HitTestingTreeNodeAutoLock;
+  // Functions that are private but called from HitTestingTreeNodeAutoLock
+  void Lock(const RecursiveMutexAutoLock& aProofOfTreeLock);
+  void Unlock(const RecursiveMutexAutoLock& aProofOfTreeLock);
+
+
   void SetApzcParent(AsyncPanZoomController* aApzc);
 
   RefPtr<HitTestingTreeNode> mLastChild;
@@ -145,6 +158,7 @@ private:
 
   RefPtr<AsyncPanZoomController> mApzc;
   bool mIsPrimaryApzcHolder;
+  bool mLocked;
 
   LayersId mLayersId;
 
@@ -191,6 +205,33 @@ private:
   /* Indicates whether or not the event regions on this node need to be
    * overridden in a certain way. */
   EventRegionsOverride mOverride;
+};
+
+/**
+ * A class that allows safe usage of a HitTestingTreeNode outside of the APZ
+ * tree lock. In general, this class should be Initialize()'d inside the tree
+ * lock (enforced by the proof-of-lock to Initialize), and then can be returned
+ * to a scope outside the tree lock and used safely. Upon destruction or
+ * Clear() being called, it unlocks the underlying node at which point it can
+ * be recycled or freed.
+ */
+class MOZ_RAII HitTestingTreeNodeAutoLock
+{
+public:
+  HitTestingTreeNodeAutoLock();
+  HitTestingTreeNodeAutoLock(const HitTestingTreeNodeAutoLock&) = delete;
+  HitTestingTreeNodeAutoLock& operator=(const HitTestingTreeNodeAutoLock&) = delete;
+  HitTestingTreeNodeAutoLock(HitTestingTreeNodeAutoLock&&) = delete;
+  ~HitTestingTreeNodeAutoLock();
+
+  void Initialize(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                  already_AddRefed<HitTestingTreeNode> aNode,
+                  RecursiveMutex& aTreeMutex);
+  void Clear();
+
+private:
+  RefPtr<HitTestingTreeNode> mNode;
+  RecursiveMutex* mTreeMutex;
 };
 
 } // namespace layers
