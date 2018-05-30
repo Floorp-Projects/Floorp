@@ -2917,7 +2917,8 @@ MacroAssembler::Push(jsid id, Register scratchReg)
         if (JSID_IS_STRING(id)) {
             JSString* str = JSID_TO_STRING(id);
             MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-            MOZ_ASSERT(JSID_TYPE_STRING == 0x0);
+            static_assert(JSID_TYPE_STRING == 0,
+                          "need to orPtr JSID_TYPE_STRING tag if it's not 0");
             Push(ImmGCPtr(str));
         } else {
             MOZ_ASSERT(JSID_IS_SYMBOL(id));
