@@ -47,7 +47,7 @@ public class LeanplumLocalPushListenerService extends IntentService {
         return;
       }
       Bundle extras = intent.getExtras();
-      if (!extras.isEmpty() && extras.containsKey(Constants.Keys.PUSH_MESSAGE_TEXT)) {
+      if (extras != null && extras.containsKey(Constants.Keys.PUSH_MESSAGE_TEXT)) {
         LeanplumPushService.handleNotification(this, extras);
       }
     } catch (Throwable t) {

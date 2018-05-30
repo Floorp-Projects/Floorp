@@ -54,6 +54,8 @@ import ch.boye.httpclientandroidlib.client.HttpResponseException;
 import ch.boye.httpclientandroidlib.message.BasicLineParser;
 import ch.boye.httpclientandroidlib.message.BasicNameValuePair;
 
+// Suppressing deprecated apache dependency.
+@SuppressWarnings("deprecation")
 class WebSocketClient {
   private static final String TAG = "WebSocketClient";
 

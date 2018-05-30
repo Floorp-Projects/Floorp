@@ -69,15 +69,6 @@ public class WebInterstitialOptions {
     this.closeUrl = closeUrl;
   }
 
-  /**
-   * Deprecated: Use {@link WebInterstitialOptions#toArgs()}.
-   */
-  @Deprecated
-  @SuppressWarnings("unused")
-  public static ActionArgs toArgs(Context currentContext) {
-    return toArgs();
-  }
-
   public static ActionArgs toArgs() {
     return new ActionArgs()
         .with(Args.URL, Values.DEFAULT_URL)

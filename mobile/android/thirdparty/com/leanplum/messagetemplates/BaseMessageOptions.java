@@ -61,8 +61,8 @@ abstract class BaseMessageOptions {
     if (imageStream != null) {
       try {
         setBackgroundImage(BitmapFactory.decodeStream(imageStream));
-      } catch (Exception e) {
-        Log.e("Leanplum", "Error loading background image", e);
+      } catch (Throwable t) {
+        Log.e("Leanplum", "Error loading background image", t);
       }
     }
     setBackgroundColor(context.numberNamed(Args.BACKGROUND_COLOR).intValue());

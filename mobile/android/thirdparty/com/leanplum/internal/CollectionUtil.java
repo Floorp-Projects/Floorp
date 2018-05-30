@@ -172,4 +172,38 @@ public class CollectionUtil {
   public static <T> T uncheckedCast(Object obj) {
     return (T) obj;
   }
+
+  /**
+   * Gets value from map or default if key isn't found.
+   *
+   * @param map Map to get value from.
+   * @param key Key we are looking for.
+   * @param defaultValue Default value if key isn't found.
+   * @return Value or default if not found.
+   */
+  public static <K, V> V getOrDefault(Map<K, V> map, K key, V defaultValue) {
+    if (map == null) {
+      return defaultValue;
+    }
+    return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+
+  /**
+   * Converts an array of object Longs to primitives.
+   *
+   * @param array Array to convert.
+   * @return Array of long primitives.
+   */
+  public static long[] toPrimitive(final Long[] array) {
+    if (array == null) {
+      return null;
+    } else if (array.length == 0) {
+      return new long[0];
+    }
+    final long[] result = new long[array.length];
+    for (int i = 0; i < array.length; i++) {
+      result[i] = array[i].longValue();
+    }
+    return result;
+  }
 }

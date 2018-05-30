@@ -33,10 +33,23 @@ import com.leanplum.utils.SharedPreferencesUtil;
  * @author Anna Orlova
  */
 abstract class LeanplumCloudMessagingProvider {
-  static final String PUSH_REGISTRATION_SERVICE = "com.leanplum.LeanplumPushRegistrationService";
-  static final String PUSH_RECEIVER = "com.leanplum.LeanplumPushReceiver";
-
   private static String registrationId;
+
+  /**
+   * Gets the registration Id associated with current messaging provider.
+   *
+   * @return Registration Id.
+   */
+  static String getCurrentRegistrationId() {
+    return registrationId;
+  }
+
+  /**
+   * Sends the registration ID to the server over HTTP.
+   */
+  private static void sendRegistrationIdToBackend(String registrationId) {
+    Leanplum.setRegistrationId(registrationId);
+  }
 
   /**
    * Registration app for Cloud Messaging.
@@ -46,23 +59,30 @@ abstract class LeanplumCloudMessagingProvider {
   public abstract String getRegistrationId();
 
   /**
-   * Verifies that Android Manifest is set up correctly.
+   * Whether Messaging Provider is initialized correctly.
    *
-   * @return true If Android Manifest is set up correctly.
+   * @return True if provider is initialized, false otherwise.
    */
-  public abstract boolean isManifestSetUp();
-
   public abstract boolean isInitialized();
+
+  /**
+   * Whether app manifest is setup correctly.
+   *
+   * @return True if manifest is setup, false otherwise.
+   */
+  public abstract boolean isManifestSetup();
 
   /**
    * Unregister from cloud messaging.
    */
   public abstract void unregister();
 
-  static String getCurrentRegistrationId() {
-    return registrationId;
-  }
-
+  /**
+   * Callback should be invoked when Registration ID is received from provider.
+   *
+   * @param context The application context.
+   * @param registrationId Registration Id.
+   */
   void onRegistrationIdReceived(Context context, String registrationId) {
     if (registrationId == null) {
       Log.w("Registration ID is undefined.");
@@ -75,22 +95,14 @@ abstract class LeanplumCloudMessagingProvider {
         context, Constants.Defaults.LEANPLUM_PUSH, Constants.Defaults.PROPERTY_REGISTRATION_ID))) {
       Log.i("Device registered for push notifications with registration token", registrationId);
       storePreferences(context.getApplicationContext());
+      sendRegistrationIdToBackend(LeanplumCloudMessagingProvider.registrationId);
     }
-    // Send push token on every launch for not missed token when user force quit the app.
-    sendRegistrationIdToBackend(LeanplumCloudMessagingProvider.registrationId);
-  }
-
-  /**
-   * Sends the registration ID to the server over HTTP.
-   */
-  private static void sendRegistrationIdToBackend(String registrationId) {
-    Leanplum.setRegistrationId(registrationId);
   }
 
   /**
    * Stores the registration ID in the application's {@code SharedPreferences}.
    *
-   * @param context application's context.
+   * @param context The application context.
    */
   public void storePreferences(Context context) {
     Log.v("Saving the registration ID in the shared preferences.");
