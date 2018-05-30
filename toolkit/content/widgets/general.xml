@@ -9,10 +9,6 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <!-- This binding is needed on <scrollbar> to prevent content process
-       startup performance regression; to be removed in bug 1458375 -->
-  <binding id="empty"/>
-
   <binding id="basecontrol">
     <implementation implements="nsIDOMXULControlElement">
       <!-- public implementation -->
