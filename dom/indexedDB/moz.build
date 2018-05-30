@@ -109,3 +109,9 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
     '/xpcom/threads',
 ]
+
+XPIDL_SOURCES += [
+    'nsIIDBPermissionsRequest.idl',
+]
+
+XPIDL_MODULE = 'dom_indexeddb'

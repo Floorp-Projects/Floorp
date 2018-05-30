@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsIInterfaceRequestor.h"
+#include "nsIIDBPermissionsRequest.h"
 #include "nsIObserver.h"
 #include "nsIPermissionManager.h"
 #include "nsISupportsImpl.h"
@@ -26,7 +26,7 @@ namespace indexedDB {
 
 class PermissionRequestBase
   : public nsIObserver
-  , public nsIInterfaceRequestor
+  , public nsIIDBPermissionsRequest
 {
   nsCOMPtr<Element> mOwnerElement;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -71,7 +71,7 @@ private:
                         uint32_t aIntPermission);
 
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIIDBPERMISSIONSREQUEST
 };
 
 } // namespace indexedDB
