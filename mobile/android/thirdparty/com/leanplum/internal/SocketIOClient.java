@@ -30,6 +30,7 @@ import com.leanplum.Leanplum;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.thirdparty_unused.BuildConfig;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -67,13 +68,6 @@ class SocketIOClient {
     // remove trailing "/" from URI, in case user provided e.g. http://test.com/
     mURL = uri.toString().replaceAll("/$", "") + "/socket.io/1/";
     mHandler = handler;
-  }
-
-  private static String userAgentString() {
-    String appName = (Leanplum.getContext() != null) ?
-        Util.getApplicationName(Leanplum.getContext()) + "/" + Util.getVersionName() : "websocket";
-    return appName + "(" + Request.appId() + "; " + Constants.CLIENT + "; "
-        + Constants.LEANPLUM_VERSION + "/" + Constants.LEANPLUM_PACKAGE_IDENTIFIER + ")";
   }
 
   private String downloadUriAsString()

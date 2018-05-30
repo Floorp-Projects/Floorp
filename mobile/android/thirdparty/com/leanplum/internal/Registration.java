@@ -40,14 +40,13 @@ public class Registration {
           @Override
           public void run() {
             try {
-              JSONObject registerResponse = Request.getLastResponse(response);
-              boolean isSuccess = Request.isResponseSuccess(registerResponse);
+              boolean isSuccess = Request.isResponseSuccess(response);
               if (isSuccess) {
                 if (callback != null) {
                   callback.onResponse(true);
                 }
               } else {
-                Log.e(Request.getResponseError(registerResponse));
+                Log.e(Request.getResponseError(response));
                 if (callback != null) {
                   callback.onResponse(false);
                 }

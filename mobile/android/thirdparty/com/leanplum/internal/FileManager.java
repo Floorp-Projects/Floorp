@@ -365,7 +365,7 @@ public class FileManager {
       final List<Pattern> compiledExcludePatterns = compilePatterns(patternsToExclude);
 
       if (isAsync) {
-        Util.executeAsyncTask(new AsyncTask<Void, Void, Void>() {
+        Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
           @Override
           protected Void doInBackground(Void... params) {
             try {
