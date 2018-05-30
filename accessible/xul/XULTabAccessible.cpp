@@ -114,14 +114,12 @@ XULTabAccessible::RelationByType(RelationType aType) const
   if (!tabsElm)
     return rel;
 
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(GetNode()));
-  nsCOMPtr<nsIDOMNode> tabpanelNode;
-  tabsElm->GetRelatedElement(domNode, getter_AddRefs(tabpanelNode));
-  if (!tabpanelNode)
+  RefPtr<mozilla::dom::Element> tabpanelElement;
+  tabsElm->GetRelatedElement(GetNode(), getter_AddRefs(tabpanelElement));
+  if (!tabpanelElement)
     return rel;
 
-  nsCOMPtr<nsIContent> tabpanelContent(do_QueryInterface(tabpanelNode));
-  rel.AppendTarget(mDoc, tabpanelContent);
+  rel.AppendTarget(mDoc, tabpanelElement);
   return rel;
 }
 
@@ -201,13 +199,11 @@ XULTabpanelAccessible::RelationByType(RelationType aType) const
   if (!tabpanelsElm)
     return rel;
 
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(GetNode()));
-  nsCOMPtr<nsIDOMNode> tabNode;
-  tabpanelsElm->GetRelatedElement(domNode, getter_AddRefs(tabNode));
-  if (!tabNode)
+  RefPtr<mozilla::dom::Element> tabElement;
+  tabpanelsElm->GetRelatedElement(GetNode(), getter_AddRefs(tabElement));
+  if (!tabElement)
     return rel;
 
-  nsCOMPtr<nsIContent> tabContent(do_QueryInterface(tabNode));
-  rel.AppendTarget(mDoc, tabContent);
+  rel.AppendTarget(mDoc, tabElement);
   return rel;
 }
