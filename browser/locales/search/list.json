@@ -126,7 +126,7 @@
     "bg": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "amazondotcom", "ddg", "portalbgdict", "wikipedia-bg"
+          "google", "amazondotcom", "ddg", "pazaruvaj", "portalbgdict", "wikipedia-bg"
         ]
       }
     },
