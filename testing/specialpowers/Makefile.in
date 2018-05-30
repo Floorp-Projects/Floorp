@@ -14,7 +14,5 @@ libs-preqs = \
 
 libs:: $(libs-preqs)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - $(XPI_NAME)) | (cd $(TEST_EXTENSIONS_DIR) && tar -xf -)
-	$(NSINSTALL) -D $(DEPTH)/_tests/testing/mochitest/extensions/specialpowers
-	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/testing/mochitest/extensions
 	$(NSINSTALL) -D $(DEPTH)/_tests/reftest/specialpowers
 	cp -RL $(DEPTH)/testing/specialpowers/specialpowers $(DEPTH)/_tests/reftest
