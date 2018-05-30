@@ -1770,6 +1770,7 @@ pref("network.http.focused_window_transaction_ratio", "0.9");
 // Whether or not we give more priority to active tab.
 // Note that this requires restart for changes to take effect.
 pref("network.http.active_tab_priority", true);
+// </http>
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -1785,7 +1786,12 @@ pref("network.sts.max_time_for_events_between_two_polls", 100);
 // During shutdown we limit PR_Close calls. If time exceeds this pref (in ms)
 // let sockets just leak.
 pref("network.sts.max_time_for_pr_close_during_shutdown", 5000);
-// </http>
+
+// When the polling socket pair we use to wake poll() up on demand doesn't
+// get signalled (is not readable) within this timeout, we try to repair it.
+// This timeout can be disabled by setting this pref to 0.
+// The value is expected in seconds.
+pref("network.sts.pollable_event_timeout", 6);
 
 // 2147483647 == PR_INT32_MAX == ~2 GB
 pref("network.websocket.max-message-size", 2147483647);
