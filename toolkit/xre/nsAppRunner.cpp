@@ -1705,21 +1705,15 @@ static RemoteResult
 StartRemoteClient(const char* aDesktopStartupID,
                   nsCString& program,
                   const char* profile,
-                  const char* username,
-                  bool aIsX11Display)
+                  const char* username)
 {
   nsAutoPtr<nsRemoteClient> client;
 
-  if (aIsX11Display) {
-    client = new XRemoteClient();
-  } else {
 #if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
-    client = new DBusRemoteClient();
+  client = new DBusRemoteClient();
 #else
-    MOZ_ASSERT(false, "Missing remote implementation!");
-    return REMOTE_NOT_FOUND;
+  client = new XRemoteClient();
 #endif
-  }
 
   nsresult rv = client->Init();
   if (NS_FAILED(rv))
@@ -4075,8 +4069,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     const char* desktopStartupIDPtr =
       mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username,
-                           GDK_IS_X11_DISPLAY(mGdkDisplay));
+    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username);
     if (rr == REMOTE_FOUND) {
       *aExitFlag = true;
       return 0;
