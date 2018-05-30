@@ -559,6 +559,9 @@ struct JSCompartment
   private:
     js::WrapperMap crossCompartmentWrappers;
 
+    using RealmVector = js::Vector<JS::Realm*, 1, js::SystemAllocPolicy>;
+    RealmVector realms_;
+
   public:
     /*
      * During GC, stores the head of a list of incoming pointers from gray cells.
@@ -590,6 +593,10 @@ struct JSCompartment
     // thread can easily lead to races. Use this method very carefully.
     JSRuntime* runtimeFromAnyThread() const {
         return runtime_;
+    }
+
+    RealmVector& realms() {
+        return realms_;
     }
 
     void assertNoCrossCompartmentWrappers() {

@@ -4251,13 +4251,16 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     // executable code limit.
     bool canAllocateMoreCode = jit::CanLikelyAllocateMoreExecutableMemory();
 
-    for (RealmsIter r(rt, WithAtoms); !r.done(); r.next()) {
-        r->unmark();
-        JSCompartment* comp = JS::GetCompartmentForRealm(r);
-        comp->scheduledForDestruction = false;
-        comp->maybeAlive = r->shouldTraceGlobal() || !r->zone()->isGCScheduled();
-        if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
-            r->zone()->setPreservingCode(true);
+    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
+        c->scheduledForDestruction = false;
+        c->maybeAlive = false;
+        for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
+            r->unmark();
+            if (r->shouldTraceGlobal() || !r->zone()->isGCScheduled())
+                c->maybeAlive = true;
+            if (shouldPreserveJITCode(r, currentTime, reason, canAllocateMoreCode))
+                r->zone()->setPreservingCode(true);
+        }
     }
 
     if (!cleanUpEverything && canAllocateMoreCode) {
@@ -4498,7 +4501,7 @@ GCRuntime::markCompartments()
 
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
         MOZ_ASSERT(!comp->scheduledForDestruction);
-        if (!comp->maybeAlive && !JS::GetRealmForCompartment(comp)->isAtomsRealm())
+        if (!comp->maybeAlive && !comp->zone()->isAtomsZone())
             comp->scheduledForDestruction = true;
     }
 }
@@ -7960,9 +7963,15 @@ js::NewRealm(JSContext* cx, JSPrincipals* principals, const JS::RealmOptions& op
     // Set up the principals.
     JS_SetCompartmentPrincipals(JS::GetCompartmentForRealm(realm), principals);
 
+    JSCompartment* comp = realm->compartment();
+    if (!comp->realms().append(realm)) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     AutoLockGC lock(rt);
 
-    if (!zone->compartments().append(JS::GetCompartmentForRealm(realm.get()))) {
+    if (!zone->compartments().append(comp)) {
         ReportOutOfMemory(cx);
         return nullptr;
     }
@@ -8479,13 +8488,16 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
         }
     }
 
-    for (RealmsIter r(rt, SkipAtoms); !r.done(); r.next()) {
-        r->checkObjectGroupTablesAfterMovingGC();
-        r->dtoaCache.checkCacheAfterMovingGC();
-        JS::GetCompartmentForRealm(r)->checkWrapperMapAfterMovingGC();
-        r->checkScriptMapsAfterMovingGC();
-        if (r->debugEnvs())
-            r->debugEnvs()->checkHashTablesAfterMovingGC();
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        c->checkWrapperMapAfterMovingGC();
+
+        for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
+            r->checkObjectGroupTablesAfterMovingGC();
+            r->dtoaCache.checkCacheAfterMovingGC();
+            r->checkScriptMapsAfterMovingGC();
+            if (r->debugEnvs())
+                r->debugEnvs()->checkHashTablesAfterMovingGC();
+        }
     }
 }
 #endif
