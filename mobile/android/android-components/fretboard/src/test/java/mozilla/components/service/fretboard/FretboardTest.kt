@@ -4,13 +4,12 @@
 
 package mozilla.components.service.fretboard
 
-import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.anyList
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -20,26 +19,42 @@ class FretboardTest {
     fun testLoadExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
-        `when`(experimentStorage.retrieve()).thenReturn(listOf(Experiment("id")))
         val fretboard = Fretboard(experimentSource, experimentStorage)
-        assertEquals(0, fretboard.experiments.size)
         fretboard.loadExperiments()
         verify(experimentStorage).retrieve()
-        assertEquals(1, fretboard.experiments.size)
-        assertEquals("id", fretboard.experiments[0].id)
     }
 
     @Test
-    fun testUpdateExperiments() {
+    fun testUpdateExperimentsStorageNotLoaded() {
+        val experimentSource = mock(ExperimentSource::class.java)
+        val experimentStorage = mock(ExperimentStorage::class.java)
+        val fretboard = Fretboard(experimentSource, experimentStorage)
+        fretboard.updateExperiments()
+        verify(experimentStorage, times(1)).retrieve()
+        fretboard.updateExperiments()
+        verify(experimentStorage, times(1)).retrieve()
+    }
+
+    @Test
+    fun testUpdateExperimentsEmptyStorage() {
         val experimentSource = mock(ExperimentSource::class.java)
         `when`(experimentSource.getExperiments(ArgumentMatchers.anyList())).thenReturn(listOf(Experiment("id")))
         val experimentStorage = mock(ExperimentStorage::class.java)
         val fretboard = Fretboard(experimentSource, experimentStorage)
-        assertEquals(0, fretboard.experiments.size)
         fretboard.updateExperiments()
         verify(experimentSource).getExperiments(listOf())
         verify(experimentStorage).save(listOf(Experiment("id")))
-        assertEquals(1, fretboard.experiments.size)
-        assertEquals("id", fretboard.experiments[0].id)
+    }
+
+    @Test
+    fun testUpdateExperimentsFromStorage() {
+        val experimentSource = mock(ExperimentSource::class.java)
+        `when`(experimentSource.getExperiments(ArgumentMatchers.anyList())).thenReturn(listOf(Experiment("id")))
+        val experimentStorage = mock(ExperimentStorage::class.java)
+        `when`(experimentStorage.retrieve()).thenReturn(listOf(Experiment("id0")))
+        val fretboard = Fretboard(experimentSource, experimentStorage)
+        fretboard.updateExperiments()
+        verify(experimentSource).getExperiments(listOf(Experiment("id0")))
+        verify(experimentStorage).save(listOf(Experiment("id")))
     }
 }

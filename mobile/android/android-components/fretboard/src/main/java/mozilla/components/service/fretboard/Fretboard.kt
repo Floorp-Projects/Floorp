@@ -14,14 +14,15 @@ class Fretboard(
     private val source: ExperimentSource,
     private val storage: ExperimentStorage
 ) {
-    internal var experiments: List<Experiment> = listOf()
-        private set
+    private var experiments: List<Experiment> = listOf()
+    private var experimentsLoaded: Boolean = false
 
     /**
      * Loads experiments from local storage
      */
     fun loadExperiments() {
         experiments = storage.retrieve()
+        experimentsLoaded = true
     }
 
     /**
@@ -29,6 +30,8 @@ class Fretboard(
      * saves them to local storage
      */
     fun updateExperiments() {
+        if (!experimentsLoaded)
+            loadExperiments()
         try {
             val serverExperiments = source.getExperiments(experiments)
             experiments = serverExperiments
