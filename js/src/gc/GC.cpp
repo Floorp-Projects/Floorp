@@ -7072,6 +7072,14 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
     bool useZeal = false;
 #endif
 
+#ifdef DEBUG
+    {
+        char budgetBuffer[32];
+        budget.describe(budgetBuffer, 32);
+        stats().writeLogMessage("Incremental: %d, useZeal: %d, budget: %s",
+            bool(isIncremental), bool(useZeal), budgetBuffer);
+    }
+#endif
     MOZ_ASSERT_IF(isIncrementalGCInProgress(), isIncremental);
     if (isIncrementalGCInProgress() && budget.isUnlimited())
         changeToNonIncrementalGC();
@@ -7083,6 +7091,8 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
          * Yields between slices occurs at predetermined points in these modes;
          * the budget is not used.
          */
+        stats().writeLogMessage(
+            "Using unlimited budget for two-slice zeal mode");
         budget.makeUnlimited();
     }
 
@@ -7130,7 +7140,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         MOZ_ASSERT(marker.isDrained());
 
         /*
-         * In incremental GCs where we have already performed more than once
+         * In incremental GCs where we have already performed more than one
          * slice we yield after marking with the aim of starting the sweep in
          * the next slice, since the first slice of sweeping can be expensive.
          *
@@ -7147,6 +7157,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
              (useZeal && hasZealMode(ZealMode::YieldBeforeSweeping))))
         {
             lastMarkSlice = true;
+            stats().writeLogMessage("Yeilding before starting sweeping");
             break;
         }
 
@@ -7622,6 +7633,9 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
 
+    stats().writeLogMessage("GC starting in state %s",
+        StateName(incrementalState));
+
     AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
@@ -7633,6 +7647,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
 
         if (reason == JS::gcreason::ABORT_GC) {
             MOZ_ASSERT(!isIncrementalGCInProgress());
+            stats().writeLogMessage("GC aborted by request");
             break;
         }
 
@@ -7672,6 +7687,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         MOZ_RELEASE_ASSERT(CheckGrayMarkingState(rt));
     }
 #endif
+    stats().writeLogMessage("GC ending");
 }
 
 js::AutoEnqueuePendingParseTasksAfterGC::~AutoEnqueuePendingParseTasksAfterGC()
