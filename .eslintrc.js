@@ -54,7 +54,6 @@ module.exports = {
     "files": [
       "devtools/client/inspector/extensions/test/head_devtools_inspector_sidebar.js",
       "storage/test/unit/**",
-      "testing/marionette/test/unit/**",
       "toolkit/components/extensions/**",
       "toolkit/mozapps/extensions/test/xpcshell/**"
     ],
