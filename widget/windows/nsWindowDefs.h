@@ -95,6 +95,12 @@ struct KeyPair
     , mScanCode((aGeneral & 0xFFFF0000) >> 16)
   {
   }
+  KeyPair(uint8_t aGeneral, uint8_t aSpecific, uint16_t aScanCode)
+    : mGeneral(aGeneral)
+    , mSpecific(aSpecific)
+    , mScanCode(aScanCode)
+  {
+  }
 };
 
 #if (WINVER < 0x0600)
