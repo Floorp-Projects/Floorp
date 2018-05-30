@@ -19,7 +19,6 @@
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
 #include "nsIContentSink.h"
-#include "nsIDOMNode.h"
 #include "nsIDTD.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
