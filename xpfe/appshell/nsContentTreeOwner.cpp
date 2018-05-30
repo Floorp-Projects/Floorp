@@ -369,7 +369,7 @@ nsContentTreeOwner::GetHasPrimaryContent(bool* aResult)
 
 NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(const nsAString &originalTarget,
                                                         nsIURI *linkURI,
-                                                        nsIDOMNode *linkNode,
+                                                        nsINode *linkNode,
                                                         bool isAppTab,
                                                         nsAString &_retval)
 {

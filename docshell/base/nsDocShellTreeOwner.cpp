@@ -25,7 +25,7 @@
 // Interfaces needed to be included
 #include "nsPresContext.h"
 #include "nsITooltipListener.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "Link.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MouseEvent.h"
