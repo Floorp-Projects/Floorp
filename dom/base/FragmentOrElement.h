@@ -6,7 +6,7 @@
 
 /*
  * Base class for all element classes as well as nsDocumentFragment.  This
- * provides an implementation of nsIDOMNode, implements nsIContent, provides
+ * provides an implementation of nsINode, implements nsIContent, provides
  * utility methods for subclasses, and so forth.
  */
 
@@ -71,7 +71,7 @@ private:
 
 /**
  * A generic base class for DOM elements and document fragments,
- * implementing many nsIContent, nsIDOMNode and Element methods.
+ * implementing many nsIContent, nsINode and Element methods.
  */
 namespace mozilla {
 namespace dom {

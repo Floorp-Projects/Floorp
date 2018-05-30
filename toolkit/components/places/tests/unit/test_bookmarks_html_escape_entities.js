@@ -59,7 +59,7 @@ add_task(async function() {
   for (let current = xml; current;
     current = current.firstChild || current.nextSibling || current.parentNode.nextSibling) {
     switch (current.nodeType) {
-      case Ci.nsIDOMNode.ELEMENT_NODE:
+      case current.ELEMENT_NODE:
         for (let {name, value} of current.attributes) {
           info("Found attribute: " + name);
           // Check tags, keyword, postData and charSet.
@@ -69,7 +69,7 @@ add_task(async function() {
           }
         }
         break;
-      case Ci.nsIDOMNode.TEXT_NODE:
+      case current.TEXT_NODE:
         // Check Title and description.
         if (!current.data.startsWith("\n") && current.data.includes("test")) {
           Assert.equal(current.data.trim(), unescaped, "Text node should be complete");

@@ -26,7 +26,6 @@
 #include "nsViewManager.h"
 #include "nsIContentInlines.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMNode.h"
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Event.h"

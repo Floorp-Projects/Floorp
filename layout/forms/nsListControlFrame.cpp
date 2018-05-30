@@ -1174,14 +1174,10 @@ nsListControlFrame::GetNumberOfOptions()
 //----------------------------------------------------------------------
 bool nsListControlFrame::CheckIfAllFramesHere()
 {
-  // Get the number of optgroups and options
-  //int32_t numContentItems = 0;
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  if (node) {
-    // XXX Need to find a fail proff way to determine that
-    // all the frames are there
-    mIsAllFramesHere = true;//NS_OK == CountAllChild(node, numContentItems);
-  }
+  // XXX Need to find a fail proof way to determine that
+  // all the frames are there
+  mIsAllFramesHere = true;
+
   // now make sure we have a frame each piece of content
 
   return mIsAllFramesHere;

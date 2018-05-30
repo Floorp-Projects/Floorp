@@ -342,7 +342,7 @@ public:
 
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.
-  already_AddRefed<nsIArray> GetTransferables(nsIDOMNode* aDragTarget);
+  already_AddRefed<nsIArray> GetTransferables(nsINode* aDragTarget);
 
   already_AddRefed<nsIArray>
   GetTransferables(nsILoadContext* aLoadContext);

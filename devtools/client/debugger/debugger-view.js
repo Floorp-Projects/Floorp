@@ -849,7 +849,7 @@ function ResultsPanelContainer() {
 ResultsPanelContainer.prototype = extend(WidgetMethods, {
   /**
    * Sets the anchor node for this container panel.
-   * @param nsIDOMNode aNode
+   * @param Node aNode
    */
   set anchor(aNode) {
     this._anchor = aNode;
@@ -882,7 +882,7 @@ ResultsPanelContainer.prototype = extend(WidgetMethods, {
 
   /**
    * Gets the anchor node for this container panel.
-   * @return nsIDOMNode
+   * @return Node
    */
   get anchor() {
     return this._anchor;

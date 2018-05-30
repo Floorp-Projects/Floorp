@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
+webidl Node;
 
 // Note: the iterator does not handle DOM mutations gracefully. So if
 // the underlying DOM we are iterating over is changed, the behavior
@@ -22,7 +22,7 @@ interface inIDeepTreeWalker : nsISupports
   // by setting this flag to true this behavior can be altered.
   attribute boolean showDocumentsAsNodes;
 
-  void init(in nsIDOMNode aRoot, in unsigned long aWhatToShow);
+  void init(in Node aRoot, in unsigned long aWhatToShow);
 
   // Methods and attributes that look like TreeWalker.
   // Note: normally parentNode cannot go further up on the tree once it reached
@@ -30,16 +30,16 @@ interface inIDeepTreeWalker : nsISupports
   // is set to a node that does not have the root as its ancestor the walk can be
   // continued from there, and once we reach a node that is 'under' the root, the
   // limitation for the parentNode will work again.
-  readonly attribute nsIDOMNode       root;
+  readonly attribute Node             root;
   readonly attribute unsigned long    whatToShow;
-           attribute nsIDOMNode       currentNode;
+           attribute Node             currentNode;
 
-  nsIDOMNode         parentNode();
-  nsIDOMNode         firstChild();
-  nsIDOMNode         lastChild();
-  nsIDOMNode         previousSibling();
-  nsIDOMNode         nextSibling();
-  nsIDOMNode         previousNode();
-  nsIDOMNode         nextNode();
+  Node         parentNode();
+  Node         firstChild();
+  Node         lastChild();
+  Node         previousSibling();
+  Node         nextSibling();
+  Node         previousNode();
+  Node         nextNode();
 };
 

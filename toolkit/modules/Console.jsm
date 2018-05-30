@@ -26,6 +26,7 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
+Cu.importGlobalProperties(["Element"]);
 
 var gTimerRegistry = new Map();
 
@@ -140,7 +141,7 @@ function stringify(aThing, aAllowNewLines) {
 
   if (typeof aThing == "object") {
     let type = getCtorName(aThing);
-    if (aThing instanceof Ci.nsIDOMNode && aThing.tagName) {
+    if (Element.isInstance(aThing)) {
       return debugElement(aThing);
     }
     type = (type == "Object" ? "" : type + " ");
@@ -224,7 +225,7 @@ function log(aThing) {
           frame = frame.caller;
         }
       }
-    } else if (aThing instanceof Ci.nsIDOMNode && aThing.tagName) {
+    } else if (Element.isInstance(aThing)) {
       reply += "  " + debugElement(aThing) + "\n";
     } else {
       let keys = Object.getOwnPropertyNames(aThing);

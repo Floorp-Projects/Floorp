@@ -2557,7 +2557,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
 
 /**
  * Get the "raw" (i.e. non-computed) shape definition on the given node.
- * @param {nsIDOMNode} node the node to analyze
+ * @param {Node} node the node to analyze
  * @param {String} property the CSS property for which a value should be retrieved.
  * @returns {String} the value of the given CSS property on the given node.
  */

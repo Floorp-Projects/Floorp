@@ -116,7 +116,7 @@ function mutateTable() {
     return;
   }
 
-  ensureAccessibleTree("start");
+  ensureAccessibleTreeForId("start");
 
   TalosContentProfiler.resume("tablemutation start", true).then(() => {
     var start = new Date(); // eslint-disable-line mozilla/avoid-Date-timing

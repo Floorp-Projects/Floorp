@@ -33,7 +33,7 @@
     var gFocusHandler = {
       handleEvent: function gFocusHandler_handleEvent(aEvent) {
         var elm = aEvent.target;
-        if (elm.nodeType != nsIDOMNode.ELEMENT_NODE)
+        if (elm.nodeType != Node.ELEMENT_NODE)
           return;
 
         gTooltipElm.style.display = "block";
@@ -47,7 +47,7 @@
         gTooltipElm.style.display = "none";
 
         var elm = aEvent.target;
-        if (elm.nodeType == nsIDOMNode.ELEMENT_NODE)
+        if (elm.nodeType == Node.ELEMENT_NODE)
           elm.removeAttribute("aria-describedby");
       }
     };

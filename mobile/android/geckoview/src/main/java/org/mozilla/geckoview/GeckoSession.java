@@ -2616,50 +2616,55 @@ public class GeckoSession extends LayerSession
         public void onScrollChanged(GeckoSession session, int scrollX, int scrollY);
     }
 
-    private final TrackingProtection mTrackingProtection = new TrackingProtection(this);
-
     /**
      * GeckoSession applications implement this interface to handle tracking
      * protection events.
      **/
     public interface TrackingProtectionDelegate {
+        @Retention(RetentionPolicy.SOURCE)
         @IntDef(flag = true,
-                value = {CATEGORY_AD, CATEGORY_ANALYTIC, CATEGORY_SOCIAL,
-                         CATEGORY_CONTENT})
+                value = { CATEGORY_NONE, CATEGORY_AD, CATEGORY_ANALYTIC,
+                          CATEGORY_SOCIAL, CATEGORY_CONTENT, CATEGORY_ALL,
+                          CATEGORY_TEST })
         public @interface Category {}
+        static final int CATEGORY_NONE = 0;
+        /**
+         * Block advertisement trackers.
+         */
         static final int CATEGORY_AD = 1 << 0;
+        /**
+         * Block analytics trackers.
+         */
         static final int CATEGORY_ANALYTIC = 1 << 1;
+        /**
+         * Block social trackers.
+         */
         static final int CATEGORY_SOCIAL = 1 << 2;
+        /**
+         * Block content trackers.
+         */
         static final int CATEGORY_CONTENT = 1 << 3;
+        /**
+         * Block Gecko test trackers (used for tests).
+         */
+        static final int CATEGORY_TEST = 1 << 4;
+        /**
+         * Block all known trackers.
+         */
+        static final int CATEGORY_ALL = (1 << 5) - 1;
 
         /**
          * A tracking element has been blocked from loading.
+         * Set blocked tracker categories via GeckoRuntimeSettings and enable
+         * tracking protection via GeckoSessionSettings.
          *
         * @param session The GeckoSession that initiated the callback.
         * @param uri The URI of the blocked element.
         * @param categories The tracker categories of the blocked element.
-        *                   One or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
-        *                   flags.
+        *                   One or more of the {@link #CATEGORY_AD CATEGORY_*} flags.
         */
         void onTrackerBlocked(GeckoSession session, String uri,
                               @Category int categories);
-    }
-
-    /**
-     * Enable tracking protection.
-     * @param categories The categories of trackers that should be blocked.
-     *                   Use one or more of the {@link TrackingProtectionDelegate#CATEGORY_AD}
-     *                   flags.
-     **/
-    public void enableTrackingProtection(@TrackingProtectionDelegate.Category int categories) {
-        mTrackingProtection.enable(categories);
-    }
-
-    /**
-     * Disable tracking protection.
-     **/
-    public void disableTrackingProtection() {
-        mTrackingProtection.disable();
     }
 
     /**

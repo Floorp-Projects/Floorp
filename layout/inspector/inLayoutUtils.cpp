@@ -32,7 +32,7 @@ inLayoutUtils::GetEventStateManagerFor(Element& aElement)
 }
 
 nsIDocument*
-inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
+inLayoutUtils::GetSubDocumentFor(nsINode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   if (content) {

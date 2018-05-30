@@ -43,7 +43,7 @@ Object.defineProperty(this, "EVENTS", {
  * A table widget with various features like resizble/toggleable columns,
  * sorting, keyboard navigation etc.
  *
- * @param {nsIDOMNode} node
+ * @param {Node} node
  *        The container element for the table widget.
  * @param {object} options
  *        - initialColumns: map of key vs display name for initial columns of

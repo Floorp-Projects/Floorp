@@ -28,15 +28,14 @@ nsDragServiceProxy::~nsDragServiceProxy()
 }
 
 static void
-GetPrincipalURIFromNode(nsCOMPtr<nsIDOMNode>& sourceNode,
+GetPrincipalURIFromNode(nsCOMPtr<nsINode>& sourceNode,
                         nsCString& aPrincipalURISpec)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(sourceNode);
-  if (!node) {
+  if (!sourceNode) {
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = sourceNode->NodePrincipal();
   nsCOMPtr<nsIURI> principalURI;
   nsresult rv = principal->GetURI(getter_AddRefs(principalURI));
   if (NS_FAILED(rv) || !principalURI) {

@@ -52,7 +52,7 @@ const GRAPH_REGION_STRIPES_COLOR = "rgba(237,38,85,0.2)";
  *   ]
  * where each item in the array represents a point in the graph.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the graph.
  * @param object options [optional]
  *  `metric`: The metric displayed in the graph, e.g. "fps" or "bananas".
@@ -339,7 +339,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
 
   /**
    * Creates the gutter node when constructing this graph.
-   * @return nsIDOMNode
+   * @return Node
    */
   _createGutter: function() {
     let gutter = this._document.createElementNS(HTML_NS, "div");
@@ -352,7 +352,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
 
   /**
    * Creates the gutter line nodes when constructing this graph.
-   * @return nsIDOMNode
+   * @return Node
    */
   _createGutterLine: function(type) {
     let line = this._document.createElementNS(HTML_NS, "div");
@@ -365,7 +365,7 @@ LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
 
   /**
    * Creates the tooltip nodes when constructing this graph.
-   * @return nsIDOMNode
+   * @return Node
    */
   _createTooltip: function(type, arrow, info, metric) {
     let tooltip = this._document.createElementNS(HTML_NS, "div");

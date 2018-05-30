@@ -1,8 +1,6 @@
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function updateDocumentSourceMaps(src) {
-  const nsIDOMNode = Ci.nsIDOMNode;
-
   const nsISAXXMLReader = Ci.nsISAXXMLReader;
   const saxReader = Cc["@mozilla.org/saxparser/xmlreader;1"]
                       .createInstance(nsISAXXMLReader);

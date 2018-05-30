@@ -149,7 +149,7 @@ class RequestListContent extends Component {
    * The predicate used when deciding whether a popup should be shown
    * over a request item or not.
    *
-   * @param nsIDOMNode target
+   * @param Node target
    *        The element node currently being hovered.
    * @param object tooltip
    *        The current tooltip instance.

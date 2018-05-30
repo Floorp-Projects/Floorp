@@ -13,7 +13,6 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsGenericHTMLElement.h" // nsGenericHTMLFormElement
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIFormControl.h"
 #include "RadioNodeList.h"
 #include "jsfriendapi.h"

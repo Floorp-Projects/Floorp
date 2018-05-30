@@ -5,11 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
 interface nsIAccessible;
 interface nsIWeakReference;
 interface nsIPresShell;
 interface nsIAccessiblePivot;
+
+webidl Node;
 
 /**
  * An interface for in-process accessibility clients wishing to get an
@@ -31,7 +32,7 @@ interface nsIAccessibilityService : nsISupports
    * @param aNode The DOM node to get an accessible for.
    * @return The nsIAccessible for the given DOM node.
    */
-  nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
+  nsIAccessible getAccessibleFor(in Node aNode);
 
    /**
     * Returns accessible role as a string.
@@ -73,7 +74,7 @@ interface nsIAccessibilityService : nsISupports
    *
    * @return       cached accessible for the given DOM node if any
    */
-  nsIAccessible getAccessibleFromCache(in nsIDOMNode aNode);
+  nsIAccessible getAccessibleFromCache(in Node aNode);
 
   /**
    * Create a new pivot for tracking a position and traversing a subtree.

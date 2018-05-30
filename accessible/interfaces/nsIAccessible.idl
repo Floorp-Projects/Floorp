@@ -7,9 +7,10 @@
 #include "nsIArray.idl"
 
 interface nsIPersistentProperties;
-interface nsIDOMNode;
 interface nsIAccessibleDocument;
 interface nsIAccessibleRelation;
+
+webidl Node;
 
 %{C++
 namespace mozilla {
@@ -76,7 +77,7 @@ interface nsIAccessible : nsISupports
   /**
    * The DOM node this nsIAccessible is associated with.
    */
-  readonly attribute nsIDOMNode DOMNode;
+  readonly attribute Node DOMNode;
 
   /**
     * For remote accessibles the id of the related DOM node.

@@ -35,8 +35,6 @@ public:
                          bool aPreallocateChildren) const override;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
-
   // WebIDL
 
   static already_AddRefed<HTMLAudioElement>

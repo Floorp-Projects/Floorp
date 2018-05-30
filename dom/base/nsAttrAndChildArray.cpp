@@ -28,14 +28,14 @@ using mozilla::CheckedUint32;
 CACHE_POINTER_SHIFT indicates how many steps to downshift the |this| pointer.
 It should be small enough to not cause collisions between adjecent arrays, and
 large enough to make sure that all indexes are used. The size below is based
-on the size of the smallest possible element (currently 24[*] bytes) which is
-the smallest distance between two nsAttrAndChildArray. 24/(2^_5_) is 0.75.
-This means that two adjacent nsAttrAndChildArrays will overlap one in 4 times.
+on the size of the smallest possible element (currently 20[*] bytes) which is
+the smallest distance between two nsAttrAndChildArray. 20/(2^_5_) is 0.625.
+This means that two adjacent nsAttrAndChildArrays will overlap one in 2.7 times.
 However not all elements will have enough children to get cached. And any
 allocator that doesn't return addresses aligned to 64 bytes will ensure that
 any index will get used.
 
-[*] sizeof(Element) + 4 bytes for nsIDOMNode vtable pointer.
+[*] sizeof(Element).  Except is that really 20 bytes?  Seems dubious!
 */
 
 #define CACHE_POINTER_SHIFT 5
