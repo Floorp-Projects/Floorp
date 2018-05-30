@@ -25,13 +25,13 @@ runWithMSE(async (ms, el) => {
   // chunk 1: segments 5-8
   // chunk 2: segments 9-13
   // We then fill the timeline so that it seamlessly plays the chunks in order 0, 2, 1.
-  const vchunks = [ {start: 0, end: 3.2033},
+  const vchunks = [{start: 0, end: 3.2033},
                     { start: 3.2033, end: 6.4066},
-                    { start: 6.4066, end: 10.01} ];
+                    { start: 6.4066, end: 10.01}];
   const firstvoffset = vchunks[2].end - vchunks[2].start; // Duration of chunk 2
   const secondvoffset = -(vchunks[1].end - vchunks[1].start); // -(Duration of chunk 1)
 
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
   is(videosb.buffered.length, 1, "No discontinuity");
   isfuzzy(videosb.buffered.start(0), vchunks[0].start, eps, "Chunk start");
@@ -49,7 +49,7 @@ runWithMSE(async (ms, el) => {
   isfuzzy(videosb.buffered.start(0), vchunks[0].start, eps, "Chunk start");
   isfuzzy(videosb.buffered.end(0), vchunks[2].end, eps, "Chunk end");
   audiosb.timestampOffset = 3;
-  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
   await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 12), ".m4s");
   is(audiosb.buffered.length, 1, "No audio discontinuity");
   isfuzzy(audiosb.buffered.start(0), 3, eps, "Audio starts at 3");
@@ -67,7 +67,7 @@ runWithMSE(async (ms, el) => {
   el.play();
   el.currentTime = el.buffered.start(0);
   ms.endOfStream();
-  await Promise.all([ once(el, "ended"), once(el, "seeked") ]);
+  await Promise.all([once(el, "ended"), once(el, "seeked")]);
   SimpleTest.finish();
 });
 

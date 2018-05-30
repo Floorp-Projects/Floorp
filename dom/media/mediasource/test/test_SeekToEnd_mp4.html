@@ -19,15 +19,15 @@ runWithMSE(async (ms, el) => {
   const videosb = ms.addSourceBuffer("video/mp4");
   const audiosb = ms.addSourceBuffer("audio/mp4");
 
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 6), ".m4s");
-  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", [ "init" ], ".mp4");
+  await fetchAndLoad(audiosb, "bipbop/bipbop_audio", ["init"], ".mp4");
   is(videosb.buffered.length, 1, "continuous buffered range");
   // Ensure we have at least 2s less audio than video.
   audiosb.appendWindowEnd = videosb.buffered.end(0) - 2;
   await fetchAndLoad(audiosb, "bipbop/bipbop_audio", range(1, 6), ".m4s");
   ms.endOfStream();
-  await Promise.all([ once(el, "durationchange"), once(ms, "sourceended") ]);
+  await Promise.all([once(el, "durationchange"), once(ms, "sourceended")]);
   ok(true, "endOfStream completed");
   // Seek to the middle of the gap where audio is missing. As we are in readyState = ended
   // seeking must complete.

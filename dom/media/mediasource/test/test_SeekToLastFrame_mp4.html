@@ -16,7 +16,7 @@ runWithMSE(async (ms, el) => {
   await once(ms, "sourceopen");
   ok(true, "Receive a sourceopen event");
   const sb = ms.addSourceBuffer("video/mp4");
-  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", [ "init" ], ".mp4");
+  await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", ["init"], ".mp4");
   await fetchAndLoad(sb, "bipbop/bipbop_480_624kbps-video", range(1, 3), ".m4s");
   el.play();
   // let seek to the last audio frame.

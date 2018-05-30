@@ -16,11 +16,11 @@ runWithMSE(async (ms, el) => {
   await once(ms, "sourceopen");
   ok(true, "Receive a sourceopen event");
   const videosb = ms.addSourceBuffer("video/mp4");
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["init"], ".mp4");
   // Set appendWindowEnd to ensure we only have about 6 frames worth.
   // We must feed at least 6 frames to pass the MDSM pre-roll.
   videosb.appendWindowEnd = .4;
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", ["1"], ".m4s");
   info("Invoking play()");
   const p = once(el, "playing");
   await el.play();
@@ -33,7 +33,7 @@ runWithMSE(async (ms, el) => {
   isfuzzy(el.currentTime, videosb.buffered.end(0) - 1 / 30,
           0.04, `Got a waiting event at ${el.currentTime}`);
   videosb.appendWindowEnd = 1;
-  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ 1 ], ".m4s");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [1], ".m4s");
   ms.endOfStream();
   await once(el, "ended");
   // These fuzz factors are bigger than they should be. We should investigate
