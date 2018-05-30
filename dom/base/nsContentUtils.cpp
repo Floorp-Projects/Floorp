@@ -3439,9 +3439,7 @@ nsContentUtils::GetContextForContent(const nsIContent* aContent)
 bool
 nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
                              nsIDocument* aLoadingDocument,
-                             nsIPrincipal* aLoadingPrincipal,
-                             int16_t* aImageBlockingStatus,
-                             uint32_t aContentType)
+                             nsIPrincipal* aLoadingPrincipal)
 {
   MOZ_ASSERT(aURI, "Must have a URI");
   MOZ_ASSERT(aLoadingDocument, "Must have a document");
@@ -3473,11 +3471,6 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
       CheckLoadURIWithPrincipal(aLoadingPrincipal, aURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
-      if (aImageBlockingStatus) {
-        // Reject the request itself, not all requests to the relevant
-        // server...
-        *aImageBlockingStatus = nsIContentPolicy::REJECT_REQUEST;
-      }
       return false;
     }
   }
@@ -3487,7 +3480,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
                  aLoadingPrincipal, // triggering principal
                  aNode,
                  nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                 aContentType);
+                 nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   int16_t decision = nsIContentPolicy::ACCEPT;
 
@@ -3496,10 +3489,6 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
                                  &decision,
                                  GetContentPolicy());
 
-  if (aImageBlockingStatus) {
-    *aImageBlockingStatus =
-      NS_FAILED(rv) ? nsIContentPolicy::REJECT_REQUEST : decision;
-  }
   return NS_FAILED(rv) ? false : NS_CP_ACCEPTED(decision);
 }
 
