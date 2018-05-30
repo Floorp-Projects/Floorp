@@ -33,7 +33,7 @@ class EditToolbar(
     context: Context,
     private val toolbar: BrowserToolbar
 ) : ViewGroup(context) {
-    private val urlView = InlineAutocompleteEditText(context).apply {
+    internal val urlView = InlineAutocompleteEditText(context).apply {
         imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
         gravity = Gravity.CENTER_VERTICAL
         background = null

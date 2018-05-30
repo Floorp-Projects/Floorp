@@ -88,6 +88,16 @@ class BrowserToolbar @JvmOverloads constructor(
         set(value) { displayToolbar.onUrlClicked = value }
 
     /**
+     * Sets the text to be displayed when the URL of the toolbar is empty.
+     */
+    var hint: String
+        get() = displayToolbar.urlView.hint.toString()
+        set(value) {
+            displayToolbar.urlView.hint = value
+            editToolbar.urlView.hint = value
+        }
+
+    /**
      * Sets the padding to be applied to the URL text (in display mode).
      */
     fun setUrlTextPadding(

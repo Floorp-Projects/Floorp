@@ -321,10 +321,23 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        // Display a URL
+        // Display a URL and set custom text to be displayed if no URL is set
         ////////////////////////////////////////////////////////////////////////////////////////////
 
+        toolbar.hint = "Search or enter address"
         toolbar.url = "https://www.nytimes.com/video"
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        // Whenever an URL was entered.. pretend to load it and re-insert it into the toolbar
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        toolbar.setOnUrlChangeListener { url ->
+            simulateReload(urlBoxProgress)
+
+            if (url.isNotEmpty()) {
+                toolbar.url = url
+            }
+        }
     }
 
     // For testing purposes
