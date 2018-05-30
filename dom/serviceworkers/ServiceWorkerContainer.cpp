@@ -301,11 +301,11 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   // using the ClientInfo instead of doing a window-specific check here.
   // See bug 1455077 for further investigation.
   nsCOMPtr<nsILoadInfo> secCheckLoadInfo =
-    new LoadInfo(doc->NodePrincipal(), // loading principal
-                 doc->NodePrincipal(), // triggering principal
-                 doc,                  // loading node
-                 nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
-                 nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
+    new mozilla::net::LoadInfo(doc->NodePrincipal(), // loading principal
+                               doc->NodePrincipal(), // triggering principal
+                               doc,                  // loading node
+                               nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
+                               nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER);
 
   // Check content policy.
   int16_t decision = nsIContentPolicy::ACCEPT;
