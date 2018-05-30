@@ -107,17 +107,29 @@ async def retry_download(*args, **kwargs):  # noqa: E999
 
 async def download(url, dest, mode=None):  # noqa: E999
     log.info("Downloading %s to %s", url, dest)
-
+    chunk_size = 4096
     bytes_downloaded = 0
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-        async with session.get(url, timeout=60) as resp:
+        async with session.get(url, timeout=120) as resp:
+            # Additional early logging for download timeouts.
+            log.debug("Fetching from url %s", resp.url)
+            for history in resp.history:
+                log.debug("Redirection history: %s", history.url)
+            if 'Content-Length' in resp.headers:
+                log.debug('Content-Length expected for %s: %s',
+                          url, resp.headers['Content-Length'])
+            log_interval = chunk_size * 1024
             with open(dest, 'wb') as fd:
                 while True:
-                    chunk = await resp.content.read(4096)
+                    chunk = await resp.content.read(chunk_size)
                     if not chunk:
                         break
                     fd.write(chunk)
                     bytes_downloaded += len(chunk)
+                    log_interval -= len(chunk)
+                    if log_interval <= 0:
+                        log.debug("Bytes downloaded for %s: %d", url, bytes_downloaded)
+                        log_interval = chunk_size * 1024
 
             log.debug('Downloaded %s bytes', bytes_downloaded)
             if 'content-length' in resp.headers:
@@ -403,14 +415,19 @@ async def async_main(args, signing_certs):
             mbsdiff=definition.get('mbsdiff_binary')
         )
         await workenv.setup()
-        tasks.append(asyncio.ensure_future(manage_partial(
-            partial_def=definition,
-            filename_template=args.filename_template,
-            artifacts_dir=args.artifacts_dir,
-            work_env=workenv,
-            signing_certs=signing_certs)
-        ))
-
+        tasks.append(asyncio.ensure_future(retry_async(
+                                           manage_partial,
+                                           retry_exceptions=(
+                                               aiohttp.ClientError,
+                                               asyncio.TimeoutError
+                                           ),
+                                           kwargs=dict(
+                                               partial_def=definition,
+                                               filename_template=args.filename_template,
+                                               artifacts_dir=args.artifacts_dir,
+                                               work_env=workenv,
+                                               signing_certs=signing_certs
+                                           ))))
     manifest = await asyncio.gather(*tasks)
     return manifest
 
