@@ -873,11 +873,11 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   line-height: 30px;
 }
 
-.no-results-container:nth-child(2) {
+.no-results-image-container {
   margin-top: 64px;
 }
 
-.no-results-container:nth-child(2) > image {
+.no-results-image {
   list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-results.svg");
   width: 380px;
   height: 293px;
