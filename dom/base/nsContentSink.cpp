@@ -878,7 +878,6 @@ nsContentSink::PrefetchPreloadHref(const nsAString &aHref,
     NS_NewURI(getter_AddRefs(uri), aHref, encoding,
               mDocument->GetDocBaseURI());
     if (uri) {
-      nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       if (aLinkTypes & nsStyleLinkElement::ePRELOAD) {
         nsAttrValue asAttr;
         Link::ParseAsValue(aAs, asAttr);
@@ -897,9 +896,9 @@ nsContentSink::PrefetchPreloadHref(const nsAString &aHref,
           policyType = nsIContentPolicy::TYPE_INVALID;
         }
 
-        prefetchService->PreloadURI(uri, mDocumentURI, domNode, policyType);
+        prefetchService->PreloadURI(uri, mDocumentURI, aSource, policyType);
       } else {
-        prefetchService->PrefetchURI(uri, mDocumentURI, domNode,
+        prefetchService->PrefetchURI(uri, mDocumentURI, aSource,
                                      aLinkTypes & nsStyleLinkElement::ePREFETCH);
       }
     }
