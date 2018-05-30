@@ -1,3 +1,20 @@
+# 0.8
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.41
+  * Kotlin coroutines 0.22.5
+  * GeckoView Nightly
+    * date: 2018.05.16
+    * version: 62.0.20180516100458
+    * revision: dedd25bfd2794eaba95225361f82c701e49c9339
+
+* **browser-session**, **engine-gecko**, **engine-system**: Added SSL information and secure state to session, and made it observable.
+* **browser-toolbar**: Introduced page, browser and navigation actions and allow for them to be dynamically shown, hidden and updated. Added ability to specify custom behaviour for clicks on URL in display mode. Added support for custom background actions. Enabled layout transitions by default.
+* **service-telemetry**: Added new mobile-metrics ping type.
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.7...v0.8)
+
 # 0.7
 
 * Compiled against:
