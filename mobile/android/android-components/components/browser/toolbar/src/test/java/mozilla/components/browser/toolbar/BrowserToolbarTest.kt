@@ -364,4 +364,16 @@ class BrowserToolbarTest {
         assertEquals(42, displayToolbar.browserActionMargin)
         assertEquals(23, displayToolbar.urlBoxMargin)
     }
+
+    @Test
+    fun `onUrlClicked is forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(RuntimeEnvironment.application)
+        val displayToolbar = toolbar.displayToolbar
+
+        assertTrue(displayToolbar.onUrlClicked())
+
+        toolbar.onUrlClicked = { false }
+
+        assertFalse(displayToolbar.onUrlClicked())
+    }
 }

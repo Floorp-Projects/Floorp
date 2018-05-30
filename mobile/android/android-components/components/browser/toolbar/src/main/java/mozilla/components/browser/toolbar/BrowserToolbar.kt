@@ -79,6 +79,15 @@ class BrowserToolbar @JvmOverloads constructor(
         set(value) { displayToolbar.urlBoxMargin = value }
 
     /**
+     * Sets a lambda that will be invoked whenever the URL in display mode was clicked. Only if this
+     * lambda returns <code>true</code> the toolbar will switch to editing mode. Return
+     * <code>false</code> to not switch to editing mode and handle the click manually.
+     */
+    var onUrlClicked: () -> Boolean
+        get() = displayToolbar.onUrlClicked
+        set(value) { displayToolbar.onUrlClicked = value }
+
+    /**
      * Sets the padding to be applied to the URL text (in display mode).
      */
     fun setUrlTextPadding(

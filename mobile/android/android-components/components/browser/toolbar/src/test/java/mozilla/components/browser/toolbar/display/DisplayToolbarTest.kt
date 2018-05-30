@@ -25,6 +25,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
@@ -526,6 +527,28 @@ class DisplayToolbarTest {
         assertTrue(viewRect.contains(reloadViewRect))
         assertTrue(viewRect.contains(readerViewRect))
         assertEquals(urlViewRect.width() + reloadViewRect.width() + readerViewRect.width(), viewRect.width())
+    }
+
+    @Test
+    fun `toolbar only switches to editing mode if onUrlClicked returns true`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)
+
+        displayToolbar.urlView.performClick()
+
+        verify(toolbar).editMode()
+
+        reset(toolbar)
+        displayToolbar.onUrlClicked = { false }
+        displayToolbar.urlView.performClick()
+
+        verify(toolbar, never()).editMode()
+
+        reset(toolbar)
+        displayToolbar.onUrlClicked = { true }
+        displayToolbar.urlView.performClick()
+
+        verify(toolbar).editMode()
     }
 
     companion object {

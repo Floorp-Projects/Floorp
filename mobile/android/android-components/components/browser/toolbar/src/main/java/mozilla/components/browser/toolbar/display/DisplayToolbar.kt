@@ -85,7 +85,9 @@ internal class DisplayToolbar(
         setSingleLine(true)
 
         setOnClickListener {
-            toolbar.editMode()
+            if (onUrlClicked()) {
+                toolbar.editMode()
+            }
         }
     }
 
@@ -135,6 +137,9 @@ internal class DisplayToolbar(
             }
             field = value
         }
+
+    // Callback to determine whether to open edit mode or not.
+    internal var onUrlClicked: () -> Boolean = { true }
 
     init {
         addView(iconView)
