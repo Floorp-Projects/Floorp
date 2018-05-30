@@ -136,7 +136,7 @@ PaymentResponse::Complete(PaymentComplete result, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mOwner);
+  nsIGlobalObject* global = mOwner->AsGlobal();
   ErrorResult errResult;
   RefPtr<Promise> promise = Promise::Create(global, errResult);
   if (errResult.Failed()) {

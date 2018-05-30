@@ -650,7 +650,7 @@ PaymentRequest::CanMakePayment(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   ErrorResult result;
   RefPtr<Promise> promise = Promise::Create(global, result);
   if (result.Failed()) {
@@ -694,7 +694,7 @@ PaymentRequest::Show(const Optional<OwningNonNull<Promise>>& aDetailsPromise,
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   ErrorResult result;
   RefPtr<Promise> promise = Promise::Create(global, result);
   if (result.Failed()) {
@@ -794,7 +794,7 @@ PaymentRequest::Abort(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   ErrorResult result;
   RefPtr<Promise> promise = Promise::Create(global, result);
   if (result.Failed()) {
