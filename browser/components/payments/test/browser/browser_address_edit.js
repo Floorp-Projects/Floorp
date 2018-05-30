@@ -163,6 +163,10 @@ add_task(async function test_edit_link() {
       for (let [key, val] of Object.entries(address)) {
         is(savedAddress[key], val, "Check updated " + key);
       }
+      ok(savedAddress.guid, "Address has a guid");
+      ok(savedAddress.name, "Address has a name");
+      ok(savedAddress.name.includes(address["given-name"]) &&
+         savedAddress.name.includes(address["family-name"]), "Address.name was computed");
 
       state = await PTU.DialogContentUtils.waitForState(content, (state) => {
         return state.page.id == "payment-summary";
@@ -248,6 +252,10 @@ add_task(async function test_add_payer_contact_name_email_link() {
       for (let [key, val] of Object.entries(address)) {
         is(savedAddress[key], val, "Check " + key);
       }
+      ok(savedAddress.guid, "Address has a guid");
+      ok(savedAddress.name, "Address has a name");
+      ok(savedAddress.name.includes(address["given-name"]) &&
+         savedAddress.name.includes(address["family-name"]), "Address.name was computed");
     }, EXPECTED_ADDRESS);
 
     info("clicking cancel");
@@ -347,6 +355,10 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
       for (let [key, val] of Object.entries(address)) {
         is(savedAddress[key], val + "1", "Check updated " + key);
       }
+      ok(savedAddress.guid, "Address has a guid");
+      ok(savedAddress.name, "Address has a name");
+      ok(savedAddress.name.includes(address["given-name"]) &&
+         savedAddress.name.includes(address["family-name"]), "Address.name was computed");
     }, EXPECTED_ADDRESS);
 
     info("clicking cancel");
@@ -360,7 +372,7 @@ add_task(async function test_edit_payer_contact_name_email_phone_link() {
  * Test that we can correctly add an address from a private window
  */
 add_task(async function test_private_persist_addresses() {
-  await setup();
+  let prefilledGuids = await setup();
 
   is((await formAutofillStorage.addresses.getAll()).length, 1,
      "Setup results in 1 stored address at start of test");
@@ -379,12 +391,6 @@ add_task(async function test_private_persist_addresses() {
       }
     );
     info("/setupPaymentDialog");
-
-    // listen for shippingaddresschange event in merchant (private) window
-    info("listen for shippingaddresschange");
-    let shippingAddressChangePromise = ContentTask.spawn(browser, {
-      eventName: "shippingaddresschange",
-    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
 
     let addressToAdd = PTU.Addresses.Temp;
     const addOptions = {
@@ -415,14 +421,47 @@ add_task(async function test_private_persist_addresses() {
     await verifyPersistCheckbox(frame, addOptions);
     await submitAddressForm(frame, addressToAdd, addOptions);
 
-    await shippingAddressChangePromise;
-    info("got shippingaddresschange event");
-
-    // verify address picker has more addresses and new selected
-    info("check shipping addresses");
-    let addresses =
+    let shippingAddresses =
       await spawnPaymentDialogTask(frame, PTU.DialogContentTasks.getShippingAddresses);
-    is(addresses.options.length, 2, "Got expected number of shipping addresses");
+    info("shippingAddresses", shippingAddresses);
+    let addressOptions = shippingAddresses.options;
+    // expect the prefilled address + the new temporary address
+    is(addressOptions.length, 2, "The picker has the expected number of address options");
+    let tempAddressOption = addressOptions.find(addr => addr.guid != prefilledGuids.address1GUID);
+    let tempAddressGuid = tempAddressOption.guid;
+    // select the new address
+    await spawnPaymentDialogTask(frame,
+                                 PTU.DialogContentTasks.selectShippingAddressByGuid,
+                                 tempAddressGuid);
+
+    info("awaiting the shippingaddresschange event");
+    await ContentTask.spawn(browser, {
+      eventName: "shippingaddresschange",
+    }, PTU.ContentTasks.awaitPaymentRequestEventPromise);
+
+    await spawnPaymentDialogTask(frame, async (args) => {
+      let {address, tempAddressGuid} = args;
+      let {
+        PaymentTestUtils: PTU,
+      } = ChromeUtils.import("resource://testing-common/PaymentTestUtils.jsm", {});
+
+      let state = await PTU.DialogContentUtils.waitForState(content, (state) => {
+        return state.selectedShippingAddress == tempAddressGuid;
+      }, "Check the temp address is the selectedShippingAddress");
+
+      let addressGUIDs = Object.keys(state.tempAddresses);
+      is(addressGUIDs.length, 1, "Check there is one address");
+
+      is(addressGUIDs[0], tempAddressGuid, "guid from state and picker options match");
+      let tempAddress = state.tempAddresses[tempAddressGuid];
+      for (let [key, val] of Object.entries(address)) {
+        is(tempAddress[key], val, "Check field " + key);
+      }
+      ok(tempAddress.guid, "Address has a guid");
+      ok(tempAddress.name, "Address has a name");
+      ok(tempAddress.name.includes(address["given-name"]) &&
+         tempAddress.name.includes(address["family-name"]), "Address.name was computed");
+    }, {address: addressToAdd, tempAddressGuid});
 
     info("clicking pay");
     spawnPaymentDialogTask(frame, PTU.DialogContentTasks.completePayment);
@@ -430,8 +469,18 @@ add_task(async function test_private_persist_addresses() {
     // Add a handler to complete the payment above.
     info("acknowledging the completion from the merchant page");
     let result = await ContentTask.spawn(browser, {}, PTU.ContentTasks.addCompletionHandler);
-    is(result.response.methodName, "basic-card", "Check methodName");
+
+    // Verify response has the expected properties
     info("response: " + JSON.stringify(result.response));
+    let responseAddress = result.response.shippingAddress;
+    ok(responseAddress, "response should contain the shippingAddress");
+    ok(responseAddress.recipient.includes(addressToAdd["given-name"]),
+       "Check given-name matches recipient in response");
+    ok(responseAddress.recipient.includes(addressToAdd["family-name"]),
+       "Check family-name matches recipient in response");
+    is(responseAddress.addressLine[0], addressToAdd["street-address"],
+       "Check street-address in response");
+    is(responseAddress.country, addressToAdd.country, "Check country in response");
   });
   // verify formautofill store doesnt have the new temp addresses
   is((await formAutofillStorage.addresses.getAll()).length, 1,

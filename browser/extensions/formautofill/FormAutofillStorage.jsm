@@ -92,10 +92,10 @@
  * When saving or updating a credit-card record, the storage will encrypt the
  * value of "cc-number", store the encrypted number in "cc-number-encrypted"
  * field, and replace "cc-number" field with the masked number. These all happen
- * in "_computeFields". We do reverse actions in "_stripComputedFields", which
+ * in "computeFields". We do reverse actions in "_stripComputedFields", which
  * decrypts "cc-number-encrypted", restores it to "cc-number", and deletes
  * "cc-number-encrypted". Therefore, calling "_stripComputedFields" followed by
- * "_computeFields" can make sure the encrypt-related fields are up-to-date.
+ * "computeFields" can make sure the encrypt-related fields are up-to-date.
  *
  * In general, you have to decrypt the number by your own outside FormAutofillStorage
  * when necessary. However, you will get the decrypted records when querying
@@ -358,7 +358,7 @@ class AutofillRecords {
     } else {
       this._ensureMatchingVersion(record);
       recordToSave = record;
-      this._computeFields(recordToSave);
+      this.computeFields(recordToSave);
     }
 
     if (sourceSync) {
@@ -442,7 +442,7 @@ class AutofillRecords {
       syncMetadata.changeCounter += 1;
     }
 
-    this._computeFields(recordFound);
+    this.computeFields(recordFound);
     this._data[recordFoundIndex] = recordFound;
 
     this._store.saveSoon();
@@ -755,7 +755,7 @@ class AutofillRecords {
       }
     }
 
-    this._computeFields(newRecord);
+    this.computeFields(newRecord);
   }
 
   /**
@@ -777,7 +777,7 @@ class AutofillRecords {
     // uploaded.
     this._getSyncMetaData(forkedLocalRecord, true);
 
-    this._computeFields(forkedLocalRecord);
+    this.computeFields(forkedLocalRecord);
     this._data.push(forkedLocalRecord);
 
     return forkedLocalRecord;
@@ -1150,7 +1150,7 @@ class AutofillRecords {
       this._stripComputedFields(record);
     }
 
-    hasChanges |= this._computeFields(record);
+    hasChanges |= this.computeFields(record);
     return hasChanges;
   }
 
@@ -1216,7 +1216,7 @@ class AutofillRecords {
   _recordReadProcessor(record) {}
 
   // An interface to be inherited.
-  _computeFields(record) {}
+  computeFields(record) {}
 
   // An interface to be inherited.
   _normalizeFields(record) {}
@@ -1237,7 +1237,7 @@ class Addresses extends AutofillRecords {
     }
   }
 
-  _computeFields(address) {
+  computeFields(address) {
     // NOTE: Remember to bump the schema version number if any of the existing
     //       computing algorithm changes. (No need to bump when just adding new
     //       computed fields.)
@@ -1496,7 +1496,7 @@ class CreditCards extends AutofillRecords {
     super(store, "creditCards", VALID_CREDIT_CARD_FIELDS, VALID_CREDIT_CARD_COMPUTED_FIELDS, CREDIT_CARD_SCHEMA_VERSION);
   }
 
-  _computeFields(creditCard) {
+  computeFields(creditCard) {
     // NOTE: Remember to bump the schema version number if any of the existing
     //       computing algorithm changes. (No need to bump when just adding new
     //       computed fields.)

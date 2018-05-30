@@ -35,26 +35,48 @@ XPCOMUtils.defineLazyGetter(this, "formAutofillStorage", () => {
   return storage;
 });
 
+/**
+ * Temporary/transient storage for address and credit card records
+ *
+ * Implements a subset of the FormAutofillStorage collection class interface, and delegates to
+ * those classes for some utility methods
+ */
 class TempCollection {
-  constructor(data = {}) {
+  constructor(type, data = {}) {
+    /**
+     * The name of the collection. e.g. 'addresses' or 'creditCards'
+     * Used to access methods from the FormAutofillStorage collections
+     */
+    this._type = type;
     this._data = data;
   }
+
+  get _formAutofillCollection() {
+    // lazy getter for the formAutofill collection - to resolve on first access
+    Object.defineProperty(this, "_formAutofillCollection", {
+      value: formAutofillStorage[this._type], writable: false, configurable: true,
+    });
+    return this._formAutofillCollection;
+  }
+
   get(guid) {
     return this._data[guid];
   }
+
   update(guid, record, preserveOldProperties) {
-    if (preserveOldProperties) {
-      Object.assign(this._data[guid], record);
-    } else {
-      this._data[guid] = record;
-    }
-    return this._data[guid];
+    let recordToSave = Object.assign(preserveOldProperties ? this._data[guid] : {}, record);
+    this._formAutofillCollection.computeFields(recordToSave);
+    return (this._data[guid] = recordToSave);
   }
+
   add(record) {
     let guid = "temp-" + Math.abs(Math.random() * 0xffffffff|0);
-    this._data[guid] = record;
+    let recordToSave = Object.assign({guid}, record);
+    this._formAutofillCollection.computeFields(recordToSave);
+    this._data[guid] = recordToSave;
     return guid;
   }
+
   getAll() {
     return this._data;
   }
@@ -202,8 +224,8 @@ var paymentDialogWrapper = {
     this.frame.loadURI("resource://payments/paymentRequest.xhtml");
 
     this.temporaryStore = {
-      addresses: new TempCollection(),
-      creditCards: new TempCollection(),
+      addresses: new TempCollection("addresses"),
+      creditCards: new TempCollection("creditCards"),
     };
   },
 
