@@ -81,7 +81,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMStorage.h"
 #include "nsIDOMWindow.h"
 #include "nsIEditingSession.h"
@@ -13382,10 +13381,9 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
   bool noOpenerImplied = false;
   if (browserChrome3) {
-    nsCOMPtr<nsIDOMNode> linkNode = do_QueryInterface(aContent);
     nsAutoString oldTarget(aTargetSpec);
     rv = browserChrome3->OnBeforeLinkTraversal(oldTarget, aURI,
-                                               linkNode, mIsAppTab, target);
+                                               aContent, mIsAppTab, target);
     if (!oldTarget.Equals(target)) {
       noOpenerImplied = true;
     }
