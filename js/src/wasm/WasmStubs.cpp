@@ -636,7 +636,7 @@ GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex, const FuncExport&
         masm.loadValue(jitArgAddr, scratchV);
 
         Label next;
-        switch (fe.sig().args()[i]) {
+        switch (fe.sig().args()[i].code()) {
           case ValType::I32: {
             ScratchTagScope tag(masm, scratchV);
             masm.splitTagForTest(scratchV, tag);

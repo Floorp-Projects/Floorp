@@ -114,8 +114,9 @@ fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg # bug
 # 'stroke-width' property, from/by/to with percent values
 # XXXdholbert the mixed pct + px tests fail right now, because we need calc()
 # in order to interpolate between pct and non-pct values, and we don't yet
-# support calc() for stroke-width & other SVG-specific properties. (Bug 1258270
-# for gecko, Bug 1386967 for stylo)
+# support calc() for stroke-width & other SVG-specific properties.
+#
+# Bug 1258270 and 1386967
 == anim-css-strokewidth-1-by-pct-pct.svg                          anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-pct-px.svg                     anim-css-strokewidth-1-ref.svg
 fails == anim-css-strokewidth-1-by-px-pct.svg                     anim-css-strokewidth-1-ref.svg

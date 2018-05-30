@@ -218,7 +218,7 @@ pref(clipboard.autocopy,true) load 1370737.html
 pref(dom.IntersectionObserver.enabled,true) load 1370968.html
 load 1373750.html
 load 1377826.html
-skip-if(stylo&&isDebugBuild&&winWidget) load structured_clone_container_throws.html # Bug 1383845
+load structured_clone_container_throws.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
 load 1383478.html
@@ -239,6 +239,7 @@ pref(dom.webcomponents.shadowdom.enabled,true) load 1419799.html
 skip-if(!browserIsRemote) pref(dom.webcomponents.customelements.enabled,true) pref(dom.disable_open_during_load,false) load 1419902.html # skip on non e10s loads, Bug 1419902
 pref(dom.webcomponents.shadowdom.enabled,true) load 1422883.html
 pref(dom.webcomponents.shadowdom.enabled,true) load 1428053.html
+pref(dom.webcomponents.customelements.enabled,true) load 1441029.html
 load 1449601.html
 load 1445670.html
 load 1458016.html

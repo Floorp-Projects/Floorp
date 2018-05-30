@@ -227,7 +227,13 @@ var validGradientAndElementValues = [
   "radial-gradient(at calc(100px + -25%) top, red, blue)",
   "radial-gradient(at left calc(100px + -25%), red, blue)",
   "radial-gradient(at calc(100px + -25px) top, red, blue)",
-  "radial-gradient(at left calc(100px + -25px), red, blue)"
+  "radial-gradient(at left calc(100px + -25px), red, blue)",
+
+  "-webkit-linear-gradient(top, red, blue)",
+  "-moz-linear-gradient(top, red, blue)",
+  "-moz-linear-gradient(center 0%, red, blue)",
+  "-moz-linear-gradient(50% top, red, blue)",
+  "-moz-linear-gradient(50% 0%, red, blue)",
 ];
 var invalidGradientAndElementValues = [
   "-moz-element(#a:1)",
@@ -318,7 +324,8 @@ var invalidGradientAndElementValues = [
   "radial-gradient(top left 99deg, cover, red, blue)",
   "radial-gradient(15% 20% -1.2345rad, circle, red, blue)",
   "radial-gradient(45px 399grad, ellipse closest-corner, red, blue)",
-  "radial-gradient(45px 399grad, farthest-side circle, red, blue)"
+  "radial-gradient(45px 399grad, farthest-side circle, red, blue)",
+  "radial-gradient(circle red, blue)",
 ];
 var unbalancedGradientAndElementValues = [
   "-moz-element(#a()",
@@ -501,32 +508,6 @@ var basicShapeUnbalancedValues = [
   "inset(1px 2px 3px 4px round 5px / 6px",
 ];
 
-
-// Gradient values that are incorrectly accepted in Gecko, but are correctly
-// rejected with Servo's style-system backend (stylo):
-let gradientsNewlyRejectedInStylo = [
-  "radial-gradient(circle red, blue)",
-];
-
-// Gradient values that are consistently serialized in Stylo but not
-// in Gecko. Gecko drops the prefix during roundtrip.
-let gradientsValidInStyloBrokenInGecko = [
-  "-webkit-linear-gradient(top, red, blue)",
-  "-moz-linear-gradient(top, red, blue)",
-  "-moz-linear-gradient(center 0%, red, blue)",
-  "-moz-linear-gradient(50% top, red, blue)",
-  "-moz-linear-gradient(50% 0%, red, blue)",
-];
-
-if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-  invalidGradientAndElementValues.push(...gradientsNewlyRejectedInStylo);
-  validGradientAndElementValues.push(...gradientsValidInStyloBrokenInGecko);
-} else {
-  // NOTE: These are technically invalid, but Gecko's CSS parser thinks they're
-  // valid. So, if we're using Gecko's style system, we add them to the
-  // "valid" list, so we can at least detect if the behavior changes.
-  validGradientAndElementValues.push(...gradientsNewlyRejectedInStylo);
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
   // Extend gradient lists with valid/invalid webkit-prefixed expressions:
@@ -3519,7 +3500,7 @@ var gCSSProperties = {
       '"cswh", "smcp" off, "salt" 4', '"cswh" 1, "smcp" off, "salt" 4',
       '"cswh" 0, \'blah\', "liga", "smcp" off, "salt" 4',
       '"liga"        ,"smcp" 0         , "blah"',
-      '"ab\\"c"', '"ab\\\\c"'
+      '"ab\\"c"', '"ab\\\\c"', "'vert' calc(2)"
     ],
     invalid_values: [
       'liga', 'liga 1', 'liga normal', '"liga" normal', 'normal liga',
@@ -6247,8 +6228,7 @@ function get_computed_value(cs, property)
   return cs.getPropertyValue(property);
 }
 
-if (SpecialPowers.DOMWindowUtils.isStyledByServo &&
-    IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
   gCSSProperties.rotate = {
     domProp: "rotate",
     inherited: false,
@@ -6371,14 +6351,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
     invalid_values: [ "on" ]
   };
   gCSSProperties["font"].subproperties.push("font-optical-sizing");
-  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    gCSSProperties["font-variation-settings"].other_values
-      .push("'vert' calc(2.5)");
-  }
-}
-
-if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-  gCSSProperties["font-feature-settings"].other_values.push("'vert' calc(2)");
+  gCSSProperties["font-variation-settings"].other_values
+    .push("'vert' calc(2.5)");
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.frames-timing.enabled")) {
@@ -6522,6 +6496,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "grayscale(350%)",
       "grayscale(4.567)",
 
+      "hue-rotate(0)",
       "hue-rotate(0deg)",
       "hue-rotate(90deg)",
       "hue-rotate(540deg)",
@@ -6678,15 +6653,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
       "sepia(-1)",
     ]
   };
-
-  // See https://github.com/w3c/fxtf-drafts/issues/228.
-  //
-  // This is updated in Stylo but not Gecko.
-  if (SpecialPowers.DOMWindowUtils.isStyledByServo) {
-    gCSSProperties["filter"].other_values.push("hue-rotate(0)");
-  } else {
-    gCSSProperties["filter"].invalid_values.push("hue-rotate(0)");
-  }
 }
 
 var isGridTemplateSubgridValueEnabled =

@@ -4739,7 +4739,6 @@ var XULBrowserWindow = {
   // This function fires only for the currently selected tab.
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
     const nsIWebProgressListener = Ci.nsIWebProgressListener;
-    const nsIChannel = Ci.nsIChannel;
 
     let browser = gBrowser.selectedBrowser;
 
@@ -4772,7 +4771,7 @@ var XULBrowserWindow = {
         let location;
         let canViewSource = true;
         // Get the URI either from a channel or a pseudo-object
-        if (aRequest instanceof nsIChannel || "URI" in aRequest) {
+        if (aRequest instanceof Ci.nsIChannel || "URI" in aRequest) {
           location = aRequest.URI;
 
           // For keyword URIs clear the user typed value since they will be changed into real URIs
@@ -7109,7 +7108,7 @@ var WebAuthnPromptHelper = {
       label: gNavigatorBundle.getString("webauthn.proceed"),
       accessKey: gNavigatorBundle.getString("webauthn.proceed.accesskey"),
       callback(state) {
-        mgr.resumeRegister(tid, !state.checkboxChecked);
+        mgr.resumeRegister(tid, state.checkboxChecked);
       }
     };
   },

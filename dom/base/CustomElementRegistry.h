@@ -196,9 +196,7 @@ class CustomElementReaction
 public:
   virtual ~CustomElementReaction() = default;
   virtual void Invoke(Element* aElement, ErrorResult& aRv) = 0;
-  virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const
-  {
-  }
+  virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const = 0;
 
   bool IsUpgradeReaction()
   {

@@ -25,7 +25,7 @@ load 321224.xul
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts-if(gtkWidget,1) asserts-if(Android&&asyncPan,1) asserts-if(stylo&&gtkWidget&&!isDebugBuild,1) load 323386-1.html # Bug 718883
+asserts-if(gtkWidget,1) asserts-if(Android&&asyncPan,1) load 323386-1.html # Bug 718883
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -413,7 +413,7 @@ load 569193-1.html
 load 570160.html
 load 570289-1.html
 load 571618-1.svg
-asserts(1) asserts-if(stylo,0-1) load 571975-1.html # bug 574889
+asserts(0-1) load 571975-1.html # bug 574889
 load 571995.xhtml
 load 574958.xhtml
 asserts(0-6) load 578977.html # bug 757305
@@ -535,7 +535,7 @@ load 842166.html
 load 844529-1.html
 load 847130.xhtml
 load 847208.html
-asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) asserts-if(stylo,4) load 847209.html # bug 847368
+asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) load 847209.html # bug 847368
 load 847211-1.html
 load 849603.html
 load 849987.html
@@ -577,7 +577,7 @@ load 1003441.xul
 load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-asserts(11) asserts-if(stylo&&Android,274) load 1015844.html # bug 574889, bug 1374479
+asserts(11) asserts-if(Android,274) load 1015844.html # bug 574889, bug 1374479
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html
@@ -644,8 +644,8 @@ load 1233191.html
 load 1234701-1.html
 load 1234701-2.html
 load 1271765.html
-asserts(2) asserts-if(stylo&&Android,1) load 1272983-1.html # bug 586628
-asserts(2) asserts-if(stylo&&Android,1) load 1272983-2.html # bug 586628
+asserts(2) asserts-if(Android,1) load 1272983-1.html # bug 586628
+asserts(2) asserts-if(Android,1) load 1272983-2.html # bug 586628
 load 1275059.html
 load 1278007.html
 load 1278080.html

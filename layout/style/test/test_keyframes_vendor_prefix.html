@@ -62,8 +62,6 @@ function addDiv(t, attrs) {
   return div;
 }
 
-const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
-
 test(function(t) {
   addStyle(t,
     { '@-webkit-keyframes anim': 'from,to { color: rgb(0, 255, 0); }' });
@@ -110,12 +108,6 @@ test(function(t) {
 }, '-webkit- prefix KEYFRAMES');
 
 test(function(t) {
-  if (!isStylo) {
-    // FIXME: Bug 1312918: later prefixed rule incorrectly overrides earlier
-    // non-prefixed on gecko.
-    return;
-  }
-
   addStyle(t,
     { '@keyframes anim':         'from,to { color: rgb(0, 255, 0); }',
       '@-webkit-keyframes anim': 'from,to { color: rgb(255, 0, 0); }' });
@@ -126,12 +118,6 @@ test(function(t) {
 }, '-webkit-keyframes should not override earlier non-prefix keyframes');
 
 test(function(t) {
-  if (!isStylo) {
-    // FIXME: Bug 1312918: later prefixed rule incorrectly overrides earlier
-    // non-prefixed on gecko.
-    return;
-  }
-
   addStyle(t,
     { '@keyframes anim':      'from,to { color: rgb(0, 255, 0); }',
       '@-moz-keyframes anim': 'from,to { color: rgb(255, 0, 0); }' });

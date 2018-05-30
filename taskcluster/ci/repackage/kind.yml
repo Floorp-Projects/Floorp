@@ -19,27 +19,32 @@ kind-dependencies:
 only-for-build-platforms:
     - linux-nightly/opt
     - linux-devedition-nightly/opt
+    - linux/opt
     - linux64-nightly/opt
     - linux64-devedition-nightly/opt
     - linux64-asan-reporter-nightly/opt
+    - linux64/opt
     - macosx64-nightly/opt
     - macosx64-devedition-nightly/opt
+    - macosx64/opt
     - win32-nightly/opt
     - win32-devedition-nightly/opt
+    - win32/opt
     - win64-nightly/opt
     - win64-devedition-nightly/opt
+    - win64/opt
 
 job-template:
     mozharness:
         config:
             by-build-platform:
-                linux-.*:
+                linux\b.*:
                     - repackage/linux32_signed.py
-                linux64-.*:
+                linux64\b.*:
                     - repackage/linux64_signed.py
-                macosx64-.*:
+                macosx64\b.*:
                     - repackage/osx_signed.py
-                win32-.*:
+                win32\b.*:
                     - repackage/win32_signed.py
-                win64-.*:
+                win64\b.*:
                     - repackage/win64_signed.py

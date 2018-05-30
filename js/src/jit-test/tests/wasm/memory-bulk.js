@@ -83,6 +83,14 @@ function bodySection(bodies) {
     return { name: codeId, body };
 }
 
+function memorySection(initialSize) {
+    var body = [];
+    body.push(...varU32(1));           // number of memories
+    body.push(...varU32(0x0));         // for now, no maximum
+    body.push(...varU32(initialSize));
+    return { name: memoryId, body };
+}
+
 const v2vSig = {args:[], ret:VoidCode};
 const v2vSigSection = sigSection([v2vSig]);
 
@@ -90,7 +98,7 @@ const v2vSigSection = sigSection([v2vSig]);
 
 function checkMiscPrefixed(opcode, expect_failure) {
     let binary = moduleWithSections(
-           [v2vSigSection, declSection([0]),
+           [v2vSigSection, declSection([0]), memorySection(1),
             bodySection(
                 [funcBody(
                     {locals:[],

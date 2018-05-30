@@ -127,25 +127,23 @@ function test_getUnanimatedComputedStyle() {
     "NS_ERROR_INVALID_ARG",
     "FLUSH_DISPLAY option should throw");
 
-  if (utils.isStyledByServo) {
-    SimpleTest.doesThrow(
-      () => utils.getUnanimatedComputedStyle(div, "::before", "opacity", utils.FLUSH_NONE),
-      "NS_ERROR_FAILURE",
-      "Non-existent pseudo should throw");
+  SimpleTest.doesThrow(
+    () => utils.getUnanimatedComputedStyle(div, "::before", "opacity", utils.FLUSH_NONE),
+    "NS_ERROR_FAILURE",
+    "Non-existent pseudo should throw");
 
-    // Flush styles since getUnanimatedComputedStyle flushes pending styles even
-    // with FLUSH_NONE option if the element hasn't yet styled.
-    getComputedStyle(div).opacity;
+  // Flush styles since getUnanimatedComputedStyle flushes pending styles even
+  // with FLUSH_NONE option if the element hasn't yet styled.
+  getComputedStyle(div).opacity;
 
-    div.style.opacity = "0";
-    is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_NONE),
-       "1",
-       "getUnanimatedComputedStyle with FLUSH_NONE should not flush pending styles");
+  div.style.opacity = "0";
+  is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_NONE),
+     "1",
+     "getUnanimatedComputedStyle with FLUSH_NONE should not flush pending styles");
 
-    is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_STYLE),
-       "0",
-       "getUnanimatedComputedStyle with FLUSH_STYLE should flush pending styles");
-  }
+  is(utils.getUnanimatedComputedStyle(div, null, "opacity", utils.FLUSH_STYLE),
+     "0",
+     "getUnanimatedComputedStyle with FLUSH_STYLE should flush pending styles");
 
   div.remove();
 

@@ -1757,29 +1757,14 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
-  // Pseudo-elements implemented by JS must have the NODE_IS_NATIVE_ANONYMOUS
-  // flag set on them. For C++-created pseudo-elements, this is done in
-  // nsCSSFrameConstructor::GetAnonymousContent, but any JS that creates
-  // pseudo-elements would run after that. So we set that flag here,
-  // when the element implementing the pseudo is inserted into the document.
-  // We maintain the invariant that any NAC-implemented pseudo-element's
-  // anonymous ancestors are also flagged as NAC, which the style system relies on.
-  if (aDocument) {
+  // FIXME(emilio): Why is this needed? The element shouldn't even be styled in
+  // the first place, we should style it properly eventually.
+  //
+  // Also, if this _is_ needed, then it's wrong and should use GetComposedDoc()
+  // to account for Shadow DOM.
+  if (aDocument && MayHaveAnimations()) {
     CSSPseudoElementType pseudoType = GetPseudoElementType();
-    if (pseudoType != CSSPseudoElementType::NotPseudo &&
-        nsCSSPseudoElements::PseudoElementIsJSCreatedNAC(pseudoType)) {
-      SetFlags(NODE_IS_NATIVE_ANONYMOUS);
-      nsIContent* parent = aParent;
-      while (parent && !parent->IsRootOfNativeAnonymousSubtree()) {
-        MOZ_ASSERT(parent->IsInNativeAnonymousSubtree());
-        parent->SetFlags(NODE_IS_NATIVE_ANONYMOUS);
-        parent = parent->GetParent();
-      }
-      MOZ_ASSERT(parent);
-    }
-
-    if (MayHaveAnimations() &&
-        (pseudoType == CSSPseudoElementType::NotPseudo ||
+    if ((pseudoType == CSSPseudoElementType::NotPseudo ||
          pseudoType == CSSPseudoElementType::before ||
          pseudoType == CSSPseudoElementType::after) &&
         EffectSet::GetEffectSet(this, pseudoType)) {
