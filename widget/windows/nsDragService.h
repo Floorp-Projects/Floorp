@@ -33,7 +33,7 @@ public:
   NS_IMETHOD GetNumDropItems(uint32_t * aNumItems) override;
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, bool *_retval) override;
   NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
-  NS_IMETHOD UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY) override;
+  NS_IMETHOD UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY) override;
 
   // native impl.
   NS_IMETHOD SetIDataObject(IDataObject * aDataObj);
@@ -53,9 +53,9 @@ protected:
   bool IsCollectionObject(IDataObject* inDataObj);
 
   // Create a bitmap for drag operations
-  bool CreateDragImage(nsIDOMNode *aDOMNode,
-                         nsIScriptableRegion *aRegion,
-                         SHDRAGIMAGE *psdi);
+  bool CreateDragImage(nsINode *aDOMNode,
+                       nsIScriptableRegion *aRegion,
+                       SHDRAGIMAGE *psdi);
 
   IDataObject * mDataObject;
   bool mSentLocalDropEvent;

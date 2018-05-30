@@ -5,11 +5,10 @@
 #include "nsISupports.idl"
 
 interface nsIDocShell;
-interface nsIDOMNode;
 interface nsISHEntry;
 interface nsIPrintSettings;
 webidl Document;
-
+webidl Node;
 
 %{ C++
 #include "nsTArray.h"
@@ -234,7 +233,7 @@ interface nsIContentViewer : nsISupports
   /*
   Scrolls to a given DOM content node. 
   */
-  void scrollToNode(in nsIDOMNode node);
+  void scrollToNode(in Node node);
 
   /** The amount by which to scale all text. Default is 1.0. */
   attribute float textZoom;

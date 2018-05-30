@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 #include "nsIURI.idl"
-#include "nsIDOMNode.idl"
 
 interface nsIBrowser;
 interface nsIRequest;
@@ -18,6 +17,7 @@ interface nsIPrincipal;
 interface mozIDOMWindowProxy;
 
 webidl Element;
+webidl Node;
 
 /**
  * The nsIXULBrowserWindow supplies the methods that may be called from the
@@ -38,7 +38,7 @@ interface nsIXULBrowserWindow : nsISupports
    */
   AString onBeforeLinkTraversal(in AString originalTarget,
                                 in nsIURI linkURI,
-                                in nsIDOMNode linkNode,
+                                in Node linkNode,
                                 in boolean isAppTab);
 
   /**

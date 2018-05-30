@@ -63,7 +63,7 @@ const GRAPH_LEGEND_MOUSEOVER_DEBOUNCE = 50;
  * where each item in the array represents a "bar", for which every value
  * represents a "block" inside that "bar", plotted at the "delta" position.
  *
- * @param nsIDOMNode parent
+ * @param Node parent
  *        The parent node holding the graph.
  */
 this.BarGraphWidget = function(parent, ...args) {

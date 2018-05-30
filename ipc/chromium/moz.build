@@ -134,7 +134,7 @@ if os_solaris:
     ]
 
 ost = CONFIG['OS_TEST']
-if '86' not in ost and 'arm' not in ost and 'aarch64' != ost and 'mips' not in ost:
+if '86' not in ost and 'arm' not in ost and 'aarch64' != ost and 'mips' not in ost and 'powerpc' not in ost:
     SOURCES += [
         'src/base/atomicops_internals_mutex.cc',
     ]

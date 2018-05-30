@@ -9,7 +9,7 @@
 #include "nsFind.h"
 #include "nsContentCID.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsISelectionController.h"
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
@@ -111,8 +111,8 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   // Not a range because one of the endpoints may be anonymous.
-  nsresult Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
-                nsIDOMNode* aEndNode, int32_t aEndOffset);
+  nsresult Init(nsINode* aStartNode, int32_t aStartOffset,
+                nsINode* aEndNode, int32_t aEndOffset);
   virtual void First() override;
   virtual void Last() override;
   virtual void Next() override;
@@ -163,8 +163,8 @@ NS_IMPL_CYCLE_COLLECTION(nsFindContentIterator, mOuterIterator, mInnerIterator,
                          mStartNode)
 
 nsresult
-nsFindContentIterator::Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
-                            nsIDOMNode* aEndNode, int32_t aEndOffset)
+nsFindContentIterator::Init(nsINode* aStartNode, int32_t aStartOffset,
+                            nsINode* aEndNode, int32_t aEndOffset)
 {
   NS_ENSURE_ARG_POINTER(aStartNode);
   NS_ENSURE_ARG_POINTER(aEndNode);
@@ -182,9 +182,9 @@ nsFindContentIterator::Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
   }
 
   // Set up the search "range" that we will examine
-  mStartNode = do_QueryInterface(aStartNode);
+  mStartNode = aStartNode;
   mStartOffset = aStartOffset;
-  mEndNode = do_QueryInterface(aEndNode);
+  mEndNode = aEndNode;
   mEndOffset = aEndOffset;
 
   return NS_OK;
@@ -481,14 +481,13 @@ nsFind::~nsFind()
 
 #ifdef DEBUG_FIND
 static void
-DumpNode(nsIDOMNode* aNode)
+DumpNode(nsINode* aNode)
 {
   if (!aNode) {
     printf(">>>> Node: NULL\n");
     return;
   }
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  nsString nodeName = node->NodeName();
+  nsString nodeName = aNode->NodeName();
   nsCOMPtr<nsIContent> textContent(do_QueryInterface(aNode));
   if (textContent && textContent->IsText()) {
     nsAutoString newText;
@@ -503,8 +502,8 @@ DumpNode(nsIDOMNode* aNode)
 #endif
 
 nsresult
-nsFind::InitIterator(nsIDOMNode* aStartNode, int32_t aStartOffset,
-                     nsIDOMNode* aEndNode, int32_t aEndOffset)
+nsFind::InitIterator(nsINode* aStartNode, int32_t aStartOffset,
+                     nsINode* aEndNode, int32_t aEndOffset)
 {
   if (!mIterator) {
     mIterator = new nsFindContentIterator(mFindBackward);
@@ -649,8 +648,8 @@ nsFind::NextNode(nsRange* aSearchRange,
       }
     }
 
-    rv = InitIterator(startNode->AsDOMNode(), static_cast<int32_t>(startOffset),
-                      endNode->AsDOMNode(), static_cast<int32_t>(endOffset));
+    rv = InitIterator(startNode, static_cast<int32_t>(startOffset),
+                      endNode, static_cast<int32_t>(endOffset));
     NS_ENSURE_SUCCESS(rv, rv);
     if (!aStartPoint) {
       aStartPoint = aSearchRange;
@@ -658,9 +657,8 @@ nsFind::NextNode(nsRange* aSearchRange,
 
     content = do_QueryInterface(mIterator->GetCurrentNode());
 #ifdef DEBUG_FIND
-    nsCOMPtr<nsIDOMNode> dnode(do_QueryInterface(content));
     printf(":::::: Got the first node ");
-    DumpNode(dnode);
+    DumpNode(content);
 #endif
     if (content && content->IsText() &&
         !SkipNode(content)) {
@@ -704,9 +702,8 @@ nsFind::NextNode(nsRange* aSearchRange,
     }
 
 #ifdef DEBUG_FIND
-    nsCOMPtr<nsIDOMNode> dnode(do_QueryInterface(content));
     printf(":::::: Got another node ");
-    DumpNode(dnode);
+    DumpNode(content);
 #endif
 
     // If we ever cross a block node, we might want to reset the match anchor:
@@ -727,9 +724,8 @@ nsFind::NextNode(nsRange* aSearchRange,
       break;
     }
 #ifdef DEBUG_FIND
-    dnode = do_QueryInterface(content);
     printf("Not a text node: ");
-    DumpNode(dnode);
+    DumpNode(content);
 #endif
   }
 
@@ -871,8 +867,7 @@ nsFind::SkipNode(nsIContent* aContent)
                                      nsGkAtoms::select)) {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-      DumpNode(node);
+      DumpNode(content);
 #endif
 
       return true;

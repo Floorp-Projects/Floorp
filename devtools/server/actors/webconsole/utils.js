@@ -304,7 +304,7 @@ exports.WebConsoleCommands = WebConsoleCommands;
  *
  * @param string id
  *        The ID of the element you want.
- * @return nsIDOMNode or null
+ * @return Node or null
  *         The result of calling document.querySelector(selector).
  */
 WebConsoleCommands._registerOriginal("$", function(owner, selector) {
@@ -359,9 +359,9 @@ WebConsoleCommands._registerOriginal("$_", {
  *
  * @param string xPath
  *        xPath search query to execute.
- * @param [optional] nsIDOMNode context
+ * @param [optional] Node context
  *        Context to run the xPath query on. Uses window.document if not set.
- * @return array of nsIDOMNode
+ * @return array of Node
  */
 WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
   let nodes = new owner.window.Array();

@@ -109,7 +109,7 @@ async function testComments(inspector, container) {
     "Active descendant must be set");
 
   let comment = [...inspector.markup._containers].find(([node]) =>
-    node.nodeType === Ci.nsIDOMNode.COMMENT_NODE)[0];
+    node.nodeType === Node.COMMENT_NODE)[0];
 
   let onInspectorUpdated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(comment);

@@ -12,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLProtoImplProperty.h"
 #include "nsIURI.h"

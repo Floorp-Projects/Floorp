@@ -368,8 +368,6 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
 
 #ifdef MOZ_XUL
   if (aContent->IsXULElement()) {
-    nsCOMPtr<nsIDOMNode> inputField;
-
     if (aContent->IsXULElement(nsGkAtoms::textbox)) {
       return aContent->OwnerDoc()->
         GetAnonymousElementByAttribute(aContent, nsGkAtoms::anonid, NS_LITERAL_STRING("input"));
@@ -377,7 +375,9 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
     else {
       nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aContent);
       if (menulist) {
+        RefPtr<Element> inputField;
         menulist->GetInputField(getter_AddRefs(inputField));
+        return inputField;
       }
       else if (aContent->IsXULElement(nsGkAtoms::scale)) {
         nsCOMPtr<nsIDocument> doc = aContent->GetComposedDoc();
@@ -391,11 +391,6 @@ nsFocusManager::GetRedirectedFocus(nsIContent* aContent)
             return child->AsElement();
         }
       }
-    }
-
-    if (inputField) {
-      nsCOMPtr<Element> retval = do_QueryInterface(inputField);
-      return retval;
     }
   }
 #endif
@@ -1350,13 +1345,12 @@ nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     // If the caller cannot access the current focused node, the caller should
     // not be able to steal focus from it. E.g., When the current focused node
     // is in chrome, any web contents should not be able to steal the focus.
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mFocusedElement));
-    sendFocusEvent = nsContentUtils::CanCallerAccess(domNode);
+    sendFocusEvent = nsContentUtils::CanCallerAccess(mFocusedElement);
     if (!sendFocusEvent && mMouseButtonEventHandlingDocument) {
       // However, while mouse button event is handling, the handling document's
       // script should be able to steal focus.
-      domNode = do_QueryInterface(mMouseButtonEventHandlingDocument);
-      sendFocusEvent = nsContentUtils::CanCallerAccess(domNode);
+      sendFocusEvent =
+        nsContentUtils::CanCallerAccess(mMouseButtonEventHandlingDocument);
     }
   }
 

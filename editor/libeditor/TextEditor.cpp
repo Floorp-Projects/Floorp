@@ -1717,7 +1717,7 @@ TextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
       return nullptr;
     }
     if (!rootElement->IsHTMLElement(nsGkAtoms::body)) {
-      rv = docEncoder->SetNativeContainerNode(rootElement);
+      rv = docEncoder->SetContainerNode(rootElement);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }

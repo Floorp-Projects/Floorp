@@ -20,7 +20,7 @@ this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
  *
  * Language:
  *   - An "item" is an instance of an AbstractTreeItem.
- *   - An "element" or "node" is an nsIDOMNode.
+ *   - An "element" or "node" is a Node.
  *
  * The following events are emitted by this tree, always from the root item,
  * with the first argument pointing to the affected child item:
@@ -78,7 +78,7 @@ this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
  *   }]
  * };
  * let root = new MyCustomTreeItem(dataSrc, { parent: null });
- * root.attachTo(nsIDOMNode);
+ * root.attachTo(Node);
  * root.expand();
  *
  * The following tree view will be generated (after expanding all nodes):
@@ -144,9 +144,9 @@ AbstractTreeItem.prototype = {
    * inheriting classes to create the child node displayed in the tree.
    * Use `this.level` and the provided `arrowNode` as you see fit.
    *
-   * @param nsIDOMNode document
-   * @param nsIDOMNode arrowNode
-   * @return nsIDOMNode
+   * @param Node document
+   * @param Node arrowNode
+   * @return Node
    */
   _displaySelf: function(document, arrowNode) {
     throw new Error(
@@ -206,7 +206,7 @@ AbstractTreeItem.prototype = {
 
   /**
    * Gets the element containing all tree items.
-   * @return nsIDOMNode
+   * @return Node
    */
   get container() {
     return this._containerNode;
@@ -243,12 +243,12 @@ AbstractTreeItem.prototype = {
   /**
    * Creates and appends this tree item to the specified parent element.
    *
-   * @param nsIDOMNode containerNode
+   * @param Node containerNode
    *        The parent element for this tree item (and every other tree item).
-   * @param nsIDOMNode fragmentNode [optional]
+   * @param Node fragmentNode [optional]
    *        An optional document fragment temporarily holding this tree item in
    *        the current batch. Defaults to the `containerNode`.
-   * @param nsIDOMNode beforeNode [optional]
+   * @param Node beforeNode [optional]
    *        An optional child element which should succeed this tree item.
    */
   attachTo: function(containerNode, fragmentNode = containerNode, beforeNode = null) {
@@ -465,7 +465,7 @@ AbstractTreeItem.prototype = {
    *
    * @param number delta
    *        The offset from this item to the target item.
-   * @return nsIDOMNode
+   * @return Node
    *         The element displaying the target item at the specified offset.
    */
   _getSiblingAtDelta: function(delta) {
@@ -522,7 +522,7 @@ AbstractTreeItem.prototype = {
     let nextElement = this._getSiblingAtDelta(1);
     if (nextElement) {
       nextElement.focus();
-    } // nsIDOMNode
+    } // Node
   },
 
   /**
@@ -532,7 +532,7 @@ AbstractTreeItem.prototype = {
     let prevElement = this._getSiblingAtDelta(-1);
     if (prevElement) {
       prevElement.focus();
-    } // nsIDOMNode
+    } // Node
   },
 
   /**

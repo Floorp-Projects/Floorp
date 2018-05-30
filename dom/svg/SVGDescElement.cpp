@@ -27,7 +27,7 @@ SVGDescElement::SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeIn
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGDescElement)
 

@@ -52,7 +52,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD SetPingInterval(uint32_t aSeconds) override;
   NS_IMETHOD GetPingTimeout(uint32_t *aSeconds) override;
   NS_IMETHOD SetPingTimeout(uint32_t aSeconds) override;
-  NS_IMETHOD InitLoadInfo(nsIDOMNode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
+  NS_IMETHOD InitLoadInfo(nsINode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
                           nsIPrincipal* aTriggeringPrincipal, uint32_t aSecurityFlags,
                           uint32_t aContentPolicyType) override;
   NS_IMETHOD GetSerial(uint32_t* aSerial) override;

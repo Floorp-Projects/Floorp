@@ -16,7 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsWeakReference.h"
-#include "nsIDOMNode.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/RefPtr.h"

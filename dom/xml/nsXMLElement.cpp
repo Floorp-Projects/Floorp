@@ -21,9 +21,6 @@ NS_NewXMLElement(Element** aInstancePtrResult,
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsXMLElement, Element,
-                            nsIDOMNode)
-
 JSObject*
 nsXMLElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 {

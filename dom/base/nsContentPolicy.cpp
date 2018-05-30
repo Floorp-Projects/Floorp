@@ -17,7 +17,6 @@
 #include "nsContentPolicy.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsITabChild.h"
 #include "nsIContent.h"
@@ -94,7 +93,7 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
 
 #ifdef DEBUG
     {
-        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(requestingContext));
+        nsCOMPtr<nsINode> node(do_QueryInterface(requestingContext));
         nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(requestingContext));
         nsCOMPtr<nsITabChild> tabChild(do_QueryInterface(requestingContext));
         NS_ASSERTION(!requestingContext || node || window || tabChild,

@@ -1865,7 +1865,7 @@ WebSocketImpl::InitializeConnection(nsIPrincipal* aPrincipal)
   // and aPrincipal are same origin.
   MOZ_ASSERT(!doc || doc->NodePrincipal()->Equals(aPrincipal));
 
-  rv = wsChannel->InitLoadInfo(doc ? doc->AsDOMNode() : nullptr,
+  rv = wsChannel->InitLoadInfo(doc,
                                doc ? doc->NodePrincipal() : aPrincipal,
                                aPrincipal,
                                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,

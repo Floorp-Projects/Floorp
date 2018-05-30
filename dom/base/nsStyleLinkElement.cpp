@@ -23,7 +23,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsXPCOMCIDInternal.h"

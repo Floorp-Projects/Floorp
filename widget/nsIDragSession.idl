@@ -14,10 +14,9 @@
 
 native nsSize (nsSize);
 
-interface nsIDOMNode;
-
 webidl DataTransfer;
 webidl Document;
+webidl Node;
 
 [scriptable, builtinclass, uuid(25bce737-73f0-43c7-bc20-c71044a73c5a)]
 interface nsIDragSession : nsISupports
@@ -60,7 +59,7 @@ interface nsIDragSession : nsISupports
     * The dom node that was originally dragged to start the session, which will be null if the
     * drag originated outside the application.
     */
-  readonly attribute nsIDOMNode sourceNode;
+  readonly attribute Node sourceNode;
 
   /**
    * The URI spec of the triggering principal.  This may be different than
@@ -102,7 +101,7 @@ interface nsIDragSession : nsISupports
 
   // Change the drag image, using similar arguments as
   // nsIDragService::InvokeDragSessionWithImage.
-  void updateDragImage(in nsIDOMNode aImage, in long aImageX, in long aImageY);
+  void updateDragImage(in Node aImage, in long aImageX, in long aImageY);
 };
 
 

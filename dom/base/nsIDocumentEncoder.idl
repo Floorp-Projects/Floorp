@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
 interface nsIOutputStream;
 
-webidl Selection;
 webidl Document;
+webidl Node;
 webidl Range;
+webidl Selection;
 
 %{ C++
 class nsINode;
@@ -33,7 +33,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
    * instead of the children of the original node.
    * @return The resulting fixed up node.
    */
-  nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
+  Node fixupNode(in Node aNode, out boolean aSerializeCloneKids);
 };
 
 [scriptable, uuid(21f112df-d96f-47da-bfcb-5331273003d1)]
@@ -265,8 +265,7 @@ interface nsIDocumentEncoder : nsISupports
    *  document or range or selection is encoded.
    * @param aNode The node to encode.
    */
-  void setNode(in nsIDOMNode aNode);
-  [noscript] void setNativeNode(in nsINodePtr aNode);
+  void setNode(in Node aNode);
 
   /**
    *  If the container is set to a non-null value, then its
@@ -274,8 +273,7 @@ interface nsIDocumentEncoder : nsISupports
    *  document or range or selection or node is encoded.
    *  @param aContainer The node which child nodes will be encoded.
    */
-  void setContainerNode(in nsIDOMNode aContainer);
-  [noscript] void setNativeContainerNode(in nsINodePtr aContainer);
+  void setContainerNode(in Node aContainer);
 
   /**
    *  Documents typically have an intrinsic character set,

@@ -69,7 +69,6 @@ class nsIContentPolicy;
 class nsIContentSecurityPolicy;
 class nsIDocShellTreeItem;
 class nsIDocumentLoaderFactory;
-class nsIDOMNode;
 class nsIDragSession;
 class nsIEventTarget;
 class nsIFragmentContentSink;
@@ -386,20 +385,10 @@ public:
    *
    * This method just sucks.
    */
-  static nsresult GetAncestorsAndOffsets(nsIDOMNode* aNode,
+  static nsresult GetAncestorsAndOffsets(nsINode* aNode,
                                          int32_t aOffset,
                                          nsTArray<nsIContent*>* aAncestorNodes,
                                          nsTArray<int32_t>* aAncestorOffsets);
-
-  /*
-   * The out parameter, |aCommonAncestor| will be the closest node, if any,
-   * to both |aNode| and |aOther| which is also an ancestor of each.
-   * Returns an error if the two nodes are disconnected and don't have
-   * a common ancestor.
-   */
-  static nsresult GetCommonAncestor(nsIDOMNode *aNode,
-                                    nsIDOMNode *aOther,
-                                    nsIDOMNode** aCommonAncestor);
 
   /**
    * Returns the common ancestor, if any, for two nodes.
@@ -461,9 +450,6 @@ public:
   static int32_t ComparePoints(nsINode* aParent1, int32_t aOffset1,
                                nsINode* aParent2, int32_t aOffset2,
                                bool* aDisconnected = nullptr);
-  static int32_t ComparePoints(nsIDOMNode* aParent1, int32_t aOffset1,
-                               nsIDOMNode* aParent2, int32_t aOffset2,
-                               bool* aDisconnected = nullptr);
   static int32_t ComparePoints(const mozilla::RawRangeBoundary& aFirst,
                                const mozilla::RawRangeBoundary& aSecond,
                                bool* aDisconnected = nullptr);
@@ -487,7 +473,7 @@ public:
    *
    * @return  The reversed document position flags.
    *
-   * @see nsIDOMNode
+   * @see Node
    */
   static uint16_t ReverseDocumentPosition(uint16_t aDocumentPosition);
 
@@ -593,7 +579,6 @@ public:
                                   const nsINode* unTrustedNode);
 
   // Check if the (JS) caller can access aNode.
-  static bool CanCallerAccess(nsIDOMNode *aNode);
   static bool CanCallerAccess(nsINode* aNode);
 
   // Check if the (JS) caller can access aWindow.

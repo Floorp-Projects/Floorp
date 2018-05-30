@@ -115,7 +115,7 @@ AutocompletePopup.prototype = {
   /**
    * Open the autocomplete popup panel.
    *
-   * @param {nsIDOMNode} anchor
+   * @param {Node} anchor
    *        Optional node to anchor the panel to.
    * @param {Number} xOffset
    *        Horizontal offset in pixels from the left of the node to the left

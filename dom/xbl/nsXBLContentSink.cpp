@@ -9,7 +9,6 @@
 #include "nsXBLContentSink.h"
 #include "nsIDocument.h"
 #include "nsBindingManager.h"
-#include "nsIDOMNode.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsIURI.h"

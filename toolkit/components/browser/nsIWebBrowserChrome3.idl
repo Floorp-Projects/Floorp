@@ -4,12 +4,13 @@
 
 #include "nsIWebBrowserChrome2.idl"
 #include "nsIURI.idl"
-#include "nsIDOMNode.idl"
 
 interface nsIDocShell;
 interface nsIInputStream;
 interface nsIRunnable;
 interface nsIPrincipal;
+
+webidl Node;
 
 /**
  * nsIWebBrowserChrome3 is an extension to nsIWebBrowserChrome2.
@@ -33,7 +34,7 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    */
   AString onBeforeLinkTraversal(in AString originalTarget,
                                 in nsIURI linkURI,
-                                in nsIDOMNode linkNode,
+                                in Node linkNode,
                                 in boolean isAppTab);
 
   /**

@@ -45,7 +45,6 @@ const DOMTokenListSupportedToken SVGAElement::sSupportedRelValues[] = {
 // nsISupports methods
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGAElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(Link)
 NS_INTERFACE_MAP_END_INHERITING(SVGAElementBase)
 

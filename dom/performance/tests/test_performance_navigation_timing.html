@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+    <!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1462891
+    -->
+    <head>
+        <title>Test for Bug 1462891</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    </head>
+    <body>
+        <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1462891">Mozilla Bug 1462891 - Navigation Timing API</a>
+        <div id="content">
+        </div>
+        <pre id="test">
+            <script class="testbody" type="text/javascript">
+             var index = 0;
+             let isRounded = (x, shouldRound, expectedPrecision) => {
+                if (!shouldRound)
+                   return true;
+
+                let rounded = (Math.floor(x / expectedPrecision) * expectedPrecision);
+                // First we do the perfectly normal check that should work just fine
+                if (rounded === x || x === 0)
+                return true;
+
+                // When we're diving by non-whole numbers, we may not get perfect
+                // multiplication/division because of floating points.
+                // When dealing with ms since epoch, a double's precision is on the order
+                // of 1/5 of a microsecond, so we use a value a little higher than that as
+                // our epsilon.
+                // To be clear, this error is introduced in our re-calculation of 'rounded'
+                // above in JavaScript.
+                if (Math.abs(rounded - x + expectedPrecision) < .0005) {
+                 return true;
+                } else if (Math.abs(rounded - x) < .0005) {
+                 return true;
+                }
+
+                 // Then we handle the case where you're sub-millisecond and the timer is not
+                 // We check that the timer is not sub-millisecond by assuming it is not if it
+                 // returns an even number of milliseconds
+                 if (expectedPrecision < 1 && Math.round(x) == x) {
+                   if (Math.round(rounded) == x) {
+                     return true;
+                   }
+                 }
+
+                 ok(false, "Looming Test Failure, Additional Debugging Info: Expected Precision: " + expectedPrecision + " Measured Value: " + x +
+                   " Rounded Vaue: " + rounded + " Fuzzy1: " + Math.abs(rounded - x + expectedPrecision) +
+                   " Fuzzy 2: " + Math.abs(rounded - x));
+
+                 return false;
+            };
+
+            var metrics = [
+                "unloadEventStart",
+                "unloadEventEnd",
+                "domInteractive",
+                "domContentLoadedEventStart",
+                "domContentLoadedEventEnd",
+                "domComplete",
+                "loadEventStart",
+                "loadEventEnd"
+            ];
+
+            async function runTests(resistFingerprinting, reduceTimerPrecision, expectedPrecision) {
+                await SpecialPowers.pushPrefEnv({
+                    "set": [["privacy.resistFingerprinting", resistFingerprinting],
+                            ["privacy.reduceTimerPrecision", reduceTimerPrecision],
+                            ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+                ]});
+                var entries = performance.getEntriesByType("navigation");
+                is(entries.length, resistFingerprinting ? 0 : 1, "Checking PerformanceNavigationEntry count");
+
+                for (let i=0; i<entries.length; i++) {
+                    for (let j=0; j<metrics.length; j++) {
+                        ok(isRounded(entries[i][metrics[j]], reduceTimerPrecision, expectedPrecision),
+                            "Testing " + metrics[j] + " with value " + entries[i][metrics[j]] +
+                            " with resistFingerprinting " + resistFingerprinting + " reduceTimerPrecision " +
+                            reduceTimerPrecision + " precision " + expectedPrecision);
+                    }
+                }
+            }
+
+            async function startTests() {
+                await runTests(false, false, 2);
+                await runTests(true, false, 2);
+                await runTests(true, true, 2);
+                await runTests(false, true, 1000);
+                await runTests(false, true, 133);
+                await runTests(false, true, 13);
+                await runTests(false, true, 2);
+                await runTests(false, true, 1);
+
+                SimpleTest.finish();
+            }
+
+            SimpleTest.waitForExplicitFinish();
+            addLoadEvent(startTests);
+            </script>
+        </pre>
+    </body>
+</html>

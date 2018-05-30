@@ -285,8 +285,7 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
     nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(aContext);
 
     if (!window) {
-        // our context might be a document (which also QIs to nsIDOMNode), so
-        // try that first
+        // Our context might be a document.
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(aContext);
         if (!doc) {
             // we were not a document after all, get our ownerDocument,
