@@ -423,7 +423,7 @@ nsWebBrowserFind::SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow,
 
 // Adapted from TextServicesDocument::GetDocumentContentRootNode
 nsresult
-nsWebBrowserFind::GetRootNode(nsIDocument* aDoc, nsIDOMNode** aNode)
+nsWebBrowserFind::GetRootNode(nsIDocument* aDoc, Element** aNode)
 {
   NS_ENSURE_ARG_POINTER(aDoc);
   NS_ENSURE_ARG_POINTER(aNode);
@@ -432,14 +432,14 @@ nsWebBrowserFind::GetRootNode(nsIDocument* aDoc, nsIDOMNode** aNode)
   if (aDoc->IsHTMLOrXHTML()) {
     Element* body = aDoc->GetBody();
     NS_ENSURE_ARG_POINTER(body);
-    NS_ADDREF(*aNode = body->AsDOMNode());
+    NS_ADDREF(*aNode = body);
     return NS_OK;
   }
 
   // For non-HTML documents, the content root node will be the doc element.
   Element* root = aDoc->GetDocumentElement();
   NS_ENSURE_ARG_POINTER(root);
-  NS_ADDREF(*aNode = root->AsDOMNode());
+  NS_ADDREF(*aNode = root);
   return NS_OK;
 }
 
@@ -449,9 +449,8 @@ nsWebBrowserFind::SetRangeAroundDocument(nsRange* aSearchRange,
                                          nsRange* aEndPt,
                                          nsIDocument* aDoc)
 {
-  nsCOMPtr<nsIDOMNode> bodyNode;
-  nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
-  nsCOMPtr<nsIContent> bodyContent(do_QueryInterface(bodyNode));
+  RefPtr<Element> bodyContent;
+  nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyContent));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_ARG_POINTER(bodyContent);
 
@@ -492,12 +491,10 @@ nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
     return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
   }
 
-  // Need bodyNode, for the start/end of the document
-  nsCOMPtr<nsIDOMNode> bodyNode;
-  nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyNode));
+  // Need bodyContent, for the start/end of the document
+  RefPtr<Element> bodyContent;
+  nsresult rv = GetRootNode(aDoc, getter_AddRefs(bodyContent));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContent> bodyContent(do_QueryInterface(bodyNode));
   NS_ENSURE_ARG_POINTER(bodyContent);
 
   uint32_t childCount = bodyContent->GetChildCount();
