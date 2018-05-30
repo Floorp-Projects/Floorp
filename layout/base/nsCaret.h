@@ -21,7 +21,6 @@
 class nsDisplayListBuilder;
 class nsFrameSelection;
 class nsIContent;
-class nsIDOMNode;
 class nsIFrame;
 class nsINode;
 class nsIPresShell;
@@ -131,7 +130,6 @@ class nsCaret final : public nsISelectionListener
      * Passing null for aNode would set the caret to track its selection again.
      **/
     void SetCaretPosition(nsINode* aNode, int32_t aOffset);
-    void SetCaretPosition(nsIDOMNode* aNode, int32_t aOffset);
 
     /**
      * Schedule a repaint for the frame where the caret would appear.

@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
+webidl Element;
 
 /**
  * A service used to sort the contents of a XUL widget.
@@ -31,7 +31,7 @@ interface nsIXULSortService : nsISupports
      *   integer: treat values as integers, non-integers are compared as strings
      *   twostate: don't allow the natural (unordered state)
      */
-    void sort(in nsIDOMNode aNode,
+    void sort(in Element aNode,
               in AString aSortKey,
               in AString aSortHints);
 };
