@@ -9,12 +9,17 @@ extra = {}
 if sys.version_info >= (3,0):
     extra['use_2to3'] = True
 
+
+def long_description():
+    return open('README.rst').read() + '\n' + open('CHANGELOG.txt').read()
+
+
 setup(
     name="jsmin",
     version=re.search(r'__version__ = ["\']([^"\']+)', open('jsmin/__init__.py').read()).group(1),
     packages=['jsmin'],
     description='JavaScript minifier.\nPLEASE UPDATE TO VERSION >= 2.0.6. Older versions have a serious bug related to comments.',
-    long_description=open('README.rst').read(),
+    long_description=long_description(),
     author='Dave St.Germain',
     author_email='dave@st.germa.in',
     maintainer='Tikitu de Jager',
