@@ -493,10 +493,10 @@ AbstractFramePtr::pushVarEnvironment(JSContext* cx, HandleScope scope)
     return js::PushVarEnvironmentObject(cx, scope, *this);
 }
 
-inline JSCompartment*
-AbstractFramePtr::compartment() const
+inline JS::Realm*
+AbstractFramePtr::realm() const
 {
-    return environmentChain()->compartment();
+    return environmentChain()->realm();
 }
 
 inline unsigned
