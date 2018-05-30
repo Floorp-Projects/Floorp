@@ -626,6 +626,12 @@ public:
       return true;
     }
 
+    // contain: paint, which we should interpret as -moz-hidden-unscrollable
+    // by default.
+    if (aDisp->IsContainPaint()) {
+      return true;
+    }
+
     // and overflow:hidden that we should interpret as -moz-hidden-unscrollable
     if (aDisp->mOverflowX == NS_STYLE_OVERFLOW_HIDDEN &&
         aDisp->mOverflowY == NS_STYLE_OVERFLOW_HIDDEN) {
