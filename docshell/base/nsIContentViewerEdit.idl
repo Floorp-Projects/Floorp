@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
+webidl Node;
 
 [scriptable, uuid(35BE2D7E-F29B-48EC-BF7E-80A30A724DE3)]
 interface nsIContentViewerEdit : nsISupports
@@ -32,5 +32,5 @@ interface nsIContentViewerEdit : nsISupports
 
 	// Set the node that will be the subject of the editing commands above.
 	// Usually this will be the node that was context-clicked.
-	void setCommandNode(in nsIDOMNode aNode);
+	void setCommandNode(in Node aNode);
 };
