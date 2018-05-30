@@ -1415,6 +1415,7 @@ public:
   bool GetMarginBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetPaddingBoxBorderRadii(nscoord aRadii[8]) const;
   bool GetContentBoxBorderRadii(nscoord aRadii[8]) const;
+  bool GetBoxBorderRadii(nscoord aRadii[8], nsMargin aOffset, bool aIsOutset) const;
   bool GetShapeBoxBorderRadii(nscoord aRadii[8]) const;
 
   /**
