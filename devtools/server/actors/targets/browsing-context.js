@@ -10,7 +10,7 @@
  * BrowsingContextTargetActor is an abstract class used by target actors that hold
  * documents, such as frames, chrome windows, etc.
  *
- * This class is extended by ContentActor, ChromeActor, and WindowActor.
+ * This class is extended by FrameTargetActor, ChromeActor, and WindowActor.
  *
  * See devtools/docs/backend/actor-hierarchy.md for more details.
  *
@@ -205,7 +205,7 @@ const browsingContextTargetPrototype = {
    *  - window-ready
    *  - navigate
    *
-   * This class is subclassed by ContentActor and others.
+   * This class is subclassed by FrameTargetActor and others.
    * Subclasses are expected to implement a getter for the docShell property.
    *
    * @param connection DebuggerServerConnection

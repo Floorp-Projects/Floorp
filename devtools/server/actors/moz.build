@@ -32,7 +32,6 @@ DevToolsModules(
     'child-process.js',
     'chrome.js',
     'common.js',
-    'content.js',
     'css-properties.js',
     'csscoverage.js',
     'device.js',
