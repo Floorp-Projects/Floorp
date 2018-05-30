@@ -1184,16 +1184,17 @@ DumpHeapVisitZone(JSRuntime* rt, void* data, Zone* zone)
 }
 
 static void
-DumpHeapVisitCompartment(JSContext* cx, void* data, JSCompartment* comp)
+DumpHeapVisitRealm(JSContext* cx, void* data, Handle<Realm*> realm)
 {
     char name[1024];
-    if (cx->runtime()->compartmentNameCallback)
-        (*cx->runtime()->compartmentNameCallback)(cx, comp, name, sizeof(name));
+    if (auto nameCallback = cx->runtime()->realmNameCallback)
+        nameCallback(cx, realm, name, sizeof(name));
     else
         strcpy(name, "<unknown>");
 
     DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
-    fprintf(dtrc->output, "# compartment %s [in zone %p]\n", name, (void*)comp->zone());
+    fprintf(dtrc->output, "# realm %s [in compartment %p, zone %p]\n", name,
+            (void*)realm->compartment(), (void*)realm->zone());
 }
 
 static void
@@ -1250,10 +1251,10 @@ js::DumpHeap(JSContext* cx, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
 
     dtrc.prefix = "> ";
     IterateHeapUnbarriered(cx, &dtrc,
-                                                   DumpHeapVisitZone,
-                                                   DumpHeapVisitCompartment,
-                                                   DumpHeapVisitArena,
-                                                   DumpHeapVisitCell);
+                           DumpHeapVisitZone,
+                           DumpHeapVisitRealm,
+                           DumpHeapVisitArena,
+                           DumpHeapVisitCell);
 
     fflush(dtrc.output);
 }

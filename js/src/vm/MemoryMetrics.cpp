@@ -332,10 +332,8 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
 }
 
 static void
-StatsRealmCallback(JSContext* cx, void* data, JSCompartment* compartment)
+StatsRealmCallback(JSContext* cx, void* data, Handle<Realm*> realm)
 {
-    Realm* realm = JS::GetRealmForCompartment(compartment);
-
     // Append a new RealmStats to the vector.
     RuntimeStats* rtStats = static_cast<StatsClosure*>(data)->rtStats;
 
@@ -344,7 +342,7 @@ StatsRealmCallback(JSContext* cx, void* data, JSCompartment* compartment)
     RealmStats& realmStats = rtStats->realmStatsVector.back();
     if (!realmStats.initClasses())
         MOZ_CRASH("oom");
-    rtStats->initExtraRealmStats(compartment, &realmStats);
+    rtStats->initExtraRealmStats(realm, &realmStats);
 
     realm->setRealmStats(&realmStats);
 
@@ -925,8 +923,7 @@ class SimpleJSRuntimeStats : public JS::RuntimeStats
         override
     {}
 
-    virtual void initExtraRealmStats(
-        JSCompartment* c, JS::RealmStats* realmStats) override
+    virtual void initExtraRealmStats(Handle<Realm*> realm, JS::RealmStats* realmStats) override
     {}
 };
 
@@ -950,10 +947,10 @@ AddSizeOfTab(JSContext* cx, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     if (!closure.init())
         return false;
     IterateHeapUnbarrieredForZone(cx, zone, &closure,
-                                                  StatsZoneCallback,
-                                                  StatsRealmCallback,
-                                                  StatsArenaCallback,
-                                                  StatsCellCallback<CoarseGrained>);
+                                  StatsZoneCallback,
+                                  StatsRealmCallback,
+                                  StatsArenaCallback,
+                                  StatsCellCallback<CoarseGrained>);
 
     MOZ_ASSERT(rtStats.zoneStatsVector.length() == 1);
     rtStats.zTotals.addSizes(rtStats.zoneStatsVector[0]);

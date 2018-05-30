@@ -1196,7 +1196,7 @@ public:
   }
 
   virtual void
-  initExtraRealmStats(JSCompartment* aCompartment,
+  initExtraRealmStats(JS::Handle<JS::Realm*> aRealm,
                       JS::RealmStats* aRealmStats)
                       override
   {
@@ -1208,10 +1208,11 @@ public:
 
     // This is the |jsPathPrefix|.  Each worker has exactly two realms:
     // one for atoms, and one for everything else.
+    JSCompartment* compartment = JS::GetCompartmentForRealm(aRealm);
     extras->jsPathPrefix.Assign(mRtPath);
     extras->jsPathPrefix += nsPrintfCString("zone(0x%p)/",
-                                            (void *)js::GetCompartmentZone(aCompartment));
-    extras->jsPathPrefix += js::IsAtomsRealm(JS::GetRealmForCompartment(aCompartment))
+                                            (void *)js::GetCompartmentZone(compartment));
+    extras->jsPathPrefix += js::IsAtomsRealm(aRealm)
                             ? NS_LITERAL_CSTRING("realm(web-worker-atoms)/")
                             : NS_LITERAL_CSTRING("realm(web-worker)/");
 
