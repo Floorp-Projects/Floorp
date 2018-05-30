@@ -30,7 +30,7 @@ tasks:
           git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}
           && git config advice.detachedHead false
           && git checkout {{event.head.sha}}
-          && ./gradlew --no-daemon clean assemble test detektCheck ktlint lint
+          && ./gradlew --no-daemon cleanBuildCache clean assemble test detektCheck ktlint lint
       artifacts:
         'public/reports':
           type: 'directory'
