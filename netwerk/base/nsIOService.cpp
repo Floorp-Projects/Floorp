@@ -48,6 +48,7 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/net/NeckoParent.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
@@ -1554,12 +1555,30 @@ nsIOService::GetManageOfflineStatus(bool* aManage)
 nsresult
 nsIOService::OnNetworkLinkEvent(const char *data)
 {
-    LOG(("nsIOService::OnNetworkLinkEvent data:%s\n", data));
-    if (!mNetworkLinkService)
-        return NS_ERROR_FAILURE;
+    if (IsNeckoChild()) {
+        // There is nothing IO service could do on the child process
+        // with this at the moment.  Feel free to add functionality
+        // here at will, though.
+        return NS_OK;
+    }
 
-    if (mShutdown)
+    if (mShutdown) {
         return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCString dataAsString(data);
+    for (auto* cp : mozilla::dom::ContentParent::AllProcesses(mozilla::dom::ContentParent::eLive)) {
+        PNeckoParent* neckoParent = SingleManagedOrNull(cp->ManagedPNeckoParent());
+        if (!neckoParent) {
+            continue;
+        }
+        Unused << neckoParent->SendNetworkChangeNotification(dataAsString);
+    }
+
+    LOG(("nsIOService::OnNetworkLinkEvent data:%s\n", data));
+    if (!mNetworkLinkService) {
+        return NS_ERROR_FAILURE;
+    }
 
     if (!mManageLinkStatus) {
         LOG(("nsIOService::OnNetworkLinkEvent mManageLinkStatus=false\n"));
@@ -1573,7 +1592,8 @@ nsIOService::OnNetworkLinkEvent(const char *data)
         // but the status of the captive portal may have changed.
         RecheckCaptivePortal();
         return NS_OK;
-    } else if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
+    }
+    if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         isUp = false;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
         isUp = true;

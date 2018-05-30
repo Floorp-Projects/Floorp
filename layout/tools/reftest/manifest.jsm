@@ -322,16 +322,14 @@ function ReadManifest(aURL, aFilter)
             if (g.compareRetainedDisplayLists) {
                 type = TYPE_REFTEST_EQUAL;
 
-                // We expect twice as many assertion failures when running in
-                // styloVsGecko mode because we run each test twice: once in
-                // Stylo mode and once in Gecko mode.
+                // We expect twice as many assertion failures when comparing
+                // tests because we run each test twice.
                 minAsserts *= 2;
                 maxAsserts *= 2;
 
-                // Skip the test if it is expected to fail in both Stylo and
-                // Gecko modes. It would unexpectedly "pass" in styloVsGecko
-                // mode when comparing the two failures, which is not a useful
-                // result.
+                // Skip the test if it is expected to fail in both modes.
+                // It would unexpectedly "pass" in comparison mode mode when
+                // comparing the two failures, which is not a useful result.
                 if (expected_status === EXPECTED_FAIL ||
                     expected_status === EXPECTED_RANDOM) {
                     expected_status = EXPECTED_DEATH;
@@ -481,9 +479,6 @@ function BuildConditionSandbox(aURL) {
 let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
 sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
 sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
-
-// TODO(emilio): Remove the remaining reftest expectations that mention stylo.
-sandbox.stylo = true;
 
     sandbox.skiaPdf = false;
 

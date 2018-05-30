@@ -139,6 +139,7 @@ class AsmJSGlobal
                 union U {
                     ValType importType_;
                     Val val_;
+                    U() : val_(Val()) {}
                 } u;
             } var;
             uint32_t ffiIndex_;
@@ -154,6 +155,7 @@ class AsmJSGlobal
                 ConstantKind kind_;
                 double value_;
             } constant;
+            V() : ffiIndex_(0) {}
         } u;
     } pod;
     CacheableChars field_;
@@ -7680,7 +7682,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, HandleValue imp
         if (!v.isPrimitive() && !HasPureCoercion(cx, v))
             return LinkFail(cx, "Imported values must be primitives");
 
-        switch (global.varInitImportType()) {
+        switch (global.varInitImportType().code()) {
           case ValType::I32: {
             int32_t i32;
             if (!ToInt32(cx, v, &i32))

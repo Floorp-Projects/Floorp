@@ -98,8 +98,7 @@
         .then(verifyAnonymizedCertificate)
         .catch(arrivingHereIsBad);
 
-      // Request direct attestation, which should prompt for user intervention,
-      // once 1430150 lands.
+      // Request direct attestation, which will prompt for user intervention.
       await requestMakeCredential("direct")
         .then(verifyDirectCertificate)
         .catch(arrivingHereIsBad);

@@ -22,6 +22,12 @@ if test "$OS_ARCH" = "WINNT"; then
             "$MOZ_UPDATE_CHANNEL" = "beta" -o \
             "$MOZ_UPDATE_CHANNEL" = "release"; then
       if ! test "$MOZ_DEBUG"; then
+        if ! test "$USE_STUB_INSTALLER"; then
+          # Expect USE_STUB_INSTALLER from taskcluster for downstream task consistency
+          echo "ERROR: STUB installer expected to be enabled but"
+          echo "ERROR: USE_STUB_INSTALLER is not specified in the environment"
+          exit 1
+        fi
         MOZ_STUB_INSTALLER=1
       fi
     fi

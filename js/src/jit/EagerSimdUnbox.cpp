@@ -100,7 +100,7 @@ UnboxSimdPhi(const JitRealm* jitRealm, MIRGraph& graph, MPhi* phi, SimdType unbo
 bool
 EagerSimdUnbox(MIRGenerator* mir, MIRGraph& graph)
 {
-    const JitRealm* jitRealm = mir->compartment->jitRealm();
+    const JitRealm* jitRealm = mir->realm->jitRealm();
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         if (mir->shouldCancel("Eager Simd Unbox"))
             return false;

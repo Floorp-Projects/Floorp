@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Zone.h"
+#include "vm/JSCompartment.h"
 
 namespace js {
 
@@ -107,26 +108,74 @@ struct CompartmentsInZoneIter
     friend class mozilla::Maybe<CompartmentsInZoneIter>;
 };
 
-// Note: this class currently assumes there's a single realm per compartment.
+class RealmsInCompartmentIter
+{
+    JSCompartment* comp;
+    JS::Realm** it;
+
+  public:
+    explicit RealmsInCompartmentIter(JSCompartment* comp)
+      : comp(comp)
+    {
+        it = comp->realms().begin();
+    }
+
+    bool done() const {
+        MOZ_ASSERT(it);
+        return it < comp->realms().begin() ||
+               it >= comp->realms().end();
+    }
+    void next() {
+        MOZ_ASSERT(!done());
+        it++;
+    }
+
+    JS::Realm* get() const {
+        MOZ_ASSERT(!done());
+        return *it;
+    }
+
+    operator JS::Realm*() const { return get(); }
+    JS::Realm* operator->() const { return get(); }
+};
+
 class RealmsInZoneIter
 {
     CompartmentsInZoneIter comp;
+    mozilla::Maybe<RealmsInCompartmentIter> realm;
 
   public:
     explicit RealmsInZoneIter(JS::Zone* zone)
       : comp(zone)
-    {}
+    {
+        settleOnCompartment();
+    }
+
+    void settleOnCompartment() {
+        if (!comp.done()) {
+            realm.emplace(comp.get());
+            MOZ_ASSERT(!realm->done(), "compartment must have at least one realm");
+        }
+    }
 
     bool done() const {
+        MOZ_ASSERT(comp.done() == realm.isNothing());
         return comp.done();
     }
     void next() {
         MOZ_ASSERT(!done());
-        comp.next();
+
+        realm->next();
+
+        if (realm->done()) {
+            realm.reset();
+            comp.next();
+            settleOnCompartment();
+        }
     }
 
     JS::Realm* get() const {
-        return JS::GetRealmForCompartment(comp.get());
+        return realm->get();
     }
 
     operator JS::Realm*() const { return get(); }

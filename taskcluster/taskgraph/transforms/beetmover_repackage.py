@@ -289,10 +289,8 @@ def generate_upstream_artifacts(job, build_task_ref, build_signing_task_ref,
                 if paths:
                     usable_paths = paths[:]
 
-                    no_stub = ("mozilla-esr60", "jamun")
-                    if project in no_stub:
-                        # Stub installer is only generated on win32 and not on esr
-                        # XXX We really should have a better solution for this
+                    use_stub = job["attributes"].get('stub-installer')
+                    if not use_stub:
                         if 'target.stub-installer.exe' in usable_paths:
                             usable_paths.remove('target.stub-installer.exe')
                     upstream_artifacts.append({

@@ -36,7 +36,7 @@ fails-if(Android) fails-if(usesRepeatResampling) fuzzy-if(webrender&&cocoaWidget
 == border-image-outset-1c.html border-image-outset-1-ref.html
 == border-image-nofill-1.html border-image-nofill-1-ref.html
 == border-image-outset-resize-1.html border-image-outset-resize-1-ref.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) fuzzy-if(winWidget&&stylo,144,448) == border-image-outset-move-1.html border-image-outset-move-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,140,514) fuzzy-if(winWidget,144,448) == border-image-outset-move-1.html border-image-outset-move-1-ref.html
 == border-image-style-none.html border-image-style-none-ref.html
 == border-image-style-none-length.html border-image-style-none-length-ref.html
 == border-image-style-none-auto.html border-image-style-none-auto-ref.html

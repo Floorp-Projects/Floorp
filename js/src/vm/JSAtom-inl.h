@@ -28,7 +28,7 @@ AtomToId(JSAtom* atom)
     if (atom->isIndex(&index) && index <= JSID_INT_MAX)
         return INT_TO_JSID(int32_t(index));
 
-    return JSID_FROM_BITS(size_t(atom));
+    return JSID_FROM_BITS(size_t(atom) | JSID_TYPE_STRING);
 }
 
 // Use the NameToId method instead!

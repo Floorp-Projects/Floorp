@@ -262,11 +262,9 @@ pub unsafe extern "C" fn rust_u2f_mgr_sign(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_u2f_mgr_cancel(mgr: *mut U2FManager) -> u64 {
+pub unsafe extern "C" fn rust_u2f_mgr_cancel(mgr: *mut U2FManager) {
     if !mgr.is_null() {
         // Ignore return value.
         let _ = (*mgr).cancel();
     }
-
-    new_tid()
 }

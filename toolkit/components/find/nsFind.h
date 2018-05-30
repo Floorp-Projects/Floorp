@@ -52,11 +52,6 @@ protected:
   nsCOMPtr<nsINode> mLastBlockParent;
   nsresult GetBlockParent(nsINode* aNode, nsINode** aParent);
 
-  // Utility routines:
-  bool IsBlockNode(nsIContent* aNode);
-  bool SkipNode(nsIContent* aNode);
-  bool IsVisibleNode(nsINode* aNode);
-
   // Move in the right direction for our search:
   nsresult NextNode(nsRange* aSearchRange,
                     nsRange* aStartPoint, nsRange* aEndPoint,

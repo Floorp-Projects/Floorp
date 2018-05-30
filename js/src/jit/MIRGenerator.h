@@ -34,7 +34,7 @@ class OptimizationInfo;
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
+    MIRGenerator(CompileRealm* realm, const JitCompileOptions& options,
                  TempAllocator* alloc, MIRGraph* graph,
                  const CompileInfo* info, const OptimizationInfo* optimizationInfo);
 
@@ -175,7 +175,7 @@ class MIRGenerator
     }
 
   public:
-    CompileCompartment* compartment;
+    CompileRealm* realm;
     CompileRuntime* runtime;
 
   protected:
