@@ -29,6 +29,7 @@ class nsRange;
 
 namespace mozilla {
 namespace dom {
+class Element;
 class Selection;
 } // namespace dom
 } // namespace mozilla
@@ -72,7 +73,7 @@ protected:
 
   void SetSelectionAndScroll(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
-  nsresult GetRootNode(nsIDocument* aDomDoc, nsIDOMNode** aNode);
+  nsresult GetRootNode(nsIDocument* aDomDoc, mozilla::dom::Element** aNode);
   nsresult GetSearchLimits(nsRange* aRange,
                            nsRange* aStartPt, nsRange* aEndPt,
                            nsIDocument* aDoc, mozilla::dom::Selection* aSel,

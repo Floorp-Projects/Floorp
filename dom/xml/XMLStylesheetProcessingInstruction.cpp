@@ -15,7 +15,6 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XMLStylesheetProcessingInstruction,
                                              ProcessingInstruction,
-                                             nsIDOMNode,
                                              nsIStyleSheetLinkingElement)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XMLStylesheetProcessingInstruction)
@@ -65,7 +64,7 @@ XMLStylesheetProcessingInstruction::UnbindFromTree(bool aDeep, bool aNullParent)
   Unused << UpdateStyleSheetInternal(oldDoc, nullptr);
 }
 
-// nsIDOMNode
+// nsINode
 
 void
 XMLStylesheetProcessingInstruction::SetNodeValueInternal(const nsAString& aNodeValue,

@@ -7,7 +7,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsIOService.h"
-#include "nsIDOMNode.h"
 #include "nsIProtocolHandler.h"
 #include "nsIFileProtocolHandler.h"
 #include "nscore.h"
@@ -717,7 +716,7 @@ nsIOService::NewFileURI(nsIFile *file, nsIURI **result)
 
 NS_IMETHODIMP
 nsIOService::NewChannelFromURI2(nsIURI* aURI,
-                                nsIDOMNode* aLoadingNode,
+                                nsINode* aLoadingNode,
                                 nsIPrincipal* aLoadingPrincipal,
                                 nsIPrincipal* aTriggeringPrincipal,
                                 uint32_t aSecurityFlags,
@@ -736,7 +735,7 @@ nsIOService::NewChannelFromURI2(nsIURI* aURI,
 }
 nsresult
 nsIOService::NewChannelFromURIWithClientAndController(nsIURI* aURI,
-                                                      nsIDOMNode* aLoadingNode,
+                                                      nsINode* aLoadingNode,
                                                       nsIPrincipal* aLoadingPrincipal,
                                                       nsIPrincipal* aTriggeringPrincipal,
                                                       const Maybe<ClientInfo>& aLoadingClientInfo,
@@ -775,7 +774,7 @@ nsresult
 nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
                                                      nsIURI* aProxyURI,
                                                      uint32_t aProxyFlags,
-                                                     nsIDOMNode* aLoadingNode,
+                                                     nsINode* aLoadingNode,
                                                      nsIPrincipal* aLoadingPrincipal,
                                                      nsIPrincipal* aTriggeringPrincipal,
                                                      const Maybe<ClientInfo>& aLoadingClientInfo,
@@ -799,10 +798,9 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     // types do.
     if (aLoadingNode || aLoadingPrincipal ||
         aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
-      nsCOMPtr<nsINode> loadingNode(do_QueryInterface(aLoadingNode));
       loadInfo = new LoadInfo(aLoadingPrincipal,
                               aTriggeringPrincipal,
-                              loadingNode,
+                              aLoadingNode,
                               aSecurityFlags,
                               aContentPolicyType,
                               aLoadingClientInfo,
@@ -934,7 +932,7 @@ NS_IMETHODIMP
 nsIOService::NewChannelFromURIWithProxyFlags2(nsIURI* aURI,
                                               nsIURI* aProxyURI,
                                               uint32_t aProxyFlags,
-                                              nsIDOMNode* aLoadingNode,
+                                              nsINode* aLoadingNode,
                                               nsIPrincipal* aLoadingPrincipal,
                                               nsIPrincipal* aTriggeringPrincipal,
                                               uint32_t aSecurityFlags,
@@ -958,7 +956,7 @@ NS_IMETHODIMP
 nsIOService::NewChannel2(const nsACString& aSpec,
                          const char* aCharset,
                          nsIURI* aBaseURI,
-                         nsIDOMNode* aLoadingNode,
+                         nsINode* aLoadingNode,
                          nsIPrincipal* aLoadingPrincipal,
                          nsIPrincipal* aTriggeringPrincipal,
                          uint32_t aSecurityFlags,

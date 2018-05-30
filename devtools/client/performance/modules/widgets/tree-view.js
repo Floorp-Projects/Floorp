@@ -177,9 +177,9 @@ function CallView({
 CallView.prototype = extend(AbstractTreeItem.prototype, {
   /**
    * Creates the view for this tree node.
-   * @param nsIDOMNode document
-   * @param nsIDOMNode arrowNode
-   * @return nsIDOMNode
+   * @param Node document
+   * @param Node arrowNode
+   * @return Node
    */
   _displaySelf: function(document, arrowNode) {
     let frameInfo = this.getDisplayedData();

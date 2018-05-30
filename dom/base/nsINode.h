@@ -11,7 +11,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
-#include "nsIDOMNode.h"
 #include "mozilla/dom/NodeInfo.h"            // member (in nsCOMPtr)
 #include "nsIVariant.h"             // for use in GetUserData()
 #include "nsIWeakReference.h"
@@ -587,8 +586,6 @@ public:
     return NodeType() == ATTRIBUTE_NODE;
   }
 
-  virtual nsIDOMNode* AsDOMNode() = 0;
-
   /**
    * Return if this node has any children.
    */
@@ -696,7 +693,7 @@ public:
 
   /**
    * The values returned by this function are the ones defined for
-   * nsIDOMNode.nodeType
+   * Node.nodeType
    */
   uint16_t NodeType() const
   {
@@ -2120,11 +2117,6 @@ protected:
   // Storage for more members that are usually not needed; allocated lazily.
   nsSlots* mSlots;
 };
-
-inline nsIDOMNode* GetAsDOMNode(nsINode* aNode)
-{
-  return aNode ? aNode->AsDOMNode() : nullptr;
-}
 
 // Useful inline function for getting a node given an nsIContent and an
 // nsIDocument.  Returns the first argument cast to nsINode if it is non-null,

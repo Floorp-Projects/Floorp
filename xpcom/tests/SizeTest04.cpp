@@ -1,9 +1,9 @@
 // Test04.cpp
 
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsCOMPtr.h"
 
-NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsINode);
 
 	/*
 		Windows:
@@ -21,10 +21,10 @@ class Test04_Raw
 			Test04_Raw();
 		 ~Test04_Raw();
 
-			void /*nsresult*/ SetNode( nsIDOMNode* newNode );
+			void /*nsresult*/ SetNode( nsINode* newNode );
 
 		private:
-			nsIDOMNode* mNode;
+			nsINode* mNode;
 	};
 
 Test04_Raw::Test04_Raw()
@@ -39,7 +39,7 @@ Test04_Raw::~Test04_Raw()
 	}
 
 void // nsresult
-Test04_Raw::SetNode( nsIDOMNode* newNode )
+Test04_Raw::SetNode( nsINode* newNode )
 		// m120, w36
 	{
 		NS_IF_ADDREF(newNode);
@@ -54,14 +54,14 @@ Test04_Raw::SetNode( nsIDOMNode* newNode )
 class Test04_nsCOMPtr
 	{
 		public:
-			void /*nsresult*/ SetNode( nsIDOMNode* newNode );
+			void /*nsresult*/ SetNode( nsINode* newNode );
 
 		private:
-			nsCOMPtr<nsIDOMNode> mNode;
+			nsCOMPtr<nsINode> mNode;
 	};
 
 void // nsresult
-Test04_nsCOMPtr::SetNode( nsIDOMNode* newNode )
+Test04_nsCOMPtr::SetNode( nsINode* newNode )
 		// m36, w13/13
 	{
 		mNode = newNode;

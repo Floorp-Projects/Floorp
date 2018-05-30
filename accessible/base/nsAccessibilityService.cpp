@@ -1661,17 +1661,16 @@ nsAccessibilityService::RemoveNativeRootAccessible(Accessible* aAccessible)
 }
 
 bool
-nsAccessibilityService::HasAccessible(nsIDOMNode* aDOMNode)
+nsAccessibilityService::HasAccessible(nsINode* aDOMNode)
 {
-  nsCOMPtr<nsINode> node(do_QueryInterface(aDOMNode));
-  if (!node)
+  if (!aDOMNode)
     return false;
 
-  DocAccessible* document = GetDocAccessible(node->OwnerDoc());
+  DocAccessible* document = GetDocAccessible(aDOMNode->OwnerDoc());
   if (!document)
     return false;
 
-  return document->HasAccessible(node);
+  return document->HasAccessible(aDOMNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

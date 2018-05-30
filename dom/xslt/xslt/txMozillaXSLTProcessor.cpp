@@ -820,13 +820,10 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
                         static_cast<txNodeSet*>
                                    (static_cast<txAExprResult*>(result));
 
-                    nsCOMPtr<nsIDOMNode> node;
                     int32_t i, count = nodeSet->size();
                     for (i = 0; i < count; ++i) {
-                        rv = txXPathNativeNode::getNode(nodeSet->get(i),
-                                                        getter_AddRefs(node));
-                        NS_ENSURE_SUCCESS(rv, rv);
-
+                        nsINode* node =
+                            txXPathNativeNode::getNode(nodeSet->get(i));
                         if (!nsContentUtils::CanCallerAccess(node)) {
                             return NS_ERROR_DOM_SECURITY_ERR;
                         }
@@ -896,7 +893,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
             uint32_t i;
             for (i = 0; i < count; ++i) {
                 nsISupports *supports = values[i];
-                nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
+                nsCOMPtr<nsINode> node = do_QueryInterface(supports);
 
                 if (node) {
                     rv = nsContentUtils::CanCallerAccess(node) ? NS_OK :

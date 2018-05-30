@@ -150,7 +150,6 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
     if (prefetchService) {
       nsCOMPtr<nsIURI> uri(GetURI());
       if (uri) {
-        nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
         if (linkTypes & nsStyleLinkElement::ePRELOAD) {
           nsAttrValue asAttr;
           nsContentPolicyType policyType;
@@ -170,11 +169,11 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
 
           prefetchService->PreloadURI(uri,
                                       mElement->OwnerDoc()->GetDocumentURI(),
-                                      domNode, policyType);
+                                      mElement, policyType);
         } else {
           prefetchService->PrefetchURI(uri,
                                        mElement->OwnerDoc()->GetDocumentURI(),
-                                       domNode, linkTypes & nsStyleLinkElement::ePREFETCH);
+                                       mElement, linkTypes & nsStyleLinkElement::ePREFETCH);
         }
         return;
       }
@@ -232,8 +231,6 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     return;
   }
 
-  nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
-
   nsAttrValue asAttr;
   nsContentPolicyType asPolicyType;
   nsAutoString mimeType;
@@ -243,7 +240,7 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   if (asPolicyType == nsIContentPolicy::TYPE_INVALID) {
     // Ignore preload with a wrong or empty as attribute, but be sure to cancel
     // the old one.
-    prefetchService->CancelPrefetchPreloadURI(uri, domNode);
+    prefetchService->CancelPrefetchPreloadURI(uri, mElement);
     return;
   }
 
@@ -257,9 +254,9 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     CORSMode corsMode = Element::AttrValueToCORSMode(aValue);
     CORSMode oldCorsMode = Element::AttrValueToCORSMode(aOldValue);
     if (corsMode != oldCorsMode) {
-      prefetchService->CancelPrefetchPreloadURI(uri, domNode);
+      prefetchService->CancelPrefetchPreloadURI(uri, mElement);
       prefetchService->PreloadURI(uri, mElement->OwnerDoc()->GetDocumentURI(),
-                                  domNode, policyType);
+                                  mElement, policyType);
     }
     return;
   }
@@ -310,7 +307,7 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
 
   if ((policyType != oldPolicyType) &&
       (oldPolicyType != nsIContentPolicy::TYPE_INVALID)) {
-    prefetchService->CancelPrefetchPreloadURI(uri, domNode);
+    prefetchService->CancelPrefetchPreloadURI(uri, mElement);
 
   }
 
@@ -320,7 +317,7 @@ Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   if ((policyType != oldPolicyType) ||
       (policyType == nsIContentPolicy::TYPE_INVALID)) {
     prefetchService->PreloadURI(uri, mElement->OwnerDoc()->GetDocumentURI(),
-                                domNode, policyType);
+                                mElement, policyType);
   }
 }
 
@@ -331,8 +328,7 @@ Link::CancelPrefetchOrPreload()
   if (prefetchService) {
     nsCOMPtr<nsIURI> uri(GetURI());
     if (uri) {
-      nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
-      prefetchService->CancelPrefetchPreloadURI(uri, domNode);
+      prefetchService->CancelPrefetchPreloadURI(uri, mElement);
     }
   }
 }

@@ -190,7 +190,7 @@ public:
                           gfxContext* aThebesContext) override;
 
   already_AddRefed<SourceSurface>
-  RenderNode(nsIDOMNode* aNode,
+  RenderNode(nsINode* aNode,
              nsIntRegion* aRegion,
              const LayoutDeviceIntPoint aPoint,
              LayoutDeviceIntRect* aScreenRect,
@@ -278,7 +278,7 @@ public:
   NS_IMETHOD CompleteScroll(bool aForward) override;
   NS_IMETHOD CompleteMove(bool aForward, bool aExtend) override;
   NS_IMETHOD SelectAll() override;
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool *_retval) override;
+  NS_IMETHOD CheckVisibility(nsINode *node, int16_t startOffset, int16_t EndOffset, bool *_retval) override;
   nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
                                   int16_t aEndOffset, bool* aRetval) override;
 

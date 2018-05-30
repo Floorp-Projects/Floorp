@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsMappedAttributeElement.h"
-#include "nsIDOMNode.h"
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
@@ -46,8 +45,7 @@ typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 /**
  * A common superclass for HTML elements
  */
-class nsGenericHTMLElement : public nsGenericHTMLElementBase,
-                             public nsIDOMNode
+class nsGenericHTMLElement : public nsGenericHTMLElementBase
 {
 public:
   using Element::SetTabIndex;
@@ -61,7 +59,8 @@ public:
     SetFlags(NODE_HAS_DIRECTION_LTR);
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(nsGenericHTMLElement,
+                                       nsGenericHTMLElementBase)
 
   NS_IMPL_FROMNODE(nsGenericHTMLElement, kNameSpaceID_XHTML)
 
@@ -268,8 +267,6 @@ public:
    */
   MOZ_CAN_RUN_SCRIPT
   nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
-
-  virtual nsIDOMNode* AsDOMNode() override { return this; }
 
 public:
   // Implementation for nsIContent

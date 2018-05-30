@@ -10,7 +10,6 @@
 
 #include "mozilla/dom/NodeIterator.h"
 
-#include "nsIDOMNode.h"
 #include "nsError.h"
 
 #include "nsIContent.h"

@@ -25,7 +25,6 @@
 #include "nsCRT.h"
 #include "nsGenericHTMLElement.h"
 
-#include "nsIDOMNode.h"
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
 #include "nsIImageDocument.h"

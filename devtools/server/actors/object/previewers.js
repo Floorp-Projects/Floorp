@@ -602,7 +602,7 @@ previewers.Object = [
 
   function DOMNode({obj, hooks}, grip, rawObj) {
     if (isWorker || obj.class == "Object" || !rawObj ||
-        !(rawObj instanceof Ci.nsIDOMNode)) {
+        !Node.isInstance(rawObj)) {
       return false;
     }
 

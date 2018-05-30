@@ -2106,8 +2106,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   int32_t imageX, imageY;
   Element* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
 
-  nsCOMPtr<nsIArray> transArray =
-    aDataTransfer->GetTransferables(dragTarget->AsDOMNode());
+  nsCOMPtr<nsIArray> transArray = aDataTransfer->GetTransferables(dragTarget);
   if (!transArray)
     return false;
 
@@ -2157,11 +2156,10 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
     }
 #endif
 
-    dragService->InvokeDragSessionWithImage(dragTarget->AsDOMNode(),
+    dragService->InvokeDragSessionWithImage(dragTarget,
                                             aPrincipalURISpec, transArray,
                                             region, action,
-                                            dragImage ? dragImage->AsDOMNode() :
-                                                        nullptr,
+                                            dragImage,
                                             imageX, imageY, event,
                                             dataTransfer);
   }

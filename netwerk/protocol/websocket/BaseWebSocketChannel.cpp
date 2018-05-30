@@ -14,7 +14,6 @@
 #include "nsProxyRelease.h"
 #include "nsStandardURL.h"
 #include "LoadInfo.h"
-#include "nsIDOMNode.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsITransportProvider.h"
 
@@ -215,15 +214,14 @@ BaseWebSocketChannel::SetPingTimeout(uint32_t aSeconds)
 }
 
 NS_IMETHODIMP
-BaseWebSocketChannel::InitLoadInfo(nsIDOMNode* aLoadingNode,
+BaseWebSocketChannel::InitLoadInfo(nsINode* aLoadingNode,
                                    nsIPrincipal* aLoadingPrincipal,
                                    nsIPrincipal* aTriggeringPrincipal,
                                    uint32_t aSecurityFlags,
                                    uint32_t aContentPolicyType)
 {
-  nsCOMPtr<nsINode> node = do_QueryInterface(aLoadingNode);
   mLoadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
-                           node, aSecurityFlags, aContentPolicyType);
+                           aLoadingNode, aSecurityFlags, aContentPolicyType);
   return NS_OK;
 }
 

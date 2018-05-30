@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Ci, Cu} = require("chrome");
+const {Cu} = require("chrome");
 
 loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
 loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
@@ -41,7 +41,7 @@ function nodeDocument(node) {
     return null;
   }
   return node.ownerDocument ||
-         (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
+         (node.nodeType == Node.DOCUMENT_NODE ? node : null);
 }
 
 function isNodeDead(node) {
@@ -106,7 +106,7 @@ function allAnonymousContentTreeWalkerFilter(node) {
  * @return {Boolean}
  */
 function isWhitespaceTextNode(node) {
-  return node.nodeType == Ci.nsIDOMNode.TEXT_NODE && !/[^\s]/.exec(node.nodeValue);
+  return node.nodeType == Node.TEXT_NODE && !/[^\s]/.exec(node.nodeValue);
 }
 
 /**

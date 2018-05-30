@@ -5,7 +5,7 @@
  
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
+webidl Node;
 
 /**
  * An interface implemented by a tooltip text provider service. This
@@ -24,7 +24,7 @@ interface nsIDOMNode;
  *
  * @see nsITooltipListener
  * @see nsIComponentManager
- * @see nsIDOMNode
+ * @see Node
  */
 [scriptable, uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
 interface nsITooltipTextProvider : nsISupports
@@ -40,5 +40,5 @@ interface nsITooltipTextProvider : nsISupports
      *         with the node and was returned in the aText argument;
      *         <CODE>PR_FALSE</CODE> otherwise.
      */
-    boolean getNodeText(in nsIDOMNode aNode, out wstring aText, out wstring aDirection);
+    boolean getNodeText(in Node aNode, out wstring aText, out wstring aDirection);
 };

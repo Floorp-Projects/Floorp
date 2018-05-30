@@ -431,15 +431,14 @@ DataTransfer::GetMozSourceNode()
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> sourceNode;
+  nsCOMPtr<nsINode> sourceNode;
   dragSession->GetSourceNode(getter_AddRefs(sourceNode));
-  nsCOMPtr<nsINode> node = do_QueryInterface(sourceNode);
-  if (node && !nsContentUtils::LegacyIsCallerNativeCode()
-      && !nsContentUtils::CanCallerAccess(node)) {
+  if (sourceNode && !nsContentUtils::LegacyIsCallerNativeCode()
+      && !nsContentUtils::CanCallerAccess(sourceNode)) {
     return nullptr;
   }
 
-  return node.forget();
+  return sourceNode.forget();
 }
 
 already_AddRefed<DOMStringList>
@@ -744,7 +743,7 @@ DataTransfer::UpdateDragImage(Element& aImage, int32_t aX, int32_t aY)
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   if (dragSession) {
-    dragSession->UpdateDragImage(aImage.AsDOMNode(), aX, aY);
+    dragSession->UpdateDragImage(&aImage, aX, aY);
   }
 }
 
@@ -822,16 +821,11 @@ DataTransfer::Clone(nsISupports* aParent, EventMessage aEventMessage,
 }
 
 already_AddRefed<nsIArray>
-DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
+DataTransfer::GetTransferables(nsINode* aDragTarget)
 {
   MOZ_ASSERT(aDragTarget);
 
-  nsCOMPtr<nsINode> dragNode = do_QueryInterface(aDragTarget);
-  if (!dragNode) {
-    return nullptr;
-  }
-
-  nsIDocument* doc = dragNode->GetComposedDoc();
+  nsIDocument* doc = aDragTarget->GetComposedDoc();
   if (!doc) {
     return nullptr;
   }

@@ -326,7 +326,7 @@ var LabelUtils = {
         return;
       }
 
-      if (el.nodeType == Ci.nsIDOMNode.TEXT_NODE || el.childNodes.length == 0) {
+      if (el.nodeType == el.TEXT_NODE || el.childNodes.length == 0) {
         let trimmedText = el.textContent.trim();
         if (trimmedText) {
           strings.push(trimmedText);
@@ -336,7 +336,7 @@ var LabelUtils = {
 
       for (let node of el.childNodes) {
         let nodeType = node.nodeType;
-        if (nodeType != Ci.nsIDOMNode.ELEMENT_NODE && nodeType != Ci.nsIDOMNode.TEXT_NODE) {
+        if (nodeType != node.ELEMENT_NODE && nodeType != node.TEXT_NODE) {
           continue;
         }
         _extractLabelStrings(node);

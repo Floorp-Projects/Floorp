@@ -67,11 +67,11 @@ public class GeckoViewActivity extends Activity {
             if (extras != null) {
                 runtimeSettingsBuilder.extras(extras);
             }
-
             runtimeSettingsBuilder
-                    .useContentProcessHint(useMultiprocess)
-                    .nativeCrashReportingEnabled(true)
-                    .javaCrashReportingEnabled(true);
+                .useContentProcessHint(useMultiprocess)
+                .nativeCrashReportingEnabled(true)
+                .javaCrashReportingEnabled(true)
+                .trackingProtectionCategories(TrackingProtectionDelegate.CATEGORY_ALL);
 
             sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
         }
@@ -79,6 +79,8 @@ public class GeckoViewActivity extends Activity {
         final GeckoSessionSettings sessionSettings = new GeckoSessionSettings();
         sessionSettings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS,
                                    useMultiprocess);
+        sessionSettings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION,
+                                   true);
         mGeckoSession = new GeckoSession(sessionSettings);
 
         mGeckoView.setSession(mGeckoSession, sGeckoRuntime);
@@ -96,12 +98,6 @@ public class GeckoViewActivity extends Activity {
         final MyGeckoViewPermission permission = new MyGeckoViewPermission();
         permission.androidPermissionRequestCode = REQUEST_PERMISSIONS;
         mGeckoSession.setPermissionDelegate(permission);
-
-        mGeckoSession.enableTrackingProtection(
-              TrackingProtectionDelegate.CATEGORY_AD |
-              TrackingProtectionDelegate.CATEGORY_ANALYTIC |
-              TrackingProtectionDelegate.CATEGORY_SOCIAL
-        );
 
         loadSettings(getIntent());
         loadFromIntent(getIntent());
@@ -382,26 +378,44 @@ public class GeckoViewActivity extends Activity {
         private int mBlockedAds = 0;
         private int mBlockedAnalytics = 0;
         private int mBlockedSocial = 0;
+        private int mBlockedContent = 0;
+        private int mBlockedTest = 0;
 
         private void clearCounters() {
             mBlockedAds = 0;
             mBlockedAnalytics = 0;
             mBlockedSocial = 0;
+            mBlockedContent = 0;
+            mBlockedTest = 0;
         }
 
         private void logCounters() {
             Log.d(LOGTAG, "Trackers blocked: " + mBlockedAds + " ads, " +
                   mBlockedAnalytics + " analytics, " +
-                  mBlockedSocial + " social");
+                  mBlockedSocial + " social, " +
+                  mBlockedContent + " content, " +
+                  mBlockedTest + " test");
         }
 
         @Override
         public void onTrackerBlocked(final GeckoSession session, final String uri,
                                      int categories) {
             Log.d(LOGTAG, "onTrackerBlocked " + categories + " (" + uri + ")");
-            mBlockedAds += categories & TrackingProtectionDelegate.CATEGORY_AD;
-            mBlockedAnalytics += categories & TrackingProtectionDelegate.CATEGORY_ANALYTIC;
-            mBlockedSocial += categories & TrackingProtectionDelegate.CATEGORY_SOCIAL;
+            if ((categories & TrackingProtectionDelegate.CATEGORY_TEST) != 0) {
+                mBlockedTest++;
+            }
+            if ((categories & TrackingProtectionDelegate.CATEGORY_AD) != 0) {
+                mBlockedAds++;
+            }
+            if ((categories & TrackingProtectionDelegate.CATEGORY_ANALYTIC) != 0) {
+                mBlockedAnalytics++;
+            }
+            if ((categories & TrackingProtectionDelegate.CATEGORY_SOCIAL) != 0) {
+                mBlockedSocial++;
+            }
+            if ((categories & TrackingProtectionDelegate.CATEGORY_CONTENT) != 0) {
+                mBlockedContent++;
+            }
         }
     }
 }

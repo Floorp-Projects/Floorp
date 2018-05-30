@@ -501,15 +501,11 @@ XULListboxAccessible::ContainerWidget() const
     nsCOMPtr<nsIDOMXULMenuListElement> menuListElm =
       do_QueryInterface(mContent->GetParent());
     if (menuListElm) {
-      nsCOMPtr<nsIDOMNode> inputElm;
+      RefPtr<mozilla::dom::Element> inputElm;
       menuListElm->GetInputField(getter_AddRefs(inputElm));
       if (inputElm) {
-        nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
-        if (inputNode) {
-          Accessible* input =
-            mDoc->GetAccessible(inputNode);
+          Accessible* input = mDoc->GetAccessible(inputElm);
           return input ? input->ContainerWidget() : nullptr;
-        }
       }
     }
   }

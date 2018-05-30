@@ -29,9 +29,9 @@ var Chart = {
 /**
  * A simple pie chart proxy for the underlying view.
  * Each item in the `slices` property represents a [data, node] pair containing
- * the data used to create the slice and the nsIDOMNode displaying it.
+ * the data used to create the slice and the Node displaying it.
  *
- * @param nsIDOMNode node
+ * @param Node node
  *        The node representing the view for this chart.
  */
 function PieChart(node) {
@@ -43,9 +43,9 @@ function PieChart(node) {
 /**
  * A simple table chart proxy for the underlying view.
  * Each item in the `rows` property represents a [data, node] pair containing
- * the data used to create the row and the nsIDOMNode displaying it.
+ * the data used to create the row and the Node displaying it.
  *
- * @param nsIDOMNode node
+ * @param Node node
  *        The node representing the view for this chart.
  */
 function TableChart(node) {
@@ -57,7 +57,7 @@ function TableChart(node) {
 /**
  * A simple pie+table chart proxy for the underlying view.
  *
- * @param nsIDOMNode node
+ * @param Node node
  *        The node representing the view for this chart.
  * @param PieChart pie
  *        The pie chart proxy.
@@ -449,13 +449,13 @@ function emptyTableChartData() {
 }
 
 /**
- * Delegates DOM events emitted by an nsIDOMNode to an EventEmitter proxy.
+ * Delegates DOM events emitted by a Node to an EventEmitter proxy.
  *
  * @param EventEmitter emitter
  *        The event emitter proxy instance.
  * @param array events
  *        An array of events, e.g. ["mouseover", "mouseout"].
- * @param nsIDOMNode node
+ * @param Node node
  *        The element firing the DOM events.
  * @param any args
  *        The arguments passed when emitting events through the proxy.

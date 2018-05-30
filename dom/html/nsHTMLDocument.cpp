@@ -22,7 +22,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIDOMNode.h" // for Find
 #include "nsPIDOMWindow.h"
 #include "nsDOMString.h"
 #include "nsIStreamListener.h"
@@ -1179,7 +1178,7 @@ nsHTMLDocument::Open(JSContext* /* unused */,
                      bool aReplace,
                      ErrorResult& rv)
 {
-  MOZ_ASSERT(nsContentUtils::CanCallerAccess(static_cast<nsIDOMNode*>(this)),
+  MOZ_ASSERT(nsContentUtils::CanCallerAccess(this),
              "XOW should have caught this!");
 
   nsCOMPtr<nsPIDOMWindowInner> window = GetInnerWindow();
@@ -1209,7 +1208,7 @@ nsHTMLDocument::Open(JSContext* cx,
   // Implements the "When called with two arguments (or fewer)" steps here:
   // https://html.spec.whatwg.org/multipage/webappapis.html#opening-the-input-stream
 
-  MOZ_ASSERT(nsContentUtils::CanCallerAccess(static_cast<nsIDOMNode*>(this)),
+  MOZ_ASSERT(nsContentUtils::CanCallerAccess(this),
              "XOW should have caught this!");
   if (!IsHTMLDocument() || mDisableDocWrite) {
     // No calling document.open() on XHTML

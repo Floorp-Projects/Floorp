@@ -23,28 +23,22 @@ using mozilla::dom::Element;
 // static helper functions
 //
 
-static nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell);
 static void GetAttribute(nsIXULWindow *inWindow, const nsAString &inAttribute,
                          nsAString &outValue);
 static void GetWindowType(nsIXULWindow* inWindow, nsString &outType);
 
-nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
+static Element* GetElementFromDocShell(nsIDocShell *aShell)
 {
-  nsCOMPtr<nsIDOMNode> node;
-
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
     nsCOMPtr<nsIDocument> doc = cv->GetDocument();
     if (doc) {
-      Element* element = doc->GetDocumentElement();
-      if (element) {
-        node = element->AsDOMNode();
-      }
+      return doc->GetDocumentElement();
     }
   }
 
-  return node;
+  return nullptr;
 }
 
 // generic "retrieve the value of a XUL attribute" function
@@ -53,11 +47,9 @@ void GetAttribute(nsIXULWindow *inWindow, const nsAString &inAttribute,
 {
   nsCOMPtr<nsIDocShell> shell;
   if (inWindow && NS_SUCCEEDED(inWindow->GetDocShell(getter_AddRefs(shell)))) {
-    nsCOMPtr<nsIDOMNode> node(GetDOMNodeFromDocShell(shell));
-    if (node) {
-      nsCOMPtr<Element> webshellElement(do_QueryInterface(node));
-      if (webshellElement)
-        webshellElement->GetAttribute(inAttribute, outValue);
+    RefPtr<Element> webshellElement = GetElementFromDocShell(shell);
+    if (webshellElement) {
+      webshellElement->GetAttribute(inAttribute, outValue);
     }
   }
 }

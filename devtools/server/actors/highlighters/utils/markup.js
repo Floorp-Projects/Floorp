@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci, Cu, Cr } = require("chrome");
+const { Cu, Cr } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
   getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -104,7 +104,7 @@ exports.isXUL = isXUL;
  * @param {Number} nodeType Optional, defaults to ELEMENT_NODE
  * @return {Boolean}
  */
-function isNodeValid(node, nodeType = Ci.nsIDOMNode.ELEMENT_NODE) {
+function isNodeValid(node, nodeType = Node.ELEMENT_NODE) {
   // Is it still alive?
   if (!node || Cu.isDeadWrapper(node)) {
     return false;

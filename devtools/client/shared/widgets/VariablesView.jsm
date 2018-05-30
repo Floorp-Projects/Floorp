@@ -54,7 +54,7 @@ this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
  * provide a "switch" function. To handle deleting variables or properties,
  * provide a "delete" function.
  *
- * @param nsIDOMNode aParentNode
+ * @param Node aParentNode
  *        The parent node to hold this view.
  * @param object aFlags [optional]
  *        An object contaning initialization options for this view.
@@ -632,7 +632,7 @@ VariablesView.prototype = {
    * Recursively searches this container for the scope, variable or property
    * displayed by the specified node.
    *
-   * @param nsIDOMNode aNode
+   * @param Node aNode
    *        The node to search for.
    * @return Scope | Variable | Property
    *         The matched scope, variable or property, or null if nothing is found.
@@ -979,7 +979,7 @@ VariablesView.prototype = {
 
   /**
    * Gets the parent node holding this view.
-   * @return nsIDOMNode
+   * @return Node
    */
   get boxObject() {
     return this._list.boxObject;
@@ -987,7 +987,7 @@ VariablesView.prototype = {
 
   /**
    * Gets the parent node holding this view.
-   * @return nsIDOMNode
+   * @return Node
    */
   get parentNode() {
     return this._parent;
@@ -1381,7 +1381,7 @@ Scope.prototype = {
    * Recursively searches for the variable or property in this container
    * displayed by the specified node.
    *
-   * @param nsIDOMNode aNode
+   * @param Node aNode
    *        The node to search for.
    * @return Variable | Property
    *         The matched variable or property, or null if nothing is found.
@@ -1748,7 +1748,7 @@ Scope.prototype = {
 
   /**
    * Gets the element associated with this item.
-   * @return nsIDOMNode
+   * @return Node
    */
   get target() {
     return this._target;
@@ -2049,7 +2049,7 @@ Scope.prototype = {
 
   /**
    * Gets the parent node holding this scope.
-   * @return nsIDOMNode
+   * @return Node
    */
   get parentNode() {
     return this.ownerView._list;

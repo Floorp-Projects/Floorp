@@ -1326,7 +1326,7 @@ FragmentOrElement::FireNodeInserted(nsIDocument* aDoc,
     if (nsContentUtils::HasMutationListeners(childContent,
           NS_EVENT_BITS_MUTATION_NODEINSERTED, aParent)) {
       InternalMutationEvent mutation(true, eLegacyNodeInserted);
-      mutation.mRelatedNode = do_QueryInterface(aParent);
+      mutation.mRelatedNode = aParent;
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
       (new AsyncEventDispatcher(childContent, mutation))->RunDOMEventWhenSafe();
@@ -2242,9 +2242,9 @@ FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (aIncludeSelf) {
-    docEncoder->SetNativeNode(this);
+    docEncoder->SetNode(this);
   } else {
-    docEncoder->SetNativeContainerNode(this);
+    docEncoder->SetContainerNode(this);
   }
   rv = docEncoder->EncodeToString(aMarkup);
   MOZ_ASSERT(NS_SUCCEEDED(rv));

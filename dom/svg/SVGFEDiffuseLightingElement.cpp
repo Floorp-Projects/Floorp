@@ -23,7 +23,7 @@ SVGFEDiffuseLightingElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGiv
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDiffuseLightingElement)
 

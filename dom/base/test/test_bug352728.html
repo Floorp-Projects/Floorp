@@ -26,15 +26,6 @@ function checkTypes(aNode, aNodeType, aTypeArray)
   }
 }
 
-function checkInterfaces(aNode, aNodeType, aInterfaceArray)
-{
-  for (var i = 0; i < aInterfaceArray.length; ++i) {
-    ok(aNode instanceof SpecialPowers.Ci[aInterfaceArray[i]],
-       aNodeType + " interface test " + i,
-       aNodeType + " should be a " + aInterfaceArray[i]);
-  }
-}
-
 function testCharacterData(aNode, aText)
 {
   is(aNode.length, aText.length, "Text length should match");
@@ -50,9 +41,6 @@ function testComment(aText)
     var comment = document.createComment(aText);
     var types = [ Comment, CharacterData, Node ];
     checkTypes(comment, "comment", types);
-
-    var interfaces = [ "nsIDOMNode" ];
-    checkInterfaces(comment, "comment", interfaces);
 
     testCharacterData(comment, aText);
     is(comment.nodeName, "#comment", "Check nodeName");
@@ -80,9 +68,6 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
     var pi = document.createProcessingInstruction(aTarget, aData);
     var types = [ ProcessingInstruction, Node ];
     checkTypes(pi, "processing instruction", types);
-
-    var interfaces = [ "nsIDOMNode" ];
-    checkInterfaces(pi, "processing instruction", interfaces);
 
     is(pi.target, aTarget, "Check target");
     is(pi.data, aData, "Check data");
