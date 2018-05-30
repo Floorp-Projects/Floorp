@@ -21,6 +21,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/File.h"
 
+class nsIDOMNode;
 class nsINode;
 class nsITransferable;
 class nsILoadContext;

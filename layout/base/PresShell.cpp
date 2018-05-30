@@ -5103,7 +5103,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
 }
 
 already_AddRefed<SourceSurface>
-PresShell::RenderNode(nsIDOMNode* aNode,
+PresShell::RenderNode(nsINode* aNode,
                       nsIntRegion* aRegion,
                       const LayoutDeviceIntPoint aPoint,
                       LayoutDeviceIntRect* aScreenRect,
@@ -5115,13 +5115,12 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   nsTArray<UniquePtr<RangePaintInfo>> rangeItems;
 
   // nothing to draw if the node isn't in a document
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  if (!node->IsInUncomposedDoc())
+  if (!aNode->IsInUncomposedDoc())
     return nullptr;
 
-  RefPtr<nsRange> range = new nsRange(node);
+  RefPtr<nsRange> range = new nsRange(aNode);
   IgnoredErrorResult rv;
-  range->SelectNode(*node, rv);
+  range->SelectNode(*aNode, rv);
   if (rv.Failed()) {
     return nullptr;
   }
