@@ -288,7 +288,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   }
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(images.Length() * VIDEO_TRACK_RATE);
 
   // Pull Encoded Data back from encoder.
@@ -311,7 +311,7 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode)
                       PRINCIPAL_HANDLE_NONE);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.NotifyEndOfStream();
 
@@ -353,7 +353,7 @@ TEST(VP8VideoTrackEncoder, SameFrameEncode)
   }
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 15);
   encoder.NotifyEndOfStream();
 
@@ -400,7 +400,7 @@ TEST(VP8VideoTrackEncoder, NullFrameFirst)
                       now + TimeDuration::FromSeconds(0.3));
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(3 * VIDEO_TRACK_RATE / 10);
   encoder.NotifyEndOfStream();
 
@@ -439,7 +439,7 @@ TEST(VP8VideoTrackEncoder, SkippedFrames)
   }
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(100 * 90);
   encoder.NotifyEndOfStream();
 
@@ -487,7 +487,7 @@ TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
                       now + TimeDuration::FromSeconds(0.9));
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(10 * VIDEO_TRACK_RATE / 10);
   encoder.NotifyEndOfStream();
 
@@ -536,7 +536,7 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
                       now + TimeDuration::FromSeconds(0.2));
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(3 * VIDEO_TRACK_RATE / 10);
   encoder.NotifyEndOfStream();
 
@@ -578,7 +578,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
 
   encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
@@ -589,7 +589,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now + TimeDuration::FromSeconds(0.1));
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
 
   encoder.Resume(now + TimeDuration::FromSeconds(0.2));
@@ -600,7 +600,7 @@ TEST(VP8VideoTrackEncoder, Suspended)
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now + TimeDuration::FromSeconds(0.2));
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
 
   encoder.NotifyEndOfStream();
@@ -640,7 +640,7 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
 
   encoder.Suspend(now + TimeDuration::FromSeconds(0.1));
@@ -651,7 +651,7 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now + TimeDuration::FromSeconds(0.1));
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10);
 
   encoder.NotifyEndOfStream();
@@ -695,7 +695,7 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(2 * VIDEO_TRACK_RATE);
 
   encoder.NotifyEndOfStream();
@@ -730,7 +730,7 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
 
   encoder.Resume(now + TimeDuration::FromSeconds(0.5));
@@ -741,7 +741,7 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now + TimeDuration::FromSeconds(0.5));
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
 
   encoder.NotifyEndOfStream();
@@ -782,7 +782,7 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
 
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.Suspend(now + TimeDuration::FromSeconds(0.5));
@@ -794,7 +794,7 @@ TEST(VP8VideoTrackEncoder, SuspendedOverlap)
                       PRINCIPAL_HANDLE_NONE,
                       false,
                       now + TimeDuration::FromSeconds(1));
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 8);
   encoder.Resume(now + TimeDuration::FromSeconds(1.3));
   encoder.AdvanceCurrentTime((VIDEO_TRACK_RATE / 10) * 7);
@@ -836,7 +836,7 @@ TEST(VP8VideoTrackEncoder, PrematureEnding)
                       now);
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.NotifyEndOfStream();
 
@@ -872,7 +872,7 @@ TEST(VP8VideoTrackEncoder, DelayedStart)
                       now);
 
   encoder.SetStartOffset(VIDEO_TRACK_RATE / 2);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.NotifyEndOfStream();
 
@@ -908,7 +908,7 @@ TEST(VP8VideoTrackEncoder, DelayedStartOtherEventOrder)
                       false,
                       now);
 
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.SetStartOffset(VIDEO_TRACK_RATE / 2);
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.NotifyEndOfStream();
@@ -945,7 +945,7 @@ TEST(VP8VideoTrackEncoder, VeryDelayedStart)
                       now);
 
   encoder.SetStartOffset(VIDEO_TRACK_RATE * 10);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 2);
   encoder.NotifyEndOfStream();
 
@@ -1014,7 +1014,7 @@ TEST(VP8VideoTrackEncoder, ShortKeyFrameInterval)
 
   encoder.SetKeyFrameInterval(500);
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 12); // 1200ms
   encoder.NotifyEndOfStream();
 
@@ -1103,7 +1103,7 @@ TEST(VP8VideoTrackEncoder, LongKeyFrameInterval)
 
   encoder.SetKeyFrameInterval(2000);
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 22); // 2200ms
   encoder.NotifyEndOfStream();
 
@@ -1190,7 +1190,7 @@ TEST(VP8VideoTrackEncoder, DefaultKeyFrameInterval)
                       now + TimeDuration::FromMilliseconds(2100));
 
   encoder.SetStartOffset(0);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 10 * 22); // 2200ms
   encoder.NotifyEndOfStream();
 
@@ -1297,7 +1297,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
 
   encoder.SetStartOffset(0);
   encoder.SetKeyFrameInterval(100);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 501ms, so the first bit of the frame starting at 500ms is
   // included. Note the need to compensate this at the end.
@@ -1333,7 +1333,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                       now + TimeDuration::FromMilliseconds(2500));
 
   encoder.SetKeyFrameInterval(1100);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 2000ms from 501ms to 2501ms
   encoder.AdvanceCurrentTime(VIDEO_TRACK_RATE / 1000 * 2000);
@@ -1359,7 +1359,7 @@ TEST(VP8VideoTrackEncoder, DynamicKeyFrameIntervalChanges)
                       now + TimeDuration::FromMilliseconds(2900));
 
   encoder.SetKeyFrameInterval(200);
-  encoder.AppendVideoSegment(Move(segment));
+  encoder.AppendVideoSegment(std::move(segment));
 
   // Advancing 499ms (compensating back 1ms from the first advancement)
   // from 2501ms to 3000ms.

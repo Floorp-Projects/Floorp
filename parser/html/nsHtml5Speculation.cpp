@@ -26,7 +26,7 @@ nsHtml5Speculation::~nsHtml5Speculation()
 void
 nsHtml5Speculation::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue)
 {
-  mOpQueue.AppendElements(Move(aOpQueue));
+  mOpQueue.AppendElements(std::move(aOpQueue));
 }
 
 void

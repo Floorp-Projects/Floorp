@@ -786,7 +786,7 @@ SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level)
       }
     }
 
-    fmtps->PushEntry(osPayloadType.str(), Move(parameters));
+    fmtps->PushEntry(osPayloadType.str(), std::move(parameters));
   }
 
   if (!fmtps->mFmtps.empty()) {

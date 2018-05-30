@@ -809,7 +809,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   RefPtr<SourceSurface> sourceSurface =
     LookupCachedSurface(aSize, aSVGContext, aFlags);
   if (sourceSurface) {
-    return MakeTuple(ImgDrawResult::SUCCESS, aSize, Move(sourceSurface));
+    return MakeTuple(ImgDrawResult::SUCCESS, aSize, std::move(sourceSurface));
   }
 
   if (mIsDrawing) {
@@ -844,7 +844,7 @@ VectorImage::GetFrameInternal(const IntSize& aSize,
   }
 
   SendFrameComplete(didCache, params.flags);
-  return MakeTuple(ImgDrawResult::SUCCESS, aSize, Move(surface));
+  return MakeTuple(ImgDrawResult::SUCCESS, aSize, std::move(surface));
 }
 
 //******************************************************************************

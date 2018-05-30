@@ -101,7 +101,7 @@ ServerTimingParser::Parse()
 nsTArray<nsCOMPtr<nsIServerTiming>>&&
 ServerTimingParser::TakeServerTimingHeaders()
 {
-  return Move(mServerTimingHeaders);
+  return std::move(mServerTimingHeaders);
 }
 
 } // namespace net

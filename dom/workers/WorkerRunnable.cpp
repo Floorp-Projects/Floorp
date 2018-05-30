@@ -476,7 +476,7 @@ MainThreadStopSyncLoopRunnable::MainThreadStopSyncLoopRunnable(
                                WorkerPrivate* aWorkerPrivate,
                                already_AddRefed<nsIEventTarget>&& aSyncLoopTarget,
                                bool aResult)
-: WorkerSyncRunnable(aWorkerPrivate, Move(aSyncLoopTarget)), mResult(aResult)
+: WorkerSyncRunnable(aWorkerPrivate, std::move(aSyncLoopTarget)), mResult(aResult)
 {
   AssertIsOnMainThread();
 #ifdef DEBUG
@@ -768,7 +768,7 @@ WorkerProxyToMainThreadRunnable::HoldWorker()
     return false;
   }
 
-  mWorkerHolder = Move(workerHolder);
+  mWorkerHolder = std::move(workerHolder);
   return true;
 }
 

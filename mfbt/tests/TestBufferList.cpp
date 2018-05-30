@@ -182,7 +182,7 @@ int main(void)
   bl2.WriteBytes(toWrite, kSmallWrite);
   bl2.WriteBytes(toWrite, kSmallWrite);
 
-  bl = mozilla::Move(bl2);
+  bl = std::move(bl2);
   MOZ_RELEASE_ASSERT(bl2.Size() == 0);
   MOZ_RELEASE_ASSERT(bl2.Iter().Done());
 

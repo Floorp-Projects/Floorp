@@ -43,7 +43,6 @@
 using mozilla::AddToHash;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::Nothing;
 using mozilla::Some;
 
@@ -1292,7 +1291,7 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
     }
 
     AutoGeckoProfilerEntry labelFrame(cx, "js::SavedStacks::saveCurrentStack");
-    return insertFrames(cx, frame, mozilla::Move(capture));
+    return insertFrames(cx, frame, std::move(capture));
 }
 
 bool

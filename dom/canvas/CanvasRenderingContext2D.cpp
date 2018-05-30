@@ -4641,7 +4641,7 @@ CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments,
     }
   }
 
-  CurrentState().dash = Move(dash);
+  CurrentState().dash = std::move(dash);
 }
 
 void

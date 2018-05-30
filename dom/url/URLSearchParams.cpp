@@ -627,7 +627,7 @@ URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   Serialize(serialized);
   NS_ConvertUTF16toUTF8 converted(serialized);
   *aContentLength = converted.Length();
-  return NS_NewCStringInputStream(aBody, Move(converted));
+  return NS_NewCStringInputStream(aBody, std::move(converted));
 }
 
 } // namespace dom

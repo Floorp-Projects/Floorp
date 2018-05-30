@@ -333,7 +333,7 @@ GMPRemoveTest::gmp_GetVideoDecoder(nsCString aNodeId,
   UniquePtr<GetGMPVideoDecoderCallback>
     cb(new Callback(&mTestMonitor, aOutDecoder, aOutHost));
 
-  if (NS_FAILED(GetService()->GetGMPVideoDecoder(nullptr, &tags, aNodeId, Move(cb)))) {
+  if (NS_FAILED(GetService()->GetGMPVideoDecoder(nullptr, &tags, aNodeId, std::move(cb)))) {
     mTestMonitor.SetFinished();
   }
 }
@@ -398,7 +398,7 @@ GMPRemoveTest::gmp_Decode()
   frameData->width_ = frameData->height_ = 16;
 
   nsTArray<uint8_t> empty;
-  nsresult rv = mDecoder->Decode(Move(frame), false /* aMissingFrames */, empty);
+  nsresult rv = mDecoder->Decode(std::move(frame), false /* aMissingFrames */, empty);
   EXPECT_OK(rv);
 }
 

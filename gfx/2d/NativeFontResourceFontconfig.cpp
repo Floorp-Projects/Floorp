@@ -13,7 +13,7 @@ namespace mozilla {
 namespace gfx {
 
 NativeFontResourceFontconfig::NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&& aFontData, FT_Face aFace)
-  : mFontData(Move(aFontData)),
+  : mFontData(std::move(aFontData)),
     mFace(aFace)
 {
 }
@@ -48,7 +48,7 @@ NativeFontResourceFontconfig::Create(uint8_t *aFontData, uint32_t aDataLength, F
   }
 
   RefPtr<NativeFontResourceFontconfig> resource =
-    new NativeFontResourceFontconfig(Move(fontData), face);
+    new NativeFontResourceFontconfig(std::move(fontData), face);
   return resource.forget();
 }
 

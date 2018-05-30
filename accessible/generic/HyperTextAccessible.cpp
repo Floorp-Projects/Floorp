@@ -1807,7 +1807,7 @@ HyperTextAccessible::SelectionRanges(nsTArray<a11y::TextRange>* aRanges) const
 
     TextRange tr(IsTextField() ? const_cast<HyperTextAccessible*>(this) : mDoc,
                     startContainer, startOffset, endContainer, endOffset);
-    *(aRanges->AppendElement()) = Move(tr);
+    *(aRanges->AppendElement()) = std::move(tr);
   }
 }
 

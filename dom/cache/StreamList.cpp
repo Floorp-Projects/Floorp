@@ -96,7 +96,7 @@ StreamList::Add(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
   // All streams should be added on IO thread before we set the stream
   // control on the owning IPC thread.
   MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
-  mList.AppendElement(Entry(aId, Move(aStream)));
+  mList.AppendElement(Entry(aId, std::move(aStream)));
 }
 
 already_AddRefed<nsIInputStream>

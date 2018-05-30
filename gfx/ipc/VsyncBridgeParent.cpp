@@ -18,7 +18,7 @@ VsyncBridgeParent::Start(Endpoint<PVsyncBridgeParent>&& aEndpoint)
     "gfx::VsyncBridgeParent::Open",
     parent,
     &VsyncBridgeParent::Open,
-    Move(aEndpoint));
+    std::move(aEndpoint));
   CompositorThreadHolder::Loop()->PostTask(task.forget());
 
   return parent;

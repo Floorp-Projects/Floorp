@@ -31,14 +31,14 @@ public:
   { }
 
   ImageKeyData(ImageKeyData&& aOther)
-    : mManager(Move(aOther.mManager))
+    : mManager(std::move(aOther.mManager))
     , mImageKey(aOther.mImageKey)
     , mInvalidations(aOther.mInvalidations)
   { }
 
   ImageKeyData& operator=(ImageKeyData&& aOther)
   {
-    mManager = Move(aOther.mManager);
+    mManager = std::move(aOther.mManager);
     mImageKey = aOther.mImageKey;
     mInvalidations = aOther.mInvalidations;
     return *this;
@@ -74,7 +74,7 @@ public:
                           nsTArray<ImageKeyData>&& aKeys)
             : Runnable("SharedSurfacesChild::SharedUserData::DestroyRunnable")
             , mId(aId)
-            , mKeys(Move(aKeys))
+            , mKeys(std::move(aKeys))
           { }
 
           NS_IMETHOD Run() override
@@ -88,7 +88,7 @@ public:
           AutoTArray<ImageKeyData, 1> mKeys;
         };
 
-        nsCOMPtr<nsIRunnable> task = new DestroyRunnable(mId, Move(mKeys));
+        nsCOMPtr<nsIRunnable> task = new DestroyRunnable(mId, std::move(mKeys));
         SystemGroup::Dispatch(TaskCategory::Other, task.forget());
       }
     }
@@ -163,7 +163,7 @@ public:
     if (!found) {
       key = aManager->WrBridge()->GetNextImageKey();
       ImageKeyData data(aManager, key, aInvalidations);
-      mKeys.AppendElement(Move(data));
+      mKeys.AppendElement(std::move(data));
       aResources.AddExternalImage(mId, key);
     }
 

@@ -4616,7 +4616,7 @@ nsTreeBodyFrame::PostScrollEvent()
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch ScrollEvent");
   } else {
-    mScrollEvent = Move(event);
+    mScrollEvent = std::move(event);
   }
 }
 

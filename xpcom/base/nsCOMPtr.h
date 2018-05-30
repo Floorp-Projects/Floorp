@@ -123,7 +123,7 @@ template<class T>
 inline already_AddRefed<T>&&
 dont_AddRef(already_AddRefed<T>&& aAlreadyAddRefedPtr)
 {
-  return mozilla::Move(aAlreadyAddRefedPtr);
+  return std::move(aAlreadyAddRefedPtr);
 }
 
 

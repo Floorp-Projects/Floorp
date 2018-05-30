@@ -170,7 +170,7 @@ struct PersistentRootedMarker;
         return *this;                                                                             \
     }                                                                                             \
     Wrapper<T>& operator=(T&& p) {                                                                \
-        set(mozilla::Move(p));                                                                    \
+        set(std::move(p));                                                                    \
         return *this;                                                                             \
     }                                                                                             \
     Wrapper<T>& operator=(const Wrapper<T>& other) {                                              \
@@ -614,7 +614,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T, MutableHan
         MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
     }
     void set(T&& v) {
-        *ptr = mozilla::Move(v);
+        *ptr = std::move(v);
         MOZ_ASSERT(GCPolicy<T>::isValid(*ptr));
     }
 
@@ -1017,7 +1017,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T, Rooted<T>>
         MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     }
     void set(T&& value) {
-        ptr = mozilla::Move(value);
+        ptr = std::move(value);
         MOZ_ASSERT(GCPolicy<T>::isValid(ptr));
     }
 

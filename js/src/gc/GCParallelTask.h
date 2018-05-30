@@ -142,7 +142,7 @@ class GCParallelTaskHelper : public GCParallelTask
       : GCParallelTask(runtime, &runTaskTyped)
     {}
     GCParallelTaskHelper(GCParallelTaskHelper&& other)
-      : GCParallelTask(mozilla::Move(other))
+      : GCParallelTask(std::move(other))
     {}
 
   private:

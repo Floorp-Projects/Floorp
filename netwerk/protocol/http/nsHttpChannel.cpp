@@ -376,7 +376,7 @@ nsHttpChannel::ReleaseMainThreadOnlyReferences()
     arrayToRelease.AppendElement(mRedirectChannel.forget());
     arrayToRelease.AppendElement(mPreflightChannel.forget());
 
-    NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
+    NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 
 nsresult
@@ -3249,7 +3249,7 @@ nsHttpChannel::ProcessPartialContent()
     if (NS_FAILED(rv)) return rv;
 
     // make the cached response be the current response
-    mResponseHead = Move(mCachedResponseHead);
+    mResponseHead = std::move(mCachedResponseHead);
 
     UpdateInhibitPersistentCachingFlag();
 
@@ -3397,7 +3397,7 @@ nsHttpChannel::ProcessNotModified()
     if (NS_FAILED(rv)) return rv;
 
     // make the cached response be the current response
-    mResponseHead = Move(mCachedResponseHead);
+    mResponseHead = std::move(mCachedResponseHead);
 
     UpdateInhibitPersistentCachingFlag();
 
@@ -4866,7 +4866,7 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     }
 
     if (mCachedResponseHead)
-        mResponseHead = Move(mCachedResponseHead);
+        mResponseHead = std::move(mCachedResponseHead);
 
     UpdateInhibitPersistentCachingFlag();
 
@@ -6454,10 +6454,10 @@ nsHttpChannel::AttachStreamFilter(ipc::Endpoint<extensions::PStreamFilterParent>
   NS_QueryNotificationCallbacks(this, parentChannel);
   RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
   if (httpParent) {
-    return httpParent->SendAttachStreamFilter(Move(aEndpoint));
+    return httpParent->SendAttachStreamFilter(std::move(aEndpoint));
   }
 
-  extensions::StreamFilterParent::Attach(this, Move(aEndpoint));
+  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
   return true;
 }
 
@@ -7323,7 +7323,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
             }
             else if (contentLength != int64_t(-1) && contentLength != size) {
                 LOG(("  concurrent cache entry write has been interrupted"));
-                mCachedResponseHead = Move(mResponseHead);
+                mCachedResponseHead = std::move(mResponseHead);
                 // Ignore zero partial length because we also want to resume when
                 // no data at all has been read from the cache.
                 rv = MaybeSetupByteRangeRequest(size, contentLength, true);

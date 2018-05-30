@@ -1144,7 +1144,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
             ReportOutOfMemory(cx);
             return false;
         }
-        bytes->initBytes(Move(copy));
+        bytes->initBytes(std::move(copy));
         return true;
     }
 
@@ -1154,7 +1154,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
             ReportOutOfMemory(cx);
             return false;
         }
-        bytes->initBytes(Move(source));
+        bytes->initBytes(std::move(source));
         return true;
     }
 
@@ -1194,7 +1194,7 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
         if (!AtomToPrintableString(cx, bi.name(), &nameBytes))
             return false;
 
-        source = JS_sprintf_append(Move(source), "%s: ", nameBytes.ptr());
+        source = JS_sprintf_append(std::move(source), "%s: ", nameBytes.ptr());
         if (!source) {
             ReportOutOfMemory(cx);
             return false;
@@ -1203,27 +1203,27 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
         BindingLocation loc = bi.location();
         switch (loc.kind()) {
           case BindingLocation::Kind::Global:
-            source = JS_sprintf_append(Move(source), "global");
+            source = JS_sprintf_append(std::move(source), "global");
             break;
 
           case BindingLocation::Kind::Frame:
-            source = JS_sprintf_append(Move(source), "frame slot %u", loc.slot());
+            source = JS_sprintf_append(std::move(source), "frame slot %u", loc.slot());
             break;
 
           case BindingLocation::Kind::Environment:
-            source = JS_sprintf_append(Move(source), "env slot %u", loc.slot());
+            source = JS_sprintf_append(std::move(source), "env slot %u", loc.slot());
             break;
 
           case BindingLocation::Kind::Argument:
-            source = JS_sprintf_append(Move(source), "arg slot %u", loc.slot());
+            source = JS_sprintf_append(std::move(source), "arg slot %u", loc.slot());
             break;
 
           case BindingLocation::Kind::NamedLambdaCallee:
-            source = JS_sprintf_append(Move(source), "named lambda callee");
+            source = JS_sprintf_append(std::move(source), "named lambda callee");
             break;
 
           case BindingLocation::Kind::Import:
-            source = JS_sprintf_append(Move(source), "import");
+            source = JS_sprintf_append(std::move(source), "import");
             break;
         }
 
@@ -1233,7 +1233,7 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
         }
 
         if (!bi.isLast()) {
-            source = JS_sprintf_append(Move(source), ", ");
+            source = JS_sprintf_append(std::move(source), ", ");
             if (!source) {
                 ReportOutOfMemory(cx);
                 return false;
@@ -1241,13 +1241,13 @@ ToDisassemblySource(JSContext* cx, HandleScope scope, JSAutoByteString* bytes)
         }
     }
 
-    source = JS_sprintf_append(Move(source), "}");
+    source = JS_sprintf_append(std::move(source), "}");
     if (!source) {
         ReportOutOfMemory(cx);
         return false;
     }
 
-    bytes->initBytes(Move(source));
+    bytes->initBytes(std::move(source));
     return true;
 }
 

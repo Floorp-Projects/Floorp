@@ -1223,7 +1223,7 @@ public:
                        uint32_t aLength)
     : Runnable("nsHtml5DataAvailable")
     , mStreamParser(aStreamParser)
-    , mData(Move(aData))
+    , mData(std::move(aData))
     , mLength(aLength)
   {
   }
@@ -1261,7 +1261,7 @@ nsHtml5StreamParser::OnDataAvailable(nsIRequest* aRequest,
     NS_ASSERTION(totalRead <= aLength, "Read more bytes than were available?");
 
     nsCOMPtr<nsIRunnable> dataAvailable =
-      new nsHtml5DataAvailable(this, Move(data), totalRead);
+      new nsHtml5DataAvailable(this, std::move(data), totalRead);
     if (NS_FAILED(
           mEventTarget->Dispatch(dataAvailable, nsIThread::DISPATCH_NORMAL))) {
       NS_WARNING("Dispatching DataAvailable event failed.");
@@ -1827,8 +1827,8 @@ nsresult
 nsHtml5StreamParser::DispatchToMain(already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (mDocGroup) {
-    return mDocGroup->Dispatch(TaskCategory::Network, Move(aRunnable));
+    return mDocGroup->Dispatch(TaskCategory::Network, std::move(aRunnable));
   }
   return SchedulerGroup::UnlabeledDispatch(TaskCategory::Network,
-                                           Move(aRunnable));
+                                           std::move(aRunnable));
 }

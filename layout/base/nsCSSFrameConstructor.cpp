@@ -12179,7 +12179,7 @@ Iterator::AppendItemsToList(nsCSSFrameConstructor* aFCtor, const Iterator& aEnd,
   }
 
   // Move our entire list of items into the empty target list.
-  aTargetList.mItems = Move(mList.mItems);
+  aTargetList.mItems = std::move(mList.mItems);
 
   // Copy over the various counters
   aTargetList.mInlineCount = mList.mInlineCount;

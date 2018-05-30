@@ -119,7 +119,7 @@ private:
       // we move NewTree manually (ugh). We still construct with an empty
       // NewTree above so that the compiler catches any changes made to the
       // ShowEventData structure in IPDL.
-      mEventData.NewTree() = Move(aEventData.NewTree());
+      mEventData.NewTree() = std::move(aEventData.NewTree());
     }
 
     void Dispatch(DocAccessibleChild* aIPCDoc) override

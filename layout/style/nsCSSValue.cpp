@@ -563,7 +563,7 @@ nsCSSValue::AdoptListValue(UniquePtr<nsCSSValueList> aValue)
   // We have to copy the first element since for owned lists the first
   // element should be an nsCSSValueList_heap object.
   SetListValue();
-  mValue.mList->mValue = Move(aValue->mValue);
+  mValue.mList->mValue = std::move(aValue->mValue);
   mValue.mList->mNext  = aValue->mNext;
   aValue->mNext = nullptr;
   aValue.reset();
@@ -593,8 +593,8 @@ nsCSSValue::AdoptPairListValue(UniquePtr<nsCSSValuePairList> aValue)
   // We have to copy the first element, since for owned pair lists, the first
   // element should be an nsCSSValuePairList_heap object.
   SetPairListValue();
-  mValue.mPairList->mXValue = Move(aValue->mXValue);
-  mValue.mPairList->mYValue = Move(aValue->mYValue);
+  mValue.mPairList->mXValue = std::move(aValue->mXValue);
+  mValue.mPairList->mYValue = std::move(aValue->mYValue);
   mValue.mPairList->mNext   = aValue->mNext;
   aValue->mNext = nullptr;
   aValue.reset();
@@ -1161,8 +1161,8 @@ nsCSSValue::Array::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
                                 ServoRawOffsetArc<RustString> aString,
                                 already_AddRefed<URLExtraData> aExtraData)
-  : mURI(Move(aURI))
-  , mExtraData(Move(aExtraData))
+  : mURI(std::move(aURI))
+  , mExtraData(std::move(aExtraData))
   , mURIResolved(true)
   , mString(aString)
 {
@@ -1172,7 +1172,7 @@ css::URLValueData::URLValueData(already_AddRefed<nsIURI> aURI,
 
 css::URLValueData::URLValueData(ServoRawOffsetArc<RustString> aString,
                                 already_AddRefed<URLExtraData> aExtraData)
-  : mExtraData(Move(aExtraData))
+  : mExtraData(std::move(aExtraData))
   , mURIResolved(false)
   , mString(aString)
 {
@@ -1393,7 +1393,7 @@ css::ImageValue::ImageValue(nsIURI* aURI,
                             already_AddRefed<URLExtraData> aExtraData,
                             nsIDocument* aDocument,
                             CORSMode aCORSMode)
-  : URLValueData(do_AddRef(aURI), aString, Move(aExtraData))
+  : URLValueData(do_AddRef(aURI), aString, std::move(aExtraData))
 {
   mCORSMode = aCORSMode;
   Initialize(aDocument);
@@ -1402,7 +1402,7 @@ css::ImageValue::ImageValue(nsIURI* aURI,
 css::ImageValue::ImageValue(ServoRawOffsetArc<RustString> aString,
                             already_AddRefed<URLExtraData> aExtraData,
                             CORSMode aCORSMode)
-  : URLValueData(aString, Move(aExtraData))
+  : URLValueData(aString, std::move(aExtraData))
 {
   mCORSMode = aCORSMode;
 }

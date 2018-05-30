@@ -352,14 +352,14 @@ Import::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 Export::Export(UniqueChars fieldName, uint32_t index, DefinitionKind kind)
-  : fieldName_(Move(fieldName))
+  : fieldName_(std::move(fieldName))
 {
     pod.kind_ = kind;
     pod.index_ = index;
 }
 
 Export::Export(UniqueChars fieldName, DefinitionKind kind)
-  : fieldName_(Move(fieldName))
+  : fieldName_(std::move(fieldName))
 {
     pod.kind_ = kind;
     pod.index_ = 0;
@@ -446,7 +446,7 @@ ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 
 Assumptions::Assumptions(JS::BuildIdCharVector&& buildId)
   : cpuId(GetCPUID()),
-    buildId(Move(buildId))
+    buildId(std::move(buildId))
 {}
 
 Assumptions::Assumptions()

@@ -458,7 +458,7 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   }
 
   *offer = sdp->ToString();
-  mGeneratedLocalDescription = Move(sdp);
+  mGeneratedLocalDescription = std::move(sdp);
   ++mSessionVersion;
 
   return NS_OK;
@@ -600,7 +600,7 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
   }
 
   *answer = sdp->ToString();
-  mGeneratedLocalDescription = Move(sdp);
+  mGeneratedLocalDescription = std::move(sdp);
   ++mSessionVersion;
 
   return NS_OK;
@@ -789,11 +789,11 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
 
   switch (type) {
     case kJsepSdpOffer:
-      rv = SetLocalDescriptionOffer(Move(parsed));
+      rv = SetLocalDescriptionOffer(std::move(parsed));
       break;
     case kJsepSdpAnswer:
     case kJsepSdpPranswer:
-      rv = SetLocalDescriptionAnswer(type, Move(parsed));
+      rv = SetLocalDescriptionAnswer(type, std::move(parsed));
       break;
     case kJsepSdpRollback:
       MOZ_CRASH(); // Handled above
@@ -806,7 +806,7 @@ nsresult
 JsepSessionImpl::SetLocalDescriptionOffer(UniquePtr<Sdp> offer)
 {
   MOZ_ASSERT(mState == kJsepStateStable);
-  mPendingLocalDescription = Move(offer);
+  mPendingLocalDescription = std::move(offer);
   SetState(kJsepStateHaveLocalOffer);
   return NS_OK;
 }
@@ -816,14 +816,14 @@ JsepSessionImpl::SetLocalDescriptionAnswer(JsepSdpType type,
                                            UniquePtr<Sdp> answer)
 {
   MOZ_ASSERT(mState == kJsepStateHaveRemoteOffer);
-  mPendingLocalDescription = Move(answer);
+  mPendingLocalDescription = std::move(answer);
 
   nsresult rv = HandleNegotiatedSession(mPendingLocalDescription,
                                         mPendingRemoteDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCurrentRemoteDescription = Move(mPendingRemoteDescription);
-  mCurrentLocalDescription = Move(mPendingLocalDescription);
+  mCurrentRemoteDescription = std::move(mPendingRemoteDescription);
+  mCurrentLocalDescription = std::move(mPendingLocalDescription);
   MOZ_ASSERT(!mIsOfferer);
   mWasOffererLastTime = false;
 
@@ -947,11 +947,11 @@ JsepSessionImpl::SetRemoteDescription(JsepSdpType type, const std::string& sdp)
 
   switch (type) {
     case kJsepSdpOffer:
-      rv = SetRemoteDescriptionOffer(Move(parsed));
+      rv = SetRemoteDescriptionOffer(std::move(parsed));
       break;
     case kJsepSdpAnswer:
     case kJsepSdpPranswer:
-      rv = SetRemoteDescriptionAnswer(type, Move(parsed));
+      rv = SetRemoteDescriptionAnswer(type, std::move(parsed));
       break;
     case kJsepSdpRollback:
       MOZ_CRASH(); // Handled above
@@ -1199,8 +1199,8 @@ JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
     }
   }
 
-  transport->mIce = Move(ice);
-  transport->mDtls = Move(dtls);
+  transport->mIce = std::move(ice);
+  transport->mDtls = std::move(dtls);
 
   if (answer.HasAttribute(SdpAttribute::kRtcpMuxAttribute)) {
     transport->mComponents = 1;
@@ -1378,7 +1378,7 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
   nsresult rv = RemoveDuplicateTrackIds(parsed.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *parsedp = Move(parsed);
+  *parsedp = std::move(parsed);
   return NS_OK;
 }
 
@@ -1387,7 +1387,7 @@ JsepSessionImpl::SetRemoteDescriptionOffer(UniquePtr<Sdp> offer)
 {
   MOZ_ASSERT(mState == kJsepStateStable);
 
-  mPendingRemoteDescription = Move(offer);
+  mPendingRemoteDescription = std::move(offer);
 
   SetState(kJsepStateHaveRemoteOffer);
   return NS_OK;
@@ -1400,14 +1400,14 @@ JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
   MOZ_ASSERT(mState == kJsepStateHaveLocalOffer ||
              mState == kJsepStateHaveRemotePranswer);
 
-  mPendingRemoteDescription = Move(answer);
+  mPendingRemoteDescription = std::move(answer);
 
   nsresult rv = HandleNegotiatedSession(mPendingLocalDescription,
                                         mPendingRemoteDescription);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCurrentRemoteDescription = Move(mPendingRemoteDescription);
-  mCurrentLocalDescription = Move(mPendingLocalDescription);
+  mCurrentRemoteDescription = std::move(mPendingRemoteDescription);
+  mCurrentLocalDescription = std::move(mPendingLocalDescription);
   MOZ_ASSERT(mIsOfferer);
   mWasOffererLastTime = true;
 
@@ -1922,7 +1922,7 @@ JsepSessionImpl::CreateGenericSDP(UniquePtr<Sdp>* sdpp)
   msids.push_back("*");
   mSdpHelper.SetupMsidSemantic(msids, sdp.get());
 
-  *sdpp = Move(sdp);
+  *sdpp = std::move(sdp);
   return NS_OK;
 }
 

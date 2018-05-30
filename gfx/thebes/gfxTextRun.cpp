@@ -1374,7 +1374,7 @@ gfxTextRun::SortGlyphRuns()
     // an array at all.
     MOZ_ASSERT(mGlyphRunArray.Length() > 1);
 
-    AutoTArray<GlyphRun,16> runs(Move(mGlyphRunArray));
+    AutoTArray<GlyphRun,16> runs(std::move(mGlyphRunArray));
     GlyphRunOffsetComparator comp;
     runs.Sort(comp);
 
@@ -1399,7 +1399,7 @@ gfxTextRun::SortGlyphRuns()
 #ifdef DEBUG
             prevOffset = run.mCharacterOffset;
 #endif
-            if (!mGlyphRunArray.AppendElement(Move(run))) {
+            if (!mGlyphRunArray.AppendElement(std::move(run))) {
                 NS_WARNING("Failed to append glyph run!");
             }
         }

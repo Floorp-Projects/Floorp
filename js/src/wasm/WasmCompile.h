@@ -50,8 +50,8 @@ struct CompileArgs : ShareableBase<CompileArgs>
     bool testTiering;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
-      : assumptions(Move(assumptions)),
-        scriptedCaller(Move(scriptedCaller)),
+      : assumptions(std::move(assumptions)),
+        scriptedCaller(std::move(scriptedCaller)),
         baselineEnabled(false),
         debugEnabled(false),
         ionEnabled(false),

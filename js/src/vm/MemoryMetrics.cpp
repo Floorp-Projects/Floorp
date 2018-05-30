@@ -30,7 +30,6 @@
 #include "wasm/WasmModule.h"
 
 using mozilla::MallocSizeOf;
-using mozilla::Move;
 using mozilla::PodCopy;
 
 using namespace js;
@@ -182,7 +181,7 @@ NotableStringInfo::NotableStringInfo(JSString* str, const StringInfo& info)
 }
 
 NotableStringInfo::NotableStringInfo(NotableStringInfo&& info)
-  : StringInfo(Move(info)),
+  : StringInfo(std::move(info)),
     length(info.length)
 {
     buffer = info.buffer;
@@ -193,7 +192,7 @@ NotableStringInfo& NotableStringInfo::operator=(NotableStringInfo&& info)
 {
     MOZ_ASSERT(this != &info, "self-move assignment is prohibited");
     this->~NotableStringInfo();
-    new (this) NotableStringInfo(Move(info));
+    new (this) NotableStringInfo(std::move(info));
     return *this;
 }
 
@@ -214,7 +213,7 @@ NotableClassInfo::NotableClassInfo(const char* className, const ClassInfo& info)
 }
 
 NotableClassInfo::NotableClassInfo(NotableClassInfo&& info)
-  : ClassInfo(Move(info))
+  : ClassInfo(std::move(info))
 {
     className_ = info.className_;
     info.className_ = nullptr;
@@ -224,7 +223,7 @@ NotableClassInfo& NotableClassInfo::operator=(NotableClassInfo&& info)
 {
     MOZ_ASSERT(this != &info, "self-move assignment is prohibited");
     this->~NotableClassInfo();
-    new (this) NotableClassInfo(Move(info));
+    new (this) NotableClassInfo(std::move(info));
     return *this;
 }
 
@@ -245,7 +244,7 @@ NotableScriptSourceInfo::NotableScriptSourceInfo(const char* filename, const Scr
 }
 
 NotableScriptSourceInfo::NotableScriptSourceInfo(NotableScriptSourceInfo&& info)
-  : ScriptSourceInfo(Move(info))
+  : ScriptSourceInfo(std::move(info))
 {
     filename_ = info.filename_;
     info.filename_ = nullptr;
@@ -255,7 +254,7 @@ NotableScriptSourceInfo& NotableScriptSourceInfo::operator=(NotableScriptSourceI
 {
     MOZ_ASSERT(this != &info, "self-move assignment is prohibited");
     this->~NotableScriptSourceInfo();
-    new (this) NotableScriptSourceInfo(Move(info));
+    new (this) NotableScriptSourceInfo(std::move(info));
     return *this;
 }
 

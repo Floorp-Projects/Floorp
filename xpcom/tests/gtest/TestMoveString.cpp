@@ -55,7 +55,7 @@ TEST(MoveString, SharedIntoOwned) {
   EXPECT_EQ(in.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -73,7 +73,7 @@ TEST(MoveString, OwnedIntoOwned) {
   EXPECT_EQ(in.GetDataFlags(), Df::OWNED | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -91,7 +91,7 @@ TEST(MoveString, LiteralIntoOwned) {
   EXPECT_EQ(in.GetDataFlags(), Df::LITERAL | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -109,7 +109,7 @@ TEST(MoveString, AutoIntoOwned) {
   EXPECT_EQ(in.GetDataFlags(), Df::INLINE | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -125,7 +125,7 @@ TEST(MoveString, DepIntoOwned) {
   nsDependentCSubstring in(NEW_VAL "garbage after", strlen(NEW_VAL));
   EXPECT_EQ(in.GetDataFlags(), Df(0));
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -140,7 +140,7 @@ TEST(MoveString, VoidIntoOwned) {
   nsCString in = VoidCString();
   EXPECT_EQ(in.GetDataFlags(), Df::VOIDED | Df::TERMINATED);
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
 
   EXPECT_EQ(out.Length(), 0u);
@@ -158,7 +158,7 @@ TEST(MoveString, SharedIntoAuto) {
   EXPECT_EQ(in.GetDataFlags(), Df::REFCOUNTED | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -176,7 +176,7 @@ TEST(MoveString, OwnedIntoAuto) {
   EXPECT_EQ(in.GetDataFlags(), Df::OWNED | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -194,7 +194,7 @@ TEST(MoveString, LiteralIntoAuto) {
   EXPECT_EQ(in.GetDataFlags(), Df::LITERAL | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -212,7 +212,7 @@ TEST(MoveString, AutoIntoAuto) {
   EXPECT_EQ(in.GetDataFlags(), Df::INLINE | Df::TERMINATED);
   const char* data = in.get();
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -228,7 +228,7 @@ TEST(MoveString, DepIntoAuto) {
   nsDependentCSubstring in(NEW_VAL "garbage after", strlen(NEW_VAL));
   EXPECT_EQ(in.GetDataFlags(), Df(0));
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
   ExpectNew(out);
 
@@ -243,7 +243,7 @@ TEST(MoveString, VoidIntoAuto) {
   nsCString in = VoidCString();
   EXPECT_EQ(in.GetDataFlags(), Df::VOIDED | Df::TERMINATED);
 
-  out.Assign(mozilla::Move(in));
+  out.Assign(std::move(in));
   ExpectTruncated(in);
 
   EXPECT_EQ(out.Length(), 0u);

@@ -243,7 +243,7 @@ nsMenuX* nsMenuX::AddMenu(UniquePtr<nsMenuX> aMenu)
   // aMenu transfers ownership to mMenuObjectsArray and becomes nullptr, so
   // we need to keep a raw pointer to access it conveniently.
   nsMenuX* menu = aMenu.get();
-  mMenuObjectsArray.AppendElement(Move(aMenu));
+  mMenuObjectsArray.AppendElement(std::move(aMenu));
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
     return menu;
@@ -558,7 +558,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 
   // |menu|'s ownership is transfer to AddMenu but, if it is successfully
   // added, we can access it via the returned raw pointer.
-  nsMenuX* menu_ptr = AddMenu(Move(menu));
+  nsMenuX* menu_ptr = AddMenu(std::move(menu));
 
   // This needs to happen after the nsIMenu object is inserted into
   // our item array in AddMenu()

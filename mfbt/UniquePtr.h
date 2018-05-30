@@ -102,13 +102,13 @@ struct PointerType
  *
  *   struct S { int x; S(int x) : x(x) {} };
  *   UniquePtr<S> g3, g4(new S(5));
- *   g3 = Move(g4); // g3 owns the S, g4 cleared
+ *   g3 = std::move(g4); // g3 owns the S, g4 cleared
  *   S* p = g3.get(); // g3 still owns |p|
  *   assert(g3->x == 5); // operator-> works (if .get() != nullptr)
  *   assert((*g3).x == 5); // also operator* (again, if not cleared)
  *   Swap(g3, g4); // g4 now owns the S, g3 cleared
  *   g3.swap(g4);  // g3 now owns the S, g4 cleared
- *   UniquePtr<S> g5(Move(g3)); // g5 owns the S, g3 cleared
+ *   UniquePtr<S> g5(std::move(g3)); // g5 owns the S, g3 cleared
  *   g5.reset(); // deletes the S, g5 cleared
  *
  *   struct FreePolicy { void operator()(void* p) { free(p); } };
@@ -143,10 +143,10 @@ struct PointerType
  *
  *   UniquePtr<Base> b1;
  *   // BAD: DefaultDelete<Base> and DefaultDelete<Derived> don't interconvert
- *   UniquePtr<Derived> d1(Move(b));
+ *   UniquePtr<Derived> d1(std::move(b));
  *
  *   UniquePtr<Base> b2;
- *   UniquePtr<Derived, DefaultDelete<Base>> d2(Move(b2)); // okay
+ *   UniquePtr<Derived, DefaultDelete<Base>> d2(std::move(b2)); // okay
  *
  * UniquePtr is specialized for array types.  Specializing with an array type
  * creates a smart-pointer version of that array -- not a pointer to such an
@@ -253,7 +253,7 @@ public:
   // behavior really isn't something you should use.
   UniquePtr(Pointer aPtr,
             typename RemoveReference<D>::Type&& aD2)
-    : mTuple(aPtr, Move(aD2))
+    : mTuple(aPtr, std::move(aD2))
   {
     static_assert(!IsReference<D>::value,
                   "rvalue deleter can't be stored by reference");
@@ -349,8 +349,8 @@ public:
     mTuple.swap(aOther.mTuple);
   }
 
-  UniquePtr(const UniquePtr& aOther) = delete; // construct using Move()!
-  void operator=(const UniquePtr& aOther) = delete; // assign using Move()!
+  UniquePtr(const UniquePtr& aOther) = delete; // construct using std::move()!
+  void operator=(const UniquePtr& aOther) = delete; // assign using std::move()!
 };
 
 // In case you didn't read the comment by the main definition (you should!): the
@@ -414,7 +414,7 @@ public:
   // comment by this constructor in the non-T[] specialization above.
   UniquePtr(Pointer aPtr,
             typename RemoveReference<D>::Type&& aD2)
-    : mTuple(aPtr, Move(aD2))
+    : mTuple(aPtr, std::move(aD2))
   {
     static_assert(!IsReference<D>::value,
                   "rvalue deleter can't be stored by reference");
@@ -493,8 +493,8 @@ public:
 
   void swap(UniquePtr& aOther) { mTuple.swap(aOther.mTuple); }
 
-  UniquePtr(const UniquePtr& aOther) = delete; // construct using Move()!
-  void operator=(const UniquePtr& aOther) = delete; // assign using Move()!
+  UniquePtr(const UniquePtr& aOther) = delete; // construct using std::move()!
+  void operator=(const UniquePtr& aOther) = delete; // assign using std::move()!
 };
 
 /**

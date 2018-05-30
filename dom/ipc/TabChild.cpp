@@ -645,7 +645,7 @@ TabChild::Init()
           static_cast<TabChild*>(tabChild.get())->ContentReceivedInputBlock(aGuid, aInputBlockId, aPreventDefault);
         }
       });
-  mAPZEventState = new APZEventState(mPuppetWidget, Move(callback));
+  mAPZEventState = new APZEventState(mPuppetWidget, std::move(callback));
 
   mIPCOpen = true;
   return NS_OK;
@@ -3612,9 +3612,9 @@ TabChildGlobal::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (mTabChild && mTabChild->TabGroup()) {
-    return mTabChild->TabGroup()->Dispatch(aCategory, Move(aRunnable));
+    return mTabChild->TabGroup()->Dispatch(aCategory, std::move(aRunnable));
   }
-  return DispatcherTrait::Dispatch(aCategory, Move(aRunnable));
+  return DispatcherTrait::Dispatch(aCategory, std::move(aRunnable));
 }
 
 nsISerialEventTarget*

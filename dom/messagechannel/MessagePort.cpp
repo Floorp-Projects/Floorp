@@ -303,7 +303,7 @@ MessagePort::Initialize(const nsID& aUUID,
     }
 
     MOZ_ASSERT(!mWorkerRef);
-    mWorkerRef = Move(strongWorkerRef);
+    mWorkerRef = std::move(strongWorkerRef);
   } else if (GetOwner()) {
     MOZ_ASSERT(NS_IsMainThread());
     mInnerID = GetOwner()->WindowID();
@@ -524,7 +524,7 @@ MessagePort::CloseInternal(bool aSoftly)
     MOZ_ASSERT(mUnshippedEntangledPort);
 
     // This avoids loops.
-    RefPtr<MessagePort> port = Move(mUnshippedEntangledPort);
+    RefPtr<MessagePort> port = std::move(mUnshippedEntangledPort);
     MOZ_ASSERT(mUnshippedEntangledPort == nullptr);
 
     mState = eStateDisentangledForClose;

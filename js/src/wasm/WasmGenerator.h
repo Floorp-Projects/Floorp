@@ -51,7 +51,7 @@ struct FuncCompileInput
         end(end),
         index(index),
         lineOrBytecode(lineOrBytecode),
-        callSiteLineNums(Move(callSiteLineNums))
+        callSiteLineNums(std::move(callSiteLineNums))
     {}
 };
 

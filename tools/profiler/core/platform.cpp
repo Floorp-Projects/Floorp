@@ -270,7 +270,7 @@ public:
 
   static void AppendRegisteredThread(PSLockRef, UniquePtr<RegisteredThread>&& aRegisteredThread)
   {
-    sInstance->mRegisteredThreads.AppendElement(Move(aRegisteredThread));
+    sInstance->mRegisteredThreads.AppendElement(std::move(aRegisteredThread));
   }
 
   static void RemoveRegisteredThread(PSLockRef, RegisteredThread* aRegisteredThread)
@@ -286,7 +286,7 @@ public:
   static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
   static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul)
   {
-    sInstance->mLul = Move(aLul);
+    sInstance->mLul = std::move(aLul);
   }
 #endif
 
@@ -577,7 +577,7 @@ public:
                         UniquePtr<ProfiledThreadData>&& aProfiledThreadData)
   {
     sInstance->mLiveProfiledThreads.AppendElement(
-      LiveProfiledThreadData{ aRegisteredThread, Move(aProfiledThreadData) });
+      LiveProfiledThreadData{ aRegisteredThread, std::move(aProfiledThreadData) });
 
     // Return a weak pointer to the ProfiledThreadData object.
     return sInstance->mLiveProfiledThreads.LastElement().mProfiledThreadData.get();
@@ -595,7 +595,7 @@ public:
       LiveProfiledThreadData& thread = sInstance->mLiveProfiledThreads[i];
       if (thread.mRegisteredThread == aRegisteredThread) {
         thread.mProfiledThreadData->NotifyUnregistered(sInstance->mBuffer->mRangeEnd);
-        sInstance->mDeadProfiledThreads.AppendElement(Move(thread.mProfiledThreadData));
+        sInstance->mDeadProfiledThreads.AppendElement(std::move(thread.mProfiledThreadData));
         sInstance->mLiveProfiledThreads.RemoveElementAt(i);
         return;
       }
@@ -1733,7 +1733,7 @@ CollectJavaThreadProfileData()
     }
     sampleId++;
   }
-  return Move(buffer);
+  return std::move(buffer);
 }
 #endif
 
@@ -2289,7 +2289,7 @@ locked_register_thread(PSLockRef aLock, const char* aName, void* aStackTop)
     }
   }
 
-  CorePS::AppendRegisteredThread(aLock, Move(registeredThread));
+  CorePS::AppendRegisteredThread(aLock, std::move(registeredThread));
 }
 
 static void
@@ -3317,7 +3317,7 @@ profiler_get_backtrace()
   DoSyncSample(lock, *registeredThread, now, regs, *buffer.get());
 
   return UniqueProfilerBacktrace(
-    new ProfilerBacktrace("SyncProfile", tid, Move(buffer)));
+    new ProfilerBacktrace("SyncProfile", tid, std::move(buffer)));
 }
 
 void
@@ -3349,7 +3349,7 @@ racy_profiler_add_marker(const char* aMarkerName,
                        ? aPayload->GetStartTime()
                        : TimeStamp::Now();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
-  racyRegisteredThread->AddPendingMarker(aMarkerName, Move(aPayload),
+  racyRegisteredThread->AddPendingMarker(aMarkerName, std::move(aPayload),
                                          delta.ToMilliseconds());
 }
 
@@ -3364,7 +3364,7 @@ profiler_add_marker(const char* aMarkerName,
     return;
   }
 
-  racy_profiler_add_marker(aMarkerName, Move(aPayload));
+  racy_profiler_add_marker(aMarkerName, std::move(aPayload));
 }
 
 void
@@ -3432,7 +3432,7 @@ profiler_add_marker_for_thread(int aThreadId,
                    : TimeStamp::Now();
   TimeDuration delta = origin - CorePS::ProcessStartTime();
   ProfilerMarker* marker =
-    new ProfilerMarker(aMarkerName, aThreadId, Move(aPayload),
+    new ProfilerMarker(aMarkerName, aThreadId, std::move(aPayload),
                        delta.ToMilliseconds());
 
 #ifdef DEBUG
@@ -3470,7 +3470,7 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
   }
 
   auto payload = MakeUnique<TracingMarkerPayload>(aCategory, aKind);
-  racy_profiler_add_marker(aMarkerName, Move(payload));
+  racy_profiler_add_marker(aMarkerName, std::move(payload));
 }
 
 void
@@ -3487,8 +3487,8 @@ profiler_tracing(const char* aCategory, const char* aMarkerName,
   }
 
   auto payload =
-    MakeUnique<TracingMarkerPayload>(aCategory, aKind, Move(aCause));
-  racy_profiler_add_marker(aMarkerName, Move(payload));
+    MakeUnique<TracingMarkerPayload>(aCategory, aKind, std::move(aCause));
+  racy_profiler_add_marker(aMarkerName, std::move(payload));
 }
 
 void

@@ -72,7 +72,7 @@ TestEndpointOpensParent::RecvStartSubprotocol(
 
   TestEndpointOpensOpenedParent* a = new TestEndpointOpensOpenedParent();
   gParentThread->message_loop()->PostTask(
-    NewRunnableFunction(OpenParent, a, mozilla::Move(endpoint)));
+    NewRunnableFunction(OpenParent, a, std::move(endpoint)));
 
   return IPC_OK();
 }
@@ -193,7 +193,7 @@ TestEndpointOpensChild::RecvStart()
 
   TestEndpointOpensOpenedChild* a = new TestEndpointOpensOpenedChild();
   gChildThread->message_loop()->PostTask(
-    NewRunnableFunction(OpenChild, a, mozilla::Move(child)));
+    NewRunnableFunction(OpenChild, a, std::move(child)));
 
   if (!SendStartSubprotocol(parent)) {
     fail("send StartSubprotocol");

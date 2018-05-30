@@ -17,7 +17,6 @@
 
 using mozilla::IsSame;
 using mozilla::Maybe;
-using mozilla::Move;
 using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::Swap;
@@ -334,18 +333,18 @@ TestCopyAndMove()
   MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasCopyConstructed);
   MOZ_RELEASE_ASSERT(mayBasicValue2->GetTag() == 5);
 
-  // Check that Move() works. (Another sanity check for move support.)
-  Maybe<BasicValue> mayBasicValue3 = Some(Move(*mayBasicValue));
+  // Check that std::move() works. (Another sanity check for move support.)
+  Maybe<BasicValue> mayBasicValue3 = Some(std::move(*mayBasicValue));
   MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveConstructed);
   MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 5);
   MOZ_RELEASE_ASSERT(mayBasicValue->GetStatus() == eWasMovedFrom);
   mayBasicValue2->SetTag(6);
-  mayBasicValue3 = Some(Move(*mayBasicValue2));
+  mayBasicValue3 = Some(std::move(*mayBasicValue2));
   MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMoveAssigned);
   MOZ_RELEASE_ASSERT(mayBasicValue3->GetTag() == 6);
   MOZ_RELEASE_ASSERT(mayBasicValue2->GetStatus() == eWasMovedFrom);
   Maybe<BasicValue> mayBasicValue4;
-  mayBasicValue4.emplace(Move(*mayBasicValue3));
+  mayBasicValue4.emplace(std::move(*mayBasicValue3));
   MOZ_RELEASE_ASSERT(mayBasicValue4->GetStatus() == eWasMoveConstructed);
   MOZ_RELEASE_ASSERT(mayBasicValue4->GetTag() == 6);
   MOZ_RELEASE_ASSERT(mayBasicValue3->GetStatus() == eWasMovedFrom);
@@ -947,13 +946,13 @@ TestTypeConversion()
 
   {
     Maybe<SourceType1> src = Some(SourceType1 {1});
-    Maybe<DestType> dest = Move(src);
+    Maybe<DestType> dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasMoveConstructed);
 
     src = Some(SourceType1 {2});
-    dest = Move(src);
+    dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasMoveAssigned);
@@ -975,13 +974,13 @@ TestTypeConversion()
 
   {
     Maybe<SourceType2> src = Some(SourceType2 {1});
-    Maybe<DestType> dest = Move(src);
+    Maybe<DestType> dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasMovedFrom);
 
     src = Some(SourceType2 {2});
-    dest = Move(src);
+    dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasMovedFrom);
@@ -1003,13 +1002,13 @@ TestTypeConversion()
 
   {
     Maybe<int> src = Some(1);
-    Maybe<DestType> dest = Move(src);
+    Maybe<DestType> dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 1);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasConstructed);
 
     src = Some(2);
-    dest = Move(src);
+    dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && dest->mTag == 2);
     MOZ_RELEASE_ASSERT(dest->mStatus == eWasAssigned);
@@ -1029,12 +1028,12 @@ TestTypeConversion()
 
   {
     Maybe<SourceType1> src = Some(SourceType1 {1});
-    Maybe<int> dest = Move(src);
+    Maybe<int> dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
 
     src = Some(SourceType1 {2});
-    dest = Move(src);
+    dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
   }
@@ -1053,12 +1052,12 @@ TestTypeConversion()
 
   {
     Maybe<size_t> src = Some(1);
-    Maybe<char16_t> dest = Move(src);
+    Maybe<char16_t> dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 1);
 
     src = Some(2);
-    dest = Move(src);
+    dest = std::move(src);
     MOZ_RELEASE_ASSERT(src.isNothing());
     MOZ_RELEASE_ASSERT(dest.isSome() && *dest == 2);
   }

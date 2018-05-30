@@ -74,7 +74,6 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
-using mozilla::Move;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
@@ -1338,7 +1337,7 @@ SaveStack(JSContext* cx, unsigned argc, Value* vp)
         Maybe<AutoRealm> ar;
         if (compartmentObject)
             ar.emplace(cx, compartmentObject);
-        if (!JS::CaptureCurrentStack(cx, &stack, mozilla::Move(capture)))
+        if (!JS::CaptureCurrentStack(cx, &stack, std::move(capture)))
             return false;
     }
 
@@ -1373,7 +1372,7 @@ CaptureFirstSubsumedFrame(JSContext* cx, unsigned argc, JS::Value* vp)
         capture.as<JS::FirstSubsumedFrame>().ignoreSelfHosted = JS::ToBoolean(args[1]);
 
     JS::RootedObject capturedStack(cx);
-    if (!JS::CaptureCurrentStack(cx, &capturedStack, mozilla::Move(capture)))
+    if (!JS::CaptureCurrentStack(cx, &capturedStack, std::move(capture)))
         return false;
 
     args.rval().setObjectOrNull(capturedStack);
@@ -3486,16 +3485,16 @@ class BackEdge {
     BackEdge() : name_(nullptr) { }
     // Construct an initialized back edge, taking ownership of |name|.
     BackEdge(JS::ubi::Node predecessor, EdgeName name)
-        : predecessor_(predecessor), name_(Move(name)) { }
-    BackEdge(BackEdge&& rhs) : predecessor_(rhs.predecessor_), name_(Move(rhs.name_)) { }
+        : predecessor_(predecessor), name_(std::move(name)) { }
+    BackEdge(BackEdge&& rhs) : predecessor_(rhs.predecessor_), name_(std::move(rhs.name_)) { }
     BackEdge& operator=(BackEdge&& rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~BackEdge();
-        new(this) BackEdge(Move(rhs));
+        new(this) BackEdge(std::move(rhs));
         return *this;
     }
 
-    EdgeName forgetName() { return Move(name_); }
+    EdgeName forgetName() { return std::move(name_); }
     JS::ubi::Node predecessor() const { return predecessor_; }
 
   private:
@@ -3528,7 +3527,7 @@ struct FindPathHandler {
         EdgeName edgeName = DuplicateString(cx, edge.name.get());
         if (!edgeName)
             return false;
-        *backEdge = mozilla::Move(BackEdge(origin, Move(edgeName)));
+        *backEdge = std::move(BackEdge(origin, std::move(edgeName)));
 
         // Have we reached our final target node?
         if (edge.referent == target) {
@@ -3676,7 +3675,7 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
         if (!JS_DefineProperty(cx, obj, "node", wrapped, JSPROP_ENUMERATE))
             return false;
 
-        heaptools::EdgeName edgeName = Move(edges[i]);
+        heaptools::EdgeName edgeName = std::move(edges[i]);
 
         RootedString edgeStr(cx, NewString<CanGC>(cx, edgeName.get(), js_strlen(edgeName.get())));
         if (!edgeStr)
@@ -3770,7 +3769,7 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
 
         JS::ubi::Node root(args[0]);
         auto maybeShortestPaths = JS::ubi::ShortestPaths::Create(cx, noGC, maxNumPaths,
-                                                                 root, mozilla::Move(targets));
+                                                                 root, std::move(targets));
         if (maybeShortestPaths.isNothing()) {
             ReportOutOfMemory(cx);
             return false;
@@ -3793,14 +3792,14 @@ ShortestPaths(JSContext* cx, unsigned argc, Value* vp)
 
                 for (auto& part : path) {
                     if (!pathVals.append(part->predecessor().exposeToJS()) ||
-                        !pathNames.append(mozilla::Move(part->name())))
+                        !pathNames.append(std::move(part->name())))
                     {
                         return false;
                     }
                 }
 
-                return values.back().append(mozilla::Move(pathVals.get())) &&
-                       names.back().append(mozilla::Move(pathNames));
+                return values.back().append(std::move(pathVals.get())) &&
+                       names.back().append(std::move(pathNames));
             });
 
             if (!ok)

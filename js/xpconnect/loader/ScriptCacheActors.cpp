@@ -86,7 +86,7 @@ ScriptCacheParent::Recv__delete__(nsTArray<ScriptData>&& scripts)
     auto& cache = ScriptPreloader::GetChildSingleton();
     for (auto& script : scripts) {
         cache.NoteScript(script.url(), script.cachePath(), processType,
-                         Move(script.xdrData()), script.loadTime());
+                         std::move(script.xdrData()), script.loadTime());
     }
 
     return IPC_OK();

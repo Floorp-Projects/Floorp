@@ -27,7 +27,7 @@ public:
                             aPayload = nullptr,
                           double aTime = 0)
     : mMarkerName(strdup(aMarkerName))
-    , mPayload(Move(aPayload))
+    , mPayload(std::move(aPayload))
     , mNext{nullptr}
     , mTime(aTime)
     , mPositionInBuffer{0}

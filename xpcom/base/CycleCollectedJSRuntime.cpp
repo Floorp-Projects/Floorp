@@ -936,7 +936,7 @@ public:
   {
     auto clone = MakeUnique<MinorGCMarker>(GetTracingType(), mReason);
     clone->SetCustomTime(GetTime());
-    return UniquePtr<AbstractTimelineMarker>(Move(clone));
+    return UniquePtr<AbstractTimelineMarker>(std::move(clone));
   }
 };
 
@@ -1639,7 +1639,7 @@ CycleCollectedJSRuntime::ErrorInterceptor::interceptError(JSContext* cx, const J
   stack.Append(buf.get());
   CopyUTF8toUTF16(buf.get(), details.mStack);
 
-  mThrownError.emplace(Move(details));
+  mThrownError.emplace(std::move(details));
 }
 
 void

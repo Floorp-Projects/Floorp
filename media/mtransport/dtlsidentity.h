@@ -26,7 +26,7 @@ class DtlsIdentity final {
   DtlsIdentity(UniqueSECKEYPrivateKey privkey,
                UniqueCERTCertificate cert,
                SSLKEAType authType)
-      : private_key_(Move(privkey)), cert_(Move(cert)), auth_type_(authType) {}
+      : private_key_(std::move(privkey)), cert_(std::move(cert)), auth_type_(authType) {}
 
   // This is only for use in tests, or for external linkage.  It makes a (bad)
   // instance of this class.

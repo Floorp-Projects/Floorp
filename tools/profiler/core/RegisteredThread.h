@@ -37,7 +37,7 @@ public:
                         double aTime)
   {
     ProfilerMarker* marker =
-      new ProfilerMarker(aMarkerName, mThreadId, Move(aPayload), aTime);
+      new ProfilerMarker(aMarkerName, mThreadId, std::move(aPayload), aTime);
     mPendingMarkers.insert(marker);
   }
 

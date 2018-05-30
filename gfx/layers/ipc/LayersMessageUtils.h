@@ -569,7 +569,7 @@ struct ParamTraits<mozilla::layers::KeyboardMap>
     if (!ReadParam(aMsg, aIter, &shortcuts)) {
       return false;
     }
-    *aResult = mozilla::layers::KeyboardMap(mozilla::Move(shortcuts));
+    *aResult = mozilla::layers::KeyboardMap(std::move(shortcuts));
     return true;
   }
 };

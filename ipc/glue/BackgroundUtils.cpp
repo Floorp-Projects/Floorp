@@ -208,7 +208,7 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
 
     *aPrincipalInfo =
       ExpandedPrincipalInfo(aPrincipal->OriginAttributesRef(),
-                            Move(whitelistInfo));
+                            std::move(whitelistInfo));
     return NS_OK;
   }
 
@@ -572,7 +572,7 @@ LoadInfoArgsToLoadInfo(const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
                           loadInfoArgs.originAttributes(),
                           redirectChainIncludingInternalRedirects,
                           redirectChain,
-                          Move(ancestorPrincipals),
+                          std::move(ancestorPrincipals),
                           loadInfoArgs.ancestorOuterWindowIDs(),
                           loadInfoArgs.corsUnsafeHeaders(),
                           loadInfoArgs.forcePreflight(),

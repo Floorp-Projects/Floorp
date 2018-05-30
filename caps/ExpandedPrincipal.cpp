@@ -281,7 +281,7 @@ ExpandedPrincipal::Read(nsIObjectInputStream* aStream)
 
     // Play it safe and InsertElementSorted, in case the sort order
     // changed for some bizarre reason.
-    mPrincipals.InsertElementSorted(Move(principal), c);
+    mPrincipals.InsertElementSorted(std::move(principal), c);
   }
 
   return NS_OK;

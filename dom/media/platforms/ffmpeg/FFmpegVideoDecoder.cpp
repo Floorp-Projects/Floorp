@@ -350,7 +350,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                        RESULT_DETAIL("image allocation error"));
   }
-  aResults.AppendElement(Move(v));
+  aResults.AppendElement(std::move(v));
   if (aGotFrame) {
     *aGotFrame = true;
   }

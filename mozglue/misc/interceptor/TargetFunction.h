@@ -56,7 +56,7 @@ public:
     , mOffset(aOther.mOffset)
     , mStartWriteOffset(aOther.mStartWriteOffset)
     , mPrevProt(aOther.mPrevProt)
-    , mLocalBytes(Move(aOther.mLocalBytes))
+    , mLocalBytes(std::move(aOther.mLocalBytes))
     , mAccumulatedStatus(aOther.mAccumulatedStatus)
   {
     aOther.mPrevProt = 0;
@@ -340,7 +340,7 @@ public:
 
   ReadOnlyTargetBytes(ReadOnlyTargetBytes&& aOther)
     : mMMPolicy(aOther.mMMPolicy)
-    , mLocalBytes(Move(aOther.mLocalBytes))
+    , mLocalBytes(std::move(aOther.mLocalBytes))
     , mBase(aOther.mBase)
   {
   }
@@ -482,13 +482,13 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final
 
     static Type Make(const MMPolicyInProcess& aMMPolicy, const void* aFunc)
     {
-      return Move(TargetBytesPtr(aMMPolicy, aFunc));
+      return std::move(TargetBytesPtr(aMMPolicy, aFunc));
     }
 
     static Type CopyFromOffset(const TargetBytesPtr& aOther,
                                const uint32_t aOffsetFromOther)
     {
-      return Move(TargetBytesPtr(aOther, aOffsetFromOther));
+      return std::move(TargetBytesPtr(aOther, aOffsetFromOther));
     }
 
     ReadOnlyTargetBytes<MMPolicyInProcess>* operator->()
@@ -497,7 +497,7 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final
     }
 
     TargetBytesPtr(TargetBytesPtr&& aOther)
-      : mTargetBytes(Move(aOther.mTargetBytes))
+      : mTargetBytes(std::move(aOther.mTargetBytes))
     {
     }
 
@@ -532,14 +532,14 @@ class MOZ_STACK_CLASS ReadOnlyTargetFunction final
 
     static Type Make(const MMPolicyOutOfProcess& aMMPolicy, const void* aFunc)
     {
-      return Move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
+      return std::move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
                     aMMPolicy, aFunc));
     }
 
     static Type CopyFromOffset(const Type& aOther,
                                const uint32_t aOffsetFromOther)
     {
-      return Move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
+      return std::move(std::make_shared<ReadOnlyTargetBytes<MMPolicyOutOfProcess>>(
                     *aOther, aOffsetFromOther));
     }
   };
@@ -559,7 +559,7 @@ public:
   }
 
   ReadOnlyTargetFunction(ReadOnlyTargetFunction&& aOther)
-    : mTargetBytes(Move(aOther.mTargetBytes))
+    : mTargetBytes(std::move(aOther.mTargetBytes))
     , mOffset(aOther.mOffset)
   {
   }
@@ -667,7 +667,7 @@ public:
       mTargetBytes->GetBase() + aOffset,
       effectiveLength);
 
-    return Move(result);
+    return std::move(result);
   }
 
 private:

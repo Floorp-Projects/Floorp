@@ -314,30 +314,30 @@ TEST(TArray, test_move_array) {
 
   ASSERT_EQ(Countable::Count(), 12);
 
-  nsTArray<Countable>&& moveRefCountableArray = Move(countableArray);
+  nsTArray<Countable>&& moveRefCountableArray = std::move(countableArray);
   moveRefCountableArray.Length(); // Make compilers happy.
 
   ASSERT_EQ(Countable::Count(), 12);
 
-  nsTArray<Countable> movedCountableArray(Move(countableArray));
+  nsTArray<Countable> movedCountableArray(std::move(countableArray));
 
   ASSERT_EQ(Countable::Count(), 12);
 
   // Test ctor
-  FallibleTArray<Countable> differentAllocatorCountableArray(Move(copyCountableArray));
+  FallibleTArray<Countable> differentAllocatorCountableArray(std::move(copyCountableArray));
   // operator=
-  copyCountableArray = Move(differentAllocatorCountableArray);
-  differentAllocatorCountableArray = Move(copyCountableArray);
+  copyCountableArray = std::move(differentAllocatorCountableArray);
+  differentAllocatorCountableArray = std::move(copyCountableArray);
   // And the other ctor
-  nsTArray<Countable> copyCountableArray2(Move(differentAllocatorCountableArray));
+  nsTArray<Countable> copyCountableArray2(std::move(differentAllocatorCountableArray));
   // with auto
-  AutoTArray<Countable, 3> autoCountableArray(Move(copyCountableArray2));
+  AutoTArray<Countable, 3> autoCountableArray(std::move(copyCountableArray2));
   // operator=
-  copyCountableArray2 = Move(autoCountableArray);
+  copyCountableArray2 = std::move(autoCountableArray);
   // Mix with FallibleTArray
-  FallibleTArray<Countable> differentAllocatorCountableArray2(Move(copyCountableArray2));
-  AutoTArray<Countable, 4> autoCountableArray2(Move(differentAllocatorCountableArray2));
-  differentAllocatorCountableArray2 = Move(autoCountableArray2);
+  FallibleTArray<Countable> differentAllocatorCountableArray2(std::move(copyCountableArray2));
+  AutoTArray<Countable, 4> autoCountableArray2(std::move(differentAllocatorCountableArray2));
+  differentAllocatorCountableArray2 = std::move(autoCountableArray2);
 
   ASSERT_EQ(Countable::Count(), 12);
 
@@ -356,30 +356,30 @@ TEST(TArray, test_move_array) {
 
   ASSERT_EQ(Moveable::Count(), 8);
 
-  nsTArray<Moveable>&& moveRefMoveableArray = Move(moveableArray);
+  nsTArray<Moveable>&& moveRefMoveableArray = std::move(moveableArray);
   moveRefMoveableArray.Length(); // Make compilers happy.
 
   ASSERT_EQ(Moveable::Count(), 8);
 
-  nsTArray<Moveable> movedMoveableArray(Move(moveableArray));
+  nsTArray<Moveable> movedMoveableArray(std::move(moveableArray));
 
   ASSERT_EQ(Moveable::Count(), 8);
 
   // Test ctor
-  FallibleTArray<Moveable> differentAllocatorMoveableArray(Move(copyMoveableArray));
+  FallibleTArray<Moveable> differentAllocatorMoveableArray(std::move(copyMoveableArray));
   // operator=
-  copyMoveableArray = Move(differentAllocatorMoveableArray);
-  differentAllocatorMoveableArray = Move(copyMoveableArray);
+  copyMoveableArray = std::move(differentAllocatorMoveableArray);
+  differentAllocatorMoveableArray = std::move(copyMoveableArray);
   // And the other ctor
-  nsTArray<Moveable> copyMoveableArray2(Move(differentAllocatorMoveableArray));
+  nsTArray<Moveable> copyMoveableArray2(std::move(differentAllocatorMoveableArray));
   // with auto
-  AutoTArray<Moveable, 3> autoMoveableArray(Move(copyMoveableArray2));
+  AutoTArray<Moveable, 3> autoMoveableArray(std::move(copyMoveableArray2));
   // operator=
-  copyMoveableArray2 = Move(autoMoveableArray);
+  copyMoveableArray2 = std::move(autoMoveableArray);
   // Mix with FallibleTArray
-  FallibleTArray<Moveable> differentAllocatorMoveableArray2(Move(copyMoveableArray2));
-  AutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
-  differentAllocatorMoveableArray2 = Move(autoMoveableArray2);
+  FallibleTArray<Moveable> differentAllocatorMoveableArray2(std::move(copyMoveableArray2));
+  AutoTArray<Moveable, 4> autoMoveableArray2(std::move(differentAllocatorMoveableArray2));
+  differentAllocatorMoveableArray2 = std::move(autoMoveableArray2);
 
   ASSERT_EQ(Moveable::Count(), 8);
 }

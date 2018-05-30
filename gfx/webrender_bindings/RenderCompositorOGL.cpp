@@ -22,12 +22,12 @@ RenderCompositorOGL::Create(RefPtr<widget::CompositorWidget>&& aWidget)
     gfxCriticalNote << "Failed GL context creation for WebRender: " << gfx::hexa(gl.get());
     return nullptr;
   }
-  return MakeUnique<RenderCompositorOGL>(Move(gl), Move(aWidget));
+  return MakeUnique<RenderCompositorOGL>(std::move(gl), std::move(aWidget));
 }
 
 RenderCompositorOGL::RenderCompositorOGL(RefPtr<gl::GLContext>&& aGL,
                                          RefPtr<widget::CompositorWidget>&& aWidget)
-  : RenderCompositor(Move(aWidget))
+  : RenderCompositor(std::move(aWidget))
   , mGL(aGL)
 {
   MOZ_ASSERT(mGL);

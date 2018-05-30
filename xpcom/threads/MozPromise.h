@@ -298,15 +298,15 @@ private:
         return;
       }
 
-      mResolveValues[aIndex].emplace(Move(aResolveValue));
+      mResolveValues[aIndex].emplace(std::move(aResolveValue));
       if (--mOutstandingPromises == 0) {
         nsTArray<ResolveValueType> resolveValues;
         resolveValues.SetCapacity(mResolveValues.Length());
         for (auto&& resolveValue : mResolveValues) {
-          resolveValues.AppendElement(Move(resolveValue.ref()));
+          resolveValues.AppendElement(std::move(resolveValue.ref()));
         }
 
-        mPromise->Resolve(Move(resolveValues), __func__);
+        mPromise->Resolve(std::move(resolveValues), __func__);
         mPromise = nullptr;
         mResolveValues.Clear();
       }
@@ -319,7 +319,7 @@ private:
         return;
       }
 
-      mPromise->Reject(Move(aRejectValue), __func__);
+      mPromise->Reject(std::move(aRejectValue), __func__);
       mPromise = nullptr;
       mResolveValues.Clear();
     }
@@ -343,8 +343,8 @@ public:
     RefPtr<AllPromiseType> promise = holder->Promise();
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(aProcessingTarget, __func__,
-        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, Move(aResolveValue)); },
-        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(Move(aRejectValue)); }
+        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, std::move(aResolveValue)); },
+        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(std::move(aRejectValue)); }
       );
     }
     return promise;
@@ -626,13 +626,13 @@ protected:
           mThisVal.get(),
           mResolveMethod,
           MaybeMove(aValue.ResolveValue()),
-          Move(mCompletionPromise));
+          std::move(mCompletionPromise));
       } else {
         InvokeCallbackMethod<SupportChaining::value>(
           mThisVal.get(),
           mRejectMethod,
           MaybeMove(aValue.RejectValue()),
-          Move(mCompletionPromise));
+          std::move(mCompletionPromise));
       }
 
       // Null out mThisVal after invoking the callback so that any references are
@@ -693,7 +693,7 @@ protected:
       InvokeCallbackMethod<SupportChaining::value>(mThisVal.get(),
                                                    mResolveRejectMethod,
                                                    MaybeMove(aValue),
-                                                   Move(mCompletionPromise));
+                                                   std::move(mCompletionPromise));
 
       // Null out mThisVal after invoking the callback so that any references are
       // released predictably on the dispatch thread. Otherwise, it would be
@@ -732,8 +732,8 @@ protected:
               const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
     {
-      mResolveFunction.emplace(Move(aResolveFunction));
-      mRejectFunction.emplace(Move(aRejectFunction));
+      mResolveFunction.emplace(std::move(aResolveFunction));
+      mRejectFunction.emplace(std::move(aRejectFunction));
     }
 
     void Disconnect() override
@@ -766,13 +766,13 @@ protected:
           mResolveFunction.ptr(),
           &ResolveFunction::operator(),
           MaybeMove(aValue.ResolveValue()),
-          Move(mCompletionPromise));
+          std::move(mCompletionPromise));
       } else {
         InvokeCallbackMethod<SupportChaining::value>(
           mRejectFunction.ptr(),
           &RejectFunction::operator(),
           MaybeMove(aValue.RejectValue()),
-          Move(mCompletionPromise));
+          std::move(mCompletionPromise));
       }
 
       // Destroy callbacks after invocation so that any references in closures are
@@ -808,7 +808,7 @@ protected:
               const char* aCallSite)
       : ThenValueBase(aResponseTarget, aCallSite)
     {
-      mResolveRejectFunction.emplace(Move(aResolveRejectFunction));
+      mResolveRejectFunction.emplace(std::move(aResolveRejectFunction));
     }
 
     void Disconnect() override
@@ -839,7 +839,7 @@ protected:
         mResolveRejectFunction.ptr(),
         &ResolveRejectFunction::operator(),
         MaybeMove(aValue),
-        Move(mCompletionPromise));
+        std::move(mCompletionPromise));
 
       // Destroy callbacks after invocation so that any references in closures are
       // released predictably on the dispatch thread. Otherwise, they would be
@@ -985,7 +985,7 @@ public:
                   Functions&&... aFunctions)
   {
     RefPtr<ThenValueType> thenValue =
-      new ThenValueType(aResponseTarget, Move(aFunctions)..., aCallSite);
+      new ThenValueType(aResponseTarget, std::move(aFunctions)..., aCallSite);
     return ReturnType(aCallSite, thenValue.forget(), this);
   }
 
@@ -1224,7 +1224,7 @@ public:
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Resolve(Move(aResolveValue), aMethodName);
+    mPromise->Resolve(std::move(aResolveValue), aMethodName);
     mPromise = nullptr;
   }
 
@@ -1239,7 +1239,7 @@ public:
                        const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Resolve(Move(aResolveValue), aMethodName);
+      Resolve(std::move(aResolveValue), aMethodName);
     }
   }
 
@@ -1260,7 +1260,7 @@ public:
       mMonitor->AssertCurrentThreadOwns();
     }
     MOZ_ASSERT(mPromise);
-    mPromise->Reject(Move(aRejectValue), aMethodName);
+    mPromise->Reject(std::move(aRejectValue), aMethodName);
     mPromise = nullptr;
   }
 
@@ -1275,7 +1275,7 @@ public:
                       const char* aMethodName)
   {
     if (!IsEmpty()) {
-      Reject(Move(aRejectValue), aMethodName);
+      Reject(std::move(aRejectValue), aMethodName);
     }
   }
 

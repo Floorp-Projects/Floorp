@@ -1539,7 +1539,7 @@ ChildRunnable::Run()
         return NS_OK;
       }
 
-      mPrincipalInfo = Move(principalInfo);
+      mPrincipalInfo = std::move(principalInfo);
 
       PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
       if (NS_WARN_IF(!actor)) {

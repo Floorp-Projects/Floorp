@@ -107,7 +107,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     mozilla::ipc::IPCResult RecvCallOrConstruct(const uint64_t& objId, InfallibleTArray<JSParam>&& argv,
                                                 const bool& construct, ReturnStatus* rs, JSVariant* result,
                                                 nsTArray<JSParam>* outparams) override {
-        if (!Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), Move(argv), construct, rs, result, outparams)) {
+        if (!Answer::RecvCallOrConstruct(ObjectId::deserialize(objId), std::move(argv), construct, rs, result, outparams)) {
             return IPC_FAIL_NO_REASON(this);
         }
         return IPC_OK();

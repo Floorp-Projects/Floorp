@@ -30,13 +30,13 @@ public:
 
   ShmemBuffer(ShmemBuffer&& rhs) {
     mInitialized = rhs.mInitialized;
-    mShmem = Move(rhs.mShmem);
+    mShmem = std::move(rhs.mShmem);
   }
 
   ShmemBuffer& operator=(ShmemBuffer&& rhs) {
     MOZ_ASSERT(&rhs != this, "self-moves are prohibited");
     mInitialized = rhs.mInitialized;
-    mShmem = Move(rhs.mShmem);
+    mShmem = std::move(rhs.mShmem);
     return *this;
   }
 
@@ -135,7 +135,7 @@ public:
       LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
     }
 #endif
-    return Move(res);
+    return std::move(res);
   }
 
 private:

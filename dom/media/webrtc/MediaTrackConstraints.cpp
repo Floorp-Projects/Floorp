@@ -497,7 +497,7 @@ MediaConstraintsHelper::SelectSettings(
     uint32_t distance =
       aDevices[i]->GetBestFitnessDistance(aggregateConstraints, aIsChrome);
     if (distance == UINT32_MAX) {
-      unsatisfactory.AppendElement(Move(aDevices[i]));
+      unsatisfactory.AppendElement(std::move(aDevices[i]));
       aDevices.RemoveElementAt(i);
     } else {
       ordered.insert(std::make_pair(distance, aDevices[i]));
@@ -523,14 +523,14 @@ MediaConstraintsHelper::SelectSettings(
       uint32_t distance = aDevices[j]->GetBestFitnessDistance(aggregateConstraints,
                                                               aIsChrome);
       if (distance == UINT32_MAX) {
-        rejects.AppendElement(Move(aDevices[j]));
+        rejects.AppendElement(std::move(aDevices[j]));
         aDevices.RemoveElementAt(j);
       } else {
         ++j;
       }
     }
     if (aDevices.IsEmpty()) {
-      aDevices.AppendElements(Move(rejects));
+      aDevices.AppendElements(std::move(rejects));
       aggregateConstraints.RemoveLastElement();
     }
   }

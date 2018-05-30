@@ -467,7 +467,7 @@ private:
     SizeOfState state(ImagesMallocSizeOf);
     ImageMemoryCounter counter(image, state, aIsUsed);
 
-    aArray->AppendElement(Move(counter));
+    aArray->AppendElement(std::move(counter));
   }
 };
 
@@ -1067,7 +1067,7 @@ imgCacheQueue::Push(imgCacheEntry* entry)
   mSize += entry->GetDataSize();
 
   RefPtr<imgCacheEntry> refptr(entry);
-  mQueue.AppendElement(Move(refptr));
+  mQueue.AppendElement(std::move(refptr));
   // If we're not dirty already, then we can efficiently add this to the
   // binary heap immediately.  This is only O(log n).
   if (!IsDirty()) {
@@ -2983,7 +2983,7 @@ imgCacheValidator::UpdateProxies(bool aCancelRequest, bool aSyncNotify)
   // that any potential notifications should still be suppressed in
   // imgRequestProxy::ChangeOwner because we haven't cleared the validating
   // flag yet, and thus they will remain deferred.
-  AutoTArray<RefPtr<imgRequestProxy>, 4> proxies(Move(mProxies));
+  AutoTArray<RefPtr<imgRequestProxy>, 4> proxies(std::move(mProxies));
 
   for (auto& proxy : proxies) {
     // First update the state of all proxies before notifying any of them

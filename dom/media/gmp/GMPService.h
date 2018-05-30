@@ -97,7 +97,7 @@ public:
                      const nsACString& aNodeId,
                      UniquePtr<GetGMPVideoDecoderCallback>&& aCallback) override
   {
-    return GetDecryptingGMPVideoDecoder(aHelper, aTags, aNodeId, Move(aCallback), 0);
+    return GetDecryptingGMPVideoDecoder(aHelper, aTags, aNodeId, std::move(aCallback), 0);
   }
 
   NS_IMETHOD RunPluginCrashCallbacks(uint32_t aPluginId,

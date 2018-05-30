@@ -972,7 +972,7 @@ nsresult
 NS_MakeAsyncNonBlockingInputStream(already_AddRefed<nsIInputStream> aSource,
                                    nsIAsyncInputStream** aAsyncInputStream)
 {
-  nsCOMPtr<nsIInputStream> source = Move(aSource);
+  nsCOMPtr<nsIInputStream> source = std::move(aSource);
   if (NS_WARN_IF(!aAsyncInputStream)) {
     return NS_ERROR_FAILURE;
   }

@@ -91,13 +91,13 @@ MediaDrmCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   data->mCreateSessionToken = aCreateSessionToken;
   data->mPromiseId = aPromiseId;
   data->mInitDataType = NS_ConvertUTF16toUTF8(aInitDataType);
-  data->mInitData = Move(aInitData);
+  data->mInitData = std::move(aInitData);
 
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<UniquePtr<CreateSessionData>&&>("MediaDrmCDMProxy::md_CreateSession",
                                                       this,
                                                       &MediaDrmCDMProxy::md_CreateSession,
-                                                      Move(data)));
+                                                      std::move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -132,13 +132,13 @@ MediaDrmCDMProxy::UpdateSession(const nsAString& aSessionId,
   UniquePtr<UpdateSessionData> data(new UpdateSessionData());
   data->mPromiseId = aPromiseId;
   data->mSessionId = NS_ConvertUTF16toUTF8(aSessionId);
-  data->mResponse = Move(aResponse);
+  data->mResponse = std::move(aResponse);
 
   nsCOMPtr<nsIRunnable> task(
     NewRunnableMethod<UniquePtr<UpdateSessionData>&&>("MediaDrmCDMProxy::md_UpdateSession",
                                                       this,
                                                       &MediaDrmCDMProxy::md_UpdateSession,
-                                                      Move(data)));
+                                                      std::move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -158,7 +158,7 @@ MediaDrmCDMProxy::CloseSession(const nsAString& aSessionId,
     NewRunnableMethod<UniquePtr<SessionOpData>&&>("MediaDrmCDMProxy::md_CloseSession",
                                                   this,
                                                   &MediaDrmCDMProxy::md_CloseSession,
-                                                  Move(data)));
+                                                  std::move(data)));
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 

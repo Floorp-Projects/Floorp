@@ -568,7 +568,7 @@ private:
     nsresult rv = svc->GetXpcomWillShutdown(getter_AddRefs(phase));
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    return Move(phase);
+    return std::move(phase);
   }
 
   nsCString mURI;

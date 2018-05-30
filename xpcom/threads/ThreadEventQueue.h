@@ -101,7 +101,7 @@ private:
 
     NestedQueueItem(UniquePtr<EventQueue> aQueue,
                     ThreadEventTarget* aEventTarget)
-      : mQueue(Move(aQueue))
+      : mQueue(std::move(aQueue))
       , mEventTarget(aEventTarget)
     {}
   };

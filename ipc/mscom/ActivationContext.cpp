@@ -190,7 +190,7 @@ ActivationContextRegion::operator=(const ActivationContext& aActCtx)
 }
 
 ActivationContextRegion::ActivationContextRegion(ActivationContext&& aActCtx)
-  : mActCtx(Move(aActCtx))
+  : mActCtx(std::move(aActCtx))
   , mActCookie(0)
 {
   Activate();
@@ -200,13 +200,13 @@ ActivationContextRegion&
 ActivationContextRegion::operator=(ActivationContext&& aActCtx)
 {
   Deactivate();
-  mActCtx = Move(aActCtx);
+  mActCtx = std::move(aActCtx);
   Activate();
   return *this;
 }
 
 ActivationContextRegion::ActivationContextRegion(ActivationContextRegion&& aRgn)
-  : mActCtx(Move(aRgn.mActCtx))
+  : mActCtx(std::move(aRgn.mActCtx))
   , mActCookie(aRgn.mActCookie)
 {
   aRgn.mActCookie = 0;
@@ -216,7 +216,7 @@ ActivationContextRegion&
 ActivationContextRegion::operator=(ActivationContextRegion&& aRgn)
 {
   Deactivate();
-  mActCtx = Move(aRgn.mActCtx);
+  mActCtx = std::move(aRgn.mActCtx);
   mActCookie = aRgn.mActCookie;
   aRgn.mActCookie = 0;
   return *this;

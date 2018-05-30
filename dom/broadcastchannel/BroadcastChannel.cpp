@@ -324,7 +324,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    bc->mWorkerRef = Move(workerRef);
+    bc->mWorkerRef = std::move(workerRef);
   }
 
   // Register this component to PBackground.

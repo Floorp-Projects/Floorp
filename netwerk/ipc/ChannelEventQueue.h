@@ -190,7 +190,7 @@ ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
     bool enqueue =  !!mForcedCount || mSuspended || mFlushing || !mEventQueue.IsEmpty();
 
     if (enqueue) {
-      mEventQueue.AppendElement(Move(event));
+      mEventQueue.AppendElement(std::move(event));
       return;
     }
 
@@ -205,7 +205,7 @@ ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
       // Leverage Suspend/Resume mechanism to trigger flush procedure without
       // creating a new one.
       SuspendInternal();
-      mEventQueue.AppendElement(Move(event));
+      mEventQueue.AppendElement(std::move(event));
       ResumeInternal();
       return;
     }
@@ -251,7 +251,7 @@ ChannelEventQueue::PrependEvent(UniquePtr<ChannelEvent>& aEvent)
   MOZ_ASSERT(mSuspended || !!mForcedCount);
 
   UniquePtr<ChannelEvent>* newEvent =
-    mEventQueue.InsertElementAt(0, Move(aEvent));
+    mEventQueue.InsertElementAt(0, std::move(aEvent));
 
   if (!newEvent) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -278,7 +278,7 @@ ChannelEventQueue::PrependEvents(nsTArray<UniquePtr<ChannelEvent>>& aEvents)
   }
 
   for (uint32_t i = 0; i < aEvents.Length(); i++) {
-    newEvents[i] = Move(aEvents[i]);
+    newEvents[i] = std::move(aEvents[i]);
   }
 
   return NS_OK;

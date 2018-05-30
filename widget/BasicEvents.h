@@ -553,21 +553,21 @@ public:
   WidgetEvent& operator=(const WidgetEvent& aOther) = default;
 
   WidgetEvent(WidgetEvent&& aOther)
-    : WidgetEventTime(Move(aOther))
+    : WidgetEventTime(std::move(aOther))
     , mClass(aOther.mClass)
     , mMessage(aOther.mMessage)
-    , mRefPoint(Move(aOther.mRefPoint))
-    , mLastRefPoint(Move(aOther.mLastRefPoint))
+    , mRefPoint(std::move(aOther.mRefPoint))
+    , mLastRefPoint(std::move(aOther.mLastRefPoint))
     , mFocusSequenceNumber(aOther.mFocusSequenceNumber)
-    , mFlags(Move(aOther.mFlags))
-    , mSpecifiedEventType(Move(aOther.mSpecifiedEventType))
-    , mSpecifiedEventTypeString(Move(aOther.mSpecifiedEventTypeString))
-    , mTarget(Move(aOther.mTarget))
-    , mCurrentTarget(Move(aOther.mCurrentTarget))
-    , mOriginalTarget(Move(aOther.mOriginalTarget))
-    , mRelatedTarget(Move(aOther.mRelatedTarget))
-    , mOriginalRelatedTarget(Move(aOther.mOriginalRelatedTarget))
-    , mPath(Move(aOther.mPath))
+    , mFlags(std::move(aOther.mFlags))
+    , mSpecifiedEventType(std::move(aOther.mSpecifiedEventType))
+    , mSpecifiedEventTypeString(std::move(aOther.mSpecifiedEventTypeString))
+    , mTarget(std::move(aOther.mTarget))
+    , mCurrentTarget(std::move(aOther.mCurrentTarget))
+    , mOriginalTarget(std::move(aOther.mOriginalTarget))
+    , mRelatedTarget(std::move(aOther.mRelatedTarget))
+    , mOriginalRelatedTarget(std::move(aOther.mOriginalRelatedTarget))
+    , mPath(std::move(aOther.mPath))
   {
     MOZ_COUNT_CTOR(WidgetEvent);
   }

@@ -27,7 +27,6 @@
 
 using namespace mozilla::ipc;
 using mozilla::Maybe;
-using mozilla::Move;
 
 class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsISeekableStream,

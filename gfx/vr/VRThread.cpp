@@ -175,7 +175,7 @@ VRThread::GetThread() const
 void
 VRThread::PostTask(already_AddRefed<Runnable> aTask)
 {
-  PostDelayedTask(Move(aTask), 0);
+  PostDelayedTask(std::move(aTask), 0);
 }
 
 void
@@ -187,9 +187,9 @@ VRThread::PostDelayedTask(already_AddRefed<Runnable> aTask,
   mLastActiveTime = TimeStamp::Now();
 
   if (!aTime) {
-    mThread->Dispatch(Move(aTask), NS_DISPATCH_NORMAL);
+    mThread->Dispatch(std::move(aTask), NS_DISPATCH_NORMAL);
   } else {
-    mThread->DelayedDispatch(Move(aTask), aTime);
+    mThread->DelayedDispatch(std::move(aTask), aTime);
   }
 }
 

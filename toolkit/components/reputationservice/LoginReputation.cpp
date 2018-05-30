@@ -150,7 +150,7 @@ LoginWhitelist::QueryLoginWhitelist(nsILoginReputationQuery* aParam)
   }
 
   fail.release();
-  mQueryPromises.AppendElement(Move(holder));
+  mQueryPromises.AppendElement(std::move(holder));
   return p;
 }
 
@@ -169,7 +169,7 @@ LoginWhitelist::OnClassifyComplete(nsresult aErrorCode,
   LR_LOG(("OnClassifyComplete : list = %s", aLists.BeginReading()));
 
   UniquePtr<MozPromiseHolder<ReputationPromise>> holder =
-    Move(mQueryPromises.ElementAt(0));
+    std::move(mQueryPromises.ElementAt(0));
   mQueryPromises.RemoveElementAt(0);
 
   if (NS_FAILED(aErrorCode)) {

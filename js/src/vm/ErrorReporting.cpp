@@ -17,8 +17,6 @@
 
 #include "vm/JSContext-inl.h"
 
-using mozilla::Move;
-
 using JS::HandleObject;
 using JS::HandleValue;
 using JS::UniqueTwoByteChars;
@@ -67,7 +65,7 @@ js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSEr
     if (cx->helperThread() && !cx->addPendingCompileError(&err))
         return false;
 
-    err->notes = Move(notes);
+    err->notes = std::move(notes);
     err->flags = flags;
     err->errorNumber = errorNumber;
 
@@ -76,7 +74,7 @@ js::ReportCompileWarning(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSEr
     err->column = metadata.columnNumber;
     err->isMuted = metadata.isMuted;
 
-    if (UniqueTwoByteChars lineOfContext = Move(metadata.lineOfContext))
+    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext))
         err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength, metadata.tokenOffset);
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,
@@ -103,7 +101,7 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
     if (cx->helperThread() && !cx->addPendingCompileError(&err))
         return;
 
-    err->notes = Move(notes);
+    err->notes = std::move(notes);
     err->flags = flags;
     err->errorNumber = errorNumber;
 
@@ -112,7 +110,7 @@ js::ReportCompileError(JSContext* cx, ErrorMetadata&& metadata, UniquePtr<JSErro
     err->column = metadata.columnNumber;
     err->isMuted = metadata.isMuted;
 
-    if (UniqueTwoByteChars lineOfContext = Move(metadata.lineOfContext))
+    if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext))
         err->initOwnedLinebuf(lineOfContext.release(), metadata.lineLength, metadata.tokenOffset);
 
     if (!ExpandErrorArgumentsVA(cx, GetErrorMessage, nullptr, errorNumber,

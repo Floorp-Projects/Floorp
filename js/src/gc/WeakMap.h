@@ -237,12 +237,12 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, ZoneAllocPolicy>,
         auto p = zone->gcWeakKeys().get(key);
         if (p) {
             gc::WeakEntryVector& weakEntries = p->value;
-            if (!weakEntries.append(Move(markable)))
+            if (!weakEntries.append(std::move(markable)))
                 marker->abortLinearWeakMarking();
         } else {
             gc::WeakEntryVector weakEntries;
-            MOZ_ALWAYS_TRUE(weakEntries.append(Move(markable)));
-            if (!zone->gcWeakKeys().put(JS::GCCellPtr(key), Move(weakEntries)))
+            MOZ_ALWAYS_TRUE(weakEntries.append(std::move(markable)));
+            if (!zone->gcWeakKeys().put(JS::GCCellPtr(key), std::move(weakEntries)))
                 marker->abortLinearWeakMarking();
         }
     }

@@ -61,14 +61,14 @@ class Fifo
     { }
 
     Fifo(Fifo&& rhs)
-        : front_(mozilla::Move(rhs.front_))
-        , rear_(mozilla::Move(rhs.rear_))
+        : front_(std::move(rhs.front_))
+        , rear_(std::move(rhs.rear_))
     { }
 
     Fifo& operator=(Fifo&& rhs) {
         MOZ_ASSERT(&rhs != this, "self-move disallowed");
         this->~Fifo();
-        new (this) Fifo(mozilla::Move(rhs));
+        new (this) Fifo(std::move(rhs));
         return *this;
     }
 

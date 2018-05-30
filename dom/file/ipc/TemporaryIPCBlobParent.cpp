@@ -79,7 +79,7 @@ TemporaryIPCBlobParent::RecvOperationDone(const nsCString& aContentType,
   PRFileDesc* prfile = PR_ImportFile(PROsfd(rawFD.release()));
 
   // Let's create the BlobImpl.
-  nsCOMPtr<nsIFile> file = Move(mFile);
+  nsCOMPtr<nsIFile> file = std::move(mFile);
 
   RefPtr<TemporaryFileBlobImpl> blobImpl =
     new TemporaryFileBlobImpl(file, NS_ConvertUTF8toUTF16(aContentType));

@@ -240,7 +240,7 @@ CompositorScreenshotGrabberImpl::ProcessQueue()
   mQueue.Clear();
 
   if (mCurrentFrameQueueItem) {
-    mQueue.AppendElement(Move(*mCurrentFrameQueueItem));
+    mQueue.AppendElement(std::move(*mCurrentFrameQueueItem));
     mCurrentFrameQueueItem = Nothing();
   }
 }

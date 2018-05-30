@@ -554,7 +554,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits(const char* const funcName) const
 
     // --
 
-    return mDrawFetchCache.Insert(vao.get(), Move(fetchLimits), Move(cacheDeps));
+    return mDrawFetchCache.Insert(vao.get(), std::move(fetchLimits), std::move(cacheDeps));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

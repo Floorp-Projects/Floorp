@@ -254,7 +254,7 @@ TRR::SendHTTPRequest()
     }
     uint32_t streamLength = body.Length();
     nsCOMPtr<nsIInputStream> uploadStream;
-    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream), Move(body));
+    rv = NS_NewCStringInputStream(getter_AddRefs(uploadStream), std::move(body));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = uploadChannel->ExplicitSetUploadStream(uploadStream,

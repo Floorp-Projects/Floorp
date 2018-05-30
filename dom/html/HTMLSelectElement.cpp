@@ -1437,12 +1437,12 @@ HTMLSelectElement::SaveState()
       if (value.IsEmpty()) {
         state.indices().AppendElement(optIndex);
       } else {
-        state.values().AppendElement(Move(value));
+        state.values().AppendElement(std::move(value));
       }
     }
   }
 
-  presState->contentData() = Move(state);
+  presState->contentData() = std::move(state);
 
   if (mDisabledChanged) {
     // We do not want to save the real disabled state but the disabled

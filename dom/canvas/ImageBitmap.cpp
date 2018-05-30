@@ -804,7 +804,7 @@ ImageBitmap::ToCloneData() const
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
 
-  return Move(result);
+  return std::move(result);
 }
 
 /* static */ already_AddRefed<ImageBitmap>
@@ -1263,7 +1263,7 @@ private:
     , mMutex("dom::CreateImageBitmapFromBlob::mMutex")
     , mPromise(aPromise)
     , mGlobalObject(aGlobal)
-    , mInputStream(Move(aInputStream))
+    , mInputStream(std::move(aInputStream))
     , mMimeType(aMimeType)
     , mCropRect(aCropRect)
     , mOriginalCropRect(aCropRect)
@@ -2216,7 +2216,7 @@ CreateImageBitmapFromBlob::Create(Promise* aPromise,
     return nullptr;
   }
 
-  task->mWorkerHolder = Move(holder);
+  task->mWorkerHolder = std::move(holder);
   return task.forget();
 }
 

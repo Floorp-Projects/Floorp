@@ -225,7 +225,7 @@ public:
     }
 
     Listener(Listener&& aOther)
-      : mListener(Move(aOther.mListener))
+      : mListener(std::move(aOther.mListener))
       , mTypeAtom(aOther.mTypeAtom.forget())
       , mTypeString(aOther.mTypeString)
       , mEventMessage(aOther.mEventMessage)

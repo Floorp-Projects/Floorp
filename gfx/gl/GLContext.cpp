@@ -2308,7 +2308,7 @@ GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
     // it falls out of scope.
     ScopedBindFramebuffer autoFB(this);
 
-    mScreen = Move(newScreen);
+    mScreen = std::move(newScreen);
 
     return true;
 }

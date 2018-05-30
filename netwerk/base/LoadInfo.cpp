@@ -471,7 +471,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mIsThirdPartyContext(aIsThirdPartyContext)
   , mIsDocshellReload(aIsDocshellReload)
   , mOriginAttributes(aOriginAttributes)
-  , mAncestorPrincipals(Move(aAncestorPrincipals))
+  , mAncestorPrincipals(std::move(aAncestorPrincipals))
   , mAncestorOuterWindowIDs(aAncestorOuterWindowIDs)
   , mCorsUnsafeHeaders(aCorsUnsafeHeaders)
   , mForcePreflight(aForcePreflight)
@@ -1298,7 +1298,7 @@ void
 LoadInfo::GiveReservedClientSource(UniquePtr<ClientSource>&& aClientSource)
 {
   MOZ_DIAGNOSTIC_ASSERT(aClientSource);
-  mReservedClientSource = Move(aClientSource);
+  mReservedClientSource = std::move(aClientSource);
   SetReservedClientInfo(mReservedClientSource->Info());
 }
 
@@ -1310,7 +1310,7 @@ LoadInfo::TakeReservedClientSource()
     // then clear that info object when the ClientSource is taken.
     mReservedClientInfo.reset();
   }
-  return Move(mReservedClientSource);
+  return std::move(mReservedClientSource);
 }
 
 void

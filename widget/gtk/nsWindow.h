@@ -131,8 +131,7 @@ public:
                                          int32_t *aX,
                                          int32_t *aY) override;
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;
-    virtual void       Move(double aX,
-                            double aY) override;
+    virtual void       Move(double aX, double aY) override;
     virtual void       Show             (bool aState) override;
     virtual void       Resize           (double aWidth,
                                          double aHeight,

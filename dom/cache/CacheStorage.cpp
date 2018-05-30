@@ -343,7 +343,7 @@ CacheStorage::Match(JSContext* aCx, const RequestOrUSVString& aRequest,
   entry->mArgs = StorageMatchArgs(CacheRequest(), params, GetOpenMode());
   entry->mRequest = request;
 
-  RunRequest(Move(entry));
+  RunRequest(std::move(entry));
 
   return promise.forget();
 }
@@ -367,7 +367,7 @@ CacheStorage::Has(const nsAString& aKey, ErrorResult& aRv)
   entry->mPromise = promise;
   entry->mArgs = StorageHasArgs(nsString(aKey));
 
-  RunRequest(Move(entry));
+  RunRequest(std::move(entry));
 
   return promise.forget();
 }
@@ -391,7 +391,7 @@ CacheStorage::Open(const nsAString& aKey, ErrorResult& aRv)
   entry->mPromise = promise;
   entry->mArgs = StorageOpenArgs(nsString(aKey));
 
-  RunRequest(Move(entry));
+  RunRequest(std::move(entry));
 
   return promise.forget();
 }
@@ -415,7 +415,7 @@ CacheStorage::Delete(const nsAString& aKey, ErrorResult& aRv)
   entry->mPromise = promise;
   entry->mArgs = StorageDeleteArgs(nsString(aKey));
 
-  RunRequest(Move(entry));
+  RunRequest(std::move(entry));
 
   return promise.forget();
 }
@@ -439,7 +439,7 @@ CacheStorage::Keys(ErrorResult& aRv)
   entry->mPromise = promise;
   entry->mArgs = StorageKeysArgs();
 
-  RunRequest(Move(entry));
+  RunRequest(std::move(entry));
 
   return promise.forget();
 }
@@ -547,7 +547,7 @@ CacheStorage::RunRequest(nsAutoPtr<Entry>&& aEntry)
 {
   MOZ_ASSERT(mActor);
 
-  nsAutoPtr<Entry> entry(Move(aEntry));
+  nsAutoPtr<Entry> entry(std::move(aEntry));
 
   AutoChildOpArgs args(this, entry->mArgs, 1);
 

@@ -458,7 +458,7 @@ nsXBLWindowKeyHandler::CollectKeyboardShortcuts()
     }
   }
 
-  return KeyboardMap(mozilla::Move(shortcuts));
+  return KeyboardMap(std::move(shortcuts));
 }
 
 nsAtom*

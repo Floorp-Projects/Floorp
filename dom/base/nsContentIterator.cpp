@@ -17,7 +17,6 @@
 #include "nsElementTable.h"
 
 using mozilla::DebugOnly;
-using mozilla::Move;
 using mozilla::RawRangeBoundary;
 
 // couple of utility static functs
@@ -982,7 +981,7 @@ nsContentSubtreeIterator::Init(const RawRangeBoundary& aStart,
     return NS_ERROR_UNEXPECTED;
   }
 
-  mRange = Move(range);
+  mRange = std::move(range);
 
   return InitWithRange();
 }

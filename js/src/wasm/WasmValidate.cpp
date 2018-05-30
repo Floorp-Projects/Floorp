@@ -62,7 +62,7 @@ Decoder::warnf(const char* msg, ...)
     if (!str)
         return;
 
-    Unused << warnings_->append(Move(str));
+    Unused << warnings_->append(std::move(str));
 }
 
 bool
@@ -73,7 +73,7 @@ Decoder::fail(size_t errorOffset, const char* msg)
     if (!strWithOffset)
         return false;
 
-    *error_ = Move(strWithOffset);
+    *error_ = std::move(strWithOffset);
     return false;
 }
 
@@ -1122,7 +1122,7 @@ DecodeTypeSection(Decoder& d, ModuleEnvironment* env)
             result = ToExprType(type);
         }
 
-        env->sigs[sigIndex] = Sig(Move(args), result);
+        env->sigs[sigIndex] = Sig(std::move(args), result);
     }
 
     return d.finishSection(*range, "type");
@@ -1368,7 +1368,7 @@ DecodeImport(Decoder& d, ModuleEnvironment* env)
         return d.fail("unsupported import kind");
     }
 
-    return env->imports.emplaceBack(Move(moduleName), Move(funcName), importKind);
+    return env->imports.emplaceBack(std::move(moduleName), std::move(funcName), importKind);
 }
 
 static bool
@@ -1601,7 +1601,7 @@ DecodeExportName(Decoder& d, CStringSet* dupSet)
     if (!dupSet->add(p, exportName.get()))
         return nullptr;
 
-    return Move(exportName);
+    return std::move(exportName);
 }
 
 static bool
@@ -1624,7 +1624,7 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         if (funcIndex >= env->numFuncs())
             return d.fail("exported function index out of bounds");
 
-        return env->exports.emplaceBack(Move(fieldName), funcIndex, DefinitionKind::Function);
+        return env->exports.emplaceBack(std::move(fieldName), funcIndex, DefinitionKind::Function);
       }
       case DefinitionKind::Table: {
         uint32_t tableIndex;
@@ -1637,7 +1637,7 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         MOZ_ASSERT(env->tables.length() == 1);
         env->tables[0].external = true;
 
-        return env->exports.emplaceBack(Move(fieldName), DefinitionKind::Table);
+        return env->exports.emplaceBack(std::move(fieldName), DefinitionKind::Table);
       }
       case DefinitionKind::Memory: {
         uint32_t memoryIndex;
@@ -1647,7 +1647,7 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         if (memoryIndex > 0 || !env->usesMemory())
             return d.fail("exported memory index out of bounds");
 
-        return env->exports.emplaceBack(Move(fieldName), DefinitionKind::Memory);
+        return env->exports.emplaceBack(std::move(fieldName), DefinitionKind::Memory);
       }
       case DefinitionKind::Global: {
         uint32_t globalIndex;
@@ -1662,7 +1662,7 @@ DecodeExport(Decoder& d, ModuleEnvironment* env, CStringSet* dupSet)
         if (!GlobalIsJSCompatible(d, global->type(), global->isMutable()))
             return false;
 
-        return env->exports.emplaceBack(Move(fieldName), globalIndex, DefinitionKind::Global);
+        return env->exports.emplaceBack(std::move(fieldName), globalIndex, DefinitionKind::Global);
       }
       default:
         return d.fail("unexpected export kind");
@@ -1774,7 +1774,7 @@ DecodeElemSection(Decoder& d, ModuleEnvironment* env)
                 return d.fail("table element out of range");
         }
 
-        if (!env->elemSegments.emplaceBack(0, offset, Move(elemFuncIndices)))
+        if (!env->elemSegments.emplaceBack(0, offset, std::move(elemFuncIndices)))
             return false;
 
         env->tables[env->elemSegments.back().tableIndex].external = true;
@@ -2020,7 +2020,7 @@ DecodeFunctionNameSubsection(Decoder& d, ModuleEnvironment* env)
 
     // To encourage fully valid function names subsections; only save names if
     // the entire subsection decoded correctly.
-    env->funcNames = Move(funcNames);
+    env->funcNames = std::move(funcNames);
     return true;
 }
 

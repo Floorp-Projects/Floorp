@@ -391,7 +391,7 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
     }
 
     *out_begin = dstBegin;
-    *out_anchoredBuffer = Move(dstBuffer);
+    *out_anchoredBuffer = std::move(dstBuffer);
     return true;
 }
 

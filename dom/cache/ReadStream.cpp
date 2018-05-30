@@ -534,7 +534,7 @@ ReadStream::Inner::AsyncOpenStreamOnOwningThread()
       if (!aStream) {
         self->OpenStreamFailed();
       } else {
-        self->mStream = Move(aStream);
+        self->mStream = std::move(aStream);
         self->mSnappyStream = new SnappyUncompressInputStream(self->mStream);
       }
     }

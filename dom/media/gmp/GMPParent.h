@@ -32,8 +32,8 @@ class GMPCapability
 public:
   explicit GMPCapability() {}
   GMPCapability(GMPCapability&& aOther)
-    : mAPIName(Move(aOther.mAPIName))
-    , mAPITags(Move(aOther.mAPITags))
+    : mAPIName(std::move(aOther.mAPIName))
+    , mAPITags(std::move(aOther.mAPITags))
   {
   }
   explicit GMPCapability(const nsCString& aAPIName)
