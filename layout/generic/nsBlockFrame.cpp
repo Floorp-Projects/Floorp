@@ -4035,42 +4035,42 @@ nsBlockFrame::DoReflowInlineFrames(BlockReflowInput& aState,
     // floats and the first element in the line doesn't fit with
     // the floats.
     //
-    // What we do is to advance past the first float we find and
-    // then reflow the line all over again.
+    // If there's block space available, we either try to reflow the line
+    // past the current band (if it's non-zero and the band definitely won't
+    // widen around a shape-outside), otherwise we try one pixel down. If
+    // there's no block space available, we push the line to the next
+    // page/column.
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE !=
                  aFloatAvailableSpace.mRect.BSize(outerWM),
                  "unconstrained block size on totally empty line");
 
     // See the analogous code for blocks in BlockReflowInput::ClearFloats.
-    if (aFloatAvailableSpace.mRect.BSize(outerWM) > 0) {
-      NS_ASSERTION(aFloatAvailableSpace.HasFloats(),
+    nscoord bandBSize = aFloatAvailableSpace.mRect.BSize(outerWM);
+    if (bandBSize > 0 ||
+        NS_UNCONSTRAINEDSIZE == aState.mReflowInput.AvailableBSize()) {
+      NS_ASSERTION(bandBSize == 0 || aFloatAvailableSpace.HasFloats(),
                    "redo line on totally empty line with non-empty band...");
       // We should never hit this case if we've placed floats on the
       // line; if we have, then the GetFloatAvailableSpace call is wrong
       // and needs to happen after the caller pops the space manager
       // state.
       aState.FloatManager()->AssertStateMatches(aFloatStateBeforeLine);
-      aState.mBCoord += aFloatAvailableSpace.mRect.BSize(outerWM);
+
+      if (!aFloatAvailableSpace.MayWiden() && bandBSize > 0) {
+        // Move it down far enough to clear the current band.
+        aState.mBCoord += bandBSize;
+      } else {
+        // Move it down by one dev pixel.
+        aState.mBCoord += aState.mPresContext->DevPixelsToAppUnits(1);
+      }
+
       aFloatAvailableSpace = aState.GetFloatAvailableSpace();
     } else {
-      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowInput.AvailableBSize(),
-                   "We shouldn't be running out of height here");
-      if (NS_UNCONSTRAINEDSIZE == aState.mReflowInput.AvailableBSize()) {
-        // just move it down a bit to try to get out of this mess
-        aState.mBCoord += 1;
-        // We should never hit this case if we've placed floats on the
-        // line; if we have, then the GetFloatAvailableSpace call is wrong
-        // and needs to happen after the caller pops the space manager
-        // state.
-        aState.FloatManager()->AssertStateMatches(aFloatStateBeforeLine);
-        aFloatAvailableSpace = aState.GetFloatAvailableSpace();
-      } else {
-        // There's nowhere to retry placing the line, so we want to push
-        // it to the next page/column where its contents can fit not
-        // next to a float.
-        lineReflowStatus = LineReflowStatus::Truncated;
-        PushTruncatedLine(aState, aLine, aKeepReflowGoing);
-      }
+      // There's nowhere to retry placing the line, so we want to push
+      // it to the next page/column where its contents can fit not
+      // next to a float.
+      lineReflowStatus = LineReflowStatus::Truncated;
+      PushTruncatedLine(aState, aLine, aKeepReflowGoing);
     }
 
     // XXX: a small optimization can be done here when paginating:
