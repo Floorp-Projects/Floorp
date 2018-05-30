@@ -6153,7 +6153,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
       if (!NS_SUCCEEDED(dragSession->GetCanDrop(&canDrop)) || !canDrop) {
         [self doDragAction:eDragExit sender:aSender];
 
-        nsCOMPtr<nsIDOMNode> sourceNode;
+        nsCOMPtr<nsINode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
         if (!sourceNode) {
           mDragService->EndDragSession(
@@ -6211,7 +6211,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
       }
       case eDragExit:
       case eDrop: {
-        nsCOMPtr<nsIDOMNode> sourceNode;
+        nsCOMPtr<nsINode> sourceNode;
         dragSession->GetSourceNode(getter_AddRefs(sourceNode));
         if (!sourceNode) {
           // We're leaving a window while doing a drag that was

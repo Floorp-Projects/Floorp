@@ -9,7 +9,7 @@
 #include "nsNativeDragTarget.h"
 #include "nsDragService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsCOMPtr.h"
 
 #include "nsIWidget.h"
@@ -380,7 +380,7 @@ nsNativeDragTarget::DragLeave()
   mDragService->GetCurrentSession(getter_AddRefs(currentDragSession));
 
   if (currentDragSession) {
-    nsCOMPtr<nsIDOMNode> sourceNode;
+    nsCOMPtr<nsINode> sourceNode;
     currentDragSession->GetSourceNode(getter_AddRefs(sourceNode));
 
     if (!sourceNode) {

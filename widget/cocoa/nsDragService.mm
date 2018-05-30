@@ -19,7 +19,7 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsLinebreakConverter.h"
 #include "nsIMacUtils.h"
-#include "nsIDOMNode.h"
+#include "nsINode.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsIIOService.h"
@@ -65,7 +65,7 @@ nsDragService::~nsDragService()
 }
 
 NSImage*
-nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
+nsDragService::ConstructDragImage(nsINode* aDOMNode,
                                   nsIScriptableRegion* aRegion,
                                   NSPoint* aDragPoint)
 {
@@ -107,7 +107,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 }
 
 NSImage*
-nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
+nsDragService::ConstructDragImage(nsINode* aDOMNode,
                                   nsIScriptableRegion* aRegion,
                                   CSSIntPoint aPoint,
                                   LayoutDeviceIntRect* aDragRect)
@@ -665,7 +665,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems)
 }
 
 NS_IMETHODIMP
-nsDragService::UpdateDragImage(nsIDOMNode* aImage, int32_t aImageX, int32_t aImageY)
+nsDragService::UpdateDragImage(nsINode* aImage, int32_t aImageX, int32_t aImageY)
 {
   nsBaseDragService::UpdateDragImage(aImage, aImageX, aImageY);
   mDragImageChanged = true;

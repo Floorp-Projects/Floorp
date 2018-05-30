@@ -190,7 +190,7 @@ public:
                           gfxContext* aThebesContext) override;
 
   already_AddRefed<SourceSurface>
-  RenderNode(nsIDOMNode* aNode,
+  RenderNode(nsINode* aNode,
              nsIntRegion* aRegion,
              const LayoutDeviceIntPoint aPoint,
              LayoutDeviceIntRect* aScreenRect,
