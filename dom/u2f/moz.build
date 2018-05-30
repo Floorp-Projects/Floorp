@@ -10,7 +10,6 @@ with Files("**"):
 EXPORTS.mozilla.dom += [
     'U2F.h',
     'U2FAuthenticator.h',
-    'U2FUtil.h',
 ]
 
 UNIFIED_SOURCES += [
