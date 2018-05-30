@@ -132,8 +132,9 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation,
         NS_SUCCEEDED(mimeParser.GetParameter("version", version))) {
       *aShouldLoad = nsIContentPolicy::REJECT_REQUEST;
 
+      nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
       LogMessage(NS_LITERAL_STRING(VERSIONED_JS_BLOCKED_MESSAGE),
-                 requestOrigin, typeString, aLoadInfo->GetLoadingContext());
+                 requestOrigin, typeString, context);
       return NS_OK;
     }
   }
