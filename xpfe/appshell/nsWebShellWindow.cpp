@@ -41,7 +41,6 @@
 #include "nsIWebProgressListener.h"
 
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
 
