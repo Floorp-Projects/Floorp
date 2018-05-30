@@ -117,12 +117,14 @@ release-promotion:
         promote_devedition:
             product: devedition
             target-tasks-method: promote_desktop
+            partial-updates: true
         promote_fennec:
             product: fennec
             target-tasks-method: promote_fennec
         promote_firefox:
             product: firefox
             target-tasks-method: promote_desktop
+            partial-updates: true
         promote_firefox_partners:
             product: firefox
             rebuild-kinds:
@@ -137,18 +139,24 @@ release-promotion:
             product: firefox
             release-type: rc
             target-tasks-method: promote_desktop
+            partial-updates: true
         push_devedition:
             product: devedition
             target-tasks-method: push_desktop
+            partial-updates: true
         push_firefox:
             product: firefox
             target-tasks-method: push_desktop
+            partial-updates: true
         ship_devedition:
             product: devedition
             target-tasks-method: ship_desktop
+            version-bump: true
+            partial-updates: true
         ship_fennec:
             product: fennec
             target-tasks-method: ship_fennec
+            version-bump: true
         ship_fennec_rc:
             product: fennec
             release-type: rc
@@ -156,10 +164,13 @@ release-promotion:
         ship_firefox:
             product: firefox
             target-tasks-method: ship_desktop
+            version-bump: true
+            partial-updates: true
         ship_firefox_rc:
             product: firefox
             release-type: rc
             target-tasks-method: ship_desktop
+            partial-updates: true
 
 scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
