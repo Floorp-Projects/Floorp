@@ -345,6 +345,11 @@ ProxyMessenger = {
     };
 
     let extension = GlobalManager.extensionMap.get(sender.extensionId);
+
+    if (extension.wakeupBackground) {
+      await extension.wakeupBackground();
+    }
+
     let {
       messageManager: receiverMM,
       xulBrowser: receiverBrowser,
