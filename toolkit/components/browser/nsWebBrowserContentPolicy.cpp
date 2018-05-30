@@ -34,8 +34,8 @@ nsWebBrowserContentPolicy::ShouldLoad(nsIURI* aContentLocation,
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
 
-  nsIDocShell* shell =
-    NS_CP_GetDocShellFromContext(aLoadInfo->GetLoadingContext());
+  nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
+  nsIDocShell* shell = NS_CP_GetDocShellFromContext(context);
   /* We're going to dereference shell, so make sure it isn't null */
   if (!shell) {
     return NS_OK;
@@ -92,8 +92,8 @@ nsWebBrowserContentPolicy::ShouldProcess(nsIURI* aContentLocation,
     return NS_OK;
   }
 
-  nsIDocShell* shell =
-    NS_CP_GetDocShellFromContext(aLoadInfo->GetLoadingContext());
+  nsCOMPtr<nsISupports> context = aLoadInfo->GetLoadingContext();
+  nsIDocShell* shell = NS_CP_GetDocShellFromContext(context);
   if (shell && (!shell->PluginsAllowedInCurrentDoc())) {
     *aShouldProcess = nsIContentPolicy::REJECT_TYPE;
   }
