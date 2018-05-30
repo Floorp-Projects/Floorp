@@ -1271,12 +1271,12 @@ JS::NotifyGCRootsRemoved(JSContext* cx)
     cx->runtime()->gc.notifyRootsRemoved();
 }
 
-JS_FRIEND_API(JSCompartment*)
-js::GetAnyCompartmentInZone(JS::Zone* zone)
+JS_FRIEND_API(JS::Realm*)
+js::GetAnyRealmInZone(JS::Zone* zone)
 {
-    CompartmentsInZoneIter comp(zone);
-    MOZ_ASSERT(!comp.done());
-    return comp.get();
+    RealmsInZoneIter realm(zone);
+    MOZ_ASSERT(!realm.done());
+    return realm.get();
 }
 
 void
