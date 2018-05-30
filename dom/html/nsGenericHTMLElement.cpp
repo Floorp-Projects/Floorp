@@ -104,13 +104,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ADDREF_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
-NS_IMPL_RELEASE_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
-
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElementBase)
-
 nsresult
 nsGenericHTMLElement::CopyInnerTo(Element* aDst, bool aPreallocateChildren)
 {

@@ -11,7 +11,6 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
-#include "nsIDOMNode.h"
 #include "mozilla/dom/NodeInfo.h"            // member (in nsCOMPtr)
 #include "nsIVariant.h"             // for use in GetUserData()
 #include "nsIWeakReference.h"
@@ -694,7 +693,7 @@ public:
 
   /**
    * The values returned by this function are the ones defined for
-   * nsIDOMNode.nodeType
+   * Node.nodeType
    */
   uint16_t NodeType() const
   {

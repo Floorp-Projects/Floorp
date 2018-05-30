@@ -13,7 +13,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIAttribute.h"
-#include "nsIDOMNode.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -27,8 +26,7 @@ namespace dom {
 
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements the DOM Attr interface.
-class Attr final : public nsIAttribute,
-                   public nsIDOMNode
+class Attr final : public nsIAttribute
 {
   virtual ~Attr() {}
 
