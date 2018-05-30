@@ -1566,6 +1566,10 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
 
   aWriter.IntProperty("version", 10);
 
+#if defined(MOZ_SOURCE_URL)
+  aWriter.StringProperty("sourceURL", "@MOZ_SOURCE_URL@");
+#endif
+
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
   // ProcessStartTime)) to convert CorePS::ProcessStartTime() into that form.
@@ -1656,10 +1660,6 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
     res = appInfo->GetAppBuildID(string);
     if (!NS_FAILED(res))
       aWriter.StringProperty("appBuildID", string.Data());
-
-    res = appInfo->GetSourceURL(string);
-    if (!NS_FAILED(res))
-      aWriter.StringProperty("sourceURL", string.Data());
   }
 
   // We should avoid collecting extension metadata for profiler while XPCOM is
