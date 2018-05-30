@@ -224,8 +224,8 @@ add_test(function test_array() {
 
 add_test(function test_that() {
   equal(1, assert.that(n => n + 1)(1));
-  Assert.throws(() => assert.that(() => false)());
-  Assert.throws(() => assert.that(val => val)(false));
+  Assert.throws(() => assert.that(() => false)(), InvalidArgumentError);
+  Assert.throws(() => assert.that(val => val)(false), InvalidArgumentError);
   Assert.throws(() => assert.that(val => val, "foo", SessionNotCreatedError)(false),
       SessionNotCreatedError);
 
