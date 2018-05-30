@@ -696,11 +696,13 @@ private:
                                             const RefPtr<AsyncPanZoomController>& aTarget);
 
 
-  already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
+  already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                                           TreeBuildingState& aState,
                                                            AsyncPanZoomController* aApzc,
                                                            LayersId aLayersId);
   template<class ScrollNode>
-  HitTestingTreeNode* PrepareNodeForLayer(const ScrollNode& aLayer,
+  HitTestingTreeNode* PrepareNodeForLayer(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                          const ScrollNode& aLayer,
                                           const FrameMetrics& aMetrics,
                                           LayersId aLayersId,
                                           const AncestorTransform& aAncestorTransform,
