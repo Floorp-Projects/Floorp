@@ -875,8 +875,7 @@ var reducers = { TopSites, App, Snippets, Prefs, Dialog, Sections, Theme };
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony export (immutable) */ __webpack_exports__["b"] = initASRouter;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_common_Actions_jsm__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_content_src_lib_init_store__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__components_ImpressionsWrapper_ImpressionsWrapper__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_react__ = __webpack_require__(0);
@@ -923,7 +922,7 @@ const ASRouterUtils = {
     global.sendAsyncMessage(__WEBPACK_IMPORTED_MODULE_1_content_src_lib_init_store__["a" /* OUTGOING_MESSAGE_NAME */], payload);
   }
 };
-/* harmony export (immutable) */ __webpack_exports__["a"] = ASRouterUtils;
+/* harmony export (immutable) */ __webpack_exports__["b"] = ASRouterUtils;
 
 
 // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
@@ -1005,9 +1004,35 @@ class ASRouterUISurface extends __WEBPACK_IMPORTED_MODULE_3_react___default.a.Pu
 
 ASRouterUISurface.defaultProps = { document: global.document };
 
-function initASRouter() {
-  __WEBPACK_IMPORTED_MODULE_4_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(ASRouterUISurface, { id: "NEWTAB_FOOTER_BAR" }), document.getElementById("snippets-container"));
+class ASRouterContent {
+  constructor() {
+    this.initialized = false;
+    this.containerElement = null;
+  }
+
+  _mount() {
+    this.containerElement = global.document.getElementById("snippets-container");
+    __WEBPACK_IMPORTED_MODULE_4_react_dom___default.a.render(__WEBPACK_IMPORTED_MODULE_3_react___default.a.createElement(ASRouterUISurface, { id: "NEWTAB_FOOTER_BAR" }), this.containerElement);
+  }
+
+  _unmount() {
+    __WEBPACK_IMPORTED_MODULE_4_react_dom___default.a.unmountComponentAtNode(this.containerElement);
+  }
+
+  init() {
+    this._mount();
+    this.initialized = true;
+  }
+
+  uninit() {
+    if (this.initialized) {
+      this._unmount();
+      this.initialized = false;
+    }
+  }
 }
+/* harmony export (immutable) */ __webpack_exports__["a"] = ASRouterContent;
+
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
 /***/ }),
@@ -3189,10 +3214,11 @@ class SnippetsProvider {
  *                         Snippet data.
  *
  * @param  {obj} store   The redux store
- * @return {obj}         Returns the snippets instance and unsubscribe function
+ * @return {obj}         Returns the snippets instance, asrouterContent instance and unsubscribe function
  */
 function addSnippetsSubscriber(store) {
   const snippets = new SnippetsProvider(store.dispatch);
+  const asrouterContent = new __WEBPACK_IMPORTED_MODULE_1_content_src_asrouter_asrouter_content__["a" /* ASRouterContent */]();
 
   let initializing = false;
 
@@ -3213,13 +3239,17 @@ function addSnippetsSubscriber(store) {
       snippets.uninit();
     }
 
-    if (state.Prefs.values.asrouterExperimentEnabled) {
-      Object(__WEBPACK_IMPORTED_MODULE_1_content_src_asrouter_asrouter_content__["b" /* initASRouter */])();
+    // Turn on AS Router snippets if the experiment is enabled and the snippets pref is on;
+    // otherwise, turn it off.
+    if (state.Prefs.values.asrouterExperimentEnabled && state.Prefs.values["feeds.snippets"] && !asrouterContent.initialized) {
+      asrouterContent.init();
+    } else if ((!state.Prefs.values.asrouterExperimentEnabled || !state.Prefs.values["feeds.snippets"]) && asrouterContent.initialized) {
+      asrouterContent.uninit();
     }
   });
 
   // These values are returned for testing purposes
-  return snippets;
+  return { snippets, asrouterContent };
 }
 /* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(3)))
 
@@ -3641,24 +3671,24 @@ class ASRouterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureCo
   }
 
   componentWillMount() {
-    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].sendMessage({ type: "ADMIN_CONNECT_STATE" });
-    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].addListener(this.onMessage);
+    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].sendMessage({ type: "ADMIN_CONNECT_STATE" });
+    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].addListener(this.onMessage);
   }
 
   componentWillUnmount() {
-    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].removeListener(this.onMessage);
+    __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].removeListener(this.onMessage);
   }
 
   handleBlock(id) {
-    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].blockById(id);
+    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].blockById(id);
   }
 
   handleUnblock(id) {
-    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].unblockById(id);
+    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].unblockById(id);
   }
 
   handleOverride(id) {
-    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].overrideMessage(id);
+    return () => __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].overrideMessage(id);
   }
 
   renderMessageItem(msg) {
@@ -3766,7 +3796,7 @@ class ASRouterAdmin extends __WEBPACK_IMPORTED_MODULE_1_react___default.a.PureCo
       ),
       __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
         "button",
-        { className: "button primary", onClick: __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["a" /* ASRouterUtils */].getNextMessage },
+        { className: "button primary", onClick: __WEBPACK_IMPORTED_MODULE_0__asrouter_asrouter_content__["b" /* ASRouterUtils */].getNextMessage },
         "Refresh Current Message"
       ),
       __WEBPACK_IMPORTED_MODULE_1_react___default.a.createElement(
