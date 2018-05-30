@@ -31,13 +31,19 @@ public:
     mIsUpgradeReaction = true;
   }
 
+  virtual void Traverse(nsCycleCollectionTraversalCallback& aCb) const override
+  {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mDefinition");
+    aCb.NoteNativeChild(mDefinition,
+      NS_CYCLE_COLLECTION_PARTICIPANT(CustomElementDefinition));
+  }
 private:
   virtual void Invoke(Element* aElement, ErrorResult& aRv) override
   {
     CustomElementRegistry::Upgrade(aElement, mDefinition, aRv);
   }
 
-  CustomElementDefinition* mDefinition;
+  RefPtr<CustomElementDefinition> mDefinition;
 };
 
 //-----------------------------------------------------
