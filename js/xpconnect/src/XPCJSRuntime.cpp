@@ -2043,8 +2043,9 @@ class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter
         js::Vector<nsCString, 0, js::SystemAllocPolicy> paths;
     };
 
-    static void CompartmentCallback(JSContext* cx, void* vdata, JSCompartment* c) {
+    static void RealmCallback(JSContext* cx, void* vdata, Handle<Realm*> realm) {
         // silently ignore OOM errors
+        JSCompartment* c = JS::GetCompartmentForRealm(realm);
         Data* data = static_cast<Data*>(vdata);
         nsCString path;
         GetCompartmentName(c, path, &data->anonymizeID, /* replaceSlashes = */ true);
@@ -2058,19 +2059,18 @@ class JSMainRuntimeRealmsReporter final : public nsIMemoryReporter
     NS_IMETHOD CollectReports(nsIHandleReportCallback* handleReport,
                               nsISupports* data, bool anonymize) override
     {
-        // First we collect the compartment paths.  Then we report them.  Doing
+        // First we collect the realm paths.  Then we report them.  Doing
         // the two steps interleaved is a bad idea, because calling
-        // |handleReport| from within CompartmentCallback() leads to all manner
+        // |handleReport| from within RealmCallback() leads to all manner
         // of assertions.
 
         Data d;
         d.anonymizeID = anonymize ? 1 : 0;
-        JS_IterateCompartments(XPCJSContext::Get()->Context(),
-                               &d, CompartmentCallback);
+        JS::IterateRealms(XPCJSContext::Get()->Context(), &d, RealmCallback);
 
         for (size_t i = 0; i < d.paths.length(); i++)
             REPORT(nsCString(d.paths[i]), KIND_OTHER, UNITS_COUNT, 1,
-                "A live compartment in the main JSRuntime.");
+                "A live realm in the main JSRuntime.");
 
         return NS_OK;
     }
@@ -2187,17 +2187,17 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         zStats->extra = extras;
     }
 
-    virtual void initExtraRealmStats(JSCompartment* c,
+    virtual void initExtraRealmStats(Handle<Realm*> realm,
                                      JS::RealmStats* realmStats) override
     {
+        JSCompartment* c = JS::GetCompartmentForRealm(realm);
         xpc::RealmStatsExtras* extras = new xpc::RealmStatsExtras;
         nsCString cName;
         GetCompartmentName(c, cName, &mAnonymizeID, /* replaceSlashes = */ true);
 
-        // Get the compartment's global.
+        // Get the realm's global.
         AutoSafeJSContext cx;
         bool needZone = true;
-        Rooted<Realm*> realm(cx, JS::GetRealmForCompartment(c));
         RootedObject global(cx, JS::GetRealmGlobalOrNull(realm));
         if (global) {
             RefPtr<nsGlobalWindowInner> window;
