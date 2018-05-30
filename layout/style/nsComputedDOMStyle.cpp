@@ -5081,14 +5081,18 @@ nsComputedDOMStyle::DoGetContain()
     val->SetIdent(eCSSKeyword_none);
   } else if (mask & NS_STYLE_CONTAIN_STRICT) {
     NS_ASSERTION(mask == (NS_STYLE_CONTAIN_STRICT | NS_STYLE_CONTAIN_ALL_BITS),
-                 "contain: strict should imply contain: layout style paint");
+                 "contain: strict should imply contain: size layout style paint");
     val->SetIdent(eCSSKeyword_strict);
-  } else {
+  } else if (mask & NS_STYLE_CONTAIN_CONTENT) {
+    NS_ASSERTION(mask == (NS_STYLE_CONTAIN_CONTENT | NS_STYLE_CONTAIN_CONTENT_BITS),
+                 "contain: content should imply contain: layout style paint");
+    val->SetIdent(eCSSKeyword_content);
+  }  else {
     nsAutoString valueStr;
-
     nsStyleUtil::AppendBitmaskCSSValue(nsCSSProps::kContainKTable,
-                                       mask, NS_STYLE_CONTAIN_LAYOUT,
-                                       NS_STYLE_CONTAIN_PAINT, valueStr);
+                                       mask,
+                                       NS_STYLE_CONTAIN_SIZE, NS_STYLE_CONTAIN_PAINT,
+                                       valueStr);
     val->SetString(valueStr);
   }
 
