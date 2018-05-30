@@ -1827,6 +1827,19 @@ class EventManager {
     }
   }
 
+  // Remove a primed listener for the given event (with the given extra
+  // addListener arguments).  This ordinarily happens as a side effect of
+  // calling addListener(), but APIs that need special handling (e.g.,
+  // runtime.onConnect and onMessage which don't have EventManagers in the
+  // parent process) can use this directly.
+  static clearOnePrimedListener(extension, module, event, args = []) {
+    let key = uneval(args);
+    let listener = extension.persistentListeners.get(module).get(event).get(key);
+    if (listener.primed) {
+      listener.primed = null;
+    }
+  }
+
   // Remove any primed listeners that were not re-registered.
   // This function is called after the background page has started.
   static clearPrimedListeners(extension) {
@@ -1852,7 +1865,7 @@ class EventManager {
   // Record the fact that there is a listener for the given event in
   // the given extension.  `args` is an Array containing any extra
   // arguments that were passed to addListener().
-  static savePersistentListener(extension, module, event, args) {
+  static savePersistentListener(extension, module, event, args = []) {
     EventManager._initPersistentListeners(extension);
     let key = uneval(args);
     extension.persistentListeners.get(module).get(event).set(key, {params: args});
@@ -1862,7 +1875,7 @@ class EventManager {
   // Remove the record for the given event listener from the extension's
   // startup data.  `key` must be a string, the result of calling uneval()
   // on the array of extra arguments originally passed to addListener().
-  static clearPersistentListener(extension, module, event, key) {
+  static clearPersistentListener(extension, module, event, key = uneval([])) {
     let listeners = extension.persistentListeners.get(module).get(event);
     listeners.delete(key);
 
