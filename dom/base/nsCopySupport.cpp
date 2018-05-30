@@ -29,7 +29,6 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"

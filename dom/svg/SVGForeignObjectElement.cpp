@@ -40,7 +40,7 @@ SVGForeignObjectElement::SVGForeignObjectElement(already_AddRefed<mozilla::dom::
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode methods
+// nsINode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGForeignObjectElement)
 

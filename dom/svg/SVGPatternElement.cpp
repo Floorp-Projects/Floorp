@@ -64,7 +64,7 @@ SVGPatternElement::SVGPatternElement(already_AddRefed<mozilla::dom::NodeInfo>& a
 }
 
 //----------------------------------------------------------------------
-// nsIDOMNode method
+// nsINode method
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGPatternElement)
 

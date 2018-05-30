@@ -5,7 +5,6 @@
 
 #include "nsCOMArray.h"
 #include "nsIAuthPrompt.h"
-#include "nsIDOMNode.h"
 #include "nsIDocument.h"
 #include "nsIExpatSink.h"
 #include "nsIChannelEventSink.h"

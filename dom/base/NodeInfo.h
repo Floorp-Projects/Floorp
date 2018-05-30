@@ -120,8 +120,8 @@ public:
   }
 
   /*
-   * Get the nodetype for the node. Returns the values specified in nsIDOMNode
-   * for nsIDOMNode.nodeType
+   * Get the nodetype for the node. Returns the values specified in Node
+   * for Node.nodeType
    */
   uint16_t NodeType() const
   {
@@ -302,7 +302,7 @@ protected:
     nsAtom* const MOZ_OWNING_REF mName;
     nsAtom* MOZ_OWNING_REF mPrefix;
     int32_t             mNamespaceID;
-    uint16_t            mNodeType; // As defined by nsIDOMNode.nodeType
+    uint16_t            mNodeType; // As defined by Node.nodeType
     const nsAString* const mNameString;
     nsAtom* MOZ_OWNING_REF mExtraName; // Only used by PIs and DocTypes
     mutable mozilla::Maybe<const uint32_t> mHash;
