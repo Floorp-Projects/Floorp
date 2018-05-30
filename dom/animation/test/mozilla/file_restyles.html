@@ -132,39 +132,21 @@ function waitForWheelEvent(aTarget) {
   });
 }
 
-function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
-  // Normally we expect one restyling for each requestAnimationFrame (as
-  // called by observeRestyling) PLUS one for the last frame because of bug
-  // 1193394.  However, we won't observe that initial restyling unless BOTH of
-  // the following two conditions hold:
-  //
-  // 1. We are running *before* restyling happens.
-  // 2. The animation actually needs a restyle because it started prior to
-  //    this frame.  Even if (1) is true, in some cases due to aligning with
-  //    the refresh driver, the animation fame in which the ready promise is
-  //    resolved happens to coincide perfectly with the start time of the
-  //    animation.  In this case no restyling is needed so we won't observe
-  //    an additional restyle.
-  if (hasConformantPromiseHandling) {
-    // If we have the conformant Promise handling and |aAnimation| begins at
-    // the current timeline time, we will not process restyling in the initial
-    // frame.
-    if (animationStartsRightNow(aAnimation)) {
-      return aExpectedRestyleCount - 1;
-    }
-  } else if (!animationStartsRightNow(aAnimation)) {
-    // If we don't have the conformant Promise handling and |aAnimation|
-    // doesn't begin at the current timeline time, we will see an additional
-    // restyling in the last frame.
-    return aExpectedRestyleCount + 1;
+async function waitForAnimationReadyToRestyle(aAnimation) {
+  await aAnimation.ready;
+  // If |aAnimation| begins at the current timeline time, we will not process
+  // restyling in the initial frame because of aligning with the refresh driver,
+  // the animation frame in which the ready promise is resolved happens to
+  // coincide perfectly with the start time of the animation.  In this case no
+  // restyling is needed in the frame so we have to wait one more frame.
+  if (animationStartsRightNow(aAnimation)) {
+    await waitForNextFrame();
   }
-  return aExpectedRestyleCount;
 }
 
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
-var hasConformantPromiseHandling;
 const isWebRender =
   SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
 
@@ -176,41 +158,19 @@ function add_task_if_omta_enabled(test) {
   add_task(test);
 }
 
-function isConformant() {
-  return new Promise(resolve => {
-    let resolvedPromise = false;
-    requestAnimationFrame(() => {
-      Promise.resolve().then(() => {
-        resolvedPromise = true;
-      });
-    });
-
-    requestAnimationFrame(() => {
-      resolve(resolvedPromise);
-    });
-  });
-}
-
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(() => {
-  // Drop this once we have the conformant Promise handling(bug 1193394).
-  add_task(async function check_conformant_promise_handling() {
-    hasConformantPromiseHandling = await isConformant();
-  });
-
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
+
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    // We need to tweak expected restyle count depending on animation state and
-    // micro task handling.
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations running on the main-thread should update style ' +
        'on the main thread');
     await ensureElementRemoval(div);
@@ -220,7 +180,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
@@ -237,7 +197,7 @@ waitForAllPaints(() => {
 
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
@@ -251,7 +211,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     div.animationDuration = '200s';
@@ -267,26 +227,20 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     animation.finish();
 
     var markers = await observeStyling(1);
-    if (!hasConformantPromiseHandling) {
-      todo_is(markers.length, 1,
-              'Bug 1415457: Animations running on the compositor should only ' +
-              'update style once after finish() is called');
-    } else {
-      is(markers.length, 1,
-         'Animations running on the compositor should only update style once ' +
-         'after finish() is called');
+    is(markers.length, 1,
+       'Animations running on the compositor should only update style once ' +
+       'after finish() is called');
 
-      markers = await observeStyling(1);
-      todo_is(markers.length, 0,
-              'Bug 1415457: Animations running on the compositor should only ' +
-              'update style once after finish() is called');
-    }
+    markers = await observeStyling(1);
+    todo_is(markers.length, 0,
+            'Bug 1415457: Animations running on the compositor should only ' +
+            'update style once after finish() is called');
 
     markers = await observeStyling(5);
     is(markers.length, 0,
@@ -357,7 +311,7 @@ waitForAllPaints(() => {
       { style: 'animation: opacity 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = await observeStyling(5);
@@ -373,7 +327,7 @@ waitForAllPaints(() => {
       { style: 'animation: background-color 100s; transform: translateY(-400px);' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     var markers = await observeStyling(5);
 
     is(markers.length, 0,
@@ -390,7 +344,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(div);
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
 
@@ -410,7 +364,7 @@ waitForAllPaints(() => {
                  'position: relative; top: 100px;' });
       parentElement.appendChild(div);
       var animation = div.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
 
@@ -424,61 +378,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function restyling_transform_animations_in_scrolled_out_element() {
-      if (hasConformantPromiseHandling) {
-        return;
-      }
-
-      // Skip this test on Android since this test have been failing
-      // intermittently.
-      // Bug 1413817: We should audit this test still fails once we have the
-      // conformant Promise micro task.
-      if (isAndroid) {
-        return;
-      }
-
-      await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
-
-      var parentElement = addDiv(null,
-        { style: 'overflow-y: scroll; height: 20px;' });
-      var div = addDiv(null,
-        { style: 'animation: rotate 100s infinite; position: relative; top: 100px;' });
-      parentElement.appendChild(div);
-      var animation = div.getAnimations()[0];
-      var timeAtStart = document.timeline.currentTime;
-
-      ok(!animation.isRunningOnCompositor,
-         'The transform animation is not running on the compositor');
-
-      var markers;
-      var now;
-      while (true) {
-        markers = await observeStyling(1);
-        // Check restyle markers until 200ms is elapsed.
-        now = document.timeline.currentTime;
-        if ((now - timeAtStart) >= 200) {
-          break;
-        }
-
-        is(markers.length, 0,
-           'Transform animation running on the element which is scrolled out ' +
-           'should be throttled until 200ms is elapsed');
-      }
-
-      is(markers.length, 1,
-         'Transform animation running on the element which is scrolled out ' +
-         'should be unthrottled after around 200ms have elapsed. now: ' +
-         now + ' start time: ' + timeAtStart);
-
-      await ensureElementRemoval(parentElement);
-    }
-  );
-
-  add_task(
-    async function restyling_transform_animations_in_scrolled_out_element() {
-      if (!hasConformantPromiseHandling) {
-        return;
-      }
-
       await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
 
       // Make sure we start from the state right after requestAnimationFrame.
@@ -525,60 +424,6 @@ waitForAllPaints(() => {
 
   add_task(
     async function restyling_out_of_view_transform_animations_in_another_element() {
-      if (hasConformantPromiseHandling) {
-        return;
-      }
-
-      // Skip this test on Android since this test have been failing
-      // intermittently.
-      // Bug 1413817: We should audit this test still fails once we have the
-      // conformant Promise micro task.
-      if (isAndroid) {
-        return;
-      }
-
-      var parentElement = addDiv(null,
-        { style: 'overflow: hidden;' });
-      var div = addDiv(null,
-        { style: 'animation: move-in 100s infinite;' });
-      parentElement.appendChild(div);
-      var animation = div.getAnimations()[0];
-      var timeAtStart = document.timeline.currentTime;
-
-      ok(!animation.isRunningOnCompositor,
-         'The transform animation on out of view element ' +
-         'is not running on the compositor');
-
-      var markers;
-      var now;
-      while (true) {
-        markers = await observeStyling(1);
-        // Check restyle markers until 200ms is elapsed.
-        now = document.timeline.currentTime;
-        if ((now - timeAtStart) >= 200) {
-          break;
-        }
-
-        is(markers.length, 0,
-           'Transform animation running on out of view element ' +
-           'should be throttled until 200ms is elapsed');
-      }
-
-      is(markers.length, 1,
-         'Transform animation running on out of view element ' +
-         'should be unthrottled after around 200ms have elapsed. now: ' +
-         now + ' start time: ' + timeAtStart);
-
-      await ensureElementRemoval(parentElement);
-    }
-  );
-
-  add_task(
-    async function restyling_out_of_view_transform_animations_in_another_element() {
-      if (!hasConformantPromiseHandling) {
-        return;
-      }
-
       // Make sure we start from the state right after requestAnimationFrame.
       await waitForFrame();
 
@@ -632,13 +477,11 @@ waitForAllPaints(() => {
                   100 * MS_PER_SEC);
     parentElement.appendChild(div);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 20);
-
     var markers = await observeStyling(20);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 20,
        'Finite transform animation in out-of-view element should never be ' +
        'throttled');
 
@@ -653,7 +496,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(div);
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     var markers = await observeStyling(5);
 
     is(markers.length, 0,
@@ -688,7 +531,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(div);
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     var markers = await observeStyling(5);
 
     is(markers.length, 0,
@@ -713,7 +556,7 @@ waitForAllPaints(() => {
      { style: 'animation: opacity 100s; visibility: hidden' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     if (!isWebRender) {
       ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
     } else {
@@ -743,7 +586,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(pad);
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     await waitForWheelEvent(parentElement);
 
@@ -767,7 +610,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(div);
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -794,7 +637,7 @@ waitForAllPaints(() => {
 
       var animation = div.getAnimations()[0];
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       // We don't check the animation causes restyles here since we already
       // check it in the first test case.
@@ -819,7 +662,7 @@ waitForAllPaints(() => {
       var animation = div.getAnimations()[0];
 
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       var markers = await observeStyling(5);
 
       is(markers.length, 0,
@@ -845,7 +688,7 @@ waitForAllPaints(() => {
 
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     var markers = await observeStyling(5);
 
     is(markers.length, 0,
@@ -877,7 +720,7 @@ waitForAllPaints(() => {
        { style: 'animation: background-color 100s; visibility: hidden' });
       var animation = div.getAnimations()[0];
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       var markers = await observeStyling(5);
 
       is(markers.length, 0,
@@ -931,7 +774,7 @@ waitForAllPaints(() => {
 
       var animation = div.getAnimations()[0];
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       // We don't check the animation causes restyles here since we already
       // check it in the first test case.
@@ -978,7 +821,7 @@ waitForAllPaints(() => {
 
       var animation = div.getAnimations()[0];
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       var markers = await observeStyling(5);
       is(markers.length, 0,
          'Animations on visibility hidden element having no visible ' +
@@ -1079,7 +922,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     animation.pause();
@@ -1102,7 +945,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     animation.pause();
 
@@ -1124,7 +967,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     animation.currentTime = 50 * MS_PER_SEC;
 
@@ -1139,7 +982,7 @@ waitForAllPaints(() => {
     var div = addDiv(null);
     var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     // Set currentTime to a time longer than duration.
@@ -1163,7 +1006,7 @@ waitForAllPaints(() => {
     var animation = div.animate({ backgroundColor: [ 'red', 'blue' ] },
                                 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     div.style.display = 'none';
 
@@ -1196,7 +1039,7 @@ waitForAllPaints(() => {
     var div = addDiv(null);
     var animation = div.animate({ opacity: [ 0, 1 ] }, 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     div.style.display = 'none';
 
@@ -1234,7 +1077,7 @@ waitForAllPaints(() => {
     var div = addDiv(null);
     var animation = div.animate({ }, 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     var markers = await observeStyling(5);
 
     is(markers.length, 0,
@@ -1260,7 +1103,7 @@ waitForAllPaints(() => {
   add_task_if_omta_enabled(async function no_restyling_when_animation_style_when_re_setting_same_animation_property() {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
     // Apply the same animation style
     div.style.animation = 'opacity 100s';
@@ -1274,7 +1117,7 @@ waitForAllPaints(() => {
   add_task(async function necessary_update_should_be_invoked() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     await waitForAnimationFrames(5);
     // Apply another animation style
     div.style.animation = 'background-color 110s';
@@ -1294,7 +1137,7 @@ waitForAllPaints(() => {
       var animation = div.animate({ opacity: [0, 1],
                                     backgroundColor: ['green', 'red'] },
                                   100 * MS_PER_SEC);
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation is running on the compositor');
       // Make the background-color style as !important to cause an update
@@ -1316,7 +1159,7 @@ waitForAllPaints(() => {
     var animation = div.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     div.remove();
 
@@ -1341,7 +1184,7 @@ waitForAllPaints(() => {
       var div = addDiv(null, { style: 'opacity: 1 ! important' });
       var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(!SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation overridden by an !important rule is NOT ' +
          'running on the compositor');
@@ -1378,12 +1221,11 @@ waitForAllPaints(() => {
         div.animate([{ visibility: 'visible' }],
                     { duration: 100 * MS_PER_SEC, composite: 'add' });
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
 
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'Additive animation has no keyframe whose offset is 0 or 1 in an ' +
          'out-of-view element should not be throttled');
       await ensureElementRemoval(div);
@@ -1396,12 +1238,11 @@ waitForAllPaints(() => {
     var animation =
       div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
 
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'Discrete animation has has no keyframe whose offset is 0 or 1 in an ' +
        'out-of-view element should not be throttled');
     await ensureElementRemoval(div);
@@ -1416,11 +1257,10 @@ waitForAllPaints(() => {
                               'visibility: collapse;' });
       var animation =
         div.animate([{ visibility: 'visible' }], 100 * MS_PER_SEC);
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'visibility animation has no keyframe whose offset is 0 or 1 in an ' +
          'out-of-view element and produces change hint other than paint-only ' +
          'change hint should not be throttled');
@@ -1434,7 +1274,7 @@ waitForAllPaints(() => {
     var animation =
       div.animate({ visibility: ['visible', 'hidden'] }, 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
 
@@ -1450,7 +1290,7 @@ waitForAllPaints(() => {
                                 { duration: 100 * MS_PER_SEC,
                                   easing: 'step-end' });
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
 
@@ -1472,11 +1312,10 @@ waitForAllPaints(() => {
                                             height: '10',
                                             fill:   'red' });
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations on an in-view svg element with post-transform should ' +
        'not be throttled.');
 
@@ -1495,11 +1334,10 @@ waitForAllPaints(() => {
                                             height: '1250',
                                             fill:   'red' });
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animations on an in-view svg element which is inside transformed ' +
        'parent should not be throttled.');
 
@@ -1517,7 +1355,7 @@ waitForAllPaints(() => {
                                             fill: 'red' });
 
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -1536,11 +1374,10 @@ waitForAllPaints(() => {
     scrollDiv.appendChild(targetDiv);
 
     var animation = targetDiv.getAnimations()[0];
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
-    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
-    is(markers.length, expectedRestyleCount,
+    is(markers.length, 5,
        'CSS animation on an in-view element with pre-transform should not ' +
        'be throttled.');
 
@@ -1556,7 +1393,7 @@ waitForAllPaints(() => {
     scrollDiv.appendChild(targetDiv);
 
     var animation = targetDiv.getAnimations()[0];
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
     is(markers.length, 0,
@@ -1575,7 +1412,7 @@ waitForAllPaints(() => {
       parentDiv.appendChild(targetDiv);
 
       var animation = targetDiv.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
       is(markers.length, 0,
@@ -1593,7 +1430,7 @@ waitForAllPaints(() => {
                                 'position: absolute; top: -1000px;' });
 
       var animation = div.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
       is(markers.length, 0,
@@ -1613,7 +1450,7 @@ waitForAllPaints(() => {
       parentDiv.appendChild(targetDiv);
 
       var animation = targetDiv.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
       is(markers.length, 0,
@@ -1631,7 +1468,7 @@ waitForAllPaints(() => {
                                 'position: fixed; top: -1000px;' });
 
       var animation = div.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
       is(markers.length, 0,
@@ -1661,7 +1498,7 @@ waitForAllPaints(() => {
       var animation = target.animate({ opacity: [0, 1] },
                                      { duration: 100 * MS_PER_SEC,
                                        iterations: Infinity });
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStylingInTargetWindow(iframe.contentWindow, 5);
       is(markers.length, 0,
@@ -1682,11 +1519,10 @@ waitForAllPaints(() => {
       parent.appendChild(target);
 
       var animation = target.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
-      const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
       var markers = await observeStyling(5);
-      is(markers.length, expectedRestyleCount,
+      is(markers.length, 5,
          'Animation on position:absolute element in collapsed element ' +
          'should not be throttled');
 
@@ -1703,7 +1539,7 @@ waitForAllPaints(() => {
       parent.appendChild(target);
 
       var animation = target.getAnimations()[0];
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
 
       var markers = await observeStyling(5);
       todo_is(markers.length, 0,
@@ -1719,7 +1555,7 @@ waitForAllPaints(() => {
       var div = addDiv(null);
       var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor,
          'The opacity animation is running on the compositor');
 
@@ -1744,7 +1580,7 @@ waitForAllPaints(() => {
                     100 * MS_PER_SEC);
       parentElement.appendChild(div);
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
       var markers = await observeStyling(20);
@@ -1760,7 +1596,7 @@ waitForAllPaints(() => {
     var div = addDiv(null);
     var animation =
       div.animate({ opacity: [ '0', '1' ] }, 100 * MS_PER_SEC);
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
@@ -1777,7 +1613,7 @@ waitForAllPaints(() => {
     var div = addDiv(null, { style: 'animation: opacity 100s' });
     var animation = div.getAnimations()[0];
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
     ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
     var markers = observeAnimSyncStyling(() => {
@@ -1798,7 +1634,7 @@ waitForAllPaints(() => {
       var animation = div.getAnimations()[0];
       var sibling = addDiv(null);
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
       var markers = observeAnimSyncStyling(() => {
@@ -1821,7 +1657,7 @@ waitForAllPaints(() => {
       var div = addDiv(null, { style: 'animation: opacity 100s' });
       var animation = div.getAnimations()[0];
 
-      await animation.ready;
+      await waitForAnimationReadyToRestyle(animation);
       ok(SpecialPowers.wrap(animation).isRunningOnCompositor);
 
       var markers = observeAnimSyncStyling(() => {
@@ -1848,7 +1684,7 @@ waitForAllPaints(() => {
 
       var transition = div.getAnimations()[0];
 
-      await transition.ready;
+      await waitForAnimationReadyToRestyle(transition);
       ok(SpecialPowers.wrap(transition).isRunningOnCompositor);
 
       var markers = observeAnimSyncStyling(() => {
@@ -1875,7 +1711,7 @@ waitForAllPaints(() => {
 
       var transition = div.getAnimations()[0];
 
-      await transition.ready;
+      await waitForAnimationReadyToRestyle(transition);
       ok(SpecialPowers.wrap(transition).isRunningOnCompositor);
 
       var markers = observeAnimSyncStyling(() => {
@@ -1898,7 +1734,7 @@ waitForAllPaints(() => {
     var animation =
       div.animate({ visibility: ['hidden', 'visible'] }, 100 * MS_PER_SEC);
 
-    await animation.ready;
+    await waitForAnimationReadyToRestyle(animation);
 
     var markers = await observeStyling(5);
 

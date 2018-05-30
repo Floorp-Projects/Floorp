@@ -12,70 +12,59 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
-
+runWithMSE(async (ms, el) => {
   const threshold = 0.5; // gap threshold in seconds.
   const fuzz = 0.000001; // fuzz when comparing double.
 
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    const vchunks = [ {start: 0, end: 3.203333}, { start: 3.203333, end: 6.406666} ];
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  const vchunks = [ {start: 0, end: 3.203333}, { start: 3.203333, end: 6.406666} ];
 
-    fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4")
-    .then(fetchAndLoad.bind(null, videosb, "bipbop/bipbop_video", range(1, 5), ".m4s"))
-    .then(function() {
-      // We will insert a gap of threshold
-      videosb.timestampOffset = threshold;
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 9), ".m4s");
-    }).then(function() {
-      // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
-      // has notified it of available data. Make sure that we get 'playing' before
-      // we starting waiting for 'waiting'.
-      info("Invoking play()");
-      const p = once(el, "playing");
-      el.play();
-      return p;
-    }).then(function() {
-      return once(el, "waiting");
-    }).then(function() {
-      // We're waiting for data after the start of the last frame.
-      // 0.033333 is the duration of the last frame.
-      ok(el.currentTime >= vchunks[1].end - 0.033333 + threshold - fuzz
-         && el.currentTime <= vchunks[1].end + threshold + fuzz, "skipped the gap properly: " + el.currentTime + " " + (vchunks[1].end + threshold));
-      is(el.buffered.length, 2, "buffered range has right length");
-      // Now we test that seeking will succeed despite the gap.
-      el.currentTime = el.buffered.end(0) + (threshold / 2);
-      return once(el, "seeked");
-    }).then(function() {
-      // Now we test that we don't pass the gap.
-      // Clean up our sourcebuffer by removing all data.
-      videosb.timestampOffset = 0;
-      videosb.remove(0, Infinity);
-      el.currentTime = 0;
-      el.pause();
-      return once(videosb, "updateend");
-    }).then(function() {
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
-    }).then(function() {
-      // We will insert a gap of threshold + 1ms
-      videosb.timestampOffset = threshold + 1 / 1000;
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 9), ".m4s");
-    }).then(function() {
-      info("Invoking play()");
-      const p = once(el, "playing");
-      el.play();
-      return p;
-    }).then(function() {
-      return once(el, "waiting");
-    }).then(function() {
-      // We're waiting for data after the start of the last frame.
-      // 0.033333 is the duration of the last frame.
-      ok(el.currentTime >= vchunks[0].end - 0.033333 - fuzz
-         && el.currentTime <= vchunks[0].end + fuzz, "stopped at the gap properly: " + el.currentTime + " " + vchunks[0].end);
-      SimpleTest.finish();
-    });
-  });
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
+  // We will insert a gap of threshold
+  videosb.timestampOffset = threshold;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 9), ".m4s");
+  // HTMLMediaElement fires 'waiting' if somebody invokes |play()| before the MDSM
+  // has notified it of available data. Make sure that we get 'playing' before
+  // we starting waiting for 'waiting'.
+  info("Invoking play()");
+  let p = once(el, "playing");
+  el.play();
+  await p;
+  await once(el, "waiting");
+  // We're waiting for data after the start of the last frame.
+  // 0.033333 is the duration of the last frame.
+  ok((el.currentTime >= vchunks[1].end - 0.033333 + threshold - fuzz &&
+      el.currentTime <= vchunks[1].end + threshold + fuzz),
+     `skipped the gap properly: ${el.currentTime} ${vchunks[1].end + threshold}`);
+  is(el.buffered.length, 2, "buffered range has right length");
+  // Now we test that seeking will succeed despite the gap.
+  el.currentTime = el.buffered.end(0) + (threshold / 2);
+  await once(el, "seeked");
+  // Now we test that we don't pass the gap.
+  // Clean up our sourcebuffer by removing all data.
+  videosb.timestampOffset = 0;
+  videosb.remove(0, Infinity);
+  el.currentTime = 0;
+  el.pause();
+  await once(videosb, "updateend");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(1, 5), ".m4s");
+  // We will insert a gap of threshold + 1ms
+  videosb.timestampOffset = threshold + 1 / 1000;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", range(5, 9), ".m4s");
+  info("Invoking play()");
+  p = once(el, "playing");
+  el.play();
+  await p;
+  await once(el, "waiting");
+  // We're waiting for data after the start of the last frame.
+  // 0.033333 is the duration of the last frame.
+  ok((el.currentTime >= vchunks[0].end - 0.033333 - fuzz &&
+      el.currentTime <= vchunks[0].end + fuzz),
+     `stopped at the gap properly: ${el.currentTime} ${vchunks[0].end}`);
+  SimpleTest.finish();
 });
 
 </script>

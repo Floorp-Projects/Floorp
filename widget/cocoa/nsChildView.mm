@@ -1808,6 +1808,10 @@ nsChildView::SetInputContext(const InputContext& aContext,
     }
   }
 
+  // IMEInputHandler::IsEditableContent() returns false when both
+  // IsASCIICableOnly() and IsIMEEnabled() return false.  So, be careful
+  // when you change the following code.  You might need to change
+  // IMEInputHandler::IsEditableContent() too.
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
     case IMEState::ENABLED:

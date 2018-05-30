@@ -12,64 +12,34 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function(ms, el) {
+runWithMSE(async (ms, el) => {
   el.controls = true;
-  el._seeked = false;
-  el._loadeddata = false;
-  el._playing = false;
-  el.addEventListener("seeked", function() {
-    ok(true, "got seeked event");
-    is(el._loadeddata, false, "can't have received loadeddata prior seeked");
-    is(el._playing, false, "can't be playing prior seeked");
-    el._seeked = true;
-  });
-  el.addEventListener("loadeddata", function() {
-    ok(true, "got loadeddata event");
-    is(el._seeked, true, "must have received seeked prior loadeddata");
-    is(el._playing, false, "can't be playing prior playing");
-    el._loadeddata = true;
-  });
-  el.addEventListener("playing", function() {
-    ok(true, "got playing");
-    is(el._seeked, true, "must have received seeked prior playing");
-    is(el._loadeddata, true, "must have received loadeddata prior playing");
-    el._playing = true;
-  });
-  once(ms, "sourceopen").then(function() {
-    ok(true, "Receive a sourceopen event");
-    const videosb = ms.addSourceBuffer("video/mp4");
-    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
-    const metadataPromises = [];
-    metadataPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4"));
-    metadataPromises.push(once(el, "loadedmetadata"));
-    Promise.all(metadataPromises)
-    .then(function() {
-      el.play();
-      videosb.timestampOffset = 2;
-      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
-      // Load [2, 3.606).
-      const playPromises = [];
-      playPromises.push(once(el, "play"));
-      playPromises.push(fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s"));
-      return Promise.all(playPromises);
-    })
-    .then(function() {
-      return fetchAndLoad(videosb, "bipbop/bipbop_video", [ "2" ], ".m4s");
-    })
-    .then(function() {
-      // TODO: readyState should be at least HAVE_CURRENTDATA, see bug 1367993.
-      ok(el.readyState >= el.HAVE_METADATA, "readyState is HAVE_METADATA");
-      el.currentTime = 2;
-      const seekedAndPlayingPromises = [];
-      seekedAndPlayingPromises.push(once(el, "seeked"));
-      seekedAndPlayingPromises.push(once(el, "playing"));
-      return Promise.all(seekedAndPlayingPromises);
-    })
-    .then(function() {
-      ok(true, "completed seek");
-      SimpleTest.finish();
-    });
-  });
+  const events = [ "seeked", "loadeddata", "playing" ];
+  let eventCount = 0;
+  events.forEach(type => el.addEventListener(type,
+      () => is(events[eventCount++], type, "events must come in order")));
+  await once(ms, "sourceopen");
+  ok(true, "Receive a sourceopen event");
+  const videosb = ms.addSourceBuffer("video/mp4");
+  is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+  let p = once(el, "loadedmetadata");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "init" ], ".mp4");
+  await p;
+  el.play();
+  videosb.timestampOffset = 2;
+  is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+  // Load [2, 3.606).
+  p = once(el, "play");
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "1" ], ".m4s");
+  await p;
+  await fetchAndLoad(videosb, "bipbop/bipbop_video", [ "2" ], ".m4s");
+  // TODO: readyState should be at least HAVE_CURRENTDATA, see bug 1367993.
+  ok(el.readyState >= el.HAVE_METADATA, "readyState is HAVE_METADATA");
+  el.currentTime = 2;
+  await Promise.all([ once(el, "seeked"), once(el, "playing") ]);
+  ok(true, "completed seek");
+  is(eventCount, events.length, "Received expected number of events");
+  SimpleTest.finish();
 });
 
 </script>

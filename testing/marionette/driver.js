@@ -335,6 +335,10 @@ GeckoDriver.prototype.globalModalDialogHandler = function(subject, topic) {
 GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
   let payload = evaluate.toJSON(data, this.seenEls);
 
+  if (payload === null) {
+    payload = {};
+  }
+
   // TODO(ato): When proxy.AsyncMessageChannel
   // is used for all chrome <-> content communication
   // this can be removed.
@@ -2608,7 +2612,7 @@ GeckoDriver.prototype.clearElement = async function(cmd) {
 /**
  * Switch to shadow root of the given host element.
  *
- * @param {string} id
+ * @param {string=} id
  *     Reference ID to the element.
  *
  * @throws {InvalidArgumentError}
@@ -2620,8 +2624,12 @@ GeckoDriver.prototype.switchToShadowRoot = async function(cmd) {
   assert.content(this.context);
   assert.open(this.getCurrentWindow());
 
-  let id = assert.string(cmd.parameters.id);
-  let webEl = WebElement.fromUUID(id, this.context);
+  let id = cmd.parameters.id;
+  let webEl = null;
+  if (id != null) {
+    assert.string(id);
+    webEl = WebElement.fromUUID(id, this.context);
+  }
   await this.listener.switchToShadowRoot(webEl);
 };
 
