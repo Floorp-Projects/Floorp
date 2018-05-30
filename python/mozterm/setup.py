@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 VERSION = '0.1.0'
-DEPS = []
+DEPS = ['six >= 1.10.0']
 
 setup(
     name='mozterm',
@@ -23,6 +23,10 @@ setup(
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Natural Language :: English',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
     ],
     install_requires=DEPS,
 )
