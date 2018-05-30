@@ -21,9 +21,11 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.session.Session;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.web.IWebView;
 
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Base implementation for fragments that use an IWebView instance. Based on Android's WebViewFragment.
@@ -104,7 +106,17 @@ public abstract class WebFragment extends LocaleAwareFragment {
     public void onPause() {
         final Session session = getSession();
         if (session != null) {
-            webView.saveWebViewState(session);
+            if (AppConstants.isGeckoBuild()) {
+                CountDownLatch latch = new CountDownLatch(1);
+                webView.saveWebViewState(session, latch);
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    // Do nothing, the page was not saved
+                }
+            } else {
+                webView.saveWebViewState(session, null);
+            }
         }
 
         webView.onPause();

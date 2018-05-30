@@ -28,11 +28,14 @@ import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoResponse;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+
+import java.util.concurrent.CountDownLatch;
 
 import kotlin.text.Charsets;
 
@@ -479,19 +482,25 @@ public class WebViewProvider {
         }
 
         @Override
-        public void saveWebViewState(@NonNull final Session session) {
-            final GeckoResponse<GeckoSession.SessionState> response = new GeckoResponse<GeckoSession.SessionState>() {
+        public void saveWebViewState(@NonNull final Session session, final CountDownLatch latch) {
+            ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
-                public void respond(GeckoSession.SessionState value) {
-                    if (value != null) {
-                        final Bundle bundle = new Bundle();
-                        bundle.putParcelable("state", value);
-                        session.saveWebViewState(bundle);
-                    }
-                }
-            };
+                public void run() {
+                    final GeckoResponse<GeckoSession.SessionState> response = new GeckoResponse<GeckoSession.SessionState>() {
+                        @Override
+                        public void respond(GeckoSession.SessionState value) {
+                            if (value != null) {
+                                final Bundle bundle = new Bundle();
+                                bundle.putParcelable("state", value);
+                                session.saveWebViewState(bundle);
+                            }
+                            latch.countDown();
+                        }
+                    };
 
-            geckoSession.saveState(response);
+                    geckoSession.saveState(response);
+                }
+            });
         }
 
         @Override

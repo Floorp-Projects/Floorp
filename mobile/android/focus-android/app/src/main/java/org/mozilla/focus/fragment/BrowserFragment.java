@@ -72,6 +72,7 @@ import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.Source;
 import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.Features;
 import org.mozilla.focus.utils.StatusBarUtils;
@@ -79,8 +80,8 @@ import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.utils.ViewUtils;
 import org.mozilla.focus.web.Download;
-import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.HttpAuthenticationDialogBuilder;
+import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.widget.AnimatedProgressBar;
 import org.mozilla.focus.widget.FloatingEraseButton;
 import org.mozilla.focus.widget.FloatingSessionsButton;
@@ -88,6 +89,7 @@ import org.mozilla.focus.widget.FloatingSessionsButton;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
@@ -1005,7 +1007,17 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 final IWebView webView = getWebView();
                 if (webView != null) {
-                    webView.saveWebViewState(session);
+                    if (AppConstants.isGeckoBuild()) {
+                        CountDownLatch latch = new CountDownLatch(1);
+                        webView.saveWebViewState(session, latch);
+                        try {
+                            latch.await();
+                        } catch (InterruptedException e) {
+                            // Do nothing, the page was not saved
+                        }
+                    } else {
+                        webView.saveWebViewState(session, null);
+                    }
                 }
 
                 final Intent intent = new Intent(getContext(), MainActivity.class);
