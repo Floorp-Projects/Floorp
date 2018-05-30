@@ -407,7 +407,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
         {
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
-          HitTestingTreeNode* node = PrepareNodeForLayer(aLayerMetrics,
+          HitTestingTreeNode* node = PrepareNodeForLayer(lock, aLayerMetrics,
                 aLayerMetrics.Metrics(), layersId, ancestorTransforms.top(),
                 parent, next, state);
           MOZ_ASSERT(node);
@@ -724,7 +724,8 @@ GetEventRegions(const ScrollNode& aLayer)
 
 
 already_AddRefed<HitTestingTreeNode>
-APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
+APZCTreeManager::RecycleOrCreateNode(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                     TreeBuildingState& aState,
                                      AsyncPanZoomController* aApzc,
                                      LayersId aLayersId)
 {
@@ -733,9 +734,9 @@ APZCTreeManager::RecycleOrCreateNode(TreeBuildingState& aState,
   // first iteration, so it should be cheap in the common case.
   for (int32_t i = aState.mNodesToDestroy.Length() - 1; i >= 0; i--) {
     RefPtr<HitTestingTreeNode> node = aState.mNodesToDestroy[i];
-    if (!node->IsPrimaryHolder()) {
+    if (node->IsRecyclable(aProofOfTreeLock)) {
       aState.mNodesToDestroy.RemoveElementAt(i);
-      node->RecycleWith(aApzc, aLayersId);
+      node->RecycleWith(aProofOfTreeLock, aApzc, aLayersId);
       return node.forget();
     }
   }
@@ -829,7 +830,8 @@ APZCTreeManager::NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) cons
 }
 
 template<class ScrollNode> HitTestingTreeNode*
-APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
+APZCTreeManager::PrepareNodeForLayer(const RecursiveMutexAutoLock& aProofOfTreeLock,
+                                     const ScrollNode& aLayer,
                                      const FrameMetrics& aMetrics,
                                      LayersId aLayersId,
                                      const AncestorTransform& aAncestorTransform,
@@ -837,8 +839,6 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
                                      HitTestingTreeNode* aNextSibling,
                                      TreeBuildingState& aState)
 {
-  mTreeLock.AssertCurrentThreadIn();
-
   bool needsApzc = true;
   if (!aMetrics.IsScrollable()) {
     needsApzc = false;
@@ -866,7 +866,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // Note: if layer properties must be propagated to nodes, RecvUpdate in
     // LayerTransactionParent.cpp must ensure that APZ will be notified
     // when those properties change.
-    node = RecycleOrCreateNode(aState, nullptr, aLayersId);
+    node = RecycleOrCreateNode(aProofOfTreeLock, aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
     node->SetHitTestData(
         GetEventRegions(aLayer),
@@ -1046,7 +1046,7 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
     // now that will also be using that APZC. The hit-test region on the APZC needs
     // to be updated to deal with the new layer's hit region.
 
-    node = RecycleOrCreateNode(aState, apzc, aLayersId);
+    node = RecycleOrCreateNode(aProofOfTreeLock, aState, apzc, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
 
     // Even though different layers associated with a given APZC may be at
