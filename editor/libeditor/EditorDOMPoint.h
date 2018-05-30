@@ -170,7 +170,7 @@ public:
   dom::Element*
   GetContainerAsElement() const
   {
-    return mParent && mParent->IsElement() ? mParent->AsElement() : nullptr;
+    return Element::FromNodeOrNull(mParent);
   }
 
   dom::Text*
