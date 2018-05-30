@@ -79,7 +79,7 @@ PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
                                         nsIArray* aMethodData,
                                         nsIPaymentDetails* aDetails,
                                         nsIPaymentOptions* aOptions,
-					const nsAString& aShippingOption)
+                                        const nsAString& aShippingOption)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
   NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
@@ -213,7 +213,7 @@ NS_IMETHODIMP
 PaymentUpdateActionRequest::InitRequest(const nsAString& aRequestId,
                                         nsIPaymentActionCallback* aCallback,
                                         nsIPaymentDetails* aDetails,
-					const nsAString& aShippingOption)
+                                        const nsAString& aShippingOption)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
   NS_ENSURE_ARG_POINTER(aDetails);

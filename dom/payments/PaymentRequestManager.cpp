@@ -458,7 +458,7 @@ PaymentRequestManager::CreatePayment(JSContext* aCx,
                                        methodData,
                                        details,
                                        options,
-				       shippingOption);
+                                       shippingOption);
 
   rv = SendRequestPayment(request, action, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
