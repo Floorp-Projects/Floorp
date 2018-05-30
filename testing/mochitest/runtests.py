@@ -838,7 +838,6 @@ class MochitestDesktop(object):
     Mochitest class for desktop firefox.
     """
     oldcwd = os.getcwd()
-    mochijar = os.path.join(SCRIPT_DIR, 'mochijar')
 
     # Path to the test script on the server
     TEST_PATH = "tests"
@@ -856,9 +855,10 @@ class MochitestDesktop(object):
     # TODO: replace this with 'runtests.py' or 'mochitest' or the like
     test_name = 'automation.py'
 
-    def __init__(self, flavor, logger_options, quiet=False):
+    def __init__(self, flavor, logger_options, staged_addons=None, quiet=False):
         update_mozinfo()
         self.flavor = flavor
+        self.staged_addons = staged_addons
         self.server = None
         self.wsserver = None
         self.websocketProcessBridge = None
@@ -1320,11 +1320,6 @@ toolbar#nav-bar {
             chromeFile.write(chrome)
 
         manifest = self.writeChromeManifest(options)
-
-        if not os.path.isdir(self.mochijar):
-            self.log.error(
-                "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
-            return None
 
         return manifest
 
@@ -2258,10 +2253,14 @@ toolbar#nav-bar {
                 # install specialpowers and mochikit addons
                 addons = Addons(self.marionette)
 
-                addons.install(create_zip(
-                    os.path.join(here, 'extensions', 'specialpowers')
-                ))
-                addons.install(create_zip(self.mochijar))
+                if self.staged_addons:
+                    for addon_path in self.staged_addons:
+                        if not os.path.isdir(addon_path):
+                            self.log.error(
+                                "TEST-UNEXPECTED-FAIL | invalid setup: missing extension at %s" %
+                                addon_path)
+                            return 1, self.lastTestSeen
+                        addons.install(create_zip(addon_path))
 
                 self.execute_start_script()
 
@@ -3066,7 +3065,8 @@ def run_test_harness(parser, options):
         key: value for key, value in vars(options).iteritems()
         if key.startswith('log') or key == 'valgrind'}
 
-    runner = MochitestDesktop(options.flavor, logger_options, quiet=options.quiet)
+    runner = MochitestDesktop(options.flavor, logger_options, options.stagedAddons,
+                              quiet=options.quiet)
 
     if hasattr(options, 'log'):
         delattr(options, 'log')
